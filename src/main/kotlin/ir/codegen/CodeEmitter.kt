@@ -131,7 +131,7 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
     }
 
     private fun emitCall(call: Call) {
-        val arguments = valueToRegister.usedArgumentRegisters()
+        val arguments = valueToRegister.callerSaveRegisters()
         for (arg in arguments) {
             objFunc.push(arg)
         }
@@ -151,7 +151,7 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
 
     private fun emitStore(instruction: Store) {
         val pointer = valueToRegister.get(instruction.pointer())
-        var value = valueToRegister.get(instruction.value())
+        var value   = valueToRegister.get(instruction.value())
 
         if (value is Mem) {
             value = objFunc.mov(value, temp2(value.size))

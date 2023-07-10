@@ -2,13 +2,17 @@ package ir
 
 import java.lang.RuntimeException
 
-abstract class Instruction(protected val define: Int, protected val tp: Type, var usages: ArrayList<Value>): Value {
+abstract class Instruction(protected val tp: Type, var usages: ArrayList<Value>) {
     internal open fun renameUsages(fn: (Value) -> Value) {
         for (i in 0 until usages.size) {
             usages[i] = fn(usages[i])
         }
     }
 
+    abstract fun dump(): String
+}
+
+abstract class ValueInstruction(protected val define: Int, tp: Type, usages: ArrayList<Value>): Instruction(tp, usages), Value {
     fun defined(): Int {
         return define
     }
@@ -20,8 +24,6 @@ abstract class Instruction(protected val define: Int, protected val tp: Type, va
     override fun type(): Type {
         return tp
     }
-
-    abstract fun dump(): String
 }
 
 enum class IntPredicate {
@@ -66,7 +68,7 @@ enum class ArithmeticUnaryOp {
     }
 }
 
-class ArithmeticUnary(index: Int, tp: Type, val op: ArithmeticUnaryOp, value: Value): Instruction(index, tp, arrayListOf(value)) {
+class ArithmeticUnary(index: Int, tp: Type, private val op: ArithmeticUnaryOp, value: Value): ValueInstruction(index, tp, arrayListOf(value)) {
     override fun dump(): String {
         return "%$define = $op $tp ${operand()}"
     }
@@ -107,7 +109,7 @@ enum class ArithmeticBinaryOp {
     }
 }
 
-class ArithmeticBinary(index: Int, tp: Type, a: Value, val op: ArithmeticBinaryOp, b: Value): Instruction(index, tp, arrayListOf(a, b)) {
+class ArithmeticBinary(index: Int, tp: Type, a: Value, val op: ArithmeticBinaryOp, b: Value): ValueInstruction(index, tp, arrayListOf(a, b)) {
     override fun dump(): String {
         return "%$define = $op $tp ${first()}, ${second()}"
     }
@@ -138,7 +140,7 @@ enum class CastType {
     }
 }
 
-class IntCompare(index: Int, a: Value, val predicate: IntPredicate, b: Value) : Instruction(index, Type.U1, arrayListOf(a, b)) {
+class IntCompare(index: Int, a: Value, val predicate: IntPredicate, b: Value) : ValueInstruction(index, Type.U1, arrayListOf(a, b)) {
     override fun dump(): String {
         return "%$define = icmp $predicate ${first()}, ${second()}"
     }
@@ -152,7 +154,7 @@ class IntCompare(index: Int, a: Value, val predicate: IntPredicate, b: Value) : 
     }
 }
 
-class Load(index: Int, ptr: Value): Instruction(index, ptr.type().dereferenceOrNull() as Type, arrayListOf(ptr)) {
+class Load(index: Int, ptr: Value): ValueInstruction(index, ptr.type().dereference(), arrayListOf(ptr)) {
     override fun dump(): String {
         return "%$define = load $tp ${operand()}"
     }
@@ -162,7 +164,7 @@ class Load(index: Int, ptr: Value): Instruction(index, ptr.type().dereferenceOrN
     }
 }
 
-class Store(pointer: Value, value: Value): Instruction(Int.MIN_VALUE, pointer.type(), arrayListOf(pointer, value)) {
+class Store(pointer: Value, value: Value): Instruction(pointer.type(), arrayListOf(pointer, value)) {
     override fun dump(): String {
         return "store $tp ${pointer()}, ${value()}"
     }
@@ -176,13 +178,13 @@ class Store(pointer: Value, value: Value): Instruction(Int.MIN_VALUE, pointer.ty
     }
 }
 
-class StackAlloc(index: Int, ty: Type, val size: Long): Instruction(index, ty.ptr(), arrayListOf()) {
+class StackAlloc(index: Int, ty: Type, val size: Long): ValueInstruction(index, ty.ptr(), arrayListOf()) {
     override fun dump(): String {
         return "%$define = stackalloc $tp $size"
     }
 }
 
-class Call(index: Int, tp: Type, val func: Function, args: ArrayList<Value>): Instruction(index, tp, args) {
+class Call(index: Int, tp: Type, val func: Function, args: ArrayList<Value>): ValueInstruction(index, tp, args) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -216,7 +218,7 @@ class Call(index: Int, tp: Type, val func: Function, args: ArrayList<Value>): In
     }
 }
 
-class GetElementPtr(indexDes: Int, tp: Type, source: Value, index: Value): Instruction(indexDes, tp, arrayListOf(source, index)) {
+class GetElementPtr(indexDes: Int, tp: Type, source: Value, index: Value): ValueInstruction(indexDes, tp, arrayListOf(source, index)) {
     override fun dump(): String {
         return "%$define = gep $tp ${source()}, ${index()}"
     }
@@ -230,7 +232,7 @@ class GetElementPtr(indexDes: Int, tp: Type, source: Value, index: Value): Instr
     }
 }
 
-class Cast(index: Int, ty: Type, val castType: CastType, value: Value): Instruction(index, ty, arrayListOf(value)) {
+class Cast(index: Int, ty: Type, val castType: CastType, value: Value): ValueInstruction(index, ty, arrayListOf(value)) {
     override fun dump(): String {
         return "%$define = $castType $tp ${value()}"
     }
@@ -240,7 +242,7 @@ class Cast(index: Int, ty: Type, val castType: CastType, value: Value): Instruct
     }
 }
 
-class Phi(index: Int, ty: Type, private val incoming: List<Label>, incomingValue: ArrayList<Value>): Instruction(index, ty, incomingValue) {
+class Phi(index: Int, ty: Type, private val incoming: List<Label>, incomingValue: ArrayList<Value>): ValueInstruction(index, ty, incomingValue) {
     override fun dump(): String {
         val bulder = StringBuilder()
         bulder.append("%$define = phi $tp ")
@@ -272,7 +274,7 @@ class Phi(index: Int, ty: Type, private val incoming: List<Label>, incomingValue
     }
 }
 
-class Select(index: Int, ty: Type, cond: Value, onTrue: Value, onFalse: Value): Instruction(index, ty, arrayListOf(cond, onTrue, onFalse)) {
+class Select(index: Int, ty: Type, cond: Value, onTrue: Value, onFalse: Value): ValueInstruction(index, ty, arrayListOf(cond, onTrue, onFalse)) {
     override fun dump(): String {
         return "%$define = select $tp ${condition()} ${onTrue()}, ${onFalse()}"
     }
@@ -290,7 +292,7 @@ class Select(index: Int, ty: Type, cond: Value, onTrue: Value, onFalse: Value): 
     }
 }
 
-abstract class TerminateInstruction(usages: ArrayList<Value>, val targets: Array<BasicBlock>): Instruction(Int.MIN_VALUE, Type.UNDEF, usages) {
+abstract class TerminateInstruction(usages: ArrayList<Value>, val targets: Array<BasicBlock>): Instruction(Type.UNDEF, usages) {
     fun targets(): Array<BasicBlock> {
         return targets
     }

@@ -2,7 +2,7 @@ package ir
 
 data class ModuleException(override val message: String): Exception(message)
 
-class Module(val functions: Map<Function, FunctionData>) {
+class Module(internal val functions: Map<Function, FunctionData>) {
     fun findFunction(function: Function): FunctionData {
         return functions[function] ?: throw ModuleException("Cannot find function: $function")
     }

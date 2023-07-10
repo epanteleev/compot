@@ -18,7 +18,9 @@ class ArgumentValue(private val index: Int, private val tp: Type): Value {
     }
 }
 
-data class U8Value(val u8: Byte): Value {
+interface Constant: Value
+
+data class U8Value(val u8: Byte): Constant {
     override fun type(): Type {
         return Type.U8
     }
@@ -28,7 +30,7 @@ data class U8Value(val u8: Byte): Value {
     }
 }
 
-data class I8Value(val i8: Byte): Value {
+data class I8Value(val i8: Byte): Constant {
     override fun type(): Type {
         return Type.I8
     }
@@ -38,7 +40,7 @@ data class I8Value(val i8: Byte): Value {
     }
 }
 
-data class U16Value(val u16: Short): Value {
+data class U16Value(val u16: Short): Constant {
     override fun type(): Type {
         return Type.U16
     }
@@ -48,7 +50,7 @@ data class U16Value(val u16: Short): Value {
     }
 }
 
-data class I16Value(val i16: Short): Value {
+data class I16Value(val i16: Short): Constant {
     override fun type(): Type {
         return Type.I16
     }
@@ -58,7 +60,7 @@ data class I16Value(val i16: Short): Value {
     }
 }
 
-data class U32Value(val u32: Int): Value {
+data class U32Value(val u32: Int): Constant {
     override fun type(): Type {
         return Type.U32
     }
@@ -68,7 +70,7 @@ data class U32Value(val u32: Int): Value {
     }
 }
 
-data class I32Value(val i32: Int): Value {
+data class I32Value(val i32: Int): Constant {
     override fun type(): Type {
         return Type.I32
     }
@@ -78,7 +80,7 @@ data class I32Value(val i32: Int): Value {
     }
 }
 
-data class U64Value(val u64: Int): Value {
+data class U64Value(val u64: Long): Constant {
     override fun type(): Type {
         return Type.U64
     }
@@ -88,7 +90,7 @@ data class U64Value(val u64: Int): Value {
     }
 }
 
-data class I64Value(val i64: Int): Value {
+data class I64Value(val i64: Long): Constant {
     override fun type(): Type {
         return Type.I64
     }
@@ -98,7 +100,7 @@ data class I64Value(val i64: Int): Value {
     }
 }
 
-class UndefinedValue: Value {
+class UndefinedValue: Constant {
     override fun type(): Type {
         return Type.UNDEF
     }

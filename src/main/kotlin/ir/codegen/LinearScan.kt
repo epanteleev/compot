@@ -2,7 +2,7 @@ package ir.codegen
 
 import asm.*
 import ir.*
-import java.lang.RuntimeException
+import ir.utils.LiveIntervals
 import java.lang.StringBuilder
 
 private class ArgumentRegisterAllocator(val stackSize: Long) {
@@ -51,18 +51,7 @@ private class RegisterAllocator {
     }
 }
 
-class LinearScan(private val data: FunctionData) {
-    private val registerMap = hashMapOf<Value, Operand>()
-    private val liveRanges = data.blocks.liveness()
-    private var stackSize: Long
-
-    init {
-        stackSize = allocRegistersForLocalVariables()
-
-        val baseSize = 0x10L /** sizeof(ret addr) + sizeof(rbp)*/
-        allocRegistersForArguments(calleeSaveRegisters().size * 8 + baseSize)
-    }
-
+class LinearScan(private var stackSize: Long, private val registerMap: MutableMap<Value, Operand>, val countOfCalleeSaveRegisters: Int) {
     fun reservedStackSize(): Long {
         return stackSize
     }
@@ -89,40 +78,21 @@ class LinearScan(private val data: FunctionData) {
         return registers
     }
 
-    fun usedArgumentRegisters(): List<GPRegister> {
-        val registers = arrayListOf<GPRegister>()
-        for (reg in registerMap.values) {
-            if (reg is GPRegister && gpArgumentRegisters.contains(reg)) {
-                registers.add(reg)
-            }
-        }
-
-        return registers
-    }
-
     fun get(value: Value): Operand {
-        if (value is Instruction || value is ArgumentValue) {
+        if (value is ValueInstruction || value is ArgumentValue) {
             return registerMap[value] as Operand
         }
-        TODO()
-       // val imm = Imm()
-    }
-
-    private fun allocRegistersForArguments(stackSize: Long) {
-        val allocator = ArgumentRegisterAllocator(stackSize)
-
-        for (argument in data.arguments()) {
-            registerMap[argument] = allocator.allocNext(argument)
+        return when (value) {
+            is U8Value  -> Imm(value.u8.toLong(), 1)
+            is I8Value  -> Imm(value.i8.toLong(), 1)
+            is U16Value -> Imm(value.u16.toLong(), 2)
+            is I16Value -> Imm(value.i16.toLong(), 2)
+            is U32Value -> Imm(value.u32.toLong(), 4)
+            is I32Value -> Imm(value.i32.toLong(), 4)
+            is I64Value -> Imm(value.i64, 8)
+            is U64Value -> Imm(value.u64, 8)
+            else -> throw RuntimeException("expect $value:${value.type()}")
         }
-    }
-
-    private fun allocRegistersForLocalVariables(): Long {
-        val allocator = RegisterAllocator()
-        for ((v, _) in liveRanges) {
-            registerMap[v] = allocator.allocNext(v)
-        }
-
-        return allocator.stackSize()
     }
 
     override fun toString(): String {
@@ -190,8 +160,43 @@ class LinearScan(private val data: FunctionData) {
 
         internal val availableRegisters = allRegisters()
 
+        private fun allocRegistersForArguments(registerMap: MutableMap<Value, Operand>, data: FunctionData, stackSize: Long) {
+            val allocator = ArgumentRegisterAllocator(stackSize)
+            for (argument in data.arguments()) {
+                registerMap[argument] = allocator.allocNext(argument)
+            }
+        }
+
+        private fun allocRegistersForLocalVariables(registerMap: MutableMap<Value, Operand>, liveRanges: LiveIntervals): Long {
+            val allocator = RegisterAllocator()
+            for ((v, _) in liveRanges) {
+                registerMap[v] = allocator.allocNext(v)
+            }
+
+            return allocator.stackSize()
+        }
+
+        private fun countOfUsedCalleeSaveRegisters(registerMap: Map<Value, Operand>): Int {
+            var count = 0
+            for (operand in registerMap.values) {
+                if (gpNonVolatileRegs.contains(operand)) {
+                    count += 1
+                }
+            }
+
+            return count
+        }
+
         fun alloc(data: FunctionData): LinearScan {
-            return LinearScan(data)
+            val liveRanges = data.blocks.liveness()
+            val registerMap = hashMapOf<Value, Operand>()
+            val stackSize = allocRegistersForLocalVariables(registerMap, liveRanges)
+
+            val baseSize = 0x10L /** sizeof(ret addr) + sizeof(rbp) */
+            val count = countOfUsedCalleeSaveRegisters(registerMap)
+            allocRegistersForArguments(registerMap, data, count * 8 + baseSize)
+
+            return LinearScan(stackSize, registerMap, count)
         }
     }
 }

@@ -22,7 +22,7 @@ class DefUseInfo private constructor(private val defUse: MutableMap<Value, Mutab
         fun create(basicBlocks: BasicBlocks): DefUseInfo {
             val defUseInfo = DefUseInfo(hashMapOf())
             for (bb in basicBlocks) {
-                for (instruction in bb) {
+                for (instruction in bb.valueInstructions()) {
                     defUseInfo.addUsages(instruction, instruction.usages)
                 }
             }

@@ -33,7 +33,7 @@ private class RenameAssistant(cfg: BasicBlocks, private val dominatorTree: Domin
     }
 
     fun rename(bb: BasicBlock, oldValue: Value): Value {
-        return if (oldValue is Instruction) {
+        return if (oldValue is ValueInstruction) {
             findActualValueOrNull(bb, oldValue) ?: oldValue
         } else {
             oldValue
@@ -50,6 +50,9 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
         var idx = 0
         for (bb in cfg) {
             for (instruction in bb) {
+                if (instruction !is ValueInstruction) {
+                    continue
+                }
                 idx = max(instruction.defined(), idx)
             }
         }
@@ -104,6 +107,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
             }
 
             if (isStackAllocOfLocalVariable(instruction)) {
+                instruction as StackAlloc
                 bbToMapValues.addValues(bb, instruction, Value.UNDEF)
                 continue
             }

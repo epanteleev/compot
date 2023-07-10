@@ -81,7 +81,7 @@ class LiveIntervals(private val liveness: Map<Value, LiveRange>) {
                 for ((index, inst) in bb.instructions.withIndex()) {
                     val location = Location(bb, index)
 
-                    if (inst !is TerminateInstruction && inst !is Store) {
+                    if (inst is ValueInstruction) {
                         liveness[inst] = LiveRange(location)
                     }
 

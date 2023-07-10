@@ -1,7 +1,7 @@
 package ir
 
-class Function(val index: Int, val name: String, val returnType: Type): Value {
-    override fun type(): Type {
+class Function(val index: Int, val name: String, private val returnType: Type) {
+    fun type(): Type {
         return returnType
     }
 
@@ -18,5 +18,11 @@ class Function(val index: Int, val name: String, val returnType: Type): Value {
         if (index != other.index) return false
         if (name != other.name) return false
         return returnType == other.returnType
+    }
+}
+
+class ExternFunction(val name: String, private val returnType: Type, val arguments: List<Type>) {
+    fun type(): Type {
+        return returnType
     }
 }

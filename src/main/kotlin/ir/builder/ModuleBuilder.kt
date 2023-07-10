@@ -8,10 +8,11 @@ import ir.utils.TypeCheck
 
 class ActivePoint(var function: Function, var bb: BasicBlock, var allocatedLabel: Int, var value: Int)
 
-class ModuleBuilder(
-    private val functions: MutableMap<Function, FunctionData>,
-    private var activePoint: ActivePoint?,
-    private var nextFunction: Int) {
+class ModuleBuilder {
+    private val functions = hashMapOf<Function, FunctionData>()
+    private val externFunctions = mutableSetOf<ExternFunction>()
+    private var activePoint: ActivePoint? = null
+    private var nextFunction: Int = 0
 
     private fun allocateBlock(): BasicBlock {
         val ap = activePointUnsafe()
@@ -30,7 +31,7 @@ class ModuleBuilder(
         return value
     }
 
-    private fun withOutput(f: (Int) -> Instruction): Value {
+    private fun withOutput(f: (Int) -> ValueInstruction): Value {
         val activePoint = activePointUnsafe()
         val value       = allocateValue()
         val instruction = f(value)
@@ -88,6 +89,12 @@ class ModuleBuilder(
 
         switchLabel(bb)
         return function
+    }
+
+    fun createExternFunction(name: String, returnType: Type, arguments: List<Type>): ExternFunction {
+        val extern = ExternFunction(name, returnType, arguments)
+        externFunctions.add(extern)
+        return extern
     }
 
     fun createLabel(): Label = allocateBlock()
@@ -184,7 +191,7 @@ class ModuleBuilder(
 
     companion object {
         fun create() : ModuleBuilder {
-            return ModuleBuilder(hashMapOf(), null, 0)
+            return ModuleBuilder()
         }
     }
 }

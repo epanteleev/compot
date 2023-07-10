@@ -50,7 +50,7 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
 
     private fun validatePhi(phi: Phi, bb: BasicBlock) {
         for ((use, incoming) in phi.usages.zip(phi.incoming())) {
-            if (use !is Instruction) {
+            if (use !is ValueInstruction) {
                 continue
             }
             val actual = creation.get(use).block
@@ -72,7 +72,7 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
     /** Check whether definition dominates to usage. */
     private fun validateDefUse(instruction: Instruction, bb: BasicBlock) {
         for (use in instruction.usages) {
-            if (use !is Instruction) {
+            if (use !is ValueInstruction) {
                 continue
             }
             val definedIn = creation.get(use).block

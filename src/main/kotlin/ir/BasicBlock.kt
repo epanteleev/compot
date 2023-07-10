@@ -1,5 +1,7 @@
 package ir
 
+import ir.iterator.ValueInstructionsIterator
+
 class BasicBlock(override val index: Int) : Label(index), Collection<Instruction> {
     val instructions = mutableListOf<Instruction>()
     val predecessors = mutableListOf<BasicBlock>()
@@ -34,7 +36,7 @@ class BasicBlock(override val index: Int) : Label(index), Collection<Instruction
         instructions.add(instruction)
     }
 
-    internal fun prepend(instruction: Instruction) {
+    internal fun prepend(instruction: ValueInstruction) {
         instructions.add(0, instruction)
     }
 
@@ -76,6 +78,10 @@ class BasicBlock(override val index: Int) : Label(index), Collection<Instruction
 
     override operator fun iterator(): Iterator<Instruction> {
         return instructions.iterator()
+    }
+
+    fun valueInstructions(): Iterator<ValueInstruction> {
+        return ValueInstructionsIterator(instructions)
     }
 
     internal fun removeIf(filter: (Instruction) -> Boolean): Boolean {

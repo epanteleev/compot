@@ -2,18 +2,18 @@ package ir.utils
 
 import ir.*
 
-class CreationInfo private constructor(private val creationInfo: MutableMap<Instruction, Location>) {
-    fun get(instruction: Instruction): Location {
+class CreationInfo private constructor(private val creationInfo: MutableMap<ValueInstruction, Location>) {
+    fun get(instruction: ValueInstruction): Location {
         return creationInfo[instruction]!!
     }
 
     companion object {
         fun create(basicBlocks: BasicBlocks): CreationInfo {
-            val creationInfo = hashMapOf<Instruction, Location>()
+            val creationInfo = hashMapOf<ValueInstruction, Location>()
 
             for (bb in basicBlocks) {
                 for ((idx, instruction) in bb.withIndex()) {
-                    if (instruction is Store || instruction is TerminateInstruction) {
+                    if (instruction !is ValueInstruction) {
                         continue
                     }
 
