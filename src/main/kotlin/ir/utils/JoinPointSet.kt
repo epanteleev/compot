@@ -3,13 +3,13 @@ package ir.utils
 import ir.*
 
 class JoinPointSet private constructor(private val blocks: BasicBlocks, private val frontiers: Map<BasicBlock, List<BasicBlock>>) {
-    private val joinSet = hashMapOf<BasicBlock, MutableSet<Value>>()
+    private val joinSet = hashMapOf<BasicBlock, MutableSet<ValueInstruction>>()
 
-    private fun hasStore(bb: BasicBlock, variable: Value): Boolean {
+    private fun hasStore(bb: BasicBlock, variable: ValueInstruction): Boolean {
         return bb.instructions.contains(variable)
     }
 
-    private fun calculateForVariable(v: Value, stores: MutableSet<BasicBlock>) {
+    private fun calculateForVariable(v: ValueInstruction, stores: MutableSet<BasicBlock>) {
         val phiPlaces = mutableSetOf<BasicBlock>()
 
         while (stores.isNotEmpty()) {

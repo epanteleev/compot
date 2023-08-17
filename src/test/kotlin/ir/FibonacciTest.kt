@@ -1,11 +1,9 @@
 package ir
 
-import ir.*
 import ir.builder.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.utils.DumpModule
-import ir.utils.JoinPointSet
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

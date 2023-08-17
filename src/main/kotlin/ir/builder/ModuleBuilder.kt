@@ -132,7 +132,7 @@ class ModuleBuilder {
         insert(Store(ptr, value))
     }
 
-    fun call(func: Function, args: ArrayList<Value>): Value {
+    fun call(func: AnyFunction, args: ArrayList<Value>): Value {
         return withOutput { it: Int -> Call(it, func.type(), func, args) }
     }
 
@@ -186,7 +186,7 @@ class ModuleBuilder {
     }
 
     fun build(): Module {
-        return VerifySSA.run(Module(functions))
+        return VerifySSA.run(Module(functions, externFunctions))
     }
 
     companion object {

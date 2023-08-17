@@ -1,6 +1,5 @@
 package ir
 
-import ir.*
 import ir.builder.ModuleBuilder
 import kotlin.test.Test
 import kotlin.test.assertTrue

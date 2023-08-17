@@ -141,7 +141,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
         bb.removeIf { filter(it) }
     }
 
-    private fun removeRedundantPhis(defUseInfo: DefUseInfo, deadPool: MutableSet<Value>, bb: BasicBlock) {
+    private fun removeRedundantPhis(defUseInfo: DefUseInfo, deadPool: MutableSet<Instruction>, bb: BasicBlock) {
         fun filter(instruction: Instruction): Boolean {
             if (instruction !is Phi ) {
                 return false
@@ -180,7 +180,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
         }
 
         val defUseInfo = cfg.defUseInfo()
-        val deadPool = hashSetOf<Value>()
+        val deadPool = hashSetOf<Instruction>()
         for (bb in cfg.postorder()) {
             removeRedundantPhis(defUseInfo, deadPool, bb)
         }

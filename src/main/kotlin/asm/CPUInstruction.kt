@@ -12,31 +12,31 @@ interface CPUInstruction {
     }
 }
 
-data class Push(val register: GPRegister): CPUInstruction {
+data class Push(val operand: AnyOperand): CPUInstruction {
     override fun toString(): String {
-        return "push${prefix(register.size)} $register"
+        return "push${prefix(operand.size)} $operand"
     }
 }
 
-data class Pop(val register: Register): CPUInstruction {
+data class Pop(val register: GPRegister): CPUInstruction {
     override fun toString(): String {
         return "pop${prefix(register.size)} $register"
     }
 }
 
-data class Mov(val src: Operand, val des: Operand): CPUInstruction {
+data class Mov(val src: AnyOperand, val des: Operand): CPUInstruction {
     override fun toString(): String {
         return "mov${prefix(des.size)} $src, $des"
     }
 }
 
-data class MovAbs(val src: Operand, val des: Register): CPUInstruction {
+data class MovAbs(val src: AnyOperand, val des: Register): CPUInstruction {
     override fun toString(): String {
         return "movabs${prefix(des.size)} $src, $des"
     }
 }
 
-data class Movss(val src: Operand, val des: Register): CPUInstruction {
+data class Movss(val src: AnyOperand, val des: Register): CPUInstruction {
     override fun toString(): String {
         return "movss${prefix(des.size)} $src, $des"
     }
@@ -70,7 +70,7 @@ enum class ArithmeticOp {
     },
 }
 
-data class Arithmetic(val op: ArithmeticOp, val first: Operand, val second: Operand): CPUInstruction {
+data class Arithmetic(val op: ArithmeticOp, val first: AnyOperand, val second: Operand): CPUInstruction {
     override fun toString(): String {
         return "$op${prefix(first.size)} $first, $second"
     }
@@ -126,7 +126,7 @@ data class Jump(val jumpType: JmpType, val label: Label): CPUInstruction {
     }
 }
 
-data class Cmp(val first: Operand, val second: Operand): CPUInstruction {
+data class Cmp(val first: AnyOperand, val second: AnyOperand): CPUInstruction {
     override fun toString(): String {
         return "cmp${prefix(first.size)} $first, $second"
     }
@@ -138,7 +138,7 @@ data class Call(val name: String): CPUInstruction {
     }
 }
 
-data class Test(val first: Operand, val second: Operand): CPUInstruction {
+data class Test(val first: Register, val second: Operand): CPUInstruction {
     override fun toString(): String {
         return "test${prefix(first.size)} $first, $second"
     }

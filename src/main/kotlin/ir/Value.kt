@@ -8,7 +8,9 @@ interface Value {
     }
 }
 
-class ArgumentValue(private val index: Int, private val tp: Type): Value {
+interface LocalValue: Value
+
+class ArgumentValue(private val index: Int, private val tp: Type): LocalValue {
     override fun type(): Type {
         return tp
     }

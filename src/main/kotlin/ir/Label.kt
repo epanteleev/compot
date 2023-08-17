@@ -1,7 +1,6 @@
 package ir
 
 abstract class Label(open val index: Int) {
-
     abstract fun index(): Int
 
     override fun toString(): String {

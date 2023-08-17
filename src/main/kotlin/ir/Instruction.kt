@@ -3,6 +3,12 @@ package ir
 import java.lang.RuntimeException
 
 abstract class Instruction(protected val tp: Type, var usages: ArrayList<Value>) {
+    val usedInstructions: List<Instruction> by lazy { usedInstructionInternal() }
+
+    private fun usedInstructionInternal(): MutableList<Instruction> {
+        return usages.filterIsInstanceTo<Instruction, MutableList<Instruction>>(arrayListOf())
+    }
+
     internal open fun renameUsages(fn: (Value) -> Value) {
         for (i in 0 until usages.size) {
             usages[i] = fn(usages[i])
@@ -12,7 +18,7 @@ abstract class Instruction(protected val tp: Type, var usages: ArrayList<Value>)
     abstract fun dump(): String
 }
 
-abstract class ValueInstruction(protected val define: Int, tp: Type, usages: ArrayList<Value>): Instruction(tp, usages), Value {
+abstract class ValueInstruction(protected val define: Int, tp: Type, usages: ArrayList<Value>): Instruction(tp, usages), LocalValue {
     fun defined(): Int {
         return define
     }
@@ -56,19 +62,19 @@ enum class IntPredicate {
 }
 
 enum class ArithmeticUnaryOp {
-    Neq,
+    Neg,
     Not;
 
     override fun toString(): String {
         val name = when (this) {
-            Neq -> "neq"
+            Neg -> "neq"
             Not -> "not"
         }
         return name
     }
 }
 
-class ArithmeticUnary(index: Int, tp: Type, private val op: ArithmeticUnaryOp, value: Value): ValueInstruction(index, tp, arrayListOf(value)) {
+class ArithmeticUnary(index: Int, tp: Type, val op: ArithmeticUnaryOp, value: Value): ValueInstruction(index, tp, arrayListOf(value)) {
     override fun dump(): String {
         return "%$define = $op $tp ${operand()}"
     }
@@ -184,7 +190,7 @@ class StackAlloc(index: Int, ty: Type, val size: Long): ValueInstruction(index, 
     }
 }
 
-class Call(index: Int, tp: Type, val func: Function, args: ArrayList<Value>): ValueInstruction(index, tp, args) {
+class Call(index: Int, tp: Type, val func: AnyFunction, args: ArrayList<Value>): ValueInstruction(index, tp, args) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -210,9 +216,7 @@ class Call(index: Int, tp: Type, val func: Function, args: ArrayList<Value>): Va
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("%$define = call $tp ${func.name}(")
-        for (arg in usages) {
-            builder.append("$arg, ")
-        }
+        usages.joinTo(builder) { "$it:${it.type()}"}
         builder.append(")")
         return builder.toString()
     }

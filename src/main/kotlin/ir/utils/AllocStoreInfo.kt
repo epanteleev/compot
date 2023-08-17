@@ -3,13 +3,13 @@ package ir.utils
 import ir.*
 
 class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
-    private var allocated: Set<Value>? = null
-    private var stores: Map<Value, Set<BasicBlock>>? = null
+    private val allocated: Set<ValueInstruction> by lazy { allocatedVariablesInternal() }
+    private val stores: Map<ValueInstruction, Set<BasicBlock>> by lazy { allStoresInternal(allocated) }
 
-    private fun allocatedVariablesInternal(): Set<Value> {
-        val stores = hashSetOf<Value>()
+    private fun allocatedVariablesInternal(): Set<ValueInstruction> {
+        val stores = hashSetOf<ValueInstruction>()
         fun allocatedInGivenBlock(bb: BasicBlock) {
-            for (inst in bb) {
+            for (inst in bb.valueInstructions()) {
                 if (inst is StackAlloc && inst.size == 1L) {
                     stores.add(inst)
                 }
@@ -23,8 +23,8 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
         return stores
     }
 
-    private fun allStoresInternal(variables: Set<Value>): Map<Value, Set<BasicBlock>> {
-        val stores = hashMapOf<Value, MutableSet<BasicBlock>>()
+    private fun allStoresInternal(variables: Set<ValueInstruction>): Map<ValueInstruction, Set<BasicBlock>> {
+        val stores = hashMapOf<ValueInstruction, MutableSet<BasicBlock>>()
         for (v in variables) {
             stores[v] = mutableSetOf()
         }
@@ -44,20 +44,12 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
 
     /** Returns set of variables which produced by 'stackalloc' instruction. */
     fun allocatedVariables(): Set<Value> {
-        if (allocated == null) {
-            allocated = allocatedVariablesInternal()
-        }
-
-        return allocated as Set<Value>
+        return allocated
     }
 
     /** Find all bd where are stores of given local variable. */
-    fun allStores(): Map<Value, Set<BasicBlock>> {
-        if (stores == null) {
-            stores = allStoresInternal(allocatedVariables())
-        }
-
-        return stores as Map<Value, Set<BasicBlock>>
+    fun allStores(): Map<ValueInstruction, Set<BasicBlock>> {
+        return stores
     }
 
     companion object {

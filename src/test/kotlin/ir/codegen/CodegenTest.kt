@@ -1,13 +1,12 @@
-package ir
+package ir.codegen
 
+import asm.*
+import ir.*
 import ir.builder.ModuleBuilder
-import ir.codegen.CodeEmitter
-import ir.codegen.LinearScan
 import ir.pass.transform.Mem2Reg
 import ir.utils.DumpModule
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class CodegenTest {
     @Test
@@ -18,7 +17,7 @@ class CodegenTest {
         val arg1 = builder.argument(0)
         val arg2 = builder.argument(1)
 
-        val regValue = builder.stackAlloc(Type.U64, 1)
+        val retValue = builder.stackAlloc(Type.U64, 1)
 
         val arg1Alloc = builder.stackAlloc(Type.U64, 1)
         val arg2Alloc = builder.stackAlloc(Type.U64, 1)
@@ -29,9 +28,13 @@ class CodegenTest {
         val a = builder.load(arg1Alloc)
         val b = builder.load(arg2Alloc)
         val add = builder.arithmeticBinary(a, ArithmeticBinaryOp.Add, b)
-        builder.store(regValue, add)
 
-        val ret = builder.load(regValue)
+        val printInt = builder.createExternFunction("printInt", Type.Void, arrayListOf(Type.U64))
+        builder.call(printInt, arrayListOf(add))
+
+        builder.store(retValue, add)
+
+        val ret = builder.load(retValue)
         builder.ret(ret)
 
         val module = builder.build()
@@ -44,5 +47,11 @@ class CodegenTest {
         println(DumpModule.apply(module))
         println(LinearScan.alloc(module.findFunction(fn)))
         println(CodeEmitter.codegen(module))
+
+        //asserts
+        val pool = RegisterPool()
+        assertEquals(pool.allocSlot(arg1), Rdi.rdi)
+        assertEquals(pool.allocSlot(arg2), Rsi.rsi)
+        assertEquals(pool.allocSlot(retValue), Mem(Rbp.rbp, -8, 8))
     }
 }

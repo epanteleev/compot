@@ -6,6 +6,11 @@ import ir.Module
 
 class DumpModule private constructor(private val builder: StringBuilder) {
     private fun dump(module: Module) {
+        for (fn in module.externFunctions) {
+            builder.append(fn)
+            builder.append('\n')
+        }
+
         for (fn in module.functions) {
             dumpFunctionData(fn)
         }

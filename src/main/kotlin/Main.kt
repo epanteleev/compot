@@ -61,14 +61,21 @@ fun main(args: Array<String>) {
     
     println(DumpModule.apply(module))
 
-    val cfg = module.findFunction(fn).blocks
+    val data = module.findFunction(fn)
+    val cfg = data.blocks
 
     println("preorder")
     for (bb in cfg.preorder()) {
         print("$bb ")
     }
     println()
-    
+
+    println("bfs traverse")
+    for (bb in cfg.bfsTraversal()) {
+        print("$bb ")
+    }
+    println()
+
     println("postorder")
     for (bb in cfg.postorder()) {
         print("$bb ")
@@ -93,11 +100,11 @@ fun main(args: Array<String>) {
     }
     println()
 
-    println(cfg.liveness())
+    println(data.liveness())
     val newModule = Mem2Reg.run(module)
     println(DumpModule.apply(newModule))
 
     VerifySSA.run(newModule)
-    println(cfg.liveness())
+    println(data.liveness())
     println(LinearScan.alloc(module.findFunction(fn)))
 }

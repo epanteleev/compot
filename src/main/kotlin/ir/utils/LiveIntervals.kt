@@ -5,21 +5,25 @@ import kotlin.math.max
 
 data class Interval(val begin: Int, var end: Int)
 
-class LiveRange(private var creation: Location) {
+class LiveRange(private val creation: Location) {
     private val intervals = hashMapOf<BasicBlock, Interval>()
+
+    fun begin(): Location {
+        return creation
+    }
 
     private fun registerUsageInternal(location: Location): Boolean {
         val existedInterval = intervals[location.block]
 
-        if (existedInterval == null && location.block == creation.block) {
+        return if (existedInterval == null && location.block == creation.block) {
             intervals[location.block] = Interval(creation.index, location.index)
-            return false
+            false
         } else if (existedInterval == null) {
             intervals[location.block] = Interval(0, location.index)
-            return false
+            false
         } else {
             existedInterval.end = max(existedInterval.end, location.index)
-            return true
+            true
         }
     }
 
@@ -50,17 +54,22 @@ class LiveRange(private var creation: Location) {
         }
     }
 
+    fun isDiedHere(location: Location): Boolean {
+        val interval = intervals[location.block] ?: return true
+        return interval.end < location.index
+    }
+
     override fun toString(): String {
         val builder = StringBuilder()
         builder.append("creation $creation, live ")
         for ((bb, interval) in intervals) {
-            builder.append("$bb[${interval.begin}:${interval.begin}] ")
+            builder.append("$bb[${interval.begin}:${interval.end}] ")
         }
         return builder.toString()
     }
 }
 
-class LiveIntervals(private val liveness: Map<Value, LiveRange>) {
+class LiveIntervals(private val liveness: LinkedHashMap<LocalValue, LiveRange>) {
     override fun toString(): String {
         val builder = StringBuilder()
         for ((v, ranges) in liveness) {
@@ -69,30 +78,48 @@ class LiveIntervals(private val liveness: Map<Value, LiveRange>) {
         return builder.toString()
     }
 
-    operator fun iterator(): Iterator<Map.Entry<Value, LiveRange>> {
+    fun values(): Collection<LiveRange> {
+        return liveness.values
+    }
+
+    operator fun get(v: LocalValue): LiveRange {
+        return liveness[v]!!
+    }
+
+    operator fun iterator(): Iterator<Map.Entry<LocalValue, LiveRange>> {
         return liveness.iterator()
     }
 
     companion object {
-        fun evaluate(basicBlocks: BasicBlocks): LiveIntervals {
-            val liveness = hashMapOf<Value, LiveRange>()
+        private fun evaluateForArguments(liveness: MutableMap<LocalValue, LiveRange>, data: FunctionData) {
+            val loc = Location(data.blocks.begin(), 0)
+            data.arguments().forEach { liveness[it] = LiveRange(loc) }
+        }
 
-            for (bb in basicBlocks.preorder()) {
+        private fun evaluateForBasicBlock(liveness: MutableMap<LocalValue, LiveRange>, basicBlocks: BasicBlocks) {
+            for (bb in basicBlocks.bfsTraversal()) {
                 for ((index, inst) in bb.instructions.withIndex()) {
                     val location = Location(bb, index)
 
-                    if (inst is ValueInstruction) {
+                    /** New definition. */
+                    if (inst is ValueInstruction && inst.type() != Type.Void) {
                         liveness[inst] = LiveRange(location)
                     }
 
                     for (usage in inst.usages) {
-                        if (usage !is Instruction) {
+                        if (usage !is LocalValue) {
                             continue
                         }
                         liveness[usage]!!.registerUsage(location)
                     }
                 }
             }
+        }
+        fun evaluate(data: FunctionData): LiveIntervals {
+            val liveness = linkedMapOf<LocalValue, LiveRange>()
+
+            evaluateForArguments(liveness, data)
+            evaluateForBasicBlock(liveness, data.blocks)
             return LiveIntervals(liveness)
         }
     }

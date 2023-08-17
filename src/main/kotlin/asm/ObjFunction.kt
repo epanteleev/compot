@@ -1,7 +1,5 @@
 package asm
 
-import ir.Call
-
 data class ObjFunctionCreationException(override val message: String): Exception(message)
 
 private data class BuilderContext(var label: Label, var instructions: MutableList<CPUInstruction>)
@@ -12,17 +10,17 @@ class ObjFunction(val name: String) {
 
     init {
         val label = Label(name)
-        var insts = arrayListOf<CPUInstruction>()
+        val instructions = arrayListOf<CPUInstruction>()
 
-        instructions = linkedMapOf(Pair(label, insts))
-        activeContext = BuilderContext(label, insts)
+        this.instructions = linkedMapOf(Pair(label, instructions))
+        activeContext = BuilderContext(label, instructions)
     }
 
     private fun ctx(): BuilderContext {
         return activeContext
     }
 
-    private fun makeArithmetic(op: ArithmeticOp, first: Operand, second: Register): Operand {
+    private fun makeArithmetic(op: ArithmeticOp, first: AnyOperand, second: Register): Operand {
         ctx().instructions.add(Arithmetic(op, first, second))
         return second
     }
@@ -39,23 +37,23 @@ class ObjFunction(val name: String) {
         activeContext.instructions = newInstructions
     }
 
-    fun add(first: Operand, second: Register): Operand {
+    fun add(first: AnyOperand, second: Register): Operand {
         return makeArithmetic(ArithmeticOp.ADD, first, second)
     }
 
-    fun sub(first: Operand, second: Register) {
+    fun sub(first: AnyOperand, second: Register) {
         makeArithmetic(ArithmeticOp.SUB, first, second)
     }
 
-    fun mul(first: Operand, second: Register) {
+    fun mul(first: AnyOperand, second: Register) {
         makeArithmetic(ArithmeticOp.MUL, first, second)
     }
 
-    fun div(first: Operand, second: Register) {
+    fun div(first: AnyOperand, second: Register) {
         makeArithmetic(ArithmeticOp.DIV, first, second)
     }
 
-    fun xor(first: Operand, second: Register) {
+    fun xor(first: AnyOperand, second: Register) {
         makeArithmetic(ArithmeticOp.XOR, first, second)
     }
 
@@ -71,11 +69,15 @@ class ObjFunction(val name: String) {
         ctx().instructions.add(Push(reg))
     }
 
-    fun pop(toReg: Register) {
+    fun push(imm: Imm) {
+        ctx().instructions.add(Push(imm))
+    }
+
+    fun pop(toReg: GPRegister) {
         ctx().instructions.add(Pop(toReg))
     }
 
-    fun mov(src: Operand, des: Operand): Operand {
+    fun <T: Operand> mov(src: AnyOperand, des: T): T {
         ctx().instructions.add(Mov(src, des))
         return des
     }
@@ -84,7 +86,7 @@ class ObjFunction(val name: String) {
         ctx().instructions.add(Call(name))
     }
 
-    fun cmp(first: Register, second: Operand) {
+    fun cmp(first: Register, second: AnyOperand) {
         ctx().instructions.add(Cmp(first, second))
     }
 
