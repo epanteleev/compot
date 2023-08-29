@@ -154,6 +154,12 @@ data class Type(val kind: TypeKind, val indirection: Int) {
         return kind == other.kind && indirection == other.indirection
     }
 
+    override fun hashCode(): Int {
+        var result = kind.hashCode()
+        result = 31 * result + indirection
+        return result
+    }
+
     companion object {
         val U1  = Type(TypeKind.U1, 0)
 
@@ -169,5 +175,9 @@ data class Type(val kind: TypeKind, val indirection: Int) {
 
         val Void  = Type(TypeKind.VOID, -1)
         val UNDEF = Type(TypeKind.UNDEFINED, -1)
+
+        fun of(kind: TypeKind, indirections: Int): Type {
+            return Type(kind, indirections)
+        }
     }
 }

@@ -12,7 +12,7 @@ data class FunctionPrototype(val name: String, val returnType: Type, val argumen
     }
 }
 
-class FunctionData(val prototype: FunctionPrototype, private var argumentValues: MutableList<ArgumentValue>, var blocks: BasicBlocks) {
+class FunctionData(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, var blocks: BasicBlocks) {
     fun arguments(): List<ArgumentValue> {
         return argumentValues
     }
@@ -22,7 +22,7 @@ class FunctionData(val prototype: FunctionPrototype, private var argumentValues:
     }
 
     companion object {
-        fun create(name: String, returnType: Type, arguments: List<Type>, argumentValues: MutableList<ArgumentValue>): FunctionData {
+        fun create(name: String, returnType: Type, arguments: List<Type>, argumentValues: List<ArgumentValue>): FunctionData {
             val prototype = FunctionPrototype(name, returnType, arguments)
             return FunctionData(prototype, argumentValues, BasicBlocks.create())
         }

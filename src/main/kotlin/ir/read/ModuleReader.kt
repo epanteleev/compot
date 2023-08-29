@@ -2,6 +2,7 @@ package ir.read
 
 import ir.Module
 import ir.Type
+import ir.TypeKind
 import ir.builder.ModuleBuilder
 
 class ParseErrorException(expect: String, actual: String): Exception("Expect: $expect, but found $actual")
@@ -9,10 +10,6 @@ class ParseErrorException(expect: String, actual: String): Exception("Expect: $e
 class ModuleReader(string: String) {
     private val tokenIterator = Tokenizer(string).iterator()
     private val moduleBuilder = ModuleBuilder()
-
-    fun isTok(token: Token): Boolean {
-        return false
-    }
 
     private fun parseModule() {
         if (!tokenIterator.hasNext()) {
@@ -28,26 +25,84 @@ class ModuleReader(string: String) {
 
             tok = tokenIterator.next()
         }
+
+        while (tok is Define) {
+            parseFunction()
+            if (!tokenIterator.hasNext()) {
+                break
+            }
+
+            tok = tokenIterator.next()
+        }
+    }
+
+    private fun parseType(): Type {
+        val typeToken = tokenIterator.expectOrError<TypeToken>("return type")
+        val returnTypeKind = matchType[typeToken.type]
+            ?: throw ParseErrorException("unknown type ", typeToken.message())
+
+        return Type.of(returnTypeKind, typeToken.indirection)
+    }
+
+    private fun parseFunctionName(): String {
+        return tokenIterator.nextOrError("function name").let {
+            if (it !is Identifier) {
+                throw ParseErrorException("function name", it.message())
+            }
+            it.string
+        }
     }
 
     private fun parseExtern() {
-        val functionName = tokenIterator.nextOrError("function name")
-        if (functionName !is Identifier) {
-            throw ParseErrorException("function name", functionName.message())
-        }
+        //extern <returnType> <function name> ( <type1>, <type2>, ...)
+        val returnType = parseType()
+        val functionName = parseFunctionName()
 
-        val openParen = tokenIterator.nextOrError("'('")
-        if (openParen !is OpenParen) {
-            throw ParseErrorException("'('", functionName.message())
-        }
+        tokenIterator.expectOrError<OpenParen>("'('")
 
-        var tok = tokenIterator.nextOrError("')' or type")
-        while (tok !is CloseParen) {
-            if (tok !is TypeToken) {
-                throw ParseErrorException("type ", tok.message())
+        val argumentsType = arrayListOf<Type>()
+        do {
+            val type = parseType()
+            argumentsType.add(type)
+
+            val comma = tokenIterator.nextOrError("','")
+            if (comma is CloseParen) {
+                break
             }
 
-        }
+            if (comma !is Comma) {
+                throw ParseErrorException("type ", comma.message())
+            }
+        } while (true)
+
+        moduleBuilder.createExternFunction(functionName, returnType, argumentsType)
+    }
+
+    private fun parseFunction() {
+        // define <returnType> <functionName>(<value1>:<type1>, <value2>:<type2>,...)
+        val returnType = parseType()
+        val functionName = parseFunctionName()
+
+        tokenIterator.expectOrError<OpenParen>("'('")
+        val argumentsType = arrayListOf<Type>()
+        do {
+            val value = tokenIterator.expectOrError<ValueToken>("value")
+
+            tokenIterator.expectOrError<Colon>("';'")
+            val type = parseType()
+            argumentsType.add(type)
+
+            val comma = tokenIterator.nextOrError("','")
+            if (comma is CloseParen) {
+                break
+            }
+
+            if (comma !is Comma) {
+                throw ParseErrorException("type ", comma.message())
+            }
+        } while (true)
+
+        val fn = moduleBuilder.createFunction(functionName, returnType, argumentsType)
     }
 
     fun read(): Module {
@@ -57,15 +112,16 @@ class ModuleReader(string: String) {
 
     companion object {
         private val matchType = hashMapOf(
-            "u1"  to Type.U1,
-            "u8"  to Type.U8,
-            "u16" to Type.U16,
-            "u32" to Type.U32,
-            "u64" to Type.U64,
-            "i8"  to Type.I8,
-            "i16" to Type.I16,
-            "i32" to Type.I32,
-            "i64" to Type.I16
+            "u1"   to TypeKind.U1,
+            "u8"   to TypeKind.U8,
+            "u16"  to TypeKind.U16,
+            "u32"  to TypeKind.U32,
+            "u64"  to TypeKind.U64,
+            "i8"   to TypeKind.I8,
+            "i16"  to TypeKind.I16,
+            "i32"  to TypeKind.I32,
+            "i64"  to TypeKind.I16,
+            "void" to TypeKind.VOID
         )
     }
 }

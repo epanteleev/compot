@@ -1,4 +1,3 @@
-import asm.*
 import ir.*
 import ir.builder.ModuleBuilder
 import ir.codegen.LinearScan

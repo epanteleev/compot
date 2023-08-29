@@ -1,7 +1,8 @@
 package read
 import ir.read.*
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.assertThrows
+import java.lang.RuntimeException
+import kotlin.test.*
 
 class TokenizerTest {
     @Test
@@ -24,16 +25,28 @@ class TokenizerTest {
         val iterator = tokenizer.iterator()
 
         assertEquals(ValueToken("3", 0, 0), iterator.next())
+        assertTrue(iterator.hasNext())
         assertEquals(Equal(0, 2), iterator.next())
+        assertTrue(iterator.hasNext())
         assertEquals(Identifier("gep", 0, 3), iterator.next())
+        assertTrue(iterator.hasNext())
         assertEquals(TypeToken("u64", 2, 0, 7), iterator.next())
+        assertTrue(iterator.hasNext())
         assertEquals(ValueToken("129", 0, 13), iterator.next())
+        assertTrue(iterator.hasNext())
         assertEquals(Comma(0, 17), iterator.next())
+        assertTrue(iterator.hasNext())
         assertEquals(ValueToken("1", 0, 19), iterator.next())
+        assertTrue(iterator.hasNext())
         assertEquals(ValueToken("43", 1, 0), iterator.next())
+        assertTrue(iterator.hasNext())
         assertEquals(Equal(1, 3), iterator.next())
+        assertTrue(iterator.hasNext())
         assertEquals(Identifier("load", 1, 4), iterator.next())
+        assertTrue(iterator.hasNext())
+        assertTrue(iterator.hasNext())
         assertEquals(TypeToken("u64", 1, 1, 9), iterator.next())
+        assertTrue(iterator.hasNext())
     }
 
     @Test
@@ -57,5 +70,23 @@ class TokenizerTest {
         val tokenizer = Tokenizer("3val")
         val iterator = tokenizer.iterator()
         assertEquals(Identifier("3val", 0, 0), iterator.next())
+    }
+
+    @Test
+    fun readWithErrorTest() {
+        assertThrows<RuntimeException> {
+            val tokenizer = Tokenizer("3.val\n g")
+            tokenizer.iterator().next()
+        }
+
+        assertThrows<RuntimeException> {
+            val tokenizer = Tokenizer("3.0val")
+            tokenizer.iterator().next()
+        }
+
+        assertThrows<RuntimeException> {
+            val tokenizer = Tokenizer("3..0val")
+            tokenizer.iterator().next()
+        }
     }
 }

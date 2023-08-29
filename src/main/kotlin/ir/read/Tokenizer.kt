@@ -6,15 +6,17 @@ class Tokenizer(val data: String) {
     private var globalPosition = 0
     private var line = 0
     private var pos = 0
-    private val tokens = arrayListOf<Token>()
 
-    init {
-        while (!isEnd()) {
-            tokens.add(nextToken())
+    private fun remainsLine(begin: Int): String {
+        val end = data.indexOf('\n', begin)
+        if (end == -1) {
+            return data.substring(begin, data.length - begin)
+        } else {
+            return data.substring(begin, end)
         }
     }
 
-    private fun isEnd(): Boolean {
+    internal fun isEnd(): Boolean {
         return globalPosition >= data.length
     }
 
@@ -38,7 +40,11 @@ class Tokenizer(val data: String) {
         return data[globalPosition]
     }
 
-    private fun skipWhitespace() {
+    internal fun skipWhitespace() {
+        if (isEnd()) {
+            return
+        }
+
         var ch = getChar()
         while (ch.isWhitespace()) {
             if (ch == '\n') {
@@ -64,12 +70,14 @@ class Tokenizer(val data: String) {
         return data.substring(begin, end)
     }
 
-    private fun readIdentifierOrKeyword(): Token {
+    private fun readIdentifierOrKeywordOrType(): Token {
         val string = readString()
         if (string == "define") {
             return Define(line, pos)
         } else if (string == "extern") {
             return Extern(line, pos)
+        } else if (string == "void") {
+            return TypeToken("void", 0, line, pos)
         }
 
         return Identifier(string, line, pos - string.length)
@@ -80,7 +88,7 @@ class Tokenizer(val data: String) {
         nextChar()
         if (!getChar().isDigit()) {
             previousChar()
-            return readIdentifierOrKeyword()
+            return readIdentifierOrKeywordOrType()
         }
 
         while (!isEnd() && getChar().isDigit()) {
@@ -104,38 +112,45 @@ class Tokenizer(val data: String) {
 
     private fun readNumberOrIdentifier(): Token {
         val begin = globalPosition
+        val pos = pos
         nextChar()
         while (!isEnd() && getChar().isDigit()) {
             nextChar()
         }
 
         if (getChar() == '.') {
+            //Floating point value
             nextChar()
             while (!isEnd() && getChar().isDigit()) {
                 nextChar()
             }
 
+            if (!isEnd() && !getChar().isWhitespace()) {
+                throw RuntimeException("$line:$pos cannot parse floating point value: ${remainsLine(begin)}")
+            }
             val floatString = data.substring(begin, globalPosition)
             val float = floatString.toDoubleOrNull()
                 ?: throw RuntimeException("Cannot to be converted to floating point value: $floatString")
-            return FloatValue(float, line, pos - floatString.length)
+            return FloatValue(float, line, pos)
 
         } else if (getChar().isLetter()) {
+            // Identifier
             while (!isEnd() && !getChar().isWhitespace()) {
                 nextChar()
             }
 
-            val end = globalPosition
-            val string = data.substring(begin, end)
-            return Identifier(string, line, pos - string.length)
+            val string = data.substring(begin, globalPosition)
+            return Identifier(string, line, pos)
 
         } else {
+            // Integer
             val intString = data.substring(begin, globalPosition)
-            val intOrNull = intString.toLongOrNull() ?: throw RuntimeException("Cannot to be converted to integer: $intString")
-            return IntValue(intOrNull, line, pos - intString.length)
+            val intOrNull = intString.toLongOrNull() ?:
+                throw RuntimeException("$line:$pos cannot to be converted to integer: $intString")
+            return IntValue(intOrNull, line, pos)
         }
     }
-    private fun nextToken(): Token {
+    internal fun nextToken(): Token {
         skipWhitespace()
         val ch = getChar()
         val tok = when (ch) {
@@ -158,18 +173,18 @@ class Tokenizer(val data: String) {
         } else if (ch == 'u' || ch == 'i' || ch == 'f') {
             return readTypeOrIdentifier()
         } else if (ch.isLetter()) {
-            return readIdentifierOrKeyword()
+            return readIdentifierOrKeywordOrType()
         } else if (ch == '%') {
             nextChar()
             val name = readString()
             val start = pos - 1 - name.length
             return ValueToken(name, line, start)
         } else {
-            throw RuntimeException("Cannot parse: ${data.substring(globalPosition)}")
+            throw RuntimeException("$line:$pos cannot parse: ${remainsLine(globalPosition)}")
         }
     }
 
     operator fun iterator(): TokenIterator {
-        return TokenIterator(tokens.iterator())
+        return TokenIterator(this)
     }
 }

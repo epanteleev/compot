@@ -73,15 +73,23 @@ class ModuleBuilder {
         activePoint = ActivePoint(ap.function, bb, ap.allocatedLabel, ap.value)
     }
 
-    fun createFunction(name: String, returnType: Type, arguments: List<Type>): Function {
+    fun createFunction(name: String, returnType: Type, argumentTypes: List<Type>): Function {
+        val argumentValues = {
+            argumentTypes.mapTo(arrayListOf()) {
+                ArgumentValue(allocateValue(), it)
+            }
+        }
+        return createFunction(name, returnType, argumentTypes, argumentValues)
+    }
+
+    fun createFunction(name: String, returnType: Type, argumentTypes: List<Type>, argumentValues: () -> List<ArgumentValue>): Function {
         val functionIndex = nextFunction
         nextFunction += 1
         val function = Function(functionIndex, name, returnType)
         val startBB = BasicBlock.empty(Label.entry)
         activePoint = ActivePoint(function, startBB, 0, 0)
 
-        val argumentValues = arguments.mapTo(arrayListOf()) { ArgumentValue(allocateValue(), it) }
-        val data = FunctionData.create(name, returnType, arguments, argumentValues)
+        val data = FunctionData.create(name, returnType, argumentTypes, argumentValues())
         data.blocks.putBlock(startBB)
         val bb = activePoint!!.bb
 

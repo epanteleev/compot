@@ -1,23 +1,35 @@
 package ir.read
 
-class TokenIterator(val iterator: Iterator<Token>): Iterator<Token> {
+import kotlin.reflect.KClass
+
+class TokenIterator(val tokenizer: Tokenizer): Iterator<Token> {
 
     override fun hasNext(): Boolean {
-        return iterator.hasNext()
+        tokenizer.skipWhitespace()
+        return !tokenizer.isEnd()
     }
 
     fun hasNextOrError(error: () -> Unit) {
-        if (!iterator.hasNext()) {
+        if (!hasNext()) {
             error()
         }
     }
 
     override fun next(): Token {
-        return iterator.next()
+        return tokenizer.nextToken()
     }
 
     fun nextOrError(message: String): Token {
         hasNextOrError { throw EOFException(message) }
-        return iterator.next()
+        return next()
+    }
+
+    inline fun <reified T>expectOrError(errorMessage: String): T {
+        val tok = nextOrError(errorMessage)
+
+        if (tok !is T) {
+            throw ParseErrorException(errorMessage, tok.message())
+        }
+        return tok
     }
 }
