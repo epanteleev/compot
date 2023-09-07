@@ -3,7 +3,7 @@ package ir
 import java.lang.RuntimeException
 
 abstract class Instruction(protected val tp: Type, var usages: ArrayList<Value>) {
-    val usedInstructions: List<Instruction> by lazy { usedInstructionInternal() }
+    private val usedInstructions: List<Instruction> by lazy { usedInstructionInternal() }
 
     private fun usedInstructionInternal(): MutableList<Instruction> {
         return usages.filterIsInstanceTo<Instruction, MutableList<Instruction>>(arrayListOf())
@@ -15,11 +15,14 @@ abstract class Instruction(protected val tp: Type, var usages: ArrayList<Value>)
         }
     }
 
+    fun usedIn(): List<Instruction> {
+        return usedInstructions
+    }
     abstract fun dump(): String
 }
 
 abstract class ValueInstruction(protected val define: Int, tp: Type, usages: ArrayList<Value>): Instruction(tp, usages), LocalValue {
-    fun defined(): Int {
+    override fun defined(): Int {
         return define
     }
 

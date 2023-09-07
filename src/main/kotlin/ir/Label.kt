@@ -17,7 +17,7 @@ abstract class Label(open val index: Int) {
     }
 }
 
-data class BlockViewer(override val index: Int): Label(index) {
+class BlockViewer(index: Int): Label(index) {
     override fun index(): Int {
         return index
     }

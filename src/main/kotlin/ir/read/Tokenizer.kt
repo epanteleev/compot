@@ -160,7 +160,8 @@ class Tokenizer(val data: String) {
             ')' -> CloseParen(line, pos)
             '=' -> Equal(line, pos)
             ',' -> Comma(line, pos)
-            ';' -> Colon(line, pos)
+            ':' -> Colon(line, pos)
+            '.' -> Dot(line, pos)
             else -> null
         }
         if (tok != null) {

@@ -11,13 +11,12 @@ class DumpModule private constructor(private val builder: StringBuilder) {
             builder.append('\n')
         }
 
-        for (fn in module.functions) {
+        for (fn in module.functions()) {
             dumpFunctionData(fn)
         }
     }
 
-    private fun dumpFunctionData(fn: Map.Entry<ir.Function, FunctionData>) {
-        val functionData = fn.value
+    private fun dumpFunctionData(functionData: FunctionData) {
         dumpPrototype(functionData.prototype, functionData.arguments())
         builder.append("{\n")
 
@@ -37,7 +36,7 @@ class DumpModule private constructor(private val builder: StringBuilder) {
     }
 
     private fun dumpPrototype(prototype: FunctionPrototype, argumentValues: List<Value>) {
-        builder.append("define ${prototype.returnType} ${prototype.name}(")
+        builder.append("define ${prototype.type()} ${prototype.name}(")
         argumentValues.joinTo(builder) { argumentValue -> "$argumentValue:${argumentValue.type()}" }
         builder.append(") ")
     }

@@ -63,30 +63,36 @@ data class CloseBrace(override val line: Int, override val pos: Int): Token(line
 
 data class Equal(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
-        return "'='"
+        return "$line:$pos '='"
     }
 }
 
 data class Comma(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
-        return "','"
+        return "$line:$pos ','"
+    }
+}
+
+data class Dot(override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "$line:$pos '.'"
     }
 }
 
 data class Define(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
-        return "'define'"
+        return "$line:$pos 'define'"
     }
 }
 
 data class Colon(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
-        return "';'"
+        return "$line:$pos ':'"
     }
 }
 
 data class Extern(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
-        return "'extern'"
+        return "$line:$pos 'extern'"
     }
 }

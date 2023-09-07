@@ -46,8 +46,8 @@ class BasicBlocks private constructor(private val blocks: MutableList<BasicBlock
     }
 
     companion object {
-        fun create(): BasicBlocks {
-            return BasicBlocks(arrayListOf())
+        fun create(startBB: BasicBlock): BasicBlocks {
+            return BasicBlocks(arrayListOf(startBB))
         }
     }
 }

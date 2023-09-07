@@ -89,8 +89,8 @@ class BasicBlock(override val index: Int) : Label(index), Collection<Instruction
     }
 
     companion object {
-        fun empty(label: Label): BasicBlock {
-            return BasicBlock(label.index())
+        fun empty(index: Int): BasicBlock {
+            return BasicBlock(index)
         }
     }
 }

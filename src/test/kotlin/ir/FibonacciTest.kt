@@ -9,8 +9,9 @@ import kotlin.test.assertTrue
 
 class FibonacciTest {
     private fun withBasicBlocks(): BasicBlocks {
-        val builder = ModuleBuilder.create()
-        val fn = builder.createFunction("fib", Type.I32, arrayListOf(Type.I32))
+        val moduleBuilder = ModuleBuilder.create()
+        val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
+        val builder = moduleBuilder.createFunction("fib", Type.I32, arrayListOf(Type.I32))
 
         val n = builder.argument(0)
 
@@ -81,12 +82,12 @@ class FibonacciTest {
         val v10 = builder.load(retVal)
         builder.ret(v10)
 
-        val module = builder.build()
+        val module = moduleBuilder.build()
         VerifySSA.run(module)
 
         println(DumpModule.apply(module))
 
-        val cfg = module.findFunction(fn).blocks
+        val cfg = module.findFunction(prototype).blocks
         //println(JoinPointSet.evaluate(cfg))
         println(DumpModule.apply(Mem2Reg.run(module)))
         return cfg

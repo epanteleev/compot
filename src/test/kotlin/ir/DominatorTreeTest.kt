@@ -7,8 +7,9 @@ import kotlin.test.assertTrue
 class DominatorTreeTest {
 
     private fun withBasicBlocks(): BasicBlocks {
-        val builder = ModuleBuilder.create()
-        val fn = builder.createFunction("hello", Type.U16, arrayListOf(Type.U16.ptr()))
+        val moduleBuilder = ModuleBuilder.create()
+        val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.U16.ptr()))
+        val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(Type.U16.ptr()))
         val b1 = builder.createLabel()
         builder.branch(b1)
 
@@ -43,10 +44,10 @@ class DominatorTreeTest {
         builder.switchLabel(exit)
         builder.ret(U16Value(0))
 
-        val module = builder.build()
+        val module = moduleBuilder.build()
 
         //println(DumpModule.apply(module))
-        return module.findFunction(fn).blocks
+        return module.findFunction(prototype).blocks
     }
 
     @Test

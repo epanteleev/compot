@@ -7,8 +7,8 @@ import ir.utils.TypeCheck
 data class ValidateSSAErrorException(override val message: String): Exception(message)
 
 class VerifySSA private constructor(private val functionData: FunctionData) {
-    private val dominatorTree = functionData.blocks.dominatorTree()
-    private val creation = CreationInfo.create(functionData.blocks)
+    private val dominatorTree by lazy { functionData.blocks.dominatorTree() }
+    private val creation by lazy { CreationInfo.create(functionData.blocks) }
 
     private fun pass() {
         for (bb in functionData.blocks) {
@@ -32,6 +32,7 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
         if (bb.equals(Label.entry)) {
             assert(bb.predecessors.isEmpty()) { "Begin block must not have predecessors." }
         }
+        assert(!bb.isEmpty()) { "Block must not be empty" }
 
         when (bb.flowInstruction()) {
             is Branch -> {
@@ -127,7 +128,7 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
 
     companion object {
         fun run(module: Module): Module {
-            module.functions.forEach { (_, data) ->
+            module.functions.forEach { data ->
                 VerifySSA(data).pass()
             }
 

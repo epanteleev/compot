@@ -188,7 +188,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
 
     companion object {
         fun run(module: Module): Module {
-            module.functions.forEach { (_, fnData) ->
+            module.functions.forEach { fnData ->
                 val cfg = fnData.blocks
 
                 val dominatorTree = cfg.dominatorTree()

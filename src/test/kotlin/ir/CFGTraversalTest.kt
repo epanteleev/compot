@@ -9,8 +9,9 @@ import kotlin.test.assertTrue
 class CFGTraversalTest {
 
     private fun withBasicBlocks(): BasicBlocks {
-        val builder = ModuleBuilder.create()
-        val fn = builder.createFunction("hello", Type.U16, arrayListOf(Type.U16.ptr(), Type.U64.ptr(), Type.U64.ptr()))
+        val moduleBuilder = ModuleBuilder.create()
+        val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.U16.ptr(), Type.U64.ptr(), Type.U64.ptr()))
+        val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(Type.U16.ptr(), Type.U64.ptr(), Type.U64.ptr()))
         val arg1 = builder.argument(0)
         val arg2 = builder.argument(1)
         val arg3 = builder.argument(2)
@@ -36,9 +37,9 @@ class CFGTraversalTest {
         val arithm = builder.arithmeticBinary(U16Value(1337), ArithmeticBinaryOp.Sub, U16Value(64))
         builder.ret(arithm)
 
-        val module = builder.build()
+        val module = moduleBuilder.build()
         VerifySSA.run(module)
-        return module.findFunction(fn).blocks
+        return module.findFunction(prototype).blocks
     }
 
 

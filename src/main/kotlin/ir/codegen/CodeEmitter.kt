@@ -97,7 +97,7 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
     }
 
     private fun emitReturn(ret: Return) {
-        val returnType = data.prototype.returnType
+        val returnType = data.prototype.type()
         if (returnType.isArithmetic() || returnType.isPointer()) {
             val value = valueToRegister.get(ret.value())
             objFunc.mov(value, temp1(value.size))
@@ -208,8 +208,8 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         fun codegen(module: Module): Assembler {
             val asm = Assembler()
 
-            for ((fn, data) in module.functions) {
-                CodeEmitter(data, asm.mkFunction(fn.name)).emit()
+            for (data in module.functions()) {
+                CodeEmitter(data, asm.mkFunction(data.prototype.name)).emit()
             }
             return asm
         }

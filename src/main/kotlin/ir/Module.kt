@@ -2,8 +2,13 @@ package ir
 
 data class ModuleException(override val message: String): Exception(message)
 
-class Module(internal val functions: Map<Function, FunctionData>, internal val externFunctions: Set<ExternFunction>) {
-    fun findFunction(function: Function): FunctionData {
-        return functions[function] ?: throw ModuleException("Cannot find function: $function")
+class Module(internal val functions: List<FunctionData>, internal val externFunctions: Set<ExternFunction>) {
+    fun findFunction(prototype: FunctionPrototype): FunctionData {
+        return functions.find { it.prototype == prototype }
+            ?: throw ModuleException("Cannot find function: $prototype")
+    }
+
+    fun functions(): Iterator<FunctionData> {
+        return functions.iterator()
     }
 }

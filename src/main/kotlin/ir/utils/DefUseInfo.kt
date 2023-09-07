@@ -24,7 +24,7 @@ class DefUseInfo private constructor(private val defUse: MutableMap<Instruction,
             val defUseInfo = DefUseInfo(hashMapOf())
             for (bb in basicBlocks) {
                 for (instruction in bb) {
-                    defUseInfo.addUsages(instruction, instruction.usedInstructions)
+                    defUseInfo.addUsages(instruction, instruction.usedIn())
                 }
             }
 

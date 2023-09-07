@@ -1,11 +1,10 @@
 package ir.read
 
-import ir.Module
-import ir.Type
-import ir.TypeKind
+import ir.*
+import ir.builder.FunctionDataBuilder
 import ir.builder.ModuleBuilder
 
-class ParseErrorException(expect: String, actual: String): Exception("Expect: $expect, but found $actual")
+class ParseErrorException(expect: String, actual: String): Exception("Found: $actual, but expect $expect")
 
 class ModuleReader(string: String) {
     private val tokenIterator = Tokenizer(string).iterator()
@@ -53,6 +52,18 @@ class ModuleReader(string: String) {
         }
     }
 
+    private fun parseOperand(builder: FunctionDataBuilder, errorMessage: String): Value {
+        return tokenIterator.nextOrError(errorMessage).let {
+            when (it) {
+                is IntValue   -> I64Value(it.int)
+                is FloatValue -> TODO("Unimplemented yet")
+                is ValueToken -> builder.findValue(it.name.toInt()) ?:
+                    throw RuntimeException("in ${it.line}:${it.pos} undefined value")
+                else -> throw ParseErrorException("constant or value", it.message())
+            }
+        }
+    }
+
     private fun parseExtern() {
         //extern <returnType> <function name> ( <type1>, <type2>, ...)
         val returnType = parseType()
@@ -85,11 +96,14 @@ class ModuleReader(string: String) {
 
         tokenIterator.expectOrError<OpenParen>("'('")
         val argumentsType = arrayListOf<Type>()
+        val argumentValue = arrayListOf<ArgumentValue>()
+
         do {
             val value = tokenIterator.expectOrError<ValueToken>("value")
 
             tokenIterator.expectOrError<Colon>("';'")
             val type = parseType()
+            argumentValue.add(ArgumentValue(value.name.toInt(), type))
             argumentsType.add(type)
 
             val comma = tokenIterator.nextOrError("','")
@@ -102,7 +116,38 @@ class ModuleReader(string: String) {
             }
         } while (true)
 
-        val fn = moduleBuilder.createFunction(functionName, returnType, argumentsType)
+        val fn = moduleBuilder.createFunction(functionName, returnType, argumentsType, argumentValue)
+
+        tokenIterator.expectOrError<OpenBrace>("'{'")
+
+        val tok = tokenIterator.next()
+        while (tok !is OpenBrace) {
+            val dot = tokenIterator.nextOrError("'.'")
+            if (dot is Dot) {
+                val label = tokenIterator.expectOrError<Identifier>("label name")
+            }
+            
+            tokenIterator.expectOrError<Colon>("label name with ':'")
+
+            parseInstruction(fn, tok)
+        }
+    }
+
+    private fun parseInstruction(builder: FunctionDataBuilder, currentTok: Token) {
+        if (currentTok is ValueToken) {
+            tokenIterator.expectOrError<Equal>("'='")
+
+            val instruction = tokenIterator.expectOrError<Identifier>("instruction name")
+            if (instruction.string == "add") {
+                val resultType = tokenIterator.expectOrError<TypeToken>("result type")
+                val first = parseOperand(builder, "first operand")
+                tokenIterator.expectOrError<Comma>("','")
+
+                val second = parseOperand(builder, "second operand")
+
+                builder.arithmeticBinary(first, ArithmeticBinaryOp.Add, second)
+            }
+        }
     }
 
     fun read(): Module {

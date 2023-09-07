@@ -1,6 +1,7 @@
 package ir.codegen
 
 import ir.ArithmeticBinaryOp
+import ir.FunctionPrototype
 import ir.Type
 import ir.builder.ModuleBuilder
 import ir.pass.transform.Mem2Reg
@@ -11,10 +12,11 @@ import kotlin.test.Test
 class ManyArgumentsTest {
     @Test
     fun test() {
-        val builder = ModuleBuilder.create()
+        val moduleBuilder = ModuleBuilder.create()
 
         val argumentTypes = arrayListOf(Type.U64, Type.U64, Type.U64, Type.U64, Type.U64, Type.U64, Type.U64, Type.U64)
-        val fn = builder.createFunction("sum8", Type.U64, argumentTypes)
+        val prototype = FunctionPrototype("sum8", Type.U64, argumentTypes)
+        val builder = moduleBuilder.createFunction("sum8", Type.U64, argumentTypes)
         val arg1 = builder.argument(0)
         val arg2 = builder.argument(1)
         val arg3 = builder.argument(2)
@@ -66,7 +68,7 @@ class ManyArgumentsTest {
         val f2 = builder.load(arg8Alloc)
         val add7 = builder.arithmeticBinary(add6, ArithmeticBinaryOp.Add, f2)
 
-        val printInt = builder.createExternFunction("printInt", Type.Void, arrayListOf(Type.U64))
+        val printInt = moduleBuilder.createExternFunction("printInt", Type.Void, arrayListOf(Type.U64))
         builder.call(printInt, arrayListOf(add7))
 
         builder.store(regValue, add7)
@@ -74,18 +76,18 @@ class ManyArgumentsTest {
         val ret = builder.load(regValue)
         builder.ret(ret)
 
-        val module = builder.build()
+        val module = moduleBuilder.build()
 
         println(DumpModule.apply(module))
 
-        val data = module.findFunction(fn)
+        val data = module.findFunction(prototype)
         println(data.liveness())
         println(LinearScan.alloc(data))
         println(CodeEmitter.codegen(module))
 
         Mem2Reg.run(module)
         println(DumpModule.apply(module))
-        println(LinearScan.alloc(module.findFunction(fn)))
+        println(LinearScan.alloc(module.findFunction(prototype)))
         println(CodeEmitter.codegen(module))
     }
 }
