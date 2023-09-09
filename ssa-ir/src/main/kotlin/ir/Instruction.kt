@@ -89,7 +89,6 @@ enum class ArithmeticBinaryOp {
     Mod,
     Div,
     Shr,
-    Sar,
     Shl,
     And,
     Or,
@@ -103,7 +102,6 @@ enum class ArithmeticBinaryOp {
             Mod -> "mod"
             Div -> "div"
             Shr -> "shr"
-            Sar -> "sar"
             Shl -> "shl"
             And -> "and"
             Or  -> "or"
@@ -144,9 +142,9 @@ enum class CastType {
     }
 }
 
-class IntCompare(index: Int, a: Value, val predicate: IntPredicate, b: Value) : ValueInstruction(index, Type.U1, arrayListOf(a, b)) {
+class IntCompare(index: Int, a: Value, private val predicate: IntPredicate, b: Value) : ValueInstruction(index, Type.U1, arrayListOf(a, b)) {
     override fun dump(): String {
-        return "%$define = icmp $predicate ${first()}, ${second()}"
+        return "%$define = icmp $predicate ${first().type()} ${first()}, ${second()}"
     }
 
     fun first(): Value {
@@ -189,6 +187,10 @@ class StackAlloc(index: Int, ty: Type, val size: Long): ValueInstruction(index, 
 }
 
 class Call(index: Int, tp: Type, val func: AnyFunction, args: ArrayList<Value>): ValueInstruction(index, tp, args) {
+    constructor(func: AnyFunction, args: ArrayList<Value>) : this(Value.UNDEF.defined(), Type.Void, func, args) {
+        assert(func.type() == Type.Void)
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -213,7 +215,12 @@ class Call(index: Int, tp: Type, val func: AnyFunction, args: ArrayList<Value>):
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%$define = call $tp ${func.name}(")
+        if (type() == Type.Void) {
+            builder.append("call $tp ${func.name}(")
+        } else {
+            builder.append("%$define = call $tp ${func.name}(")
+        }
+
         usages.joinTo(builder) { "$it:${it.type()}"}
         builder.append(")")
         return builder.toString()
@@ -246,13 +253,13 @@ class Cast(index: Int, ty: Type, val castType: CastType, value: Value): ValueIns
 
 class Phi(index: Int, ty: Type, private val incoming: List<Label>, incomingValue: ArrayList<Value>): ValueInstruction(index, ty, incomingValue) {
     override fun dump(): String {
-        val bulder = StringBuilder()
-        bulder.append("%$define = phi $tp ")
-
-        for ((v, l) in usages.zip(incoming)) {
-            bulder.append("[$v, $l]")
+        val builder = StringBuilder()
+        builder.append("%$define = phi $tp [")
+        usages.zip(incoming).joinTo(builder) {
+            "${it.first}: ${it.second}"
         }
-        return bulder.toString()
+        builder.append(']')
+        return builder.toString()
     }
 
     override fun renameUsages(fn: (Value) -> Value) {
@@ -312,7 +319,7 @@ class Branch(target: BasicBlock): TerminateInstruction(arrayListOf(), arrayOf(ta
 
 class BranchCond(value: Value, onTrue: BasicBlock, onFalse: BasicBlock): TerminateInstruction(arrayListOf(value), arrayOf(onTrue, onFalse)) {
     override fun dump(): String {
-        return "br i1 ${condition()} label ${onTrue()}, label ${onFalse()} "
+        return "br u1 ${condition()} label ${onTrue()}, label ${onFalse()} "
     }
 
     fun condition(): Value {

@@ -24,7 +24,7 @@ class DumpModule private constructor(private val builder: StringBuilder) {
             val pred = bb.predecessors
             builder.append("$bb:\t")
             if (pred.isNotEmpty()) {
-                builder.append("pred=")
+                builder.append("; pred=")
                 pred.joinTo(builder)
             }
             builder.append('\n')

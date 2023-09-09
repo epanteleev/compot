@@ -25,10 +25,6 @@ class FunctionDataBuilder private constructor(
         return bb
     }
 
-    fun build(): FunctionData {
-        return FunctionData.create(prototype, blocks, argumentValues)
-    }
-
     private fun withOutput(f: (Int) -> ValueInstruction): Value {
         val value = allocateValue()
         val instruction = f(value)
@@ -41,6 +37,14 @@ class FunctionDataBuilder private constructor(
         bb.append(instruction)
     }
 
+    fun begin(): BasicBlock {
+        return blocks.begin()
+    }
+
+    fun build(): FunctionData {
+        return FunctionData.create(prototype, blocks, argumentValues)
+    }
+
     fun createLabel(): Label = allocateBlock()
 
     fun switchLabel(label: Label) {
@@ -48,6 +52,10 @@ class FunctionDataBuilder private constructor(
     }
 
     fun argument(index: Int): Value = argumentValues[index]
+
+    fun arguments(): List<ArgumentValue> {
+        return argumentValues
+    }
 
     fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): Value {
         return withOutput { it: Int -> ArithmeticUnary(it, value.type(), op, value) }
@@ -89,6 +97,12 @@ class FunctionDataBuilder private constructor(
     }
 
     fun call(func: AnyFunction, args: ArrayList<Value>): Value {
+        if (func.type() == Type.Void) {
+            val call = Call(func, args)
+            insert(call)
+            return Value.UNDEF
+        }
+
         val call = withOutput { it: Int -> Call(it, func.type(), func, args) }
         if (!TypeCheck.checkCall(call as Call)) {
             throw ModuleException("Inconsistent types: ${call.dump()}")
@@ -154,17 +168,6 @@ class FunctionDataBuilder private constructor(
 
         return phi
     }
-
-    fun findValue(index: Int): LocalValue? {
-        for (bb in blocks) {
-            for (value in bb) {
-                if (value is LocalValue && value.defined() == index) {
-                    return value
-                }
-            }
-        }
-        return null
-    }
     
     companion object {
         fun create(
@@ -178,7 +181,7 @@ class FunctionDataBuilder private constructor(
             val startBB = BasicBlock.empty(Label.entry.index())
             val basicBlocks = BasicBlocks.create(startBB)
 
-            val builder = FunctionDataBuilder(prototype, argumentValues, basicBlocks, maxIndex.defined())
+            val builder = FunctionDataBuilder(prototype, argumentValues, basicBlocks, maxIndex.defined() + 1)
             builder.switchLabel(startBB)
             return builder
         }

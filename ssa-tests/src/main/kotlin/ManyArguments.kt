@@ -1,6 +1,8 @@
 import ir.*
 import ir.builder.ModuleBuilder
+import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
+import startup.Driver
 
 fun main() {
     val moduleBuilder = ModuleBuilder.create()
@@ -65,5 +67,7 @@ fun main() {
     builder.ret(ret)
 
     val module = moduleBuilder.build()
-    Driver.output("manyArguments", module, Mem2Reg::run)
+    Driver.output("manyArguments", module) {
+        VerifySSA.run(Mem2Reg.run(VerifySSA.run(it)))
+    }
 }

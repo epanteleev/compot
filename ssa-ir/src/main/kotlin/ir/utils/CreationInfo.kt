@@ -16,6 +16,9 @@ class CreationInfo private constructor(private val creationInfo: MutableMap<Valu
                     if (instruction !is ValueInstruction) {
                         continue
                     }
+                    if (instruction.type() == Type.Void) {
+                        continue
+                    }
 
                     creationInfo[instruction] = Location(bb, idx)
                 }

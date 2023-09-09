@@ -14,6 +14,8 @@ enum class TypeKind {
     I16,
     I32,
     I64,
+    F32,
+    F64,
     VOID,
     UNDEFINED;
 
@@ -28,6 +30,8 @@ enum class TypeKind {
             I16       -> "i16"
             I32       -> "i32"
             I64       -> "i64"
+            F32       -> "f32"
+            F64       -> "f64"
             VOID      -> "void"
             UNDEFINED -> "undef"
         }
@@ -63,11 +67,10 @@ data class Type(val kind: TypeKind, val indirection: Int) {
     }
 
     override fun toString(): String {
-        val builder = StringBuilder()
+        val builder = StringBuilder(kind.toString())
         for (i in 0 until indirection) {
             builder.append('*')
         }
-        builder.append(kind)
         return builder.toString()
     }
 
@@ -75,11 +78,14 @@ data class Type(val kind: TypeKind, val indirection: Int) {
         if (indirection != 0) {
             return false
         }
-        val isArithm = when (kind) {
-            TypeKind.U1, TypeKind.UNDEFINED, TypeKind.VOID -> false
-            else                                           -> true
+        return when (kind) {
+            TypeKind.U1,
+            TypeKind.UNDEFINED,
+            TypeKind.VOID,
+            TypeKind.F32,
+            TypeKind.F64 -> false
+            else         -> true
         }
-        return isArithm
     }
 
     fun isUnsigned(): Boolean {
@@ -96,6 +102,13 @@ data class Type(val kind: TypeKind, val indirection: Int) {
         }
     }
 
+    fun isFloat(): Boolean {
+        return when (kind) {
+            TypeKind.F32, TypeKind.F64 -> true
+            else                       -> false
+        }
+    }
+
     /** Return size in bytes of given type. */
     fun size(): Int {
         if (isPointer()) {
@@ -106,8 +119,8 @@ data class Type(val kind: TypeKind, val indirection: Int) {
             TypeKind.U1 -> throw TypeErrorException("Cannot get size of $kind")
             TypeKind.U8, TypeKind.I8   -> 1
             TypeKind.U16, TypeKind.I16 -> 2
-            TypeKind.U32, TypeKind.I32 -> 4
-            TypeKind.U64, TypeKind.I64 -> 8
+            TypeKind.U32, TypeKind.I32, TypeKind.F32 -> 4
+            TypeKind.U64, TypeKind.I64, TypeKind.F64 -> 8
             else -> throw TypeErrorException("Cannot get size of type: $kind")
         }
         return s
@@ -122,8 +135,8 @@ data class Type(val kind: TypeKind, val indirection: Int) {
             TypeKind.U1                -> 1
             TypeKind.U8,  TypeKind.I8  -> 0xff
             TypeKind.U16, TypeKind.I16 -> 0xffff
-            TypeKind.U32, TypeKind.I32 -> 0xffff_ffff
-            TypeKind.U64, TypeKind.I64 -> -1L
+            TypeKind.U32, TypeKind.I32, TypeKind.F32 -> 0xffff_ffff
+            TypeKind.U64, TypeKind.I64, TypeKind.F64 -> -1L
             else -> throw TypeErrorException("Cannot get bitmask: $kind")
         }
         return mask
@@ -139,6 +152,10 @@ data class Type(val kind: TypeKind, val indirection: Int) {
         val isDifferentSign = (isSigned() && ty.isUnsigned()) || (isUnsigned() && ty.isSigned())
         if (isDifferentSign) {
             return false
+        }
+
+        if (ty.kind == TypeKind.F64 && kind == TypeKind.F32) {
+            return true
         }
 
         val tySize = ty.size()
@@ -172,6 +189,9 @@ data class Type(val kind: TypeKind, val indirection: Int) {
         val I16 = Type(TypeKind.I16, 0)
         val I32 = Type(TypeKind.I32, 0)
         val I64 = Type(TypeKind.I64, 0)
+
+        val F32 = Type(TypeKind.F32, 0)
+        val F64 = Type(TypeKind.F64, 0)
 
         val Void  = Type(TypeKind.VOID, -1)
         val UNDEF = Type(TypeKind.UNDEFINED, -1)

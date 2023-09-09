@@ -26,7 +26,25 @@ class ArgumentValue(private val index: Int, private val tp: Type): LocalValue {
     }
 }
 
-interface Constant: Value
+interface Constant: Value {
+    companion object {
+        inline fun<reified T: Number> of(kind: TypeKind, value: T): Constant {
+            return when (kind) {
+                TypeKind.I8  -> I8Value(value.toByte())
+                TypeKind.U8  -> U8Value(value.toByte())
+                TypeKind.I16 -> I16Value(value.toShort())
+                TypeKind.U16 -> U16Value(value.toShort())
+                TypeKind.I32 -> I32Value(value.toInt())
+                TypeKind.U32 -> U32Value(value.toInt())
+                TypeKind.I64 -> I64Value(value.toLong())
+                TypeKind.U64 -> U64Value(value.toLong())
+                TypeKind.F32 -> F32Value(value.toFloat())
+                TypeKind.F64 -> F64Value(value.toDouble())
+                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            }
+        }
+    }
+}
 
 data class U8Value(val u8: Byte): Constant {
     override fun type(): Type {
@@ -108,7 +126,31 @@ data class I64Value(val i64: Long): Constant {
     }
 }
 
-class UndefinedValue: Constant {
+data class F32Value(val f32: Float): Constant {
+    override fun type(): Type {
+        return Type.F32
+    }
+
+    override fun toString(): String {
+        return f32.toString()
+    }
+}
+
+data class F64Value(val f64: Double): Constant {
+    override fun type(): Type {
+        return Type.F64
+    }
+
+    override fun toString(): String {
+        return f64.toString()
+    }
+}
+
+class UndefinedValue: Constant, LocalValue {
+    override fun defined(): Int {
+        return -1
+    }
+
     override fun type(): Type {
         return Type.UNDEF
     }
