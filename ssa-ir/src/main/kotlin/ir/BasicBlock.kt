@@ -1,7 +1,5 @@
 package ir
 
-import ir.iterator.ValueInstructionsIterator
-
 class BasicBlock(override val index: Int) : Label(index), Collection<Instruction> {
     val instructions = mutableListOf<Instruction>()
     val predecessors = mutableListOf<BasicBlock>()
@@ -56,7 +54,7 @@ class BasicBlock(override val index: Int) : Label(index), Collection<Instruction
         if (this === other) return true
 
         if (other is BlockViewer) {
-            return index == other.index
+            return index == other.index()
         }
 
         if (javaClass != other?.javaClass) return false
@@ -81,7 +79,7 @@ class BasicBlock(override val index: Int) : Label(index), Collection<Instruction
     }
 
     fun valueInstructions(): Iterator<ValueInstruction> {
-        return ValueInstructionsIterator(instructions)
+        return instructions.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf()).iterator()
     }
 
     internal fun removeIf(filter: (Instruction) -> Boolean): Boolean {

@@ -1,7 +1,7 @@
 package startup
 
 import ir.*
-import ir.codegen.CodeEmitter
+import ir.codegen.x64.CodeEmitter
 import ir.utils.DumpModule
 import java.io.File
 import java.nio.file.Paths

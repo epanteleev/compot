@@ -1,4 +1,4 @@
-package asm
+package asm.x64
 
 interface CPUInstruction {
     fun prefix(size: Int): Char {
@@ -120,7 +120,7 @@ enum class JmpType {
     },
 }
 
-data class Jump(val jumpType: JmpType, val label: Label): CPUInstruction {
+data class Jump(val jumpType: JmpType, val label: String): CPUInstruction {
     override fun toString(): String {
         return "$jumpType $label"
     }
@@ -128,7 +128,7 @@ data class Jump(val jumpType: JmpType, val label: Label): CPUInstruction {
 
 data class Cmp(val first: AnyOperand, val second: AnyOperand): CPUInstruction {
     override fun toString(): String {
-        return "cmp${prefix(first.size)} $first, $second"
+        return "cmp${prefix(first.size)} $second, $first"
     }
 }
 

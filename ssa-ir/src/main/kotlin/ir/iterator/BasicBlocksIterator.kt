@@ -83,6 +83,7 @@ class BfsTraversalIterator(start: BasicBlock, countOfBlocks: Int) : BasicBlocksI
 
         while (!stack.isEmpty()) {
             val basicBlocks = stack.pop()!!
+
             for (bb in basicBlocks) {
                 if (visited[bb.index()]) {
                     continue

@@ -1,10 +1,13 @@
 package ir.codegen
 
-import asm.*
+import asm.x64.Mem
+import asm.x64.Rbp
+import asm.x64.Rdi
+import asm.x64.Rsi
 import ir.*
 import ir.builder.ModuleBuilder
+import ir.codegen.x64.RegisterPool
 import ir.pass.transform.Mem2Reg
-import ir.utils.DumpModule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

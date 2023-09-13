@@ -1,4 +1,4 @@
-package asm
+package asm.x64
 
 import java.lang.RuntimeException
 

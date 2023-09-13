@@ -15,7 +15,7 @@ object TypeCheck {
 
     fun checkPhi(phi: Phi): Boolean {
         val type = phi.type()
-        for (use in phi.usages) {
+        for (use in phi.usedValues()) {
             if (type != use.type()) {
                 return false
             }
@@ -55,7 +55,7 @@ object TypeCheck {
     
     fun checkCall(call: Call): Boolean {
         val returnType = call.type()
-        val prototypeReturnType = call.func.type()
+        val prototypeReturnType = call.prototype().type()
         return returnType == prototypeReturnType
     }
 

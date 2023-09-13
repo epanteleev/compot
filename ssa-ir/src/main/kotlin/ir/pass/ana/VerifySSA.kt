@@ -50,7 +50,7 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
     }
 
     private fun validatePhi(phi: Phi, bb: BasicBlock) {
-        for ((use, incoming) in phi.usages.zip(phi.incoming())) {
+        for ((use, incoming) in phi.usedValues().zip(phi.incoming())) {
             if (use !is ValueInstruction) {
                 continue
             }
@@ -72,7 +72,7 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
 
     /** Check whether definition dominates to usage. */
     private fun validateDefUse(instruction: Instruction, bb: BasicBlock) {
-        for (use in instruction.usages) {
+        for (use in instruction.usedValues()) {
             if (use !is ValueInstruction) {
                 continue
             }
@@ -86,7 +86,7 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
         for (instruction in bb) {
             when (instruction) {
                 is Phi -> {
-                    assert(TypeCheck.checkPhi(instruction)) { "Inconsistent phi instruction '${instruction.dump()}': different types ${instruction.usages.map { it.type() }.joinToString()}" }
+                    assert(TypeCheck.checkPhi(instruction)) { "Inconsistent phi instruction '${instruction.dump()}': different types ${instruction.usedValues().map { it.type() }.joinToString()}" }
                 }
                 is ArithmeticUnary -> {
                     fun message() = "Unary instruction '${instruction.dump()}' must have the same type: destination=${instruction.type()} operand=${instruction.operand().type()}"

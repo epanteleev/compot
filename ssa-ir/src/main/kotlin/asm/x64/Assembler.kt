@@ -1,4 +1,4 @@
-package asm
+package asm.x64
 
 class Assembler {
     private val list = arrayListOf<ObjFunction>()
@@ -12,7 +12,7 @@ class Assembler {
     override fun toString(): String {
         val builder = StringBuilder()
         list.forEach {
-            builder.append(".global ${it.name}\n")
+            builder.append(".global ${it.name()}\n")
         }
         builder.append('\n')
         list.forEach {

@@ -96,9 +96,9 @@ class FunctionDataBuilder private constructor(
         insert(store)
     }
 
-    fun call(func: AnyFunction, args: ArrayList<Value>): Value {
+    fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Value {
         if (func.type() == Type.Void) {
-            val call = Call(func, args)
+            val call = VoidCall(func, args)
             insert(call)
             return Value.UNDEF
         }

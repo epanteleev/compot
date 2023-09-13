@@ -1,6 +1,7 @@
 package ir
 
 import ir.builder.ModuleBuilder
+import ir.codegen.x64.CodeEmitter
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.utils.DumpModule
@@ -87,7 +88,13 @@ class FibonacciTest {
 
         val cfg = module.findFunction(prototype).blocks
         //println(JoinPointSet.evaluate(cfg))
-        //println(DumpModule.apply(Mem2Reg.run(module)))
+        println(DumpModule.apply(module))
+        println(CodeEmitter.codegen(module))
+
+        val optModule = Mem2Reg.run(module)
+        println(DumpModule.apply(optModule))
+        VerifySSA.run(optModule)
+        println(CodeEmitter.codegen(optModule))
         return cfg
     }
 

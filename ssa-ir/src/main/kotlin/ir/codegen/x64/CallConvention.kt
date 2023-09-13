@@ -1,6 +1,6 @@
-package ir.codegen
+package ir.codegen.x64
 
-import asm.*
+import asm.x64.*
 
 object CallConvention {
     internal val availableRegisters: ArrayList<GPRegister> by lazy { allRegisters() }

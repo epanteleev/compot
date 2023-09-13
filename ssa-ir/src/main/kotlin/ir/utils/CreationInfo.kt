@@ -2,9 +2,12 @@ package ir.utils
 
 import ir.*
 
+data class CreationInfoException(override val message: String): Exception(message)
+
 class CreationInfo private constructor(private val creationInfo: MutableMap<ValueInstruction, Location>) {
     fun get(instruction: ValueInstruction): Location {
-        return creationInfo[instruction]!!
+        return creationInfo[instruction] ?:
+            throw CreationInfoException("value doesn't exist: instruction=$instruction")
     }
 
     companion object {
@@ -14,9 +17,6 @@ class CreationInfo private constructor(private val creationInfo: MutableMap<Valu
             for (bb in basicBlocks) {
                 for ((idx, instruction) in bb.withIndex()) {
                     if (instruction !is ValueInstruction) {
-                        continue
-                    }
-                    if (instruction.type() == Type.Void) {
                         continue
                     }
 

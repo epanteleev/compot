@@ -1,8 +1,11 @@
-package ir.codegen
+package ir.codegen.x64
 
-import asm.*
+import asm.x64.*
 import ir.*
 import ir.Call
+import ir.Label
+import ir.Module
+import ir.utils.DefUseInfo
 import ir.utils.Location
 
 private class ArgumentEmitter(val objFunc: ObjFunction) {
@@ -24,7 +27,7 @@ private class ArgumentEmitter(val objFunc: ObjFunction) {
                 objFunc.push(CodeEmitter.temp1(value.size))
             }
             is GPRegister -> objFunc.push(value)
-            is Imm        -> objFunc.push(value)
+            is Imm -> objFunc.push(value)
             else -> throw RuntimeException("Internal error")
         }
     }
@@ -38,7 +41,9 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
         for (reg in calleeSaveRegisters) {
             objFunc.push(reg)
-            objFunc.mov(Rsp.rsp, Rbp.rbp)
+            if (reg == Rbp.rbp) {
+                objFunc.mov(Rsp.rsp, Rbp.rbp)
+            }
         }
 
         if (stackSize != 0L) {
@@ -136,10 +141,9 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         } else {
             throw RuntimeException("Internal error")
         }
-
     }
 
-    private fun emitCall(call: Call, location: Location) {
+    private fun emitCall(call: Callable, location: Location) {
         val arguments = valueToRegister.callerSaveRegisters(location)
         for (arg in arguments) {
             objFunc.push(arg)
@@ -151,7 +155,7 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
             argEmitter.emit(valueToRegister.operand(arg))
         }
 
-        objFunc.call(call.func.name)
+        objFunc.call(call.prototype().name)
 
         for (arg in arguments.reversed()) {
             objFunc.pop(arg)
@@ -176,6 +180,48 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         objFunc.mov(pointer, value)
     }
 
+    private fun emitIntCompare(isMultiplyUsages: Boolean, intCompare: IntCompare) {
+        var first = valueToRegister.operand(intCompare.first())
+        val second = valueToRegister.operand(intCompare.second())
+
+        first = if (first is Mem && second is Mem) {
+            objFunc.mov(first, temp1(first.size))
+        } else {
+            first
+        }
+
+        objFunc.cmp(first as GPRegister, second)
+        if (isMultiplyUsages) {
+            println("multiply usages $intCompare")
+        }
+    }
+
+    private fun emitBranch(branch: Branch) {
+        objFunc.jump(JmpType.JMP, "L${branch.target().index()}")
+    }
+
+    private fun emitBranchCond(branchCond: BranchCond) {
+        val cond = branchCond.condition()
+        if (cond is IntCompare) {
+            val jmpType = when (cond.predicate().invert()) {
+                IntPredicate.Eq -> JmpType.JE
+                IntPredicate.Ne -> JmpType.JNE
+                IntPredicate.Ugt -> JmpType.JG
+                IntPredicate.Uge -> JmpType.JGE
+                IntPredicate.Ult -> JmpType.JL
+                IntPredicate.Ule -> JmpType.JLE
+                IntPredicate.Sgt -> JmpType.JG
+                IntPredicate.Sge -> JmpType.JGE
+                IntPredicate.Slt -> JmpType.JL
+                IntPredicate.Sle -> JmpType.JLE
+            }
+
+            objFunc.jump(jmpType, "L${branchCond.onFalse().index()}")
+        } else {
+            println("unsupported $branchCond")
+        }
+    }
+
     private fun emitBasicBlock(bb: BasicBlock) {
         for ((index, instruction) in bb.withIndex()) {
             when (instruction) {
@@ -185,14 +231,59 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
                 is Load             -> emitLoad(instruction)
                 is Call             -> emitCall(instruction, Location(bb, index))
                 is ArithmeticUnary  -> emitArithmeticUnary(instruction)
+                is IntCompare       -> emitIntCompare(false, instruction)
+                is Branch           -> emitBranch(instruction)
+                is BranchCond       -> emitBranchCond(instruction)
+                is VoidCall         -> emitCall(instruction, Location(bb, index))
+                is Phi              -> {/* skip */}
+                is StackAlloc       -> {/* skip */}
+                else                -> println("Unsupported: $instruction")
             }
         }
+    }
+
+    private fun emitPhi(phi: Phi) {
+        val savedLabel = objFunc.currentLabel()
+        val resultValue = valueToRegister.operand(phi)
+
+        for ((bb, value) in phi.incoming().zip(phi.usedValues())) {
+            objFunc.switchLabel("L${bb.index()}")
+
+            val valueOperand = valueToRegister.operand(value)
+            if (valueOperand == resultValue) {
+                continue
+            }
+            val resultReg = if (resultValue is Mem) {
+                objFunc.mov(resultValue, temp1(resultValue.size))
+            } else {
+                resultValue as GPRegister
+            }
+            objFunc.mov(valueOperand, resultReg)
+
+            if (resultValue is Mem) {
+                objFunc.mov(temp1(resultValue.size), resultValue)
+            }
+        }
+        objFunc.switchLabel(savedLabel)
     }
 
     private fun emit() {
         emitPrologue()
         for (bb in data.blocks.preorder()) {
+            if (!bb.equals(Label.entry)) {
+                objFunc.label("L${bb.index()}")
+            }
             emitBasicBlock(bb)
+        }
+
+        for (bb in data.blocks) {
+            for (instruction in bb) {
+                if (instruction !is Phi) {
+                    continue
+                }
+
+                emitPhi(instruction)
+            }
         }
     }
 

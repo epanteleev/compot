@@ -4,8 +4,68 @@ import ir.*
 import ir.utils.*
 import kotlin.math.max
 
-private class RenameAssistant(cfg: BasicBlocks, private val dominatorTree: DominatorTree) {
+data class Mem2RegException(override val message: String): Exception(message)
+
+private object Utils {
+    fun isStackAllocOfLocalVariable(instruction: Instruction): Boolean {
+        return instruction is StackAlloc && instruction.size == 1L
+    }
+
+    fun isLoadOfLocalVariable(instruction: Instruction): Boolean {
+        return instruction is Load && instruction.operand() !is ArgumentValue
+    }
+
+    fun isStoreOfLocalVariable(instruction: Instruction): Boolean {
+        return instruction is Store && instruction.pointer() !is ArgumentValue
+    }
+}
+
+private class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: DominatorTree) {
     private val bbToMapValues = initialize(cfg)
+
+    init {
+        for (bb in cfg.preorder()) {
+            rewriteValuesSetup(bb)
+        }
+    }
+
+    private fun rewriteValuesSetup(bb: BasicBlock) {
+        for (instruction in bb) {
+            if (Utils.isStoreOfLocalVariable(instruction)) {
+                instruction as Store
+                val actual = findActualValueOrNull(bb, instruction.value())
+                if (actual != null) {
+                    addValues(bb, instruction.pointer(), actual)
+                } else {
+                    addValues(bb, instruction.pointer(), instruction.value())
+                }
+
+                continue
+            }
+
+            if (Utils.isStackAllocOfLocalVariable(instruction)) {
+                instruction as StackAlloc
+                addValues(bb, instruction, Value.UNDEF)
+                continue
+            }
+
+            if (Utils.isLoadOfLocalVariable(instruction)) {
+                instruction as Load
+                val actual = findActualValue(bb, instruction.operand())
+                addValues(bb, instruction, actual)
+                continue
+            }
+
+            if (instruction is Phi) {
+                // Note: all used values are equal in uncompleted phi instruction.
+                // Will take only first value.
+                addValues(bb, instruction.usedValues().first(), instruction)
+                continue
+            }
+
+            instruction.rewriteUsages { v -> rename(bb, v) }
+        }
+    }
 
     private fun initialize(cfg: BasicBlocks): MutableMap<BasicBlock, MutableMap<Value, Value>> {
         val bbToMapValues = hashMapOf<BasicBlock, MutableMap<Value, Value>>()
@@ -17,11 +77,11 @@ private class RenameAssistant(cfg: BasicBlocks, private val dominatorTree: Domin
     }
 
     fun findActualValue(bb: Label, value: Value): Value {
-        val actual = findActualValueOrNull(bb, value)
-        return actual as Value
+        return findActualValueOrNull(bb, value)
+            ?: throw Mem2RegException("cannot find: basicBlock=$bb, value=$value")
     }
 
-    private fun findActualValueOrNull(bb: Label, value: Value): Value? {
+    fun findActualValueOrNull(bb: Label, value: Value): Value? {
         for (d in dominatorTree.dominators(bb)) {
             val newV = bbToMapValues[d]!![value]
             if (newV != null) {
@@ -49,10 +109,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
     private fun findMaxIndex(): Int {
         var idx = 0
         for (bb in cfg) {
-            for (instruction in bb) {
-                if (instruction !is ValueInstruction) {
-                    continue
-                }
+            for (instruction in bb.valueInstructions()) {
                 idx = max(instruction.defined(), idx)
             }
         }
@@ -76,64 +133,22 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
         return newIdx
     }
 
-    private fun completePhis(bbToMapValues: RenameAssistant, bb: BasicBlock) {
+    private fun completePhis(bbToMapValues: RewriteAssistant, bb: BasicBlock) {
         for (instruction in bb) {
             if (instruction !is Phi) {
                 break
             }
 
-            instruction.renameUsagesInPhi { v, l -> bbToMapValues.rename(l as BasicBlock, v) }
-        }
-    }
-
-    private fun isStackAllocOfLocalVariable(instruction: Instruction): Boolean {
-        return instruction is StackAlloc && instruction.size == 1L
-    }
-
-    private fun isLoadOfLocalVariable(instruction: Instruction): Boolean {
-        return instruction is Load && instruction.operand() !is ArgumentValue
-    }
-
-    private fun isStoreOfLocalVariable(instruction: Instruction): Boolean {
-        return instruction is Store && instruction.pointer() !is ArgumentValue
-    }
-
-    private fun renameValues(bbToMapValues: RenameAssistant, bb: BasicBlock) {
-        for (instruction in bb) {
-            if (isStoreOfLocalVariable(instruction)) {
-                instruction as Store
-                bbToMapValues.addValues(bb, instruction.pointer(), instruction.value())
-                continue
-            }
-
-            if (isStackAllocOfLocalVariable(instruction)) {
-                instruction as StackAlloc
-                bbToMapValues.addValues(bb, instruction, Value.UNDEF)
-                continue
-            }
-
-            if (isLoadOfLocalVariable(instruction)) {
-                instruction as Load
-                val actual = bbToMapValues.findActualValue(bb, instruction.operand())
-                bbToMapValues.addValues(bb, instruction, actual)
-                continue
-            }
-
-            if (instruction is Phi) {
-                bbToMapValues.addValues(bb, instruction.usages.first(), instruction)
-                continue
-            }
-
-            instruction.renameUsages { v -> bbToMapValues.rename(bb, v) }
+            instruction.rewriteUsagesInPhi { v, l -> bbToMapValues.rename(l as BasicBlock, v) }
         }
     }
 
     private fun removeMemoryInstructions(bb: BasicBlock) {
         fun filter(instruction: Instruction): Boolean {
             return when {
-                isStackAllocOfLocalVariable(instruction) -> true
-                isStoreOfLocalVariable(instruction) -> true
-                isLoadOfLocalVariable(instruction)  -> true
+                Utils.isStackAllocOfLocalVariable(instruction) -> true
+                Utils.isStoreOfLocalVariable(instruction) -> true
+                Utils.isLoadOfLocalVariable(instruction)  -> true
                 else -> false
             }
         }
@@ -165,11 +180,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
             idx = insertPhisIfNeeded(idx, bb)
         }
 
-        val bbToMapValues = RenameAssistant(cfg, dominatorTree)
-
-        for (bb in cfg.preorder()) {
-            renameValues(bbToMapValues, bb)
-        }
+        val bbToMapValues = RewriteAssistant(cfg, dominatorTree)
 
         for (bb in cfg) {
             completePhis(bbToMapValues, bb)

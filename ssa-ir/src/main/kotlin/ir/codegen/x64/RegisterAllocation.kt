@@ -1,6 +1,6 @@
-package ir.codegen
+package ir.codegen.x64
 
-import asm.*
+import asm.x64.*
 import ir.*
 import ir.utils.LiveIntervals
 import ir.utils.Location
@@ -8,9 +8,14 @@ import java.lang.StringBuilder
 
 class RegisterAllocation(private var stackSize: Long,
                          private val registerMap: MutableMap<LocalValue, Operand>,
-                         private val liveness: LiveIntervals) {
+                         private val liveness: LiveIntervals
+) {
     /** Count of callee save registers in given function. */
     val calleeSaveRegisters: Set<GPRegister> by lazy { calleeSaveRegistersInternal() }
+
+    fun liveness(): LiveIntervals {
+        return liveness
+    }
 
     fun reservedStackSize(): Long {
         return stackSize
@@ -54,8 +59,8 @@ class RegisterAllocation(private var stackSize: Long,
     fun operand(value: Value): AnyOperand {
         return when (value) {
             is ValueInstruction, is ArgumentValue -> registerMap[value] as Operand
-            is U8Value  -> Imm(value.u8.toLong(), 1)
-            is I8Value  -> Imm(value.i8.toLong(), 1)
+            is U8Value -> Imm(value.u8.toLong(), 1)
+            is I8Value -> Imm(value.i8.toLong(), 1)
             is U16Value -> Imm(value.u16.toLong(), 2)
             is I16Value -> Imm(value.i16.toLong(), 2)
             is U32Value -> Imm(value.u32.toLong(), 4)

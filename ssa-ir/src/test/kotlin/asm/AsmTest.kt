@@ -1,4 +1,5 @@
 package asm
+import asm.x64.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

@@ -1,6 +1,6 @@
-package ir.codegen
+package ir.codegen.x64
 
-import asm.*
+import asm.x64.*
 import ir.ArgumentValue
 import ir.StackAlloc
 import ir.Type
@@ -44,7 +44,13 @@ class RegisterPool {
     }
 
     private fun tryPickRegister(value: Value): Register? {
-        assert(value.type().isSigned() || value.type().isUnsigned() || value.type().isPointer())
+        assert(value.type() == Type.U1 ||
+                value.type().isSigned() ||
+                value.type().isUnsigned() ||
+                value.type().isPointer()) {
+            "found ${value.type()}"
+        }
+
         if (freeRegisters.isEmpty()) {
             return null
         }

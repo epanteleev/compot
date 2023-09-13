@@ -1,7 +1,8 @@
-package ir.codegen
+package ir.codegen.x64
 
-import asm.*
-import ir.*
+import asm.x64.Operand
+import ir.FunctionData
+import ir.LocalValue
 
 class LinearScan(data: FunctionData) {
     private val liveRanges = data.liveness()

@@ -1,12 +1,15 @@
 package ir
 
-abstract class AnyFunction(val name: String, protected val returnType: Type) {
+abstract class AnyFunctionPrototype(val name: String,
+                                    protected val returnType: Type,
+                                    protected val arguments: List<Type>) {
     fun type(): Type {
         return returnType
     }
 }
 
-class FunctionPrototype(name: String, returnType: Type, private val arguments: List<Type>): AnyFunction(name, returnType) {
+class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
+    AnyFunctionPrototype(name, returnType, arguments) {
     override fun toString(): String {
         val builder = StringBuilder()
         builder.append("define $name(")
@@ -29,7 +32,8 @@ class FunctionPrototype(name: String, returnType: Type, private val arguments: L
     }
 }
 
-class ExternFunction(name: String, returnType: Type, private val arguments: List<Type>): AnyFunction(name, returnType) {
+class ExternFunction(name: String, returnType: Type, arguments: List<Type>):
+    AnyFunctionPrototype(name, returnType, arguments) {
     override fun toString(): String {
         return "extern ${type()} $name(${arguments.joinToString()})"
     }

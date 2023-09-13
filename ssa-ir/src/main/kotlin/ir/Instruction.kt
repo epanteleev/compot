@@ -2,17 +2,20 @@ package ir
 
 import java.lang.RuntimeException
 
-abstract class Instruction(protected val tp: Type, var usages: ArrayList<Value>) {
-    internal open fun renameUsages(fn: (Value) -> Value) {
+abstract class Instruction(protected val tp: Type, protected var usages: ArrayList<Value>) {
+    internal open fun rewriteUsages(fn: (Value) -> Value) {
         for (i in 0 until usages.size) {
             usages[i] = fn(usages[i])
         }
     }
 
-    fun usedInstructions(): List<Instruction> {
-        return usages.filterIsInstanceTo<Instruction, MutableList<Instruction>>(arrayListOf())
+    fun usedInstructions(): List<ValueInstruction> {
+        return usages.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
     }
 
+    fun usedValues(): List<Value> {
+        return usages
+    }
     abstract fun dump(): String
 }
 
@@ -56,6 +59,21 @@ enum class IntPredicate {
             Sle -> "sle"
         }
         return name
+    }
+
+    fun invert(): IntPredicate {
+        return when (this) {
+            Eq  -> Ne
+            Ne  -> Eq
+            Uge -> Ult
+            Ugt -> Ule
+            Ult -> Uge
+            Ule -> Ugt
+            Sgt -> Sle
+            Sge -> Slt
+            Slt -> Sge
+            Sle -> Sgt
+        }
     }
 }
 
@@ -147,6 +165,10 @@ class IntCompare(index: Int, a: Value, private val predicate: IntPredicate, b: V
         return "%$define = icmp $predicate ${first().type()} ${first()}, ${second()}"
     }
 
+    fun predicate(): IntPredicate {
+        return predicate
+    }
+
     fun first(): Value {
         return usages.first()
     }
@@ -186,10 +208,18 @@ class StackAlloc(index: Int, ty: Type, val size: Long): ValueInstruction(index, 
     }
 }
 
-class Call(index: Int, tp: Type, val func: AnyFunction, args: ArrayList<Value>): ValueInstruction(index, tp, args) {
-    constructor(func: AnyFunction, args: ArrayList<Value>) : this(Value.UNDEF.defined(), Type.Void, func, args) {
-        assert(func.type() == Type.Void)
+interface Callable {
+    fun arguments(): List<Value>
+
+    fun prototype(): AnyFunctionPrototype
+}
+
+class Call(index: Int, tp: Type, private val func: AnyFunctionPrototype, args: ArrayList<Value>):
+    ValueInstruction(index, tp, args), Callable {
+    init {
+        require(func.type() != Type.Void) { "Must be non void" }
     }
+
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -209,18 +239,39 @@ class Call(index: Int, tp: Type, val func: AnyFunction, args: ArrayList<Value>):
         return result
     }
 
-    fun arguments(): List<Value> {
+    override fun arguments(): List<Value> {
         return usages
+    }
+
+    override fun prototype(): AnyFunctionPrototype {
+        return func
     }
 
     override fun dump(): String {
         val builder = StringBuilder()
-        if (type() == Type.Void) {
-            builder.append("call $tp ${func.name}(")
-        } else {
-            builder.append("%$define = call $tp ${func.name}(")
-        }
+        builder.append("%$define = call $tp ${func.name}(")
+        usages.joinTo(builder) { "$it:${it.type()}"}
+        builder.append(")")
+        return builder.toString()
+    }
+}
 
+class VoidCall(private val func: AnyFunctionPrototype, args: ArrayList<Value>): Instruction(Type.Void, args), Callable {
+    init {
+        require(func.type() == Type.Void) { "Must be void" }
+    }
+
+    override fun arguments(): List<Value> {
+        return usages
+    }
+
+    override fun prototype(): AnyFunctionPrototype {
+        return func
+    }
+
+    override fun dump(): String {
+        val builder = StringBuilder()
+        builder.append("call $tp ${func.name}(")
         usages.joinTo(builder) { "$it:${it.type()}"}
         builder.append(")")
         return builder.toString()
@@ -262,11 +313,11 @@ class Phi(index: Int, ty: Type, private val incoming: List<Label>, incomingValue
         return builder.toString()
     }
 
-    override fun renameUsages(fn: (Value) -> Value) {
+    override fun rewriteUsages(fn: (Value) -> Value) {
         throw RuntimeException("Don't use it for phi node")
     }
 
-    fun renameUsagesInPhi(fn: (Value, Label) -> Value) {
+    fun rewriteUsagesInPhi(fn: (Value, Label) -> Value) {
        for (i in 0 until usages.size) {
            usages[i] = fn(usages[i], incoming[i])
        }

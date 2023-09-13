@@ -3,6 +3,8 @@ package ir.utils
 import ir.*
 import kotlin.math.max
 
+data class LiveIntervalsException(override val message: String): Exception(message)
+
 data class Interval(val begin: Int, var end: Int)
 
 class LiveRange(private val creation: Location) {
@@ -12,45 +14,50 @@ class LiveRange(private val creation: Location) {
         return creation
     }
 
-    private fun registerUsageInternal(location: Location): Boolean {
+    private fun registerUsageInternal(location: Location) {
         val existedInterval = intervals[location.block]
 
-        return if (existedInterval == null && location.block == creation.block) {
+        if (existedInterval == null && location.block == creation.block) {
             intervals[location.block] = Interval(creation.index, location.index)
-            false
         } else if (existedInterval == null) {
             intervals[location.block] = Interval(0, location.index)
-            false
         } else {
             existedInterval.end = max(existedInterval.end, location.index)
-            true
         }
     }
 
     private fun propagate(location: Location) {
         val worklist = arrayListOf(location.block)
+        val visited = hashSetOf<BasicBlock>()
 
         fun iter(block: BasicBlock) {
             for (predecessor in block.predecessors) {
-                if (registerUsageInternal(Location(predecessor, predecessor.instructions.size))) {
+                registerUsageInternal(Location(predecessor, predecessor.instructions.size))
+                if (!visited.contains(predecessor) && predecessor != creation.block) {
                     worklist.add(predecessor)
                 }
             }
+            visited.add(block)
         }
 
         while (worklist.isNotEmpty()) {
             val block = worklist.removeAt(worklist.size - 1)
-            if (block.equals(Label.entry)) {
-                continue
-            }
             iter(block)
         }
     }
 
     fun registerUsage(location: Location) {
-        val needPropagateLiveness = registerUsageInternal(location)
-        if (needPropagateLiveness) {
+        registerUsageInternal(location)
+        if (location.block != creation.block) {
             propagate(location)
+        }
+    }
+
+    fun registerUsageInPhi(location: Location, incoming: BasicBlock) {
+        registerUsageInternal(location)
+        registerUsageInternal(Location(incoming, incoming.size))
+        if (incoming != creation.block) {
+            propagate(Location(incoming, incoming.size))
         }
     }
 
@@ -91,35 +98,61 @@ class LiveIntervals(private val liveness: LinkedHashMap<LocalValue, LiveRange>) 
     }
 
     companion object {
-        private fun evaluateForArguments(liveness: MutableMap<LocalValue, LiveRange>, data: FunctionData) {
+        private fun argumentsLiveness(liveness: MutableMap<LocalValue, LiveRange>, data: FunctionData) {
             val loc = Location(data.blocks.begin(), 0)
             data.arguments().forEach { liveness[it] = LiveRange(loc) }
         }
 
-        private fun evaluateForBasicBlock(liveness: MutableMap<LocalValue, LiveRange>, basicBlocks: BasicBlocks) {
+        private fun setupLiveRanges(liveness: MutableMap<LocalValue, LiveRange>, basicBlocks: BasicBlocks) {
+            for (bb in basicBlocks) {
+                for ((index, inst) in bb.instructions.withIndex()) {
+                    if (inst !is LocalValue) {
+                        continue
+                    }
+                    val location = Location(bb, index)
+                    /** New definition. */
+                    liveness[inst] = LiveRange(location)
+                }
+            }
+        }
+        private fun evaluateUsages(liveness: MutableMap<LocalValue, LiveRange>, basicBlocks: BasicBlocks) {
             for (bb in basicBlocks.bfsTraversal()) {
                 for ((index, inst) in bb.instructions.withIndex()) {
                     val location = Location(bb, index)
 
-                    /** New definition. */
-                    if (inst is ValueInstruction && inst.type() != Type.Void) {
-                        liveness[inst] = LiveRange(location)
+                    if (inst is Phi) {
+                        for ((usage, bb) in inst.usedValues().zip(inst.incoming())) {
+                            if (usage !is LocalValue) {
+                                continue
+                            }
+                            val liveRange = liveness[usage]
+                                ?: throw LiveIntervalsException("in $usage")
+
+                            liveRange.registerUsageInPhi(location, bb as BasicBlock)
+                        }
+                    } else {
+                        for (usage in inst.usedValues()) {
+                            if (usage !is LocalValue) {
+                                continue
+                            }
+                            val liveRange = liveness[usage]
+                                ?: throw LiveIntervalsException("in $usage")
+
+                            liveRange.registerUsage(location)
+                        }
                     }
 
-                    for (usage in inst.usages) {
-                        if (usage !is LocalValue) {
-                            continue
-                        }
-                        liveness[usage]!!.registerUsage(location)
-                    }
+
                 }
             }
         }
+
         fun evaluate(data: FunctionData): LiveIntervals {
             val liveness = linkedMapOf<LocalValue, LiveRange>()
 
-            evaluateForArguments(liveness, data)
-            evaluateForBasicBlock(liveness, data.blocks)
+            argumentsLiveness(liveness, data)
+            setupLiveRanges(liveness, data.blocks)
+            evaluateUsages(liveness, data.blocks)
             return LiveIntervals(liveness)
         }
     }
