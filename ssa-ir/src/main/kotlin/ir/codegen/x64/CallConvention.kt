@@ -14,7 +14,7 @@ object CallConvention {
         R9.r9
     )
 
-    val gpVolatileRegs: Array<GPRegister> = arrayOf(
+    val gpCallerSaveRegs: Array<GPRegister> = arrayOf(
         Rax.rax,
         Rcx.rcx,
         Rdx.rdx,
@@ -26,7 +26,7 @@ object CallConvention {
         R11.r11
     )
 
-    val gpNonVolatileRegs: Array<GPRegister> = arrayOf(
+    val gpCalleeSaveRegs: Array<GPRegister> = arrayOf(
         Rbp.rbp,
         Rbx.rbx,
         R12.r12,
@@ -45,8 +45,8 @@ object CallConvention {
 
     private fun allRegisters(): ArrayList<GPRegister> {
         val allRegisters = arrayListOf<GPRegister>()
-        allRegisters.addAll(gpVolatileRegs)
-        allRegisters.addAll(gpNonVolatileRegs)
+        allRegisters.addAll(gpCallerSaveRegs)
+        allRegisters.addAll(gpCalleeSaveRegs)
 
         allRegisters.remove(Rbp.rbp)
         allRegisters.removeAll(gpArgumentRegisters.toSet())

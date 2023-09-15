@@ -27,7 +27,7 @@ class RegisterAllocation(private var stackSize: Long,
             if (reg !is GPRegister) {
                 continue
             }
-            if (CallConvention.gpNonVolatileRegs.contains(reg)) {
+            if (CallConvention.gpCalleeSaveRegs.contains(reg)) {
                 if (registers.contains(reg)) {
                     continue
                 }
@@ -45,7 +45,7 @@ class RegisterAllocation(private var stackSize: Long,
             if (reg !is GPRegister) {
                 continue
             }
-            if (!CallConvention.gpVolatileRegs.contains(reg)) {
+            if (!CallConvention.gpCallerSaveRegs.contains(reg)) {
                 continue
             }
             if (!liveness[value].isDiedHere(loc)) {

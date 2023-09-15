@@ -9,13 +9,13 @@ class LinearScan(data: FunctionData) {
     private val registerMap = hashMapOf<LocalValue, Operand>()
 
     fun build(): RegisterAllocation {
-        val pool = RegisterPool()
+        val pool = VirtualRegistersPool()
         allocRegistersForLocalVariables(pool)
         val frameSize = pool.stackSize()
         return RegisterAllocation(frameSize, registerMap, liveRanges)
     }
 
-    private fun allocRegistersForLocalVariables(pool: RegisterPool) {
+    private fun allocRegistersForLocalVariables(pool: VirtualRegistersPool) {
         val active = hashMapOf<LocalValue, Operand>()
         for ((variable, range) in liveRanges) {
             active.entries.removeIf {

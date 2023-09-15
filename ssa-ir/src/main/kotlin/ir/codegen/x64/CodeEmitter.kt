@@ -127,7 +127,7 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
 
         } else if (unary.op == ArithmeticUnaryOp.Not) {
             val second = if (result is Mem) {
-                objFunc.mov(result, temp1(8))
+                objFunc.mov(result, temp1(result.size))
             } else {
                 result as Register
             }
@@ -135,7 +135,7 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
             objFunc.sub(operand, second)
 
             if (result is Mem) {
-                objFunc.mov(temp1(8), result)
+                objFunc.mov(temp1(result.size), result)
             }
 
         } else {

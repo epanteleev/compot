@@ -6,7 +6,7 @@ import asm.x64.Rdi
 import asm.x64.Rsi
 import ir.*
 import ir.builder.ModuleBuilder
-import ir.codegen.x64.RegisterPool
+import ir.codegen.x64.VirtualRegistersPool
 import ir.pass.transform.Mem2Reg
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -53,7 +53,7 @@ class CodegenTest {
         //println(CodeEmitter.codegen(module))
 
         //asserts
-        val pool = RegisterPool()
+        val pool = VirtualRegistersPool()
         assertEquals(pool.allocSlot(arg1), Rdi.rdi)
         assertEquals(pool.allocSlot(arg2), Rsi.rsi)
         assertEquals(pool.allocSlot(retValue), Mem(Rbp.rbp, -8, 8))
