@@ -3,6 +3,7 @@ package ir.codegen.x64
 import asm.x64.Mem
 import asm.x64.Rbp
 import ir.StackAlloc
+import ir.Type
 import ir.Value
 import ir.ValueInstruction
 
@@ -24,42 +25,43 @@ interface StackFrame {
 }
 
 private class BasePointerAddressedStackFrame : StackFrame {
-    private var totalFrameSize: Long = 0
+    private var frameSize: Long = 0
     private val freeStackSlots = linkedMapOf<Int, Mem>()
 
+    private fun withAlignment(alignment: Int, value: Long): Long {
+        return ((value + (alignment * 2 - 1)) / alignment) * alignment
+    }
+
     private fun stackSlotAlloc(value: StackAlloc): Mem {
-        val typeSize = value.type().size()
+        val typeSize = value.type().dereference().size()
         val totalSize = typeSize * value.size
-        totalFrameSize += totalSize
-        return Mem(Rbp.rbp, -totalFrameSize, typeSize)
+        frameSize += totalSize
+        return Mem(Rbp.rbp, -frameSize, typeSize)
     }
 
     /** Spilled value. */
     private fun valueInstructionAlloc(value: ValueInstruction): Mem {
-        val typeSize = value.type().size()
+        val typeSize = if (value.type() != Type.U1) {
+            value.type().size()
+        } else {
+            1
+        }
+
         val freeSlot = freeStackSlots[typeSize]
         if (freeSlot != null) {
             freeStackSlots.remove(typeSize)
             return freeSlot
         }
 
-        totalFrameSize += typeSize
-        return Mem(Rbp.rbp, -totalFrameSize, typeSize)
+        frameSize = withAlignment(typeSize, frameSize)
+        return Mem(Rbp.rbp, -frameSize, typeSize)
     }
 
     override fun takeSlot(value: Value): Mem {
         return when (value) {
-            is StackAlloc -> {
-                stackSlotAlloc(value)
-            }
-
-            is ValueInstruction -> {
-                valueInstructionAlloc(value)
-            }
-
-            else -> {
-                throw StackFrameException("Cannot alloc slot for this value=$value")
-            }
+            is StackAlloc       -> stackSlotAlloc(value)
+            is ValueInstruction -> valueInstructionAlloc(value)
+            else -> throw StackFrameException("Cannot alloc slot for this value=$value")
         }
     }
 
@@ -67,7 +69,8 @@ private class BasePointerAddressedStackFrame : StackFrame {
         freeStackSlots[slot.size] = slot
     }
 
+    /** @return used stack size. Assume that given value aligned by 8 byte. */
     override fun size(): Long {
-        return totalFrameSize
+        return frameSize
     }
 }

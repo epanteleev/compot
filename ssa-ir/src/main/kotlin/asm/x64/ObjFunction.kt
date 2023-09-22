@@ -75,24 +75,24 @@ class ObjFunction(private val name: String) {
         return activeContext.label.id
     }
 
-    fun add(first: AnyOperand, second: Register): Operand {
-        return makeArithmetic(ArithmeticOp.ADD, first, second)
+    fun add(first: AnyOperand, destination: Register): Operand {
+        return makeArithmetic(ArithmeticOp.ADD, first, destination)
     }
 
-    fun sub(first: AnyOperand, second: Register) {
-        makeArithmetic(ArithmeticOp.SUB, first, second)
+    fun sub(first: AnyOperand, desttination: Register) {
+        makeArithmetic(ArithmeticOp.SUB, first, desttination)
     }
 
-    fun mul(first: AnyOperand, second: Register) {
-        makeArithmetic(ArithmeticOp.MUL, first, second)
+    fun mul(first: AnyOperand, destination: Register) {
+        makeArithmetic(ArithmeticOp.MUL, first, destination)
     }
 
-    fun div(first: AnyOperand, second: Register) {
-        makeArithmetic(ArithmeticOp.DIV, first, second)
+    fun div(first: AnyOperand, destination: Register) {
+        makeArithmetic(ArithmeticOp.DIV, first, destination)
     }
 
-    fun xor(first: AnyOperand, second: Register) {
-        makeArithmetic(ArithmeticOp.XOR, first, second)
+    fun xor(first: AnyOperand, destination: Register) {
+        makeArithmetic(ArithmeticOp.XOR, first, destination)
     }
 
     fun test(first: Register, second: Operand) {
@@ -136,6 +136,10 @@ class ObjFunction(private val name: String) {
         ctx().instructions.add(Ret)
     }
 
+    fun leave() {
+        ctx().instructions.add(Leave)
+    }
+
     override fun toString(): String {
         val builder = StringBuilder()
         var count = 0
@@ -156,6 +160,12 @@ class ObjFunction(private val name: String) {
         val Ret = object : CPUInstruction {
             override fun toString(): String {
                 return "ret"
+            }
+        }
+
+        val Leave = object : CPUInstruction {
+            override fun toString(): String {
+                return "leave"
             }
         }
     }

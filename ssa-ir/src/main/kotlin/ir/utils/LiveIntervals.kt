@@ -41,23 +41,24 @@ class LiveRange(private val creation: Location) {
         }
 
         while (worklist.isNotEmpty()) {
-            val block = worklist.removeAt(worklist.size - 1)
+            val block = worklist.removeLast()
             iter(block)
         }
     }
 
-    fun registerUsage(location: Location) {
+    internal fun registerUsage(location: Location) {
         registerUsageInternal(location)
         if (location.block != creation.block) {
             propagate(location)
         }
     }
 
-    fun registerUsageInPhi(location: Location, incoming: BasicBlock) {
+    internal fun registerUsageInPhi(location: Location, incoming: BasicBlock) {
         registerUsageInternal(location)
-        registerUsageInternal(Location(incoming, incoming.size))
+        val loc = Location(incoming, incoming.size)
+        registerUsageInternal(loc)
         if (incoming != creation.block) {
-            propagate(Location(incoming, incoming.size))
+            propagate(loc)
         }
     }
 

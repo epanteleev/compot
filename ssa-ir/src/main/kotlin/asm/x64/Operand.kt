@@ -8,8 +8,12 @@ interface AnyOperand {
 interface Operand: AnyOperand
 
 interface Register: Operand
-interface FPURegister: Register
-interface GPRegister: Register
+interface FPURegister: Register {
+    operator fun invoke(size: Int): FPURegister
+}
+interface GPRegister: Register {
+    operator fun invoke(size: Int): GPRegister
+}
 
 enum class Rax(override val size: Int): GPRegister {
     rax(8),
@@ -26,6 +30,10 @@ enum class Rax(override val size: Int): GPRegister {
             else -> throw RuntimeException("Internal error")
         }
         return string
+    }
+
+    override fun invoke(size: Int): GPRegister {
+        return Rax.invoke(size)
     }
 
     companion object {
@@ -58,6 +66,10 @@ enum class Rbx(override val size: Int): GPRegister {
         return string
     }
 
+    override fun invoke(size: Int): GPRegister {
+        return Rbx.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): Rbx {
             return when (size) {
@@ -86,6 +98,10 @@ enum class Rcx(override val size: Int): GPRegister {
             else -> throw RuntimeException("Internal error")
         }
         return string
+    }
+
+    override fun invoke(size: Int): GPRegister {
+        return Rcx.invoke(size)
     }
 
     companion object {
@@ -118,6 +134,10 @@ enum class Rsi(override val size: Int): GPRegister {
         return string
     }
 
+    override fun invoke(size: Int): GPRegister {
+        return Rsi.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): Rsi {
             return when (size) {
@@ -146,6 +166,10 @@ enum class Rdi(override val size: Int): GPRegister {
             else -> throw RuntimeException("Internal error")
         }
         return string
+    }
+
+    override fun invoke(size: Int): GPRegister {
+        return Rdi.invoke(size)
     }
 
     companion object {
@@ -178,6 +202,10 @@ enum class Rdx(override val size: Int): GPRegister {
         return string
     }
 
+    override fun invoke(size: Int): GPRegister {
+        return Rdx.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): Rdx {
             return when (size) {
@@ -206,6 +234,10 @@ enum class Rbp(override val size: Int): GPRegister {
             else -> throw RuntimeException("Internal error")
         }
         return string
+    }
+
+    override fun invoke(size: Int): GPRegister {
+        return Rbp.invoke(size)
     }
 
     companion object {
@@ -238,6 +270,10 @@ enum class R8(override val size: Int): GPRegister {
         return string
     }
 
+    override fun invoke(size: Int): GPRegister {
+        return R8.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): R8 {
             return when (size) {
@@ -266,6 +302,10 @@ enum class R9(override val size: Int): GPRegister {
             else -> throw RuntimeException("Internal error")
         }
         return string
+    }
+
+    override fun invoke(size: Int): GPRegister {
+        return R9.invoke(size)
     }
 
     companion object {
@@ -298,6 +338,10 @@ enum class R10(override val size: Int): GPRegister {
         return string
     }
 
+    override fun invoke(size: Int): GPRegister {
+        return R10.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): R10 {
             return when (size) {
@@ -326,6 +370,10 @@ enum class R11(override val size: Int): GPRegister {
             else -> throw RuntimeException("Internal error")
         }
         return string
+    }
+
+    override fun invoke(size: Int): GPRegister {
+        return R11.invoke(size)
     }
 
     companion object {
@@ -358,6 +406,10 @@ enum class R12(override val size: Int): GPRegister {
         return string
     }
 
+    override fun invoke(size: Int): GPRegister {
+        return R12.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): R12 {
             return when (size) {
@@ -386,6 +438,10 @@ enum class R13(override val size: Int): GPRegister {
             else -> throw RuntimeException("Internal error")
         }
         return string
+    }
+
+    override fun invoke(size: Int): GPRegister {
+        return R13.invoke(size)
     }
 
     companion object {
@@ -418,6 +474,10 @@ enum class R14(override val size: Int): GPRegister {
         return string
     }
 
+    override fun invoke(size: Int): GPRegister {
+        return R14.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): R14 {
             return when (size) {
@@ -448,6 +508,10 @@ enum class R15(override val size: Int): GPRegister {
         return string
     }
 
+    override fun invoke(size: Int): GPRegister {
+        return R15.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): R15 {
             return when (size) {
@@ -474,6 +538,10 @@ enum class Rsp(override val size: Int): GPRegister {
         return string
     }
 
+    override fun invoke(size: Int): GPRegister {
+        return Rsp.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): Rsp {
             return when (size) {
@@ -496,6 +564,10 @@ enum class Ymm0(override val size: Int): FPURegister {
             else -> throw RuntimeException("Internal error")
         }
         return string
+    }
+
+    override fun invoke(size: Int): FPURegister {
+        return Ymm0.invoke(size)
     }
 
     companion object {
@@ -522,6 +594,10 @@ enum class Ymm1(override val size: Int): FPURegister {
         return string
     }
 
+    override fun invoke(size: Int): FPURegister {
+        return Ymm1.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): Ymm1 {
             return when (size) {
@@ -544,6 +620,10 @@ enum class Ymm2(override val size: Int): FPURegister {
             else -> throw RuntimeException("Internal error")
         }
         return string
+    }
+
+    override fun invoke(size: Int): FPURegister {
+        return Ymm2.invoke(size)
     }
 
     companion object {
@@ -570,6 +650,10 @@ enum class Ymm3(override val size: Int): FPURegister {
         return string
     }
 
+    override fun invoke(size: Int): FPURegister {
+        return Ymm3.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): Ymm3 {
             return when (size) {
@@ -594,6 +678,10 @@ enum class Ymm4(override val size: Int): FPURegister {
         return string
     }
 
+    override fun invoke(size: Int): FPURegister {
+        return Ymm4.invoke(size)
+    }
+
     companion object {
         operator fun invoke(size: Int): Ymm4 {
             return when (size) {
@@ -616,6 +704,10 @@ enum class Ymm5(override val size: Int): FPURegister {
             else -> throw RuntimeException("Internal error")
         }
         return string
+    }
+
+    override fun invoke(size: Int): FPURegister {
+        return Ymm5.invoke(size)
     }
 
     companion object {

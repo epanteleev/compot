@@ -15,9 +15,7 @@ class Assembler {
             builder.append(".global ${it.name()}\n")
         }
         builder.append('\n')
-        list.forEach {
-            builder.append(it)
-        }
+        list.joinTo(builder, separator = "\n")
 
         return builder.toString()
     }

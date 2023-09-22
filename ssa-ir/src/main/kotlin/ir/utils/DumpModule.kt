@@ -33,6 +33,7 @@ class DumpModule private constructor(private val builder: StringBuilder) {
         }
 
         builder.append('}')
+        builder.append('\n')
     }
 
     private fun dumpPrototype(prototype: FunctionPrototype, argumentValues: List<Value>) {

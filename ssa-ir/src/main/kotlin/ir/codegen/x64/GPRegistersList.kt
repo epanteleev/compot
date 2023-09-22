@@ -15,7 +15,7 @@ class GPRegistersList {
         require(value.type() == Type.U1 ||
                 value.type().isArithmetic() ||
                 value.type().isPointer()) {
-            "found ${value.type()}"
+            "found ${value.type()} in $value"
         }
         require(value !is StackAlloc) { "cannot be" }
 
@@ -26,11 +26,17 @@ class GPRegistersList {
         if (CallConvention.gpCalleeSaveRegs.contains(reg)) {
             usedCalleeSaveRegisters.add(reg)
         }
-        return reg
+
+        val type = value.type()
+        return if (type == Type.U1) {
+            reg(1)
+        } else {
+            reg(value.type().size())
+        }
     }
 
     fun returnRegister(reg: GPRegister) {
-        freeRegisters.add(reg)
+        freeRegisters.add(reg(8))
     }
 
     fun usedCalleeSaveRegisters(): Set<GPRegister> {

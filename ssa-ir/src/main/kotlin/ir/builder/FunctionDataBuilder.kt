@@ -177,11 +177,16 @@ class FunctionDataBuilder private constructor(
             argumentValues: List<ArgumentValue>
         ): FunctionDataBuilder {
             val prototype = FunctionPrototype(name, returnType, arguments)
-            val maxIndex = argumentValues.maxBy { it.defined() }
+            val maxIndex = if (argumentValues.isNotEmpty()) {
+                argumentValues.maxBy { it.defined() }.defined()
+            } else {
+                -1
+            }
+
             val startBB = BasicBlock.empty(Label.entry.index())
             val basicBlocks = BasicBlocks.create(startBB)
 
-            val builder = FunctionDataBuilder(prototype, argumentValues, basicBlocks, maxIndex.defined() + 1)
+            val builder = FunctionDataBuilder(prototype, argumentValues, basicBlocks, maxIndex + 1)
             builder.switchLabel(startBB)
             return builder
         }

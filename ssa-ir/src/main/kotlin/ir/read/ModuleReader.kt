@@ -21,12 +21,16 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
     }
 
     private fun parseOperand(kind: TypeKind, errorMessage: String): Value {
-        return iterator.next(errorMessage).let {
+        return parseOperand(iterator.next(errorMessage), kind)
+    }
+
+    private fun parseOperand(token: Token, kind: TypeKind): Value {
+        return token.let {
             when (it) {
                 is IntValue   -> Constant.of(kind, it.int)
                 is FloatValue -> Constant.of(kind, it.fp)
                 is ValueToken -> nameToValue[it.name] ?:
-                throw RuntimeException("in ${it.position()} undefined value")
+                    throw RuntimeException("in ${it.position()} undefined value")
                 else -> throw ParseErrorException("constant or value", it)
             }
         }
@@ -34,7 +38,7 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
 
     private fun parseBinary(resultName: String, op: ArithmeticBinaryOp) {
         val resultType = iterator.expect<TypeToken>("result type")
-        val first = parseOperand(resultType.kind(), "first operand")
+        val first      = parseOperand(resultType.kind(), "first operand")
         iterator.expect<Comma>("','")
 
         val second = parseOperand(resultType.kind(), "second operand")
@@ -42,13 +46,13 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
     }
 
     private fun parseLoad(valueToken: ValueToken) {
-        val typeToken = iterator.expect<TypeToken>("loaded type")
+        val typeToken    = iterator.expect<TypeToken>("loaded type")
         val pointerToken = iterator.expect<ValueToken>("pointer")
-        val pointer = nameToValue[pointerToken.name] ?:
+        val pointer      = nameToValue[pointerToken.name] ?:
             throw RuntimeException("in ${pointerToken.position()} undefined value")
 
-        val loadedType = typeToken.type()
-        val actualType = pointer.type().dereference()
+        val loadedType   = typeToken.type()
+        val actualType   = pointer.type().dereference()
         if (loadedType != actualType) {
             throw ParseErrorException("${valueToken.position()} incorrect type in load instruction: expect=$loadedType, actual=$actualType")
         }
@@ -63,9 +67,9 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
     }
 
     private fun parseStore(currentTok: Token) {
-        val type = iterator.expect<TypeToken>("stored value type")
+        val type         = iterator.expect<TypeToken>("stored value type")
         val pointerToken = iterator.expect<ValueToken>("pointer")
-        val pointer = nameToValue[pointerToken.name] ?:
+        val pointer      = nameToValue[pointerToken.name] ?:
         throw ParseErrorException("existed value", pointerToken)
 
         if (type.type() != pointer.type()) {
@@ -78,8 +82,7 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
 
     private fun parseRet(currentTok: Token) {
         val retType = iterator.expect<TypeToken>("return type").type()
-        val retValue = iterator.expect<ValueToken>("return value")
-        val returnValue = nameToValue[retValue.name] ?: throw ParseErrorException("existed value", retValue)
+        val returnValue = parseOperand(retType.kind, "value or literal")
 
         val actualRetType = returnValue.type()
         if (retType != actualRetType) {
@@ -97,16 +100,18 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
         val argumentsType = arrayListOf<Type>()
         val argumentValue = arrayListOf<Value>()
 
-        do {
-            val valueToken = iterator.expect<ValueToken>("value")
+        var valueToken = iterator.next("value")
+        while (valueToken !is CloseParen) {
 
             iterator.expect<Colon>("':'")
             val type = iterator.expect<TypeToken>("argument type").type()
-            val value = nameToValue[valueToken.name] ?: throw ParseErrorException("existed value", valueToken)
+
+            val value = parseOperand(valueToken, type.kind)
             argumentValue.add(value)
             argumentsType.add(type)
 
             val comma = iterator.next("','")
+
             if (comma is CloseParen) {
                 break
             }
@@ -114,7 +119,9 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
             if (comma !is Comma) {
                 throw ParseErrorException("type ", comma)
             }
-        } while (true)
+            valueToken = iterator.next("value")
+        }
+
         val prototype = FunctionPrototype(functionName.string, functionReturnType, argumentsType)
 
         if (currentTok != null) {
@@ -375,7 +382,11 @@ class ModuleReader(string: String) {
         val argumentValue = arrayListOf<ArgumentValue>()
 
         do {
-            val value = tokenIterator.expect<ValueToken>("value")
+            val value = tokenIterator.next("value")
+            if (value is CloseParen) {
+                break
+            }
+            value as ValueToken
 
             tokenIterator.expect<Colon>("':'")
             val type = tokenIterator.expect<TypeToken>("argument type").type()

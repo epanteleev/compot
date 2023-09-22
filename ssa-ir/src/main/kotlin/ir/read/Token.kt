@@ -34,7 +34,7 @@ data class ValueToken(val name: String, override val line: Int, override val pos
     }
 }
 
-data class TypeToken(private val type: String, val indirection: Int, override val line: Int, override val pos: Int): Token(line, pos) {
+data class TypeToken(private val type: String, private val indirection: Int, override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         val stars = "*".repeat(indirection)
         return "type '$type$stars'"
@@ -45,7 +45,11 @@ data class TypeToken(private val type: String, val indirection: Int, override va
     }
 
     fun type(): Type {
-        return Type.of(kind(), indirection)
+        return when (kind()) {
+            TypeKind.VOID      -> Type.Void
+            TypeKind.UNDEFINED -> Type.UNDEF
+            else               -> Type.of(kind(), indirection)
+        }
     }
 
     companion object {

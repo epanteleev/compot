@@ -79,7 +79,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>MainKt</mainClass>
+                                    <mainClass>startup.StartupKt</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>

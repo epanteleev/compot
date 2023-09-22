@@ -62,6 +62,9 @@ class Tokenizer(val data: String) {
                 '\n' -> nextLine()
                 else -> nextChar()
             }
+            if (isEnd()) {
+                break
+            }
             ch = getChar()
         }
     }

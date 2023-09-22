@@ -22,7 +22,7 @@ class RegisterAllocation(private var stackSize: Long,
     }
 
     private fun calleeSaveRegistersInternal(): Set<GPRegister> {
-        val registers = linkedSetOf<GPRegister>(Rbp.rbp)
+        val registers = linkedSetOf<GPRegister>()
         for (reg in registerMap.values) {
             if (reg !is GPRegister) {
                 continue
@@ -59,8 +59,8 @@ class RegisterAllocation(private var stackSize: Long,
     fun operand(value: Value): AnyOperand {
         return when (value) {
             is ValueInstruction, is ArgumentValue -> registerMap[value] as Operand
-            is U8Value -> Imm(value.u8.toLong(), 1)
-            is I8Value -> Imm(value.i8.toLong(), 1)
+            is U8Value  -> Imm(value.u8.toLong(), 1)
+            is I8Value  -> Imm(value.i8.toLong(), 1)
             is U16Value -> Imm(value.u16.toLong(), 2)
             is I16Value -> Imm(value.i16.toLong(), 2)
             is U32Value -> Imm(value.u32.toLong(), 4)

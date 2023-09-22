@@ -208,7 +208,7 @@ class StackAlloc(index: Int, ty: Type, val size: Long): ValueInstruction(index, 
     }
 }
 
-interface Callable {
+interface Callable: Value {
     fun arguments(): List<Value>
 
     fun prototype(): AnyFunctionPrototype
@@ -275,6 +275,10 @@ class VoidCall(private val func: AnyFunctionPrototype, args: ArrayList<Value>): 
         usages.joinTo(builder) { "$it:${it.type()}"}
         builder.append(")")
         return builder.toString()
+    }
+
+    override fun type(): Type {
+        return Type.Void
     }
 }
 

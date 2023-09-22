@@ -8,6 +8,9 @@ class TokenIterator(val tokenizer: Tokenizer) : Iterator<Token> {
     }
 
     override fun hasNext(): Boolean {
+        if (tokenizer.isEnd()) {
+            return false
+        }
         tokenizer.skipWhitespace()
         return !tokenizer.isEnd()
     }

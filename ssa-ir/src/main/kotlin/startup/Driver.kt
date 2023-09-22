@@ -5,7 +5,7 @@ import ir.codegen.x64.CodeEmitter
 import ir.utils.DumpModule
 import java.io.File
 import java.nio.file.Paths
-import kotlin.io.path.Path
+import java.util.concurrent.TimeUnit
 
 object Driver {
     fun output(name: String, module: Module, pipeline: (Module) -> Module) {
@@ -18,13 +18,16 @@ object Driver {
         val directoryName = File(filename)
         if (directoryName.exists()) {
             println("[Directory '$directoryName' exist. Remove...]")
-            directoryName.delete()
+            directoryName.deleteRecursively()
         }
 
-        val unoptimizedAsm = File("$filename/base.s")
-        val optimizedAsm   = File("$filename/opt.s")
+        val unoptimizedAsm = File("$filename/base.S")
+        val optimizedAsm   = File("$filename/opt.S")
         val dumpIr         = File("$filename/$filename.ir")
         val dumpIrOpt      = File("$filename/$filename.opt.ir")
+
+        val objectFileBase = File("$filename/base.o")
+        val optObjFileBase = File("$filename/opt.o")
 
         directoryName.mkdir()
 
@@ -32,6 +35,7 @@ object Driver {
         optimizedAsm.writeText(optimizedCodegen.toString())
         dumpIr.writeText(dumpIrString)
         dumpIrOpt.writeText(DumpModule.apply(optimizedModule))
+
         println("[Done '$filename']")
     }
 

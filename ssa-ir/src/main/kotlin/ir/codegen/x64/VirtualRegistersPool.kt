@@ -17,12 +17,20 @@ class VirtualRegistersPool {
         assert(type.isSigned() || type.isUnsigned() || type.isPointer())
 
         val slot = if (freeArgumentRegisters.isNotEmpty()) {
-            freeArgumentRegisters.removeLast()
+            if (type == Type.U1) {
+                freeArgumentRegisters.removeLast().invoke(1)
+            } else {
+                freeArgumentRegisters.removeLast().invoke(type.size())
+            }
         } else {
 
             val old = argumentSlotIndex
             argumentSlotIndex += 1
-            val slot = ArgumentSlot(Rbp.rbp, old /*actual value is frameBase + 8L * old*/, 8)
+            val slot = if (type == Type.U1) {
+                ArgumentSlot(Rbp.rbp, old /*actual value is frameBase + 8L * old*/, 1)
+            } else {
+                ArgumentSlot(Rbp.rbp, old /*actual value is frameBase + 8L * old*/, 8)
+            }
             allocatedArgumentStackSlots.add(slot)
             slot
         }
@@ -66,13 +74,13 @@ class VirtualRegistersPool {
     fun finalize() {
         val addressSize = 8L
         val calleeSaveRegs = gpRegisters.usedCalleeSaveRegisters()
-        for (slot in allocatedArgumentStackSlots) {
-            slot.updateOffset(calleeSaveRegs.size * 8L + 8L * slot.offset + addressSize)
+        for (argumentSlot in allocatedArgumentStackSlots) {
+            argumentSlot.updateOffset(calleeSaveRegs.size * 8L + 8L * argumentSlot.offset + addressSize)
         }
         allocatedArgumentStackSlots.clear()
     }
 
     fun stackSize(): Long {
-        return frame.size()
+        return ((frame.size() + 7) / 8) * 8
     }
 }

@@ -5,31 +5,44 @@ import ir.*
 import ir.Call
 import ir.Label
 import ir.Module
-import ir.utils.DefUseInfo
 import ir.utils.Location
 
 private class ArgumentEmitter(val objFunc: ObjFunction) {
-    private var index: Long = 0
+    private interface Place
+    private val Memory = object : Place {}
+    private data class RealRegister(val registerIndex: Int): Place
 
-    fun emit(value: AnyOperand) {
-        val size = CallConvention.gpArgumentRegisters.size
-        val old = index
-        index += 1
-
-        if (old < size) {
-            objFunc.mov(value, CallConvention.gpArgumentRegisters[old.toInt()])
-            return
+    private fun emit(index: Int): Place {
+        return if (index < registers.size) {
+            RealRegister(index)
+        } else {
+            Memory
         }
+    }
 
-        when (value) {
-            is Mem -> {
-                objFunc.mov(value, CodeEmitter.temp1(value.size))
-                objFunc.push(CodeEmitter.temp1(value.size))
+    fun doIt(arguments: List<AnyOperand>) {
+        val places = arguments.indices.mapTo(arrayListOf()) { emit(it) }
+
+        for ((pos, value) in places.zip(arguments).asReversed()) {
+            if (pos is RealRegister) {
+                objFunc.mov(value, registers[pos.registerIndex].invoke(value.size))
+                continue
             }
-            is GPRegister -> objFunc.push(value)
-            is Imm -> objFunc.push(value)
-            else -> throw RuntimeException("Internal error")
+
+            when (value) {
+                is Mem -> {
+                    objFunc.mov(value, CodeEmitter.temp1(value.size))
+                    objFunc.push(CodeEmitter.temp1(8))
+                }
+                is GPRegister -> objFunc.push(value)
+                is Imm -> objFunc.push(value)
+                else -> throw RuntimeException("Internal error: value=$value")
+            }
         }
+    }
+
+    companion object {
+        private val registers = CallConvention.gpArgumentRegisters
     }
 }
 
@@ -39,28 +52,25 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
     private fun emitPrologue() {
         val stackSize = valueToRegister.reservedStackSize()
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
-        for (reg in calleeSaveRegisters) {
-            objFunc.push(reg)
-            if (reg == Rbp.rbp) {
-                objFunc.mov(Rsp.rsp, Rbp.rbp)
-            }
-        }
+
+        objFunc.push(Rbp.rbp)
+        objFunc.mov(Rsp.rsp, Rbp.rbp)
 
         if (stackSize != 0L) {
             objFunc.sub(Imm(stackSize, 8), Rsp.rsp)
         }
+        for (reg in calleeSaveRegisters) {
+            objFunc.push(reg)
+        }
     }
 
     private fun emitEpilogue() {
-        val stackSize = valueToRegister.reservedStackSize()
-        if (stackSize != 0L) {
-            objFunc.add(Imm(stackSize, 8), Rsp.rsp)
-        }
-
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
-        for (reg in calleeSaveRegisters) {
+        for (reg in calleeSaveRegisters.reversed()) {
             objFunc.pop(reg)
         }
+
+        objFunc.leave()
     }
 
     private fun emitArithmeticBinary(binary: ArithmeticBinary) {
@@ -72,24 +82,24 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
             first = objFunc.mov(first, temp1(first.size))
         }
 
-        second = if (destination is Mem) {
-            objFunc.mov(second, temp2(second.size))
+        first = if (destination is Mem) {
+            objFunc.mov(first, temp2(second.size))
         } else {
-            objFunc.mov(second, destination)
+            objFunc.mov(first, destination)
         }
 
         when (binary.op) {
             ArithmeticBinaryOp.Add -> {
-                objFunc.add(first, second as Register)
+                objFunc.add(second, first as Register)
             }
             ArithmeticBinaryOp.Sub -> {
-                objFunc.sub(first, second as Register)
+                objFunc.sub(second, first as Register)
             }
             ArithmeticBinaryOp.Xor -> {
-                objFunc.xor(first, second as Register)
+                objFunc.xor(second, first as Register)
             }
             ArithmeticBinaryOp.Mul -> {
-                objFunc.mul(first, second as Register)
+                objFunc.mul(second, first as Register)
             }
             else -> {
                 TODO()
@@ -97,7 +107,7 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         }
 
         if (destination is Mem) {
-            objFunc.mov(second, destination)
+            objFunc.mov(first, destination)
         }
     }
 
@@ -144,21 +154,38 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
     }
 
     private fun emitCall(call: Callable, location: Location) {
-        val arguments = valueToRegister.callerSaveRegisters(location)
-        for (arg in arguments) {
+        val savedRegisters = valueToRegister.callerSaveRegisters(location)
+        for (arg in savedRegisters) {
             objFunc.push(arg)
         }
 
-        val argEmitter = ArgumentEmitter(objFunc)
-
-        for (arg in call.arguments()) {
-            argEmitter.emit(valueToRegister.operand(arg))
+        val totalStackSize = savedRegisters.size * 8 + valueToRegister.reservedStackSize() + Rsp.rsp.size
+        if (totalStackSize % 16L == 0L) {
+            objFunc.sub(Imm(8, 8), Rsp.rsp)
         }
+
+        ArgumentEmitter(objFunc).doIt(call.arguments().mapTo(arrayListOf()) { valueToRegister.operand(it) })
 
         objFunc.call(call.prototype().name)
 
-        for (arg in arguments.reversed()) {
+        if (totalStackSize % 16L == 0L) {
+            objFunc.add(Imm(8, 8), Rsp.rsp)
+        }
+        for (arg in savedRegisters.reversed()) {
             objFunc.pop(arg)
+        }
+
+        val retType = call.type()
+        if (retType == Type.Void) {
+            return
+        }
+
+        if (retType.isArithmetic() || retType.isPointer() || retType == Type.U1) {
+            objFunc.mov(Rax.rax(call.type().size()), valueToRegister.operand(call) as Operand)
+        } else if (retType.isFloat()) {
+            TODO()
+        } else {
+            throw RuntimeException("unknown value type=$retType")
         }
     }
 
