@@ -46,7 +46,7 @@ class CFGTraversalTest {
         val expected = listOf(0, 1, 2, 3)
 
         for ((idx, bb) in withBasicBlocks().preorder().withIndex()) {
-            assertEquals(expected[idx], bb.index())
+            assertEquals(expected[idx], bb.index)
         }
     }
 
@@ -55,7 +55,7 @@ class CFGTraversalTest {
         val expected = listOf(3, 2, 1, 0)
 
         for ((idx, bb) in withBasicBlocks().postorder().withIndex()) {
-            assertEquals(expected[idx], bb.index())
+            assertEquals(expected[idx], bb.index)
         }
     }
 

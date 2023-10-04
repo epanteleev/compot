@@ -1,39 +1,32 @@
 package ir
 
-abstract class Label(protected open val index: Int) {
-    abstract fun index(): Int
-
-    override fun toString(): String {
-        val idx = index()
-        return if (idx == 0) {
-            "entry"
-        } else {
-            "L$idx"
-        }
-    }
+interface Label {
+    val index: Int
 
     companion object {
         val entry = BlockViewer(0)
     }
 }
 
-class BlockViewer(index: Int): Label(index) {
-    override fun index(): Int {
+class BlockViewer(override val index: Int): Label {
+    override fun hashCode(): Int {
         return index
     }
 
-    override fun hashCode(): Int {
-        return index
+    override fun toString(): String {
+        return if (index == 0) {
+            "entry"
+        } else {
+            "L$index"
+        }
     }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
 
-        val flag = when (other) {
-            is BlockViewer -> index == other.index
-            is BasicBlock  -> index == other.index()
-            else           -> false
+        return when (other) {
+            is Label -> index == other.index
+            else     -> false
         }
-        return flag
     }
 }

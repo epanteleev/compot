@@ -26,9 +26,6 @@ object Driver {
         val dumpIr         = File("$filename/$filename.ir")
         val dumpIrOpt      = File("$filename/$filename.opt.ir")
 
-        val objectFileBase = File("$filename/base.o")
-        val optObjFileBase = File("$filename/opt.o")
-
         directoryName.mkdir()
 
         unoptimizedAsm.writeText(codegen.toString())

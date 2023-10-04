@@ -1,6 +1,7 @@
 package ir
 
-import ir.utils.LiveIntervals
+import ir.codegen.x64.regalloc.liveness.LiveIntervals
+import ir.codegen.x64.regalloc.liveness.Liveness
 
 class FunctionData private constructor(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {
     fun arguments(): List<ArgumentValue> {
@@ -8,7 +9,7 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
     }
 
     fun liveness(): LiveIntervals {
-        return LiveIntervals.evaluate(this)
+        return Liveness.evaluate(this)
     }
 
     companion object {

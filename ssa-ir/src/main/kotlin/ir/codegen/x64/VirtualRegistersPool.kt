@@ -11,7 +11,6 @@ class VirtualRegistersPool {
     /** Arguments matching. */
     private var freeArgumentRegisters = CallConvention.gpArgumentRegisters.toMutableList().asReversed()
     private var argumentSlotIndex: Long = 0
-    private val allocatedArgumentStackSlots = arrayListOf<ArgumentSlot>()
 
     private fun pickArgument(type: Type): Operand {
         assert(type.isSigned() || type.isUnsigned() || type.isPointer())
@@ -26,24 +25,23 @@ class VirtualRegistersPool {
 
             val old = argumentSlotIndex
             argumentSlotIndex += 1
-            val slot = if (type == Type.U1) {
-                ArgumentSlot(Rbp.rbp, old /*actual value is frameBase + 8L * old*/, 1)
+            val slotSize = if (type == Type.U1) {
+                1
             } else {
-                ArgumentSlot(Rbp.rbp, old /*actual value is frameBase + 8L * old*/, 8)
+                type.size()
             }
-            allocatedArgumentStackSlots.add(slot)
-            slot
+            ArgumentSlot(Rbp.rbp, old * 8 + 16, slotSize)
         }
 
         return slot
     }
 
+    fun allocArgument(value: ArgumentValue): Operand {
+        return pickArgument(value.type())
+    }
+
     fun allocSlot(value: Value): Operand {
         when (value) {
-            is ArgumentValue -> {
-                return pickArgument(value.type())
-            }
-
             is StackAlloc -> {
                 return frame.takeSlot(value)
             }
@@ -69,15 +67,6 @@ class VirtualRegistersPool {
             is Mem        -> frame.returnSlot(operand)
             else          -> TODO("Unimplemented")
         }
-    }
-
-    fun finalize() {
-        val addressSize = 8L
-        val calleeSaveRegs = gpRegisters.usedCalleeSaveRegisters()
-        for (argumentSlot in allocatedArgumentStackSlots) {
-            argumentSlot.updateOffset(calleeSaveRegs.size * 8L + 8L * argumentSlot.offset + addressSize)
-        }
-        allocatedArgumentStackSlots.clear()
     }
 
     fun stackSize(): Long {

@@ -4,7 +4,9 @@ import ir.builder.ModuleBuilder
 import ir.codegen.x64.CodeEmitter
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
+import ir.pass.transform.SplitCriticalEdge
 import ir.utils.DumpModule
+import ir.codegen.x64.regalloc.liveness.Liveness
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -88,13 +90,16 @@ class FibonacciTest {
 
         val cfg = module.findFunction(prototype).blocks
         //println(JoinPointSet.evaluate(cfg))
-        println(DumpModule.apply(module))
-        println(CodeEmitter.codegen(module))
+        //println(DumpModule.apply(module))
+        //println(CodeEmitter.codegen(module))
 
-        val optModule = Mem2Reg.run(module)
-        println(DumpModule.apply(optModule))
-        VerifySSA.run(optModule)
-        println(CodeEmitter.codegen(optModule))
+        //val optModule = SplitCriticalEdge.run(Mem2Reg.run(module))
+
+        //println(Liveness.evaluate(optModule.findFunction(prototype)))
+
+        //println(DumpModule.apply(optModule))
+        //VerifySSA.run(optModule)
+        //println(CodeEmitter.codegen(optModule))
         return cfg
     }
 

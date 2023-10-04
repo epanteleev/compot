@@ -1,40 +1,68 @@
 package ir
 
-import ir.iterator.BasicBlocksIterator
-import ir.iterator.BfsTraversalIterator
-import ir.iterator.PostorderIterator
-import ir.iterator.PreorderIterator
+import ir.iterator.*
 import ir.utils.DefUseInfo
-import ir.utils.LiveIntervals
+import kotlin.math.max
 
-class BasicBlocks private constructor(private val blocks: MutableList<BasicBlock>) {
+
+class BasicBlocks(private val basicBlocks: MutableList<BasicBlock>) {
+    fun blocks(): MutableList<BasicBlock> {
+        return basicBlocks
+    }
+
+    fun size(): Int {
+        return basicBlocks.size
+    }
+
     fun findBlock(label: Label): BasicBlock {
-        return blocks.find { it.index() == label.index() }
+        return basicBlocks.find { it.index == label.index }
             ?: throw IllegalArgumentException("Cannot find correspond block: $label")
     }
 
-    fun begin(): BasicBlock {
-        return blocks[0]
+    fun maxBlockIndex(): Int {
+        return basicBlocks.maxBy { it.index }.index
     }
 
-    fun putBlock(block: BasicBlock) {
-        blocks.add(block)
+    fun maxInstructionIndex(): Int {
+        var index = -1
+        for (bb in basicBlocks) {
+            for (inst in bb) {
+                if (inst !is ValueInstruction) {
+                    continue
+                }
+
+                index = max(index, inst.defined())
+            }
+        }
+        return index
     }
-    
+
+    fun begin(): BasicBlock {
+        return basicBlocks[0]
+    }
+
     fun preorder(): BasicBlocksIterator {
-        return PreorderIterator(begin(), blocks.size)
+        return PreorderIterator(begin(), blocks().size)
     }
 
     fun postorder(): BasicBlocksIterator {
-        return PostorderIterator(begin(), blocks.size)
+        return PostorderIterator(begin(), blocks().size)
     }
 
-    fun bfsTraversal(): BfsTraversalIterator {
-        return BfsTraversalIterator(begin(), blocks.size)
+    fun bfsTraversal(): BasicBlocksIterator {
+        return BfsTraversalIterator(begin(), blocks().size)
+    }
+
+    fun linearScanOrder(): BasicBlocksIterator {
+        return bfsTraversal()
     }
 
     fun dominatorTree(): DominatorTree {
         return DominatorTree.evaluate(this)
+    }
+
+    fun putBlock(block: BasicBlock) {
+        basicBlocks.add(block)
     }
 
     fun defUseInfo(): DefUseInfo {
@@ -42,12 +70,16 @@ class BasicBlocks private constructor(private val blocks: MutableList<BasicBlock
     }
 
     operator fun iterator(): Iterator<BasicBlock> {
-        return blocks.iterator()
+        return basicBlocks.iterator()
     }
 
     companion object {
         fun create(startBB: BasicBlock): BasicBlocks {
             return BasicBlocks(arrayListOf(startBB))
+        }
+
+        fun create(blocks: MutableList<BasicBlock>): BasicBlocks {
+            return BasicBlocks(blocks)
         }
     }
 }

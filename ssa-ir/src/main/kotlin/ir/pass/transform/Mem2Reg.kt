@@ -103,6 +103,18 @@ private class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Domi
     fun addValues(bb: BasicBlock, from: Value, to: Value) {
         bbToMapValues[bb]!![from] = to
     }
+
+    override fun toString(): String {
+        val builder = StringBuilder()
+        for ((bb, valueMap) in bbToMapValues) {
+            builder.append("----- bb=$bb -----\n")
+            for ((from, to) in valueMap) {
+                builder.append("$from -> $to\n")
+            }
+        }
+
+        return builder.toString()
+    }
 }
 
 class Mem2Reg private constructor(private val cfg: BasicBlocks, private val joinSet: Map<BasicBlock, Set<Value>>) {
@@ -122,9 +134,9 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
 
         var newIdx = idx
         for (v in values) {
-            val incoming = bb.predecessors.mapTo(arrayListOf()) { v }
+            val incoming = bb.predecessors().mapTo(arrayListOf()) { v }
 
-            val phi = Phi(newIdx, v.type().dereference(), bb.predecessors, incoming)
+            val phi = Phi(newIdx, v.type().dereference(), bb.predecessors().toMutableList(), incoming)
             bb.prepend(phi)
 
             newIdx += 1
@@ -134,12 +146,22 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
     }
 
     private fun completePhis(bbToMapValues: RewriteAssistant, bb: BasicBlock) {
-        for (instruction in bb) {
-            if (instruction !is Phi) {
-                break
+        for (phi in bb.phis()) {
+            phi.updateUsagesInPhi { v, l ->
+                bbToMapValues.rename(l, v)
             }
 
-            instruction.rewriteUsagesInPhi { v, l -> bbToMapValues.rename(l as BasicBlock, v) }
+            // Update incoming blocks if operand value is defined
+            // in the same blocks.
+            for ((incoming, used) in phi.zip()) {
+                if (used !is Phi) {
+                    continue
+                }
+
+                if (bb.containsBefore(used, phi)) {
+                    phi.updateIncoming(incoming, bb)
+                }
+            }
         }
     }
 
@@ -158,7 +180,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
 
     private fun removeRedundantPhis(defUseInfo: DefUseInfo, deadPool: MutableSet<Instruction>, bb: BasicBlock) {
         fun filter(instruction: Instruction): Boolean {
-            if (instruction !is Phi ) {
+            if (instruction !is Phi) {
                 return false
             }
 

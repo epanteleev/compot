@@ -6,7 +6,7 @@ class JoinPointSet private constructor(private val blocks: BasicBlocks, private 
     private val joinSet = hashMapOf<BasicBlock, MutableSet<ValueInstruction>>()
 
     private fun hasStore(bb: BasicBlock, variable: ValueInstruction): Boolean {
-        return bb.instructions.contains(variable)
+        return bb.instructions().contains(variable)
     }
 
     private fun calculateForVariable(v: ValueInstruction, stores: MutableSet<BasicBlock>) {

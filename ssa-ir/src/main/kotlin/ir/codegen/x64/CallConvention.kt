@@ -40,7 +40,7 @@ object CallConvention {
     }
 
     fun temp2(size: Int): GPRegister {
-        return Rcx(size)
+        return R10(size)
     }
 
     private fun allRegisters(): ArrayList<GPRegister> {

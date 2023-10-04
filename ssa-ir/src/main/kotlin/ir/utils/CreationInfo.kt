@@ -15,7 +15,7 @@ class CreationInfo private constructor(private val creationInfo: MutableMap<Valu
             val creationInfo = hashMapOf<ValueInstruction, Location>()
 
             for (bb in basicBlocks) {
-                for ((idx, instruction) in bb.withIndex()) {
+                for ((idx, instruction) in bb.iterator().withIndex()) {
                     if (instruction !is ValueInstruction) {
                         continue
                     }

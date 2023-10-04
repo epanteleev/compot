@@ -306,7 +306,7 @@ class Cast(index: Int, ty: Type, val castType: CastType, value: Value): ValueIns
     }
 }
 
-class Phi(index: Int, ty: Type, private val incoming: List<Label>, incomingValue: ArrayList<Value>): ValueInstruction(index, ty, incomingValue) {
+class Phi(index: Int, ty: Type, private val incoming: MutableList<BasicBlock>, incomingValue: ArrayList<Value>): ValueInstruction(index, ty, incomingValue) {
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("%$define = phi $tp [")
@@ -321,16 +321,28 @@ class Phi(index: Int, ty: Type, private val incoming: List<Label>, incomingValue
         throw RuntimeException("Don't use it for phi node")
     }
 
-    fun rewriteUsagesInPhi(fn: (Value, Label) -> Value) {
+    fun updateUsagesInPhi(fn: (Value, BasicBlock) -> Value) {
        for (i in 0 until usages.size) {
            usages[i] = fn(usages[i], incoming[i])
        }
     }
 
-    fun incoming(): List<Label> {
+    fun updateIncoming(old: BasicBlock, new: BasicBlock) {
+        val index = incoming.indexOf(old)
+        assert(index != -1) {
+            "cannot find old=$old"
+        }
+
+        incoming[index] = new
+    }
+
+    fun incoming(): List<BasicBlock> {
          return incoming
     }
 
+    fun zip(): Iterator<Pair<BasicBlock, Value>> {
+        return (incoming() zip usedValues()).iterator()
+    }
     companion object {
         fun create(index: Int, ty: Type): Phi {
             return Phi(index, ty, arrayListOf(), arrayListOf())
@@ -353,6 +365,16 @@ class Select(index: Int, ty: Type, cond: Value, onTrue: Value, onFalse: Value): 
 
     fun onFalse(): Value {
         return usages[2]
+    }
+}
+
+class Copy(index: Int, origin: Value): ValueInstruction(index, origin.type(), arrayListOf(origin)) {
+    override fun dump(): String {
+        return "%$define = copy $tp ${origin()}"
+    }
+
+    fun origin(): Value {
+        return usages[0]
     }
 }
 

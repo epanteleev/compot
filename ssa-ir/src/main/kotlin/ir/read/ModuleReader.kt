@@ -12,7 +12,7 @@ class ParseErrorException(message: String): Exception(message) {
 
 private class FunctionBlockReader(private val iterator: TokenIterator, private val builder: FunctionDataBuilder) {
     private val nameToValue = hashMapOf<String, Value>()
-    private val nameToLabel = hashMapOf<String, Label>("entry" to builder.begin())
+    private val nameToLabel = hashMapOf<String, BasicBlock>("entry" to builder.begin())
 
     init {
         for (arg in builder.arguments()) {
@@ -169,7 +169,7 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
         val type = iterator.expect<TypeToken>("operands type").type()
 
         iterator.expect<OpenSquareBracket>("'['")
-        val labels = arrayListOf<Label>()
+        val labels = arrayListOf<BasicBlock>()
         val argumentValue = arrayListOf<Value>()
 
         do {

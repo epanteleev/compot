@@ -30,19 +30,42 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
 
     private fun validateBlock(bb: BasicBlock) {
         if (bb.equals(Label.entry)) {
-            assert(bb.predecessors.isEmpty()) { "Begin block must not have predecessors." }
+            assert(bb.predecessors().isEmpty()) { "Begin block must not have predecessors." }
         }
         assert(!bb.isEmpty()) { "Block must not be empty" }
-
-        when (bb.flowInstruction()) {
+        val successors = bb.successors()
+        when (val flow = bb.flowInstruction()) {
             is Branch -> {
-                assert(bb.successors.size == 1) { "Block $bb has more that 1 predecessor." }
+                val target = flow.target()
+                assert(successors.size == 1) {
+                    "Block $bb has other count of successors: successors=$successors"
+                }
+                assert(target == successors[0]) {
+                    "Block $bb has inconsistent successors: branch=${flow.targets}, successors=${successors}"
+                }
+                assert(target.predecessors().contains(bb)) {
+                    "Block $target has inconsistent predecessors: branch=${flow.targets}, predecessors=${target.predecessors()}"
+                }
             }
             is BranchCond -> {
-                assert(bb.successors.size == 2) { "Block $bb has more that 2 predecessors." }
+                val onTrue  = flow.onTrue()
+                val onFalse = flow.onFalse()
+                assert(bb.successors().size == 2) { "Block $bb has not 2 successors exactly: ${bb.successors()}" }
+                assert(onTrue == successors[0]) {
+                    "Block $bb has inconsistent successors: branch=${flow.targets}, successors=${successors}"
+                }
+                assert(onFalse == successors[1]) {
+                    "Block $bb has inconsistent successors: branch=${flow.targets}, successors=${successors}"
+                }
+                assert(onTrue.predecessors().contains(bb)) {
+                    "Block $onTrue has inconsistent predecessors: branch=${flow.targets}, predecessors=${onTrue.predecessors()}"
+                }
+                assert(onFalse.predecessors().contains(bb)) {
+                    "Block $onTrue has inconsistent predecessors: branch=${flow.targets}, predecessors=${onTrue.predecessors()}"
+                }
             }
             is Return -> {
-                assert(bb.successors.isEmpty()) { "Block $bb has predecessors ${bb.index()}." }
+                assert(bb.successors().isEmpty()) { "Block $bb has predecessors ${bb.index}." }
             }
         }
 
@@ -58,11 +81,11 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
             assert(dominatorTree.dominates(actual, incoming)) { "Inconsistent phi instruction: value defined in $incoming, used in $actual " }
         }
 
-        val incoming = phi.incoming()
-        val predecessors = bb.predecessors
-        if (predecessors.size != incoming.size || !predecessors.containsAll(incoming)) {
+        val incomings = phi.incoming()
+        val predecessors = bb.predecessors()
+        if (predecessors.size != incomings.size) {
             val message = StringBuilder().append("Inconsistent phi instruction: incoming blocks and predecessors are not equal. incoming=")
-            incoming.joinTo(message)
+            incomings.joinTo(message)
             message.append(" predecessors=")
             predecessors.joinTo(message)
 

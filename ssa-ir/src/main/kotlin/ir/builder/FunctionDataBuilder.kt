@@ -45,13 +45,13 @@ class FunctionDataBuilder private constructor(
         return FunctionData.create(prototype, blocks, argumentValues)
     }
 
-    fun createLabel(): Label = allocateBlock()
+    fun createLabel(): BasicBlock = allocateBlock()
 
     fun switchLabel(label: Label) {
         bb = blocks.findBlock(label)
     }
 
-    fun argument(index: Int): Value = argumentValues[index]
+    fun argument(index: Int): ArgumentValue = argumentValues[index]
 
     fun arguments(): List<ArgumentValue> {
         return argumentValues
@@ -159,7 +159,7 @@ class FunctionDataBuilder private constructor(
         return selectInst
     }
 
-    fun phi(incoming: ArrayList<Value>, labels: List<Label>): Value {
+    fun phi(incoming: ArrayList<Value>, labels: ArrayList<BasicBlock>): Value {
         val phi = withOutput { it: Int -> Phi(it, incoming[0].type(), labels, incoming) }
 
         if (!TypeCheck.checkPhi(phi as Phi)) {
@@ -183,7 +183,7 @@ class FunctionDataBuilder private constructor(
                 -1
             }
 
-            val startBB = BasicBlock.empty(Label.entry.index())
+            val startBB = BasicBlock.empty(Label.entry.index)
             val basicBlocks = BasicBlocks.create(startBB)
 
             val builder = FunctionDataBuilder(prototype, argumentValues, basicBlocks, maxIndex + 1)

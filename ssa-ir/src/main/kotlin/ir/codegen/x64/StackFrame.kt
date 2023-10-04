@@ -35,7 +35,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
     private fun stackSlotAlloc(value: StackAlloc): Mem {
         val typeSize = value.type().dereference().size()
         val totalSize = typeSize * value.size
-        frameSize += totalSize
+        frameSize = withAlignment(totalSize.toInt(), frameSize)
         return Mem(Rbp.rbp, -frameSize, typeSize)
     }
 

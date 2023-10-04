@@ -21,14 +21,14 @@ class DumpModule private constructor(private val builder: StringBuilder) {
         builder.append("{\n")
 
         for (bb in functionData.blocks.preorder()) {
-            val pred = bb.predecessors
+            val pred = bb.predecessors()
             builder.append("$bb:\t")
             if (pred.isNotEmpty()) {
                 builder.append("; pred=")
                 pred.joinTo(builder)
             }
             builder.append('\n')
-            bb.instructions.joinTo(builder, separator="\n") { "\t${it.dump()}" }
+            bb.instructions().joinTo(builder, separator="\n") { "\t${it.dump()}" }
             builder.append('\n')
         }
 

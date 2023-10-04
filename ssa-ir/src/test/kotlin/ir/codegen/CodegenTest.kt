@@ -54,8 +54,8 @@ class CodegenTest {
 
         //asserts
         val pool = VirtualRegistersPool()
-        assertEquals(pool.allocSlot(arg1), Rdi.rdi)
-        assertEquals(pool.allocSlot(arg2), Rsi.rsi)
+        assertEquals(pool.allocArgument(arg1), Rdi.rdi)
+        assertEquals(pool.allocArgument(arg2), Rsi.rsi)
         assertEquals(pool.allocSlot(retValue), Mem(Rbp.rbp, -8, 8))
     }
 }

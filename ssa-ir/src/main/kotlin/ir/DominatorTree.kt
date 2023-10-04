@@ -45,13 +45,13 @@ class DominatorTree(private val idomMap: MutableMap<BasicBlock, BasicBlock>) {
         val dominanceFrontiers = hashMapOf<BasicBlock, MutableList<BasicBlock>>()
 
         idomMap.forEach { (bb, idom) ->
-            val predecessors = bb.predecessors
+            val predecessors = bb.predecessors()
             if (predecessors.size < 2) {
                 return@forEach
             }
 
             for (p in predecessors) {
-                var runner = p
+                var runner: BasicBlock = p
                 while (runner != idom) {
                     (dominanceFrontiers.getOrPut(runner) { arrayListOf() }).add(bb)
                     runner = idomMap[runner]!!
@@ -87,8 +87,8 @@ class DominatorTree(private val idomMap: MutableMap<BasicBlock, BasicBlock>) {
                 val predecessors = hashMapOf<Int, List<Int>>()
 
                 for (bb in postorder) {
-                    if (bb.predecessors.isNotEmpty()) {
-                        predecessors[blockToIndex[bb]!!] = bb.predecessors.map { blockToIndex[it]!! }
+                    if (bb.predecessors().isNotEmpty()) {
+                        predecessors[blockToIndex[bb]!!] = bb.predecessors().map { blockToIndex[it]!! }
                     }
                 }
 

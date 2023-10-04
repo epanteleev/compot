@@ -5,7 +5,12 @@ import ir.*
 import ir.Call
 import ir.Label
 import ir.Module
-import ir.utils.Location
+import ir.codegen.x64.regalloc.LinearScan
+import ir.pass.ana.VerifySSA
+import ir.pass.transform.CopyInsertion
+import ir.pass.transform.SplitCriticalEdge
+import ir.utils.DumpModule
+import ir.utils.OrderedLocation
 
 private class ArgumentEmitter(val objFunc: ObjFunction) {
     private interface Place
@@ -153,24 +158,30 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         }
     }
 
-    private fun emitCall(call: Callable, location: Location) {
+    private fun emitCall(call: Callable, location: OrderedLocation) {
         val savedRegisters = valueToRegister.callerSaveRegisters(location)
         for (arg in savedRegisters) {
             objFunc.push(arg)
         }
 
-        val totalStackSize = savedRegisters.size * 8 + valueToRegister.reservedStackSize() + Rsp.rsp.size
-        if (totalStackSize % 16L == 0L) {
+        val totalStackSize = (savedRegisters.size + valueToRegister.calleeSaveRegisters.size + /** include retaddr and rbp **/ 2) * 8 +
+                valueToRegister.reservedStackSize()
+        if (totalStackSize % 16L != 0L) {
             objFunc.sub(Imm(8, 8), Rsp.rsp)
         }
 
-        ArgumentEmitter(objFunc).doIt(call.arguments().mapTo(arrayListOf()) { valueToRegister.operand(it) })
+        ArgumentEmitter(objFunc).doIt(call.arguments()
+            .mapTo(arrayListOf()) {
+                valueToRegister.operand(it)
+            }
+        )
 
         objFunc.call(call.prototype().name)
 
-        if (totalStackSize % 16L == 0L) {
+        if (totalStackSize % 16L != 0L) {
             objFunc.add(Imm(8, 8), Rsp.rsp)
         }
+
         for (arg in savedRegisters.reversed()) {
             objFunc.pop(arg)
         }
@@ -204,14 +215,24 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         val pointer = valueToRegister.operand(instruction.operand())
         val value   = valueToRegister.operand(instruction) as Operand
 
-        objFunc.mov(pointer, value)
+        val operand = if (value is Mem) {
+            objFunc.mov(value, temp1(value.size))
+        } else {
+            value
+        }
+
+        objFunc.mov(pointer, operand)
+
+        if (value is Mem) {
+            objFunc.mov(temp1(value.size), value)
+        }
     }
 
     private fun emitIntCompare(isMultiplyUsages: Boolean, intCompare: IntCompare) {
         var first = valueToRegister.operand(intCompare.first())
         val second = valueToRegister.operand(intCompare.second())
 
-        first = if (first is Mem && second is Mem) {
+        first = if (first is Mem) {
             objFunc.mov(first, temp1(first.size))
         } else {
             first
@@ -224,7 +245,7 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
     }
 
     private fun emitBranch(branch: Branch) {
-        objFunc.jump(JmpType.JMP, "L${branch.target().index()}")
+        objFunc.jump(JmpType.JMP, "L${branch.target().index}")
     }
 
     private fun emitBranchCond(branchCond: BranchCond) {
@@ -243,25 +264,39 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
                 IntPredicate.Sle -> JmpType.JLE
             }
 
-            objFunc.jump(jmpType, "L${branchCond.onFalse().index()}")
+            objFunc.jump(jmpType, "L${branchCond.onFalse().index}")
         } else {
             println("unsupported $branchCond")
         }
     }
 
-    private fun emitBasicBlock(bb: BasicBlock) {
-        for ((index, instruction) in bb.withIndex()) {
+    private fun emitCopy(copy: Copy) {
+        val result  = valueToRegister.operand(copy)
+        val operand = valueToRegister.operand(copy.origin())
+
+        if (result is Mem && operand is Mem) {
+            val temp = temp1(operand.size)
+            objFunc.mov(operand, temp)
+            objFunc.mov(temp, result)
+        } else {
+            objFunc.mov(operand, result as Operand)
+        }
+    }
+
+    private fun emitBasicBlock(bb: BasicBlock, map: Map<Callable, OrderedLocation>) {
+        for (instruction in bb) {
             when (instruction) {
                 is ArithmeticBinary -> emitArithmeticBinary(instruction)
                 is Store            -> emitStore(instruction)
                 is Return           -> emitReturn(instruction)
                 is Load             -> emitLoad(instruction)
-                is Call             -> emitCall(instruction, Location(bb, index))
+                is Call             -> emitCall(instruction, map[instruction]!!)
                 is ArithmeticUnary  -> emitArithmeticUnary(instruction)
                 is IntCompare       -> emitIntCompare(false, instruction)
                 is Branch           -> emitBranch(instruction)
                 is BranchCond       -> emitBranchCond(instruction)
-                is VoidCall         -> emitCall(instruction, Location(bb, index))
+                is VoidCall         -> emitCall(instruction, map[instruction]!!)
+                is Copy             -> emitCopy(instruction)
                 is Phi              -> {/* skip */}
                 is StackAlloc       -> {/* skip */}
                 else                -> println("Unsupported: $instruction")
@@ -269,48 +304,25 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         }
     }
 
-    private fun emitPhi(phi: Phi) {
-        val savedLabel = objFunc.currentLabel()
-        val resultValue = valueToRegister.operand(phi)
-
-        for ((bb, value) in phi.incoming().zip(phi.usedValues())) {
-            objFunc.switchLabel("L${bb.index()}")
-
-            val valueOperand = valueToRegister.operand(value)
-            if (valueOperand == resultValue) {
-                continue
-            }
-            val resultReg = if (resultValue is Mem) {
-                objFunc.mov(resultValue, temp1(resultValue.size))
-            } else {
-                resultValue as GPRegister
-            }
-            objFunc.mov(valueOperand, resultReg)
-
-            if (resultValue is Mem) {
-                objFunc.mov(temp1(resultValue.size), resultValue)
+    private fun emit() {
+        val orderedLocation = hashMapOf<Callable, OrderedLocation>()
+        var order = 0
+        for (bb in data.blocks.linearScanOrder()) {
+            for ((idx, call) in bb.instructions().withIndex()) {
+                if (call is Call || call is VoidCall) {
+                    call as Callable
+                    orderedLocation[call] = OrderedLocation(bb, order, idx)
+                }
+                order += 1
             }
         }
-        objFunc.switchLabel(savedLabel)
-    }
 
-    private fun emit() {
         emitPrologue()
         for (bb in data.blocks.preorder()) {
             if (!bb.equals(Label.entry)) {
-                objFunc.label("L${bb.index()}")
+                objFunc.label("L${bb.index}")
             }
-            emitBasicBlock(bb)
-        }
-
-        for (bb in data.blocks) {
-            for (instruction in bb) {
-                if (instruction !is Phi) {
-                    continue
-                }
-
-                emitPhi(instruction)
-            }
+            emitBasicBlock(bb, orderedLocation)
         }
     }
 
@@ -324,11 +336,14 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         }
 
         fun codegen(module: Module): Assembler {
+
+            val opt = VerifySSA.run(CopyInsertion.run(SplitCriticalEdge.run(module)))
             val asm = Assembler()
 
-            for (data in module.functions()) {
+            for (data in opt.functions()) {
                 CodeEmitter(data, asm.mkFunction(data.prototype.name)).emit()
             }
+
             return asm
         }
     }

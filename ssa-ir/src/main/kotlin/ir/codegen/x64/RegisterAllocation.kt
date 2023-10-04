@@ -2,8 +2,9 @@ package ir.codegen.x64
 
 import asm.x64.*
 import ir.*
-import ir.utils.LiveIntervals
+import ir.codegen.x64.regalloc.liveness.LiveIntervals
 import ir.utils.Location
+import ir.utils.OrderedLocation
 import java.lang.StringBuilder
 
 class RegisterAllocation(private var stackSize: Long,
@@ -27,11 +28,12 @@ class RegisterAllocation(private var stackSize: Long,
             if (reg !is GPRegister) {
                 continue
             }
-            if (CallConvention.gpCalleeSaveRegs.contains(reg)) {
-                if (registers.contains(reg)) {
+            val reg8 = reg(8)
+            if (CallConvention.gpCalleeSaveRegs.contains(reg8)) {
+                if (registers.contains(reg8)) { //Todo
                     continue
                 }
-                registers.add(reg)
+                registers.add(reg8)
             }
         }
 
@@ -39,17 +41,18 @@ class RegisterAllocation(private var stackSize: Long,
     }
 
     /** Get used caller save registers in given location. */
-    fun callerSaveRegisters(loc: Location): Set<GPRegister> {
+    fun callerSaveRegisters(loc: OrderedLocation): Set<GPRegister> {
         val registers = linkedSetOf<GPRegister>()
         for ((value, reg) in registerMap) {
             if (reg !is GPRegister) {
                 continue
             }
-            if (!CallConvention.gpCallerSaveRegs.contains(reg)) {
+            val reg8 = reg(8)
+            if (!CallConvention.gpCallerSaveRegs.contains(reg8)) {
                 continue
             }
-            if (!liveness[value].isDiedHere(loc)) {
-                registers.add(reg)
+            if (liveness[value].end() > loc) {
+                registers.add(reg8)
             }
         }
 

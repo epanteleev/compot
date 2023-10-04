@@ -1,17 +1,16 @@
 package ir.iterator
 
-import ir.BasicBlock
-import ir.Return
+import ir.*
 import java.util.*
 
 typealias Callback = (BasicBlock) -> Unit
 
-abstract class BasicBlocksIterator(countOfBlocks: Int): Iterator<BasicBlock> {
+abstract class BasicBlocksIterator(protected val countOfBlocks: Int): Iterator<BasicBlock> {
+    protected val order = ArrayList<BasicBlock>(countOfBlocks)
     protected val visited = BooleanArray(countOfBlocks)
 }
 
 abstract class DfsTraversalIterator(countOfBlocks: Int) : BasicBlocksIterator(countOfBlocks) {
-    protected val order = ArrayList<BasicBlock>(countOfBlocks)
     protected var iterator: MutableIterator<BasicBlock> = order.iterator()
 
     protected fun dfsForeachLabel(start: BasicBlock, callback: Callback) {
@@ -26,10 +25,10 @@ abstract class DfsTraversalIterator(countOfBlocks: Int) : BasicBlocksIterator(co
                 exitBlock = bb
                 continue
             }
-            if (!visited[bb.index()]) {
+            if (!visited[bb.index]) {
                 callback(bb)
-                visited[bb.index()] = true
-                stack.addAll(bb.successors)
+                visited[bb.index] = true
+                stack.addAll(bb.successors())
             }
         }
 
@@ -61,21 +60,20 @@ class PreorderIterator(start: BasicBlock, countOfBlocks: Int) : DfsTraversalIter
 }
 
 class BfsTraversalIterator(start: BasicBlock, countOfBlocks: Int) : BasicBlocksIterator(countOfBlocks) {
-    private val bfsOrdered = ArrayList<BasicBlock>(countOfBlocks)
     private val iterator: MutableIterator<BasicBlock>
 
     init {
-        bfsForeachLabel(start) { bb -> bfsOrdered.add(bb) }
-        iterator = bfsOrdered.iterator()
+        bfsForeachLabel(start) { bb -> order.add(bb) }
+        iterator = order.iterator()
     }
 
     private fun bfsForeachLabel(start: BasicBlock, callback: Callback) {
         val stack = LinkedList<List<BasicBlock>>()
         fun visitBlock(bb: BasicBlock) {
             callback(bb)
-            visited[bb.index()] = true
-            if (bb.successors.isNotEmpty()) {
-                stack.add(bb.successors)
+            visited[bb.index] = true
+            if (bb.successors().isNotEmpty()) {
+                stack.add(bb.successors())
             }
         }
 
@@ -85,7 +83,7 @@ class BfsTraversalIterator(start: BasicBlock, countOfBlocks: Int) : BasicBlocksI
             val basicBlocks = stack.pop()!!
 
             for (bb in basicBlocks) {
-                if (visited[bb.index()]) {
+                if (visited[bb.index]) {
                     continue
                 }
                 visitBlock(bb)
