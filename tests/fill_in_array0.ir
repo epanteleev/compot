@@ -1,0 +1,21 @@
+extern void printIntArray(i32*, i32)
+
+define u64 main() {
+entry:
+	%array = stackalloc i32* 5
+	%zero = gep i32* %array, 0
+	store i32* %zero, 0
+	%first = gep i32* %array, 1
+	store i32* %first, 1
+	%second = gep i32* %array, 2
+        store i32* %second, 2
+	%third = gep i32* %array, 3
+        store i32* %third, 3
+	%forth = gep i32* %array, 4
+        store i32* %forth, 4
+	%begin = gep i32* %array, 0
+	call void printIntArray(i32*: begin, i32: 5)
+	ret i32 0
+}
+
+

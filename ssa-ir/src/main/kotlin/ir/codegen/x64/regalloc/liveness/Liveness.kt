@@ -5,9 +5,10 @@ import ir.utils.OrderedLocation
 
 class Liveness private constructor(val data: FunctionData) {
     private val liveness = linkedMapOf<LocalValue, LiveRangeImpl>()
+    private val bbOrdering: Map<BasicBlock, Int>
     init {
         setupArguments()
-        setupLiveRanges()
+        bbOrdering = setupLiveRanges()
         evaluateUsages()
     }
 
@@ -18,10 +19,12 @@ class Liveness private constructor(val data: FunctionData) {
         }
     }
 
-    private fun setupLiveRanges() {
-        var ordering = 0
-        for (bb in data.blocks.bfsTraversal()) {
+    private fun setupLiveRanges(): Map<BasicBlock, Int> {
+        val bbOrdering = hashMapOf<BasicBlock, Int>()
+        var ordering = -1
+        for (bb in data.blocks.linearScanOrder()) {
             for ((index, inst) in bb.instructions().withIndex()) {
+                ordering += 1
                 if (inst !is LocalValue) {
                     continue
                 }
@@ -29,27 +32,38 @@ class Liveness private constructor(val data: FunctionData) {
                 /** New definition. */
                 val begin = OrderedLocation(bb, ordering, index)
                 liveness[inst] = LiveRangeImpl(begin, begin)
-                ordering += 1
             }
+            bbOrdering[bb] = ordering
         }
+
+        return bbOrdering
     }
 
     private fun evaluateUsages() {
-        var ordering = 0
+        var ordering = -1
         for (bb in data.blocks.linearScanOrder()) {
+            val maxBlock = bb.predecessors().fold(bb) { a, b ->
+                if (bbOrdering[a]!! > bbOrdering[b]!!) {
+                    a
+                } else {
+                    b
+                }
+            }
+
             for ((index, inst) in bb.instructions().withIndex()) {
-                val location = OrderedLocation(bb, ordering, index)
+                ordering += 1
+
+                val location = OrderedLocation(maxBlock, bbOrdering[maxBlock]!!, index)
                 for (usage in inst.usedValues()) {
                     if (usage !is LocalValue) {
                         continue
                     }
+
                     val liveRange = liveness[usage]
                         ?: throw LiveIntervalsException("in $usage")
 
                     liveRange.registerUsage(location)
                 }
-
-                ordering += 1
             }
         }
     }

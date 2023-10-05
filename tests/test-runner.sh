@@ -22,3 +22,13 @@ run_test fib
 
 compile_test fib_recursive
 run_test fib_recursive
+
+compile_test discriminant
+run_test discriminant
+
+compile_test factorial
+run_test factorial
+
+compile_test fill_in_array0
+run_test fill_in_array0
+

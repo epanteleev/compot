@@ -4,7 +4,7 @@ class EOFException(expect: String): Exception("Expect: $expect, but found EOF")
 
 class Tokenizer(val data: String) {
     private var globalPosition = 0
-    private var line = 0
+    private var line = 1
     private var pos = 0
 
     private fun remainsLine(begin: Int): String {

@@ -10,9 +10,9 @@ class ParseErrorException(message: String): Exception(message) {
             this( "${token.position()} found: ${token.message()}, but expect $expect")
 }
 
-private class FunctionBlockReader(private val iterator: TokenIterator, private val builder: FunctionDataBuilder) {
-    private val nameToValue = hashMapOf<String, Value>()
-    private val nameToLabel = hashMapOf<String, BasicBlock>("entry" to builder.begin())
+private class FunctionBlockReader(private val iterator: TokenIterator, private val builder: FunctionDataBuilder,
+                                  private val nameToValue: MutableMap<String, Value>) {
+    private val nameToLabel = hashMapOf("entry" to builder.begin())
 
     init {
         for (arg in builder.arguments()) {
@@ -302,8 +302,8 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
     }
 
     companion object {
-        fun parse(tokenIterator: TokenIterator, builder: FunctionDataBuilder) {
-            FunctionBlockReader(tokenIterator, builder).parseInstructions()
+        fun parse(tokenIterator: TokenIterator, builder: FunctionDataBuilder, nameToValue: MutableMap<String, Value>) {
+            FunctionBlockReader(tokenIterator, builder, nameToValue).parseInstructions()
         }
     }
 }
@@ -374,6 +374,7 @@ class ModuleReader(string: String) {
 
     private fun parseFunction() {
         // define <returnType> <functionName>(<value1>:<type1>, <value2>:<type2>,...)
+        val nameToValue = hashMapOf<String, Value>()
         val returnType = tokenIterator.expect<TypeToken>("return type").type()
         val functionName = parseFunctionName()
 
@@ -381,6 +382,7 @@ class ModuleReader(string: String) {
         val argumentsType = arrayListOf<Type>()
         val argumentValue = arrayListOf<ArgumentValue>()
 
+        var argumentNumber = 0
         do {
             val value = tokenIterator.next("value")
             if (value is CloseParen) {
@@ -390,7 +392,11 @@ class ModuleReader(string: String) {
 
             tokenIterator.expect<Colon>("':'")
             val type = tokenIterator.expect<TypeToken>("argument type").type()
-            argumentValue.add(ArgumentValue(value.name.toInt(), type))
+
+            val arg = ArgumentValue(argumentNumber, type)
+            argumentNumber += 1
+            nameToValue[value.name] = arg
+            argumentValue.add(arg)
             argumentsType.add(type)
 
             val comma = tokenIterator.next("','")
@@ -404,7 +410,7 @@ class ModuleReader(string: String) {
         } while (true)
 
         val fn = moduleBuilder.createFunction(functionName, returnType, argumentsType, argumentValue)
-        FunctionBlockReader.parse(tokenIterator, fn)
+        FunctionBlockReader.parse(tokenIterator, fn, nameToValue)
     }
 
     fun read(): Module {

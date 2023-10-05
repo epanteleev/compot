@@ -6,6 +6,26 @@ abstract class AnyFunctionPrototype(val name: String,
     fun type(): Type {
         return returnType
     }
+
+    fun arguments(): List<Type> {
+        return arguments
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other is AnyFunctionPrototype) {
+            return name == other.name &&
+                    returnType == other.type() &&
+                    arguments == other.arguments()
+
+        }
+
+        return false
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode() + arguments.hashCode() + returnType.hashCode()
+    }
 }
 
 class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
@@ -16,19 +36,6 @@ class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
         arguments.joinTo(builder)
         builder.append("): $returnType")
         return builder.toString()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as FunctionPrototype
-
-        return arguments == other.arguments
-    }
-
-    override fun hashCode(): Int {
-        return name.hashCode() + arguments.hashCode() + returnType.hashCode()
     }
 }
 

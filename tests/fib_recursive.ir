@@ -3,7 +3,7 @@ extern void printInt(u64)
 
 define u64 main() {
 entry:
-        %1 = call u64 fib(8: u64)
+        %1 = call i32 fib(8: i32)
 	call void printInt(%1: u64)
         ret u64 0
 }

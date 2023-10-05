@@ -1,4 +1,4 @@
-extern void printInt(u64)
+extern void printUlong(u64)
 
 define u64 sum8(%0:u64, %1:u64, %2:u64, %3:u64, %4:u64, %5:u64, %6:u64, %7:u64) {
 entry:	
@@ -34,7 +34,7 @@ entry:
 	%29 = add u64 %27, %28
 	%30 = load u64 %16
 	%31 = add u64 %29, %30
-	call void printInt(%31:u64)
+	call void printUlong(%31:u64)
 	store u64* %8, %31
 	%32 = load u64 %8
 	ret u64 %32

@@ -28,7 +28,7 @@ class LinearScan(val data: FunctionData) {
     private fun allocRegistersForArguments() {
         for ((group, _) in liveRangesGroup) {
             val arg = group.hasArgument
-                ?: continue
+                ?: continue //Todo 'break'
 
             val operand = pool.allocArgument(arg)
             active[group] = operand

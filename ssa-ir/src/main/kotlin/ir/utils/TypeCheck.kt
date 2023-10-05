@@ -56,6 +56,13 @@ object TypeCheck {
     fun checkCall(call: Call): Boolean {
         val returnType = call.type()
         val prototypeReturnType = call.prototype().type()
+
+        for ((expectedType, value) in call.prototype().arguments() zip call.arguments()) {
+            if (expectedType != value.type()) {
+                return false
+            }
+        }
+
         return returnType == prototypeReturnType
     }
 

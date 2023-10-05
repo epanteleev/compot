@@ -72,6 +72,9 @@ enum class ArithmeticOp {
 
 data class Arithmetic(val op: ArithmeticOp, val first: AnyOperand, val second: Operand): CPUInstruction {
     override fun toString(): String {
+        if (op == ArithmeticOp.MUL) {
+            return "imul${prefix(first.size)} $first, $second"
+        }
         return "$op${prefix(first.size)} $first, $second"
     }
 }

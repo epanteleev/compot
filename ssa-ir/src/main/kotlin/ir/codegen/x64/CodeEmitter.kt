@@ -106,8 +106,11 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
             ArithmeticBinaryOp.Mul -> {
                 objFunc.mul(second, first as Register)
             }
+            ArithmeticBinaryOp.Div -> {
+                objFunc.div(second, first as Register)
+            }
             else -> {
-                TODO()
+                println("Unimplemented: ${binary.op}")
             }
         }
 
@@ -336,7 +339,6 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         }
 
         fun codegen(module: Module): Assembler {
-
             val opt = VerifySSA.run(CopyInsertion.run(SplitCriticalEdge.run(module)))
             val asm = Assembler()
 

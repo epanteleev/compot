@@ -6,7 +6,7 @@ import ir.utils.TypeCheck
 
 data class ValidateSSAErrorException(override val message: String): Exception(message)
 
-class VerifySSA private constructor(private val functionData: FunctionData) {
+class VerifySSA private constructor(private val functionData: FunctionData, val prototypes: List<AnyFunctionPrototype>) {
     private val dominatorTree by lazy { functionData.blocks.dominatorTree() }
     private val creation by lazy { CreationInfo.create(functionData.blocks) }
 
@@ -155,6 +155,12 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
         for (instruction in bb) {
             when (instruction) {
                 is Phi -> validatePhi(instruction, bb)
+                is Callable -> {
+                    assert(prototypes.contains(instruction.prototype())) {
+                        "Called undefined function: prototype=${instruction.prototype()}"
+                    }
+                    validateDefUse(instruction, bb)
+                }
                 else -> validateDefUse(instruction, bb)
             }
         }
@@ -167,8 +173,9 @@ class VerifySSA private constructor(private val functionData: FunctionData) {
 
     companion object {
         fun run(module: Module): Module {
+            val prototypes = module.prototypes
             module.functions.forEach { data ->
-                VerifySSA(data).pass()
+                VerifySSA(data, prototypes).pass()
             }
 
             return module
