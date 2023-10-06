@@ -25,15 +25,6 @@ class BasicBlock(override val index: Int) : Label {
         predecessors.add(bb)
     }
 
-    fun updatePredecessor(old: BasicBlock, new: BasicBlock) {
-        val index = predecessors.indexOf(old)
-        if (index == -1) {
-            throw RuntimeException("Out of index: old=$old")
-        }
-
-        predecessors[index] = new
-    }
-
     private fun addSuccessor(bb: BasicBlock) {
         successors.add(bb)
     }

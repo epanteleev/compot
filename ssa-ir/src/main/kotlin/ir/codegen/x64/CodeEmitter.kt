@@ -51,7 +51,7 @@ private class ArgumentEmitter(val objFunc: ObjFunction) {
     }
 }
 
-class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
+class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val objFunc: ObjFunction) {
     private val valueToRegister = LinearScan.alloc(data)
 
     private fun emitPrologue() {
@@ -248,7 +248,7 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
     }
 
     private fun emitBranch(branch: Branch) {
-        objFunc.jump(JmpType.JMP, "L${branch.target().index}")
+        objFunc.jump(JmpType.JMP, ".L$functionCounter.${branch.target().index}")
     }
 
     private fun emitBranchCond(branchCond: BranchCond) {
@@ -267,7 +267,7 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
                 IntPredicate.Sle -> JmpType.JLE
             }
 
-            objFunc.jump(jmpType, "L${branchCond.onFalse().index}")
+            objFunc.jump(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
         } else {
             println("unsupported $branchCond")
         }
@@ -323,8 +323,9 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
         emitPrologue()
         for (bb in data.blocks.preorder()) {
             if (!bb.equals(Label.entry)) {
-                objFunc.label("L${bb.index}")
+                objFunc.label(".L$functionCounter.${bb.index}")
             }
+
             emitBasicBlock(bb, orderedLocation)
         }
     }
@@ -342,8 +343,8 @@ class CodeEmitter(val data: FunctionData, private val objFunc: ObjFunction) {
             val opt = VerifySSA.run(CopyInsertion.run(SplitCriticalEdge.run(module)))
             val asm = Assembler()
 
-            for (data in opt.functions()) {
-                CodeEmitter(data, asm.mkFunction(data.prototype.name)).emit()
+            for ((idx, data) in opt.functions().withIndex()) {
+                CodeEmitter(data, idx, asm.mkFunction(data.prototype.name)).emit()
             }
 
             return asm

@@ -1,6 +1,6 @@
 import ir.*
 import ir.builder.ModuleBuilder
-import ir.codegen.x64.LinearScan
+import ir.codegen.x64.regalloc.LinearScan
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.utils.DumpModule

@@ -1,0 +1,102 @@
+extern void printInt(i32)
+
+define u64 main() {
+entry:
+        %1 = call i32 clamp(8: i32, 9: i32, 10: i32)
+	call void printInt(%1: i32)
+	%2 = call i32 clamp(8: i32, 20: i32, 10: i32)
+        call void printInt(%2: i32)
+	%3 = call i32 clamp(8: i32, 1: i32, 10: i32)
+        call void printInt(%3: i32)
+        ret u64 0
+}
+
+;int max(int a, int b) {
+;    if (a > b) {
+;        return a;
+;    }
+;    return b;
+;}
+define i32 max(%a: i32, %b: i32) {
+entry:
+  %retval = stackalloc i32* 1
+  %aAddr = stackalloc i32* 1
+  %bAddr = stackalloc i32* 1
+  store i32* %aAddr, %a
+  store i32* %bAddr, %b
+  %0 = load i32 %aAddr
+  %1 = load i32 %bAddr
+  %cmp = icmp sgt i32 %0, %1
+  br u1 %cmp label ifThen, label ifEnd
+
+ifThen:
+  %2 = load i32 %aAddr
+  store i32* %retval, %2
+  br label return
+
+ifEnd:
+  %3 = load i32 %bAddr
+  store i32* %retval, %3
+  br label return
+
+return:
+  %4 = load i32 %retval
+  ret i32 %4
+}
+
+;int min(int a, int b) {
+;    if (a < b) {
+;        return a;
+;    }
+;    return b;
+;}
+define i32 min(%a: i32, %b: i32) {
+entry:
+  %retval = stackalloc i32* 1
+  %aAddr = stackalloc i32* 1
+  %bAddr = stackalloc i32* 1
+  store i32* %aAddr, %a
+  store i32* %bAddr, %b
+  %0 = load i32 %aAddr
+  %1 = load i32 %bAddr
+  %cmp = icmp slt i32 %0, %1
+  br u1 %cmp label ifThen, label ifEnd
+
+ifThen:
+  %2 = load i32 %aAddr
+  store i32* %retval, %2
+  br label return
+
+ifEnd:
+  %3 = load i32 %bAddr
+  store i32* %retval, %3
+  br label return
+
+return:
+  %4 = load i32 %retval
+  ret i32 %4
+}
+
+;int clamp(int from, int value, int to) {
+;    int b = min(value, to);
+;    return max(from, b);
+;}
+define i32 clamp(%from: i32, %value: i32, %to: i32) {
+entry:
+  %fromAddr = stackalloc i32* 1
+  %valueAddr = stackalloc i32* 1
+  %toAddr = stackalloc i32* 1
+  %b = stackalloc i32* 1
+  store i32* %fromAddr, %from
+  store i32* %valueAddr, %value
+  store i32* %toAddr, %to
+  %0 = load i32 %valueAddr
+  %1 = load i32 %toAddr
+  %call = call i32 min(%0: i32, %1: i32)
+  store i32* %b, %call
+  %2 = load i32 %fromAddr
+  %3 = load i32 %b
+  %call1 = call i32 max(%2: i32, %3: i32)
+  ret i32 %call1
+}
+

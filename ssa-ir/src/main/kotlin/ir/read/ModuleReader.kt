@@ -73,7 +73,7 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
         throw ParseErrorException("existed value", pointerToken)
 
         if (type.type() != pointer.type()) {
-            throw ParseErrorException("${currentTok.position()} incorrect type: expect=${type.type()}, actual=${pointer.type()}")
+            throw ParseErrorException("${currentTok.position()} incorrect type: expect=${pointer.type()}, actual=${type.type()}")
         }
         iterator.expect<Comma>("','")
         val valueToken = parseOperand(type.kind(), "stored value")
@@ -388,7 +388,9 @@ class ModuleReader(string: String) {
             if (value is CloseParen) {
                 break
             }
-            value as ValueToken
+            if (value !is ValueToken) {
+                throw ParseErrorException("value ", value)
+            }
 
             tokenIterator.expect<Colon>("':'")
             val type = tokenIterator.expect<TypeToken>("argument type").type()

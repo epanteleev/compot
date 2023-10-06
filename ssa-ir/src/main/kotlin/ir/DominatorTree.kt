@@ -136,12 +136,7 @@ class DominatorTree(private val idomMap: MutableMap<BasicBlock, BasicBlock>) {
             }
 
             fun postorder(): List<BasicBlock> {
-                val blocksOrder = arrayListOf<BasicBlock>()
-                for (bb in basicBlocks.postorder()) {
-                    blocksOrder.add(bb)
-                }
-
-                return blocksOrder
+                return basicBlocks.postorder().order()
             }
 
             fun indexBlocks(blocksOrder: List<BasicBlock>): Map<BasicBlock, Int> {

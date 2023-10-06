@@ -13,9 +13,10 @@ class Liveness private constructor(val data: FunctionData) {
     }
 
     private fun setupArguments() {
-        data.arguments().forEach {
-            val begin = OrderedLocation(data.blocks.begin(), -1, -1)
-            liveness[it] = LiveRangeImpl(begin, begin)
+        val arguments = data.arguments()
+        for ((index, arg) in arguments.withIndex()) {
+            val begin = OrderedLocation(data.blocks.begin(), -(arguments.size - index), -1)
+            liveness[arg] = LiveRangeImpl(begin, begin)
         }
     }
 

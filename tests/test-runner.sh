@@ -29,6 +29,12 @@ run_test discriminant
 compile_test factorial
 run_test factorial
 
+compile_test manyBranches
+run_test manyBranches
+
+compile_test clamp
+run_test clamp
+
 compile_test fill_in_array0
 run_test fill_in_array0
 
