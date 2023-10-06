@@ -1,5 +1,6 @@
 package ir
 
+import ir.block.Block
 import java.lang.RuntimeException
 
 abstract class Instruction(protected val tp: Type, protected var usages: ArrayList<Value>) {
@@ -13,19 +14,20 @@ abstract class Instruction(protected val tp: Type, protected var usages: ArrayLi
         return usages.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
     }
 
-    fun usedValues(): List<Value> {
+    fun usages(): List<Value> {
         return usages
     }
+
     abstract fun dump(): String
 }
 
-abstract class ValueInstruction(protected val define: Int, tp: Type, usages: ArrayList<Value>): Instruction(tp, usages), LocalValue {
-    override fun defined(): Int {
-        return define
+abstract class ValueInstruction(protected val identifier: String, tp: Type, usages: ArrayList<Value>): Instruction(tp, usages), LocalValue {
+    override fun name(): String {
+        return identifier
     }
 
     override fun toString(): String {
-        return "%$define"
+        return "%$identifier"
     }
 
     override fun type(): Type {
@@ -90,9 +92,9 @@ enum class ArithmeticUnaryOp {
     }
 }
 
-class ArithmeticUnary(index: Int, tp: Type, val op: ArithmeticUnaryOp, value: Value): ValueInstruction(index, tp, arrayListOf(value)) {
+class ArithmeticUnary(name: String, tp: Type, val op: ArithmeticUnaryOp, value: Value): ValueInstruction(name, tp, arrayListOf(value)) {
     override fun dump(): String {
-        return "%$define = $op $tp ${operand()}"
+        return "%$identifier = $op $tp ${operand()}"
     }
 
     fun operand(): Value {
@@ -129,9 +131,9 @@ enum class ArithmeticBinaryOp {
     }
 }
 
-class ArithmeticBinary(index: Int, tp: Type, a: Value, val op: ArithmeticBinaryOp, b: Value): ValueInstruction(index, tp, arrayListOf(a, b)) {
+class ArithmeticBinary(name: String, tp: Type, a: Value, val op: ArithmeticBinaryOp, b: Value): ValueInstruction(name, tp, arrayListOf(a, b)) {
     override fun dump(): String {
-        return "%$define = $op $tp ${first()}, ${second()}"
+        return "%$identifier = $op $tp ${first()}, ${second()}"
     }
 
     fun first(): Value {
@@ -160,9 +162,9 @@ enum class CastType {
     }
 }
 
-class IntCompare(index: Int, a: Value, private val predicate: IntPredicate, b: Value) : ValueInstruction(index, Type.U1, arrayListOf(a, b)) {
+class IntCompare(name: String, a: Value, private val predicate: IntPredicate, b: Value) : ValueInstruction(name, Type.U1, arrayListOf(a, b)) {
     override fun dump(): String {
-        return "%$define = icmp $predicate ${first().type()} ${first()}, ${second()}"
+        return "%$identifier = icmp $predicate ${first().type()} ${first()}, ${second()}"
     }
 
     fun predicate(): IntPredicate {
@@ -178,9 +180,9 @@ class IntCompare(index: Int, a: Value, private val predicate: IntPredicate, b: V
     }
 }
 
-class Load(index: Int, ptr: Value): ValueInstruction(index, ptr.type().dereference(), arrayListOf(ptr)) {
+class Load(name: String, ptr: Value): ValueInstruction(name, ptr.type().dereference(), arrayListOf(ptr)) {
     override fun dump(): String {
-        return "%$define = load $tp ${operand()}"
+        return "%$identifier = load $tp ${operand()}"
     }
 
     fun operand(): Value {
@@ -202,9 +204,9 @@ class Store(pointer: Value, value: Value): Instruction(pointer.type(), arrayList
     }
 }
 
-class StackAlloc(index: Int, ty: Type, val size: Long): ValueInstruction(index, ty.ptr(), arrayListOf()) {
+class StackAlloc(name: String, ty: Type, val size: Long): ValueInstruction(name, ty.ptr(), arrayListOf()) {
     override fun dump(): String {
-        return "%$define = stackalloc $tp $size"
+        return "%$identifier = stackalloc $tp $size"
     }
 }
 
@@ -214,8 +216,8 @@ interface Callable: Value {
     fun prototype(): AnyFunctionPrototype
 }
 
-class Call(index: Int, tp: Type, private val func: AnyFunctionPrototype, args: ArrayList<Value>):
-    ValueInstruction(index, tp, args), Callable {
+class Call(name: String, tp: Type, private val func: AnyFunctionPrototype, args: ArrayList<Value>):
+    ValueInstruction(name, tp, args), Callable {
     init {
         require(func.type() != Type.Void) { "Must be non void" }
     }
@@ -227,13 +229,13 @@ class Call(index: Int, tp: Type, private val func: AnyFunctionPrototype, args: A
 
         other as Call
 
-        if (define != other.define) return false
+        if (identifier != other.identifier) return false
         if (func != other.func) return false
         return usages === other.usages
     }
 
     override fun hashCode(): Int {
-        var result = define.hashCode()
+        var result = identifier.hashCode()
         result = 31 * result + func.hashCode()
         result = 31 * result + usages.hashCode()
         return result
@@ -249,7 +251,7 @@ class Call(index: Int, tp: Type, private val func: AnyFunctionPrototype, args: A
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%$define = call $tp ${func.name}(")
+        builder.append("%$identifier = call $tp ${func.name}(")
         usages.joinTo(builder) { "$it:${it.type()}"}
         builder.append(")")
         return builder.toString()
@@ -282,9 +284,9 @@ class VoidCall(private val func: AnyFunctionPrototype, args: ArrayList<Value>): 
     }
 }
 
-class GetElementPtr(indexDes: Int, tp: Type, source: Value, index: Value): ValueInstruction(indexDes, tp, arrayListOf(source, index)) {
+class GetElementPtr(name: String, tp: Type, source: Value, index: Value): ValueInstruction(name, tp, arrayListOf(source, index)) {
     override fun dump(): String {
-        return "%$define = gep $tp ${source()}, ${index()}"
+        return "%$identifier = gep $tp ${source()}, ${index()}"
     }
 
     fun source(): Value {
@@ -296,9 +298,9 @@ class GetElementPtr(indexDes: Int, tp: Type, source: Value, index: Value): Value
     }
 }
 
-class Cast(index: Int, ty: Type, val castType: CastType, value: Value): ValueInstruction(index, ty, arrayListOf(value)) {
+class Cast(name: String, ty: Type, val castType: CastType, value: Value): ValueInstruction(name, ty, arrayListOf(value)) {
     override fun dump(): String {
-        return "%$define = $castType $tp ${value()}"
+        return "%$identifier = $castType $tp ${value()}"
     }
 
     fun value(): Value {
@@ -306,10 +308,10 @@ class Cast(index: Int, ty: Type, val castType: CastType, value: Value): ValueIns
     }
 }
 
-class Phi(index: Int, ty: Type, private val incoming: MutableList<BasicBlock>, incomingValue: ArrayList<Value>): ValueInstruction(index, ty, incomingValue) {
+class Phi(name: String, ty: Type, private val incoming: MutableList<Block>, incomingValue: ArrayList<Value>): ValueInstruction(name, ty, incomingValue) {
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%$define = phi $tp [")
+        builder.append("%$identifier = phi $tp [")
         usages.zip(incoming).joinTo(builder) {
             "${it.first}: ${it.second}"
         }
@@ -321,13 +323,13 @@ class Phi(index: Int, ty: Type, private val incoming: MutableList<BasicBlock>, i
         throw RuntimeException("Don't use it for phi node")
     }
 
-    fun updateUsagesInPhi(fn: (Value, BasicBlock) -> Value) {
+    fun updateUsagesInPhi(fn: (Value, Block) -> Value) {
        for (i in 0 until usages.size) {
            usages[i] = fn(usages[i], incoming[i])
        }
     }
 
-    fun updateIncoming(old: BasicBlock, new: BasicBlock) {
+    fun updateIncoming(old: Block, new: Block) {
         val index = incoming.indexOf(old)
         assert(index != -1) {
             "cannot find old=$old"
@@ -336,23 +338,23 @@ class Phi(index: Int, ty: Type, private val incoming: MutableList<BasicBlock>, i
         incoming[index] = new
     }
 
-    fun incoming(): List<BasicBlock> {
+    fun incoming(): List<Block> {
          return incoming
     }
 
-    fun zip(): Iterator<Pair<BasicBlock, Value>> {
-        return (incoming() zip usedValues()).iterator()
+    fun zip(): Iterator<Pair<Block, Value>> {
+        return (incoming() zip usages()).iterator()
     }
     companion object {
-        fun create(index: Int, ty: Type): Phi {
+        fun create(index: String, ty: Type): Phi {
             return Phi(index, ty, arrayListOf(), arrayListOf())
         }
     }
 }
 
-class Select(index: Int, ty: Type, cond: Value, onTrue: Value, onFalse: Value): ValueInstruction(index, ty, arrayListOf(cond, onTrue, onFalse)) {
+class Select(name: String, ty: Type, cond: Value, onTrue: Value, onFalse: Value): ValueInstruction(name, ty, arrayListOf(cond, onTrue, onFalse)) {
     override fun dump(): String {
-        return "%$define = select $tp ${condition()} ${onTrue()}, ${onFalse()}"
+        return "%$identifier = select $tp ${condition()} ${onTrue()}, ${onFalse()}"
     }
 
     fun condition(): Value {
@@ -368,9 +370,9 @@ class Select(index: Int, ty: Type, cond: Value, onTrue: Value, onFalse: Value): 
     }
 }
 
-class Copy(index: Int, origin: Value): ValueInstruction(index, origin.type(), arrayListOf(origin)) {
+class Copy(name: String, origin: Value): ValueInstruction(name, origin.type(), arrayListOf(origin)) {
     override fun dump(): String {
-        return "%$define = copy $tp ${origin()}"
+        return "%$identifier = copy $tp ${origin()}"
     }
 
     fun origin(): Value {
@@ -378,23 +380,23 @@ class Copy(index: Int, origin: Value): ValueInstruction(index, origin.type(), ar
     }
 }
 
-abstract class TerminateInstruction(usages: ArrayList<Value>, val targets: Array<BasicBlock>): Instruction(Type.UNDEF, usages) {
-    fun targets(): Array<BasicBlock> {
+abstract class TerminateInstruction(usages: ArrayList<Value>, val targets: Array<Block>): Instruction(Type.UNDEF, usages) {
+    fun targets(): Array<Block> {
         return targets
     }
 }
 
-class Branch(target: BasicBlock): TerminateInstruction(arrayListOf(), arrayOf(target)) {
+class Branch(target: Block): TerminateInstruction(arrayListOf(), arrayOf(target)) {
     override fun dump(): String {
         return "br label ${target()}"
     }
 
-    fun target(): BasicBlock {
+    fun target(): Block {
         return targets[0]
     }
 }
 
-class BranchCond(value: Value, onTrue: BasicBlock, onFalse: BasicBlock): TerminateInstruction(arrayListOf(value), arrayOf(onTrue, onFalse)) {
+class BranchCond(value: Value, onTrue: Block, onFalse: Block): TerminateInstruction(arrayListOf(value), arrayOf(onTrue, onFalse)) {
     override fun dump(): String {
         return "br u1 ${condition()} label ${onTrue()}, label ${onFalse()} "
     }
@@ -403,11 +405,11 @@ class BranchCond(value: Value, onTrue: BasicBlock, onFalse: BasicBlock): Termina
         return usages[0]
     }
 
-    fun onTrue(): BasicBlock {
+    fun onTrue(): Block {
         return targets[0]
     }
 
-    fun onFalse(): BasicBlock {
+    fun onFalse(): Block {
         return targets[1]
     }
 }

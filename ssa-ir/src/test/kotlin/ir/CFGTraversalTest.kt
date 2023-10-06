@@ -1,5 +1,6 @@
 package ir
 
+import ir.block.BlockViewer
 import ir.builder.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import kotlin.test.Test

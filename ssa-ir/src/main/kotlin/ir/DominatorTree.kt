@@ -1,8 +1,10 @@
 package ir
 
+import ir.block.AnyBlock
+import ir.block.Label
 import java.util.HashMap
 
-class DominatorTree(private val idomMap: MutableMap<BasicBlock, BasicBlock>) {
+class DominatorTree(private val idomMap: MutableMap<AnyBlock, AnyBlock>) {
     private val cachedDominators = hashMapOf<Label, List<Label>>()
 
     private fun calculateDominators(target: Label): List<Label> {
@@ -41,8 +43,8 @@ class DominatorTree(private val idomMap: MutableMap<BasicBlock, BasicBlock>) {
         return dom
     }
 
-    fun frontiers(): Map<BasicBlock, List<BasicBlock>> {
-        val dominanceFrontiers = hashMapOf<BasicBlock, MutableList<BasicBlock>>()
+    fun frontiers(): Map<AnyBlock, List<AnyBlock>> {
+        val dominanceFrontiers = hashMapOf<AnyBlock, MutableList<AnyBlock>>()
 
         idomMap.forEach { (bb, idom) ->
             val predecessors = bb.predecessors()
@@ -51,7 +53,7 @@ class DominatorTree(private val idomMap: MutableMap<BasicBlock, BasicBlock>) {
             }
 
             for (p in predecessors) {
-                var runner: BasicBlock = p
+                var runner: AnyBlock = p
                 while (runner != idom) {
                     (dominanceFrontiers.getOrPut(runner) { arrayListOf() }).add(bb)
                     runner = idomMap[runner]!!
@@ -62,7 +64,7 @@ class DominatorTree(private val idomMap: MutableMap<BasicBlock, BasicBlock>) {
         return dominanceFrontiers
     }
 
-    operator fun iterator(): MutableIterator<MutableMap.MutableEntry<BasicBlock, BasicBlock>> {
+    operator fun iterator(): MutableIterator<MutableMap.MutableEntry<AnyBlock, AnyBlock>> {
         return idomMap.iterator()
     }
 
@@ -83,7 +85,7 @@ class DominatorTree(private val idomMap: MutableMap<BasicBlock, BasicBlock>) {
                 return dominators
             }
 
-            fun calculateSuccessors(postorder: List<BasicBlock>, blockToIndex: Map<BasicBlock, Int>): Map<Int, List<Int>> {
+            fun calculateSuccessors(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> {
                 val predecessors = hashMapOf<Int, List<Int>>()
 
                 for (bb in postorder) {
@@ -124,10 +126,10 @@ class DominatorTree(private val idomMap: MutableMap<BasicBlock, BasicBlock>) {
                 return definedSuccessors.fold(definedSuccessors.first(), lambda)
             }
 
-            fun enumerationToBlocks(blocks: List<BasicBlock>, indexToBlock: Map<Int, BasicBlock>, dominators: MutableMap<Int, Int>): DominatorTree {
+            fun enumerationToBlocks(blocks: List<AnyBlock>, indexToBlock: Map<Int, AnyBlock>, dominators: MutableMap<Int, Int>): DominatorTree {
                 dominators.remove(blocks.size - 1)
 
-                val domTree = hashMapOf<BasicBlock, BasicBlock>()
+                val domTree = hashMapOf<AnyBlock, AnyBlock>()
                 for (entry in dominators) {
                     domTree[indexToBlock[entry.key]!!] = indexToBlock[entry.value]!!
                 }
@@ -135,12 +137,12 @@ class DominatorTree(private val idomMap: MutableMap<BasicBlock, BasicBlock>) {
                 return DominatorTree(domTree)
             }
 
-            fun postorder(): List<BasicBlock> {
+            fun postorder(): List<AnyBlock> {
                 return basicBlocks.postorder().order()
             }
 
-            fun indexBlocks(blocksOrder: List<BasicBlock>): Map<BasicBlock, Int> {
-                val blockToIndex = hashMapOf<BasicBlock, Int>()
+            fun indexBlocks(blocksOrder: List<AnyBlock>): Map<AnyBlock, Int> {
+                val blockToIndex = hashMapOf<AnyBlock, Int>()
                 for ((idx, bb) in blocksOrder.withIndex()) {
                     blockToIndex[bb] = idx
                 }

@@ -1,14 +1,15 @@
 package ir.utils
 
 import ir.*
+import ir.block.AnyBlock
 
 class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     private val allocated: Set<ValueInstruction> by lazy { allocatedVariablesInternal() }
-    private val stores: Map<ValueInstruction, Set<BasicBlock>> by lazy { allStoresInternal(allocated) }
+    private val stores: Map<ValueInstruction, Set<AnyBlock>> by lazy { allStoresInternal(allocated) }
 
     private fun allocatedVariablesInternal(): Set<ValueInstruction> {
         val stores = hashSetOf<ValueInstruction>()
-        fun allocatedInGivenBlock(bb: BasicBlock) {
+        fun allocatedInGivenBlock(bb: AnyBlock) {
             for (inst in bb.valueInstructions()) {
                 if (inst is StackAlloc && inst.size == 1L) {
                     stores.add(inst)
@@ -23,8 +24,8 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
         return stores
     }
 
-    private fun allStoresInternal(variables: Set<ValueInstruction>): Map<ValueInstruction, Set<BasicBlock>> {
-        val stores = hashMapOf<ValueInstruction, MutableSet<BasicBlock>>()
+    private fun allStoresInternal(variables: Set<ValueInstruction>): Map<ValueInstruction, Set<AnyBlock>> {
+        val stores = hashMapOf<ValueInstruction, MutableSet<AnyBlock>>()
         for (v in variables) {
             stores[v] = mutableSetOf()
         }
@@ -48,7 +49,7 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     }
 
     /** Find all bd where are stores of given local variable. */
-    fun allStores(): Map<ValueInstruction, Set<BasicBlock>> {
+    fun allStores(): Map<ValueInstruction, Set<AnyBlock>> {
         return stores
     }
 

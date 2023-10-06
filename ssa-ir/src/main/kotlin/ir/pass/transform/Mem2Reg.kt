@@ -1,8 +1,10 @@
 package ir.pass.transform
 
 import ir.*
+import ir.block.AnyBlock
+import ir.block.Block
+import ir.block.Label
 import ir.utils.*
-import kotlin.math.max
 
 data class Mem2RegException(override val message: String): Exception(message)
 
@@ -29,7 +31,7 @@ private class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Domi
         }
     }
 
-    private fun rewriteValuesSetup(bb: BasicBlock) {
+    private fun rewriteValuesSetup(bb: Block) {
         for (instruction in bb) {
             if (Utils.isStoreOfLocalVariable(instruction)) {
                 instruction as Store
@@ -59,7 +61,7 @@ private class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Domi
             if (instruction is Phi) {
                 // Note: all used values are equal in uncompleted phi instruction.
                 // Will take only first value.
-                addValues(bb, instruction.usedValues().first(), instruction)
+                addValues(bb, instruction.usages().first(), instruction)
                 continue
             }
 
@@ -67,8 +69,8 @@ private class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Domi
         }
     }
 
-    private fun initialize(cfg: BasicBlocks): MutableMap<BasicBlock, MutableMap<Value, Value>> {
-        val bbToMapValues = hashMapOf<BasicBlock, MutableMap<Value, Value>>()
+    private fun initialize(cfg: BasicBlocks): MutableMap<Block, MutableMap<Value, Value>> {
+        val bbToMapValues = hashMapOf<Block, MutableMap<Value, Value>>()
         for (bb in cfg) {
             bbToMapValues[bb] = hashMapOf()
         }
@@ -92,7 +94,7 @@ private class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Domi
         return null
     }
 
-    fun rename(bb: BasicBlock, oldValue: Value): Value {
+    fun rename(bb: Block, oldValue: Value): Value {
         return if (oldValue is ValueInstruction) {
             findActualValueOrNull(bb, oldValue) ?: oldValue
         } else {
@@ -100,7 +102,7 @@ private class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Domi
         }
     }
 
-    fun addValues(bb: BasicBlock, from: Value, to: Value) {
+    fun addValues(bb: Block, from: Value, to: Value) {
         bbToMapValues[bb]!![from] = to
     }
 
@@ -117,35 +119,18 @@ private class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Domi
     }
 }
 
-class Mem2Reg private constructor(private val cfg: BasicBlocks, private val joinSet: Map<BasicBlock, Set<Value>>) {
-    private fun findMaxIndex(): Int {
-        var idx = 0
-        for (bb in cfg) {
-            for (instruction in bb.valueInstructions()) {
-                idx = max(instruction.defined(), idx)
+class Mem2Reg private constructor(private val cfg: BasicBlocks, private val joinSet: Map<AnyBlock, Set<Value>>) {
+    private fun insertPhisIfNeeded(bb: Block) {
+        val values = joinSet[bb] ?: return /** skip phi insertion. **/
+
+        for (v in values) {
+            bb.insert(0) {
+                it.uncompletedPhi(v, bb)
             }
         }
-
-        return idx
     }
 
-    private fun insertPhisIfNeeded(idx: Int, bb: BasicBlock): Int {
-        val values = joinSet[bb] ?: return idx
-
-        var newIdx = idx
-        for (v in values) {
-            val incoming = bb.predecessors().mapTo(arrayListOf()) { v }
-
-            val phi = Phi(newIdx, v.type().dereference(), bb.predecessors().toMutableList(), incoming)
-            bb.prepend(phi)
-
-            newIdx += 1
-        }
-
-        return newIdx
-    }
-
-    private fun completePhis(bbToMapValues: RewriteAssistant, bb: BasicBlock) {
+    private fun completePhis(bbToMapValues: RewriteAssistant, bb: Block) {
         for (phi in bb.phis()) {
             phi.updateUsagesInPhi { v, l ->
                 bbToMapValues.rename(l, v)
@@ -158,14 +143,14 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
                     continue
                 }
 
-                if (bb.containsBefore(used, phi)) {
+                if (bb.isBefore(used, phi)) {
                     phi.updateIncoming(incoming, bb)
                 }
             }
         }
     }
 
-    private fun removeMemoryInstructions(bb: BasicBlock) {
+    private fun removeMemoryInstructions(bb: Block) {
         fun filter(instruction: Instruction): Boolean {
             return when {
                 Utils.isStackAllocOfLocalVariable(instruction) -> true
@@ -178,7 +163,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
         bb.removeIf { filter(it) }
     }
 
-    private fun removeRedundantPhis(defUseInfo: DefUseInfo, deadPool: MutableSet<Instruction>, bb: BasicBlock) {
+    private fun removeRedundantPhis(defUseInfo: DefUseInfo, deadPool: MutableSet<Instruction>, bb: Block) {
         fun filter(instruction: Instruction): Boolean {
             if (instruction !is Phi) {
                 return false
@@ -196,10 +181,8 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
     }
 
     private fun pass(dominatorTree: DominatorTree) {
-        var idx = findMaxIndex() + 1
-
         for (bb in cfg) {
-            idx = insertPhisIfNeeded(idx, bb)
+            insertPhisIfNeeded(bb)
         }
 
         val bbToMapValues = RewriteAssistant(cfg, dominatorTree)

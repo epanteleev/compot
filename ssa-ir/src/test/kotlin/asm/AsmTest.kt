@@ -1,10 +1,7 @@
 package asm
 import asm.x64.*
-import ir.BasicBlock
-import ir.utils.OrderedLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class AsmTest {
     @Test

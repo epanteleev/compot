@@ -13,11 +13,13 @@ open class LiveRange internal constructor(protected val creation: OrderedLocatio
     }
 
     fun merge(other: LiveRange): LiveRange {
-        return LiveRange(minOf(other.creation, creation, compareBy { it.order }), maxOf(other.end, end, compareBy { it.order }))
+        val begin = minOf(other.creation, creation, compareBy { it.index })
+        val end = maxOf(other.end, end, compareBy { it.index })
+        return LiveRange(begin, end)
     }
 
     override fun toString(): String {
-        return "creation $creation, died $end"
+        return "range [$creation : $end]"
     }
 }
 

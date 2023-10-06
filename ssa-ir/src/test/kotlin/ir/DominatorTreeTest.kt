@@ -1,5 +1,6 @@
 package ir
 
+import ir.block.BlockViewer
 import ir.builder.ModuleBuilder
 import kotlin.test.Test
 import kotlin.test.assertTrue

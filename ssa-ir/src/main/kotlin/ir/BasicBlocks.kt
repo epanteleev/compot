@@ -1,12 +1,14 @@
 package ir
 
+import ir.block.Block
+import ir.block.Label
 import ir.iterator.*
 import ir.utils.DefUseInfo
 import kotlin.math.max
 
 
-class BasicBlocks(private val basicBlocks: MutableList<BasicBlock>) {
-    fun blocks(): MutableList<BasicBlock> {
+class BasicBlocks(private val basicBlocks: MutableList<Block>) {
+    fun blocks(): MutableList<Block> {
         return basicBlocks
     }
 
@@ -14,7 +16,7 @@ class BasicBlocks(private val basicBlocks: MutableList<BasicBlock>) {
         return basicBlocks.size
     }
 
-    fun findBlock(label: Label): BasicBlock {
+    fun findBlock(label: Label): Block {
         return basicBlocks.find { it.index == label.index }
             ?: throw IllegalArgumentException("Cannot find correspond block: $label")
     }
@@ -26,18 +28,13 @@ class BasicBlocks(private val basicBlocks: MutableList<BasicBlock>) {
     fun maxInstructionIndex(): Int {
         var index = -1
         for (bb in basicBlocks) {
-            for (inst in bb) {
-                if (inst !is ValueInstruction) {
-                    continue
-                }
-
-                index = max(index, inst.defined())
-            }
+            index = max(index, bb.maxValueIndex())
         }
+
         return index
     }
 
-    fun begin(): BasicBlock {
+    fun begin(): Block {
         return basicBlocks[0]
     }
 
@@ -61,7 +58,7 @@ class BasicBlocks(private val basicBlocks: MutableList<BasicBlock>) {
         return DominatorTree.evaluate(this)
     }
 
-    fun putBlock(block: BasicBlock) {
+    fun putBlock(block: Block) {
         basicBlocks.add(block)
     }
 
@@ -69,16 +66,16 @@ class BasicBlocks(private val basicBlocks: MutableList<BasicBlock>) {
         return DefUseInfo.create(this)
     }
 
-    operator fun iterator(): Iterator<BasicBlock> {
+    operator fun iterator(): Iterator<Block> {
         return basicBlocks.iterator()
     }
 
     companion object {
-        fun create(startBB: BasicBlock): BasicBlocks {
+        fun create(startBB: Block): BasicBlocks {
             return BasicBlocks(arrayListOf(startBB))
         }
 
-        fun create(blocks: MutableList<BasicBlock>): BasicBlocks {
+        fun create(blocks: MutableList<Block>): BasicBlocks {
             return BasicBlocks(blocks)
         }
     }

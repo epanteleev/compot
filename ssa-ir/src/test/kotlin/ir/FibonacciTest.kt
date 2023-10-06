@@ -1,12 +1,8 @@
 package ir
 
+import ir.block.BlockViewer
 import ir.builder.ModuleBuilder
-import ir.codegen.x64.CodeEmitter
 import ir.pass.ana.VerifySSA
-import ir.pass.transform.Mem2Reg
-import ir.pass.transform.SplitCriticalEdge
-import ir.utils.DumpModule
-import ir.codegen.x64.regalloc.liveness.Liveness
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

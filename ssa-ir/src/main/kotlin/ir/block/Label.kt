@@ -1,4 +1,4 @@
-package ir
+package ir.block
 
 interface Label {
     val index: Int

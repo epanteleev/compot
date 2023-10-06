@@ -3,13 +3,13 @@ package ir.codegen.x64
 import asm.x64.*
 import ir.*
 import ir.Call
-import ir.Label
+import ir.block.Label
 import ir.Module
+import ir.block.Block
 import ir.codegen.x64.regalloc.LinearScan
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.CopyInsertion
 import ir.pass.transform.SplitCriticalEdge
-import ir.utils.DumpModule
 import ir.utils.OrderedLocation
 
 private class ArgumentEmitter(val objFunc: ObjFunction) {
@@ -286,7 +286,7 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         }
     }
 
-    private fun emitBasicBlock(bb: BasicBlock, map: Map<Callable, OrderedLocation>) {
+    private fun emitBasicBlock(bb: Block, map: Map<Callable, OrderedLocation>) {
         for (instruction in bb) {
             when (instruction) {
                 is ArithmeticBinary -> emitArithmeticBinary(instruction)
@@ -314,7 +314,7 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
             for ((idx, call) in bb.instructions().withIndex()) {
                 if (call is Call || call is VoidCall) {
                     call as Callable
-                    orderedLocation[call] = OrderedLocation(bb, order, idx)
+                    orderedLocation[call] = OrderedLocation(bb, order)
                 }
                 order += 1
             }

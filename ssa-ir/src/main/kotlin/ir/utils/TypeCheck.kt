@@ -15,7 +15,7 @@ object TypeCheck {
 
     fun checkPhi(phi: Phi): Boolean {
         val type = phi.type()
-        for (use in phi.usedValues()) {
+        for (use in phi.usages()) {
             if (type != use.type()) {
                 return false
             }

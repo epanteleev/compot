@@ -1,43 +1,25 @@
 package ir.builder
 
 import ir.*
-import ir.utils.TypeCheck
+import ir.block.Block
+import ir.block.Label
 
 class FunctionDataBuilder private constructor(
     private val prototype: FunctionPrototype,
     private var argumentValues: List<ArgumentValue>,
-    private val blocks: BasicBlocks,
-    private var value: Int
+    private val blocks: BasicBlocks
 ) {
     private var allocatedLabel: Int = 0
-    private var bb: BasicBlock = blocks.begin()
+    private var bb: Block = blocks.begin()
 
-    private fun allocateValue(): Int {
-        val currentValue = value
-        value += 1
-        return currentValue
-    }
-
-    private fun allocateBlock(): BasicBlock {
+    private fun allocateBlock(): Block {
         allocatedLabel += 1
-        val bb = BasicBlock.empty(allocatedLabel)
+        val bb = Block.empty(allocatedLabel)
         blocks.putBlock(bb)
         return bb
     }
 
-    private fun withOutput(f: (Int) -> ValueInstruction): Value {
-        val value = allocateValue()
-        val instruction = f(value)
-
-        bb.append(instruction)
-        return instruction
-    }
-
-    private fun insert(instruction: Instruction) {
-        bb.append(instruction)
-    }
-
-    fun begin(): BasicBlock {
+    fun begin(): Block {
         return blocks.begin()
     }
 
@@ -45,7 +27,7 @@ class FunctionDataBuilder private constructor(
         return FunctionData.create(prototype, blocks, argumentValues)
     }
 
-    fun createLabel(): BasicBlock = allocateBlock()
+    fun createLabel(): Block = allocateBlock()
 
     fun switchLabel(label: Label) {
         bb = blocks.findBlock(label)
@@ -58,117 +40,69 @@ class FunctionDataBuilder private constructor(
     }
 
     fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): Value {
-        return withOutput { it: Int -> ArithmeticUnary(it, value.type(), op, value) }
+        return bb.arithmeticUnary(op, value)
     }
 
     fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): Value {
-        if (a.type() != b.type()) {
-            throw ModuleException("Operands have different types: a=${a.type()}, b=${b.type()}")
-        }
-
-        return withOutput { it: Int -> ArithmeticBinary(it, a.type(), a, op, b) }
+        return bb.arithmeticBinary(a, op, b)
     }
 
     fun intCompare(a: Value, pred: IntPredicate, b: Value): Value {
-        val cmp = withOutput { it: Int -> IntCompare(it, a, pred, b) }
-        if (!TypeCheck.checkIntCompare(cmp as IntCompare)) {
-            throw ModuleException("Operands have different types: a=${a.type()}, b=${b.type()}")
-        }
-
-        return cmp
+        return bb.intCompare(a, pred, b)
     }
 
     fun load(ptr: Value): Value {
-        val load = withOutput { it: Int -> Load(it, ptr) }
-        if (!TypeCheck.checkLoad(load as Load)) {
-            throw ModuleException("Inconsistent types: ${load.dump()}")
-        }
-
-        return load
+        return bb.load(ptr)
     }
 
     fun store(ptr: Value, value: Value) {
-        val store = Store(ptr, value)
-        if (!TypeCheck.checkStore(store)) {
-            throw ModuleException("Inconsistent types: ${store.dump()}")
-        }
-
-        insert(store)
+        return bb.store(ptr, value)
     }
 
     fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Value {
-        if (func.type() == Type.Void) {
-            val call = VoidCall(func, args)
-            insert(call)
-            return Value.UNDEF
-        }
-
-        val call = withOutput { it: Int -> Call(it, func.type(), func, args) }
-        if (!TypeCheck.checkCall(call as Call)) {
-            throw ModuleException("Inconsistent types: ${call.dump()}")
-        }
-
-        return call
+        return bb.call(func, args)
     }
 
     fun branch(target: Label) {
-        insert(Branch(blocks.findBlock(target)))
+        branch(blocks.findBlock(target))
+    }
+
+    fun branch(target: Block) {
+        bb.branch(target)
+    }
+
+    fun branchCond(value: Value, onTrue: Block, onFalse: Block) {
+        bb.branchCond(value, onTrue, onFalse)
     }
 
     fun branchCond(value: Value, onTrue: Label, onFalse: Label) {
-        insert(BranchCond(value, blocks.findBlock(onTrue), blocks.findBlock(onFalse)))
+        branchCond(value, blocks.findBlock(onTrue), blocks.findBlock(onFalse))
     }
 
     fun stackAlloc(ty: Type, size: Long): Value {
-        val alloc = withOutput { it: Int -> StackAlloc(it, ty, size) }
-        if (!TypeCheck.checkAlloc(alloc as StackAlloc)) {
-            throw ModuleException("Inconsistent types: ${alloc.dump()}")
-        }
-
-        return alloc
+        return bb.stackAlloc(ty, size)
     }
 
     fun ret(value: Value) {
-        insert(Return(value))
+        bb.ret(value)
     }
 
     fun gep(source: Value, index: Value): Value {
-        val gep = withOutput { it: Int -> GetElementPtr(it, source.type(), source, index) }
-        if (!TypeCheck.checkGep(gep as GetElementPtr)) {
-            throw ModuleException("Inconsistent types: ${gep.dump()}")
-        }
-
-        return gep
+        return bb.gep(source, index)
     }
 
     fun cast(value: Value, ty: Type, cast: CastType): Value {
-        val castInst = withOutput { it: Int -> Cast(it, ty, cast, value) }
-        if (!TypeCheck.checkCast(castInst as Cast)) {
-            throw ModuleException("Inconsistent types: ${castInst.dump()}")
-        }
-
-        return castInst
+        return bb.cast(value, ty, cast)
     }
 
     fun select(cond: Value, onTrue: Value, onFalse: Value): Value {
-        val selectInst = withOutput { it: Int -> Select(it, onTrue.type(), cond, onTrue, onFalse) }
-        if (!TypeCheck.checkSelect(selectInst as Select)) {
-            throw ModuleException("Inconsistent types: ${selectInst.dump()}")
-        }
-
-        return selectInst
+        return bb.select(cond, onTrue, onFalse)
     }
 
-    fun phi(incoming: ArrayList<Value>, labels: ArrayList<BasicBlock>): Value {
-        val phi = withOutput { it: Int -> Phi(it, incoming[0].type(), labels, incoming) }
-
-        if (!TypeCheck.checkPhi(phi as Phi)) {
-            throw ModuleException("Operands have different types: labels=$labels")
-        }
-
-        return phi
+    fun phi(incoming: ArrayList<Value>, labels: ArrayList<Block>): Value {
+        return bb.phi(incoming, labels)
     }
-    
+
     companion object {
         fun create(
             name: String,
@@ -177,16 +111,10 @@ class FunctionDataBuilder private constructor(
             argumentValues: List<ArgumentValue>
         ): FunctionDataBuilder {
             val prototype = FunctionPrototype(name, returnType, arguments)
-            val maxIndex = if (argumentValues.isNotEmpty()) {
-                argumentValues.maxBy { it.defined() }.defined()
-            } else {
-                -1
-            }
-
-            val startBB = BasicBlock.empty(Label.entry.index)
+            val startBB = Block.empty(Label.entry.index)
             val basicBlocks = BasicBlocks.create(startBB)
 
-            val builder = FunctionDataBuilder(prototype, argumentValues, basicBlocks, maxIndex + 1)
+            val builder = FunctionDataBuilder(prototype, argumentValues, basicBlocks)
             builder.switchLabel(startBB)
             return builder
         }

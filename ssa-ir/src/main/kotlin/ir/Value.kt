@@ -9,12 +9,12 @@ interface Value {
 }
 
 interface LocalValue: Value {
-    fun defined(): Int
+    fun name(): String
 }
 
 class ArgumentValue(private val index: Int, private val tp: Type): LocalValue {
-    override fun defined(): Int {
-        return index
+    override fun name(): String {
+        return "arg$index"
     }
 
     override fun type(): Type {
@@ -147,8 +147,8 @@ data class F64Value(val f64: Double): Constant {
 }
 
 class UndefinedValue: Constant, LocalValue {
-    override fun defined(): Int {
-        return -1
+    override fun name(): String {
+        return toString()
     }
 
     override fun type(): Type {

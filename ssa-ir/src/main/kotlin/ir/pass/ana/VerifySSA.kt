@@ -1,6 +1,8 @@
 package ir.pass.ana
 
 import ir.*
+import ir.block.Block
+import ir.block.Label
 import ir.utils.CreationInfo
 import ir.utils.TypeCheck
 
@@ -20,7 +22,7 @@ class VerifySSA private constructor(private val functionData: FunctionData, val 
     private fun validateExitBlock() {
         var exitBlocks = 0
         for (bb in functionData.blocks) {
-            if (bb.flowInstruction() is Return) {
+            if (bb.last() is Return) {
                 exitBlocks += 1
             }
         }
@@ -28,13 +30,13 @@ class VerifySSA private constructor(private val functionData: FunctionData, val 
         assert(exitBlocks == 1) { "Allowed only one exit block, but found $exitBlocks blocks."}
     }
 
-    private fun validateBlock(bb: BasicBlock) {
+    private fun validateBlock(bb: Block) {
         if (bb.equals(Label.entry)) {
             assert(bb.predecessors().isEmpty()) { "Begin block must not have predecessors." }
         }
         assert(!bb.isEmpty()) { "Block must not be empty" }
         val successors = bb.successors()
-        when (val flow = bb.flowInstruction()) {
+        when (val flow = bb.last()) {
             is Branch -> {
                 val target = flow.target()
                 assert(successors.size == 1) {
@@ -72,8 +74,8 @@ class VerifySSA private constructor(private val functionData: FunctionData, val 
         validateInstructions(bb)
     }
 
-    private fun validatePhi(phi: Phi, bb: BasicBlock) {
-        for ((use, incoming) in phi.usedValues().zip(phi.incoming())) {
+    private fun validatePhi(phi: Phi, bb: Block) {
+        for ((use, incoming) in phi.usages().zip(phi.incoming())) {
             if (use !is ValueInstruction) {
                 continue
             }
@@ -94,8 +96,8 @@ class VerifySSA private constructor(private val functionData: FunctionData, val 
     }
 
     /** Check whether definition dominates to usage. */
-    private fun validateDefUse(instruction: Instruction, bb: BasicBlock) {
-        for (use in instruction.usedValues()) {
+    private fun validateDefUse(instruction: Instruction, bb: Block) {
+        for (use in instruction.usages()) {
             if (use !is ValueInstruction) {
                 continue
             }
@@ -105,11 +107,11 @@ class VerifySSA private constructor(private val functionData: FunctionData, val 
         }
     }
 
-    private fun validateTypes(bb: BasicBlock) {
+    private fun validateTypes(bb: Block) {
         for (instruction in bb) {
             when (instruction) {
                 is Phi -> {
-                    assert(TypeCheck.checkPhi(instruction)) { "Inconsistent phi instruction '${instruction.dump()}': different types ${instruction.usedValues().map { it.type() }.joinToString()}" }
+                    assert(TypeCheck.checkPhi(instruction)) { "Inconsistent phi instruction '${instruction.dump()}': different types ${instruction.usages().map { it.type() }.joinToString()}" }
                 }
                 is ArithmeticUnary -> {
                     fun message() = "Unary instruction '${instruction.dump()}' must have the same type: destination=${instruction.type()} operand=${instruction.operand().type()}"
@@ -151,7 +153,7 @@ class VerifySSA private constructor(private val functionData: FunctionData, val 
         }
     }
 
-    private fun validateControlFlow(bb: BasicBlock) {
+    private fun validateControlFlow(bb: Block) {
         for (instruction in bb) {
             when (instruction) {
                 is Phi -> validatePhi(instruction, bb)
@@ -166,7 +168,7 @@ class VerifySSA private constructor(private val functionData: FunctionData, val 
         }
     }
 
-    private fun validateInstructions(bb: BasicBlock) {
+    private fun validateInstructions(bb: Block) {
         validateControlFlow(bb)
         validateTypes(bb)
     }

@@ -1,11 +1,12 @@
 package ir.pass.transform
 
 import ir.*
+import ir.block.Block
 
 class SplitCriticalEdge private constructor(private val cfg: BasicBlocks) {
     private var maxIndex = cfg.maxBlockIndex()
 
-    private fun hasCriticalEdge(bb: BasicBlock, predecessor: BasicBlock): Boolean {
+    private fun hasCriticalEdge(bb: Block, predecessor: Block): Boolean {
         return predecessor.successors().size > 1 && bb.predecessors().size > 1
     }
 
@@ -23,13 +24,13 @@ class SplitCriticalEdge private constructor(private val cfg: BasicBlocks) {
         }
     }
 
-    private fun insertBasicBlock(bb: BasicBlock, p: BasicBlock) {
+    private fun insertBasicBlock(bb: Block, p: Block) {
         maxIndex += 1
-        val newBlock = BasicBlock.empty(maxIndex).apply {
-            append(Branch(bb))
+        val newBlock = Block.empty(maxIndex).apply {
+            branch(bb)
         }
 
-        when (val flow = p.flowInstruction()) {
+        when (val flow = p.last()) {
             is Branch     -> p.updateFlowInstruction(Branch(newBlock))
             is BranchCond -> {
                 val newFlowInst = when (bb) {

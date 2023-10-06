@@ -1,31 +1,32 @@
 package ir.iterator
 
 import ir.*
+import ir.block.Block
 import java.util.*
 
-typealias Callback = (BasicBlock) -> Unit
+typealias Callback = (Block) -> Unit
 
-abstract class BasicBlocksIterator(countOfBlocks: Int): Iterator<BasicBlock> {
-    protected val order = ArrayList<BasicBlock>(countOfBlocks)
+abstract class BasicBlocksIterator(countOfBlocks: Int): Iterator<Block> {
+    protected val order = ArrayList<Block>(countOfBlocks)
     protected val visited = BooleanArray(countOfBlocks)
 
-    fun order(): List<BasicBlock> {
+    fun order(): List<Block> {
         return order
     }
 }
 
 abstract class DfsTraversalIterator(countOfBlocks: Int) : BasicBlocksIterator(countOfBlocks) {
-    protected abstract var iterator: MutableIterator<BasicBlock>
+    protected abstract var iterator: MutableIterator<Block>
 
-    protected fun dfsForeachLabel(start: BasicBlock, callback: Callback) {
-        val stack = arrayListOf<BasicBlock>()
+    protected fun dfsForeachLabel(start: Block, callback: Callback) {
+        val stack = arrayListOf<Block>()
         stack.add(start)
 
-        var exitBlock: BasicBlock? = null
+        var exitBlock: Block? = null
         while (stack.isNotEmpty()) {
             val bb = stack.removeLast()
 
-            if (bb.flowInstruction() is Return) {
+            if (bb.last() is Return) {
                 exitBlock = bb
                 continue
             }
@@ -39,12 +40,12 @@ abstract class DfsTraversalIterator(countOfBlocks: Int) : BasicBlocksIterator(co
             }
         }
 
-        callback(exitBlock as BasicBlock)
+        callback(exitBlock as Block)
     }
 }
 
-class PostorderIterator(start: BasicBlock, countOfBlocks: Int) : DfsTraversalIterator(countOfBlocks) {
-    override var iterator: MutableIterator<BasicBlock>
+class PostorderIterator(start: Block, countOfBlocks: Int) : DfsTraversalIterator(countOfBlocks) {
+    override var iterator: MutableIterator<Block>
     init {
         dfsForeachLabel(start) { bb -> order.add(bb) }
         order.reverse()
@@ -55,13 +56,13 @@ class PostorderIterator(start: BasicBlock, countOfBlocks: Int) : DfsTraversalIte
         return iterator.hasNext()
     }
 
-    override fun next(): BasicBlock {
+    override fun next(): Block {
         return iterator.next()
     }
 }
 
-class PreorderIterator(start: BasicBlock, countOfBlocks: Int) : DfsTraversalIterator(countOfBlocks) {
-    override var iterator: MutableIterator<BasicBlock>
+class PreorderIterator(start: Block, countOfBlocks: Int) : DfsTraversalIterator(countOfBlocks) {
+    override var iterator: MutableIterator<Block>
 
     init {
         dfsForeachLabel(start) { bb -> order.add(bb) }
@@ -72,22 +73,22 @@ class PreorderIterator(start: BasicBlock, countOfBlocks: Int) : DfsTraversalIter
         return iterator.hasNext()
     }
 
-    override fun next(): BasicBlock {
+    override fun next(): Block {
         return iterator.next()
     }
 }
 
-class BfsTraversalIterator(start: BasicBlock, countOfBlocks: Int) : BasicBlocksIterator(countOfBlocks) {
-    private val iterator: MutableIterator<BasicBlock>
+class BfsTraversalIterator(start: Block, countOfBlocks: Int) : BasicBlocksIterator(countOfBlocks) {
+    private val iterator: MutableIterator<Block>
 
     init {
         bfsForeachLabel(start) { bb -> order.add(bb) }
         iterator = order.iterator()
     }
 
-    private fun bfsForeachLabel(start: BasicBlock, callback: Callback) {
-        val stack = arrayListOf<List<BasicBlock>>()
-        fun visitBlock(bb: BasicBlock) {
+    private fun bfsForeachLabel(start: Block, callback: Callback) {
+        val stack = arrayListOf<List<Block>>()
+        fun visitBlock(bb: Block) {
             callback(bb)
             visited[bb.index] = true
             if (bb.successors().isNotEmpty()) {
@@ -113,7 +114,7 @@ class BfsTraversalIterator(start: BasicBlock, countOfBlocks: Int) : BasicBlocksI
         return iterator.hasNext()
     }
 
-    override fun next(): BasicBlock {
+    override fun next(): Block {
         return iterator.next()
     }
 }

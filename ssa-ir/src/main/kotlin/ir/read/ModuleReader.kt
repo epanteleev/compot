@@ -1,6 +1,7 @@
 package ir.read
 
 import ir.*
+import ir.block.Block
 import ir.builder.FunctionDataBuilder
 import ir.builder.ModuleBuilder
 import ir.pass.ana.VerifySSA
@@ -16,7 +17,7 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
 
     init {
         for (arg in builder.arguments()) {
-            nameToValue[arg.defined().toString()] = arg
+            nameToValue[arg.name().toString()] = arg
         }
     }
 
@@ -169,7 +170,7 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
         val type = iterator.expect<TypeToken>("operands type").type()
 
         iterator.expect<OpenSquareBracket>("'['")
-        val labels = arrayListOf<BasicBlock>()
+        val labels = arrayListOf<Block>()
         val argumentValue = arrayListOf<Value>()
 
         do {
