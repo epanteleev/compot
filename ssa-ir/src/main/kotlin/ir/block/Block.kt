@@ -75,13 +75,16 @@ class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
         return builder(this)
     }
 
-//    fun update(index: Int, builder: (BlockBuilderInterface) -> Value): Value {
-//        assert(index >= 0)
-//        val instruction = builder(this)
-//
-//
-//        return instruction
-//    }
+    fun swap(first: Instruction, second: Instruction) {
+        val firstIndex        = instructions.indexOf(first)
+        val secondIndex = instructions.indexOf(second)
+        assert(firstIndex != -1)
+        assert(secondIndex != -1)
+
+        val temp = instructions[firstIndex]
+        instructions[firstIndex] = instructions[secondIndex]
+        instructions[secondIndex] = temp
+    }
 
     internal fun updateFlowInstruction(newInstruction: TerminateInstruction) {
         assert(instructions[size - 1] is TerminateInstruction) {

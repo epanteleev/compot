@@ -4,8 +4,6 @@ import ir.*
 import ir.block.Block
 
 class CopyInsertion private constructor(private val cfg: BasicBlocks) {
-    private var index = cfg.maxInstructionIndex()
-
     private fun hasCriticalEdge(bb: Block, predecessor: Block): Boolean {
         return predecessor.successors().size > 1 && bb.predecessors().size > 1
     }
@@ -13,23 +11,14 @@ class CopyInsertion private constructor(private val cfg: BasicBlocks) {
     private fun modifyPhis(bb: Block, phi: Phi) {
         val newValues = hashMapOf<Value, Value>()
         for ((incoming, operand) in phi.zip()) {
-            index += 1
             assert(!hasCriticalEdge(bb, incoming)) {
                 "Flow graph has critical edge from $incoming to $bb"
             }
 
-            //val copy = Copy(index, operand)
-
-
-            val copy = if (bb == incoming) {
-                bb.insert(phi) {
-                    it.copy(operand)
-                }
-            } else {
-                incoming.insert(incoming.last()) {
-                    it.copy(operand)
-                }
+            val copy = incoming.insert(incoming.last()) {
+                it.copy(operand)
             }
+
             newValues[operand] = copy
         }
 

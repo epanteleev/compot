@@ -138,13 +138,13 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
 
             // Update incoming blocks if operand value is defined
             // in the same blocks.
-            for ((incoming, used) in phi.zip()) {
+            for (used in phi.usages()) {
                 if (used !is Phi) {
                     continue
                 }
 
                 if (bb.isBefore(used, phi)) {
-                    phi.updateIncoming(incoming, bb)
+                    bb.swap(used, phi)
                 }
             }
         }

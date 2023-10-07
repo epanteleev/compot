@@ -25,15 +25,6 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
         return basicBlocks.maxBy { it.index }.index
     }
 
-    fun maxInstructionIndex(): Int {
-        var index = -1
-        for (bb in basicBlocks) {
-            index = max(index, bb.maxValueIndex())
-        }
-
-        return index
-    }
-
     fun begin(): Block {
         return basicBlocks[0]
     }
