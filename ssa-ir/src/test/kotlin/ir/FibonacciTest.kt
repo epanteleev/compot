@@ -2,6 +2,8 @@ package ir
 
 import ir.block.BlockViewer
 import ir.builder.ModuleBuilder
+import ir.instruction.ArithmeticBinaryOp
+import ir.instruction.IntPredicate
 import ir.pass.ana.VerifySSA
 import kotlin.test.Test
 import kotlin.test.assertTrue

@@ -1,7 +1,7 @@
 package ir.iterator
 
-import ir.*
 import ir.block.Block
+import ir.instruction.Return
 import java.util.*
 
 typealias Callback = (Block) -> Unit

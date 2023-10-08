@@ -2,6 +2,7 @@ package ir
 
 import ir.block.BlockViewer
 import ir.builder.ModuleBuilder
+import ir.instruction.IntPredicate
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

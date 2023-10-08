@@ -1,6 +1,7 @@
 package ir.utils
 
 import ir.*
+import ir.instruction.ValueInstruction
 
 data class CreationInfoException(override val message: String): Exception(message)
 

@@ -2,6 +2,7 @@ package ir.pass.transform
 
 import ir.*
 import ir.block.Block
+import ir.instruction.Phi
 
 class CopyInsertion private constructor(private val cfg: BasicBlocks) {
     private fun hasCriticalEdge(bb: Block, predecessor: Block): Boolean {
@@ -22,12 +23,17 @@ class CopyInsertion private constructor(private val cfg: BasicBlocks) {
             newValues[operand] = copy
         }
 
-        phi.updateUsagesInPhi { v, _ -> newValues[v]!! }
+        bb.update(phi) {
+            val newUsages = phi.usages().mapTo(arrayListOf()) { newValues[it]!! }
+            phi.copy(newUsages)
+        }
     }
 
     fun pass() {
         for (bb in cfg) {
-            bb.phis().forEach { modifyPhis(bb, it) }
+            bb.phis { phi ->
+                modifyPhis(bb, phi)
+            }
         }
     }
 

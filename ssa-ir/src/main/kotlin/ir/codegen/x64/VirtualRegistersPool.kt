@@ -2,6 +2,8 @@ package ir.codegen.x64
 
 import asm.x64.*
 import ir.*
+import ir.instruction.StackAlloc
+import ir.instruction.ValueInstruction
 import java.lang.IllegalArgumentException
 
 class VirtualRegistersPool {

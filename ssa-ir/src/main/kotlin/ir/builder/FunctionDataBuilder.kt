@@ -3,6 +3,10 @@ package ir.builder
 import ir.*
 import ir.block.Block
 import ir.block.Label
+import ir.instruction.ArithmeticBinaryOp
+import ir.instruction.ArithmeticUnaryOp
+import ir.instruction.CastType
+import ir.instruction.IntPredicate
 
 class FunctionDataBuilder private constructor(
     private val prototype: FunctionPrototype,

@@ -2,6 +2,9 @@ package ir.utils
 
 import ir.*
 import ir.block.AnyBlock
+import ir.instruction.StackAlloc
+import ir.instruction.Store
+import ir.instruction.ValueInstruction
 
 class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     private val allocated: Set<ValueInstruction> by lazy { allocatedVariablesInternal() }
@@ -11,7 +14,7 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
         val stores = hashSetOf<ValueInstruction>()
         fun allocatedInGivenBlock(bb: AnyBlock) {
             for (inst in bb.valueInstructions()) {
-                if (inst is StackAlloc && inst.size == 1L) {
+                if (inst is StackAlloc && inst.size() == 1L) {
                     stores.add(inst)
                 }
             }

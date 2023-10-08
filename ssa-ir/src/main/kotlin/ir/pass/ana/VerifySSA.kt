@@ -3,6 +3,7 @@ package ir.pass.ana
 import ir.*
 import ir.block.Block
 import ir.block.Label
+import ir.instruction.*
 import ir.utils.CreationInfo
 import ir.utils.TypeCheck
 

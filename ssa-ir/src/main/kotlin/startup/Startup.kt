@@ -1,16 +1,14 @@
 package startup
 
-import ir.codegen.x64.CodeEmitter
-import ir.codegen.x64.regalloc.Coalescing
-import ir.codegen.x64.regalloc.LinearScan
+import ir.Module
+
 import ir.pass.ana.VerifySSA
-import ir.pass.transform.CopyInsertion
 import ir.pass.transform.Mem2Reg
-import ir.pass.transform.SplitCriticalEdge
+
 import ir.read.ModuleReader
 import ir.utils.DumpModule
-import ir.codegen.x64.regalloc.liveness.Liveness
 import java.io.File
+import kotlin.Throwable
 
 fun main(args: Array<String>) {
     if (args.isEmpty()) {
@@ -20,7 +18,20 @@ fun main(args: Array<String>) {
 
     val text = File(args[0]).readText()
     val module = ModuleReader(text).read()
-    Driver.output(args[0], module) {
-        VerifySSA.run(Mem2Reg.run(it))
+    var opt: Module? = null
+
+    try {
+        Driver.output(args[0], module) {
+            opt = it
+            opt = Mem2Reg.run(opt as Module)
+            opt = VerifySSA.run(opt as Module)
+            opt as Module
+        }
+    } catch (ex: Throwable) {
+        if (opt != null) {
+            println(DumpModule.apply(opt!!))
+        }
+
+        ex.printStackTrace()
     }
 }

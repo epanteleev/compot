@@ -2,8 +2,8 @@ package ir.codegen.x64.regalloc
 
 import ir.ArgumentValue
 import ir.LocalValue
-import ir.Phi
-import ir.StackAlloc
+import ir.instruction.Phi
+import ir.instruction.StackAlloc
 import ir.codegen.x64.regalloc.liveness.LiveIntervals
 import ir.codegen.x64.regalloc.liveness.LiveRange
 
@@ -15,7 +15,7 @@ data class Group(val values: List<LocalValue>) {
     val stackAllocGroup: Boolean by lazy {
         val isStackAlloc = values[0] is StackAlloc
         if (isStackAlloc) {
-            assert( values.find { it !is StackAlloc } != null) {
+            assert( values.find { it !is StackAlloc } == null) {
                 "must have only stackalloc values values=$values"
             }
         }

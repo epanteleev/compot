@@ -1,16 +1,18 @@
 package ir.block
 
 import ir.*
+import ir.instruction.*
 import ir.utils.TypeCheck
 
-class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
+class Block(override val index: Int) : MutableBlock, AnyBlock {
     private val instructions = mutableListOf<Instruction>()
     private val predecessors = mutableListOf<Block>()
-    private val successors = mutableListOf<Block>()
+    private val successors   = mutableListOf<Block>()
 
     //Fields to implement BlockBuilderInterface
     private var maxValueIndex: Int = 0
     private var indexToAppend = 0
+    private var insertionMode = InsertionMode.Append
 
     override fun instructions(): List<Instruction> {
         return instructions
@@ -25,15 +27,20 @@ class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
     }
 
     override fun last(): TerminateInstruction {
-        return instructions[size - 1] as TerminateInstruction
+        val last = instructions[size - 1]
+        assert(last is TerminateInstruction) {
+            "should be. but last=$last"
+        }
+
+        return last as TerminateInstruction
     }
 
     override fun begin(): Instruction {
-        return instructions[0]
-    }
+        assert(instructions.isNotEmpty()) {
+            "bb=$this must have any instructions"
+        }
 
-    fun maxValueIndex(): Int {
-        return maxValueIndex
+        return instructions[0]
     }
 
     val size get(): Int = instructions.size
@@ -60,7 +67,7 @@ class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
         predecessors.remove(old)
     }
 
-    fun insert(before: Instruction, builder: (BlockBuilderInterface) -> Value): Value {
+    fun insert(before: Instruction, builder: (MutableBlock) -> Value): Value {
         val beforeIndex = instructions.indexOf(before)
         assert(beforeIndex != -1) {
             "flow graph doesn't contains instruction=$before"
@@ -69,26 +76,51 @@ class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
         return insert(beforeIndex, builder)
     }
 
-    fun insert(index: Int, builder: (BlockBuilderInterface) -> Value): Value {
+    fun insert(index: Int, builder: (MutableBlock) -> Value): Value {
         assert(index >= 0)
         indexToAppend = index
+        insertionMode = InsertionMode.Append
         return builder(this)
     }
 
-    fun swap(first: Instruction, second: Instruction) {
-        val firstIndex        = instructions.indexOf(first)
-        val secondIndex = instructions.indexOf(second)
-        assert(firstIndex != -1)
-        assert(secondIndex != -1)
+    fun update(before: Instruction, builder: (Instruction) -> Instruction): Instruction {
+        val beforeIndex = instructions.indexOf(before)
+        assert(beforeIndex != -1) {
+            "flow graph doesn't contains instruction=$before"
+        }
+
+        return update(beforeIndex, builder)
+    }
+
+    fun update(index: Int, builder: (Instruction) -> Instruction): Instruction {
+        assert(instructions.size > index && index >= 0)
+        indexToAppend = index
+        insertionMode = InsertionMode.Update
+        return add(builder(instructions[index]))
+    }
+
+    fun swap(firstIndex: Int, secondIndex: Int) {
+        assert(instructions.size > firstIndex && firstIndex >= 0)
+        assert(instructions.size > secondIndex && secondIndex >= 0)
 
         val temp = instructions[firstIndex]
         instructions[firstIndex] = instructions[secondIndex]
         instructions[secondIndex] = temp
     }
 
+    fun indexOf(instruction: Instruction): Int {
+        val index = instructions.indexOf(instruction)
+        assert(index != -1) {
+            "instruction=$instruction doesn't exist in $this block."
+        }
+
+        return index
+    }
+
     internal fun updateFlowInstruction(newInstruction: TerminateInstruction) {
-        assert(instructions[size - 1] is TerminateInstruction) {
-            "${instructions[size - 1]} should be terminate instruction"
+        val last = instructions[size - 1]
+        assert(last is TerminateInstruction) {
+            "$last should be terminate instruction"
         }
 
         instructions[size - 1] = newInstruction
@@ -96,19 +128,6 @@ class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
 
     fun contains(element: Instruction): Boolean {
         return instructions.contains(element)
-    }
-
-    fun isBefore(element: Instruction, before: Instruction): Boolean {
-        val elementIndex = instructions.indexOf(element)
-        if (elementIndex == -1) {
-            return false
-        }
-        val beforeIndex = instructions.indexOf(before)
-        if (beforeIndex == -1) {
-            return false
-        }
-
-        return elementIndex < beforeIndex
     }
 
     override fun equals(other: Any?): Boolean {
@@ -147,9 +166,25 @@ class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
         return instructions.filterIsInstanceTo<Phi, MutableList<Phi>>(arrayListOf())
     }
 
+    fun phis(fn: (Phi) -> Unit) {
+        instructions.forEach {
+            if (it !is Phi) {
+                return
+            }
+
+            fn(it)
+        }
+    }
+
     fun removeIf(filter: (Instruction) -> Boolean): Boolean {
         return instructions.removeIf { filter(it) }
     }
+
+//    fun copy(): Block {
+//        val newInstructions = instructions.mapTo(arrayListOf()) { it }
+//        val newPredecessors = predecessors.mapTo(arrayListOf()) { it }
+//        val newSuccessors = successors.mapTo(arrayListOf()) { }
+//    }
 
     override fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): Value {
         return withOutput { it: Int -> ArithmeticUnary(n(it), value.type(), op, value) }
@@ -205,15 +240,15 @@ class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
     }
 
     override fun branch(target: Block) {
-        append(Branch(target))
+        add(Branch(target))
     }
 
     override fun branchCond(value: Value, onTrue: Block, onFalse: Block) {
-        append(BranchCond(value, onTrue, onFalse))
+        add(BranchCond(value, onTrue, onFalse))
     }
 
     override fun stackAlloc(ty: Type, size: Long): Value {
-        val alloc = withOutput { it: Int -> StackAlloc(n(it), ty, size) }
+        val alloc = withOutput { it: Int -> StackAlloc(n(it), ty, U64Value(size)) }
         if (!TypeCheck.checkAlloc(alloc as StackAlloc)) {
             throw ModuleException("Inconsistent types: ${alloc.dump()}")
         }
@@ -222,7 +257,7 @@ class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
     }
 
     override fun ret(value: Value) {
-        append(Return(value))
+        add(Return(value))
     }
 
     override fun gep(source: Value, index: Value): Value {
@@ -273,6 +308,17 @@ class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
         return withOutput { it: Int -> Phi("phi${n(it)}", type, blocks, values) }
     }
 
+    internal fun copy(copyFn: () -> Instruction): Instruction {
+        val instruction = copyFn()
+        if (instruction is TerminateInstruction) {
+            add(instruction)
+        } else {
+            append(instruction)
+        }
+
+        return instruction
+    }
+
     override fun copy(value: Value): Value {
         return withOutput { it: Int -> Copy(n(it), value) }
     }
@@ -292,17 +338,44 @@ class Block(override val index: Int) : BlockBuilderInterface, AnyBlock {
     }
 
     private fun append(instruction: Instruction) {
+        when (insertionMode) {
+            InsertionMode.Append -> instructions.add(indexToAppend, instruction)
+            InsertionMode.Update -> instructions[indexToAppend] = instruction
+        }
+
+        insertionMode = InsertionMode.Append
+        indexToAppend = instructions.size
+    }
+
+    private fun add(instruction: Instruction): Instruction {
         fun makeEdge(to: Block) {
             addSuccessor(to)
             to.addPredecessor(this)
         }
+        fun updateEdge(terminateInstruction: TerminateInstruction) {
+            for (idx in successors.indices) {
+                successors[idx] = terminateInstruction.targets()[idx]
+            }
 
-        if (instruction is TerminateInstruction) {
-            instruction.targets().forEach { makeEdge(it) }
+            for (incoming in terminateInstruction.targets()) {
+                val idx = incoming.predecessors.indexOf(this)
+                assert(idx != -1) {
+                    "should contains bb=$this in incoming=$incoming"
+                }
+
+                incoming.predecessors[idx] = this
+            }
         }
 
-        instructions.add(indexToAppend, instruction)
-        indexToAppend = instructions.size
+        if (instruction is TerminateInstruction) {
+            when (insertionMode) {
+                InsertionMode.Append -> instruction.targets().forEach { makeEdge(it) }
+                InsertionMode.Update -> updateEdge(instruction)
+            }
+        }
+
+        append(instruction)
+        return instruction
     }
 
     override fun toString(): String {

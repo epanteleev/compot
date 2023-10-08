@@ -2,10 +2,10 @@ package ir.codegen.x64
 
 import asm.x64.Mem
 import asm.x64.Rbp
-import ir.StackAlloc
+import ir.instruction.StackAlloc
 import ir.Type
 import ir.Value
-import ir.ValueInstruction
+import ir.instruction.ValueInstruction
 
 data class StackFrameException(override val message: String): Exception(message)
 
@@ -34,7 +34,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     private fun stackSlotAlloc(value: StackAlloc): Mem {
         val typeSize = value.type().dereference().size()
-        val totalSize = typeSize * value.size
+        val totalSize = typeSize * value.size()
         frameSize = withAlignment(totalSize.toInt(), frameSize)
         return Mem(Rbp.rbp, -frameSize, typeSize)
     }
@@ -59,7 +59,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     override fun takeSlot(value: Value): Mem {
         return when (value) {
-            is StackAlloc       -> stackSlotAlloc(value)
+            is StackAlloc -> stackSlotAlloc(value)
             is ValueInstruction -> valueInstructionAlloc(value)
             else -> throw StackFrameException("Cannot alloc slot for this value=$value")
         }

@@ -3,7 +3,7 @@ package ir.codegen.x64
 import asm.x64.*
 import ir.*
 import ir.codegen.x64.regalloc.liveness.LiveIntervals
-import ir.utils.Location
+import ir.instruction.ValueInstruction
 import ir.utils.OrderedLocation
 import java.lang.StringBuilder
 

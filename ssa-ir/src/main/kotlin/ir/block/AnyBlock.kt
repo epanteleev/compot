@@ -1,6 +1,8 @@
 package ir.block
 
-import ir.*
+import ir.instruction.Instruction
+import ir.instruction.TerminateInstruction
+import ir.instruction.ValueInstruction
 
 interface AnyBlock: Label {
     fun instructions(): List<Instruction>

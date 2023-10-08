@@ -57,6 +57,47 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
         return DefUseInfo.create(this)
     }
 
+    fun copy(oldArgumentValues: List<ArgumentValue>, newArgumentValues: List<ArgumentValue>) {
+        fun setupValuesMap(): MutableMap<LocalValue, LocalValue> {
+            val oldValuesToOld = hashMapOf<LocalValue, LocalValue>()
+            for ((old, new) in oldArgumentValues zip newArgumentValues) {
+                oldValuesToOld[old] = new
+            }
+
+            return oldValuesToOld
+        }
+
+        fun setupNewBasicBlock(): Map<Block, Block> {
+            val newBasicBlocks = basicBlocks.mapTo(arrayListOf()) {
+                Block.empty(it.index)
+            }
+
+            val oldToNew = hashMapOf<Block, Block>()
+            for ((old, new) in basicBlocks zip newBasicBlocks) {
+                oldToNew[old] = new
+            }
+
+            return oldToNew
+        }
+
+        val oldToNew       = setupNewBasicBlock()
+        val oldValuesToOld = setupValuesMap()
+
+        for (bb in basicBlocks) {
+            val newBB = oldToNew[bb]!!
+            for (inst in bb.instructions()) {
+                when (inst) {
+//                    is TrivialCopybable -> {
+//                        newBB.copy { i ->
+//                            val newUsages = inst.usages().mapTo(arrayListOf()) { oldValuesToOld[it]!! }
+//                            inst.copy(newUsages)
+//                        }
+//                    }
+                }
+            }
+        }
+    }
+
     operator fun iterator(): Iterator<Block> {
         return basicBlocks.iterator()
     }

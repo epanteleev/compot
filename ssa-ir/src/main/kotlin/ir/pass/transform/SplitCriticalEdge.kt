@@ -2,6 +2,8 @@ package ir.pass.transform
 
 import ir.*
 import ir.block.Block
+import ir.instruction.Branch
+import ir.instruction.BranchCond
 
 class SplitCriticalEdge private constructor(private val cfg: BasicBlocks) {
     private var maxIndex = cfg.maxBlockIndex()
@@ -31,7 +33,7 @@ class SplitCriticalEdge private constructor(private val cfg: BasicBlocks) {
         }
 
         when (val flow = p.last()) {
-            is Branch     -> p.updateFlowInstruction(Branch(newBlock))
+            is Branch -> p.updateFlowInstruction(Branch(newBlock))
             is BranchCond -> {
                 val newFlowInst = when (bb) {
                     flow.onTrue() -> {

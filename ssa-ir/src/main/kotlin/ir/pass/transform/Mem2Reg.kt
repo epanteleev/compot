@@ -4,13 +4,14 @@ import ir.*
 import ir.block.AnyBlock
 import ir.block.Block
 import ir.block.Label
+import ir.instruction.*
 import ir.utils.*
 
 data class Mem2RegException(override val message: String): Exception(message)
 
 private object Utils {
     fun isStackAllocOfLocalVariable(instruction: Instruction): Boolean {
-        return instruction is StackAlloc && instruction.size == 1L
+        return instruction is StackAlloc && instruction.size() == 1L
     }
 
     fun isLoadOfLocalVariable(instruction: Instruction): Boolean {
@@ -32,7 +33,13 @@ private class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Domi
     }
 
     private fun rewriteValuesSetup(bb: Block) {
-        for (instruction in bb) {
+        val instructions = bb.instructions()
+        for (index in instructions.indices) {
+            val instruction = instructions[index]
+            if (instruction is Branch) {
+                continue
+            }
+
             if (Utils.isStoreOfLocalVariable(instruction)) {
                 instruction as Store
                 val actual = findActualValueOrNull(bb, instruction.value())
@@ -65,7 +72,9 @@ private class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Domi
                 continue
             }
 
-            instruction.rewriteUsages { v -> rename(bb, v) }
+            bb.update(index) {
+                instruction.copy(instruction.usages().mapTo(arrayListOf()) { v -> rename(bb, v) } )
+            }
         }
     }
 
@@ -131,20 +140,32 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
     }
 
     private fun completePhis(bbToMapValues: RewriteAssistant, bb: Block) {
-        for (phi in bb.phis()) {
-            phi.updateUsagesInPhi { v, l ->
-                bbToMapValues.rename(l, v)
+        bb.phis { phi ->
+            bb.update(phi) {
+                it as Phi
+                val newUsages = arrayListOf<Value>()
+                for ((l, v) in it.zip()) {
+                    newUsages.add(bbToMapValues.rename(l, v))
+                }
+                it.copy(newUsages)
             }
+        }
 
-            // Update incoming blocks if operand value is defined
-            // in the same blocks.
+        for (phi in bb.phis()) {
+            // Exchange phi functions
             for (used in phi.usages()) {
                 if (used !is Phi) {
                     continue
                 }
+                if (!bb.contains(used)) {
+                    continue
+                }
 
-                if (bb.isBefore(used, phi)) {
-                    bb.swap(used, phi)
+                val usedIdx = bb.indexOf(used)
+                val phiIndex = bb.indexOf(phi)
+
+                if (usedIdx < phiIndex) {
+                    bb.swap(usedIdx, phiIndex)
                 }
             }
         }

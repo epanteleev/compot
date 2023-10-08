@@ -4,6 +4,9 @@ import ir.*
 import ir.block.Block
 import ir.builder.FunctionDataBuilder
 import ir.builder.ModuleBuilder
+import ir.instruction.ArithmeticBinaryOp
+import ir.instruction.CastType
+import ir.instruction.IntPredicate
 import ir.pass.ana.VerifySSA
 
 class ParseErrorException(message: String): Exception(message) {

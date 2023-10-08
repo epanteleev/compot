@@ -3,9 +3,9 @@ package ir.codegen.x64
 import asm.x64.GPRegister
 import asm.x64.Rbp
 import asm.x64.Register
-import ir.StackAlloc
+import ir.instruction.StackAlloc
 import ir.Type
-import ir.ValueInstruction
+import ir.instruction.ValueInstruction
 
 class GPRegistersList {
     private var freeRegisters = CallConvention.availableRegisters.toMutableList().asReversed()

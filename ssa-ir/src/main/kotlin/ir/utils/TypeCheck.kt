@@ -1,6 +1,7 @@
 package ir.utils
 
 import ir.*
+import ir.instruction.*
 
 object TypeCheck {
     fun checkUnary(unary: ArithmeticUnary): Boolean {

@@ -1,8 +1,16 @@
-package ir
+package ir.block
 
-import ir.block.Block
+import ir.AnyFunctionPrototype
+import ir.Type
+import ir.Value
+import ir.instruction.*
 
-interface BlockBuilderInterface {
+enum class InsertionMode {
+    Append,
+    Update
+}
+
+interface MutableBlock {
     fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): Value
     fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): Value
     fun intCompare(a: Value, pred: IntPredicate, b: Value): Value
