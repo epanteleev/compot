@@ -1,5 +1,6 @@
 import ir.*
 import ir.builder.ModuleBuilder
+import ir.instruction.ArithmeticBinaryOp
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import startup.Driver

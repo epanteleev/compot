@@ -4,7 +4,7 @@ import ir.*
 import ir.block.Block
 
 
-abstract class Instruction(protected val tp: Type, protected var usages: ArrayList<Value>) {
+abstract class Instruction(protected val tp: Type, protected val usages: List<Value>) {
     fun usedInstructions(): List<ValueInstruction> {
         return usages.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
     }
@@ -13,13 +13,13 @@ abstract class Instruction(protected val tp: Type, protected var usages: ArrayLi
         return usages
     }
 
-    abstract fun copy(newUsages: ArrayList<Value>): Instruction
+    abstract fun copy(newUsages: List<Value>): Instruction
     abstract override fun equals(other: Any?): Boolean
     abstract override fun hashCode(): Int
     abstract fun dump(): String
 }
 
-abstract class ValueInstruction(protected val identifier: String, tp: Type, usages: ArrayList<Value>):
+abstract class ValueInstruction(protected val identifier: String, tp: Type, usages: List<Value>):
     Instruction(tp, usages),
     LocalValue {
     override fun name(): String {
@@ -119,7 +119,7 @@ class ArithmeticUnary(name: String, tp: Type, val op: ArithmeticUnaryOp, value: 
         return usages[0]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): ArithmeticUnary {
+    override fun copy(newUsages: List<Value>): ArithmeticUnary {
         assert(newUsages.size == 1) {
             "should be"
         }
@@ -179,7 +179,7 @@ class ArithmeticBinary(name: String, tp: Type, a: Value, val op: ArithmeticBinar
         return usages[1]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): ArithmeticBinary {
+    override fun copy(newUsages: List<Value>): ArithmeticBinary {
         return ArithmeticBinary(identifier, tp, newUsages[0], op, newUsages[1])
     }
 }
@@ -227,7 +227,7 @@ class IntCompare(name: String, a: Value, private val predicate: IntPredicate, b:
         return usages[1]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): IntCompare {
+    override fun copy(newUsages: List<Value>): IntCompare {
         return IntCompare(identifier, newUsages[0], predicate, newUsages[1])
     }
 }
@@ -246,7 +246,7 @@ class Load(name: String, ptr: Value):
         return usages[0]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): Load {
+    override fun copy(newUsages: List<Value>): Load {
         return Load(identifier, newUsages[0])
     }
 }
@@ -273,7 +273,7 @@ class Store(pointer: Value, value: Value):
         return usages[1]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): Store {
+    override fun copy(newUsages: List<Value>): Store {
         return Store(newUsages[0], newUsages[1])
     }
 
@@ -290,26 +290,22 @@ class Store(pointer: Value, value: Value):
     }
 }
 
-class StackAlloc(name: String, ty: Type, private val size: U64Value):
+class StackAlloc(name: String, ty: Type, private val size: Long):
     ValueInstruction(name, ty.ptr(), arrayListOf()) {
     override fun dump(): String {
         return "%$identifier = stackalloc $tp $size"
     }
 
     fun size(): Long {
-        return size.u64
+        return size
     }
 
-    override fun copy(newUsages: ArrayList<Value>): StackAlloc {
-        assert(newUsages.size == 1) {
-            "should be"
-        }
-
-        return StackAlloc(identifier, tp, newUsages[0] as U64Value)
+    override fun copy(newUsages: List<Value>): StackAlloc {
+        return StackAlloc(identifier, tp.dereference(), size)
     }
 }
 
-class Call(name: String, tp: Type, private val func: AnyFunctionPrototype, args: ArrayList<Value>):
+class Call(name: String, tp: Type, private val func: AnyFunctionPrototype, args: List<Value>):
     ValueInstruction(name, tp, args),
     Callable {
     init {
@@ -324,7 +320,7 @@ class Call(name: String, tp: Type, private val func: AnyFunctionPrototype, args:
         return func
     }
 
-    override fun copy(newUsages: ArrayList<Value>): Call {
+    override fun copy(newUsages: List<Value>): Call {
         assert(newUsages.size == usages.size) {
             "should be"
         }
@@ -341,7 +337,7 @@ class Call(name: String, tp: Type, private val func: AnyFunctionPrototype, args:
     }
 }
 
-class VoidCall(private val func: AnyFunctionPrototype, args: ArrayList<Value>):
+class VoidCall(private val func: AnyFunctionPrototype, args: List<Value>):
     Instruction(Type.Void, args),
     Callable {
     init {
@@ -380,7 +376,7 @@ class VoidCall(private val func: AnyFunctionPrototype, args: ArrayList<Value>):
         return builder.toString()
     }
 
-    override fun copy(newUsages: ArrayList<Value>): VoidCall {
+    override fun copy(newUsages: List<Value>): VoidCall {
         assert(newUsages.size == usages.size) {
             "should be"
         }
@@ -415,7 +411,7 @@ class GetElementPtr(name: String, tp: Type, source: Value, index: Value):
         return usages[1]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): GetElementPtr {
+    override fun copy(newUsages: List<Value>): GetElementPtr {
         return GetElementPtr(identifier, tp, newUsages[0], newUsages[1])
     }
 }
@@ -434,12 +430,12 @@ class Cast(name: String, ty: Type, val castType: CastType, value: Value):
         return usages[0]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): Cast {
+    override fun copy(newUsages: List<Value>): Cast {
         return Cast(identifier, tp, castType, newUsages[0])
     }
 }
 
-class Phi(name: String, ty: Type, private val incoming: MutableList<Block>, incomingValue: ArrayList<Value>):
+class Phi(name: String, ty: Type, private val incoming: List<Block>, incomingValue: List<Value>):
     ValueInstruction(name, ty, incomingValue) {
     override fun dump(): String {
         val builder = StringBuilder()
@@ -451,12 +447,6 @@ class Phi(name: String, ty: Type, private val incoming: MutableList<Block>, inco
         return builder.toString()
     }
 
-    fun updateUsagesInPhi(fn: (Value, Block) -> Value) {
-       for (i in 0 until usages.size) {
-           usages[i] = fn(usages[i], incoming[i])
-       }
-    }
-
     fun incoming(): List<Block> {
          return incoming
     }
@@ -465,7 +455,11 @@ class Phi(name: String, ty: Type, private val incoming: MutableList<Block>, inco
         return incoming() zip usages()
     }
 
-    override fun copy(newUsages: ArrayList<Value>): Instruction {
+    override fun copy(newUsages: List<Value>): Instruction {
+        return Phi(identifier, tp, incoming, newUsages)
+    }
+
+    fun copy(newUsages: List<Value>, incoming: List<Block>): Phi {
         return Phi(identifier, tp, incoming, newUsages)
     }
 
@@ -506,7 +500,7 @@ class Select(name: String, ty: Type, cond: Value, onTrue: Value, onFalse: Value)
         return usages[2]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): Select {
+    override fun copy(newUsages: List<Value>): Select {
         return Select(identifier, tp, newUsages[0], newUsages[1], newUsages[2])
     }
 }
@@ -525,12 +519,12 @@ class Copy(name: String, origin: Value):
         return usages[0]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): Copy {
+    override fun copy(newUsages: List<Value>): Copy {
         return Copy(identifier, newUsages[0])
     }
 }
 
-abstract class TerminateInstruction(usages: ArrayList<Value>, val targets: Array<Block>):
+abstract class TerminateInstruction(usages: List<Value>, val targets: Array<Block>):
     Instruction(Type.UNDEF, usages) {
     fun targets(): Array<Block> {
         return targets
@@ -539,6 +533,8 @@ abstract class TerminateInstruction(usages: ArrayList<Value>, val targets: Array
     override fun hashCode(): Int {
         return targets.hashCode()
     }
+
+    abstract fun copy(usages: List<Value>, targets: Array<Block>): TerminateInstruction
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -563,8 +559,12 @@ class Branch(target: Block): TerminateInstruction(arrayListOf(), arrayOf(target)
         return targets[0]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): Instruction {
+    override fun copy(newUsages: List<Value>): Instruction {
         return this
+    }
+
+    override fun copy(usages: List<Value>, targets: Array<Block>): Branch {
+        return Branch(targets[0])
     }
 }
 
@@ -598,7 +598,11 @@ class BranchCond(value: Value, onTrue: Block, onFalse: Block):
         return targets[1]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): Instruction {
+    override fun copy(usages: List<Value>, targets: Array<Block>): BranchCond {
+        return BranchCond(usages[0], targets[0], targets[1])
+    }
+
+    override fun copy(newUsages: List<Value>): Instruction {
         assert(newUsages.size == 1) {
             "should be"
         }
@@ -621,7 +625,11 @@ class Return(value: Value):
         return usages[0]
     }
 
-    override fun copy(newUsages: ArrayList<Value>): Return {
+    override fun copy(usages: List<Value>, targets: Array<Block>): Return {
+        return Return(usages[0])
+    }
+
+    override fun copy(newUsages: List<Value>): Return {
         return Return(newUsages[0])
     }
 }

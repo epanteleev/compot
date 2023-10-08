@@ -70,7 +70,7 @@ class CoalescedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
     }
 }
 
-class Coalescing(val intervals: LiveIntervals) {
+class Coalescing(private val intervals: LiveIntervals) {
     private val visited = hashSetOf<LocalValue>()
     private val liveness = hashMapOf<Group, LiveRange>()
 

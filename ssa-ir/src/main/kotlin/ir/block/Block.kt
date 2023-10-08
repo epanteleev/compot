@@ -162,6 +162,16 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         return instructions.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
     }
 
+    fun valueInstructions(fn: (ValueInstruction) -> Unit) {
+        instructions.forEach {
+            if (it !is ValueInstruction) {
+                return
+            }
+
+            fn(it)
+        }
+    }
+
     fun phis(): List<Phi> {
         return instructions.filterIsInstanceTo<Phi, MutableList<Phi>>(arrayListOf())
     }
@@ -179,12 +189,6 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
     fun removeIf(filter: (Instruction) -> Boolean): Boolean {
         return instructions.removeIf { filter(it) }
     }
-
-//    fun copy(): Block {
-//        val newInstructions = instructions.mapTo(arrayListOf()) { it }
-//        val newPredecessors = predecessors.mapTo(arrayListOf()) { it }
-//        val newSuccessors = successors.mapTo(arrayListOf()) { }
-//    }
 
     override fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): Value {
         return withOutput { it: Int -> ArithmeticUnary(n(it), value.type(), op, value) }
@@ -248,7 +252,7 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
     }
 
     override fun stackAlloc(ty: Type, size: Long): Value {
-        val alloc = withOutput { it: Int -> StackAlloc(n(it), ty, U64Value(size)) }
+        val alloc = withOutput { it: Int -> StackAlloc(n(it), ty, size) }
         if (!TypeCheck.checkAlloc(alloc as StackAlloc)) {
             throw ModuleException("Inconsistent types: ${alloc.dump()}")
         }
@@ -287,10 +291,6 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         return selectInst
     }
 
-    private fun n(i: Int): String {
-        return "${index}x$i"
-    }
-
     override fun phi(incoming: ArrayList<Value>, labels: ArrayList<Block>): Value {
         val phi = withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type(), labels, incoming) }
 
@@ -308,46 +308,11 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         return withOutput { it: Int -> Phi("phi${n(it)}", type, blocks, values) }
     }
 
-    internal fun copy(copyFn: () -> Instruction): Instruction {
-        val instruction = copyFn()
-        if (instruction is TerminateInstruction) {
-            add(instruction)
-        } else {
-            append(instruction)
-        }
-
-        return instruction
-    }
-
     override fun copy(value: Value): Value {
         return withOutput { it: Int -> Copy(n(it), value) }
     }
 
-    private fun withOutput(f: (Int) -> ValueInstruction): Value {
-        fun allocateValue(): Int {
-            val currentValue = maxValueIndex
-            maxValueIndex += 1
-            return currentValue
-        }
-
-        val value = allocateValue()
-        val instruction = f(value)
-
-        append(instruction)
-        return instruction
-    }
-
-    private fun append(instruction: Instruction) {
-        when (insertionMode) {
-            InsertionMode.Append -> instructions.add(indexToAppend, instruction)
-            InsertionMode.Update -> instructions[indexToAppend] = instruction
-        }
-
-        insertionMode = InsertionMode.Append
-        indexToAppend = instructions.size
-    }
-
-    private fun add(instruction: Instruction): Instruction {
+    fun add(instruction: Instruction): Instruction {
         fun makeEdge(to: Block) {
             addSuccessor(to)
             to.addPredecessor(this)
@@ -376,6 +341,34 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
 
         append(instruction)
         return instruction
+    }
+
+    private fun n(i: Int): String {
+        return "${index}x$i"
+    }
+
+    private fun withOutput(f: (Int) -> ValueInstruction): Value {
+        fun allocateValue(): Int {
+            val currentValue = maxValueIndex
+            maxValueIndex += 1
+            return currentValue
+        }
+
+        val value = allocateValue()
+        val instruction = f(value)
+
+        append(instruction)
+        return instruction
+    }
+
+    private fun append(instruction: Instruction) {
+        when (insertionMode) {
+            InsertionMode.Append -> instructions.add(indexToAppend, instruction)
+            InsertionMode.Update -> instructions[indexToAppend] = instruction
+        }
+
+        insertionMode = InsertionMode.Append
+        indexToAppend = instructions.size
     }
 
     override fun toString(): String {

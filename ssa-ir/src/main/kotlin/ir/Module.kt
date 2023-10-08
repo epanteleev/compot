@@ -1,5 +1,7 @@
 package ir
 
+import ir.utils.CopyModule
+
 data class ModuleException(override val message: String): Exception(message)
 
 data class Module(internal val functions: List<FunctionData>, internal val externFunctions: Set<ExternFunction>) {
@@ -10,6 +12,10 @@ data class Module(internal val functions: List<FunctionData>, internal val exter
     fun findFunction(prototype: FunctionPrototype): FunctionData {
         return functions.find { it.prototype == prototype }
             ?: throw ModuleException("Cannot find function: $prototype")
+    }
+
+    fun copy(): Module {
+        return CopyModule.copy(this)
     }
 
     fun functions(): Iterator<FunctionData> {

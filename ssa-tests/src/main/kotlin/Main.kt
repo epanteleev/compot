@@ -1,10 +1,13 @@
 import ir.*
 import ir.builder.ModuleBuilder
 import ir.codegen.x64.regalloc.LinearScan
+import ir.instruction.ArithmeticBinaryOp
+import ir.instruction.CastType
+import ir.instruction.IntPredicate
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.utils.DumpModule
-import ir.utils.JoinPointSet
+import ir.pass.transform.auxiliary.JoinPointSet
 
 fun main(args: Array<String>) {
     val builder = ModuleBuilder.create()

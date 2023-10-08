@@ -3,14 +3,16 @@ package ir
 import ir.block.BlockViewer
 import ir.builder.ModuleBuilder
 import ir.instruction.IntPredicate
+import ir.pass.ana.VerifySSA
+import ir.pass.transform.Mem2Reg
+import ir.utils.DumpModule
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class DominatorTreeTest {
-
-    private fun withBasicBlocks(): BasicBlocks {
+    private fun withBasicBlocks(): Module {
         val moduleBuilder = ModuleBuilder.create()
-        val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.U16.ptr()))
         val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(Type.U16.ptr()))
         val b1 = builder.createLabel()
         builder.branch(b1)
@@ -46,15 +48,14 @@ class DominatorTreeTest {
         builder.switchLabel(exit)
         builder.ret(U16Value(0))
 
-        val module = moduleBuilder.build()
-
-        //println(DumpModule.apply(module))
-        return module.findFunction(prototype).blocks
+        return moduleBuilder.build()
     }
 
     @Test
     fun testDominator() {
-        val domTree = withBasicBlocks().dominatorTree()
+        val module = withBasicBlocks()
+        val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.U16.ptr()))
+        val domTree = module.findFunction(prototype).blocks.dominatorTree()
 
         assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(1)))
         assertTrue(domTree.dominates(BlockViewer(1), BlockViewer(2)))
@@ -63,5 +64,17 @@ class DominatorTreeTest {
         assertTrue(domTree.dominates(BlockViewer(3), BlockViewer(4)))
         assertTrue(domTree.dominates(BlockViewer(4), BlockViewer(5)))
         assertTrue(domTree.dominates(BlockViewer(4), BlockViewer(6)))
+    }
+
+    @Test
+    fun testCopy() {
+        val module = withBasicBlocks()
+        val moduleCopy = module.copy()
+        assertEquals(DumpModule.apply(module), DumpModule.apply(moduleCopy))
+
+        val originalMem2Reg = VerifySSA.run(Mem2Reg.run(module))
+        val copyMem2Reg     = VerifySSA.run(Mem2Reg.run(module))
+        println(DumpModule.apply(originalMem2Reg))
+        assertEquals(DumpModule.apply(originalMem2Reg), DumpModule.apply(copyMem2Reg))
     }
 }

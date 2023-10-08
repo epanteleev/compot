@@ -1,7 +1,8 @@
-package ir.utils
+package ir.pass.transform.auxiliary
 
 import ir.*
 import ir.block.AnyBlock
+import ir.block.Block
 import ir.instruction.ValueInstruction
 
 class JoinPointSet private constructor(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
@@ -9,6 +10,10 @@ class JoinPointSet private constructor(private val blocks: BasicBlocks, private 
 
     private fun hasStore(bb: AnyBlock, variable: ValueInstruction): Boolean {
         return bb.instructions().contains(variable)
+    }
+
+    operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<ValueInstruction>>> {
+        return joinSet.iterator()
     }
 
     private fun calculateForVariable(v: ValueInstruction, stores: MutableSet<AnyBlock>) {
@@ -38,7 +43,7 @@ class JoinPointSet private constructor(private val blocks: BasicBlocks, private 
         }
     }
 
-    private fun calculate(): Map<AnyBlock, Set<Value>> {
+    private fun calculate(): JoinPointSet {
         val allocInfo = AllocStoreInfo.create(blocks)
         val stores = allocInfo.allStores()
 
@@ -46,16 +51,16 @@ class JoinPointSet private constructor(private val blocks: BasicBlocks, private 
             calculateForVariable(v, vStores as MutableSet<AnyBlock>)
         }
 
-        return joinSet
+        return this
     }
 
     companion object {
-        fun evaluate(blocks: BasicBlocks, dominatorTree: DominatorTree): Map<AnyBlock, Set<Value>> {
+        fun evaluate(blocks: BasicBlocks, dominatorTree: DominatorTree): JoinPointSet {
             val df = dominatorTree.frontiers()
             return JoinPointSet(blocks, df).calculate()
         }
 
-        fun evaluate(blocks: BasicBlocks): Map<AnyBlock, Set<Value>> {
+        fun evaluate(blocks: BasicBlocks): JoinPointSet {
             val df = blocks.dominatorTree().frontiers()
             return JoinPointSet(blocks, df).calculate()
         }

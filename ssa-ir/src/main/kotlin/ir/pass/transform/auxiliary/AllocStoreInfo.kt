@@ -1,10 +1,8 @@
-package ir.utils
+package ir.pass.transform.auxiliary
 
 import ir.*
+import ir.instruction.*
 import ir.block.AnyBlock
-import ir.instruction.StackAlloc
-import ir.instruction.Store
-import ir.instruction.ValueInstruction
 
 class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     private val allocated: Set<ValueInstruction> by lazy { allocatedVariablesInternal() }
@@ -14,9 +12,11 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
         val stores = hashSetOf<ValueInstruction>()
         fun allocatedInGivenBlock(bb: AnyBlock) {
             for (inst in bb.valueInstructions()) {
-                if (inst is StackAlloc && inst.size() == 1L) {
-                    stores.add(inst)
+                if (!Utils.isStackAllocOfLocalVariable(inst)) {
+                    continue
                 }
+
+                stores.add(inst)
             }
         }
 
@@ -35,10 +35,13 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
 
         for (bb in blocks.preorder()) {
             for (inst in bb) {
-                if (inst is Store && inst.pointer() !is ArgumentValue) {
-                    if (variables.contains(inst.pointer())) {
-                        stores[inst.pointer()]!!.add(bb)
+                if (Utils.isStoreOfLocalVariable(inst)) {
+                    inst as Store
+                    if (!variables.contains(inst.pointer())) {
+                        continue
                     }
+
+                    stores[inst.pointer()]!!.add(bb)
                 }
             }
         }
