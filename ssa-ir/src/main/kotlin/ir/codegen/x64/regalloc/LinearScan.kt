@@ -1,10 +1,7 @@
 package ir.codegen.x64.regalloc
 
+import ir.*
 import asm.x64.Operand
-import ir.ArgumentValue
-import ir.FunctionData
-import ir.LocalValue
-import ir.codegen.x64.RegisterAllocation
 import ir.codegen.x64.VirtualRegistersPool
 
 class LinearScan(val data: FunctionData) {
@@ -50,6 +47,11 @@ class LinearScan(val data: FunctionData) {
 
     private fun allocRegistersForLocalVariables() {
         for ((group, range) in liveRangesGroup) {
+            val arg = group.hasArgument
+            if (arg != null || group.stackAllocGroup) {
+                continue
+            }
+
             active.entries.removeIf {
                 if (liveRangesGroup[it.key].end() < range.begin()) {
                     pool.free(it.value)
@@ -58,12 +60,6 @@ class LinearScan(val data: FunctionData) {
                     return@removeIf false
                 }
             }
-
-            val arg = group.hasArgument
-            if (arg != null && !group.stackAllocGroup) {
-                continue
-            }
-
             pickOperandGroup(group)
         }
     }

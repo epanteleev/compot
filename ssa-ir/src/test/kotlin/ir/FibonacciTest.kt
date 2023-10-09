@@ -118,7 +118,7 @@ class FibonacciTest {
 
         val originalMem2Reg = VerifySSA.run(Mem2Reg.run(module))
         val copyMem2Reg     = VerifySSA.run(Mem2Reg.run(module))
-        println(DumpModule.apply(originalMem2Reg))
+
         assertEquals(DumpModule.apply(originalMem2Reg), DumpModule.apply(copyMem2Reg))
         assertEquals(DumpModule.apply(copy), copyModule2String)
     }

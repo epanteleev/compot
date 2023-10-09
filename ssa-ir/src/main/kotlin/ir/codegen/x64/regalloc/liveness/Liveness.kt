@@ -46,11 +46,15 @@ class Liveness private constructor(val data: FunctionData) {
         var ordering = -1
         for (bb in data.blocks.linearScanOrder()) {
             val maxBlock = evaluateMaxBlock(bb)
-
             for (inst in bb.instructions()) {
                 ordering += 1
+                val actualIndex = if (maxBlock != bb) {
+                    bbOrdering[maxBlock]!!
+                } else {
+                    ordering
+                }
 
-                val location = OrderedLocation(maxBlock, bbOrdering[maxBlock]!!)
+                val location = OrderedLocation(maxBlock, actualIndex)
                 for (usage in inst.usages()) {
                     if (usage !is LocalValue) {
                         continue
@@ -67,7 +71,7 @@ class Liveness private constructor(val data: FunctionData) {
 
     private fun evaluateMaxBlock(bb: Block): Block {
         val predecessors = bb.predecessors()
-        if (predecessors.size == 1) {
+        if (predecessors.size <= 1) {
             return bb
         }
 

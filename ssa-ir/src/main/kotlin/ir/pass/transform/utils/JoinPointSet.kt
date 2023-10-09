@@ -1,8 +1,7 @@
-package ir.pass.transform.auxiliary
+package ir.pass.transform.utils
 
 import ir.*
 import ir.block.AnyBlock
-import ir.block.Block
 import ir.instruction.ValueInstruction
 
 class JoinPointSet private constructor(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {

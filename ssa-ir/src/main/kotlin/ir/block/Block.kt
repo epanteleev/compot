@@ -26,6 +26,10 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         return successors
     }
 
+    fun hasCriticalEdgeFrom(predecessor: Block): Boolean {
+        return predecessor.successors().size > 1 && predecessors().size > 1
+    }
+
     override fun last(): TerminateInstruction {
         val last = instructions[size - 1]
         assert(last is TerminateInstruction) {
@@ -318,11 +322,12 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
             to.addPredecessor(this)
         }
         fun updateEdge(terminateInstruction: TerminateInstruction) {
+            val targets = terminateInstruction.targets()
             for (idx in successors.indices) {
-                successors[idx] = terminateInstruction.targets()[idx]
+                successors[idx] = targets[idx]
             }
 
-            for (incoming in terminateInstruction.targets()) {
+            for (incoming in targets) {
                 val idx = incoming.predecessors.indexOf(this)
                 assert(idx != -1) {
                     "should contains bb=$this in incoming=$incoming"

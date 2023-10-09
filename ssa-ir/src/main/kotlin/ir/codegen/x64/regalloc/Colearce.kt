@@ -83,6 +83,7 @@ class Coalescing(private val intervals: LiveIntervals) {
         for ((k, v) in result) {
             map[k] = v
         }
+
         return CoalescedLiveIntervals(map)
     }
 

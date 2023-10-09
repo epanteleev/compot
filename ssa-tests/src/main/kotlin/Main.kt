@@ -7,7 +7,7 @@ import ir.instruction.IntPredicate
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.utils.DumpModule
-import ir.pass.transform.auxiliary.JoinPointSet
+import ir.pass.transform.utils.JoinPointSet
 
 fun main(args: Array<String>) {
     val builder = ModuleBuilder.create()

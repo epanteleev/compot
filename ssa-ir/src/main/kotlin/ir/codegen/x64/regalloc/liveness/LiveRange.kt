@@ -3,7 +3,7 @@ package ir.codegen.x64.regalloc.liveness
 import ir.*
 import ir.utils.OrderedLocation
 
-open class LiveRange internal constructor(protected val creation: OrderedLocation, protected var end: OrderedLocation) {
+open class LiveRange internal constructor(private val creation: OrderedLocation, protected var end: OrderedLocation) {
     fun begin(): OrderedLocation {
         return creation
     }

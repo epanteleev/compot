@@ -15,15 +15,18 @@ internal object CopyModule {
 
     fun copy(oldBasicBlocks: BasicBlocks): BasicBlocks {
         val oldToNew       = setupNewBasicBlock(oldBasicBlocks)
-        val oldValuesToOld = hashMapOf<LocalValue, LocalValue>()
+        val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
 
         val arrayBlocks = arrayListOf<Block>()
         for (bb in oldBasicBlocks.preorder()) {
             arrayBlocks.add(oldToNew[bb]!!)
-            copy(bb, oldValuesToOld, oldToNew)
+            copy(bb, oldValuesToNew, oldToNew)
         }
 
-        return BasicBlocks.create(arrayBlocks)
+        val newBB = BasicBlocks.create(arrayBlocks)
+        updatePhis(newBB, oldValuesToNew)
+
+        return newBB
     }
 
     private fun copy(thisBlock: Block, oldToNewValues: MutableMap<LocalValue, LocalValue>, oldToNewBlock: Map<Block, Block>) {
@@ -33,34 +36,40 @@ internal object CopyModule {
         }
     }
 
-    private fun newUsages(oldToNewValues: MutableMap<LocalValue, LocalValue>, usages: List<Value>): List<Value> {
-        return usages.mapTo(arrayListOf()) {
+    private fun newUsages(oldToNewValues: Map<LocalValue, LocalValue>, inst: Instruction): List<Value> {
+        return inst.usages().mapTo(arrayListOf()) {
             if (it is ArgumentValue || it is Constant) {
                 it
             } else {
-                oldToNewValues[it]!!
+                val result = oldToNewValues[it]
+                assert(result != null) {
+                    "cannot find value=$it in instruction=$inst"
+                }
+
+                result as Value
             }
         }
     }
 
     private fun newInst(oldToNewValues: MutableMap<LocalValue, LocalValue>, oldToNewBlock: Map<Block, Block>, inst: Instruction): Instruction {
-        val newUsages = newUsages(oldToNewValues, inst.usages())
         when (inst) {
             is Phi -> {
                 val targets = inst.incoming()
                 val newTargets = targets.mapTo(arrayListOf()) { oldToNewBlock[it]!! }
+                val newInst = inst.copy(inst.usages(), newTargets) /** put in old usages **/
 
-                val newInst = inst.copy(newUsages, newTargets)
                 oldToNewValues[inst] = newInst
                 return newInst
             }
             is TerminateInstruction -> {
+                val newUsages = newUsages(oldToNewValues, inst)
                 val targets = inst.targets()
                 val newTargets = targets.map { oldToNewBlock[it]!! }.toTypedArray()
 
                 return inst.copy(newUsages, newTargets)
             }
             else -> {
+                val newUsages = newUsages(oldToNewValues, inst)
                 val newInst = inst.copy(newUsages)
                 if (inst is ValueInstruction) {
                     oldToNewValues[inst] = newInst as ValueInstruction
@@ -71,13 +80,29 @@ internal object CopyModule {
         }
     }
 
-    private fun setupNewBasicBlock(oldBasicBlocks: BasicBlocks): Map<Block, Block> {
-        val newBasicBlocks = oldBasicBlocks.blocks().mapTo(arrayListOf()) {
-            Block.empty(it.index)
-        }
+    private fun updatePhis(arrayBlocks: BasicBlocks, oldValuesToOld: Map<LocalValue, LocalValue>) {
+        for (bb in arrayBlocks) {
+            for (inst in bb.instructions()) {
+                if (inst !is Phi) {
+                    continue
+                }
 
+                val usages = newUsages(oldValuesToOld, inst)
+                bb.update(inst) {
+                    it as Phi
+                    it.copy(usages, inst.incoming())
+                }
+            }
+        }
+    }
+
+    private fun setupNewBasicBlock(oldBasicBlocks: BasicBlocks): Map<Block, Block> {
+        val newBasicBlocks = arrayListOf<Block>()
         val oldToNew = hashMapOf<Block, Block>()
-        for ((old, new) in oldBasicBlocks.blocks() zip newBasicBlocks) {
+
+        for (old in oldBasicBlocks.blocks()) {
+            val new = Block.empty(old.index)
+            newBasicBlocks.add(new)
             oldToNew[old] = new
         }
 

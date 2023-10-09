@@ -5,6 +5,8 @@ import ir.utils.*
 import ir.block.*
 import ir.instruction.*
 import ir.pass.transform.auxiliary.*
+import ir.pass.transform.utils.JoinPointSet
+import ir.pass.transform.utils.RewriteAssistant
 
 
 data class Mem2RegException(override val message: String): Exception(message)

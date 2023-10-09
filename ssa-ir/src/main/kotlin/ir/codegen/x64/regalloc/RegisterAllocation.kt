@@ -1,7 +1,8 @@
-package ir.codegen.x64
+package ir.codegen.x64.regalloc
 
 import asm.x64.*
 import ir.*
+import ir.codegen.x64.CallConvention
 import ir.codegen.x64.regalloc.liveness.LiveIntervals
 import ir.instruction.ValueInstruction
 import ir.utils.OrderedLocation
@@ -51,7 +52,8 @@ class RegisterAllocation(private var stackSize: Long,
             if (!CallConvention.gpCallerSaveRegs.contains(reg8)) {
                 continue
             }
-            if (liveness[value].end() > loc) {
+            val liveRange = liveness[value]
+            if (liveRange.end() > loc && loc > liveRange.begin()) {
                 registers.add(reg8)
             }
         }

@@ -2,15 +2,15 @@ package ir.codegen.x64
 
 import asm.x64.*
 import ir.*
+import ir.instruction.*
 import ir.block.Label
 import ir.Module
 import ir.block.Block
 import ir.codegen.x64.regalloc.LinearScan
 import ir.instruction.Call
-import ir.instruction.Callable
 import ir.pass.ana.VerifySSA
-import ir.pass.transform.CopyInsertion
-import ir.pass.transform.SplitCriticalEdge
+
+import ir.pass.transform.SSADestruction
 import ir.utils.OrderedLocation
 
 private class ArgumentEmitter(val objFunc: ObjFunction) {
@@ -79,9 +79,9 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         objFunc.leave()
     }
 
-    private fun emitArithmeticBinary(binary: ir.instruction.ArithmeticBinary) {
+    private fun emitArithmeticBinary(binary: ArithmeticBinary) {
         var first       = valueToRegister.operand(binary.first())
-        var second      = valueToRegister.operand(binary.second())
+        val second      = valueToRegister.operand(binary.second())
         val destination = valueToRegister.operand(binary) as Operand
 
         if (first is Mem) {
@@ -95,19 +95,19 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         }
 
         when (binary.op) {
-            ir.instruction.ArithmeticBinaryOp.Add -> {
+            ArithmeticBinaryOp.Add -> {
                 objFunc.add(second, first as Register)
             }
-            ir.instruction.ArithmeticBinaryOp.Sub -> {
+            ArithmeticBinaryOp.Sub -> {
                 objFunc.sub(second, first as Register)
             }
-            ir.instruction.ArithmeticBinaryOp.Xor -> {
+            ArithmeticBinaryOp.Xor -> {
                 objFunc.xor(second, first as Register)
             }
-            ir.instruction.ArithmeticBinaryOp.Mul -> {
+            ArithmeticBinaryOp.Mul -> {
                 objFunc.mul(second, first as Register)
             }
-            ir.instruction.ArithmeticBinaryOp.Div -> {
+            ArithmeticBinaryOp.Div -> {
                 objFunc.div(second, first as Register)
             }
             else -> {
@@ -120,7 +120,7 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         }
     }
 
-    private fun emitReturn(ret: ir.instruction.Return) {
+    private fun emitReturn(ret: Return) {
         val returnType = data.prototype.type()
         if (returnType.isArithmetic() || returnType.isPointer()) {
             val value = valueToRegister.operand(ret.value())
@@ -131,11 +131,11 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         objFunc.ret()
     }
 
-    private fun emitArithmeticUnary(unary: ir.instruction.ArithmeticUnary) {
+    private fun emitArithmeticUnary(unary: ArithmeticUnary) {
         val operand = valueToRegister.operand(unary.operand())
         val result  = valueToRegister.operand(unary)
 
-        if (unary.op == ir.instruction.ArithmeticUnaryOp.Neg) {
+        if (unary.op == ArithmeticUnaryOp.Neg) {
             val second = if (operand is Mem) {
                 objFunc.mov(operand, temp1(8))
             } else {
@@ -144,7 +144,7 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
             objFunc.xor(Imm(-1, 8), second)
             objFunc.mov(second, result as Operand)
 
-        } else if (unary.op == ir.instruction.ArithmeticUnaryOp.Not) {
+        } else if (unary.op == ArithmeticUnaryOp.Not) {
             val second = if (result is Mem) {
                 objFunc.mov(result, temp1(result.size))
             } else {
@@ -204,7 +204,7 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         }
     }
 
-    private fun emitStore(instruction: ir.instruction.Store) {
+    private fun emitStore(instruction: Store) {
         val pointer = valueToRegister.operand(instruction.pointer()) as Operand
         var value   = valueToRegister.operand(instruction.value())
 
@@ -215,7 +215,7 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         objFunc.mov(value, pointer)
     }
 
-    private fun emitLoad(instruction: ir.instruction.Load) {
+    private fun emitLoad(instruction: Load) {
         val pointer = valueToRegister.operand(instruction.operand())
         val value   = valueToRegister.operand(instruction) as Operand
 
@@ -232,7 +232,7 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         }
     }
 
-    private fun emitIntCompare(isMultiplyUsages: Boolean, intCompare: ir.instruction.IntCompare) {
+    private fun emitIntCompare(isMultiplyUsages: Boolean, intCompare: IntCompare) {
         var first = valueToRegister.operand(intCompare.first())
         val second = valueToRegister.operand(intCompare.second())
 
@@ -248,24 +248,24 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         }
     }
 
-    private fun emitBranch(branch: ir.instruction.Branch) {
+    private fun emitBranch(branch: Branch) {
         objFunc.jump(JmpType.JMP, ".L$functionCounter.${branch.target().index}")
     }
 
-    private fun emitBranchCond(branchCond: ir.instruction.BranchCond) {
+    private fun emitBranchCond(branchCond: BranchCond) {
         val cond = branchCond.condition()
-        if (cond is ir.instruction.IntCompare) {
+        if (cond is IntCompare) {
             val jmpType = when (cond.predicate().invert()) {
-                ir.instruction.IntPredicate.Eq -> JmpType.JE
-                ir.instruction.IntPredicate.Ne -> JmpType.JNE
-                ir.instruction.IntPredicate.Ugt -> JmpType.JG
-                ir.instruction.IntPredicate.Uge -> JmpType.JGE
-                ir.instruction.IntPredicate.Ult -> JmpType.JL
-                ir.instruction.IntPredicate.Ule -> JmpType.JLE
-                ir.instruction.IntPredicate.Sgt -> JmpType.JG
-                ir.instruction.IntPredicate.Sge -> JmpType.JGE
-                ir.instruction.IntPredicate.Slt -> JmpType.JL
-                ir.instruction.IntPredicate.Sle -> JmpType.JLE
+                IntPredicate.Eq -> JmpType.JE
+                IntPredicate.Ne -> JmpType.JNE
+                IntPredicate.Ugt -> JmpType.JG
+                IntPredicate.Uge -> JmpType.JGE
+                IntPredicate.Ult -> JmpType.JL
+                IntPredicate.Ule -> JmpType.JLE
+                IntPredicate.Sgt -> JmpType.JG
+                IntPredicate.Sge -> JmpType.JGE
+                IntPredicate.Slt -> JmpType.JL
+                IntPredicate.Sle -> JmpType.JLE
             }
 
             objFunc.jump(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
@@ -274,7 +274,7 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         }
     }
 
-    private fun emitCopy(copy: ir.instruction.Copy) {
+    private fun emitCopy(copy: Copy) {
         val result  = valueToRegister.operand(copy)
         val operand = valueToRegister.operand(copy.origin())
 
@@ -290,36 +290,42 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
     private fun emitBasicBlock(bb: Block, map: Map<Callable, OrderedLocation>) {
         for (instruction in bb) {
             when (instruction) {
-                is ir.instruction.ArithmeticBinary -> emitArithmeticBinary(instruction)
-                is ir.instruction.Store -> emitStore(instruction)
-                is ir.instruction.Return -> emitReturn(instruction)
-                is ir.instruction.Load -> emitLoad(instruction)
-                is Call -> emitCall(instruction, map[instruction]!!)
-                is ir.instruction.ArithmeticUnary -> emitArithmeticUnary(instruction)
-                is ir.instruction.IntCompare -> emitIntCompare(false, instruction)
-                is ir.instruction.Branch -> emitBranch(instruction)
-                is ir.instruction.BranchCond -> emitBranchCond(instruction)
-                is ir.instruction.VoidCall -> emitCall(instruction, map[instruction]!!)
-                is ir.instruction.Copy -> emitCopy(instruction)
-                is ir.instruction.Phi -> {/* skip */}
-                is ir.instruction.StackAlloc -> {/* skip */}
+                is ArithmeticBinary -> emitArithmeticBinary(instruction)
+                is Store            -> emitStore(instruction)
+                is Return           -> emitReturn(instruction)
+                is Load             -> emitLoad(instruction)
+                is Call             -> emitCall(instruction, map[instruction]!!)
+                is ArithmeticUnary  -> emitArithmeticUnary(instruction)
+                is IntCompare       -> emitIntCompare(false, instruction)
+                is Branch           -> emitBranch(instruction)
+                is BranchCond       -> emitBranchCond(instruction)
+                is VoidCall         -> emitCall(instruction, map[instruction]!!)
+                is Copy             -> emitCopy(instruction)
+                is Phi              -> {/* skip */}
+                is StackAlloc       -> {/* skip */}
                 else                -> println("Unsupported: $instruction")
             }
         }
     }
 
-    private fun emit() {
+    private fun evaluateOrder(): Map<Callable, OrderedLocation> {
         val orderedLocation = hashMapOf<Callable, OrderedLocation>()
         var order = 0
         for (bb in data.blocks.linearScanOrder()) {
-            for ((idx, call) in bb.instructions().withIndex()) {
-                if (call is Call || call is ir.instruction.VoidCall) {
+            for (call in bb.instructions()) {
+                if (call is Call || call is VoidCall) {
                     call as Callable
                     orderedLocation[call] = OrderedLocation(bb, order)
                 }
                 order += 1
             }
         }
+
+        return orderedLocation
+    }
+
+    private fun emit() {
+        val orderedLocation = evaluateOrder()
 
         emitPrologue()
         for (bb in data.blocks.preorder()) {
@@ -341,7 +347,7 @@ class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val 
         }
 
         fun codegen(module: Module): Assembler {
-            val opt = VerifySSA.run(CopyInsertion.run(SplitCriticalEdge.run(module)))
+            val opt = VerifySSA.run(SSADestruction.run(module))
             val asm = Assembler()
 
             for ((idx, data) in opt.functions().withIndex()) {

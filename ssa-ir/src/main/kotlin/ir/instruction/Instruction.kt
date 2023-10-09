@@ -534,7 +534,7 @@ abstract class TerminateInstruction(usages: List<Value>, val targets: Array<Bloc
         return targets.hashCode()
     }
 
-    abstract fun copy(usages: List<Value>, targets: Array<Block>): TerminateInstruction
+    abstract fun copy(usages: List<Value>, newTargets: Array<Block>): TerminateInstruction
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -563,8 +563,8 @@ class Branch(target: Block): TerminateInstruction(arrayListOf(), arrayOf(target)
         return this
     }
 
-    override fun copy(usages: List<Value>, targets: Array<Block>): Branch {
-        return Branch(targets[0])
+    override fun copy(usages: List<Value>, newTargets: Array<Block>): Branch {
+        return Branch(newTargets[0])
     }
 }
 
@@ -598,8 +598,8 @@ class BranchCond(value: Value, onTrue: Block, onFalse: Block):
         return targets[1]
     }
 
-    override fun copy(usages: List<Value>, targets: Array<Block>): BranchCond {
-        return BranchCond(usages[0], targets[0], targets[1])
+    override fun copy(usages: List<Value>, newTargets: Array<Block>): BranchCond {
+        return BranchCond(usages[0], newTargets[0], newTargets[1])
     }
 
     override fun copy(newUsages: List<Value>): Instruction {
@@ -625,7 +625,7 @@ class Return(value: Value):
         return usages[0]
     }
 
-    override fun copy(usages: List<Value>, targets: Array<Block>): Return {
+    override fun copy(usages: List<Value>, newTargets: Array<Block>): Return {
         return Return(usages[0])
     }
 

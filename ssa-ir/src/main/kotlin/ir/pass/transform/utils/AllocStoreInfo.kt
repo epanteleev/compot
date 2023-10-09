@@ -1,4 +1,4 @@
-package ir.pass.transform.auxiliary
+package ir.pass.transform.utils
 
 import ir.*
 import ir.instruction.*

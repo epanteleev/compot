@@ -28,24 +28,29 @@ private class BasePointerAddressedStackFrame : StackFrame {
     private var frameSize: Long = 0
     private val freeStackSlots = linkedMapOf<Int, Mem>()
 
+    private fun getTypeSize(ty: Type): Int {
+        return if (ty != Type.U1) {
+            ty.size()
+        } else {
+            1
+        }
+    }
+
     private fun withAlignment(alignment: Int, value: Long): Long {
         return ((value + (alignment * 2 - 1)) / alignment) * alignment
     }
 
     private fun stackSlotAlloc(value: StackAlloc): Mem {
-        val typeSize = value.type().dereference().size()
+        val typeSize = getTypeSize(value.type().dereference())
         val totalSize = typeSize * value.size()
+
         frameSize = withAlignment(totalSize.toInt(), frameSize)
         return Mem(Rbp.rbp, -frameSize, typeSize)
     }
 
     /** Spilled value. */
     private fun valueInstructionAlloc(value: ValueInstruction): Mem {
-        val typeSize = if (value.type() != Type.U1) {
-            value.type().size()
-        } else {
-            1
-        }
+        val typeSize = getTypeSize(value.type())
 
         val freeSlot = freeStackSlots[typeSize]
         if (freeSlot != null) {
@@ -69,7 +74,6 @@ private class BasePointerAddressedStackFrame : StackFrame {
         freeStackSlots[slot.size] = slot
     }
 
-    /** @return used stack size. Assume that given value aligned by 8 byte. */
     override fun size(): Long {
         return frameSize
     }
