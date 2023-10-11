@@ -5,8 +5,6 @@ import ir.block.Block
 import ir.instruction.Phi
 
 internal class CopyInsertion private constructor(private val cfg: BasicBlocks) {
-
-
     private fun modifyPhis(bb: Block, phi: Phi) {
         val newValues = hashMapOf<Value, Value>()
         for ((incoming, operand) in phi.zip()) {

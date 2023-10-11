@@ -1,40 +1,9 @@
 package ir.codegen.x64.regalloc
 
-import ir.ArgumentValue
 import ir.LocalValue
 import ir.instruction.Phi
-import ir.instruction.StackAlloc
 import ir.codegen.x64.regalloc.liveness.LiveIntervals
 import ir.codegen.x64.regalloc.liveness.LiveRange
-
-data class Group(val values: List<LocalValue>) {
-    val hasArgument: ArgumentValue? by lazy {
-        values.find { it is ArgumentValue } as ArgumentValue?
-    }
-
-    val stackAllocGroup: Boolean by lazy {
-        val isStackAlloc = values[0] is StackAlloc
-        if (isStackAlloc) {
-            assert( values.find { it !is StackAlloc } == null) {
-                "must have only stackalloc values values=$values"
-            }
-        }
-
-        isStackAlloc
-    }
-
-    fun first(): LocalValue {
-        return values[0]
-    }
-
-    operator fun iterator(): Iterator<LocalValue> {
-        return values.iterator()
-    }
-
-    override fun toString(): String {
-        return values.joinToString(prefix = "[", separator = ",", postfix = "]")
-    }
-}
 
 class CoalescedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
     private val valueToGroup: Map<LocalValue, Group>

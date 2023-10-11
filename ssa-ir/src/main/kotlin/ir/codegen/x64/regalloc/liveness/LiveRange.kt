@@ -25,6 +25,10 @@ open class LiveRange internal constructor(private val creation: OrderedLocation,
 
 class LiveRangeImpl internal constructor(creation: OrderedLocation, end: OrderedLocation): LiveRange(creation, end) {
     internal fun registerUsage(location: OrderedLocation) {
+        if (end >= location) {
+            return
+        }
+
         end = location
     }
 }

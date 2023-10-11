@@ -52,7 +52,7 @@ private class ArgumentEmitter(val objFunc: ObjFunction) {
     }
 }
 
-class CodeEmitter(val data: FunctionData, val functionCounter: Int, private val objFunc: ObjFunction) {
+class CodeEmitter(val data: FunctionData, private val functionCounter: Int, private val objFunc: ObjFunction) {
     private val valueToRegister = LinearScan.alloc(data)
 
     private fun emitPrologue() {

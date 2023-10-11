@@ -11,20 +11,20 @@ enum class InsertionMode {
 }
 
 interface MutableBlock {
-    fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): Value
-    fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): Value
-    fun intCompare(a: Value, pred: IntPredicate, b: Value): Value
-    fun load(ptr: Value): Value
+    fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): ArithmeticUnary
+    fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary
+    fun intCompare(a: Value, pred: IntPredicate, b: Value): IntCompare
+    fun load(ptr: Value): Load
     fun store(ptr: Value, value: Value)
-    fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Value
+    fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Value //Todo separate interface for VoidCall
     fun branch(target: Block)
     fun branchCond(value: Value, onTrue: Block, onFalse: Block)
-    fun stackAlloc(ty: Type, size: Long): Value
+    fun stackAlloc(ty: Type, size: Long): StackAlloc
     fun ret(value: Value)
-    fun gep(source: Value, index: Value): Value
-    fun cast(value: Value, ty: Type, cast: CastType): Value
-    fun select(cond: Value, onTrue: Value, onFalse: Value): Value
-    fun phi(incoming: ArrayList<Value>, labels: ArrayList<Block>): Value
-    fun uncompletedPhi(incoming: Value, bb: Block): Value
-    fun copy(value: Value): Value
+    fun gep(source: Value, index: Value): GetElementPtr
+    fun cast(value: Value, ty: Type, cast: CastType): Cast
+    fun select(cond: Value, onTrue: Value, onFalse: Value): Select
+    fun phi(incoming: ArrayList<Value>, labels: ArrayList<Block>): Phi
+    fun uncompletedPhi(incoming: Value, bb: Block): Phi
+    fun copy(value: Value): Copy
 }

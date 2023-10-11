@@ -2,7 +2,6 @@ package ir.codegen.x64.regalloc
 
 import ir.*
 import asm.x64.Operand
-import ir.codegen.x64.VirtualRegistersPool
 
 class LinearScan(val data: FunctionData) {
     private val liveRanges = data.liveness()
@@ -18,8 +17,7 @@ class LinearScan(val data: FunctionData) {
     }
 
     fun build(): RegisterAllocation {
-        val frameSize = pool.stackSize()
-        return RegisterAllocation(frameSize, registerMap, liveRanges)
+        return RegisterAllocation(pool.stackSize(), registerMap, liveRanges)
     }
 
     private fun allocRegistersForArguments() {

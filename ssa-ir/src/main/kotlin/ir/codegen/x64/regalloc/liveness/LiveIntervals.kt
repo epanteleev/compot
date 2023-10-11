@@ -15,7 +15,12 @@ class LiveIntervals(private val liveness: Map<LocalValue, LiveRange>) {
     }
 
     operator fun get(v: LocalValue): LiveRange {
-        return liveness[v]!!
+        val range = liveness[v]
+        assert(range != null) {
+            "cannot find v=$v"
+        }
+
+        return range as LiveRange
     }
 
     operator fun iterator(): Iterator<Map.Entry<LocalValue, LiveRange>> {

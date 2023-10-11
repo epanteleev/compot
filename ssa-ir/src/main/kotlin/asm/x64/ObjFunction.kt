@@ -4,7 +4,6 @@ data class ObjFunctionCreationException(override val message: String): Exception
 
 private data class BuilderContext(var label: Label, var instructions: InstructionList)
 
-
 private class InstructionList {
     private val list = arrayListOf<CPUInstruction>()
 
@@ -41,13 +40,8 @@ class ObjFunction(private val name: String) {
         return name
     }
 
-    private fun ctx(): BuilderContext {
-        return activeContext
-    }
-
-    private fun makeArithmetic(op: ArithmeticOp, first: AnyOperand, second: Register): Operand {
-        ctx().instructions.add(Arithmetic(op, first, second))
-        return second
+    private fun addInstruction(inst: CPUInstruction) {
+        activeContext.instructions.add(inst)
     }
 
     fun label(name: String) {
@@ -76,68 +70,73 @@ class ObjFunction(private val name: String) {
     }
 
     fun add(first: AnyOperand, destination: Register): Operand {
-        return makeArithmetic(ArithmeticOp.ADD, first, destination)
+        addInstruction(Add(first, destination))
+        return destination
     }
 
-    fun sub(first: AnyOperand, desttination: Register) {
-        makeArithmetic(ArithmeticOp.SUB, first, desttination)
+    fun sub(first: AnyOperand, destination: Register): Operand {
+        addInstruction(Sub(first, destination))
+        return destination
     }
 
-    fun mul(first: AnyOperand, destination: Register) {
-        makeArithmetic(ArithmeticOp.MUL, first, destination)
+    fun mul(first: AnyOperand, destination: Register): Operand {
+        addInstruction(iMull(first, destination))
+        return destination
     }
 
-    fun div(first: AnyOperand, destination: Register) {
-        makeArithmetic(ArithmeticOp.DIV, first, destination)
+    fun div(first: AnyOperand, destination: Register): Operand {
+        addInstruction(Div(first, destination))
+        return destination
     }
 
-    fun xor(first: AnyOperand, destination: Register) {
-        makeArithmetic(ArithmeticOp.XOR, first, destination)
+    fun xor(first: AnyOperand, destination: Register): Operand {
+        addInstruction(Xor(first, destination))
+        return destination
     }
 
     fun test(first: Register, second: Operand) {
-        ctx().instructions.add(Test(first, second))
+        addInstruction(Test(first, second))
     }
 
     fun setcc(tp: SetCCType, reg: GPRegister) {
-        ctx().instructions.add(SetCc(tp, reg))
+        addInstruction(SetCc(tp, reg))
     }
 
     fun push(reg: GPRegister) {
-        ctx().instructions.add(Push(reg))
+        addInstruction(Push(reg))
     }
 
     fun push(imm: Imm) {
-        ctx().instructions.add(Push(imm))
+        addInstruction(Push(imm))
     }
 
     fun pop(toReg: GPRegister) {
-        ctx().instructions.add(Pop(toReg))
+        addInstruction(Pop(toReg))
     }
 
     fun <T: Operand> mov(src: AnyOperand, des: T): T {
-        ctx().instructions.add(Mov(src, des))
+        addInstruction(Mov(src, des))
         return des
     }
 
     fun call(name: String) {
-        ctx().instructions.add(Call(name))
+        addInstruction(Call(name))
     }
 
     fun cmp(first: Register, second: AnyOperand) {
-        ctx().instructions.add(Cmp(first, second))
+        addInstruction(Cmp(first, second))
     }
 
     fun jump(jmpType: JmpType, label: String) {
-        ctx().instructions.add(Jump(jmpType, label))
+        addInstruction(Jump(jmpType, label))
     }
 
     fun ret() {
-        ctx().instructions.add(Ret)
+        addInstruction(Ret)
     }
 
     fun leave() {
-        ctx().instructions.add(Leave)
+        addInstruction(Leave)
     }
 
     override fun toString(): String {

@@ -20,7 +20,7 @@ private class FunctionBlockReader(private val iterator: TokenIterator, private v
 
     init {
         for (arg in builder.arguments()) {
-            nameToValue[arg.name().toString()] = arg
+            nameToValue[arg.name()] = arg
         }
     }
 

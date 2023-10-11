@@ -42,40 +42,35 @@ data class Movss(val src: AnyOperand, val des: Register): CPUInstruction {
     }
 }
 
-enum class ArithmeticOp {
-    ADD {
-        override fun toString(): String {
-            return "add"
-        }
-    },
-    SUB {
-        override fun toString(): String {
-            return "sub"
-        }
-    },
-    MUL {
-        override fun toString(): String {
-            return "mul"
-        }
-    },
-    DIV {
-        override fun toString(): String {
-            return "div"
-        }
-    },
-    XOR {
-        override fun toString(): String {
-            return "xor"
-        }
-    },
+interface Arithmetic: CPUInstruction
+
+data class Add(val first: AnyOperand, val second: Operand): Arithmetic {
+    override fun toString(): String {
+        return "add${prefix(first.size)} $first, $second"
+    }
 }
 
-data class Arithmetic(val op: ArithmeticOp, val first: AnyOperand, val second: Operand): CPUInstruction {
+data class Sub(val first: AnyOperand, val second: Operand): Arithmetic {
     override fun toString(): String {
-        if (op == ArithmeticOp.MUL) {
-            return "imul${prefix(first.size)} $first, $second"
-        }
-        return "$op${prefix(first.size)} $first, $second"
+        return "sub${prefix(first.size)} $first, $second"
+    }
+}
+
+data class iMull(val first: AnyOperand, val second: Operand): Arithmetic {
+    override fun toString(): String {
+        return "imul${prefix(first.size)} $first, $second"
+    }
+}
+
+data class Xor(val first: AnyOperand, val second: Operand): Arithmetic {
+    override fun toString(): String {
+        return "xor${prefix(first.size)} $first, $second"
+    }
+}
+
+data class Div(val first: AnyOperand, val second: Operand): Arithmetic {
+    override fun toString(): String {
+        return "div${prefix(first.size)} $first, $second"
     }
 }
 

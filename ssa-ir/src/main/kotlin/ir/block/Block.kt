@@ -194,11 +194,11 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         return instructions.removeIf { filter(it) }
     }
 
-    override fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): Value {
+    override fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): ArithmeticUnary {
         return withOutput { it: Int -> ArithmeticUnary(n(it), value.type(), op, value) }
     }
 
-    override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): Value {
+    override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
         if (a.type() != b.type()) {
             throw ModuleException("Operands have different types: a=${a.type()}, b=${b.type()}")
         }
@@ -206,18 +206,18 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         return withOutput { it: Int -> ArithmeticBinary(n(it), a.type(), a, op, b) }
     }
 
-    override fun intCompare(a: Value, pred: IntPredicate, b: Value): Value {
+    override fun intCompare(a: Value, pred: IntPredicate, b: Value): IntCompare {
         val cmp = withOutput { it: Int -> IntCompare("cmp${n(it)}", a, pred, b) }
-        if (!TypeCheck.checkIntCompare(cmp as IntCompare)) {
+        if (!TypeCheck.checkIntCompare(cmp)) {
             throw ModuleException("Operands have different types: a=${a.type()}, b=${b.type()}")
         }
 
         return cmp
     }
 
-    override fun load(ptr: Value): Value {
+    override fun load(ptr: Value): Load {
         val load = withOutput { it: Int -> Load("v${n(it)}", ptr) }
-        if (!TypeCheck.checkLoad(load as Load)) {
+        if (!TypeCheck.checkLoad(load)) {
             throw ModuleException("Inconsistent types: ${load.dump()}")
         }
 
@@ -240,7 +240,7 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         }
 
         val call = withOutput { it: Int -> Call(n(it), func.type(), func, args) }
-        if (!TypeCheck.checkCall(call as Call)) {
+        if (!TypeCheck.checkCall(call)) {
             throw ModuleException("Inconsistent types: ${call.dump()}")
         }
 
@@ -255,9 +255,9 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         add(BranchCond(value, onTrue, onFalse))
     }
 
-    override fun stackAlloc(ty: Type, size: Long): Value {
+    override fun stackAlloc(ty: Type, size: Long): StackAlloc {
         val alloc = withOutput { it: Int -> StackAlloc(n(it), ty, size) }
-        if (!TypeCheck.checkAlloc(alloc as StackAlloc)) {
+        if (!TypeCheck.checkAlloc(alloc)) {
             throw ModuleException("Inconsistent types: ${alloc.dump()}")
         }
 
@@ -268,51 +268,51 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         add(Return(value))
     }
 
-    override fun gep(source: Value, index: Value): Value {
+    override fun gep(source: Value, index: Value): GetElementPtr {
         val gep = withOutput { it: Int -> GetElementPtr(n(it), source.type(), source, index) }
-        if (!TypeCheck.checkGep(gep as GetElementPtr)) {
+        if (!TypeCheck.checkGep(gep)) {
             throw ModuleException("Inconsistent types: ${gep.dump()}")
         }
 
         return gep
     }
 
-    override fun cast(value: Value, ty: Type, cast: CastType): Value {
+    override fun cast(value: Value, ty: Type, cast: CastType): Cast {
         val castInst = withOutput { it: Int -> Cast(n(it), ty, cast, value) }
-        if (!TypeCheck.checkCast(castInst as Cast)) {
+        if (!TypeCheck.checkCast(castInst)) {
             throw ModuleException("Inconsistent types: ${castInst.dump()}")
         }
 
         return castInst
     }
 
-    override fun select(cond: Value, onTrue: Value, onFalse: Value): Value {
+    override fun select(cond: Value, onTrue: Value, onFalse: Value): Select {
         val selectInst = withOutput { it: Int -> Select(n(it), onTrue.type(), cond, onTrue, onFalse) }
-        if (!TypeCheck.checkSelect(selectInst as Select)) {
+        if (!TypeCheck.checkSelect(selectInst)) {
             throw ModuleException("Inconsistent types: ${selectInst.dump()}")
         }
 
         return selectInst
     }
 
-    override fun phi(incoming: ArrayList<Value>, labels: ArrayList<Block>): Value {
+    override fun phi(incoming: ArrayList<Value>, labels: ArrayList<Block>): Phi {
         val phi = withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type(), labels, incoming) }
 
-        if (!TypeCheck.checkPhi(phi as Phi)) {
+        if (!TypeCheck.checkPhi(phi)) {
             throw ModuleException("Operands have different types: labels=$labels")
         }
 
         return phi
     }
 
-    override fun uncompletedPhi(incoming: Value, bb: Block): Value {
+    override fun uncompletedPhi(incoming: Value, bb: Block): Phi {
         val type = incoming.type().dereference()
         val blocks = bb.predecessors().toMutableList()
         val values = bb.predecessors().mapTo(arrayListOf()) { incoming }
         return withOutput { it: Int -> Phi("phi${n(it)}", type, blocks, values) }
     }
 
-    override fun copy(value: Value): Value {
+    override fun copy(value: Value): Copy {
         return withOutput { it: Int -> Copy(n(it), value) }
     }
 
@@ -352,13 +352,13 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         return "${index}x$i"
     }
 
-    private fun withOutput(f: (Int) -> ValueInstruction): Value {
-        fun allocateValue(): Int {
-            val currentValue = maxValueIndex
-            maxValueIndex += 1
-            return currentValue
-        }
+    private fun allocateValue(): Int {
+        val currentValue = maxValueIndex
+        maxValueIndex += 1
+        return currentValue
+    }
 
+    private inline fun<reified T: ValueInstruction> withOutput(f: (Int) -> T): T {
         val value = allocateValue()
         val instruction = f(value)
 

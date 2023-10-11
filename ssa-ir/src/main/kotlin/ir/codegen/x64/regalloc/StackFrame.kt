@@ -1,4 +1,4 @@
-package ir.codegen.x64
+package ir.codegen.x64.regalloc
 
 import asm.x64.Mem
 import asm.x64.Rbp

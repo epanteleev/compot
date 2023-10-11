@@ -1,7 +1,8 @@
-package ir.codegen.x64
+package ir.codegen.x64.regalloc
 
 import asm.x64.*
 import ir.*
+import ir.codegen.x64.CallConvention
 import ir.instruction.StackAlloc
 import ir.instruction.ValueInstruction
 import java.lang.IllegalArgumentException
