@@ -19,10 +19,8 @@ internal class CopyInsertion private constructor(private val cfg: BasicBlocks) {
             newValues[operand] = copy
         }
 
-        bb.update(phi) {
-            val newUsages = phi.usages().mapTo(arrayListOf()) { newValues[it]!! }
-            phi.copy(newUsages)
-        }
+        val newUsages = phi.usages().mapTo(arrayListOf()) { newValues[it]!! }
+        phi.update(newUsages)
     }
 
     fun pass() {

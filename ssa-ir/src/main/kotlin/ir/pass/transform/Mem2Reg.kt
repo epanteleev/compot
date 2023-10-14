@@ -25,14 +25,12 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
 
     private fun completePhis(bbToMapValues: RewriteAssistant, bb: Block) {
         bb.phis { phi ->
-            bb.update(phi) {
-                it as Phi
-                val newUsages = arrayListOf<Value>()
-                for ((l, v) in it.zip()) {
-                    newUsages.add(bbToMapValues.rename(l, v))
-                }
-                it.copy(newUsages)
+            val newUsages = arrayListOf<Value>()
+            for ((l, v) in phi.zip()) {
+                newUsages.add(bbToMapValues.rename(l, v))
             }
+
+            phi.update(newUsages)
         }
     }
 

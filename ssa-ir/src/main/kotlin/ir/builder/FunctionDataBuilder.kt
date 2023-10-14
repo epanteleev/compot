@@ -3,10 +3,7 @@ package ir.builder
 import ir.*
 import ir.block.Block
 import ir.block.Label
-import ir.instruction.ArithmeticBinaryOp
-import ir.instruction.ArithmeticUnaryOp
-import ir.instruction.CastType
-import ir.instruction.IntPredicate
+import ir.instruction.*
 
 class FunctionDataBuilder private constructor(
     private val prototype: FunctionPrototype,
@@ -63,8 +60,12 @@ class FunctionDataBuilder private constructor(
         return bb.store(ptr, value)
     }
 
-    fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Value {
+    fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Call {
         return bb.call(func, args)
+    }
+
+    fun vcall(func: AnyFunctionPrototype, args: ArrayList<Value>) {
+        bb.vcall(func, args)
     }
 
     fun branch(target: Label) {

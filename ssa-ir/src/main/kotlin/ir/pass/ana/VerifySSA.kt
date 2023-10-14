@@ -44,10 +44,10 @@ class VerifySSA private constructor(private val functionData: FunctionData, val 
                     "Block $bb has other count of successors: successors=$successors"
                 }
                 assert(target == successors[0]) {
-                    "Block $bb has inconsistent successors: branch=${flow.targets}, successors=${successors}"
+                    "Block $bb has inconsistent successors: branch=${flow.targets.joinToString { it.toString() }}, successors=${successors}"
                 }
                 assert(target.predecessors().contains(bb)) {
-                    "Block $target has inconsistent predecessors: branch=${flow.targets}, predecessors=${target.predecessors()}"
+                    "Block $target has inconsistent predecessors: branch=${flow.targets.joinToString { it.toString() }}, predecessors=${target.predecessors()}"
                 }
             }
             is BranchCond -> {
@@ -55,16 +55,16 @@ class VerifySSA private constructor(private val functionData: FunctionData, val 
                 val onFalse = flow.onFalse()
                 assert(bb.successors().size == 2) { "Block $bb has not 2 successors exactly: ${bb.successors()}" }
                 assert(onTrue == successors[0]) {
-                    "Block $bb has inconsistent successors: branch=${flow.targets}, successors=${successors}"
+                    "Block $bb has inconsistent successors: branch=${flow.targets.joinToString { it.toString() }}, successors=${successors}"
                 }
                 assert(onFalse == successors[1]) {
-                    "Block $bb has inconsistent successors: branch=${flow.targets}, successors=${successors}"
+                    "Block $bb has inconsistent successors: branch=${flow.targets.joinToString { it.toString() }}, successors=${successors}"
                 }
                 assert(onTrue.predecessors().contains(bb)) {
-                    "Block $onTrue has inconsistent predecessors: branch=${flow.targets}, predecessors=${onTrue.predecessors()}"
+                    "Block $onTrue has inconsistent predecessors: branch=${flow.targets.joinToString { it.toString() }}, predecessors=${onTrue.predecessors()}"
                 }
                 assert(onFalse.predecessors().contains(bb)) {
-                    "Block $onTrue has inconsistent predecessors: branch=${flow.targets}, predecessors=${onTrue.predecessors()}"
+                    "Block $onTrue has inconsistent predecessors: branch=${flow.targets.joinToString { it.toString() }}, predecessors=${onTrue.predecessors()}"
                 }
             }
             is Return -> {

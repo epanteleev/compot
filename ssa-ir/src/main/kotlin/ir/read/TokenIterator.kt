@@ -1,5 +1,7 @@
 package ir.read
 
+import ir.read.bulder.ParseErrorException
+
 class TokenIterator(val tokenizer: Tokenizer) : Iterator<Token> {
     fun hasNextOrError(error: () -> Unit) {
         if (!hasNext()) {
@@ -24,11 +26,11 @@ class TokenIterator(val tokenizer: Tokenizer) : Iterator<Token> {
         return next()
     }
 
-    inline fun <reified T: Token> expect(errorMessage: String): T {
-        val tok = next(errorMessage)
+    inline fun <reified T: Token> expect(expect: String): T {
+        val tok = next(expect)
 
         if (tok !is T) {
-            throw ParseErrorException(errorMessage, tok)
+            throw ParseErrorException(expect, tok)
         }
         return tok
     }

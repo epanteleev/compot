@@ -16,19 +16,21 @@ data class Identifier(val string: String, override val line: Int, override val p
     }
 }
 
-data class IntValue(val int: Long, override val line: Int, override val pos: Int): Token(line, pos) {
+abstract class ValueToken(override val line: Int, override val pos: Int): Token(line, pos)
+
+data class IntValue(val int: Long, override val line: Int, override val pos: Int): ValueToken(line, pos) {
     override fun message(): String {
         return "int value '$int'"
     }
 }
 
-data class FloatValue(val fp: Double, override val line: Int, override val pos: Int): Token(line, pos) {
+data class FloatValue(val fp: Double, override val line: Int, override val pos: Int): ValueToken(line, pos) {
     override fun message(): String {
         return "float value '$fp'"
     }
 }
 
-data class ValueToken(val name: String, override val line: Int, override val pos: Int): Token(line, pos) {
+data class ValueInstructionToken(val name: String, override val line: Int, override val pos: Int): ValueToken(line, pos) {
     override fun message(): String {
         return "value '%$name'"
     }

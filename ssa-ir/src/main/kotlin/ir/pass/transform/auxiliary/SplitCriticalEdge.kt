@@ -5,6 +5,7 @@ import ir.block.Block
 import ir.instruction.Branch
 import ir.instruction.BranchCond
 import ir.instruction.Phi
+import ir.instruction.TerminateInstruction
 
 internal class SplitCriticalEdge private constructor(private val cfg: BasicBlocks) {
     private var maxIndex = cfg.maxBlockIndex()
@@ -45,10 +46,7 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
                     return@phis
                 }
 
-                bb.update(phi) {
-                    it as Phi
-                    it.copy(it.usages(), validIncoming)
-                }
+                phi.update(phi.usages(), validIncoming.toTypedArray())
             }
         }
     }
@@ -59,30 +57,19 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
             branch(bb)
         }
 
-        when (val flow = p.last()) {
-            is Branch -> p.updateFlowInstruction(Branch(newBlock))
-            is BranchCond -> {
-                val newFlowInst = when (bb) {
-                    flow.onTrue() -> {
-                        BranchCond(flow.condition(), newBlock, flow.onFalse())
-                    }
-                    flow.onFalse() -> {
-                        BranchCond(flow.condition(), flow.onTrue(), newBlock)
-                    }
-                    else -> {
-                        throw RuntimeException("internal error: p=$p, bb=$bb")
-                    }
-                }
-                p.updateFlowInstruction(newFlowInst)
-            }
-            else -> {
-                throw RuntimeException("unsupported terminate instruction: inst=$flow p=$p, bb=$bb")
+        val inst = p.last()
+        val targets = inst.targets()
+        val newTargets = targets.mapTo(arrayListOf()) {
+            if (it == bb) {
+                newBlock
+            } else {
+                it
             }
         }
+        inst.updateTargets(newTargets)
 
         predecessorMap[p] = newBlock
-        p.updateSuccessor(bb, newBlock)
-        bb.removePredecessors(p)
+        Block.insertBlock(bb, newBlock, p)
 
         cfg.putBlock(newBlock)
     }

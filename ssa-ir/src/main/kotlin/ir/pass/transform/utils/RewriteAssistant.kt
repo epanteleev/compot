@@ -88,9 +88,7 @@ internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Dom
                 continue
             }
 
-            bb.update(index) {
-                instruction.copy(instruction.usages().mapTo(arrayListOf()) { v -> rename(bb, v) } )
-            }
+            instruction.update(instruction.usages().mapTo(arrayListOf()) { v -> rename(bb, v) } )
         }
     }
 

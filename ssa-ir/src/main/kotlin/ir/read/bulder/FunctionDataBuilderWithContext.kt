@@ -6,6 +6,11 @@ import ir.block.Label
 import ir.instruction.*
 import ir.read.*
 
+class ParseErrorException(message: String): Exception(message) {
+    constructor(expect: String, token: Token):
+            this( "${token.position()} found: ${token.message()}, but expect $expect")
+}
+
 class FunctionDataBuilderWithContext private constructor(
     private val prototype: FunctionPrototype,
     private val argumentValues: List<ArgumentValue>,
@@ -14,7 +19,8 @@ class FunctionDataBuilderWithContext private constructor(
 ) {
     private var allocatedLabel: Int = 0
     private var bb: Block = blocks.begin()
-    private val nameToLabel = hashMapOf<String, Block>()
+    private val nameToLabel = hashMapOf("entry" to bb)
+    private val incomplitedPhi = arrayListOf<PhiContext>()
 
     private fun allocateBlock(): Block {
         allocatedLabel += 1
@@ -23,17 +29,17 @@ class FunctionDataBuilderWithContext private constructor(
         return bb
     }
 
-    private fun getValue(token: Token, ty: Type): Value {
+    private fun getValue(token: ValueToken, ty: Type): Value {
         return token.let {
             when (it) {
                 is IntValue   -> Constant.of(ty.kind, it.int)
                 is FloatValue -> Constant.of(ty.kind, it.fp)
-                is ValueToken -> {
+                is ValueInstructionToken -> {
                     val operand = nameMap[it.name] ?:
                         throw RuntimeException("in ${it.position()} undefined value")
 
-                    assert(operand.type() == ty) {
-                        "must be the same type: in_file=$ty, find=${operand.type()}"
+                    if (operand.type() != ty) {
+                        throw ParseErrorException("must be the same type: in_file=$ty, find=${operand.type()} in ${token.position()}")
                     }
 
                     operand
@@ -43,12 +49,13 @@ class FunctionDataBuilderWithContext private constructor(
         }
     }
 
-    private inline fun<reified T: ValueInstruction> memorize(name: String, value: T): T {
-        assert(nameMap[name] == null) {
-            "already has value with the same name: nameMap[$name]=${nameMap[name]}"
+    private inline fun<reified T: ValueInstruction> memorize(name: ValueInstructionToken, value: T): T {
+        val existed = nameMap[name.name]
+        if (existed != null) {
+            throw ParseErrorException("already has value with the same name=$existed in ${name.position()}")
         }
 
-        nameMap[name] = value
+        nameMap[name.name] = value
         return value
     }
 
@@ -57,12 +64,22 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun build(): FunctionData {
+        for (phi in incomplitedPhi) {
+            phi.completePhi(nameMap)
+        }
+
         return FunctionData.create(prototype, blocks, argumentValues)
+    }
+
+    fun makePrototype(name: Identifier, returnType: TypeToken, argTypes: List<TypeToken>): FunctionPrototype {
+        val types = argTypes.mapTo(arrayListOf()) { it.type() }
+        return FunctionPrototype(name.string, returnType.type(), types)
     }
 
     fun createLabel(): Block = allocateBlock()
 
-    fun switchLabel(label: Label) {
+    fun switchLabel(labelTok: LabelToken) {
+        val label = getBlockOrCreate(labelTok.name)
         bb = blocks.findBlock(label)
     }
 
@@ -70,45 +87,70 @@ class FunctionDataBuilderWithContext private constructor(
         return argumentValues
     }
 
-    fun arithmeticUnary(name: String, op: ArithmeticUnaryOp, valueTok: ValueToken, expectedType: Type): ArithmeticUnary {
-        val value  = getValue(valueTok, expectedType)
-        val result = bb.arithmeticUnary(op, value)
-        return memorize(name, result)
+    fun arithmeticUnary(name: ValueInstructionToken, op: ArithmeticUnaryOp, valueTok: ValueToken, expectedType: TypeToken): ArithmeticUnary {
+        val value  = getValue(valueTok, expectedType.type())
+        return memorize(name, bb.arithmeticUnary(op, value))
     }
 
-    fun arithmeticBinary(name: String, a: ValueToken, op: ArithmeticBinaryOp, b: ValueToken, expectedType: Type): ArithmeticBinary {
-        val first  = getValue(a, expectedType)
-        val second = getValue(b, expectedType)
+    fun arithmeticBinary(name: ValueInstructionToken, a: ValueToken, op: ArithmeticBinaryOp, b: ValueToken, expectedType: TypeToken): ArithmeticBinary {
+        val first  = getValue(a, expectedType.type())
+        val second = getValue(b, expectedType.type())
         val result = bb.arithmeticBinary(first, op, second)
         return memorize(name, result)
     }
 
-    fun intCompare(name: String, a: ValueToken, pred: IntPredicate, b: ValueToken, expectedType: Type): IntCompare {
-        val first  = getValue(a, expectedType)
-        val second = getValue(b, expectedType)
-        val result = bb.intCompare(first, pred, second)
+    fun intCompare(name: ValueInstructionToken, a: ValueToken, predicate: Identifier, b: ValueToken, expectedType: TypeToken): IntCompare {
+        val compareType = when (predicate.string) {
+            "eq"  -> IntPredicate.Eq
+            "ne"  -> IntPredicate.Ne
+            "uge" -> IntPredicate.Uge
+            "ugt" -> IntPredicate.Ugt
+            "ult" -> IntPredicate.Ult
+            "ule" -> IntPredicate.Ule
+            "sgt" -> IntPredicate.Sgt
+            "sge" -> IntPredicate.Sge
+            "slt" -> IntPredicate.Slt
+            "sle" -> IntPredicate.Sle
+            else  -> throw ParseErrorException("${predicate.position()} unknown compare type: cmpType=${predicate.string}")
+        }
+
+        val first  = getValue(a, expectedType.type())
+        val second = getValue(b, expectedType.type())
+        val result = bb.intCompare(first, compareType, second)
         return memorize(name, result)
     }
 
-    fun load(name: String, ptr: ValueToken, expectedType: Type): Load {
-        val pointer = getValue(ptr, expectedType)
+    fun load(name: ValueInstructionToken, ptr: ValueToken, expectedType: TypeToken): Load {
+        val pointer = getValue(ptr, expectedType.type().ptr())
         return memorize(name, bb.load(pointer))
     }
 
-    fun store(ptr: ValueToken, valueTok: ValueToken, expectedType: Type) {
-        val pointer = getValue(ptr, expectedType)
-        val value = getValue(valueTok, expectedType)
+    fun store(ptr: ValueToken, valueTok: ValueToken, expectedType: TypeToken) {
+        val pointer = getValue(ptr, expectedType.type())
+        val value   = getValue(valueTok, expectedType.type().dereference())
         return bb.store(pointer, value)
     }
 
-    fun call(func: AnyFunctionPrototype, args: ArrayList<ValueToken>): Value {
+    fun call(name: ValueInstructionToken, func: AnyFunctionPrototype, args: ArrayList<ValueToken>): Value {
+        require(func.type() != Type.Void)
         val argumentValues = arrayListOf<Value>()
 
         for ((arg, ty) in args zip func.arguments()) {
             argumentValues.add(getValue(arg, ty))
         }
 
-        return bb.call(func, argumentValues)
+        return memorize(name, bb.call(func, argumentValues))
+    }
+
+    fun vcall(func: AnyFunctionPrototype, args: ArrayList<ValueToken>) {
+        require(func.type() == Type.Void)
+        val argumentValues = arrayListOf<Value>()
+
+        for ((arg, ty) in args zip func.arguments()) {
+            argumentValues.add(getValue(arg, ty))
+        }
+
+        bb.vcall(func, argumentValues)
     }
 
     private fun getBlockOrCreate(name: String): Block {
@@ -122,39 +164,40 @@ class FunctionDataBuilderWithContext private constructor(
         }
     }
 
-    fun branch(targetName: LabelToken) {
-        val block = getBlockOrCreate(targetName.name)
+    fun branch(targetName: Identifier) {
+        val block = getBlockOrCreate(targetName.string)
         bb.branch(block)
     }
 
-    fun branchCond(value: Value, onTrueName: LabelToken, onFalseName: LabelToken) {
-        val onTrue  = getBlockOrCreate(onTrueName.name)
-        val onFalse = getBlockOrCreate(onFalseName.name)
+    fun branchCond(valueTok: ValueInstructionToken, onTrueName: Identifier, onFalseName: Identifier) {
+        val onTrue  = getBlockOrCreate(onTrueName.string)
+        val onFalse = getBlockOrCreate(onFalseName.string)
 
+        val value = getValue(valueTok, Type.U1)
         bb.branchCond(value, onTrue, onFalse)
     }
 
-    fun stackAlloc(name: String, ty: Type, size: Long): StackAlloc {
-        return memorize(name, bb.stackAlloc(ty, size))
+    fun stackAlloc(name: ValueInstructionToken, ty: TypeToken, size: IntValue): StackAlloc {
+        return memorize(name, bb.stackAlloc(ty.type().dereference(), size.int))
     }
 
-    fun ret(retValue: ValueToken, expectedType: Type) {
-        val value = getValue(retValue, expectedType)
+    fun ret(retValue: ValueToken, expectedType: TypeToken) {
+        val value = getValue(retValue, expectedType.type())
         bb.ret(value)
     }
 
-    fun gep(name: String, sourceName: ValueToken, indexName: ValueToken, sourceType: Type): GetElementPtr {
-        val source = getValue(sourceName, sourceType)
-        val index  = getValue(indexName, Type.U64) //Todo bug
+    fun gep(name: ValueInstructionToken, sourceName: ValueToken, sourceType: TypeToken, indexName: ValueToken, indexType: TypeToken): GetElementPtr {
+        val source = getValue(sourceName, sourceType.type())
+        val index  = getValue(indexName, indexType.type())
         return memorize(name, bb.gep(source, index))
     }
 
-    fun cast(name: String, valueTok: ValueToken, ty: Type, cast: CastType, valueType: Type): Cast {
-        val value = getValue(valueTok, valueType)
-        return memorize(name, bb.cast(value, ty, cast))
+    fun cast(name: ValueInstructionToken, operandToken: ValueToken, operandType: TypeToken, cast: CastType, resultType: TypeToken): Cast {
+        val value = getValue(operandToken, resultType.type())
+        return memorize(name, bb.cast(value, operandType.type(), cast))
     }
 
-    fun select(name: String, condTok: ValueToken, onTrueTok: ValueToken, onFalseTok: ValueToken, selectType: Type): Value {
+    fun select(name: ValueInstructionToken, condTok: ValueToken, onTrueTok: ValueToken, onFalseTok: ValueToken, selectType: Type): Value {
         val cond    = getValue(condTok, Type.U1)
         val onTrue  = getValue(onTrueTok, selectType)
         val onFalse = getValue(onFalseTok, selectType)
@@ -162,23 +205,19 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.select(cond, onTrue, onFalse))
     }
 
-    fun phi(name: String, incomingTok: ArrayList<ValueToken>, labelsTok: ArrayList<LabelToken>, expectedType: Type): Value {
-        //Todo incorrect impl
-        val incoming = arrayListOf<Value>()
-        for (tok in incomingTok) {
-            incoming.add(getValue(tok, expectedType))
-        }
-
+    fun phi(name: ValueInstructionToken, incomingTok: ArrayList<ValueToken>, labelsTok: ArrayList<Identifier>, expectedType: TypeToken): Value {
         val blocks = arrayListOf<Block>()
         for (tok in labelsTok) {
-            blocks.add(getBlockOrCreate(tok.name))
+            blocks.add(getBlockOrCreate(tok.string))
         }
 
-        return memorize(name, bb.phi(incoming, blocks))
+        val phi = bb.phi(arrayListOf(), blocks)
+        incomplitedPhi.add(PhiContext(phi, incomingTok, expectedType.type()))
+        return memorize(name, phi)
     }
 
     companion object {
-        fun create(name: Identifier, returnType: TypeToken, argumentTypeTokens: List<TypeToken>, argumentValueTokens: List<ValueToken>): FunctionDataBuilderWithContext {
+        fun create(name: Identifier, returnType: TypeToken, argumentTypeTokens: List<TypeToken>, argumentValueTokens: List<ValueInstructionToken>): FunctionDataBuilderWithContext {
             fun handleArguments(argumentTypeTokens: List<TypeToken>): List<ArgumentValue> {
                 val argumentValues = arrayListOf<ArgumentValue>()
                 for ((idx, arg) in argumentTypeTokens.withIndex()) {
@@ -188,7 +227,7 @@ class FunctionDataBuilderWithContext private constructor(
                 return argumentValues
             }
 
-            fun setupNameMap(argument: List<ArgumentValue>, tokens: List<ValueToken>): MutableMap<String, LocalValue> {
+            fun setupNameMap(argument: List<ArgumentValue>, tokens: List<ValueInstructionToken>): MutableMap<String, LocalValue> {
                 val nameToValue = hashMapOf<String, LocalValue>()
                 for ((arg, tok) in argument zip tokens) {
                     nameToValue[tok.name] = arg
@@ -197,17 +236,36 @@ class FunctionDataBuilderWithContext private constructor(
                 return nameToValue
             }
 
-            val args = argumentTypeTokens.mapTo(arrayListOf()) { it.type() }
-            val prototype = FunctionPrototype(name.string, returnType.type(), args)
-            val startBB = Block.empty(Label.entry.index)
+            val args        = argumentTypeTokens.mapTo(arrayListOf()) { it.type() }
+            val prototype   = FunctionPrototype(name.string, returnType.type(), args)
+            val startBB     = Block.empty(Label.entry.index)
             val basicBlocks = BasicBlocks.create(startBB)
 
             val arguments = handleArguments(argumentTypeTokens)
-            val nameMap = setupNameMap(arguments, argumentValueTokens)
+            val nameMap   = setupNameMap(arguments, argumentValueTokens)
 
-            val builder = FunctionDataBuilderWithContext(prototype, arguments, basicBlocks, nameMap)
-            builder.switchLabel(startBB)
-            return builder
+            return FunctionDataBuilderWithContext(prototype, arguments, basicBlocks, nameMap)
         }
+    }
+}
+
+private data class PhiContext(val phi: Phi, val valueTokens: List<ValueToken>, val expectedType: Type) {
+    fun completePhi(valueMap: Map<String, LocalValue>) {
+        val values = arrayListOf<Value>()
+        for (tok in valueTokens) {
+            if (tok !is ValueInstructionToken) {
+                continue
+            }
+
+            val local = valueMap[tok.name]
+                ?: throw ParseErrorException("undefined value in ${tok.position()}")
+
+            if (local.type() != expectedType) {
+                throw ParseErrorException("mismatch type ${local.type()} in ${tok.position()}")
+            }
+            values.add(local)
+        }
+
+        phi.update(values.toTypedArray(), phi.incoming())
     }
 }

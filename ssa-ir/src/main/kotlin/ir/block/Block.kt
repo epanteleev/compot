@@ -12,7 +12,6 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
     //Fields to implement BlockBuilderInterface
     private var maxValueIndex: Int = 0
     private var indexToAppend = 0
-    private var insertionMode = InsertionMode.Append
 
     override fun instructions(): List<Instruction> {
         return instructions
@@ -57,7 +56,7 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         successors.add(bb)
     }
 
-    fun updateSuccessor(old: Block, new: Block) {
+    private fun updateSuccessor(old: Block, new: Block) {
         val index = successors.indexOf(old)
         if (index == -1) {
             throw RuntimeException("Out of index: old=$old")
@@ -67,7 +66,7 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         successors[index] = new
     }
 
-    fun removePredecessors(old: Block) {
+    private fun removePredecessors(old: Block) {
         predecessors.remove(old)
     }
 
@@ -83,24 +82,7 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
     fun insert(index: Int, builder: (MutableBlock) -> Value): Value {
         assert(index >= 0)
         indexToAppend = index
-        insertionMode = InsertionMode.Append
         return builder(this)
-    }
-
-    fun update(before: Instruction, builder: (Instruction) -> Instruction): Instruction {
-        val beforeIndex = instructions.indexOf(before)
-        assert(beforeIndex != -1) {
-            "flow graph doesn't contains instruction=$before"
-        }
-
-        return update(beforeIndex, builder)
-    }
-
-    fun update(index: Int, builder: (Instruction) -> Instruction): Instruction {
-        assert(instructions.size > index && index >= 0)
-        indexToAppend = index
-        insertionMode = InsertionMode.Update
-        return add(builder(instructions[index]))
     }
 
     fun swap(firstIndex: Int, secondIndex: Int) {
@@ -119,15 +101,6 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         }
 
         return index
-    }
-
-    internal fun updateFlowInstruction(newInstruction: TerminateInstruction) {
-        val last = instructions[size - 1]
-        assert(last is TerminateInstruction) {
-            "$last should be terminate instruction"
-        }
-
-        instructions[size - 1] = newInstruction
     }
 
     fun contains(element: Instruction): Boolean {
@@ -233,18 +206,19 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         append(store)
     }
 
-    override fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Value {
-        if (func.type() == Type.Void) {
-            append(VoidCall(func, args))
-            return Value.UNDEF
-        }
-
+    override fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Call {
+        require(func.type() != Type.Void)
         val call = withOutput { it: Int -> Call(n(it), func.type(), func, args) }
         if (!TypeCheck.checkCall(call)) {
             throw ModuleException("Inconsistent types: ${call.dump()}")
         }
 
         return call
+    }
+
+    override fun vcall(func: AnyFunctionPrototype, args: ArrayList<Value>) {
+        require(func.type() == Type.Void)
+        append(VoidCall(func, args))
     }
 
     override fun branch(target: Block) {
@@ -295,8 +269,8 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
         return selectInst
     }
 
-    override fun phi(incoming: ArrayList<Value>, labels: ArrayList<Block>): Phi {
-        val phi = withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type(), labels, incoming) }
+    override fun phi(incoming: List<Value>, labels: List<Block>): Phi {
+        val phi = withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type(), labels.toTypedArray(), incoming.toTypedArray()) }
 
         if (!TypeCheck.checkPhi(phi)) {
             throw ModuleException("Operands have different types: labels=$labels")
@@ -307,8 +281,8 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
 
     override fun uncompletedPhi(incoming: Value, bb: Block): Phi {
         val type = incoming.type().dereference()
-        val blocks = bb.predecessors().toMutableList()
-        val values = bb.predecessors().mapTo(arrayListOf()) { incoming }
+        val blocks = bb.predecessors().toTypedArray()
+        val values = bb.predecessors().mapTo(arrayListOf()) { incoming }.toTypedArray() //Todo
         return withOutput { it: Int -> Phi("phi${n(it)}", type, blocks, values) }
     }
 
@@ -321,27 +295,9 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
             addSuccessor(to)
             to.addPredecessor(this)
         }
-        fun updateEdge(terminateInstruction: TerminateInstruction) {
-            val targets = terminateInstruction.targets()
-            for (idx in successors.indices) {
-                successors[idx] = targets[idx]
-            }
-
-            for (incoming in targets) {
-                val idx = incoming.predecessors.indexOf(this)
-                assert(idx != -1) {
-                    "should contains bb=$this in incoming=$incoming"
-                }
-
-                incoming.predecessors[idx] = this
-            }
-        }
 
         if (instruction is TerminateInstruction) {
-            when (insertionMode) {
-                InsertionMode.Append -> instruction.targets().forEach { makeEdge(it) }
-                InsertionMode.Update -> updateEdge(instruction)
-            }
+            instruction.targets().forEach { makeEdge(it) }
         }
 
         append(instruction)
@@ -367,12 +323,7 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
     }
 
     private fun append(instruction: Instruction) {
-        when (insertionMode) {
-            InsertionMode.Append -> instructions.add(indexToAppend, instruction)
-            InsertionMode.Update -> instructions[indexToAppend] = instruction
-        }
-
-        insertionMode = InsertionMode.Append
+        instructions.add(indexToAppend, instruction)
         indexToAppend = instructions.size
     }
 
@@ -385,6 +336,11 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
     }
 
     companion object {
+        fun insertBlock(block: Block, newBlock: Block, predecessor: Block) {
+            predecessor.updateSuccessor(block, newBlock)
+            block.removePredecessors(predecessor)
+        }
+
         fun empty(blockIndex: Int): Block {
             return Block(blockIndex)
         }

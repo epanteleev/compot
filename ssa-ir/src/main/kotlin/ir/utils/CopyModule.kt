@@ -56,7 +56,7 @@ internal object CopyModule {
             is Phi -> {
                 val targets = inst.incoming()
                 val newTargets = targets.mapTo(arrayListOf()) { oldToNewBlock[it]!! }
-                val newInst = inst.copy(inst.usages(), newTargets) /** put in old usages **/
+                val newInst = inst.copy(inst.usages(), newTargets.toTypedArray()) /** put in old usages **/
 
                 oldToNewValues[inst] = newInst
                 return newInst
@@ -88,10 +88,7 @@ internal object CopyModule {
                 }
 
                 val usages = newUsages(oldValuesToOld, inst)
-                bb.update(inst) {
-                    it as Phi
-                    it.copy(usages, inst.incoming())
-                }
+                inst.update(usages.toTypedArray(), inst.incoming())
             }
         }
     }

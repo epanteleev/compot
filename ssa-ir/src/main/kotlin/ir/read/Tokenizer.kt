@@ -197,7 +197,7 @@ class Tokenizer(val data: String) {
             nextChar()
             val name = readString()
             val start = pos - 1 - name.length
-            ValueToken(name, line, start)
+            ValueInstructionToken(name, line, start)
         } else {
             throw RuntimeException("$line:$pos cannot parse: ${remainsLine(globalPosition)}")
         }

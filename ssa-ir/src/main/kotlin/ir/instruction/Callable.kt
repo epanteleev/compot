@@ -4,6 +4,6 @@ import ir.AnyFunctionPrototype
 import ir.Value
 
 interface Callable: Value {
-    fun arguments(): List<Value>
+    fun arguments(): Array<Value>
     fun prototype(): AnyFunctionPrototype
 }
