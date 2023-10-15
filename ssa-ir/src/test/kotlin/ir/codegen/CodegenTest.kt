@@ -54,9 +54,9 @@ class CodegenTest {
         //println(CodeEmitter.codegen(module))
 
         //asserts
-        val pool = VirtualRegistersPool()
-        assertEquals(pool.allocArgument(arg1), Rdi.rdi)
-        assertEquals(pool.allocArgument(arg2), Rsi.rsi)
+        val pool = VirtualRegistersPool.create(module.functions[0].arguments())
+        assertEquals(pool.arguments()[0], Rdi.rdi)
+        assertEquals(pool.arguments()[1], Rsi.rsi)
         assertEquals(pool.allocSlot(retValue), Mem(Rbp.rbp, -8, 8))
     }
 }

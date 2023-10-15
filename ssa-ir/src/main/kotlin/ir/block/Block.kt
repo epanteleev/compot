@@ -4,13 +4,12 @@ import ir.*
 import ir.instruction.*
 import ir.utils.TypeCheck
 
-class Block(override val index: Int) : MutableBlock, AnyBlock {
+class Block(override val index: Int, private var maxValueIndex: Int = 0) : MutableBlock, AnyBlock {
     private val instructions = mutableListOf<Instruction>()
     private val predecessors = mutableListOf<Block>()
     private val successors   = mutableListOf<Block>()
 
     //Fields to implement BlockBuilderInterface
-    private var maxValueIndex: Int = 0
     private var indexToAppend = 0
 
     override fun instructions(): List<Instruction> {
@@ -47,6 +46,10 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
     }
 
     val size get(): Int = instructions.size
+
+    fun maxValueIndex(): Int {
+        return maxValueIndex
+    }
 
     private fun addPredecessor(bb: Block) {
         predecessors.add(bb)
@@ -343,6 +346,10 @@ class Block(override val index: Int) : MutableBlock, AnyBlock {
 
         fun empty(blockIndex: Int): Block {
             return Block(blockIndex)
+        }
+
+        fun empty(blockIndex: Int, maxValueIndex: Int): Block {
+            return Block(blockIndex, maxValueIndex)
         }
     }
 }

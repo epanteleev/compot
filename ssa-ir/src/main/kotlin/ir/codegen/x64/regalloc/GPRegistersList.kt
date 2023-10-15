@@ -1,15 +1,17 @@
 package ir.codegen.x64.regalloc
 
 import asm.x64.GPRegister
+import asm.x64.Operand
 import asm.x64.Rbp
 import asm.x64.Register
+import ir.ArgumentValue
 import ir.instruction.StackAlloc
 import ir.Type
 import ir.codegen.x64.CallConvention
 import ir.instruction.ValueInstruction
 
-class GPRegistersList {
-    private var freeRegisters = CallConvention.availableRegisters.toMutableList().asReversed()
+class GPRegistersList(argumentValue: List<Operand>) {
+    private var freeRegisters = CallConvention.availableRegisters(argumentValue.filterIsInstance<GPRegister>()).toMutableList()
     private val usedCalleeSaveRegisters = mutableSetOf<GPRegister>(Rbp.rbp)
 
     fun pickRegister(value: ValueInstruction): Register? {
@@ -37,10 +39,10 @@ class GPRegistersList {
     }
 
     fun returnRegister(reg: GPRegister) {
-        freeRegisters.add(reg(8))
-    }
+        if (reg.isArgument) {
+            return
+        }
 
-    fun usedCalleeSaveRegisters(): Set<GPRegister> {
-        return usedCalleeSaveRegisters
+        freeRegisters.add(reg(8))
     }
 }

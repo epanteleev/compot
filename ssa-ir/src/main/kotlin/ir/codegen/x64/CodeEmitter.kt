@@ -8,49 +8,9 @@ import ir.Module
 import ir.block.Block
 import ir.codegen.x64.regalloc.LinearScan
 import ir.instruction.Call
-import ir.pass.ana.VerifySSA
+import ir.utils.DumpModule
 
-import ir.pass.transform.SSADestruction
 import ir.utils.OrderedLocation
-
-private class ArgumentEmitter(val objFunc: ObjFunction) {
-    private interface Place
-    private val Memory = object : Place {}
-    private data class RealRegister(val registerIndex: Int): Place
-
-    private fun emit(index: Int): Place {
-        return if (index < registers.size) {
-            RealRegister(index)
-        } else {
-            Memory
-        }
-    }
-
-    fun doIt(arguments: List<AnyOperand>) {
-        val places = arguments.indices.mapTo(arrayListOf()) { emit(it) }
-
-        for ((pos, value) in places.zip(arguments).asReversed()) {
-            if (pos is RealRegister) {
-                objFunc.mov(value, registers[pos.registerIndex].invoke(value.size))
-                continue
-            }
-
-            when (value) {
-                is Mem -> {
-                    objFunc.mov(value, CodeEmitter.temp1(value.size))
-                    objFunc.push(CodeEmitter.temp1(8))
-                }
-                is GPRegister -> objFunc.push(value)
-                is Imm -> objFunc.push(value)
-                else -> throw RuntimeException("Internal error: value=$value")
-            }
-        }
-    }
-
-    companion object {
-        private val registers = CallConvention.gpArgumentRegisters
-    }
-}
 
 class CodeEmitter(val data: FunctionData, private val functionCounter: Int, private val objFunc: ObjFunction) {
     private val valueToRegister = LinearScan.alloc(data)
@@ -174,11 +134,11 @@ class CodeEmitter(val data: FunctionData, private val functionCounter: Int, priv
             objFunc.sub(Imm(8, 8), Rsp.rsp)
         }
 
-        ArgumentEmitter(objFunc).doIt(call.arguments()
-            .mapTo(arrayListOf()) {
-                valueToRegister.operand(it)
-            }
-        )
+//        CalleeArgumentAllocator(objFunc).doIt(call.arguments()
+//            .mapTo(arrayListOf()) {
+//                valueToRegister.operand(it)
+//            }
+//        )
 
         objFunc.call(call.prototype().name)
 
@@ -313,8 +273,7 @@ class CodeEmitter(val data: FunctionData, private val functionCounter: Int, priv
         var order = 0
         for (bb in data.blocks.linearScanOrder()) {
             for (call in bb.instructions()) {
-                if (call is Call || call is VoidCall) {
-                    call as Callable
+                if (call is Callable) {
                     orderedLocation[call] = OrderedLocation(bb, order)
                 }
                 order += 1
@@ -347,10 +306,10 @@ class CodeEmitter(val data: FunctionData, private val functionCounter: Int, priv
         }
 
         fun codegen(module: Module): Assembler {
-            val opt = VerifySSA.run(SSADestruction.run(module))
             val asm = Assembler()
 
-            for ((idx, data) in opt.functions().withIndex()) {
+            println(DumpModule.apply(module))
+            for ((idx, data) in module.functions().withIndex()) {
                 CodeEmitter(data, idx, asm.mkFunction(data.prototype.name)).emit()
             }
 

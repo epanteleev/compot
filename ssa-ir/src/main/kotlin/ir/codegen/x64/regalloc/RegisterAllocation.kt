@@ -60,7 +60,13 @@ class RegisterAllocation(private val stackSize: Long,
 
     fun operand(value: Value): AnyOperand {
         return when (value) {
-            is LocalValue -> registerMap[value] as Operand
+            is LocalValue ->  {
+                val operand = registerMap[value]
+                assert(operand != null) {
+                    "cannot find operand for $value"
+                }
+                operand as Operand
+            }
             is U8Value    -> Imm(value.u8.toLong(), 1)
             is I8Value    -> Imm(value.i8.toLong(), 1)
             is U16Value   -> Imm(value.u16.toLong(), 2)

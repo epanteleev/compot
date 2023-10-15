@@ -9,7 +9,7 @@ import ir.utils.TypeCheck
 
 data class ValidateSSAErrorException(override val message: String): Exception(message)
 
-class VerifySSA private constructor(private val functionData: FunctionData, val prototypes: List<AnyFunctionPrototype>) {
+class VerifySSA private constructor(private val functionData: FunctionData, private val prototypes: List<AnyFunctionPrototype>) {
     private val dominatorTree by lazy { functionData.blocks.dominatorTree() }
     private val creation by lazy { CreationInfo.create(functionData.blocks) }
 

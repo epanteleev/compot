@@ -1,5 +1,6 @@
 package ir.codegen.x64.regalloc
 
+import asm.x64.Operand
 import ir.LocalValue
 import ir.instruction.Phi
 import ir.codegen.x64.regalloc.liveness.LiveIntervals
@@ -39,7 +40,7 @@ class CoalescedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
     }
 }
 
-class Coalescing(private val intervals: LiveIntervals) {
+class Coalescing(private val intervals: LiveIntervals, private val precolored: Map<LocalValue, Operand>) {
     private val visited = hashSetOf<LocalValue>()
     private val liveness = hashMapOf<Group, LiveRange>()
 
@@ -65,13 +66,18 @@ class Coalescing(private val intervals: LiveIntervals) {
             val group = arrayListOf<LocalValue>(value)
             visited.add(value)
             var liveRange = range
+            var operand: Operand? = null
             for (used in value.usedInstructions()) {
+                val op = precolored[used]
+                assert(op != null && operand != null)
+                operand = op
+
                 liveRange = liveRange.merge(intervals[used])
                 group.add(used)
                 visited.add(used)
             }
 
-            liveness[Group(group)] = liveRange
+            liveness[Group(group, operand)] = liveRange
         }
     }
 
@@ -84,14 +90,15 @@ class Coalescing(private val intervals: LiveIntervals) {
                 continue
             }
 
-            liveness[Group(arrayListOf(value))] = range
+            val op = precolored[value]
+            liveness[Group(arrayListOf(value), op)] = range
             visited.add(value)
         }
     }
 
     companion object {
-        fun evaluate(liveIntervals: LiveIntervals): CoalescedLiveIntervals {
-            return Coalescing(liveIntervals).build()
+        fun evaluate(liveIntervals: LiveIntervals, precolored: Map<LocalValue, Operand>): CoalescedLiveIntervals {
+            return Coalescing(liveIntervals, precolored).build()
         }
     }
 }

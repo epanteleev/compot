@@ -18,6 +18,14 @@ abstract class Instruction(protected val tp: Type, protected val operands: Array
         }
     }
 
+    fun update(index: Int, new: Value) {
+        assert(0 <= index && index < operands.size) {
+            "out of range in $this"
+        }
+
+        operands[index] = new
+    }
+
     abstract fun copy(newUsages: List<Value>): Instruction
     abstract override fun equals(other: Any?): Boolean
     abstract override fun hashCode(): Int

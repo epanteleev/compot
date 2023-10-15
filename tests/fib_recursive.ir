@@ -1,10 +1,10 @@
-extern void printInt(u64)
+extern void printInt(i32)
 
 
 define u64 main() {
 entry:
         %1 = call i32 fib(8: i32)
-	call void printInt(%1: u64)
+	call void printInt(%1: i32)
         ret u64 0
 }
 
@@ -39,6 +39,6 @@ L3:
   br label L4
 
 L4:
-  %5 = load i32 %1
-  ret i32 %5
+  %15 = load i32 %1
+  ret i32 %15
 }

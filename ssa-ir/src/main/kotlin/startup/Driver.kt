@@ -2,18 +2,20 @@ package startup
 
 import ir.*
 import ir.codegen.x64.CodeEmitter
+import ir.pass.ana.VerifySSA
+import ir.pass.transform.SSADestruction
 import ir.utils.DumpModule
 import java.io.File
 import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 
 object Driver {
     fun output(name: String, module: Module, pipeline: (Module) -> Module) {
         val filename         = getName(name)
-        val codegen          = CodeEmitter.codegen(module)
+        val codegen          = CodeEmitter.codegen(VerifySSA.run(SSADestruction.run(module)))
         val dumpIrString     = DumpModule.apply(module)
         val optimizedModule  = pipeline(module)
-        val optimizedCodegen = CodeEmitter.codegen(optimizedModule)
+        val destroyed        = VerifySSA.run(SSADestruction.run(optimizedModule))
+        val optimizedCodegen = CodeEmitter.codegen(destroyed)
 
         val directoryName = File(filename)
         if (directoryName.exists()) {
@@ -25,6 +27,7 @@ object Driver {
         val optimizedAsm   = File("$filename/opt.S")
         val dumpIr         = File("$filename/$filename.ir")
         val dumpIrOpt      = File("$filename/$filename.opt.ir")
+        val dumpIrDestr    = File("$filename/$filename.dest.ir")
 
         directoryName.mkdir()
 
@@ -32,7 +35,7 @@ object Driver {
         optimizedAsm.writeText(optimizedCodegen.toString())
         dumpIr.writeText(dumpIrString)
         dumpIrOpt.writeText(DumpModule.apply(optimizedModule))
-
+        dumpIrDestr.writeText(DumpModule.apply(destroyed))
         println("[Done '$filename']")
     }
 

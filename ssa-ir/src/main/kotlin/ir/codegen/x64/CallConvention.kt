@@ -3,8 +3,6 @@ package ir.codegen.x64
 import asm.x64.*
 
 object CallConvention {
-    internal val availableRegisters: ArrayList<GPRegister> by lazy { allRegisters() }
-
     val gpArgumentRegisters: Array<GPRegister> = arrayOf(
         Rdi.rdi,
         Rsi.rsi,
@@ -43,13 +41,14 @@ object CallConvention {
         return R10(size)
     }
 
-    private fun allRegisters(): ArrayList<GPRegister> {
-        val allRegisters = arrayListOf<GPRegister>()
+    fun availableRegisters(usedArgumentRegisters: List<GPRegister>): Set<GPRegister> {
+        val allRegisters = mutableSetOf<GPRegister>()
         allRegisters.addAll(gpCallerSaveRegs)
         allRegisters.addAll(gpCalleeSaveRegs)
+        allRegisters.addAll(gpArgumentRegisters)
 
         allRegisters.remove(Rbp.rbp)
-        allRegisters.removeAll(gpArgumentRegisters.toSet())
+        allRegisters.removeAll(usedArgumentRegisters.toSet())
         allRegisters.remove(temp1(8))
         allRegisters.remove(temp2(8))
         return allRegisters

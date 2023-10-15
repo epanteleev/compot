@@ -98,7 +98,7 @@ internal object CopyModule {
         val oldToNew = hashMapOf<Block, Block>()
 
         for (old in oldBasicBlocks.blocks()) {
-            val new = Block.empty(old.index)
+            val new = Block.empty(old.index, old.maxValueIndex())
             newBasicBlocks.add(new)
             oldToNew[old] = new
         }

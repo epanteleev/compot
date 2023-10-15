@@ -26,7 +26,7 @@ function check() {
 	expected=$2
 	if [ "$result" == "$expected" ];
 	then
-  		echo -e "\t${GREEN}[SUCCESS]${RESET}"
+  		echo -e "\t${GREEN}[SUCCESS] '$result'${RESET}"
 	else
   		echo -e "\t${RED}[FAIL]: '$1'${RESET}"
   		echo -e "\t${GREEN}[Expected]: '$expected'${RESET}"

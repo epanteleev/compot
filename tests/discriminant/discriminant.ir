@@ -1,0 +1,25 @@
+extern void printInt(i32)
+define u64 main() {
+entry:	
+	%0x0 = call i32 discriminant(8:i32, 8:i32, 8:i32)
+	call void printInt(%0x0:i32)
+	ret u64 0
+}
+define i32 discriminant(%0:i32, %1:i32, %2:i32) {
+entry:	
+	%0x0 = stackalloc i32* 1
+	%0x1 = stackalloc i32* 1
+	%0x2 = stackalloc i32* 1
+	store i32* %0x0, %0
+	store i32* %0x1, %1
+	store i32* %0x2, %2
+	%v0x3 = load i32 %0x1
+	%v0x4 = load i32 %0x1
+	%0x5 = mul i32 %v0x3, %v0x4
+	%v0x6 = load i32 %0x0
+	%0x7 = mul i32 4, %v0x6
+	%v0x8 = load i32 %0x2
+	%0x9 = mul i32 %0x7, %v0x8
+	%0x10 = sub i32 %0x5, %0x9
+	ret i32 %0x10
+}

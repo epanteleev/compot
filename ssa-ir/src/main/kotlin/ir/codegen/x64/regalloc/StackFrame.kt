@@ -11,9 +11,7 @@ data class StackFrameException(override val message: String): Exception(message)
 
 interface StackFrame {
     fun takeSlot(value: Value): Mem
-
     fun returnSlot(slot: Mem)
-
     fun size(): Long
 
     companion object {

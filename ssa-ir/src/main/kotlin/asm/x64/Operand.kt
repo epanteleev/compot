@@ -840,11 +840,7 @@ open class Mem(protected open val base: GPRegister, open val offset: Long, overr
     }
 }
 
-class ArgumentSlot(override val base: GPRegister, override var offset: Long, override val size: Int): Mem(base, offset, size) {
-    fun updateOffset(newOffset: Long) {
-        offset = newOffset
-    }
-}
+class ArgumentSlot(override val base: GPRegister, override val offset: Long, override val size: Int): Mem(base, offset, size)
 
 class Imm(val value: Long, override val size: Int): AnyOperand {
     override fun toString(): String {

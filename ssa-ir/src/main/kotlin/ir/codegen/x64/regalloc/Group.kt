@@ -1,13 +1,10 @@
 package ir.codegen.x64.regalloc
 
+import asm.x64.Operand
 import ir.*
 import ir.instruction.StackAlloc
 
-data class Group(val values: List<LocalValue>) {
-    val hasArgument: ArgumentValue? by lazy {
-        values.find { it is ArgumentValue } as ArgumentValue?
-    }
-
+data class Group(val values: List<LocalValue>, val precolored: Operand? = null) {
     val stackAllocGroup: Boolean by lazy {
         val isStackAlloc = values[0] is StackAlloc
         if (isStackAlloc) {

@@ -2,38 +2,49 @@ package ir.codegen.x64.regalloc
 
 import ir.*
 import asm.x64.Operand
+import ir.instruction.Callable
+import ir.instruction.ValueInstruction
 
-class LinearScan(val data: FunctionData) {
+class LinearScan(private val data: FunctionData) {
     private val liveRanges = data.liveness()
-    private val liveRangesGroup = Coalescing.evaluate(liveRanges)
     private val registerMap = hashMapOf<LocalValue, Operand>()
     private val active = hashMapOf<Group, Operand>()
-    private val pool = VirtualRegistersPool()
+    private val pool = VirtualRegistersPool.create(data.arguments())
+    private val liveRangesGroup: CoalescedLiveIntervals
 
     init {
-        allocRegistersForArguments()
-        handleStackAlloc()
-        allocRegistersForLocalVariables()
+        allocRegistersForArgumentValues()
+        handleArguments()
+
+        liveRangesGroup = Coalescing.evaluate(liveRanges, registerMap)
+
+        handleStackAlloc(liveRangesGroup)
+        allocRegistersForLocalVariables(liveRangesGroup)
     }
 
     fun build(): RegisterAllocation {
         return RegisterAllocation(pool.stackSize(), registerMap, liveRanges)
     }
 
-    private fun allocRegistersForArguments() {
-        for ((group, _) in liveRangesGroup) {
-            val arg = group.hasArgument
-                ?: break
-
-            val operand = pool.allocArgument(arg)
-            active[group] = operand
-            for (value in group) {
-                registerMap[value] = operand
-            }
+    private fun allocRegistersForArgumentValues() {
+        for (arg in data.arguments()) {
+            registerMap[arg] = pool.takeArgument(arg)
         }
     }
 
-    private fun handleStackAlloc() {
+    private fun handleArguments() {
+       for ((value, _) in liveRanges) {
+           if (value !is Callable) {
+               continue
+           }
+            val allocation = CalleeArgumentAllocator.alloc(value.arguments().toList())
+            for ((operand, arg) in allocation zip value.arguments()) {
+                registerMap[arg as ValueInstruction] = operand
+            }
+       }
+    }
+
+    private fun handleStackAlloc(liveRangesGroup: CoalescedLiveIntervals) {
         for ((group, _) in liveRangesGroup) {
             if (!group.stackAllocGroup) {
                 continue
@@ -43,9 +54,9 @@ class LinearScan(val data: FunctionData) {
         }
     }
 
-    private fun allocRegistersForLocalVariables() {
+    private fun allocRegistersForLocalVariables(liveRangesGroup: CoalescedLiveIntervals) {
         for ((group, range) in liveRangesGroup) {
-            val arg = group.hasArgument
+            val arg = group.precolored
             if (arg != null || group.stackAllocGroup) {
                 continue
             }
@@ -90,6 +101,7 @@ class LinearScan(val data: FunctionData) {
     companion object {
         fun alloc(data: FunctionData): RegisterAllocation {
             val linearScan = LinearScan(data)
+            println(linearScan)
             return linearScan.build()
         }
     }

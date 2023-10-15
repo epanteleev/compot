@@ -21,6 +21,10 @@ class ArgumentValue(private val index: Int, private val tp: Type): LocalValue {
         return tp
     }
 
+    fun position(): Int {
+        return index
+    }
+
     override fun toString(): String {
         return "%$index"
     }
