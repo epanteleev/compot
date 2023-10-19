@@ -1,8 +1,10 @@
 package ir.pass.transform.utils
 
 import ir.*
-import ir.block.*
 import ir.instruction.*
+import ir.module.BasicBlocks
+import ir.module.block.Block
+import ir.module.block.Label
 import ir.pass.transform.Mem2RegException
 
 internal object Utils {

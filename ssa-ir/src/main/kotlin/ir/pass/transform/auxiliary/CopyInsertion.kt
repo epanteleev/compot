@@ -1,9 +1,11 @@
 package ir.pass.transform.auxiliary
 
 import ir.*
-import ir.block.Block
-import ir.block.Label
+import ir.module.block.Block
+import ir.module.block.Label
 import ir.instruction.*
+import ir.module.FunctionData
+import ir.module.Module
 
 internal class CopyInsertion private constructor(private val cfg: FunctionData) {
     private fun isolatePhis(bb: Block, phi: Phi) {
@@ -55,33 +57,21 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
     }
 
     private fun isolateCall() {
-        fun updateUsages(c: Instruction, map: Map<Value, Copy>) {
-            val newUsages = c.usages().map {
-                map[it]!!
-            }
-
-            c.update(newUsages)
-        }
-
-        fun insertCopies(bb: Block, call: Callable): Map<Value, Copy> {
+        fun insertCopies(bb: Block, call: Callable) {
             call as Instruction
-            val map = hashMapOf<Value, Copy>()
-            for (arg in call.arguments()) {
+            for ((idx, arg) in call.arguments().withIndex()) {
                 val copy = bb.insert(call) {
                     it.copy(arg)
                 }
-                map[arg] = copy as Copy
+                call.update(idx, copy)
             }
-
-            return map
         }
 
         for (bb in cfg.blocks) {
             val calls = bb.instructions().filterIsInstance<Callable>()
             for (c in calls) {
                 c as Instruction
-                val map = insertCopies(bb, c)
-                updateUsages(c, map)
+                insertCopies(bb, c)
             }
         }
     }

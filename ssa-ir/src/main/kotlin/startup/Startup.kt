@@ -1,12 +1,11 @@
 package startup
 
-import ir.Module
+import ir.module.Module
 
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 
 import ir.read.ModuleReader
-import ir.utils.DumpModule
 import java.io.File
 import kotlin.Throwable
 
@@ -29,7 +28,7 @@ fun main(args: Array<String>) {
         }
     } catch (ex: Throwable) {
         if (opt != null) {
-            println(DumpModule.apply(opt!!))
+            println(opt!!.toString())
         }
 
         ex.printStackTrace()

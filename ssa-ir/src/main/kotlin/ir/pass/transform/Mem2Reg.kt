@@ -2,8 +2,10 @@ package ir.pass.transform
 
 import ir.*
 import ir.utils.*
-import ir.block.*
 import ir.instruction.*
+import ir.module.BasicBlocks
+import ir.module.Module
+import ir.module.block.Block
 import ir.pass.transform.auxiliary.*
 import ir.pass.transform.utils.JoinPointSet
 import ir.pass.transform.utils.RewriteAssistant

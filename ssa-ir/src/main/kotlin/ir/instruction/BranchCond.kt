@@ -1,7 +1,7 @@
 package ir.instruction
 
 import ir.Value
-import ir.block.Block
+import ir.module.block.Block
 
 class BranchCond(value: Value, onTrue: Block, onFalse: Block):
     TerminateInstruction(arrayOf(value), arrayOf(onTrue, onFalse)) {

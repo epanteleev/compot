@@ -2,7 +2,8 @@ package ir.pass.transform.utils
 
 import ir.*
 import ir.instruction.*
-import ir.block.AnyBlock
+import ir.module.BasicBlocks
+import ir.module.block.AnyBlock
 
 class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     private val allocated: Set<ValueInstruction> by lazy { allocatedVariablesInternal() }

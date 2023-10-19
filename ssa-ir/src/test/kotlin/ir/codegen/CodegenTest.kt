@@ -5,8 +5,8 @@ import asm.x64.Rbp
 import asm.x64.Rdi
 import asm.x64.Rsi
 import ir.*
-import ir.builder.ModuleBuilder
-import ir.codegen.x64.regalloc.VirtualRegistersPool
+import ir.module.builder.ModuleBuilder
+import ir.platform.regalloc.VirtualRegistersPool
 import ir.instruction.ArithmeticBinaryOp
 import ir.pass.transform.Mem2Reg
 import kotlin.test.Test

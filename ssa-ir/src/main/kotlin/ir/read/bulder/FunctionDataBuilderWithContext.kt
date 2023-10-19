@@ -1,9 +1,11 @@
 package ir.read.bulder
 
 import ir.*
-import ir.block.Block
-import ir.block.Label
+import ir.module.block.Block
+import ir.module.block.Label
 import ir.instruction.*
+import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.read.*
 
 class ParseErrorException(message: String): Exception(message) {

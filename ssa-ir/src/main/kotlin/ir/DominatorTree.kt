@@ -1,7 +1,8 @@
 package ir
 
-import ir.block.AnyBlock
-import ir.block.Label
+import ir.module.BasicBlocks
+import ir.module.block.AnyBlock
+import ir.module.block.Label
 import java.util.HashMap
 
 class DominatorTree(private val idomMap: MutableMap<AnyBlock, AnyBlock>) {

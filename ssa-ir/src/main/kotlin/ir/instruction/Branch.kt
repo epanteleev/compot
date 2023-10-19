@@ -1,7 +1,7 @@
 package ir.instruction
 
 import ir.Value
-import ir.block.Block
+import ir.module.block.Block
 
 
 class Branch(target: Block): TerminateInstruction(arrayOf(), arrayOf(target)) {

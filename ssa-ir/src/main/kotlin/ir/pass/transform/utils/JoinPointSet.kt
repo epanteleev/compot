@@ -1,8 +1,9 @@
 package ir.pass.transform.utils
 
 import ir.*
-import ir.block.AnyBlock
+import ir.module.block.AnyBlock
 import ir.instruction.ValueInstruction
+import ir.module.BasicBlocks
 
 class JoinPointSet private constructor(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
     private val joinSet = hashMapOf<AnyBlock, MutableSet<ValueInstruction>>()

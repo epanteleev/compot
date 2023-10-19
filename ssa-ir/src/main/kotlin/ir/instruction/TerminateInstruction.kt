@@ -1,7 +1,7 @@
 package ir.instruction
 
 import ir.*
-import ir.block.Block
+import ir.module.block.Block
 
 abstract class TerminateInstruction(usages: Array<Value>, val targets: Array<Block>):
     Instruction(Type.UNDEF, usages) {

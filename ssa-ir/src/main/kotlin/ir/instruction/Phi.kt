@@ -1,7 +1,7 @@
 package ir.instruction
 
 import ir.*
-import ir.block.Block
+import ir.module.block.Block
 
 class Phi(name: String, ty: Type, private val incoming: Array<Block>, incomingValue: Array<Value>):
     ValueInstruction(name, ty, incomingValue) {

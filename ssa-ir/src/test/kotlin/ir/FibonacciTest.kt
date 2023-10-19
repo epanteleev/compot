@@ -1,12 +1,12 @@
 package ir
 
-import ir.block.BlockViewer
-import ir.builder.ModuleBuilder
+import ir.module.block.BlockViewer
+import ir.module.builder.ModuleBuilder
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate
+import ir.module.Module
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
-import ir.utils.DumpModule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -110,16 +110,16 @@ class FibonacciTest {
     fun testCopy() {
         val module = withBasicBlocks()
         val moduleCopy = module.copy()
-        assertEquals(DumpModule.apply(module), DumpModule.apply(moduleCopy))
+        assertEquals(module.toString(), moduleCopy.toString())
 
         val copy = moduleCopy.copy()
-        val copyModule2String = DumpModule.apply(copy)
-        assertEquals(DumpModule.apply(copy), copyModule2String)
+        val copyModule2String = copy.toString()
+        assertEquals(copy.toString(), copyModule2String)
 
         val originalMem2Reg = VerifySSA.run(Mem2Reg.run(module))
         val copyMem2Reg     = VerifySSA.run(Mem2Reg.run(module))
 
-        assertEquals(DumpModule.apply(originalMem2Reg), DumpModule.apply(copyMem2Reg))
-        assertEquals(DumpModule.apply(copy), copyModule2String)
+        assertEquals(originalMem2Reg.toString(), copyMem2Reg.toString())
+        assertEquals(copy.toString(), copyModule2String)
     }
 }

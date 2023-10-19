@@ -1,8 +1,9 @@
 package ir.pass.transform.auxiliary
 
-import ir.*
-import ir.block.Block
+import ir.module.block.Block
 import ir.instruction.Instruction
+import ir.module.BasicBlocks
+import ir.module.Module
 import ir.pass.transform.utils.Utils
 
 class RemoveDeadMemoryInstructions private constructor(private val cfg: BasicBlocks) {

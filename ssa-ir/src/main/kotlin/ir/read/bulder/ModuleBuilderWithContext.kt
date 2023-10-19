@@ -1,14 +1,12 @@
 package ir.read.bulder
 
 import ir.*
-import ir.builder.FunctionDataBuilder
-import ir.builder.ModuleBuilder
+import ir.module.SSAModule
+import ir.module.Module
 import ir.pass.ana.VerifySSA
 import ir.read.Identifier
 import ir.read.TypeToken
 import ir.read.ValueInstructionToken
-import ir.read.ValueToken
-import ir.utils.DumpModule
 
 class ModuleBuilderWithContext {
     private val functions = arrayListOf<FunctionDataBuilderWithContext>()
@@ -31,7 +29,7 @@ class ModuleBuilderWithContext {
             it.build()
         }
 
-        return VerifySSA.run(Module(fns, externFunctions))
+        return VerifySSA.run(SSAModule(fns, externFunctions))
     }
 
     companion object {

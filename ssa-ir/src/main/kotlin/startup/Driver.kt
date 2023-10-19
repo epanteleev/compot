@@ -1,10 +1,9 @@
 package startup
 
-import ir.*
-import ir.codegen.x64.CodeEmitter
+import ir.platform.x64.CodeEmitter
+import ir.module.Module
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.SSADestruction
-import ir.utils.DumpModule
 import java.io.File
 import java.nio.file.Paths
 
@@ -12,7 +11,7 @@ object Driver {
     fun output(name: String, module: Module, pipeline: (Module) -> Module) {
         val filename         = getName(name)
         val codegen          = CodeEmitter.codegen(VerifySSA.run(SSADestruction.run(module)))
-        val dumpIrString     = DumpModule.apply(module)
+        val dumpIrString     = module.toString()
         val optimizedModule  = pipeline(module)
         val destroyed        = VerifySSA.run(SSADestruction.run(optimizedModule))
         val optimizedCodegen = CodeEmitter.codegen(destroyed)
@@ -34,8 +33,8 @@ object Driver {
         unoptimizedAsm.writeText(codegen.toString())
         optimizedAsm.writeText(optimizedCodegen.toString())
         dumpIr.writeText(dumpIrString)
-        dumpIrOpt.writeText(DumpModule.apply(optimizedModule))
-        dumpIrDestr.writeText(DumpModule.apply(destroyed))
+        dumpIrOpt.writeText(optimizedModule.toString())
+        dumpIrDestr.writeText(destroyed.toString())
         println("[Done '$filename']")
     }
 

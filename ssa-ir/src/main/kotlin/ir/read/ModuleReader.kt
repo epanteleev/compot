@@ -1,9 +1,8 @@
 package ir.read
 
-import ir.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.CastType
-import ir.instruction.IntPredicate
+import ir.module.Module
 import ir.read.bulder.FunctionDataBuilderWithContext
 import ir.read.bulder.ModuleBuilderWithContext
 import ir.read.bulder.ParseErrorException

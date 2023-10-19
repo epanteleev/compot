@@ -1,7 +1,7 @@
 package ir.instruction
 
 import ir.Value
-import ir.block.Block
+import ir.module.block.Block
 
 class Return(value: Value):
     TerminateInstruction(arrayOf(value), arrayOf()) {

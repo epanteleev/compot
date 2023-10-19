@@ -1,11 +1,13 @@
 package ir.pass.ana
 
 import ir.*
-import ir.block.Block
-import ir.block.Label
+import ir.module.block.Block
+import ir.module.block.Label
 import ir.instruction.*
+import ir.module.FunctionData
+import ir.module.Module
 import ir.utils.CreationInfo
-import ir.utils.TypeCheck
+import ir.module.auxiliary.TypeCheck
 
 data class ValidateSSAErrorException(override val message: String): Exception(message)
 

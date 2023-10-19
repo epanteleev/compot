@@ -1,6 +1,6 @@
 package ir.utils
 
-import ir.BasicBlocks
+import ir.module.BasicBlocks
 import ir.instruction.Instruction
 
 class DefUseInfo private constructor(private val defUse: MutableMap<Instruction, MutableList<Instruction>>) {
