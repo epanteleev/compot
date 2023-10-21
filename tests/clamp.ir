@@ -19,9 +19,9 @@ entry:
 ;}
 define i32 max(%a: i32, %b: i32) {
 entry:
-  %retval = stackalloc i32* 1
-  %aAddr = stackalloc i32* 1
-  %bAddr = stackalloc i32* 1
+  %retval = alloc i32* 1
+  %aAddr = alloc i32* 1
+  %bAddr = alloc i32* 1
   store i32* %aAddr, %a
   store i32* %bAddr, %b
   %0 = load i32 %aAddr
@@ -52,9 +52,9 @@ return:
 ;}
 define i32 min(%a: i32, %b: i32) {
 entry:
-  %retval = stackalloc i32* 1
-  %aAddr = stackalloc i32* 1
-  %bAddr = stackalloc i32* 1
+  %retval = alloc i32* 1
+  %aAddr = alloc i32* 1
+  %bAddr = alloc i32* 1
   store i32* %aAddr, %a
   store i32* %bAddr, %b
   %0 = load i32 %aAddr
@@ -83,10 +83,10 @@ return:
 ;}
 define i32 clamp(%from: i32, %value: i32, %to: i32) {
 entry:
-  %fromAddr = stackalloc i32* 1
-  %valueAddr = stackalloc i32* 1
-  %toAddr = stackalloc i32* 1
-  %b = stackalloc i32* 1
+  %fromAddr = alloc i32* 1
+  %valueAddr = alloc i32* 1
+  %toAddr = alloc i32* 1
+  %b = alloc i32* 1
   store i32* %fromAddr, %from
   store i32* %valueAddr, %value
   store i32* %toAddr, %to

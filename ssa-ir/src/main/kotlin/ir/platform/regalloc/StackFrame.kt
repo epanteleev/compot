@@ -2,7 +2,7 @@ package ir.platform.regalloc
 
 import asm.x64.Mem
 import asm.x64.Rbp
-import ir.instruction.StackAlloc
+import ir.instruction.Alloc
 import ir.Type
 import ir.Value
 import ir.instruction.ValueInstruction
@@ -38,7 +38,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
         return ((value + (alignment * 2 - 1)) / alignment) * alignment
     }
 
-    private fun stackSlotAlloc(value: StackAlloc): Mem {
+    private fun stackSlotAlloc(value: Alloc): Mem {
         val typeSize = getTypeSize(value.type().dereference())
         val totalSize = typeSize * value.size()
 
@@ -62,7 +62,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     override fun takeSlot(value: Value): Mem {
         return when (value) {
-            is StackAlloc -> stackSlotAlloc(value)
+            is Alloc -> stackSlotAlloc(value)
             is ValueInstruction -> valueInstructionAlloc(value)
             else -> throw StackFrameException("Cannot alloc slot for this value=$value")
         }

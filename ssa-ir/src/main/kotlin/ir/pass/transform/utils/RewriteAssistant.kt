@@ -9,7 +9,7 @@ import ir.pass.transform.Mem2RegException
 
 internal object Utils {
     fun isStackAllocOfLocalVariable(instruction: Instruction): Boolean {
-        return instruction is StackAlloc && instruction.size() == 1L
+        return instruction is Alloc && instruction.size() == 1L
     }
 
     fun isLoadOfLocalVariable(instruction: Instruction): Boolean {
@@ -71,7 +71,7 @@ internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Dom
             }
 
             if (Utils.isStackAllocOfLocalVariable(instruction)) {
-                instruction as StackAlloc
+                instruction as Alloc
                 addValues(bb, instruction, Value.UNDEF)
                 continue
             }

@@ -6,7 +6,6 @@ import ir.instruction.*
 import ir.module.block.Label
 import ir.module.Module
 import ir.module.block.Block
-import ir.platform.regalloc.LinearScan
 import ir.instruction.Call
 import ir.module.FunctionData
 import ir.platform.regalloc.RegisterAllocation
@@ -269,7 +268,7 @@ class CodeEmitter(private val data: FunctionData,
                 is DownStackFrame   -> emitDownStackFrame(instruction, map)
                 is UpStackFrame     -> emitUpStackFrame(instruction, map)
                 is Phi              -> {/* skip */}
-                is StackAlloc       -> {/* skip */}
+                is Alloc       -> {/* skip */}
                 else                -> println("Unsupported: $instruction")
             }
         }

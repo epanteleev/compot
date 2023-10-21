@@ -233,8 +233,8 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
         add(BranchCond(value, onTrue, onFalse))
     }
 
-    override fun stackAlloc(ty: Type, size: Long): StackAlloc {
-        val alloc = withOutput { it: Int -> StackAlloc(n(it), ty, size) }
+    override fun stackAlloc(ty: Type, size: Long): Alloc {
+        val alloc = withOutput { it: Int -> Alloc(n(it), ty, size) }
         if (!TypeCheck.checkAlloc(alloc)) {
             throw ModuleException("Inconsistent types: ${alloc.dump()}")
         }

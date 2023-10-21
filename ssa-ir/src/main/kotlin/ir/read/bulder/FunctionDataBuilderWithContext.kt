@@ -190,7 +190,7 @@ class FunctionDataBuilderWithContext private constructor(
         bb.branchCond(value, onTrue, onFalse)
     }
 
-    fun stackAlloc(name: ValueInstructionToken, ty: TypeToken, size: IntValue): StackAlloc {
+    fun stackAlloc(name: ValueInstructionToken, ty: TypeToken, size: IntValue): Alloc {
         return memorize(name, bb.stackAlloc(ty.type().dereference(), size.int))
     }
 

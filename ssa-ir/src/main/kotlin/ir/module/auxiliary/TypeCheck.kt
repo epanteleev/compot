@@ -98,7 +98,7 @@ object TypeCheck {
         return select.onTrue().type() == select.type()
     }
 
-    fun checkAlloc(alloc: StackAlloc): Boolean {
+    fun checkAlloc(alloc: Alloc): Boolean {
         val kind = alloc.type()
         return kind != Type.Void && kind != Type.U1
     }

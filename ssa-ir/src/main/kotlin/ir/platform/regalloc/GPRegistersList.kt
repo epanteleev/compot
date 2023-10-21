@@ -4,7 +4,7 @@ import asm.x64.GPRegister
 import asm.x64.Operand
 import asm.x64.Rbp
 import asm.x64.Register
-import ir.instruction.StackAlloc
+import ir.instruction.Alloc
 import ir.Type
 import ir.platform.x64.CallConvention
 import ir.instruction.ValueInstruction
@@ -19,7 +19,7 @@ class GPRegistersList(argumentValue: List<Operand>) {
                 value.type().isPointer()) {
             "found ${value.type()} in $value"
         }
-        require(value !is StackAlloc) { "cannot be" }
+        require(value !is Alloc) { "cannot be" }
 
         if (freeRegisters.isEmpty()) {
             return null

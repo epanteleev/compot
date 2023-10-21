@@ -11,9 +11,9 @@ entry:
 
 define i32 discriminant(%a:i32, %b:i32, %c:i32) {
 entry:	
-	%aAddr = stackalloc i32* 1
-	%bAddr = stackalloc i32* 1
-	%cAddr = stackalloc i32* 1
+	%aAddr = alloc i32* 1
+	%bAddr = alloc i32* 1
+	%cAddr = alloc i32* 1
 	store i32* %aAddr, %a
 	store i32* %bAddr, %b 
 	store i32* %cAddr, %c 

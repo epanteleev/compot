@@ -2,13 +2,13 @@ package ir.platform.regalloc
 
 import asm.x64.Operand
 import ir.*
-import ir.instruction.StackAlloc
+import ir.instruction.Alloc
 
 data class Group(val values: List<LocalValue>, val precolored: Operand? = null) {
     val stackAllocGroup: Boolean by lazy {
-        val isStackAlloc = values[0] is StackAlloc
+        val isStackAlloc = values[0] is Alloc
         if (isStackAlloc) {
-            assert( values.find { it !is StackAlloc } == null) {
+            assert( values.find { it !is Alloc } == null) {
                 "must have only stackalloc values values=$values"
             }
         }

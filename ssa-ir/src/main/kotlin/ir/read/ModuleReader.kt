@@ -197,7 +197,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
                     "zext"       -> parseCast(currentTok, CastType.ZeroExtend)
                     "trunc"      -> parseCast(currentTok, CastType.Truncate)
                     "bitcast"    -> parseCast(currentTok, CastType.Bitcast)
-                    "stackalloc" -> parseStackAlloc(currentTok)
+                    "alloc" -> parseStackAlloc(currentTok)
                     "icmp"       -> parseCmp(currentTok)
                     "phi"        -> parsePhi(currentTok)
                     "gep"        -> parseGep(currentTok)

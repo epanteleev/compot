@@ -3,7 +3,7 @@ package ir.platform.regalloc
 import asm.x64.*
 import ir.*
 import ir.platform.x64.CallConvention
-import ir.instruction.StackAlloc
+import ir.instruction.Alloc
 import ir.instruction.ValueInstruction
 import java.lang.IllegalArgumentException
 
@@ -13,7 +13,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
 
     fun allocSlot(value: Value): Operand {
         return when (value) {
-            is StackAlloc -> frame.takeSlot(value)
+            is Alloc -> frame.takeSlot(value)
             is ValueInstruction -> {
                 gpRegisters.pickRegister(value) ?: frame.takeSlot(value)
             }

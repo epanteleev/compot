@@ -15,7 +15,7 @@ interface MutableBlock {
     fun vcall(func: AnyFunctionPrototype, args: ArrayList<Value>)
     fun branch(target: Block)
     fun branchCond(value: Value, onTrue: Block, onFalse: Block)
-    fun stackAlloc(ty: Type, size: Long): StackAlloc
+    fun stackAlloc(ty: Type, size: Long): Alloc
     fun ret(value: Value)
     fun gep(source: Value, index: Value): GetElementPtr
     fun cast(value: Value, ty: Type, cast: CastType): Cast
