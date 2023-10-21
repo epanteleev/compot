@@ -51,6 +51,17 @@ class FunctionDataBuilderWithContext private constructor(
         }
     }
 
+    private fun getConstant(token: ValueToken, ty: Type): Value {
+        return token.let {
+            when (it) {
+                is IntValue              -> Constant.of(ty.kind, it.int)
+                is FloatValue            -> Constant.of(ty.kind, it.fp)
+                is ValueInstructionToken -> Value.UNDEF
+                else -> throw ParseErrorException("constant or value", it)
+            }
+        }
+    }
+
     private inline fun<reified T: ValueInstruction> memorize(name: ValueInstructionToken, value: T): T {
         val existed = nameMap[name.name]
         if (existed != null) {
@@ -213,8 +224,14 @@ class FunctionDataBuilderWithContext private constructor(
             blocks.add(getBlockOrCreate(tok.string))
         }
 
-        val phi = bb.phi(arrayListOf(), blocks)
-        incomplitedPhi.add(PhiContext(phi, incomingTok, expectedType.type()))
+        val type = expectedType.type()
+        val values = arrayListOf<Value>()
+        for (tok in incomingTok) {
+            values.add(getConstant(tok, type))
+        }
+
+        val phi = bb.uncompletedPhi(values, blocks)
+        incomplitedPhi.add(PhiContext(phi, incomingTok, type))
         return memorize(name, phi)
     }
 
@@ -253,21 +270,19 @@ class FunctionDataBuilderWithContext private constructor(
 
 private data class PhiContext(val phi: Phi, val valueTokens: List<ValueToken>, val expectedType: Type) {
     fun completePhi(valueMap: Map<String, LocalValue>) {
-        val values = arrayListOf<Value>()
-        for (tok in valueTokens) {
+        val values = phi.usages()
+        for ((idx, tok) in valueTokens.withIndex()) {
             if (tok !is ValueInstructionToken) {
                 continue
             }
 
             val local = valueMap[tok.name]
-                ?: throw ParseErrorException("undefined value in ${tok.position()}")
+                ?: throw ParseErrorException("undefined value ${tok.name} in ${tok.position()}")
 
             if (local.type() != expectedType) {
                 throw ParseErrorException("mismatch type ${local.type()} in ${tok.position()}")
             }
-            values.add(local)
+            values[idx] = local
         }
-
-        phi.update(values.toTypedArray(), phi.incoming())
     }
 }

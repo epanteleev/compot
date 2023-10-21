@@ -41,6 +41,9 @@ run_test manyArguments 36
 compile_test fib
 run_test fib 21
 
+compile_test fib_opt
+run_test fib_opt 21
+
 compile_test fib_recursive
 run_test fib_recursive 21
 

@@ -21,7 +21,7 @@ interface MutableBlock {
     fun cast(value: Value, ty: Type, cast: CastType): Cast
     fun select(cond: Value, onTrue: Value, onFalse: Value): Select
     fun phi(incoming: List<Value>, labels: List<Block>): Phi
-    fun uncompletedPhi(incoming: Value, bb: Block): Phi
+    fun uncompletedPhi(incoming: Value): Phi
     fun copy(value: Value): Copy
     fun downStackFrame(callable: Callable)
     fun upStackFrame(callable: Callable)

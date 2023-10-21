@@ -25,11 +25,11 @@ class Phi(name: String, ty: Type, private val incoming: Array<Block>, incomingVa
     }
 
     override fun copy(newUsages: List<Value>): Instruction {
-        return Phi(identifier, tp, incoming, newUsages.toTypedArray())
+        return Phi(identifier, tp, incoming.clone(), newUsages.toTypedArray())
     }
 
     fun copy(newUsages: Array<Value>, incoming: Array<Block>): Phi {
-        return Phi(identifier, tp, incoming, newUsages)
+        return Phi(identifier, tp, incoming.clone(), newUsages.clone())
     }
 
     fun update(newUsages: Array<Value>, newIncoming: Array<Block>): Phi {

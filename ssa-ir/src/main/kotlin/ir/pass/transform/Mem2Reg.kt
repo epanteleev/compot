@@ -19,7 +19,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
             bb as Block
             for (v in vSet) {
                 bb.insert(0) {
-                    it.uncompletedPhi(v, bb)
+                    it.uncompletedPhi(v)
                 }
             }
         }

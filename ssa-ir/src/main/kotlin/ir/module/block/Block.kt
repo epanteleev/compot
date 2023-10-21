@@ -291,11 +291,15 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
         add(UpStackFrame(callable))
     }
 
-    override fun uncompletedPhi(incoming: Value, bb: Block): Phi {
+    override fun uncompletedPhi(incoming: Value): Phi {
         val type = incoming.type().dereference()
-        val blocks = bb.predecessors().toTypedArray()
-        val values = bb.predecessors().mapTo(arrayListOf()) { incoming }.toTypedArray() //Todo
+        val blocks = predecessors().toTypedArray()
+        val values = predecessors().mapTo(arrayListOf()) { incoming }.toTypedArray() //Todo
         return withOutput { it: Int -> Phi("phi${n(it)}", type, blocks, values) }
+    }
+
+    fun uncompletedPhi(incoming: List<Value>, labels: List<Block>): Phi {
+        return withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type(), labels.toTypedArray(), incoming.toTypedArray()) }
     }
 
     override fun copy(value: Value): Copy {

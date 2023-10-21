@@ -29,7 +29,8 @@ class ModuleBuilderWithContext {
             it.build()
         }
 
-        return VerifySSA.run(SSAModule(fns, externFunctions))
+        val ssa = SSAModule(fns, externFunctions)
+        return VerifySSA.run(ssa)
     }
 
     companion object {

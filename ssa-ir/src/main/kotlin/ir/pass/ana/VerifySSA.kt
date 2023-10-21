@@ -83,7 +83,7 @@ class VerifySSA private constructor(private val functionData: FunctionData, priv
                 continue
             }
             val actual = creation.get(use).block
-            assert(dominatorTree.dominates(actual, incoming)) { "Inconsistent phi instruction: value defined in $incoming, used in $actual " }
+            assert(dominatorTree.dominates(actual, incoming)) { "Inconsistent phi instruction $phi: value defined in $incoming, used in $actual " }
         }
 
         val incomings = phi.incoming()

@@ -25,9 +25,9 @@ abstract class AnyFunctionPrototype(val name: String,
 
     fun shortName(): String {
         val builder = StringBuilder()
-        builder.append("$name(")
+        builder.append(" $returnType $name(")
         arguments.joinTo(builder)
-        builder.append("): $returnType")
+        builder.append(")")
         return builder.toString()
     }
 
@@ -39,10 +39,7 @@ abstract class AnyFunctionPrototype(val name: String,
 class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
     AnyFunctionPrototype(name, returnType, arguments) {
     override fun toString(): String {
-        val builder = StringBuilder()
-        builder.append("define ")
-        builder.append(shortName())
-        return builder.toString()
+        return "define ${shortName()}"
     }
 }
 

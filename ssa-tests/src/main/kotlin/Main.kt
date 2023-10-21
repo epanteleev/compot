@@ -1,12 +1,11 @@
 import ir.*
-import ir.builder.ModuleBuilder
-import ir.codegen.x64.regalloc.LinearScan
+import ir.module.builder.ModuleBuilder
+import ir.platform.regalloc.LinearScan
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.CastType
 import ir.instruction.IntPredicate
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
-import ir.utils.DumpModule
 import ir.pass.transform.utils.JoinPointSet
 
 fun main(args: Array<String>) {
@@ -63,7 +62,7 @@ fun main(args: Array<String>) {
 
     val module = builder.build()
     
-    println(DumpModule.apply(module))
+    println(module.toString())
 
     val helloFn = FunctionPrototype("hello", Type.U64, arrayListOf(Type.U16.ptr(), Type.U64.ptr()))
     val data = module.findFunction(helloFn)
@@ -107,7 +106,7 @@ fun main(args: Array<String>) {
 
     println(data.liveness())
     val newModule = Mem2Reg.run(module)
-    println(DumpModule.apply(newModule))
+    println(newModule.toString())
 
     VerifySSA.run(newModule)
     println(data.liveness())
