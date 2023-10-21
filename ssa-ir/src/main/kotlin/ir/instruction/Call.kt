@@ -16,7 +16,6 @@ class Call(name: String, tp: Type, private val func: AnyFunctionPrototype, args:
     override fun prototype(): AnyFunctionPrototype {
         return func
     }
-
     override fun copy(newUsages: List<Value>): Call {
         assert(newUsages.size == operands.size) {
             "should be"

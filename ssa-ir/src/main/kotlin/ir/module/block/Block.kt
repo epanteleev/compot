@@ -283,6 +283,14 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
         return phi
     }
 
+    override fun downStackFrame(callable: Callable) {
+        add(DownStackFrame(callable))
+    }
+
+    override fun upStackFrame(callable: Callable) {
+        add(UpStackFrame(callable))
+    }
+
     override fun uncompletedPhi(incoming: Value, bb: Block): Phi {
         val type = incoming.type().dereference()
         val blocks = bb.predecessors().toTypedArray()

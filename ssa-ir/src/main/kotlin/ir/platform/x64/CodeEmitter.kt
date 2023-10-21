@@ -127,33 +127,8 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun emitCall(call: Callable, location: OrderedLocation) {
-        val savedRegisters = valueToRegister.callerSaveRegisters(location)
-        for (arg in savedRegisters) {
-            objFunc.push(arg)
-        }
-
-        val totalStackSize = (savedRegisters.size + valueToRegister.calleeSaveRegisters.size + /** include retaddr and rbp **/ 2) * 8 +
-                valueToRegister.reservedStackSize()
-        if (totalStackSize % 16L != 0L) {
-            objFunc.sub(Imm(8, 8), Rsp.rsp)
-        }
-
-//        CalleeArgumentAllocator(objFunc).doIt(call.arguments()
-//            .mapTo(arrayListOf()) {
-//                valueToRegister.operand(it)
-//            }
-//        )
-
+    private fun emitCall(call: Callable) {
         objFunc.call(call.prototype().name)
-
-        if (totalStackSize % 16L != 0L) {
-            objFunc.add(Imm(8, 8), Rsp.rsp)
-        }
-
-        for (arg in savedRegisters.reversed()) {
-            objFunc.pop(arg)
-        }
 
         val retType = call.type()
         if (retType == Type.Void) {
@@ -252,6 +227,31 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
+    private fun emitDownStackFrame(dsf: DownStackFrame, map: Map<Callable, OrderedLocation>) {
+        val savedRegisters = valueToRegister.callerSaveRegisters(map[dsf.call()]!!)
+        for (arg in savedRegisters) {
+            objFunc.push(arg)
+        }
+
+        val totalStackSize = valueToRegister.frameSize(savedRegisters)
+        if (totalStackSize % 16L != 0L) {
+            objFunc.sub(Imm(8, 8), Rsp.rsp)
+        }
+    }
+
+    private fun emitUpStackFrame(usf: UpStackFrame, map: Map<Callable, OrderedLocation>) {
+        val savedRegisters = valueToRegister.callerSaveRegisters(map[usf.call()]!!)
+        val totalStackSize = valueToRegister.frameSize(savedRegisters)
+
+        if (totalStackSize % 16L != 0L) {
+            objFunc.add(Imm(8, 8), Rsp.rsp)
+        }
+
+        for (arg in savedRegisters.reversed()) {
+            objFunc.pop(arg)
+        }
+    }
+
     private fun emitBasicBlock(bb: Block, map: Map<Callable, OrderedLocation>) {
         for (instruction in bb) {
             when (instruction) {
@@ -259,13 +259,15 @@ class CodeEmitter(private val data: FunctionData,
                 is Store            -> emitStore(instruction)
                 is Return           -> emitReturn(instruction)
                 is Load             -> emitLoad(instruction)
-                is Call             -> emitCall(instruction, map[instruction]!!)
+                is Call             -> emitCall(instruction)
                 is ArithmeticUnary  -> emitArithmeticUnary(instruction)
                 is IntCompare       -> emitIntCompare(false, instruction)
                 is Branch           -> emitBranch(instruction)
                 is BranchCond       -> emitBranchCond(instruction)
-                is VoidCall         -> emitCall(instruction, map[instruction]!!)
+                is VoidCall         -> emitCall(instruction)
                 is Copy             -> emitCopy(instruction)
+                is DownStackFrame   -> emitDownStackFrame(instruction, map)
+                is UpStackFrame     -> emitUpStackFrame(instruction, map)
                 is Phi              -> {/* skip */}
                 is StackAlloc       -> {/* skip */}
                 else                -> println("Unsupported: $instruction")

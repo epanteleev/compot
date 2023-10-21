@@ -59,11 +59,21 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
     private fun isolateCall() {
         fun insertCopies(bb: Block, call: Callable) {
             call as Instruction
+            bb.insert(call) {
+                it.downStackFrame(call)
+                Value.UNDEF
+            }
+
             for ((idx, arg) in call.arguments().withIndex()) {
                 val copy = bb.insert(call) {
                     it.copy(arg)
                 }
                 call.update(idx, copy)
+            }
+
+            bb.insert(bb.indexOf(call) + 1) {
+                it.upStackFrame(call)
+                Value.UNDEF
             }
         }
 

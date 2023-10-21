@@ -23,6 +23,14 @@ abstract class AnyFunctionPrototype(val name: String,
         return false
     }
 
+    fun shortName(): String {
+        val builder = StringBuilder()
+        builder.append("$name(")
+        arguments.joinTo(builder)
+        builder.append("): $returnType")
+        return builder.toString()
+    }
+
     override fun hashCode(): Int {
         return name.hashCode() + arguments.hashCode() + returnType.hashCode()
     }
@@ -32,9 +40,8 @@ class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
     AnyFunctionPrototype(name, returnType, arguments) {
     override fun toString(): String {
         val builder = StringBuilder()
-        builder.append("define $name(")
-        arguments.joinTo(builder)
-        builder.append("): $returnType")
+        builder.append("define ")
+        builder.append(shortName())
         return builder.toString()
     }
 }
@@ -42,6 +49,6 @@ class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
 class ExternFunction(name: String, returnType: Type, arguments: List<Type>):
     AnyFunctionPrototype(name, returnType, arguments) {
     override fun toString(): String {
-        return "extern ${type()} $name(${arguments.joinToString()})"
+        return "extern ${shortName()}"
     }
 }

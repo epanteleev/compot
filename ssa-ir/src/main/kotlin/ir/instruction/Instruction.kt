@@ -2,7 +2,6 @@ package ir.instruction
 
 import ir.*
 
-
 abstract class Instruction(protected val tp: Type, protected val operands: Array<Value>) {
     fun usedInstructions(): List<ValueInstruction> {
         return operands.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())

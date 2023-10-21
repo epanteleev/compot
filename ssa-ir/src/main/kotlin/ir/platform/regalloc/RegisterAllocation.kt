@@ -32,6 +32,10 @@ class RegisterAllocation(private val stackSize: Long,
         registers
     }
 
+    fun frameSize(savedRegisters: Set<GPRegister>): Long {
+        return (savedRegisters.size + calleeSaveRegisters.size + /** include retaddr and rbp **/ 2) * 8 + reservedStackSize()
+    }
+
     fun reservedStackSize(): Long {
         return stackSize
     }
@@ -43,11 +47,11 @@ class RegisterAllocation(private val stackSize: Long,
             if (reg !is GPRegister) {
                 continue
             }
-
-            val reg8 = reg(8)
             if (!reg.isCallERSave) {
                 continue
             }
+
+            val reg8 = reg(8)
             assert(CallConvention.gpCallerSaveRegs.contains(reg8))
 
             val liveRange = liveness[value]
