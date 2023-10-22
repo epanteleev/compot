@@ -1,11 +1,11 @@
 package ir.platform.regalloc
 
-import asm.x64.Mem
-import asm.x64.Rbp
+import asm.x64.*
 import ir.instruction.Alloc
-import ir.Type
+import ir.types.PrimitiveType
 import ir.Value
 import ir.instruction.ValueInstruction
+import ir.types.Type
 
 data class StackFrameException(override val message: String): Exception(message)
 
@@ -40,9 +40,8 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     private fun stackSlotAlloc(value: Alloc): Mem {
         val typeSize = getTypeSize(value.type().dereference())
-        val totalSize = typeSize * value.size()
 
-        frameSize = withAlignment(totalSize.toInt(), frameSize)
+        frameSize = withAlignment(typeSize, frameSize)
         return Mem(Rbp.rbp, -frameSize, typeSize)
     }
 

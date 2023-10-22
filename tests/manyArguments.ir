@@ -2,15 +2,15 @@ extern void printUlong(u64)
 
 define u64 sum8(%0:u64, %1:u64, %2:u64, %3:u64, %4:u64, %5:u64, %6:u64, %7:u64) {
 entry:	
-	%8 = alloc u64* 1
-	%9 = alloc u64* 1
-	%10 = alloc u64* 1
-	%11 = alloc u64* 1
-	%12 = alloc u64* 1
-	%13 = alloc u64* 1
-	%14 = alloc u64* 1
-	%15 = alloc u64* 1
-	%16 = alloc u64* 1
+	%8 = alloc u64
+	%9 = alloc u64
+	%10 = alloc u64
+	%11 = alloc u64
+	%12 = alloc u64
+	%13 = alloc u64
+	%14 = alloc u64
+	%15 = alloc u64
+	%16 = alloc u64
 	store u64* %9, %0
 	store u64* %10, %1
 	store u64* %11, %2

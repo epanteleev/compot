@@ -1,12 +1,9 @@
 package ir.read.bulder
 
 import ir.*
-import ir.module.SSAModule
-import ir.module.Module
+import ir.read.*
+import ir.module.*
 import ir.pass.ana.VerifySSA
-import ir.read.Identifier
-import ir.read.TypeToken
-import ir.read.ValueInstructionToken
 
 class ModuleBuilderWithContext {
     private val functions = arrayListOf<FunctionDataBuilderWithContext>()

@@ -1,7 +1,9 @@
 package ir
 
+import ir.types.*
+
 abstract class AnyFunctionPrototype(val name: String,
-                                    protected val returnType: Type,
+                                    private val returnType: Type,
                                     protected val arguments: List<Type>) {
     fun type(): Type {
         return returnType
@@ -25,7 +27,7 @@ abstract class AnyFunctionPrototype(val name: String,
 
     fun shortName(): String {
         val builder = StringBuilder()
-        builder.append(" $returnType $name(")
+        builder.append("$returnType $name(")
         arguments.joinTo(builder)
         builder.append(")")
         return builder.toString()

@@ -7,6 +7,10 @@ import ir.instruction.*
 import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.read.*
+import ir.types.PointerType
+import ir.types.PrimitiveType
+import ir.types.Type
+import ir.types.VoidType
 
 class ParseErrorException(message: String): Exception(message) {
     constructor(expect: String, token: Token):
@@ -34,8 +38,8 @@ class FunctionDataBuilderWithContext private constructor(
     private fun getValue(token: ValueToken, ty: Type): Value {
         return token.let {
             when (it) {
-                is IntValue   -> Constant.of(ty.kind, it.int)
-                is FloatValue -> Constant.of(ty.kind, it.fp)
+                is IntValue   -> Constant.of(ty, it.int)
+                is FloatValue -> Constant.of(ty, it.fp)
                 is ValueInstructionToken -> {
                     val operand = nameMap[it.name] ?:
                         throw RuntimeException("in ${it.position()} undefined value")
@@ -54,8 +58,8 @@ class FunctionDataBuilderWithContext private constructor(
     private fun getConstant(token: ValueToken, ty: Type): Value {
         return token.let {
             when (it) {
-                is IntValue              -> Constant.of(ty.kind, it.int)
-                is FloatValue            -> Constant.of(ty.kind, it.fp)
+                is IntValue              -> Constant.of(ty, it.int)
+                is FloatValue            -> Constant.of(ty, it.fp)
                 is ValueInstructionToken -> Value.UNDEF
                 else -> throw ParseErrorException("constant or value", it)
             }
@@ -140,12 +144,12 @@ class FunctionDataBuilderWithContext private constructor(
 
     fun store(ptr: ValueToken, valueTok: ValueToken, expectedType: TypeToken) {
         val pointer = getValue(ptr, expectedType.type())
-        val value   = getValue(valueTok, expectedType.type().dereference())
+        val value   = getValue(valueTok, expectedType.asType<PointerType>().asDereference<PrimitiveType>())
         return bb.store(pointer, value)
     }
 
     fun call(name: ValueInstructionToken, func: AnyFunctionPrototype, args: ArrayList<ValueToken>): Value {
-        require(func.type() != Type.Void)
+        require(func.type() !is VoidType)
         val argumentValues = arrayListOf<Value>()
 
         for ((arg, ty) in args zip func.arguments()) {
@@ -156,7 +160,7 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun vcall(func: AnyFunctionPrototype, args: ArrayList<ValueToken>) {
-        require(func.type() == Type.Void)
+        require(func.type() is VoidType)
         val argumentValues = arrayListOf<Value>()
 
         for ((arg, ty) in args zip func.arguments()) {
@@ -190,8 +194,8 @@ class FunctionDataBuilderWithContext private constructor(
         bb.branchCond(value, onTrue, onFalse)
     }
 
-    fun stackAlloc(name: ValueInstructionToken, ty: TypeToken, size: IntValue): Alloc {
-        return memorize(name, bb.stackAlloc(ty.type().dereference(), size.int))
+    fun stackAlloc(name: ValueInstructionToken, ty: TypeToken): Alloc {
+        return memorize(name, bb.alloc(ty.type()))
     }
 
     fun ret(retValue: ValueToken, expectedType: TypeToken) {
@@ -210,7 +214,7 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.cast(value, operandType.type(), cast))
     }
 
-    fun select(name: ValueInstructionToken, condTok: ValueToken, onTrueTok: ValueToken, onFalseTok: ValueToken, selectType: Type): Value {
+    fun select(name: ValueInstructionToken, condTok: ValueToken, onTrueTok: ValueToken, onFalseTok: ValueToken, selectType: PrimitiveType): Value {
         val cond    = getValue(condTok, Type.U1)
         val onTrue  = getValue(onTrueTok, selectType)
         val onFalse = getValue(onFalseTok, selectType)
@@ -224,7 +228,7 @@ class FunctionDataBuilderWithContext private constructor(
             blocks.add(getBlockOrCreate(tok.string))
         }
 
-        val type = expectedType.type()
+        val type = expectedType.asType<PrimitiveType>()
         val values = arrayListOf<Value>()
         for (tok in incomingTok) {
             values.add(getConstant(tok, type))
@@ -268,7 +272,7 @@ class FunctionDataBuilderWithContext private constructor(
     }
 }
 
-private data class PhiContext(val phi: Phi, val valueTokens: List<ValueToken>, val expectedType: Type) {
+private data class PhiContext(val phi: Phi, val valueTokens: List<ValueToken>, val expectedType: PrimitiveType) {
     fun completePhi(valueMap: Map<String, LocalValue>) {
         val values = phi.usages()
         for ((idx, tok) in valueTokens.withIndex()) {

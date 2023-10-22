@@ -1,7 +1,7 @@
 package ir.module.auxiliary
 
-import ir.*
 import ir.instruction.*
+import ir.types.*
 
 object TypeCheck {
     fun checkUnary(unary: ArithmeticUnary): Boolean {
@@ -29,29 +29,31 @@ object TypeCheck {
     }
 
     fun checkLoad(load: Load): Boolean {
-        val kind = load.type().kind
-        if (kind == TypeKind.VOID || kind == TypeKind.U1) {
+        val type = load.type()
+        if (type is VoidType || type is BooleanType) {
             return false
         }
 
-        if (!load.operand().type().isPointer()) {
+        val ptrType = load.operand().type()
+        if (ptrType !is PointerType) {
             return false
         }
 
-        return load.type() == load.operand().type().dereference()
+        return load.type() == ptrType.dereference()
     }
 
     fun checkStore(store: Store): Boolean {
-        val kind = store.value().type()
-        if (kind == Type.Void || kind == Type.U1) {
+        val type = store.value().type()
+        if (type is VoidType || type is BooleanType) {
             return false
         }
 
-        if (!store.pointer().type().isPointer()) {
+        val ptrType = store.pointer().type()
+        if (ptrType !is PointerType) {
             return false
         }
 
-        return store.value().type() == store.pointer().type().dereference()
+        return store.value().type() == ptrType.dereference()
     }
     
     fun checkCall(call: Call): Boolean {
@@ -70,7 +72,7 @@ object TypeCheck {
     fun checkCast(cast: Cast): Boolean {
         when (cast.castType) {
             CastType.ZeroExtend, CastType.SignExtend, CastType.Truncate -> {
-                if (!cast.type().isArithmetic() || !cast.value().type().isArithmetic()) {
+                if (cast.type() !is ArithmeticType || cast.value().type() !is ArithmeticType) {
                     return false
                 }
 
@@ -99,18 +101,18 @@ object TypeCheck {
     }
 
     fun checkAlloc(alloc: Alloc): Boolean {
-        val kind = alloc.type()
-        return kind != Type.Void && kind != Type.U1
+        val vType = alloc.type().dereference()
+        return !(vType is VoidType || vType is UndefinedType)
     }
 
     fun checkGep(gep: GetElementPtr): Boolean {
         val index = gep.index()
         val source = gep.source()
 
-        if (!index.type().isArithmetic()) {
+        if (index.type() !is ArithmeticType) {
             return false
         }
-        if (source.type().dereferenceOrNull() == null) {
+        if (source.type() !is PointerType) {
             return false
         }
 

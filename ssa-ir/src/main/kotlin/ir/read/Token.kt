@@ -1,7 +1,6 @@
 package ir.read
 
-import ir.Type
-import ir.TypeKind
+import ir.types.*
 
 sealed class Token(protected open val line: Int, protected open val pos: Int) {
     abstract fun message(): String
@@ -42,30 +41,39 @@ data class TypeToken(private val type: String, private val indirection: Int, ove
         return "type '$type$stars'"
     }
 
-    fun kind(): TypeKind {
+    private fun kind(): Type {
         return matchType[type] ?: throw RuntimeException("Internal error: type=$type")
     }
 
     fun type(): Type {
-        return when (kind()) {
-            TypeKind.VOID      -> Type.Void
-            TypeKind.UNDEFINED -> Type.UNDEF
-            else               -> Type.of(kind(), indirection)
+        return if (indirection == 0) {
+            kind()
+        } else {
+            PointerType.of(kind(), indirection)
         }
+    }
+
+    inline fun<reified T: Type> asType(): T {
+        val ty = type()
+        if (ty !is T) {
+            throw RuntimeException("actual type=$ty")
+        }
+
+        return ty
     }
 
     companion object {
         private val matchType = hashMapOf(
-            "u1"   to TypeKind.U1,
-            "u8"   to TypeKind.U8,
-            "u16"  to TypeKind.U16,
-            "u32"  to TypeKind.U32,
-            "u64"  to TypeKind.U64,
-            "i8"   to TypeKind.I8,
-            "i16"  to TypeKind.I16,
-            "i32"  to TypeKind.I32,
-            "i64"  to TypeKind.I16,
-            "void" to TypeKind.VOID
+            "u1"   to Type.U1,
+            "u8"   to Type.U8,
+            "u16"  to Type.U16,
+            "u32"  to Type.U32,
+            "u64"  to Type.U64,
+            "i8"   to Type.I8,
+            "i16"  to Type.I16,
+            "i32"  to Type.I32,
+            "i64"  to Type.I16,
+            "void" to Type.Void
         )
     }
 }

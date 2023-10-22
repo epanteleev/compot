@@ -1,7 +1,24 @@
 package ir.instruction
 
-import ir.Type
 import ir.Value
+import ir.types.Type
+
+enum class CastType {
+    ZeroExtend,
+    SignExtend,
+    Truncate,
+    Bitcast;
+
+    override fun toString(): String {
+        val name = when (this) {
+            ZeroExtend -> "zext"
+            SignExtend -> "sext"
+            Truncate   -> "trunc"
+            Bitcast    -> "bitcast"
+        }
+        return name
+    }
+}
 
 class Cast(name: String, ty: Type, val castType: CastType, value: Value):
     ValueInstruction(name, ty, arrayOf(value)) {

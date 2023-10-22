@@ -6,6 +6,7 @@ import ir.instruction.IntPredicate
 import ir.module.Module
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
+import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -74,7 +75,7 @@ class DominatorTreeTest {
 
         val originalMem2Reg = VerifySSA.run(Mem2Reg.run(module))
         val copyMem2Reg     = VerifySSA.run(Mem2Reg.run(module))
-        println(originalMem2Reg.toString())
+        //println(originalMem2Reg.toString())
         assertEquals(originalMem2Reg.toString(), copyMem2Reg.toString())
     }
 }

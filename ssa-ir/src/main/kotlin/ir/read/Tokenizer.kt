@@ -9,10 +9,10 @@ class Tokenizer(val data: String) {
 
     private fun remainsLine(begin: Int): String {
         val end = data.indexOf('\n', begin)
-        if (end == -1) {
-            return data.substring(begin, data.length - begin)
+        return if (end == -1) {
+            data.substring(begin, data.length - begin)
         } else {
-            return data.substring(begin, end)
+            data.substring(begin, end)
         }
     }
 

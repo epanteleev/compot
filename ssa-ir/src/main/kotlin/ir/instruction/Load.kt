@@ -1,9 +1,10 @@
 package ir.instruction
 
 import ir.Value
+import ir.types.PointerType
 
 class Load(name: String, ptr: Value):
-    ValueInstruction(name, ptr.type().dereference(), arrayOf(ptr)) {
+    ValueInstruction(name, (ptr.type() as PointerType).dereference(), arrayOf(ptr)) {
     override fun dump(): String {
         return "%$identifier = load $tp ${operand()}"
     }

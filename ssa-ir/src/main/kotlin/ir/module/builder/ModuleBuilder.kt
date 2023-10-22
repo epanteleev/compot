@@ -4,6 +4,8 @@ import ir.*
 import ir.module.SSAModule
 import ir.module.Module
 import ir.pass.ana.VerifySSA
+import ir.types.PrimitiveType
+import ir.types.Type
 
 class ModuleBuilder {
     private val functions = arrayListOf<FunctionDataBuilder>()

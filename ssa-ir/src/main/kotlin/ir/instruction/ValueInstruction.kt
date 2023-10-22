@@ -1,9 +1,8 @@
 package ir.instruction
 
-import ir.LocalValue
-import ir.Type
 import ir.Value
-
+import ir.types.Type
+import ir.LocalValue
 
 abstract class ValueInstruction(protected val identifier: String, tp: Type, usages: Array<Value>):
     Instruction(tp, usages),

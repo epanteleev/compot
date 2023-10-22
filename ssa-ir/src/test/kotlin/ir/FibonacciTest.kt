@@ -7,6 +7,7 @@ import ir.instruction.IntPredicate
 import ir.module.Module
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
+import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -18,13 +19,13 @@ class FibonacciTest {
 
         val n = builder.argument(0)
 
-        val retVal = builder.stackAlloc(Type.I32, 1)
-        val nAddr  = builder.stackAlloc(Type.I32, 1)
+        val retVal = builder.stackAlloc(Type.I32)
+        val nAddr  = builder.stackAlloc(Type.I32)
 
-        val a = builder.stackAlloc(Type.I32, 1)
-        val b = builder.stackAlloc(Type.I32, 1)
-        val c = builder.stackAlloc(Type.I32, 1)
-        val i = builder.stackAlloc(Type.I32, 1)
+        val a = builder.stackAlloc(Type.I32)
+        val b = builder.stackAlloc(Type.I32)
+        val c = builder.stackAlloc(Type.I32)
+        val i = builder.stackAlloc(Type.I32)
 
         builder.store(nAddr, n)
         builder.store(a, I32Value(0))

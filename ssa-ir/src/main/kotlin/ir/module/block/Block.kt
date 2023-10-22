@@ -4,6 +4,9 @@ import ir.*
 import ir.instruction.*
 import ir.module.ModuleException
 import ir.module.auxiliary.TypeCheck
+import ir.types.PointerType
+import ir.types.PrimitiveType
+import ir.types.Type
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) : MutableBlock, AnyBlock {
     private val instructions = mutableListOf<Instruction>()
@@ -172,7 +175,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     }
 
     override fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): ArithmeticUnary {
-        return withOutput { it: Int -> ArithmeticUnary(n(it), value.type(), op, value) }
+        return withOutput { it: Int -> ArithmeticUnary(n(it), value.type() as PrimitiveType, op, value) }
     }
 
     override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
@@ -180,7 +183,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
             throw ModuleException("Operands have different types: a=${a.type()}, b=${b.type()}")
         }
 
-        return withOutput { it: Int -> ArithmeticBinary(n(it), a.type(), a, op, b) }
+        return withOutput { it: Int -> ArithmeticBinary(n(it), a.type() as PrimitiveType, a, op, b) }
     }
 
     override fun intCompare(a: Value, pred: IntPredicate, b: Value): IntCompare {
@@ -233,8 +236,8 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
         add(BranchCond(value, onTrue, onFalse))
     }
 
-    override fun stackAlloc(ty: Type, size: Long): Alloc {
-        val alloc = withOutput { it: Int -> Alloc(n(it), ty, size) }
+    override fun alloc(ty: Type): Alloc {
+        val alloc = withOutput { it: Int -> Alloc(n(it), ty) }
         if (!TypeCheck.checkAlloc(alloc)) {
             throw ModuleException("Inconsistent types: ${alloc.dump()}")
         }
@@ -274,7 +277,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     }
 
     override fun phi(incoming: List<Value>, labels: List<Block>): Phi {
-        val phi = withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type(), labels.toTypedArray(), incoming.toTypedArray()) }
+        val phi = withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type() as PrimitiveType, labels.toTypedArray(), incoming.toTypedArray()) }
 
         if (!TypeCheck.checkPhi(phi)) {
             throw ModuleException("Operands have different types: labels=$labels")
@@ -292,14 +295,14 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     }
 
     override fun uncompletedPhi(incoming: Value): Phi {
-        val type = incoming.type().dereference()
+        val type = (incoming.type() as PointerType).dereference() as PrimitiveType
         val blocks = predecessors().toTypedArray()
         val values = predecessors().mapTo(arrayListOf()) { incoming }.toTypedArray() //Todo
         return withOutput { it: Int -> Phi("phi${n(it)}", type, blocks, values) }
     }
 
     fun uncompletedPhi(incoming: List<Value>, labels: List<Block>): Phi {
-        return withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type(), labels.toTypedArray(), incoming.toTypedArray()) }
+        return withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type() as PrimitiveType, labels.toTypedArray(), incoming.toTypedArray()) }
     }
 
     override fun copy(value: Value): Copy {

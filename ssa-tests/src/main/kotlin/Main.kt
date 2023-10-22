@@ -7,6 +7,7 @@ import ir.instruction.IntPredicate
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.pass.transform.utils.JoinPointSet
+import ir.types.Type
 
 fun main(args: Array<String>) {
     val builder = ModuleBuilder.create()
@@ -15,8 +16,8 @@ fun main(args: Array<String>) {
         val d = argument(0)
         val arg1 = argument(0)
         val arg2 = argument(1)
-        val variable = stackAlloc(Type.U64, 1)
-        val variable2 = stackAlloc(Type.U16, 1)
+        val variable = stackAlloc(Type.U64)
+        val variable2 = stackAlloc(Type.U16)
 
         val v1   = load(arg1)
         val ttt  = cast(v1, Type.U64, CastType.SignExtend)

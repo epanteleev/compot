@@ -10,9 +10,9 @@ entry:
 
 define i32 factorial(%val: i32) {
 entry:
-  %valAddr = alloc i32* 1
-  %factorial = alloc i32* 1
-  %i = alloc i32* 1
+  %valAddr = alloc i32
+  %factorial = alloc i32
+  %i = alloc i32
   store i32* %valAddr, %val
   store i32* %factorial, 1
   store i32* %i, 1

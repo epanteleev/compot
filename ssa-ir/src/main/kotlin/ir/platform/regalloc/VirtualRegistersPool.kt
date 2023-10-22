@@ -5,6 +5,7 @@ import ir.*
 import ir.platform.x64.CallConvention
 import ir.instruction.Alloc
 import ir.instruction.ValueInstruction
+import ir.types.*
 import java.lang.IllegalArgumentException
 
 class VirtualRegistersPool private constructor(private val argumentSlots: List<Operand>) {
@@ -56,12 +57,12 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
                 }
             }
 
-            private fun cast(reg: GPRegister, type: Type): GPRegister {
+            private fun cast(reg: GPRegister, type: PrimitiveType): GPRegister {
                 return reg(hardwareSize(type))
             }
 
-            fun pickArgument(type: Type): Operand {
-                assert(type.isSigned() || type.isUnsigned() || type.isPointer())
+            fun pickArgument(type: PrimitiveType): Operand {
+                assert(type is IntType || type is UIntType || type is PointerType)
 
                 val slot = if (freeArgumentRegisters.isNotEmpty()) {
                     cast(freeArgumentRegisters.removeLast(), type)
@@ -77,7 +78,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
 
         fun create(argumentValue: List<ArgumentValue>): VirtualRegistersPool {
             val allocator = ArgumentAllocator()
-            return VirtualRegistersPool(argumentValue.map { allocator.pickArgument(it.type()) })
+            return VirtualRegistersPool(argumentValue.map { allocator.pickArgument(it.type() as PrimitiveType) })
         }
     }
 }

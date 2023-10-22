@@ -1,8 +1,8 @@
-import ir.*
 import ir.module.builder.ModuleBuilder
 import ir.instruction.ArithmeticBinaryOp
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
+import ir.types.Type
 import startup.Driver
 
 fun main() {
@@ -20,16 +20,16 @@ fun main() {
     val arg7 = builder.argument(6)
     val arg8 = builder.argument(7)
 
-    val regValue = builder.stackAlloc(Type.U64, 1)
+    val regValue = builder.stackAlloc(Type.U64)
 
-    val arg1Alloc = builder.stackAlloc(Type.U64, 1)
-    val arg2Alloc = builder.stackAlloc(Type.U64, 1)
-    val arg3Alloc = builder.stackAlloc(Type.U64, 1)
-    val arg4Alloc = builder.stackAlloc(Type.U64, 1)
-    val arg5Alloc = builder.stackAlloc(Type.U64, 1)
-    val arg6Alloc = builder.stackAlloc(Type.U64, 1)
-    val arg7Alloc = builder.stackAlloc(Type.U64, 1)
-    val arg8Alloc = builder.stackAlloc(Type.U64, 1)
+    val arg1Alloc = builder.stackAlloc(Type.U64)
+    val arg2Alloc = builder.stackAlloc(Type.U64)
+    val arg3Alloc = builder.stackAlloc(Type.U64)
+    val arg4Alloc = builder.stackAlloc(Type.U64)
+    val arg5Alloc = builder.stackAlloc(Type.U64)
+    val arg6Alloc = builder.stackAlloc(Type.U64)
+    val arg7Alloc = builder.stackAlloc(Type.U64)
+    val arg8Alloc = builder.stackAlloc(Type.U64)
 
     builder.store(arg1Alloc, arg1)
     builder.store(arg2Alloc, arg2)

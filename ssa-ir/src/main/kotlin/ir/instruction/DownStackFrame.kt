@@ -1,6 +1,7 @@
 package ir.instruction
 
 import ir.*
+import ir.types.Type
 
 class DownStackFrame(private val callable: Callable): Instruction(Type.UNDEF, arrayOf()) {
     fun call(): Callable {

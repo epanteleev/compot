@@ -1,5 +1,7 @@
 package ir
 
+import ir.types.*
+
 interface Value {
     fun type(): Type
 
@@ -32,18 +34,18 @@ class ArgumentValue(private val index: Int, private val tp: Type): LocalValue {
 
 interface Constant: Value {
     companion object {
-        inline fun<reified T: Number> of(kind: TypeKind, value: T): Constant {
+        inline fun<reified T: Number> of(kind: Type, value: T): Constant {
             return when (kind) {
-                TypeKind.I8  -> I8Value(value.toByte())
-                TypeKind.U8  -> U8Value(value.toByte())
-                TypeKind.I16 -> I16Value(value.toShort())
-                TypeKind.U16 -> U16Value(value.toShort())
-                TypeKind.I32 -> I32Value(value.toInt())
-                TypeKind.U32 -> U32Value(value.toInt())
-                TypeKind.I64 -> I64Value(value.toLong())
-                TypeKind.U64 -> U64Value(value.toLong())
-                TypeKind.F32 -> F32Value(value.toFloat())
-                TypeKind.F64 -> F64Value(value.toDouble())
+                Type.I8  -> I8Value(value.toByte())
+                Type.U8  -> U8Value(value.toByte())
+                Type.I16 -> I16Value(value.toShort())
+                Type.U16 -> U16Value(value.toShort())
+                Type.I32 -> I32Value(value.toInt())
+                Type.U32 -> U32Value(value.toInt())
+                Type.I64 -> I64Value(value.toLong())
+                Type.U64 -> U64Value(value.toLong())
+                Type.F32 -> F32Value(value.toFloat())
+                Type.F64 -> F64Value(value.toDouble())
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
         }
@@ -51,7 +53,7 @@ interface Constant: Value {
 }
 
 data class U8Value(val u8: Byte): Constant {
-    override fun type(): Type {
+    override fun type(): UIntType {
         return Type.U8
     }
 
@@ -61,7 +63,7 @@ data class U8Value(val u8: Byte): Constant {
 }
 
 data class I8Value(val i8: Byte): Constant {
-    override fun type(): Type {
+    override fun type(): IntType {
         return Type.I8
     }
 
@@ -71,7 +73,7 @@ data class I8Value(val i8: Byte): Constant {
 }
 
 data class U16Value(val u16: Short): Constant {
-    override fun type(): Type {
+    override fun type(): UIntType {
         return Type.U16
     }
 
@@ -81,7 +83,7 @@ data class U16Value(val u16: Short): Constant {
 }
 
 data class I16Value(val i16: Short): Constant {
-    override fun type(): Type {
+    override fun type(): IntType {
         return Type.I16
     }
 
@@ -91,7 +93,7 @@ data class I16Value(val i16: Short): Constant {
 }
 
 data class U32Value(val u32: Int): Constant {
-    override fun type(): Type {
+    override fun type(): UIntType {
         return Type.U32
     }
 
@@ -101,7 +103,7 @@ data class U32Value(val u32: Int): Constant {
 }
 
 data class I32Value(val i32: Int): Constant {
-    override fun type(): Type {
+    override fun type(): IntType {
         return Type.I32
     }
 
@@ -111,7 +113,7 @@ data class I32Value(val i32: Int): Constant {
 }
 
 data class U64Value(val u64: Long): Constant {
-    override fun type(): Type {
+    override fun type(): UIntType {
         return Type.U64
     }
 
@@ -121,7 +123,7 @@ data class U64Value(val u64: Long): Constant {
 }
 
 data class I64Value(val i64: Long): Constant {
-    override fun type(): Type {
+    override fun type(): IntType {
         return Type.I64
     }
 
@@ -131,7 +133,7 @@ data class I64Value(val i64: Long): Constant {
 }
 
 data class F32Value(val f32: Float): Constant {
-    override fun type(): Type {
+    override fun type(): FloatingPoint {
         return Type.F32
     }
 
@@ -141,7 +143,7 @@ data class F32Value(val f32: Float): Constant {
 }
 
 data class F64Value(val f64: Double): Constant {
-    override fun type(): Type {
+    override fun type(): FloatingPoint {
         return Type.F64
     }
 
@@ -155,7 +157,7 @@ class UndefinedValue: Constant, LocalValue {
         return toString()
     }
 
-    override fun type(): Type {
+    override fun type(): UndefinedType {
         return Type.UNDEF
     }
 

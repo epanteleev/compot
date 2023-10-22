@@ -1,6 +1,7 @@
 package ir.instruction
 
 import ir.*
+import ir.types.Type
 
 class Call(name: String, tp: Type, private val func: AnyFunctionPrototype, args: List<Value>):
     ValueInstruction(name, tp, args.toTypedArray()),

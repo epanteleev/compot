@@ -1,8 +1,8 @@
 package ir.instruction
 
-import ir.Type
+import ir.types.PrimitiveType
 import ir.Value
-
+import ir.types.Type
 
 enum class ArithmeticBinaryOp {
     Add,
@@ -33,27 +33,14 @@ enum class ArithmeticBinaryOp {
     }
 }
 
-enum class CastType {
-    ZeroExtend,
-    SignExtend,
-    Truncate,
-    Bitcast;
-
-    override fun toString(): String {
-        val name = when (this) {
-            ZeroExtend -> "zext"
-            SignExtend -> "sext"
-            Truncate   -> "trunc"
-            Bitcast    -> "bitcast"
-        }
-        return name
-    }
-}
-
-class ArithmeticBinary(name: String, tp: Type, a: Value, val op: ArithmeticBinaryOp, b: Value):
+class ArithmeticBinary(name: String, tp: PrimitiveType, a: Value, val op: ArithmeticBinaryOp, b: Value):
     ValueInstruction(name, tp, arrayOf(a, b)) {
     override fun dump(): String {
         return "%$identifier = $op $tp ${first()}, ${second()}"
+    }
+
+    override fun type(): PrimitiveType {
+        return tp as PrimitiveType
     }
 
     fun first(): Value {
@@ -73,6 +60,6 @@ class ArithmeticBinary(name: String, tp: Type, a: Value, val op: ArithmeticBinar
     }
 
     override fun copy(newUsages: List<Value>): ArithmeticBinary {
-        return ArithmeticBinary(identifier, tp, newUsages[0], op, newUsages[1])
+        return ArithmeticBinary(identifier, type(), newUsages[0], op, newUsages[1])
     }
 }

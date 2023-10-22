@@ -1,9 +1,9 @@
 package ir.instruction
 
 import ir.*
+import ir.types.Type
 
-
-class Select(name: String, ty: Type, cond: Value, onTrue: Value, onFalse: Value):
+class Select(name: String, ty: Type, cond: Value, onTrue: Value, onFalse: Value) :
     ValueInstruction(name, ty, arrayOf(cond, onTrue, onFalse)) {
     override fun dump(): String {
         return "%$identifier = select $tp ${condition()} ${onTrue()}, ${onFalse()}"

@@ -1,7 +1,8 @@
 package ir.instruction
 
-import ir.Type
+import ir.types.PrimitiveType
 import ir.Value
+import ir.types.Type
 
 
 enum class ArithmeticUnaryOp {
@@ -17,10 +18,14 @@ enum class ArithmeticUnaryOp {
     }
 }
 
-class ArithmeticUnary(name: String, tp: Type, val op: ArithmeticUnaryOp, value: Value):
+class ArithmeticUnary(name: String, tp: PrimitiveType, val op: ArithmeticUnaryOp, value: Value):
     ValueInstruction(name, tp, arrayOf(value)) {
     override fun dump(): String {
         return "%$identifier = $op $tp ${operand()}"
+    }
+
+    override fun type(): PrimitiveType {
+        return tp as PrimitiveType
     }
 
     fun operand(): Value {
@@ -36,6 +41,6 @@ class ArithmeticUnary(name: String, tp: Type, val op: ArithmeticUnaryOp, value: 
             "should be"
         }
 
-        return ArithmeticUnary(identifier, tp, op, newUsages[0])
+        return ArithmeticUnary(identifier, type(), op, newUsages[0])
     }
 }

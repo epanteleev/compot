@@ -2,7 +2,7 @@ extern void printIntArray(i32*, i32)
 
 define u64 main() {
 entry:
-	%array = alloc i32* 5
+	%array = alloc [i32 x 5]
 	%zero = gep i32* %array, i32 0
 	store i32* %zero, 0
 	%first = gep i32* %array, i32 1

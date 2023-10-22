@@ -7,6 +7,7 @@ import ir.instruction.CastType
 import ir.instruction.IntPredicate
 import ir.module.BasicBlocks
 import ir.pass.ana.VerifySSA
+import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

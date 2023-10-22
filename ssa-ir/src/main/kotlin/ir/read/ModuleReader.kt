@@ -29,10 +29,8 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     private fun parseStackAlloc(resultName: ValueInstructionToken) {
-        val typeToken      = iterator.expect<TypeToken>("loaded type")
-        val allocationSize = iterator.expect<IntValue>("stackalloc size")
-
-        builder.stackAlloc(resultName, typeToken, allocationSize)
+        val typeToken = iterator.expect<TypeToken>("loaded type")
+        builder.stackAlloc(resultName, typeToken)
     }
 
     private fun parseStore() {

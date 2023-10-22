@@ -1,19 +1,19 @@
 package ir.instruction
 
-import ir.Type
 import ir.Value
+import ir.types.*
 
-class Alloc(name: String, ty: Type, private val size: Long):
+class Alloc(name: String, ty: Type):
     ValueInstruction(name, ty.ptr(), arrayOf()) {
     override fun dump(): String {
-        return "%$identifier = alloc $tp $size"
+        return "%$identifier = alloc $tp"
     }
 
-    fun size(): Long {
-        return size
+    override fun type(): PointerType {
+        return tp as PointerType
     }
 
     override fun copy(newUsages: List<Value>): Alloc {
-        return Alloc(identifier, tp.dereference(), size)
+        return Alloc(identifier, type().dereference())
     }
 }

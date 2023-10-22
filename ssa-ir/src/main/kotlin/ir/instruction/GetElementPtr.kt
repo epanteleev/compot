@@ -1,11 +1,17 @@
 package ir.instruction
 
 import ir.*
+import ir.types.PointerType
+import ir.types.Type
 
 class GetElementPtr(name: String, tp: Type, source: Value, index: Value):
     ValueInstruction(name, tp, arrayOf(source, index)) {
     override fun dump(): String {
         return "%$identifier = gep $tp ${source()}, ${index().type()} ${index()}"
+    }
+
+    override fun type(): PointerType {
+        return tp as PointerType
     }
 
     fun source(): Value {
@@ -25,6 +31,6 @@ class GetElementPtr(name: String, tp: Type, source: Value, index: Value):
     }
 
     override fun copy(newUsages: List<Value>): GetElementPtr {
-        return GetElementPtr(identifier, tp, newUsages[0], newUsages[1])
+        return GetElementPtr(identifier, type(), newUsages[0], newUsages[1])
     }
 }

@@ -1,6 +1,7 @@
 package ir.instruction
 
 import ir.*
+import ir.types.Type
 
 abstract class Instruction(protected val tp: Type, protected val operands: Array<Value>) {
     fun usedInstructions(): List<ValueInstruction> {

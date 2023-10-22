@@ -1,6 +1,7 @@
 package ir.instruction
 
 import ir.*
+import ir.types.*
 import ir.module.block.Block
 
 abstract class TerminateInstruction(usages: Array<Value>, val targets: Array<Block>):

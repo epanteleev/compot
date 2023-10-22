@@ -28,8 +28,8 @@ entry:
 ;}
 define i32 manyBranches(%val: i32) {
 entry:
-  %valAddr = alloc i32* 1
-  %ret     = alloc i32* 1
+  %valAddr = alloc i32
+  %ret     = alloc i32
   store i32* %valAddr, %val
   store i32* %ret, 0
   %0 = load i32 %valAddr
@@ -68,6 +68,3 @@ ifEnd7:
   %3 = load i32 %ret
   ret i32 %3
 }
-
-
-

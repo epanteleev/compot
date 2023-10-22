@@ -1,7 +1,6 @@
 package ir.platform.x64
 
 import asm.x64.*
-import ir.*
 import ir.instruction.*
 import ir.module.block.Label
 import ir.module.Module
@@ -9,6 +8,8 @@ import ir.module.block.Block
 import ir.instruction.Call
 import ir.module.FunctionData
 import ir.platform.regalloc.RegisterAllocation
+import ir.types.*
+import ir.types.ArithmeticType
 
 import ir.utils.OrderedLocation
 
@@ -86,7 +87,7 @@ class CodeEmitter(private val data: FunctionData,
 
     private fun emitReturn(ret: Return) {
         val returnType = data.prototype.type()
-        if (returnType.isArithmetic() || returnType.isPointer()) {
+        if (returnType is ArithmeticType || returnType is PointerType) {
             val value = valueToRegister.operand(ret.value())
             objFunc.mov(value, temp1(value.size))
         }
@@ -134,9 +135,9 @@ class CodeEmitter(private val data: FunctionData,
             return
         }
 
-        if (retType.isArithmetic() || retType.isPointer() || retType == Type.U1) {
+        if (retType is ArithmeticType || retType is PointerType || retType == Type.U1) {
             objFunc.mov(Rax.rax(call.type().size()), valueToRegister.operand(call) as Operand)
-        } else if (retType.isFloat()) {
+        } else if (retType is FloatingPoint) {
             TODO()
         } else {
             throw RuntimeException("unknown value type=$retType")

@@ -6,6 +6,8 @@ import ir.module.block.Label
 import ir.instruction.*
 import ir.module.BasicBlocks
 import ir.module.FunctionData
+import ir.types.PrimitiveType
+import ir.types.Type
 
 class FunctionDataBuilder private constructor(
     private val prototype: FunctionPrototype,
@@ -86,8 +88,8 @@ class FunctionDataBuilder private constructor(
         branchCond(value, blocks.findBlock(onTrue), blocks.findBlock(onFalse))
     }
 
-    fun stackAlloc(ty: Type, size: Long): Value {
-        return bb.stackAlloc(ty, size)
+    fun stackAlloc(ty: Type): Value {
+        return bb.alloc(ty)
     }
 
     fun ret(value: Value) {
@@ -98,7 +100,7 @@ class FunctionDataBuilder private constructor(
         return bb.gep(source, index)
     }
 
-    fun cast(value: Value, ty: Type, cast: CastType): Value {
+    fun cast(value: Value, ty: PrimitiveType, cast: CastType): Value {
         return bb.cast(value, ty, cast)
     }
 

@@ -6,10 +6,11 @@ import ir.module.BasicBlocks
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.pass.transform.Mem2RegException
+import ir.types.PrimitiveType
 
 internal object Utils {
     fun isStackAllocOfLocalVariable(instruction: Instruction): Boolean {
-        return instruction is Alloc && instruction.size() == 1L
+        return instruction is Alloc && instruction.type().dereference() is PrimitiveType
     }
 
     fun isLoadOfLocalVariable(instruction: Instruction): Boolean {

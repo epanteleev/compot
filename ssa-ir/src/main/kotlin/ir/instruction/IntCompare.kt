@@ -1,8 +1,7 @@
 package ir.instruction
 
-import ir.Type
 import ir.Value
-
+import ir.types.Type
 
 enum class IntPredicate {
     Eq,

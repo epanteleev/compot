@@ -1,9 +1,8 @@
 package ir.instruction
 
-import ir.AnyFunctionPrototype
-import ir.Type
 import ir.Value
-
+import ir.types.Type
+import ir.AnyFunctionPrototype
 
 class VoidCall(private val func: AnyFunctionPrototype, args: List<Value>):
     Instruction(Type.Void, args.toTypedArray()),

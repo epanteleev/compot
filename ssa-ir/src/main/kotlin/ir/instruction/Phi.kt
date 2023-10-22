@@ -2,8 +2,9 @@ package ir.instruction
 
 import ir.*
 import ir.module.block.Block
+import ir.types.PrimitiveType
 
-class Phi(name: String, ty: Type, private val incoming: Array<Block>, incomingValue: Array<Value>):
+class Phi(name: String, ty: PrimitiveType, private val incoming: Array<Block>, incomingValue: Array<Value>):
     ValueInstruction(name, ty, incomingValue) {
 
     override fun dump(): String {
@@ -25,11 +26,11 @@ class Phi(name: String, ty: Type, private val incoming: Array<Block>, incomingVa
     }
 
     override fun copy(newUsages: List<Value>): Instruction {
-        return Phi(identifier, tp, incoming.clone(), newUsages.toTypedArray())
+        return Phi(identifier, tp as PrimitiveType, incoming.clone(), newUsages.toTypedArray())
     }
 
     fun copy(newUsages: Array<Value>, incoming: Array<Block>): Phi {
-        return Phi(identifier, tp, incoming.clone(), newUsages.clone())
+        return Phi(identifier, tp as PrimitiveType, incoming.clone(), newUsages.clone())
     }
 
     fun update(newUsages: Array<Value>, newIncoming: Array<Block>): Phi {
@@ -39,7 +40,7 @@ class Phi(name: String, ty: Type, private val incoming: Array<Block>, incomingVa
     }
 
     companion object {
-        fun create(name: String, ty: Type): Phi {
+        fun create(name: String, ty: PrimitiveType): Phi {
             return Phi(name, ty, arrayOf(), arrayOf())
         }
     }
