@@ -9,10 +9,10 @@ class Tokenizer(val data: String) {
 
     private fun remainsLine(begin: Int): String {
         val end = data.indexOf('\n', begin)
-        return if (end == -1) {
-            data.substring(begin, data.length - begin)
+        if (end == -1) {
+            return data.substring(begin, data.length - begin)
         } else {
-            data.substring(begin, end)
+            return data.substring(begin, end)
         }
     }
 
@@ -80,30 +80,30 @@ class Tokenizer(val data: String) {
     }
 
     private fun readIdentifierOrKeywordOrType(): Token {
-        val string = readString()
-        if (string == "define") {
-            return Define(line, pos)
-        } else if (string == "extern") {
-            return Extern(line, pos)
-        } else if (string == "void") {
-            return TypeToken("void", 0, line, pos)
-        }
-
-        val begin = pos - string.length
-        return if (!isEnd() && getChar() == ':') {
-            nextChar()
-            LabelToken(string, line, begin)
-        } else {
-            Identifier(string, line, begin)
+        return when (val string = readString()) {
+            "define" -> Define(line, pos)
+            "extern" -> Extern(line, pos)
+            "void"   -> PrimitiveTypeToken("void", 0, line, pos)
+            else -> {
+                val begin = pos - string.length
+                if (!isEnd() && getChar() == ':') {
+                    nextChar()
+                    LabelToken(string, line, begin)
+                } else {
+                    Identifier(string, line, begin)
+                }
+            }
         }
     }
 
-    private fun readTypeOrIdentifier(): Token {
+    private fun readType(): Token? {
         val begin = globalPosition
         nextChar()
-        if (!getChar().isDigit()) {
+        val ch = getChar()
+
+        if (!ch.isDigit()) {
             previousChar()
-            return readIdentifierOrKeywordOrType()
+            return null
         }
 
         while (!isEnd() && getChar().isDigit()) {
@@ -122,7 +122,7 @@ class Tokenizer(val data: String) {
         }
 
         val start = pos - indirection - typeName.length
-        return TypeToken(typeName, indirection, line, start)
+        return PrimitiveTypeToken(typeName, indirection, line, start)
     }
 
     private fun readNumberOrIdentifier(): Token {
@@ -166,6 +166,7 @@ class Tokenizer(val data: String) {
         }
     }
 
+
     internal fun nextToken(): Token {
         skipWhitespace()
         val ch = getChar()
@@ -180,6 +181,8 @@ class Tokenizer(val data: String) {
             '.' -> Dot(line, pos)
             '[' -> OpenSquareBracket(line, pos)
             ']' -> CloseSquareBracket(line, pos)
+            '<' -> OpenTriangleBracket(line, pos)
+            '>' -> CloseTriangleBracket(line, pos)
             else -> null
         }
         if (tok != null) {
@@ -190,7 +193,8 @@ class Tokenizer(val data: String) {
         return if (ch.isDigit()) {
             readNumberOrIdentifier()
         } else if (ch == 'u' || ch == 'i' || ch == 'f') {
-            readTypeOrIdentifier()
+            readType() ?:
+                readIdentifierOrKeywordOrType()
         } else if (ch.isLetter()) {
             readIdentifierOrKeywordOrType()
         } else if (ch == '%') {

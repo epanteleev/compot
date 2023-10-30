@@ -28,7 +28,7 @@ class CalleeArgumentAllocator(private val arguments: List<Value>) {
                     allocation.add(reg(value.type().size()))
                 }
                 is Memory -> {
-                    allocation.add(Mem(Rsp.rsp, -(8L * pos.index) + 8, 8))
+                    allocation.add(Mem.mem(Rsp.rsp, -(8L * pos.index) + 8, 8))
                 }
             }
         }

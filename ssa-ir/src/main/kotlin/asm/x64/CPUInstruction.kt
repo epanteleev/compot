@@ -42,6 +42,12 @@ data class Movss(val src: AnyOperand, val des: Register): CPUInstruction {
     }
 }
 
+data class Lea(val src: AnyOperand, val des: Register): CPUInstruction {
+    override fun toString(): String {
+        return "lea${prefix(des.size)} $src, $des"
+    }
+}
+
 interface Arithmetic: CPUInstruction
 
 data class Add(val first: AnyOperand, val second: Operand): Arithmetic {

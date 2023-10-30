@@ -10,6 +10,6 @@ data class ArrayType(val type: Type, val size: Int) : Type {
     }
 
     override fun toString(): String {
-        return "[$type x $size]"
+        return "[$size x $type]"
     }
 }

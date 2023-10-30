@@ -1,15 +1,13 @@
 package ir.codegen
 
-import asm.x64.Mem
-import asm.x64.Rbp
-import asm.x64.Rdi
-import asm.x64.Rsi
 import ir.*
-import ir.module.builder.ModuleBuilder
-import ir.platform.regalloc.VirtualRegistersPool
-import ir.instruction.ArithmeticBinaryOp
-import ir.pass.transform.Mem2Reg
+import asm.x64.*
 import ir.types.Type
+import ir.pass.transform.Mem2Reg
+import ir.module.builder.ModuleBuilder
+import ir.instruction.ArithmeticBinaryOp
+import ir.platform.regalloc.VirtualRegistersPool
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -58,6 +56,6 @@ class CodegenTest {
         val pool = VirtualRegistersPool.create(module.functions[0].arguments())
         assertEquals(pool.arguments()[0], Rdi.rdi)
         assertEquals(pool.arguments()[1], Rsi.rsi)
-        assertEquals(pool.allocSlot(retValue), Mem(Rbp.rbp, -8, 8))
+        assertEquals(pool.allocSlot(retValue), Mem.mem(Rbp.rbp, -8, 8))
     }
 }

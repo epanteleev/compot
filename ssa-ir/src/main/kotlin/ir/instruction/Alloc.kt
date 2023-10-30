@@ -6,7 +6,7 @@ import ir.types.*
 class Alloc(name: String, ty: Type):
     ValueInstruction(name, ty.ptr(), arrayOf()) {
     override fun dump(): String {
-        return "%$identifier = alloc $tp"
+        return "%$identifier = alloc ${type().dereference()}"
     }
 
     override fun type(): PointerType {

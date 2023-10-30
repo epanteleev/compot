@@ -45,7 +45,7 @@ class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
     }
 }
 
-class ExternFunction(name: String, returnType: Type, arguments: List<Type>):
+class ExternFunction internal constructor(name: String, returnType: Type, arguments: List<Type>):
     AnyFunctionPrototype(name, returnType, arguments) {
     override fun toString(): String {
         return "extern ${shortName()}"

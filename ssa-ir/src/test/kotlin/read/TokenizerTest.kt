@@ -12,7 +12,7 @@ class TokenizerTest {
         assertEquals(Identifier("abs", 1,0), iterator.next())
         assertEquals(Equal(1, 4), iterator.next())
         assertEquals(Identifier("add", 1, 6), iterator.next())
-        assertEquals(TypeToken("u64", 0, 1,10), iterator.next())
+        assertEquals(PrimitiveTypeToken("u64", 0, 1,10), iterator.next())
         assertEquals(IntValue(3, 1, 14), iterator.next())
         assertEquals(Comma(1, 15), iterator.next())
         assertEquals(ValueInstructionToken("1", 1, 17), iterator.next())
@@ -30,7 +30,7 @@ class TokenizerTest {
         assertTrue(iterator.hasNext())
         assertEquals(Identifier("gep", 1, 3), iterator.next())
         assertTrue(iterator.hasNext())
-        assertEquals(TypeToken("u64", 2, 1, 7), iterator.next())
+        assertEquals(PrimitiveTypeToken("u64", 2, 1, 7), iterator.next())
         assertTrue(iterator.hasNext())
         assertEquals(ValueInstructionToken("129", 1, 13), iterator.next())
         assertTrue(iterator.hasNext())
@@ -45,7 +45,7 @@ class TokenizerTest {
         assertEquals(Identifier("load", 2, 4), iterator.next())
         assertTrue(iterator.hasNext())
         assertTrue(iterator.hasNext())
-        assertEquals(TypeToken("u64", 1, 2, 9), iterator.next())
+        assertEquals(PrimitiveTypeToken("u64", 1, 2, 9), iterator.next())
         assertTrue(iterator.hasNext())
     }
 

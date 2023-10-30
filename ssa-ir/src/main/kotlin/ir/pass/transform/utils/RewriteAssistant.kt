@@ -14,11 +14,21 @@ internal object Utils {
     }
 
     fun isLoadOfLocalVariable(instruction: Instruction): Boolean {
-        return instruction is Load && instruction.operand() !is ArgumentValue
+        if (instruction !is Load) {
+            return false
+        }
+
+        val pointer = instruction.operand()
+        return pointer !is ArgumentValue && pointer.type() is PrimitiveType
     }
 
     fun isStoreOfLocalVariable(instruction: Instruction): Boolean {
-        return instruction is Store && instruction.pointer() !is ArgumentValue
+        if (instruction !is Store) {
+            return false
+        }
+
+        val pointer = instruction.pointer()
+        return pointer is Load || pointer is Alloc
     }
 }
 

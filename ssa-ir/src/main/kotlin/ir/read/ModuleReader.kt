@@ -13,7 +13,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     private fun parseBinary(resultName: ValueInstructionToken, op: ArithmeticBinaryOp) {
-        val resultType = iterator.expect<TypeToken>("result type")
+        val resultType = iterator.expect<PrimitiveTypeToken>("result type")
         val first      = parseOperand("first operand")
         iterator.expect<Comma>("','")
 
@@ -22,19 +22,19 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     private fun parseLoad(resultName: ValueInstructionToken) {
-        val typeToken    = iterator.expect<TypeToken>("loaded type")
+        val typeToken    = iterator.expect<PrimitiveTypeToken>("loaded type")
         val pointerToken = iterator.expect<ValueInstructionToken>("pointer")
 
         builder.load(resultName, pointerToken, typeToken)
     }
 
     private fun parseStackAlloc(resultName: ValueInstructionToken) {
-        val typeToken = iterator.expect<TypeToken>("loaded type")
+        val typeToken = iterator.expect<PrimitiveTypeToken>("loaded type")
         builder.stackAlloc(resultName, typeToken)
     }
 
     private fun parseStore() {
-        val type         = iterator.expect<TypeToken>("stored value type")
+        val type         = iterator.expect<PrimitiveTypeToken>("stored value type")
         val pointerToken = iterator.expect<ValueInstructionToken>("pointer")
 
         iterator.expect<Comma>("','")
@@ -43,16 +43,16 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     private fun parseRet() {
-        val retType     = iterator.expect<TypeToken>("return type")
+        val retType     = iterator.expect<PrimitiveTypeToken>("return type")
         val returnValue = parseOperand("value or literal")
 
         builder.ret(returnValue, retType)
     }
 
     private fun parseCall(currentTok: ValueInstructionToken?) {
-        val functionReturnType = iterator.expect<TypeToken>("function type")
+        val functionReturnType = iterator.expect<PrimitiveTypeToken>("function type")
         val functionName       = iterator.expect<Identifier>("function name")
-        val argumentsType      = arrayListOf<TypeToken>()
+        val argumentsType      = arrayListOf<PrimitiveTypeToken>()
         val argumentValue      = arrayListOf<ValueToken>()
 
         iterator.expect<OpenParen>("'('")
@@ -63,7 +63,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
             }
 
             iterator.expect<Colon>("':'")
-            val type = iterator.expect<TypeToken>("argument type")
+            val type = iterator.expect<PrimitiveTypeToken>("argument type")
 
             argumentValue.add(valueToken)
             argumentsType.add(type)
@@ -87,7 +87,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     private fun parseCast(resultName: ValueInstructionToken, castType: CastType) {
-        val castToken      = iterator.expect<TypeToken>("cast type")
+        val castToken      = iterator.expect<PrimitiveTypeToken>("cast type")
         val castValueToken = iterator.expect<ValueInstructionToken>("cast value")
 
         builder.cast(resultName, castValueToken, castToken, castType, castToken) //Todo
@@ -95,7 +95,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
 
     private fun parseCmp(resultTypeToken: ValueInstructionToken) {
         val compareTypeToken = iterator.expect<Identifier>("compare type")
-        val resultType       = iterator.expect<TypeToken>("result type")
+        val resultType       = iterator.expect<PrimitiveTypeToken>("result type")
         val first            = iterator.expect<ValueToken>("compare operand")
         iterator.expect<Comma>("','")
         val second           = iterator.expect<ValueToken>("compare operand")
@@ -104,7 +104,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     private fun parsePhi(resultTypeToken: ValueInstructionToken) {
-        val type = iterator.expect<TypeToken>("operands type")
+        val type = iterator.expect<PrimitiveTypeToken>("operands type")
 
         iterator.expect<OpenSquareBracket>("'['")
         val labels = arrayListOf<Identifier>()
@@ -141,7 +141,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
             } else {
                 throw ParseErrorException("'label'", labelOrType)
             }
-        } else if (labelOrType is TypeToken) {
+        } else if (labelOrType is PrimitiveTypeToken) {
             // br {cmpValue} label {trueLabel}, label {falseLabel}
             val cmpValue = iterator.expect<ValueInstructionToken>("value type")
             if (iterator.expect<Identifier>("'label'").string != "label") {
@@ -163,10 +163,10 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
 
     private fun parseGep(resultName: ValueInstructionToken) {
         //%$identifier = gep $tp {source}, ${index.type} ${index}
-        val sourceType = iterator.expect<TypeToken>("type")
+        val sourceType = iterator.expect<PrimitiveTypeToken>("type")
         val source     = iterator.expect<ValueInstructionToken>("source value")
         iterator.expect<Comma>("comma")
-        val indexType  = iterator.expect<TypeToken>("index type")
+        val indexType  = iterator.expect<PrimitiveTypeToken>("index type")
         val index      = iterator.expect<ValueToken>("index")
 
         builder.gep(resultName, source, sourceType, index, indexType)
@@ -278,14 +278,14 @@ class ModuleReader(string: String) {
 
     private fun parseExtern() {
         //extern <returnType> <function name> ( <type1>, <type2>, ...)
-        val returnType = tokenIterator.expect<TypeToken>("return type")
+        val returnType = tokenIterator.expect<PrimitiveTypeToken>("return type")
         val functionName = parseFunctionName()
 
         tokenIterator.expect<OpenParen>("'('")
 
-        val argumentsType = arrayListOf<TypeToken>()
+        val argumentsType = arrayListOf<PrimitiveTypeToken>()
         do {
-            val type = tokenIterator.expect<TypeToken>("argument type")
+            val type = tokenIterator.expect<PrimitiveTypeToken>("argument type")
             argumentsType.add(type)
 
             val comma = tokenIterator.next("','")
@@ -303,11 +303,11 @@ class ModuleReader(string: String) {
 
     private fun parseFunction() {
         // define <returnType> <functionName>(<value1>:<type1>, <value2>:<type2>,...)
-        val returnType = tokenIterator.expect<TypeToken>("return type")
+        val returnType = tokenIterator.expect<PrimitiveTypeToken>("return type")
         val functionName = parseFunctionName()
 
         tokenIterator.expect<OpenParen>("'('")
-        val argumentsType = arrayListOf<TypeToken>()
+        val argumentsType = arrayListOf<PrimitiveTypeToken>()
         val argumentValue = arrayListOf<ValueInstructionToken>()
 
         do {
@@ -320,7 +320,7 @@ class ModuleReader(string: String) {
             }
 
             tokenIterator.expect<Colon>("':'")
-            val type = tokenIterator.expect<TypeToken>("argument type")
+            val type = tokenIterator.expect<PrimitiveTypeToken>("argument type")
 
             argumentValue.add(value)
             argumentsType.add(type)

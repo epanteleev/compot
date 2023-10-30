@@ -152,7 +152,11 @@ class CodeEmitter(private val data: FunctionData,
             value = objFunc.mov(value, temp2(value.size))
         }
 
-        objFunc.mov(value, pointer)
+        when (pointer) {
+            is Mem        -> objFunc.mov(value, pointer)
+            is GPRegister -> objFunc.mov(value, Mem.mem(pointer, 0, value.size))
+            else -> throw RuntimeException("unsupported pointer=$pointer")
+        }
     }
 
     private fun emitLoad(instruction: Load) {
@@ -252,6 +256,43 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
+    private fun emitGep(gep: GetElementPtr) {
+        val source = valueToRegister.operand(gep.source())
+        val index  = valueToRegister.operand(gep.index())
+        val dest   = valueToRegister.operand(gep)
+
+        val indexReg = when (index) {
+            is Mem -> objFunc.mov(index, temp2(source.size))
+            is Imm -> index
+            else   -> index
+        }
+
+        val destReg = if (dest is Mem) {
+            objFunc.mov(dest, temp2(dest.size))
+        } else {
+            dest as Register
+        }
+
+        val sourceReg = if (source is Mem) {
+            when (indexReg) {
+                is GPRegister -> {
+                    Mem.mem(source.base, source.offset, indexReg, gep.type().size().toLong(), dest.size)
+                }
+                is Imm -> {
+                    val offset = indexReg.value * gep.type().dereference().size()
+                    Mem.mem(source.base, source.offset + offset, dest.size)
+                }
+                else -> {
+                    throw RuntimeException("error")
+                }
+            }
+        } else {
+            source
+        }
+
+        objFunc.lea(sourceReg, destReg)
+    }
+
     private fun emitBasicBlock(bb: Block, map: Map<Callable, OrderedLocation>) {
         for (instruction in bb) {
             when (instruction) {
@@ -269,7 +310,8 @@ class CodeEmitter(private val data: FunctionData,
                 is DownStackFrame   -> emitDownStackFrame(instruction, map)
                 is UpStackFrame     -> emitUpStackFrame(instruction, map)
                 is Phi              -> {/* skip */}
-                is Alloc       -> {/* skip */}
+                is Alloc            -> {/* skip */}
+                is GetElementPtr    -> emitGep(instruction)
                 else                -> println("Unsupported: $instruction")
             }
         }

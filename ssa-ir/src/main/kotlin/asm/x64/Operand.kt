@@ -1,7 +1,5 @@
 package asm.x64
 
-import java.lang.RuntimeException
-
 interface AnyOperand {
     val size: Int
 }
@@ -815,7 +813,7 @@ enum class Ymm5(override val size: Int): FPURegister {
     }
 }
 
-open class Mem(protected open val base: GPRegister, open val offset: Long, override val size: Int): Operand {
+open class Mem protected constructor(open val base: GPRegister, open val offset: Long, override val size: Int): Operand {
     override fun toString(): String {
         return if (offset == 0L) {
             "($base)"
@@ -825,7 +823,7 @@ open class Mem(protected open val base: GPRegister, open val offset: Long, overr
     }
 
     override fun hashCode(): Int {
-        return offset.toInt() + size
+        return offset.hashCode() + size
     }
 
     override fun equals(other: Any?): Boolean {
@@ -838,11 +836,32 @@ open class Mem(protected open val base: GPRegister, open val offset: Long, overr
         if (offset != other.offset) return false
         return size == other.size
     }
+
+    companion object {
+        fun mem(base: GPRegister, offset: Long, size: Int): Mem {
+            return Mem(base, offset, size)
+        }
+
+        fun mem(base: GPRegister, offset: Long, reg: GPRegister, const: Long, size: Int): Mem {
+            return Mem4(base, offset, reg, const, size)
+        }
+    }
+}
+
+class Mem4 internal constructor(override val base: GPRegister, override val offset: Long, val reg: GPRegister, val const: Long, override val size: Int):
+    Mem(base, offset, size) {
+    override fun toString(): String {
+        return if (offset == 0L) {
+            "($base, $reg, $const)"
+        } else {
+            "$offset($base, $reg, $const)"
+        }
+    }
 }
 
 class ArgumentSlot(override val base: GPRegister, override val offset: Long, override val size: Int): Mem(base, offset, size)
 
-class Imm(val value: Long, override val size: Int): AnyOperand {
+data class Imm(val value: Long, override val size: Int): AnyOperand {
     override fun toString(): String {
         return "$$value"
     }

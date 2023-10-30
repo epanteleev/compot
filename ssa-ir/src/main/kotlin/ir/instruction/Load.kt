@@ -2,6 +2,8 @@ package ir.instruction
 
 import ir.Value
 import ir.types.PointerType
+import ir.types.PrimitiveType
+import ir.types.Type
 
 class Load(name: String, ptr: Value):
     ValueInstruction(name, (ptr.type() as PointerType).dereference(), arrayOf(ptr)) {
@@ -15,6 +17,10 @@ class Load(name: String, ptr: Value):
         }
 
         return operands[0]
+    }
+
+    override fun type(): PrimitiveType {
+        return tp as PrimitiveType
     }
 
     override fun copy(newUsages: List<Value>): Load {

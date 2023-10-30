@@ -29,11 +29,6 @@ object TypeCheck {
     }
 
     fun checkLoad(load: Load): Boolean {
-        val type = load.type()
-        if (type is VoidType || type is BooleanType) {
-            return false
-        }
-
         val ptrType = load.operand().type()
         if (ptrType !is PointerType) {
             return false

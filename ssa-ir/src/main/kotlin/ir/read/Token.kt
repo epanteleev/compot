@@ -35,7 +35,9 @@ data class ValueInstructionToken(val name: String, override val line: Int, overr
     }
 }
 
-data class TypeToken(private val type: String, private val indirection: Int, override val line: Int, override val pos: Int): Token(line, pos) {
+abstract class TypeToken(override val line: Int, override val pos: Int) : Token(line, pos)
+
+data class PrimitiveTypeToken(private val type: String, private val indirection: Int, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
     override fun message(): String {
         val stars = "*".repeat(indirection)
         return "type '$type$stars'"
@@ -75,6 +77,12 @@ data class TypeToken(private val type: String, private val indirection: Int, ove
             "i64"  to Type.I16,
             "void" to Type.Void
         )
+    }
+}
+
+data class ArrayTypeToken(val size: Int, val type: TypeToken, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+    override fun message(): String {
+        return "<$size x ${type.message()}>"
     }
 }
 
@@ -153,5 +161,17 @@ data class OpenSquareBracket(override val line: Int, override val pos: Int): Tok
 data class CloseSquareBracket(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         return "']'"
+    }
+}
+
+data class OpenTriangleBracket(override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "'<'"
+    }
+}
+
+data class CloseTriangleBracket(override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "'>'"
     }
 }

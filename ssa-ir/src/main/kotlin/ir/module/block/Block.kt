@@ -4,6 +4,7 @@ import ir.*
 import ir.instruction.*
 import ir.module.ModuleException
 import ir.module.auxiliary.TypeCheck
+import ir.types.ArrayType
 import ir.types.PointerType
 import ir.types.PrimitiveType
 import ir.types.Type
@@ -250,7 +251,9 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     }
 
     override fun gep(source: Value, index: Value): GetElementPtr {
-        val gep = withOutput { it: Int -> GetElementPtr(n(it), source.type(), source, index) }
+        val elementType = (source.type() as PointerType).asDereference<ArrayType>().type
+
+        val gep = withOutput { it: Int -> GetElementPtr(n(it), elementType.ptr(), source, index) }
         if (!TypeCheck.checkGep(gep)) {
             throw ModuleException("Inconsistent types: ${gep.dump()}")
         }

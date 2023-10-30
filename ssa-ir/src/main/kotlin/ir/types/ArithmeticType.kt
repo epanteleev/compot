@@ -1,3 +1,3 @@
 package ir.types
 
-interface ArithmeticType
+interface ArithmeticType: Type

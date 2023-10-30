@@ -69,6 +69,11 @@ class ObjFunction(private val name: String) {
         return activeContext.label.id
     }
 
+    fun lea(first: AnyOperand, destination: Register): Operand {
+        addInstruction(Lea(first, destination))
+        return destination
+    }
+
     fun add(first: AnyOperand, destination: Register): Operand {
         addInstruction(Add(first, destination))
         return destination
