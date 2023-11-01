@@ -309,8 +309,8 @@ class CodeEmitter(private val data: FunctionData,
                 is Copy             -> emitCopy(instruction)
                 is DownStackFrame   -> emitDownStackFrame(instruction, map)
                 is UpStackFrame     -> emitUpStackFrame(instruction, map)
-                is Phi              -> {/* skip */}
-                is Alloc            -> {/* skip */}
+                is Phi              -> { /* skip */ }
+                is Alloc            -> { /* skip */ }
                 is GetElementPtr    -> emitGep(instruction)
                 else                -> println("Unsupported: $instruction")
             }
