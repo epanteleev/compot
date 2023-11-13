@@ -7,7 +7,7 @@ import ir.types.ArrayType
 import ir.types.Type
 import startup.Driver
 
-fun main(args: Array<String>) {
+fun main() {
     val builder = ModuleBuilder.create()
     val proto = builder.createExternFunction("printIntArray", Type.Void, arrayListOf(Type.I32.ptr(), Type.I32))
 

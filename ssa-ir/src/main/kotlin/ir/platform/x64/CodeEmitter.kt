@@ -274,13 +274,14 @@ class CodeEmitter(private val data: FunctionData,
         }
 
         val sourceReg = if (source is Mem) {
+            val pointer = gep.type()
             when (indexReg) {
                 is GPRegister -> {
-                    Mem.mem(source.base, source.offset, indexReg, gep.type().size().toLong(), dest.size)
+                    Mem.mem(source.base, source.offset, indexReg(source.base.size), pointer.dereference().size().toLong(), pointer.size())
                 }
                 is Imm -> {
                     val offset = indexReg.value * gep.type().dereference().size()
-                    Mem.mem(source.base, source.offset + offset, dest.size)
+                    Mem.mem(source.base, source.offset + offset, pointer.dereference().size())
                 }
                 else -> {
                     throw RuntimeException("error")

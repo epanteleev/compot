@@ -842,19 +842,19 @@ open class Mem protected constructor(open val base: GPRegister, open val offset:
             return Mem(base, offset, size)
         }
 
-        fun mem(base: GPRegister, offset: Long, reg: GPRegister, const: Long, size: Int): Mem {
-            return Mem4(base, offset, reg, const, size)
+        fun mem(base: GPRegister, offset: Long, index: GPRegister, disp: Long, size: Int): Mem {
+            return Mem4(base, offset, index, disp, size)
         }
     }
 }
 
-class Mem4 internal constructor(override val base: GPRegister, override val offset: Long, val reg: GPRegister, val const: Long, override val size: Int):
+class Mem4 internal constructor(override val base: GPRegister, override val offset: Long, val index: GPRegister, val displacement: Long, override val size: Int):
     Mem(base, offset, size) {
     override fun toString(): String {
         return if (offset == 0L) {
-            "($base, $reg, $const)"
+            "($base, $index, $displacement)"
         } else {
-            "$offset($base, $reg, $const)"
+            "$offset($base, $index, $displacement)"
         }
     }
 }

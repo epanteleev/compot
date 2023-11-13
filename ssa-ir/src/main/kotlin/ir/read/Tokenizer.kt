@@ -40,17 +40,17 @@ class Tokenizer(val data: String) {
         return data[globalPosition]
     }
 
-    private fun skipComments() {
-        nextChar()
-        var ch = getChar()
-        while (!isEnd() && ch != '\n') {
-            nextChar()
-            ch = getChar()
-        }
-        nextLine()
-    }
-
     internal fun skipWhitespace() {
+        fun skipComments() {
+            nextChar()
+            var ch = getChar()
+            while (!isEnd() && ch != '\n') {
+                nextChar()
+                ch = getChar()
+            }
+            nextLine()
+        }
+
         if (isEnd()) {
             return
         }
@@ -96,7 +96,28 @@ class Tokenizer(val data: String) {
         }
     }
 
-    private fun readType(): Token? {
+    private fun readType(): TypeToken? {
+        if (getChar() == '<') {
+            nextChar()
+            val tok = readType()!!
+            skipWhitespace()
+
+            assert(getChar() == 'x')
+            nextChar()
+            skipWhitespace()
+            val begin = globalPosition
+            while (!isEnd() && getChar().isDigit()) {
+                nextChar()
+            }
+            val size = data.substring(begin, globalPosition)
+
+            skipWhitespace()
+            assert(getChar() == '>')
+            nextChar()
+
+            return ArrayTypeToken(size.toInt(), tok, line, pos)
+        }
+
         val begin = globalPosition
         nextChar()
         val ch = getChar()
@@ -166,7 +187,6 @@ class Tokenizer(val data: String) {
         }
     }
 
-
     internal fun nextToken(): Token {
         skipWhitespace()
         val ch = getChar()
@@ -181,8 +201,6 @@ class Tokenizer(val data: String) {
             '.' -> Dot(line, pos)
             '[' -> OpenSquareBracket(line, pos)
             ']' -> CloseSquareBracket(line, pos)
-            '<' -> OpenTriangleBracket(line, pos)
-            '>' -> CloseTriangleBracket(line, pos)
             else -> null
         }
         if (tok != null) {
@@ -192,7 +210,7 @@ class Tokenizer(val data: String) {
 
         return if (ch.isDigit()) {
             readNumberOrIdentifier()
-        } else if (ch == 'u' || ch == 'i' || ch == 'f') {
+        } else if (ch == 'u' || ch == 'i' || ch == 'f' || ch == '<') {
             readType() ?:
                 readIdentifierOrKeywordOrType()
         } else if (ch.isLetter()) {

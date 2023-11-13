@@ -35,7 +35,9 @@ data class ValueInstructionToken(val name: String, override val line: Int, overr
     }
 }
 
-abstract class TypeToken(override val line: Int, override val pos: Int) : Token(line, pos)
+abstract class TypeToken(override val line: Int, override val pos: Int) : Token(line, pos) {
+    abstract fun type(): Type
+}
 
 data class PrimitiveTypeToken(private val type: String, private val indirection: Int, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
     override fun message(): String {
@@ -47,7 +49,7 @@ data class PrimitiveTypeToken(private val type: String, private val indirection:
         return matchType[type] ?: throw RuntimeException("Internal error: type=$type")
     }
 
-    fun type(): Type {
+    override fun type(): Type {
         return if (indirection == 0) {
             kind()
         } else {
@@ -81,8 +83,12 @@ data class PrimitiveTypeToken(private val type: String, private val indirection:
 }
 
 data class ArrayTypeToken(val size: Int, val type: TypeToken, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+    override fun type(): Type {
+        return ArrayType(type.type(), size)
+    }
+
     override fun message(): String {
-        return "<$size x ${type.message()}>"
+        return "<${type.message()}, $size>"
     }
 }
 

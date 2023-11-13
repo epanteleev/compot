@@ -2,6 +2,7 @@ extern void printIntArray(i32*, i32)
 
 define u64 main() {
 entry:
+        %retVal = alloc i32
 	%array = alloc <i32 x 5>
 	%zero = gep i32* %array, i32 0
 	store i32* %zero, 0
@@ -14,8 +15,10 @@ entry:
 	%forth = gep i32* %array, i32 4
         store i32* %forth, 4
 	%begin = gep i32* %array, i32 0
-	call void printIntArray(%begin: i32*, 5: i32)
-	ret i32 0
+        store i32* %retVal, 154
+        %ret = load i32 %retVal
+        call void printIntArray(%begin: i32*, 5: i32)	
+        ret i32 %retVal
 }
 
 

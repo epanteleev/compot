@@ -42,9 +42,9 @@ class FunctionDataBuilderWithContext private constructor(
                 is FloatValue -> Constant.of(ty, it.fp)
                 is ValueInstructionToken -> {
                     val operand = nameMap[it.name] ?:
-                        throw RuntimeException("in ${it.position()} undefined value")
+                        throw RuntimeException("in ${it.position()} undefined value ${it.name}")
 
-                    if (operand.type() != ty) {
+                    if (operand.type() != ty && operand.type() !is PointerType) {
                         throw ParseErrorException("must be the same type: in_file=$ty, find=${operand.type()} in ${token.position()}")
                     }
 
@@ -194,7 +194,7 @@ class FunctionDataBuilderWithContext private constructor(
         bb.branchCond(value, onTrue, onFalse)
     }
 
-    fun stackAlloc(name: ValueInstructionToken, ty: PrimitiveTypeToken): Alloc {
+    fun stackAlloc(name: ValueInstructionToken, ty: TypeToken): Alloc {
         return memorize(name, bb.alloc(ty.type()))
     }
 

@@ -11,6 +11,9 @@
     <name>ssa-construction</name>
     <packaging>pom</packaging>
 
+    <properties>
+        <kotlin.compiler.languageVersion>2.0</kotlin.compiler.languageVersion>
+    </properties>
     <modules>
         <module>ssa-ir</module>
         <module>ssa-tests</module>

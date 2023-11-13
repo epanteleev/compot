@@ -9,7 +9,7 @@ import ir.pass.transform.Mem2Reg
 import ir.pass.transform.utils.JoinPointSet
 import ir.types.Type
 
-fun main(args: Array<String>) {
+fun main() {
     val builder = ModuleBuilder.create()
 
     builder.createFunction("hello", Type.U64, arrayListOf(Type.U16.ptr(), Type.U64.ptr())).apply {

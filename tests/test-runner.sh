@@ -63,5 +63,11 @@ run_test clamp "9
 8"
 
 compile_test fill_in_array0
-run_test fill_in_array0 "12345"
+run_test fill_in_array0 "01234"
+
+compile_test fill_in_array1
+run_test fill_in_array1 "01234"
+
+compile_test fill_in_array2
+run_test fill_in_array2 "01234"
 

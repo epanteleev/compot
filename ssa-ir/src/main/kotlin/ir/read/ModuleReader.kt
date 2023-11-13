@@ -29,7 +29,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     private fun parseStackAlloc(resultName: ValueInstructionToken) {
-        val typeToken = iterator.expect<PrimitiveTypeToken>("loaded type")
+        val typeToken = iterator.expect<TypeToken>("loaded type")
         builder.stackAlloc(resultName, typeToken)
     }
 
