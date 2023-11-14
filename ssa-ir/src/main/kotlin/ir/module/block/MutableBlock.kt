@@ -17,6 +17,7 @@ interface MutableBlock {
     fun branchCond(value: Value, onTrue: Block, onFalse: Block)
     fun alloc(ty: Type): Alloc
     fun ret(value: Value)
+    fun retVoid()
     fun gep(source: Value, index: Value): GetElementPtr
     fun cast(value: Value, ty: Type, cast: CastType): Cast
     fun select(cond: Value, onTrue: Value, onFalse: Value): Select

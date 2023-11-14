@@ -203,6 +203,10 @@ class FunctionDataBuilderWithContext private constructor(
         bb.ret(value)
     }
 
+    fun retVoid() {
+        bb.retVoid()
+    }
+
     fun gep(name: ValueInstructionToken, sourceName: ValueToken, sourceType: PrimitiveTypeToken, indexName: ValueToken, indexType: PrimitiveTypeToken): GetElementPtr {
         val source = getValue(sourceName, sourceType.type())
         val index  = getValue(indexName, indexType.type())

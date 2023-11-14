@@ -1,8 +1,12 @@
 package ir.types
 
-data class ArrayType(val type: Type, val size: Int) : Type {
+data class ArrayType(private val type: Type, val size: Int) : Type {
     override fun ptr(): Type {
         return PointerType(this)
+    }
+
+    fun elementType(): Type {
+        return type
     }
 
     override fun size(): Int {
@@ -10,6 +14,6 @@ data class ArrayType(val type: Type, val size: Int) : Type {
     }
 
     override fun toString(): String {
-        return "<$size x $type>"
+        return "<$type x $size>"
     }
 }

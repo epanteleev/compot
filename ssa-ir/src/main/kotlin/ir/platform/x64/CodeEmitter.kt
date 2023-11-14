@@ -86,10 +86,14 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     private fun emitReturn(ret: Return) {
-        val returnType = data.prototype.type()
-        if (returnType is ArithmeticType || returnType is PointerType) {
-            val value = valueToRegister.operand(ret.value())
-            objFunc.mov(value, temp1(value.size))
+        if (ret is ReturnValue) {
+            val returnType = data.prototype.type()
+            if (returnType is ArithmeticType || returnType is PointerType) {
+                val value = valueToRegister.operand(ret.value())
+                objFunc.mov(value, temp1(value.size))
+            } else {
+                TODO()
+            }
         }
 
         emitEpilogue()
@@ -227,7 +231,12 @@ class CodeEmitter(private val data: FunctionData,
             objFunc.mov(operand, temp)
             objFunc.mov(temp, result)
         } else {
-            objFunc.mov(operand, result as Operand)
+            result as Operand
+            if (operand is Imm) {
+                objFunc.mov(operand, result(8))
+            } else {
+                objFunc.mov(operand, result)
+            }
         }
     }
 
@@ -273,8 +282,8 @@ class CodeEmitter(private val data: FunctionData,
             dest as Register
         }
 
+        val pointer = gep.type()
         val sourceReg = if (source is Mem) {
-            val pointer = gep.type()
             when (indexReg) {
                 is GPRegister -> {
                     Mem.mem(source.base, source.offset, indexReg(source.base.size), pointer.dereference().size().toLong(), pointer.size())
@@ -288,7 +297,19 @@ class CodeEmitter(private val data: FunctionData,
                 }
             }
         } else {
-            source
+            source as GPRegister
+            when (indexReg) {
+                is GPRegister -> {
+                    Mem.mem(source, 0, indexReg(source.size), pointer.dereference().size().toLong(), pointer.size())
+                }
+                is Imm -> {
+                    val offset = indexReg.value * gep.type().dereference().size()
+                    Mem.mem(source, offset, pointer.dereference().size())
+                }
+                else -> {
+                    throw RuntimeException("error")
+                }
+            }
         }
 
         objFunc.lea(sourceReg, destReg)

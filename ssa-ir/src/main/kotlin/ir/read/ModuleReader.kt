@@ -6,10 +6,11 @@ import ir.module.Module
 import ir.read.bulder.FunctionDataBuilderWithContext
 import ir.read.bulder.ModuleBuilderWithContext
 import ir.read.bulder.ParseErrorException
+import ir.types.Type
 
 private class FunctionBlockReader private constructor(private val iterator: TokenIterator, private val builder: FunctionDataBuilderWithContext) {
-    private fun parseOperand(errorMessage: String): ValueToken {
-        return iterator.expect<ValueToken>(errorMessage)
+    private fun parseOperand(expectMessage: String): ValueToken {
+        return iterator.expect<ValueToken>(expectMessage)
     }
 
     private fun parseBinary(resultName: ValueInstructionToken, op: ArithmeticBinaryOp) {
@@ -44,8 +45,12 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
 
     private fun parseRet() {
         val retType     = iterator.expect<PrimitiveTypeToken>("return type")
-        val returnValue = parseOperand("value or literal")
+        if (retType.type() == Type.Void) {
+            builder.retVoid()
+            return
+        }
 
+        val returnValue = parseOperand("value or literal")
         builder.ret(returnValue, retType)
     }
 

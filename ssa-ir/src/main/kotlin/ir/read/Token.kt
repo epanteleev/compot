@@ -76,7 +76,7 @@ data class PrimitiveTypeToken(private val type: String, private val indirection:
             "i8"   to Type.I8,
             "i16"  to Type.I16,
             "i32"  to Type.I32,
-            "i64"  to Type.I16,
+            "i64"  to Type.I64,
             "void" to Type.Void
         )
     }

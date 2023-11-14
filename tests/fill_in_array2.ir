@@ -1,33 +1,34 @@
-extern void printIntArray(i32*, i32)
+extern void printLongArray(i64*, i64)
 
 define i32 main() {
 entry:
   %retval = alloc i32
-  %array  = alloc <i32 x 5>
-  %i      = alloc i32
+  %array  = alloc <i64 x 5>
+  %i      = alloc i64
   store i32* %retval, 0
-  store i32* %i, 0
+  store i64* %i, 0
   br label forCond
 
 forCond:
-  %0 = load i32 %i
-  %cmp = icmp slt i32 %0, 5
+  %0 = load i64 %i
+  %cmp = icmp slt i64 %0, 5
   br u1 %cmp label forBody, label forEnd
 
 forBody:
-  %1 = load i32 %i
-  %arrayidx = gep i32 %array, i32 %1
-  store i32* %arrayidx, %1
+  %1 = load i64 %i
+  %arrayidx = gep i64* %array, i64 %1
+  store i64* %arrayidx, %1
   br label forInc
 
 forInc:
-  %3 = load i32 %i
-  %inc = add i32 %3, 1
-  store i32* %i, %inc
+  %3 = load i64 %i
+  %inc = add i64 %3, 1
+  store i64* %i, %inc
   br label forCond
 
 forEnd:
-  %arraydecay = gep i32* %array, i32 00
-  call void printIntArray(%arraydecay: i32*, 5: i32)
-  ret i32 0
+  %arraydecay = gep i64* %array, i64 0
+  call void printLongArray(%arraydecay: i64*, 5: i64)
+  %r = load i32 %retval
+  ret i32 %r
 }

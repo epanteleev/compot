@@ -4,10 +4,7 @@ import ir.*
 import ir.instruction.*
 import ir.module.ModuleException
 import ir.module.auxiliary.TypeCheck
-import ir.types.ArrayType
-import ir.types.PointerType
-import ir.types.PrimitiveType
-import ir.types.Type
+import ir.types.*
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) : MutableBlock, AnyBlock {
     private val instructions = mutableListOf<Instruction>()
@@ -247,13 +244,32 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     }
 
     override fun ret(value: Value) {
-        add(Return(value))
+        add(ReturnValue(value))
+    }
+
+    override fun retVoid() {
+        add(retVoid)
     }
 
     override fun gep(source: Value, index: Value): GetElementPtr {
-        val elementType = (source.type() as PointerType).asDereference<ArrayType>().type
+        fun instructionType(sourceType: Type): Type {
+            return when (sourceType) {
+                is ArrayType     -> sourceType.elementType().ptr()
+                is PrimitiveType -> sourceType.ptr()
+                else -> { throw RuntimeException("I haven't known yet... ") }
+            }
+        }
 
-        val gep = withOutput { it: Int -> GetElementPtr(n(it), elementType.ptr(), source, index) }
+        val srcType = source.type()
+        require(srcType is PointerType) {
+            "Inconsistent types: expected pointer type, but $srcType found"
+        }
+        val indexType = index.type()
+        require( index is Constant || indexType == Type.U64 || indexType == Type.I64) {
+            "index type for non-constants should be either u64 or i64, but index.type=$indexType"
+        }
+
+        val gep = withOutput { it: Int -> GetElementPtr(n(it), instructionType(srcType.type), source, index) }
         if (!TypeCheck.checkGep(gep)) {
             throw ModuleException("Inconsistent types: ${gep.dump()}")
         }
@@ -358,6 +374,8 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     }
 
     companion object {
+        private val retVoid = ReturnVoid()
+
         fun insertBlock(block: Block, newBlock: Block, predecessor: Block) {
             predecessor.updateSuccessor(block, newBlock)
             block.removePredecessors(predecessor)

@@ -1,0 +1,39 @@
+extern void printIntArray(i32*, i32)
+extern i32* malloc(i32)
+extern void free(i32*)
+
+define i32 main() {
+  %array = call i32* malloc(40: i32)
+  call void fill_in_array(%array: i32*, 10: i32)
+  call void free(%array: i32*)
+  ret i32 0
+}
+
+define void fill_in_array(%array: i32*, %len: i32) {
+entry:
+  %i = alloc i32
+  store i32* %i, 0
+  br label forCond
+
+forCond:
+  %0 = load i32 %i
+  %cmp = icmp slt i32 %0, %len
+  br u1 %cmp label forBody, label forEnd
+
+forBody:
+  %1 = load i32 %i
+  %arrayidx = gep i32* %array, i32 %1
+  store i32* %arrayidx, %1
+  br label forInc
+
+forInc:
+  %3 = load i32 %i
+  %inc = add i32 %3, 1
+  store i32* %i, %inc
+  br label forCond
+
+forEnd:
+  %arraydecay = gep i32* %array, i32 0
+  call void printIntArray(%arraydecay: i32*, %len: i32)
+  ret void
+}

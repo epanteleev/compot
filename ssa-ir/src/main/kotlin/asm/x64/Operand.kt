@@ -3,7 +3,9 @@ package asm.x64
 interface AnyOperand {
     val size: Int
 }
-interface Operand: AnyOperand
+interface Operand: AnyOperand {
+    operator fun invoke(size: Int): Operand
+}
 
 interface Register: Operand {
     val isCallERSave: Boolean
@@ -12,11 +14,11 @@ interface Register: Operand {
 }
 
 interface FPURegister: Register {
-    operator fun invoke(size: Int): FPURegister
+    override fun invoke(size: Int): FPURegister
 }
 
 interface GPRegister: Register {
-    operator fun invoke(size: Int): GPRegister
+    override fun invoke(size: Int): GPRegister
 }
 
 enum class Rax(override val size: Int): GPRegister {
@@ -826,6 +828,10 @@ open class Mem protected constructor(open val base: GPRegister, open val offset:
         return offset.hashCode() + size
     }
 
+    override fun invoke(size: Int): Operand {
+        return Mem(base, offset, size)
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -856,6 +862,10 @@ class Mem4 internal constructor(override val base: GPRegister, override val offs
         } else {
             "$offset($base, $index, $displacement)"
         }
+    }
+
+    override fun invoke(size: Int): Operand {
+        return Mem4(base, offset, index, displacement, size)
     }
 }
 

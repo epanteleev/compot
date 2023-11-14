@@ -69,10 +69,9 @@ class Tokenizer(val data: String) {
         }
     }
 
-    private fun readString(): String {
-        val begin = globalPosition
+    private fun readString(begin: Int = globalPosition): String {
         nextChar()
-        while (!isEnd() && getChar().isLetterOrDigit()) {
+        while (!isEnd() && (getChar().isLetterOrDigit() || getChar() == '_')) {
             nextChar()
         }
         val end = globalPosition
@@ -170,12 +169,7 @@ class Tokenizer(val data: String) {
             return FloatValue(float, line, pos)
 
         } else if (getChar().isLetter()) {
-            // Identifier
-            while (!isEnd() && !getChar().isWhitespace()) {
-                nextChar()
-            }
-
-            val string = data.substring(begin, globalPosition)
+            val string = readString(begin)
             return Identifier(string, line, pos)
 
         } else {

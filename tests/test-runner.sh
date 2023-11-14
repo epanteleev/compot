@@ -71,3 +71,5 @@ run_test fill_in_array1 "01234"
 compile_test fill_in_array2
 run_test fill_in_array2 "01234"
 
+compile_test fill_in_array3
+run_test fill_in_array3 "0123456789"

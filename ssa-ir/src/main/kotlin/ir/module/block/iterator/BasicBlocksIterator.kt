@@ -2,6 +2,7 @@ package ir.module.block.iterator
 
 import ir.module.block.Block
 import ir.instruction.Return
+import ir.instruction.ReturnVoid
 
 typealias Callback = (Block) -> Unit
 
@@ -25,7 +26,8 @@ abstract class DfsTraversalIterator(countOfBlocks: Int) : BasicBlocksIterator(co
         while (stack.isNotEmpty()) {
             val bb = stack.removeLast()
 
-            if (bb.last() is Return) {
+            val last = bb.last()
+            if (last is Return) {
                 exitBlock = bb
                 continue
             }
