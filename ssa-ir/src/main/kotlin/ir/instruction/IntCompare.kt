@@ -1,35 +1,60 @@
 package ir.instruction
 
 import ir.Value
+import ir.instruction.utils.Visitor
 import ir.types.Type
 
 enum class IntPredicate {
-    Eq,
-    Ne,
-    Ugt,
-    Uge,
-    Ult,
-    Ule,
-    Sgt,
-    Sge,
-    Slt,
-    Sle;
-
-    override fun toString(): String {
-        val name = when (this) {
-            Eq  -> "eq"
-            Ne  -> "ne"
-            Uge -> "uge"
-            Ugt -> "ugt"
-            Ult -> "ult"
-            Ule -> "ule"
-            Sgt -> "sgt"
-            Sge -> "sge"
-            Slt -> "slt"
-            Sle -> "sle"
+    Eq {
+        override fun toString(): String {
+            return "eq"
         }
-        return name
-    }
+    },
+    Ne {
+        override fun toString(): String {
+            return "ne"
+        }
+    },
+    Ugt {
+        override fun toString(): String {
+            return "ugt"
+        }
+    },
+    Uge {
+        override fun toString(): String {
+            return "uge"
+        }
+    },
+    Ult {
+        override fun toString(): String {
+            return "ult"
+        }
+    },
+    Ule {
+        override fun toString(): String {
+            return "ule"
+        }
+    },
+    Sgt {
+        override fun toString(): String {
+            return "sgt"
+        }
+    },
+    Sge {
+        override fun toString(): String {
+            return "sge"
+        }
+    },
+    Slt {
+        override fun toString(): String {
+            return "slt"
+        }
+    },
+    Sle {
+        override fun toString(): String {
+            return "sle"
+        }
+    };
 
     fun invert(): IntPredicate {
         return when (this) {
@@ -47,7 +72,7 @@ enum class IntPredicate {
     }
 }
 
-class IntCompare(name: String, a: Value, private val predicate: IntPredicate, b: Value) :
+class IntCompare private constructor(name: String, a: Value, private val predicate: IntPredicate, b: Value) :
     ValueInstruction(name, Type.U1, arrayOf(a, b)) {
     override fun dump(): String {
         return "%$identifier = icmp $predicate ${first().type()} ${first()}, ${second()}"
@@ -74,6 +99,34 @@ class IntCompare(name: String, a: Value, private val predicate: IntPredicate, b:
     }
 
     override fun copy(newUsages: List<Value>): IntCompare {
-        return IntCompare(identifier, newUsages[0], predicate, newUsages[1])
+        assert(newUsages.size == 2) {
+            "should be, but newUsages=$newUsages"
+        }
+
+        return make(identifier, newUsages[0], predicate, newUsages[1])
+    }
+
+    override fun visit(visitor: Visitor) {
+        visitor.visit(this)
+    }
+
+    companion object {
+        fun make(name: String, a: Value, predicate: IntPredicate, b: Value): IntCompare {
+            val aType = a.type()
+            val bType = b.type()
+            require(isAppropriateType(aType, bType)) {
+                "should be the same types, but a.type=$aType, b.type=$bType"
+            }
+
+            return registerUser(IntCompare(name, a, predicate, b), a, b)
+        }
+
+        private fun isAppropriateType(aType: Type, bType: Type): Boolean {
+            return aType == bType
+        }
+
+        fun isCorrect(icmp: IntCompare): Boolean {
+            return isAppropriateType(icmp.first().type(), icmp.second().type())
+        }
     }
 }

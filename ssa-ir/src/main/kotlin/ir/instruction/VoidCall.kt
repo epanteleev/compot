@@ -3,8 +3,9 @@ package ir.instruction
 import ir.Value
 import ir.types.Type
 import ir.AnyFunctionPrototype
+import ir.instruction.utils.Visitor
 
-class VoidCall(private val func: AnyFunctionPrototype, args: List<Value>):
+class VoidCall private constructor(private val func: AnyFunctionPrototype, args: List<Value>):
     Instruction(Type.Void, args.toTypedArray()),
     Callable {
     init {
@@ -45,13 +46,28 @@ class VoidCall(private val func: AnyFunctionPrototype, args: List<Value>):
 
     override fun copy(newUsages: List<Value>): VoidCall {
         assert(newUsages.size == operands.size) {
-            "should be"
+            "should be, but newUsages=$newUsages"
         }
 
-        return VoidCall(func, newUsages)
+        return make(func, newUsages)
+    }
+
+    override fun visit(visitor: Visitor) {
+        visitor.visit(this)
     }
 
     override fun type(): Type {
         return Type.Void
+    }
+
+    companion object {
+        fun make(func: AnyFunctionPrototype, args: List<Value>): VoidCall {
+            require(Callable.isAppropriateTypes(func, args)) {
+                args.joinToString(prefix = "inconsistent types, prototype='${func.shortName()}', ")
+                { "$it: ${it.type()}" }
+            }
+
+            return registerUser(VoidCall(func, args), args.iterator())
+        }
     }
 }

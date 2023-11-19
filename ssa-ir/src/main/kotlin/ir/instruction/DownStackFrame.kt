@@ -1,9 +1,11 @@
 package ir.instruction
 
 import ir.*
+import ir.instruction.utils.Visitor
 import ir.types.Type
 
-class DownStackFrame(private val callable: Callable): Instruction(Type.UNDEF, arrayOf()) {
+class DownStackFrame(private val callable: Callable):
+    Instruction(Type.UNDEF, arrayOf()) {
     fun call(): Callable {
         return callable
     }
@@ -18,6 +20,10 @@ class DownStackFrame(private val callable: Callable): Instruction(Type.UNDEF, ar
 
         other as DownStackFrame
         return other.callable == callable
+    }
+
+    override fun visit(visitor: Visitor) {
+        visitor.visit(this)
     }
 
     override fun hashCode(): Int {

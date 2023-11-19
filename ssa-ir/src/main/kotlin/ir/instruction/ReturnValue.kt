@@ -1,9 +1,11 @@
 package ir.instruction
 
 import ir.Value
+import ir.instruction.utils.Visitor
+import ir.types.*
 import ir.module.block.Block
 
-class ReturnValue(value: Value): Return(arrayOf(value)) {
+class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
     override fun dump(): String {
         return "ret ${value().type()} ${value()}"
     }
@@ -17,10 +19,33 @@ class ReturnValue(value: Value): Return(arrayOf(value)) {
     }
 
     override fun copy(usages: List<Value>, newTargets: Array<Block>): Return {
-        return ReturnValue(usages[0])
+        return make(usages[0])
     }
 
     override fun copy(newUsages: List<Value>): Return {
-        return ReturnValue(newUsages[0])
+        return make(newUsages[0])
+    }
+
+    override fun visit(visitor: Visitor) {
+        visitor.visit(this)
+    }
+
+    companion object {
+        fun make(value: Value): Return {
+            val retType = value.type()
+            require(isAppropriateType(retType)) {
+                "cannot be $retType"
+            }
+
+            return registerUser(ReturnValue(value), value)
+        }
+
+        private fun isAppropriateType(retType: Type): Boolean {
+            return retType !is VoidType && retType !is UndefinedType
+        }
+
+        fun isCorrect(retValue: ReturnValue): Boolean {
+            return isAppropriateType(retValue.value().type())
+        }
     }
 }

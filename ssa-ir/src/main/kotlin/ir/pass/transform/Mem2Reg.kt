@@ -36,7 +36,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
     private fun swapDependentPhis(bb: Block) {
         bb.phis { phi ->
             // Exchange phi functions
-            for (used in phi.usages()) {
+            for (used in phi.operands()) {
                 if (used !is Phi) {
                     continue
                 }

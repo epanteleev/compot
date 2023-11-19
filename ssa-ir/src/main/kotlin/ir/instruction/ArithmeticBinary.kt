@@ -1,46 +1,70 @@
 package ir.instruction
 
-import ir.types.PrimitiveType
 import ir.Value
-import ir.types.Type
+import ir.instruction.utils.Visitor
+import ir.types.*
 
 enum class ArithmeticBinaryOp {
-    Add,
-    Sub,
-    Mul,
-    Mod,
-    Div,
-    Shr,
-    Shl,
-    And,
-    Or,
-    Xor;
-
-    override fun toString(): String {
-        val name = when (this) {
-            Add -> "add"
-            Sub -> "sub"
-            Mul -> "mul"
-            Mod -> "mod"
-            Div -> "div"
-            Shr -> "shr"
-            Shl -> "shl"
-            And -> "and"
-            Or  -> "or"
-            Xor -> "xor"
+    Add {
+        override fun toString(): String {
+            return "add"
         }
-        return name
-    }
+    },
+    Sub {
+        override fun toString(): String {
+            return "sub"
+        }
+    },
+    Mul {
+        override fun toString(): String {
+            return "mul"
+        }
+    },
+    Mod {
+        override fun toString(): String {
+            return "mod"
+        }
+    },
+    Div {
+        override fun toString(): String {
+            return "div"
+        }
+    },
+    Shr {
+        override fun toString(): String {
+            return "shr"
+        }
+    },
+    Shl {
+        override fun toString(): String {
+            return "shl"
+        }
+    },
+    And {
+        override fun toString(): String {
+            return "and"
+        }
+    },
+    Or {
+        override fun toString(): String {
+            return "or"
+        }
+    },
+    Xor {
+        override fun toString(): String {
+            return "xor"
+        }
+    };
 }
 
-class ArithmeticBinary(name: String, tp: PrimitiveType, a: Value, val op: ArithmeticBinaryOp, b: Value):
+class ArithmeticBinary private constructor(name: String, tp: ArithmeticType, a: Value, val op: ArithmeticBinaryOp, b: Value) :
     ValueInstruction(name, tp, arrayOf(a, b)) {
     override fun dump(): String {
         return "%$identifier = $op $tp ${first()}, ${second()}"
     }
 
-    override fun type(): PrimitiveType {
-        return tp as PrimitiveType
+    override fun type(): ArithmeticType {
+        return tp as ArithmeticType
     }
 
     fun first(): Value {
@@ -60,6 +84,30 @@ class ArithmeticBinary(name: String, tp: PrimitiveType, a: Value, val op: Arithm
     }
 
     override fun copy(newUsages: List<Value>): ArithmeticBinary {
-        return ArithmeticBinary(identifier, type(), newUsages[0], op, newUsages[1])
+        return make(identifier, type(), newUsages[0], op, newUsages[1])
+    }
+
+    override fun visit(visitor: Visitor) {
+        visitor.visit(this)
+    }
+
+    companion object {
+        fun make(name: String, tp: ArithmeticType, a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
+            val aType = a.type()
+            val bType = b.type()
+            require(isAppropriateTypes(tp, aType, bType)) {
+                "operands should be arithmetic type, but tp=$tp, a.type=$aType, b.type=$bType"
+            }
+
+            return registerUser(ArithmeticBinary(name, tp, a, op, b), a, b)
+        }
+
+        private fun isAppropriateTypes(tp: ArithmeticType, aType: Type, bType: Type): Boolean {
+            return aType == tp && bType == tp
+        }
+
+        fun isCorrect(binary: ArithmeticBinary): Boolean {
+            return isAppropriateTypes(binary.type(), binary.first().type(), binary.second().type())
+        }
     }
 }

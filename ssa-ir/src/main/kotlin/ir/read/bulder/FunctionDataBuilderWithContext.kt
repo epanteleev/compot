@@ -278,7 +278,7 @@ class FunctionDataBuilderWithContext private constructor(
 
 private data class PhiContext(val phi: Phi, val valueTokens: List<ValueToken>, val expectedType: PrimitiveType) {
     fun completePhi(valueMap: Map<String, LocalValue>) {
-        val values = phi.usages()
+        val values = phi.operands()
         for ((idx, tok) in valueTokens.withIndex()) {
             if (tok !is ValueInstructionToken) {
                 continue

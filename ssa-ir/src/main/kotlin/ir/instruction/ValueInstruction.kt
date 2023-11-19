@@ -4,9 +4,22 @@ import ir.Value
 import ir.types.Type
 import ir.LocalValue
 
-abstract class ValueInstruction(protected val identifier: String, tp: Type, usages: Array<Value>):
-    Instruction(tp, usages),
+abstract class ValueInstruction(protected val identifier: String, tp: Type, operands: Array<Value>):
+    Instruction(tp, operands),
     LocalValue {
+    private val usedIn: MutableList<Instruction> = arrayListOf()
+
+    internal fun addUser(instruction: Instruction) {
+        usedIn.add(instruction)
+    }
+
+    internal fun killUser(instruction: Instruction) {
+        usedIn.remove(instruction)
+    }
+
+    fun usedIn(): Collection<Instruction> {
+        return usedIn
+    }
 
     override fun name(): String {
         return identifier

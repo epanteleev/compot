@@ -1,6 +1,7 @@
 package ir.instruction
 
 import ir.*
+import ir.instruction.utils.Visitor
 import ir.types.Type
 
 class UpStackFrame(private val callable: Callable): Instruction(Type.UNDEF, arrayOf()) {
@@ -10,6 +11,10 @@ class UpStackFrame(private val callable: Callable): Instruction(Type.UNDEF, arra
 
     override fun copy(newUsages: List<Value>): Instruction {
         return UpStackFrame(callable)
+    }
+
+    override fun visit(visitor: Visitor) {
+        visitor.visit(this)
     }
 
     override fun equals(other: Any?): Boolean {

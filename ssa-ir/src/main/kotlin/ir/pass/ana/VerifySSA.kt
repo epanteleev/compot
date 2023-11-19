@@ -1,13 +1,11 @@
 package ir.pass.ana
 
 import ir.*
-import ir.module.block.Block
-import ir.module.block.Label
 import ir.instruction.*
-import ir.module.FunctionData
 import ir.module.Module
+import ir.module.block.*
+import ir.module.FunctionData
 import ir.utils.CreationInfo
-import ir.module.auxiliary.TypeCheck
 
 data class ValidateSSAErrorException(override val message: String): Exception(message)
 
@@ -78,7 +76,7 @@ class VerifySSA private constructor(private val functionData: FunctionData, priv
     }
 
     private fun validatePhi(phi: Phi, bb: Block) {
-        for ((use, incoming) in phi.usages().zip(phi.incoming())) {
+        for ((use, incoming) in phi.operands().zip(phi.incoming())) {
             if (use !is ValueInstruction) {
                 continue
             }
@@ -100,7 +98,7 @@ class VerifySSA private constructor(private val functionData: FunctionData, priv
 
     /** Check whether definition dominates to usage. */
     private fun validateDefUse(instruction: Instruction, bb: Block) {
-        for (use in instruction.usages()) {
+        for (use in instruction.operands()) {
             if (use !is ValueInstruction) {
                 continue
             }
@@ -112,45 +110,57 @@ class VerifySSA private constructor(private val functionData: FunctionData, priv
 
     private fun validateTypes(bb: Block) {
         for (instruction in bb) {
+            //Todo remove it
+            if (instruction is ValueInstruction) {
+                for (user in instruction.usedIn()) {
+                    assert(user.operands().contains(instruction)) {
+                        "should be inst='${instruction.dump()}'"
+                    }
+                }
+            }
+
             when (instruction) {
                 is Phi -> {
-                    assert(TypeCheck.checkPhi(instruction)) { "Inconsistent phi instruction '${instruction.dump()}': different types ${instruction.usages().map { it.type() }.joinToString()}" }
+                    assert(Phi.isCorrect(instruction)) { "Inconsistent phi instruction '${instruction.dump()}': different types ${instruction.operands().map { it.type() }.joinToString()}" }
                 }
                 is ArithmeticUnary -> {
                     fun message() = "Unary instruction '${instruction.dump()}' must have the same type: destination=${instruction.type()} operand=${instruction.operand().type()}"
-                    assert(TypeCheck.checkUnary(instruction)) { message() }
+                    assert(ArithmeticUnary.isCorrect(instruction)) { message() }
                 }
                 is ArithmeticBinary -> {
                     fun message() = "Binary arithmetic instruction '${instruction.dump()}' requires all operands to be of the same type: a=${instruction.first().type()}, b=${instruction.second().type()}"
-                    assert(TypeCheck.checkBinary(instruction)) { message() }
+                    assert(ArithmeticBinary.isCorrect(instruction)) { message() }
                 }
                 is IntCompare -> {
                     fun message() = "Compare instruction '${instruction.dump()}' requires all operands to be of the same type: a=${instruction.first().type()}, b=${instruction.second().type()}"
-                    assert(TypeCheck.checkIntCompare(instruction)) { message() }
+                    assert(IntCompare.isCorrect(instruction)) { message() }
                 }
                 is Load -> {
                     fun message() = "Load instruction '${instruction.dump()}' requires all operands to be of the same type."
-                    assert(TypeCheck.checkLoad(instruction)) { message() }
+                    assert(Load.isCorrect(instruction)) { message() }
                 }
                 is Store -> {
                     fun message() = "Store instruction '${instruction.dump()}' requires all operands to be of the same type."
-                    assert(TypeCheck.checkStore(instruction)) { message() }
+                    assert(Store.isCorrect(instruction)) { message() }
                 }
                 is Call -> {
                     fun message() = "Call instruction '${instruction.dump()}' has inconsistent return types."
-                    assert(TypeCheck.checkCall(instruction)) { message() }
+                    assert(Callable.isCorrect(instruction)) { message() }
                 }
                 is Cast -> {
                     fun message() = "Cast instruction '${instruction.dump()}' has inconsistent types."
-                    assert(TypeCheck.checkCast(instruction)) { message() }
+                    assert(Cast.isCorrect(instruction)) { message() }
                 }
                 is Select -> {
                     fun message() = "Select instruction '${instruction.dump()}' requires all operands to be of the same type."
-                    assert(TypeCheck.checkSelect(instruction)) { message() }
+                    assert(Select.isCorrect(instruction)) { message() }
                 }
                 is GetElementPtr -> {
                     fun message() = "Gep instruction '${instruction.dump()}' has inconsistent types."
-                    assert(TypeCheck.checkGep(instruction)) { message() }
+                    assert(GetElementPtr.isCorrect(instruction)) { message() }
+                }
+                is BranchCond -> {
+                    //TODO("impl me")
                 }
             }
         }

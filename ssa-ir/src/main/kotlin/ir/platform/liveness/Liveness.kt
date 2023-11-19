@@ -62,7 +62,7 @@ class Liveness private constructor(val data: FunctionData) {
         }
 
         fun updateLiveRange(inst: Instruction, instructionLocation: OrderedLocation) {
-            for (usage in inst.usages()) {
+            for (usage in inst.operands()) {
                 if (usage !is LocalValue) {
                     continue
                 }

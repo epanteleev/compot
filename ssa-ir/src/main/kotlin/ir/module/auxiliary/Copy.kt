@@ -35,7 +35,7 @@ internal object Copy {
     }
 
     private fun newUsages(oldToNewValues: Map<LocalValue, LocalValue>, inst: Instruction): List<Value> {
-        return inst.usages().mapTo(arrayListOf()) {
+        return inst.operands().mapTo(arrayListOf()) {
             if (it is ArgumentValue || it is Constant) {
                 it
             } else {
@@ -54,7 +54,7 @@ internal object Copy {
             is Phi -> {
                 val targets = inst.incoming()
                 val newTargets = targets.mapTo(arrayListOf()) { oldToNewBlock[it]!! }
-                val newInst = inst.copy(inst.usages(), newTargets.toTypedArray()) /** put in old usages **/
+                val newInst = inst.copy(inst.operands(), newTargets) /** put in old usages **/
 
                 oldToNewValues[inst] = newInst
                 return newInst
@@ -86,7 +86,7 @@ internal object Copy {
                 }
 
                 val usages = newUsages(oldValuesToOld, inst)
-                inst.update(usages.toTypedArray(), inst.incoming())
+                inst.update(usages, inst.incoming())
             }
         }
     }

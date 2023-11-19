@@ -9,4 +9,20 @@ interface Callable: Value {
     fun shortName(): String {
         return prototype().shortName()
     }
+
+    companion object {
+        internal fun isAppropriateTypes(func: AnyFunctionPrototype, args: List<Value>): Boolean {
+            for ((expectedType, value) in func.arguments() zip args) {
+                if (expectedType != value.type()) {
+                    return false
+                }
+            }
+
+            return true
+        }
+
+        fun isCorrect(call: Callable): Boolean {
+            return isAppropriateTypes(call.prototype(), call.arguments().toList())
+        }
+    }
 }

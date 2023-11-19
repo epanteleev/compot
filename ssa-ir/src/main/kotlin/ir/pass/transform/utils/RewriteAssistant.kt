@@ -97,11 +97,11 @@ internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Dom
             if (instruction is Phi) {
                 // Note: all used values are equal in uncompleted phi instruction.
                 // Will take only first value.
-                addValues(bb, instruction.usages().first(), instruction)
+                addValues(bb, instruction.operands().first(), instruction)
                 continue
             }
 
-            instruction.update(instruction.usages().mapTo(arrayListOf()) { v -> rename(bb, v) } )
+            instruction.update(instruction.operands().mapTo(arrayListOf()) { v -> rename(bb, v) } )
         }
     }
 

@@ -1,11 +1,10 @@
 package ir.instruction
 
 import ir.Value
-import ir.types.PointerType
-import ir.types.PrimitiveType
-import ir.types.Type
+import ir.instruction.utils.Visitor
+import ir.types.*
 
-class Load(name: String, ptr: Value):
+class Load private constructor(name: String, ptr: Value):
     ValueInstruction(name, (ptr.type() as PointerType).dereference(), arrayOf(ptr)) {
     override fun dump(): String {
         return "%$identifier = load $tp ${operand()}"
@@ -24,6 +23,33 @@ class Load(name: String, ptr: Value):
     }
 
     override fun copy(newUsages: List<Value>): Load {
-        return Load(identifier, newUsages[0])
+        assert(newUsages.size == 1) {
+            "should be, but newUsages=$newUsages"
+        }
+
+        return make(identifier, newUsages[0])
+    }
+
+    override fun visit(visitor: Visitor) {
+        visitor.visit(this)
+    }
+
+    companion object {
+        fun make(name: String, operand: Value): Load {
+            val type = operand.type()
+            require(isAppropriateTypes(type)) {
+                "should be pointer to primitive type, but operand.type=$type"
+            }
+
+            return registerUser(Load(name, operand), operand)
+        }
+
+        private fun isAppropriateTypes(tp: Type): Boolean {
+            return tp is PointerType && tp.dereference() is PrimitiveType
+        }
+
+        fun isCorrect(load: Load): Boolean {
+            return isAppropriateTypes(load.operand().type())
+        }
     }
 }

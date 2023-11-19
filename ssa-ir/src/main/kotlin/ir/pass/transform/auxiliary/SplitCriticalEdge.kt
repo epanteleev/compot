@@ -43,7 +43,7 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
                     return@phis
                 }
 
-                phi.update(phi.usages(), validIncoming.toTypedArray())
+                phi.update(phi.operands().toList(), validIncoming)
             }
         }
     }

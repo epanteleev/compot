@@ -107,7 +107,7 @@ private class DumpCSSAModule(module: CSSAModule) : DumpModule<CSSAModule>(module
         super.dumpInstruction(instruction, idx)
 
         val killed = arrayListOf<LocalValue>()
-        for (use in instruction.usages()) {
+        for (use in instruction.operands()) {
             if (use !is LocalValue) {
                 continue
             }

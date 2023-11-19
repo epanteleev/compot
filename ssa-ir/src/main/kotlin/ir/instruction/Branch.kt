@@ -1,9 +1,10 @@
 package ir.instruction
 
 import ir.Value
+import ir.instruction.utils.Visitor
 import ir.module.block.Block
 
-class Branch(target: Block): TerminateInstruction(arrayOf(), arrayOf(target)) {
+class Branch private constructor(target: Block): TerminateInstruction(arrayOf(), arrayOf(target)) {
     override fun dump(): String {
         return "br label ${target()}"
     }
@@ -17,10 +18,20 @@ class Branch(target: Block): TerminateInstruction(arrayOf(), arrayOf(target)) {
     }
 
     override fun copy(newUsages: List<Value>): Instruction {
-        return Branch(target())
+        return make(target())
     }
 
     override fun copy(usages: List<Value>, newTargets: Array<Block>): Branch {
-        return Branch(newTargets[0])
+        return make(newTargets[0])
+    }
+
+    override fun visit(visitor: Visitor) {
+        visitor.visit(this)
+    }
+
+    companion object {
+        fun make(target: Block): Branch {
+            return Branch(target)
+        }
     }
 }

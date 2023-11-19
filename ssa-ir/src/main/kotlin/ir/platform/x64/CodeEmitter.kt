@@ -6,6 +6,8 @@ import ir.module.block.Label
 import ir.module.Module
 import ir.module.block.Block
 import ir.instruction.Call
+import ir.instruction.utils.Visitor
+import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.platform.regalloc.RegisterAllocation
 import ir.types.*
@@ -18,8 +20,10 @@ data class CodegenException(override val message: String): Exception(message)
 class CodeEmitter(private val data: FunctionData,
                   private val functionCounter: Int,
                   private val objFunc: ObjFunction,
-                  private val valueToRegister: RegisterAllocation
-) {
+                  private val valueToRegister: RegisterAllocation,
+): Visitor {
+    private val orderedLocation = evaluateOrder(data.blocks)
+
     private fun emitPrologue() {
         val stackSize = valueToRegister.reservedStackSize()
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
@@ -44,7 +48,7 @@ class CodeEmitter(private val data: FunctionData,
         objFunc.leave()
     }
 
-    private fun emitArithmeticBinary(binary: ArithmeticBinary) {
+    override fun visit(binary: ArithmeticBinary) {
         var first       = valueToRegister.operand(binary.first())
         val second      = valueToRegister.operand(binary.second())
         val destination = valueToRegister.operand(binary) as Operand
@@ -85,22 +89,25 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun emitReturn(ret: Return) {
-        if (ret is ReturnValue) {
-            val returnType = data.prototype.type()
-            if (returnType is ArithmeticType || returnType is PointerType) {
-                val value = valueToRegister.operand(ret.value())
-                objFunc.mov(value, temp1(value.size))
-            } else {
-                TODO()
-            }
+    override fun visit(returnValue: ReturnValue) {
+        val returnType = data.prototype.type()
+        if (returnType is ArithmeticType || returnType is PointerType) {
+            val value = valueToRegister.operand(returnValue.value())
+            objFunc.mov(value, temp1(value.size))
+        } else {
+            TODO()
         }
 
         emitEpilogue()
         objFunc.ret()
     }
 
-    private fun emitArithmeticUnary(unary: ArithmeticUnary) {
+    override fun visit(returnVoid: ReturnVoid) {
+        emitEpilogue()
+        objFunc.ret()
+    }
+
+    override fun visit(unary: ArithmeticUnary) {
         val operand = valueToRegister.operand(unary.operand())
         val result  = valueToRegister.operand(unary)
 
@@ -148,9 +155,17 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun emitStore(instruction: Store) {
-        val pointer = valueToRegister.operand(instruction.pointer()) as Operand
-        var value   = valueToRegister.operand(instruction.value())
+    override fun visit(voidCall: VoidCall) {
+        emitCall(voidCall)
+    }
+
+    override fun visit(call: Call) {
+        emitCall(call)
+    }
+
+    override fun visit(store: Store) {
+        val pointer = valueToRegister.operand(store.pointer()) as Operand
+        var value   = valueToRegister.operand(store.value())
 
         if (value is Mem) {
             value = objFunc.mov(value, temp2(value.size))
@@ -163,9 +178,9 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun emitLoad(instruction: Load) {
-        val pointer = valueToRegister.operand(instruction.operand())
-        val value   = valueToRegister.operand(instruction) as Operand
+    override fun visit(load: Load) {
+        val pointer = valueToRegister.operand(load.operand())
+        val value   = valueToRegister.operand(load) as Operand
 
         val operand = if (value is Mem) {
             objFunc.mov(value, temp1(value.size))
@@ -180,7 +195,7 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun emitIntCompare(isMultiplyUsages: Boolean, intCompare: IntCompare) {
+    override fun visit(intCompare: IntCompare) {
         var first = valueToRegister.operand(intCompare.first())
         val second = valueToRegister.operand(intCompare.second())
 
@@ -191,16 +206,13 @@ class CodeEmitter(private val data: FunctionData,
         }
 
         objFunc.cmp(first as GPRegister, second)
-        if (isMultiplyUsages) {
-            println("multiply usages $intCompare")
-        }
     }
 
-    private fun emitBranch(branch: Branch) {
+    override fun visit(branch: Branch) {
         objFunc.jump(JmpType.JMP, ".L$functionCounter.${branch.target().index}")
     }
 
-    private fun emitBranchCond(branchCond: BranchCond) {
+    override fun visit(branchCond: BranchCond) {
         val cond = branchCond.condition()
         if (cond is IntCompare) {
             val jmpType = when (cond.predicate().invert()) {
@@ -222,7 +234,7 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun emitCopy(copy: Copy) {
+    override fun visit(copy: Copy) {
         val result  = valueToRegister.operand(copy)
         val operand = valueToRegister.operand(copy.origin())
 
@@ -240,8 +252,8 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun emitDownStackFrame(dsf: DownStackFrame, map: Map<Callable, OrderedLocation>) {
-        val savedRegisters = valueToRegister.callerSaveRegisters(map[dsf.call()]!!)
+    override fun visit(dsf: DownStackFrame) {
+        val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[dsf.call()]!!)
         for (arg in savedRegisters) {
             objFunc.push(arg)
         }
@@ -252,8 +264,8 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun emitUpStackFrame(usf: UpStackFrame, map: Map<Callable, OrderedLocation>) {
-        val savedRegisters = valueToRegister.callerSaveRegisters(map[usf.call()]!!)
+    override fun visit(usf: UpStackFrame) {
+        val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[usf.call()]!!)
         val totalStackSize = valueToRegister.frameSize(savedRegisters)
 
         if (totalStackSize % 16L != 0L) {
@@ -265,7 +277,7 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun emitGep(gep: GetElementPtr) {
+    override fun visit(gep: GetElementPtr) {
         val source = valueToRegister.operand(gep.source())
         val index  = valueToRegister.operand(gep.index())
         val dest   = valueToRegister.operand(gep)
@@ -315,34 +327,21 @@ class CodeEmitter(private val data: FunctionData,
         objFunc.lea(sourceReg, destReg)
     }
 
-    private fun emitBasicBlock(bb: Block, map: Map<Callable, OrderedLocation>) {
-        for (instruction in bb) {
-            when (instruction) {
-                is ArithmeticBinary -> emitArithmeticBinary(instruction)
-                is Store            -> emitStore(instruction)
-                is Return           -> emitReturn(instruction)
-                is Load             -> emitLoad(instruction)
-                is Call             -> emitCall(instruction)
-                is ArithmeticUnary  -> emitArithmeticUnary(instruction)
-                is IntCompare       -> emitIntCompare(false, instruction)
-                is Branch           -> emitBranch(instruction)
-                is BranchCond       -> emitBranchCond(instruction)
-                is VoidCall         -> emitCall(instruction)
-                is Copy             -> emitCopy(instruction)
-                is DownStackFrame   -> emitDownStackFrame(instruction, map)
-                is UpStackFrame     -> emitUpStackFrame(instruction, map)
-                is Phi              -> { /* skip */ }
-                is Alloc            -> { /* skip */ }
-                is GetElementPtr    -> emitGep(instruction)
-                else                -> println("Unsupported: $instruction")
-            }
-        }
+    override fun visit(cast: Cast) {
+        TODO("Not yet implemented")
     }
 
-    private fun evaluateOrder(): Map<Callable, OrderedLocation> {
+    override fun visit(select: Select) {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(phi: Phi) { /* nothing to do */ }
+    override fun visit(alloc: Alloc) { /* nothing to do */ }
+
+    private fun evaluateOrder(blocks: BasicBlocks): Map<Callable, OrderedLocation> {
         val orderedLocation = hashMapOf<Callable, OrderedLocation>()
         var order = 0
-        for (bb in data.blocks.linearScanOrder()) {
+        for (bb in blocks.linearScanOrder()) {
             for ((idx, call) in bb.instructions().withIndex()) {
                 if (call is Callable) {
                     orderedLocation[call] = OrderedLocation(bb, idx, order)
@@ -355,15 +354,15 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     private fun emit() {
-        val orderedLocation = evaluateOrder()
-
         emitPrologue()
         for (bb in data.blocks.preorder()) {
             if (!bb.equals(Label.entry)) {
                 objFunc.label(".L$functionCounter.${bb.index}")
             }
 
-            emitBasicBlock(bb, orderedLocation)
+            for (instruction in bb) {
+                instruction.visit(this)
+            }
         }
     }
 

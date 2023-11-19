@@ -22,7 +22,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
             newValues[operand] = copy
         }
 
-        val newUsages = phi.usages().mapTo(arrayListOf()) { newValues[it]!! }
+        val newUsages = phi.operands().mapTo(arrayListOf()) { newValues[it]!! }
         phi.update(newUsages)
     }
 
@@ -45,7 +45,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
                     continue
                 }
 
-                for ((idx, use) in inst.usages().withIndex()) {
+                for ((idx, use) in inst.operands().withIndex()) {
                     if (use !is ArgumentValue) {
                         continue
                     }

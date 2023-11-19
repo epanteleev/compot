@@ -1,10 +1,13 @@
 package ir.instruction
 
 import ir.*
+import ir.instruction.utils.Visitor
 import ir.module.block.Block
+import ir.types.PointerType
 import ir.types.PrimitiveType
+import ir.types.Type
 
-class Phi(name: String, ty: PrimitiveType, private val incoming: Array<Block>, incomingValue: Array<Value>):
+class Phi private constructor(name: String, ty: PrimitiveType, private var incoming: List<Block>, incomingValue: Array<Value>):
     ValueInstruction(name, ty, incomingValue) {
 
     override fun dump(): String {
@@ -17,31 +20,72 @@ class Phi(name: String, ty: PrimitiveType, private val incoming: Array<Block>, i
         return builder.toString()
     }
 
-    fun incoming(): Array<Block> {
+    override fun type(): PrimitiveType {
+        return tp as PrimitiveType
+    }
+
+    fun incoming(): List<Block> {
         return incoming
     }
 
     fun zip(): List<Pair<Block, Value>> {
-        return incoming() zip usages()
+        return incoming() zip operands()
     }
 
     override fun copy(newUsages: List<Value>): Instruction {
-        return Phi(identifier, tp as PrimitiveType, incoming.clone(), newUsages.toTypedArray())
+        return make(identifier, type(), incoming, newUsages.toTypedArray())
     }
 
-    fun copy(newUsages: Array<Value>, incoming: Array<Block>): Phi {
-        return Phi(identifier, tp as PrimitiveType, incoming.clone(), newUsages.clone())
+    fun copy(newUsages: Array<Value>, incoming: List<Block>): Phi {
+        return make(identifier, type(), incoming, newUsages.clone())
     }
 
-    fun update(newUsages: Array<Value>, newIncoming: Array<Block>): Phi {
-        update(newUsages.toList())
-        newIncoming.copyInto(incoming)
+    override fun visit(visitor: Visitor) {
+        visitor.visit(this)
+    }
+
+    fun update(newUsages: List<Value>, newIncoming: List<Block>): Phi {
+        update(newUsages)
+        incoming = newIncoming
         return this
     }
 
     companion object {
-        fun create(name: String, ty: PrimitiveType): Phi {
-            return Phi(name, ty, arrayOf(), arrayOf())
+        fun make(name: String, ty: PrimitiveType): Phi {
+            return Phi(name, ty, arrayListOf(), arrayOf())
+        }
+
+        fun make(name: String, ty: PrimitiveType, incoming: List<Block>, incomingValue: Array<Value>): Phi {
+            return registerUser(Phi(name, ty, incoming, incomingValue), incomingValue.iterator())
+        }
+
+        fun makeUncompleted(name: String, incoming: Value, predecessors: List<Block>): Phi {
+            val incomingType = incoming.type()
+            require(incomingType is PointerType) {
+                "should be pointer type, but incoming.type=$incomingType"
+            }
+
+            val type = incomingType.dereference()
+            require(type is PrimitiveType) {
+                "should be primitive type, but type=$type"
+            }
+
+            val values = predecessors.mapTo(arrayListOf()) { incoming }.toTypedArray() //Todo
+            return Phi(name, type, predecessors, values)
+        }
+
+        private fun isAppropriateTypes(type: PrimitiveType, incomingValue: Array<Value>): Boolean {
+            for (use in incomingValue) {
+                if (type != use.type()) {
+                    return false
+                }
+            }
+
+            return true
+        }
+
+        fun isCorrect(phi: Phi): Boolean {
+            return isAppropriateTypes(phi.type(), phi.operands())
         }
     }
 }

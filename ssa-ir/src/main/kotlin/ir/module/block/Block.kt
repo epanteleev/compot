@@ -1,10 +1,10 @@
 package ir.module.block
 
 import ir.*
+import ir.types.*
 import ir.instruction.*
 import ir.module.ModuleException
-import ir.module.auxiliary.TypeCheck
-import ir.types.*
+
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) : MutableBlock, AnyBlock {
     private val instructions = mutableListOf<Instruction>()
@@ -33,7 +33,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     override fun last(): TerminateInstruction {
         val last = instructions[size - 1]
         assert(last is TerminateInstruction) {
-            "should be. but last=$last"
+            "should be, but last=$last"
         }
 
         return last as TerminateInstruction
@@ -173,136 +173,79 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     }
 
     override fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): ArithmeticUnary {
-        return withOutput { it: Int -> ArithmeticUnary(n(it), value.type() as PrimitiveType, op, value) }
+        val valueType = value.type()
+        require(valueType is ArithmeticType) {
+            "should be arithmetic type, but ty=$valueType"
+        }
+
+        return withOutput { it: Int -> ArithmeticUnary.make(n(it), valueType, op, value) }
     }
 
     override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
-        if (a.type() != b.type()) {
-            throw ModuleException("Operands have different types: a=${a.type()}, b=${b.type()}")
+        val ty = a.type()
+        require(ty is ArithmeticType) {
+            "should be arithmetic type, but ty=$ty"
         }
 
-        return withOutput { it: Int -> ArithmeticBinary(n(it), a.type() as PrimitiveType, a, op, b) }
+        return withOutput { it: Int -> ArithmeticBinary.make(n(it), ty, a, op, b) }
     }
 
     override fun intCompare(a: Value, pred: IntPredicate, b: Value): IntCompare {
-        val cmp = withOutput { it: Int -> IntCompare("cmp${n(it)}", a, pred, b) }
-        if (!TypeCheck.checkIntCompare(cmp)) {
-            throw ModuleException("Operands have different types: a=${a.type()}, b=${b.type()}")
-        }
-
-        return cmp
+        return withOutput { it: Int -> IntCompare.make("cmp${n(it)}", a, pred, b) }
     }
 
     override fun load(ptr: Value): Load {
-        val load = withOutput { it: Int -> Load("v${n(it)}", ptr) }
-        if (!TypeCheck.checkLoad(load)) {
-            throw ModuleException("Inconsistent types: ${load.dump()}")
-        }
-
-        return load
+        return withOutput { it: Int -> Load.make("v${n(it)}", ptr) }
     }
 
     override fun store(ptr: Value, value: Value) {
-        val store = Store(ptr, value)
-        if (!TypeCheck.checkStore(store)) {
-            throw ModuleException("Inconsistent types: ${store.dump()}")
-        }
-
+        val store = Store.make(ptr, value)
         append(store)
     }
 
     override fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Call {
-        require(func.type() != Type.Void)
-        val call = withOutput { it: Int -> Call(n(it), func.type(), func, args) }
-        if (!TypeCheck.checkCall(call)) {
-            throw ModuleException("Inconsistent types: ${call.dump()}")
-        }
-
-        return call
+        return withOutput { it: Int -> Call.make(n(it), func, args) }
     }
 
     override fun vcall(func: AnyFunctionPrototype, args: ArrayList<Value>) {
         require(func.type() == Type.Void)
-        append(VoidCall(func, args))
+        append(VoidCall.make(func, args))
     }
 
     override fun branch(target: Block) {
-        add(Branch(target))
+        add(Branch.make(target))
     }
 
     override fun branchCond(value: Value, onTrue: Block, onFalse: Block) {
-        add(BranchCond(value, onTrue, onFalse))
+        add(BranchCond.make(value, onTrue, onFalse))
     }
 
     override fun alloc(ty: Type): Alloc {
-        val alloc = withOutput { it: Int -> Alloc(n(it), ty) }
-        if (!TypeCheck.checkAlloc(alloc)) {
-            throw ModuleException("Inconsistent types: ${alloc.dump()}")
-        }
-
-        return alloc
+        return withOutput { it: Int -> Alloc.make(n(it), ty) }
     }
 
     override fun ret(value: Value) {
-        add(ReturnValue(value))
+        add(ReturnValue.make(value))
     }
 
     override fun retVoid() {
-        add(retVoid)
+        add(ReturnVoid.make())
     }
 
     override fun gep(source: Value, index: Value): GetElementPtr {
-        fun instructionType(sourceType: Type): Type {
-            return when (sourceType) {
-                is ArrayType     -> sourceType.elementType().ptr()
-                is PrimitiveType -> sourceType.ptr()
-                else -> { throw RuntimeException("I haven't known yet... ") }
-            }
-        }
-
-        val srcType = source.type()
-        require(srcType is PointerType) {
-            "Inconsistent types: expected pointer type, but $srcType found"
-        }
-        val indexType = index.type()
-        require( index is Constant || indexType == Type.U64 || indexType == Type.I64) {
-            "index type for non-constants should be either u64 or i64, but index.type=$indexType"
-        }
-
-        val gep = withOutput { it: Int -> GetElementPtr(n(it), instructionType(srcType.type), source, index) }
-        if (!TypeCheck.checkGep(gep)) {
-            throw ModuleException("Inconsistent types: ${gep.dump()}")
-        }
-
-        return gep
+        return withOutput { it: Int -> GetElementPtr.make(n(it), source, index) }
     }
 
     override fun cast(value: Value, ty: Type, cast: CastType): Cast {
-        val castInst = withOutput { it: Int -> Cast(n(it), ty, cast, value) }
-        if (!TypeCheck.checkCast(castInst)) {
-            throw ModuleException("Inconsistent types: ${castInst.dump()}")
-        }
-
-        return castInst
+        return withOutput { it: Int -> Cast.make(n(it), ty, cast, value) }
     }
 
     override fun select(cond: Value, onTrue: Value, onFalse: Value): Select {
-        val selectInst = withOutput { it: Int -> Select(n(it), onTrue.type(), cond, onTrue, onFalse) }
-        if (!TypeCheck.checkSelect(selectInst)) {
-            throw ModuleException("Inconsistent types: ${selectInst.dump()}")
-        }
-
-        return selectInst
+        return withOutput { it: Int -> Select.make(n(it), onTrue.type(), cond, onTrue, onFalse) }
     }
 
     override fun phi(incoming: List<Value>, labels: List<Block>): Phi {
-        val phi = withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type() as PrimitiveType, labels.toTypedArray(), incoming.toTypedArray()) }
-
-        if (!TypeCheck.checkPhi(phi)) {
-            throw ModuleException("Operands have different types: labels=$labels")
-        }
-
-        return phi
+        return withOutput { it: Int -> Phi.make("phi${n(it)}", incoming[0].type() as PrimitiveType, labels, incoming.toTypedArray()) }
     }
 
     override fun downStackFrame(callable: Callable) {
@@ -314,18 +257,16 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     }
 
     override fun uncompletedPhi(incoming: Value): Phi {
-        val type = (incoming.type() as PointerType).dereference() as PrimitiveType
-        val blocks = predecessors().toTypedArray()
-        val values = predecessors().mapTo(arrayListOf()) { incoming }.toTypedArray() //Todo
-        return withOutput { it: Int -> Phi("phi${n(it)}", type, blocks, values) }
+        val blocks = predecessors()
+        return withOutput { it: Int -> Phi.makeUncompleted("phi${n(it)}", incoming, blocks) }
     }
 
     fun uncompletedPhi(incoming: List<Value>, labels: List<Block>): Phi {
-        return withOutput { it: Int -> Phi("phi${n(it)}", incoming[0].type() as PrimitiveType, labels.toTypedArray(), incoming.toTypedArray()) }
+        return withOutput { it: Int -> Phi.make("phi${n(it)}", incoming[0].type() as PrimitiveType, labels, incoming.toTypedArray()) }
     }
 
     override fun copy(value: Value): Copy {
-        return withOutput { it: Int -> Copy(n(it), value) }
+        return withOutput { it: Int -> Copy.make(n(it), value) }
     }
 
     fun add(instruction: Instruction): Instruction {
@@ -374,8 +315,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     }
 
     companion object {
-        private val retVoid = ReturnVoid()
-
         fun insertBlock(block: Block, newBlock: Block, predecessor: Block) {
             predecessor.updateSuccessor(block, newBlock)
             block.removePredecessors(predecessor)
