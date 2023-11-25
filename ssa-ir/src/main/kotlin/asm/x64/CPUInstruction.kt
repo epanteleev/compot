@@ -26,19 +26,25 @@ data class Pop(val register: GPRegister): CPUInstruction {
 
 data class Mov(val src: AnyOperand, val des: Operand): CPUInstruction {
     override fun toString(): String {
-        return "mov${prefix(des.size)} $src, $des"
+        return "mov${prefix(src.size)} $src, $des"
     }
 }
 
 data class MovAbs(val src: AnyOperand, val des: Register): CPUInstruction {
     override fun toString(): String {
-        return "movabs${prefix(des.size)} $src, $des"
+        return "movabs${prefix(src.size)} $src, $des"
     }
 }
 
 data class Movss(val src: AnyOperand, val des: Register): CPUInstruction {
     override fun toString(): String {
-        return "movss${prefix(des.size)} $src, $des"
+        return "movss${prefix(src.size)} $src, $des"
+    }
+}
+
+data class Movsx(val src: GPRegister, val des: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "movsx${prefix(src.size)} $src, $des"
     }
 }
 

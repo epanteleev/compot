@@ -74,6 +74,16 @@ class TokenizerTest {
     }
 
     @Test
+    fun readFunctionName() {
+        val tokenizer = Tokenizer("define void @some")
+        val iterator = tokenizer.iterator()
+        assertEquals(Define(1, 0), iterator.next())
+        assertEquals(PrimitiveTypeToken("void", 0, 1, 7), iterator.next())
+        assertEquals(FunctionName("some", 1, 13), iterator.next())
+        assertFalse(iterator.hasNext())
+    }
+
+    @Test
     fun readWithErrorTest() {
         assertThrows<RuntimeException> {
             val tokenizer = Tokenizer("3.val\n g")

@@ -2,13 +2,15 @@ package ir.platform.liveness
 
 import ir.*
 import ir.module.block.Block
-import ir.instruction.Instruction
 import ir.module.FunctionData
 import ir.utils.OrderedLocation
+import ir.instruction.Instruction
+
 
 class Liveness private constructor(val data: FunctionData) {
     private val liveness = linkedMapOf<LocalValue, LiveRangeImpl>()
     private val bbOrdering = hashMapOf<Block, Int>()
+    private val linearScanOrder = data.blocks.linearScanOrder().order()
 
     init {
         setupArguments()
@@ -26,7 +28,7 @@ class Liveness private constructor(val data: FunctionData) {
 
     private fun setupLiveRanges(): Map<Block, Int> {
         var ordering = -1
-        for (bb in data.blocks.linearScanOrder()) {
+        for (bb in linearScanOrder) {
             for ((idx, inst) in bb.instructions().withIndex()) {
                 ordering += 1
                 if (inst !is LocalValue) {
@@ -44,23 +46,6 @@ class Liveness private constructor(val data: FunctionData) {
     }
 
     private fun evaluateUsages() {
-        fun evaluateMaxBlock(bb: Block): Block {
-            val predecessors = bb.predecessors()
-            if (predecessors.size <= 1) {
-                return bb
-            }
-
-            val maxBlock = predecessors.fold(bb) { a, b ->
-                if (bbOrdering[a]!! > bbOrdering[b]!!) {
-                    a
-                } else {
-                    b
-                }
-            }
-
-            return maxBlock
-        }
-
         fun updateLiveRange(inst: Instruction, instructionLocation: OrderedLocation) {
             for (usage in inst.operands()) {
                 if (usage !is LocalValue) {
@@ -70,22 +55,15 @@ class Liveness private constructor(val data: FunctionData) {
                 val liveRange = liveness[usage]
                     ?: throw LiveIntervalsException("in $usage")
 
-                liveRange.registerUsage(instructionLocation)
+                liveRange.registerUsage(instructionLocation, bbOrdering)
             }
         }
 
         var ordering = -1
-        for (bb in data.blocks.linearScanOrder()) {
-            val maxBlock = evaluateMaxBlock(bb)
+        for (bb in linearScanOrder) {
             for ((idx, inst) in bb.instructions().withIndex()) {
                 ordering += 1
-                val actualIndex = if (maxBlock != bb) {
-                    bbOrdering[maxBlock]!!
-                } else {
-                    ordering
-                }
-
-                val location = OrderedLocation(maxBlock, idx, actualIndex)
+                val location = OrderedLocation(bb, idx, ordering)
                 updateLiveRange(inst, location)
             }
         }
@@ -93,7 +71,7 @@ class Liveness private constructor(val data: FunctionData) {
 
     private fun doAnalysis(): LiveIntervals {
         fun sortedByCreation(): Map<LocalValue, LiveRange> {
-            val pairList = liveness.toList().sortedBy { (_, value) -> value.begin().index }
+            val pairList = liveness.toList().sortedBy { (_, value) -> value.begin().order }
             val result = linkedMapOf<LocalValue, LiveRange>()
             for ((k, v) in pairList) {
                 result[k] = v

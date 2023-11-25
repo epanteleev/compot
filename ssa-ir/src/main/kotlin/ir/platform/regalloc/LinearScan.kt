@@ -2,9 +2,8 @@ package ir.platform.regalloc
 
 import ir.*
 import asm.x64.Operand
-import ir.instruction.Callable
-import ir.instruction.ValueInstruction
 import ir.module.FunctionData
+import ir.instruction.Callable
 import ir.platform.liveness.LiveIntervals
 
 class LinearScan(private val data: FunctionData, private val liveRanges: LiveIntervals) {
@@ -41,7 +40,7 @@ class LinearScan(private val data: FunctionData, private val liveRanges: LiveInt
                }
                val allocation = CalleeArgumentAllocator.alloc(inst.arguments().toList())
                for ((operand, arg) in allocation zip inst.arguments()) {
-                   registerMap[arg as ValueInstruction] = operand
+                   registerMap[arg as LocalValue] = operand
                }
            }
        }

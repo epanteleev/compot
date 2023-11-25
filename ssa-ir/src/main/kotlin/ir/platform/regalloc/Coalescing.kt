@@ -48,7 +48,7 @@ class Coalescing(private val intervals: LiveIntervals, private val precolored: M
         coalescePhis()
         completeOtherGroups()
 
-        val result = liveness.toList().sortedBy { (_, value) -> value.begin().index }
+        val result = liveness.toList().sortedBy { (_, value) -> value.begin().order }
         val map = linkedMapOf<Group, LiveRange>()
         for ((k, v) in result) {
             map[k] = v

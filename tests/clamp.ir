@@ -1,13 +1,13 @@
-extern void printInt(i32)
+extern void @printInt(i32)
 
-define u64 main() {
+define u64 @main() {
 entry:
-        %1 = call i32 clamp(8: i32, 9: i32, 10: i32)
-	call void printInt(%1: i32)
-	%2 = call i32 clamp(8: i32, 20: i32, 10: i32)
-        call void printInt(%2: i32)
-	%3 = call i32 clamp(8: i32, 1: i32, 10: i32)
-        call void printInt(%3: i32)
+        %1 = call i32 @clamp(8: i32, 9: i32, 10: i32)
+	call void @printInt(%1: i32)
+	%2 = call i32 @clamp(8: i32, 20: i32, 10: i32)
+        call void @printInt(%2: i32)
+	%3 = call i32 @clamp(8: i32, 1: i32, 10: i32)
+        call void @printInt(%3: i32)
         ret u64 0
 }
 
@@ -17,7 +17,7 @@ entry:
 ;    }
 ;    return b;
 ;}
-define i32 max(%a: i32, %b: i32) {
+define i32 @max(%a: i32, %b: i32) {
 entry:
   %retval = alloc i32
   %aAddr = alloc i32
@@ -50,7 +50,7 @@ return:
 ;    }
 ;    return b;
 ;}
-define i32 min(%a: i32, %b: i32) {
+define i32 @min(%a: i32, %b: i32) {
 entry:
   %retval = alloc i32
   %aAddr = alloc i32
@@ -81,7 +81,7 @@ return:
 ;    int b = min(value, to);
 ;    return max(from, b);
 ;}
-define i32 clamp(%from: i32, %value: i32, %to: i32) {
+define i32 @clamp(%from: i32, %value: i32, %to: i32) {
 entry:
   %fromAddr  = alloc i32
   %valueAddr = alloc i32
@@ -92,11 +92,11 @@ entry:
   store i32* %toAddr, %to
   %0 = load i32 %valueAddr
   %1 = load i32 %toAddr
-  %call = call i32 min(%0: i32, %1: i32)
+  %call = call i32 @min(%0: i32, %1: i32)
   store i32* %b, %call
   %2 = load i32 %fromAddr
   %3 = load i32 %b
-  %call1 = call i32 max(%2: i32, %3: i32)
+  %call1 = call i32 @max(%2: i32, %3: i32)
   ret i32 %call1
 }
 

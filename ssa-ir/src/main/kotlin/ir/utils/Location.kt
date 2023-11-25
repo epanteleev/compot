@@ -17,7 +17,7 @@ data class Location(override val block: Block, override val index: Int): Abstrac
     }
 }
 
-data class OrderedLocation(override val block: Block, override val index: Int, private val order: Int): AbstractLocation {
+data class OrderedLocation(override val block: Block, override val index: Int, val order: Int): AbstractLocation {
     override fun toString(): String {
         return "[${block}:$index order=$order]"
     }

@@ -1,8 +1,9 @@
 package ir.platform.liveness
 
+import ir.module.block.Block
 import ir.utils.OrderedLocation
 
-open class LiveRange internal constructor(private val creation: OrderedLocation, protected var end: OrderedLocation) {
+open class LiveRange internal constructor(protected val creation: OrderedLocation, protected var end: OrderedLocation) {
     fun begin(): OrderedLocation {
         return creation
     }
@@ -23,11 +24,54 @@ open class LiveRange internal constructor(private val creation: OrderedLocation,
 }
 
 class LiveRangeImpl internal constructor(creation: OrderedLocation, end: OrderedLocation): LiveRange(creation, end) {
-    internal fun registerUsage(location: OrderedLocation) {
-        if (end >= location) {
+    private fun addWork(worklist: MutableList<Block>, visited: MutableSet<Block>, bb: Block) {
+        if (bb == creation.block) {
             return
         }
 
-        end = location
+        for (p in bb.predecessors()) {
+            if (visited.contains(p)) {
+                continue
+            }
+            worklist.add(p)
+        }
+    }
+
+    internal fun registerUsage(location: OrderedLocation, bbOrdering: Map<Block, Int>) {
+        val worklist = arrayListOf<Block>()
+        val visited  = mutableSetOf<Block>()
+        addWork(worklist, visited, location.block)
+
+        var currentKillerBlock = location.block
+
+        while (worklist.isNotEmpty()) {
+            val bb = worklist.removeLast()
+            if (visited.contains(bb)) {
+                continue
+            }
+
+            val ord = bbOrdering[bb]!!
+            if (ord > bbOrdering[currentKillerBlock]!!) {
+                currentKillerBlock = bb
+                break
+            }
+
+            visited.add(bb)
+            addWork(worklist, visited, bb)
+        }
+
+        worklist.clear()
+        visited.clear()
+        end = if (currentKillerBlock == location.block) {
+            if (end >= location) {
+                return
+            }
+
+            location
+        } else {
+            OrderedLocation(currentKillerBlock,
+                currentKillerBlock.instructions().size - 1,
+                bbOrdering[currentKillerBlock]!!)
+        }
     }
 }

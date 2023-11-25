@@ -1,15 +1,23 @@
-extern void printIntArray(i32*, i32)
-extern i32* malloc(i32)
-extern void free(i32*)
+extern void @printIntArray(i32*, i32)
+extern i32* @malloc(i32)
+extern void @free(i32*)
 
-define i32 main() {
-  %array = call i32* malloc(40: i32)
-  call void fill_in_array(%array: i32*, 10: i32)
-  call void free(%array: i32*)
+define i32 @main() {
+  %array = call i32* @malloc(40: i32)
+  call void @fill_in_array(%array: i32*, 10: i32)
+  call void @free(%array: i32*)
   ret i32 0
 }
 
-define void fill_in_array(%array: i32*, %len: i32) {
+;int fill_in_array(int* array, int len) {
+;    for (int i = 0; i < len; i++) {
+;        array[i] = i;
+;    }
+;
+;    printArrayInt(array, len);
+;    return 0;
+;}
+define void @fill_in_array(%array: i32*, %len: i32) {
 entry:
   %i = alloc i32
   store i32* %i, 0
@@ -34,6 +42,6 @@ forInc:
 
 forEnd:
   %arraydecay = gep i32* %array, i32 0
-  call void printIntArray(%arraydecay: i32*, %len: i32)
+  call void @printIntArray(%arraydecay: i32*, %len: i32)
   ret void
 }

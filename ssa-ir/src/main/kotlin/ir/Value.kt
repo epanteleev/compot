@@ -14,7 +14,7 @@ interface LocalValue: Value {
     fun name(): String
 }
 
-class ArgumentValue(private val index: Int, private val tp: Type): LocalValue {
+data class ArgumentValue(private val index: Int, private val tp: Type): LocalValue {
     override fun name(): String {
         return "arg$index"
     }
@@ -163,5 +163,15 @@ class UndefinedValue: Constant, LocalValue {
 
     override fun toString(): String {
         return "undef"
+    }
+
+    override fun hashCode(): Int {
+        return -1;
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return true
     }
 }

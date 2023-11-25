@@ -31,7 +31,7 @@ enum class CastType {
 class Cast private constructor(name: String, ty: Type, val castType: CastType, value: Value):
     ValueInstruction(name, ty, arrayOf(value)) {
     override fun dump(): String {
-        return "%$identifier = $castType $tp ${value()}"
+        return "%$identifier = $castType ${value().type()} ${value()} to ${type()}"
     }
 
     fun value(): Value {

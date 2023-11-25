@@ -13,21 +13,10 @@ abstract class AnyFunctionPrototype(val name: String,
         return arguments
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other is AnyFunctionPrototype) {
-            return name == other.name &&
-                    returnType == other.type() &&
-                    arguments == other.arguments()
-
-        }
-
-        return false
-    }
 
     fun shortName(): String {
         val builder = StringBuilder()
-        builder.append("$returnType $name(")
+        builder.append("$returnType @$name(")
         arguments.joinTo(builder)
         builder.append(")")
         return builder.toString()
@@ -35,6 +24,17 @@ abstract class AnyFunctionPrototype(val name: String,
 
     override fun hashCode(): Int {
         return name.hashCode() + arguments.hashCode() + returnType.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AnyFunctionPrototype) return false
+
+        if (name != other.name) return false
+        if (returnType != other.returnType) return false
+        if (arguments != other.arguments) return false
+
+        return true
     }
 }
 

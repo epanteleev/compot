@@ -1,16 +1,16 @@
-extern void printInt(i32)
+extern void @printInt(i32)
 
-define u64 main() {
+define u64 @main() {
 entry:
-        %1 = call i32 factorial(8: i32)
-	call void printInt(%1: i32)
-        ret u64 0
+  %1 = call i32 @factorial(8: i32)
+  call void @printInt(%1: i32)
+  ret u64 0
 }
 
 
-define i32 factorial(%val: i32) {
+define i32 @factorial(%val: i32) {
 entry:
-  %valAddr = alloc i32
+  %valAddr   = alloc i32
   %factorial = alloc i32
   %i = alloc i32
   store i32* %valAddr, %val

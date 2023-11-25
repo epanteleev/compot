@@ -3,7 +3,6 @@ package ir.module.block
 import ir.*
 import ir.types.*
 import ir.instruction.*
-import ir.module.ModuleException
 
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) : MutableBlock, AnyBlock {

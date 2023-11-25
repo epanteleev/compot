@@ -10,7 +10,8 @@ import java.nio.file.Paths
 object Driver {
     fun output(name: String, module: Module, pipeline: (Module) -> Module) {
         val filename         = getName(name)
-        val codegen          = CodeEmitter.codegen(VerifySSA.run(SSADestruction.run(module)))
+        val unoptimizedIr    = VerifySSA.run(SSADestruction.run(module))
+        val unoptimisedCode  = CodeEmitter.codegen(unoptimizedIr)
         val dumpIrString     = module.toString()
         val optimizedModule  = pipeline(module)
         val destroyed        = VerifySSA.run(SSADestruction.run(optimizedModule))
@@ -25,16 +26,18 @@ object Driver {
         val unoptimizedAsm = File("$filename/base.S")
         val optimizedAsm   = File("$filename/opt.S")
         val dumpIr         = File("$filename/$filename.ir")
-        val dumpIrOpt      = File("$filename/$filename.opt.ir")
-        val dumpIrDestr    = File("$filename/$filename.dest.ir")
+        val baseDumpIrDestr = File("$filename/$filename.base.dest.ir")
+        val optDumpIrOpt   = File("$filename/$filename.opt.ir")
+        val optDumpIrDestr = File("$filename/$filename.opt.dest.ir")
 
         directoryName.mkdir()
 
-        unoptimizedAsm.writeText(codegen.toString())
+        baseDumpIrDestr.writeText(unoptimizedIr.toString())
+        unoptimizedAsm.writeText(unoptimisedCode.toString())
         optimizedAsm.writeText(optimizedCodegen.toString())
         dumpIr.writeText(dumpIrString)
-        dumpIrOpt.writeText(optimizedModule.toString())
-        dumpIrDestr.writeText(destroyed.toString())
+        optDumpIrOpt.writeText(optimizedModule.toString())
+        optDumpIrDestr.writeText(destroyed.toString())
         println("[Done '$filename']")
     }
 

@@ -9,8 +9,7 @@ class SSADestruction {
     companion object {
         fun run(module: Module): CSSAModule {
             val copy = module.copy()
-            val cssa = CSSAModule(copy.functions, copy.externFunctions)
-            return CopyInsertion.run(SplitCriticalEdge.run(cssa)) as CSSAModule
+            return CopyInsertion.run(SplitCriticalEdge.run(copy)) as CSSAModule
         }
     }
 }

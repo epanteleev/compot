@@ -70,8 +70,8 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
     companion object {
         fun dump(module: Module): String {
             val dump = when (module) {
-                is SSAModule -> DumpSSAlModule(module)
-                is CSSAModule       -> DumpCSSAModule(module)
+                is SSAModule  -> DumpSSAlModule(module)
+                is CSSAModule -> DumpCSSAModule(module)
                 else -> throw RuntimeException("undefined")
             }
 

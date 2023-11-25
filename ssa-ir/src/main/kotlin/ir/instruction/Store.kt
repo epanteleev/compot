@@ -39,7 +39,7 @@ class Store private constructor(pointer: Value, value: Value):
     }
 
     override fun hashCode(): Int {
-        return pointer().hashCode() and value().hashCode()
+        return pointer().type().hashCode() xor value().type().hashCode()
     }
 
     override fun equals(other: Any?): Boolean {

@@ -11,21 +11,19 @@ import ir.platform.liveness.LiveIntervals
 data class CSSAModule(override val functions: List<FunctionData>, override val externFunctions: Set<ExternFunction>):
     Module(functions, externFunctions) {
 
-    private val liveIntervals by lazy {
-        val map = hashMapOf<FunctionData, LiveIntervals>()
+    private val liveIntervals: Map<FunctionData, LiveIntervals>
+    private val registerAllocation: Map<FunctionData, RegisterAllocation>
+
+    init {
+        liveIntervals = hashMapOf()
         for (fn in functions) {
-            map[fn] = fn.liveness()
+            liveIntervals[fn] = fn.liveness()
         }
-        map
-    }
 
-    private val registerAllocation by lazy {
-        val map = hashMapOf<FunctionData, RegisterAllocation>()
+        registerAllocation = hashMapOf()
         for ((fn, liveIntervals) in liveIntervals) {
-            map[fn] = LinearScan.alloc(fn, liveIntervals)
+            registerAllocation[fn] = LinearScan.alloc(fn, liveIntervals)
         }
-
-        map
     }
 
     fun regAlloc(data: FunctionData): RegisterAllocation {

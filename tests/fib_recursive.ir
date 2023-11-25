@@ -1,13 +1,13 @@
-extern void printInt(i32)
+extern void @printInt(i32)
 
-define u64 main() {
+define u64 @main() {
 entry:
-        %1 = call i32 fib(8: i32)
-	call void printInt(%1: i32)
-        ret u64 0
+  %1 = call i32 @fib(8: i32)
+  call void @printInt(%1: i32)
+  ret u64 0
 }
 
-define i32 fib(%0: i32) {
+define i32 @fib(%0: i32) {
 entry:
   %1 = alloc i32
   %2 = alloc i32
@@ -29,10 +29,10 @@ L2:
 L3:
   %8 = load i32 %2
   %9 = sub i32 %8, 1
-  %10 = call i32 fib(%9: i32)
+  %10 = call i32 @fib(%9: i32)
   %11 = load i32 %2
   %12 = sub i32 %11, 2
-  %13 = call i32 fib(%12: i32)
+  %13 = call i32 @fib(%12: i32)
   %14 = add i32 %10, %13
   store i32* %1, %14
   br label L4

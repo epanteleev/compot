@@ -6,6 +6,7 @@ import ir.module.block.Label
 import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module
+import ir.platform.x64.CSSAModule
 
 internal class CopyInsertion private constructor(private val cfg: FunctionData) {
     private fun isolatePhis(bb: Block, phi: Phi) {
@@ -100,7 +101,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
     companion object {
         fun run(module: Module): Module {
             module.functions.forEach { CopyInsertion(it).pass() }
-            return module
+            return CSSAModule(module.functions, module.externFunctions)
         }
     }
 }

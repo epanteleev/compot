@@ -244,11 +244,7 @@ class CodeEmitter(private val data: FunctionData,
             objFunc.mov(temp, result)
         } else {
             result as Operand
-            if (operand is Imm) {
-                objFunc.mov(operand, result(8))
-            } else {
-                objFunc.mov(operand, result)
-            }
+            objFunc.mov(operand, result)
         }
     }
 
@@ -328,7 +324,26 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(cast: Cast) {
-        TODO("Not yet implemented")
+        val des = valueToRegister.operand(cast) as Operand
+        val src = valueToRegister.operand(cast.value())
+
+        val srcReg = if (src is Mem) {
+            objFunc.mov(src, temp1(src.size))
+        } else {
+            src as GPRegister
+        }
+
+        when (cast.castType) {
+            CastType.SignExtend -> {
+                objFunc.movsx(srcReg, des)
+            }
+
+            CastType.ZeroExtend -> {
+                objFunc.mov(srcReg, des)
+            }
+            CastType.Truncate -> TODO()
+            CastType.Bitcast -> TODO()
+        }
     }
 
     override fun visit(select: Select) {

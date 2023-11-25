@@ -88,9 +88,9 @@ class FunctionDataBuilderWithContext private constructor(
         return FunctionData.create(prototype, blocks, argumentValues)
     }
 
-    fun makePrototype(name: Identifier, returnType: PrimitiveTypeToken, argTypes: List<PrimitiveTypeToken>): FunctionPrototype {
+    fun makePrototype(functionName: FunctionName, returnType: PrimitiveTypeToken, argTypes: List<PrimitiveTypeToken>): FunctionPrototype {
         val types = argTypes.mapTo(arrayListOf()) { it.type() }
-        return FunctionPrototype(name.string, returnType.type(), types)
+        return FunctionPrototype(functionName.name, returnType.type(), types)
     }
 
     fun createLabel(): Block = allocateBlock()
@@ -214,8 +214,8 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun cast(name: ValueInstructionToken, operandToken: ValueToken, operandType: PrimitiveTypeToken, cast: CastType, resultType: PrimitiveTypeToken): Cast {
-        val value = getValue(operandToken, resultType.type())
-        return memorize(name, bb.cast(value, operandType.type(), cast))
+        val value = getValue(operandToken, operandType.type())
+        return memorize(name, bb.cast(value, resultType.type(), cast))
     }
 
     fun select(name: ValueInstructionToken, condTok: ValueToken, onTrueTok: ValueToken, onFalseTok: ValueToken, selectType: PrimitiveType): Value {
@@ -244,7 +244,7 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     companion object {
-        fun create(name: Identifier, returnType: PrimitiveTypeToken, argumentTypeTokens: List<PrimitiveTypeToken>, argumentValueTokens: List<ValueInstructionToken>): FunctionDataBuilderWithContext {
+        fun create(functionName: FunctionName, returnType: PrimitiveTypeToken, argumentTypeTokens: List<PrimitiveTypeToken>, argumentValueTokens: List<ValueInstructionToken>): FunctionDataBuilderWithContext {
             fun handleArguments(argumentTypeTokens: List<PrimitiveTypeToken>): List<ArgumentValue> {
                 val argumentValues = arrayListOf<ArgumentValue>()
                 for ((idx, arg) in argumentTypeTokens.withIndex()) {
@@ -264,7 +264,7 @@ class FunctionDataBuilderWithContext private constructor(
             }
 
             val args        = argumentTypeTokens.mapTo(arrayListOf()) { it.type() }
-            val prototype   = FunctionPrototype(name.string, returnType.type(), args)
+            val prototype   = FunctionPrototype(functionName.name, returnType.type(), args)
             val startBB     = Block.empty(Label.entry.index)
             val basicBlocks = BasicBlocks.create(startBB)
 

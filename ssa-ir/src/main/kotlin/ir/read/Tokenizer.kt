@@ -80,9 +80,10 @@ class Tokenizer(val data: String) {
 
     private fun readIdentifierOrKeywordOrType(): Token {
         return when (val string = readString()) {
-            "define" -> Define(line, pos)
-            "extern" -> Extern(line, pos)
-            "void"   -> PrimitiveTypeToken("void", 0, line, pos)
+            "define" -> Define(line, pos - "define".length)
+            "extern" -> Extern(line, pos - "extern".length)
+            "void"   -> PrimitiveTypeToken("void", 0, line, pos - "void".length)
+            "to"     -> To(line, pos - "to".length)
             else -> {
                 val begin = pos - string.length
                 if (!isEnd() && getChar() == ':') {
@@ -202,7 +203,13 @@ class Tokenizer(val data: String) {
             return tok
         }
 
-        return if (ch.isDigit()) {
+        if (ch == '@') {
+            nextChar()
+            val name = readString()
+            return FunctionName(name, line, pos - name.length)
+        }
+
+        return if (ch == '-' || ch.isDigit()) {
             readNumberOrIdentifier()
         } else if (ch == 'u' || ch == 'i' || ch == 'f' || ch == '<') {
             readType() ?:

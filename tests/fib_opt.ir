@@ -1,35 +1,35 @@
-extern void printInt(i32)
+extern void @printInt(i32)
 
-define u64 main() {
+define u64 @main() {
 entry:	
-	%0x0 = call i32 fib(8:i32)
-	call void printInt(%0x0:i32)
-	ret u64 0
+  %0x0 = call i32 @fib(8:i32)
+  call void @printInt(%0x0:i32)
+  ret u64 0
 }
 
-define i32 fib(%0:i32) {
+define i32 @fib(%0:i32) {
 entry:	
-	%cmp0x7 = icmp eq i32 %0, 0
-	br u1 %cmp0x7 label L1, label L2 
+  %cmp0x7 = icmp eq i32 %0, 0
+  br u1 %cmp0x7 label L1, label L2 
 L1:	; pred=entry
-	br label L3
+  br label L3
 L2:	; pred=entry
-	br label L4
+  br label L4
 L4:	; pred=L2, L7
-	%phi4x6 = phi i32 [2: L2, %7x1: L7]
-	%phi4x3 = phi i32 [0: L2, %phi4x4: L7]
-	%phi4x4 = phi i32 [1: L2, %5x2: L7]
-	%cmp4x2 = icmp sle i32 %phi4x6, %0
-	br u1 %cmp4x2 label L5, label L6 
+  %phi4x6 = phi i32 [2: L2, %7x1: L7]
+  %phi4x3 = phi i32 [0: L2, %phi4x4: L7]
+  %phi4x4 = phi i32 [1: L2, %5x2: L7]
+  %cmp4x2 = icmp sle i32 %phi4x6, %0
+  br u1 %cmp4x2 label L5, label L6 
 L5:	; pred=L4
-	%5x2 = add i32 %phi4x3, %phi4x4
-	br label L7
+  %5x2 = add i32 %phi4x3, %phi4x4
+  br label L7
 L7:	; pred=L5
-	%7x1 = add i32 %phi4x6, 1
-	br label L4
+  %7x1 = add i32 %phi4x6, 1
+  br label L4
 L6:	; pred=L4
-	br label L3
+  br label L3
 L3:	; pred=L1, L6
-	%phi3x1 = phi i32 [0: L1, %phi4x4: L6]
-	ret i32 %phi3x1
+  %phi3x1 = phi i32 [0: L1, %phi4x4: L6]
+  ret i32 %phi3x1
 }

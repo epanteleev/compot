@@ -140,6 +140,12 @@ data class Define(override val line: Int, override val pos: Int): Token(line, po
     }
 }
 
+data class To(override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "'to'"
+    }
+}
+
 data class Colon(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         return "':'"
@@ -181,3 +187,10 @@ data class CloseTriangleBracket(override val line: Int, override val pos: Int): 
         return "'>'"
     }
 }
+
+data class FunctionName(val name: String, override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "function @$name"
+    }
+}
+

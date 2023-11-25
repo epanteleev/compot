@@ -124,6 +124,10 @@ class ObjFunction(private val name: String) {
         return des
     }
 
+    fun movsx(src: GPRegister, des: AnyOperand) {
+        addInstruction(Movsx(src, des))
+    }
+
     fun call(name: String) {
         addInstruction(Call(name))
     }

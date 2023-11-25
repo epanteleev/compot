@@ -5,15 +5,15 @@ import ir.*
 import ir.instruction.Alloc
 
 data class Group(val values: List<LocalValue>, val precolored: Operand? = null) {
-    val stackAllocGroup: Boolean by lazy {
-        val isStackAlloc = values[0] is Alloc
-        if (isStackAlloc) {
+    val stackAllocGroup: Boolean
+
+    init {
+        stackAllocGroup = values[0] is Alloc
+        if (stackAllocGroup) {
             assert( values.find { it !is Alloc } == null) {
                 "must have only stackalloc values values=$values"
             }
         }
-
-        isStackAlloc
     }
 
     fun first(): LocalValue {

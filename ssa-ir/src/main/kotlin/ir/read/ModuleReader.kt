@@ -56,7 +56,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
 
     private fun parseCall(currentTok: ValueInstructionToken?) {
         val functionReturnType = iterator.expect<PrimitiveTypeToken>("function type")
-        val functionName       = iterator.expect<Identifier>("function name")
+        val functionName       = iterator.expect<FunctionName>("function name")
         val argumentsType      = arrayListOf<PrimitiveTypeToken>()
         val argumentValue      = arrayListOf<ValueToken>()
 
@@ -92,10 +92,12 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     private fun parseCast(resultName: ValueInstructionToken, castType: CastType) {
-        val castToken      = iterator.expect<PrimitiveTypeToken>("cast type")
-        val castValueToken = iterator.expect<ValueInstructionToken>("cast value")
+        val operandType = iterator.expect<PrimitiveTypeToken>("value type")
+        val operand   = iterator.expect<ValueInstructionToken>("cast value")
+        iterator.expect<To>("'to' keyword")
+        val castValueToken = iterator.expect<PrimitiveTypeToken>("cast type")
 
-        builder.cast(resultName, castValueToken, castToken, castType, castToken) //Todo
+        builder.cast(resultName, operand, operandType, castType, castValueToken)
     }
 
     private fun parseCmp(resultTypeToken: ValueInstructionToken) {
@@ -200,7 +202,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
                     "zext"       -> parseCast(currentTok, CastType.ZeroExtend)
                     "trunc"      -> parseCast(currentTok, CastType.Truncate)
                     "bitcast"    -> parseCast(currentTok, CastType.Bitcast)
-                    "alloc" -> parseStackAlloc(currentTok)
+                    "alloc"      -> parseStackAlloc(currentTok)
                     "icmp"       -> parseCmp(currentTok)
                     "phi"        -> parsePhi(currentTok)
                     "gep"        -> parseGep(currentTok)
@@ -271,20 +273,10 @@ class ModuleReader(string: String) {
         }
     }
 
-    private fun parseFunctionName(): Identifier {
-        return tokenIterator.next("function name").let {
-            if (it !is Identifier) {
-                throw ParseErrorException("function name", it)
-            }
-
-            it
-        }
-    }
-
     private fun parseExtern() {
         //extern <returnType> <function name> ( <type1>, <type2>, ...)
         val returnType = tokenIterator.expect<PrimitiveTypeToken>("return type")
-        val functionName = parseFunctionName()
+        val functionName = tokenIterator.expect<FunctionName>("function name")
 
         tokenIterator.expect<OpenParen>("'('")
 
@@ -309,7 +301,7 @@ class ModuleReader(string: String) {
     private fun parseFunction() {
         // define <returnType> <functionName>(<value1>:<type1>, <value2>:<type2>,...)
         val returnType = tokenIterator.expect<PrimitiveTypeToken>("return type")
-        val functionName = parseFunctionName()
+        val functionName = tokenIterator.expect<FunctionName>("function name")
 
         tokenIterator.expect<OpenParen>("'('")
         val argumentsType = arrayListOf<PrimitiveTypeToken>()

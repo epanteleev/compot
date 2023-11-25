@@ -54,12 +54,6 @@ class GetElementPtr private constructor(name: String, tp: Type, source: Value, i
                 "inconsistent types source.type=$sourceType, index.type=$indexType"
             }
 
-            if (index is ValueInstruction) {
-                require(indexType == Type.I64 || indexType == Type.U64) {
-                    "$index should be ${Type.I64} or ${Type.U64}"
-                }
-            }
-
             return registerUser(GetElementPtr(name, tp, source, index), source, index)
         }
 

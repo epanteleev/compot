@@ -1,6 +1,6 @@
-extern void printLongArray(i64*, i64)
+extern void @printLongArray(i64*, i64)
 
-define i32 main() {
+define i32 @main() {
 entry:
   %retval = alloc i32
   %array  = alloc <i64 x 5>
@@ -28,7 +28,7 @@ forInc:
 
 forEnd:
   %arraydecay = gep i64* %array, i64 0
-  call void printLongArray(%arraydecay: i64*, 5: i64)
+  call void @printLongArray(%arraydecay: i64*, 5: i64)
   %r = load i32 %retval
   ret i32 %r
 }
