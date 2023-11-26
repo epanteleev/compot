@@ -337,12 +337,12 @@ class CodeEmitter(private val data: FunctionData,
             CastType.SignExtend -> {
                 objFunc.movsx(srcReg, des)
             }
-
-            CastType.ZeroExtend -> {
-                objFunc.mov(srcReg, des)
+            CastType.ZeroExtend, CastType.Bitcast -> {
+                objFunc.mov(srcReg(des.size), des)
             }
-            CastType.Truncate -> TODO()
-            CastType.Bitcast -> TODO()
+            CastType.Truncate -> {
+                objFunc.mov(srcReg, des(srcReg.size))
+            }
         }
     }
 
