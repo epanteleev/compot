@@ -139,32 +139,25 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     private fun parseBranch() {
-        val labelOrType = iterator.next("'label' or type")
-        if (labelOrType is Identifier) {
-            // br label {labelName}
-            if (labelOrType.string == "label") {
-                val labelName = iterator.expect<Identifier>("label name")
-                builder.branch(labelName)
-            } else {
-                throw ParseErrorException("'label'", labelOrType)
-            }
-        } else if (labelOrType is PrimitiveTypeToken) {
-            // br {cmpValue} label {trueLabel}, label {falseLabel}
-            val cmpValue = iterator.expect<ValueInstructionToken>("value type")
-            if (iterator.expect<Identifier>("'label'").string != "label") {
-                throw ParseErrorException("label name", labelOrType)
+        when (val labelOrType = iterator.next("'label' or type")) {
+            is LabelUsage -> {
+                builder.branch(labelOrType)
             }
 
-            val trueLabel = iterator.expect<Identifier>("label name")
-            iterator.expect<Comma>("','")
-            if (iterator.expect<Identifier>("'label'").string != "label") {
-                throw ParseErrorException("label name", labelOrType)
+            is PrimitiveTypeToken -> {
+                // br {cmpValue} label {trueLabel}, label {falseLabel}
+                val cmpValue = iterator.expect<ValueInstructionToken>("value type")
+
+                val trueLabel = iterator.expect<LabelUsage>("'label' with name")
+                iterator.expect<Comma>("','")
+
+                val labelFalse = iterator.expect<LabelUsage>("'label' with name")
+                builder.branchCond(cmpValue, trueLabel, labelFalse)
             }
 
-            val labelFalse = iterator.expect<Identifier>("label name")
-            builder.branchCond(cmpValue, trueLabel, labelFalse)
-        } else {
-            throw ParseErrorException("'label' or type", labelOrType)
+            else -> {
+                throw ParseErrorException("'label' or type", labelOrType)
+            }
         }
     }
 
@@ -210,7 +203,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
                 }
             }
 
-            is LabelToken -> {
+            is LabelDefinition -> {
                 builder.switchLabel(currentTok)
             }
 

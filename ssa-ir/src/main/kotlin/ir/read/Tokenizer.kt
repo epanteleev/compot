@@ -1,6 +1,7 @@
 package ir.read
 
-class EOFException(expect: String): Exception("Expect: $expect, but found EOF")
+class EOFException(message: String): Exception(message)
+class TokenizerException(message: String): Exception(message)
 
 class Tokenizer(val data: String) {
     private var globalPosition = 0
@@ -10,7 +11,7 @@ class Tokenizer(val data: String) {
     private fun remainsLine(begin: Int): String {
         val end = data.indexOf('\n', begin)
         return if (end == -1) {
-            data.substring(begin, data.length - begin)
+            data.substring(begin, data.length)
         } else {
             data.substring(begin, end)
         }
@@ -37,6 +38,9 @@ class Tokenizer(val data: String) {
     }
 
     private fun getChar(): Char {
+        if (globalPosition >= data.length) {
+            throw EOFException("unexpected EOF in $line, $pos")
+        }
         return data[globalPosition]
     }
 
@@ -71,7 +75,7 @@ class Tokenizer(val data: String) {
 
     private fun readString(begin: Int = globalPosition): String {
         nextChar()
-        while (!isEnd() && (getChar().isLetterOrDigit() || getChar() == '_')) {
+        while (!isEnd() && (getChar().isLetterOrDigit() || getChar() == '_' || getChar() == '.')) {
             nextChar()
         }
         val end = globalPosition
@@ -79,16 +83,24 @@ class Tokenizer(val data: String) {
     }
 
     private fun readIdentifierOrKeywordOrType(): Token {
+        val begin = pos
         return when (val string = readString()) {
-            "define" -> Define(line, pos - "define".length)
-            "extern" -> Extern(line, pos - "extern".length)
-            "void"   -> PrimitiveTypeToken("void", 0, line, pos - "void".length)
-            "to"     -> To(line, pos - "to".length)
+            "define" -> Define(line, begin)
+            "extern" -> Extern(line, begin)
+            "void"   -> PrimitiveTypeToken("void", 0, line, begin)
+            "to"     -> To(line, begin)
+            "label"  -> {
+                skipWhitespace()
+                if (getChar() != '%') {
+                    throw TokenizerException("$line:$pos cannot parse: '${remainsLine(globalPosition)}'")
+                }
+                val labelName = readValueString()
+                LabelUsage(labelName, line, begin)
+            }
             else -> {
-                val begin = pos - string.length
                 if (!isEnd() && getChar() == ':') {
                     nextChar()
-                    LabelToken(string, line, begin)
+                    LabelDefinition(string, line, begin)
                 } else {
                     Identifier(string, line, begin)
                 }
@@ -96,26 +108,33 @@ class Tokenizer(val data: String) {
         }
     }
 
+    private fun readArrayType(): ArrayTypeToken {
+        nextChar()
+        val tok = readType()!!
+        skipWhitespace()
+
+        if (getChar() != 'x') {
+            throw TokenizerException("expect 'x' symbol")
+        }
+        nextChar()
+        skipWhitespace()
+        val size = readNumeric() ?: throw TokenizerException("expect size of array")
+        if (size !is IntValue) {
+            throw TokenizerException("expect integer type of array size")
+        }
+
+        skipWhitespace()
+        if (getChar() != '>') {
+            throw TokenizerException("expect '>' symbol")
+        }
+        nextChar()
+
+        return ArrayTypeToken(size.int, tok, line, pos)
+    }
+
     private fun readType(): TypeToken? {
         if (getChar() == '<') {
-            nextChar()
-            val tok = readType()!!
-            skipWhitespace()
-
-            assert(getChar() == 'x')
-            nextChar()
-            skipWhitespace()
-            val begin = globalPosition
-            while (!isEnd() && getChar().isDigit()) {
-                nextChar()
-            }
-            val size = data.substring(begin, globalPosition)
-
-            skipWhitespace()
-            assert(getChar() == '>')
-            nextChar()
-
-            return ArrayTypeToken(size.toInt(), tok, line, pos)
+            return readArrayType()
         }
 
         val begin = globalPosition
@@ -146,8 +165,7 @@ class Tokenizer(val data: String) {
         return PrimitiveTypeToken(typeName, indirection, line, start)
     }
 
-    private fun readNumberOrIdentifier(): Token {
-        val begin = globalPosition
+    private fun readNumeric(begin: Int = globalPosition): ValueToken? {
         val pos = pos
         nextChar()
         while (!isEnd() && getChar().isDigit()) {
@@ -162,24 +180,42 @@ class Tokenizer(val data: String) {
             }
 
             if (!isEnd() && !getChar().isWhitespace()) {
-                throw RuntimeException("$line:$pos cannot parse floating point value: ${remainsLine(begin)}")
+                throw TokenizerException("$line:$pos cannot parse floating point value: '${remainsLine(begin)}'")
             }
             val floatString = data.substring(begin, globalPosition)
             val float = floatString.toDoubleOrNull()
-                ?: throw RuntimeException("Cannot to be converted to floating point value: $floatString")
+                ?: throw TokenizerException("Cannot to be converted to floating point value: '$floatString'")
+
             return FloatValue(float, line, pos)
 
-        } else if (getChar().isLetter()) {
-            val string = readString(begin)
-            return Identifier(string, line, pos)
-
-        } else {
+        } else if (!getChar().isLetter() && getChar() != '_') {
             // Integer
             val intString = data.substring(begin, globalPosition)
             val intOrNull = intString.toLongOrNull() ?:
-                throw RuntimeException("$line:$pos cannot to be converted to integer: $intString")
+                throw TokenizerException("$line:$pos cannot to be converted to integer: '$intString'")
+
             return IntValue(intOrNull, line, pos)
+        } else {
+            return null
         }
+    }
+
+    private fun readNumberOrIdentifier(): Token {
+        val begin = globalPosition
+        val pos = pos
+
+        val number = readNumeric(begin)
+        if (number != null) {
+            return number
+        }
+
+        val string = readString(begin)
+        return Identifier(string, line, pos)
+    }
+
+    private fun readValueString(): String {
+        nextChar()
+        return readString()
     }
 
     internal fun nextToken(): Token {
@@ -217,12 +253,11 @@ class Tokenizer(val data: String) {
         } else if (ch.isLetter()) {
             readIdentifierOrKeywordOrType()
         } else if (ch == '%') {
-            nextChar()
-            val name = readString()
-            val start = pos - 1 - name.length
+            val start = pos
+            val name = readValueString()
             ValueInstructionToken(name, line, start)
         } else {
-            throw RuntimeException("$line:$pos cannot parse: ${remainsLine(globalPosition)}")
+            throw TokenizerException("$line:$pos cannot parse: ${remainsLine(globalPosition)}")
         }
     }
 

@@ -95,7 +95,7 @@ class FunctionDataBuilderWithContext private constructor(
 
     fun createLabel(): Block = allocateBlock()
 
-    fun switchLabel(labelTok: LabelToken) {
+    fun switchLabel(labelTok: LabelDefinition) {
         val label = getBlockOrCreate(labelTok.name)
         bb = blocks.findBlock(label)
     }
@@ -181,14 +181,14 @@ class FunctionDataBuilderWithContext private constructor(
         }
     }
 
-    fun branch(targetName: Identifier) {
-        val block = getBlockOrCreate(targetName.string)
+    fun branch(targetName: LabelUsage) {
+        val block = getBlockOrCreate(targetName.labelName)
         bb.branch(block)
     }
 
-    fun branchCond(valueTok: ValueInstructionToken, onTrueName: Identifier, onFalseName: Identifier) {
-        val onTrue  = getBlockOrCreate(onTrueName.string)
-        val onFalse = getBlockOrCreate(onFalseName.string)
+    fun branchCond(valueTok: ValueInstructionToken, onTrueName: LabelUsage, onFalseName: LabelUsage) {
+        val onTrue  = getBlockOrCreate(onTrueName.labelName)
+        val onFalse = getBlockOrCreate(onFalseName.labelName)
 
         val value = getValue(valueTok, Type.U1)
         bb.branchCond(value, onTrue, onFalse)

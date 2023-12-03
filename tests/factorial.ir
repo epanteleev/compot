@@ -7,7 +7,6 @@ entry:
   ret u64 0
 }
 
-
 define i32 @factorial(%val: i32) {
 entry:
   %valAddr   = alloc i32
@@ -16,26 +15,26 @@ entry:
   store i32* %valAddr, %val
   store i32* %factorial, 1
   store i32* %i, 1
-  br label forCond
+  br label %forCond
 
 forCond:
   %0 = load i32 %i
   %1 = load i32 %valAddr
   %cmp = icmp sle i32 %0, %1
-  br u1 %cmp label forBody, label forEnd
+  br u1 %cmp label %forBody, label %forEnd
 
 forBody:
   %2 = load i32 %factorial
   %3 = load i32 %i
   %mul = mul i32 %2, %3
   store i32* %factorial, %mul
-  br label forInc
+  br label %forInc
 
 forInc:
   %4 = load i32 %i
   %inc = add i32 %4, 1
   store i32* %i, %inc
-  br label forCond
+  br label %forCond
 
 forEnd:
   %5 = load i32 %factorial

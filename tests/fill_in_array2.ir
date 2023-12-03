@@ -7,24 +7,24 @@ entry:
   %i      = alloc i64
   store i32* %retval, 0
   store i64* %i, 0
-  br label forCond
+  br label %forCond
 
 forCond:
   %0 = load i64 %i
   %cmp = icmp slt i64 %0, 5
-  br u1 %cmp label forBody, label forEnd
+  br u1 %cmp label %forBody, label %forEnd
 
 forBody:
   %1 = load i64 %i
   %arrayidx = gep i64* %array, i64 %1
   store i64* %arrayidx, %1
-  br label forInc
+  br label %forInc
 
 forInc:
   %3 = load i64 %i
   %inc = add i64 %3, 1
   store i64* %i, %inc
-  br label forCond
+  br label %forCond
 
 forEnd:
   %arraydecay = gep i64* %array, i64 0

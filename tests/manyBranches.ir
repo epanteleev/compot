@@ -34,35 +34,35 @@ entry:
   store i32* %ret, 0
   %0 = load i32 %valAddr
   %cmp = icmp sgt i32 %0, 3
-  br u1 %cmp label ifThen, label ifElse
+  br u1 %cmp label %ifThen, label %ifElse
 
 ifThen:
   %1 = load i32 %valAddr
   %cmp1 = icmp slt i32 %1, 10
-  br u1 %cmp1 label ifThen2, label ifEnd
+  br u1 %cmp1 label %ifThen2, label %ifEnd
 
 ifThen2:
   store i32* %ret, 7
-  br label ifEnd
+  br label %ifEnd
 
 ifEnd:
-  br label ifEnd7
+  br label %ifEnd7
 
 ifElse:
   %2 = load i32 %valAddr
   %cmp3 = icmp sgt i32 %2, 20
-  br u1 %cmp3 label ifThen4, label ifElse5
+  br u1 %cmp3 label %ifThen4, label %ifElse5
 
 ifThen4:
   store i32* %ret, 20
-  br label ifEnd6
+  br label %ifEnd6
 
 ifElse5:
   store i32* %ret, 30
-  br label ifEnd6
+  br label %ifEnd6
 
 ifEnd6:
-  br label ifEnd7
+  br label %ifEnd7
 
 ifEnd7:
   %3 = load i32 %ret

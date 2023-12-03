@@ -82,9 +82,9 @@ data class PrimitiveTypeToken(private val type: String, private val indirection:
     }
 }
 
-data class ArrayTypeToken(val size: Int, val type: TypeToken, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+data class ArrayTypeToken(val size: Long, val type: TypeToken, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
     override fun type(): Type {
-        return ArrayType(type.type(), size)
+        return ArrayType(type.type(), size.toInt())
     }
 
     override fun message(): String {
@@ -146,6 +146,12 @@ data class To(override val line: Int, override val pos: Int): Token(line, pos) {
     }
 }
 
+data class LabelUsage(val labelName: String, override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "'label'"
+    }
+}
+
 data class Colon(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         return "':'"
@@ -158,7 +164,7 @@ data class Extern(override val line: Int, override val pos: Int): Token(line, po
     }
 }
 
-data class LabelToken(val name: String, override val line: Int, override val pos: Int): Token(line, pos) {
+data class LabelDefinition(val name: String, override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         return "label '$name:'"
     }

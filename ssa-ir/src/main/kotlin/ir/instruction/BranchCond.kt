@@ -8,7 +8,7 @@ import ir.module.block.Block
 class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block) :
     TerminateInstruction(arrayOf(value), arrayOf(onTrue, onFalse)) {
     override fun dump(): String {
-        return "br u1 ${condition()} label ${onTrue()}, label ${onFalse()} "
+        return "br u1 ${condition()} label %${onTrue()}, label %${onFalse()} "
     }
 
     fun condition(): Value {

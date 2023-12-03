@@ -27,17 +27,17 @@ entry:
   %0 = load i32 %aAddr
   %1 = load i32 %bAddr
   %cmp = icmp sgt i32 %0, %1
-  br u1 %cmp label ifThen, label ifEnd
+  br u1 %cmp label %ifThen, label %ifEnd
 
 ifThen:
   %2 = load i32 %aAddr
   store i32* %retval, %2
-  br label return
+  br label %return
 
 ifEnd:
   %3 = load i32 %bAddr
   store i32* %retval, %3
-  br label return
+  br label %return
 
 return:
   %4 = load i32 %retval
@@ -60,17 +60,17 @@ entry:
   %0 = load i32 %aAddr
   %1 = load i32 %bAddr
   %cmp = icmp slt i32 %0, %1
-  br u1 %cmp label ifThen, label ifEnd
+  br u1 %cmp label %ifThen, label %ifEnd
 
 ifThen:
   %2 = load i32 %aAddr
   store i32* %retval, %2
-  br label return
+  br label %return
 
 ifEnd:
   %3 = load i32 %bAddr
   store i32* %retval, %3
-  br label return
+  br label %return
 
 return:
   %4 = load i32 %retval
