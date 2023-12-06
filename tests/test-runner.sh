@@ -5,10 +5,12 @@ GREEN=`tput setaf 2`
 RESET=`tput sgr0`
 
 JAVA=java
+
+DEFAULT_JVM_OPTS="-ea"
 IR_COMPILER="../build/ssa-1.0/bin/ssa"
 
 mkdir ../build
-unzip ../ssa/build/distributions/ssa-1.0.zip -d ../build
+unzip -o ../ssa/build/distributions/ssa-1.0.zip -d ../build
 
 function compile_test() {
 	${IR_COMPILER} "$1.ir"

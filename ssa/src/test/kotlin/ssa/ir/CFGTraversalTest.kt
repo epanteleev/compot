@@ -1,11 +1,11 @@
 package ir
 
-import ir.module.block.BlockViewer
-import ir.module.builder.ModuleBuilder
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.CastType
 import ir.instruction.IntPredicate
 import ir.module.BasicBlocks
+import ir.module.block.BlockViewer
+import ir.module.builder.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.types.Type
 import kotlin.test.Test

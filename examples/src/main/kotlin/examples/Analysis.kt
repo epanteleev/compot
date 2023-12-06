@@ -1,21 +1,22 @@
 package examples
 
-import ir.*
-import ir.module.builder.ModuleBuilder
-import ir.platform.regalloc.LinearScan
+import ir.FunctionPrototype
+import ir.U16Value
+import ir.U64Value
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.CastType
 import ir.instruction.IntPredicate
+import ir.module.builder.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.pass.transform.utils.JoinPointSet
+import ir.platform.regalloc.LinearScan
 import ir.types.Type
 
 fun main() {
     val builder = ModuleBuilder.create()
 
     builder.createFunction("hello", Type.U64, arrayListOf(Type.U16.ptr(), Type.U64.ptr())).apply {
-        val d = argument(0)
         val arg1 = argument(0)
         val arg2 = argument(1)
         val variable = stackAlloc(Type.U64)
@@ -55,9 +56,9 @@ fun main() {
         val cast = cast(phi, Type.U16, CastType.Truncate)
         val arithm = arithmeticBinary(U16Value(1337), ArithmeticBinaryOp.Sub, cast)
         val conv = cast(arithm, Type.U64, CastType.ZeroExtend)
-        val sum1 = arithmeticBinary(conv, ArithmeticBinaryOp.Sub, phi)
+        arithmeticBinary(conv, ArithmeticBinaryOp.Sub, phi)
 
-        val v5 = load(Type.U64, variable)
+        load(Type.U64, variable)
 
         val retv = load(Type.U64, variable2)
         ret(retv)

@@ -1,7 +1,10 @@
 package read
 import ir.read.*
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class TokenizerTest {
     @Test

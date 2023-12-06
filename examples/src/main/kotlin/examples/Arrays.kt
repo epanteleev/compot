@@ -1,6 +1,7 @@
 package examples
 
-import ir.*
+import ir.FunctionPrototype
+import ir.I32Value
 import ir.module.builder.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
@@ -40,7 +41,6 @@ fun main() {
 
     val helloFn = FunctionPrototype("main", Type.U64, arrayListOf())
     val data = module.findFunction(helloFn)
-    val cfg = data.blocks
 
     println(data.liveness())
     val newModule = Mem2Reg.run(module)

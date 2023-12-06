@@ -1,11 +1,11 @@
 package examples
 
-import ir.module.builder.ModuleBuilder
 import ir.instruction.ArithmeticBinaryOp
-import ir.pass.transform.Mem2Reg
+import ir.module.builder.ModuleBuilder
 import ir.pass.ana.VerifySSA
-import startup.Driver
+import ir.pass.transform.Mem2Reg
 import ir.types.Type
+import startup.Driver
 
 fun main() {
     val moduleBuilder = ModuleBuilder.create()

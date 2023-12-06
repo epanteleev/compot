@@ -1,13 +1,11 @@
 package ir.codegen
 
-import ir.*
 import asm.x64.*
-import ir.types.Type
-import ir.pass.transform.Mem2Reg
-import ir.module.builder.ModuleBuilder
 import ir.instruction.ArithmeticBinaryOp
+import ir.module.builder.ModuleBuilder
+import ir.pass.transform.Mem2Reg
 import ir.platform.regalloc.VirtualRegistersPool
-
+import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -16,7 +14,6 @@ class CodegenTest {
     fun test() {
         val moduleBuilder = ModuleBuilder.create()
 
-        val prototype = FunctionPrototype("sum", Type.U64, arrayListOf(Type.U64, Type.U64))
         val builder = moduleBuilder.createFunction("sum", Type.U64, arrayListOf(Type.U64, Type.U64))
         val arg1 = builder.argument(0)
         val arg2 = builder.argument(1)
