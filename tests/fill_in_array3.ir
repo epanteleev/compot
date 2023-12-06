@@ -1,11 +1,11 @@
-extern void @printIntArray(i32*, i32)
-extern i32* @malloc(i32)
-extern void @free(i32*)
+extern void @printIntArray(ptr, i32)
+extern ptr @malloc(i32)
+extern void @free(ptr)
 
 define i32 @main() {
-  %array = call i32* @malloc(40: i32)
-  call void @fill_in_array(%array: i32*, 10: i32)
-  call void @free(%array: i32*)
+  %array = call ptr @malloc(40: i32)
+  call void @fill_in_array(%array: ptr, 10: i32)
+  call void @free(%array: ptr)
   ret i32 0
 }
 
@@ -17,10 +17,10 @@ define i32 @main() {
 ;    printArrayInt(array, len);
 ;    return 0;
 ;}
-define void @fill_in_array(%array: i32*, %len: i32) {
+define void @fill_in_array(%array: ptr, %len: i32) {
 entry:
   %i = alloc i32
-  store i32* %i, 0
+  store ptr %i, i32 0
   br label %forCond
 
 forCond:
@@ -30,18 +30,18 @@ forCond:
 
 forBody:
   %1 = load i32 %i
-  %arrayidx = gep i32* %array, i32 %1
-  store i32* %arrayidx, %1
+  %arrayidx = gep i32, ptr %array, i32 %1
+  store ptr %arrayidx, i32 %1
   br label %forInc
 
 forInc:
   %3 = load i32 %i
   %inc = add i32 %3, 1
-  store i32* %i, %inc
+  store ptr %i, i32 %inc
   br label %forCond
 
 forEnd:
-  %arraydecay = gep i32* %array, i32 0
-  call void @printIntArray(%arraydecay: i32*, %len: i32)
+  %arraydecay = gep i32, ptr %array, i32 0
+  call void @printIntArray(%arraydecay: ptr, %len: i32)
   ret void
 }

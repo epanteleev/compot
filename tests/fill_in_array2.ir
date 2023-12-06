@@ -1,12 +1,12 @@
-extern void @printLongArray(i64*, i64)
+extern void @printLongArray(ptr, i64)
 
 define i32 @main() {
 entry:
   %retval = alloc i32
   %array  = alloc <i64 x 5>
   %i      = alloc i64
-  store i32* %retval, 0
-  store i64* %i, 0
+  store ptr %retval, i32 0
+  store ptr %i, i64 0
   br label %forCond
 
 forCond:
@@ -16,19 +16,19 @@ forCond:
 
 forBody:
   %1 = load i64 %i
-  %arrayidx = gep i64* %array, i64 %1
-  store i64* %arrayidx, %1
+  %arrayidx = gep i64, ptr %array, i64 %1
+  store ptr %arrayidx, i64 %1
   br label %forInc
 
 forInc:
   %3 = load i64 %i
   %inc = add i64 %3, 1
-  store i64* %i, %inc
+  store ptr %i, i64 %inc
   br label %forCond
 
 forEnd:
-  %arraydecay = gep i64* %array, i64 0
-  call void @printLongArray(%arraydecay: i64*, 5: i64)
+  %arraydecay = gep i64, ptr %array, i64 0
+  call void @printLongArray(%arraydecay: ptr, 5: i64)
   %r = load i32 %retval
   ret i32 %r
 }

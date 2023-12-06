@@ -2,13 +2,13 @@ extern void @printInt(i32)
 
 define u64 @main() {
 entry:
-        %1 = call i32 @clamp(8: i32, 9: i32, 10: i32)
-	call void @printInt(%1: i32)
-	%2 = call i32 @clamp(8: i32, 20: i32, 10: i32)
-        call void @printInt(%2: i32)
-	%3 = call i32 @clamp(8: i32, 1: i32, 10: i32)
-        call void @printInt(%3: i32)
-        ret u64 0
+  %1 = call i32 @clamp(8: i32, 9: i32, 10: i32)
+  call void @printInt(%1: i32)
+  %2 = call i32 @clamp(8: i32, 20: i32, 10: i32)
+  call void @printInt(%2: i32)
+  %3 = call i32 @clamp(8: i32, 1: i32, 10: i32)
+  call void @printInt(%3: i32)
+  ret u64 0
 }
 
 ;int max(int a, int b) {
@@ -22,8 +22,8 @@ entry:
   %retval = alloc i32
   %aAddr = alloc i32
   %bAddr = alloc i32
-  store i32* %aAddr, %a
-  store i32* %bAddr, %b
+  store ptr %aAddr, i32 %a
+  store ptr %bAddr,i32 %b
   %0 = load i32 %aAddr
   %1 = load i32 %bAddr
   %cmp = icmp sgt i32 %0, %1
@@ -31,12 +31,12 @@ entry:
 
 ifThen:
   %2 = load i32 %aAddr
-  store i32* %retval, %2
+  store ptr %retval, i32 %2
   br label %return
 
 ifEnd:
   %3 = load i32 %bAddr
-  store i32* %retval, %3
+  store ptr %retval, i32 %3
   br label %return
 
 return:
@@ -55,8 +55,8 @@ entry:
   %retval = alloc i32
   %aAddr = alloc i32
   %bAddr = alloc i32
-  store i32* %aAddr, %a
-  store i32* %bAddr, %b
+  store ptr %aAddr, i32 %a
+  store ptr %bAddr, i32 %b
   %0 = load i32 %aAddr
   %1 = load i32 %bAddr
   %cmp = icmp slt i32 %0, %1
@@ -64,12 +64,12 @@ entry:
 
 ifThen:
   %2 = load i32 %aAddr
-  store i32* %retval, %2
+  store ptr %retval, i32 %2
   br label %return
 
 ifEnd:
   %3 = load i32 %bAddr
-  store i32* %retval, %3
+  store ptr %retval, i32 %3
   br label %return
 
 return:
@@ -87,13 +87,13 @@ entry:
   %valueAddr = alloc i32
   %toAddr    = alloc i32
   %b         = alloc i32
-  store i32* %fromAddr, %from
-  store i32* %valueAddr, %value
-  store i32* %toAddr, %to
+  store ptr %fromAddr, i32 %from
+  store ptr %valueAddr, i32 %value
+  store ptr %toAddr, i32 %to
   %0 = load i32 %valueAddr
   %1 = load i32 %toAddr
   %call = call i32 @min(%0: i32, %1: i32)
-  store i32* %b, %call
+  store ptr %b, i32 %call
   %2 = load i32 %fromAddr
   %3 = load i32 %b
   %call1 = call i32 @max(%2: i32, %3: i32)

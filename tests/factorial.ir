@@ -12,9 +12,9 @@ entry:
   %valAddr   = alloc i32
   %factorial = alloc i32
   %i = alloc i32
-  store i32* %valAddr, %val
-  store i32* %factorial, 1
-  store i32* %i, 1
+  store ptr %valAddr, i32 %val
+  store ptr %factorial, i32 1
+  store ptr %i, i32 1
   br label %forCond
 
 forCond:
@@ -27,13 +27,13 @@ forBody:
   %2 = load i32 %factorial
   %3 = load i32 %i
   %mul = mul i32 %2, %3
-  store i32* %factorial, %mul
+  store ptr %factorial, i32 %mul
   br label %forInc
 
 forInc:
   %4 = load i32 %i
   %inc = add i32 %4, 1
-  store i32* %i, %inc
+  store ptr %i, i32 %inc
   br label %forCond
 
 forEnd:

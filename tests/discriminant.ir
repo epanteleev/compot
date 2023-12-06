@@ -12,9 +12,9 @@ entry:
   %aAddr = alloc i32
   %bAddr = alloc i32
   %cAddr = alloc i32
-  store i32* %aAddr, %a
-  store i32* %bAddr, %b 
-  store i32* %cAddr, %c 
+  store ptr %aAddr, i32 %a
+  store ptr %bAddr, i32 %b 
+  store ptr %cAddr, i32 %c 
   %0 = load i32 %bAddr
   %1 = load i32 %bAddr
   %mul = mul i32 %0, %1

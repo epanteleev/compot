@@ -11,14 +11,14 @@ entry:
   %14 = alloc u64
   %15 = alloc u64
   %16 = alloc u64
-  store u64* %9, %0
-  store u64* %10, %1
-  store u64* %11, %2
-  store u64* %12, %3
-  store u64* %13, %4
-  store u64* %14, %5
-  store u64* %15, %6
-  store u64* %16, %7
+  store ptr %9, u64 %0
+  store ptr %10, u64 %1
+  store ptr %11, u64 %2
+  store ptr %12, u64 %3
+  store ptr %13, u64 %4
+  store ptr %14, u64 %5
+  store ptr %15, u64 %6
+  store ptr %16, u64 %7
   %17 = load u64 %9
   %18 = load u64 %10
   %19 = add u64 %17, %18
@@ -35,7 +35,7 @@ entry:
   %30 = load u64 %16
   %31 = add u64 %29, %30
   call void @printUlong(%31:u64)
-  store u64* %8, %31
+  store ptr %8, u64 %31
   %32 = load u64 %8
   ret u64 %32
 }

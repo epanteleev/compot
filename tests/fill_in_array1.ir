@@ -1,23 +1,23 @@
-extern void @printIntArray(i32*, i32)
+extern void @printIntArray(ptr, i32)
 
 define u64 @main() {
 entry:
   %retVal = alloc i32
   %array = alloc <i32 x 5>
-  %zero = gep i32* %array, i32 0
-  store i32* %zero, 0
-  %first = gep i32* %array, i32 1
-  store i32* %first, 1
-  %second = gep i32* %array, i32 2
-  store i32* %second, 2
-  %third = gep i32* %array, i32 3
-  store i32* %third, 3
-  %forth = gep i32* %array, i32 4
-  store i32* %forth, 4
-  %begin = gep i32* %array, i32 0
-  store i32* %retVal, 154
+  %zero = gep i32, ptr %array, i32 0
+  store ptr %zero, i32 0
+  %first = gep i32, ptr %array, i32 1
+  store ptr %first, i32 1
+  %second = gep i32, ptr %array, i32 2
+  store ptr %second, i32 2
+  %third = gep i32, ptr %array, i32 3
+  store ptr %third, i32 3
+  %forth = gep i32, ptr %array, i32 4
+  store ptr %forth, i32 4
+  %begin = gep i32, ptr %array, i32 0
+  store ptr %retVal, i32 154
   %ret = load i32 %retVal
-  call void @printIntArray(%begin: i32*, 5: i32)	
+  call void @printIntArray(%begin: ptr, 5: i32)	
   ret i32 %retVal
 }
 

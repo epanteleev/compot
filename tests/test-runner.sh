@@ -5,7 +5,10 @@ GREEN=`tput setaf 2`
 RESET=`tput sgr0`
 
 JAVA=java
-IR_COMPILER="${JAVA} -jar -ea ../ssa-ir/target/ssa-ir-1.0-SNAPSHOT-jar-with-dependencies.jar"
+IR_COMPILER="../build/ssa-1.0/bin/ssa"
+
+mkdir ../build
+unzip ../ssa/build/distributions/ssa-1.0.zip -d ../build
 
 function compile_test() {
 	${IR_COMPILER} "$1.ir"
