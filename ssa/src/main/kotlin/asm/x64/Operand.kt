@@ -891,7 +891,7 @@ class ArgumentSlot(val base: GPRegister, val offset: Long, override val size: In
 
 data class AddressLiteral internal constructor(val label: String, override val size: Int): Address {
     override fun toString(): String {
-        return "\$$label"
+        return "$label(%rip)"
     }
     override fun invoke(size: Int): Operand {
         return AddressLiteral(label, size)

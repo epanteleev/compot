@@ -79,7 +79,7 @@ class RegisterAllocation(private val stackSize: Long,
             is I32Value       -> Imm(value.i32.toLong(), 4)
             is I64Value       -> Imm(value.i64, 8)
             is U64Value       -> Imm(value.u64, 8)
-            is GlobalConstant -> Address.mem(value.name(), 8)
+            is GlobalValue -> Address.mem(value.name(), 8)
             else -> throw RuntimeException("expect $value:${value.type()}")
         }
     }

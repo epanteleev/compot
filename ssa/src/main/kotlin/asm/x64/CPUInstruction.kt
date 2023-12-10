@@ -26,7 +26,7 @@ data class Pop(val register: GPRegister): CPUInstruction {
 
 data class Mov(val src: AnyOperand, val des: Operand): CPUInstruction {
     override fun toString(): String {
-        return "mov${prefix(src.size)} $src, $des"
+        return "mov${prefix(des.size)} $src, $des"
     }
 }
 

@@ -1,0 +1,10 @@
+extern i32 @printf(ptr)
+
+@str = constant <i8 x 12> "Hello world"
+
+define i32 @main() {
+entry:	
+  %0x0 = call i32 @printf(@str:ptr)
+  ret i32 0
+}
+

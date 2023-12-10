@@ -66,7 +66,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
     }
 
     protected open fun dumpPrototype(prototype: FunctionPrototype, argumentValues: List<Value>) {
-        builder.append("define ${prototype.type()} ${prototype.name}(")
+        builder.append("define ${prototype.type()} @${prototype.name}(")
         argumentValues.joinTo(builder) { argumentValue -> "$argumentValue:${argumentValue.type()}" }
         builder.append(") ")
     }

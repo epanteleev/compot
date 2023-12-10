@@ -34,7 +34,7 @@ class Call private constructor(name: String, private val func: AnyFunctionProtot
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%$identifier = call $tp ${func.name}(")
+        builder.append("%$identifier = call $tp @${func.name}(")
         operands.joinTo(builder) { "$it:${it.type()}"}
         builder.append(")")
         return builder.toString()

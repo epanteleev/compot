@@ -7,7 +7,7 @@ private data class BuilderContext(var label: Label, var instructions: Instructio
 private class InstructionList {
     private val list = arrayListOf<CPUInstruction>()
 
-    fun add(inst: CPUInstruction) {
+    fun add(inst: CPUInstruction) { //Todo
         if (list.isNotEmpty() && list.last() is Jump) {
             list.add(list.size - 1, inst)
         } else {

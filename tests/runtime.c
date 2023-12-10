@@ -4,13 +4,32 @@ void printLong(long value) {
 	printf("%ld\n", value);	
 }
 
-void printUlong(unsigned long value) {
+void printULong(unsigned long value) {
         printf("%lu\n", value); 
 }
 
-
 void printInt(int value) {
         printf("%d\n", value); 
+}
+
+void printUInt(unsigned int value) {
+        printf("%u\n", value);
+}
+
+void printShort(short value) {
+        printf("%d\n", value);
+}
+
+void printUShort(unsigned short value) {
+        printf("%u\n", value);
+}
+
+void printByte(char value) {
+        printf("%d\n", value);
+}
+
+void printUByte(unsigned char value) {
+        printf("%u\n", value);
 }
 
 void printLongArray(long* array, long size) {

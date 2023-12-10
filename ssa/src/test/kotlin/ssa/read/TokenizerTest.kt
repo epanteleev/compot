@@ -17,7 +17,7 @@ class TokenizerTest {
         assertEquals(ElementaryTypeToken("u64", 1,10), iterator.next())
         assertEquals(IntValue(3, 1, 14), iterator.next())
         assertEquals(Comma(1, 15), iterator.next())
-        assertEquals(ValueInstructionToken("1", 1, 17), iterator.next())
+        assertEquals(LocalValueToken("1", 1, 17), iterator.next())
         assertEquals(iterator.hasNext(), false)
     }
 
@@ -26,16 +26,16 @@ class TokenizerTest {
         val tokenizer = Tokenizer("%3=gep ptr %129, %1\n%43=load ptr %3")
         val iterator = tokenizer.iterator()
 
-        assertEquals(ValueInstructionToken("3", 1, 0), iterator.next())
+        assertEquals(LocalValueToken("3", 1, 0), iterator.next())
         assertTrue(iterator.hasNext())
         assertEquals(Equal(1, 2), iterator.next())
         assertTrue(iterator.hasNext())
         assertEquals(Identifier("gep", 1, 3), iterator.next())
         assertEquals(ElementaryTypeToken("ptr", 1, 7), iterator.next())
-        assertEquals(ValueInstructionToken("129", 1, 11), iterator.next())
+        assertEquals(LocalValueToken("129", 1, 11), iterator.next())
         assertEquals(Comma(1, 15), iterator.next())
-        assertEquals(ValueInstructionToken("1", 1, 17), iterator.next())
-        assertEquals(ValueInstructionToken("43", 2, 0), iterator.next())
+        assertEquals(LocalValueToken("1", 1, 17), iterator.next())
+        assertEquals(LocalValueToken("43", 2, 0), iterator.next())
         assertEquals(Equal(2, 3), iterator.next())
         assertEquals(Identifier("load", 2, 4), iterator.next())
         assertEquals(ElementaryTypeToken("ptr", 2, 9), iterator.next())
@@ -89,7 +89,7 @@ class TokenizerTest {
         val iterator = tokenizer.iterator()
         assertEquals(Define(1, 0), iterator.next())
         assertEquals(ElementaryTypeToken("void", 1, 7), iterator.next())
-        assertEquals(FunctionName("some", 1, 13), iterator.next())
+        assertEquals(SymbolValue("some", 1, 13), iterator.next())
         assertFalse(iterator.hasNext())
     }
 

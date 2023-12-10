@@ -1,0 +1,14 @@
+extern void @printInt(i32)
+extern i32 @printf(ptr)
+
+@integer = constant i32 120
+@str     = constant <i8 x 5> "abc "
+
+define i32 @main() {
+entry:
+  %unused = call i32 @printf(@str: ptr)
+  %v = load i32 @integer
+  call void @printInt(%v: i32)
+  ret i32 0
+}
+

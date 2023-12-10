@@ -152,17 +152,6 @@ data class F64Value(val f64: Double): Constant {
     }
 }
 
-data class StringLiteral(val string: String): Constant {
-    private val tp = ArrayType(Type.I8, string.length)
-    override fun type(): Type {
-        return tp
-    }
-
-    override fun toString(): String {
-        return "\"$string\""
-    }
-}
-
 class UndefinedValue: Constant, LocalValue {
     override fun name(): String {
         return toString()

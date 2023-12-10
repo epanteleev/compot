@@ -21,7 +21,7 @@ internal object Utils {
         }
 
         val pointer = instruction.operand()
-        return pointer !is ArgumentValue && pointer.type() is PrimitiveType
+        return pointer is ValueInstruction && pointer.type() is PrimitiveType
     }
 
     fun isStoreOfLocalVariable(instruction: Instruction): Boolean {

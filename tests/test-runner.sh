@@ -66,3 +66,15 @@ compile_and_run fill_in_array3 "0123456789"
 compile_and_run i32_to_i64 "-1"
 compile_and_run u32_to_u64 "1"
 compile_and_run i64_to_i32 "-1"
+compile_and_run hello_world "Hello world"
+compile_and_run load_global_var 120
+compile_and_run load_global_var1 "abc 120"
+compile_and_run load_global_var2 "-8
+-16
+-32
+-64
+8
+16
+32
+64"
+

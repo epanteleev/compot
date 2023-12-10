@@ -85,12 +85,13 @@ class Tokenizer(val data: String) {
     private fun readIdentifierOrKeywordOrType(): Token {
         val begin = pos
         return when (val string = readString()) {
-            "define" -> Define(line, begin)
-            "extern" -> Extern(line, begin)
-            "void"   -> ElementaryTypeToken("void", line, begin)
-            "to"     -> To(line, begin)
-            "ptr"    -> ElementaryTypeToken("ptr", line, begin)
-            "label"  -> {
+            "define"   -> Define(line, begin)
+            "extern"   -> Extern(line, begin)
+            "void"     -> ElementaryTypeToken("void", line, begin)
+            "to"       -> To(line, begin)
+            "ptr"      -> ElementaryTypeToken("ptr", line, begin)
+            "constant" -> ConstantKeyword(line, begin)
+            "label"    -> {
                 skipWhitespace()
                 if (getChar() != '%') {
                     throw TokenizerException("$line:$pos cannot parse: '${remainsLine(globalPosition)}'")
@@ -156,7 +157,7 @@ class Tokenizer(val data: String) {
         return ElementaryTypeToken(typeName, line, start)
     }
 
-    private fun readNumeric(begin: Int = globalPosition): ValueToken? {
+    private fun readNumeric(begin: Int = globalPosition): AnyValueToken? {
         val pos = pos
         nextChar()
         while (!isEnd() && getChar().isDigit()) {
@@ -209,6 +210,26 @@ class Tokenizer(val data: String) {
         return readString()
     }
 
+    private fun readStringLiteral(): StringLiteralToken {
+        nextChar()
+        val begin = globalPosition
+        var end = globalPosition
+        while (getChar() != '"') {
+            end += 1
+            nextChar()
+        }
+        nextChar()
+        val string = data.substring(begin, end)
+        return StringLiteralToken(string, line, begin)
+    }
+
+    private fun readSymbolName(): SymbolValue {
+        nextChar()
+        val begin = pos
+        val name = readString()
+        return SymbolValue(name, line, begin)
+    }
+
     internal fun nextToken(): Token {
         skipWhitespace()
         val ch = getChar()
@@ -230,10 +251,10 @@ class Tokenizer(val data: String) {
             return tok
         }
 
-        if (ch == '@') {
-            nextChar()
-            val name = readString()
-            return FunctionName(name, line, pos - name.length)
+        when (ch) {
+            '"' -> return readStringLiteral()
+            '@' -> return readSymbolName()
+            else -> {}
         }
 
         return if (ch == '-' || ch.isDigit()) {
@@ -246,7 +267,7 @@ class Tokenizer(val data: String) {
         } else if (ch == '%') {
             val start = pos
             val name = readValueString()
-            ValueInstructionToken(name, line, start)
+            LocalValueToken(name, line, start)
         } else {
             throw TokenizerException("$line:$pos cannot parse: ${remainsLine(globalPosition)}")
         }

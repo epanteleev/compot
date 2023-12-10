@@ -1,7 +1,7 @@
 package ir.platform.x64
 
 import ir.ExternFunction
-import ir.GlobalConstant
+import ir.GlobalValue
 import ir.module.*
 import ir.module.auxiliary.Copy
 import ir.module.auxiliary.DumpModule
@@ -11,7 +11,7 @@ import ir.platform.regalloc.RegisterAllocation
 
 data class CSSAModule(override val functions: List<FunctionData>,
                       override val externFunctions: Set<ExternFunction>,
-                      override val constants: Set<GlobalConstant>):
+                      override val constants: Set<GlobalValue>):
     Module(functions, externFunctions, constants) {
     private val liveIntervals: Map<FunctionData, LiveIntervals>
     private val registerAllocation: Map<FunctionData, RegisterAllocation>

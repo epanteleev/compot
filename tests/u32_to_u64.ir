@@ -1,8 +1,8 @@
-extern void @printUlong(u64)
+extern void @printULong(u64)
 
 define i32 @main() {
   %long = call u64 @u32_to_u64(1: u32)
-  call void @printUlong(%long: u64)
+  call void @printULong(%long: u64)
   ret i32 0
 }
 

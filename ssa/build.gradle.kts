@@ -25,6 +25,9 @@ application {
 }
 
 tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+tasks.named<Jar>("jar") {
+    dependsOn.add(tasks.findByName("test"))
 }

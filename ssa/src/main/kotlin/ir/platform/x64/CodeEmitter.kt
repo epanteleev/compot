@@ -190,7 +190,7 @@ class CodeEmitter(private val data: FunctionData,
         val pointer = valueToRegister.operand(load.operand())
         val value   = valueToRegister.operand(load) as Operand
 
-        val operand = if (value is Address2) {
+        val operand = if (value is Address) {
             objFunc.mov(value, temp1(value.size))
         } else {
             value
@@ -198,7 +198,7 @@ class CodeEmitter(private val data: FunctionData,
 
         objFunc.mov(pointer, operand)
 
-        if (value is Address2) {
+        if (value is Address) {
             objFunc.mov(temp1(value.size), value)
         }
     }
@@ -224,8 +224,8 @@ class CodeEmitter(private val data: FunctionData,
         val cond = branchCond.condition()
         if (cond is IntCompare) {
             val jmpType = when (cond.predicate().invert()) {
-                IntPredicate.Eq -> JmpType.JE
-                IntPredicate.Ne -> JmpType.JNE
+                IntPredicate.Eq  -> JmpType.JE
+                IntPredicate.Ne  -> JmpType.JNE
                 IntPredicate.Ugt -> JmpType.JG
                 IntPredicate.Uge -> JmpType.JGE
                 IntPredicate.Ult -> JmpType.JL
@@ -246,10 +246,19 @@ class CodeEmitter(private val data: FunctionData,
         val result  = valueToRegister.operand(copy)
         val operand = valueToRegister.operand(copy.origin())
 
-        if (result is Address2 && operand is Address2) {
+        if (result is Address && operand is Address) {
             val temp = temp1(operand.size)
-            objFunc.mov(operand, temp)
+            if (operand is AddressLiteral) {
+                objFunc.lea(operand, temp)
+            } else {
+                objFunc.mov(operand, temp)
+            }
+
             objFunc.mov(temp, result)
+        } else if (operand is AddressLiteral) {
+            val dest =  result as GPRegister
+            objFunc.lea(operand, dest)
+
         } else {
             result as Operand
             objFunc.mov(operand, result)
@@ -404,6 +413,10 @@ class CodeEmitter(private val data: FunctionData,
             }
 
             val asm = Assembler()
+
+            for (c in module.constants) {
+                asm.mkSymbol(c)
+            }
 
             for ((idx, data) in module.functions().withIndex()) {
                 CodeEmitter(data, idx, asm.mkFunction(data.prototype.name), module.regAlloc(data)).emit()

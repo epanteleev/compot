@@ -9,7 +9,7 @@ import ir.types.Type
 class ModuleBuilder {
     private val functions = arrayListOf<FunctionDataBuilder>()
     private val externFunctions = mutableSetOf<ExternFunction>()
-    private val constants = mutableSetOf<GlobalConstant>()
+    private val constants = mutableSetOf<GlobalValue>()
 
     fun createFunction(name: String, returnType: Type, argumentTypes: List<Type>): FunctionDataBuilder {
         val data = FunctionDataBuilder.create(name, returnType, argumentTypes)
@@ -29,16 +29,9 @@ class ModuleBuilder {
         return extern
     }
 
-    fun createGlobalConstant(name: String, data: Constant): Value {
-        val constant = InitializedGlobalConstant(name, data)
-        constants.add(constant)
-        return constant
-    }
-
-    fun createGlobalConstant(name: String, type: Type): Value {
-        val constant = ZeroGlobalConstant(name, type)
-        constants.add(constant)
-        return constant
+    fun addConstant(global: GlobalValue): GlobalValue {
+        constants.add(global)
+        return global
     }
 
     fun build(): Module {

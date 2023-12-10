@@ -16,21 +16,23 @@ data class Identifier(val string: String, override val line: Int, override val p
     }
 }
 
-abstract class ValueToken(override val line: Int, override val pos: Int): Token(line, pos)
+abstract class AnyValueToken(override val line: Int, override val pos: Int): Token(line, pos)
 
-data class IntValue(val int: Long, override val line: Int, override val pos: Int): ValueToken(line, pos) {
+data class IntValue(val int: Long, override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
     override fun message(): String {
         return "int value '$int'"
     }
 }
 
-data class FloatValue(val fp: Double, override val line: Int, override val pos: Int): ValueToken(line, pos) {
+data class FloatValue(val fp: Double, override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
     override fun message(): String {
         return "float value '$fp'"
     }
 }
 
-data class ValueInstructionToken(val name: String, override val line: Int, override val pos: Int): ValueToken(line, pos) {
+abstract class ValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos)
+
+data class LocalValueToken(val name: String, override val line: Int, override val pos: Int): ValueToken(line, pos) {
     override fun message(): String {
         return "value '%$name'"
     }
@@ -115,6 +117,12 @@ data class Equal(override val line: Int, override val pos: Int): Token(line, pos
     }
 }
 
+data class ConstantKeyword(override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "'constant'"
+    }
+}
+
 data class Comma(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         return "','"
@@ -187,9 +195,14 @@ data class CloseTriangleBracket(override val line: Int, override val pos: Int): 
     }
 }
 
-data class FunctionName(val name: String, override val line: Int, override val pos: Int): Token(line, pos) {
+data class SymbolValue(val name: String, override val line: Int, override val pos: Int): ValueToken(line, pos) {
     override fun message(): String {
-        return "function @$name"
+        return "@$name"
     }
 }
 
+data class StringLiteralToken(val string: String, override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "\"$string\""
+    }
+}

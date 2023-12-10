@@ -1,0 +1,50 @@
+extern void @printByte(i8)
+extern void @printShort(i16)
+extern void @printInt(i32)
+extern void @printLong(i64)
+
+extern void @printUByte(u8)
+extern void @printUShort(u16)
+extern void @printUInt(u32)
+extern void @printULong(u64)
+
+
+@byte    = constant i8  -8
+@short   = constant i16 -16 
+@integer = constant i32 -32
+@long    = constant i64 -64
+
+@ubyte    = constant u8 8
+@ushort   = constant u16 16
+@uinteger = constant u32 32
+@ulong    = constant u64 64
+
+
+define i32 @main() {
+entry:
+  %byte = load i8 @byte
+  call void @printByte(%byte: i8)
+
+  %short = load i16 @short
+  call void @printShort(%short: i16)
+
+  %int = load i32 @integer
+  call void @printInt(%int: i32)
+
+  %long = load i64 @long
+  call void @printLong(%long: i64)
+
+  %ubyte = load u8 @ubyte
+  call void @printUByte(%ubyte: u8)
+
+  %ushort = load u16 @ushort
+  call void @printUShort(%ushort: u16)
+
+  %uint = load u32 @uinteger
+  call void @printUInt(%uint: u32)
+
+  %ulong = load u64 @ulong
+  call void @printULong(%ulong: u64)
+  ret i32 0
+}
+
