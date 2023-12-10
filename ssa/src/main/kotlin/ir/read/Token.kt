@@ -123,6 +123,12 @@ data class ConstantKeyword(override val line: Int, override val pos: Int): Token
     }
 }
 
+data class GlobalKeyword(override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "'global'"
+    }
+}
+
 data class Comma(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         return "','"

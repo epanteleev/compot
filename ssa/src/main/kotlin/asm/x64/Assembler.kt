@@ -1,15 +1,14 @@
 package asm.x64
 
 import ir.*
-import ir.types.Type
 
 class Assembler {
-    private val list = arrayListOf<ObjFunction>()
+    private val functions = arrayListOf<ObjFunction>()
     private val symbols = mutableSetOf<ObjSymbol>()
 
     fun mkFunction(name: String): ObjFunction {
         val fn = ObjFunction(name)
-        list.add(fn)
+        functions.add(fn)
         return fn
     }
 
@@ -34,17 +33,21 @@ class Assembler {
 
     override fun toString(): String {
         val builder = StringBuilder()
-        list.forEach {
+        functions.forEach {
             builder.append(".global ${it.name()}\n")
         }
         builder.append('\n')
 
+        if (symbols.isNotEmpty()) {
+            builder.append(".data\n")
+        }
         symbols.forEach {
             builder.append(it)
             builder.append('\n')
         }
 
-        list.joinTo(builder, separator = "\n")
+        builder.append(".text\n")
+        functions.joinTo(builder, separator = "\n")
         return builder.toString()
     }
 }

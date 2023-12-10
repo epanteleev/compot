@@ -37,28 +37,27 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     private fun getValue(token: AnyValueToken, ty: Type): Value {
-        return token.let { token ->
-            when (token) {
-                is IntValue   -> Constant.of(ty, token.int)
-                is FloatValue -> Constant.of(ty, token.fp)
-                is LocalValueToken -> {
-                    val operand = nameMap[token.name] ?:
-                        throw RuntimeException("in ${token.position()} undefined value ${token.name}")
+        return when (token) {
+            is IntValue -> Constant.of(ty, token.int)
+            is FloatValue -> Constant.of(ty, token.fp)
+            is LocalValueToken -> {
+                val operand = nameMap[token.name]
+                    ?: throw RuntimeException("in ${token.position()} undefined value ${token.name}")
 
-                    if (operand.type() != ty && operand.type() !is PointerType) {
-                        throw ParseErrorException("must be the same type: in_file=$ty, find=${operand.type()} in ${token.position()}")
-                    }
-
-                    operand
+                if (operand.type() != ty && operand.type() !is PointerType) {
+                    throw ParseErrorException("must be the same type: in_file=$ty, find=${operand.type()} in ${token.position()}")
                 }
-                is SymbolValue -> {
-                    val symbolName = token.name
-                    val gValue = globals.find { symbolName == it.name() }
-                        ?: throw ParseErrorException("cannot find global value '$symbolName'")
-                    gValue
-                } //TODO
-                else -> throw ParseErrorException("constant or value", token)
+
+                operand
             }
+
+            is SymbolValue -> {
+                val symbolName = token.name
+                val gValue = globals.find { symbolName == it.name() }
+                    ?: throw ParseErrorException("cannot find global value '$symbolName'")
+                gValue
+            } //TODO
+            else -> throw ParseErrorException("constant or value", token)
         }
     }
 

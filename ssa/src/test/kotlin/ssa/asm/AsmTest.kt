@@ -21,6 +21,7 @@ class AsmTest {
         """
         .global main
         
+        .text
         main:
             pushq %rbp
             movq %rsp, %rbp

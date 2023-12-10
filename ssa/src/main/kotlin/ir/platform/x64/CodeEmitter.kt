@@ -175,12 +175,12 @@ class CodeEmitter(private val data: FunctionData,
         val pointer = valueToRegister.operand(store.pointer()) as Operand
         var value   = valueToRegister.operand(store.value())
 
-        if (value is Address2) {
+        if (value is Address) {
             value = objFunc.mov(value, temp2(value.size))
         }
 
         when (pointer) {
-            is Address2        -> objFunc.mov(value, pointer)
+            is Address    -> objFunc.mov(value, pointer)
             is GPRegister -> objFunc.mov(value, Address.mem(pointer, 0, value.size))
             else -> throw RuntimeException("unsupported pointer=$pointer")
         }

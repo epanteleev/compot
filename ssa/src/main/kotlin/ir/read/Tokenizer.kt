@@ -91,6 +91,7 @@ class Tokenizer(val data: String) {
             "to"       -> To(line, begin)
             "ptr"      -> ElementaryTypeToken("ptr", line, begin)
             "constant" -> ConstantKeyword(line, begin)
+            "global"   -> GlobalKeyword(line, begin)
             "label"    -> {
                 skipWhitespace()
                 if (getChar() != '%') {

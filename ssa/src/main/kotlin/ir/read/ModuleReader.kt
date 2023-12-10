@@ -36,7 +36,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
 
     private fun parseStore() {
         iterator.expect<ElementaryTypeToken>("stored value type") //Todo check type
-        val pointerToken = iterator.expect<LocalValueToken>("pointer")
+        val pointerToken = iterator.expect<ValueToken>("pointer")
 
         iterator.expect<Comma>("','")
         val valueTypeToken = iterator.expect<ElementaryTypeToken>("pointer")
@@ -262,7 +262,10 @@ class ModuleReader(string: String) {
 
     private fun parseGlobals(name: SymbolValue) {
         tokenIterator.expect<Equal>("'='")
-        tokenIterator.expect<ConstantKeyword>("'constant'")
+        val keyword = tokenIterator.next("'constant' or 'global'")
+        if (keyword !is GlobalKeyword && keyword !is ConstantKeyword) {
+            throw ParseErrorException("'constant' or 'global'", keyword)
+        }
         val type = tokenIterator.expect<TypeToken>("constant type")
 
         val global = when (val data = tokenIterator.next()) {

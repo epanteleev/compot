@@ -77,4 +77,5 @@ compile_and_run load_global_var2 "-8
 16
 32
 64"
+compile_and_run load_store_global_var "1000"
 

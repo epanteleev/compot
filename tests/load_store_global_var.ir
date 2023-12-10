@@ -1,9 +1,10 @@
 extern void @printInt(i32)
 
-@integer = constant i32 120
+@integer = global i32 120
 
 define i32 @main() {
 entry:
+  store ptr @integer, i32 1000
   %v = load i32 @integer
   call void @printInt(%v: i32)
   ret i32 0
