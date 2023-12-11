@@ -5,6 +5,7 @@ import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.BasicBlocks
 import ir.module.block.AnyBlock
+import ir.pass.transform.utils.Utils.isLocalVariable
 
 class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     private val allocated: Set<Alloc> by lazy { allocatedVariablesInternal() }
@@ -14,11 +15,15 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
         val stores = hashSetOf<Alloc>()
         fun allocatedInGivenBlock(bb: AnyBlock) {
             for (inst in bb.valueInstructions()) {
-                if (!Utils.isStackAllocOfLocalVariable(inst)) {
+                if (inst !is Alloc) {
                     continue
                 }
 
-                stores.add(inst as Alloc)
+                if (!inst.isLocalVariable()) {
+                    continue
+                }
+
+                stores.add(inst)
             }
         }
 
@@ -37,14 +42,17 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
 
         for (bb in blocks.preorder()) {
             for (inst in bb) {
-                if (Utils.isStoreOfLocalVariable(inst)) {
-                    inst as Store
-                    if (!variables.contains(inst.pointer())) {
-                        continue
-                    }
-
-                    stores[inst.pointer()]!!.add(bb)
+                if (inst !is Store) {
+                    continue
                 }
+                if (!inst.isLocalVariable()) {
+                    continue
+                }
+                if (!variables.contains(inst.pointer())) {
+                    continue
+                }
+
+                stores[inst.pointer()]!!.add(bb)
             }
         }
 
@@ -52,7 +60,7 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     }
 
     /** Returns set of variables which produced by 'stackalloc' instruction. */
-    fun allocatedVariables(): Set<Value> {
+    fun allocatedVariables(): Set<Alloc> {
         return allocated
     }
 

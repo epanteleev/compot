@@ -1,9 +1,7 @@
 package ir.pass.transform
 
-import ir.DominatorTree
-import ir.Value
-import ir.instruction.Instruction
-import ir.instruction.Phi
+import ir.*
+import ir.instruction.*
 import ir.module.BasicBlocks
 import ir.module.Module
 import ir.module.block.Block
@@ -12,6 +10,7 @@ import ir.pass.transform.utils.JoinPointSet
 import ir.pass.transform.utils.RewriteAssistant
 import ir.types.PrimitiveType
 import ir.utils.DefUseInfo
+
 
 data class Mem2RegException(override val message: String): Exception(message)
 

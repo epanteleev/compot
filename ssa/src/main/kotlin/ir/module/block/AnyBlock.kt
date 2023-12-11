@@ -4,7 +4,7 @@ import ir.instruction.Instruction
 import ir.instruction.TerminateInstruction
 import ir.instruction.ValueInstruction
 
-interface AnyBlock: Label {
+interface AnyBlock : Label {
     fun instructions(): List<Instruction>
     fun predecessors(): List<Block>
     fun successors(): List<Block>

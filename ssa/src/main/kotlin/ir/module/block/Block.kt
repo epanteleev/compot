@@ -13,7 +13,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
     private val predecessors = mutableListOf<Block>()
     private val successors   = mutableListOf<Block>()
 
-    //Fields to implement BlockBuilderInterface
     private var indexToAppend = 0
 
     override fun instructions(): List<Instruction> {

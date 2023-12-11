@@ -1,35 +1,28 @@
 package ir.pass.transform.utils
 
-import ir.ArgumentValue
-import ir.DominatorTree
 import ir.Value
+import ir.DominatorTree
 import ir.instruction.*
 import ir.module.BasicBlocks
 import ir.module.block.Block
 import ir.module.block.Label
-import ir.pass.transform.Mem2RegException
 import ir.types.PrimitiveType
+import ir.pass.transform.Mem2RegException
+import ir.pass.transform.utils.Utils.isLocalVariable
+
 
 internal object Utils {
-    fun isStackAllocOfLocalVariable(instruction: Instruction): Boolean {
-        return instruction is Alloc && instruction.allocatedType is PrimitiveType
+    fun Alloc.isLocalVariable(): Boolean {
+        return allocatedType is PrimitiveType
     }
 
-    fun isLoadOfLocalVariable(instruction: Instruction): Boolean {
-        if (instruction !is Load) {
-            return false
-        }
-
-        val pointer = instruction.operand()
+    fun Load.isLocalVariable(): Boolean {
+        val pointer = operand()
         return pointer is ValueInstruction && pointer.type() is PrimitiveType
     }
 
-    fun isStoreOfLocalVariable(instruction: Instruction): Boolean {
-        if (instruction !is Store) {
-            return false
-        }
-
-        val pointer = instruction.pointer()
+    fun Store.isLocalVariable(): Boolean {
+        val pointer = pointer()
         return pointer is Load || pointer is Alloc
     }
 }
@@ -71,8 +64,7 @@ internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Dom
                 continue
             }
 
-            if (Utils.isStoreOfLocalVariable(instruction)) {
-                instruction as Store
+            if (instruction is Store && instruction.isLocalVariable()) {
                 val actual = findActualValueOrNull(bb, instruction.value())
                 if (actual != null) {
                     addValues(bb, instruction.pointer(), actual)
@@ -83,14 +75,12 @@ internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Dom
                 continue
             }
 
-            if (Utils.isStackAllocOfLocalVariable(instruction)) {
-                instruction as Alloc
+            if (instruction is Alloc && instruction.isLocalVariable()) {
                 addValues(bb, instruction, Value.UNDEF)
                 continue
             }
 
-            if (Utils.isLoadOfLocalVariable(instruction)) {
-                instruction as Load
+            if (instruction is Load && instruction.isLocalVariable()) {
                 val actual = findActualValue(bb, instruction.operand())
                 addValues(bb, instruction, actual)
                 continue

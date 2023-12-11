@@ -50,9 +50,9 @@ abstract class GlobalValue(protected open val name: String): GlobalSymbol, Value
     }
 }
 
-class U8GlobalValue(override val name: String, val u8: UByte?): GlobalValue(name) {
+class U8GlobalValue(override val name: String, val u8: UByte): GlobalValue(name) {
     override fun data(): String {
-        return u8?.toString().orEmpty()
+        return u8.toString()
     }
 
     override fun dump(): String {
@@ -60,9 +60,9 @@ class U8GlobalValue(override val name: String, val u8: UByte?): GlobalValue(name
     }
 }
 
-class I8GlobalValue(override val name: String, val i8: Byte?): GlobalValue(name) {
+class I8GlobalValue(override val name: String, val i8: Byte): GlobalValue(name) {
     override fun data(): String {
-        return i8?.toString().orEmpty()
+        return i8.toString()
     }
 
     override fun dump(): String {
@@ -70,9 +70,9 @@ class I8GlobalValue(override val name: String, val i8: Byte?): GlobalValue(name)
     }
 }
 
-class U16GlobalValue(override val name: String, val u16: UShort?): GlobalValue(name) {
+class U16GlobalValue(override val name: String, val u16: UShort): GlobalValue(name) {
     override fun data(): String {
-        return u16?.toString().orEmpty()
+        return u16.toString()
     }
 
     override fun dump(): String {
@@ -80,10 +80,10 @@ class U16GlobalValue(override val name: String, val u16: UShort?): GlobalValue(n
     }
 }
 
-class I16GlobalValue(override val name: String, val i16: Short?): GlobalValue(name) {
+class I16GlobalValue(override val name: String, val i16: Short): GlobalValue(name) {
 
     override fun data(): String {
-        return i16?.toString().orEmpty()
+        return i16.toString()
     }
 
     override fun dump(): String {
@@ -91,9 +91,9 @@ class I16GlobalValue(override val name: String, val i16: Short?): GlobalValue(na
     }
 }
 
-class U32GlobalValue(override val name: String, val u32: UInt?): GlobalValue(name) {
+class U32GlobalValue(override val name: String, val u32: UInt): GlobalValue(name) {
     override fun data(): String {
-        return u32?.toString().orEmpty()
+        return u32.toString()
     }
 
     override fun dump(): String {
@@ -101,9 +101,9 @@ class U32GlobalValue(override val name: String, val u32: UInt?): GlobalValue(nam
     }
 }
 
-class I32GlobalValue(override val name: String, val i32: Int?): GlobalValue(name) {
+class I32GlobalValue(override val name: String, val i32: Int): GlobalValue(name) {
     override fun data(): String {
-        return i32?.toString().orEmpty()
+        return i32.toString()
     }
 
     override fun dump(): String {
@@ -111,9 +111,9 @@ class I32GlobalValue(override val name: String, val i32: Int?): GlobalValue(name
     }
 }
 
-class U64GlobalValue(override val name: String, val u64: ULong?): GlobalValue(name) {
+class U64GlobalValue(override val name: String, val u64: ULong): GlobalValue(name) {
     override fun data(): String {
-        return u64?.toString().orEmpty()
+        return u64.toString()
     }
 
     override fun dump(): String {
@@ -121,9 +121,9 @@ class U64GlobalValue(override val name: String, val u64: ULong?): GlobalValue(na
     }
 }
 
-class I64GlobalValue(override val name: String, val i64: Long?): GlobalValue(name) {
+class I64GlobalValue(override val name: String, val i64: Long): GlobalValue(name) {
     override fun data(): String {
-        return i64?.toString().orEmpty()
+        return i64.toString()
     }
 
     override fun dump(): String {
@@ -131,9 +131,9 @@ class I64GlobalValue(override val name: String, val i64: Long?): GlobalValue(nam
     }
 }
 
-class F32GlobalValue(override val name: String, val f32: Float?): GlobalValue(name) {
+class F32GlobalValue(override val name: String, val f32: Float): GlobalValue(name) {
     override fun data(): String {
-        return f32?.toString().orEmpty()
+        return f32.toString()
     }
 
     override fun dump(): String {
@@ -141,9 +141,9 @@ class F32GlobalValue(override val name: String, val f32: Float?): GlobalValue(na
     }
 }
 
-class F64GlobalValue(override val name: String, val f64: Double?): GlobalValue(name) {
+class F64GlobalValue(override val name: String, val f64: Double): GlobalValue(name) {
     override fun data(): String {
-        return f64?.toString().orEmpty()
+        return f64.toString()
     }
 
     override fun dump(): String {

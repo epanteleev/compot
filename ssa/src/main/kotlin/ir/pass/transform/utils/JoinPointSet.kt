@@ -6,6 +6,7 @@ import ir.instruction.ValueInstruction
 import ir.module.BasicBlocks
 import ir.module.block.AnyBlock
 
+
 class JoinPointSet private constructor(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
     private val joinSet = hashMapOf<AnyBlock, MutableSet<Alloc>>()
 
