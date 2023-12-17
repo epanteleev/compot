@@ -1,7 +1,7 @@
 package ir.platform.regalloc
 
 import asm.x64.Address
-import asm.x64.Rbp
+import asm.x64.GPRegister.*
 import ir.Value
 import ir.instruction.Alloc
 import ir.instruction.ValueInstruction
@@ -11,7 +11,7 @@ data class StackFrameException(override val message: String): Exception(message)
 
 interface StackFrame {
     fun takeSlot(value: Value): Address
-    fun returnSlot(slot: Address)
+    fun returnSlot(slot: Address, size: Int)
     fun size(): Long
 
     companion object {
@@ -42,7 +42,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
         val typeSize = getTypeSize(value.allocatedType)
 
         frameSize = withAlignment(typeSize, frameSize)
-        return Address.mem(Rbp.rbp, -frameSize, typeSize)
+        return Address.mem(rbp, -frameSize)
     }
 
     /** Spilled value. */
@@ -56,7 +56,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
         }
 
         frameSize = withAlignment(typeSize, frameSize)
-        return Address.mem(Rbp.rbp, -frameSize, typeSize)
+        return Address.mem(rbp, -frameSize)
     }
 
     override fun takeSlot(value: Value): Address {
@@ -67,8 +67,8 @@ private class BasePointerAddressedStackFrame : StackFrame {
         }
     }
 
-    override fun returnSlot(slot: Address) {
-        freeStackSlots[slot.size] = slot
+    override fun returnSlot(slot: Address, size: Int) {
+        freeStackSlots[size] = slot
     }
 
     override fun size(): Long {

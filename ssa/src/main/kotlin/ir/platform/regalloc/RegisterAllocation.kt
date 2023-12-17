@@ -19,13 +19,12 @@ class RegisterAllocation(private val stackSize: Long,
                 continue
             }
 
-            val reg8 = reg(8)
-            if (!reg8.isCallEESave) {
+            if (!reg.isCallEESave) {
                 continue
             }
-            assert(gpCalleeSaveRegs.contains(reg8))
+            assert(gpCalleeSaveRegs.contains(reg)) //TODO
 
-            registers.add(reg8)
+            registers.add(reg)
         }
 
         registers
@@ -50,12 +49,11 @@ class RegisterAllocation(private val stackSize: Long,
                 continue
             }
 
-            val reg8 = reg(8)
-            assert(CallConvention.gpCallerSaveRegs.contains(reg8))
+            assert(CallConvention.gpCallerSaveRegs.contains(reg))
 
             val liveRange = liveness[value]
             if (liveRange.end() > loc && loc > liveRange.begin()) {
-                registers.add(reg8)
+                registers.add(reg)
             }
         }
 
@@ -64,22 +62,22 @@ class RegisterAllocation(private val stackSize: Long,
 
     fun operand(value: Value): AnyOperand {
         return when (value) {
-            is LocalValue ->  {
+            is LocalValue  -> {
                 val operand = registerMap[value]
                 assert(operand != null) {
                     "cannot find operand for $value"
                 }
                 operand as Operand
             }
-            is U8Value        -> Imm(value.u8.toLong(), 1)
-            is I8Value        -> Imm(value.i8.toLong(), 1)
-            is U16Value       -> Imm(value.u16.toLong(), 2)
-            is I16Value       -> Imm(value.i16.toLong(), 2)
-            is U32Value       -> Imm(value.u32.toLong(), 4)
-            is I32Value       -> Imm(value.i32.toLong(), 4)
-            is I64Value       -> Imm(value.i64, 8)
-            is U64Value       -> Imm(value.u64, 8)
-            is GlobalValue -> Address.mem(value.name(), 8)
+            is U8Value     -> Imm(value.u8.toLong())
+            is I8Value     -> Imm(value.i8.toLong())
+            is U16Value    -> Imm(value.u16.toLong())
+            is I16Value    -> Imm(value.i16.toLong())
+            is U32Value    -> Imm(value.u32.toLong())
+            is I32Value    -> Imm(value.i32.toLong())
+            is I64Value    -> Imm(value.i64)
+            is U64Value    -> Imm(value.u64)
+            is GlobalValue -> Address.mem(value.name())
             else -> throw RuntimeException("expect $value:${value.type()}")
         }
     }

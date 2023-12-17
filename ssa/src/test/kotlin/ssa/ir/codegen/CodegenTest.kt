@@ -1,6 +1,7 @@
-package ir.codegen
+package ssa.ir.codegen
 
 import asm.x64.*
+import asm.x64.GPRegister.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.ModuleBuilder
 import ir.pass.transform.Mem2Reg
@@ -51,8 +52,8 @@ class CodegenTest {
 
         //asserts
         val pool = VirtualRegistersPool.create(module.functions[0].arguments())
-        assertEquals(pool.arguments()[0], Rdi.rdi)
-        assertEquals(pool.arguments()[1], Rsi.rsi)
-        assertEquals(pool.allocSlot(retValue), Address.mem(Rbp.rbp, -8, 8))
+        assertEquals(pool.arguments()[0], rdi)
+        assertEquals(pool.arguments()[1], rsi)
+        assertEquals(pool.allocSlot(retValue), Address.mem(rbp, -8))
     }
 }

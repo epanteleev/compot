@@ -7,12 +7,8 @@ private data class BuilderContext(var label: Label, var instructions: Instructio
 private class InstructionList {
     private val list = arrayListOf<CPUInstruction>()
 
-    fun add(inst: CPUInstruction) { //Todo
-        if (list.isNotEmpty() && list.last() is Jump) {
-            list.add(list.size - 1, inst)
-        } else {
-            list.add(inst)
-        }
+    fun add(inst: CPUInstruction) {
+        list.add(inst)
     }
 
     override fun toString(): String {
@@ -40,7 +36,7 @@ class ObjFunction(private val name: String) {
         return name
     }
 
-    private fun addInstruction(inst: CPUInstruction) {
+    private fun add(inst: CPUInstruction) {
         activeContext.instructions.add(inst)
     }
 
@@ -56,96 +52,76 @@ class ObjFunction(private val name: String) {
         activeContext.instructions = newInstructions
     }
 
-    fun switchLabel(name: String) {
-        val newLabel = Label(name)
-        val instructions = codeBlocks[newLabel]
-            ?: throw ObjFunctionCreationException("Label with name '$name' doesn't exist")
+    fun lea(size: Int, first: Address, destination: Register) = add(Lea(size, first, destination))
+    fun lea(size: Int, first: Register, destination: Register) = add(Lea(size, first, destination))
 
-        activeContext.label = newLabel
-        activeContext.instructions = instructions
-    }
+    fun add(size: Int, first: Register, destination: Register) = add(Add(size, first, destination))
+    fun add(size: Int, first: Imm, destination: Register) = add(Add(size, first, destination))
+    fun add(size: Int, first: Register, destination: Address) = add(Add(size, first, destination))
+    fun add(size: Int, first: Address, destination: Register) = add(Add(size, first, destination))
+    fun add(size: Int, first: Imm, destination: Address) = add(Add(size, first, destination))
 
-    fun currentLabel(): String {
-        return activeContext.label.id
-    }
-
-    fun lea(first: AnyOperand, destination: Register): Operand {
-        addInstruction(Lea(first, destination))
+    fun sub(size: Int, first: AnyOperand, destination: Register): Operand {
+        add(Sub(size, first, destination))
         return destination
     }
 
-    fun add(first: AnyOperand, destination: Register): Operand {
-        addInstruction(Add(first, destination))
+    fun mul(size: Int, first: AnyOperand, destination: Register): Operand {
+        add(iMull(size, first, destination))
         return destination
     }
 
-    fun sub(first: AnyOperand, destination: Register): Operand {
-        addInstruction(Sub(first, destination))
+    fun div(size: Int, first: AnyOperand, destination: Register): Operand {
+        add(Div(size, first, destination))
         return destination
     }
 
-    fun mul(first: AnyOperand, destination: Register): Operand {
-        addInstruction(iMull(first, destination))
+    fun xor(size: Int, first: AnyOperand, destination: Register): Operand {
+        add(Xor(size, first, destination))
         return destination
     }
 
-    fun div(first: AnyOperand, destination: Register): Operand {
-        addInstruction(Div(first, destination))
-        return destination
+    fun test(size: Int, first: Register, second: Operand) {
+        add(Test(size, first, second))
     }
 
-    fun xor(first: AnyOperand, destination: Register): Operand {
-        addInstruction(Xor(first, destination))
-        return destination
+    fun setcc(size: Int, tp: SetCCType, reg: GPRegister) {
+        add(SetCc(size, tp, reg))
     }
 
-    fun test(first: Register, second: Operand) {
-        addInstruction(Test(first, second))
-    }
+    fun push(size: Int, reg: GPRegister) = add(Push(size, reg))
 
-    fun setcc(tp: SetCCType, reg: GPRegister) {
-        addInstruction(SetCc(tp, reg))
-    }
+    fun push(size: Int, imm: Imm) = add(Push(size, imm))
 
-    fun push(reg: GPRegister) {
-        addInstruction(Push(reg))
-    }
-
-    fun push(imm: Imm) {
-        addInstruction(Push(imm))
-    }
-
-    fun pop(toReg: GPRegister) {
-        addInstruction(Pop(toReg))
+    fun pop(size: Int, toReg: GPRegister) {
+        add(Pop(size, toReg))
     }
 
     fun <T: Operand> mov(size: Int, src: AnyOperand, des: T): T {
-        addInstruction(Mov(size, src, des))
+        add(Mov(size, src, des))
         return des
     }
 
-    fun movsx(src: GPRegister, des: AnyOperand) {
-        addInstruction(Movsx(src, des))
-    }
+    fun movsx(fromSize: Int, toSize: Int, src: GPRegister, des: AnyOperand) = add(Movsx(fromSize, toSize, src, des))
 
     fun call(name: String) {
-        addInstruction(Call(name))
+        add(Call(name))
     }
 
-    fun cmp(first: Register, second: AnyOperand) {
-        addInstruction(Cmp(first, second))
+    fun cmp(size: Int, first: Register, second: AnyOperand) {
+        add(Cmp(size, first, second))
     }
 
     fun jump(jmpType: JmpType, label: String) {
-        addInstruction(Jump(jmpType, label))
+        add(Jump(jmpType, label))
     }
 
     fun ret() {
-        addInstruction(Ret)
+        add(Ret)
     }
 
     fun leave() {
-        addInstruction(Leave)
+        add(Leave)
     }
 
     override fun toString(): String {

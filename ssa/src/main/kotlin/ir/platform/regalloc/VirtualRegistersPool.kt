@@ -1,6 +1,7 @@
 package ir.platform.regalloc
 
 import asm.x64.*
+import asm.x64.GPRegister.*
 import ir.ArgumentValue
 import ir.Value
 import ir.instruction.Alloc
@@ -32,10 +33,10 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
         return argumentSlots[arg.position()]
     }
 
-    fun free(operand: Operand) {
+    fun free(operand: Operand, size: Int) {
         when (operand) {
             is GPRegister -> gpRegisters.returnRegister(operand)
-            is Address2        -> frame.returnSlot(operand)
+            is Address    -> frame.returnSlot(operand, size)
             else          -> TODO("Unimplemented")
         }
     }
@@ -49,27 +50,15 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
             private var freeArgumentRegisters = CallConvention.gpArgumentRegisters.toMutableList().asReversed()
             private var argumentSlotIndex: Long = 0
 
-            private fun hardwareSize(type: Type): Int {
-                return if (type == Type.U1) {
-                    1
-                } else {
-                    type.size()
-                }
-            }
-
-            private fun cast(reg: GPRegister, type: PrimitiveType): GPRegister {
-                return reg(hardwareSize(type))
-            }
-
             fun pickArgument(type: PrimitiveType): Operand {
                 assert(type is IntType || type is UIntType || type is PointerType)
 
                 val slot = if (freeArgumentRegisters.isNotEmpty()) {
-                    cast(freeArgumentRegisters.removeLast(), type)
+                    freeArgumentRegisters.removeLast()
                 } else {
                     val old = argumentSlotIndex
                     argumentSlotIndex += 1
-                    ArgumentSlot(Rbp.rbp, old * 8 + 16, hardwareSize(type))
+                    ArgumentSlot(rbp, old * 8 + 16)
                 }
 
                 return slot

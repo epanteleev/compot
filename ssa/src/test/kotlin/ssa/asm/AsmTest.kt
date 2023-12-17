@@ -1,5 +1,7 @@
 package asm
+
 import asm.x64.*
+import asm.x64.GPRegister.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -8,13 +10,13 @@ class AsmTest {
     fun test1() {
         val asm = Assembler()
         val fn = asm.mkFunction("main")
-        fn.push(Rbp(8))
-        fn.mov(8, Rsp(8), Rbp(8))
-        fn.sub(Imm(16, 8), Rsp(8))
-        fn.mov(8, Rdi(8), Address.mem(Rbp(8),-8, 8))
+        fn.push(8, rbp)
+        fn.mov(8, rsp, rbp)
+        fn.sub(8, Imm(16), rsp)
+        fn.mov(8, rdi, Address.mem(rbp,-8))
 
-        fn.mov(8, Imm(0, 8), Rax(8))
-        fn.mov(8, Rbp(8), Rsp(8))
+        fn.mov(8, Imm(0), rax)
+        fn.mov(8, rbp, rsp)
         fn.ret()
 
         val expected =

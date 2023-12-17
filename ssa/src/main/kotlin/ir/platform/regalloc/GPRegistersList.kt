@@ -1,8 +1,9 @@
 package ir.platform.regalloc
 
 import asm.x64.GPRegister
+import asm.x64.GPRegister.*
 import asm.x64.Operand
-import asm.x64.Rbp
+
 import asm.x64.Register
 import ir.instruction.Alloc
 import ir.instruction.ValueInstruction
@@ -13,7 +14,7 @@ import ir.types.Type
 
 class GPRegistersList(argumentValue: List<Operand>) {
     private var freeRegisters = CallConvention.availableRegisters(argumentValue.filterIsInstance<GPRegister>()).toMutableList()
-    private val usedCalleeSaveRegisters = mutableSetOf<GPRegister>(Rbp.rbp)
+    private val usedCalleeSaveRegisters = mutableSetOf(rbp)
 
     fun pickRegister(value: ValueInstruction): Register? {
         require(value.type() == Type.U1 ||
@@ -27,16 +28,11 @@ class GPRegistersList(argumentValue: List<Operand>) {
             return null
         }
         val reg = freeRegisters.removeLast()
-        if (CallConvention.gpCalleeSaveRegs.contains(reg)) {
+        if (reg.isCallEESave) {
             usedCalleeSaveRegisters.add(reg)
         }
 
-        val type = value.type()
-        return if (type == Type.U1) {
-            reg(1)
-        } else {
-            reg(value.type().size())
-        }
+        return reg
     }
 
     fun returnRegister(reg: GPRegister) {
@@ -44,6 +40,6 @@ class GPRegistersList(argumentValue: List<Operand>) {
             return
         }
 
-        freeRegisters.add(reg(8))
+        freeRegisters.add(reg)
     }
 }

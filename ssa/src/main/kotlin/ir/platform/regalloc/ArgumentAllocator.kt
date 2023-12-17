@@ -1,8 +1,8 @@
 package ir.platform.regalloc
 
 import asm.x64.Address
+import asm.x64.GPRegister.*
 import asm.x64.Operand
-import asm.x64.Rsp
 import ir.Value
 import ir.platform.x64.CallConvention
 
@@ -27,10 +27,10 @@ class CalleeArgumentAllocator(private val arguments: List<Value>) {
             when (pos) {
                 is RealRegister -> {
                     val reg = registers[pos.registerIndex]
-                    allocation.add(reg(value.type().size()))
+                    allocation.add(reg)
                 }
                 is Memory -> {
-                    allocation.add(Address.mem(Rsp.rsp, -(8L * pos.index) + 8, 8))
+                    allocation.add(Address.mem(rsp, -(8L * pos.index) + 8))
                 }
             }
         }

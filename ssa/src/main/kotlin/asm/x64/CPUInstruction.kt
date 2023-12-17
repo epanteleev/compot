@@ -1,88 +1,93 @@
 package asm.x64
 
+import asm.x64.CPUInstruction.Companion.prefix
+
 interface CPUInstruction {
-    fun prefix(size: Int): Char {
-        return when (size) {
-            8 -> 'q'
-            4 -> 'l'
-            2 -> 'w'
-            1 -> 'b'
-            else -> throw RuntimeException("Unknown operand size: $size")
+
+    companion object {
+        fun prefix(size: Int): Char {
+            return when (size) {
+                8 -> 'q'
+                4 -> 'l'
+                2 -> 'w'
+                1 -> 'b'
+                else -> throw RuntimeException("Unknown operand size: $size")
+            }
         }
     }
 }
 
-data class Push(val operand: AnyOperand): CPUInstruction {
+data class Push(val size: Int, val operand: AnyOperand): CPUInstruction {
     override fun toString(): String {
-        return "push${prefix(operand.size)} $operand"
+        return "push${prefix(size)} ${operand.toString(size)}"
     }
 }
 
-data class Pop(val register: GPRegister): CPUInstruction {
+data class Pop(val size: Int, val register: GPRegister): CPUInstruction {
     override fun toString(): String {
-        return "pop${prefix(register.size)} $register"
+        return "pop${prefix(size)} ${register.toString(size)}"
     }
 }
 
 data class Mov(val size: Int, val src: AnyOperand, val des: Operand): CPUInstruction {
     override fun toString(): String {
-        return "mov${prefix(size)} $src, $des"
+        return "mov${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
     }
 }
 
-data class MovAbs(val src: AnyOperand, val des: Register): CPUInstruction {
+data class MovAbs(val size: Int, val src: AnyOperand, val des: Register): CPUInstruction {
     override fun toString(): String {
-        return "movabs${prefix(src.size)} $src, $des"
+        return "movabs${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
     }
 }
 
-data class Movss(val src: AnyOperand, val des: Register): CPUInstruction {
+data class Movss(val size: Int, val src: AnyOperand, val des: Register): CPUInstruction {
     override fun toString(): String {
-        return "movss${prefix(src.size)} $src, $des"
+        return "movss${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
     }
 }
 
-data class Movsx(val src: GPRegister, val des: AnyOperand): CPUInstruction {
+data class Movsx(val fromSize: Int, val toSize: Int, val src: GPRegister, val des: AnyOperand): CPUInstruction {
     override fun toString(): String {
-        return "movsx${prefix(src.size)} $src, $des"
+        return "movsx${prefix(fromSize)} ${src.toString(fromSize)}, ${des.toString(toSize)}"
     }
 }
 
-data class Lea(val src: AnyOperand, val des: Register): CPUInstruction {
+data class Lea(val size: Int, val src: AnyOperand, val des: Register): CPUInstruction {
     override fun toString(): String {
-        return "lea${prefix(des.size)} $src, $des"
+        return "lea${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
     }
 }
 
 interface Arithmetic: CPUInstruction
 
-data class Add(val first: AnyOperand, val second: Operand): Arithmetic {
+data class Add(val size: Int, val first: AnyOperand, val second: Operand): Arithmetic {
     override fun toString(): String {
-        return "add${prefix(first.size)} $first, $second"
+        return "add${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 
-data class Sub(val first: AnyOperand, val second: Operand): Arithmetic {
+data class Sub(val size: Int, val first: AnyOperand, val second: Operand): Arithmetic {
     override fun toString(): String {
-        return "sub${prefix(first.size)} $first, $second"
+        return "sub${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 
-data class iMull(val first: AnyOperand, val second: Operand): Arithmetic {
+data class iMull(val size: Int, val first: AnyOperand, val second: Operand): Arithmetic {
     override fun toString(): String {
-        return "imul${prefix(first.size)} $first, $second"
+        return "imul${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 
-data class Xor(val first: AnyOperand, val second: Operand): Arithmetic {
+data class Xor(val size: Int, val first: AnyOperand, val second: Operand): Arithmetic {
     override fun toString(): String {
-        return "xor${prefix(first.size)} $first, $second"
+        return "xor${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 
-data class Div(val first: AnyOperand, val second: Operand): Arithmetic {
+data class Div(val size: Int, val first: AnyOperand, val second: Operand): Arithmetic {
     override fun toString(): String {
-        return "div${prefix(first.size)} $first, $second"
+        return "div${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 
@@ -136,9 +141,9 @@ data class Jump(val jumpType: JmpType, val label: String): CPUInstruction {
     }
 }
 
-data class Cmp(val first: AnyOperand, val second: AnyOperand): CPUInstruction {
+data class Cmp(val size: Int, val first: AnyOperand, val second: AnyOperand): CPUInstruction {
     override fun toString(): String {
-        return "cmp${prefix(first.size)} $second, $first"
+        return "cmp${prefix(size)} ${second.toString(size)}, ${first.toString(size)}"
     }
 }
 
@@ -148,9 +153,9 @@ data class Call(val name: String): CPUInstruction {
     }
 }
 
-data class Test(val first: Register, val second: Operand): CPUInstruction {
+data class Test(val size: Int, val first: Register, val second: Operand): CPUInstruction {
     override fun toString(): String {
-        return "test${prefix(first.size)} $first, $second"
+        return "test${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 
@@ -187,8 +192,8 @@ enum class SetCCType {
     },
 }
 
-data class SetCc(val tp: SetCCType, val reg: GPRegister): CPUInstruction {
+data class SetCc(val size: Int, val tp: SetCCType, val reg: GPRegister): CPUInstruction {
     override fun toString(): String {
-        return "$tp${prefix(reg.size)} $reg"
+        return "$tp${prefix(size)} ${reg.toString(size)}"
     }
 }
