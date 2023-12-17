@@ -9,12 +9,12 @@ class AsmTest {
         val asm = Assembler()
         val fn = asm.mkFunction("main")
         fn.push(Rbp(8))
-        fn.mov(Rsp(8), Rbp(8))
+        fn.mov(8, Rsp(8), Rbp(8))
         fn.sub(Imm(16, 8), Rsp(8))
-        fn.mov(Rdi(8), Address.mem(Rbp(8),-8, 8))
+        fn.mov(8, Rdi(8), Address.mem(Rbp(8),-8, 8))
 
-        fn.mov(Imm(0, 8), Rax(8))
-        fn.mov(Rbp(8), Rsp(8))
+        fn.mov(8, Imm(0, 8), Rax(8))
+        fn.mov(8, Rbp(8), Rsp(8))
         fn.ret()
 
         val expected =

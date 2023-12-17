@@ -26,7 +26,7 @@ class CodeEmitter(private val data: FunctionData,
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
 
         objFunc.push(Rbp.rbp)
-        objFunc.mov(Rsp.rsp, Rbp.rbp)
+        objFunc.mov(8, Rsp.rsp, Rbp.rbp)
 
         if (stackSize != 0L) {
             objFunc.sub(Imm(stackSize, 8), Rsp.rsp)
@@ -50,14 +50,14 @@ class CodeEmitter(private val data: FunctionData,
         val second      = valueToRegister.operand(binary.second())
         val destination = valueToRegister.operand(binary) as Operand
 
-        if (first is Address2) {
-            first = objFunc.mov(first, temp1(first.size))
+        if (first is Address) {
+            first = objFunc.mov(first.size, first, temp1(first.size))
         }
 
-        first = if (destination is Address2) {
-            objFunc.mov(first, temp2(second.size))
+        first = if (destination is Address) {
+            objFunc.mov(second.size, first, temp2(second.size))
         } else {
-            objFunc.mov(first, destination)
+            objFunc.mov(first.size, first, destination)
         }
 
         when (binary.op) {
@@ -81,8 +81,8 @@ class CodeEmitter(private val data: FunctionData,
             }
         }
 
-        if (destination is Address2) {
-            objFunc.mov(first, destination)
+        if (destination is Address) {
+            objFunc.mov(first.size, first, destination)
         }
     }
 
@@ -95,7 +95,7 @@ class CodeEmitter(private val data: FunctionData,
 
         if (returnType is ArithmeticType || returnType is PointerType) {
             val value = valueToRegister.operand(returnValue.value())
-            objFunc.mov(value, temp1(value.size))
+            objFunc.mov(value.size, value, temp1(value.size))
         } else {
             TODO()
         }
@@ -115,16 +115,16 @@ class CodeEmitter(private val data: FunctionData,
 
         if (unary.op == ArithmeticUnaryOp.Neg) {
             val second = if (operand is Address2) {
-                objFunc.mov(operand, temp1(8))
+                objFunc.mov(operand.size, operand, temp1(operand.size))
             } else {
                 operand as Register
             }
             objFunc.xor(Imm(-1, 8), second)
-            objFunc.mov(second, result as Operand)
+            objFunc.mov(operand.size, second, result as Operand)
 
         } else if (unary.op == ArithmeticUnaryOp.Not) {
             val second = if (result is Address2) {
-                objFunc.mov(result, temp1(result.size))
+                objFunc.mov(result.size, result, temp1(result.size))
             } else {
                 result as Register
             }
@@ -132,7 +132,7 @@ class CodeEmitter(private val data: FunctionData,
             objFunc.sub(operand, second)
 
             if (result is Address2) {
-                objFunc.mov(temp1(result.size), result)
+                objFunc.mov(result.size, temp1(result.size), result)
             }
 
         } else {
@@ -150,7 +150,8 @@ class CodeEmitter(private val data: FunctionData,
 
         when (retType) {
             is ArithmeticType, is PointerType, is BooleanType -> {
-                objFunc.mov(Rax.rax(call.type().size()), valueToRegister.operand(call) as Operand)
+                val size = call.type().size()
+                objFunc.mov(size, Rax.rax(size), valueToRegister.operand(call) as Operand)
             }
 
             is FloatingPoint -> {
@@ -176,12 +177,12 @@ class CodeEmitter(private val data: FunctionData,
         var value   = valueToRegister.operand(store.value())
 
         if (value is Address) {
-            value = objFunc.mov(value, temp2(value.size))
+            value = objFunc.mov(value.size, value, temp2(value.size))
         }
 
         when (pointer) {
-            is Address    -> objFunc.mov(value, pointer)
-            is GPRegister -> objFunc.mov(value, Address.mem(pointer, 0, value.size))
+            is Address    -> objFunc.mov(value.size, value, pointer)
+            is GPRegister -> objFunc.mov(value.size, value, Address.mem(pointer, 0, value.size))
             else -> throw RuntimeException("unsupported pointer=$pointer")
         }
     }
@@ -191,15 +192,15 @@ class CodeEmitter(private val data: FunctionData,
         val value   = valueToRegister.operand(load) as Operand
 
         val operand = if (value is Address) {
-            objFunc.mov(value, temp1(value.size))
+            objFunc.mov(value.size, value, temp1(value.size))
         } else {
             value
         }
 
-        objFunc.mov(pointer, operand)
+        objFunc.mov(value.size, pointer, operand)
 
         if (value is Address) {
-            objFunc.mov(temp1(value.size), value)
+            objFunc.mov(value.size, temp1(value.size), value)
         }
     }
 
@@ -208,7 +209,7 @@ class CodeEmitter(private val data: FunctionData,
         val second = valueToRegister.operand(intCompare.second())
 
         first = if (first is Address2) {
-            objFunc.mov(first, temp1(first.size))
+            objFunc.mov(first.size, first, temp1(first.size))
         } else {
             first
         }
@@ -251,17 +252,17 @@ class CodeEmitter(private val data: FunctionData,
             if (operand is AddressLiteral) {
                 objFunc.lea(operand, temp)
             } else {
-                objFunc.mov(operand, temp)
+                objFunc.mov(operand.size, operand, temp)
             }
 
-            objFunc.mov(temp, result)
+            objFunc.mov(operand.size, temp, result)
         } else if (operand is AddressLiteral) {
             val dest =  result as GPRegister
             objFunc.lea(operand, dest)
 
         } else {
             result as Operand
-            objFunc.mov(operand, result)
+            objFunc.mov(operand.size, operand, result)
         }
     }
 
@@ -296,13 +297,13 @@ class CodeEmitter(private val data: FunctionData,
         val dest   = valueToRegister.operand(getElementPtr)
 
         val indexReg = when (index) {
-            is Address2 -> objFunc.mov(index, temp2(source.size))
+            is Address2 -> objFunc.mov(source.size, index, temp2(source.size))
             is Imm -> index
             else   -> index
         }
 
         val destReg = if (dest is Address2) {
-            objFunc.mov(dest, temp2(dest.size))
+            objFunc.mov(dest.size, dest, temp2(dest.size))
         } else {
             dest as Register
         }
@@ -345,7 +346,7 @@ class CodeEmitter(private val data: FunctionData,
         val src = valueToRegister.operand(cast.value())
 
         val srcReg = if (src is Address2) {
-            objFunc.mov(src, temp1(src.size))
+            objFunc.mov(src.size, src, temp1(src.size))
         } else {
             src as GPRegister
         }
@@ -355,10 +356,10 @@ class CodeEmitter(private val data: FunctionData,
                 objFunc.movsx(srcReg, des)
             }
             CastType.ZeroExtend, CastType.Bitcast -> {
-                objFunc.mov(srcReg(des.size), des)
+                objFunc.mov(des.size, srcReg(des.size), des)
             }
             CastType.Truncate -> {
-                objFunc.mov(srcReg, des(srcReg.size))
+                objFunc.mov(srcReg.size, srcReg, des(srcReg.size))
             }
         }
     }

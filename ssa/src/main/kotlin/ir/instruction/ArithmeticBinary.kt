@@ -3,6 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.instruction.utils.Visitor
 import ir.types.ArithmeticType
+import ir.types.PrimitiveType
 import ir.types.Type
 
 enum class ArithmeticBinaryOp {
@@ -58,14 +59,14 @@ enum class ArithmeticBinaryOp {
     };
 }
 
-class ArithmeticBinary private constructor(name: String, tp: ArithmeticType, a: Value, val op: ArithmeticBinaryOp, b: Value) :
+class ArithmeticBinary private constructor(name: String, tp: PrimitiveType, a: Value, val op: ArithmeticBinaryOp, b: Value) :
     ValueInstruction(name, tp, arrayOf(a, b)) {
     override fun dump(): String {
         return "%$identifier = $op $tp ${first()}, ${second()}"
     }
 
-    override fun type(): ArithmeticType {
-        return tp as ArithmeticType
+    override fun type(): PrimitiveType {
+        return tp as PrimitiveType
     }
 
     fun first(): Value {
@@ -93,7 +94,7 @@ class ArithmeticBinary private constructor(name: String, tp: ArithmeticType, a: 
     }
 
     companion object {
-        fun make(name: String, tp: ArithmeticType, a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
+        fun make(name: String, tp: PrimitiveType, a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateTypes(tp, aType, bType)) {
@@ -103,7 +104,7 @@ class ArithmeticBinary private constructor(name: String, tp: ArithmeticType, a: 
             return registerUser(ArithmeticBinary(name, tp, a, op, b), a, b)
         }
 
-        private fun isAppropriateTypes(tp: ArithmeticType, aType: Type, bType: Type): Boolean {
+        private fun isAppropriateTypes(tp: PrimitiveType, aType: Type, bType: Type): Boolean {
             return aType == tp && bType == tp
         }
 

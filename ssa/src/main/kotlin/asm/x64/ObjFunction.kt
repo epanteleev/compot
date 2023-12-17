@@ -119,8 +119,8 @@ class ObjFunction(private val name: String) {
         addInstruction(Pop(toReg))
     }
 
-    fun <T: Operand> mov(src: AnyOperand, des: T): T {
-        addInstruction(Mov(src, des))
+    fun <T: Operand> mov(size: Int, src: AnyOperand, des: T): T {
+        addInstruction(Mov(size, src, des))
         return des
     }
 

@@ -184,7 +184,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
 
     override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
         val ty = a.type()
-        require(ty is ArithmeticType) {
+        require(ty is PrimitiveType) {
             "should be arithmetic type, but ty=$ty"
         }
 
