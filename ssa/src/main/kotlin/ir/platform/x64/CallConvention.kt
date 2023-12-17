@@ -36,7 +36,6 @@ object CallConvention {
     )
 
     val temp1 = rax
-
     val temp2 = r10
 
     fun availableRegisters(usedArgumentRegisters: List<GPRegister>): Set<GPRegister> {

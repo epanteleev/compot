@@ -1,6 +1,7 @@
 package ir.platform.x64
 
 import asm.x64.*
+import ir.platform.x64.utils.Utils.case
 import ir.instruction.*
 import ir.instruction.utils.Visitor
 import ir.module.*
@@ -10,6 +11,10 @@ import ir.types.*
 import ir.utils.OrderedLocation
 import asm.x64.GPRegister.*
 import ir.instruction.Call
+import ir.platform.x64.utils.AddCodegen
+import ir.platform.x64.utils.MulCodegen
+import ir.platform.x64.utils.SubCodegen
+
 
 data class CodegenException(override val message: String): Exception(message)
 
@@ -19,16 +24,6 @@ class CodeEmitter(private val data: FunctionData,
                   private val valueToRegister: RegisterAllocation,
 ): Visitor {
     private val orderedLocation = evaluateOrder(data.blocks)
-
-    private inline fun <reified F: AnyOperand, reified S: AnyOperand, reified T: AnyOperand>
-            case(first: AnyOperand, second: AnyOperand, third: AnyOperand): Boolean {
-        return first is F && second is S && third is T
-    }
-
-    private inline fun <reified F: AnyOperand, reified S: AnyOperand, reified T: AnyOperand>
-            case(first: AnyOperand, second: AnyOperand): Boolean {
-        return first is F && second is S
-    }
 
     private fun emitPrologue() {
         val stackSize = valueToRegister.reservedStackSize()
@@ -61,98 +56,9 @@ class CodeEmitter(private val data: FunctionData,
         val size   = binary.type().size()
 
         when (binary.op) {
-            ArithmeticBinaryOp.Add -> {
-                when {
-                    case<GPRegister, GPRegister, GPRegister>(dst, first, second) -> {
-                        first as GPRegister
-                        dst as GPRegister
-                        second as GPRegister
-                        if (first == dst) {
-                            objFunc.add(size, second, dst)
-                        } else if (second == dst) {
-                            objFunc.add(size, first, dst)
-                        } else {
-                            objFunc.mov(size, first, dst)
-                            objFunc.add(size, second, dst)
-                        }
-                    }
-                    case<Address, GPRegister, GPRegister>(dst, first, second) -> {
-                        dst as Address
-                        second as Register
-                        objFunc.mov(size, first, dst)
-                        objFunc.add(size, second, dst)
-                    }
-                    case<Address, Address, GPRegister>(dst, first, second) -> {
-                        dst as Address
-                        first as Address
-                        second as GPRegister
-                        objFunc.mov(size, first, temp1)
-                        objFunc.add(size, second, temp1)
-                        objFunc.mov(size, temp1, dst)
-                    }
-                    case<GPRegister, Imm, GPRegister>(dst, first, second) -> {
-                        dst as GPRegister
-                        first as Imm
-                        second as GPRegister
-                        if (dst == second) {
-                            objFunc.add(size, first, dst)
-                        } else {
-                            objFunc.lea(size, Address.mem(second, first.value), dst)
-                        }
-                    }
-                    case<GPRegister, GPRegister, Imm>(dst, first, second) -> {
-                        dst as GPRegister
-                        first as GPRegister
-                        second as Imm
-                        if (dst == first) {
-                            objFunc.add(size, first, dst)
-                        } else {
-                            objFunc.lea(size, Address.mem(first, second.value), dst)
-                        }
-                    }
-                    case<Address, Address, Address>(dst, first, second) -> {
-                        dst as Address
-                        first as Address
-                        second as Address
-                        objFunc.mov(size, first, temp1)
-                        objFunc.add(size, second, temp1)
-                        objFunc.mov(size, temp1, dst)
-                    }
-                    case<GPRegister, Address, GPRegister>(dst, first, second) -> {
-                        dst as GPRegister
-                        first as Address
-                        second as GPRegister
-
-                        if (dst == second) {
-                            objFunc.add(size, first, second)
-                        } else {
-                            objFunc.mov(size, first, temp1)
-                            objFunc.add(size, second, temp1)
-                            objFunc.mov(size, temp1, dst)
-                        }
-                    }
-                    else -> {
-                        throw RuntimeException("Unimplemented: dst=$dst, first=$first, second=$second")
-                    }
-                }
-            }
-            ArithmeticBinaryOp.Sub -> {
-                if (first is Address) {
-                    first = objFunc.mov(size, first, temp1)
-                }
-
-                first = if (dst is Address) {
-                    objFunc.mov(size, first, temp2)
-                } else {
-                    objFunc.mov(size, first, dst)
-                }
-
-                objFunc.sub(size, second, first as Register)
-
-                if (dst is Address) {
-                    objFunc.mov(size, first, dst)
-                }
-            }
+            ArithmeticBinaryOp.Add -> AddCodegen(objFunc, dst, first, second, size)
+            ArithmeticBinaryOp.Mul -> MulCodegen(objFunc, dst, first, second, size)
+            ArithmeticBinaryOp.Sub -> SubCodegen(objFunc, dst, first, second, size)
             ArithmeticBinaryOp.Xor -> {
                 if (first is Address) {
                     first = objFunc.mov(size, first, temp1)
@@ -165,23 +71,6 @@ class CodeEmitter(private val data: FunctionData,
                 }
 
                 objFunc.xor(size, second, first as Register)
-
-                if (dst is Address) {
-                    objFunc.mov(size, first, dst)
-                }
-            }
-            ArithmeticBinaryOp.Mul -> {
-                if (first is Address) {
-                    first = objFunc.mov(size, first, temp1)
-                }
-
-                first = if (dst is Address) {
-                    objFunc.mov(size, first, temp2)
-                } else {
-                    objFunc.mov(size, first, dst)
-                }
-
-                objFunc.mul(size, second, first as Register)
 
                 if (dst is Address) {
                     objFunc.mov(size, first, dst)
@@ -250,15 +139,22 @@ class CodeEmitter(private val data: FunctionData,
             objFunc.mov(size, second, result as Operand)
 
         } else if (unary.op == ArithmeticUnaryOp.Not) {
-            val second = if (result is Address2) {
+            val second = if (result is Address) {
                 objFunc.mov(size, result, temp1)
+                temp1
             } else {
                 result as Register
             }
-            objFunc.xor(size, second, second)
-            objFunc.sub(size, operand, second)
 
-            if (result is Address2) {
+            objFunc.xor(size, second, second)
+            when (operand) {
+                is Address -> objFunc.sub(size, operand, second)
+                is GPRegister -> objFunc.sub(size, operand, second)
+                is Imm -> objFunc.sub(size, operand, second)
+                else -> throw RuntimeException("Internal error")
+            }
+
+            if (result is Address) {
                 objFunc.mov(size, temp1, result)
             }
 

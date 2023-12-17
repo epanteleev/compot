@@ -61,15 +61,18 @@ class ObjFunction(private val name: String) {
     fun add(size: Int, first: Address, destination: Register) = add(Add(size, first, destination))
     fun add(size: Int, first: Imm, destination: Address) = add(Add(size, first, destination))
 
-    fun sub(size: Int, first: AnyOperand, destination: Register): Operand {
-        add(Sub(size, first, destination))
-        return destination
-    }
+    fun sub(size: Int, first: Register, destination: Register) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: Imm, destination: Register) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: Register, destination: Address) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: Address, destination: Register) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: Imm, destination: Address) = add(Sub(size, first, destination))
 
-    fun mul(size: Int, first: AnyOperand, destination: Register): Operand {
-        add(iMull(size, first, destination))
-        return destination
-    }
+    fun mul(size: Int, first: Register, destination: Register) = add(iMull(size, first, destination))
+    fun mul(size: Int, first: Imm, destination: Register) = add(iMull(size, first, destination))
+    fun mul(size: Int, first: Register, destination: Address) = add(iMull(size, first, destination))
+    fun mul(size: Int, first: Address, destination: Register) = add(iMull(size, first, destination))
+    fun mul(size: Int, first: Imm, destination: Address) = add(iMull(size, first, destination))
+
 
     fun div(size: Int, first: AnyOperand, destination: Register): Operand {
         add(Div(size, first, destination))

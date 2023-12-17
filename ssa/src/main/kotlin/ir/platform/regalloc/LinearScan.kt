@@ -64,7 +64,7 @@ class LinearScan(private val data: FunctionData, private val liveRanges: LiveInt
             }
 
             active.entries.removeIf {
-                if (liveRangesGroup[it.key].end() < /* todo should be <= */ range.begin()) {
+                if (liveRangesGroup[it.key].end() <= range.begin()) {
                     pool.free(it.value, it.key.first().type().size())
                     return@removeIf true
                 } else {

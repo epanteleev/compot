@@ -395,7 +395,7 @@ interface Address : Operand {
             return Address2(base, offset)
         }
 
-        fun mem(base: GPRegister, offset: Long, index: GPRegister, disp: Long): Address {
+        fun mem(base: GPRegister?, offset: Long, index: GPRegister, disp: Long): Address {
             return Address4(base, offset, index, disp)
         }
 
@@ -438,7 +438,7 @@ class Address2 internal constructor(val base: GPRegister, val offset: Long) : Ad
     }
 }
 
-class Address4 internal constructor(val base: GPRegister, val offset: Long, val index: GPRegister, val disp: Long) :
+class Address4 internal constructor(private val base: GPRegister?, private val offset: Long, val index: GPRegister, val disp: Long) :
     Address {
     override fun toString(): String {
         return if (offset == 0L) {
@@ -448,11 +448,14 @@ class Address4 internal constructor(val base: GPRegister, val offset: Long, val 
         }
     }
 
+    private fun base(size: Int): String {
+        return base?.toString(size) ?: ""
+    }
     override fun toString(size: Int): String {
         return if (offset == 0L) {
-            "(${base.toString(8)}, ${index.toString(8)}, $disp)"
+            "(${base(8)}, ${index.toString(8)}, $disp)"
         } else {
-            "$offset(${base.toString(8)}, ${index.toString(8)}, $disp)"
+            "$offset(${base(8)}, ${index.toString(8)}, $disp)"
         }
     }
 }
