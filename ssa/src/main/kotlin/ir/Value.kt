@@ -53,7 +53,7 @@ interface Constant: Value {
 }
 
 data class U8Value(val u8: Byte): Constant {
-    override fun type(): UIntType {
+    override fun type(): UnsignedIntType {
         return Type.U8
     }
 
@@ -63,7 +63,7 @@ data class U8Value(val u8: Byte): Constant {
 }
 
 data class I8Value(val i8: Byte): Constant {
-    override fun type(): IntType {
+    override fun type(): SignedIntType {
         return Type.I8
     }
 
@@ -73,7 +73,7 @@ data class I8Value(val i8: Byte): Constant {
 }
 
 data class U16Value(val u16: Short): Constant {
-    override fun type(): UIntType {
+    override fun type(): UnsignedIntType {
         return Type.U16
     }
 
@@ -83,7 +83,7 @@ data class U16Value(val u16: Short): Constant {
 }
 
 data class I16Value(val i16: Short): Constant {
-    override fun type(): IntType {
+    override fun type(): SignedIntType {
         return Type.I16
     }
 
@@ -93,7 +93,7 @@ data class I16Value(val i16: Short): Constant {
 }
 
 data class U32Value(val u32: Int): Constant {
-    override fun type(): UIntType {
+    override fun type(): UnsignedIntType {
         return Type.U32
     }
 
@@ -103,7 +103,7 @@ data class U32Value(val u32: Int): Constant {
 }
 
 data class I32Value(val i32: Int): Constant {
-    override fun type(): IntType {
+    override fun type(): SignedIntType {
         return Type.I32
     }
 
@@ -113,7 +113,7 @@ data class I32Value(val i32: Int): Constant {
 }
 
 data class U64Value(val u64: Long): Constant {
-    override fun type(): UIntType {
+    override fun type(): UnsignedIntType {
         return Type.U64
     }
 
@@ -123,7 +123,7 @@ data class U64Value(val u64: Long): Constant {
 }
 
 data class I64Value(val i64: Long): Constant {
-    override fun type(): IntType {
+    override fun type(): SignedIntType {
         return Type.I64
     }
 

@@ -71,6 +71,8 @@ data class ElementaryTypeToken(private val type: String, override val line: Int,
             "i16"  to Type.I16,
             "i32"  to Type.I32,
             "i64"  to Type.I64,
+            "f32"  to Type.F32,
+            "f64"  to Type.F64,
             "void" to Type.Void,
             "ptr"  to Type.Ptr,
         )

@@ -18,7 +18,7 @@ class Assembler {
 
     private fun convertToSymbolType(globalValue: GlobalValue): SymbolType {
         return when (globalValue) {
-            is StringLiteralGlobal -> SymbolType.String
+            is StringLiteralGlobal -> SymbolType.StringLiteral
             is I64GlobalValue      -> SymbolType.Long
             is U64GlobalValue      -> SymbolType.Long
             is I32GlobalValue      -> SymbolType.Integer

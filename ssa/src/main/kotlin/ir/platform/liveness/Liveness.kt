@@ -26,7 +26,7 @@ class Liveness private constructor(val data: FunctionData) {
         }
     }
 
-    private fun setupLiveRanges(): Map<Block, Int> {
+    private fun setupLiveRanges() {
         var ordering = -1
         for (bb in linearScanOrder) {
             for ((idx, inst) in bb.instructions().withIndex()) {
@@ -41,8 +41,6 @@ class Liveness private constructor(val data: FunctionData) {
             }
             bbOrdering[bb] = ordering
         }
-
-        return bbOrdering
     }
 
     private fun evaluateUsages() {

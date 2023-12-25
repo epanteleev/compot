@@ -9,7 +9,7 @@ import ir.types.Type
 class Load private constructor(name: String, val loadedType: PrimitiveType, ptr: Value):
     ValueInstruction(name, Type.Ptr, arrayOf(ptr)) {
     override fun dump(): String {
-        return "%$identifier = load $loadedType, ptr ${operand()}"
+        return "%$identifier = load $loadedType ${operand()}"
     }
 
     fun operand(): Value {

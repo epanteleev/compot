@@ -1,6 +1,8 @@
 package ir.types
 
-data class IntType(val size: Int) : PrimitiveType, ArithmeticType {
+interface IntegerType: ArithmeticType
+
+data class SignedIntType(val size: Int) : IntegerType {
     override fun size(): Int {
         return size
     }
@@ -16,7 +18,7 @@ data class IntType(val size: Int) : PrimitiveType, ArithmeticType {
     }
 }
 
-data class UIntType(val size: Int) : PrimitiveType, ArithmeticType {
+data class UnsignedIntType(val size: Int) : IntegerType {
     override fun size(): Int {
         return size
     }

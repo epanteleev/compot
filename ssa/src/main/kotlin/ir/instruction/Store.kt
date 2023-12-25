@@ -10,7 +10,7 @@ import ir.types.VoidType
 class Store private constructor(pointer: Value, value: Value):
     Instruction(arrayOf(pointer, value)) {
     override fun dump(): String {
-        return "store ${value().type()} ${value()}, ptr ${pointer()}"
+        return "store ptr ${pointer()}, ${value().type()} ${value()}"
     }
 
     fun pointer(): Value {

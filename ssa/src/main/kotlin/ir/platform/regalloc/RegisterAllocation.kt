@@ -1,18 +1,19 @@
 package ir.platform.regalloc
 
-import asm.x64.*
 import ir.*
-import ir.platform.liveness.LiveIntervals
-import ir.platform.x64.CallConvention
-import ir.platform.x64.CallConvention.gpCalleeSaveRegs
+import asm.x64.*
 import ir.utils.OrderedLocation
+import ir.platform.x64.CallConvention
+import ir.platform.liveness.LiveIntervals
+import ir.platform.x64.CallConvention.gpCalleeSaveRegs
+
 
 class RegisterAllocation(private val stackSize: Long,
                          private val registerMap: Map<LocalValue, Operand>,
                          private val liveness: LiveIntervals
 ) {
     /** Count of callee save registers in given function. */
-    val calleeSaveRegisters: Set<GPRegister> by lazy {
+    val calleeSaveRegisters: Set<GPRegister> by lazy { //TODO get this from *RegisterList
         val registers = linkedSetOf<GPRegister>()
         for (reg in registerMap.values) {
             if (reg !is GPRegister) {
@@ -69,16 +70,18 @@ class RegisterAllocation(private val stackSize: Long,
                 }
                 operand as Operand
             }
-            is U8Value     -> Imm(value.u8.toLong())
-            is I8Value     -> Imm(value.i8.toLong())
-            is U16Value    -> Imm(value.u16.toLong())
-            is I16Value    -> Imm(value.i16.toLong())
-            is U32Value    -> Imm(value.u32.toLong())
-            is I32Value    -> Imm(value.i32.toLong())
-            is I64Value    -> Imm(value.i64)
-            is U64Value    -> Imm(value.u64)
+            is U8Value     -> ImmInt(value.u8.toLong())
+            is I8Value     -> ImmInt(value.i8.toLong())
+            is U16Value    -> ImmInt(value.u16.toLong())
+            is I16Value    -> ImmInt(value.i16.toLong())
+            is U32Value    -> ImmInt(value.u32.toLong())
+            is I32Value    -> ImmInt(value.i32.toLong())
+            is I64Value    -> ImmInt(value.i64)
+            is U64Value    -> ImmInt(value.u64)
+            is F32Value    -> ImmFp32(value.f32)
+            is F64Value    -> ImmFp64(value.f64)
             is GlobalValue -> Address.mem(value.name())
-            else -> throw RuntimeException("expect $value:${value.type()}")
+            else -> throw RuntimeException("expect $value: ${value.type()}")
         }
     }
 

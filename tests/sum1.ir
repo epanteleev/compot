@@ -1,0 +1,15 @@
+extern void @printFloat(f32)
+
+
+define i32 @main() {
+entry:	
+  %0x0 = alloc f32
+  store ptr %0x0, f32 4.0
+  %0x1 = alloc f32
+  store ptr %0x1, f32 8.0
+  %v0x2 = load f32 %0x0
+  %v0x3 = load f32 %0x1
+  %0x4 = add f32 %v0x3, %v0x3
+  call void @printFloat(%0x4:f32)
+  ret i32 0
+}

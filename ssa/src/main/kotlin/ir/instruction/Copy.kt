@@ -1,12 +1,18 @@
 package ir.instruction
 
 import ir.Value
-import ir.instruction.utils.Visitor
-import ir.types.PrimitiveType
 import ir.types.Type
+import ir.types.PrimitiveType
+import ir.instruction.utils.Visitor
+
 
 class Copy private constructor(name: String, origin: Value):
     ValueInstruction(name, origin.type(), arrayOf(origin)) {
+
+    override fun type(): PrimitiveType {
+        return tp as PrimitiveType
+    }
+
     override fun dump(): String {
         return "%$identifier = copy $tp ${origin()}"
     }

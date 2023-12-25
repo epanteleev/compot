@@ -6,7 +6,7 @@ RESET=`tput sgr0`
 
 JAVA=java
 
-DEFAULT_JVM_OPTS="-ea"
+export JAVA_OPTS="-ea"
 IR_COMPILER="../build/ssa-1.0/bin/ssa"
 
 mkdir ../build
@@ -49,6 +49,8 @@ function compile_and_run() {
 }
 
 compile_and_run manyArguments 36
+compile_and_run sum 16
+compile_and_run sum1 16.000000
 compile_and_run fib 21
 compile_and_run fib_opt 21
 compile_and_run fib_recursive 21

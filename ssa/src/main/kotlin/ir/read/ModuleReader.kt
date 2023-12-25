@@ -1,12 +1,11 @@
 package ir.read
 
 import ir.*
-import ir.instruction.ArithmeticBinaryOp
-import ir.instruction.CastType
+import ir.types.*
 import ir.module.Module
 import ir.read.bulder.*
-import ir.types.ArrayType
-import ir.types.Type
+import ir.instruction.*
+
 
 private class FunctionBlockReader private constructor(private val iterator: TokenIterator, private val builder: FunctionDataBuilderWithContext) {
     private fun parseOperand(expectMessage: String): AnyValueToken {

@@ -4,7 +4,7 @@ import ir.LocalValue
 import ir.Value
 import ir.types.Type
 
-abstract class ValueInstruction(protected val identifier: String, val tp: Type, operands: Array<Value>):
+abstract class ValueInstruction(protected val identifier: String, protected val tp: Type, operands: Array<Value>):
     Instruction(operands),
     LocalValue {
     private val usedIn: MutableList<Instruction> = arrayListOf()

@@ -32,6 +32,14 @@ void printUByte(unsigned char value) {
         printf("%u\n", value);
 }
 
+void printFloat(float fp) {
+	printf("%f\n", fp);
+}
+
+void printDouble(double fp) {
+	printf("%lf\n", fp);
+}
+
 void printLongArray(long* array, long size) {
         for (long i = 0; i < size; i++) {
                 printf("%ld", array[i]);

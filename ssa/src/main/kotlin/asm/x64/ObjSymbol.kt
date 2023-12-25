@@ -1,28 +1,28 @@
 package asm.x64
 
 enum class SymbolType {
-    String {
-        override fun toString(): kotlin.String {
+    StringLiteral {
+        override fun toString(): String {
             return ".string"
         }
     },
     Long {
-        override fun toString(): kotlin.String {
+        override fun toString(): String {
             return ".quad"
         }
     },
     Integer {
-        override fun toString(): kotlin.String {
+        override fun toString(): String {
             return ".long"
         }
     },
     Short {
-        override fun toString(): kotlin.String {
+        override fun toString(): String {
             return ".short"
         }
     },
     Byte {
-        override fun toString(): kotlin.String {
+        override fun toString(): String {
             return ".byte"
         }
     }

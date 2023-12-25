@@ -2,8 +2,8 @@ package asm.x64
 
 import asm.x64.CPUInstruction.Companion.prefix
 
-interface CPUInstruction {
 
+interface CPUInstruction {
     companion object {
         fun prefix(size: Int): Char {
             return when (size) {
@@ -38,12 +38,6 @@ data class Mov(val size: Int, val src: AnyOperand, val des: Operand): CPUInstruc
 data class MovAbs(val size: Int, val src: AnyOperand, val des: Register): CPUInstruction {
     override fun toString(): String {
         return "movabs${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
-    }
-}
-
-data class Movss(val size: Int, val src: AnyOperand, val des: Register): CPUInstruction {
-    override fun toString(): String {
-        return "movss${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
     }
 }
 
@@ -195,5 +189,41 @@ enum class SetCCType {
 data class SetCc(val size: Int, val tp: SetCCType, val reg: GPRegister): CPUInstruction {
     override fun toString(): String {
         return "$tp${prefix(size)} ${reg.toString(size)}"
+    }
+}
+
+data class Addss(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "addss ${src.toString(size)}, ${des.toString(size)}"
+    }
+}
+
+data class Addsd(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "addsd ${src.toString(size)}, ${des.toString(size)}"
+    }
+}
+
+data class Movss(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "movss ${src.toString(size)}, ${des.toString(size)}"
+    }
+}
+
+data class Movsd(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "movsd ${src.toString(size)}, ${des.toString(size)}"
+    }
+}
+
+data class Movd(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return if (src is XmmRegister) {
+            "movd ${src.toString(16)}, ${des.toString(size)}"
+        } else if (des is XmmRegister) {
+            "movd ${src.toString(size)}, ${des.toString(16)}"
+        } else {
+            throw RuntimeException("Internal error: src=$src, des=$des")
+        }
     }
 }

@@ -168,13 +168,10 @@ class Tokenizer(val data: String) {
         if (getChar() == '.') {
             //Floating point value
             nextChar()
-            while (!isEnd() && getChar().isDigit()) {
+            while (!isEnd() && !isSeparator(getChar())) {
                 nextChar()
             }
 
-            if (!isEnd() && !getChar().isWhitespace()) {
-                throw TokenizerException("$line:$pos cannot parse floating point value: '${remainsLine(begin)}'")
-            }
             val floatString = data.substring(begin, globalPosition)
             val float = floatString.toDoubleOrNull()
                 ?: throw TokenizerException("Cannot to be converted to floating point value: '$floatString'")
@@ -276,5 +273,25 @@ class Tokenizer(val data: String) {
 
     operator fun iterator(): TokenIterator {
         return TokenIterator(this)
+    }
+
+    companion object {
+        private val separators = arrayOf(
+            '{',
+            '}',
+            '(',
+            ')',
+            '=',
+            ',',
+            ':',
+            '[',
+            ']',
+            ' ',
+            '\t',
+            '\n'
+        )
+        fun isSeparator(char: Char): Boolean {
+            return separators.contains(char)
+        }
     }
 }

@@ -31,24 +31,25 @@ object SubCodegen {
             }
 
             case<Address, GPRegister, GPRegister>(dst, first, second) -> {
-                dst as Address
-                second as Register
+                dst    as Address
+                first  as GPRegister
+                second as GPRegister
                 objFunc.mov(size, first, dst)
                 objFunc.sub(size, second, dst)
             }
 
             case<Address, Address, GPRegister>(dst, first, second) -> {
-                dst as Address
-                first as Address
+                dst    as Address
+                first  as Address
                 second as GPRegister
                 objFunc.mov(size, first, temp1)
                 objFunc.sub(size, second, CodeEmitter.temp1)
                 objFunc.mov(size, temp1, dst)
             }
 
-            case<GPRegister, Imm, GPRegister>(dst, first, second) -> {
+            case<GPRegister, ImmInt, GPRegister>(dst, first, second) -> {
                 dst as GPRegister
-                first as Imm
+                first as ImmInt
                 second as GPRegister
 
                 objFunc.mov(size, first, temp1)
@@ -65,10 +66,10 @@ object SubCodegen {
                 objFunc.mov(size, temp1, dst)
             }
 
-            case<GPRegister, GPRegister, Imm>(dst, first, second) -> {
+            case<GPRegister, GPRegister, ImmInt>(dst, first, second) -> {
                 dst as GPRegister
                 first as GPRegister
-                second as Imm
+                second as ImmInt
 
                 if (dst == first) {
                     objFunc.sub(size, second, dst)
@@ -88,10 +89,25 @@ object SubCodegen {
             }
 
             case<Address, GPRegister, GPRegister>(dst, first, second) -> {
-                dst as Address
-                second as Register
+                dst    as Address
+                first  as GPRegister
+                second as GPRegister
                 objFunc.mov(size, first, dst)
                 objFunc.sub(size, second, dst)
+            }
+
+            case<GPRegister, ImmInt, ImmInt>(dst, first, second) -> {
+                dst    as GPRegister
+                first  as ImmInt
+                second as ImmInt
+                objFunc.mov(size, ImmInt(first.value - second.value), dst)
+            }
+
+            case<Address, ImmInt, ImmInt>(dst, first, second) -> {
+                dst as Address
+                first as ImmInt
+                second as ImmInt
+                objFunc.mov(size, ImmInt(first.value - second.value), dst)
             }
 
             else -> throw RuntimeException("Unimplemented: '${ArithmeticBinaryOp.Sub}' dst=$dst, first=$first, second=$second")

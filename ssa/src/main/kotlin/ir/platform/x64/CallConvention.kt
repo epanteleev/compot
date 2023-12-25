@@ -2,8 +2,10 @@ package ir.platform.x64
 
 import asm.x64.*
 import asm.x64.GPRegister.*
+import asm.x64.XmmRegister.*
 
-
+// Calling conventions for different C++ compilers and operating systems
+// https://www.agner.org/optimize/calling_conventions.pdf
 object CallConvention {
     val gpArgumentRegisters: Array<GPRegister> = arrayOf(
         rdi,
@@ -35,8 +37,43 @@ object CallConvention {
         r15
     )
 
+    val xmmArgumentRegister: Array<XmmRegister> = arrayOf(
+        xmm0,
+        xmm1,
+        xmm2,
+        xmm3,
+        xmm4,
+        xmm5,
+        xmm6,
+        xmm7,
+    )
+
+    val xmmRegisters: Array<XmmRegister> = arrayOf(
+        xmm0,
+        xmm1,
+        xmm2,
+        xmm3,
+        xmm4,
+        xmm5,
+        xmm6,
+        xmm7,
+        xmm8,
+        xmm9,
+        xmm10,
+        xmm11,
+        xmm12,
+        xmm13,
+        xmm14,
+        xmm15,
+    )
+
     val temp1 = rax
     val temp2 = r10
+    val retReg = rax
+
+    val xmmTemp1 = xmm8
+    val xmmTemp2 = xmm9
+    val fpRet = xmm0
 
     fun availableRegisters(usedArgumentRegisters: List<GPRegister>): Set<GPRegister> {
         val allRegisters = mutableSetOf<GPRegister>()
@@ -48,6 +85,17 @@ object CallConvention {
         allRegisters.removeAll(usedArgumentRegisters.toSet())
         allRegisters.remove(temp1)
         allRegisters.remove(temp2)
+        allRegisters.remove(retReg)
+        return allRegisters
+    }
+
+    fun availableXmmRegisters(usedArgumentRegisters: List<XmmRegister>): Set<XmmRegister> {
+        val allRegisters = mutableSetOf<XmmRegister>()
+        allRegisters.addAll(xmmRegisters)
+        allRegisters.remove(fpRet)
+        allRegisters.remove(xmmTemp1)
+        allRegisters.remove(xmmTemp2)
+        allRegisters.removeAll(usedArgumentRegisters.toSet())
         return allRegisters
     }
 }

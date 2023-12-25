@@ -1,6 +1,6 @@
 extern void @printIntArray(ptr, i32)
 
-define u64 @main() {
+define i32 @main() {
 entry:
   %retVal = alloc i32
   %array = alloc <i32 x 5>
@@ -18,6 +18,6 @@ entry:
   store ptr %retVal, i32 154
   %ret = load i32 %retVal
   call void @printIntArray(%begin: ptr, 5: i32)	
-  ret i32 %retVal
+  ret i32 %ret
 }
 

@@ -1,10 +1,8 @@
 package ir.platform.x64
 
-import ir.ExternFunction
-import ir.GlobalValue
+import ir.*
 import ir.module.*
-import ir.module.auxiliary.Copy
-import ir.module.auxiliary.DumpModule
+import ir.module.auxiliary.*
 import ir.platform.liveness.LiveIntervals
 import ir.platform.regalloc.LinearScan
 import ir.platform.regalloc.RegisterAllocation

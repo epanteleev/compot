@@ -61,7 +61,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     override fun takeSlot(value: Value): Address {
         return when (value) {
-            is Alloc -> stackSlotAlloc(value)
+            is Alloc            -> stackSlotAlloc(value)
             is ValueInstruction -> valueInstructionAlloc(value)
             else -> throw StackFrameException("Cannot alloc slot for this value=$value")
         }

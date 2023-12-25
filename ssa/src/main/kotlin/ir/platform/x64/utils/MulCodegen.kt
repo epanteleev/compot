@@ -10,8 +10,8 @@ object MulCodegen {
     operator fun invoke(objFunc: ObjFunction, dst: AnyOperand, first: AnyOperand, second: AnyOperand, size: Int) {
         when {
             case<GPRegister, GPRegister, GPRegister>(dst, first, second) -> {
-                first as GPRegister
-                dst as GPRegister
+                first  as GPRegister
+                dst    as GPRegister
                 second as GPRegister
                 if (first == dst) {
                     objFunc.mul(size, second, dst)
@@ -24,24 +24,25 @@ object MulCodegen {
             }
 
             case<Address, GPRegister, GPRegister>(dst, first, second) -> {
-                dst as Address
-                second as Register
+                dst    as Address
+                first  as GPRegister
+                second as GPRegister
                 objFunc.mov(size, first, dst)
                 objFunc.mul(size, second, dst)
             }
 
             case<Address, Address, GPRegister>(dst, first, second) -> {
-                dst as Address
-                first as Address
+                dst    as Address
+                first  as Address
                 second as GPRegister
                 objFunc.mov(size, first, temp1)
                 objFunc.mul(size, second, CodeEmitter.temp1)
                 objFunc.mov(size, temp1, dst)
             }
 
-            case<GPRegister, Imm, GPRegister>(dst, first, second) -> {
+            case<GPRegister, ImmInt, GPRegister>(dst, first, second) -> {
                 dst as GPRegister
-                first as Imm
+                first as ImmInt
                 second as GPRegister
 
                 if (first.value == 2L) {
@@ -55,10 +56,10 @@ object MulCodegen {
                 }
             }
 
-            case<GPRegister, GPRegister, Imm>(dst, first, second) -> {
+            case<GPRegister, GPRegister, ImmInt>(dst, first, second) -> {
                 dst as GPRegister
                 first as GPRegister
-                second as Imm
+                second as ImmInt
 
                 if (second.value == 2L) {
                     // Todo implement mul as shl
@@ -95,10 +96,25 @@ object MulCodegen {
             }
 
             case<Address, GPRegister, GPRegister>(dst, first, second) -> {
-                dst as Address
-                second as Register
+                dst    as Address
+                first  as GPRegister
+                second as GPRegister
                 objFunc.mov(size, first, dst)
                 objFunc.mul(size, second, dst)
+            }
+
+            case<GPRegister, ImmInt, ImmInt>(dst, first, second) -> {
+                dst as GPRegister
+                first as ImmInt
+                second as ImmInt
+                objFunc.mov(size, ImmInt(first.value * second.value), dst)
+            }
+
+            case<Address, ImmInt, ImmInt>(dst, first, second) -> {
+                dst as Address
+                first as ImmInt
+                second as ImmInt
+                objFunc.mov(size, ImmInt(first.value * second.value), dst)
             }
 
             else -> throw RuntimeException("Unimplemented: '${ArithmeticBinaryOp.Mul}' dst=$dst, first=$first, second=$second")

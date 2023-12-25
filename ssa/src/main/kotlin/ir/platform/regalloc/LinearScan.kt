@@ -1,10 +1,11 @@
 package ir.platform.regalloc
 
-import asm.x64.Operand
 import ir.LocalValue
+import asm.x64.Operand
 import ir.instruction.Callable
 import ir.module.FunctionData
 import ir.platform.liveness.LiveIntervals
+
 
 class LinearScan(private val data: FunctionData, private val liveRanges: LiveIntervals) {
     private val registerMap = hashMapOf<LocalValue, Operand>()
