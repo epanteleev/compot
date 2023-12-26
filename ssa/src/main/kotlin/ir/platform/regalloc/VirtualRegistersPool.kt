@@ -49,20 +49,32 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
     companion object {
         private class ArgumentAllocator {
             private var freeArgumentRegisters = CallConvention.gpArgumentRegisters.toMutableList().asReversed()
+            private var freeXmmArgumentRegisters = CallConvention.xmmArgumentRegister.toMutableList().asReversed()
             private var argumentSlotIndex: Long = 0
 
             fun pickArgument(type: PrimitiveType): Operand {
-                assert(type is SignedIntType || type is UnsignedIntType || type is PointerType)
+                return when (type) {
+                    is IntegerType, is PointerType -> {
+                        if (freeArgumentRegisters.isNotEmpty()) {
+                            freeArgumentRegisters.removeLast()
+                        } else {
+                            val old = argumentSlotIndex
+                            argumentSlotIndex += 1
+                            ArgumentSlot(rbp, old * 8 + 16)
+                        }
+                    }
+                    is FloatingPoint -> {
+                        if (freeXmmArgumentRegisters.isNotEmpty()) {
+                            freeXmmArgumentRegisters.removeLast()
+                        } else {
+                            val old = argumentSlotIndex
+                            argumentSlotIndex += 1
+                            ArgumentSlot(rbp, old * 16 + 16)
+                        }
+                    }
 
-                val slot = if (freeArgumentRegisters.isNotEmpty()) {
-                    freeArgumentRegisters.removeLast()
-                } else {
-                    val old = argumentSlotIndex
-                    argumentSlotIndex += 1
-                    ArgumentSlot(rbp, old * 8 + 16)
+                    else -> throw RuntimeException("type=$type")
                 }
-
-                return slot
             }
         }
 

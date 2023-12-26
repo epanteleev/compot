@@ -4,6 +4,7 @@ import ir.AnyFunctionPrototype
 import ir.Value
 import ir.instruction.*
 import ir.types.ArithmeticType
+import ir.types.IntegerType
 import ir.types.PrimitiveType
 import ir.types.Type
 
@@ -173,13 +174,22 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
         return instructions.removeIf { filter(it) }
     }
 
-    override fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): ArithmeticUnary {
+    override fun not(value: Value): Not {
         val valueType = value.type()
-        require(valueType is ArithmeticType) {
-            "should be arithmetic type, but ty=$valueType"
+        require(valueType is IntegerType) {
+            "should be integer type, but ty=$valueType"
         }
 
-        return withOutput { it: Int -> ArithmeticUnary.make(n(it), valueType, op, value) }
+        return withOutput { it: Int -> Not.make(n(it), valueType, value) }
+    }
+
+    override fun neg(value: Value): Neg {
+        val valueType = value.type()
+        require(valueType is ArithmeticType) {
+            "should be integer type, but ty=$valueType"
+        }
+
+        return withOutput { it: Int -> Neg.make(n(it), valueType, value) }
     }
 
     override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {

@@ -47,8 +47,12 @@ class FunctionDataBuilder private constructor(
         return argumentValues
     }
 
-    fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): Value {
-        return bb.arithmeticUnary(op, value)
+    fun not(value: Value): Value {
+        return bb.not(value)
+    }
+
+    fun neg(value: Value): Value {
+        return bb.neg(value)
     }
 
     fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): Value {

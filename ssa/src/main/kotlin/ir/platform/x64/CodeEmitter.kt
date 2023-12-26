@@ -11,6 +11,8 @@ import ir.utils.OrderedLocation
 import asm.x64.GPRegister.*
 import ir.*
 import ir.instruction.Call
+import ir.instruction.Neg
+import ir.instruction.Not
 import ir.platform.x64.utils.*
 
 
@@ -18,7 +20,7 @@ data class CodegenException(override val message: String): Exception(message)
 
 class CodeEmitter(private val data: FunctionData,
                   private val functionCounter: Int,
-                  private val asm: Assembler,
+                  asm: Assembler,
                   private val valueToRegister: RegisterAllocation,
 ): Visitor {
     private val orderedLocation = evaluateOrder(data.blocks)
@@ -107,11 +109,15 @@ class CodeEmitter(private val data: FunctionData,
             "should be the same, but: function.return.type=$returnType, ret.type=$retInstType"
         }
 
-        if (returnType is ArithmeticType || returnType is PointerType) {
-            val value = valueToRegister.operand(returnValue.value())
+        val value = valueToRegister.operand(returnValue.value())
+        if (returnType is IntegerType || returnType is PointerType) {
             objFunc.movOld(size, value, temp1)
-        } else {
-            TODO()
+        } else if (returnType is FloatingPoint) {
+            when (value) {
+                is Address -> objFunc.movf(size, value, fpRet)
+                is XmmRegister -> objFunc.movf(size, value, fpRet)
+                else -> TODO()
+            }
         }
 
         emitEpilogue()
@@ -123,43 +129,16 @@ class CodeEmitter(private val data: FunctionData,
         objFunc.ret()
     }
 
-    override fun visit(unary: ArithmeticUnary) {
-        val operand = valueToRegister.operand(unary.operand())
-        val result  = valueToRegister.operand(unary)
-        val size = unary.type().size()
+    override fun visit(neg: Neg) {
+        val operand = valueToRegister.operand(neg.operand())
+        val result  = valueToRegister.operand(neg)
+        NegCodegen(neg.type(), objFunc, result, operand)
+    }
 
-        if (unary.op == ArithmeticUnaryOp.Neg) {
-            val second = if (operand is Address2) {
-                objFunc.movOld(size, operand, temp1)
-            } else {
-                operand as Register
-            }
-            objFunc.xor(size, ImmInt(-1), second)
-            objFunc.movOld(size, second, result as Operand)
-
-        } else if (unary.op == ArithmeticUnaryOp.Not) {
-            val second = if (result is Address) {
-                objFunc.mov(size, result, temp1)
-                temp1
-            } else {
-                result as Register
-            }
-
-            objFunc.xor(size, second, second)
-            when (operand) {
-                is Address -> objFunc.sub(size, operand, second)
-                is GPRegister -> objFunc.sub(size, operand, second)
-                is ImmInt -> objFunc.sub(size, operand, second)
-                else -> throw RuntimeException("Internal error")
-            }
-
-            if (result is Address) {
-                objFunc.mov(size, temp1, result)
-            }
-
-        } else {
-            throw RuntimeException("Internal error")
-        }
+    override fun visit(neg: Not) {
+        val operand = valueToRegister.operand(neg.operand())
+        val result  = valueToRegister.operand(neg)
+        NotCodegen(neg.type() as IntegerType, objFunc, result, operand)
     }
 
     private fun emitCall(call: Callable) {
@@ -169,15 +148,18 @@ class CodeEmitter(private val data: FunctionData,
         if (retType == Type.Void) {
             return
         }
-
+        val size = call.type().size()
         when (retType) {
-            is ArithmeticType, is PointerType, is BooleanType -> {
-                val size = call.type().size()
+            is IntegerType, is PointerType, is BooleanType -> {
                 objFunc.movOld(size, rax, valueToRegister.operand(call) as Operand)
             }
 
             is FloatingPoint -> {
-                TODO()
+                when (val op = valueToRegister.operand(call)) {
+                    is Address -> objFunc.movf(size, fpRet, op)
+                    is XmmRegister -> objFunc.movf(size, fpRet, op)
+                    else -> TODO()
+                }
             }
 
             else -> {
@@ -395,6 +377,7 @@ class CodeEmitter(private val data: FunctionData,
     companion object {
         val temp1 = CallConvention.temp1
         val temp2 = CallConvention.temp2
+        val fpRet = XmmRegister.xmm0
 
         fun codegen(module: Module): Assembler {
             if (module !is CSSAModule) {

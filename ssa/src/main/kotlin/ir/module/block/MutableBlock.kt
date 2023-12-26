@@ -7,7 +7,8 @@ import ir.types.PrimitiveType
 import ir.types.Type
 
 interface MutableBlock {
-    fun arithmeticUnary(op: ArithmeticUnaryOp, value: Value): ArithmeticUnary
+    fun neg(value: Value): Neg
+    fun not(value: Value): Not
     fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary
     fun intCompare(a: Value, pred: IntPredicate, b: Value): IntCompare
     fun load(loadedType: PrimitiveType, ptr: Value): Load

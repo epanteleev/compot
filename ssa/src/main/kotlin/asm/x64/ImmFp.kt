@@ -5,6 +5,8 @@ import java.lang.IllegalArgumentException
 sealed interface ImmFp : Imm {
     fun bits(): ImmInt
 
+    operator fun unaryMinus(): ImmFp
+
     operator fun plus(other: ImmFp): ImmFp
 }
 
@@ -15,6 +17,10 @@ data class ImmFp32(val fp: Float): ImmFp {
 
     override fun bits(): ImmInt {
         return ImmInt(fp.toBits().toLong())
+    }
+
+    override operator fun unaryMinus(): ImmFp {
+        return ImmFp32(-fp)
     }
 
     override fun plus(other: ImmFp): ImmFp {
@@ -36,6 +42,10 @@ data class ImmFp64(val fp: Double): ImmFp {
 
     override fun bits(): ImmInt {
         return ImmInt(fp.toBits())
+    }
+
+    override operator fun unaryMinus(): ImmFp {
+        return ImmFp64(-fp)
     }
 
     override fun plus(other: ImmFp): ImmFp {

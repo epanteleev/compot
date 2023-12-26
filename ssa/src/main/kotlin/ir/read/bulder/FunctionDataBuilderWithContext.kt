@@ -38,7 +38,7 @@ class FunctionDataBuilderWithContext private constructor(
 
     private fun getValue(token: AnyValueToken, ty: Type): Value {
         return when (token) {
-            is IntValue -> Constant.of(ty, token.int)
+            is IntValue   -> Constant.of(ty, token.int)
             is FloatValue -> Constant.of(ty, token.fp)
             is LocalValueToken -> {
                 val operand = nameMap[token.name]
@@ -110,9 +110,14 @@ class FunctionDataBuilderWithContext private constructor(
         return argumentValues
     }
 
-    fun arithmeticUnary(name: LocalValueToken, op: ArithmeticUnaryOp, valueTok: AnyValueToken, expectedType: ElementaryTypeToken): ArithmeticUnary {
+    fun neg(name: LocalValueToken, valueTok: AnyValueToken, expectedType: ElementaryTypeToken): ArithmeticUnary {
         val value  = getValue(valueTok, expectedType.type())
-        return memorize(name, bb.arithmeticUnary(op, value))
+        return memorize(name, bb.neg(value))
+    }
+
+    fun not(name: LocalValueToken, valueTok: AnyValueToken, expectedType: ElementaryTypeToken): ArithmeticUnary {
+        val value  = getValue(valueTok, expectedType.type())
+        return memorize(name, bb.not(value))
     }
 
     fun arithmeticBinary(name: LocalValueToken, a: AnyValueToken, op: ArithmeticBinaryOp, b: AnyValueToken, expectedType: ElementaryTypeToken): ArithmeticBinary {

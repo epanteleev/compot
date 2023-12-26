@@ -124,9 +124,13 @@ class VerifySSA private constructor(private val functionData: FunctionData, priv
                 is Phi -> {
                     assert(Phi.isCorrect(instruction)) { "Inconsistent phi instruction '${instruction.dump()}': different types ${instruction.operands().map { it.type() }.joinToString()}" }
                 }
-                is ArithmeticUnary -> {
-                    fun message() = "Unary instruction '${instruction.dump()}' must have the same type: destination=${instruction.type()} operand=${instruction.operand().type()}"
-                    assert(ArithmeticUnary.isCorrect(instruction)) { message() }
+                is Neg -> {
+                    fun message() = "Neg instruction '${instruction.dump()}' must have the same type: destination=${instruction.type()} operand=${instruction.operand().type()}"
+                    assert(Neg.isCorrect(instruction)) { message() }
+                }
+                is Not -> {
+                    fun message() = "Not instruction '${instruction.dump()}' must have the same type: destination=${instruction.type()} operand=${instruction.operand().type()}"
+                    assert(Not.isCorrect(instruction)) { message() }
                 }
                 is ArithmeticBinary -> {
                     fun message() = "Binary arithmetic instruction '${instruction.dump()}' requires all operands to be of the same type: a=${instruction.first().type()}, b=${instruction.second().type()}"

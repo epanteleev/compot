@@ -1,0 +1,19 @@
+extern void @printDouble(f64)
+
+define i32 @main() {
+  %float = call f64 @neg(-1.0: f64)
+  call void @printDouble(%float: f64)
+  ret i32 0
+}
+
+;double neg(double i) {
+;    return -i;
+;}
+define f64 @neg(%i: f64) {
+entry:
+  %1 = alloc f64
+  store ptr %1, f64 %i
+  %2 = load f64 %1
+  %3 = neg f64 %2
+  ret f64 %3
+}

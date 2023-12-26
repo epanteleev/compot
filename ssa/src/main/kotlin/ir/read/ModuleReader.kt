@@ -175,6 +175,20 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
         builder.gep(resultName, type, source, sourceType, index, indexType)
     }
 
+    private fun parseNeg(currentTok: LocalValueToken) {
+        // %$identifier = {unary type name} {operand type} %{value}
+        val type   = iterator.expect<ElementaryTypeToken>("type")
+        val source = iterator.expect<LocalValueToken>("source value")
+        builder.neg(currentTok, source, type)
+    }
+
+    private fun parseNot(currentTok: LocalValueToken) {
+        // %$identifier = {unary type name} {operand type} %{value}
+        val type   = iterator.expect<ElementaryTypeToken>("type")
+        val source = iterator.expect<LocalValueToken>("source value")
+        builder.neg(currentTok, source, type)
+    }
+
     private fun parseInstruction(currentTok: Token) {
         when (currentTok) {
             is LocalValueToken -> {
@@ -202,6 +216,8 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
                     "icmp"       -> parseCmp(currentTok)
                     "phi"        -> parsePhi(currentTok)
                     "gep"        -> parseGep(currentTok)
+                    "neg"        -> parseNeg(currentTok)
+                    "not"        -> parseNot(currentTok)
                     else -> throw ParseErrorException("instruction name", instruction)
                 }
             }

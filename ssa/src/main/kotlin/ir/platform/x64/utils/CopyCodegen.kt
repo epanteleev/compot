@@ -87,6 +87,12 @@ object CopyCodegen {
                 objFunc.movf(size, origin, dst)
             }
 
+            case<XmmRegister, AddressLiteral>(dst, origin) -> {
+                dst    as GPRegister
+                origin as AddressLiteral
+                TODO()
+            }
+
             case<XmmRegister, Address>(dst, origin) -> {
                 dst    as XmmRegister
                 origin as Address
@@ -103,13 +109,19 @@ object CopyCodegen {
             case<Address, ImmFp>(dst, origin) -> {
                 dst    as Address
                 origin as ImmFp
-                objFunc.mov(size, origin.bits(), dst)
+                objFunc.mov(size, origin.bits(), dst) //TODO
             }
 
             case<Address, XmmRegister>(dst, origin) -> {
                 dst    as Address
                 origin as XmmRegister
                 objFunc.movf(size, origin, dst)
+            }
+
+            case<Address, AddressLiteral>(dst, origin) -> {
+                dst    as Address
+                origin as AddressLiteral
+                TODO()
             }
 
             case<Address, Address>(dst, origin) -> {

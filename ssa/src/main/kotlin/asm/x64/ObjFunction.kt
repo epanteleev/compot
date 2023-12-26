@@ -81,6 +81,11 @@ class ObjFunction(private val name: String) {
     fun movd(size: Int, src: Address, dst: XmmRegister) = add(Movd(size, src, dst))
     fun movd(size: Int, src: XmmRegister, dst: Address) = add(Movd(size, src, dst))
 
+    fun neg(size: Int, dst: GPRegister) = add(Neg(size, dst))
+    fun neg(size: Int, dst: Address) = add(Neg(size, dst))
+
+    fun not(size: Int, dst: GPRegister) = add(Not(size, dst))
+    fun not(size: Int, dst: Address) = add(Not(size, dst))
 
     fun div(size: Int, first: AnyOperand, destination: Register): Operand {
         add(Div(size, first, destination))
@@ -177,6 +182,22 @@ class ObjFunction(private val name: String) {
         else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
     }
 
+    // Bitwise Logical XOR of Packed Floating-Point Values
+    fun xorpd(src: XmmRegister, dst: XmmRegister) = add(Xorpd(16, src, dst))
+    fun xorpd(src: Address, dst: XmmRegister) = add(Xorpd(16, src, dst))
+    fun xorps(src: XmmRegister, dst: XmmRegister) = add(Xorps(16, src, dst))
+    fun xorps(src: Address, dst: XmmRegister) = add(Xorps(16, src, dst))
+    fun xorpf(size: Int, src: Address, dst: XmmRegister) = when (size) {
+        4 -> xorps(src, dst)
+        8 -> xorpd(src, dst)
+        else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
+    }
+    fun xorpf(size: Int, src: XmmRegister, dst: XmmRegister) = when (size) {
+        4 -> xorps(src, dst)
+        8 -> xorpd(src, dst)
+        else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
+    }
+
     override fun toString(): String {
         val builder = StringBuilder()
         var count = 0
@@ -191,19 +212,5 @@ class ObjFunction(private val name: String) {
         }
 
         return builder.toString()
-    }
-
-    companion object {
-        val Ret = object : CPUInstruction {
-            override fun toString(): String {
-                return "ret"
-            }
-        }
-
-        val Leave = object : CPUInstruction {
-            override fun toString(): String {
-                return "leave"
-            }
-        }
     }
 }

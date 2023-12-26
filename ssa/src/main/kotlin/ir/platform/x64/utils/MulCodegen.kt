@@ -57,8 +57,8 @@ object MulCodegen {
             }
 
             case<GPRegister, GPRegister, ImmInt>(dst, first, second) -> {
-                dst as GPRegister
-                first as GPRegister
+                dst    as GPRegister
+                first  as GPRegister
                 second as ImmInt
 
                 if (second.value == 2L) {
@@ -73,25 +73,34 @@ object MulCodegen {
             }
 
             case<Address, Address, Address>(dst, first, second) -> {
-                dst as Address
-                first as Address
+                dst    as Address
+                first  as Address
                 second as Address
-                objFunc.mov(size, first, CodeEmitter.temp1)
-                objFunc.mul(size, second, CodeEmitter.temp1)
-                objFunc.mov(size, CodeEmitter.temp1, dst)
+
+                if (first == dst) {
+                    objFunc.mov(size, second, temp1)
+                    objFunc.mul(size, temp1, dst)
+                } else if (second == dst) {
+                    objFunc.mov(size, first, temp1)
+                    objFunc.mul(size, temp1, dst)
+                } else {
+                    objFunc.mov(size, first, temp1)
+                    objFunc.mul(size, second, temp1)
+                    objFunc.mov(size, temp1, dst)
+                }
             }
 
             case<GPRegister, Address, GPRegister>(dst, first, second) -> {
-                dst as GPRegister
-                first as Address
+                dst    as GPRegister
+                first  as Address
                 second as GPRegister
 
                 if (dst == second) {
                     objFunc.add(size, first, second)
                 } else {
-                    objFunc.mov(size, first, CodeEmitter.temp1)
-                    objFunc.mul(size, second, CodeEmitter.temp1)
-                    objFunc.mov(size, CodeEmitter.temp1, dst)
+                    objFunc.mov(size, first, temp1)
+                    objFunc.mul(size, second, temp1)
+                    objFunc.mov(size, temp1, dst)
                 }
             }
 

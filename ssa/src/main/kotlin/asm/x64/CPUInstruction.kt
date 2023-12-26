@@ -3,7 +3,7 @@ package asm.x64
 import asm.x64.CPUInstruction.Companion.prefix
 
 
-interface CPUInstruction {
+sealed interface CPUInstruction {
     companion object {
         fun prefix(size: Int): Char {
             return when (size) {
@@ -15,6 +15,15 @@ interface CPUInstruction {
             }
         }
     }
+
+}
+
+object Leave: CPUInstruction {
+    override fun toString(): String = "leave"
+}
+
+object Ret: CPUInstruction {
+    override fun toString(): String = "ret"
 }
 
 data class Push(val size: Int, val operand: AnyOperand): CPUInstruction {
@@ -204,26 +213,50 @@ data class Addsd(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUIn
     }
 }
 
-data class Movss(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUInstruction {
+data class Movss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
     override fun toString(): String {
-        return "movss ${src.toString(size)}, ${des.toString(size)}"
+        return "movss ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Movsd(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUInstruction {
+data class Movsd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
     override fun toString(): String {
-        return "movsd ${src.toString(size)}, ${des.toString(size)}"
+        return "movsd ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Movd(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUInstruction {
+data class Movd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
     override fun toString(): String {
         return if (src is XmmRegister) {
-            "movd ${src.toString(16)}, ${des.toString(size)}"
-        } else if (des is XmmRegister) {
-            "movd ${src.toString(size)}, ${des.toString(16)}"
+            "movd ${src.toString(16)}, ${dst.toString(size)}"
+        } else if (dst is XmmRegister) {
+            "movd ${src.toString(size)}, ${dst.toString(16)}"
         } else {
-            throw RuntimeException("Internal error: src=$src, des=$des")
+            throw RuntimeException("Internal error: src=$src, des=$dst")
         }
+    }
+}
+
+data class Neg(val size: Int, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "neg${prefix(size)} ${dst.toString(size)}"
+    }
+}
+
+data class Not(val size: Int, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "not${prefix(size)} ${dst.toString(size)}"
+    }
+}
+
+data class Xorps(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "xorps ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
+data class Xorpd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "xorpd ${src.toString(size)}, ${dst.toString(size)}"
     }
 }

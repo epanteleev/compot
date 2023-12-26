@@ -37,7 +37,7 @@ object LoadCodegen {
                 objFunc.mov(size, temp1, dst)
             }
 
-            else -> throw RuntimeException("Unimplemented: 'load' dst=$dst, pointer=$pointer")
+            else -> throw RuntimeException("Unimplemented: dst=$dst, pointer=$pointer")
         }
     }
 
