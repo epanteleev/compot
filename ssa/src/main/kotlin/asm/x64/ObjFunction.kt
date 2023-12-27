@@ -54,30 +54,30 @@ class ObjFunction(private val name: String) {
         activeContext.instructions = newInstructions
     }
 
-    fun lea(size: Int, first: Address, destination: Register) = add(Lea(size, first, destination))
-    fun lea(size: Int, first: Register, destination: Register) = add(Lea(size, first, destination))
+    fun lea(size: Int, first: Address, destination: GPRegister) = add(Lea(size, first, destination))
+    fun lea(size: Int, first: GPRegister, destination: GPRegister) = add(Lea(size, first, destination))
 
-    fun add(size: Int, first: Register, destination: Register) = add(Add(size, first, destination))
-    fun add(size: Int, first: ImmInt, destination: Register) = add(Add(size, first, destination))
-    fun add(size: Int, first: Register, destination: Address) = add(Add(size, first, destination))
-    fun add(size: Int, first: Address, destination: Register) = add(Add(size, first, destination))
+    fun add(size: Int, first: GPRegister, destination: GPRegister) = add(Add(size, first, destination))
+    fun add(size: Int, first: ImmInt, destination: GPRegister) = add(Add(size, first, destination))
+    fun add(size: Int, first: GPRegister, destination: Address) = add(Add(size, first, destination))
+    fun add(size: Int, first: Address, destination: GPRegister) = add(Add(size, first, destination))
     fun add(size: Int, first: ImmInt, destination: Address) = add(Add(size, first, destination))
 
-    fun sub(size: Int, first: Register, destination: Register) = add(Sub(size, first, destination))
-    fun sub(size: Int, first: ImmInt, destination: Register) = add(Sub(size, first, destination))
-    fun sub(size: Int, first: Register, destination: Address) = add(Sub(size, first, destination))
-    fun sub(size: Int, first: Address, destination: Register) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: GPRegister, destination: GPRegister) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: ImmInt, destination: GPRegister) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: GPRegister, destination: Address) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: Address, destination: GPRegister) = add(Sub(size, first, destination))
     fun sub(size: Int, first: ImmInt, destination: Address) = add(Sub(size, first, destination))
 
-    fun mul(size: Int, src: Register, dst: Register) = add(iMull(size, src, dst))
-    fun mul(size: Int, src: ImmInt, dst: Register) = add(iMull(size, src, dst))
-    fun mul(size: Int, src: Register, dst: Address) = add(iMull(size, src, dst))
-    fun mul(size: Int, src: Address, dst: Register) = add(iMull(size, src, dst))
+    fun mul(size: Int, src: GPRegister, dst: GPRegister) = add(iMull(size, src, dst))
+    fun mul(size: Int, src: ImmInt, dst: GPRegister) = add(iMull(size, src, dst))
+    fun mul(size: Int, src: GPRegister, dst: Address) = add(iMull(size, src, dst))
+    fun mul(size: Int, src: Address, dst: GPRegister) = add(iMull(size, src, dst))
     fun mul(size: Int, src: ImmInt, dst: Address) = add(iMull(size, src, dst))
 
 
     fun movd(size: Int, src: GPRegister, dst: XmmRegister) = add(Movd(size, src, dst))
-    fun movd(size: Int, src: XmmRegister, dst: Register) = add(Movd(size, src, dst))
+    fun movd(size: Int, src: XmmRegister, dst: GPRegister) = add(Movd(size, src, dst))
     fun movd(size: Int, src: Address, dst: XmmRegister) = add(Movd(size, src, dst))
     fun movd(size: Int, src: XmmRegister, dst: Address) = add(Movd(size, src, dst))
 
@@ -87,17 +87,17 @@ class ObjFunction(private val name: String) {
     fun not(size: Int, dst: GPRegister) = add(Not(size, dst))
     fun not(size: Int, dst: Address) = add(Not(size, dst))
 
-    fun div(size: Int, first: AnyOperand, destination: Register): Operand {
+    fun div(size: Int, first: AnyOperand, destination: GPRegister): Operand {
         add(Div(size, first, destination))
         return destination
     }
 
-    fun xor(size: Int, first: AnyOperand, destination: Register): Operand {
+    fun xor(size: Int, first: AnyOperand, destination: GPRegister): Operand {
         add(Xor(size, first, destination))
         return destination
     }
 
-    fun test(size: Int, first: Register, second: Operand) {
+    fun test(size: Int, first: GPRegister, second: Operand) {
         add(Test(size, first, second))
     }
 
@@ -130,7 +130,7 @@ class ObjFunction(private val name: String) {
         add(Call(name))
     }
 
-    fun cmp(size: Int, first: Register, second: AnyOperand) = add(Cmp(size, first, second))
+    fun cmp(size: Int, first: GPRegister, second: AnyOperand) = add(Cmp(size, first, second))
 
     fun jump(jmpType: JmpType, label: String) = add(Jump(jmpType, label))
 
@@ -153,6 +153,63 @@ class ObjFunction(private val name: String) {
     fun addf(size: Int, src: XmmRegister, dst: XmmRegister) = when (size) {
         4 -> addss(src, dst)
         8 -> addsd(src, dst)
+        else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
+    }
+
+    // Subtract Scalar Single-Precision Floating-Point Values
+    fun subss(src: Address, dst: XmmRegister) = add(Subss(16, src, dst))
+    fun subss(src: XmmRegister, dst: XmmRegister) = add(Subss(16, src, dst))
+
+    // Subtract Scalar Double-Precision Floating-Point Values
+    fun subsd(src: Address, dst: XmmRegister) = add(Subsd(16, src, dst))
+    fun subsd(src: XmmRegister, dst: XmmRegister) = add(Subsd(16, src, dst))
+
+    fun subf(size: Int, src: Address, dst: XmmRegister) = when (size) {
+        4 -> subss(src, dst)
+        8 -> subsd(src, dst)
+        else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
+    }
+    fun subf(size: Int, src: XmmRegister, dst: XmmRegister) = when (size) {
+        4 -> subss(src, dst)
+        8 -> subsd(src, dst)
+        else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
+    }
+
+    // Multiply Scalar Single-Precision Floating-Point Values
+    fun mulss(src: Address, dst: XmmRegister) = add(Mulss(16, src, dst))
+    fun mulss(src: XmmRegister, dst: XmmRegister) = add(Mulss(16, src, dst))
+
+    // Multiply Scalar Double-Precision Floating-Point Values
+    fun mulsd(src: Address, dst: XmmRegister) = add(Mulsd(16, src, dst))
+    fun mulsd(src: XmmRegister, dst: XmmRegister) = add(Mulsd(16, src, dst))
+
+    fun mulf(size: Int, src: Address, dst: XmmRegister) = when (size) {
+        4 -> mulss(src, dst)
+        8 -> mulsd(src, dst)
+        else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
+    }
+    fun mulf(size: Int, src: XmmRegister, dst: XmmRegister) = when (size) {
+        4 -> mulss(src, dst)
+        8 -> mulsd(src, dst)
+        else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
+    }
+
+    // Divide Scalar Single-Precision Floating-Point Values
+    fun divss(src: Address, dst: XmmRegister) = add(Divss(16, src, dst))
+    fun divss(src: XmmRegister, dst: XmmRegister) = add(Divss(16, src, dst))
+
+    // Divide Scalar Double-Precision Floating-Point Values
+    fun divsd(src: Address, dst: XmmRegister) = add(Divsd(16, src, dst))
+    fun divsd(src: XmmRegister, dst: XmmRegister) = add(Divsd(16, src, dst))
+
+    fun divf(size: Int, src: Address, dst: XmmRegister) = when (size) {
+        4 -> divss(src, dst)
+        8 -> divsd(src, dst)
+        else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
+    }
+    fun divf(size: Int, src: XmmRegister, dst: XmmRegister) = when (size) {
+        4 -> divss(src, dst)
+        8 -> divsd(src, dst)
         else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
     }
 

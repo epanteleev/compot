@@ -49,12 +49,14 @@ function compile_and_run() {
 }
 
 compile_and_run manyArguments 36
+compile_and_run manyArguments1 36.000000
 compile_and_run sum 16
 compile_and_run sum1 16.000000
 compile_and_run fib 21
 compile_and_run fib_opt 21
 compile_and_run fib_recursive 21
 compile_and_run discriminant -192
+compile_and_run discriminant1 -192.000000
 compile_and_run factorial 40320
 compile_and_run manyBranches "7
 0"

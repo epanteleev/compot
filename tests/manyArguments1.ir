@@ -1,0 +1,48 @@
+extern void @printDouble(f64)
+
+define f64 @sum8(%0:f64, %1:f64, %2:f64, %3:f64, %4:f64, %5:f64, %6:f64, %7:f64) {
+entry:	
+  %8 = alloc f64
+  %9 = alloc f64
+  %10 = alloc f64
+  %11 = alloc f64
+  %12 = alloc f64
+  %13 = alloc f64
+  %14 = alloc f64
+  %15 = alloc f64
+  %16 = alloc f64
+  store ptr %9, f64 %0
+  store ptr %10, f64 %1
+  store ptr %11, f64 %2
+  store ptr %12, f64 %3
+  store ptr %13, f64 %4
+  store ptr %14, f64 %5
+  store ptr %15, f64 %6
+  store ptr %16, f64 %7
+  %17 = load f64 %9
+  %18 = load f64 %10
+  %19 = add f64 %17, %18
+  %20 = load f64 %11
+  %21 = add f64 %19, %20
+  %22 = load f64 %12
+  %23 = add f64 %21, %22
+  %24 = load f64 %13
+  %25 = add f64 %23, %24
+  %26 = load f64 %14
+  %27 = add f64 %25, %26
+  %28 = load f64 %15
+  %29 = add f64 %27, %28
+  %30 = load f64 %16
+  %31 = add f64 %29, %30
+  call void @printDouble(%31:f64)
+  store ptr %8, f64 %31
+  %32 = load f64 %8
+  ret f64 %32
+}
+
+define f64 @main() {
+entry:
+  %1 = call f64 @sum8(1: f64, 2: f64, 3: f64, 4: f64, 5: f64, 6: f64, 7: f64, 8: f64)
+  ret f64 %1 
+}
+

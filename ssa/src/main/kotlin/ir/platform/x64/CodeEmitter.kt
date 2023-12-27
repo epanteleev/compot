@@ -57,9 +57,9 @@ class CodeEmitter(private val data: FunctionData,
         val size   = binary.type().size()
 
         when (binary.op) {
-            ArithmeticBinaryOp.Add -> AddCodegen(binary.type(), objFunc, dst, first, second)
-            ArithmeticBinaryOp.Mul -> MulCodegen(objFunc, dst, first, second, size)
-            ArithmeticBinaryOp.Sub -> SubCodegen(objFunc, dst, first, second, size)
+            ArithmeticBinaryOp.Add -> AddCodegen(binary.type(), objFunc)(dst, first, second)
+            ArithmeticBinaryOp.Mul -> MulCodegen(binary.type(), objFunc)(dst, first, second)
+            ArithmeticBinaryOp.Sub -> SubCodegen(binary.type(), objFunc)(dst, first, second)
             ArithmeticBinaryOp.Xor -> {
                 if (first is Address) {
                     first = objFunc.movOld(size, first, temp1)
@@ -71,7 +71,7 @@ class CodeEmitter(private val data: FunctionData,
                     objFunc.movOld(size, first, dst)
                 }
 
-                objFunc.xor(size, second, first as Register)
+                objFunc.xor(size, second, first as GPRegister)
 
                 if (dst is Address) {
                     objFunc.movOld(size, first, dst)
@@ -88,7 +88,7 @@ class CodeEmitter(private val data: FunctionData,
                     objFunc.movOld(size, first, dst)
                 }
 
-                objFunc.div(size, second, first as Register)
+                objFunc.div(size, second, first as GPRegister)
 
                 if (dst is Address) {
                     objFunc.movOld(size, first, dst)
@@ -138,7 +138,7 @@ class CodeEmitter(private val data: FunctionData,
     override fun visit(neg: Not) {
         val operand = valueToRegister.operand(neg.operand())
         val result  = valueToRegister.operand(neg)
-        NotCodegen(neg.type() as IntegerType, objFunc, result, operand)
+        NotCodegen(neg.type(), objFunc, result, operand)
     }
 
     private fun emitCall(call: Callable) {
@@ -279,7 +279,7 @@ class CodeEmitter(private val data: FunctionData,
         val destReg = if (dest is Address2) {
             objFunc.movOld(size, dest, temp2)
         } else {
-            dest as Register
+            dest as GPRegister
         }
 
         val sourceReg = if (source is Address2) {

@@ -260,3 +260,39 @@ data class Xorpd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUIn
         return "xorpd ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
+
+data class Subss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "subss ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
+data class Subsd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "subsd ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
+data class Mulss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "mulss ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
+data class Mulsd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "mulsd ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
+data class Divss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "divss ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
+data class Divsd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "divsd ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}

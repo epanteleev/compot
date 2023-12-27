@@ -1,0 +1,28 @@
+extern void @printFloat(f32)
+
+define u64 @main() {
+entry:
+  %1 = call f32 @discriminant(8: f32, 8: f32, 8: f32)
+  call void @printFloat(%1: f32)
+  ret u64 0
+}
+
+define f32 @discriminant(%a:f32, %b:f32, %c:f32) {
+entry:	
+  %aAddr = alloc f32
+  %bAddr = alloc f32
+  %cAddr = alloc f32
+  store ptr %aAddr, f32 %a
+  store ptr %bAddr, f32 %b 
+  store ptr %cAddr, f32 %c 
+  %0 = load f32 %bAddr
+  %1 = load f32 %bAddr
+  %mul = mul f32 %0, %1
+  %2 = load f32 %aAddr
+  %mul1 = mul f32 4, %2
+  %3 = load f32 %cAddr
+  %mul2 = mul f32 %mul1, %3
+  %sub = sub f32 %mul, %mul2
+  ret f32 %sub
+}
+
