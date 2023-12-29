@@ -24,10 +24,10 @@ object NotCodegen {
                 }
             }
 
-            case<GPRegister, ImmInt>(dst, operand) -> {
+            case<GPRegister, Imm32>(dst, operand) -> {
                 dst     as GPRegister
-                operand as ImmInt
-                objFunc.mov(size, ImmInt(operand.value.inv()), dst)
+                operand as Imm32
+                objFunc.mov(size, Imm32(operand.value.inv()), dst)
             }
 
             case<GPRegister, Address>(dst, operand) -> {
@@ -37,10 +37,10 @@ object NotCodegen {
                 objFunc.not(size, dst)
             }
 
-            case<Address, ImmInt>(dst, operand) -> {
+            case<Address, Imm32>(dst, operand) -> {
                 dst     as Address
-                operand as ImmInt
-                objFunc.mov(size, ImmInt(operand.value.inv()), dst)
+                operand as Imm32
+                objFunc.mov(size, Imm32(operand.value.inv()), dst)
             }
 
             case<Address, GPRegister>(dst, operand) -> {

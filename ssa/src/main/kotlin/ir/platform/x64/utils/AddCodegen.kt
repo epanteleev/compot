@@ -45,11 +45,11 @@ data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
         }
     }
 
-    override fun rir(dst: GPRegister, first: ImmInt, second: GPRegister) {
+    override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
         if (dst == second) {
             objFunc.add(size, first, dst)
         } else {
-            objFunc.lea(size, Address.mem(second, first.value), dst)
+            objFunc.lea(size, Address.mem(second, first.value()), dst)
         }
     }
 
@@ -58,7 +58,7 @@ data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
         objFunc.add(size, second, dst)
     }
 
-    override fun rri(dst: GPRegister, first: GPRegister, second: ImmInt) {
+    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
         if (dst == first) {
             objFunc.add(size, second, dst)
         } else {
@@ -70,15 +70,15 @@ data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
         TODO("Not yet implemented")
     }
 
-    override fun rii(dst: GPRegister, first: ImmInt, second: ImmInt) {
-        objFunc.mov(size, ImmInt(first.value + second.value), dst)
+    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
+        objFunc.mov(size, Imm32(first.value + second.value), dst) //TODO overflow????
     }
 
-    override fun ria(dst: GPRegister, first: ImmInt, second: Address) {
+    override fun ria(dst: GPRegister, first: Imm32, second: Address) {
         TODO("Not yet implemented")
     }
 
-    override fun rai(dst: GPRegister, first: Address, second: ImmInt) {
+    override fun rai(dst: GPRegister, first: Address, second: Imm32) {
         TODO("Not yet implemented")
     }
 
@@ -86,23 +86,23 @@ data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
         TODO("Not yet implemented")
     }
 
-    override fun aii(dst: Address, first: ImmInt, second: ImmInt) {
-        objFunc.mov(size, ImmInt(first.value + second.value), dst)
+    override fun aii(dst: Address, first: Imm32, second: Imm32) {
+        objFunc.mov(size, Imm32(first.value + second.value), dst)
     }
 
-    override fun air(dst: Address, first: ImmInt, second: GPRegister) {
+    override fun air(dst: Address, first: Imm32, second: GPRegister) {
         TODO("Not yet implemented")
     }
 
-    override fun aia(dst: Address, first: ImmInt, second: Address) {
+    override fun aia(dst: Address, first: Imm32, second: Address) {
         TODO("Not yet implemented")
     }
 
-    override fun ari(dst: Address, first: Register, second: ImmInt) {
+    override fun ari(dst: Address, first: Register, second: Imm32) {
         TODO("Not yet implemented")
     }
 
-    override fun aai(dst: Address, first: Address, second: ImmInt) {
+    override fun aai(dst: Address, first: Address, second: Imm32) {
         TODO("Not yet implemented")
     }
 
@@ -153,72 +153,15 @@ data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
         }
     }
 
-    override fun rirF(dst: XmmRegister, first: ImmFp, second: XmmRegister) {
-        objFunc.mov(size, first.bits(), temp1)
-        objFunc.movd(size, temp1, xmmTemp1)
-
-        if (dst == second) {
-            objFunc.addf(size, xmmTemp1, dst)
-        } else {
-            objFunc.addf(size, second, xmmTemp1)
-            objFunc.movf(size, xmmTemp1, dst)
-        }
-    }
-
     override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
         TODO("Not yet implemented")
-    }
-
-    override fun rriF(dst: XmmRegister, first: XmmRegister, second: ImmFp) {
-        objFunc.mov(size, second.bits(), temp1)
-        objFunc.movd(size, temp1, xmmTemp1)
-
-        if (dst == first) {
-            objFunc.addf(size, xmmTemp1, dst)
-        } else {
-            objFunc.addf(size, first, xmmTemp1)
-            objFunc.movf(size, xmmTemp1, dst)
-        }
     }
 
     override fun raaF(dst: XmmRegister, first: Address, second: Address) {
         TODO("Not yet implemented")
     }
 
-    override fun riiF(dst: XmmRegister, first: ImmFp, second: ImmFp) {
-        objFunc.mov(size, (first + second).bits(), temp1)
-        objFunc.movd(size, temp1, dst)
-    }
-
-    override fun riaF(dst: XmmRegister, first: ImmFp, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun raiF(dst: XmmRegister, first: Address, second: ImmFp) {
-        TODO("Not yet implemented")
-    }
-
     override fun araF(dst: Address, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aiiF(dst: Address, first: ImmFp, second: ImmFp) {
-        TODO("Not yet implemented")
-    }
-
-    override fun airF(dst: Address, first: ImmFp, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aiaF(dst: Address, first: ImmFp, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun ariF(dst: Address, first: Register, second: ImmFp) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aaiF(dst: Address, first: Address, second: ImmFp) {
         TODO("Not yet implemented")
     }
 

@@ -12,10 +12,10 @@ class AsmTest {
         val fn = asm.mkFunction("main")
         fn.push(8, rbp)
         fn.mov(8, rsp, rbp)
-        fn.sub(8, ImmInt(16), rsp)
+        fn.sub(8, Imm32(16), rsp)
         fn.mov(8, rdi, Address.mem(rbp,-8))
 
-        fn.mov(8, ImmInt(0), rax)
+        fn.mov(8, Imm32(0), rax)
         fn.mov(8, rbp, rsp)
         fn.ret()
 

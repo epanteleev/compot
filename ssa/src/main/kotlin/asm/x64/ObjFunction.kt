@@ -58,22 +58,29 @@ class ObjFunction(private val name: String) {
     fun lea(size: Int, first: GPRegister, destination: GPRegister) = add(Lea(size, first, destination))
 
     fun add(size: Int, first: GPRegister, destination: GPRegister) = add(Add(size, first, destination))
-    fun add(size: Int, first: ImmInt, destination: GPRegister) = add(Add(size, first, destination))
+    fun add(size: Int, first: Imm32, destination: GPRegister) = add(Add(size, first, destination))
     fun add(size: Int, first: GPRegister, destination: Address) = add(Add(size, first, destination))
     fun add(size: Int, first: Address, destination: GPRegister) = add(Add(size, first, destination))
-    fun add(size: Int, first: ImmInt, destination: Address) = add(Add(size, first, destination))
+    fun add(size: Int, first: Imm32, destination: Address) = add(Add(size, first, destination))
 
     fun sub(size: Int, first: GPRegister, destination: GPRegister) = add(Sub(size, first, destination))
-    fun sub(size: Int, first: ImmInt, destination: GPRegister) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: Imm32, destination: GPRegister) = add(Sub(size, first, destination))
     fun sub(size: Int, first: GPRegister, destination: Address) = add(Sub(size, first, destination))
     fun sub(size: Int, first: Address, destination: GPRegister) = add(Sub(size, first, destination))
-    fun sub(size: Int, first: ImmInt, destination: Address) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: Imm32, destination: Address) = add(Sub(size, first, destination))
 
     fun mul(size: Int, src: GPRegister, dst: GPRegister) = add(iMull(size, src, dst))
-    fun mul(size: Int, src: ImmInt, dst: GPRegister) = add(iMull(size, src, dst))
+    fun mul(size: Int, src: Imm32, dst: GPRegister) = add(iMull(size, src, dst))
     fun mul(size: Int, src: GPRegister, dst: Address) = add(iMull(size, src, dst))
     fun mul(size: Int, src: Address, dst: GPRegister) = add(iMull(size, src, dst))
-    fun mul(size: Int, src: ImmInt, dst: Address) = add(iMull(size, src, dst))
+    fun mul(size: Int, src: Imm32, dst: Address) = add(iMull(size, src, dst))
+
+
+    fun xor(size: Int, src: Address, dst: GPRegister) = add(Xor(size, src, dst))
+    fun xor(size: Int, imm32: Imm32, dst: Address) = add(Xor(size, imm32, dst))
+    fun xor(size: Int, src: GPRegister, dst: GPRegister) = add(Xor(size, src, dst))
+    fun xor(size: Int, imm32: Imm32, dst: GPRegister) = add(Xor(size, imm32, dst))
+    fun xor(size: Int, src: GPRegister, dst: Address) = add(Xor(size, src, dst))
 
 
     fun movd(size: Int, src: GPRegister, dst: XmmRegister) = add(Movd(size, src, dst))
@@ -107,7 +114,7 @@ class ObjFunction(private val name: String) {
 
     fun push(size: Int, reg: GPRegister) = add(Push(size, reg))
 
-    fun push(size: Int, imm: ImmInt) = add(Push(size, imm))
+    fun push(size: Int, imm: Imm32) = add(Push(size, imm))
 
     fun pop(size: Int, toReg: GPRegister) {
         add(Pop(size, toReg))
@@ -121,8 +128,11 @@ class ObjFunction(private val name: String) {
     fun mov(size: Int, src: GPRegister, dst: GPRegister) = add(Mov(size, src, dst))
     fun mov(size: Int, src: Address, dst: GPRegister) = add(Mov(size, src, dst))
     fun mov(size: Int, src: GPRegister, dst: Address) = add(Mov(size, src, dst))
-    fun mov(size: Int, imm32: ImmInt, dst: Address) = add(Mov(size, imm32, dst))
-    fun mov(size: Int, imm32: ImmInt, dst: GPRegister) = add(Mov(size, imm32, dst))
+    fun mov(size: Int, imm32: Imm32, dst: Address) {
+        add(Mov(size, imm32, dst))
+    }
+
+    fun mov(size: Int, imm32: Imm32, dst: GPRegister) = add(Mov(size, imm32, dst))
 
     fun movsx(fromSize: Int, toSize: Int, src: GPRegister, des: AnyOperand) = add(Movsx(fromSize, toSize, src, des))
 

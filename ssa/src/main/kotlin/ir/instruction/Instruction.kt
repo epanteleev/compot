@@ -35,6 +35,23 @@ abstract class Instruction(protected val operands: Array<Value>) {
         }
     }
 
+    fun finalize() {
+        if (this is ValueInstruction) {
+            assert(usedIn().isEmpty()) {
+                "removed used instruction: removed=$this, users=${usedIn()}"
+            }
+        }
+
+        for (idx in operands.indices) {
+            val op = operands[idx]
+            if (op is ValueInstruction) {
+                op.killUser(this)
+            }
+
+            operands[idx] = Value.UNDEF
+        }
+    }
+
     abstract fun visit(visitor: Visitor)
     abstract fun copy(newUsages: List<Value>): Instruction
     abstract override fun equals(other: Any?): Boolean

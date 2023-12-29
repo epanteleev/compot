@@ -70,14 +70,14 @@ class RegisterAllocation(private val stackSize: Long,
                 }
                 operand as Operand
             }
-            is U8Value     -> ImmInt(value.u8.toLong())
-            is I8Value     -> ImmInt(value.i8.toLong())
-            is U16Value    -> ImmInt(value.u16.toLong())
-            is I16Value    -> ImmInt(value.i16.toLong())
-            is U32Value    -> ImmInt(value.u32.toLong())
-            is I32Value    -> ImmInt(value.i32.toLong())
-            is I64Value    -> ImmInt(value.i64)
-            is U64Value    -> ImmInt(value.u64)
+            is U8Value     -> Imm32(value.u8.toLong())
+            is I8Value     -> Imm32(value.i8.toLong())
+            is U16Value    -> Imm32(value.u16.toLong())
+            is I16Value    -> Imm32(value.i16.toLong())
+            is U32Value    -> Imm32(value.u32.toLong())
+            is I32Value    -> Imm32(value.i32.toLong())
+            is I64Value    -> Imm64(value.i64)
+            is U64Value    -> Imm64(value.u64)
             is F32Value    -> ImmFp32(value.f32)
             is F64Value    -> ImmFp64(value.f64)
             is GlobalValue -> Address.mem(value.name())

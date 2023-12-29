@@ -23,8 +23,8 @@ object StoreCodegen {
                 objFunc.mov(size, value, Address.mem(pointer, 0))
             }
 
-            case<ImmInt, GPRegister>(value, pointer) -> {
-                value   as ImmInt
+            case<Imm32, GPRegister>(value, pointer) -> {
+                value   as Imm32
                 pointer as GPRegister
                 objFunc.mov(size, value, Address.mem(pointer, 0))
             }
@@ -42,8 +42,8 @@ object StoreCodegen {
                 objFunc.mov(size, CallConvention.temp1, pointer)
             }
 
-            case<ImmInt, Address>(value, pointer) -> {
-                value   as ImmInt
+            case<Imm32, Address>(value, pointer) -> {
+                value   as Imm32
                 pointer as Address
                 objFunc.mov(size, value, pointer)
             }
@@ -71,12 +71,6 @@ object StoreCodegen {
                 pointer as Address
                 objFunc.movf(size, value, CallConvention.xmmTemp1)
                 objFunc.movf(size, CallConvention.xmmTemp1, pointer)
-            }
-
-            case<ImmFp, Address>(value, pointer) -> {
-                value   as ImmFp
-                pointer as Address
-                objFunc.mov(size, value.bits(), pointer) // TOdo check it
             }
 
             else -> throw RuntimeException("Unimplemented: value=$value, pointer=$pointer")

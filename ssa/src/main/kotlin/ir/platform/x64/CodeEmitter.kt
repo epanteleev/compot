@@ -9,10 +9,17 @@ import ir.platform.regalloc.RegisterAllocation
 import ir.types.*
 import ir.utils.OrderedLocation
 import asm.x64.GPRegister.*
+import ir.Constant
+import ir.GlobalValue
+import ir.I64Value
+import ir.U64Value
 import ir.instruction.Call
 import ir.instruction.Neg
 import ir.instruction.Not
+import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
+import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.xmmTemp1
+import ir.platform.x64.CallConvention.xmmTemp2
 import ir.platform.x64.utils.*
 
 
@@ -20,7 +27,7 @@ data class CodegenException(override val message: String): Exception(message)
 
 class CodeEmitter(private val data: FunctionData,
                   private val functionCounter: Int,
-                  asm: Assembler,
+                  private val asm: Assembler,
                   private val valueToRegister: RegisterAllocation,
 ): Visitor {
     private val orderedLocation = evaluateOrder(data.blocks)
@@ -34,7 +41,7 @@ class CodeEmitter(private val data: FunctionData,
         objFunc.mov(8, rsp, rbp)
 
         if (stackSize != 0L) {
-            objFunc.sub(8, ImmInt(stackSize), rsp)
+            objFunc.sub(8, Imm32(stackSize), rsp)
         }
         for (reg in calleeSaveRegisters) {
             objFunc.push(8, reg)
@@ -60,23 +67,7 @@ class CodeEmitter(private val data: FunctionData,
             ArithmeticBinaryOp.Add -> AddCodegen(binary.type(), objFunc)(dst, first, second)
             ArithmeticBinaryOp.Mul -> MulCodegen(binary.type(), objFunc)(dst, first, second)
             ArithmeticBinaryOp.Sub -> SubCodegen(binary.type(), objFunc)(dst, first, second)
-            ArithmeticBinaryOp.Xor -> {
-                if (first is Address) {
-                    first = objFunc.movOld(size, first, temp1)
-                }
-
-                first = if (dst is Address) {
-                    objFunc.movOld(size, first, temp2)
-                } else {
-                    objFunc.movOld(size, first, dst)
-                }
-
-                objFunc.xor(size, second, first as GPRegister)
-
-                if (dst is Address) {
-                    objFunc.movOld(size, first, dst)
-                }
-            }
+            ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), objFunc)(dst, first, second)
             ArithmeticBinaryOp.Div -> {
                 if (first is Address) {
                     first = objFunc.movOld(size, first, temp1)
@@ -132,7 +123,13 @@ class CodeEmitter(private val data: FunctionData,
     override fun visit(neg: Neg) {
         val operand = valueToRegister.operand(neg.operand())
         val result  = valueToRegister.operand(neg)
-        NegCodegen(neg.type(), objFunc, result, operand)
+        if (neg.type() == Type.F32) {
+            asm.mkSymbol(GlobalValue.of(FLOAT_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroFloat))
+        } else if (neg.type() == Type.F64) {
+            asm.mkSymbol(GlobalValue.of(DOUBLE_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroDouble))
+        }
+
+        NegCodegen(neg.type(), objFunc)(result, operand)
     }
 
     override fun visit(neg: Not) {
@@ -216,34 +213,39 @@ class CodeEmitter(private val data: FunctionData,
             is XmmRegister -> {
                 when (second) {
                     is XmmRegister -> {
-                        objFunc.cmpf(size, first, second)
+                        objFunc.cmpf(size, second, first)
                     }
                     is Address -> {
                         objFunc.movf(size, second, xmmTemp1)
-                        objFunc.cmpf(size, first, xmmTemp1)
+                        objFunc.cmpf(size, xmmTemp1, first)
                     }
                     is ImmFp -> {
-                        objFunc.mov(size, second.bits(), temp1)
+                        objFunc.mov(size, second.bits() as Imm32, temp1)
                         objFunc.movd(size, temp1, xmmTemp1)
-                        objFunc.cmpf(size, first, xmmTemp1)
+                        objFunc.cmpf(size, xmmTemp1, first)
                     }
                 }
             }
             is Address -> {
                 when (second) {
                     is XmmRegister -> {
-                        objFunc.cmpf(size, first, second)
+                        objFunc.movf(size, first, xmmTemp1)
+                        objFunc.cmpf(size, second, xmmTemp1)
                     }
                     is Address -> {
-                        objFunc.movf(size, second, xmmTemp1)
-                        objFunc.cmpf(size, first, xmmTemp1)
+                        objFunc.movf(size, first, xmmTemp1)
+                        objFunc.cmpf(size, second, xmmTemp1)
                     }
                     is ImmFp -> {
-                        objFunc.mov(size, second.bits(), temp1)
+                        objFunc.mov(size, second.bits() as Imm32, temp1)
                         objFunc.movd(size, temp1, xmmTemp1)
-                        objFunc.cmpf(size, first, xmmTemp1)
+                        objFunc.movf(size, first, xmmTemp2)
+                        objFunc.cmpf(size, xmmTemp1, xmmTemp2)
                     }
                 }
+            }
+            is ImmInt -> {
+                TODO()
             }
         }
     }
@@ -253,42 +255,43 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(branchCond: BranchCond) {
-        val cond = branchCond.condition()
-        if (cond is IntCompare) {
-            val jmpType = when (cond.predicate().invert()) {
-                IntPredicate.Eq  -> JmpType.JE
-                IntPredicate.Ne  -> JmpType.JNE
-                IntPredicate.Ugt -> JmpType.JG
-                IntPredicate.Uge -> JmpType.JGE
-                IntPredicate.Ult -> JmpType.JL
-                IntPredicate.Ule -> JmpType.JLE
-                IntPredicate.Sgt -> JmpType.JG
-                IntPredicate.Sge -> JmpType.JGE
-                IntPredicate.Slt -> JmpType.JL
-                IntPredicate.Sle -> JmpType.JLE
+        val jmpType = when (val cond = branchCond.condition()) {
+            is IntCompare -> {
+                when (cond.predicate().invert()) {
+                    IntPredicate.Eq  -> JmpType.JE
+                    IntPredicate.Ne  -> JmpType.JNE
+                    IntPredicate.Ugt -> JmpType.JG
+                    IntPredicate.Uge -> JmpType.JGE
+                    IntPredicate.Ult -> JmpType.JL
+                    IntPredicate.Ule -> JmpType.JLE
+                    IntPredicate.Sgt -> JmpType.JG
+                    IntPredicate.Sge -> JmpType.JGE
+                    IntPredicate.Slt -> JmpType.JL
+                    IntPredicate.Sle -> JmpType.JLE
+                }
             }
 
-            objFunc.jump(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
-        } else if (cond is FloatCompare) {
-            val jmpType = when (cond.predicate()) {
-                FloatPredicate.Oeq -> JmpType.JE
-                FloatPredicate.Ogt -> JmpType.JG
-                FloatPredicate.Oge -> JmpType.JGE
-                FloatPredicate.Olt -> JmpType.JL
-                FloatPredicate.Ole -> JmpType.JLE
-                FloatPredicate.One -> JmpType.JNE
-                FloatPredicate.Ord -> TODO()
-                FloatPredicate.Ueq -> JmpType.JE
-                FloatPredicate.Ugt -> JmpType.JG
-                FloatPredicate.Uge -> JmpType.JGE
-                FloatPredicate.Ult ->JmpType.JL
-                FloatPredicate.Ule -> JmpType.JLE
-                FloatPredicate.Uno -> TODO()
+            is FloatCompare -> {
+                when (cond.predicate().invert()) {
+                    FloatPredicate.Oeq -> JmpType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
+                    FloatPredicate.Ogt -> TODO()
+                    FloatPredicate.Oge -> JmpType.JAE
+                    FloatPredicate.Olt -> TODO()
+                    FloatPredicate.Ole -> JmpType.JBE
+                    FloatPredicate.One -> JmpType.JNE // TODO Clang insert extra instruction 'jp ${labelName}"
+                    FloatPredicate.Ord -> TODO()
+                    FloatPredicate.Ueq -> TODO()
+                    FloatPredicate.Ugt -> TODO()
+                    FloatPredicate.Uge -> TODO()
+                    FloatPredicate.Ult -> TODO()
+                    FloatPredicate.Ule -> TODO()
+                    FloatPredicate.Uno -> TODO()
+                    FloatPredicate.Une -> TODO()
+                }
             }
-            objFunc.jump(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
-        } else {
-            println("unsupported $branchCond")
+            else -> throw CodegenException("unknown type instruction=$cond")
         }
+        objFunc.jump(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
     }
 
     override fun visit(copy: Copy) {
@@ -305,7 +308,7 @@ class CodeEmitter(private val data: FunctionData,
 
         val totalStackSize = valueToRegister.frameSize(savedRegisters)
         if (totalStackSize % 16L != 0L) {
-            objFunc.sub(8, ImmInt(8), rsp)
+            objFunc.sub(8, Imm32(8), rsp)
         }
     }
 
@@ -314,7 +317,7 @@ class CodeEmitter(private val data: FunctionData,
         val totalStackSize = valueToRegister.frameSize(savedRegisters)
 
         if (totalStackSize % 16L != 0L) {
-            objFunc.add(8, ImmInt(8), rsp)
+            objFunc.add(8, Imm32(8), rsp)
         }
 
         for (arg in savedRegisters.reversed()) {
@@ -346,7 +349,7 @@ class CodeEmitter(private val data: FunctionData,
                     Address.mem(source.base, source.offset, indexReg, getElementPtr.basicType.size().toLong())
                 }
                 is ImmInt -> {
-                    val offset = indexReg.value * getElementPtr.basicType.size()
+                    val offset = indexReg.value() * getElementPtr.basicType.size()
                     Address.mem(source.base, source.offset + offset)
                 }
                 else -> {
@@ -360,7 +363,7 @@ class CodeEmitter(private val data: FunctionData,
                     Address.mem(source, 0, indexReg, getElementPtr.basicType.size().toLong())
                 }
                 is ImmInt -> {
-                    val offset = indexReg.value * getElementPtr.basicType.size()
+                    val offset = indexReg.value() * getElementPtr.basicType.size()
                     Address.mem(source, offset)
                 }
                 else -> {

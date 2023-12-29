@@ -81,9 +81,9 @@ data class iMull(val size: Int, val first: AnyOperand, val second: Operand): Ari
     }
 }
 
-data class Xor(val size: Int, val first: AnyOperand, val second: Operand): Arithmetic {
+data class Xor(val size: Int, val src: AnyOperand, val dst: Operand): Arithmetic {
     override fun toString(): String {
-        return "xor${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
+        return "xor${prefix(size)} ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
@@ -100,41 +100,60 @@ data class Label(val id: String) {
 }
 
 enum class JmpType {
-    JE {
-        override fun toString(): String {
-            return "je"
-        }
+    JE { // Jump if equal (ZF=1).
+        override fun toString(): String = "je"
     },
-    JNE {
-        override fun toString(): String {
-            return "jne"
-        }
+    JNE { // Jump if not equal (ZF=0).
+        override fun toString(): String = "jne"
     },
-    JG {
-        override fun toString(): String {
-            return "jg"
-        }
+    JG { // Jump if greater (ZF=0 and SF=OF).
+        override fun toString(): String = "jg"
     },
-    JGE  {
-        override fun toString(): String {
-            return "jge"
-        }
+    JGE  { // Jump if greater or equal (SF=OF).
+        override fun toString(): String = "jge"
     },
-    JL {
-        override fun toString(): String {
-            return "jl"
-        }
+    JL { // Jump if less (SF≠ OF).
+        override fun toString(): String = "jl"
     },
-    JLE {
-        override fun toString(): String {
-            return "jle"
-        }
+    JLE { // Jump if less or equal (ZF=1 or SF≠ OF).
+        override fun toString(): String = "jle"
     },
-    JMP {
-        override fun toString(): String {
-            return "jmp"
-        }
+    JMP { // TODO
+        override fun toString(): String = "jmp"
     },
+    JA { // Jump if below (CF=1).
+        override fun toString(): String = "ja"
+    },
+    JAE { // Jump if above or equal (CF=0).
+        override fun toString(): String = "jae"
+    },
+    JB { // Jump if below (CF=1).
+        override fun toString(): String = "jb"
+    },
+    JBE { // Jump if below or equal (CF=1 or ZF=1).
+        override fun toString(): String = "jbe"
+    },
+    JNA { // Jump if not above (CF=1 or ZF=1).
+        override fun toString(): String = "jna"
+    },
+    JNAE { // Jump if not above or equal (CF=1).
+        override fun toString(): String = "jnae"
+    },
+    JNB { // Jump if not below (CF=0).
+        override fun toString(): String = "jnb"
+    },
+    JP { // Jump if parity (PF=1).
+        override fun toString(): String = "jp"
+    },
+    JS { // Jump if sign (SF=1).
+        override fun toString(): String = "js"
+    },
+    JZ { // Jump short if zero (ZF = 1).
+        override fun toString(): String = "jz"
+    },
+    JNP {
+        override fun toString(): String = "jnp"
+    }
 }
 
 data class Jump(val jumpType: JmpType, val label: String): CPUInstruction {

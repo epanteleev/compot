@@ -175,6 +175,11 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return instructions.removeIf { filter(it) }
     }
 
+    fun remove(instructionIndex: Int) {
+        val removed = instructions.removeAt(instructionIndex)
+        removed.finalize()
+    }
+
     override fun not(value: Value): Not {
         val valueType = value.type()
         require(valueType is IntegerType) {
