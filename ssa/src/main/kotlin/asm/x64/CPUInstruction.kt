@@ -118,9 +118,6 @@ enum class JmpType {
     JLE { // Jump if less or equal (ZF=1 or SF≠ OF).
         override fun toString(): String = "jle"
     },
-    JMP { // TODO
-        override fun toString(): String = "jmp"
-    },
     JA { // Jump if below (CF=1).
         override fun toString(): String = "ja"
     },
@@ -156,9 +153,15 @@ enum class JmpType {
     }
 }
 
-data class Jump(val jumpType: JmpType, val label: String): CPUInstruction {
+data class Jcc(val jumpType: JmpType, val label: String): CPUInstruction {
     override fun toString(): String {
         return "$jumpType $label"
+    }
+}
+
+data class Jump(val label: String): CPUInstruction {
+    override fun toString(): String {
+        return "jmp $label"
     }
 }
 

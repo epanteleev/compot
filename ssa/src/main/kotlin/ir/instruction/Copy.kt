@@ -14,7 +14,7 @@ class Copy private constructor(name: String, origin: Value):
     }
 
     override fun dump(): String {
-        return "%$identifier = copy $tp ${origin()}"
+        return "%$identifier = $name $tp ${origin()}"
     }
 
     fun origin(): Value {
@@ -38,6 +38,8 @@ class Copy private constructor(name: String, origin: Value):
     }
 
     companion object {
+        val name = "copy"
+
         fun make(name: String, origin: Value): Copy {
             val originType = origin.type()
             require(isAppropriateType(originType)) {

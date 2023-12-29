@@ -1,4 +1,4 @@
-package ir.platform.x64.utils
+package ir.platform.x64.codegen
 
 import asm.x64.*
 import ir.types.*

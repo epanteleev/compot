@@ -2,7 +2,7 @@ package ir.platform.x64.utils
 
 import asm.x64.*
 
-interface XmmOperandVisitor {
+interface XmmOperandVisitorBinaryOp {
     fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister)
     fun arrF(dst: Address, first: XmmRegister, second: XmmRegister)
     fun rarF(dst: XmmRegister, first: Address, second: XmmRegister)

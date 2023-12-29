@@ -1,4 +1,4 @@
-package ir.platform.x64.utils
+package ir.platform.x64.codegen
 
 import asm.x64.*
 import ir.types.*
@@ -6,63 +6,66 @@ import ir.platform.x64.CodeEmitter
 import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
+import ir.platform.x64.utils.ApplyClosure
+import ir.platform.x64.utils.GPOperandVisitorBinaryOp
+import ir.platform.x64.utils.XmmOperandVisitorBinaryOp
 
 
-data class SubCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOperandVisitorBinaryOp, XmmOperandVisitor {
+data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOperandVisitorBinaryOp, XmmOperandVisitorBinaryOp {
     private val size: Int = type.size()
 
     operator fun invoke(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
         when (type) {
-            is FloatingPointType -> ApplyClosureBinaryOp(dst, first, second, this as XmmOperandVisitor)
-            is IntegerType       -> ApplyClosureBinaryOp(dst, first, second, this as GPOperandVisitorBinaryOp)
+            is FloatingPointType  -> ApplyClosure(dst, first, second, this as XmmOperandVisitorBinaryOp)
+            is IntegerType    -> ApplyClosure(dst, first, second, this as GPOperandVisitorBinaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        when {
-            (first == dst) -> objFunc.sub(size, second, dst)
-            else -> {
-                objFunc.mov(size, first, temp1)
-                objFunc.sub(size, second, temp1)
-                objFunc.mov(size, temp1, dst)
-            }
+        if (first == dst) {
+            objFunc.add(size, second, dst)
+        } else if (second == dst) {
+            objFunc.add(size, first, dst)
+        } else {
+            objFunc.mov(size, first, dst)
+            objFunc.add(size, second, dst)
         }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
         objFunc.mov(size, first, dst)
-        objFunc.sub(size, second, dst)
+        objFunc.add(size, second, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        objFunc.mov(size, first, temp1)
-        objFunc.sub(size, second, temp1)
-        objFunc.mov(size, temp1, dst)
+        if (dst == second) {
+            objFunc.add(size, first, second)
+        } else {
+            objFunc.mov(size, first, temp1)
+            objFunc.add(size, second, temp1)
+            objFunc.mov(size, temp1, dst)
+        }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        objFunc.mov(size, first, temp1)
-        objFunc.sub(size, second, CodeEmitter.temp1)
-        objFunc.mov(size, temp1, dst)
+        if (dst == second) {
+            objFunc.add(size, first, dst)
+        } else {
+            objFunc.lea(size, Address.mem(second, first.value()), dst)
+        }
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        when {
-            (first == dst) -> objFunc.sub(size, second, dst)
-            else -> {
-                objFunc.mov(size, first, temp1)
-                objFunc.sub(size, second, temp1)
-                objFunc.mov(size, temp1, dst)
-            }
-        }
+        objFunc.mov(size, first, dst)
+        objFunc.add(size, second, dst)
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
         if (dst == first) {
-            objFunc.sub(size, second, dst)
+            objFunc.add(size, second, dst)
         } else {
-            objFunc.lea(size, Address.mem(first, -second.value), dst)
+            objFunc.lea(size, Address.mem(first, second.value), dst)
         }
     }
 
@@ -71,7 +74,7 @@ data class SubCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        objFunc.mov(size, Imm32(first.value - second.value), dst) //TODO overflow
+        objFunc.mov(size, Imm32(first.value + second.value), dst) //TODO overflow????
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -87,7 +90,7 @@ data class SubCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        objFunc.mov(size, Imm32(first.value - second.value), dst)
+        objFunc.mov(size, Imm32(first.value + second.value), dst)
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
@@ -108,50 +111,58 @@ data class SubCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
         objFunc.mov(size, first, temp1)
-        objFunc.sub(size, second, CodeEmitter.temp1)
+        objFunc.add(size, second, temp1)
         objFunc.mov(size, temp1, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        objFunc.mov(size, first, temp1)
-        objFunc.sub(size, second, temp1)
-        objFunc.mov(size, temp1, dst)
+        if (dst == first) {
+            objFunc.mov(size, second, temp1)
+            objFunc.add(size, temp1, dst)
+        } else if (dst == second) {
+            objFunc.mov(size, first, temp1)
+            objFunc.add(size, temp1, dst)
+        } else {
+            objFunc.mov(size, first, CodeEmitter.temp1)
+            objFunc.add(size, second, CodeEmitter.temp1)
+            objFunc.mov(size, CodeEmitter.temp1, dst)
+        }
     }
 
     override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
-        if (dst == first) {
-            objFunc.subf(size, second, dst)
+        if (first == dst) {
+            objFunc.addf(size, second, dst)
+        } else if (second == dst) {
+            objFunc.addf(size, first, dst)
         } else {
-            objFunc.movf(size, first, xmmTemp1)
-            objFunc.subf(size, second, xmmTemp1)
-            objFunc.movf(size, xmmTemp1, dst)
+            objFunc.movf(size, first, dst)
+            objFunc.addf(size, second, dst)
         }
     }
 
     override fun arrF(dst: Address, first: XmmRegister, second: XmmRegister) {
         objFunc.movf(size, first, xmmTemp1)
-        objFunc.subf(size, second, xmmTemp1)
+        objFunc.addf(size, second, xmmTemp1)
         objFunc.movf(size, xmmTemp1, dst)
     }
 
     override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
-        TODO("Not yet implemented")
+        if (second == dst) {
+            objFunc.addf(size, first, dst)
+        } else {
+            objFunc.movf(size, first, xmmTemp1)
+            objFunc.addf(size, second, xmmTemp1)
+            objFunc.movf(size, xmmTemp1, dst)
+        }
     }
 
     override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
-        if (dst == first) {
-            objFunc.subf(size, second, dst)
-        } else {
-            objFunc.movf(size, first, xmmTemp1)
-            objFunc.subf(size, second, xmmTemp1)
-            objFunc.movf(size, xmmTemp1, dst)
-        }
+        TODO("Not yet implemented")
     }
 
     override fun raaF(dst: XmmRegister, first: Address, second: Address) {
         TODO("Not yet implemented")
     }
-
 
     override fun araF(dst: Address, first: XmmRegister, second: Address) {
         TODO("Not yet implemented")
@@ -159,15 +170,17 @@ data class SubCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
 
     override fun aarF(dst: Address, first: Address, second: XmmRegister) {
         objFunc.movf(size, first, xmmTemp1)
-        objFunc.subf(size, second, xmmTemp1)
+        objFunc.addf(size, second, xmmTemp1)
         objFunc.movf(size, xmmTemp1, dst)
     }
 
     override fun aaaF(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        objFunc.movf(size, first, xmmTemp1)
+        objFunc.addf(size, second, xmmTemp1)
+        objFunc.movf(size, xmmTemp1, dst)
     }
 
     override fun error(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
-        throw RuntimeException("Unimplemented: '${ArithmeticBinaryOp.Sub}' dst=$dst, first=$first, second=$second")
+        throw RuntimeException("Unimplemented: '${ArithmeticBinaryOp.Add}' dst=$dst, first=$first, second=$second")
     }
 }

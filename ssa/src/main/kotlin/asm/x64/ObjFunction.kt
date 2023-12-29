@@ -142,7 +142,8 @@ class ObjFunction(private val name: String) {
 
     fun cmp(size: Int, first: AnyOperand, second: AnyOperand) = add(Cmp(size, first, second))
 
-    fun jump(jmpType: JmpType, label: String) = add(Jump(jmpType, label))
+    fun jcc(jmpType: JmpType, label: String) = add(Jcc(jmpType, label))
+    fun jump(label: String) = add(Jump(label))
 
     fun ret() = add(Ret)
     fun leave() = add(Leave)

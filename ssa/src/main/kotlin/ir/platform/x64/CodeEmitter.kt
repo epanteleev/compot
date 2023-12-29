@@ -9,10 +9,7 @@ import ir.platform.regalloc.RegisterAllocation
 import ir.types.*
 import ir.utils.OrderedLocation
 import asm.x64.GPRegister.*
-import ir.Constant
 import ir.GlobalValue
-import ir.I64Value
-import ir.U64Value
 import ir.instruction.Call
 import ir.instruction.Neg
 import ir.instruction.Not
@@ -20,7 +17,7 @@ import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.xmmTemp2
-import ir.platform.x64.utils.*
+import ir.platform.x64.codegen.*
 
 
 data class CodegenException(override val message: String): Exception(message)
@@ -205,7 +202,7 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(floatCompare: FloatCompare) {
-        var first  = valueToRegister.operand(floatCompare.first())
+        val first  = valueToRegister.operand(floatCompare.first())
         val second = valueToRegister.operand(floatCompare.second())
         val size = floatCompare.first().type().size()
 
@@ -251,7 +248,7 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(branch: Branch) {
-        objFunc.jump(JmpType.JMP, ".L$functionCounter.${branch.target().index}")
+        objFunc.jump(".L$functionCounter.${branch.target().index}")
     }
 
     override fun visit(branchCond: BranchCond) {
@@ -291,13 +288,13 @@ class CodeEmitter(private val data: FunctionData,
             }
             else -> throw CodegenException("unknown type instruction=$cond")
         }
-        objFunc.jump(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
+        objFunc.jcc(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
     }
 
     override fun visit(copy: Copy) {
         val result  = valueToRegister.operand(copy)
         val operand = valueToRegister.operand(copy.origin())
-        CopyCodegen(copy.type(), objFunc, result, operand)
+        CopyCodegen(copy.type(), objFunc)(result, operand)
     }
 
     override fun visit(downStackFrame: DownStackFrame) {

@@ -1,55 +1,46 @@
-package ir.platform.x64.utils
+package ir.platform.x64.codegen
 
 import asm.x64.*
 import ir.types.*
 import ir.instruction.ArithmeticBinaryOp
-import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.CallConvention.xmmTemp1
+import ir.platform.x64.utils.ApplyClosure
+import ir.platform.x64.utils.GPOperandVisitorBinaryOp
+import ir.platform.x64.utils.XmmOperandVisitorBinaryOp
 
 
-data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOperandVisitorBinaryOp, XmmOperandVisitor {
+data class XorCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOperandVisitorBinaryOp, XmmOperandVisitorBinaryOp {
     private val size: Int = type.size()
 
     operator fun invoke(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
         when (type) {
-            is FloatingPointType -> ApplyClosureBinaryOp(dst, first, second, this as XmmOperandVisitor)
-            is IntegerType   -> ApplyClosureBinaryOp(dst, first, second, this as GPOperandVisitorBinaryOp)
+            is FloatingPointType -> ApplyClosure(dst, first, second, this as XmmOperandVisitorBinaryOp)
+            is IntegerType       -> ApplyClosure(dst, first, second, this as GPOperandVisitorBinaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         if (first == dst) {
-            objFunc.mul(size, second, dst)
+            objFunc.xor(size, second, dst)
         } else if (second == dst) {
-            objFunc.mul(size, first, dst)
+            objFunc.xor(size, first, dst)
         } else {
             objFunc.mov(size, first, dst)
-            objFunc.mul(size, second, dst)
+            objFunc.xor(size, second, dst)
         }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
         objFunc.mov(size, first, dst)
-        objFunc.mul(size, second, dst)
+        objFunc.xor(size, second, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        if (dst == second) {
-            objFunc.add(size, first, second)
-        } else {
-            objFunc.mov(size, first, temp1)
-            objFunc.mul(size, second, temp1)
-            objFunc.mov(size, temp1, dst)
-        }
+        TODO("Not yet implemented")
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        if (dst == second) {
-            objFunc.mul(size, first, dst)
-        } else {
-            objFunc.lea(size, Address.mem(null, 0, second, first.value), dst)
-        }
+        TODO("Not yet implemented")
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
@@ -57,11 +48,7 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        if (dst == first) {
-            objFunc.mul(size, second, dst)
-        } else {
-            objFunc.lea(size, Address.mem(null, 0, first, second.value), dst)
-        }
+        TODO("Not yet implemented")
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
@@ -69,7 +56,7 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        objFunc.mov(size, Imm32(first.value * second.value), dst) //TODO overflow???
+        TODO("Not yet implemented")
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -85,7 +72,7 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        objFunc.mov(size, Imm32(first.value * second.value), dst) //TODO overflow??
+        TODO("Not yet implemented")
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
@@ -109,28 +96,17 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        if (first == dst) {
-            objFunc.mov(size, second, temp1)
-            objFunc.mul(size, temp1, dst)
-        } else if (second == dst) {
-            objFunc.mov(size, first, temp1)
-            objFunc.mul(size, temp1, dst)
-        } else {
-            objFunc.mov(size, first, temp1)
-            objFunc.mul(size, second, temp1)
-            objFunc.mov(size, temp1, dst)
-        }
+        TODO("Not yet implemented")
     }
 
     override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
         if (first == dst) {
-            objFunc.mulf(size, second, dst)
+            objFunc.xorpf(size, second, dst)
         } else if (second == dst) {
-            objFunc.mulf(size, first, dst)
+            objFunc.xorpf(size, first, dst)
         } else {
-            objFunc.movf(size, first, xmmTemp1)
-            objFunc.mulf(size, second, xmmTemp1)
-            objFunc.movf(size, xmmTemp1, dst)
+            objFunc.movf(size, first, dst)
+            objFunc.xorpf(size, second, dst)
         }
     }
 
@@ -141,7 +117,6 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
         TODO("Not yet implemented")
     }
-
 
     override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
         TODO("Not yet implemented")
@@ -164,6 +139,6 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun error(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
-        throw RuntimeException("Unimplemented: '${ArithmeticBinaryOp.Mul}' dst=$dst, first=$first, second=$second")
+        throw RuntimeException("Unimplemented: '${ArithmeticBinaryOp.Xor}' dst=$dst, first=$first, second=$second")
     }
 }
