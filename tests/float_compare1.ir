@@ -1,0 +1,24 @@
+extern void @printDouble(f64)
+
+define i32 @main() {
+entry:
+  %1 = call f64 @compare(8.0: f64, 8.0: f64)
+  call void @printDouble(%1: f64)
+  ret i32 0
+}
+
+define f64 @compare(%a: f64, %b: f64) {
+entry:
+  %retAddr = alloc f64
+  %is_eq = fcmp one f64 %a, %b
+  br u1 %is_eq label %L1, label %L2
+L2:
+  store ptr %retAddr, f64 4.0
+  br label %L3
+L1:
+  store ptr %retAddr, f64 5.0
+  br label %L3
+L3:
+  %ret = load f64 %retAddr
+  ret f64 %ret
+}
