@@ -9,7 +9,7 @@ import ir.types.*
 object CopyCodegen {
     operator fun invoke(type: PrimitiveType, objFunc: ObjFunction, dst: AnyOperand, origin: AnyOperand) {
         when (type) {
-            is FloatingPoint -> generateForFp(objFunc, dst, origin, type.size())
+            is FloatingPointType -> generateForFp(objFunc, dst, origin, type.size())
             is IntegerType, is PointerType -> generate(objFunc, dst, origin, type.size())
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, origin=$origin")
         }

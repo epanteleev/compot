@@ -9,10 +9,10 @@ import ir.platform.regalloc.RegisterAllocation
 import ir.types.*
 import ir.utils.OrderedLocation
 import asm.x64.GPRegister.*
-import ir.*
 import ir.instruction.Call
 import ir.instruction.Neg
 import ir.instruction.Not
+import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.utils.*
 
 
@@ -112,7 +112,7 @@ class CodeEmitter(private val data: FunctionData,
         val value = valueToRegister.operand(returnValue.value())
         if (returnType is IntegerType || returnType is PointerType) {
             objFunc.movOld(size, value, temp1)
-        } else if (returnType is FloatingPoint) {
+        } else if (returnType is FloatingPointType) {
             when (value) {
                 is Address -> objFunc.movf(size, value, fpRet)
                 is XmmRegister -> objFunc.movf(size, value, fpRet)
@@ -154,7 +154,7 @@ class CodeEmitter(private val data: FunctionData,
                 objFunc.movOld(size, rax, valueToRegister.operand(call) as Operand)
             }
 
-            is FloatingPoint -> {
+            is FloatingPointType -> {
                 when (val op = valueToRegister.operand(call)) {
                     is Address -> objFunc.movf(size, fpRet, op)
                     is XmmRegister -> objFunc.movf(size, fpRet, op)
@@ -194,7 +194,7 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(intCompare: IntCompare) {
-        var first = valueToRegister.operand(intCompare.first())
+        var first  = valueToRegister.operand(intCompare.first())
         val second = valueToRegister.operand(intCompare.second())
         val size = intCompare.first().type().size()
 
@@ -204,7 +204,48 @@ class CodeEmitter(private val data: FunctionData,
             first
         }
 
-        objFunc.cmp(size, first as GPRegister, second)
+        objFunc.cmp(size, second, first as GPRegister)
+    }
+
+    override fun visit(floatCompare: FloatCompare) {
+        var first  = valueToRegister.operand(floatCompare.first())
+        val second = valueToRegister.operand(floatCompare.second())
+        val size = floatCompare.first().type().size()
+
+        when (first) {
+            is XmmRegister -> {
+                when (second) {
+                    is XmmRegister -> {
+                        objFunc.cmpf(size, first, second)
+                    }
+                    is Address -> {
+                        objFunc.movf(size, second, xmmTemp1)
+                        objFunc.cmpf(size, first, xmmTemp1)
+                    }
+                    is ImmFp -> {
+                        objFunc.mov(size, second.bits(), temp1)
+                        objFunc.movd(size, temp1, xmmTemp1)
+                        objFunc.cmpf(size, first, xmmTemp1)
+                    }
+                }
+            }
+            is Address -> {
+                when (second) {
+                    is XmmRegister -> {
+                        objFunc.cmpf(size, first, second)
+                    }
+                    is Address -> {
+                        objFunc.movf(size, second, xmmTemp1)
+                        objFunc.cmpf(size, first, xmmTemp1)
+                    }
+                    is ImmFp -> {
+                        objFunc.mov(size, second.bits(), temp1)
+                        objFunc.movd(size, temp1, xmmTemp1)
+                        objFunc.cmpf(size, first, xmmTemp1)
+                    }
+                }
+            }
+        }
     }
 
     override fun visit(branch: Branch) {
@@ -227,6 +268,23 @@ class CodeEmitter(private val data: FunctionData,
                 IntPredicate.Sle -> JmpType.JLE
             }
 
+            objFunc.jump(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
+        } else if (cond is FloatCompare) {
+            val jmpType = when (cond.predicate()) {
+                FloatPredicate.Oeq -> JmpType.JE
+                FloatPredicate.Ogt -> JmpType.JG
+                FloatPredicate.Oge -> JmpType.JGE
+                FloatPredicate.Olt -> JmpType.JL
+                FloatPredicate.Ole -> JmpType.JLE
+                FloatPredicate.One -> JmpType.JNE
+                FloatPredicate.Ord -> TODO()
+                FloatPredicate.Ueq -> JmpType.JE
+                FloatPredicate.Ugt -> JmpType.JG
+                FloatPredicate.Uge -> JmpType.JGE
+                FloatPredicate.Ult ->JmpType.JL
+                FloatPredicate.Ule -> JmpType.JLE
+                FloatPredicate.Uno -> TODO()
+            }
             objFunc.jump(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
         } else {
             println("unsupported $branchCond")

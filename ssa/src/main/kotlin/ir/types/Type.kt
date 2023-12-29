@@ -22,8 +22,8 @@ interface Type {
         val I32 = SignedIntType(4)
         val I64 = SignedIntType(8)
 
-        val F32 = FloatingPoint(4)
-        val F64 = FloatingPoint(8)
+        val F32 = FloatingPointType(4)
+        val F64 = FloatingPointType(8)
 
         val Ptr = PointerType()
 

@@ -19,8 +19,8 @@ fun main() {
     builder.createFunction("hello", Type.U64, arrayListOf(Type.U16.ptr(), Type.U64.ptr())).apply {
         val arg1 = argument(0)
         val arg2 = argument(1)
-        val variable = stackAlloc(Type.U64)
-        val variable2 = stackAlloc(Type.U16)
+        val variable = alloc(Type.U64)
+        val variable2 = alloc(Type.U16)
 
         val v1   = load(Type.U64, arg1)
         val ttt  = cast(v1, Type.U64, CastType.SignExtend)

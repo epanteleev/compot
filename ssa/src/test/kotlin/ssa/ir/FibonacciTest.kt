@@ -19,13 +19,13 @@ class FibonacciTest {
 
         val n = builder.argument(0)
 
-        val retVal = builder.stackAlloc(Type.I32)
-        val nAddr  = builder.stackAlloc(Type.I32)
+        val retVal = builder.alloc(Type.I32)
+        val nAddr  = builder.alloc(Type.I32)
 
-        val a = builder.stackAlloc(Type.I32)
-        val b = builder.stackAlloc(Type.I32)
-        val c = builder.stackAlloc(Type.I32)
-        val i = builder.stackAlloc(Type.I32)
+        val a = builder.alloc(Type.I32)
+        val b = builder.alloc(Type.I32)
+        val c = builder.alloc(Type.I32)
+        val i = builder.alloc(Type.I32)
 
         builder.store(nAddr, n)
         builder.store(a, I32Value(0))

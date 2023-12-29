@@ -9,7 +9,7 @@ import ir.platform.x64.utils.Utils.case
 object StoreCodegen {
     operator fun invoke(type: PrimitiveType, objFunc: ObjFunction, value: AnyOperand, pointer: AnyOperand) {
         when (type) {
-            is FloatingPoint -> generateForFp(objFunc, value, pointer, type.size())
+            is FloatingPointType -> generateForFp(objFunc, value, pointer, type.size())
             is IntegerType, is PointerType -> generate(objFunc, value, pointer, type.size())
             else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
         }
@@ -76,7 +76,7 @@ object StoreCodegen {
             case<ImmFp, Address>(value, pointer) -> {
                 value   as ImmFp
                 pointer as Address
-                objFunc.mov(size, value.bits(), pointer)
+                objFunc.mov(size, value.bits(), pointer) // TOdo check it
             }
 
             else -> throw RuntimeException("Unimplemented: value=$value, pointer=$pointer")

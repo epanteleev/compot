@@ -11,7 +11,7 @@ class GPRegistersList(argumentValue: List<GPRegister>) {
     private val usedCalleeSaveRegisters = mutableSetOf(rbp)
 
     fun pickRegister(type: PrimitiveType): GPRegister? {
-        require(type !is FloatingPoint ) { "found $type" }
+        require(type !is FloatingPointType ) { "found $type" }
 
         if (freeRegisters.isEmpty()) {
             return null

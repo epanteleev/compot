@@ -3,6 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.instruction.utils.Visitor
 import ir.types.ArithmeticType
+import ir.types.PrimitiveType
 import ir.types.Type
 
 enum class CastType {
@@ -42,12 +43,16 @@ class Cast private constructor(name: String, ty: Type, val castType: CastType, v
         return operands[0]
     }
 
+    override fun type(): PrimitiveType {
+        return tp as PrimitiveType
+    }
+
     override fun copy(newUsages: List<Value>): Cast {
         assert(newUsages.size == 1) {
             "should be, but newUsages=$newUsages"
         }
 
-        return make(identifier, tp, castType, newUsages[0])
+        return make(identifier, type(), castType, newUsages[0])
     }
 
     override fun visit(visitor: Visitor) {
@@ -55,7 +60,7 @@ class Cast private constructor(name: String, ty: Type, val castType: CastType, v
     }
 
     companion object {
-        fun make(name: String, ty: Type, castType: CastType, value: Value): Cast {
+        fun make(name: String, ty: PrimitiveType, castType: CastType, value: Value): Cast {
             val valueType = value.type()
             require(isAppropriateType(ty, castType, valueType)) {
                 "inconsistent types in $name: ty=$ty, castType=$castType, value.type=$valueType"

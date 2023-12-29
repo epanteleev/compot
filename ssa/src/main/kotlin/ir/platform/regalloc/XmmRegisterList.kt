@@ -9,7 +9,7 @@ class XmmRegisterList(arguments: List<XmmRegister>) {
     private var freeRegisters = CallConvention.availableXmmRegisters(arguments).toMutableList()
     private val usedCalleeSaveRegisters = mutableSetOf<XmmRegister>()
 
-    fun pickRegister(type: FloatingPoint): XmmRegister? {
+    fun pickRegister(type: FloatingPointType): XmmRegister? {
         if (freeRegisters.isEmpty()) {
             return null
         }

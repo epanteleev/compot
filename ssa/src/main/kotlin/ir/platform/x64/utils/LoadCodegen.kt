@@ -10,7 +10,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 object LoadCodegen {
     operator fun invoke(type: PrimitiveType, objFunc: ObjFunction, dst: AnyOperand, pointer: AnyOperand) {
         when (type) {
-            is FloatingPoint               -> generateForFp(objFunc, dst, pointer, type.size())
+            is FloatingPointType               -> generateForFp(objFunc, dst, pointer, type.size())
             is IntegerType, is PointerType -> generate(objFunc, dst, pointer, type.size())
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, pointer=$pointer")
         }

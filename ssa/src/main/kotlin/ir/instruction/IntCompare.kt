@@ -1,8 +1,9 @@
 package ir.instruction
 
 import ir.Value
+import ir.types.*
 import ir.instruction.utils.Visitor
-import ir.types.Type
+
 
 enum class IntPredicate {
     Eq {
@@ -82,6 +83,10 @@ class IntCompare private constructor(name: String, a: Value, private val predica
         return predicate
     }
 
+    fun compareType(): IntegerType {
+        return first().type() as IntegerType
+    }
+
     fun first(): Value {
         assert(operands.size == 2) {
             "size should be 2 in $this instruction"
@@ -122,7 +127,7 @@ class IntCompare private constructor(name: String, a: Value, private val predica
         }
 
         private fun isAppropriateType(aType: Type, bType: Type): Boolean {
-            return aType == bType
+            return aType == bType && aType is IntegerType
         }
 
         fun isCorrect(icmp: IntCompare): Boolean {

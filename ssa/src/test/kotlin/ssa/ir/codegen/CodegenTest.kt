@@ -19,10 +19,10 @@ class CodegenTest {
         val arg1 = builder.argument(0)
         val arg2 = builder.argument(1)
 
-        val retValue = builder.stackAlloc(Type.U64)
+        val retValue = builder.alloc(Type.U64)
 
-        val arg1Alloc = builder.stackAlloc(Type.U64)
-        val arg2Alloc = builder.stackAlloc(Type.U64)
+        val arg1Alloc = builder.alloc(Type.U64)
+        val arg2Alloc = builder.alloc(Type.U64)
 
         builder.store(arg1Alloc, arg1)
         builder.store(arg2Alloc, arg2)

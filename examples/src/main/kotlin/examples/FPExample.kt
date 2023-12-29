@@ -11,9 +11,9 @@ fun main() {
     val builder = ModuleBuilder.create()
     val printFloat = builder.createExternFunction("printFloat", Type.Void, arrayListOf(Type.F32))
     builder.createFunction("main", Type.I32, arrayListOf()).apply {
-        val first = stackAlloc(Type.F32)
+        val first = alloc(Type.F32)
         store(first, F32Value(4f))
-        val second = stackAlloc(Type.F32)
+        val second = alloc(Type.F32)
         store(second, F32Value(8f))
 
         load(Type.F32, first)

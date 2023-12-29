@@ -133,7 +133,7 @@ data class I64Value(val i64: Long): Constant {
 }
 
 data class F32Value(val f32: Float): Constant {
-    override fun type(): FloatingPoint {
+    override fun type(): FloatingPointType {
         return Type.F32
     }
 
@@ -143,7 +143,7 @@ data class F32Value(val f32: Float): Constant {
 }
 
 data class F64Value(val f64: Double): Constant {
-    override fun type(): FloatingPoint {
+    override fun type(): FloatingPointType {
         return Type.F64
     }
 

@@ -9,7 +9,8 @@ import ir.types.PrimitiveType
 import ir.types.Type
 
 
-class Block(override val index: Int, private var maxValueIndex: Int = 0) : MutableBlock, AnyBlock {
+class Block(override val index: Int, private var maxValueIndex: Int = 0) :
+    AnyFabric, AnyBlock {
     private val instructions = mutableListOf<Instruction>()
     private val predecessors = mutableListOf<Block>()
     private val successors   = mutableListOf<Block>()
@@ -77,7 +78,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
         predecessors.remove(old)
     }
 
-    fun insert(before: Instruction, builder: (MutableBlock) -> Value): Value {
+    fun insert(before: Instruction, builder: (AnyFabric) -> Value): Value {
         val beforeIndex = instructions.indexOf(before)
         assert(beforeIndex != -1) {
             "flow graph doesn't contains instruction=$before"
@@ -86,7 +87,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
         return insert(beforeIndex, builder)
     }
 
-    fun insert(index: Int, builder: (MutableBlock) -> Value): Value {
+    fun insert(index: Int, builder: (AnyFabric) -> Value): Value {
         assert(index >= 0)
         indexToAppend = index
         return builder(this)
@@ -201,8 +202,12 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
         return withOutput { it: Int -> ArithmeticBinary.make(n(it), ty, a, op, b) }
     }
 
-    override fun intCompare(a: Value, pred: IntPredicate, b: Value): IntCompare {
-        return withOutput { it: Int -> IntCompare.make("cmp${n(it)}", a, pred, b) }
+    override fun intCompare(a: Value, predicate: IntPredicate, b: Value): IntCompare {
+        return withOutput { it: Int -> IntCompare.make("cmp${n(it)}", a, predicate, b) }
+    }
+
+    override fun floatCompare(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
+        return withOutput { it: Int -> FloatCompare.make("cmp${n(it)}", a, predicate, b) }
     }
 
     override fun load(loadedType: PrimitiveType, ptr: Value): Load {
@@ -247,7 +252,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) : Mutab
         return withOutput { it: Int -> GetElementPtr.make(n(it), ty, source, index) }
     }
 
-    override fun cast(value: Value, ty: Type, cast: CastType): Cast {
+    override fun cast(value: Value, ty: PrimitiveType, cast: CastType): Cast {
         return withOutput { it: Int -> Cast.make(n(it), ty, cast, value) }
     }
 

@@ -13,7 +13,7 @@ data class SubCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
 
     operator fun invoke(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
         when (type) {
-            is FloatingPoint  -> ApplyClosureBinaryOp(dst, first, second, this as XmmOperandVisitor)
+            is FloatingPointType  -> ApplyClosureBinaryOp(dst, first, second, this as XmmOperandVisitor)
             is IntegerType    -> ApplyClosureBinaryOp(dst, first, second, this as GPOperandVisitorBinaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }

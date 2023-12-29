@@ -20,7 +20,7 @@ class CalleeArgumentAllocator(private val arguments: List<Value>) {
 
     private fun emit(type: Type): Place {
         return when (type) {
-            is FloatingPoint -> {
+            is FloatingPointType -> {
                 if (xmmRegPos < fpRegisters.size) {
                     xmmRegPos += 1
                     RealFpRegister(xmmRegPos - 1)

@@ -43,12 +43,14 @@ abstract class TypeToken(override val line: Int, override val pos: Int) : Token(
 }
 
 data class ElementaryTypeToken(private val type: String, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+    private val realType by lazy { matchType[type] }
+
     override fun message(): String {
         return "type '$type'"
     }
 
     override fun type(): Type {
-        return matchType[type] ?: throw RuntimeException("Internal error: type=$type")
+        return realType ?: throw RuntimeException("Internal error: type=$type")
     }
 
     inline fun<reified T: Type> asType(): T {

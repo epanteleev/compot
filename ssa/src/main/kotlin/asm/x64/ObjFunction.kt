@@ -130,7 +130,7 @@ class ObjFunction(private val name: String) {
         add(Call(name))
     }
 
-    fun cmp(size: Int, first: GPRegister, second: AnyOperand) = add(Cmp(size, first, second))
+    fun cmp(size: Int, first: AnyOperand, second: AnyOperand) = add(Cmp(size, first, second))
 
     fun jump(jmpType: JmpType, label: String) = add(Jump(jmpType, label))
 
@@ -252,6 +252,26 @@ class ObjFunction(private val name: String) {
     fun xorpf(size: Int, src: XmmRegister, dst: XmmRegister) = when (size) {
         4 -> xorps(src, dst)
         8 -> xorpd(src, dst)
+        else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
+    }
+
+    // Unordered Compare Scalar Single-Precision Floating-Point Values and set EFLAGS
+    fun ucomiss(src: Address, dst: XmmRegister) = add(Ucomiss(16, src, dst))
+    fun ucomiss(src: XmmRegister, dst: XmmRegister) = add(Ucomiss(16, src, dst))
+
+    // Unordered Compare Scalar Double-Precision Floating-Point Values and set EFLAGS
+    fun ucomisd(src: Address, dst: XmmRegister) = add(Ucomisd(16, src, dst))
+    fun ucomisd(src: XmmRegister, dst: XmmRegister) = add(Ucomisd(16, src, dst))
+
+    fun cmpf(size: Int, src: Address, dst: XmmRegister) = when (size) {
+        4 -> ucomiss(src, dst)
+        8 -> ucomisd(src, dst)
+        else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
+    }
+
+    fun cmpf(size: Int, src: XmmRegister, dst: XmmRegister) = when (size) {
+        4 -> ucomiss(src, dst)
+        8 -> ucomisd(src, dst)
         else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
     }
 

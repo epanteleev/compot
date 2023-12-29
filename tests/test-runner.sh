@@ -63,6 +63,9 @@ compile_and_run manyBranches "7
 compile_and_run clamp "9
 10
 8"
+compile_and_run clamp1 "9.000000
+10.000000
+8.000000"
 compile_and_run fill_in_array0 "01234"
 compile_and_run fill_in_array1 "01234"
 compile_and_run fill_in_array2 "01234"

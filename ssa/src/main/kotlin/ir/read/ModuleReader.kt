@@ -100,14 +100,32 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
         builder.cast(resultName, operand, operandType, castType, castValueToken)
     }
 
-    private fun parseCmp(resultTypeToken: LocalValueToken) {
+    private fun parseIcmp(resultTypeToken: LocalValueToken) {
         val compareTypeToken = iterator.expect<Identifier>("compare type")
         val resultType       = iterator.expect<ElementaryTypeToken>("result type")
         val first            = iterator.expect<AnyValueToken>("compare operand")
         iterator.expect<Comma>("','")
         val second           = iterator.expect<AnyValueToken>("compare operand")
 
+        if (resultType.type() !is IntegerType) {
+            throw ParseErrorException("expect integer type, but resultType=$resultType")
+        }
+
         builder.intCompare(resultTypeToken, first, compareTypeToken, second, resultType)
+    }
+
+    private fun parseFcmp(resultTypeToken: LocalValueToken) {
+        val compareTypeToken = iterator.expect<Identifier>("compare type")
+        val resultType       = iterator.expect<ElementaryTypeToken>("result type")
+        val first            = iterator.expect<AnyValueToken>("compare operand")
+        iterator.expect<Comma>("','")
+        val second           = iterator.expect<AnyValueToken>("compare operand")
+
+        if (resultType.type() !is FloatingPointType) {
+            throw ParseErrorException("expect integer type, but resultType=$resultType")
+        }
+
+        builder.floatCompare(resultTypeToken, first, compareTypeToken, second, resultType)
     }
 
     private fun parsePhi(resultTypeToken: LocalValueToken) {
@@ -213,11 +231,12 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
                     "trunc"      -> parseCast(currentTok, CastType.Truncate)
                     "bitcast"    -> parseCast(currentTok, CastType.Bitcast)
                     "alloc"      -> parseStackAlloc(currentTok)
-                    "icmp"       -> parseCmp(currentTok)
                     "phi"        -> parsePhi(currentTok)
                     "gep"        -> parseGep(currentTok)
                     "neg"        -> parseNeg(currentTok)
                     "not"        -> parseNot(currentTok)
+                    "icmp"       -> parseIcmp(currentTok)
+                    "fcmp"       -> parseFcmp(currentTok)
                     else -> throw ParseErrorException("instruction name", instruction)
                 }
             }

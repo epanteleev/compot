@@ -11,7 +11,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 object NegCodegen {
     operator fun invoke(type: PrimitiveType, objFunc: ObjFunction, dst: AnyOperand, operand: AnyOperand) {
         when (type) {
-            is FloatingPoint -> generateForFp(objFunc, dst, operand, type.size())
+            is FloatingPointType -> generateForFp(objFunc, dst, operand, type.size())
             is IntegerType   -> generate(objFunc, dst, operand, type.size())
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, operand=$operand")
         }

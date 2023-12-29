@@ -1,10 +1,10 @@
 package ir.instruction
 
 import ir.Value
-import ir.instruction.utils.Visitor
+import ir.types.*
 import ir.module.block.Block
-import ir.types.PointerType
-import ir.types.PrimitiveType
+import ir.instruction.utils.Visitor
+
 
 class Phi private constructor(name: String, ty: PrimitiveType, private var incoming: List<Block>, incomingValue: Array<Value>):
     ValueInstruction(name, ty, incomingValue) {

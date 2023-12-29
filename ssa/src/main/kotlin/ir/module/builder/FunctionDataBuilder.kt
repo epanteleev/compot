@@ -9,6 +9,7 @@ import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.module.block.Label
+import ir.module.block.InstructionFabric
 import ir.types.PrimitiveType
 import ir.types.Type
 
@@ -16,7 +17,7 @@ class FunctionDataBuilder private constructor(
     private val prototype: FunctionPrototype,
     private var argumentValues: List<ArgumentValue>,
     private val blocks: BasicBlocks
-) {
+): InstructionFabric {
     private var allocatedLabel: Int = 0
     private var bb: Block = blocks.begin()
 
@@ -47,35 +48,39 @@ class FunctionDataBuilder private constructor(
         return argumentValues
     }
 
-    fun not(value: Value): Value {
+    override fun not(value: Value): Not {
         return bb.not(value)
     }
 
-    fun neg(value: Value): Value {
+    override fun neg(value: Value): Neg {
         return bb.neg(value)
     }
 
-    fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): Value {
+    override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
         return bb.arithmeticBinary(a, op, b)
     }
 
-    fun intCompare(a: Value, pred: IntPredicate, b: Value): Value {
-        return bb.intCompare(a, pred, b)
+    override fun intCompare(a: Value, predicate: IntPredicate, b: Value): IntCompare {
+        return bb.intCompare(a, predicate, b)
     }
 
-    fun load(loadedType: PrimitiveType, ptr: Value): Value {
+    override fun floatCompare(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
+        return bb.floatCompare(a, predicate, b)
+    }
+
+    override fun load(loadedType: PrimitiveType, ptr: Value): Load {
         return bb.load(loadedType, ptr)
     }
 
-    fun store(ptr: Value, value: Value) {
+    override fun store(ptr: Value, value: Value) {
         return bb.store(ptr, value)
     }
 
-    fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Call {
+    override fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Call {
         return bb.call(func, args)
     }
 
-    fun vcall(func: AnyFunctionPrototype, args: ArrayList<Value>) {
+    override fun vcall(func: AnyFunctionPrototype, args: ArrayList<Value>) {
         bb.vcall(func, args)
     }
 
@@ -83,11 +88,11 @@ class FunctionDataBuilder private constructor(
         branch(blocks.findBlock(target))
     }
 
-    fun branch(target: Block) {
+    override fun branch(target: Block) {
         bb.branch(target)
     }
 
-    fun branchCond(value: Value, onTrue: Block, onFalse: Block) {
+    override fun branchCond(value: Value, onTrue: Block, onFalse: Block) {
         bb.branchCond(value, onTrue, onFalse)
     }
 
@@ -95,27 +100,32 @@ class FunctionDataBuilder private constructor(
         branchCond(value, blocks.findBlock(onTrue), blocks.findBlock(onFalse))
     }
 
-    fun stackAlloc(ty: Type): Value {
+    override fun alloc(ty: Type): Alloc {
         return bb.alloc(ty)
     }
 
-    fun ret(value: Value) {
+    override fun ret(value: Value) {
         bb.ret(value)
     }
 
-    fun gep(source: Value, type: PrimitiveType, index: Value): Value {
-        return bb.gep(source, type, index)
+    override fun retVoid() {
+        bb.retVoid()
     }
 
-    fun cast(value: Value, ty: PrimitiveType, cast: CastType): Value {
+    override fun gep(source: Value, ty: PrimitiveType, index: Value): GetElementPtr {
+        return bb.gep(source, ty, index)
+    }
+
+
+    override fun cast(value: Value, ty: PrimitiveType, cast: CastType): Cast {
         return bb.cast(value, ty, cast)
     }
 
-    fun select(cond: Value, onTrue: Value, onFalse: Value): Value {
+    override fun select(cond: Value, onTrue: Value, onFalse: Value): Select {
         return bb.select(cond, onTrue, onFalse)
     }
 
-    fun phi(incoming: ArrayList<Value>, labels: ArrayList<Block>): Value {
+    override fun phi(incoming: List<Value>, labels: List<Block>): Phi {
         return bb.phi(incoming, labels)
     }
 

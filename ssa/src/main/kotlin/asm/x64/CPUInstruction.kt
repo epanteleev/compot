@@ -15,7 +15,6 @@ sealed interface CPUInstruction {
             }
         }
     }
-
 }
 
 object Leave: CPUInstruction {
@@ -146,7 +145,7 @@ data class Jump(val jumpType: JmpType, val label: String): CPUInstruction {
 
 data class Cmp(val size: Int, val first: AnyOperand, val second: AnyOperand): CPUInstruction {
     override fun toString(): String {
-        return "cmp${prefix(size)} ${second.toString(size)}, ${first.toString(size)}"
+        return "cmp${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 
@@ -294,5 +293,17 @@ data class Divss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUIn
 data class Divsd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
     override fun toString(): String {
         return "divsd ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
+data class Ucomiss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "ucomiss ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
+data class Ucomisd(val size: Int, val src1: AnyOperand, val src2: AnyOperand): CPUInstruction {
+    override fun toString(): String {
+        return "ucomisd ${src1.toString(size)}, ${src2.toString(size)}"
     }
 }

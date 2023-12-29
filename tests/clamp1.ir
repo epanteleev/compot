@@ -1,0 +1,102 @@
+extern void @printFloat(f32)
+
+define u64 @main() {
+entry:
+  %1 = call f32 @clamp(8: f32, 9: f32, 10: f32)
+  call void @printFloat(%1: f32)
+  %2 = call f32 @clamp(8: f32, 20: f32, 10: f32)
+  call void @printFloat(%2: f32)
+  %3 = call f32 @clamp(8: f32, 1: f32, 10: f32)
+  call void @printFloat(%3: f32)
+  ret u64 0
+}
+
+;float max(float a, float b) {
+;    if (a > b) {
+;        return a;
+;    }
+;    return b;
+;}
+define f32 @max(%a: f32, %b: f32) {
+entry:
+  %retval = alloc f32
+  %aAddr = alloc f32
+  %bAddr = alloc f32
+  store ptr %aAddr, f32 %a
+  store ptr %bAddr,f32 %b
+  %0 = load f32 %aAddr
+  %1 = load f32 %bAddr
+  %cmp = fcmp ogt f32 %0, %1
+  br u1 %cmp label %ifThen, label %ifEnd
+
+ifThen:
+  %2 = load f32 %aAddr
+  store ptr %retval, f32 %2
+  br label %return
+
+ifEnd:
+  %3 = load f32 %bAddr
+  store ptr %retval, f32 %3
+  br label %return
+
+return:
+  %4 = load f32 %retval
+  ret f32 %4
+}
+
+;float min(float a, float b) {
+;    if (a < b) {
+;        return a;
+;    }
+;    return b;
+;}
+define f32 @min(%a: f32, %b: f32) {
+entry:
+  %retval = alloc f32
+  %aAddr = alloc f32
+  %bAddr = alloc f32
+  store ptr %aAddr, f32 %a
+  store ptr %bAddr, f32 %b
+  %0 = load f32 %aAddr
+  %1 = load f32 %bAddr
+  %cmp = fcmp olt f32 %0, %1
+  br u1 %cmp label %ifThen, label %ifEnd
+
+ifThen:
+  %2 = load f32 %aAddr
+  store ptr %retval, f32 %2
+  br label %return
+
+ifEnd:
+  %3 = load f32 %bAddr
+  store ptr %retval, f32 %3
+  br label %return
+
+return:
+  %4 = load f32 %retval
+  ret f32 %4
+}
+
+;float clamp(float from, float value, float to) {
+;    float b = min(value, to);
+;    return max(from, b);
+;}
+define f32 @clamp(%from: f32, %value: f32, %to: f32) {
+entry:
+  %fromAddr  = alloc f32
+  %valueAddr = alloc f32
+  %toAddr    = alloc f32
+  %b         = alloc f32
+  store ptr %fromAddr, f32 %from
+  store ptr %valueAddr, f32 %value
+  store ptr %toAddr, f32 %to
+  %0 = load f32 %valueAddr
+  %1 = load f32 %toAddr
+  %call = call f32 @min(%0: f32, %1: f32)
+  store ptr %b, f32 %call
+  %2 = load f32 %fromAddr
+  %3 = load f32 %b
+  %call1 = call f32 @max(%2: f32, %3: f32)
+  ret f32 %call1
+}
+

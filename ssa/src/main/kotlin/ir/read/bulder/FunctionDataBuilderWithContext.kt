@@ -148,6 +148,30 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, result)
     }
 
+    fun floatCompare(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, expectedType: ElementaryTypeToken): FloatCompare {
+        val compareType = when (predicate.string) {
+            "oeq" -> FloatPredicate.Oeq
+            "one" -> FloatPredicate.One
+            "oge" -> FloatPredicate.Oge
+            "ogt" -> FloatPredicate.Ogt
+            "olt" -> FloatPredicate.Olt
+            "ole" -> FloatPredicate.Ole
+            "ugt" -> FloatPredicate.Ugt
+            "uge" -> FloatPredicate.Uge
+            "ult" -> FloatPredicate.Ult
+            "ule" -> FloatPredicate.Ule
+            "uno" -> FloatPredicate.Uno
+            "ueq" -> FloatPredicate.Ueq
+            "ord" -> FloatPredicate.Ord
+            else  -> throw ParseErrorException("${predicate.position()} unknown compare type: cmpType=${predicate.string}")
+        }
+
+        val first  = getValue(a, expectedType.type())
+        val second = getValue(b, expectedType.type())
+        val result = bb.floatCompare(first, compareType, second)
+        return memorize(name, result)
+    }
+
     fun load(name: LocalValueToken, ptr: AnyValueToken, expectedType: ElementaryTypeToken): Load {
         val pointer = getValue(ptr, expectedType.type().ptr())
         return memorize(name, bb.load(expectedType.asType<PrimitiveType>(),pointer))
@@ -226,7 +250,7 @@ class FunctionDataBuilderWithContext private constructor(
 
     fun cast(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, cast: CastType, resultType: ElementaryTypeToken): Cast {
         val value = getValue(operandToken, operandType.type())
-        return memorize(name, bb.cast(value, resultType.type(), cast))
+        return memorize(name, bb.cast(value, resultType.asType<PrimitiveType>(), cast))
     }
 
     fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: PrimitiveType): Value {

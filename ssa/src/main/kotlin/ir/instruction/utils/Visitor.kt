@@ -15,6 +15,7 @@ interface Visitor {
     fun visit(downStackFrame: DownStackFrame)
     fun visit(getElementPtr: GetElementPtr)
     fun visit(intCompare: IntCompare)
+    fun visit(floatCompare: FloatCompare)
     fun visit(load: Load)
     fun visit(phi: Phi)
     fun visit(returnValue: ReturnValue)
