@@ -40,6 +40,15 @@ data class LocalValueToken(val name: String, override val line: Int, override va
 
 abstract class TypeToken(override val line: Int, override val pos: Int) : Token(line, pos) {
     abstract fun type(): Type
+
+    inline fun<reified T: Type> asType(): T {
+        val ty = type()
+        if (ty !is T) {
+            throw RuntimeException("actual type=$ty")
+        }
+
+        return ty
+    }
 }
 
 data class ElementaryTypeToken(private val type: String, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
@@ -51,15 +60,6 @@ data class ElementaryTypeToken(private val type: String, override val line: Int,
 
     override fun type(): Type {
         return realType ?: throw RuntimeException("Internal error: type=$type")
-    }
-
-    inline fun<reified T: Type> asType(): T {
-        val ty = type()
-        if (ty !is T) {
-            throw RuntimeException("actual type=$ty")
-        }
-
-        return ty
     }
 
     companion object {

@@ -1,10 +1,11 @@
 package ir.platform.regalloc
 
-import asm.x64.Operand
 import ir.LocalValue
+import asm.x64.Operand
 import ir.instruction.Phi
 import ir.platform.liveness.LiveIntervals
 import ir.platform.liveness.LiveRange
+
 
 class CoalescedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
     private val valueToGroup: Map<LocalValue, Group>

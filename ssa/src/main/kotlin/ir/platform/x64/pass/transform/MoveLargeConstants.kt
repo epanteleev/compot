@@ -83,7 +83,7 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
 
         fun run(module: Module): Module {
             val functions = module.functions.map { it }
-            val constants = module.constants.mapTo(mutableSetOf()) { it }
+            val constants = module.globals.mapTo(mutableSetOf()) { it }
             MoveLargeConstants(functions, constants).run()
 
             return CSSAModule(functions, module.externFunctions, constants)

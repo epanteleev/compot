@@ -7,10 +7,11 @@ import ir.types.Type
 import ir.types.UndefinedType
 import ir.types.VoidType
 
+
 class Store private constructor(pointer: Value, value: Value):
     Instruction(arrayOf(pointer, value)) {
     override fun dump(): String {
-        return "store ptr ${pointer()}, ${value().type()} ${value()}"
+        return "$NAME ptr ${pointer()}, ${value().type()} ${value()}"
     }
 
     fun pointer(): Value {
@@ -54,6 +55,8 @@ class Store private constructor(pointer: Value, value: Value):
     }
 
     companion object {
+        const val NAME = "store"
+
         fun make(pointer: Value, value: Value): Store {
             val pointerType = pointer.type()
             val valueType   = value.type()

@@ -54,6 +54,6 @@ class CodegenTest {
         val pool = VirtualRegistersPool.create(module.functions[0].arguments())
         assertEquals(pool.arguments()[0], rdi)
         assertEquals(pool.arguments()[1], rsi)
-        assertEquals(pool.allocSlot(retValue), Address.mem(rbp, -8))
+        assertEquals(pool.allocSlot(retValue), Address.from(rbp, -8))
     }
 }

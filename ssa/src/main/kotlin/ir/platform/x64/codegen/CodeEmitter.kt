@@ -1,85 +1,85 @@
-package ir.platform.x64
+package ir.platform.x64.codegen
 
 import asm.x64.*
-import ir.instruction.*
-import ir.instruction.utils.Visitor
-import ir.module.*
-import ir.module.block.Label
-import ir.platform.regalloc.RegisterAllocation
 import ir.types.*
-import ir.utils.OrderedLocation
-import asm.x64.GPRegister.*
+import ir.module.*
 import ir.GlobalValue
-import ir.instruction.Call
+import ir.instruction.*
+import ir.platform.x64.*
 import ir.instruction.Neg
 import ir.instruction.Not
+import ir.instruction.Call
+import asm.x64.GPRegister.*
+import ir.module.block.Label
+import ir.utils.OrderedLocation
+import ir.instruction.utils.Visitor
+import ir.platform.regalloc.RegisterAllocation
+import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
-import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.CallConvention.xmmTemp2
-import ir.platform.x64.codegen.*
+import ir.platform.x64.CallConvention.STACK_ALIGNMENT
 
 
 data class CodegenException(override val message: String): Exception(message)
 
 class CodeEmitter(private val data: FunctionData,
                   private val functionCounter: Int,
-                  private val asm: Assembler,
+                  private val unit: CompilationUnit,
                   private val valueToRegister: RegisterAllocation,
 ): Visitor {
     private val orderedLocation = evaluateOrder(data.blocks)
-    private val objFunc: ObjFunction = asm.mkFunction(data.prototype.name)
+    private val asm: Assembler = unit.mkFunction(data.prototype.name)
 
     private fun emitPrologue() {
         val stackSize = valueToRegister.reservedStackSize()
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
 
-        objFunc.push(8, rbp)
-        objFunc.mov(8, rsp, rbp)
+        asm.push(8, rbp)
+        asm.mov(8, rsp, rbp)
 
         if (stackSize != 0L) {
-            objFunc.sub(8, Imm32(stackSize), rsp)
+            asm.sub(8, Imm32(stackSize), rsp)
         }
         for (reg in calleeSaveRegisters) {
-            objFunc.push(8, reg)
+            asm.push(8, reg)
         }
     }
 
     private fun emitEpilogue() {
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
         for (reg in calleeSaveRegisters.reversed()) {
-            objFunc.pop(8, reg)
+            asm.pop(8, reg)
         }
 
-        objFunc.leave()
+        asm.leave()
     }
 
     override fun visit(binary: ArithmeticBinary) {
         var first  = valueToRegister.operand(binary.first())
         val second = valueToRegister.operand(binary.second())
-        val dst    = valueToRegister.operand(binary) as Operand
+        val dst    = valueToRegister.operand(binary)
         val size   = binary.type().size()
 
         when (binary.op) {
-            ArithmeticBinaryOp.Add -> AddCodegen(binary.type(), objFunc)(dst, first, second)
-            ArithmeticBinaryOp.Mul -> MulCodegen(binary.type(), objFunc)(dst, first, second)
-            ArithmeticBinaryOp.Sub -> SubCodegen(binary.type(), objFunc)(dst, first, second)
-            ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), objFunc)(dst, first, second)
+            ArithmeticBinaryOp.Add -> AddCodegen(binary.type(), asm)(dst, first, second)
+            ArithmeticBinaryOp.Mul -> MulCodegen(binary.type(), asm)(dst, first, second)
+            ArithmeticBinaryOp.Sub -> SubCodegen(binary.type(), asm)(dst, first, second)
+            ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Div -> {
                 if (first is Address) {
-                    first = objFunc.movOld(size, first, temp1)
+                    first = asm.movOld(size, first, temp1)
                 }
 
                 first = if (dst is Address) {
-                    objFunc.movOld(size, first, temp2)
+                    asm.movOld(size, first, temp2)
                 } else {
-                    objFunc.movOld(size, first, dst)
+                    asm.movOld(size, first, dst)
                 }
 
-                objFunc.div(size, second, first as GPRegister)
+                asm.div(size, second, first as GPRegister)
 
                 if (dst is Address) {
-                    objFunc.movOld(size, first, dst)
+                    asm.movOld(size, first, dst)
                 }
             }
             else -> {
@@ -99,44 +99,44 @@ class CodeEmitter(private val data: FunctionData,
 
         val value = valueToRegister.operand(returnValue.value())
         if (returnType is IntegerType || returnType is PointerType) {
-            objFunc.movOld(size, value, temp1)
+            asm.movOld(size, value, temp1)
         } else if (returnType is FloatingPointType) {
             when (value) {
-                is Address -> objFunc.movf(size, value, fpRet)
-                is XmmRegister -> objFunc.movf(size, value, fpRet)
+                is Address -> asm.movf(size, value, fpRet)
+                is XmmRegister -> asm.movf(size, value, fpRet)
                 else -> TODO()
             }
         }
 
         emitEpilogue()
-        objFunc.ret()
+        asm.ret()
     }
 
     override fun visit(returnVoid: ReturnVoid) {
         emitEpilogue()
-        objFunc.ret()
+        asm.ret()
     }
 
     override fun visit(neg: Neg) {
         val operand = valueToRegister.operand(neg.operand())
         val result  = valueToRegister.operand(neg)
         if (neg.type() == Type.F32) {
-            asm.mkSymbol(GlobalValue.of(FLOAT_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroFloat))
+            unit.mkSymbol(GlobalValue.of(FLOAT_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroFloat))
         } else if (neg.type() == Type.F64) {
-            asm.mkSymbol(GlobalValue.of(DOUBLE_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroDouble))
+            unit.mkSymbol(GlobalValue.of(DOUBLE_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroDouble))
         }
 
-        NegCodegen(neg.type(), objFunc)(result, operand)
+        NegCodegen(neg.type(), asm)(result, operand)
     }
 
     override fun visit(neg: Not) {
         val operand = valueToRegister.operand(neg.operand())
         val result  = valueToRegister.operand(neg)
-        NotCodegen(neg.type(), objFunc, result, operand)
+        NotCodegen(neg.type(), asm)(result, operand)
     }
 
     private fun emitCall(call: Callable) {
-        objFunc.call(call.prototype().name)
+        asm.call(call.prototype().name)
 
         val retType = call.type()
         if (retType == Type.Void) {
@@ -145,13 +145,13 @@ class CodeEmitter(private val data: FunctionData,
         val size = call.type().size()
         when (retType) {
             is IntegerType, is PointerType, is BooleanType -> {
-                objFunc.movOld(size, rax, valueToRegister.operand(call) as Operand)
+                asm.movOld(size, rax, valueToRegister.operand(call))
             }
 
             is FloatingPointType -> {
                 when (val op = valueToRegister.operand(call)) {
-                    is Address -> objFunc.movf(size, fpRet, op)
-                    is XmmRegister -> objFunc.movf(size, fpRet, op)
+                    is Address -> asm.movf(size, fpRet, op)
+                    is XmmRegister -> asm.movf(size, fpRet, op)
                     else -> TODO()
                 }
             }
@@ -171,20 +171,20 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(store: Store) {
-        val pointer = valueToRegister.operand(store.pointer()) as Operand
+        val pointer = valueToRegister.operand(store.pointer())
         val value   = valueToRegister.operand(store.value())
         val type = store.value().type()
         assert(type is PrimitiveType) {
             "should be, but type=$type"
         }
 
-        StoreCodegen(type as PrimitiveType, objFunc, value, pointer)
+        StoreCodegen(type as PrimitiveType, asm)( value, pointer)
     }
 
     override fun visit(load: Load) {
         val pointer = valueToRegister.operand(load.operand())
-        val value   = valueToRegister.operand(load) as Operand
-        LoadCodegen(load.type(), objFunc, value, pointer)
+        val value   = valueToRegister.operand(load)
+        LoadCodegen(load.type(), asm)( value, pointer)
     }
 
     override fun visit(intCompare: IntCompare) {
@@ -193,12 +193,12 @@ class CodeEmitter(private val data: FunctionData,
         val size = intCompare.first().type().size()
 
         first = if (first is Address2) {
-            objFunc.movOld(size, first, temp1)
+            asm.movOld(size, first, temp1)
         } else {
             first
         }
 
-        objFunc.cmp(size, second, first as GPRegister)
+        asm.cmp(size, second, first as GPRegister)
     }
 
     override fun visit(floatCompare: FloatCompare) {
@@ -210,34 +210,23 @@ class CodeEmitter(private val data: FunctionData,
             is XmmRegister -> {
                 when (second) {
                     is XmmRegister -> {
-                        objFunc.cmpf(size, second, first)
+                        asm.cmpf(size, second, first)
                     }
                     is Address -> {
-                        objFunc.movf(size, second, xmmTemp1)
-                        objFunc.cmpf(size, xmmTemp1, first)
-                    }
-                    is ImmFp -> {
-                        objFunc.mov(size, second.bits() as Imm32, temp1)
-                        objFunc.movd(size, temp1, xmmTemp1)
-                        objFunc.cmpf(size, xmmTemp1, first)
+                        asm.movf(size, second, xmmTemp1)
+                        asm.cmpf(size, xmmTemp1, first)
                     }
                 }
             }
             is Address -> {
                 when (second) {
                     is XmmRegister -> {
-                        objFunc.movf(size, first, xmmTemp1)
-                        objFunc.cmpf(size, second, xmmTemp1)
+                        asm.movf(size, first, xmmTemp1)
+                        asm.cmpf(size, second, xmmTemp1)
                     }
                     is Address -> {
-                        objFunc.movf(size, first, xmmTemp1)
-                        objFunc.cmpf(size, second, xmmTemp1)
-                    }
-                    is ImmFp -> {
-                        objFunc.mov(size, second.bits() as Imm32, temp1)
-                        objFunc.movd(size, temp1, xmmTemp1)
-                        objFunc.movf(size, first, xmmTemp2)
-                        objFunc.cmpf(size, xmmTemp1, xmmTemp2)
+                        asm.movf(size, first, xmmTemp1)
+                        asm.cmpf(size, second, xmmTemp1)
                     }
                 }
             }
@@ -248,7 +237,7 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(branch: Branch) {
-        objFunc.jump(".L$functionCounter.${branch.target().index}")
+        asm.jump(".L$functionCounter.${branch.target().index}")
     }
 
     override fun visit(branchCond: BranchCond) {
@@ -288,24 +277,24 @@ class CodeEmitter(private val data: FunctionData,
             }
             else -> throw CodegenException("unknown type instruction=$cond")
         }
-        objFunc.jcc(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
+        asm.jcc(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
     }
 
     override fun visit(copy: Copy) {
         val result  = valueToRegister.operand(copy)
         val operand = valueToRegister.operand(copy.origin())
-        CopyCodegen(copy.type(), objFunc)(result, operand)
+        CopyCodegen(copy.type(), asm)(result, operand)
     }
 
     override fun visit(downStackFrame: DownStackFrame) {
         val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[downStackFrame.call()]!!)
         for (arg in savedRegisters) {
-            objFunc.push(8, arg)
+            asm.push(8, arg)
         }
 
         val totalStackSize = valueToRegister.frameSize(savedRegisters)
-        if (totalStackSize % 16L != 0L) {
-            objFunc.sub(8, Imm32(8), rsp)
+        if (totalStackSize % STACK_ALIGNMENT != 0L) {
+            asm.sub(8, Imm32(8), rsp)
         }
     }
 
@@ -313,12 +302,12 @@ class CodeEmitter(private val data: FunctionData,
         val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[upStackFrame.call()]!!)
         val totalStackSize = valueToRegister.frameSize(savedRegisters)
 
-        if (totalStackSize % 16L != 0L) {
-            objFunc.add(8, Imm32(8), rsp)
+        if (totalStackSize % STACK_ALIGNMENT != 0L) {
+            asm.add(8, Imm32(8), rsp)
         }
 
         for (arg in savedRegisters.reversed()) {
-            objFunc.pop(8, arg)
+            asm.pop(8, arg)
         }
     }
 
@@ -329,13 +318,13 @@ class CodeEmitter(private val data: FunctionData,
         val size = getElementPtr.type().size()
 
         val indexReg = when (index) {
-            is Address2 -> objFunc.movOld(size, index, temp2)
+            is Address2 -> asm.movOld(size, index, temp2)
             is ImmInt -> index
             else   -> index
         }
 
         val destReg = if (dest is Address2) {
-            objFunc.movOld(size, dest, temp2)
+            asm.movOld(size, dest, temp2)
         } else {
             dest as GPRegister
         }
@@ -343,11 +332,11 @@ class CodeEmitter(private val data: FunctionData,
         val sourceReg = if (source is Address2) {
             when (indexReg) {
                 is GPRegister -> {
-                    Address.mem(source.base, source.offset, indexReg, getElementPtr.basicType.size().toLong())
+                    Address.from(source.base, source.offset, indexReg, getElementPtr.basicType.size().toLong())
                 }
                 is ImmInt -> {
                     val offset = indexReg.value() * getElementPtr.basicType.size()
-                    Address.mem(source.base, source.offset + offset)
+                    Address.from(source.base, source.offset + offset)
                 }
                 else -> {
                     throw RuntimeException("error")
@@ -357,11 +346,11 @@ class CodeEmitter(private val data: FunctionData,
             source as GPRegister
             when (indexReg) {
                 is GPRegister -> {
-                    Address.mem(source, 0, indexReg, getElementPtr.basicType.size().toLong())
+                    Address.from(source, 0, indexReg, getElementPtr.basicType.size().toLong())
                 }
                 is ImmInt -> {
                     val offset = indexReg.value() * getElementPtr.basicType.size()
-                    Address.mem(source, offset)
+                    Address.from(source, offset)
                 }
                 else -> {
                     throw RuntimeException("error")
@@ -369,32 +358,37 @@ class CodeEmitter(private val data: FunctionData,
             }
         }
 
-        objFunc.lea(size, sourceReg, destReg)
+        asm.lea(size, sourceReg, destReg)
     }
 
-    override fun visit(cast: Cast) {
-        val des = valueToRegister.operand(cast) as Operand
-        val src = valueToRegister.operand(cast.value())
-        val toSize = cast.type().size()
-        val fromSize = cast.value().type().size()
+    override fun visit(bitcast: Bitcast) {
+        val des = valueToRegister.operand(bitcast)
+        val src = valueToRegister.operand(bitcast.value())
+        BitcastCodegen(bitcast.type(), asm)(des, src)
+    }
 
-        val srcReg = if (src is Address2) {
-            objFunc.movOld(toSize, src, temp1)
-        } else {
-            src as GPRegister
-        }
+    override fun visit(zext: ZeroExtend) {
+        val dst = valueToRegister.operand(zext)
+        val src = valueToRegister.operand(zext.value())
+        ZeroExtendCodegen(zext.type(), asm)(dst, src)
+    }
 
-        when (cast.castType) {
-            CastType.SignExtend -> {
-                objFunc.movsx(fromSize, toSize, srcReg, des)
-            }
-            CastType.ZeroExtend, CastType.Bitcast -> {
-                objFunc.movOld(toSize, srcReg, des)
-            }
-            CastType.Truncate -> {
-                objFunc.movOld(toSize, srcReg, des)
-            }
-        }
+    override fun visit(sext: SignExtend) {
+        val dst = valueToRegister.operand(sext)
+        val src = valueToRegister.operand(sext.value())
+        SignExtendCodegen(sext.value().type() as IntegerType, sext.type(), asm)(dst, src)
+    }
+
+    override fun visit(trunc: Truncate) {
+        val dst = valueToRegister.operand(trunc)
+        val src = valueToRegister.operand(trunc.value())
+        TruncateCodegen(trunc.value().type() as IntegerType, trunc.type(), asm)(dst, src)
+    }
+
+    override fun visit(fptruncate: Fptruncate) {
+        val dst = valueToRegister.operand(fptruncate)
+        val src = valueToRegister.operand(fptruncate.value())
+        FptruncateCodegen(fptruncate.value().type() as FloatingPointType, fptruncate.type(), asm)(dst, src)
     }
 
     override fun visit(select: Select) {
@@ -423,7 +417,7 @@ class CodeEmitter(private val data: FunctionData,
         emitPrologue()
         for (bb in data.blocks.preorder()) {
             if (!bb.equals(Label.entry)) {
-                objFunc.label(".L$functionCounter.${bb.index}")
+                asm.label(".L$functionCounter.${bb.index}")
             }
 
             for (instruction in bb) {
@@ -435,16 +429,16 @@ class CodeEmitter(private val data: FunctionData,
     companion object {
         val temp1 = CallConvention.temp1
         val temp2 = CallConvention.temp2
-        val fpRet = XmmRegister.xmm0
+        val fpRet = CallConvention.fpRet
 
-        fun codegen(module: Module): Assembler {
+        fun codegen(module: Module): CompilationUnit {
             if (module !is CSSAModule) {
                 throw CodegenException("cannot transform module")
             }
 
-            val asm = Assembler()
+            val asm = CompilationUnit()
 
-            for (c in module.constants) {
+            for (c in module.globals) {
                 asm.mkSymbol(c)
             }
 

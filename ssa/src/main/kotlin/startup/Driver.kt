@@ -3,7 +3,7 @@ package startup
 import ir.module.Module
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.SSADestruction
-import ir.platform.x64.CodeEmitter
+import ir.platform.x64.codegen.CodeEmitter
 import java.io.File
 import java.nio.file.Paths
 

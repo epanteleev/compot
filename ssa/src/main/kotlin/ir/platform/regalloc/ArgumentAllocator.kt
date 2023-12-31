@@ -55,7 +55,7 @@ class CalleeArgumentAllocator(private val arguments: List<Value>) {
                     allocation.add(fpRegisters[pos.registerIndex])
                 }
                 is Memory -> {
-                    allocation.add(Address.mem(rsp, -(pos.slotSize * pos.index) + 8))
+                    allocation.add(Address.from(rsp, -(pos.slotSize * pos.index) + 8))
                 }
             }
         }

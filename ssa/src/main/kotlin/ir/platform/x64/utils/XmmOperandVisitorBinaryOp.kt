@@ -11,5 +11,5 @@ interface XmmOperandVisitorBinaryOp {
     fun araF(dst: Address, first: XmmRegister, second: Address)
     fun aarF(dst: Address, first: Address, second: XmmRegister)
     fun aaaF(dst: Address, first: Address, second: Address)
-    fun error(dst: AnyOperand, first: AnyOperand, second: AnyOperand)
+    fun default(dst: Operand, first: Operand, second: Operand)
 }

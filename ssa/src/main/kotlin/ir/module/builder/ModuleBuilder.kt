@@ -9,7 +9,7 @@ import ir.types.Type
 class ModuleBuilder {
     private val functions = arrayListOf<FunctionDataBuilder>()
     private val externFunctions = mutableSetOf<ExternFunction>()
-    private val constants = mutableSetOf<GlobalValue>()
+    private val globals = mutableSetOf<GlobalValue>()
 
     fun createFunction(name: String, returnType: Type, argumentTypes: List<Type>): FunctionDataBuilder {
         val data = FunctionDataBuilder.create(name, returnType, argumentTypes)
@@ -30,7 +30,7 @@ class ModuleBuilder {
     }
 
     fun addConstant(global: GlobalValue): GlobalValue {
-        constants.add(global)
+        globals.add(global)
         return global
     }
 
@@ -39,7 +39,7 @@ class ModuleBuilder {
             it.build()
         }
 
-        return VerifySSA.run(SSAModule(fns, externFunctions, constants))
+        return VerifySSA.run(SSAModule(fns, externFunctions, globals))
     }
 
     companion object {

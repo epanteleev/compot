@@ -1,0 +1,16 @@
+extern void @printFloat(f32)
+extern void @printDouble(f64)
+
+@float = constant f32 120.0
+@double = constant f64 140.0
+
+define i32 @main() {
+entry:
+  %v = load f32 @float
+  call void @printFloat(%v: f32)
+
+  %d = load f64 @double
+  call void @printDouble(%d: f64)
+  ret i32 0
+}
+

@@ -3,15 +3,15 @@ package asm.x64
 
 interface Address : Operand {
     companion object {
-        fun mem(base: GPRegister, offset: Long): Address {
+        fun from(base: GPRegister, offset: Long): Address {
             return Address2(base, offset)
         }
 
-        fun mem(base: GPRegister?, offset: Long, index: GPRegister, disp: Long): Address {
+        fun from(base: GPRegister?, offset: Long, index: GPRegister, disp: Long): Address {
             return Address4(base, offset, index, disp)
         }
 
-        fun mem(label: String): Address {
+        fun from(label: String): Address {
             return AddressLiteral(label)
         }
     }

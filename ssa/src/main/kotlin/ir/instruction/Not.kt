@@ -9,7 +9,7 @@ import ir.instruction.utils.Visitor
 class Not private constructor(name: String, tp: IntegerType, value: Value):
     ArithmeticUnary(name, tp, value) {
     override fun dump(): String {
-        return "%$identifier = not $tp ${operand()}"
+        return "%$identifier = $NAME $tp ${operand()}"
     }
 
     override fun type(): IntegerType {
@@ -37,6 +37,8 @@ class Not private constructor(name: String, tp: IntegerType, value: Value):
     }
 
     companion object {
+        const val NAME = "not"
+
         fun make(name: String, tp: IntegerType, value: Value): Not {
             val valueType = value.type()
             require(isAppropriateTypes(tp, valueType)) {

@@ -8,10 +8,10 @@ import ir.platform.x64.utils.GPOperandVisitorBinaryOp
 import ir.platform.x64.utils.XmmOperandVisitorBinaryOp
 
 
-data class XorCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOperandVisitorBinaryOp, XmmOperandVisitorBinaryOp {
+data class XorCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorBinaryOp, XmmOperandVisitorBinaryOp {
     private val size: Int = type.size()
 
-    operator fun invoke(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
+    operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
             is FloatingPointType -> ApplyClosure(dst, first, second, this as XmmOperandVisitorBinaryOp)
             is IntegerType       -> ApplyClosure(dst, first, second, this as GPOperandVisitorBinaryOp)
@@ -21,18 +21,18 @@ data class XorCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         if (first == dst) {
-            objFunc.xor(size, second, dst)
+            asm.xor(size, second, dst)
         } else if (second == dst) {
-            objFunc.xor(size, first, dst)
+            asm.xor(size, first, dst)
         } else {
-            objFunc.mov(size, first, dst)
-            objFunc.xor(size, second, dst)
+            asm.mov(size, first, dst)
+            asm.xor(size, second, dst)
         }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        objFunc.mov(size, first, dst)
-        objFunc.xor(size, second, dst)
+        asm.mov(size, first, dst)
+        asm.xor(size, second, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
@@ -101,12 +101,12 @@ data class XorCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
 
     override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
         if (first == dst) {
-            objFunc.xorpf(size, second, dst)
+            asm.xorpf(size, second, dst)
         } else if (second == dst) {
-            objFunc.xorpf(size, first, dst)
+            asm.xorpf(size, first, dst)
         } else {
-            objFunc.movf(size, first, dst)
-            objFunc.xorpf(size, second, dst)
+            asm.movf(size, first, dst)
+            asm.xorpf(size, second, dst)
         }
     }
 
@@ -138,7 +138,7 @@ data class XorCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
         TODO("Not yet implemented")
     }
 
-    override fun error(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
-        throw RuntimeException("Unimplemented: '${ArithmeticBinaryOp.Xor}' dst=$dst, first=$first, second=$second")
+    override fun default(dst: Operand, first: Operand, second: Operand) {
+        throw RuntimeException("Internal error: '${ArithmeticBinaryOp.Xor}' dst=$dst, first=$first, second=$second")
     }
 }

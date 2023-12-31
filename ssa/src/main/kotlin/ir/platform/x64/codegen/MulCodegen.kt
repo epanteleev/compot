@@ -2,18 +2,16 @@ package ir.platform.x64.codegen
 
 import asm.x64.*
 import ir.types.*
+import ir.platform.x64.utils.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.utils.ApplyClosure
-import ir.platform.x64.utils.GPOperandVisitorBinaryOp
-import ir.platform.x64.utils.XmmOperandVisitorBinaryOp
 
 
-data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOperandVisitorBinaryOp, XmmOperandVisitorBinaryOp {
+data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorBinaryOp, XmmOperandVisitorBinaryOp {
     private val size: Int = type.size()
 
-    operator fun invoke(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
+    operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
             is FloatingPointType -> ApplyClosure(dst, first, second, this as XmmOperandVisitorBinaryOp)
             is IntegerType   -> ApplyClosure(dst, first, second, this as GPOperandVisitorBinaryOp)
@@ -23,35 +21,35 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         if (first == dst) {
-            objFunc.mul(size, second, dst)
+            asm.mul(size, second, dst)
         } else if (second == dst) {
-            objFunc.mul(size, first, dst)
+            asm.mul(size, first, dst)
         } else {
-            objFunc.mov(size, first, dst)
-            objFunc.mul(size, second, dst)
+            asm.mov(size, first, dst)
+            asm.mul(size, second, dst)
         }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        objFunc.mov(size, first, dst)
-        objFunc.mul(size, second, dst)
+        asm.mov(size, first, dst)
+        asm.mul(size, second, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         if (dst == second) {
-            objFunc.add(size, first, second)
+            asm.add(size, first, second)
         } else {
-            objFunc.mov(size, first, temp1)
-            objFunc.mul(size, second, temp1)
-            objFunc.mov(size, temp1, dst)
+            asm.mov(size, first, temp1)
+            asm.mul(size, second, temp1)
+            asm.mov(size, temp1, dst)
         }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
         if (dst == second) {
-            objFunc.mul(size, first, dst)
+            asm.mul(size, first, dst)
         } else {
-            objFunc.lea(size, Address.mem(null, 0, second, first.value), dst)
+            asm.lea(size, Address.from(null, 0, second, first.value), dst)
         }
     }
 
@@ -61,9 +59,9 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
         if (dst == first) {
-            objFunc.mul(size, second, dst)
+            asm.mul(size, second, dst)
         } else {
-            objFunc.lea(size, Address.mem(null, 0, first, second.value), dst)
+            asm.lea(size, Address.from(null, 0, first, second.value), dst)
         }
     }
 
@@ -72,7 +70,7 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        objFunc.mov(size, Imm32(first.value * second.value), dst) //TODO overflow???
+        asm.mov(size, Imm32(first.value * second.value), dst) //TODO overflow???
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -88,7 +86,7 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        objFunc.mov(size, Imm32(first.value * second.value), dst) //TODO overflow??
+        asm.mov(size, Imm32(first.value * second.value), dst) //TODO overflow??
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
@@ -113,27 +111,27 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
 
     override fun aaa(dst: Address, first: Address, second: Address) {
         if (first == dst) {
-            objFunc.mov(size, second, temp1)
-            objFunc.mul(size, temp1, dst)
+            asm.mov(size, second, temp1)
+            asm.mul(size, temp1, dst)
         } else if (second == dst) {
-            objFunc.mov(size, first, temp1)
-            objFunc.mul(size, temp1, dst)
+            asm.mov(size, first, temp1)
+            asm.mul(size, temp1, dst)
         } else {
-            objFunc.mov(size, first, temp1)
-            objFunc.mul(size, second, temp1)
-            objFunc.mov(size, temp1, dst)
+            asm.mov(size, first, temp1)
+            asm.mul(size, second, temp1)
+            asm.mov(size, temp1, dst)
         }
     }
 
     override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
         if (first == dst) {
-            objFunc.mulf(size, second, dst)
+            asm.mulf(size, second, dst)
         } else if (second == dst) {
-            objFunc.mulf(size, first, dst)
+            asm.mulf(size, first, dst)
         } else {
-            objFunc.movf(size, first, xmmTemp1)
-            objFunc.mulf(size, second, xmmTemp1)
-            objFunc.movf(size, xmmTemp1, dst)
+            asm.movf(size, first, xmmTemp1)
+            asm.mulf(size, second, xmmTemp1)
+            asm.movf(size, xmmTemp1, dst)
         }
     }
 
@@ -166,7 +164,7 @@ data class MulCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
         TODO("Not yet implemented")
     }
 
-    override fun error(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
-        throw RuntimeException("Unimplemented: '${ArithmeticBinaryOp.Mul}' dst=$dst, first=$first, second=$second")
+    override fun default(dst: Operand, first: Operand, second: Operand) {
+        throw RuntimeException("Internal error: '${ArithmeticBinaryOp.Mul}' dst=$dst, first=$first, second=$second")
     }
 }

@@ -4,7 +4,6 @@ import ir.FunctionPrototype
 import ir.U16Value
 import ir.U64Value
 import ir.instruction.ArithmeticBinaryOp
-import ir.instruction.CastType
 import ir.instruction.IntPredicate
 import ir.module.builder.ModuleBuilder
 import ir.pass.ana.VerifySSA
@@ -23,8 +22,7 @@ fun main() {
         val variable2 = alloc(Type.U16)
 
         val v1   = load(Type.U64, arg1)
-        val ttt  = cast(v1, Type.U64, CastType.SignExtend)
-        val res  = intCompare(U64Value(32), IntPredicate.Sgt, ttt)
+        val res  = intCompare(U64Value(32), IntPredicate.Sgt, v1)
         store(variable, U64Value(12))
         store(variable2, U16Value(14))
 
@@ -53,9 +51,9 @@ fun main() {
         switchLabel(mergeLabel)
 
         val phi = phi(arrayListOf(U64Value(63), U64Value(43)), arrayListOf(trueLabel, falseLabel))
-        val cast = cast(phi, Type.U16, CastType.Truncate)
+        val cast = trunc(phi, Type.U16)
         val arithm = arithmeticBinary(U16Value(1337), ArithmeticBinaryOp.Sub, cast)
-        val conv = cast(arithm, Type.U64, CastType.ZeroExtend)
+        val conv = zext(arithm, Type.U64)
         arithmeticBinary(conv, ArithmeticBinaryOp.Sub, phi)
 
         load(Type.U64, variable)

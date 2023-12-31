@@ -42,7 +42,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
         val typeSize = getTypeSize(value.allocatedType)
 
         frameSize = withAlignment(typeSize, frameSize)
-        return Address.mem(rbp, -frameSize)
+        return Address.from(rbp, -frameSize)
     }
 
     /** Spilled value. */
@@ -56,7 +56,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
         }
 
         frameSize = withAlignment(typeSize, frameSize)
-        return Address.mem(rbp, -frameSize)
+        return Address.from(rbp, -frameSize)
     }
 
     override fun takeSlot(value: Value): Address {

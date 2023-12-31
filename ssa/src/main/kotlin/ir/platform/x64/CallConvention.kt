@@ -72,8 +72,7 @@ object CallConvention {
     val retReg = rax
 
     val xmmTemp1 = xmm8
-    val xmmTemp2 = xmm9
-    val fpRet = xmm0
+    val fpRet    = xmm0
 
     fun availableRegisters(usedArgumentRegisters: List<GPRegister>): Set<GPRegister> {
         val allRegisters = mutableSetOf<GPRegister>()
@@ -94,7 +93,6 @@ object CallConvention {
         allRegisters.addAll(xmmRegisters)
         allRegisters.remove(fpRet)
         allRegisters.remove(xmmTemp1)
-        allRegisters.remove(xmmTemp2)
         allRegisters.removeAll(usedArgumentRegisters.toSet())
         return allRegisters
     }
@@ -102,4 +100,6 @@ object CallConvention {
     const val CONSTANT_POOL_PREFIX = ".LCP_"
     const val FLOAT_SUB_ZERO_SYMBOL = ".LCP_FLTSZ"
     const val DOUBLE_SUB_ZERO_SYMBOL = ".LCP_DBLTSZ"
+
+    const val STACK_ALIGNMENT = 16L
 }

@@ -2,69 +2,57 @@ package ir.platform.x64.codegen
 
 import asm.x64.*
 import ir.types.*
-import ir.platform.x64.CallConvention
-import ir.platform.x64.utils.Utils.case
+import ir.instruction.Not
+import ir.platform.x64.utils.ApplyClosure
+import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.utils.GPOperandVisitorUnaryOp
 
 
-object NotCodegen {
-    operator fun invoke(type: IntegerType, objFunc: ObjFunction, dst: AnyOperand, operand: AnyOperand) {
-        generate(objFunc, dst, operand, type.size())
+data class NotCodegen(val type: IntegerType, val asm: Assembler): GPOperandVisitorUnaryOp {
+    private val size = type.size()
+
+    operator fun invoke(dst: Operand, src: Operand) {
+        ApplyClosure(dst, src, this as GPOperandVisitorUnaryOp)
     }
 
-    private fun generate(objFunc: ObjFunction, dst: AnyOperand, operand: AnyOperand, size: Int) {
-        when {
-            case<GPRegister, GPRegister>(dst, operand) -> {
-                dst     as GPRegister
-                operand as GPRegister
-                if (dst == operand) {
-                    objFunc.not(size, dst)
-                } else {
-                    objFunc.mov(size, operand, dst)
-                    objFunc.not(size, dst)
-                }
-            }
-
-            case<GPRegister, Imm32>(dst, operand) -> {
-                dst     as GPRegister
-                operand as Imm32
-                objFunc.mov(size, Imm32(operand.value.inv()), dst)
-            }
-
-            case<GPRegister, Address>(dst, operand) -> {
-                dst     as GPRegister
-                operand as Address
-                objFunc.mov(size, operand, dst)
-                objFunc.not(size, dst)
-            }
-
-            case<Address, Imm32>(dst, operand) -> {
-                dst     as Address
-                operand as Imm32
-                objFunc.mov(size, Imm32(operand.value.inv()), dst)
-            }
-
-            case<Address, GPRegister>(dst, operand) -> {
-                dst     as Address
-                operand as GPRegister
-                objFunc.mov(size, operand, dst)
-                objFunc.not(size, dst)
-            }
-
-            case<Address, Address>(dst, operand) -> {
-                dst     as Address
-                operand as Address
-
-                if (dst == operand) {
-                    objFunc.not(size, dst)
-                } else {
-                    objFunc.mov(size, operand, CallConvention.temp1)
-                    objFunc.not(size, CallConvention.temp1)
-                    objFunc.mov(size, CallConvention.temp1, dst)
-                }
-            }
-
-            else -> throw RuntimeException("Unimplemented: dst=$dst, operand=$operand")
+    override fun rr(dst: GPRegister, src: GPRegister) {
+        if (dst == src) {
+            asm.not(size, dst)
+        } else {
+            asm.mov(size, src, dst)
+            asm.not(size, dst)
         }
     }
 
+    override fun ra(dst: GPRegister, src: Address) {
+        asm.mov(size, src, dst)
+        asm.not(size, dst)
+    }
+
+    override fun ar(dst: Address, src: GPRegister) {
+        asm.mov(size, src, dst)
+        asm.not(size, dst)
+    }
+
+    override fun aa(dst: Address, src: Address) {
+        if (dst == src) {
+            asm.not(size, dst)
+        } else {
+            asm.mov(size, src, temp1)
+            asm.not(size, temp1)
+            asm.mov(size, temp1, dst)
+        }
+    }
+
+    override fun ri(dst: GPRegister, src: Imm32) {
+        asm.mov(size, Imm32(src.value.inv()), dst)
+    }
+
+    override fun ai(dst: Address, src: Imm32) {
+        asm.mov(size, Imm32(src.value.inv()), dst)
+    }
+
+    override fun default(dst: Operand, src: Operand) {
+        throw RuntimeException("Internal error: '${Not.NAME}' dst=$dst, src=$$src")
+    }
 }

@@ -9,8 +9,8 @@ import ir.platform.regalloc.RegisterAllocation
 
 data class CSSAModule(override val functions: List<FunctionData>,
                       override val externFunctions: Set<ExternFunction>,
-                      override val constants: Set<GlobalValue>):
-    Module(functions, externFunctions, constants) {
+                      override val globals: Set<GlobalValue>):
+    Module(functions, externFunctions, globals) {
     private val liveIntervals: Map<FunctionData, LiveIntervals>
     private val registerAllocation: Map<FunctionData, RegisterAllocation>
 
@@ -45,7 +45,7 @@ data class CSSAModule(override val functions: List<FunctionData>,
     }
 
     override fun copy(): Module {
-        return SSAModule(functions.map { Copy.copy(it) }, externFunctions, constants)
+        return SSAModule(functions.map { Copy.copy(it) }, externFunctions, globals)
     }
 
     override fun toString(): String {

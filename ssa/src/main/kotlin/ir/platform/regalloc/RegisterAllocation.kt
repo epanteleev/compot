@@ -61,7 +61,7 @@ class RegisterAllocation(private val stackSize: Long,
         return registers
     }
 
-    fun operand(value: Value): AnyOperand {
+    fun operand(value: Value): Operand {
         return when (value) {
             is LocalValue  -> {
                 val operand = registerMap[value]
@@ -80,7 +80,7 @@ class RegisterAllocation(private val stackSize: Long,
             is U64Value    -> Imm64(value.u64)
             is F32Value    -> ImmFp32(value.f32)
             is F64Value    -> ImmFp64(value.f64)
-            is GlobalValue -> Address.mem(value.name())
+            is GlobalValue -> Address.from(value.name())
             else -> throw RuntimeException("expect $value: ${value.type()}")
         }
     }

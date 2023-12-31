@@ -1,7 +1,6 @@
 package ir
 
 import ir.instruction.ArithmeticBinaryOp
-import ir.instruction.CastType
 import ir.instruction.IntPredicate
 import ir.module.BasicBlocks
 import ir.module.block.BlockViewer
@@ -22,7 +21,7 @@ class CFGTraversalTest {
         val arg2 = builder.argument(1)
         val arg3 = builder.argument(2)
         val v1 = builder.load(Type.U16, arg1)
-        val ttt  = builder.cast(v1, Type.U64, CastType.SignExtend)
+        val ttt  = builder.sext(v1, Type.U64)
         val res  = builder.intCompare(U64Value(32), IntPredicate.Sgt, ttt)
 
         val trueLabel = builder.createLabel()

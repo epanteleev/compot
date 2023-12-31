@@ -9,7 +9,7 @@ import ir.types.Type
 class Load private constructor(name: String, val loadedType: PrimitiveType, ptr: Value):
     ValueInstruction(name, Type.Ptr, arrayOf(ptr)) {
     override fun dump(): String {
-        return "%$identifier = load $loadedType ${operand()}"
+        return "%$identifier = $NAME $loadedType ${operand()}"
     }
 
     fun operand(): Value {
@@ -37,6 +37,8 @@ class Load private constructor(name: String, val loadedType: PrimitiveType, ptr:
     }
 
     companion object {
+        const val NAME = "load"
+
         fun make(name: String, loadedType: PrimitiveType, operand: Value): Load {
             val type = operand.type()
             require(isAppropriateTypes(type)) {

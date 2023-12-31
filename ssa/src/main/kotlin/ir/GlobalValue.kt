@@ -28,7 +28,12 @@ abstract class GlobalValue(protected open val name: String): GlobalSymbol, Value
         return name == other.name
     }
 
-    abstract fun dump(): String
+    fun dump(): String {
+        return "@$name = constant ${type()} ${content()}"
+    }
+
+    open fun content(): String = data()
+
     abstract fun data(): String
 
     abstract fun contentType(): Type
@@ -57,10 +62,6 @@ class U8GlobalValue(override val name: String, val u8: UByte): GlobalValue(name)
         return u8.toString()
     }
 
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
-    }
-
     override fun contentType(): Type = Type.U8
 }
 
@@ -69,20 +70,12 @@ class I8GlobalValue(override val name: String, val i8: Byte): GlobalValue(name) 
         return i8.toString()
     }
 
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
-    }
-
     override fun contentType(): Type = Type.I8
 }
 
 class U16GlobalValue(override val name: String, val u16: UShort): GlobalValue(name) {
     override fun data(): String {
         return u16.toString()
-    }
-
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
     }
 
     override fun contentType(): Type = Type.U16
@@ -94,20 +87,12 @@ class I16GlobalValue(override val name: String, val i16: Short): GlobalValue(nam
         return i16.toString()
     }
 
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
-    }
-
     override fun contentType(): Type = Type.I16
 }
 
 class U32GlobalValue(override val name: String, val u32: UInt): GlobalValue(name) {
     override fun data(): String {
         return u32.toString()
-    }
-
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
     }
 
     override fun contentType(): Type = Type.U32
@@ -118,20 +103,12 @@ class I32GlobalValue(override val name: String, val i32: Int): GlobalValue(name)
         return i32.toString()
     }
 
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
-    }
-
     override fun contentType(): Type = Type.I32
 }
 
 class U64GlobalValue(override val name: String, val u64: ULong): GlobalValue(name) {
     override fun data(): String {
         return u64.toString()
-    }
-
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
     }
 
     override fun contentType(): Type = Type.U64
@@ -142,33 +119,25 @@ class I64GlobalValue(override val name: String, val i64: Long): GlobalValue(name
         return i64.toString()
     }
 
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
-    }
-
     override fun contentType(): Type = Type.I64
 }
 
 class F32GlobalValue(override val name: String, val f32: Float): GlobalValue(name) {
     override fun data(): String {
-        return f32.toString()
+        return f32.toBits().toString()
     }
 
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
-    }
+    override fun content(): String = f32.toString()
 
     override fun contentType(): Type = Type.F32
 }
 
 class F64GlobalValue(override val name: String, val f64: Double): GlobalValue(name) {
     override fun data(): String {
-        return f64.toString()
+        return f64.toBits().toString()
     }
 
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
-    }
+    override fun content(): String = f64.toString()
 
     override fun contentType(): Type = Type.F64
 }
@@ -176,10 +145,6 @@ class F64GlobalValue(override val name: String, val f64: Double): GlobalValue(na
 class StringLiteralGlobal(override val name: String, val tp: ArrayType, val string: String?): GlobalValue(name) {
     override fun data(): String {
         return "\"$string\""
-    }
-
-    override fun dump(): String {
-        return "@$name = constant ${type()} ${string.orEmpty()}"
     }
 
     override fun contentType(): Type = Type.Ptr

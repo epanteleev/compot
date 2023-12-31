@@ -25,7 +25,7 @@ object Ret: CPUInstruction {
     override fun toString(): String = "ret"
 }
 
-data class Push(val size: Int, val operand: AnyOperand): CPUInstruction {
+data class Push(val size: Int, val operand: Operand): CPUInstruction {
     override fun toString(): String {
         return "push${prefix(size)} ${operand.toString(size)}"
     }
@@ -37,25 +37,43 @@ data class Pop(val size: Int, val register: GPRegister): CPUInstruction {
     }
 }
 
-data class Mov(val size: Int, val src: AnyOperand, val des: Operand): CPUInstruction {
+data class Mov(val size: Int, val src: Operand, val des: Operand): CPUInstruction {
     override fun toString(): String {
         return "mov${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
     }
 }
 
-data class MovAbs(val size: Int, val src: AnyOperand, val des: Register): CPUInstruction {
+data class MovAbs(val size: Int, val src: Operand, val des: Register): CPUInstruction {
     override fun toString(): String {
         return "movabs${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
     }
 }
 
-data class Movsx(val fromSize: Int, val toSize: Int, val src: GPRegister, val des: AnyOperand): CPUInstruction {
+data class Movsx(val fromSize: Int, val toSize: Int, val src: Operand, val des: Operand): CPUInstruction {
+    init {
+        assert(fromSize <= toSize && fromSize < 4) {
+            "cannot be: fromSize=$fromSize, toSize=$toSize"
+        }
+    }
+
     override fun toString(): String {
         return "movsx${prefix(fromSize)} ${src.toString(fromSize)}, ${des.toString(toSize)}"
     }
 }
 
-data class Lea(val size: Int, val src: AnyOperand, val des: Register): CPUInstruction {
+data class Movsxd(val fromSize: Int, val toSize: Int, val src: Operand, val des: Operand): CPUInstruction {
+    init {
+        assert(fromSize <= toSize && (fromSize == 4 || fromSize == 8)) {
+            "cannot be: fromSize=$fromSize, toSize=$toSize"
+        }
+    }
+
+    override fun toString(): String {
+        return "movsxd ${src.toString(fromSize)}, ${des.toString(toSize)}"
+    }
+}
+
+data class Lea(val size: Int, val src: Operand, val des: Register): CPUInstruction {
     override fun toString(): String {
         return "lea${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
     }
@@ -63,31 +81,31 @@ data class Lea(val size: Int, val src: AnyOperand, val des: Register): CPUInstru
 
 interface Arithmetic: CPUInstruction
 
-data class Add(val size: Int, val first: AnyOperand, val second: Operand): Arithmetic {
+data class Add(val size: Int, val first: Operand, val second: Operand): Arithmetic {
     override fun toString(): String {
         return "add${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 
-data class Sub(val size: Int, val first: AnyOperand, val second: Operand): Arithmetic {
+data class Sub(val size: Int, val first: Operand, val second: Operand): Arithmetic {
     override fun toString(): String {
         return "sub${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 
-data class iMull(val size: Int, val first: AnyOperand, val second: Operand): Arithmetic {
+data class iMull(val size: Int, val first: Operand, val second: Operand): Arithmetic {
     override fun toString(): String {
         return "imul${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 
-data class Xor(val size: Int, val src: AnyOperand, val dst: Operand): Arithmetic {
+data class Xor(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
     override fun toString(): String {
         return "xor${prefix(size)} ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Div(val size: Int, val first: AnyOperand, val second: Operand): Arithmetic {
+data class Div(val size: Int, val first: Operand, val second: Operand): Arithmetic {
     override fun toString(): String {
         return "div${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
@@ -165,7 +183,7 @@ data class Jump(val label: String): CPUInstruction {
     }
 }
 
-data class Cmp(val size: Int, val first: AnyOperand, val second: AnyOperand): CPUInstruction {
+data class Cmp(val size: Int, val first: Operand, val second: Operand): CPUInstruction {
     override fun toString(): String {
         return "cmp${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }
@@ -222,31 +240,31 @@ data class SetCc(val size: Int, val tp: SetCCType, val reg: GPRegister): CPUInst
     }
 }
 
-data class Addss(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUInstruction {
+data class Addss(val size: Int, val src: Operand, val des: Operand): CPUInstruction {
     override fun toString(): String {
         return "addss ${src.toString(size)}, ${des.toString(size)}"
     }
 }
 
-data class Addsd(val size: Int, val src: AnyOperand, val des: AnyOperand): CPUInstruction {
+data class Addsd(val size: Int, val src: Operand, val des: Operand): CPUInstruction {
     override fun toString(): String {
         return "addsd ${src.toString(size)}, ${des.toString(size)}"
     }
 }
 
-data class Movss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Movss(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "movss ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Movsd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Movsd(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "movsd ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Movd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Movd(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return if (src is XmmRegister) {
             "movd ${src.toString(16)}, ${dst.toString(size)}"
@@ -258,74 +276,80 @@ data class Movd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUIns
     }
 }
 
-data class Neg(val size: Int, val dst: AnyOperand): CPUInstruction {
+data class Neg(val size: Int, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "neg${prefix(size)} ${dst.toString(size)}"
     }
 }
 
-data class Not(val size: Int, val dst: AnyOperand): CPUInstruction {
+data class Not(val size: Int, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "not${prefix(size)} ${dst.toString(size)}"
     }
 }
 
-data class Xorps(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Xorps(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "xorps ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Xorpd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Xorpd(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "xorpd ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Subss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Subss(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "subss ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Subsd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Subsd(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "subsd ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Mulss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Mulss(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "mulss ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Mulsd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Mulsd(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "mulsd ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Divss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Divss(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "divss ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Divsd(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Divsd(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "divsd ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Ucomiss(val size: Int, val src: AnyOperand, val dst: AnyOperand): CPUInstruction {
+data class Ucomiss(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "ucomiss ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
-data class Ucomisd(val size: Int, val src1: AnyOperand, val src2: AnyOperand): CPUInstruction {
+data class Ucomisd(val size: Int, val src1: Operand, val src2: Operand): CPUInstruction {
     override fun toString(): String {
         return "ucomisd ${src1.toString(size)}, ${src2.toString(size)}"
+    }
+}
+
+data class Cvtsd2ss(val src1: Operand, val src2: Operand): CPUInstruction {
+    override fun toString(): String {
+        return "cvtsd2ss ${src1.toString(16)}, ${src2.toString(16)}"
     }
 }

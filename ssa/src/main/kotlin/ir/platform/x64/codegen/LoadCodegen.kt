@@ -2,67 +2,56 @@ package ir.platform.x64.codegen
 
 import asm.x64.*
 import ir.types.*
-import ir.platform.x64.utils.Utils.case
+import ir.instruction.Load
+import ir.platform.x64.utils.*
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.CallConvention.xmmTemp1
 
 
-object LoadCodegen {
-    operator fun invoke(type: PrimitiveType, objFunc: ObjFunction, dst: AnyOperand, pointer: AnyOperand) {
+data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp, XmmOperandVisitorUnaryOp {
+    private val size = type.size()
+
+    operator fun invoke(dst: Operand, pointer: Operand) {
         when (type) {
-            is FloatingPointType               -> generateForFp(objFunc, dst, pointer, type.size())
-            is IntegerType, is PointerType -> generate(objFunc, dst, pointer, type.size())
+            is FloatingPointType           -> ApplyClosure(dst, pointer, this as XmmOperandVisitorUnaryOp)
+            is IntegerType, is PointerType -> ApplyClosure(dst, pointer, this as GPOperandVisitorUnaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, pointer=$pointer")
         }
     }
 
-    private fun generate(objFunc: ObjFunction, dst: AnyOperand, pointer: AnyOperand, size: Int)  {
-        when {
-            case<GPRegister, GPRegister>(dst, pointer) -> {
-                dst     as GPRegister
-                pointer as GPRegister
-                objFunc.mov(size, Address.mem(pointer, 0), dst)
-            }
+    override fun rr(dst: GPRegister, src: GPRegister) = default(dst, src)
 
-            case<GPRegister, Address>(dst, pointer) -> {
-                dst     as GPRegister
-                pointer as Address
-                objFunc.mov(size, pointer, dst)
-            }
-
-            case<Address, Address>(dst, pointer) -> {
-                dst     as Address
-                pointer as Address
-                objFunc.mov(size, pointer, temp1)
-                objFunc.mov(size, temp1, dst)
-            }
-
-            else -> throw RuntimeException("Unimplemented: dst=$dst, pointer=$pointer")
-        }
+    override fun ra(dst: GPRegister, src: Address) {
+        asm.mov(size, src, dst)
     }
 
-    private fun generateForFp(objFunc: ObjFunction, dst: AnyOperand, pointer: AnyOperand, size: Int) {
-        when {
-            case<XmmRegister, GPRegister>(dst, pointer) -> {
-                dst     as XmmRegister
-                pointer as GPRegister
-                objFunc.movf(size, Address.mem(pointer, 0), dst)
-            }
+    override fun ar(dst: Address, src: GPRegister) = default(dst, src)
 
-            case<XmmRegister, Address>(dst, pointer) -> {
-                dst     as XmmRegister
-                pointer as Address
-                objFunc.movf(size, pointer, dst)
-            }
+    override fun aa(dst: Address, src: Address) {
+        asm.mov(size, src, temp1)
+        asm.mov(size, temp1, dst)
+    }
 
-            case<Address, Address>(dst, pointer) -> {
-                dst     as Address
-                pointer as Address
-                objFunc.movf(size, pointer, xmmTemp1)
-                objFunc.movf(size, xmmTemp1, dst)
-            }
+    override fun ri(dst: GPRegister, src: Imm32) {
+        TODO("Not yet implemented")
+    }
 
-            else -> throw RuntimeException("Unimplemented: dst=$dst, pointer=$pointer")
-        }
+    override fun ai(dst: Address, src: Imm32) {
+        TODO("Not yet implemented")
+    }
+
+    override fun rrF(dst: XmmRegister, src: XmmRegister) = default(dst, src)
+
+    override fun raF(dst: XmmRegister, src: Address) {
+        asm.movf(size, src, dst)
+    }
+
+    override fun arF(dst: Address, src: XmmRegister) = default(dst, src)
+
+    override fun aaF(dst: Address, src: Address) {
+        TODO("Not yet implemented")
+    }
+
+    override fun default(dst: Operand, src: Operand) {
+        throw RuntimeException("Internal error: '${Load.NAME}' dst=$dst, pointer=$src")
     }
 }

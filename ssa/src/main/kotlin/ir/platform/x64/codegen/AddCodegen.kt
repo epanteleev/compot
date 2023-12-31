@@ -2,7 +2,6 @@ package ir.platform.x64.codegen
 
 import asm.x64.*
 import ir.types.*
-import ir.platform.x64.CodeEmitter
 import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
@@ -11,61 +10,61 @@ import ir.platform.x64.utils.GPOperandVisitorBinaryOp
 import ir.platform.x64.utils.XmmOperandVisitorBinaryOp
 
 
-data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOperandVisitorBinaryOp, XmmOperandVisitorBinaryOp {
+data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVisitorBinaryOp, XmmOperandVisitorBinaryOp {
     private val size: Int = type.size()
 
-    operator fun invoke(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
+    operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
             is FloatingPointType  -> ApplyClosure(dst, first, second, this as XmmOperandVisitorBinaryOp)
-            is IntegerType    -> ApplyClosure(dst, first, second, this as GPOperandVisitorBinaryOp)
+            is IntegerType        -> ApplyClosure(dst, first, second, this as GPOperandVisitorBinaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         if (first == dst) {
-            objFunc.add(size, second, dst)
+            asm.add(size, second, dst)
         } else if (second == dst) {
-            objFunc.add(size, first, dst)
+            asm.add(size, first, dst)
         } else {
-            objFunc.mov(size, first, dst)
-            objFunc.add(size, second, dst)
+            asm.mov(size, first, dst)
+            asm.add(size, second, dst)
         }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        objFunc.mov(size, first, dst)
-        objFunc.add(size, second, dst)
+        asm.mov(size, first, dst)
+        asm.add(size, second, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         if (dst == second) {
-            objFunc.add(size, first, second)
+            asm.add(size, first, second)
         } else {
-            objFunc.mov(size, first, temp1)
-            objFunc.add(size, second, temp1)
-            objFunc.mov(size, temp1, dst)
+            asm.mov(size, first, temp1)
+            asm.add(size, second, temp1)
+            asm.mov(size, temp1, dst)
         }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
         if (dst == second) {
-            objFunc.add(size, first, dst)
+            asm.add(size, first, dst)
         } else {
-            objFunc.lea(size, Address.mem(second, first.value()), dst)
+            asm.lea(size, Address.from(second, first.value()), dst)
         }
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        objFunc.mov(size, first, dst)
-        objFunc.add(size, second, dst)
+        asm.mov(size, first, dst)
+        asm.add(size, second, dst)
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
         if (dst == first) {
-            objFunc.add(size, second, dst)
+            asm.add(size, second, dst)
         } else {
-            objFunc.lea(size, Address.mem(first, second.value), dst)
+            asm.lea(size, Address.from(first, second.value), dst)
         }
     }
 
@@ -74,7 +73,7 @@ data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        objFunc.mov(size, Imm32(first.value + second.value), dst) //TODO overflow????
+        asm.mov(size, Imm32(first.value + second.value), dst) //TODO overflow????
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -90,7 +89,7 @@ data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        objFunc.mov(size, Imm32(first.value + second.value), dst)
+        asm.mov(size, Imm32(first.value + second.value), dst)
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
@@ -110,49 +109,49 @@ data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        objFunc.mov(size, first, temp1)
-        objFunc.add(size, second, temp1)
-        objFunc.mov(size, temp1, dst)
+        asm.mov(size, first, temp1)
+        asm.add(size, second, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
         if (dst == first) {
-            objFunc.mov(size, second, temp1)
-            objFunc.add(size, temp1, dst)
+            asm.mov(size, second, temp1)
+            asm.add(size, temp1, dst)
         } else if (dst == second) {
-            objFunc.mov(size, first, temp1)
-            objFunc.add(size, temp1, dst)
+            asm.mov(size, first, temp1)
+            asm.add(size, temp1, dst)
         } else {
-            objFunc.mov(size, first, CodeEmitter.temp1)
-            objFunc.add(size, second, CodeEmitter.temp1)
-            objFunc.mov(size, CodeEmitter.temp1, dst)
+            asm.mov(size, first, CodeEmitter.temp1)
+            asm.add(size, second, CodeEmitter.temp1)
+            asm.mov(size, CodeEmitter.temp1, dst)
         }
     }
 
     override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
         if (first == dst) {
-            objFunc.addf(size, second, dst)
+            asm.addf(size, second, dst)
         } else if (second == dst) {
-            objFunc.addf(size, first, dst)
+            asm.addf(size, first, dst)
         } else {
-            objFunc.movf(size, first, dst)
-            objFunc.addf(size, second, dst)
+            asm.movf(size, first, dst)
+            asm.addf(size, second, dst)
         }
     }
 
     override fun arrF(dst: Address, first: XmmRegister, second: XmmRegister) {
-        objFunc.movf(size, first, xmmTemp1)
-        objFunc.addf(size, second, xmmTemp1)
-        objFunc.movf(size, xmmTemp1, dst)
+        asm.movf(size, first, xmmTemp1)
+        asm.addf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
         if (second == dst) {
-            objFunc.addf(size, first, dst)
+            asm.addf(size, first, dst)
         } else {
-            objFunc.movf(size, first, xmmTemp1)
-            objFunc.addf(size, second, xmmTemp1)
-            objFunc.movf(size, xmmTemp1, dst)
+            asm.movf(size, first, xmmTemp1)
+            asm.addf(size, second, xmmTemp1)
+            asm.movf(size, xmmTemp1, dst)
         }
     }
 
@@ -169,18 +168,18 @@ data class AddCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOper
     }
 
     override fun aarF(dst: Address, first: Address, second: XmmRegister) {
-        objFunc.movf(size, first, xmmTemp1)
-        objFunc.addf(size, second, xmmTemp1)
-        objFunc.movf(size, xmmTemp1, dst)
+        asm.movf(size, first, xmmTemp1)
+        asm.addf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun aaaF(dst: Address, first: Address, second: Address) {
-        objFunc.movf(size, first, xmmTemp1)
-        objFunc.addf(size, second, xmmTemp1)
-        objFunc.movf(size, xmmTemp1, dst)
+        asm.movf(size, first, xmmTemp1)
+        asm.addf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
-    override fun error(dst: AnyOperand, first: AnyOperand, second: AnyOperand) {
-        throw RuntimeException("Unimplemented: '${ArithmeticBinaryOp.Add}' dst=$dst, first=$first, second=$second")
+    override fun default(dst: Operand, first: Operand, second: Operand) {
+        throw RuntimeException("Internal error: '${ArithmeticBinaryOp.Add}' dst=$dst, first=$first, second=$second")
     }
 }

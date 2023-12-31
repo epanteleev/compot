@@ -8,10 +8,10 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
 
 
-data class CopyCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOperandVisitorUnaryOp, XmmOperandVisitorUnaryOp {
+data class CopyCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp, XmmOperandVisitorUnaryOp {
     val size = type.size()
 
-    operator fun invoke(dst: AnyOperand, src: AnyOperand) {
+    operator fun invoke(dst: Operand, src: Operand) {
         when (type) {
             is FloatingPointType            -> ApplyClosure(dst, src, this as XmmOperandVisitorUnaryOp)
             is IntegerType, is PointerType  -> ApplyClosure(dst, src, this as GPOperandVisitorUnaryOp)
@@ -24,18 +24,18 @@ data class CopyCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOpe
             return
         }
 
-        objFunc.mov(size, src, dst)
+        asm.mov(size, src, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {
         when (src) {
-            is AddressLiteral -> objFunc.lea(size, src, dst)
-            else              -> objFunc.mov(size, src, dst)
+            is AddressLiteral -> asm.lea(size, src, dst)
+            else              -> asm.mov(size, src, dst)
         }
     }
 
     override fun ar(dst: Address, src: GPRegister) {
-        objFunc.mov(size, src, dst)
+        asm.mov(size, src, dst)
     }
 
     override fun aa(dst: Address, src: Address) {
@@ -43,16 +43,16 @@ data class CopyCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOpe
             return
         }
 
-        objFunc.mov(size, src, temp1)
-        objFunc.mov(size, temp1, dst)
+        asm.mov(size, src, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        objFunc.mov(size, src, dst)
+        asm.mov(size, src, dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {
-        objFunc.mov(size, src, dst)
+        asm.mov(size, src, dst)
     }
 
     override fun rrF(dst: XmmRegister, src: XmmRegister) {
@@ -60,15 +60,15 @@ data class CopyCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOpe
             return
         }
 
-        objFunc.movf(size, src, dst)
+        asm.movf(size, src, dst)
     }
 
     override fun raF(dst: XmmRegister, src: Address) {
-        objFunc.movf(size, src, dst)
+        asm.movf(size, src, dst)
     }
 
     override fun arF(dst: Address, src: XmmRegister) {
-        objFunc.movf(size, src, dst)
+        asm.movf(size, src, dst)
     }
 
     override fun aaF(dst: Address, src: Address) {
@@ -76,11 +76,11 @@ data class CopyCodegen(val type: PrimitiveType, val objFunc: ObjFunction): GPOpe
             return
         }
 
-        objFunc.movf(size, src, xmmTemp1)
-        objFunc.movf(size, xmmTemp1, dst)
+        asm.movf(size, src, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
-    override fun error(src: AnyOperand, dst: AnyOperand) {
-        throw RuntimeException("Unimplemented: '${Copy.name}' dst=$dst, src=$src")
+    override fun default(dst: Operand, src: Operand) {
+        throw RuntimeException("Internal error: '${Copy.NAME}' dst=$dst, src=$src")
     }
 }

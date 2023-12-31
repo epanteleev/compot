@@ -10,5 +10,5 @@ interface GPOperandVisitorUnaryOp {
     fun aa(dst: Address, src: Address)
     fun ri(dst: GPRegister, src: Imm32)
     fun ai(dst: Address, src: Imm32)
-    fun error(src: AnyOperand, dst: AnyOperand)
+    fun default(dst: Operand, src: Operand)
 }

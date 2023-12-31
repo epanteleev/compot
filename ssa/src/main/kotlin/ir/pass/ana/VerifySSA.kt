@@ -152,9 +152,9 @@ class VerifySSA private constructor(private val functionData: FunctionData, priv
                     fun message() = "Call instruction '${instruction.dump()}' has inconsistent return types."
                     assert(Callable.isCorrect(instruction)) { message() }
                 }
-                is Cast -> {
+                is Bitcast -> {
                     fun message() = "Cast instruction '${instruction.dump()}' has inconsistent types."
-                    assert(Cast.isCorrect(instruction)) { message() }
+                    assert(Bitcast.isCorrect(instruction)) { message() }
                 }
                 is Select -> {
                     fun message() = "Select instruction '${instruction.dump()}' requires all operands to be of the same type."

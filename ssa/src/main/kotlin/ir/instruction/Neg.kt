@@ -9,7 +9,7 @@ import ir.types.ArithmeticType
 class Neg private constructor(name: String, tp: ArithmeticType, value: Value):
     ArithmeticUnary(name, tp, value) {
     override fun dump(): String {
-        return "%$identifier = neg $tp ${operand()}"
+        return "%$identifier = $NAME $tp ${operand()}"
     }
 
     override fun type(): ArithmeticType {
@@ -37,6 +37,8 @@ class Neg private constructor(name: String, tp: ArithmeticType, value: Value):
     }
 
     companion object {
+        const val NAME = "neg"
+
         fun make(name: String, tp: ArithmeticType, value: Value): Neg {
             val valueType = value.type()
             require(isAppropriateTypes(tp, valueType)) {

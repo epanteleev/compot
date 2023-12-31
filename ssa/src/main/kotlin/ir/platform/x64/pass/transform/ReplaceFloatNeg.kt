@@ -1,21 +1,16 @@
 package ir.platform.x64.pass.transform
 
-import asm.x64.ImmInt
 import ir.*
 import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
 import ir.platform.x64.CSSAModule
-import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
-import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
 import ir.types.FloatingPointType
 import ir.types.Type
 
 
-class ReplaceFloatNeg(val functions: List<FunctionData>) {
-
-
+class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
     private fun minusZero(tp: FloatingPointType): Constant {
         return when (tp) {
             Type.F32 -> F32Value(-0.0f)
@@ -71,7 +66,7 @@ class ReplaceFloatNeg(val functions: List<FunctionData>) {
             val functions = module.functions.map { it }
             ReplaceFloatNeg(functions).run()
 
-            return CSSAModule(functions, module.externFunctions, module.constants)
+            return CSSAModule(functions, module.externFunctions, module.globals)
         }
     }
 }

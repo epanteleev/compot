@@ -7,5 +7,5 @@ interface XmmOperandVisitorUnaryOp {
     fun raF(dst: XmmRegister, src: Address)
     fun arF(dst: Address, src: XmmRegister)
     fun aaF(dst: Address, src: Address)
-    fun error(src: AnyOperand, dst: AnyOperand)
+    fun default(dst: Operand, src: Operand)
 }

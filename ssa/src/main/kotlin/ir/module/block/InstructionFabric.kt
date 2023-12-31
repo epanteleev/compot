@@ -22,7 +22,11 @@ interface InstructionFabric {
     fun ret(value: Value)
     fun retVoid()
     fun gep(source: Value, ty: PrimitiveType, index: Value): GetElementPtr
-    fun cast(value: Value, ty: PrimitiveType, cast: CastType): Cast
+    fun bitcast(value: Value, ty: PrimitiveType): Bitcast
+    fun zext(value: Value, toType: IntegerType): ZeroExtend
+    fun sext(value: Value, toType: IntegerType): SignExtend
+    fun trunc(value: Value, toType: IntegerType): Truncate
+    fun fptrunc(value: Value, toType: FloatingPointType): Fptruncate
     fun select(cond: Value, onTrue: Value, onFalse: Value): Select
     fun phi(incoming: List<Value>, labels: List<Block>): Phi
 }

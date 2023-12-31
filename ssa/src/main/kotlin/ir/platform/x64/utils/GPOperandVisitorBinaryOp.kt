@@ -21,5 +21,5 @@ interface GPOperandVisitorBinaryOp {
     fun aai(dst: Address, first: Address, second: Imm32)
     fun aar(dst: Address, first: Address, second: GPRegister)
     fun aaa(dst: Address, first: Address, second: Address)
-    fun error(dst: AnyOperand, first: AnyOperand, second: AnyOperand)
+    fun default(dst: Operand, first: Operand, second: Operand)
 }

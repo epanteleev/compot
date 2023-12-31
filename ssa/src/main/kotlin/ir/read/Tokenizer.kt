@@ -267,7 +267,7 @@ class Tokenizer(val data: String) {
             val name = readValueString()
             LocalValueToken(name, line, start)
         } else {
-            throw TokenizerException("$line:$pos cannot parse: ${remainsLine(globalPosition)}")
+            throw TokenizerException("$line:$pos cannot parse: '${remainsLine(globalPosition)}'")
         }
     }
 

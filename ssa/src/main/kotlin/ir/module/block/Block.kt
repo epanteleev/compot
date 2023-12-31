@@ -3,10 +3,7 @@ package ir.module.block
 import ir.AnyFunctionPrototype
 import ir.Value
 import ir.instruction.*
-import ir.types.ArithmeticType
-import ir.types.IntegerType
-import ir.types.PrimitiveType
-import ir.types.Type
+import ir.types.*
 
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :
@@ -257,8 +254,24 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> GetElementPtr.make(n(it), ty, source, index) }
     }
 
-    override fun cast(value: Value, ty: PrimitiveType, cast: CastType): Cast {
-        return withOutput { it: Int -> Cast.make(n(it), ty, cast, value) }
+    override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {
+        return withOutput { it: Int -> Bitcast.make(n(it), ty, value) }
+    }
+
+    override fun zext(value: Value, toType: IntegerType): ZeroExtend {
+        return withOutput { it: Int -> ZeroExtend.make(n(it), toType, value) }
+    }
+
+    override fun sext(value: Value, toType: IntegerType): SignExtend {
+        return withOutput { it: Int -> SignExtend.make(n(it), toType, value) }
+    }
+
+    override fun trunc(value: Value, toType: IntegerType): Truncate {
+        return withOutput { it: Int -> Truncate.make(n(it), toType, value) }
+    }
+
+    override fun fptrunc(value: Value, toType: FloatingPointType): Fptruncate {
+        return withOutput { it: Int -> Fptruncate.make(n(it), toType, value) }
     }
 
     override fun select(cond: Value, onTrue: Value, onFalse: Value): Select {

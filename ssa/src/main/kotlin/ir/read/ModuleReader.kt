@@ -91,13 +91,49 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
         }
     }
 
-    private fun parseCast(resultName: LocalValueToken, castType: CastType) {
+    private fun parseZext(resultName: LocalValueToken) {
         val operandType = iterator.expect<ElementaryTypeToken>("value type")
-        val operand   = iterator.expect<LocalValueToken>("cast value")
+        val operand     = iterator.expect<LocalValueToken>("cast value")
         iterator.expect<To>("'to' keyword")
-        val castValueToken = iterator.expect<ElementaryTypeToken>("cast type")
+        val castValueToken = iterator.expect<ElementaryTypeToken>("${ZeroExtend.NAME} type")
 
-        builder.cast(resultName, operand, operandType, castType, castValueToken)
+        builder.zext(resultName, operand, operandType, castValueToken)
+    }
+
+    private fun parseTrunc(resultName: LocalValueToken) {
+        val operandType = iterator.expect<ElementaryTypeToken>("value type")
+        val operand     = iterator.expect<LocalValueToken>("value to cast")
+        iterator.expect<To>("'to' keyword")
+        val castValueToken = iterator.expect<ElementaryTypeToken>("${Truncate.NAME} type")
+
+        builder.trunc(resultName, operand, operandType, castValueToken)
+    }
+
+    private fun parseBitcast(resultName: LocalValueToken) {
+        val operandType = iterator.expect<ElementaryTypeToken>("value type")
+        val operand     = iterator.expect<LocalValueToken>("value to cast")
+        iterator.expect<To>("'to' keyword")
+        val castValueToken = iterator.expect<ElementaryTypeToken>("${Bitcast.NAME} type")
+
+        builder.bitcast(resultName, operand, operandType, castValueToken)
+    }
+
+    private fun parseFptrunc(resultName: LocalValueToken) {
+        val operandType = iterator.expect<ElementaryTypeToken>("value type")
+        val operand     = iterator.expect<LocalValueToken>("value to cast")
+        iterator.expect<To>("'to' keyword")
+        val castValueToken = iterator.expect<ElementaryTypeToken>("${Fptruncate.NAME} type")
+
+        builder.fptrunc(resultName, operand, operandType, castValueToken)
+    }
+
+    private fun parseSext(resultName: LocalValueToken) {
+        val operandType = iterator.expect<ElementaryTypeToken>("value type")
+        val operand     = iterator.expect<LocalValueToken>("value to cast")
+        iterator.expect<To>("'to' keyword")
+        val castValueToken = iterator.expect<ElementaryTypeToken>("${SignExtend.NAME} type")
+
+        builder.sext(resultName, operand, operandType, castValueToken)
     }
 
     private fun parseIcmp(resultTypeToken: LocalValueToken) {
@@ -226,10 +262,11 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
                     "or"         -> parseBinary(currentTok, ArithmeticBinaryOp.Or)
                     "load"       -> parseLoad(currentTok)
                     "call"       -> parseCall(currentTok)
-                    "sext"       -> parseCast(currentTok, CastType.SignExtend)
-                    "zext"       -> parseCast(currentTok, CastType.ZeroExtend)
-                    "trunc"      -> parseCast(currentTok, CastType.Truncate)
-                    "bitcast"    -> parseCast(currentTok, CastType.Bitcast)
+                    "sext"       -> parseSext(currentTok)
+                    "zext"       -> parseZext(currentTok)
+                    "trunc"      -> parseTrunc(currentTok)
+                    "bitcast"    -> parseBitcast(currentTok)
+                    "fptrunc"    -> parseFptrunc(currentTok)
                     "alloc"      -> parseStackAlloc(currentTok)
                     "phi"        -> parsePhi(currentTok)
                     "gep"        -> parseGep(currentTok)
@@ -324,7 +361,7 @@ class ModuleReader(string: String) {
                 }
             }
             is StringLiteralToken -> {
-                StringLiteralGlobal(name.name, type.type() as ArrayType, data.string)
+                StringLiteralGlobal(name.name, type.asType<ArrayType>(), data.string)
             }
             else -> throw ParseErrorException("unsupported: data=$data")
         }

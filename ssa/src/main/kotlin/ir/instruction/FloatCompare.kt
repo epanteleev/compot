@@ -69,7 +69,7 @@ enum class FloatPredicate {
 class FloatCompare private constructor(name: String, a: Value, private val predicate: FloatPredicate, b: Value) :
     ValueInstruction(name, Type.U1, arrayOf(a, b)) {
     override fun dump(): String {
-        return "%$identifier = fcmp $predicate ${first().type()} ${first()}, ${second()}"
+        return "%$identifier = $NAME $predicate ${first().type()} ${first()}, ${second()}"
     }
 
     fun predicate(): FloatPredicate {
@@ -109,6 +109,8 @@ class FloatCompare private constructor(name: String, a: Value, private val predi
     }
 
     companion object {
+        const val NAME = "fcmp"
+
         fun make(name: String, a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
             val aType = a.type()
             val bType = b.type()

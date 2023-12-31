@@ -10,6 +10,8 @@ import ir.module.FunctionData
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.InstructionFabric
+import ir.types.FloatingPointType
+import ir.types.IntegerType
 import ir.types.PrimitiveType
 import ir.types.Type
 
@@ -117,12 +119,28 @@ class FunctionDataBuilder private constructor(
     }
 
 
-    override fun cast(value: Value, ty: PrimitiveType, cast: CastType): Cast {
-        return bb.cast(value, ty, cast)
+    override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {
+        return bb.bitcast(value, ty)
+    }
+
+    override fun zext(value: Value, toType: IntegerType): ZeroExtend {
+        return bb.zext(value, toType)
+    }
+
+    override fun sext(value: Value, toType: IntegerType): SignExtend {
+        return bb.sext(value, toType)
+    }
+
+    override fun trunc(value: Value, toType: IntegerType): Truncate {
+        return bb.trunc(value, toType)
     }
 
     override fun select(cond: Value, onTrue: Value, onFalse: Value): Select {
         return bb.select(cond, onTrue, onFalse)
+    }
+
+    override fun fptrunc(value: Value, toType: FloatingPointType): Fptruncate {
+        return bb.fptrunc(value, toType)
     }
 
     override fun phi(incoming: List<Value>, labels: List<Block>): Phi {

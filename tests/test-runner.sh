@@ -84,9 +84,12 @@ compile_and_run load_global_var2 "-8
 16
 32
 64"
+compile_and_run load_global_var3 "120.000000
+140.000000"
 compile_and_run load_store_global_var "1000"
 compile_and_run neg 1
 compile_and_run neg1 1.000000
 compile_and_run neg2 1.000000
 compile_and_run float_compare 5.000000
 compile_and_run float_compare1 4.000000
+compile_and_run f64_to_f32 -1.000000

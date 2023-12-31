@@ -7,10 +7,7 @@ import ir.module.FunctionData
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.read.*
-import ir.types.PointerType
-import ir.types.PrimitiveType
-import ir.types.Type
-import ir.types.VoidType
+import ir.types.*
 
 class ParseErrorException(message: String): Exception(message) {
     constructor(expect: String, token: Token):
@@ -248,9 +245,29 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.gep(source, type.asType<PrimitiveType>(), index))
     }
 
-    fun cast(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, cast: CastType, resultType: ElementaryTypeToken): Cast {
+    fun bitcast(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): Bitcast {
         val value = getValue(operandToken, operandType.type())
-        return memorize(name, bb.cast(value, resultType.asType<PrimitiveType>(), cast))
+        return memorize(name, bb.bitcast(value, resultType.asType<PrimitiveType>()))
+    }
+
+    fun zext(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): ZeroExtend {
+        val value = getValue(operandToken, operandType.type())
+        return memorize(name, bb.zext(value, resultType.asType<IntegerType>()))
+    }
+
+    fun sext(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): SignExtend {
+        val value = getValue(operandToken, operandType.type())
+        return memorize(name, bb.sext(value, resultType.asType<IntegerType>()))
+    }
+
+    fun trunc(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): Truncate {
+        val value = getValue(operandToken, operandType.type())
+        return memorize(name, bb.trunc(value, resultType.asType<IntegerType>()))
+    }
+
+    fun fptrunc(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): Fptruncate {
+        val value = getValue(operandToken, operandType.type())
+        return memorize(name, bb.fptrunc(value, resultType.asType<FloatingPointType>()))
     }
 
     fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: PrimitiveType): Value {

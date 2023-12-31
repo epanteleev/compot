@@ -6,12 +6,12 @@ enum class SymbolType {
             return ".string"
         }
     },
-    Long {
+    Quad {
         override fun toString(): String {
             return ".quad"
         }
     },
-    Integer {
+    Long {
         override fun toString(): String {
             return ".long"
         }

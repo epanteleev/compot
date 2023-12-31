@@ -4,7 +4,7 @@ import ir.I32Value
 import ir.StringLiteralGlobal
 import ir.module.builder.ModuleBuilder
 import ir.pass.transform.SSADestruction
-import ir.platform.x64.CodeEmitter
+import ir.platform.x64.codegen.CodeEmitter
 import ir.types.ArrayType
 import ir.types.Type
 

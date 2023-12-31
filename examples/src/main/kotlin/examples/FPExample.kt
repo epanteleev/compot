@@ -4,7 +4,7 @@ import ir.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.ModuleBuilder
 import ir.pass.transform.SSADestruction
-import ir.platform.x64.CodeEmitter
+import ir.platform.x64.codegen.CodeEmitter
 import ir.types.Type
 
 fun main() {
