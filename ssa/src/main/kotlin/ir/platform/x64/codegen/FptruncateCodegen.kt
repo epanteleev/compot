@@ -1,14 +1,16 @@
 package ir.platform.x64.codegen
 
 import asm.x64.*
+import ir.types.*
 import ir.platform.x64.utils.*
 import ir.instruction.Fptruncate
-import ir.types.FloatingPointType
-import ir.types.Type
+import ir.platform.x64.CallConvention.xmmTemp1
 
 
 data class FptruncateCodegen(val fromType: FloatingPointType, val toType: FloatingPointType, val asm: Assembler):
     XmmOperandVisitorUnaryOp {
+    private val toSize = toType.size()
+
     init {
         assert(toType == Type.F32) {
             "extect this, but toType=$toType"
@@ -16,6 +18,9 @@ data class FptruncateCodegen(val fromType: FloatingPointType, val toType: Floati
     }
 
     operator fun invoke(dst: Operand, src: Operand) {
+        if (fromType == toType) {
+            return
+        }
         ApplyClosure(dst, src, this as XmmOperandVisitorUnaryOp)
     }
 
@@ -24,15 +29,17 @@ data class FptruncateCodegen(val fromType: FloatingPointType, val toType: Floati
     }
 
     override fun raF(dst: XmmRegister, src: Address) {
-        TODO("Not yet implemented")
+        asm.cvtsd2ss(src, dst)
     }
 
     override fun arF(dst: Address, src: XmmRegister) {
-        TODO("Not yet implemented")
+        asm.cvtsd2ss(src, xmmTemp1)
+        asm.movf(toSize, xmmTemp1, dst)
     }
 
     override fun aaF(dst: Address, src: Address) {
-        TODO("Not yet implemented")
+        asm.cvtsd2ss(src, xmmTemp1)
+        asm.movf(toSize, xmmTemp1, dst)
     }
 
     override fun default(dst: Operand, src: Operand) {
