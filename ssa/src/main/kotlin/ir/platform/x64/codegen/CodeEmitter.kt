@@ -388,7 +388,13 @@ class CodeEmitter(private val data: FunctionData,
     override fun visit(fptruncate: Fptruncate) {
         val dst = valueToRegister.operand(fptruncate)
         val src = valueToRegister.operand(fptruncate.value())
-        FptruncateCodegen(fptruncate.value().type() as FloatingPointType, fptruncate.type(), asm)(dst, src)
+        FptruncateCodegen(fptruncate.type(), asm)(dst, src)
+    }
+
+    override fun visit(fpext: FpExtend) {
+        val dst = valueToRegister.operand(fpext)
+        val src = valueToRegister.operand(fpext.value())
+        FpExtendCodegen(fpext.type(), asm)(dst, src)
     }
 
     override fun visit(select: Select) {

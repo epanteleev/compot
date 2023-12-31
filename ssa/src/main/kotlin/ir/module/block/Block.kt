@@ -7,7 +7,7 @@ import ir.types.*
 
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :
-    AnyFabric, AnyBlock {
+    AnyInstructionFabric, AnyBlock {
     private val instructions = mutableListOf<Instruction>()
     private val predecessors = mutableListOf<Block>()
     private val successors   = mutableListOf<Block>()
@@ -75,7 +75,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         predecessors.remove(old)
     }
 
-    fun insert(before: Instruction, builder: (AnyFabric) -> Value): Value {
+    fun insert(before: Instruction, builder: (AnyInstructionFabric) -> Value): Value {
         val beforeIndex = instructions.indexOf(before)
         assert(beforeIndex != -1) {
             "flow graph doesn't contains instruction=$before"
@@ -84,7 +84,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return insert(beforeIndex, builder)
     }
 
-    fun insert(index: Int, builder: (AnyFabric) -> Value): Value {
+    fun insert(index: Int, builder: (AnyInstructionFabric) -> Value): Value {
         assert(index >= 0)
         indexToAppend = index
         return builder(this)
@@ -272,6 +272,10 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     override fun fptrunc(value: Value, toType: FloatingPointType): Fptruncate {
         return withOutput { it: Int -> Fptruncate.make(n(it), toType, value) }
+    }
+
+    override fun fpext(value: Value, toType: FloatingPointType): FpExtend {
+        return withOutput { it: Int -> FpExtend.make(n(it), toType, value) }
     }
 
     override fun select(cond: Value, onTrue: Value, onFalse: Value): Select {

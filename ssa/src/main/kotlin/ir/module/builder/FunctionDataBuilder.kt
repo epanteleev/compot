@@ -143,6 +143,10 @@ class FunctionDataBuilder private constructor(
         return bb.fptrunc(value, toType)
     }
 
+    override fun fpext(value: Value, toType: FloatingPointType): FpExtend {
+        return bb.fpext(value, toType)
+    }
+
     override fun phi(incoming: List<Value>, labels: List<Block>): Phi {
         return bb.phi(incoming, labels)
     }

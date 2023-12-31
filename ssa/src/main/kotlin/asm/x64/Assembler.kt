@@ -305,6 +305,9 @@ class Assembler(private val name: String) {
     fun cvtsd2ss(src: XmmRegister, dst: XmmRegister) = add(Cvtsd2ss(src, dst))
     fun cvtsd2ss(src: Address, dst: XmmRegister) = add(Cvtsd2ss(src, dst))
 
+    // Convert Scalar Single-Precision Floating-Point Value to Scalar Double-Precision Floating-Point Value
+    fun cvtss2sd(src: XmmRegister, dst: XmmRegister) = add(Cvtss2sd(src, dst))
+    fun cvtss2sd(src: Address, dst: XmmRegister) = add(Cvtss2sd(src, dst))
 
     override fun toString(): String {
         val builder = StringBuilder()

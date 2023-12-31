@@ -7,20 +7,17 @@ import ir.instruction.Fptruncate
 import ir.platform.x64.CallConvention.xmmTemp1
 
 
-data class FptruncateCodegen(val fromType: FloatingPointType, val toType: FloatingPointType, val asm: Assembler):
+data class FptruncateCodegen(val toType: FloatingPointType, val asm: Assembler):
     XmmOperandVisitorUnaryOp {
     private val toSize = toType.size()
 
     init {
         assert(toType == Type.F32) {
-            "extect this, but toType=$toType"
+            "expect this, but toType=$toType"
         }
     }
 
     operator fun invoke(dst: Operand, src: Operand) {
-        if (fromType == toType) {
-            return
-        }
         ApplyClosure(dst, src, this as XmmOperandVisitorUnaryOp)
     }
 

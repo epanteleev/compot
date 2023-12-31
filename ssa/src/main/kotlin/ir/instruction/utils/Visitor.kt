@@ -15,6 +15,7 @@ interface Visitor {
     fun visit(sext: SignExtend)
     fun visit(trunc: Truncate)
     fun visit(fptruncate: Fptruncate)
+    fun visit(fpext: FpExtend)
     fun visit(copy: Copy)
     fun visit(downStackFrame: DownStackFrame)
     fun visit(getElementPtr: GetElementPtr)

@@ -270,6 +270,11 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.fptrunc(value, resultType.asType<FloatingPointType>()))
     }
 
+    fun fpext(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): FpExtend {
+        val value = getValue(operandToken, operandType.type())
+        return memorize(name, bb.fpext(value, resultType.asType<FloatingPointType>()))
+    }
+
     fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: PrimitiveType): Value {
         val cond    = getValue(condTok, Type.U1)
         val onTrue  = getValue(onTrueTok, selectType)

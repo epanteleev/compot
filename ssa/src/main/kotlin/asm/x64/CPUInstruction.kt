@@ -353,3 +353,9 @@ data class Cvtsd2ss(val src1: Operand, val src2: Operand): CPUInstruction {
         return "cvtsd2ss ${src1.toString(16)}, ${src2.toString(16)}"
     }
 }
+
+data class Cvtss2sd(val src1: Operand, val src2: Operand): CPUInstruction {
+    override fun toString(): String {
+        return "cvtss2sd ${src1.toString(16)}, ${src2.toString(16)}"
+    }
+}

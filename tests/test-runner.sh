@@ -93,3 +93,4 @@ compile_and_run neg2 1.000000
 compile_and_run float_compare 5.000000
 compile_and_run float_compare1 4.000000
 compile_and_run f64_to_f32 -1.000000
+compile_and_run f32_to_f64 -1.000000

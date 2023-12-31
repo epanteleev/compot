@@ -127,6 +127,15 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
         builder.fptrunc(resultName, operand, operandType, castValueToken)
     }
 
+    private fun parseFpext(resultName: LocalValueToken) {
+        val operandType = iterator.expect<ElementaryTypeToken>("value type")
+        val operand     = iterator.expect<LocalValueToken>("value to cast")
+        iterator.expect<To>("'to' keyword")
+        val castValueToken = iterator.expect<ElementaryTypeToken>("${FpExtend.NAME} type")
+
+        builder.fpext(resultName, operand, operandType, castValueToken)
+    }
+
     private fun parseSext(resultName: LocalValueToken) {
         val operandType = iterator.expect<ElementaryTypeToken>("value type")
         val operand     = iterator.expect<LocalValueToken>("value to cast")
@@ -267,6 +276,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
                     "trunc"      -> parseTrunc(currentTok)
                     "bitcast"    -> parseBitcast(currentTok)
                     "fptrunc"    -> parseFptrunc(currentTok)
+                    "fpext"      -> parseFpext(currentTok)
                     "alloc"      -> parseStackAlloc(currentTok)
                     "phi"        -> parsePhi(currentTok)
                     "gep"        -> parseGep(currentTok)
