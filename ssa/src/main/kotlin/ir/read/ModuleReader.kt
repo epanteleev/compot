@@ -122,7 +122,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
         val operandType = iterator.expect<ElementaryTypeToken>("value type")
         val operand     = iterator.expect<LocalValueToken>("value to cast")
         iterator.expect<To>("'to' keyword")
-        val castValueToken = iterator.expect<ElementaryTypeToken>("${Fptruncate.NAME} type")
+        val castValueToken = iterator.expect<ElementaryTypeToken>("${FpTruncate.NAME} type")
 
         builder.fptrunc(resultName, operand, operandType, castValueToken)
     }

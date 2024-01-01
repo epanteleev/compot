@@ -51,7 +51,7 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVi
         if (dst == second) {
             asm.add(size, first, dst)
         } else {
-            asm.lea(size, Address.from(second, first.value()), dst)
+            asm.lea(size, Address.from(second, first.value().toInt()), dst)
         }
     }
 
@@ -64,7 +64,7 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVi
         if (dst == first) {
             asm.add(size, second, dst)
         } else {
-            asm.lea(size, Address.from(first, second.value), dst)
+            asm.lea(size, Address.from(first, second.value().toInt()), dst)
         }
     }
 
@@ -73,7 +73,7 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVi
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        asm.mov(size, Imm32(first.value + second.value), dst) //TODO overflow????
+        asm.mov(size, Imm32(first.value() + second.value()), dst) //TODO overflow????
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -89,7 +89,7 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVi
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        asm.mov(size, Imm32(first.value + second.value), dst)
+        asm.mov(size, Imm32(first.value() + second.value()), dst)
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {

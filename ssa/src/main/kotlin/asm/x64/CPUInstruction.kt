@@ -74,6 +74,12 @@ data class Movsxd(val fromSize: Int, val toSize: Int, val src: Operand, val des:
 }
 
 data class Lea(val size: Int, val src: Operand, val des: Register): CPUInstruction {
+    init {
+        assert(size == 2 || size == 4 || size == 8) {
+            "shoild be, but size=$size"
+        }
+    }
+
     override fun toString(): String {
         return "lea${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
     }

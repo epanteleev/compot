@@ -9,7 +9,7 @@ sealed interface ImmInt: Imm {
     }
 }
 
-data class Imm32(val value: Long) : ImmInt {
+data class Imm32(private val value: Long) : ImmInt {
     init {
         require(Int.MIN_VALUE < value && value < Int.MAX_VALUE) //TODO
     }

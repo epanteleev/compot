@@ -270,8 +270,8 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Truncate.make(n(it), toType, value) }
     }
 
-    override fun fptrunc(value: Value, toType: FloatingPointType): Fptruncate {
-        return withOutput { it: Int -> Fptruncate.make(n(it), toType, value) }
+    override fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate {
+        return withOutput { it: Int -> FpTruncate.make(n(it), toType, value) }
     }
 
     override fun fpext(value: Value, toType: FloatingPointType): FpExtend {

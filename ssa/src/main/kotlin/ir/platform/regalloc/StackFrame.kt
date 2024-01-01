@@ -12,7 +12,7 @@ data class StackFrameException(override val message: String): Exception(message)
 interface StackFrame {
     fun takeSlot(value: Value): Address
     fun returnSlot(slot: Address, size: Int)
-    fun size(): Long
+    fun size(): Int
 
     companion object {
         fun create(isBasePointerAddressed: Boolean = true): StackFrame {
@@ -23,7 +23,7 @@ interface StackFrame {
 }
 
 private class BasePointerAddressedStackFrame : StackFrame {
-    private var frameSize: Long = 0
+    private var frameSize: Int = 0
     private val freeStackSlots = linkedMapOf<Int, Address>()
 
     private fun getTypeSize(ty: Type): Int {
@@ -34,7 +34,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
         }
     }
 
-    private fun withAlignment(alignment: Int, value: Long): Long {
+    private fun withAlignment(alignment: Int, value: Int): Int {
         return ((value + (alignment * 2 - 1)) / alignment) * alignment
     }
 
@@ -71,7 +71,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
         freeStackSlots[size] = slot
     }
 
-    override fun size(): Long {
+    override fun size(): Int {
         return frameSize
     }
 }

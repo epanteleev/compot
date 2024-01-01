@@ -5,7 +5,7 @@ import ir.types.*
 import ir.instruction.utils.Visitor
 
 
-class Fptruncate private constructor(name: String, toType: FloatingPointType, value: Value):
+class FpTruncate private constructor(name: String, toType: FloatingPointType, value: Value):
     ValueInstruction(name, toType, arrayOf(value)) {
     override fun dump(): String {
         return "%$identifier = $NAME ${value().type()} ${value()} to ${type()}"
@@ -23,7 +23,7 @@ class Fptruncate private constructor(name: String, toType: FloatingPointType, va
         return tp as FloatingPointType
     }
 
-    override fun copy(newUsages: List<Value>): Fptruncate {
+    override fun copy(newUsages: List<Value>): FpTruncate {
         assert(newUsages.size == 1) {
             "should be, but newUsages=$newUsages"
         }
@@ -38,13 +38,13 @@ class Fptruncate private constructor(name: String, toType: FloatingPointType, va
     companion object {
         const val NAME = "fptrunc"
 
-        fun make(name: String, toType: FloatingPointType, value: Value): Fptruncate {
+        fun make(name: String, toType: FloatingPointType, value: Value): FpTruncate {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
                 "inconsistent types in $name: ty=$toType, value.type=$valueType"
             }
 
-            return registerUser(Fptruncate(name, toType, value), value)
+            return registerUser(FpTruncate(name, toType, value), value)
         }
 
         private fun isAppropriateType(toType: FloatingPointType, valueType: Type): Boolean {
@@ -55,7 +55,7 @@ class Fptruncate private constructor(name: String, toType: FloatingPointType, va
             return toType.size() < valueType.size()
         }
 
-        fun isCorrect(trunc: Fptruncate): Boolean {
+        fun isCorrect(trunc: FpTruncate): Boolean {
             return isAppropriateType(trunc.type(), trunc.value().type())
         }
     }

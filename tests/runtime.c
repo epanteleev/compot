@@ -53,3 +53,10 @@ void printIntArray(int* array, int size) {
 	}
 	printf("\n");
 }
+
+void printFloatArray(float* array, int size) {
+        for (int i = 0; i < size; i++) {
+                printf("%f ", array[i]);
+        }
+        printf("\n");
+}

@@ -37,8 +37,8 @@ class CodeEmitter(private val data: FunctionData,
         asm.push(8, rbp)
         asm.mov(8, rsp, rbp)
 
-        if (stackSize != 0L) {
-            asm.sub(8, Imm32(stackSize), rsp)
+        if (stackSize != 0) {
+            asm.sub(8, Imm32(stackSize.toLong()), rsp)
         }
         for (reg in calleeSaveRegisters) {
             asm.push(8, reg)
@@ -171,20 +171,38 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(store: Store) {
-        val pointer = valueToRegister.operand(store.pointer())
-        val value   = valueToRegister.operand(store.value())
+        val pointer        = store.pointer()
+        val pointerOperand = valueToRegister.operand(pointer)
+        val value          = valueToRegister.operand(store.value())
         val type = store.value().type()
-        assert(type is PrimitiveType) {
-            "should be, but type=$type"
-        }
 
-        StoreCodegen(type as PrimitiveType, asm)( value, pointer)
+        if (pointer is Alloc || pointer is GlobalValue) {
+            // Operand isn't real pointer, but slot on stack or data segment.
+            // We handle it separately.
+            assert(pointerOperand is Address) {
+                "should be address, but pointer=$pointer"
+            }
+
+            StoreCodegenForAlloc(type as PrimitiveType, asm)( value, pointerOperand)
+        } else {
+            StoreCodegen(type as PrimitiveType, asm)( value, pointerOperand)
+        }
     }
 
     override fun visit(load: Load) {
-        val pointer = valueToRegister.operand(load.operand())
+        val operand = load.operand()
+        val pointer = valueToRegister.operand(operand)
         val value   = valueToRegister.operand(load)
-        LoadCodegen(load.type(), asm)( value, pointer)
+        if (operand is Alloc || operand is GlobalValue) {
+            // Operand isn't real pointer, but slot on stack or data segment.
+            // We handle it separately.
+            assert(pointer is Address) {
+                "should be address, but pointer=$pointer"
+            }
+            LoadCodegenForAlloc(load.type(), asm)( value, pointer)
+        } else {
+            TODO()
+        }
     }
 
     override fun visit(intCompare: IntCompare) {
@@ -312,53 +330,62 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(getElementPtr: GetElementPtr) {
-        val source = valueToRegister.operand(getElementPtr.source())
-        val index  = valueToRegister.operand(getElementPtr.index())
-        val dest   = valueToRegister.operand(getElementPtr)
-        val size = getElementPtr.type().size()
+        val source = getElementPtr.source()
+        val sourceOperand = valueToRegister.operand(source)
+        val index         = valueToRegister.operand(getElementPtr.index())
+        val dest          = valueToRegister.operand(getElementPtr)
 
-        val indexReg = when (index) {
-            is Address2 -> asm.movOld(size, index, temp2)
-            is ImmInt -> index
-            else   -> index
-        }
-
-        val destReg = if (dest is Address2) {
-            asm.movOld(size, dest, temp2)
+        if (source is Alloc) {
+            GetElementPtrCodegenForAlloc(getElementPtr.type(), getElementPtr.basicType, asm)(dest, sourceOperand, index)
         } else {
-            dest as GPRegister
+            GetElementPtrCodegen(getElementPtr.type(), getElementPtr.basicType, asm)(dest, sourceOperand, index)
         }
 
-        val sourceReg = if (source is Address2) {
-            when (indexReg) {
-                is GPRegister -> {
-                    Address.from(source.base, source.offset, indexReg, getElementPtr.basicType.size().toLong())
-                }
-                is ImmInt -> {
-                    val offset = indexReg.value() * getElementPtr.basicType.size()
-                    Address.from(source.base, source.offset + offset)
-                }
-                else -> {
-                    throw RuntimeException("error")
-                }
-            }
-        } else {
-            source as GPRegister
-            when (indexReg) {
-                is GPRegister -> {
-                    Address.from(source, 0, indexReg, getElementPtr.basicType.size().toLong())
-                }
-                is ImmInt -> {
-                    val offset = indexReg.value() * getElementPtr.basicType.size()
-                    Address.from(source, offset)
-                }
-                else -> {
-                    throw RuntimeException("error")
-                }
-            }
-        }
 
-        asm.lea(size, sourceReg, destReg)
+//        val size = getElementPtr.type().size()
+//
+//        val indexReg = when (index) {
+//            is Address2 -> asm.movOld(size, index, temp2)
+//            is ImmInt -> index
+//            else   -> index
+//        }
+//
+//        val destReg = if (dest is Address2) {
+//            asm.movOld(size, dest, temp2)
+//        } else {
+//            dest as GPRegister
+//        }
+//
+//        val sourceReg = if (source is Address2) {
+//            when (indexReg) {
+//                is GPRegister -> {
+//                    Address.from(source.base, source.offset, indexReg, getElementPtr.basicType.size().toLong())
+//                }
+//                is ImmInt -> {
+//                    val offset = indexReg.value() * getElementPtr.basicType.size()
+//                    Address.from(source.base, source.offset + offset)
+//                }
+//                else -> {
+//                    throw RuntimeException("error")
+//                }
+//            }
+//        } else {
+//            source as GPRegister
+//            when (indexReg) {
+//                is GPRegister -> {
+//                    Address.from(source, 0, indexReg, getElementPtr.basicType.size().toLong())
+//                }
+//                is ImmInt -> {
+//                    val offset = indexReg.value() * getElementPtr.basicType.size()
+//                    Address.from(source, offset)
+//                }
+//                else -> {
+//                    throw RuntimeException("error")
+//                }
+//            }
+//        }
+//
+//        asm.lea(size, sourceReg, destReg)
     }
 
     override fun visit(bitcast: Bitcast) {
@@ -385,7 +412,7 @@ class CodeEmitter(private val data: FunctionData,
         TruncateCodegen(trunc.value().type() as IntegerType, trunc.type(), asm)(dst, src)
     }
 
-    override fun visit(fptruncate: Fptruncate) {
+    override fun visit(fptruncate: FpTruncate) {
         val dst = valueToRegister.operand(fptruncate)
         val src = valueToRegister.operand(fptruncate.value())
         FptruncateCodegen(fptruncate.type(), asm)(dst, src)

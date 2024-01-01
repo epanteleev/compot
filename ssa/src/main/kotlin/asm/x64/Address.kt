@@ -3,11 +3,11 @@ package asm.x64
 
 interface Address : Operand {
     companion object {
-        fun from(base: GPRegister, offset: Long): Address {
+        fun from(base: GPRegister, offset: Int): Address {
             return Address2(base, offset)
         }
 
-        fun from(base: GPRegister?, offset: Long, index: GPRegister, disp: Long): Address {
+        fun from(base: GPRegister?, offset: Int, index: GPRegister, disp: Int): Address {
             return Address4(base, offset, index, disp)
         }
 
@@ -17,17 +17,13 @@ interface Address : Operand {
     }
 }
 
-class Address2 internal constructor(val base: GPRegister, val offset: Long) : Address {
+class Address2 internal constructor(val base: GPRegister, val offset: Int) : Address {
     override fun toString(): String {
-        return if (offset == 0L) {
-            "($base)"
-        } else {
-            "$offset($base)"
-        }
+        return toString(Int.MAX_VALUE)
     }
 
     override fun toString(size: Int): String {
-        return if (offset == 0L) {
+        return if (offset == 0) {
             "(${base.toString(8)})"
         } else {
             "$offset(${base.toString(8)})"
@@ -50,14 +46,10 @@ class Address2 internal constructor(val base: GPRegister, val offset: Long) : Ad
     }
 }
 
-class Address4 internal constructor(private val base: GPRegister?, private val offset: Long, val index: GPRegister, val disp: Long) :
+class Address4 internal constructor(private val base: GPRegister?, private val offset: Int, val index: GPRegister, val scale: Int) :
     Address {
     override fun toString(): String {
-        return if (offset == 0L) {
-            "($base, $index, $disp)"
-        } else {
-            "$offset($base, $index, $disp)"
-        }
+        return toString(Int.MAX_VALUE)
     }
 
     private fun base(size: Int): String {
@@ -65,17 +57,21 @@ class Address4 internal constructor(private val base: GPRegister?, private val o
     }
 
     override fun toString(size: Int): String {
-        return if (offset == 0L) {
-            "(${base(8)}, ${index.toString(8)}, $disp)"
+        return if (offset == 0) {
+            "(${base(8)}, ${index.toString(8)}, $scale)"
         } else {
-            "$offset(${base(8)}, ${index.toString(8)}, $disp)"
+            "$offset(${base(8)}, ${index.toString(8)}, $scale)"
         }
     }
 }
 
-class ArgumentSlot(private val base: GPRegister, private val offset: Long) : Address {
+class ArgumentSlot(private val base: GPRegister, private val offset: Int) : Address {
+    override fun toString(): String {
+        return toString(Int.MAX_VALUE)
+    }
+
     override fun toString(size: Int): String {
-        return if (offset == 0L) {
+        return if (offset == 0) {
             "(${base.toString(8)})"
         } else {
             "$offset(${base.toString(8)})"

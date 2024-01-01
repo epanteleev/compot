@@ -26,7 +26,7 @@ interface InstructionFabric {
     fun zext(value: Value, toType: IntegerType): ZeroExtend
     fun sext(value: Value, toType: IntegerType): SignExtend
     fun trunc(value: Value, toType: IntegerType): Truncate
-    fun fptrunc(value: Value, toType: FloatingPointType): Fptruncate
+    fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate
     fun fpext(value: Value, toType: FloatingPointType): FpExtend
     fun select(cond: Value, onTrue: Value, onFalse: Value): Select
     fun phi(incoming: List<Value>, labels: List<Block>): Phi

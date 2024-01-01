@@ -42,7 +42,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
         }
     }
 
-    fun stackSize(): Long {
+    fun stackSize(): Int {
         return ((frame.size() + 7) / 8) * 8
     }
 
@@ -50,7 +50,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
         private class ArgumentAllocator {
             private var freeArgumentRegisters = CallConvention.gpArgumentRegisters.toMutableList().asReversed()
             private var freeXmmArgumentRegisters = CallConvention.xmmArgumentRegister.toMutableList().asReversed()
-            private var argumentSlotIndex: Long = 0
+            private var argumentSlotIndex: Int = 0
 
             fun pickArgument(type: PrimitiveType): Operand {
                 return when (type) {

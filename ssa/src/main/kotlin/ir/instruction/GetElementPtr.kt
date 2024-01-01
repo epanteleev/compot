@@ -2,15 +2,12 @@ package ir.instruction
 
 import ir.Value
 import ir.instruction.utils.Visitor
-import ir.types.ArithmeticType
-import ir.types.PointerType
-import ir.types.PrimitiveType
-import ir.types.Type
+import ir.types.*
 
 class GetElementPtr private constructor(name: String, val basicType: PrimitiveType, source: Value, index: Value):
     ValueInstruction(name, Type.Ptr, arrayOf(source, index)) {
     override fun dump(): String {
-        return "%$identifier = gep $basicType, ptr ${source()}, ${index().type()} ${index()}"
+        return "%$identifier = $NAME $basicType, ptr ${source()}, ${index().type()} ${index()}"
     }
 
     override fun type(): PointerType {
@@ -46,6 +43,7 @@ class GetElementPtr private constructor(name: String, val basicType: PrimitiveTy
     }
 
     companion object {
+        const val NAME = "gep"
 
         fun make(name: String, tp: PrimitiveType, source: Value, index: Value): GetElementPtr {
             val sourceType = source.type()
@@ -58,7 +56,7 @@ class GetElementPtr private constructor(name: String, val basicType: PrimitiveTy
         }
 
         private fun isAppropriateType(sourceType: Type, indexType: Type): Boolean {
-            if (indexType !is ArithmeticType) {
+            if (indexType !is IntegerType) {
                 return false
             }
             if (sourceType !is PointerType) {

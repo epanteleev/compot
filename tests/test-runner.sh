@@ -9,6 +9,7 @@ JAVA=java
 export JAVA_OPTS="-ea"
 IR_COMPILER="../build/ssa-1.0/bin/ssa"
 
+rm -rf ../build
 mkdir ../build
 unzip -o ../ssa/build/distributions/ssa-1.0.zip -d ../build
 
@@ -70,6 +71,8 @@ compile_and_run fill_in_array0 "01234"
 compile_and_run fill_in_array1 "01234"
 compile_and_run fill_in_array2 "01234"
 compile_and_run fill_in_array3 "0123456789"
+compile_and_run fill_in_array4 "01234"
+compile_and_run fill_in_fp_array1 "0.000000 1.000000 2.000000 3.000000 4.000000 "
 compile_and_run i32_to_i64 "-1"
 compile_and_run u32_to_u64 "1"
 compile_and_run i64_to_i32 "-1"

@@ -3,7 +3,7 @@ package ir.platform.x64.codegen
 import asm.x64.*
 import ir.types.*
 import ir.platform.x64.utils.*
-import ir.instruction.Fptruncate
+import ir.instruction.FpTruncate
 import ir.platform.x64.CallConvention.xmmTemp1
 
 
@@ -40,6 +40,6 @@ data class FptruncateCodegen(val toType: FloatingPointType, val asm: Assembler):
     }
 
     override fun default(dst: Operand, src: Operand) {
-        throw RuntimeException("Internal error: '${Fptruncate.NAME}' dst=$dst, src=$$src")
+        throw RuntimeException("Internal error: '${FpTruncate.NAME}' dst=$dst, src=$src")
     }
 }

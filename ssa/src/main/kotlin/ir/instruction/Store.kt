@@ -1,11 +1,8 @@
 package ir.instruction
 
 import ir.Value
+import ir.types.*
 import ir.instruction.utils.Visitor
-import ir.types.PointerType
-import ir.types.Type
-import ir.types.UndefinedType
-import ir.types.VoidType
 
 
 class Store private constructor(pointer: Value, value: Value):
@@ -68,7 +65,7 @@ class Store private constructor(pointer: Value, value: Value):
         }
 
         private fun isAppropriateTypes(pointerType: Type, valueType: Type): Boolean {
-            if (valueType is VoidType || valueType is UndefinedType) {
+            if (valueType !is PrimitiveType) {
                 return false
             }
 

@@ -10,7 +10,7 @@ import java.lang.IllegalArgumentException
 
 class CalleeArgumentAllocator(private val arguments: List<Value>) {
     private interface Place
-    private data class Memory(val index: Int, val slotSize: Long): Place
+    private data class Memory(val index: Int, val slotSize: Int): Place
     private data class RealGPRegister(val registerIndex: Int): Place
     private data class RealFpRegister(val registerIndex: Int): Place
 

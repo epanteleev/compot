@@ -139,7 +139,7 @@ class FunctionDataBuilder private constructor(
         return bb.select(cond, onTrue, onFalse)
     }
 
-    override fun fptrunc(value: Value, toType: FloatingPointType): Fptruncate {
+    override fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate {
         return bb.fptrunc(value, toType)
     }
 

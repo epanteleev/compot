@@ -265,7 +265,7 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.trunc(value, resultType.asType<IntegerType>()))
     }
 
-    fun fptrunc(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): Fptruncate {
+    fun fptrunc(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): FpTruncate {
         val value = getValue(operandToken, operandType.type())
         return memorize(name, bb.fptrunc(value, resultType.asType<FloatingPointType>()))
     }

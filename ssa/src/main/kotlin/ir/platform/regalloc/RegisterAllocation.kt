@@ -8,7 +8,7 @@ import ir.platform.liveness.LiveIntervals
 import ir.platform.x64.CallConvention.gpCalleeSaveRegs
 
 
-class RegisterAllocation(private val stackSize: Long,
+class RegisterAllocation(private val stackSize: Int,
                          private val registerMap: Map<LocalValue, Operand>,
                          private val liveness: LiveIntervals
 ) {
@@ -31,11 +31,11 @@ class RegisterAllocation(private val stackSize: Long,
         registers
     }
 
-    fun frameSize(savedRegisters: Set<GPRegister>): Long {
+    fun frameSize(savedRegisters: Set<GPRegister>): Int {
         return (savedRegisters.size + calleeSaveRegisters.size + /** include retaddr and rbp **/ 2) * 8 + reservedStackSize()
     }
 
-    fun reservedStackSize(): Long {
+    fun reservedStackSize(): Int {
         return stackSize
     }
 

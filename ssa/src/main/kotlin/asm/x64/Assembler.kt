@@ -54,8 +54,8 @@ class Assembler(private val name: String) {
         activeContext.instructions = newInstructions
     }
 
-    fun lea(size: Int, first: Address, destination: GPRegister) = add(Lea(size, first, destination))
-    fun lea(size: Int, first: GPRegister, destination: GPRegister) = add(Lea(size, first, destination))
+    // Load Effective Address
+    fun lea(size: Int, src: Address, dst: GPRegister) = add(Lea(size, src, dst))
 
     fun add(size: Int, first: GPRegister, destination: GPRegister) = add(Add(size, first, destination))
     fun add(size: Int, first: Imm32, destination: GPRegister) = add(Add(size, first, destination))
