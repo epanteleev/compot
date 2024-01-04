@@ -1,8 +1,9 @@
 package ir.instruction
 
 import ir.Value
-import ir.instruction.utils.Visitor
 import ir.types.*
+import ir.instruction.utils.Visitor
+
 
 class GetElementPtr private constructor(name: String, val basicType: PrimitiveType, source: Value, index: Value):
     ValueInstruction(name, Type.Ptr, arrayOf(source, index)) {

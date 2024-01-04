@@ -102,7 +102,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
     companion object {
         fun run(module: Module): Module {
             module.functions.forEach { CopyInsertion(it).pass() }
-            return CSSAModule(module.functions, module.externFunctions, module.globals)
+            return CSSAModule(module.functions, module.externFunctions, module.globals, module.types)
         }
     }
 }

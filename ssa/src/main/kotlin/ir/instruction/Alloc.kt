@@ -1,11 +1,9 @@
 package ir.instruction
 
 import ir.Value
+import ir.types.*
 import ir.instruction.utils.Visitor
-import ir.types.PointerType
-import ir.types.Type
-import ir.types.UndefinedType
-import ir.types.VoidType
+
 
 class Alloc private constructor(name: String, val allocatedType: Type):
     ValueInstruction(name, allocatedType.ptr(), arrayOf()) {

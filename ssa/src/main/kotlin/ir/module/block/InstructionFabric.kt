@@ -4,6 +4,8 @@ import ir.Value
 import ir.types.*
 import ir.instruction.*
 import ir.AnyFunctionPrototype
+import ir.Constant
+import ir.IntegerConstant
 
 
 interface InstructionFabric {
@@ -22,6 +24,7 @@ interface InstructionFabric {
     fun ret(value: Value)
     fun retVoid()
     fun gep(source: Value, ty: PrimitiveType, index: Value): GetElementPtr
+    fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr
     fun bitcast(value: Value, ty: PrimitiveType): Bitcast
     fun zext(value: Value, toType: IntegerType): ZeroExtend
     fun sext(value: Value, toType: IntegerType): SignExtend

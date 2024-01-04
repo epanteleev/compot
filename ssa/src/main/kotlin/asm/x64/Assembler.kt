@@ -69,12 +69,13 @@ class Assembler(private val name: String) {
     fun sub(size: Int, first: Address, destination: GPRegister) = add(Sub(size, first, destination))
     fun sub(size: Int, first: Imm32, destination: Address) = add(Sub(size, first, destination))
 
-    fun mul(size: Int, src: GPRegister, dst: GPRegister) = add(iMull(size, src, dst))
-    fun mul(size: Int, src: Imm32, dst: GPRegister) = add(iMull(size, src, dst))
-    fun mul(size: Int, src: GPRegister, dst: Address) = add(iMull(size, src, dst))
-    fun mul(size: Int, src: Address, dst: GPRegister) = add(iMull(size, src, dst))
-    fun mul(size: Int, src: Imm32, dst: Address) = add(iMull(size, src, dst))
-
+    fun mul(size: Int, src: GPRegister, dst: GPRegister) = add(iMull(size, null, src, dst))
+    fun mul(size: Int, src: Imm32, dst: GPRegister) = add(iMull(size, null, src, dst))
+    fun mul(size: Int, src: GPRegister, dst: Address) = add(iMull(size, null, src, dst))
+    fun mul(size: Int, src: Address, dst: GPRegister) = add(iMull(size, null, src, dst))
+    fun mul(size: Int, src: Imm32, dst: Address) = add(iMull(size, null, src, dst))
+    fun mul(size: Int, src1: Imm32, src: GPRegister, dst: GPRegister) = add(iMull(size, src1, src, dst))
+    fun mul(size: Int, src1: Imm32, src: Address, dst: GPRegister) = add(iMull(size, src1, src, dst))
 
     fun xor(size: Int, src: Address, dst: GPRegister) = add(Xor(size, src, dst))
     fun xor(size: Int, imm32: Imm32, dst: Address) = add(Xor(size, imm32, dst))

@@ -2,15 +2,17 @@ package ir.platform.x64
 
 import ir.*
 import ir.module.*
+import ir.types.StructType
 import ir.module.auxiliary.*
+import ir.platform.regalloc.*
 import ir.platform.liveness.LiveIntervals
-import ir.platform.regalloc.LinearScan
-import ir.platform.regalloc.RegisterAllocation
+
 
 data class CSSAModule(override val functions: List<FunctionData>,
                       override val externFunctions: Set<ExternFunction>,
-                      override val globals: Set<GlobalValue>):
-    Module(functions, externFunctions, globals) {
+                      override val globals: Set<GlobalValue>,
+                      override val types: List<StructType>):
+    Module(functions, externFunctions, globals, types) {
     private val liveIntervals: Map<FunctionData, LiveIntervals>
     private val registerAllocation: Map<FunctionData, RegisterAllocation>
 
@@ -45,7 +47,7 @@ data class CSSAModule(override val functions: List<FunctionData>,
     }
 
     override fun copy(): Module {
-        return SSAModule(functions.map { Copy.copy(it) }, externFunctions, globals)
+        return SSAModule(functions.map { Copy.copy(it) }, externFunctions, globals, types)
     }
 
     override fun toString(): String {

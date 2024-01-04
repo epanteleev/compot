@@ -99,9 +99,15 @@ data class Sub(val size: Int, val first: Operand, val second: Operand): Arithmet
     }
 }
 
-data class iMull(val size: Int, val first: Operand, val second: Operand): Arithmetic {
+data class iMull(val size: Int, val third: Imm32?, val first: Operand, val second: Operand): Arithmetic {
     override fun toString(): String {
-        return "imul${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
+        val t = if (third != null) {
+            " ,$third"
+        } else {
+            ""
+        }
+
+        return "imul${prefix(size)}$t ${first.toString(size)}, ${second.toString(size)}"
     }
 }
 

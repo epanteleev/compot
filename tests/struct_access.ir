@@ -1,0 +1,21 @@
+$Point = type {i32, i32} 
+
+extern void @printInt(i32)
+
+define i32 @main() {
+entry:
+  %point = alloc $Point
+  %x = gfp $Point, ptr %point, i32 0
+  store ptr %x, i32 6
+  %y = gfp $Point, ptr %point, i32 1
+  store ptr %y, i32 8
+
+  %x1 = gfp $Point, ptr %point, i32 0
+  %x1v = load i32 %x1
+  %y1 = gfp $Point, ptr %point, i32 1
+  %y1v = load i32 %y1
+  %sum = add i32 %x1v, %y1v
+  call void @printInt(%sum: i32)
+  ret i32 0
+}
+

@@ -1,6 +1,7 @@
 package ir.module.block
 
 import ir.AnyFunctionPrototype
+import ir.IntegerConstant
 import ir.Value
 import ir.instruction.*
 import ir.types.*
@@ -252,6 +253,10 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     override fun gep(source: Value, ty: PrimitiveType, index: Value): GetElementPtr {
         return withOutput { it: Int -> GetElementPtr.make(n(it), ty, source, index) }
+    }
+
+    override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr {
+        return withOutput { it: Int -> GetFieldPtr.make(n(it), ty, source, index) }
     }
 
     override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {

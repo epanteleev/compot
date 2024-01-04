@@ -18,7 +18,7 @@ internal object Utils {
 
     fun Load.isLocalVariable(): Boolean {
         val pointer = operand()
-        return pointer is ValueInstruction && pointer.type() is PrimitiveType
+        return pointer is Alloc && pointer.allocatedType is PrimitiveType
     }
 
     fun Store.isLocalVariable(): Boolean {

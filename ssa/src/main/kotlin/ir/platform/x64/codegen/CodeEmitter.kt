@@ -201,7 +201,7 @@ class CodeEmitter(private val data: FunctionData,
             }
             LoadCodegenForAlloc(load.type(), asm)( value, pointer)
         } else {
-            TODO()
+            LoadCodegen(load.type(), asm)( value, pointer)
         }
     }
 
@@ -340,52 +340,19 @@ class CodeEmitter(private val data: FunctionData,
         } else {
             GetElementPtrCodegen(getElementPtr.type(), getElementPtr.basicType, asm)(dest, sourceOperand, index)
         }
+    }
 
+    override fun visit(getFieldPtr: GetFieldPtr) {
+        val source = getFieldPtr.source()
+        val sourceOperand = valueToRegister.operand(source)
+        val index         = valueToRegister.operand(getFieldPtr.index())
+        val dest          = valueToRegister.operand(getFieldPtr)
 
-//        val size = getElementPtr.type().size()
-//
-//        val indexReg = when (index) {
-//            is Address2 -> asm.movOld(size, index, temp2)
-//            is ImmInt -> index
-//            else   -> index
-//        }
-//
-//        val destReg = if (dest is Address2) {
-//            asm.movOld(size, dest, temp2)
-//        } else {
-//            dest as GPRegister
-//        }
-//
-//        val sourceReg = if (source is Address2) {
-//            when (indexReg) {
-//                is GPRegister -> {
-//                    Address.from(source.base, source.offset, indexReg, getElementPtr.basicType.size().toLong())
-//                }
-//                is ImmInt -> {
-//                    val offset = indexReg.value() * getElementPtr.basicType.size()
-//                    Address.from(source.base, source.offset + offset)
-//                }
-//                else -> {
-//                    throw RuntimeException("error")
-//                }
-//            }
-//        } else {
-//            source as GPRegister
-//            when (indexReg) {
-//                is GPRegister -> {
-//                    Address.from(source, 0, indexReg, getElementPtr.basicType.size().toLong())
-//                }
-//                is ImmInt -> {
-//                    val offset = indexReg.value() * getElementPtr.basicType.size()
-//                    Address.from(source, offset)
-//                }
-//                else -> {
-//                    throw RuntimeException("error")
-//                }
-//            }
-//        }
-//
-//        asm.lea(size, sourceReg, destReg)
+        if (source is Alloc) {
+            GetFieldPtrCodegenForAlloc(getFieldPtr.type(), getFieldPtr.basicType, asm)(dest, sourceOperand, index)
+        } else {
+            TODO()
+        }
     }
 
     override fun visit(bitcast: Bitcast) {

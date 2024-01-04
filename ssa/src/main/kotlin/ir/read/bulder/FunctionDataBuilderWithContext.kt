@@ -1,13 +1,12 @@
 package ir.read.bulder
 
 import ir.*
-import ir.instruction.*
-import ir.module.BasicBlocks
-import ir.module.FunctionData
-import ir.module.block.Block
-import ir.module.block.Label
 import ir.read.*
 import ir.types.*
+import ir.module.*
+import ir.module.block.*
+import ir.instruction.*
+
 
 class ParseErrorException(message: String): Exception(message) {
     constructor(expect: String, token: Token):
@@ -226,8 +225,8 @@ class FunctionDataBuilderWithContext private constructor(
         bb.branchCond(value, onTrue, onFalse)
     }
 
-    fun stackAlloc(name: LocalValueToken, ty: TypeToken): Alloc {
-        return memorize(name, bb.alloc(ty.type()))
+    fun alloc(name: LocalValueToken, ty: Type): Alloc {
+        return memorize(name, bb.alloc(ty))
     }
 
     fun ret(retValue: AnyValueToken, expectedType: ElementaryTypeToken) {
@@ -243,6 +242,12 @@ class FunctionDataBuilderWithContext private constructor(
         val source = getValue(sourceName, sourceType.type())
         val index  = getValue(indexName, indexType.type())
         return memorize(name, bb.gep(source, type.asType<PrimitiveType>(), index))
+    }
+
+    fun gfp(name: LocalValueToken, type: StructType, sourceName: AnyValueToken, sourceType: ElementaryTypeToken, indexName: AnyValueToken, indexType: ElementaryTypeToken): GetFieldPtr {
+        val source = getValue(sourceName, sourceType.type())
+        val index  = getValue(indexName, indexType.type()) as IntegerConstant
+        return memorize(name, bb.gfp(source, type, index))
     }
 
     fun bitcast(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): Bitcast {

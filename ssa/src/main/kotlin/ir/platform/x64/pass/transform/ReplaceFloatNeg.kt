@@ -66,7 +66,7 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
             val functions = module.functions.map { it }
             ReplaceFloatNeg(functions).run()
 
-            return CSSAModule(functions, module.externFunctions, module.globals)
+            return CSSAModule(functions, module.externFunctions, module.globals, module.types)
         }
     }
 }

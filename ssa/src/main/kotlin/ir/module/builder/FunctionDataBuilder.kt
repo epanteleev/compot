@@ -1,19 +1,13 @@
 package ir.module.builder
 
-import ir.AnyFunctionPrototype
-import ir.ArgumentValue
-import ir.FunctionPrototype
-import ir.Value
+import ir.*
 import ir.instruction.*
 import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.InstructionFabric
-import ir.types.FloatingPointType
-import ir.types.IntegerType
-import ir.types.PrimitiveType
-import ir.types.Type
+import ir.types.*
 
 class FunctionDataBuilder private constructor(
     private val prototype: FunctionPrototype,
@@ -118,6 +112,9 @@ class FunctionDataBuilder private constructor(
         return bb.gep(source, ty, index)
     }
 
+    override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr {
+        return bb.gfp(source, ty, index)
+    }
 
     override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {
         return bb.bitcast(value, ty)

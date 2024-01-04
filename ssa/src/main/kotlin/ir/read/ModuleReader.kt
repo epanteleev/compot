@@ -7,7 +7,9 @@ import ir.read.bulder.*
 import ir.instruction.*
 
 
-private class FunctionBlockReader private constructor(private val iterator: TokenIterator, private val builder: FunctionDataBuilderWithContext) {
+private class FunctionBlockReader private constructor(private val iterator: TokenIterator,
+                                                      private val moduleBuilder: ModuleBuilderWithContext,
+                                                      private val builder: FunctionDataBuilderWithContext) {
     private fun parseOperand(expectMessage: String): AnyValueToken {
         return iterator.expect<AnyValueToken>(expectMessage)
     }
@@ -29,8 +31,13 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     private fun parseStackAlloc(resultName: LocalValueToken) {
-        val typeToken = iterator.expect<TypeToken>("loaded type")
-        builder.stackAlloc(resultName, typeToken)
+        val type = when (val typeToken = iterator.next("loaded type")) {
+            is TypeToken        -> typeToken.type()
+            is StructDefinition -> moduleBuilder.findStructType(typeToken.name)
+            else -> throw ParseErrorException("unknown type $resultName")
+        }
+
+        builder.alloc(resultName, type)
     }
 
     private fun parseStore() {
@@ -238,6 +245,20 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
         builder.gep(resultName, type, source, sourceType, index, indexType)
     }
 
+    private fun parseGfp(resultName: LocalValueToken) {
+        //%$identifier = gfp $type, ${source.type} {source}, ${index.type} ${index}
+        val type = iterator.expect<StructDefinition>("type")
+        iterator.expect<Comma>("comma")
+
+        val sourceType = iterator.expect<ElementaryTypeToken>("type")
+        val source     = iterator.expect<LocalValueToken>("source value")
+        iterator.expect<Comma>("comma")
+        val indexType  = iterator.expect<ElementaryTypeToken>("index type")
+        val index      = iterator.expect<AnyValueToken>("index")
+
+        builder.gfp(resultName, moduleBuilder.findStructType(type.name), source, sourceType, index, indexType)
+    }
+
     private fun parseNeg(currentTok: LocalValueToken) {
         // %$identifier = {unary type name} {operand type} %{value}
         val type   = iterator.expect<ElementaryTypeToken>("type")
@@ -284,6 +305,7 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
                     "not"        -> parseNot(currentTok)
                     "icmp"       -> parseIcmp(currentTok)
                     "fcmp"       -> parseFcmp(currentTok)
+                    "gfp"        -> parseGfp(currentTok)
                     else -> throw ParseErrorException("instruction name", instruction)
                 }
             }
@@ -316,8 +338,12 @@ private class FunctionBlockReader private constructor(private val iterator: Toke
     }
 
     companion object {
-        fun parse(tokenIterator: TokenIterator, builder: FunctionDataBuilderWithContext) {
-            FunctionBlockReader(tokenIterator, builder).parseInstructions()
+        fun parse(
+            tokenIterator: TokenIterator,
+            moduleBuilder: ModuleBuilderWithContext,
+            builder: FunctionDataBuilderWithContext
+        ) {
+            FunctionBlockReader(tokenIterator, moduleBuilder, builder).parseInstructions()
         }
     }
 }
@@ -336,9 +362,35 @@ class ModuleReader(string: String) {
                 is Extern -> parseExtern()
                 is Define -> parseFunction()
                 is SymbolValue -> parseGlobals(tok)
+                is StructDefinition -> parseStructDefinition(tok)
                 else -> throw ParseErrorException("function, extern or global constant", tok)
             }
         } while (tokenIterator.hasNext())
+    }
+
+    private fun parseStructDefinition(struct: StructDefinition) {
+        tokenIterator.expect<Equal>("'='")
+        tokenIterator.expect<TypeKeyword>("'type' keyword")
+
+        tokenIterator.expect<OpenBrace>("'{'")
+        val fieldTypes = arrayListOf<TypeToken>()
+
+        do {
+            val tp = tokenIterator.expect<TypeToken>("type")
+            fieldTypes.add(tp)
+
+            val next = tokenIterator.next("comma, '}' or type")
+            if (next is CloseBrace) {
+                break
+            }
+
+            if (next !is Comma) {
+                throw ParseErrorException("','", next)
+            }
+
+        } while (true)
+
+        moduleBuilder.addStructType(StructType(struct.name, fieldTypes.map { it.type() })) //TODO
     }
 
     private fun parseGlobals(name: SymbolValue) {
@@ -433,12 +485,12 @@ class ModuleReader(string: String) {
             }
 
             if (comma !is Comma) {
-                throw ParseErrorException("type ", comma)
+                throw ParseErrorException("','", comma)
             }
         } while (true)
 
         val fn = moduleBuilder.createFunction(functionName, returnType, argumentsType, argumentValue)
-        FunctionBlockReader.parse(tokenIterator, fn)
+        FunctionBlockReader.parse(tokenIterator, moduleBuilder, fn)
     }
 
     fun read(): Module {

@@ -19,6 +19,7 @@ interface Visitor {
     fun visit(copy: Copy)
     fun visit(downStackFrame: DownStackFrame)
     fun visit(getElementPtr: GetElementPtr)
+    fun visit(getFieldPtr: GetFieldPtr)
     fun visit(intCompare: IntCompare)
     fun visit(floatCompare: FloatCompare)
     fun visit(load: Load)

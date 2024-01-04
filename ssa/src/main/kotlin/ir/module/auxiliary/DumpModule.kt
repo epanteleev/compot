@@ -17,6 +17,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
 
     private fun dump() {
         dumpExternFunctions()
+        dumpTypes()
         dumpConstants()
         for (fn in module.functions()) {
             dumpFunctionData(fn)
@@ -34,6 +35,14 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
     private fun dumpConstants() {
         for (c in module.globals) {
             builder.append(c.dump())
+            builder.append('\n')
+        }
+        builder.append('\n')
+    }
+
+    private fun dumpTypes() {
+        for (structType in module.types) {
+            builder.append(structType.dump())
             builder.append('\n')
         }
         builder.append('\n')

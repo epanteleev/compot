@@ -1,14 +1,14 @@
 package ir.platform.x64.pass.transform
 
-import asm.x64.ImmInt
 import ir.*
-import ir.module.FunctionData
 import ir.types.Type
+import asm.x64.ImmInt
 import ir.module.Module
 import ir.module.block.Block
+import ir.types.PrimitiveType
+import ir.module.FunctionData
 import ir.platform.x64.CSSAModule
 import ir.platform.x64.CallConvention
-import ir.types.PrimitiveType
 
 
 // Move large constant to data segment
@@ -86,7 +86,7 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
             val constants = module.globals.mapTo(mutableSetOf()) { it }
             MoveLargeConstants(functions, constants).run()
 
-            return CSSAModule(functions, module.externFunctions, constants)
+            return CSSAModule(functions, module.externFunctions, constants, module.types)
         }
     }
 }

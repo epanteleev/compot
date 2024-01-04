@@ -92,6 +92,7 @@ class Tokenizer(val data: String) {
             "ptr"      -> ElementaryTypeToken("ptr", line, begin)
             "constant" -> ConstantKeyword(line, begin)
             "global"   -> GlobalKeyword(line, begin)
+            "type"     -> TypeKeyword(line, begin)
             "label"    -> {
                 skipWhitespace()
                 if (getChar() != '%') {
@@ -266,6 +267,10 @@ class Tokenizer(val data: String) {
             val start = pos
             val name = readValueString()
             LocalValueToken(name, line, start)
+        } else if (ch == '$') {
+            val start = pos
+            val name = readValueString()
+            StructDefinition(name, line, start)
         } else {
             throw TokenizerException("$line:$pos cannot parse: '${remainsLine(globalPosition)}'")
         }

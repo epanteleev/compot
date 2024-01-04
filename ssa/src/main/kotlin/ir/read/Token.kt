@@ -157,6 +157,12 @@ data class To(override val line: Int, override val pos: Int): Token(line, pos) {
     }
 }
 
+data class TypeKeyword(override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "'type'"
+    }
+}
+
 data class LabelUsage(val labelName: String, override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         return "'label'"
@@ -214,5 +220,11 @@ data class SymbolValue(val name: String, override val line: Int, override val po
 data class StringLiteralToken(val string: String, override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         return "\"$string\""
+    }
+}
+
+data class StructDefinition(val name: String, override val line: Int, override val pos: Int): Token(line, pos) {
+    override fun message(): String {
+        return "$$name"
     }
 }
