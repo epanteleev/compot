@@ -3,7 +3,7 @@ package ir.read
 import ir.read.bulder.ParseErrorException
 
 class TokenIterator(val tokenizer: Tokenizer) : Iterator<Token> {
-    fun hasNextOrError(error: () -> Unit) {
+    private fun hasNextOrError(error: () -> Unit) {
         if (!hasNext()) {
             error()
         }
@@ -26,7 +26,7 @@ class TokenIterator(val tokenizer: Tokenizer) : Iterator<Token> {
         return next()
     }
 
-    inline fun <reified T: Token> expect(expect: String): T {
+    inline fun <reified T: AnyToken> expect(expect: String): T {
         val tok = next(expect)
 
         if (tok !is T) {

@@ -3,25 +3,34 @@ package ir.read.bulder
 import ir.*
 import ir.read.*
 import ir.module.*
-import ir.pass.ana.VerifySSA
 import ir.types.StructType
+import ir.pass.ana.VerifySSA
 
 
-class ModuleBuilderWithContext {
+interface TypeResolver {
+    fun resolve(name: String): StructType
+}
+
+class ModuleBuilderWithContext: TypeResolver {
     private val functions = arrayListOf<FunctionDataBuilderWithContext>()
     private val externFunctions = mutableSetOf<ExternFunction>()
     private val globals = mutableSetOf<GlobalValue>()
     private val structs = arrayListOf<StructType>()
 
-    fun createFunction(name: SymbolValue, returnType: ElementaryTypeToken, argumentTypes: List<ElementaryTypeToken>, argumentValues: List<LocalValueToken>): FunctionDataBuilderWithContext {
-        val data = FunctionDataBuilderWithContext.create(name, returnType, argumentTypes, argumentValues, globals)
+    fun createFunction(functionName: SymbolValue, returnType: TypeToken, argumentTypes: List<TypeToken>, argumentValues: List<LocalValueToken>): FunctionDataBuilderWithContext {
+        val args        = argumentTypes.mapTo(arrayListOf()) { it.type(this) }
+        val prototype   = FunctionPrototype(functionName.name, returnType.type(this), args)
+
+        val data = FunctionDataBuilderWithContext.create(this, prototype, argumentValues)
         functions.add(data)
         return data
     }
 
-    fun addGlobal(global: GlobalValue) {
-        globals.add(global)
+    fun findGlobal(name: String): GlobalValue {
+        return globals.find { it.name() == name } ?: throw RuntimeException("not found name=$name")
     }
+
+    fun addGlobal(global: GlobalValue) = globals.add(global)
 
     fun addStructType(structType: StructType) = structs.add(structType)
 
@@ -29,8 +38,12 @@ class ModuleBuilderWithContext {
         return structs.find { it.name == name } ?: throw RuntimeException("not found name=$name")
     }
 
-    fun createExternFunction(functionName: SymbolValue, returnType: ElementaryTypeToken, arguments: List<ElementaryTypeToken>): ExternFunction {
-        val extern = ExternFunction(functionName.name, returnType.type(), arguments.map { it.type() })
+    override fun resolve(name: String): StructType {
+        return findStructType(name)
+    }
+
+    fun createExternFunction(functionName: SymbolValue, returnType: TypeToken, arguments: List<TypeToken>): ExternFunction {
+        val extern = ExternFunction(functionName.name, returnType.type(this), arguments.map { it.type(this) })
         externFunctions.add(extern)
         return extern
     }

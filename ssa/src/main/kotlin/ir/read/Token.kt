@@ -1,10 +1,13 @@
 package ir.read
 
-import ir.types.ArrayType
-import ir.types.Type
+import ir.read.bulder.TypeResolver
+import ir.types.*
 
-sealed class Token(protected open val line: Int, protected open val pos: Int) {
-    abstract fun message(): String
+interface AnyToken {
+    fun message(): String
+}
+
+sealed class Token(protected open val line: Int, protected open val pos: Int): AnyToken {
     fun position(): String {
         return "$line:$pos"
     }
@@ -39,7 +42,19 @@ data class LocalValueToken(val name: String, override val line: Int, override va
 }
 
 abstract class TypeToken(override val line: Int, override val pos: Int) : Token(line, pos) {
-    abstract fun type(): Type
+    abstract fun type(resolver: TypeResolver): Type
+}
+
+interface ArithmeticTypeToken: AnyToken {
+    fun type(resolver: TypeResolver): Type
+}
+
+abstract class PrimitiveTypeToken(open val type: PrimitiveType, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+    override fun type(resolver: TypeResolver): Type {
+        return type
+    }
+
+    abstract fun type(): PrimitiveType
 
     inline fun<reified T: Type> asType(): T {
         val ty = type()
@@ -49,45 +64,62 @@ abstract class TypeToken(override val line: Int, override val pos: Int) : Token(
 
         return ty
     }
-}
-
-data class ElementaryTypeToken(private val type: String, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
-    private val realType by lazy { matchType[type] }
 
     override fun message(): String {
         return "type '$type'"
     }
-
-    override fun type(): Type {
-        return realType ?: throw RuntimeException("Internal error: type=$type")
-    }
-
-    companion object {
-        private val matchType = hashMapOf(
-            "u1"   to Type.U1,
-            "u8"   to Type.U8,
-            "u16"  to Type.U16,
-            "u32"  to Type.U32,
-            "u64"  to Type.U64,
-            "i8"   to Type.I8,
-            "i16"  to Type.I16,
-            "i32"  to Type.I32,
-            "i64"  to Type.I64,
-            "f32"  to Type.F32,
-            "f64"  to Type.F64,
-            "void" to Type.Void,
-            "ptr"  to Type.Ptr,
-        )
-    }
 }
 
-data class ArrayTypeToken(val size: Long, val type: TypeToken, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
-    override fun type(): Type {
-        return ArrayType(type.type(), size.toInt())
+data class IntegerTypeToken(override val type: IntegerType, override val line: Int, override val pos: Int)
+    : PrimitiveTypeToken(type, line, pos), ArithmeticTypeToken {
+    override fun type(): IntegerType = type
+}
+
+data class FloatTypeToken(override val type: FloatingPointType, override val line: Int, override val pos: Int)
+    : PrimitiveTypeToken(type, line, pos), ArithmeticTypeToken {
+    override fun type(): FloatingPointType = type
+}
+
+data class PointerTypeToken(override val line: Int, override val pos: Int)
+    : PrimitiveTypeToken(Type.Ptr, line, pos)  {
+    override fun type(): PointerType = Type.Ptr
+}
+
+data class BooleanTypeToken(override val line: Int, override val pos: Int)
+    : PrimitiveTypeToken(Type.U1, line, pos)  {
+    override fun type(): BooleanType = Type.U1
+}
+
+data class VoidTypeToken(override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+    override fun type(resolver: TypeResolver): Type {
+        return Type.Void
+    }
+
+    override fun message(): String = "type '${Type.Void}'"
+    fun type(): Type = Type.Void
+}
+
+abstract class AggregateTypeToken(override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+    abstract override fun type(resolver: TypeResolver): AggregateType
+}
+
+data class ArrayTypeToken(val size: Long, val type: TypeToken, override val line: Int, override val pos: Int) : AggregateTypeToken(line, pos) {
+    override fun type(resolver: TypeResolver): ArrayType {
+        return ArrayType(type.type(resolver), size.toInt())
     }
 
     override fun message(): String {
         return "<${type.message()}, $size>"
+    }
+}
+
+data class StructDefinition(val name: String, override val line: Int, override val pos: Int): AggregateTypeToken(line, pos) {
+    override fun type(resolver: TypeResolver): StructType {
+        return resolver.resolve(name)
+    }
+
+    override fun message(): String {
+        return "$$name"
     }
 }
 
@@ -220,11 +252,5 @@ data class SymbolValue(val name: String, override val line: Int, override val po
 data class StringLiteralToken(val string: String, override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         return "\"$string\""
-    }
-}
-
-data class StructDefinition(val name: String, override val line: Int, override val pos: Int): Token(line, pos) {
-    override fun message(): String {
-        return "$$name"
     }
 }

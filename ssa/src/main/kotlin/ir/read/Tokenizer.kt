@@ -1,5 +1,8 @@
 package ir.read
 
+import ir.types.Type
+
+
 class EOFException(message: String): Exception(message)
 class TokenizerException(message: String): Exception(message)
 
@@ -87,9 +90,9 @@ class Tokenizer(val data: String) {
         return when (val string = readString()) {
             "define"   -> Define(line, begin)
             "extern"   -> Extern(line, begin)
-            "void"     -> ElementaryTypeToken("void", line, begin)
+            "void"     -> VoidTypeToken(line, begin)
             "to"       -> To(line, begin)
-            "ptr"      -> ElementaryTypeToken("ptr", line, begin)
+            "ptr"      -> PointerTypeToken(line, begin)
             "constant" -> ConstantKeyword(line, begin)
             "global"   -> GlobalKeyword(line, begin)
             "type"     -> TypeKeyword(line, begin)
@@ -156,7 +159,20 @@ class Tokenizer(val data: String) {
 
         val typeName = data.substring(begin, globalPosition)
         val start = pos - typeName.length
-        return ElementaryTypeToken(typeName, line, start)
+        return when (typeName) {
+            "u1"  -> BooleanTypeToken(line, start)
+            "u8"  -> IntegerTypeToken(Type.U8, line, start)
+            "u16" -> IntegerTypeToken(Type.U16, line, start)
+            "u32" -> IntegerTypeToken(Type.U32, line, start)
+            "u64" -> IntegerTypeToken(Type.U64, line, start)
+            "i8"  -> IntegerTypeToken(Type.I8, line, start)
+            "i16" -> IntegerTypeToken(Type.I16, line, start)
+            "i32" -> IntegerTypeToken(Type.I32, line, start)
+            "i64" -> IntegerTypeToken(Type.I64, line, start)
+            "f32" -> FloatTypeToken(Type.F32, line, start)
+            "f64" -> FloatTypeToken(Type.F64, line, start)
+            else -> throw TokenizerException("$line:$pos unknown type: '$typeName'")
+        }
     }
 
     private fun readNumeric(begin: Int = globalPosition): AnyValueToken? {

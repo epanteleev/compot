@@ -1,5 +1,6 @@
 package read
 import ir.read.*
+import ir.types.Type
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,7 +15,7 @@ class TokenizerTest {
         assertEquals(Identifier("abs", 1,0), iterator.next())
         assertEquals(Equal(1, 4), iterator.next())
         assertEquals(Identifier("add", 1, 6), iterator.next())
-        assertEquals(ElementaryTypeToken("u64", 1,10), iterator.next())
+        assertEquals(IntegerTypeToken(Type.U64, 1,10), iterator.next())
         assertEquals(IntValue(3, 1, 14), iterator.next())
         assertEquals(Comma(1, 15), iterator.next())
         assertEquals(LocalValueToken("1", 1, 17), iterator.next())
@@ -31,14 +32,14 @@ class TokenizerTest {
         assertEquals(Equal(1, 2), iterator.next())
         assertTrue(iterator.hasNext())
         assertEquals(Identifier("gep", 1, 3), iterator.next())
-        assertEquals(ElementaryTypeToken("ptr", 1, 7), iterator.next())
+        assertEquals(PointerTypeToken(1, 7), iterator.next())
         assertEquals(LocalValueToken("129", 1, 11), iterator.next())
         assertEquals(Comma(1, 15), iterator.next())
         assertEquals(LocalValueToken("1", 1, 17), iterator.next())
         assertEquals(LocalValueToken("43", 2, 0), iterator.next())
         assertEquals(Equal(2, 3), iterator.next())
         assertEquals(Identifier("load", 2, 4), iterator.next())
-        assertEquals(ElementaryTypeToken("ptr", 2, 9), iterator.next())
+        assertEquals(PointerTypeToken(2, 9), iterator.next())
         assertTrue(iterator.hasNext())
     }
 
@@ -88,7 +89,7 @@ class TokenizerTest {
         val tokenizer = Tokenizer("define void @some")
         val iterator = tokenizer.iterator()
         assertEquals(Define(1, 0), iterator.next())
-        assertEquals(ElementaryTypeToken("void", 1, 7), iterator.next())
+        assertEquals(VoidTypeToken(1, 7), iterator.next())
         assertEquals(SymbolValue("some", 1, 13), iterator.next())
         assertFalse(iterator.hasNext())
     }

@@ -14,11 +14,11 @@ class ParseErrorException(message: String): Exception(message) {
 }
 
 class FunctionDataBuilderWithContext private constructor(
+    private val moduleBuilder: ModuleBuilderWithContext,
     private val prototype: FunctionPrototype,
     private val argumentValues: List<ArgumentValue>,
     private val blocks: BasicBlocks,
-    private val nameMap: MutableMap<String, LocalValue>,
-    private val globals: Set<GlobalValue>
+    private val nameMap: MutableMap<String, LocalValue>
 ) {
     private var allocatedLabel: Int = 0
     private var bb: Block = blocks.begin()
@@ -47,12 +47,7 @@ class FunctionDataBuilderWithContext private constructor(
                 operand
             }
 
-            is SymbolValue -> {
-                val symbolName = token.name
-                val gValue = globals.find { symbolName == it.name() }
-                    ?: throw ParseErrorException("cannot find global value '$symbolName'")
-                gValue
-            } //TODO
+            is SymbolValue -> moduleBuilder.findGlobal(token.name)
             else -> throw ParseErrorException("constant or value", token)
         }
     }
@@ -90,11 +85,6 @@ class FunctionDataBuilderWithContext private constructor(
         return FunctionData.create(prototype, blocks, argumentValues)
     }
 
-    fun makePrototype(functionName: SymbolValue, returnType: ElementaryTypeToken, argTypes: List<ElementaryTypeToken>): FunctionPrototype {
-        val types = argTypes.mapTo(arrayListOf()) { it.type() }
-        return FunctionPrototype(functionName.name, returnType.type(), types)
-    }
-
     fun createLabel(): Block = allocateBlock()
 
     fun switchLabel(labelTok: LabelDefinition) {
@@ -106,24 +96,24 @@ class FunctionDataBuilderWithContext private constructor(
         return argumentValues
     }
 
-    fun neg(name: LocalValueToken, valueTok: AnyValueToken, expectedType: ElementaryTypeToken): ArithmeticUnary {
-        val value  = getValue(valueTok, expectedType.type())
+    fun neg(name: LocalValueToken, valueTok: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticUnary {
+        val value = getValue(valueTok, expectedType.type(moduleBuilder))
         return memorize(name, bb.neg(value))
     }
 
-    fun not(name: LocalValueToken, valueTok: AnyValueToken, expectedType: ElementaryTypeToken): ArithmeticUnary {
+    fun not(name: LocalValueToken, valueTok: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticUnary {
         val value  = getValue(valueTok, expectedType.type())
         return memorize(name, bb.not(value))
     }
 
-    fun arithmeticBinary(name: LocalValueToken, a: AnyValueToken, op: ArithmeticBinaryOp, b: AnyValueToken, expectedType: ElementaryTypeToken): ArithmeticBinary {
-        val first  = getValue(a, expectedType.type())
-        val second = getValue(b, expectedType.type())
+    fun arithmeticBinary(name: LocalValueToken, a: AnyValueToken, op: ArithmeticBinaryOp, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
+        val first  = getValue(a, expectedType.type(moduleBuilder))
+        val second = getValue(b, expectedType.type(moduleBuilder))
         val result = bb.arithmeticBinary(first, op, second)
         return memorize(name, result)
     }
 
-    fun intCompare(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, expectedType: ElementaryTypeToken): IntCompare {
+    fun intCompare(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, expectedType: IntegerTypeToken): IntCompare {
         val compareType = when (predicate.string) {
             "eq"  -> IntPredicate.Eq
             "ne"  -> IntPredicate.Ne
@@ -144,7 +134,7 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, result)
     }
 
-    fun floatCompare(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, expectedType: ElementaryTypeToken): FloatCompare {
+    fun floatCompare(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, expectedType: FloatTypeToken): FloatCompare {
         val compareType = when (predicate.string) {
             "oeq" -> FloatPredicate.Oeq
             "one" -> FloatPredicate.One
@@ -168,12 +158,12 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, result)
     }
 
-    fun load(name: LocalValueToken, ptr: AnyValueToken, expectedType: ElementaryTypeToken): Load {
+    fun load(name: LocalValueToken, ptr: AnyValueToken, expectedType: PrimitiveTypeToken): Load {
         val pointer = getValue(ptr, expectedType.type().ptr())
         return memorize(name, bb.load(expectedType.asType<PrimitiveType>(),pointer))
     }
 
-    fun store(ptr: AnyValueToken, valueTok: AnyValueToken, expectedType: ElementaryTypeToken) {
+    fun store(ptr: AnyValueToken, valueTok: AnyValueToken, expectedType: PrimitiveTypeToken) {
         val pointer = getValue(ptr, expectedType.type())
         val value   = getValue(valueTok, expectedType.asType<PrimitiveType>())
         return bb.store(pointer, value)
@@ -229,55 +219,53 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.alloc(ty))
     }
 
-    fun ret(retValue: AnyValueToken, expectedType: ElementaryTypeToken) {
-        val value = getValue(retValue, expectedType.type())
+    fun ret(retValue: AnyValueToken, expectedType: TypeToken) {
+        val value = getValue(retValue, expectedType.type(moduleBuilder))
         bb.ret(value)
     }
 
-    fun retVoid() {
-        bb.retVoid()
-    }
+    fun retVoid() = bb.retVoid()
 
-    fun gep(name: LocalValueToken, type: ElementaryTypeToken, sourceName: AnyValueToken, sourceType: ElementaryTypeToken, indexName: AnyValueToken, indexType: ElementaryTypeToken): GetElementPtr {
+    fun gep(name: LocalValueToken, type: PrimitiveTypeToken, sourceName: AnyValueToken, sourceType: PointerTypeToken, indexName: AnyValueToken, indexType: IntegerTypeToken): GetElementPtr {
         val source = getValue(sourceName, sourceType.type())
         val index  = getValue(indexName, indexType.type())
         return memorize(name, bb.gep(source, type.asType<PrimitiveType>(), index))
     }
 
-    fun gfp(name: LocalValueToken, type: StructType, sourceName: AnyValueToken, sourceType: ElementaryTypeToken, indexName: AnyValueToken, indexType: ElementaryTypeToken): GetFieldPtr {
+    fun gfp(name: LocalValueToken, type: AggregateTypeToken, sourceName: AnyValueToken, sourceType: PointerTypeToken, indexName: IntValue, indexType: IntegerTypeToken): GetFieldPtr {
         val source = getValue(sourceName, sourceType.type())
         val index  = getValue(indexName, indexType.type()) as IntegerConstant
-        return memorize(name, bb.gfp(source, type, index))
+        return memorize(name, bb.gfp(source, type.type(moduleBuilder), index))
     }
 
-    fun bitcast(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): Bitcast {
+    fun bitcast(name: LocalValueToken, operandToken: AnyValueToken, operandType: PrimitiveTypeToken, resultType: PrimitiveTypeToken): Bitcast {
         val value = getValue(operandToken, operandType.type())
-        return memorize(name, bb.bitcast(value, resultType.asType<PrimitiveType>()))
+        return memorize(name, bb.bitcast(value, resultType.type()))
     }
 
-    fun zext(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): ZeroExtend {
+    fun zext(name: LocalValueToken, operandToken: AnyValueToken, operandType: IntegerTypeToken, resultType: IntegerTypeToken): ZeroExtend {
         val value = getValue(operandToken, operandType.type())
-        return memorize(name, bb.zext(value, resultType.asType<IntegerType>()))
+        return memorize(name, bb.zext(value,  resultType.type()))
     }
 
-    fun sext(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): SignExtend {
+    fun sext(name: LocalValueToken, operandToken: AnyValueToken, operandType: IntegerTypeToken, resultType: IntegerTypeToken): SignExtend {
         val value = getValue(operandToken, operandType.type())
-        return memorize(name, bb.sext(value, resultType.asType<IntegerType>()))
+        return memorize(name, bb.sext(value, resultType.type()))
     }
 
-    fun trunc(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): Truncate {
+    fun trunc(name: LocalValueToken, operandToken: AnyValueToken, operandType: IntegerTypeToken, resultType: IntegerTypeToken): Truncate {
         val value = getValue(operandToken, operandType.type())
-        return memorize(name, bb.trunc(value, resultType.asType<IntegerType>()))
+        return memorize(name, bb.trunc(value, resultType.type()))
     }
 
-    fun fptrunc(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): FpTruncate {
+    fun fptrunc(name: LocalValueToken, operandToken: AnyValueToken, operandType: FloatTypeToken, resultType: FloatTypeToken): FpTruncate {
         val value = getValue(operandToken, operandType.type())
-        return memorize(name, bb.fptrunc(value, resultType.asType<FloatingPointType>()))
+        return memorize(name, bb.fptrunc(value, resultType.type()))
     }
 
-    fun fpext(name: LocalValueToken, operandToken: AnyValueToken, operandType: ElementaryTypeToken, resultType: ElementaryTypeToken): FpExtend {
+    fun fpext(name: LocalValueToken, operandToken: AnyValueToken, operandType: FloatTypeToken, resultType: FloatTypeToken): FpExtend {
         val value = getValue(operandToken, operandType.type())
-        return memorize(name, bb.fpext(value, resultType.asType<FloatingPointType>()))
+        return memorize(name, bb.fpext(value, resultType.type()))
     }
 
     fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: PrimitiveType): Value {
@@ -288,7 +276,7 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.select(cond, onTrue, onFalse))
     }
 
-    fun phi(name: LocalValueToken, incomingTok: ArrayList<AnyValueToken>, labelsTok: ArrayList<Identifier>, expectedType: ElementaryTypeToken): Value {
+    fun phi(name: LocalValueToken, incomingTok: ArrayList<AnyValueToken>, labelsTok: ArrayList<Identifier>, expectedType: PrimitiveTypeToken): Value {
         val blocks = arrayListOf<Block>()
         for (tok in labelsTok) {
             blocks.add(getBlockOrCreate(tok.string))
@@ -305,16 +293,18 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, phi)
     }
 
+    fun makePrototype(functionName: SymbolValue, returnType: TypeToken, argTypes: List<TypeToken>): FunctionPrototype {
+        val types = argTypes.mapTo(arrayListOf()) { it.type(moduleBuilder) }
+        return FunctionPrototype(functionName.name, returnType.type(moduleBuilder), types)
+    }
+
     companion object {
-        fun create(functionName: SymbolValue,
-                   returnType: ElementaryTypeToken,
-                   argumentTypeTokens: List<ElementaryTypeToken>,
-                   argumentValueTokens: List<LocalValueToken>,
-                   globals: Set<GlobalValue>): FunctionDataBuilderWithContext {
-            fun handleArguments(argumentTypeTokens: List<ElementaryTypeToken>): List<ArgumentValue> {
+        fun create(moduleBuilder: ModuleBuilderWithContext, prototype: FunctionPrototype,
+            argumentValueTokens: List<LocalValueToken>): FunctionDataBuilderWithContext {
+            fun handleArguments(argumentTypeTokens: List<Type>): List<ArgumentValue> {
                 val argumentValues = arrayListOf<ArgumentValue>()
                 for ((idx, arg) in argumentTypeTokens.withIndex()) {
-                    argumentValues.add(ArgumentValue(idx, arg.type()))
+                    argumentValues.add(ArgumentValue(idx, arg))
                 }
 
                 return argumentValues
@@ -329,15 +319,13 @@ class FunctionDataBuilderWithContext private constructor(
                 return nameToValue
             }
 
-            val args        = argumentTypeTokens.mapTo(arrayListOf()) { it.type() }
-            val prototype   = FunctionPrototype(functionName.name, returnType.type(), args)
             val startBB     = Block.empty(Label.entry.index)
             val basicBlocks = BasicBlocks.create(startBB)
 
-            val arguments = handleArguments(argumentTypeTokens)
+            val arguments = handleArguments(prototype.arguments())
             val nameMap   = setupNameMap(arguments, argumentValueTokens)
 
-            return FunctionDataBuilderWithContext(prototype, arguments, basicBlocks, nameMap, globals)
+            return FunctionDataBuilderWithContext(moduleBuilder, prototype, arguments, basicBlocks, nameMap)
         }
     }
 }

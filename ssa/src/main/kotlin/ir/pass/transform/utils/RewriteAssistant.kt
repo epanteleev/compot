@@ -1,11 +1,9 @@
 package ir.pass.transform.utils
 
-import ir.Value
-import ir.DominatorTree
+import ir.*
 import ir.instruction.*
+import ir.module.block.*
 import ir.module.BasicBlocks
-import ir.module.block.Block
-import ir.module.block.Label
 import ir.types.PrimitiveType
 import ir.pass.transform.Mem2RegException
 import ir.pass.transform.utils.Utils.isLocalVariable
