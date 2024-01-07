@@ -48,7 +48,9 @@ function compile_and_run() {
 	compile_test "$test_name"
 	run_test "$test_name" "$expected_result"
 }
+compile_and_run select 01
 compile_and_run struct_access 14
+compile_and_run struct_access1 16
 compile_and_run manyArguments 36
 compile_and_run manyArguments1 36.000000
 compile_and_run sum 16
@@ -72,7 +74,9 @@ compile_and_run fill_in_array1 "01234"
 compile_and_run fill_in_array2 "01234"
 compile_and_run fill_in_array3 "0123456789"
 compile_and_run fill_in_array4 "01234"
+compile_and_run fill_in_array5 "01234"
 compile_and_run fill_in_fp_array1 "0.000000 1.000000 2.000000 3.000000 4.000000 "
+compile_and_run fill_in_fp_array2 "0.000000 1.000000 2.000000 3.000000 4.000000 "
 compile_and_run i32_to_i64 "-1"
 compile_and_run u32_to_u64 "1"
 compile_and_run i64_to_i32 "-1"

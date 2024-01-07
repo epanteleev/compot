@@ -31,7 +31,8 @@ interface InstructionFabric {
     fun trunc(value: Value, toType: IntegerType): Truncate
     fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate
     fun fpext(value: Value, toType: FloatingPointType): FpExtend
-    fun select(cond: Value, onTrue: Value, onFalse: Value): Select
+    fun fptosi(value: Value, toType: SignedIntType): FloatToSigned
+    fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select
     fun phi(incoming: List<Value>, labels: List<Block>): Phi
 }
 

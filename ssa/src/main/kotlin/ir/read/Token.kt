@@ -70,9 +70,19 @@ abstract class PrimitiveTypeToken(open val type: PrimitiveType, override val lin
     }
 }
 
-data class IntegerTypeToken(override val type: IntegerType, override val line: Int, override val pos: Int)
+abstract class IntegerTypeToken(override val type: IntegerType, override val line: Int, override val pos: Int)
     : PrimitiveTypeToken(type, line, pos), ArithmeticTypeToken {
-    override fun type(): IntegerType = type
+    abstract override fun type(): IntegerType
+}
+
+data class SignedIntegerTypeToken(override val type: SignedIntType, override val line: Int, override val pos: Int)
+    : IntegerTypeToken(type, line, pos), ArithmeticTypeToken {
+    override fun type(): SignedIntType =  type
+}
+
+data class UnsignedIntegerTypeToken(override val type: UnsignedIntType, override val line: Int, override val pos: Int)
+    : IntegerTypeToken(type, line, pos), ArithmeticTypeToken {
+    override fun type(): UnsignedIntType =  type
 }
 
 data class FloatTypeToken(override val type: FloatingPointType, override val line: Int, override val pos: Int)

@@ -23,7 +23,7 @@ class FunctionDataBuilderWithContext private constructor(
     private var allocatedLabel: Int = 0
     private var bb: Block = blocks.begin()
     private val nameToLabel = hashMapOf("entry" to bb)
-    private val incomplitedPhi = arrayListOf<PhiContext>()
+    private val incompletePhis = arrayListOf<PhiContext>()
 
     private fun allocateBlock(): Block {
         allocatedLabel += 1
@@ -78,7 +78,7 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun build(): FunctionData {
-        for (phi in incomplitedPhi) {
+        for (phi in incompletePhis) {
             phi.completePhi(nameMap)
         }
 
@@ -268,12 +268,17 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.fpext(value, resultType.type()))
     }
 
-    fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: PrimitiveType): Value {
-        val cond    = getValue(condTok, Type.U1)
-        val onTrue  = getValue(onTrueTok, selectType)
-        val onFalse = getValue(onFalseTok, selectType)
+    fun fptosi(name: LocalValueToken, operandToken: AnyValueToken, operandType: FloatTypeToken, resultType: SignedIntegerTypeToken): FloatToSigned {
+        val value = getValue(operandToken, operandType.type())
+        return memorize(name, bb.fptosi(value, resultType.type()))
+    }
 
-        return memorize(name, bb.select(cond, onTrue, onFalse))
+    fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: PrimitiveTypeToken): Value {
+        val cond    = getValue(condTok, Type.U1)
+        val onTrue  = getValue(onTrueTok, selectType.type())
+        val onFalse = getValue(onFalseTok, selectType.type())
+
+        return memorize(name, bb.select(cond, selectType.type(), onTrue, onFalse))
     }
 
     fun phi(name: LocalValueToken, incomingTok: ArrayList<AnyValueToken>, labelsTok: ArrayList<Identifier>, expectedType: PrimitiveTypeToken): Value {
@@ -289,7 +294,7 @@ class FunctionDataBuilderWithContext private constructor(
         }
 
         val phi = bb.uncompletedPhi(values, blocks)
-        incomplitedPhi.add(PhiContext(phi, incomingTok, type))
+        incompletePhis.add(PhiContext(phi, incomingTok, type))
         return memorize(name, phi)
     }
 

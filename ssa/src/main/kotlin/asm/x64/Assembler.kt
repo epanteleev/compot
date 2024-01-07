@@ -310,6 +310,40 @@ class Assembler(private val name: String) {
     fun cvtss2sd(src: XmmRegister, dst: XmmRegister) = add(Cvtss2sd(src, dst))
     fun cvtss2sd(src: Address, dst: XmmRegister) = add(Cvtss2sd(src, dst))
 
+    // Convert Scalar Single Precision Floating-Point Value to Doubleword Integer
+    fun cvtss2si(toSize: Int, src: XmmRegister, dst: GPRegister) = when (toSize) {
+        8, 4 -> add(Cvtss2si(toSize, src, dst))
+        else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
+    }
+
+    fun cvtss2si(toSize: Int, src: Address, dst: GPRegister) = when (toSize) {
+        8, 4 -> add(Cvtss2si(toSize, src, dst))
+        else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
+    }
+
+    // Convert Double Single Precision Floating-Point Value to Doubleword Integer
+    fun cvtsd2si(toSize: Int, src: XmmRegister, dst: GPRegister) = when (toSize) {
+        8, 4 -> add(Cvtsd2si(toSize, src, dst))
+        else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
+    }
+
+    fun cvtsd2si(toSize: Int, src: Address, dst: GPRegister) = when (toSize) {
+        8, 4 -> add(Cvtsd2si(toSize, src, dst))
+        else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
+    }
+
+    fun cvtfp2int(toSize: Int, fromSize: Int, src: Address, dst: GPRegister) = when (fromSize) {
+        8 -> cvtsd2si(toSize, src, dst)
+        4 -> cvtss2si(toSize, src, dst)
+        else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
+    }
+
+    fun cvtfp2int(toSize: Int, fromSize: Int, src: XmmRegister, dst: GPRegister) = when (fromSize) {
+        8 -> cvtsd2si(toSize, src, dst)
+        4 -> cvtss2si(toSize, src, dst)
+        else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
+    }
+
     override fun toString(): String {
         val builder = StringBuilder()
         var count = 0

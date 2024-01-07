@@ -371,3 +371,15 @@ data class Cvtss2sd(val src1: Operand, val src2: Operand): CPUInstruction {
         return "cvtss2sd ${src1.toString(16)}, ${src2.toString(16)}"
     }
 }
+
+data class Cvtsd2si(val toSize: Int, val src1: Operand, val src2: Operand): CPUInstruction {
+    override fun toString(): String {
+        return "cvtsd2si ${src1.toString(16)}, ${src2.toString(toSize)}"
+    }
+}
+
+data class Cvtss2si(val toSize: Int, val src1: Operand, val src2: Operand): CPUInstruction {
+    override fun toString(): String {
+        return "cvtss2si ${src1.toString(16)}, ${src2.toString(toSize)}"
+    }
+}

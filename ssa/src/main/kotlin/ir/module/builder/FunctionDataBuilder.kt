@@ -132,8 +132,8 @@ class FunctionDataBuilder private constructor(
         return bb.trunc(value, toType)
     }
 
-    override fun select(cond: Value, onTrue: Value, onFalse: Value): Select {
-        return bb.select(cond, onTrue, onFalse)
+    override fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select {
+        return bb.select(cond, type, onTrue, onFalse)
     }
 
     override fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate {
@@ -142,6 +142,10 @@ class FunctionDataBuilder private constructor(
 
     override fun fpext(value: Value, toType: FloatingPointType): FpExtend {
         return bb.fpext(value, toType)
+    }
+
+    override fun fptosi(value: Value, toType: SignedIntType): FloatToSigned {
+        return bb.fptosi(value, toType)
     }
 
     override fun phi(incoming: List<Value>, labels: List<Block>): Phi {

@@ -283,8 +283,12 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> FpExtend.make(n(it), toType, value) }
     }
 
-    override fun select(cond: Value, onTrue: Value, onFalse: Value): Select {
-        return withOutput { it: Int -> Select.make(n(it), onTrue.type(), cond, onTrue, onFalse) }
+    override fun fptosi(value: Value, toType: SignedIntType): FloatToSigned {
+        return withOutput { it: Int -> FloatToSigned.make(n(it), toType, value) }
+    }
+
+    override fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select {
+        return withOutput { it: Int -> Select.make(n(it), type, cond, onTrue, onFalse) }
     }
 
     override fun phi(incoming: List<Value>, labels: List<Block>): Phi {

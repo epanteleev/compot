@@ -1,6 +1,7 @@
 package ir.read
 
 import ir.types.Type
+import jdk.jfr.Unsigned
 
 
 class EOFException(message: String): Exception(message)
@@ -41,8 +42,8 @@ class Tokenizer(val data: String) {
     }
 
     private fun getChar(): Char {
-        if (globalPosition >= data.length) {
-            throw EOFException("unexpected EOF in $line, $pos")
+        if (isEnd()) {
+            throw EOFException("$line:$pos unexpected EOF")
         }
         return data[globalPosition]
     }
@@ -161,14 +162,14 @@ class Tokenizer(val data: String) {
         val start = pos - typeName.length
         return when (typeName) {
             "u1"  -> BooleanTypeToken(line, start)
-            "u8"  -> IntegerTypeToken(Type.U8, line, start)
-            "u16" -> IntegerTypeToken(Type.U16, line, start)
-            "u32" -> IntegerTypeToken(Type.U32, line, start)
-            "u64" -> IntegerTypeToken(Type.U64, line, start)
-            "i8"  -> IntegerTypeToken(Type.I8, line, start)
-            "i16" -> IntegerTypeToken(Type.I16, line, start)
-            "i32" -> IntegerTypeToken(Type.I32, line, start)
-            "i64" -> IntegerTypeToken(Type.I64, line, start)
+            "u8"  -> UnsignedIntegerTypeToken(Type.U8, line, start)
+            "u16" -> UnsignedIntegerTypeToken(Type.U16, line, start)
+            "u32" -> UnsignedIntegerTypeToken(Type.U32, line, start)
+            "u64" -> UnsignedIntegerTypeToken(Type.U64, line, start)
+            "i8"  -> SignedIntegerTypeToken(Type.I8, line, start)
+            "i16" -> SignedIntegerTypeToken(Type.I16, line, start)
+            "i32" -> SignedIntegerTypeToken(Type.I32, line, start)
+            "i64" -> SignedIntegerTypeToken(Type.I64, line, start)
             "f32" -> FloatTypeToken(Type.F32, line, start)
             "f64" -> FloatTypeToken(Type.F64, line, start)
             else -> throw TokenizerException("$line:$pos unknown type: '$typeName'")

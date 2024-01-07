@@ -47,7 +47,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
     }
 
     private fun parseRet() {
-        val retType     = iterator.expect<TypeToken>("return type")
+        val retType = iterator.expect<TypeToken>("return type")
         if (retType.type(moduleBuilder) == Type.Void) {
             builder.retVoid()
             return
@@ -137,6 +137,15 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         val castValueToken = iterator.expect<FloatTypeToken>("${FpExtend.NAME} type")
 
         builder.fpext(resultName, operand, operandType, castValueToken)
+    }
+
+    private fun parseFptosi(resultName: LocalValueToken) {
+        val operandType = iterator.expect<FloatTypeToken>("value type")
+        val operand     = iterator.expect<LocalValueToken>("value to cast")
+        iterator.expect<To>("'to' keyword")
+        val castValueToken = iterator.expect<SignedIntegerTypeToken>("${FloatToSigned.NAME} type")
+
+        builder.fptosi(resultName, operand, operandType, castValueToken)
     }
 
     private fun parseSext(resultName: LocalValueToken) {
@@ -259,6 +268,26 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         builder.neg(currentTok, source, type)
     }
 
+    private fun parseSelect(currentTok: LocalValueToken) {
+        // %$identifier = select u1 <v0>, <t1> <v1>, <t2> <v2>
+        val booleanTypeToken = iterator.expect<BooleanTypeToken>("'${Type.U1}' type")
+        val v0 = iterator.expect<AnyValueToken>("condition value")
+        iterator.expect<Comma>("','")
+
+        val t1 = iterator.expect<PrimitiveTypeToken>("primitive type")
+        val v1 = iterator.expect<AnyValueToken>("first operand")
+        iterator.expect<Comma>("','")
+
+        val t2 = iterator.expect<PrimitiveTypeToken>("primitive type")
+        val v2 = iterator.expect<AnyValueToken>("second operand")
+
+        if (t1.type() != t2.type()) {
+            throw ParseErrorException("should be the same primitive type: t1=${t1.type()}, t2=${t2.type()}")
+        }
+
+        builder.select(currentTok, v0, v1, v2, t1)
+    }
+
     private fun parseInstruction(currentTok: Token) {
         when (currentTok) {
             is LocalValueToken -> {
@@ -284,6 +313,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "bitcast"    -> parseBitcast(currentTok)
                     "fptrunc"    -> parseFptrunc(currentTok)
                     "fpext"      -> parseFpext(currentTok)
+                    "fptosi"     -> parseFptosi(currentTok)
                     "alloc"      -> parseStackAlloc(currentTok)
                     "phi"        -> parsePhi(currentTok)
                     "gep"        -> parseGep(currentTok)
@@ -292,6 +322,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "icmp"       -> parseIcmp(currentTok)
                     "fcmp"       -> parseFcmp(currentTok)
                     "gfp"        -> parseGfp(currentTok)
+                    "select"     -> parseSelect(currentTok)
                     else -> throw ParseErrorException("instruction name", instruction)
                 }
             }

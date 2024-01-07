@@ -15,7 +15,7 @@ class TokenizerTest {
         assertEquals(Identifier("abs", 1,0), iterator.next())
         assertEquals(Equal(1, 4), iterator.next())
         assertEquals(Identifier("add", 1, 6), iterator.next())
-        assertEquals(IntegerTypeToken(Type.U64, 1,10), iterator.next())
+        assertEquals(UnsignedIntegerTypeToken(Type.U64, 1,10), iterator.next())
         assertEquals(IntValue(3, 1, 14), iterator.next())
         assertEquals(Comma(1, 15), iterator.next())
         assertEquals(LocalValueToken("1", 1, 17), iterator.next())
@@ -125,6 +125,11 @@ class TokenizerTest {
 
         assertThrows<TokenizerException> {
             val tokenizer = Tokenizer("3..0val")
+            tokenizer.iterator().next()
+        }
+
+        assertThrows<EOFException> {
+            val tokenizer = Tokenizer("\"sdfsdf")
             tokenizer.iterator().next()
         }
     }

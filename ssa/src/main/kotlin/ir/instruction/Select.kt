@@ -1,15 +1,18 @@
 package ir.instruction
 
 import ir.Value
+import ir.types.*
 import ir.instruction.utils.Visitor
-import ir.types.BooleanType
-import ir.types.PrimitiveType
-import ir.types.Type
 
-class Select private constructor(name: String, ty: Type, cond: Value, onTrue: Value, onFalse: Value) :
+
+class Select private constructor(name: String, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value) :
     ValueInstruction(name, ty, arrayOf(cond, onTrue, onFalse)) {
+    override fun type(): PrimitiveType {
+        return tp as PrimitiveType
+    }
+
     override fun dump(): String {
-        return "%$identifier = select $tp ${condition()} ${onTrue()}, ${onFalse()}"
+        return "%$identifier = $NAME ${Type.U1} ${condition()}, ${onTrue().type()} ${onTrue()}, ${onFalse().type()} ${onFalse()}"
     }
 
     fun condition(): Value {
@@ -41,7 +44,7 @@ class Select private constructor(name: String, ty: Type, cond: Value, onTrue: Va
             "should be, but newUsages=$newUsages"
         }
 
-        return make(identifier, tp, newUsages[0], newUsages[1], newUsages[2])
+        return make(identifier, type(), newUsages[0], newUsages[1], newUsages[2])
     }
 
     override fun visit(visitor: Visitor) {
@@ -49,7 +52,9 @@ class Select private constructor(name: String, ty: Type, cond: Value, onTrue: Va
     }
 
     companion object {
-        fun make(name: String, ty: Type, cond: Value, onTrue: Value, onFalse: Value): Select {
+        const val NAME = "select"
+
+        fun make(name: String, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value): Select {
             val onTrueType = onTrue.type()
             val onFalseType = onFalse.type()
             val condType = cond.type()
@@ -60,12 +65,12 @@ class Select private constructor(name: String, ty: Type, cond: Value, onTrue: Va
             return registerUser(Select(name, ty, cond, onTrue, onFalse), cond, onTrue, onFalse)
         }
 
-        private fun isAppropriateType(ty: Type, condType: Type, onTrueType: Type, onFalseType: Type): Boolean {
+        private fun isAppropriateType(ty: PrimitiveType, condType: Type, onTrueType: Type, onFalseType: Type): Boolean {
             if (condType !is BooleanType) {
                 return false
             }
 
-            return (ty == onFalseType) && (ty == onTrueType) && (ty is PrimitiveType)
+            return (ty == onFalseType) && (ty == onTrueType)
         }
 
         fun isCorrect(select: Select): Boolean {

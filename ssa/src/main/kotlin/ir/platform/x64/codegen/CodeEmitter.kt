@@ -18,6 +18,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.STACK_ALIGNMENT
+import ir.platform.x64.codegen.impl.*
 
 
 data class CodegenException(override val message: String): Exception(message)
@@ -47,7 +48,7 @@ class CodeEmitter(private val data: FunctionData,
 
     private fun emitEpilogue() {
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
-        for (reg in calleeSaveRegisters.reversed()) {
+        for (reg in calleeSaveRegisters.reversed()) { //TODO created new ds
             asm.pop(8, reg)
         }
 
@@ -351,7 +352,7 @@ class CodeEmitter(private val data: FunctionData,
         if (source is Alloc) {
             GetFieldPtrCodegenForAlloc(getFieldPtr.type(), getFieldPtr.basicType, asm)(dest, sourceOperand, index)
         } else {
-            TODO()
+            GetFieldPtrCodegen(getFieldPtr.type(), getFieldPtr.basicType, asm)(dest, sourceOperand, index)
         }
     }
 
@@ -389,6 +390,12 @@ class CodeEmitter(private val data: FunctionData,
         val dst = valueToRegister.operand(fpext)
         val src = valueToRegister.operand(fpext.value())
         FpExtendCodegen(fpext.type(), asm)(dst, src)
+    }
+
+    override fun visit(fptosi: FloatToSigned) {
+        val dst = valueToRegister.operand(fptosi)
+        val src = valueToRegister.operand(fptosi.value())
+        FloatToSignedCodegen(fptosi.type(), fptosi.value().type() as FloatingPointType, asm)(dst, src)
     }
 
     override fun visit(select: Select) {
