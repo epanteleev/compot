@@ -31,7 +31,7 @@ class FibonacciTest {
         builder.store(a, I32Value(0))
         builder.store(b, I32Value(1))
         val v0 = builder.load(Type.I32, nAddr)
-        val cmp = builder.intCompare(v0, IntPredicate.Eq, I32Value(0))
+        val cmp = builder.icmp(v0, IntPredicate.Eq, I32Value(0))
 
         val ifThen = builder.createLabel()
         val ifEnd = builder.createLabel()
@@ -56,7 +56,7 @@ class FibonacciTest {
         builder.switchLabel(forCond)
         val v2 = builder.load(Type.I32, i)
         val v3 = builder.load(Type.I32, nAddr)
-        val cmp1 = builder.intCompare(v2, IntPredicate.Sle, v3)
+        val cmp1 = builder.icmp(v2, IntPredicate.Le, v3)
         builder.branchCond(cmp1, forBody, forEnd)
 
         builder.switchLabel(forBody)

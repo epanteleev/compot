@@ -136,9 +136,9 @@ class VerifySSA private constructor(private val functionData: FunctionData, priv
                     fun message() = "Binary arithmetic instruction '${instruction.dump()}' requires all operands to be of the same type: a=${instruction.first().type()}, b=${instruction.second().type()}"
                     assert(ArithmeticBinary.isCorrect(instruction)) { message() }
                 }
-                is IntCompare -> {
+                is SignedIntCompare -> {
                     fun message() = "Compare instruction '${instruction.dump()}' requires all operands to be of the same type: a=${instruction.first().type()}, b=${instruction.second().type()}"
-                    assert(IntCompare.isCorrect(instruction)) { message() }
+                    assert(SignedIntCompare.isCorrect(instruction)) { message() }
                 }
                 is Load -> {
                     fun message() = "Load instruction '${instruction.dump()}' requires all operands to be of the same type."

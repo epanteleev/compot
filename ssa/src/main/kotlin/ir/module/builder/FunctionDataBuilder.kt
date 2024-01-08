@@ -56,12 +56,16 @@ class FunctionDataBuilder private constructor(
         return bb.arithmeticBinary(a, op, b)
     }
 
-    override fun intCompare(a: Value, predicate: IntPredicate, b: Value): IntCompare {
-        return bb.intCompare(a, predicate, b)
+    override fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
+        return bb.icmp(a, predicate, b)
     }
 
-    override fun floatCompare(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
-        return bb.floatCompare(a, predicate, b)
+    override fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare {
+        return bb.ucmp(a, predicate, b)
+    }
+
+    override fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
+        return bb.fcmp(a, predicate, b)
     }
 
     override fun load(loadedType: PrimitiveType, ptr: Value): Load {

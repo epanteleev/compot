@@ -206,10 +206,24 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    override fun visit(intCompare: IntCompare) {
-        var first  = valueToRegister.operand(intCompare.first())
-        val second = valueToRegister.operand(intCompare.second())
-        val size = intCompare.first().type().size()
+    override fun visit(icmp: SignedIntCompare) { //TODO
+        var first  = valueToRegister.operand(icmp.first())
+        val second = valueToRegister.operand(icmp.second())
+        val size = icmp.first().type().size()
+
+        first = if (first is Address2) {
+            asm.movOld(size, first, temp1)
+        } else {
+            first
+        }
+
+        asm.cmp(size, second, first as GPRegister)
+    }
+
+    override fun visit(ucmp: UnsignedIntCompare) { //TODO
+        var first  = valueToRegister.operand(ucmp.first())
+        val second = valueToRegister.operand(ucmp.second())
+        val size = ucmp.first().type().size()
 
         first = if (first is Address2) {
             asm.movOld(size, first, temp1)
@@ -261,23 +275,30 @@ class CodeEmitter(private val data: FunctionData,
 
     override fun visit(branchCond: BranchCond) {
         val jmpType = when (val cond = branchCond.condition()) {
-            is IntCompare -> {
-                when (cond.predicate().invert()) {
-                    IntPredicate.Eq  -> JmpType.JE
-                    IntPredicate.Ne  -> JmpType.JNE
-                    IntPredicate.Ugt -> JmpType.JG
-                    IntPredicate.Uge -> JmpType.JGE
-                    IntPredicate.Ult -> JmpType.JL
-                    IntPredicate.Ule -> JmpType.JLE
-                    IntPredicate.Sgt -> JmpType.JG
-                    IntPredicate.Sge -> JmpType.JGE
-                    IntPredicate.Slt -> JmpType.JL
-                    IntPredicate.Sle -> JmpType.JLE
+            is SignedIntCompare -> {
+                when (val convType = cond.predicate().invert()) {
+                    IntPredicate.Eq -> JmpType.JE
+                    IntPredicate.Ne -> JmpType.JNE
+                    IntPredicate.Gt -> JmpType.JG
+                    IntPredicate.Ge -> JmpType.JGE
+                    IntPredicate.Lt -> JmpType.JL
+                    IntPredicate.Le -> JmpType.JLE
+                    else -> throw CodegenException("unknown conversion type: convType=$convType")
                 }
             }
-
+            is UnsignedIntCompare -> {
+                when (val convType = cond.predicate().invert()) {
+                    IntPredicate.Eq -> JmpType.JE
+                    IntPredicate.Ne -> JmpType.JNE
+                    IntPredicate.Gt -> JmpType.JA
+                    IntPredicate.Ge -> JmpType.JAE
+                    IntPredicate.Lt -> JmpType.JB
+                    IntPredicate.Le -> JmpType.JBE
+                    else -> throw CodegenException("unknown conversion type: convType=$convType")
+                }
+            }
             is FloatCompare -> {
-                when (cond.predicate().invert()) {
+                when (val convType = cond.predicate().invert()) {
                     FloatPredicate.Oeq -> JmpType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
                     FloatPredicate.Ogt -> TODO()
                     FloatPredicate.Oge -> JmpType.JAE
@@ -292,6 +313,7 @@ class CodeEmitter(private val data: FunctionData,
                     FloatPredicate.Ule -> TODO()
                     FloatPredicate.Uno -> TODO()
                     FloatPredicate.Une -> TODO()
+                    else -> throw CodegenException("unknown conversion type: convType=$convType")
                 }
             }
             else -> throw CodegenException("unknown type instruction=$cond")
@@ -330,29 +352,29 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    override fun visit(getElementPtr: GetElementPtr) {
-        val source = getElementPtr.source()
+    override fun visit(gep: GetElementPtr) {
+        val source = gep.source()
         val sourceOperand = valueToRegister.operand(source)
-        val index         = valueToRegister.operand(getElementPtr.index())
-        val dest          = valueToRegister.operand(getElementPtr)
+        val index         = valueToRegister.operand(gep.index())
+        val dest          = valueToRegister.operand(gep)
 
         if (source is Alloc) {
-            GetElementPtrCodegenForAlloc(getElementPtr.type(), getElementPtr.basicType, asm)(dest, sourceOperand, index)
+            GetElementPtrCodegenForAlloc(gep.type(), gep.basicType, asm)(dest, sourceOperand, index)
         } else {
-            GetElementPtrCodegen(getElementPtr.type(), getElementPtr.basicType, asm)(dest, sourceOperand, index)
+            GetElementPtrCodegen(gep.type(), gep.basicType, asm)(dest, sourceOperand, index)
         }
     }
 
-    override fun visit(getFieldPtr: GetFieldPtr) {
-        val source = getFieldPtr.source()
+    override fun visit(gfp: GetFieldPtr) {
+        val source = gfp.source()
         val sourceOperand = valueToRegister.operand(source)
-        val index         = valueToRegister.operand(getFieldPtr.index())
-        val dest          = valueToRegister.operand(getFieldPtr)
+        val index         = valueToRegister.operand(gfp.index())
+        val dest          = valueToRegister.operand(gfp)
 
         if (source is Alloc) {
-            GetFieldPtrCodegenForAlloc(getFieldPtr.type(), getFieldPtr.basicType, asm)(dest, sourceOperand, index)
+            GetFieldPtrCodegenForAlloc(gfp.type(), gfp.basicType, asm)(dest, sourceOperand, index)
         } else {
-            GetFieldPtrCodegen(getFieldPtr.type(), getFieldPtr.basicType, asm)(dest, sourceOperand, index)
+            GetFieldPtrCodegen(gfp.type(), gfp.basicType, asm)(dest, sourceOperand, index)
         }
     }
 

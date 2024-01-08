@@ -33,12 +33,12 @@ entry:
   store ptr %valAddr, i32 %val
   store ptr %ret, i32 0
   %0 = load i32 %valAddr
-  %cmp = icmp sgt i32 %0, 3
+  %cmp = icmp gt i32 %0, 3
   br u1 %cmp label %ifThen, label %ifElse
 
 ifThen:
   %1 = load i32 %valAddr
-  %cmp1 = icmp slt i32 %1, 10
+  %cmp1 = icmp lt i32 %1, 10
   br u1 %cmp1 label %ifThen2, label %ifEnd
 
 ifThen2:
@@ -50,7 +50,7 @@ ifEnd:
 
 ifElse:
   %2 = load i32 %valAddr
-  %cmp3 = icmp sgt i32 %2, 20
+  %cmp3 = icmp gt i32 %2, 20
   br u1 %cmp3 label %ifThen4, label %ifElse5
 
 ifThen4:

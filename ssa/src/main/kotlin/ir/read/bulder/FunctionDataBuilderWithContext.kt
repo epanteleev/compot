@@ -113,28 +113,35 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, result)
     }
 
-    fun intCompare(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, expectedType: IntegerTypeToken): IntCompare {
-        val compareType = when (predicate.string) {
+    private fun matchCompareType(predicate: Identifier): IntPredicate {
+        return when (predicate.string) {
             "eq"  -> IntPredicate.Eq
             "ne"  -> IntPredicate.Ne
-            "uge" -> IntPredicate.Uge
-            "ugt" -> IntPredicate.Ugt
-            "ult" -> IntPredicate.Ult
-            "ule" -> IntPredicate.Ule
-            "sgt" -> IntPredicate.Sgt
-            "sge" -> IntPredicate.Sge
-            "slt" -> IntPredicate.Slt
-            "sle" -> IntPredicate.Sle
+            "ge" -> IntPredicate.Ge
+            "gt" -> IntPredicate.Gt
+            "lt" -> IntPredicate.Lt
+            "le" -> IntPredicate.Le
             else  -> throw ParseErrorException("${predicate.position()} unknown compare type: cmpType=${predicate.string}")
         }
-
-        val first  = getValue(a, expectedType.type())
-        val second = getValue(b, expectedType.type())
-        val result = bb.intCompare(first, compareType, second)
-        return memorize(name, result)
     }
 
-    fun floatCompare(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, expectedType: FloatTypeToken): FloatCompare {
+    fun icmp(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: SignedIntegerTypeToken): SignedIntCompare {
+        val compareType = matchCompareType(predicate)
+
+        val first  = getValue(a, operandsTypes.type())
+        val second = getValue(b, operandsTypes.type())
+        return memorize(name, bb.icmp(first, compareType, second))
+    }
+
+    fun ucmp(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: UnsignedIntegerTypeToken): UnsignedIntCompare {
+        val compareType = matchCompareType(predicate)
+
+        val first  = getValue(a, operandsTypes.type())
+        val second = getValue(b, operandsTypes.type())
+        return memorize(name, bb.ucmp(first, compareType, second))
+    }
+
+    fun floatCompare(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: FloatTypeToken): FloatCompare {
         val compareType = when (predicate.string) {
             "oeq" -> FloatPredicate.Oeq
             "one" -> FloatPredicate.One
@@ -152,9 +159,9 @@ class FunctionDataBuilderWithContext private constructor(
             else  -> throw ParseErrorException("${predicate.position()} unknown compare type: cmpType=${predicate.string}")
         }
 
-        val first  = getValue(a, expectedType.type())
-        val second = getValue(b, expectedType.type())
-        val result = bb.floatCompare(first, compareType, second)
+        val first  = getValue(a, operandsTypes.type())
+        val second = getValue(b, operandsTypes.type())
+        val result = bb.fcmp(first, compareType, second)
         return memorize(name, result)
     }
 

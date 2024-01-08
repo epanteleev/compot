@@ -22,7 +22,7 @@ fun main() {
         val variable2 = alloc(Type.U16)
 
         val v1   = load(Type.U64, arg1)
-        val res  = intCompare(U64Value(32), IntPredicate.Sgt, v1)
+        val res  = ucmp(U64Value(32), IntPredicate.Gt, v1)
         store(variable, U64Value(12))
         store(variable2, U16Value(14))
 

@@ -5,7 +5,7 @@ import ir.types.*
 import ir.instruction.utils.Visitor
 
 
-enum class FloatPredicate {
+enum class FloatPredicate: AnyPredicateType {
     Oeq { // ordered and equal
         override fun invert(): FloatPredicate = One
         override fun toString(): String = "oeq"
@@ -62,8 +62,6 @@ enum class FloatPredicate {
         override fun invert(): FloatPredicate = TODO()
         override fun toString(): String = "uno"
     };
-
-    abstract fun invert(): FloatPredicate
 }
 
 class FloatCompare private constructor(name: String, a: Value, private val predicate: FloatPredicate, b: Value) :
@@ -72,26 +70,15 @@ class FloatCompare private constructor(name: String, a: Value, private val predi
         return "%$identifier = $NAME $predicate ${first().type()} ${first()}, ${second()}"
     }
 
-    fun predicate(): FloatPredicate = predicate
+    override fun predicate(): FloatPredicate = predicate
 
-    fun compareType(): FloatingPointType {
+    override fun operandsType(): FloatingPointType {
+        val opType = first().type()
+        assert(opType is FloatingPointType) {
+            "should be, but opType=$opType"
+        }
+
         return first().type() as FloatingPointType
-    }
-
-    fun first(): Value {
-        assert(operands.size == 2) {
-            "size should be 2 in $this instruction"
-        }
-
-        return operands[0]
-    }
-
-    fun second(): Value {
-        assert(operands.size == 2) {
-            "size should be 2 in $this instruction"
-        }
-
-        return operands[1]
     }
 
     override fun copy(newUsages: List<Value>): FloatCompare {
@@ -123,7 +110,7 @@ class FloatCompare private constructor(name: String, a: Value, private val predi
             return aType == bType && aType is FloatingPointType
         }
 
-        fun isCorrect(icmp: IntCompare): Boolean {
+        fun isCorrect(icmp: SignedIntCompare): Boolean {
             return isAppropriateType(icmp.first().type(), icmp.second().type())
         }
     }

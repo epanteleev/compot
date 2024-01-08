@@ -205,11 +205,15 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> ArithmeticBinary.make(n(it), ty, a, op, b) }
     }
 
-    override fun intCompare(a: Value, predicate: IntPredicate, b: Value): IntCompare {
-        return withOutput { it: Int -> IntCompare.make("cmp${n(it)}", a, predicate, b) }
+    override fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
+        return withOutput { it: Int -> SignedIntCompare.make("cmp${n(it)}", a, predicate, b) }
     }
 
-    override fun floatCompare(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
+    override fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare {
+        return withOutput { it: Int -> UnsignedIntCompare.make("cmp${n(it)}", a, predicate, b) }
+    }
+
+    override fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
         return withOutput { it: Int -> FloatCompare.make("cmp${n(it)}", a, predicate, b) }
     }
 

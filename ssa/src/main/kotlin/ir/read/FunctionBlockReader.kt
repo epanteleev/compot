@@ -159,22 +159,32 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseIcmp(resultTypeToken: LocalValueToken) {
         val compareTypeToken = iterator.expect<Identifier>("compare type")
-        val resultType       = iterator.expect<IntegerTypeToken>("result type")
+        val operandsTypes       = iterator.expect<SignedIntegerTypeToken>("signed integer operands type")
         val first            = iterator.expect<AnyValueToken>("first compare operand")
         iterator.expect<Comma>("','")
         val second           = iterator.expect<AnyValueToken>("second compare operand")
 
-        builder.intCompare(resultTypeToken, first, compareTypeToken, second, resultType)
+        builder.icmp(resultTypeToken, first, compareTypeToken, second, operandsTypes)
+    }
+
+    private fun parseUcmp(resultTypeToken: LocalValueToken) {
+        val compareTypeToken = iterator.expect<Identifier>("compare type")
+        val operandsTypes       = iterator.expect<UnsignedIntegerTypeToken>("unsigned integer operands type")
+        val first            = iterator.expect<AnyValueToken>("first compare operand")
+        iterator.expect<Comma>("','")
+        val second           = iterator.expect<AnyValueToken>("second compare operand")
+
+        builder.ucmp(resultTypeToken, first, compareTypeToken, second, operandsTypes)
     }
 
     private fun parseFcmp(resultTypeToken: LocalValueToken) {
         val compareTypeToken = iterator.expect<Identifier>("compare type")
-        val resultType       = iterator.expect<FloatTypeToken>("result type")
-        val first            = iterator.expect<AnyValueToken>("compare operand")
+        val operandsTypes       = iterator.expect<FloatTypeToken>("floating point operands type")
+        val first            = iterator.expect<AnyValueToken>("first compare operand")
         iterator.expect<Comma>("','")
-        val second           = iterator.expect<AnyValueToken>("compare operand")
+        val second           = iterator.expect<AnyValueToken>("second compare operand")
 
-        builder.floatCompare(resultTypeToken, first, compareTypeToken, second, resultType)
+        builder.floatCompare(resultTypeToken, first, compareTypeToken, second, operandsTypes)
     }
 
     private fun parsePhi(resultTypeToken: LocalValueToken) {
@@ -320,6 +330,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "neg"        -> parseNeg(currentTok)
                     "not"        -> parseNot(currentTok)
                     "icmp"       -> parseIcmp(currentTok)
+                    "ucmp"       -> parseUcmp(currentTok)
                     "fcmp"       -> parseFcmp(currentTok)
                     "gfp"        -> parseGfp(currentTok)
                     "select"     -> parseSelect(currentTok)

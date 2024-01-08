@@ -20,7 +20,7 @@ entry:
 forCond:
   %0 = load i32 %i
   %1 = load i32 %valAddr
-  %cmp = icmp sle i32 %0, %1
+  %cmp = icmp le i32 %0, %1
   br u1 %cmp label %forBody, label %forEnd
 
 forBody:

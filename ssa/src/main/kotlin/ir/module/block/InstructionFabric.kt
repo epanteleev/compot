@@ -4,7 +4,6 @@ import ir.Value
 import ir.types.*
 import ir.instruction.*
 import ir.AnyFunctionPrototype
-import ir.Constant
 import ir.IntegerConstant
 
 
@@ -12,8 +11,9 @@ interface InstructionFabric {
     fun neg(value: Value): Neg
     fun not(value: Value): Not
     fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary
-    fun intCompare(a: Value, predicate: IntPredicate, b: Value): IntCompare
-    fun floatCompare(a: Value, predicate: FloatPredicate, b: Value): FloatCompare
+    fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare
+    fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare
+    fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare
     fun load(loadedType: PrimitiveType, ptr: Value): Load
     fun store(ptr: Value, value: Value)
     fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Call

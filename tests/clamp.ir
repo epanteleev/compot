@@ -26,7 +26,7 @@ entry:
   store ptr %bAddr,i32 %b
   %0 = load i32 %aAddr
   %1 = load i32 %bAddr
-  %cmp = icmp sgt i32 %0, %1
+  %cmp = icmp gt i32 %0, %1
   br u1 %cmp label %ifThen, label %ifEnd
 
 ifThen:
@@ -59,7 +59,7 @@ entry:
   store ptr %bAddr, i32 %b
   %0 = load i32 %aAddr
   %1 = load i32 %bAddr
-  %cmp = icmp slt i32 %0, %1
+  %cmp = icmp lt i32 %0, %1
   br u1 %cmp label %ifThen, label %ifEnd
 
 ifThen:

@@ -20,26 +20,28 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     private fun matchIntCondition(): CMoveFlag {
-        condition as IntCompare
-        return when(val compareType = condition.compareType()) {
-            is SignedIntType -> {
+        return when (condition) {
+            is SignedIntCompare -> {
                 when (condition.predicate()) {
                     IntPredicate.Eq -> CMoveFlag.CMOVE
                     IntPredicate.Ne -> CMoveFlag.CMOVNE
-                    IntPredicate.Ugt -> CMoveFlag.CMOVA
-                    IntPredicate.Uge -> CMoveFlag.CMOVAE
-                    IntPredicate.Ult -> CMoveFlag.CMOVB
-                    IntPredicate.Ule -> CMoveFlag.CMOVBE
-                    IntPredicate.Sgt -> CMoveFlag.CMOVG
-                    IntPredicate.Sge -> CMoveFlag.CMOVGE
-                    IntPredicate.Slt -> CMoveFlag.CMOVL
-                    IntPredicate.Sle -> CMoveFlag.CMOVLE
+                    IntPredicate.Gt -> CMoveFlag.CMOVG
+                    IntPredicate.Ge -> CMoveFlag.CMOVGE
+                    IntPredicate.Lt -> CMoveFlag.CMOVL
+                    IntPredicate.Le -> CMoveFlag.CMOVLE
                 }
             }
-            is UnsignedIntType -> {
-                TODO()
+            is UnsignedIntCompare -> {
+                when (condition.predicate()) {
+                    IntPredicate.Eq -> CMoveFlag.CMOVE
+                    IntPredicate.Ne -> CMoveFlag.CMOVNE
+                    IntPredicate.Gt -> CMoveFlag.CMOVA
+                    IntPredicate.Ge -> CMoveFlag.CMOVAE
+                    IntPredicate.Lt -> CMoveFlag.CMOVB
+                    IntPredicate.Le -> CMoveFlag.CMOVBE
+                }
             }
-            else -> throw RuntimeException("unexpected compare type: compareType=$compareType")
+            else -> throw RuntimeException("unexpected condition type: condition=$condition")
         }
     }
 

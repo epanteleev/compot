@@ -31,7 +31,7 @@ L2:	; pred=entry
 L3:	; pred=L2, L5
   %10 = load i32 %6
   %11 = load i32 %2
-  %12 = icmp sle i32 %10, %11
+  %12 = icmp le i32 %10, %11
   br u1 %12 label %L4, label %L6 
 L4:	; pred=L3
   %13 = load i32 %3

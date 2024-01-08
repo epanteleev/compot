@@ -22,7 +22,7 @@ class CFGTraversalTest {
         val arg3 = builder.argument(2)
         val v1 = builder.load(Type.U16, arg1)
         val ttt  = builder.sext(v1, Type.U64)
-        val res  = builder.intCompare(U64Value(32), IntPredicate.Sgt, ttt)
+        val res  = builder.ucmp(U64Value(32), IntPredicate.Gt, ttt)
 
         val trueLabel = builder.createLabel()
         val falseLabel = builder.createLabel()

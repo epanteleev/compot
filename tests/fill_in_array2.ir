@@ -11,7 +11,7 @@ entry:
 
 forCond:
   %0 = load i64 %i
-  %cmp = icmp slt i64 %0, 5
+  %cmp = icmp lt i64 %0, 5
   br u1 %cmp label %forBody, label %forEnd
 
 forBody:

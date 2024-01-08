@@ -2,7 +2,7 @@ extern void @printInt(i32)
 
 define i32 @select(%v: i32) {
 entry:
-  %less = icmp slt i32 %v, 5
+  %less = icmp lt i32 %v, 5
   %v.select = select u1 %less, i32 0, i32 1
   ret i32 %v.select
 }
