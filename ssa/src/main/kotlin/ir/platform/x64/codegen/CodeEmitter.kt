@@ -399,7 +399,10 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(select: Select) {
-        TODO("Not yet implemented")
+        val dst = valueToRegister.operand(select)
+        val onTrue = valueToRegister.operand(select.onTrue())
+        val onFalse = valueToRegister.operand(select.onFalse())
+        SelectCodegen(select.type(), select.condition() as CompareInstruction, asm)(dst, onTrue, onFalse)
     }
 
     override fun visit(phi: Phi) { /* nothing to do */ }

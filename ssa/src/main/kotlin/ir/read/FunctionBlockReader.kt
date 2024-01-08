@@ -270,7 +270,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseSelect(currentTok: LocalValueToken) {
         // %$identifier = select u1 <v0>, <t1> <v1>, <t2> <v2>
-        val booleanTypeToken = iterator.expect<BooleanTypeToken>("'${Type.U1}' type")
+        iterator.expect<BooleanTypeToken>("'${Type.U1}' type")
         val v0 = iterator.expect<AnyValueToken>("condition value")
         iterator.expect<Comma>("','")
 

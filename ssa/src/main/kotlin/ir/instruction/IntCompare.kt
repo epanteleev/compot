@@ -7,14 +7,10 @@ import ir.instruction.utils.Visitor
 
 enum class IntPredicate {
     Eq {
-        override fun toString(): String {
-            return "eq"
-        }
+        override fun toString(): String = "eq"
     },
     Ne {
-        override fun toString(): String {
-            return "ne"
-        }
+        override fun toString(): String = "ne"
     },
     Ugt {
         override fun toString(): String {
@@ -74,14 +70,12 @@ enum class IntPredicate {
 }
 
 class IntCompare private constructor(name: String, a: Value, private val predicate: IntPredicate, b: Value) :
-    ValueInstruction(name, Type.U1, arrayOf(a, b)) {
+    CompareInstruction(name, a, b) {
     override fun dump(): String {
-        return "%$identifier = icmp $predicate ${first().type()} ${first()}, ${second()}"
+        return "%$identifier = $NAME $predicate ${first().type()} ${first()}, ${second()}"
     }
 
-    fun predicate(): IntPredicate {
-        return predicate
-    }
+    fun predicate(): IntPredicate = predicate
 
     fun compareType(): IntegerType {
         return first().type() as IntegerType
@@ -116,6 +110,8 @@ class IntCompare private constructor(name: String, a: Value, private val predica
     }
 
     companion object {
+        const val NAME = "icmp"
+
         fun make(name: String, a: Value, predicate: IntPredicate, b: Value): IntCompare {
             val aType = a.type()
             val bType = b.type()

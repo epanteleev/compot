@@ -67,14 +67,12 @@ enum class FloatPredicate {
 }
 
 class FloatCompare private constructor(name: String, a: Value, private val predicate: FloatPredicate, b: Value) :
-    ValueInstruction(name, Type.U1, arrayOf(a, b)) {
+    CompareInstruction(name, a, b) {
     override fun dump(): String {
         return "%$identifier = $NAME $predicate ${first().type()} ${first()}, ${second()}"
     }
 
-    fun predicate(): FloatPredicate {
-        return predicate
-    }
+    fun predicate(): FloatPredicate = predicate
 
     fun compareType(): FloatingPointType {
         return first().type() as FloatingPointType

@@ -215,34 +215,22 @@ data class Test(val size: Int, val first: Register, val second: Operand): CPUIns
 
 enum class SetCCType {
     SETL {
-        override fun toString(): String {
-            return "setl"
-        }
+        override fun toString(): String = "setl"
     },
     SETE {
-        override fun toString(): String {
-            return "sete"
-        }
+        override fun toString(): String = "sete"
     },
     SETG {
-        override fun toString(): String {
-            return "setg"
-        }
+        override fun toString(): String = "setg"
     },
     SETGE {
-        override fun toString(): String {
-            return "setge"
-        }
+        override fun toString(): String = "setge"
     },
     SETLE  {
-        override fun toString(): String {
-            return "setle"
-        }
+        override fun toString(): String = "setle"
     },
     SETNE {
-        override fun toString(): String {
-            return "setne"
-        }
+        override fun toString(): String = "setne"
     },
 }
 
@@ -381,5 +369,104 @@ data class Cvtsd2si(val toSize: Int, val src1: Operand, val src2: Operand): CPUI
 data class Cvtss2si(val toSize: Int, val src1: Operand, val src2: Operand): CPUInstruction {
     override fun toString(): String {
         return "cvtss2si ${src1.toString(16)}, ${src2.toString(toSize)}"
+    }
+}
+
+enum class CMoveFlag {
+    CMOVA { // Move if above (CF=0 and ZF=0).
+        override fun toString(): String = "cmova"
+    },
+    CMOVAE { // Move if above or equal (CF=0).
+        override fun toString(): String = "cmovae"
+    },
+    CMOVB { // Move if below (CF=1).
+        override fun toString(): String = "cmovb"
+    },
+    CMOVBE { // Move if below or equal (CF=1 or ZF=1).
+        override fun toString(): String = "cmovbe"
+    },
+    CMOVC { // Move if carry (CF=1).
+        override fun toString(): String = "cmovc"
+    },
+    CMOVE { // Move if equal (ZF=1).
+        override fun toString(): String = "cmove"
+    },
+    CMOVG { // Move if greater (ZF=0 and SF=OF).
+        override fun toString(): String = "cmovg"
+    },
+    CMOVGE { // Move if greater or equal (SF=OF).
+        override fun toString(): String = "cmovge"
+    },
+    CMOVL { // Move if less (SF≠ OF).
+        override fun toString(): String = "cmovl"
+    },
+    CMOVLE { // Move if less or equal (ZF=1 or SF≠ OF).
+        override fun toString(): String = "cmovle"
+    },
+    CMOVNA { // Move if not above (CF=1 or ZF=1).
+        override fun toString(): String = "cmovna"
+    },
+    CMOVNAE { // Move if not above or equal (CF=1).
+        override fun toString(): String = "cmovnae"
+    },
+    CMOVNB { // Move if not below (CF=0).
+        override fun toString(): String = "cmovnb"
+    },
+    CMOVNBE { // Move if not below or equal (CF=0 and ZF=0).
+        override fun toString(): String = "cmovnbe"
+    },
+    CMOVNC { // Move if not carry (CF=0).
+        override fun toString(): String = "cmovnc"
+    },
+    CMOVNE { // Move if not equal (ZF=0).
+        override fun toString(): String = "cmovne"
+    },
+    CMOVNG { // Move if not greater (ZF=1 or SF≠ OF).
+        override fun toString(): String = "cmovng"
+    },
+    CMOVNGE { // Move if not greater or equal (SF≠ OF).
+        override fun toString(): String = "cmovnge"
+    },
+    CMOVNL { // Move if not less (SF=OF).
+        override fun toString(): String = "cmovnl"
+    },
+    CMOVNLE { // Move if not less or equal (ZF=0 and SF=OF).
+        override fun toString(): String = "cmovnle"
+    },
+    CMOVNO { // Move if not overflow (OF=0).
+        override fun toString(): String = "cmovno"
+    },
+    CMOVNP { // Move if not parity (PF=0).
+        override fun toString(): String = "cmovnp"
+    },
+    CMOVNS { // Move if not sign (SF=0).
+        override fun toString(): String = "cmovns"
+    },
+    CMOVNZ { // Move if not zero (ZF=0).
+        override fun toString(): String = "cmovnz"
+    },
+    CMOVO { // Move if overflow (OF=1).
+        override fun toString(): String = "cmovo"
+    },
+    CMOVP { // Move if parity (PF=1).
+        override fun toString(): String = "cmovp"
+    },
+    CMOVPE { // Move if parity even (PF=1).
+        override fun toString(): String = "cmovpe"
+    },
+    CMOVPO { // Move if parity odd (PF=0).
+        override fun toString(): String = "cmovpo"
+    },
+    CMOVS { // Move if sign (SF=1).
+        override fun toString(): String = "cmovs"
+    },
+    CMOVZ { // Move if zero (ZF=1).
+        override fun toString(): String = "cmovz"
+    }
+}
+
+data class CMOVcc(val size: Int, val flag: CMoveFlag, val src: Operand, val dst: Operand): CPUInstruction {
+    override fun toString(): String {
+        return "$flag ${src.toString(size)}, ${dst.toString(size)}"
     }
 }

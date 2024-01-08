@@ -153,6 +153,17 @@ class Assembler(private val name: String) {
         else -> throw IllegalArgumentException("fromSize=$fromSize, toSize=$toSize, src=$src, dst=$dst")
     }
 
+    // Conditional Move
+    fun cmovcc(size: Int, flag: CMoveFlag, src: Address, dst: GPRegister) = when (size) {
+        2, 4, 8 -> add(CMOVcc(size, flag, src, dst))
+        else -> throw IllegalArgumentException("size=$size, flag=$flag, src=$src, dst=$dst")
+    }
+
+    fun cmovcc(size: Int, flag: CMoveFlag, src: GPRegister, dst: GPRegister) = when (size) {
+        2, 4, 8 -> add(CMOVcc(size, flag, src, dst))
+        else -> throw IllegalArgumentException("size=$size, flag=$flag, src=$src, dst=$dst")
+    }
+
     // Call Procedure
     fun call(name: String) = add(Call(name))
 

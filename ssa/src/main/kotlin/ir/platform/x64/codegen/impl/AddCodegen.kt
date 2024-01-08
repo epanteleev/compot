@@ -2,13 +2,11 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.types.*
+import ir.platform.x64.codegen.utils.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.CodeEmitter
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandVisitorBinaryOp
-import ir.platform.x64.codegen.utils.XmmOperandVisitorBinaryOp
 
 
 data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVisitorBinaryOp,

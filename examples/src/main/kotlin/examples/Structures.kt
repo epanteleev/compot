@@ -10,7 +10,6 @@ import ir.types.Type
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val printFloat = builder.createExternFunction("printInt", Type.Void, arrayListOf(Type.I32))
     val pointStruct = StructType("point", arrayListOf(Type.I32, Type.I32))
     builder.addStructType(pointStruct)
 

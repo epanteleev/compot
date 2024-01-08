@@ -48,7 +48,8 @@ function compile_and_run() {
 	compile_test "$test_name"
 	run_test "$test_name" "$expected_result"
 }
-compile_and_run select 01
+compile_and_run select "0
+1"
 compile_and_run struct_access 14
 compile_and_run struct_access1 16
 compile_and_run manyArguments 36
