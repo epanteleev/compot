@@ -2,13 +2,12 @@ package ir.module
 
 import ir.ArgumentValue
 import ir.FunctionPrototype
-import ir.GlobalSymbol
 import ir.module.auxiliary.Copy
 import ir.platform.liveness.LiveIntervals
 import ir.platform.liveness.Liveness
 
-class FunctionData private constructor(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, val blocks: BasicBlocks):
-    GlobalSymbol {
+
+class FunctionData private constructor(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {
     fun arguments(): List<ArgumentValue> {
         return argumentValues
     }
@@ -21,7 +20,7 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
         return Copy.copy(this)
     }
 
-    override fun name(): String {
+    fun name(): String {
         return prototype.name
     }
 

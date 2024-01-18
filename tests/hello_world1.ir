@@ -1,0 +1,20 @@
+extern i32 @printf(ptr)
+
+@str = constant <i8 x 12> "Hello world"
+
+define void @sayHello() {
+entry:	
+  %0x0 = call i32 @printf(@str:ptr)
+  ret void
+}
+
+define i32 @main() {
+entry:
+  %fn = alloc ptr
+  store ptr %fn, ptr @sayHello
+  %0 = load ptr %fn
+  %0x0 = call void %0()
+  ret i32 0
+}
+
+

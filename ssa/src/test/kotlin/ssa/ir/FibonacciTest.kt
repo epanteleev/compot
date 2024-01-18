@@ -4,7 +4,7 @@ import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate
 import ir.module.Module
 import ir.module.block.BlockViewer
-import ir.module.builder.ModuleBuilder
+import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.types.Type

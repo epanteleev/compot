@@ -3,7 +3,7 @@ package ssa.ir.codegen
 import asm.x64.*
 import asm.x64.GPRegister.*
 import ir.instruction.ArithmeticBinaryOp
-import ir.module.builder.ModuleBuilder
+import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.Mem2Reg
 import ir.platform.regalloc.VirtualRegistersPool
 import ir.types.Type

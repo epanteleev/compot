@@ -57,12 +57,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         builder.ret(returnValue, retType)
     }
 
-    private fun parseCall(currentTok: LocalValueToken?) {
-        val functionReturnType = iterator.expect<TypeToken>("function type")
-        val functionName       = iterator.expect<SymbolValue>("function name")
-        val argumentsType      = arrayListOf<TypeToken>()
-        val argumentValue      = arrayListOf<AnyValueToken>()
-
+    private fun tryParseArgumentBlock(argumentsTypes: MutableList<TypeToken>, argumentValues: MutableList<AnyValueToken>) {
         iterator.expect<OpenParen>("'('")
         var valueToken = iterator.next("value")
         while (valueToken !is CloseParen) {
@@ -73,8 +68,8 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
             iterator.expect<Colon>("':'")
             val type = iterator.expect<TypeToken>("argument type")
 
-            argumentValue.add(valueToken)
-            argumentsType.add(type)
+            argumentValues.add(valueToken)
+            argumentsTypes.add(type)
 
             val comma = iterator.next("','")
             if (comma is CloseParen) {
@@ -85,12 +80,21 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
             }
             valueToken = iterator.next("value")
         }
+    }
 
-        val prototype = builder.makePrototype(functionName, functionReturnType, argumentsType)
+    private fun parseCall(currentTok: LocalValueToken?) {
+        val functionReturnType = iterator.expect<TypeToken>("function type")
+        val functionName       = iterator.expect<SymbolValue>("function name")
+
+        val argumentsTypes      = arrayListOf<TypeToken>()
+        val argumentValues      = arrayListOf<AnyValueToken>()
+        tryParseArgumentBlock(argumentsTypes, argumentValues)
+
+        val prototype = builder.makePrototype(functionName, functionReturnType, argumentsTypes)
         if (currentTok != null) {
-            builder.call(currentTok, prototype, argumentValue)
+            builder.call(currentTok, prototype, argumentValues)
         } else {
-            builder.vcall(prototype, argumentValue)
+            builder.vcall(prototype, argumentValues)
         }
     }
 

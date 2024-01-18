@@ -90,7 +90,7 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(returnValue: ReturnValue) {
-        val returnType = data.prototype.type()
+        val returnType = data.prototype.returnType()
         val retInstType = returnValue.value().type()
         val size = returnType.size()
 
@@ -471,6 +471,10 @@ class CodeEmitter(private val data: FunctionData,
             val asm = CompilationUnit()
 
             for (c in module.globals) {
+                if (c !is GlobalValue) {
+                    continue
+                }
+
                 asm.mkSymbol(c)
             }
 

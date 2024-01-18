@@ -5,7 +5,7 @@ import ir.U16Value
 import ir.U64Value
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate
-import ir.module.builder.ModuleBuilder
+import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.pass.transform.utils.JoinPointSet

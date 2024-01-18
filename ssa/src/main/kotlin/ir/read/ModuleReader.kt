@@ -95,7 +95,7 @@ class ModuleReader(string: String) {
             }
             else -> throw ParseErrorException("unsupported: data=$data")
         }
-        moduleBuilder.addGlobal(global)
+        moduleBuilder.addConstant(global)
     }
 
     private fun parseExtern() {

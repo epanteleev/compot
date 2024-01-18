@@ -1,5 +1,10 @@
 package ir
 
-interface GlobalSymbol {
+import ir.types.Type
+
+interface GlobalSymbol: Value {
     fun name(): String
+    fun dump(): String
+
+    override fun type(): Type = Type.Ptr
 }

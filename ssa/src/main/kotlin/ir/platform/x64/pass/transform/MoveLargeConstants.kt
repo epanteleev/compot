@@ -12,7 +12,7 @@ import ir.platform.x64.CallConvention
 
 
 // Move large constant to data segment
-class MoveLargeConstants private constructor(val functions: List<FunctionData>, val constants: MutableSet<GlobalValue>) {
+class MoveLargeConstants private constructor(val functions: List<FunctionData>, val constants: MutableSet<GlobalSymbol>) {
     private var constantIndex = 0
 
     private fun run() {

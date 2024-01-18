@@ -1,4 +1,4 @@
-package ir.module.builder
+package ir.module.builder.impl
 
 import ir.*
 import ir.instruction.*

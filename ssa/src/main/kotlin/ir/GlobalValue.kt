@@ -2,17 +2,13 @@ package ir
 
 import ir.types.*
 
-abstract class GlobalValue(protected open val name: String): GlobalSymbol, Value {
+abstract class GlobalValue(protected open val name: String): GlobalSymbol {
     override fun name(): String {
         return name
     }
 
     override fun toString(): String {
         return "@$name"
-    }
-
-    override fun type(): PointerType {
-        return Type.Ptr
     }
 
     override fun hashCode(): Int {
@@ -28,7 +24,7 @@ abstract class GlobalValue(protected open val name: String): GlobalSymbol, Value
         return name == other.name
     }
 
-    fun dump(): String {
+    override fun dump(): String {
         return "@$name = constant ${type()} ${content()}"
     }
 

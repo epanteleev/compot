@@ -6,10 +6,10 @@ import ir.instruction.utils.Visitor
 import ir.types.Type
 
 class Call private constructor(name: String, private val func: AnyFunctionPrototype, args: List<Value>):
-    ValueInstruction(name, func.type(), args.toTypedArray()),
+    ValueInstruction(name, func.returnType(), args.toTypedArray()),
     Callable {
     init {
-        require(func.type() != Type.Void) { "Must be non void" }
+        require(func.returnType() != Type.Void) { "Must be non void" }
     }
 
     override fun arguments(): Array<Value> {

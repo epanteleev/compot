@@ -10,7 +10,7 @@ import ir.platform.liveness.LiveIntervals
 
 data class CSSAModule(override val functions: List<FunctionData>,
                       override val externFunctions: Set<ExternFunction>,
-                      override val globals: Set<GlobalValue>,
+                      override val globals: Set<GlobalSymbol>,
                       override val types: List<StructType>):
     Module(functions, externFunctions, globals, types) {
     private val liveIntervals: Map<FunctionData, LiveIntervals>

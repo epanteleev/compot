@@ -2,7 +2,7 @@ package examples
 
 import ir.FunctionPrototype
 import ir.I32Value
-import ir.module.builder.ModuleBuilder
+import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.types.ArrayType

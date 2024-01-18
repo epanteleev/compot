@@ -188,7 +188,7 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun vcall(func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>) {
-        require(func.type() is VoidType)
+        require(func.returnType() is VoidType)
         val argumentValues = arrayListOf<Value>()
 
         for ((arg, ty) in args zip func.arguments()) {

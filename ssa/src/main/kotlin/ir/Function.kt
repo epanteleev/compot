@@ -4,14 +4,11 @@ import ir.types.Type
 
 abstract class AnyFunctionPrototype(val name: String,
                                     private val returnType: Type,
-                                    protected val arguments: List<Type>) {
-    fun type(): Type {
-        return returnType
-    }
+                                    protected val arguments: List<Type>): GlobalSymbol {
 
-    fun arguments(): List<Type> {
-        return arguments
-    }
+    fun arguments(): List<Type> = arguments
+
+    fun returnType(): Type = returnType
 
     fun shortName(): String {
         val builder = StringBuilder()
@@ -20,6 +17,8 @@ abstract class AnyFunctionPrototype(val name: String,
         builder.append(")")
         return builder.toString()
     }
+    override fun dump(): String = toString()
+    override fun name(): String = name
 
     override fun hashCode(): Int {
         return name.hashCode() + arguments.hashCode() + returnType.hashCode()

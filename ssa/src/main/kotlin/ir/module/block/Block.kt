@@ -231,7 +231,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     }
 
     override fun vcall(func: AnyFunctionPrototype, args: ArrayList<Value>) {
-        require(func.type() == Type.Void)
+        require(func.returnType() == Type.Void)
         append(VoidCall.make(func, args))
     }
 

@@ -9,7 +9,7 @@ class VoidCall private constructor(private val func: AnyFunctionPrototype, args:
     Instruction(args.toTypedArray()),
     Callable {
     init {
-        require(func.type() == Type.Void) { "Must be void" }
+        require(func.returnType() == Type.Void) { "Must be void" }
     }
 
     override fun arguments(): Array<Value> {
