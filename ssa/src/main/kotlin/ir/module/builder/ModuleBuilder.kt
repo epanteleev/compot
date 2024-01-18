@@ -7,7 +7,7 @@ import ir.pass.ana.VerifySSA
 import ir.types.StructType
 import ir.types.Type
 
-class ModuleBuilder {
+class ModuleBuilder private constructor() {
     private val functions = arrayListOf<FunctionDataBuilder>()
     private val externFunctions = mutableSetOf<ExternFunction>()
     private val globals = mutableSetOf<GlobalValue>()

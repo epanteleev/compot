@@ -115,8 +115,8 @@ class FunctionDataBuilderWithContext private constructor(
 
     private fun matchCompareType(predicate: Identifier): IntPredicate {
         return when (predicate.string) {
-            "eq"  -> IntPredicate.Eq
-            "ne"  -> IntPredicate.Ne
+            "eq" -> IntPredicate.Eq
+            "ne" -> IntPredicate.Ne
             "ge" -> IntPredicate.Ge
             "gt" -> IntPredicate.Gt
             "lt" -> IntPredicate.Lt
