@@ -82,7 +82,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         }
     }
 
-    private fun parseCall(currentTok: LocalValueToken?) {
+    private fun parseCall(currentTok: LocalValueToken) {
         val functionReturnType = iterator.expect<TypeToken>("function type")
         val functionName       = iterator.expect<SymbolValue>("function name")
 
@@ -91,10 +91,27 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         tryParseArgumentBlock(argumentsTypes, argumentValues)
 
         val prototype = builder.makePrototype(functionName, functionReturnType, argumentsTypes)
-        if (currentTok != null) {
-            builder.call(currentTok, prototype, argumentValues)
-        } else {
-            builder.vcall(prototype, argumentValues)
+        builder.call(currentTok, prototype, argumentValues)
+    }
+
+    private fun parseVCall() {
+        val functionReturnType = iterator.expect<TypeToken>("function type")
+        val funcNameOrValue    = iterator.next("function name or value")
+
+        val argumentsTypes      = arrayListOf<TypeToken>()
+        val argumentValues      = arrayListOf<AnyValueToken>()
+        tryParseArgumentBlock(argumentsTypes, argumentValues)
+
+        when (funcNameOrValue) {
+            is SymbolValue -> {
+                val prototype = builder.makePrototype(funcNameOrValue, functionReturnType, argumentsTypes)
+                builder.vcall(prototype, argumentValues)
+            }
+            is LocalValueToken -> {
+                val prototype = builder.makePrototype(functionReturnType, argumentsTypes)
+                builder.ivcall(funcNameOrValue, prototype, argumentValues)
+            }
+            else -> throw ParseErrorException("function name or value", funcNameOrValue)
         }
     }
 
@@ -349,7 +366,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
             is Identifier -> {
                 when (currentTok.string) {
                     "ret"   -> parseRet()
-                    "call"  -> parseCall(null)
+                    "call"  -> parseVCall()
                     "store" -> parseStore()
                     "br"    -> parseBranch()
                     else    -> throw ParseErrorException("instruction", currentTok)

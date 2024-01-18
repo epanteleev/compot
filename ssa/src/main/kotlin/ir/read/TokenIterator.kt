@@ -2,7 +2,7 @@ package ir.read
 
 import ir.read.bulder.ParseErrorException
 
-class TokenIterator(val tokenizer: Tokenizer) : Iterator<Token> {
+class TokenIterator(private val tokenizer: Tokenizer) : Iterator<Token> {
     private fun hasNextOrError(error: () -> Unit) {
         if (!hasNext()) {
             error()

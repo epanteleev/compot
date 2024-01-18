@@ -5,11 +5,12 @@ import ir.Value
 import ir.instruction.utils.Visitor
 import ir.types.Type
 
-class VoidCall private constructor(private val func: AnyFunctionPrototype, args: List<Value>):
-    Instruction(args.toTypedArray()),
+
+class VoidCall private constructor(private val func: AnyFunctionPrototype, args: Array<Value>):
+    Instruction(args),
     Callable {
     init {
-        require(func.returnType() == Type.Void) { "Must be void" }
+        assert(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
     }
 
     override fun arguments(): Array<Value> {
@@ -25,15 +26,12 @@ class VoidCall private constructor(private val func: AnyFunctionPrototype, args:
         if (javaClass != other?.javaClass) return false
 
         other as VoidCall
-
         if (func != other.func) return false
         return operands.contentEquals(other.operands)
     }
 
     override fun hashCode(): Int {
-        var result = func.hashCode()
-        result = 31 * result + operands.hashCode()
-        return result
+        return func.hashCode()
     }
 
     override fun dump(): String {
@@ -62,12 +60,13 @@ class VoidCall private constructor(private val func: AnyFunctionPrototype, args:
 
     companion object {
         fun make(func: AnyFunctionPrototype, args: List<Value>): VoidCall {
-            require(Callable.isAppropriateTypes(func, args)) {
+            val argsArray = args.toTypedArray()
+            require(Callable.isAppropriateTypes(func, argsArray)) {
                 args.joinToString(prefix = "inconsistent types, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
 
-            return registerUser(VoidCall(func, args), args.iterator())
+            return registerUser(VoidCall(func, argsArray), args.iterator())
         }
     }
 }

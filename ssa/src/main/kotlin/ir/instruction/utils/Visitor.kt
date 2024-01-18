@@ -28,6 +28,8 @@ interface Visitor {
     fun visit(phi: Phi)
     fun visit(returnValue: ReturnValue)
     fun visit(returnVoid: ReturnVoid)
+    fun visit(indirectionCall: IndirectionCall)
+    fun visit(indirectionVoidCall: IndirectionVoidCall)
     fun visit(select: Select)
     fun visit(store: Store)
     fun visit(upStackFrame: UpStackFrame)

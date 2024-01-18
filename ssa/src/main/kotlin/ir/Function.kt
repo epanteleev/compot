@@ -4,7 +4,7 @@ import ir.types.Type
 
 abstract class AnyFunctionPrototype(val name: String,
                                     private val returnType: Type,
-                                    protected val arguments: List<Type>): GlobalSymbol {
+                                    protected val arguments: List<Type>) {
 
     fun arguments(): List<Type> = arguments
 
@@ -17,8 +17,6 @@ abstract class AnyFunctionPrototype(val name: String,
         builder.append(")")
         return builder.toString()
     }
-    override fun dump(): String = toString()
-    override fun name(): String = name
 
     override fun hashCode(): Int {
         return name.hashCode() + arguments.hashCode() + returnType.hashCode()
@@ -37,9 +35,27 @@ abstract class AnyFunctionPrototype(val name: String,
 }
 
 class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
-    AnyFunctionPrototype(name, returnType, arguments) {
+    AnyFunctionPrototype(name, returnType, arguments), GlobalSymbol {
     override fun toString(): String {
         return "define ${shortName()}"
+    }
+
+    override fun dump(): String = toString()
+    override fun name(): String = name
+}
+
+class IndirectFunctionPrototype(returnType: Type, arguments: List<Type>):
+    AnyFunctionPrototype("<indirect>", returnType, arguments) {
+    override fun toString(): String {
+        return "define ${shortName()}"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return this === other //TODO???
+    }
+
+    override fun hashCode(): Int {
+        return returnType().hashCode() + arguments().hashCode()
     }
 }
 
@@ -49,7 +65,6 @@ class ExternFunction internal constructor(name: String, returnType: Type, argume
         return "extern ${shortName()}"
     }
 
-    override fun name(): String {
-        return name
-    }
+    override fun name(): String = name
+    override fun dump(): String = toString()
 }

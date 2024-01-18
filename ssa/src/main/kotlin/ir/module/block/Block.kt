@@ -1,6 +1,7 @@
 package ir.module.block
 
 import ir.AnyFunctionPrototype
+import ir.IndirectFunctionPrototype
 import ir.IntegerConstant
 import ir.Value
 import ir.instruction.*
@@ -226,13 +227,24 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         append(store)
     }
 
-    override fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Call {
+    override fun call(func: AnyFunctionPrototype, args: List<Value>): Call {
+        require(func.returnType() != Type.Void)
         return withOutput { it: Int -> Call.make(n(it), func, args) }
     }
 
-    override fun vcall(func: AnyFunctionPrototype, args: ArrayList<Value>) {
+    override fun vcall(func: AnyFunctionPrototype, args: List<Value>) {
         require(func.returnType() == Type.Void)
         append(VoidCall.make(func, args))
+    }
+
+    override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
+        require(func.returnType() != Type.Void)
+        return withOutput { it: Int -> IndirectionCall.make(n(it), pointer, func, args) }
+    }
+
+    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>) {
+        require(func.returnType() == Type.Void)
+        append(IndirectionVoidCall.make(pointer, func, args))
     }
 
     override fun branch(target: Block) {

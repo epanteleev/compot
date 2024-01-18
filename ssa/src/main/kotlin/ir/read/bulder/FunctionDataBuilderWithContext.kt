@@ -1,5 +1,6 @@
 package ir.read.bulder
 
+import collections.forEachWith
 import ir.*
 import ir.read.*
 import ir.types.*
@@ -176,26 +177,38 @@ class FunctionDataBuilderWithContext private constructor(
         return bb.store(pointer, value)
     }
 
-    fun call(name: LocalValueToken, func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>): Value {
-        require(func.type() !is VoidType)
+    private fun convertToValues(types: List<Type>, args: List<AnyValueToken>): List<Value> {
         val argumentValues = arrayListOf<Value>()
-
-        for ((arg, ty) in args zip func.arguments()) {
+        args.forEachWith(types) { arg, ty ->
             argumentValues.add(getValue(arg, ty))
         }
+        return argumentValues
+    }
 
+    fun call(name: LocalValueToken, func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>): Value {
+        require(func.returnType() !is VoidType)
+        val argumentValues = convertToValues(func.arguments(), args)
         return memorize(name, bb.call(func, argumentValues))
     }
 
     fun vcall(func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>) {
         require(func.returnType() is VoidType)
-        val argumentValues = arrayListOf<Value>()
-
-        for ((arg, ty) in args zip func.arguments()) {
-            argumentValues.add(getValue(arg, ty))
-        }
-
+        val argumentValues = convertToValues(func.arguments(), args)
         bb.vcall(func, argumentValues)
+    }
+
+    fun icall(name: LocalValueToken, pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>): Value {
+        require(func.returnType() !is VoidType)
+        val argumentValues = convertToValues(func.arguments(), args)
+        val pointer = getValue(pointerToken, Type.Ptr)
+        return memorize(name, bb.icall(pointer, func, argumentValues))
+    }
+
+    fun ivcall(pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>) {
+        require(func.returnType() is VoidType)
+        val argumentValues = convertToValues(func.arguments(), args)
+        val pointer = getValue(pointerToken, Type.Ptr)
+        bb.ivcall(pointer, func,argumentValues)
     }
 
     private fun getBlockOrCreate(name: String): Block {
@@ -308,6 +321,11 @@ class FunctionDataBuilderWithContext private constructor(
     fun makePrototype(functionName: SymbolValue, returnType: TypeToken, argTypes: List<TypeToken>): FunctionPrototype {
         val types = argTypes.mapTo(arrayListOf()) { it.type(moduleBuilder) }
         return FunctionPrototype(functionName.name, returnType.type(moduleBuilder), types)
+    }
+
+    fun makePrototype(returnType: TypeToken, argTypes: List<TypeToken>): IndirectFunctionPrototype {
+        val types = argTypes.mapTo(arrayListOf()) { it.type(moduleBuilder) }
+        return IndirectFunctionPrototype(returnType.type(moduleBuilder), types)
     }
 
     companion object {

@@ -171,6 +171,14 @@ class CodeEmitter(private val data: FunctionData,
         emitCall(call)
     }
 
+    override fun visit(indirectionCall: IndirectionCall) {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(indirectionVoidCall: IndirectionVoidCall) {
+        TODO("Not yet implemented")
+    }
+
     override fun visit(store: Store) {
         val pointer        = store.pointer()
         val pointerOperand = valueToRegister.operand(pointer)

@@ -5,11 +5,11 @@ import ir.Value
 import ir.instruction.utils.Visitor
 import ir.types.Type
 
-class Call private constructor(name: String, private val func: AnyFunctionPrototype, args: List<Value>):
-    ValueInstruction(name, func.returnType(), args.toTypedArray()),
+class Call private constructor(name: String, private val func: AnyFunctionPrototype, args: Array<Value>):
+    ValueInstruction(name, func.returnType(), args),
     Callable {
     init {
-        require(func.returnType() != Type.Void) { "Must be non void" }
+        assert(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
     }
 
     override fun arguments(): Array<Value> {
@@ -42,12 +42,13 @@ class Call private constructor(name: String, private val func: AnyFunctionProtot
 
     companion object {
         fun make(name: String, func: AnyFunctionPrototype, args: List<Value>): Call {
-            require(Callable.isAppropriateTypes(func, args)) {
+            val argsArray = args.toTypedArray()
+            require(Callable.isAppropriateTypes(func, argsArray)) {
                 args.joinToString(prefix = "inconsistent types in $name, prototype='${func.shortName()}', ")
                     { "$it: ${it.type()}" }
             }
 
-            return registerUser(Call(name, func, args), args.iterator())
+            return registerUser(Call(name, func, argsArray), args.iterator())
         }
     }
 }

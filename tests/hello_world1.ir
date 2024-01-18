@@ -13,7 +13,7 @@ entry:
   %fn = alloc ptr
   store ptr %fn, ptr @sayHello
   %0 = load ptr %fn
-  %0x0 = call void %0()
+  call void %0()
   ret i32 0
 }
 

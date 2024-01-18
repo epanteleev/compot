@@ -9,6 +9,7 @@ import ir.module.block.Label
 import ir.module.block.InstructionFabric
 import ir.types.*
 
+
 class FunctionDataBuilder private constructor(
     private val prototype: FunctionPrototype,
     private var argumentValues: List<ArgumentValue>,
@@ -76,12 +77,20 @@ class FunctionDataBuilder private constructor(
         return bb.store(ptr, value)
     }
 
-    override fun call(func: AnyFunctionPrototype, args: ArrayList<Value>): Call {
+    override fun call(func: AnyFunctionPrototype, args: List<Value>): Call {
         return bb.call(func, args)
     }
 
-    override fun vcall(func: AnyFunctionPrototype, args: ArrayList<Value>) {
+    override fun vcall(func: AnyFunctionPrototype, args: List<Value>) {
         bb.vcall(func, args)
+    }
+
+    override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
+        return bb.icall(pointer, func, args)
+    }
+
+    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>) {
+        bb.ivcall(pointer, func, args)
     }
 
     fun branch(target: Label) {
