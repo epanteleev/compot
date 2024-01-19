@@ -176,6 +176,10 @@ class VerifySSA private constructor(private val functionData: FunctionData, priv
             when (instruction) {
                 is Phi -> validatePhi(instruction, bb)
                 is Callable -> {
+                    if (instruction is IndirectionCall || instruction is IndirectionVoidCall) {
+                        continue
+                    }
+
                     assert(prototypes.contains(instruction.prototype())) {
                         "Called undefined function: prototype=${instruction.prototype()}"
                     }

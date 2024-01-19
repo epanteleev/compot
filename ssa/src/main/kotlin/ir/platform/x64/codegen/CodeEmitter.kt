@@ -176,7 +176,11 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(indirectionVoidCall: IndirectionVoidCall) {
-        TODO("Not yet implemented")
+        when (val pointer = valueToRegister.operand(indirectionVoidCall.pointer())) {
+            is GPRegister -> asm.call(pointer)
+            is Address -> asm.call(pointer)
+            else -> throw CodegenException("invalid operand: pointer=$pointer")
+        }
     }
 
     override fun visit(store: Store) {

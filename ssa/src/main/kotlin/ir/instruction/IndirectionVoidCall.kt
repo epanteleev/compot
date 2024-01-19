@@ -15,7 +15,7 @@ class IndirectionVoidCall private constructor(pointer: Value, private val func: 
     }
 
     fun pointer(): Value {
-        assert(operands.size > 1) {
+        assert(operands.isNotEmpty()) {
             "size should be at least 1 operand in $this instruction"
         }
 
@@ -37,7 +37,7 @@ class IndirectionVoidCall private constructor(pointer: Value, private val func: 
             "should be, but newUsages=$newUsages"
         }
 
-        return make(newUsages[0], func, newUsages.takeLast(newUsages.size - 2)) // TODO Creation new list
+        return make(newUsages[0], func, newUsages.takeLast(newUsages.size - 1)) // TODO Creation new list
     }
 
     override fun equals(other: Any?): Boolean {

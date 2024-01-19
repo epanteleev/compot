@@ -31,8 +31,17 @@ data class StoreCodegenForAlloc(val type: PrimitiveType, val asm: Assembler): GP
             return
         }
 
-        asm.mov(size, src, temp1)
-        asm.mov(size, temp1, dst)
+        when (src) {
+            is AddressLiteral -> {
+                asm.lea(size, src, temp1)
+                asm.mov(size, temp1, dst)
+            }
+            else -> {
+                asm.mov(size, src, temp1)
+                asm.mov(size, temp1, dst)
+            }
+        }
+
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {

@@ -5,7 +5,6 @@ import ir.types.*
 import ir.instruction.Load
 import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
 import ir.platform.x64.codegen.utils.XmmOperandVisitorUnaryOp
-import ir.platform.x64.utils.*
 
 
 data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp,

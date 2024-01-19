@@ -6,7 +6,7 @@ import ir.types.PointerType
 import ir.types.PrimitiveType
 import ir.types.Type
 
-class Load private constructor(name: String, val loadedType: PrimitiveType, ptr: Value):
+class Load private constructor(name: String, private val loadedType: PrimitiveType, ptr: Value):
     ValueInstruction(name, Type.Ptr, arrayOf(ptr)) {
     override fun dump(): String {
         return "%$identifier = $NAME $loadedType ${operand()}"

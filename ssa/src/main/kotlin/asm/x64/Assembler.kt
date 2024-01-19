@@ -166,6 +166,8 @@ class Assembler(private val name: String) {
 
     // Call Procedure
     fun call(name: String) = add(Call(name))
+    fun call(reg: GPRegister) = add(Call(reg))
+    fun call(reg: Address) = add(Call(reg))
 
     fun cmp(size: Int, first: Operand, second: Operand) = add(Cmp(size, first, second))
 

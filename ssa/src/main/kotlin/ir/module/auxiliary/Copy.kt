@@ -39,7 +39,7 @@ internal object Copy {
 
     private fun newUsages(oldToNewValues: Map<LocalValue, LocalValue>, inst: Instruction): List<Value> {
         return inst.operands().mapTo(arrayListOf()) {
-            if (it is ArgumentValue || it is Constant || it is GlobalValue) {
+            if (it is ArgumentValue || it is Constant || it is GlobalSymbol) {
                 it
             } else {
                 val result = oldToNewValues[it]

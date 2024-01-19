@@ -63,7 +63,7 @@ class RegisterAllocation(private val stackSize: Int,
 
     fun operand(value: Value): Operand {
         return when (value) {
-            is LocalValue  -> {
+            is LocalValue -> {
                 val operand = registerMap[value]
                 assert(operand != null) {
                     "cannot find operand for $value"
@@ -80,7 +80,7 @@ class RegisterAllocation(private val stackSize: Int,
             is U64Value    -> Imm64(value.u64)
             is F32Value    -> ImmFp32(value.f32)
             is F64Value    -> ImmFp64(value.f64)
-            is GlobalValue -> Address.from(value.name())
+            is GlobalSymbol -> Address.from(value.name())
             else -> throw RuntimeException("expect $value: ${value.type()}")
         }
     }
