@@ -15,9 +15,15 @@ interface Address : Operand {
             return AddressLiteral(label)
         }
     }
+
+    fun withOffset(disp: Int): Address
 }
 
 class Address2 internal constructor(val base: GPRegister, val offset: Int) : Address {
+    override fun withOffset(disp: Int): Address {
+        return Address2(base, offset + disp)
+    }
+
     override fun toString(): String {
         return toString(Int.MAX_VALUE)
     }
@@ -48,6 +54,10 @@ class Address2 internal constructor(val base: GPRegister, val offset: Int) : Add
 
 class Address4 internal constructor(private val base: GPRegister?, private val offset: Int, val index: GPRegister, val scale: Int) :
     Address {
+    override fun withOffset(disp: Int): Address {
+        return Address4(base, offset + (disp * scale), index, scale)
+    }
+
     override fun toString(): String {
         return toString(Int.MAX_VALUE)
     }
@@ -66,6 +76,10 @@ class Address4 internal constructor(private val base: GPRegister?, private val o
 }
 
 class ArgumentSlot(private val base: GPRegister, private val offset: Int) : Address {
+    override fun withOffset(disp: Int): Address {
+        return ArgumentSlot(base, offset + disp)
+    }
+
     override fun toString(): String {
         return toString(Int.MAX_VALUE)
     }
@@ -80,6 +94,7 @@ class ArgumentSlot(private val base: GPRegister, private val offset: Int) : Addr
 }
 
 data class AddressLiteral internal constructor(val label: String) : Address {
+    override fun withOffset(disp: Int): Address = throw RuntimeException("impossible to calculate")
     override fun toString(): String {
         return "$label(%rip)"
     }

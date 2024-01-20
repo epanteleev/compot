@@ -1,10 +1,10 @@
 package ir.instruction
 
 import ir.Value
-import ir.instruction.utils.Visitor
+import ir.types.*
 import ir.module.block.Block
-import ir.types.BooleanType
-import ir.types.Type
+import ir.instruction.utils.Visitor
+
 
 class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block) :
     TerminateInstruction(arrayOf(value), arrayOf(onTrue, onFalse)) {

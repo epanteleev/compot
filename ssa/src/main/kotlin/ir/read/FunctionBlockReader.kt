@@ -263,7 +263,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         iterator.expect<Comma>("comma")
 
         val sourceType = iterator.expect<PointerTypeToken>("type")
-        val source     = iterator.expect<LocalValueToken>("source value")
+        val source     = iterator.expect<ValueToken>("source value")
         iterator.expect<Comma>("comma")
         val indexType  = iterator.expect<IntegerTypeToken>("index type")
         val index      = iterator.expect<AnyValueToken>("index")

@@ -1,9 +1,10 @@
 package ir.instruction
 
-import ir.AnyFunctionPrototype
 import ir.Value
-import ir.instruction.utils.Visitor
 import ir.types.Type
+import ir.AnyFunctionPrototype
+import ir.instruction.utils.Visitor
+
 
 class Call private constructor(name: String, private val func: AnyFunctionPrototype, args: Array<Value>):
     ValueInstruction(name, func.returnType(), args),

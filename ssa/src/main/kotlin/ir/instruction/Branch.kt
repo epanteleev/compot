@@ -1,8 +1,9 @@
 package ir.instruction
 
 import ir.Value
-import ir.instruction.utils.Visitor
 import ir.module.block.Block
+import ir.instruction.utils.Visitor
+
 
 class Branch private constructor(target: Block): TerminateInstruction(arrayOf(), arrayOf(target)) {
     override fun dump(): String {
