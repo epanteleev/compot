@@ -42,6 +42,7 @@ interface InstructionFabric {
 interface InternalInstructionFabric {
     fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi
     fun copy(value: Value): Copy
+    fun move(toValue: Alloc, fromValue: Value)
     fun downStackFrame(callable: Callable)
     fun upStackFrame(callable: Callable)
 }

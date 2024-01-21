@@ -339,6 +339,15 @@ class CodeEmitter(private val data: FunctionData,
         CopyCodegen(copy.type(), asm)(result, operand)
     }
 
+    override fun visit(move: Move) {
+        val pointer        = move.toValue()
+        val pointerOperand = valueToRegister.operand(pointer)
+        val value          = valueToRegister.operand(move.toValue())
+        val type = move.fromValue().type()
+
+        StoreCodegenForAlloc(type as PrimitiveType, asm)(value, pointerOperand)
+    }
+
     override fun visit(downStackFrame: DownStackFrame) {
         val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[downStackFrame.call()]!!)
         for (arg in savedRegisters) {

@@ -18,6 +18,7 @@ interface Visitor {
     fun visit(fpext: FpExtend)
     fun visit(fptosi: FloatToSigned)
     fun visit(copy: Copy)
+    fun visit(move: Move)
     fun visit(downStackFrame: DownStackFrame)
     fun visit(gep: GetElementPtr)
     fun visit(gfp: GetFieldPtr)

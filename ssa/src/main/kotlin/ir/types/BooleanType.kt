@@ -1,7 +1,6 @@
 package ir.types
 
 class BooleanType : PrimitiveType {
-    override fun size(): Int {
-        return 1
-    }
+    override fun toString(): String = "u1"
+    override fun size(): Int = 1
 }

@@ -6,6 +6,7 @@ import ir.pass.transform.Mem2Reg
 import ir.read.ModuleReader
 import java.io.File
 
+
 fun main(args: Array<String>) {
     if (args.isEmpty()) {
         println("<ir-file>.ir")

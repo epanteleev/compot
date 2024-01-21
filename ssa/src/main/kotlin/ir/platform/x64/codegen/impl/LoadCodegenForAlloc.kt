@@ -3,9 +3,8 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Load
+import ir.platform.x64.codegen.utils.*
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
-import ir.platform.x64.codegen.utils.XmmOperandVisitorUnaryOp
 
 
 data class LoadCodegenForAlloc(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp,
@@ -14,16 +13,8 @@ data class LoadCodegenForAlloc(val type: PrimitiveType, val asm: Assembler): GPO
 
     operator fun invoke(dst: Operand, pointer: Operand) {
         when (type) {
-            is FloatingPointType           -> ir.platform.x64.codegen.utils.ApplyClosure(
-                dst,
-                pointer,
-                this as XmmOperandVisitorUnaryOp
-            )
-            is IntegerType, is PointerType -> ir.platform.x64.codegen.utils.ApplyClosure(
-                dst,
-                pointer,
-                this as GPOperandVisitorUnaryOp
-            )
+            is FloatingPointType           -> ApplyClosure(dst, pointer, this as XmmOperandVisitorUnaryOp)
+            is IntegerType, is PointerType -> ApplyClosure(dst, pointer, this as GPOperandVisitorUnaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, pointer=$pointer")
         }
     }

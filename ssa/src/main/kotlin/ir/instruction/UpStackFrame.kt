@@ -8,7 +8,7 @@ class UpStackFrame(private val callable: Callable): Instruction(arrayOf()) {
         return callable
     }
 
-    override fun copy(newUsages: List<Value>): Instruction {
+    override fun copy(newUsages: List<Value>): UpStackFrame {
         return UpStackFrame(callable)
     }
 

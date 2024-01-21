@@ -86,7 +86,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return insert(beforeIndex, builder)
     }
 
-    fun insert(index: Int, builder: (AnyInstructionFabric) -> Value): Value {
+    fun<T> insert(index: Int, builder: (AnyInstructionFabric) -> T): T {
         assert(index >= 0)
         indexToAppend = index
         return builder(this)
@@ -332,7 +332,11 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Copy.make(n(it), value) }
     }
 
-    fun add(instruction: Instruction): Instruction {
+    override fun move(toValue: Alloc, fromValue: Value) {
+        append(Move.make(toValue, fromValue))
+    }
+
+    fun add(instruction: Instruction): Instruction { //TODO simplify???
         fun makeEdge(to: Block) {
             addSuccessor(to)
             to.addPredecessor(this)

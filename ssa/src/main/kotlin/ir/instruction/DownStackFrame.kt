@@ -9,8 +9,8 @@ class DownStackFrame(private val callable: Callable):
         return callable
     }
 
-    override fun copy(newUsages: List<Value>): Instruction {
-        return UpStackFrame(callable)
+    override fun copy(newUsages: List<Value>): DownStackFrame {
+        return DownStackFrame(callable)
     }
 
     override fun equals(other: Any?): Boolean {
