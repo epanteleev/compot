@@ -3,8 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Load
-import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
-import ir.platform.x64.codegen.utils.XmmOperandVisitorUnaryOp
+import ir.platform.x64.codegen.utils.*
 
 
 data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp,
@@ -13,16 +12,8 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVi
 
     operator fun invoke(value: Operand, pointer: Operand) {
         when (type) {
-            is FloatingPointType -> ir.platform.x64.codegen.utils.ApplyClosure(
-                pointer,
-                value,
-                this as XmmOperandVisitorUnaryOp
-            )
-            is IntegerType, is PointerType -> ir.platform.x64.codegen.utils.ApplyClosure(
-                pointer,
-                value,
-                this as GPOperandVisitorUnaryOp
-            )
+            is FloatingPointType           -> ApplyClosure(value, pointer, this as XmmOperandVisitorUnaryOp)
+            is IntegerType, is PointerType -> ApplyClosure(value, pointer, this as GPOperandVisitorUnaryOp)
             else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
         }
     }
@@ -32,7 +23,10 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVi
     }
 
     override fun ra(dst: GPRegister, src: Address) {
-        TODO("Not yet implemented")
+        when (src) {
+            is AddressLiteral -> asm.mov(size, src, dst)
+            else -> TODO()
+        }
     }
 
     override fun ar(dst: Address, src: GPRegister) {
@@ -56,7 +50,10 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVi
     }
 
     override fun raF(dst: XmmRegister, src: Address) {
-        TODO("Not yet implemented")
+        when (src) {
+            is AddressLiteral -> asm.movf(size, src, dst)
+            else -> TODO()
+        }
     }
 
     override fun arF(dst: Address, src: XmmRegister) {

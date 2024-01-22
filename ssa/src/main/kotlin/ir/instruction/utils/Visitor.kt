@@ -4,6 +4,7 @@ import ir.instruction.*
 
 interface Visitor {
     fun visit(alloc: Alloc)
+    fun visit(generate: Generate)
     fun visit(binary: ArithmeticBinary)
     fun visit(neg: Neg)
     fun visit(neg: Not)

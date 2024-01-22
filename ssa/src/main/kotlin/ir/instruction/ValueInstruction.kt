@@ -7,7 +7,7 @@ import ir.types.Type
 abstract class ValueInstruction(protected val identifier: String, protected val tp: Type, operands: Array<Value>):
     Instruction(operands),
     LocalValue {
-    private val usedIn: MutableList<Instruction> = arrayListOf()
+    private var usedIn: MutableList<Instruction> = arrayListOf()
 
     internal fun addUser(instruction: Instruction) {
         usedIn.add(instruction)
@@ -17,7 +17,7 @@ abstract class ValueInstruction(protected val identifier: String, protected val 
         usedIn.remove(instruction)
     }
 
-    fun usedIn(): Collection<Instruction> {
+    fun usedIn(): List<Instruction> {
         return usedIn
     }
 
@@ -44,5 +44,23 @@ abstract class ValueInstruction(protected val identifier: String, protected val 
 
     override fun hashCode(): Int {
         return identifier.hashCode() + tp.hashCode()
+    }
+
+    companion object {
+        private val EMPTY_USED_IN = arrayListOf<Instruction>()
+
+        fun replaceUsages(inst: ValueInstruction, toValue: Value) {
+            val usedIn = inst.usedIn
+            inst.usedIn = EMPTY_USED_IN
+            for (user in usedIn) {
+                for ((idxUse, use) in user.operands().withIndex()) {
+                    if (use != inst) {
+                        continue
+                    }
+
+                    user.update(idxUse, toValue)
+                }
+            }
+        }
     }
 }

@@ -5,7 +5,7 @@ import ir.types.PrimitiveType
 import ir.instruction.utils.Visitor
 
 
-class Move private constructor(toValue: Alloc, fromValue: Value):
+class Move private constructor(toValue: Generate, fromValue: Value):
     Instruction(arrayOf(toValue, fromValue)) {
 
     override fun dump(): String {
@@ -21,12 +21,12 @@ class Move private constructor(toValue: Alloc, fromValue: Value):
         return operands[1]
     }
 
-    fun toValue(): Alloc {
+    fun toValue(): Generate {
         assert(operands.size == 2) {
             "size should be 2 in $this instruction"
         }
 
-        return operands[0] as Alloc
+        return operands[0] as Generate
     }
 
     override fun copy(newUsages: List<Value>): Move {
@@ -34,7 +34,7 @@ class Move private constructor(toValue: Alloc, fromValue: Value):
             "should be, but newUsages=$newUsages"
         }
 
-        return make(newUsages[0] as Alloc, newUsages[1])
+        return make(newUsages[0] as Generate, newUsages[1])
     }
 
     override fun equals(other: Any?): Boolean {
@@ -56,7 +56,7 @@ class Move private constructor(toValue: Alloc, fromValue: Value):
     companion object {
         const val NAME = "move"
 
-        fun make(toValue: Alloc, fromValue: Value): Move {
+        fun make(toValue: Generate, fromValue: Value): Move {
             require(isAppropriateType(toValue, fromValue)) {
                 "inconsistent types: toValue=$toValue, fromValue=$fromValue"
             }
@@ -69,7 +69,7 @@ class Move private constructor(toValue: Alloc, fromValue: Value):
         }
 
         private fun isAppropriateType(toValue: Value, fromValue: Value): Boolean {
-            if (toValue is Alloc || fromValue is Alloc) {
+            if (toValue is Generate || fromValue is Generate) {
                 return fromValue.type() is PrimitiveType
             }
 

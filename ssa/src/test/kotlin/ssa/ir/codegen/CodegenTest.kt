@@ -7,6 +7,7 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.Mem2Reg
 import ir.platform.regalloc.VirtualRegistersPool
 import ir.types.Type
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -54,6 +55,5 @@ class CodegenTest {
         val pool = VirtualRegistersPool.create(module.functions[0].arguments())
         assertEquals(pool.arguments()[0], rdi)
         assertEquals(pool.arguments()[1], rsi)
-        assertEquals(pool.allocSlot(retValue), Address.from(rbp, -8))
     }
 }

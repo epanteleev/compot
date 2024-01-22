@@ -4,8 +4,8 @@ import ir.*
 import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module
+import ir.module.SSAModule
 import ir.module.block.Block
-import ir.platform.x64.CSSAModule
 import ir.types.FloatingPointType
 import ir.types.Type
 
@@ -48,15 +48,7 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
                 it.arithmeticBinary(inst.operand(), ArithmeticBinaryOp.Xor, minusZero(type))
             }
 
-            for (user in inst.usedIn().map { it }) {
-                for ((idxUse, use) in user.operands().withIndex()) {
-                    if (use != inst) {
-                        continue
-                    }
-
-                    user.update(idxUse, xor)
-                }
-            }
+            ValueInstruction.replaceUsages(inst, xor)
             bb.remove(idx)
         }
     }
@@ -66,7 +58,7 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
             val functions = module.functions.map { it }
             ReplaceFloatNeg(functions).run()
 
-            return CSSAModule(functions, module.externFunctions, module.globals, module.types)
+            return SSAModule(functions, module.externFunctions, module.globals, module.types)
         }
     }
 }

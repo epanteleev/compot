@@ -8,7 +8,7 @@ import ir.instruction.utils.Visitor
 class Alloc private constructor(name: String, val allocatedType: Type):
     ValueInstruction(name, allocatedType.ptr(), arrayOf()) {
     override fun dump(): String {
-        return "%$identifier = alloc $allocatedType"
+        return "%$identifier = $NAME $allocatedType"
     }
 
     override fun type(): PointerType {
@@ -24,6 +24,8 @@ class Alloc private constructor(name: String, val allocatedType: Type):
     }
 
     companion object {
+        const val NAME = "alloc"
+
         fun make(name: String, ty: Type): Alloc {
             require(isAppropriateType(ty)) {
                 "should not be $ty"

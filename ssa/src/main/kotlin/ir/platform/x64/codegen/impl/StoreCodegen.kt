@@ -1,11 +1,9 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
-import ir.instruction.Store
 import ir.types.*
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
-import ir.platform.x64.codegen.utils.XmmOperandVisitorUnaryOp
+import ir.instruction.Store
+import ir.platform.x64.codegen.utils.*
 
 
 data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp,
@@ -41,7 +39,10 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandV
     }
 
     override fun ai(dst: Address, src: Imm32) {
-        TODO("Not yet implemented")
+        when (dst) {
+            is AddressLiteral -> asm.mov(size, src, dst)
+            else -> TODO("Not yet implemented")
+        }
     }
 
     override fun rrF(dst: XmmRegister, src: XmmRegister) {

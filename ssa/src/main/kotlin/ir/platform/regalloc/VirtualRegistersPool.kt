@@ -15,6 +15,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
 
     fun allocSlot(value: Value): Operand {
         return when (value) {
+            is Generate         -> frame.takeSlot(value)
             is Alloc            -> frame.takeSlot(value)
             is ValueInstruction -> {
                 when (val tp = value.type()) {

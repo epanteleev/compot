@@ -13,6 +13,7 @@ import asm.x64.GPRegister.*
 import ir.module.block.Label
 import ir.utils.OrderedLocation
 import ir.instruction.utils.Visitor
+import ir.pass.transform.utils.Utils.isLocalVariable
 import ir.platform.regalloc.RegisterAllocation
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
@@ -184,38 +185,27 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(store: Store) {
-        val pointer        = store.pointer()
+        val pointer = store.pointer()
+//        assert(store.isLocalVariable()) {
+//            "cannot be, but operand=$pointer"
+//        }
+
         val pointerOperand = valueToRegister.operand(pointer)
         val value          = valueToRegister.operand(store.value())
         val type = store.value().type()
 
-        if (pointer is Alloc || pointer is GlobalValue) {
-            // Operand isn't real pointer, but slot on stack or data segment.
-            // We handle it separately.
-            assert(pointerOperand is Address) {
-                "should be address, but pointer=$pointer"
-            }
-
-            StoreCodegenForAlloc(type as PrimitiveType, asm)( value, pointerOperand)
-        } else {
-            StoreCodegen(type as PrimitiveType, asm)( value, pointerOperand)
-        }
+        StoreCodegen(type as PrimitiveType, asm)( value, pointerOperand)
     }
 
     override fun visit(load: Load) {
         val operand = load.operand()
+//        assert(load.isLocalVariable()) {
+//            "cannot be, but operand=$operand"
+//        }
+
         val pointer = valueToRegister.operand(operand)
         val value   = valueToRegister.operand(load)
-        if (operand is Alloc || operand is GlobalValue) {
-            // Operand isn't real pointer, but slot on stack or data segment.
-            // We handle it separately.
-            assert(pointer is Address) {
-                "should be address, but pointer=$pointer"
-            }
-            LoadCodegenForAlloc(load.type(), asm)( value, pointer)
-        } else {
-            LoadCodegen(load.type(), asm)( value, pointer)
-        }
+        LoadCodegen(load.type(), asm)( value, pointer)
     }
 
     override fun visit(icmp: SignedIntCompare) { //TODO
@@ -342,10 +332,10 @@ class CodeEmitter(private val data: FunctionData,
     override fun visit(move: Move) {
         val pointer        = move.toValue()
         val pointerOperand = valueToRegister.operand(pointer)
-        val value          = valueToRegister.operand(move.toValue())
+        val value          = valueToRegister.operand(move.fromValue())
         val type = move.fromValue().type()
 
-        StoreCodegenForAlloc(type as PrimitiveType, asm)(value, pointerOperand)
+        MoveCodegen(type as PrimitiveType, asm)(value, pointerOperand)
     }
 
     override fun visit(downStackFrame: DownStackFrame) {
@@ -450,6 +440,7 @@ class CodeEmitter(private val data: FunctionData,
 
     override fun visit(phi: Phi) { /* nothing to do */ }
     override fun visit(alloc: Alloc) { /* nothing to do */ }
+    override fun visit(generate: Generate) { /* nothing to do */ }
 
     private fun evaluateOrder(blocks: BasicBlocks): Map<Callable, OrderedLocation> {
         val orderedLocation = hashMapOf<Callable, OrderedLocation>()

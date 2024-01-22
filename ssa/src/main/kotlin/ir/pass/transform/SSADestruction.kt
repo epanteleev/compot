@@ -11,7 +11,7 @@ class SSADestruction {
     companion object {
         fun run(module: Module): CSSAModule {
             val copy = module.copy()
-            val transformed = LoadStoreReplacement.run(
+            val transformed = AllocLoadStoreReplacement.run(
                 MoveLargeConstants.run(
                     ReplaceFloatNeg.run(
                         CopyInsertion.run(

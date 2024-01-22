@@ -324,6 +324,10 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Phi.makeUncompleted("phi${n(it)}", ty, incoming, blocks) }
     }
 
+    override fun gen(ty: PrimitiveType): Generate {
+        return withOutput { it: Int -> Generate.make("gen${n(it)}", ty) }
+    }
+
     fun uncompletedPhi(incoming: List<Value>, labels: List<Block>): Phi {
         return withOutput { it: Int -> Phi.make("phi${n(it)}", incoming[0].type() as PrimitiveType, labels, incoming.toTypedArray()) }
     }
@@ -332,7 +336,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Copy.make(n(it), value) }
     }
 
-    override fun move(toValue: Alloc, fromValue: Value) {
+    override fun move(toValue: Generate, fromValue: Value) {
         append(Move.make(toValue, fromValue))
     }
 
