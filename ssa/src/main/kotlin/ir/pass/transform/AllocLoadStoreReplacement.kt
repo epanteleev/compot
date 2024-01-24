@@ -38,24 +38,13 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     }
 
     private fun pass() {
-        for (bb in cfg) {
+        for (bb in cfg.preorder()) {
             val instructions = bb.instructions()
             val size = instructions.size
             for (i in 0 until size) {
                 val inst = instructions[i]
                 when {
                     inst is Alloc && inst.isLocalVariable() -> replaceAlloc(bb, inst, i)
-                    else -> {}
-                }
-            }
-        }
-
-        for (bb in cfg) {
-            val instructions = bb.instructions()
-            val size = instructions.size
-            for (i in 0 until size) {
-                val inst = instructions[i]
-                when {
                     inst is Load && inst.isLocalVariable() -> replaceLoad(bb, inst, i)
                     inst is Store && inst.isLocalVariable() -> replaceStore(bb, inst, i)
                     else -> {}

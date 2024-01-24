@@ -3,11 +3,9 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Copy
+import ir.platform.x64.codegen.utils.*
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
-import ir.platform.x64.codegen.utils.XmmOperandVisitorUnaryOp
 
 
 data class CopyCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp, XmmOperandVisitorUnaryOp {
