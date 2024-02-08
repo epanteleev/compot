@@ -63,7 +63,7 @@ data class GetElementPtrCodegenForAlloc (val type: PointerType, val basicType: P
         default(dst, first, second)
     }
 
-    override fun ari(dst: Address, first: Register, second: Imm32) {
+    override fun ari(dst: Address, first: GPRegister, second: Imm32) {
         default(dst, first, second)
     }
 

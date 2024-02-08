@@ -17,7 +17,7 @@ interface GPOperandVisitorBinaryOp {
     fun aii(dst: Address, first: Imm32, second: Imm32)
     fun air(dst: Address, first: Imm32, second: GPRegister)
     fun aia(dst: Address, first: Imm32, second: Address)
-    fun ari(dst: Address, first: Register, second: Imm32)
+    fun ari(dst: Address, first: GPRegister, second: Imm32)
     fun aai(dst: Address, first: Address, second: Imm32)
     fun aar(dst: Address, first: Address, second: GPRegister)
     fun aaa(dst: Address, first: Address, second: Address)

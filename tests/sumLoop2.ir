@@ -1,0 +1,67 @@
+define i32 @sumLoop2(%a: i32, %b: i32) {
+entry:
+  %a.addr = alloc i32
+  %b.addr = alloc i32
+  %acc = alloc i32
+  %i = alloc i32
+  %j = alloc i32
+  store ptr %a.addr, i32 %a
+  store ptr %b.addr, i32 %b
+  store ptr %acc, i32 0
+  store ptr %i, i32 0
+  br label %for.cond
+
+for.cond:
+  %0 = load i32 %i
+  %1 = load i32 %a.addr
+  %cmp = icmp lt i32 %0, %1
+  br u1 %cmp label %for.body, label %for.end7
+
+for.body:
+  store ptr %j, i32 0
+  br label %for.cond1
+
+for.cond1:
+  %2 = load i32 %j
+  %3 = load i32 %b.addr
+  %cmp2 = icmp lt i32 %2, %3
+  br u1 %cmp2 label %for.body3, label %for.end
+
+for.body3:
+  %4 = load i32 %acc
+  %5 = load i32 %i
+  %add = add i32 %4, %5
+  %6 = load i32 %j
+  %add4 = add i32 %add, %6
+  store ptr %acc, i32 %add4
+  br label %for.inc
+
+for.inc:
+  %7 = load i32 %j
+  %inc = add i32 %7, 1
+  store ptr %j, i32 %inc
+  br label %for.cond1
+
+for.end:
+  br label %for.inc5
+
+for.inc5:
+  %8 = load i32 %i
+  %inc6 = add i32 %8, 1
+  store ptr %i, i32 %inc6
+  br label %for.cond
+
+for.end7:
+  %9 = load i32 %acc
+  ret i32 %9
+}
+
+extern void @printInt(i32)
+
+define u64 @main() {
+entry:
+  %1 = call i32 @sumLoop2(3: i32, 5: i32)
+  call void @printInt(%1: i32)
+  ret u64 0
+}
+

@@ -19,7 +19,7 @@ internal object Utils {
         if (operand is Generate) {
             return true
         }
-        if (operand is GlobalValue) {
+        if (operand is GlobalValue) { //TODO
             return false
         }
         return operand is Alloc && operand.allocatedType is PrimitiveType
@@ -64,7 +64,7 @@ internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Dom
         val instructions = bb.instructions()
         for (index in instructions.indices) {
             val instruction = instructions[index]
-            if (instruction is Branch) {
+            if (instruction is Branch || instruction is ReturnVoid) {
                 continue
             }
 

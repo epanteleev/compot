@@ -106,7 +106,7 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
         TODO("Not yet implemented")
     }
 
-    override fun ari(dst: Address, first: Register, second: Imm32) {
+    override fun ari(dst: Address, first: GPRegister, second: Imm32) {
         TODO("Not yet implemented")
     }
 

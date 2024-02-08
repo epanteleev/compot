@@ -357,6 +357,8 @@ class Assembler(private val name: String) {
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 
+    fun comment(message: String) = add(Comment(message))
+
     override fun toString(): String {
         val builder = StringBuilder()
         var count = 0

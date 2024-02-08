@@ -372,7 +372,7 @@ class CodeEmitter(private val data: FunctionData,
         if (source is Alloc) {
             GetElementPtrCodegenForAlloc(gep.type(), gep.basicType, asm)(dest, sourceOperand, index)
         } else {
-            GetElementPtrCodegen(gep.type(), gep.basicType, asm)(dest, sourceOperand, index)
+            GetElementPtrCodegen(gep.type(), gep.index().type().size(), gep.basicType, asm)(dest, sourceOperand, index)
         }
     }
 
@@ -465,6 +465,7 @@ class CodeEmitter(private val data: FunctionData,
             }
 
             for (instruction in bb) {
+                asm.comment(instruction.dump())
                 instruction.visit(this)
             }
         }

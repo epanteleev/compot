@@ -1,11 +1,11 @@
 package ir.pass.transform.utils
 
-import ir.Value
 import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.BasicBlocks
 import ir.module.block.AnyBlock
 import ir.pass.transform.utils.Utils.isLocalVariable
+
 
 class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     private val allocated: Set<Alloc> by lazy { allocatedVariablesInternal() }
@@ -40,7 +40,7 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
             stores[v] = mutableSetOf()
         }
 
-        for (bb in blocks.preorder()) {
+        for (bb in blocks.preorder()) { //TODO fast traversal???
             for (inst in bb) {
                 if (inst !is Store) {
                     continue

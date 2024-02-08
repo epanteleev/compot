@@ -5,6 +5,7 @@ import ir.types.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
+import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandVisitorBinaryOp
 import ir.platform.x64.codegen.utils.XmmOperandVisitorBinaryOp
 
@@ -15,18 +16,8 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVis
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
-            is FloatingPointType -> ir.platform.x64.codegen.utils.ApplyClosure(
-                dst,
-                first,
-                second,
-                this as XmmOperandVisitorBinaryOp
-            )
-            is IntegerType   -> ir.platform.x64.codegen.utils.ApplyClosure(
-                dst,
-                first,
-                second,
-                this as GPOperandVisitorBinaryOp
-            )
+            is FloatingPointType -> ApplyClosure(dst, first, second, this as XmmOperandVisitorBinaryOp)
+            is IntegerType       -> ApplyClosure(dst, first, second, this as GPOperandVisitorBinaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }
@@ -109,7 +100,7 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVis
         TODO("Not yet implemented")
     }
 
-    override fun ari(dst: Address, first: Register, second: Imm32) {
+    override fun ari(dst: Address, first: GPRegister, second: Imm32) {
         TODO("Not yet implemented")
     }
 

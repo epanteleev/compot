@@ -3,6 +3,8 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Store
+import ir.platform.x64.CallConvention.POINTER_SIZE
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.utils.*
 
 
@@ -27,7 +29,8 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandV
     }
 
     override fun ar(dst: Address, src: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.mov(size, src, Address.from(temp1, 0))
     }
 
     override fun aa(dst: Address, src: Address) {

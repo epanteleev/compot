@@ -473,3 +473,7 @@ data class CMOVcc(val size: Int, val flag: CMoveFlag, val src: Operand, val dst:
         return "$flag ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
+
+data class Comment(val message: String): CPUInstruction {
+    override fun toString(): String = "# $message"
+}

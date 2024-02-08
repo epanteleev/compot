@@ -38,7 +38,7 @@ function check() {
 	else
   		echo -e "\t${RED}[FAIL]: '$1'${RESET}"
   		echo -e "\t${GREEN}[Expected]: '$expected'${RESET}"
-  		echo -e "\t${RED}[Actual]:${RESET} '$result'"
+  		echo -e "\t${RED}[Actual]:  ${RESET} '$result'"
 	fi
 }
 
@@ -49,7 +49,8 @@ function compile_and_run() {
 	run_test "$test_name" "$expected_result"
 }
 
-
+compile_and_run sumLoop2 "45"
+compile_and_run bubble_sort "0 2 4 4 9 23 45 55 89 90 "
 compile_and_run hello_world1 "Hello world"
 compile_and_run select "0
 1"

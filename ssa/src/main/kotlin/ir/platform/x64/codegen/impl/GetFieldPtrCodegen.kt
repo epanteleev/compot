@@ -51,7 +51,7 @@ class GetFieldPtrCodegen(val type: PointerType, val basicType: AggregateType, va
 
     override fun aia(dst: Address, first: Imm32, second: Address) = default(dst, first, second)
 
-    override fun ari(dst: Address, first: Register, second: Imm32) {
+    override fun ari(dst: Address, first: GPRegister, second: Imm32) {
         TODO("Not yet implemented")
     }
 

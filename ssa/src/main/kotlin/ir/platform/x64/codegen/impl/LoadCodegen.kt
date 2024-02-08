@@ -3,6 +3,8 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Load
+import ir.platform.x64.CallConvention.POINTER_SIZE
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.utils.*
 
 
@@ -34,7 +36,13 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVi
     }
 
     override fun aa(dst: Address, src: Address) {
-        TODO("Not yet implemented")
+        if (dst == src) {
+            return
+        }
+
+        asm.mov(POINTER_SIZE, src, temp1)
+        asm.mov(size, Address.from(temp1, 0), temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {

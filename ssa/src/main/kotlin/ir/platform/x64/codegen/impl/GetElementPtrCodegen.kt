@@ -9,9 +9,10 @@ import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.codegen.utils.GPOperandVisitorBinaryOp
 
 
-class GetElementPtrCodegen(val type: PointerType, basicType: PrimitiveType, val asm: Assembler) :
+class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: PrimitiveType, val asm: Assembler) :
     GPOperandVisitorBinaryOp {
     private val size: Int = basicType.size()
+
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         ir.platform.x64.codegen.utils.ApplyClosure(dst, source, index, this as GPOperandVisitorBinaryOp)
@@ -43,6 +44,7 @@ class GetElementPtrCodegen(val type: PointerType, basicType: PrimitiveType, val 
         assert(isIntRange(disp)) {
             "should be, but disp=$disp"
         }
+
         asm.lea(POINTER_SIZE, Address.from(first, disp.toInt()), dst)
     }
 
@@ -63,7 +65,9 @@ class GetElementPtrCodegen(val type: PointerType, basicType: PrimitiveType, val 
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(secondOpSize, second, temp1)
+        asm.lea(POINTER_SIZE, Address.from(first, 0, temp1, size), temp1)
+        asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
@@ -78,7 +82,7 @@ class GetElementPtrCodegen(val type: PointerType, basicType: PrimitiveType, val 
         TODO("Not yet implemented")
     }
 
-    override fun ari(dst: Address, first: Register, second: Imm32) {
+    override fun ari(dst: Address, first: GPRegister, second: Imm32) {
         TODO("Not yet implemented")
     }
 

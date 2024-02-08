@@ -84,7 +84,7 @@ data class XorCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVis
         TODO("Not yet implemented")
     }
 
-    override fun ari(dst: Address, first: Register, second: Imm32) {
+    override fun ari(dst: Address, first: GPRegister, second: Imm32) {
         TODO("Not yet implemented")
     }
 

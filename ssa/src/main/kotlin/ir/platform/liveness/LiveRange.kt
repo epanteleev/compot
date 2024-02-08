@@ -3,6 +3,7 @@ package ir.platform.liveness
 import ir.module.block.Block
 import ir.utils.OrderedLocation
 
+
 open class LiveRange internal constructor(protected val creation: OrderedLocation, protected var end: OrderedLocation) {
     fun begin(): OrderedLocation {
         return creation
@@ -38,7 +39,7 @@ class LiveRangeImpl internal constructor(creation: OrderedLocation, end: Ordered
     }
 
     internal fun registerUsage(location: OrderedLocation, bbOrdering: Map<Block, Int>) {
-        val worklist = arrayListOf<Block>()
+        val worklist = arrayListOf<Block>() //TODO
         val visited  = mutableSetOf<Block>()
         addWork(worklist, visited, location.block)
 

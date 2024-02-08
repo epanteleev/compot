@@ -2,7 +2,7 @@ package ir.pass.transform.utils
 
 import ir.DominatorTree
 import ir.instruction.Alloc
-import ir.instruction.ValueInstruction
+import ir.instruction.Store
 import ir.module.BasicBlocks
 import ir.module.block.AnyBlock
 
@@ -10,8 +10,19 @@ import ir.module.block.AnyBlock
 class JoinPointSet private constructor(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
     private val joinSet = hashMapOf<AnyBlock, MutableSet<Alloc>>()
 
-    private fun hasStore(bb: AnyBlock, variable: ValueInstruction): Boolean {
-        return bb.instructions().contains(variable)
+    private fun hasDef(bb: AnyBlock, variable: Alloc): Boolean {
+        if (bb.instructions().contains(variable)) {
+            return true
+        }
+        for (users in variable.usedIn()) {
+            if (users !is Store) {
+                continue
+            }
+            if (bb.instructions().contains(users)) {
+                return true
+            }
+        }
+        return false
     }
 
     operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<Alloc>>> {
@@ -38,7 +49,7 @@ class JoinPointSet private constructor(private val blocks: BasicBlocks, private 
                 values.add(v)
                 phiPlaces.add(y)
 
-                if (!hasStore(y, v)) {
+                if (!hasDef(y, v)) {
                     stores.add(y)
                 }
             }

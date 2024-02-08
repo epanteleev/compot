@@ -4,6 +4,7 @@ import ir.FunctionPrototype
 import ir.LocalValue
 import ir.Value
 import ir.instruction.Instruction
+import ir.instruction.ValueInstruction
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.SSAModule
@@ -109,6 +110,7 @@ private class DumpCSSAModule(module: CSSAModule) : DumpModule<CSSAModule>(module
     private var regAlloc: RegisterAllocation? = null
     private var liveness: LiveIntervals? = null
     private var currentBlock: Block? = null
+    private val killedInBlock = arrayListOf<LocalValue>()
 
     override fun dumpFunctionData(functionData: FunctionData) {
         regAlloc = module.regAlloc(functionData)
@@ -119,6 +121,11 @@ private class DumpCSSAModule(module: CSSAModule) : DumpModule<CSSAModule>(module
     override fun dumpBlock(bb: Block) {
         currentBlock = bb
         super.dumpBlock(bb)
+        if (killedInBlock.isNotEmpty()) {
+            builder.append("\tkilled in bb: ")
+            killedInBlock.joinTo(builder, separator = ",") { it.toString() }
+            killedInBlock.clear()
+        }
     }
 
     override fun dumpInstruction(instruction: Instruction, idx: Int) {
@@ -136,8 +143,11 @@ private class DumpCSSAModule(module: CSSAModule) : DumpModule<CSSAModule>(module
             }
 
             val end = liveness!![use].end()
+            currentBlock as Block
             if (end.thisPlace(currentBlock!!, idx)) {
                 killed.add(use)
+            } else if (end.thisPlace(currentBlock!!, currentBlock!!.size)) {
+                killedInBlock.add(use)
             }
         }
 

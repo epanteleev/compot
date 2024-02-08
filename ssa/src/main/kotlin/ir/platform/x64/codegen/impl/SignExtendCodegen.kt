@@ -3,6 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.IntegerType
 import ir.instruction.SignExtend
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
 
@@ -25,11 +26,13 @@ data class SignExtendCodegen(val fromType: IntegerType, val toType: IntegerType,
     }
 
     override fun ar(dst: Address, src: GPRegister) {
-        TODO("Not yet implemented")
+        asm.movsext(fromSize, toSize, src, temp1)
+        asm.mov(toSize, temp1, dst)
     }
 
     override fun aa(dst: Address, src: Address) {
-        TODO("Not yet implemented")
+        asm.movsext(fromSize, toSize, src, temp1)
+        asm.mov(toSize, temp1, dst)
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {

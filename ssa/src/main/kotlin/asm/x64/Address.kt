@@ -7,8 +7,8 @@ interface Address : Operand {
             return Address2(base, offset)
         }
 
-        fun from(base: GPRegister?, offset: Int, index: GPRegister, disp: Int): Address {
-            return Address4(base, offset, index, disp)
+        fun from(base: GPRegister?, offset: Int, index: GPRegister, scale: Int): Address {
+            return Address4(base, offset, index, scale)
         }
 
         fun from(label: String): Address {
@@ -52,7 +52,7 @@ class Address2 internal constructor(val base: GPRegister, val offset: Int) : Add
     }
 }
 
-class Address4 internal constructor(private val base: GPRegister?, private val offset: Int, val index: GPRegister, val scale: Int) :
+class Address4 internal constructor(private val base: GPRegister?, private val offset: Int, val index: GPRegister, private val scale: Int) :
     Address {
     override fun withOffset(disp: Int): Address {
         return Address4(base, offset + (disp * scale), index, scale)
