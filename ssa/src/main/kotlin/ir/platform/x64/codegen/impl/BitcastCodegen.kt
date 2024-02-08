@@ -4,7 +4,6 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.Bitcast
 import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
-import ir.platform.x64.utils.*
 
 
 data class BitcastCodegen (val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp {

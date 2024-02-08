@@ -4,7 +4,6 @@ import asm.x64.*
 import ir.types.IntegerType
 import ir.instruction.Truncate
 import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
-import ir.platform.x64.utils.*
 
 
 data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: Assembler):
