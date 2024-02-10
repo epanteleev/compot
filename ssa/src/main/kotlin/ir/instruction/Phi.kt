@@ -1,5 +1,6 @@
 package ir.instruction
 
+import collections.forEachWith
 import ir.Value
 import ir.types.*
 import ir.module.block.Block
@@ -29,6 +30,12 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
 
     fun zip(): List<Pair<Block, Value>> {
         return incoming() zip operands()
+    }
+
+    fun forAllIncoming(closure: (Block, Value) -> Unit) {
+        incoming().forEachWith(operands().asIterable()) { bb, value ->
+            closure(bb, value)
+        }
     }
 
     override fun copy(newUsages: List<Value>): Instruction {

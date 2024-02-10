@@ -100,7 +100,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
                 val joinSet = JoinPointSet.evaluate(cfg, dominatorTree)
                 Mem2Reg(cfg, joinSet).pass(dominatorTree)
             }
-            return RemoveDeadMemoryInstructions.run(module)
+            return PhiFunctionPruning.run(RemoveDeadMemoryInstructions.run(module))
         }
     }
 }

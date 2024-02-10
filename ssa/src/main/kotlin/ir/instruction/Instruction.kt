@@ -38,7 +38,7 @@ abstract class Instruction(protected val operands: Array<Value>) {
     fun finalize() {
         if (this is ValueInstruction) {
             assert(usedIn().isEmpty()) {
-                "removed used instruction: removed=$this, users=${usedIn()}"
+                "removed useful instruction: removed=$this, users=${usedIn()}"
             }
         }
 

@@ -11,7 +11,6 @@ entry:
   store ptr %n.addr, i32 %n
   store ptr %i, i32 0
   store ptr %j, i32 0
-  store ptr %tmp, i32 0
   br label %for.cond
 
 for.cond:
@@ -97,16 +96,16 @@ for.end20:
   ret void
 }
 
-; arr[] = {2, 4, 0, 9, 90, 45, 55, 89, 4, 23}
+; arr[] = {4, 2, 0, 9, 90, 45, 55, 89, 4, 23}
 define i32 @main() {
 entry:
   %retval = alloc i32
   %arr = alloc <i32x10>
   store ptr %retval, i32 0
   %arrayidx = gep i32, ptr %arr, i64 0
-  store ptr %arrayidx, i32 2
+  store ptr %arrayidx, i32 4
   %arrayidx1 = gep i32, ptr %arr, i64 1
-  store ptr %arrayidx1, i32 4
+  store ptr %arrayidx1, i32 2
   %arrayidx2 = gep i32, ptr %arr, i64 2
   store ptr %arrayidx2, i32 0
   %arrayidx3 = gep i32, ptr %arr, i64 3
