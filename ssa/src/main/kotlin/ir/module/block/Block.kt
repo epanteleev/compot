@@ -214,6 +214,10 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> UnsignedIntCompare.make("cmp${n(it)}", a, predicate, b) }
     }
 
+    override fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare {
+        return withOutput { it: Int -> PointerCompare.make("cmp${n(it)}", a, predicate, b) }
+    }
+
     override fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
         return withOutput { it: Int -> FloatCompare.make("cmp${n(it)}", a, predicate, b) }
     }
@@ -279,11 +283,11 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Bitcast.make(n(it), ty, value) }
     }
 
-    override fun zext(value: Value, toType: IntegerType): ZeroExtend {
+    override fun zext(value: Value, toType: UnsignedIntType): ZeroExtend {
         return withOutput { it: Int -> ZeroExtend.make(n(it), toType, value) }
     }
 
-    override fun sext(value: Value, toType: IntegerType): SignExtend {
+    override fun sext(value: Value, toType: SignedIntType): SignExtend {
         return withOutput { it: Int -> SignExtend.make(n(it), toType, value) }
     }
 

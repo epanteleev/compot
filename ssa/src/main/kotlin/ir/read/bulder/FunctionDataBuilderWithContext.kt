@@ -142,6 +142,14 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.ucmp(first, compareType, second))
     }
 
+    fun pcmp(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: PointerTypeToken): PointerCompare {
+        val compareType = matchCompareType(predicate)
+
+        val first  = getValue(a, operandsTypes.type())
+        val second = getValue(b, operandsTypes.type())
+        return memorize(name, bb.pcmp(first, compareType, second))
+    }
+
     fun floatCompare(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: FloatTypeToken): FloatCompare {
         val compareType = when (predicate.string) {
             "oeq" -> FloatPredicate.Oeq
@@ -167,7 +175,7 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun load(name: LocalValueToken, ptr: AnyValueToken, expectedType: PrimitiveTypeToken): Load {
-        val pointer = getValue(ptr, expectedType.type().ptr())
+        val pointer = getValue(ptr, Type.Ptr)
         return memorize(name, bb.load(expectedType.asType<PrimitiveType>(),pointer))
     }
 
@@ -263,12 +271,12 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.bitcast(value, resultType.type()))
     }
 
-    fun zext(name: LocalValueToken, operandToken: AnyValueToken, operandType: IntegerTypeToken, resultType: IntegerTypeToken): ZeroExtend {
+    fun zext(name: LocalValueToken, operandToken: AnyValueToken, operandType: UnsignedIntegerTypeToken, resultType: UnsignedIntegerTypeToken): ZeroExtend {
         val value = getValue(operandToken, operandType.type())
         return memorize(name, bb.zext(value,  resultType.type()))
     }
 
-    fun sext(name: LocalValueToken, operandToken: AnyValueToken, operandType: IntegerTypeToken, resultType: IntegerTypeToken): SignExtend {
+    fun sext(name: LocalValueToken, operandToken: AnyValueToken, operandType: SignedIntegerTypeToken, resultType: SignedIntegerTypeToken): SignExtend {
         val value = getValue(operandToken, operandType.type())
         return memorize(name, bb.sext(value, resultType.type()))
     }

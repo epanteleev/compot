@@ -1,0 +1,71 @@
+extern i64 @strlen(ptr)
+
+define void @stringReverse(%str: ptr) {
+entry:
+  %str.addr = alloc ptr
+  %len = alloc i32
+  %start = alloc ptr
+  %end = alloc ptr
+  %temp = alloc i8
+  store ptr %str.addr, ptr %str
+  %0 = load ptr %str.addr
+  %call = call i64 @strlen(%0: ptr)
+  %conv = trunc i64 %call to i32
+  store ptr %len, i32 %conv
+  %1 = load ptr %str.addr
+  store ptr %start, ptr %1
+  %2 = load ptr %str.addr
+  %3 = load i32 %len
+  %idx.ext = sext i32 %3 to i64
+  %add.ptr = gep i8, ptr %2, i64 %idx.ext
+  %add.ptr1 = gep i8, ptr %add.ptr, i64 -1
+  store ptr %end, ptr %add.ptr1
+  br label %while.cond
+
+while.cond:
+  %4 = load ptr %start
+  %5 = load ptr %end
+  %cmp = pcmp lt ptr %4, %5
+  br u1 %cmp label %while.body, label %while.end
+
+while.body:
+  %6 = load ptr %start
+  %7 = load i8 %6
+  store ptr %temp, i8 %7
+  %8 = load ptr %end
+  %9 = load i8 %8
+  %10 = load ptr %start
+  store ptr %10, i8 %9
+  %11 = load i8 %temp
+  %12 = load ptr %end
+  store ptr %12, i8 %11
+  %13 = load ptr %start
+  %incdec.ptr = gep i8, ptr %13, i32 1
+  store ptr %start, ptr %incdec.ptr
+  %14 = load ptr %end
+  %incdec.ptr2 = gep i8, ptr %14, i32 -1
+  store ptr %end, ptr %incdec.ptr2
+  br label %while.cond
+
+while.end:
+  ret void
+}
+
+extern i32 @printf(ptr)
+extern ptr @malloc(i64)
+extern void @memcpy(ptr, ptr, i32)
+extern void @free(ptr)
+
+@str = constant <i8 x 12> "Hello world"
+
+define i32 @main() {
+entry:
+  %memory = call ptr @malloc(12: i64)
+  call void @memcpy(%memory: ptr, @str: ptr, 12: i32)
+  call void @stringReverse(%memory: ptr)
+  %0x0 = call i32 @printf(%memory: ptr)
+  call void @free(%memory: ptr)
+
+  ret i32 0
+}
+

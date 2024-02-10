@@ -3,10 +3,6 @@ package ir.types
 data class TypeErrorException(override val message: String) : Exception(message)
 
 interface Type {
-    fun ptr(): PointerType {
-        return Ptr
-    }
-
     fun size(): Int
 
     companion object {

@@ -14,6 +14,7 @@ interface Visitor {
     fun visit(bitcast: Bitcast)
     fun visit(zext: ZeroExtend)
     fun visit(sext: SignExtend)
+    fun visit(pcmp: PointerCompare)
     fun visit(trunc: Truncate)
     fun visit(fptruncate: FpTruncate)
     fun visit(fpext: FpExtend)

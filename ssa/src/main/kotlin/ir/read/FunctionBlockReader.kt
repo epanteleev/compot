@@ -116,10 +116,10 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
     }
 
     private fun parseZext(resultName: LocalValueToken) {
-        val operandType = iterator.expect<IntegerTypeToken>("value type")
+        val operandType = iterator.expect<UnsignedIntegerTypeToken>("value type")
         val operand     = iterator.expect<LocalValueToken>("cast value")
         iterator.expect<To>("'to' keyword")
-        val castValueToken = iterator.expect<IntegerTypeToken>("${ZeroExtend.NAME} type")
+        val castValueToken = iterator.expect<UnsignedIntegerTypeToken>("${ZeroExtend.NAME} type")
 
         builder.zext(resultName, operand, operandType, castValueToken)
     }
@@ -170,32 +170,42 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
     }
 
     private fun parseSext(resultName: LocalValueToken) {
-        val operandType = iterator.expect<IntegerTypeToken>("value type")
+        val operandType = iterator.expect<SignedIntegerTypeToken>("value type")
         val operand     = iterator.expect<LocalValueToken>("value to cast")
         iterator.expect<To>("'to' keyword")
-        val castValueToken = iterator.expect<IntegerTypeToken>("${SignExtend.NAME} type")
+        val castValueToken = iterator.expect<SignedIntegerTypeToken>("${SignExtend.NAME} type")
 
         builder.sext(resultName, operand, operandType, castValueToken)
     }
 
-    private fun parseIcmp(resultTypeToken: LocalValueToken) {
+    private fun parseIcmp(resultName: LocalValueToken) {
         val compareTypeToken = iterator.expect<Identifier>("compare type")
-        val operandsTypes       = iterator.expect<SignedIntegerTypeToken>("signed integer operands type")
+        val operandsTypes    = iterator.expect<SignedIntegerTypeToken>("signed integer operands type")
         val first            = iterator.expect<AnyValueToken>("first compare operand")
         iterator.expect<Comma>("','")
         val second           = iterator.expect<AnyValueToken>("second compare operand")
 
-        builder.icmp(resultTypeToken, first, compareTypeToken, second, operandsTypes)
+        builder.icmp(resultName, first, compareTypeToken, second, operandsTypes)
     }
 
-    private fun parseUcmp(resultTypeToken: LocalValueToken) {
+    private fun parseUcmp(resultName: LocalValueToken) {
         val compareTypeToken = iterator.expect<Identifier>("compare type")
         val operandsTypes       = iterator.expect<UnsignedIntegerTypeToken>("unsigned integer operands type")
         val first            = iterator.expect<AnyValueToken>("first compare operand")
         iterator.expect<Comma>("','")
         val second           = iterator.expect<AnyValueToken>("second compare operand")
 
-        builder.ucmp(resultTypeToken, first, compareTypeToken, second, operandsTypes)
+        builder.ucmp(resultName, first, compareTypeToken, second, operandsTypes)
+    }
+
+    private fun parsePcmp(resultName: LocalValueToken) {
+        val compareTypeToken = iterator.expect<Identifier>("compare type")
+        val operandsTypes    = iterator.expect<PointerTypeToken>("pointer type")
+        val first            = iterator.expect<AnyValueToken>("first compare operand")
+        iterator.expect<Comma>("','")
+        val second           = iterator.expect<AnyValueToken>("second compare operand")
+
+        builder.pcmp(resultName, first, compareTypeToken, second, operandsTypes)
     }
 
     private fun parseFcmp(resultTypeToken: LocalValueToken) {
@@ -340,6 +350,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "call"       -> parseCall(currentTok)
                     "sext"       -> parseSext(currentTok)
                     "zext"       -> parseZext(currentTok)
+                    "pcmp"       -> parsePcmp(currentTok)
                     "trunc"      -> parseTrunc(currentTok)
                     "bitcast"    -> parseBitcast(currentTok)
                     "fptrunc"    -> parseFptrunc(currentTok)

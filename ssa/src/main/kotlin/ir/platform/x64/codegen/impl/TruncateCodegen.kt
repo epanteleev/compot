@@ -16,6 +16,9 @@ data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, v
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {
+        if (dst == src) {
+            return
+        }
         asm.mov(fromSize, src, dst)
     }
 

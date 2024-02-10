@@ -13,7 +13,7 @@ import ir.platform.x64.CSSAModule
 internal class CopyInsertion private constructor(private val cfg: FunctionData) {
     private fun isolatePhis(bb: Block, phi: Phi) {
         val newValues = hashMapOf<Value, Value>()
-        for ((incoming, operand) in phi.zip()) {
+        phi.forAllIncoming { incoming, operand ->
             assert(!bb.hasCriticalEdgeFrom(incoming)) {
                 "Flow graph has critical edge from $incoming to $bb"
             }

@@ -5,7 +5,7 @@ import ir.types.*
 import ir.instruction.utils.Visitor
 
 
-class SignExtend private constructor(name: String, toType: IntegerType, value: Value):
+class SignExtend private constructor(name: String, toType: SignedIntType, value: Value):
     ValueInstruction(name, toType, arrayOf(value)) {
     override fun dump(): String {
         return "%$identifier = $NAME ${value().type()} ${value()} to ${type()}"
@@ -19,8 +19,8 @@ class SignExtend private constructor(name: String, toType: IntegerType, value: V
         return operands[0]
     }
 
-    override fun type(): IntegerType {
-        return tp as IntegerType
+    override fun type(): SignedIntType {
+        return tp as SignedIntType
     }
 
     override fun copy(newUsages: List<Value>): SignExtend {
@@ -38,7 +38,7 @@ class SignExtend private constructor(name: String, toType: IntegerType, value: V
     companion object {
         const val NAME = "sext"
 
-        fun make(name: String, toType: IntegerType, value: Value): SignExtend {
+        fun make(name: String, toType: SignedIntType, value: Value): SignExtend {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
                 "inconsistent types in $name: ty=$toType, value.type=$valueType"
@@ -47,8 +47,8 @@ class SignExtend private constructor(name: String, toType: IntegerType, value: V
             return registerUser(SignExtend(name, toType, value), value)
         }
 
-        private fun isAppropriateType(toType: IntegerType, valueType: Type): Boolean {
-            if (valueType !is IntegerType) {
+        private fun isAppropriateType(toType: SignedIntType, valueType: Type): Boolean {
+            if (valueType !is SignedIntType) {
                 return false
             }
 

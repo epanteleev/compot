@@ -19,15 +19,14 @@ internal object Utils {
         if (operand is Generate) {
             return true
         }
-        if (operand is GlobalValue) { //TODO
-            return false
-        }
         return operand is Alloc && operand.allocatedType is PrimitiveType
     }
 
     fun Store.isLocalVariable(): Boolean {
         val pointer = pointer()
-        return pointer is Load || pointer is Alloc || pointer is Generate
+        return (pointer is Load && pointer.isLocalVariable()) ||
+                (pointer is Alloc && pointer.isLocalVariable()) ||
+                pointer is Generate
     }
 }
 

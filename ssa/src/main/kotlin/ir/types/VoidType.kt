@@ -1,10 +1,6 @@
 package ir.types
 
 class VoidType : Type {
-    override fun ptr(): PointerType {
-        throw TypeErrorException("cannot do it for void type")
-    }
-
     override fun size(): Int {
         throw TypeErrorException("cannot do it for void type")
     }

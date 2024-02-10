@@ -222,6 +222,20 @@ class CodeEmitter(private val data: FunctionData,
         asm.cmp(size, second, first as GPRegister)
     }
 
+    override fun visit(pcmp: PointerCompare) { //TODO
+        var first  = valueToRegister.operand(pcmp.first())
+        val second = valueToRegister.operand(pcmp.second())
+        val size = pcmp.first().type().size()
+
+        first = if (first is Address2) {
+            asm.movOld(size, first, temp1)
+        } else {
+            first
+        }
+
+        asm.cmp(size, second, first as GPRegister)
+    }
+
     override fun visit(ucmp: UnsignedIntCompare) { //TODO
         var first  = valueToRegister.operand(ucmp.first())
         val second = valueToRegister.operand(ucmp.second())
@@ -276,7 +290,9 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(branchCond: BranchCond) {
-        val jmpType = when (val cond = branchCond.condition()) {
+        val cond = branchCond.condition()
+        cond as CompareInstruction
+        val jmpType = when (cond) {
             is SignedIntCompare -> {
                 when (val convType = cond.predicate().invert()) {
                     IntPredicate.Eq -> JmpType.JE
@@ -288,7 +304,7 @@ class CodeEmitter(private val data: FunctionData,
                     else -> throw CodegenException("unknown conversion type: convType=$convType")
                 }
             }
-            is UnsignedIntCompare -> {
+            is UnsignedIntCompare, is PointerCompare -> {
                 when (val convType = cond.predicate().invert()) {
                     IntPredicate.Eq -> JmpType.JE
                     IntPredicate.Ne -> JmpType.JNE

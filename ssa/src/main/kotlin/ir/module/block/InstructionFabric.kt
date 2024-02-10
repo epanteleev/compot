@@ -14,6 +14,7 @@ interface InstructionFabric {
     fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary
     fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare
     fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare
+    fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare
     fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare
     fun load(loadedType: PrimitiveType, ptr: Value): Load
     fun store(ptr: Value, value: Value)
@@ -29,8 +30,8 @@ interface InstructionFabric {
     fun gep(source: Value, ty: PrimitiveType, index: Value): GetElementPtr
     fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr
     fun bitcast(value: Value, ty: PrimitiveType): Bitcast
-    fun zext(value: Value, toType: IntegerType): ZeroExtend
-    fun sext(value: Value, toType: IntegerType): SignExtend
+    fun zext(value: Value, toType: UnsignedIntType): ZeroExtend
+    fun sext(value: Value, toType: SignedIntType): SignExtend
     fun trunc(value: Value, toType: IntegerType): Truncate
     fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate
     fun fpext(value: Value, toType: FloatingPointType): FpExtend

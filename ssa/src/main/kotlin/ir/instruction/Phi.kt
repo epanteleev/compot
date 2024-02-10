@@ -28,10 +28,6 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
         return incoming
     }
 
-    fun zip(): List<Pair<Block, Value>> {
-        return incoming() zip operands()
-    }
-
     fun forAllIncoming(closure: (Block, Value) -> Unit) {
         incoming().forEachWith(operands().asIterable()) { bb, value ->
             closure(bb, value)

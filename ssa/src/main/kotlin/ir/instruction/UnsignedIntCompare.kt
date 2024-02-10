@@ -41,7 +41,7 @@ class UnsignedIntCompare private constructor(name: String, a: Value, private val
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateType(aType, bType)) {
-                "should be the same types, but a.type=$aType, b.type=$bType"
+                "should be the same unsigned integer types, but a.type=$aType, b.type=$bType"
             }
 
             return registerUser(UnsignedIntCompare(name, a, predicate, b), a, b)

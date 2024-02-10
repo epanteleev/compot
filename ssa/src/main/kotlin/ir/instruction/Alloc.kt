@@ -6,7 +6,7 @@ import ir.instruction.utils.Visitor
 
 
 class Alloc private constructor(name: String, val allocatedType: Type):
-    ValueInstruction(name, allocatedType.ptr(), arrayOf()) {
+    ValueInstruction(name, Type.Ptr, arrayOf()) {
     override fun dump(): String {
         return "%$identifier = $NAME $allocatedType"
     }

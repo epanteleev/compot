@@ -65,6 +65,10 @@ class FunctionDataBuilder private constructor(
         return bb.ucmp(a, predicate, b)
     }
 
+    override fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare {
+        return bb.pcmp(a, predicate, b)
+    }
+
     override fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
         return bb.fcmp(a, predicate, b)
     }
@@ -133,11 +137,11 @@ class FunctionDataBuilder private constructor(
         return bb.bitcast(value, ty)
     }
 
-    override fun zext(value: Value, toType: IntegerType): ZeroExtend {
+    override fun zext(value: Value, toType: UnsignedIntType): ZeroExtend {
         return bb.zext(value, toType)
     }
 
-    override fun sext(value: Value, toType: IntegerType): SignExtend {
+    override fun sext(value: Value, toType: SignedIntType): SignExtend {
         return bb.sext(value, toType)
     }
 

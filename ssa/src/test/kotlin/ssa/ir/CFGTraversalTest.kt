@@ -15,14 +15,14 @@ class CFGTraversalTest {
 
     private fun withBasicBlocks(): BasicBlocks {
         val moduleBuilder = ModuleBuilder.create()
-        val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.U16.ptr(), Type.U64.ptr(), Type.U64.ptr()))
-        val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(Type.U16.ptr(), Type.U64.ptr(), Type.U64.ptr()))
+        val prototype = FunctionPrototype("hello", Type.I16, arrayListOf(Type.Ptr, Type.Ptr, Type.Ptr))
+        val builder = moduleBuilder.createFunction("hello", Type.I16, arrayListOf(Type.Ptr, Type.Ptr, Type.Ptr))
         val arg1 = builder.argument(0)
         val arg2 = builder.argument(1)
         val arg3 = builder.argument(2)
-        val v1 = builder.load(Type.U16, arg1)
-        val ttt  = builder.sext(v1, Type.U64)
-        val res  = builder.ucmp(U64Value(32), IntPredicate.Gt, ttt)
+        val v1 = builder.load(Type.I16, arg1)
+        val ttt  = builder.sext(v1, Type.I64)
+        val res  = builder.icmp(I64Value(32), IntPredicate.Gt, ttt)
 
         val trueLabel = builder.createLabel()
         val falseLabel = builder.createLabel()
@@ -30,11 +30,11 @@ class CFGTraversalTest {
         builder.branchCond(res, trueLabel, falseLabel)
 
         builder.switchLabel(trueLabel)
-        builder.store(arg3, U64Value(12))
+        builder.store(arg3, I64Value(12))
         builder.branch(mergeLabel)
 
         builder.switchLabel(falseLabel)
-        builder.store(arg2, U64Value(19))
+        builder.store(arg2, I64Value(19))
         builder.branch(mergeLabel)
 
         builder.switchLabel(mergeLabel)

@@ -5,7 +5,7 @@ import ir.types.*
 import ir.instruction.utils.Visitor
 
 
-class ZeroExtend private constructor(name: String, toType: IntegerType, value: Value):
+class ZeroExtend private constructor(name: String, toType: UnsignedIntType, value: Value):
     ValueInstruction(name, toType, arrayOf(value)) {
     override fun dump(): String {
         return "%$identifier = $NAME ${value().type()} ${value()} to ${type()}"
@@ -19,8 +19,8 @@ class ZeroExtend private constructor(name: String, toType: IntegerType, value: V
         return operands[0]
     }
 
-    override fun type(): IntegerType {
-        return tp as IntegerType
+    override fun type(): UnsignedIntType {
+        return tp as UnsignedIntType
     }
 
     override fun copy(newUsages: List<Value>): ZeroExtend {
@@ -38,7 +38,7 @@ class ZeroExtend private constructor(name: String, toType: IntegerType, value: V
     companion object {
         const val NAME = "zext"
 
-        fun make(name: String, toType: IntegerType, value: Value): ZeroExtend {
+        fun make(name: String, toType: UnsignedIntType, value: Value): ZeroExtend {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
                 "inconsistent types in $name: ty=$toType, value.type=$valueType"
@@ -47,8 +47,8 @@ class ZeroExtend private constructor(name: String, toType: IntegerType, value: V
             return registerUser(ZeroExtend(name, toType, value), value)
         }
 
-        private fun isAppropriateType(toType: IntegerType, valueType: Type): Boolean {
-            if (valueType !is IntegerType) {
+        private fun isAppropriateType(toType: UnsignedIntType, valueType: Type): Boolean {
+            if (valueType !is UnsignedIntType) {
                 return false
             }
 

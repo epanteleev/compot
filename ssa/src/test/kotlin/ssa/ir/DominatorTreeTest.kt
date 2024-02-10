@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 class DominatorTreeTest {
     private fun withBasicBlocks(): Module {
         val moduleBuilder = ModuleBuilder.create()
-        val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(Type.U16.ptr()))
+        val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(Type.Ptr))
         val b1 = builder.createLabel()
         builder.branch(b1)
 
@@ -55,7 +55,7 @@ class DominatorTreeTest {
     @Test
     fun testDominator() {
         val module = withBasicBlocks()
-        val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.U16.ptr()))
+        val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.Ptr))
         val domTree = module.findFunction(prototype).blocks.dominatorTree()
 
         assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(1)))
