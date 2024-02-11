@@ -5,7 +5,7 @@ import ir.instruction.*
 import ir.module.block.Block
 import ir.types.PrimitiveType
 import ir.platform.x64.CSSAModule
-import ir.pass.ValueInstructionExtension.isLocalVariable
+import ir.pass.ValueInstructionExtension.canBeReplaced
 
 
 class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks) {
@@ -37,20 +37,46 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
         bb.remove(i + 1)
     }
 
-    private fun pass() {
+    private fun replaceCopy(bb: Block, inst: Copy, i: Int) {
+        val lea = bb.insert(i) { it.lea(inst.origin() as Generate) }
+        ValueInstruction.replaceUsages(inst, lea)
+        bb.remove(i + 1)
+    }
+
+    private fun replaceAllocLoadStores(): Set<Copy> {
+        val allocPointerUsers = mutableSetOf<Copy>()
         for (bb in cfg.preorder()) {
             val instructions = bb.instructions()
             val size = instructions.size
             for (i in 0 until size) {
                 val inst = instructions[i]
                 when {
-                    inst is Alloc && inst.isLocalVariable() -> replaceAlloc(bb, inst, i)
-                    inst is Load && inst.isLocalVariable() -> replaceLoad(bb, inst, i)
-                    inst is Store && inst.isLocalVariable() -> replaceStore(bb, inst, i)
+                    inst is Alloc && inst.canBeReplaced() -> {
+                        for (user in inst.usedIn()) {
+                            if (user !is Copy) {
+                                continue
+                            }
+
+                            allocPointerUsers.add(user)
+                        }
+
+                        replaceAlloc(bb, inst, i)
+                    }
+                    inst is Load && inst.canBeReplaced() -> replaceLoad(bb, inst, i)
+                    inst is Store && inst.canBeReplaced() -> replaceStore(bb, inst, i)
+                    inst is Copy && allocPointerUsers.contains(inst) -> replaceCopy(bb, inst, i)
                     else -> {}
                 }
             }
         }
+
+        return allocPointerUsers
+    }
+
+    private fun pass() {
+        replaceAllocLoadStores()
+
+
     }
 
     companion object {

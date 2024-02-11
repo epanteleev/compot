@@ -4,6 +4,7 @@ import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.BasicBlocks
 import ir.module.block.AnyBlock
+import ir.pass.ValueInstructionExtension.hasOnlyLoadStoreUsers
 import ir.pass.ValueInstructionExtension.isLocalVariable
 
 
@@ -20,6 +21,9 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
                 }
 
                 if (!inst.isLocalVariable()) {
+                    continue
+                }
+                if (!inst.hasOnlyLoadStoreUsers()) {
                     continue
                 }
 

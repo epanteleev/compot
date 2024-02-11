@@ -52,7 +52,10 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandV
     override fun ai(dst: Address, src: Imm32) {
         when (dst) {
             is AddressLiteral -> asm.mov(size, src, dst)
-            else -> TODO("Not yet implemented")
+            else -> {
+                asm.mov(size, dst, temp1)
+                asm.mov(size, src, Address.from(temp1, 0))
+            }
         }
     }
 

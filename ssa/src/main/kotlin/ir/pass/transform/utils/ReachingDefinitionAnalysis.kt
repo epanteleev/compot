@@ -4,6 +4,7 @@ import ir.*
 import ir.instruction.*
 import ir.module.block.*
 import ir.module.BasicBlocks
+import ir.pass.ValueInstructionExtension.hasOnlyLoadStoreUsers
 import ir.pass.transform.Mem2RegException
 import ir.pass.ValueInstructionExtension.isLocalVariable
 
@@ -46,7 +47,7 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, private v
                 continue
             }
 
-            if (instruction is Alloc && instruction.isLocalVariable()) {
+            if (instruction is Alloc && instruction.isLocalVariable() && instruction.hasOnlyLoadStoreUsers()) {
                 valueMap[instruction] = Value.UNDEF
                 continue
             }

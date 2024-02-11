@@ -330,6 +330,10 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Generate.make("gen${n(it)}", ty) }
     }
 
+    override fun lea(generate: Generate): Lea {
+        return withOutput { it: Int -> Lea.make("gen${n(it)}", generate) }
+    }
+
     fun uncompletedPhi(incomingType: PrimitiveType, incoming: List<Value>, labels: List<Block>): Phi {
         return withOutput { it: Int -> Phi.make("phi${n(it)}", incomingType, labels, incoming.toTypedArray()) }
     }

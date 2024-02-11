@@ -10,6 +10,7 @@ import ir.instruction.Neg
 import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
+import ir.instruction.Lea
 import ir.module.block.Label
 import ir.utils.OrderedLocation
 import ir.instruction.utils.Visitor
@@ -18,7 +19,9 @@ import ir.platform.regalloc.RegisterAllocation
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
+import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.STACK_ALIGNMENT
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.impl.*
 
 
@@ -357,7 +360,8 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(downStackFrame: DownStackFrame) {
-        val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[downStackFrame.call()]!!)
+        val sdf = orderedLocation[downStackFrame.call()]
+        val savedRegisters = valueToRegister.callerSaveRegisters(sdf!!)
         for (arg in savedRegisters) {
             asm.push(8, arg)
         }
@@ -459,6 +463,22 @@ class CodeEmitter(private val data: FunctionData,
     override fun visit(phi: Phi) { /* nothing to do */ }
     override fun visit(alloc: Alloc) { /* nothing to do */ }
     override fun visit(generate: Generate) { /* nothing to do */ }
+
+    override fun visit(lea: Lea) {
+        val dst = valueToRegister.operand(lea)
+        val gen = valueToRegister.operand(lea.generate()) as Address
+
+        when (dst) {
+            is Address -> {
+                asm.lea(POINTER_SIZE, gen, temp1)
+                asm.mov(POINTER_SIZE, temp1, dst)
+            }
+            is GPRegister -> {
+                asm.lea(POINTER_SIZE, gen, dst)
+            }
+            else -> TODO()
+        }
+    }
 
     private fun evaluateOrder(blocks: BasicBlocks): Map<Callable, OrderedLocation> {
         val orderedLocation = hashMapOf<Callable, OrderedLocation>()

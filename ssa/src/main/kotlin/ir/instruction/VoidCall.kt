@@ -26,8 +26,7 @@ class VoidCall private constructor(private val func: AnyFunctionPrototype, args:
         if (javaClass != other?.javaClass) return false
 
         other as VoidCall
-        if (func != other.func) return false
-        return operands.contentEquals(other.operands)
+        return func == other.func
     }
 
     override fun hashCode(): Int {

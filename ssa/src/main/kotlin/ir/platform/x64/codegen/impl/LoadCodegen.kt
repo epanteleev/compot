@@ -27,7 +27,10 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVi
     override fun ra(dst: GPRegister, src: Address) {
         when (src) {
             is AddressLiteral -> asm.mov(size, src, dst)
-            else -> TODO()
+            else -> {
+                asm.mov(size, src, temp1)
+                asm.mov(size, Address.from(temp1, 0), dst)
+            }
         }
     }
 
