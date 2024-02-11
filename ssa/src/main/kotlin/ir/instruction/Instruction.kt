@@ -3,6 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.instruction.utils.Visitor
 
+
 abstract class Instruction(protected val operands: Array<Value>) {
     fun usedInstructions(): List<ValueInstruction> {
         return operands.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
@@ -15,6 +16,13 @@ abstract class Instruction(protected val operands: Array<Value>) {
     fun update(newUsages: Collection<Value>) {
         for ((i, v) in newUsages.withIndex()) {
             update(i, v)
+        }
+    }
+
+    fun update(closure: (Value) -> Value) {
+        for ((i, v) in operands.withIndex()) {
+            val newValue = closure(v)
+            update(i, newValue)
         }
     }
 

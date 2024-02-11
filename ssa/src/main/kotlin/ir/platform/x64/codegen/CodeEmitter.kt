@@ -13,7 +13,7 @@ import asm.x64.GPRegister.*
 import ir.module.block.Label
 import ir.utils.OrderedLocation
 import ir.instruction.utils.Visitor
-import ir.pass.transform.utils.Utils.isLocalVariable
+import ir.pass.ValueInstructionExtension.isLocalVariable
 import ir.platform.regalloc.RegisterAllocation
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
@@ -67,6 +67,8 @@ class CodeEmitter(private val data: FunctionData,
             ArithmeticBinaryOp.Mul -> MulCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Sub -> SubCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), asm)(dst, first, second)
+            ArithmeticBinaryOp.And -> AndCodegen(binary.type(), asm)(dst, first, second)
+            ArithmeticBinaryOp.Or -> OrCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Div -> {
                 if (first is Address) {
                     first = asm.movOld(size, first, temp1)
@@ -186,9 +188,9 @@ class CodeEmitter(private val data: FunctionData,
 
     override fun visit(store: Store) {
         val pointer = store.pointer()
-//        assert(store.isLocalVariable()) {
-//            "cannot be, but operand=$pointer"
-//        }
+        assert(!store.isLocalVariable()) {
+            "cannot be, but operand=$pointer"
+        }
 
         val pointerOperand = valueToRegister.operand(pointer)
         val value          = valueToRegister.operand(store.value())
@@ -199,9 +201,9 @@ class CodeEmitter(private val data: FunctionData,
 
     override fun visit(load: Load) {
         val operand = load.operand()
-//        assert(load.isLocalVariable()) {
-//            "cannot be, but operand=$operand"
-//        }
+        assert(!load.isLocalVariable()) {
+            "cannot be, but operand=$operand"
+        }
 
         val pointer = valueToRegister.operand(operand)
         val value   = valueToRegister.operand(load)
@@ -480,7 +482,9 @@ class CodeEmitter(private val data: FunctionData,
                 asm.label(".L$functionCounter.${bb.index}")
             }
 
-            for (instruction in bb) {
+            val instructions = bb.instructions()
+            for (idx in instructions.indices) {
+                val instruction = instructions[idx]
                 asm.comment(instruction.dump())
                 instruction.visit(this)
             }

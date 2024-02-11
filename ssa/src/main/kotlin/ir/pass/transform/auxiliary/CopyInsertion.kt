@@ -1,14 +1,14 @@
 package ir.pass.transform.auxiliary
 
-import ir.ArgumentValue
 import ir.Value
 import ir.instruction.*
-import ir.module.FunctionData
+import ir.ArgumentValue
 import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
 import ir.module.block.Label
-import ir.platform.x64.CSSAModule
+import ir.module.FunctionData
+
 
 internal class CopyInsertion private constructor(private val cfg: FunctionData) {
     private fun isolatePhis(bb: Block, phi: Phi) {
@@ -25,8 +25,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
             newValues[operand] = copy
         }
 
-        val newUsages = phi.operands().mapTo(arrayListOf()) { newValues[it]!! }
-        phi.update(newUsages)
+        phi.update { newValues[it]!! }
     }
 
     private fun isolateArgumentValues() {

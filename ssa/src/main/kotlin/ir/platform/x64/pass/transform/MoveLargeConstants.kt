@@ -3,6 +3,7 @@ package ir.platform.x64.pass.transform
 import ir.*
 import ir.types.Type
 import asm.x64.ImmInt
+import asm.x64.ImmInt.Companion.canBeImm32
 import ir.module.Module
 import ir.module.block.Block
 import ir.types.PrimitiveType
@@ -26,8 +27,8 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
 
     private fun makeConstantOrNull(operand: Constant): GlobalValue? {
         val global = when {
-            operand is U64Value /*&& canBeImm32(operand.u64)*/ -> GlobalValue.of("$prefix${constantIndex}", Type.U64, operand.u64)
-            operand is I64Value /*&& canBeImm32(operand.i64)*/ -> GlobalValue.of("$prefix${constantIndex}", Type.I64, operand.i64)
+            operand is U64Value && !canBeImm32(operand.u64) -> GlobalValue.of("$prefix${constantIndex}", Type.U64, operand.u64)
+            operand is I64Value && !canBeImm32(operand.i64) -> GlobalValue.of("$prefix${constantIndex}", Type.I64, operand.i64)
             operand is F32Value ->  {
                 val bits = operand.f32.toBits().toLong()
                 if (bits == ImmInt.minusZeroFloat) { //TODO DANGER!!!!
@@ -78,9 +79,6 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
 
     companion object {
         private const val prefix = CallConvention.CONSTANT_POOL_PREFIX
-        private fun canBeImm32(constant: Long): Boolean {
-            return Int.MIN_VALUE <= constant && constant <= Int.MAX_VALUE
-        }
 
         fun run(module: Module): Module {
             val functions = module.functions.map { it }

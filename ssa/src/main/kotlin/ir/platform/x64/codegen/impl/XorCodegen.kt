@@ -49,7 +49,12 @@ data class XorCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVis
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.xor(size, second, dst)
+        } else {
+            asm.mov(size, second, dst)
+            asm.xor(size, first, dst)
+        }
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {

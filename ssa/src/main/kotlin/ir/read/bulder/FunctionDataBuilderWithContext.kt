@@ -56,8 +56,8 @@ class FunctionDataBuilderWithContext private constructor(
     private fun getConstant(token: AnyValueToken, ty: Type): Value {
         return token.let {
             when (it) {
-                is IntValue              -> Constant.of(ty, it.int)
-                is FloatValue            -> Constant.of(ty, it.fp)
+                is IntValue        -> Constant.of(ty, it.int)
+                is FloatValue      -> Constant.of(ty, it.fp)
                 is LocalValueToken -> Value.UNDEF
                 else -> throw ParseErrorException("constant or value", it)
             }
@@ -321,7 +321,7 @@ class FunctionDataBuilderWithContext private constructor(
             values.add(getConstant(tok, type))
         }
 
-        val phi = bb.uncompletedPhi(values, blocks)
+        val phi = bb.uncompletedPhi(type, values, blocks)
         incompletePhis.add(PhiContext(phi, incomingTok, type))
         return memorize(name, phi)
     }

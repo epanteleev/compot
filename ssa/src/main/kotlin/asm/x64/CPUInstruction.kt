@@ -117,6 +117,18 @@ data class Xor(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
     }
 }
 
+data class And(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
+    override fun toString(): String {
+        return "and${prefix(size)} ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
+data class Or(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
+    override fun toString(): String {
+        return "or${prefix(size)} ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
 data class Div(val size: Int, val first: Operand, val second: Operand): Arithmetic {
     override fun toString(): String {
         return "div${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"

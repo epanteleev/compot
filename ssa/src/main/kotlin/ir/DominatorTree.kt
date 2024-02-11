@@ -1,8 +1,9 @@
 package ir
 
 import ir.module.BasicBlocks
-import ir.module.block.AnyBlock
 import ir.module.block.Label
+import ir.module.block.AnyBlock
+
 
 class DominatorTree(private val idomMap: MutableMap<AnyBlock, AnyBlock>) {
     private val cachedDominators = hashMapOf<Label, List<Label>>()

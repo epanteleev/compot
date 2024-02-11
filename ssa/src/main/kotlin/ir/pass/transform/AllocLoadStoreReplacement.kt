@@ -5,7 +5,7 @@ import ir.instruction.*
 import ir.module.block.Block
 import ir.types.PrimitiveType
 import ir.platform.x64.CSSAModule
-import ir.pass.transform.utils.Utils.isLocalVariable
+import ir.pass.ValueInstructionExtension.isLocalVariable
 
 
 class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks) {

@@ -68,9 +68,17 @@ class Address4 internal constructor(private val base: GPRegister?, private val o
 
     override fun toString(size: Int): String {
         return if (offset == 0) {
-            "(${base(8)}, ${index.toString(8)}, $scale)"
+            if (scale == 1) {
+                "(${base(8)}, ${index.toString(8)})"
+            } else {
+                "(${base(8)}, ${index.toString(8)}, $scale)"
+            }
         } else {
-            "$offset(${base(8)}, ${index.toString(8)}, $scale)"
+            if (scale == 1) {
+                "$offset(${base(8)}, ${index.toString(8)})"
+            } else {
+                "$offset(${base(8)}, ${index.toString(8)}, $scale)"
+            }
         }
     }
 }

@@ -24,7 +24,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseLoad(resultName: LocalValueToken) {
         val typeToken    = iterator.expect<PrimitiveTypeToken>("loaded type")
-        val pointerToken = iterator.expect<ValueToken>("pointer")
+        val pointerToken = iterator.expect<ValueToken>("type '${Type.Ptr}'")
 
         builder.load(resultName, pointerToken, typeToken)
     }
@@ -38,10 +38,10 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseStore() {
         iterator.expect<PrimitiveTypeToken>("stored value type")
-        val pointerToken = iterator.expect<ValueToken>("pointer")
+        val pointerToken = iterator.expect<ValueToken>("pointer value")
 
         iterator.expect<Comma>("','")
-        val valueTypeToken = iterator.expect<PrimitiveTypeToken>("pointer")
+        val valueTypeToken = iterator.expect<PrimitiveTypeToken>("value to store")
         val valueToken = parseOperand("stored value")
         builder.store(pointerToken, valueToken, valueTypeToken)
     }
@@ -116,7 +116,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
     }
 
     private fun parseZext(resultName: LocalValueToken) {
-        val operandType = iterator.expect<UnsignedIntegerTypeToken>("value type")
+        val operandType = iterator.expect<UnsignedIntegerTypeToken>("unsigned value type")
         val operand     = iterator.expect<LocalValueToken>("cast value")
         iterator.expect<To>("'to' keyword")
         val castValueToken = iterator.expect<UnsignedIntegerTypeToken>("${ZeroExtend.NAME} type")
@@ -170,7 +170,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
     }
 
     private fun parseSext(resultName: LocalValueToken) {
-        val operandType = iterator.expect<SignedIntegerTypeToken>("value type")
+        val operandType = iterator.expect<SignedIntegerTypeToken>("signed value type")
         val operand     = iterator.expect<LocalValueToken>("value to cast")
         iterator.expect<To>("'to' keyword")
         val castValueToken = iterator.expect<SignedIntegerTypeToken>("${SignExtend.NAME} type")
@@ -200,7 +200,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parsePcmp(resultName: LocalValueToken) {
         val compareTypeToken = iterator.expect<Identifier>("compare type")
-        val operandsTypes    = iterator.expect<PointerTypeToken>("pointer type")
+        val operandsTypes    = iterator.expect<PointerTypeToken>("type ${Type.Ptr}")
         val first            = iterator.expect<AnyValueToken>("first compare operand")
         iterator.expect<Comma>("','")
         val second           = iterator.expect<AnyValueToken>("second compare operand")
@@ -269,10 +269,10 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseGep(resultName: LocalValueToken) {
         //%$identifier = gep $type, ${source.type} {source}, ${index.type} ${index}
-        val type = iterator.expect<PrimitiveTypeToken>("type")
+        val type = iterator.expect<PrimitiveTypeToken>("primitive type")
         iterator.expect<Comma>("comma")
 
-        val sourceType = iterator.expect<PointerTypeToken>("type")
+        val sourceType = iterator.expect<PointerTypeToken>("type ${Type.Ptr}")
         val source     = iterator.expect<ValueToken>("source value")
         iterator.expect<Comma>("comma")
         val indexType  = iterator.expect<IntegerTypeToken>("index type")
@@ -283,10 +283,10 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseGfp(resultName: LocalValueToken) {
         //%$identifier = gfp $type, ${source.type} {source}, ${index.type} ${index}
-        val type = iterator.expect<AggregateTypeToken>("type")
+        val type = iterator.expect<AggregateTypeToken>("aggregate type")
         iterator.expect<Comma>("comma")
 
-        val sourceType = iterator.expect<PointerTypeToken>("type")
+        val sourceType = iterator.expect<PointerTypeToken>("type ${Type.Ptr}")
         val source     = iterator.expect<LocalValueToken>("source value")
         iterator.expect<Comma>("comma")
         val indexType  = iterator.expect<IntegerTypeToken>("index type")

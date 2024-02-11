@@ -5,9 +5,10 @@ import ir.instruction.*
 import ir.module.BasicBlocks
 import ir.module.Module
 import ir.module.block.Block
+import ir.pass.transform.utils.ReachingDefinition
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
 import ir.pass.transform.utils.JoinPointSet
-import ir.pass.transform.utils.RewriteAssistant
+import ir.pass.transform.utils.ReachingDefinitionAnalysis
 import ir.types.PrimitiveType
 import ir.utils.DefUseInfo
 
@@ -26,12 +27,18 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
         }
     }
 
-    private fun completePhis(bbToMapValues: RewriteAssistant, bb: Block) {
+    private fun completePhis(bbToMapValues: ReachingDefinition, bb: Block) {
+        fun renameValues(newUsages: MutableList<Value>, block: Block, v: Value) {
+            val newValue = when (v) {
+                is ValueInstruction -> bbToMapValues.rename(block, v)
+                else -> v
+            }
+            newUsages.add(newValue)
+        }
+
         bb.phis { phi ->
             val newUsages = arrayListOf<Value>()
-            phi.forAllIncoming { l, v ->
-                newUsages.add(bbToMapValues.rename(l, v))
-            }
+            phi.forAllIncoming { l, v -> renameValues(newUsages, l, v) }
             phi.update(newUsages)
         }
     }
@@ -77,7 +84,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
     private fun pass(dominatorTree: DominatorTree) {
         insertPhis()
 
-        val bbToMapValues = RewriteAssistant(cfg, dominatorTree)
+        val bbToMapValues = ReachingDefinitionAnalysis.run(cfg, dominatorTree)
         for (bb in cfg) {
             completePhis(bbToMapValues, bb)
             swapDependentPhis(bb)

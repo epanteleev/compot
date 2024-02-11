@@ -1,11 +1,9 @@
 package ir.module.block
 
-import ir.AnyFunctionPrototype
-import ir.IndirectFunctionPrototype
-import ir.IntegerConstant
+import ir.*
 import ir.Value
-import ir.instruction.*
 import ir.types.*
+import ir.instruction.*
 
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :
@@ -163,7 +161,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     fun phis(fn: (Phi) -> Unit) {
         instructions.forEach {
             if (it !is Phi) {
-                return
+                return // Assume that phi functions are in the beginning of bb.
             }
 
             fn(it)
@@ -332,8 +330,8 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Generate.make("gen${n(it)}", ty) }
     }
 
-    fun uncompletedPhi(incoming: List<Value>, labels: List<Block>): Phi {
-        return withOutput { it: Int -> Phi.make("phi${n(it)}", incoming[0].type() as PrimitiveType, labels, incoming.toTypedArray()) }
+    fun uncompletedPhi(incomingType: PrimitiveType, incoming: List<Value>, labels: List<Block>): Phi {
+        return withOutput { it: Int -> Phi.make("phi${n(it)}", incomingType, labels, incoming.toTypedArray()) }
     }
 
     override fun copy(value: Value): Copy {

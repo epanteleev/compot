@@ -69,6 +69,6 @@ data class MoveCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVi
     override fun raF(dst: XmmRegister, src: Address) = default(dst, src)
     override fun rrF(dst: XmmRegister, src: XmmRegister) = default(dst, src)
     override fun default(dst: Operand, src: Operand) {
-        throw RuntimeException("Internal error: '${Store.NAME}' dst=$dst, pointer=$src")
+        throw RuntimeException("Internal error: '${Store.NAME}' dst=$dst, src=$src")
     }
 }

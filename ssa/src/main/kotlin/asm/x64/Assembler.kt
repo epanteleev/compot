@@ -11,10 +11,6 @@ private class InstructionList {
         list.add(inst)
     }
 
-    override fun toString(): String {
-        return list.toString()
-    }
-
     fun joinTo(builder: StringBuilder, prefix: String, separator: String) {
         list.joinTo(builder, separator, prefix)
     }
@@ -83,6 +79,19 @@ class Assembler(private val name: String) {
     fun xor(size: Int, imm32: Imm32, dst: GPRegister) = add(Xor(size, imm32, dst))
     fun xor(size: Int, src: GPRegister, dst: Address) = add(Xor(size, src, dst))
 
+    // Logical AND
+    fun and(size: Int, src: Address, dst: GPRegister) = add(And(size, src, dst))
+    fun and(size: Int, imm32: Imm32, dst: Address) = add(And(size, imm32, dst))
+    fun and(size: Int, src: GPRegister, dst: GPRegister) = add(And(size, src, dst))
+    fun and(size: Int, imm32: Imm32, dst: GPRegister) = add(And(size, imm32, dst))
+    fun and(size: Int, src: GPRegister, dst: Address) = add(And(size, src, dst))
+
+    // Logical OR
+    fun or(size: Int, src: Address, dst: GPRegister) = add(And(size, src, dst))
+    fun or(size: Int, imm32: Imm32, dst: Address) = add(And(size, imm32, dst))
+    fun or(size: Int, src: GPRegister, dst: GPRegister) = add(And(size, src, dst))
+    fun or(size: Int, imm32: Imm32, dst: GPRegister) = add(And(size, imm32, dst))
+    fun or(size: Int, src: GPRegister, dst: Address) = add(And(size, src, dst))
 
     fun movd(size: Int, src: GPRegister, dst: XmmRegister) = add(Movd(size, src, dst))
     fun movd(size: Int, src: XmmRegister, dst: GPRegister) = add(Movd(size, src, dst))

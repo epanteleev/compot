@@ -85,7 +85,13 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVi
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+        if (dst == second) {
+            asm.add(size, first, dst)
+        } else {
+            asm.mov(size, second, temp1)
+            asm.add(size, first, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
@@ -111,22 +117,30 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVi
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        asm.mov(size, first, temp1)
-        asm.add(size, second, temp1)
-        asm.mov(size, temp1, dst)
+        if (dst == first) {
+            asm.add(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.add(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        if (dst == first) {
-            asm.mov(size, second, temp1)
-            asm.add(size, temp1, dst)
-        } else if (dst == second) {
-            asm.mov(size, first, temp1)
-            asm.add(size, temp1, dst)
-        } else {
-            asm.mov(size, first, CodeEmitter.temp1)
-            asm.add(size, second, CodeEmitter.temp1)
-            asm.mov(size, CodeEmitter.temp1, dst)
+        when (dst) {
+            first -> {
+                asm.mov(size, second, temp1)
+                asm.add(size, temp1, dst)
+            }
+            second -> {
+                asm.mov(size, first, temp1)
+                asm.add(size, temp1, dst)
+            }
+            else -> {
+                asm.mov(size, first, CodeEmitter.temp1)
+                asm.add(size, second, CodeEmitter.temp1)
+                asm.mov(size, CodeEmitter.temp1, dst)
+            }
         }
     }
 

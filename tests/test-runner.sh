@@ -49,6 +49,7 @@ function compile_and_run() {
 	run_test "$test_name" "$expected_result"
 }
 
+compile_and_run removeElement "4 2 0 9 45 55 89 4 23 "
 compile_and_run stringReverse "dlrow olleH"
 compile_and_run sumLoop2 "45"
 compile_and_run bubble_sort "0 2 4 4 9 23 45 55 89 90 "

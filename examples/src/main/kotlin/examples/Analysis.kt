@@ -15,7 +15,7 @@ import ir.types.Type
 fun main() {
     val builder = ModuleBuilder.create()
 
-    builder.createFunction("hello", Type.U64, arrayListOf(Type.U16.ptr(), Type.U64.ptr())).apply {
+    builder.createFunction("hello", Type.U64, arrayListOf(Type.Ptr, Type.Ptr)).apply {
         val arg1 = argument(0)
         val arg2 = argument(1)
         val variable = alloc(Type.U64)
@@ -66,7 +66,7 @@ fun main() {
     
     println(module.toString())
 
-    val helloFn = FunctionPrototype("hello", Type.U64, arrayListOf(Type.U16.ptr(), Type.U64.ptr()))
+    val helloFn = FunctionPrototype("hello", Type.U64, arrayListOf(Type.Ptr, Type.Ptr))
     val data = module.findFunction(helloFn)
     val cfg = data.blocks
 

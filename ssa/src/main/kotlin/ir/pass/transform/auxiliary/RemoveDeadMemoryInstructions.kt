@@ -1,14 +1,10 @@
 package ir.pass.transform.auxiliary
 
-import ir.instruction.Alloc
-import ir.instruction.Instruction
-import ir.instruction.Load
-import ir.instruction.Store
-import ir.module.BasicBlocks
-import ir.module.Module
+import ir.module.*
+import ir.instruction.*
 import ir.module.block.Block
-import ir.pass.transform.utils.Utils
-import ir.pass.transform.utils.Utils.isLocalVariable
+import ir.pass.ValueInstructionExtension.isLocalVariable
+
 
 class RemoveDeadMemoryInstructions private constructor(private val cfg: BasicBlocks) {
     private fun removeMemoryInstructions(bb: Block) {

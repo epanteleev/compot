@@ -1,8 +1,6 @@
 package ir.read
 
 import ir.types.Type
-import jdk.jfr.Unsigned
-
 
 class EOFException(message: String): Exception(message)
 class TokenizerException(message: String): Exception(message)
@@ -79,9 +77,10 @@ class Tokenizer(val data: String) {
 
     private fun readString(begin: Int = globalPosition): String {
         nextChar()
-        while (!isEnd() && (getChar().isLetterOrDigit() || getChar() == '_' || getChar() == '.')) {
+        while (!isEnd() && isStringSymbol(getChar())) {
             nextChar()
         }
+
         val end = globalPosition
         return data.substring(begin, end)
     }
@@ -312,6 +311,11 @@ class Tokenizer(val data: String) {
             '\t',
             '\n'
         )
+
+        private fun isStringSymbol(char: Char): Boolean {
+            return char.isLetterOrDigit() || char == '_' || char == '.' || char == '-'
+        }
+
         fun isSeparator(char: Char): Boolean {
             return separators.contains(char)
         }

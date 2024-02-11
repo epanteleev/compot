@@ -4,33 +4,11 @@ import ir.*
 import ir.instruction.*
 import ir.module.block.*
 import ir.module.BasicBlocks
-import ir.types.PrimitiveType
 import ir.pass.transform.Mem2RegException
-import ir.pass.transform.utils.Utils.isLocalVariable
+import ir.pass.ValueInstructionExtension.isLocalVariable
 
 
-internal object Utils {
-    fun Alloc.isLocalVariable(): Boolean {
-        return allocatedType is PrimitiveType
-    }
-
-    fun Load.isLocalVariable(): Boolean {
-        val operand = operand()
-        if (operand is Generate) {
-            return true
-        }
-        return operand is Alloc && operand.allocatedType is PrimitiveType
-    }
-
-    fun Store.isLocalVariable(): Boolean {
-        val pointer = pointer()
-        return (pointer is Load && pointer.isLocalVariable()) ||
-                (pointer is Alloc && pointer.isLocalVariable()) ||
-                pointer is Generate
-    }
-}
-
-internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: DominatorTree) {
+class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, private val dominatorTree: DominatorTree) {
     private val bbToMapValues = initialize(cfg)
 
     init {
@@ -39,7 +17,7 @@ internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Dom
         }
     }
 
-    fun rename(bb: Block, oldValue: Value): Value {
+    private fun rename(bb: Block, oldValue: Value): Value {
         return if (oldValue is ValueInstruction) {
             findActualValueOrNull(bb, oldValue) ?: oldValue
         } else {
@@ -47,20 +25,9 @@ internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Dom
         }
     }
 
-    override fun toString(): String {
-        val builder = StringBuilder()
-        for ((bb, valueMap) in bbToMapValues) {
-            builder.append("----- bb=$bb -----\n")
-            for ((from, to) in valueMap) {
-                builder.append("$from -> $to\n")
-            }
-        }
-
-        return builder.toString()
-    }
-
     private fun rewriteValuesSetup(bb: Block) {
         val instructions = bb.instructions()
+        val valueMap = bbToMapValues[bb]!!
         for (index in instructions.indices) {
             val instruction = instructions[index]
             if (instruction is Branch || instruction is ReturnVoid) {
@@ -69,34 +36,35 @@ internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Dom
 
             if (instruction is Store && instruction.isLocalVariable()) {
                 val actual = findActualValueOrNull(bb, instruction.value())
+                val pointer = instruction.pointer()
                 if (actual != null) {
-                    addValues(bb, instruction.pointer(), actual)
+                    valueMap[pointer] = actual
                 } else {
-                    addValues(bb, instruction.pointer(), instruction.value())
+                    valueMap[pointer] = instruction.value()
                 }
 
                 continue
             }
 
             if (instruction is Alloc && instruction.isLocalVariable()) {
-                addValues(bb, instruction, Value.UNDEF)
+                valueMap[instruction] = Value.UNDEF
                 continue
             }
 
             if (instruction is Load && instruction.isLocalVariable()) {
                 val actual = findActualValue(bb, instruction.operand())
-                addValues(bb, instruction, actual)
+                valueMap[instruction] = actual
                 continue
             }
 
             if (instruction is Phi) {
                 // Note: all used values are equal in uncompleted phi instruction.
                 // Will take only first value.
-                addValues(bb, instruction.operands().first(), instruction)
+                valueMap[instruction.operands().first()] = instruction
                 continue
             }
 
-            instruction.update(instruction.operands().mapTo(arrayListOf()) { v -> rename(bb, v) } )
+            instruction.update { v -> rename(bb, v) }
         }
     }
 
@@ -125,7 +93,39 @@ internal class RewriteAssistant(cfg: BasicBlocks, private val dominatorTree: Dom
         return null
     }
 
-    private fun addValues(bb: Block, from: Value, to: Value) {
-        bbToMapValues[bb]!![from] = to
+    companion object {
+        fun run(cfg: BasicBlocks, dominatorTree: DominatorTree): ReachingDefinition {
+            val ana = ReachingDefinitionAnalysis(cfg, dominatorTree)
+            return ReachingDefinition(ana.bbToMapValues, dominatorTree)
+        }
+    }
+}
+
+class ReachingDefinition(private val info: MutableMap<Block, MutableMap<Value, Value>>, private val dominatorTree: DominatorTree) {
+    override fun toString(): String {
+        val builder = StringBuilder()
+        for ((bb, valueMap) in info) {
+            builder.append("----- bb=$bb -----\n")
+            for ((from, to) in valueMap) {
+                builder.append("$from -> $to\n")
+            }
+        }
+
+        return builder.toString()
+    }
+
+    private fun findActualValueOrNull(bb: Label, value: Value): Value? {
+        for (d in dominatorTree.dominators(bb)) {
+            val newV = info[d]!![value]
+            if (newV != null) {
+                return newV
+            }
+        }
+
+        return null
+    }
+
+    fun rename(bb: Block, oldValue: ValueInstruction): Value {
+        return findActualValueOrNull(bb, oldValue) ?: oldValue
     }
 }

@@ -1,9 +1,9 @@
 package ir.instruction
 
-import collections.forEachWith
 import ir.Value
 import ir.types.*
 import ir.module.block.Block
+import collections.forEachWith
 import ir.instruction.utils.Visitor
 
 
@@ -13,7 +13,7 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("%$identifier = phi $tp [")
-        operands.zip(incoming).joinTo(builder) {
+        operands.zip(incoming).joinTo(builder) {//todo
             "${it.first}: ${it.second}"
         }
         builder.append(']')

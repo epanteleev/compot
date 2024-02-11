@@ -1,8 +1,9 @@
 package ir.pass.transform.auxiliary
 
-import ir.module.BasicBlocks
 import ir.module.Module
+import ir.module.BasicBlocks
 import ir.module.block.Block
+
 
 internal class SplitCriticalEdge private constructor(private val cfg: BasicBlocks) {
     private var maxIndex = cfg.maxBlockIndex()
