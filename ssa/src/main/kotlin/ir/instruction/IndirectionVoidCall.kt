@@ -46,8 +46,7 @@ class IndirectionVoidCall private constructor(pointer: Value, private val func: 
 
         other as IndirectionVoidCall
 
-        if (func != other.func) return false
-        return operands.contentEquals(other.operands)
+        return func != other.func
     }
 
     override fun hashCode(): Int {

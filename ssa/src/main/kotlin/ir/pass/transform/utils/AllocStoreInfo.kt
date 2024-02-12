@@ -3,9 +3,8 @@ package ir.pass.transform.utils
 import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.BasicBlocks
+import ir.pass.isLocalVariable
 import ir.module.block.AnyBlock
-import ir.pass.ValueInstructionExtension.hasOnlyLoadStoreUsers
-import ir.pass.ValueInstructionExtension.isLocalVariable
 
 
 class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
@@ -15,15 +14,12 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     private fun allocatedVariablesInternal(): Set<Alloc> {
         val stores = hashSetOf<Alloc>()
         fun allocatedInGivenBlock(bb: AnyBlock) {
-            for (inst in bb.valueInstructions()) {
+            for (inst in bb) {
                 if (inst !is Alloc) {
                     continue
                 }
 
                 if (!inst.isLocalVariable()) {
-                    continue
-                }
-                if (!inst.hasOnlyLoadStoreUsers()) {
                     continue
                 }
 
@@ -44,7 +40,7 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
             stores[v] = mutableSetOf()
         }
 
-        for (bb in blocks.preorder()) { //TODO fast traversal???
+        for (bb in blocks) {
             for (inst in bb) {
                 if (inst !is Store) {
                     continue

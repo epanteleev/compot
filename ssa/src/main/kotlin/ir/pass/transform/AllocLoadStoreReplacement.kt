@@ -3,9 +3,9 @@ package ir.pass.transform
 import ir.module.*
 import ir.instruction.*
 import ir.module.block.Block
+import ir.pass.canBeReplaced
 import ir.types.PrimitiveType
 import ir.platform.x64.CSSAModule
-import ir.pass.ValueInstructionExtension.canBeReplaced
 
 
 class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks) {
@@ -81,11 +81,10 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
 
     companion object {
         fun run(module: Module): Module {
-            val copy = module.copy()
-            for (fn in copy.functions) {
+            for (fn in module.functions) {
                 AllocLoadStoreReplacement(fn.blocks).pass()
             }
-            val ret = CSSAModule(copy.functions, copy.externFunctions, copy.globals, copy.types)
+            val ret = CSSAModule(module.functions, module.externFunctions, module.globals, module.types)
             return ret
         }
     }

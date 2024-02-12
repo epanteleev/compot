@@ -75,7 +75,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         predecessors.remove(old)
     }
 
-    fun insert(before: Instruction, builder: (AnyInstructionFabric) -> Value): Value {
+    fun<T> insert(before: Instruction, builder: (AnyInstructionFabric) -> T): T {
         val beforeIndex = instructions.indexOf(before)
         assert(beforeIndex != -1) {
             "flow graph doesn't contains instruction=$before"
@@ -138,10 +138,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     override operator fun iterator(): Iterator<Instruction> {
         return instructions.iterator()
-    }
-
-    override fun valueInstructions(): List<ValueInstruction> {
-        return instructions.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
     }
 
     fun valueInstructions(fn: (ValueInstruction) -> Unit) {
@@ -331,7 +327,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     }
 
     override fun lea(generate: Generate): Lea {
-        return withOutput { it: Int -> Lea.make("gen${n(it)}", generate) }
+        return withOutput { it: Int -> Lea.make("lea${n(it)}", generate) }
     }
 
     fun uncompletedPhi(incomingType: PrimitiveType, incoming: List<Value>, labels: List<Block>): Phi {

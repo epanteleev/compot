@@ -49,7 +49,10 @@ function compile_and_run() {
 	run_test "$test_name" "$expected_result"
 }
 
-compile_and_run swap "5 7"
+compile_and_run swapElements "4 2 0 9 90 45 55 89 23 4 "
+compile_and_run swap1 "4 2 0 9 90 45 55 89 23 4 "
+compile_and_run swap "7
+5"
 compile_and_run removeElement "4 2 0 9 45 55 89 4 23 "
 compile_and_run stringReverse "dlrow olleH"
 compile_and_run sumLoop2 "45"

@@ -1,8 +1,8 @@
 package ir.instruction
 
 import ir.Value
-import ir.AnyFunctionPrototype
 import ir.types.Type
+import ir.AnyFunctionPrototype
 
 
 interface Callable: Value {
@@ -32,11 +32,25 @@ interface Callable: Value {
         }
 
         fun isCorrect(call: Callable): Boolean {
-            return when(call) {
+            return when (call) {
                 is IndirectionVoidCall -> isAppropriateTypes(call.prototype(), call.pointer(), call.arguments())
-                is IndirectionCall -> isAppropriateTypes(call.prototype(), call.pointer(), call.arguments())
+                is IndirectionCall     -> isAppropriateTypes(call.prototype(), call.pointer(), call.arguments())
                 else -> isAppropriateTypes(call.prototype(), call.arguments())
             }
         }
+    }
+}
+
+data class IdentityCallable(private val delegate: Callable) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as IdentityCallable
+        return delegate == other.delegate
+                && delegate.arguments().contentEquals(other.delegate.arguments())
+    }
+
+    override fun hashCode(): Int {
+        return delegate.hashCode()
     }
 }

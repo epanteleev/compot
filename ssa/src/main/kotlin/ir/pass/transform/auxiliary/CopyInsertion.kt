@@ -46,7 +46,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
                     continue
                 }
 
-                for ((idx, use) in inst.operands().withIndex()) {
+                for ((idx, use) in inst.operands().withIndex()) { //TODO
                     if (use !is ArgumentValue) {
                         continue
                     }
@@ -58,31 +58,38 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
     }
 
     private fun isolateCall() {
-        fun insertCopies(bb: Block, call: Callable) {
+        fun insertCopies(bb: Block, idx: Int, call: Callable): Int {
             call as Instruction
-            bb.insert(call) {
+            bb.insert(idx) {
                 it.downStackFrame(call)
-                Value.UNDEF
             }
 
-            for ((idx, arg) in call.arguments().withIndex()) {
-                val copy = bb.insert(call) {
+            for ((i, arg) in call.arguments().withIndex()) {
+                val copy = bb.insert(idx + 1 + i) {
                     it.copy(arg)
                 }
-                call.update(idx, copy)
+                call.update(i, copy)
             }
 
-            bb.insert(bb.indexOf(call) + 1) {
+            val upStackFramePosition = idx + call.arguments().size + 2
+            bb.insert(upStackFramePosition) {
                 it.upStackFrame(call)
-                Value.UNDEF
             }
+
+            return call.arguments().size + 2
         }
 
         for (bb in cfg.blocks) {
-            val calls = bb.instructions().filterIsInstance<Callable>()
-            for (c in calls) {
-                c as Instruction
-                insertCopies(bb, c)
+            val instructions = bb.instructions()
+            var idx = 0
+            while (idx < instructions.size) {
+                val c = instructions[idx]
+                idx += 1
+                if (c !is Callable) {
+                    continue
+                }
+
+                idx += insertCopies(bb, idx - 1, c)
             }
         }
     }

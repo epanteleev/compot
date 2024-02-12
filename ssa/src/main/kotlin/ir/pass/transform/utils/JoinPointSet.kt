@@ -7,7 +7,26 @@ import ir.module.BasicBlocks
 import ir.module.block.AnyBlock
 
 
-class JoinPointSet private constructor(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
+class JoinPointSet internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>) {
+
+    operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<Alloc>>> {
+        return joinSet.iterator()
+    }
+
+    companion object {
+        fun evaluate(blocks: BasicBlocks, dominatorTree: DominatorTree): JoinPointSet {
+            val df = dominatorTree.frontiers()
+            return JoinPointSetEvaluate(blocks, df).calculate()
+        }
+
+        fun evaluate(blocks: BasicBlocks): JoinPointSet {
+            val df = blocks.dominatorTree().frontiers()
+            return JoinPointSetEvaluate(blocks, df).calculate()
+        }
+    }
+}
+
+private class JoinPointSetEvaluate(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
     private val joinSet = hashMapOf<AnyBlock, MutableSet<Alloc>>()
 
     private fun hasDef(bb: AnyBlock, variable: Alloc): Boolean {
@@ -23,10 +42,6 @@ class JoinPointSet private constructor(private val blocks: BasicBlocks, private 
             }
         }
         return false
-    }
-
-    operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<Alloc>>> {
-        return joinSet.iterator()
     }
 
     private fun calculateForVariable(v: Alloc, stores: MutableSet<AnyBlock>) {
@@ -56,7 +71,7 @@ class JoinPointSet private constructor(private val blocks: BasicBlocks, private 
         }
     }
 
-    private fun calculate(): JoinPointSet {
+    fun calculate(): JoinPointSet {
         val allocInfo = AllocStoreInfo.create(blocks)
         val stores = allocInfo.allStores()
 
@@ -64,18 +79,6 @@ class JoinPointSet private constructor(private val blocks: BasicBlocks, private 
             calculateForVariable(v, vStores as MutableSet<AnyBlock>)
         }
 
-        return this
-    }
-
-    companion object {
-        fun evaluate(blocks: BasicBlocks, dominatorTree: DominatorTree): JoinPointSet {
-            val df = dominatorTree.frontiers()
-            return JoinPointSet(blocks, df).calculate()
-        }
-
-        fun evaluate(blocks: BasicBlocks): JoinPointSet {
-            val df = blocks.dominatorTree().frontiers()
-            return JoinPointSet(blocks, df).calculate()
-        }
+        return JoinPointSet(joinSet)
     }
 }

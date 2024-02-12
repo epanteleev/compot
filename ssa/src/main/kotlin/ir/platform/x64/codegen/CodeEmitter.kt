@@ -12,17 +12,17 @@ import ir.instruction.Call
 import asm.x64.GPRegister.*
 import ir.instruction.Lea
 import ir.module.block.Label
+import ir.pass.isLocalVariable
 import ir.utils.OrderedLocation
 import ir.instruction.utils.Visitor
-import ir.pass.ValueInstructionExtension.isLocalVariable
+import ir.platform.x64.codegen.impl.*
 import ir.platform.regalloc.RegisterAllocation
 import ir.platform.x64.CallConvention.xmmTemp1
+import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
-import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.STACK_ALIGNMENT
-import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.impl.*
+
 
 
 data class CodegenException(override val message: String): Exception(message)
@@ -360,7 +360,7 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(downStackFrame: DownStackFrame) {
-        val sdf = orderedLocation[downStackFrame.call()]
+        val sdf = orderedLocation[IdentityCallable(downStackFrame.call())]
         val savedRegisters = valueToRegister.callerSaveRegisters(sdf!!)
         for (arg in savedRegisters) {
             asm.push(8, arg)
@@ -373,7 +373,7 @@ class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(upStackFrame: UpStackFrame) {
-        val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[upStackFrame.call()]!!)
+        val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[IdentityCallable(upStackFrame.call())]!!)
         val totalStackSize = valueToRegister.frameSize(savedRegisters)
 
         if (totalStackSize % STACK_ALIGNMENT != 0L) {
@@ -480,13 +480,13 @@ class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun evaluateOrder(blocks: BasicBlocks): Map<Callable, OrderedLocation> {
-        val orderedLocation = hashMapOf<Callable, OrderedLocation>()
+    private fun evaluateOrder(blocks: BasicBlocks): Map<IdentityCallable, OrderedLocation> {
+        val orderedLocation = mutableMapOf<IdentityCallable, OrderedLocation>()
         var order = 0
         for (bb in blocks.linearScanOrder()) {
             for ((idx, call) in bb.instructions().withIndex()) {
                 if (call is Callable) {
-                    orderedLocation[call] = OrderedLocation(bb, idx, order)
+                    orderedLocation[IdentityCallable(call)] = OrderedLocation(bb, idx, order)
                 }
                 order += 1
             }
@@ -520,7 +520,6 @@ class CodeEmitter(private val data: FunctionData,
             if (module !is CSSAModule) {
                 throw CodegenException("cannot transform module")
             }
-
             val asm = CompilationUnit()
 
             for (c in module.globals) {

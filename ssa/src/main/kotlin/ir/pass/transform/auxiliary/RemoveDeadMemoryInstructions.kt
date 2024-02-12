@@ -3,15 +3,14 @@ package ir.pass.transform.auxiliary
 import ir.module.*
 import ir.instruction.*
 import ir.module.block.Block
-import ir.pass.ValueInstructionExtension.isLocalVariable
-import ir.pass.ValueInstructionExtension.hasOnlyLoadStoreUsers
+import ir.pass.isLocalVariable
 
 
 class RemoveDeadMemoryInstructions private constructor(private val cfg: BasicBlocks) {
     private fun removeMemoryInstructions(bb: Block) {
         fun filter(instruction: Instruction): Boolean {
             return when (instruction) {
-                is Alloc -> instruction.isLocalVariable() && instruction.hasOnlyLoadStoreUsers()
+                is Alloc -> instruction.isLocalVariable()
                 is Store -> instruction.isLocalVariable()
                 is Load  -> instruction.isLocalVariable()
                 else -> false

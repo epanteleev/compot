@@ -6,10 +6,10 @@ import ir.instruction.utils.Visitor
 
 
 class Lea private constructor(name: String, origin: Generate):
-    ValueInstruction(name, origin.type(), arrayOf(origin)) {
+    ValueInstruction(name, Type.Ptr, arrayOf(origin)) {
 
-    override fun type(): PrimitiveType {
-        return tp as PrimitiveType
+    override fun type(): PointerType {
+        return Type.Ptr
     }
 
     override fun dump(): String {
