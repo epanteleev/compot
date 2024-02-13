@@ -1,11 +1,13 @@
 package examples
 
 import ir.*
+import ir.types.Type
+import ir.pass.transform.SSADestruction
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
-import ir.pass.transform.SSADestruction
-import ir.platform.x64.codegen.CodeEmitter
-import ir.types.Type
+import ir.pass.transform.SSADestructionFabric
+import ir.platform.x64.codegen.x64CodeGenerator
+
 
 fun main() {
     val builder = ModuleBuilder.create()
@@ -25,8 +27,8 @@ fun main() {
 
     val module = builder.build()
     println(module.toString())
-    val des = SSADestruction.run(module)
+    val des = SSADestructionFabric.create(module).run()
     println(des)
-    val asm = CodeEmitter.codegen(des)
+    val asm = x64CodeGenerator.emit(des)
     println(asm.toString())
 }

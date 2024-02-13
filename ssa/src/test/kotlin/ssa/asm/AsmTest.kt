@@ -2,6 +2,7 @@ package asm
 
 import asm.x64.*
 import asm.x64.GPRegister.*
+import ir.platform.x64.CompilationUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

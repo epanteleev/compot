@@ -5,6 +5,7 @@ import ir.I32Value
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
+import ir.pass.transform.Mem2RegFabric
 import ir.types.ArrayType
 import ir.types.Type
 import startup.Driver
@@ -43,13 +44,13 @@ fun main() {
     val data = module.findFunction(helloFn)
 
     println(data.liveness())
-    val newModule = Mem2Reg.run(module)
+    val newModule = Mem2RegFabric.create(module).run()
     println(newModule.toString())
 
     VerifySSA.run(newModule)
     println(data.liveness())
 
     Driver.output("fill-in-array", module) {
-        VerifySSA.run(Mem2Reg.run(VerifySSA.run(it)))
+        VerifySSA.run(Mem2RegFabric.create(VerifySSA.run(it)).run())
     }
 }

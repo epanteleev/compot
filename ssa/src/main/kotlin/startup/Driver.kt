@@ -2,20 +2,21 @@ package startup
 
 import ir.module.Module
 import ir.pass.ana.VerifySSA
-import ir.pass.transform.SSADestruction
-import ir.platform.x64.codegen.CodeEmitter
+import ir.pass.transform.SSADestructionFabric
+import ir.platform.x64.codegen.x64CodeGenerator
 import java.io.File
 import java.nio.file.Paths
+
 
 object Driver {
     fun output(name: String, module: Module, pipeline: (Module) -> Module) {
         val filename         = getName(name)
-        val unoptimizedIr    = VerifySSA.run(SSADestruction.run(module))
-        val unoptimisedCode  = CodeEmitter.codegen(unoptimizedIr)
+        val unoptimizedIr    = VerifySSA.run(SSADestructionFabric.create(module).run())
+        val unoptimisedCode  = x64CodeGenerator.emit(unoptimizedIr)
         val dumpIrString     = module.toString()
         val optimizedModule  = pipeline(module)
-        val destroyed        = VerifySSA.run(SSADestruction.run(optimizedModule))
-        val optimizedCodegen = CodeEmitter.codegen(destroyed)
+        val destroyed        = VerifySSA.run(SSADestructionFabric.create(optimizedModule).run())
+        val optimizedCodegen = x64CodeGenerator.emit(destroyed)
 
         val directoryName = File(filename)
         if (directoryName.exists()) {

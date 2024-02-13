@@ -1,8 +1,11 @@
-package asm.x64
+package ir.platform.x64
 
 import ir.*
+import asm.x64.*
+import ir.platform.CompiledModule
 
-class CompilationUnit {
+
+class CompilationUnit: CompiledModule {
     private val functions = arrayListOf<Assembler>()
     private val symbols = mutableSetOf<ObjSymbol>()
 

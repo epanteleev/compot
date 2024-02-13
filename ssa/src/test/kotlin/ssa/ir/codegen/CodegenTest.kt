@@ -5,6 +5,7 @@ import asm.x64.GPRegister.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.Mem2Reg
+import ir.pass.transform.Mem2RegFabric
 import ir.platform.regalloc.VirtualRegistersPool
 import ir.types.Type
 import org.junit.jupiter.api.assertThrows
@@ -46,7 +47,7 @@ class CodegenTest {
         //println(LinearScan.alloc(module.findFunction(prototype)))
         //println(CodeEmitter.codegen(module))
 
-        Mem2Reg.run(module)
+        Mem2RegFabric.create(module).run()
         //println(DumpModule.apply(module))
         //println(LinearScan.alloc(module.findFunction(prototype)))
         //println(CodeEmitter.codegen(module))

@@ -5,7 +5,6 @@ import ir.types.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.CodeEmitter
 import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandVisitorBinaryOp
 import ir.platform.x64.codegen.utils.XmmOperandVisitorBinaryOp
@@ -47,7 +46,7 @@ data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVis
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
         asm.mov(size, first, temp1)
-        asm.sub(size, second, CodeEmitter.temp1)
+        asm.sub(size, second, temp1)
         asm.mov(size, temp1, dst)
     }
 
@@ -112,7 +111,7 @@ data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVis
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
         asm.mov(size, first, temp1)
-        asm.sub(size, second, CodeEmitter.temp1)
+        asm.sub(size, second, temp1)
         asm.mov(size, temp1, dst)
     }
 

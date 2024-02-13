@@ -5,17 +5,37 @@ import ir.instruction.*
 import ir.module.BasicBlocks
 import ir.module.Module
 import ir.module.block.Block
-import ir.pass.transform.utils.ReachingDefinition
+import ir.pass.PassFabric
+import ir.pass.TransformPass
+import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
-import ir.pass.transform.utils.JoinPointSet
-import ir.pass.transform.utils.ReachingDefinitionAnalysis
 import ir.types.PrimitiveType
 import ir.utils.DefUseInfo
 
 
 data class Mem2RegException(override val message: String): Exception(message)
 
-class Mem2Reg private constructor(private val cfg: BasicBlocks, private val joinSet: JoinPointSet) {
+class Mem2Reg internal constructor(module: Module): TransformPass(module) {
+    override fun name(): String = "mem2reg"
+    override fun run(): Module {
+        module.functions.forEach { fnData ->
+            val cfg = fnData.blocks
+
+            val dominatorTree = cfg.dominatorTree()
+            val joinSet = JoinPointSet.evaluate(cfg, dominatorTree)
+            Mem2RegImpl(cfg, joinSet).pass(dominatorTree)
+        }
+        return PhiFunctionPruning.run(RemoveDeadMemoryInstructions.run(module))
+    }
+}
+
+object Mem2RegFabric: PassFabric {
+    override fun create(module: Module): TransformPass {
+        return Mem2Reg(module.copy())
+    }
+}
+
+private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: JoinPointSet) {
     private fun insertPhis() {
         for ((bb, vSet) in joinSet) {
             bb as Block
@@ -81,7 +101,7 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
         bb.removeIf { filter(it) }
     }
 
-    private fun pass(dominatorTree: DominatorTree) {
+    fun pass(dominatorTree: DominatorTree) {
         insertPhis()
 
         val bbToMapValues = ReachingDefinitionAnalysis.run(cfg, dominatorTree)
@@ -94,19 +114,6 @@ class Mem2Reg private constructor(private val cfg: BasicBlocks, private val join
         val deadPool = hashSetOf<Instruction>()
         for (bb in cfg.postorder()) {
             removeRedundantPhis(defUseInfo, deadPool, bb)
-        }
-    }
-
-    companion object {
-        fun run(module: Module): Module {
-            module.functions.forEach { fnData ->
-                val cfg = fnData.blocks
-
-                val dominatorTree = cfg.dominatorTree()
-                val joinSet = JoinPointSet.evaluate(cfg, dominatorTree)
-                Mem2Reg(cfg, joinSet).pass(dominatorTree)
-            }
-            return PhiFunctionPruning.run(RemoveDeadMemoryInstructions.run(module))
         }
     }
 }

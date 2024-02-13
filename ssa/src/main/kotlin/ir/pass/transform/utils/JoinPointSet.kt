@@ -8,7 +8,6 @@ import ir.module.block.AnyBlock
 
 
 class JoinPointSet internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>) {
-
     operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<Alloc>>> {
         return joinSet.iterator()
     }

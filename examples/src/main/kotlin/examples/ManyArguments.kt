@@ -4,6 +4,7 @@ import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
+import ir.pass.transform.Mem2RegFabric
 import ir.types.Type
 import startup.Driver
 
@@ -71,6 +72,6 @@ fun main() {
 
     val module = moduleBuilder.build()
     Driver.output("manyArguments", module) {
-        VerifySSA.run(Mem2Reg.run(VerifySSA.run(it)))
+        VerifySSA.run(Mem2RegFabric.create(VerifySSA.run(it)).run())
     }
 }

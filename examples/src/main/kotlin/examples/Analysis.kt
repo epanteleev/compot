@@ -8,6 +8,7 @@ import ir.instruction.IntPredicate
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
+import ir.pass.transform.Mem2RegFabric
 import ir.pass.transform.utils.JoinPointSet
 import ir.platform.regalloc.LinearScan
 import ir.types.Type
@@ -107,7 +108,7 @@ fun main() {
     println()
 
     println(data.liveness())
-    val newModule = Mem2Reg.run(module)
+    val newModule = Mem2RegFabric.create(module).run()
     println(newModule.toString())
 
     VerifySSA.run(newModule)

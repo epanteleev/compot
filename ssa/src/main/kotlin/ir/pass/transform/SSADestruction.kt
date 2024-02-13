@@ -1,27 +1,33 @@
 package ir.pass.transform
 
 import ir.module.Module
+import ir.pass.PassFabric
+import ir.pass.TransformPass
 import ir.platform.x64.CSSAModule
 import ir.pass.transform.auxiliary.*
-import ir.platform.x64.pass.transform.ReplaceFloatNeg
-import ir.platform.x64.pass.transform.MoveLargeConstants
+import ir.platform.x64.pass.transform.*
 
 
-class SSADestruction {
-    companion object {
-        fun run(module: Module): CSSAModule {
-            val copy = module.copy()
-            val transformed = AllocLoadStoreReplacement.run(
-                MoveLargeConstants.run(
-                    ReplaceFloatNeg.run(
-                        CopyInsertion.run(
-                            SplitCriticalEdge.run(copy)
-                        )
+class SSADestruction(module: Module): TransformPass(module) {
+    override fun name(): String = "ssa-destruction"
+    override fun run(): Module {
+        val copy = module.copy()
+        val transformed = AllocLoadStoreReplacement.run(
+            MoveLargeConstants.run(
+                ReplaceFloatNeg.run(
+                    CopyInsertion.run(
+                        SplitCriticalEdge.run(copy)
                     )
                 )
             )
+        )
 
-            return transformed as CSSAModule
-        }
+        return transformed as CSSAModule
+    }
+}
+
+object SSADestructionFabric: PassFabric {
+    override fun create(module: Module): TransformPass {
+        return SSADestruction(module.copy())
     }
 }

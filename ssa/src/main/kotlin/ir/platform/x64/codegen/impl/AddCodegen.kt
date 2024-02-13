@@ -6,7 +6,6 @@ import ir.platform.x64.codegen.utils.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.CodeEmitter
 
 
 data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVisitorBinaryOp,
@@ -137,9 +136,9 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVi
                 asm.add(size, temp1, dst)
             }
             else -> {
-                asm.mov(size, first, CodeEmitter.temp1)
-                asm.add(size, second, CodeEmitter.temp1)
-                asm.mov(size, CodeEmitter.temp1, dst)
+                asm.mov(size, first, temp1)
+                asm.add(size, second, temp1)
+                asm.mov(size, temp1, dst)
             }
         }
     }

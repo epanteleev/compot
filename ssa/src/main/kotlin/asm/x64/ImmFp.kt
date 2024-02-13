@@ -1,6 +1,5 @@
 package asm.x64
 
-import java.lang.IllegalArgumentException
 
 sealed interface ImmFp : Imm {
     fun bits(): ImmInt

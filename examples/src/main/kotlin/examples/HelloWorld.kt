@@ -2,9 +2,10 @@ package examples
 
 import ir.*
 import ir.types.*
-import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestruction
-import ir.platform.x64.codegen.CodeEmitter
+import ir.module.builder.impl.ModuleBuilder
+import ir.pass.transform.SSADestructionFabric
+import ir.platform.x64.codegen.x64CodeGenerator
 
 
 fun main() {
@@ -18,6 +19,6 @@ fun main() {
 
     val module = builder.build()
     println(module.toString())
-    val asm = CodeEmitter.codegen(SSADestruction.run(module))
+    val asm = x64CodeGenerator.emit(SSADestructionFabric.create(module).run())
     println(asm.toString())
 }

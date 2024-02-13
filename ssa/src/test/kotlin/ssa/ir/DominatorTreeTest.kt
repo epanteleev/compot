@@ -6,6 +6,7 @@ import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
+import ir.pass.transform.Mem2RegFabric
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -73,8 +74,8 @@ class DominatorTreeTest {
         val moduleCopy = module.copy()
         assertEquals(module.toString(), moduleCopy.toString())
 
-        val originalMem2Reg = VerifySSA.run(Mem2Reg.run(module))
-        val copyMem2Reg     = VerifySSA.run(Mem2Reg.run(module))
+        val originalMem2Reg = VerifySSA.run(Mem2RegFabric.create(module).run())
+        val copyMem2Reg     = VerifySSA.run(Mem2RegFabric.create(module).run())
         //println(originalMem2Reg.toString())
         assertEquals(originalMem2Reg.toString(), copyMem2Reg.toString())
     }
