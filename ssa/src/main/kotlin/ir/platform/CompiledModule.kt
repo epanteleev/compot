@@ -1,4 +1,3 @@
 package ir.platform
 
-interface CompiledModule {
-}
+interface CompiledModule

@@ -1,8 +1,7 @@
-package ir.platform.regalloc
+package ir.platform.x64.regalloc
 
 import ir.LocalValue
 import asm.x64.Operand
-import ir.instruction.Alloc
 import ir.instruction.Generate
 
 

@@ -1,12 +1,13 @@
 package ir.pass
 
 import ir.module.Module
+import kotlin.system.exitProcess
 import ir.pass.transform.Mem2RegFabric
 import ir.pass.transform.SSADestructionFabric
-import kotlin.system.exitProcess
 
 
-class PassPipeline private constructor(private val passFabrics: List<PassFabric>, val ctx: CompileContext) {
+
+class PassPipeline private constructor(private val passFabrics: List<PassFabric>, private val ctx: CompileContext) {
     fun run(start: Module): Module {
         var current = start
 

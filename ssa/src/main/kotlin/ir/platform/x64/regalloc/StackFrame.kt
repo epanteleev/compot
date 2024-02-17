@@ -1,11 +1,12 @@
-package ir.platform.regalloc
+package ir.platform.x64.regalloc
 
+import ir.Value
+import ir.types.Type
 import asm.x64.Address
 import asm.x64.GPRegister.*
-import ir.Value
 import ir.instruction.Alloc
 import ir.instruction.ValueInstruction
-import ir.types.Type
+
 
 data class StackFrameException(override val message: String): Exception(message)
 

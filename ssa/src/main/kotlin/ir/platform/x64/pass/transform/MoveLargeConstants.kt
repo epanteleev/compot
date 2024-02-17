@@ -9,12 +9,11 @@ import ir.module.block.Block
 import ir.types.PrimitiveType
 import ir.module.FunctionData
 import ir.module.SSAModule
-import ir.platform.x64.CSSAModule
 import ir.platform.x64.CallConvention
 
 
 // Move large constant to data segment
-class MoveLargeConstants private constructor(val functions: List<FunctionData>, val constants: MutableSet<GlobalSymbol>) {
+class MoveLargeConstants private constructor(val functions: List<FunctionData>, private val constants: MutableSet<GlobalSymbol>) {
     private var constantIndex = 0
 
     private fun run() {

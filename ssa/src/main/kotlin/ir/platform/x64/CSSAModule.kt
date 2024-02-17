@@ -4,8 +4,9 @@ import ir.*
 import ir.module.*
 import ir.types.StructType
 import ir.module.auxiliary.*
-import ir.platform.regalloc.*
-import ir.platform.liveness.LiveIntervals
+import ir.platform.x64.regalloc.LinearScan
+import ir.platform.x64.regalloc.RegisterAllocation
+import ir.platform.x64.regalloc.liveness.LiveIntervals
 
 
 data class CSSAModule(override val functions: List<FunctionData>,

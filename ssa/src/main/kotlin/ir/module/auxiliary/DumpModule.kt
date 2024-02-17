@@ -9,8 +9,8 @@ import ir.module.FunctionData
 import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
-import ir.platform.liveness.LiveIntervals
-import ir.platform.regalloc.RegisterAllocation
+import ir.platform.x64.regalloc.liveness.LiveIntervals
+import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.CSSAModule
 
 abstract class DumpModule<T: Module> protected constructor(protected val module: T) {

@@ -10,6 +10,7 @@ import ir.instruction.Neg
 import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
+import collections.identityHashMapOf
 import ir.instruction.Lea
 import ir.module.block.Label
 import ir.pass.isLocalVariable
@@ -17,7 +18,7 @@ import ir.utils.OrderedLocation
 import ir.instruction.utils.Visitor
 import ir.platform.CompiledModule
 import ir.platform.x64.codegen.impl.*
-import ir.platform.regalloc.RegisterAllocation
+import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
@@ -36,9 +37,9 @@ object x64CodeGenerator {
 }
 
 private class CodeEmitter(private val data: FunctionData,
-                  private val functionCounter: Int,
-                  private val unit: CompilationUnit,
-                  private val valueToRegister: RegisterAllocation,
+                          private val functionCounter: Int,
+                          private val unit: CompilationUnit,
+                          private val valueToRegister: RegisterAllocation,
 ): Visitor {
     private val orderedLocation = evaluateOrder(data.blocks)
     private val asm: Assembler = unit.mkFunction(data.prototype.name)
@@ -368,7 +369,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(downStackFrame: DownStackFrame) {
-        val sdf = orderedLocation[IdentityCallable(downStackFrame.call())]
+        val sdf = orderedLocation[downStackFrame.call()]
         val savedRegisters = valueToRegister.callerSaveRegisters(sdf!!)
         for (arg in savedRegisters) {
             asm.push(8, arg)
@@ -381,7 +382,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(upStackFrame: UpStackFrame) {
-        val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[IdentityCallable(upStackFrame.call())]!!)
+        val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[upStackFrame.call()]!!)
         val totalStackSize = valueToRegister.frameSize(savedRegisters)
 
         if (totalStackSize % STACK_ALIGNMENT != 0L) {
@@ -488,13 +489,13 @@ private class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun evaluateOrder(blocks: BasicBlocks): Map<IdentityCallable, OrderedLocation> {
-        val orderedLocation = mutableMapOf<IdentityCallable, OrderedLocation>()
+    private fun evaluateOrder(blocks: BasicBlocks): Map<Callable, OrderedLocation> {
+        val orderedLocation = identityHashMapOf<Callable, OrderedLocation>()
         var order = 0
         for (bb in blocks.linearScanOrder()) {
             for ((idx, call) in bb.instructions().withIndex()) {
                 if (call is Callable) {
-                    orderedLocation[IdentityCallable(call)] = OrderedLocation(bb, idx, order)
+                    orderedLocation[call] = OrderedLocation(bb, idx, order)
                 }
                 order += 1
             }

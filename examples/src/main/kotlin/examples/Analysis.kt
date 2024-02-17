@@ -10,7 +10,7 @@ import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2Reg
 import ir.pass.transform.Mem2RegFabric
 import ir.pass.transform.utils.JoinPointSet
-import ir.platform.regalloc.LinearScan
+import ir.platform.x64.regalloc.LinearScan
 import ir.types.Type
 
 fun main() {

@@ -19,7 +19,7 @@ internal object Copy {
 private class CopyCFG(val oldBasicBlocks: BasicBlocks) {
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
     private val oldToNewBlock = setupNewBasicBlock()
-    private val oldCallableToNew = hashMapOf<IdentityCallable, Callable>()
+    private val oldCallableToNew = hashMapOf<Callable, Callable>()
 
     private fun setupNewBasicBlock(): Map<Block, Block> {
         val oldToNew = hashMapOf<Block, Block>()
@@ -88,18 +88,18 @@ private class CopyCFG(val oldBasicBlocks: BasicBlocks) {
                 oldValuesToNew[inst] = newInst as ValueInstruction
 
                 if (newInst is Callable) {
-                    oldCallableToNew[IdentityCallable(inst as Callable)] = newInst
+                    oldCallableToNew[inst as Callable] = newInst
                 }
                 return newInst
             }
             is Callable -> {
                 val newUsages = newUsages(inst)
                 val newInst = inst.copy(newUsages)
-                oldCallableToNew[IdentityCallable(inst as Callable)] = newInst as Callable
+                oldCallableToNew[inst] = newInst as Callable
                 return newInst
             }
             is AdjustStackFrame -> {
-                val newUsages = oldCallableToNew[IdentityCallable(inst.call())]!!
+                val newUsages = oldCallableToNew[inst.call()]!!
                 return inst.copy(newUsages)
             }
             else -> {

@@ -1,4 +1,4 @@
-package ir.platform.regalloc
+package ir.platform.x64.regalloc
 
 import ir.Value
 import asm.x64.*

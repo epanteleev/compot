@@ -1,7 +1,8 @@
 package ir.read
 
-import ir.read.bulder.TypeResolver
 import ir.types.*
+import ir.read.bulder.TypeResolver
+
 
 interface AnyToken {
     fun message(): String

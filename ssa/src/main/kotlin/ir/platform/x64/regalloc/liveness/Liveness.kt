@@ -1,4 +1,4 @@
-package ir.platform.liveness
+package ir.platform.x64.regalloc.liveness
 
 import ir.LocalValue
 import ir.instruction.Instruction

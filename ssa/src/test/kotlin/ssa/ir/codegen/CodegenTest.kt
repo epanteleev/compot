@@ -6,7 +6,7 @@ import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.Mem2Reg
 import ir.pass.transform.Mem2RegFabric
-import ir.platform.regalloc.VirtualRegistersPool
+import ir.platform.x64.regalloc.VirtualRegistersPool
 import ir.types.Type
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
