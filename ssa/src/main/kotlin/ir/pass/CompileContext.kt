@@ -3,6 +3,7 @@ package ir.pass
 import java.io.File
 import ir.module.Module
 
+
 class CompileContext(private val filename: String, private val suffix: String, private val loggingLevel: Int) {
     fun log(passName: String, pass: Module) {
         if (loggingLevel == 0) {

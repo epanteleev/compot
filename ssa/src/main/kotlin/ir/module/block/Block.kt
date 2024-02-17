@@ -8,9 +8,9 @@ import ir.instruction.*
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     AnyInstructionFabric, AnyBlock {
-    private val instructions = mutableListOf<Instruction>()
-    private val predecessors = mutableListOf<Block>()
-    private val successors   = mutableListOf<Block>()
+    private val instructions = arrayListOf<Instruction>()
+    private val predecessors = arrayListOf<Block>()
+    private val successors   = arrayListOf<Block>()
 
     private var indexToAppend = 0
 
@@ -31,7 +31,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     }
 
     override fun last(): TerminateInstruction {
-        val last = instructions[size - 1]
+        val last = instructions.last()
         assert(last is TerminateInstruction) {
             "should be, but last=$last"
         }

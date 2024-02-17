@@ -2,9 +2,9 @@ package ir.platform.regalloc
 
 import ir.Value
 import asm.x64.*
+import ir.types.*
 import asm.x64.GPRegister.*
 import ir.platform.x64.CallConvention
-import ir.types.*
 import java.lang.IllegalArgumentException
 
 
