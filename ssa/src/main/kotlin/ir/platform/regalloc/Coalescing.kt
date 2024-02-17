@@ -3,8 +3,8 @@ package ir.platform.regalloc
 import ir.LocalValue
 import asm.x64.Operand
 import ir.instruction.Phi
-import ir.platform.liveness.LiveIntervals
 import ir.platform.liveness.LiveRange
+import ir.platform.liveness.LiveIntervals
 
 
 class CoalescedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
