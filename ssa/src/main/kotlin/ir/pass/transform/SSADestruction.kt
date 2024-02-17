@@ -22,7 +22,7 @@ class SSADestruction(module: Module): TransformPass(module) {
             )
         )
 
-        return transformed as CSSAModule
+        return CSSAModule(transformed.functions, transformed.externFunctions, transformed.globals, transformed.types)
     }
 }
 

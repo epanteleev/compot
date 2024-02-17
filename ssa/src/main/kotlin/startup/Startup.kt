@@ -1,11 +1,7 @@
 package startup
 
-import ir.module.Module
-import ir.pass.ana.VerifySSA
-import ir.pass.transform.Mem2Reg
-import ir.pass.transform.Mem2RegFabric
-import ir.read.ModuleReader
 import java.io.File
+import ir.read.ModuleReader
 
 
 fun main(args: Array<String>) {
@@ -16,20 +12,6 @@ fun main(args: Array<String>) {
 
     val text = File(args[0]).readText()
     val module = ModuleReader(text).read()
-    var opt: Module? = null
 
-    try {
-        Driver.output(args[0], module) {
-            opt = it
-            opt = Mem2RegFabric.create(opt as Module).run()
-            opt = VerifySSA.run(opt as Module)
-            opt as Module
-        }
-    } catch (ex: Throwable) {
-        if (opt != null) {
-            println(opt!!.toString())
-        }
-
-        ex.printStackTrace()
-    }
+    Driver.output(args[0], module)
 }

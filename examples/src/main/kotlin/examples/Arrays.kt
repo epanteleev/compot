@@ -50,7 +50,5 @@ fun main() {
     VerifySSA.run(newModule)
     println(data.liveness())
 
-    Driver.output("fill-in-array", module) {
-        VerifySSA.run(Mem2RegFabric.create(VerifySSA.run(it)).run())
-    }
+    Driver.output("fill-in-array", module)
 }

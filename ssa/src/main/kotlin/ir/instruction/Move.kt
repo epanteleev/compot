@@ -30,7 +30,7 @@ class Move private constructor(toValue: Generate, fromValue: Value):
     }
 
     override fun copy(newUsages: List<Value>): Move {
-        assert(newUsages.size == 1) {
+        assert(newUsages.size == 2) {
             "should be, but newUsages=$newUsages"
         }
 

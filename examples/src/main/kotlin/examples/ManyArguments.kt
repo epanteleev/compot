@@ -1,12 +1,10 @@
 package examples
 
-import ir.instruction.ArithmeticBinaryOp
-import ir.module.builder.impl.ModuleBuilder
-import ir.pass.ana.VerifySSA
-import ir.pass.transform.Mem2Reg
-import ir.pass.transform.Mem2RegFabric
 import ir.types.Type
 import startup.Driver
+import ir.instruction.ArithmeticBinaryOp
+import ir.module.builder.impl.ModuleBuilder
+
 
 fun main() {
     val moduleBuilder = ModuleBuilder.create()
@@ -71,7 +69,5 @@ fun main() {
     builder.ret(ret)
 
     val module = moduleBuilder.build()
-    Driver.output("manyArguments", module) {
-        VerifySSA.run(Mem2RegFabric.create(VerifySSA.run(it)).run())
-    }
+    Driver.output("manyArguments", module)
 }

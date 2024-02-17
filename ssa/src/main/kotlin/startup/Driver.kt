@@ -1,44 +1,53 @@
 package startup
 
-import ir.module.Module
-import ir.pass.ana.VerifySSA
-import ir.pass.transform.SSADestructionFabric
-import ir.platform.x64.codegen.x64CodeGenerator
 import java.io.File
+import ir.module.Module
 import java.nio.file.Paths
+import ir.pass.PassPipeline
+import ir.pass.CompileContextBuilder
+import ir.platform.x64.codegen.x64CodeGenerator
 
 
 object Driver {
-    fun output(name: String, module: Module, pipeline: (Module) -> Module) {
-        val filename         = getName(name)
-        val unoptimizedIr    = VerifySSA.run(SSADestructionFabric.create(module).run())
-        val unoptimisedCode  = x64CodeGenerator.emit(unoptimizedIr)
-        val dumpIrString     = module.toString()
-        val optimizedModule  = pipeline(module)
-        val destroyed        = VerifySSA.run(SSADestructionFabric.create(optimizedModule).run())
+    private fun unoptimized(filename: String, module: Module) {
+        val ctx = CompileContextBuilder(filename)
+            .setSuffix(".base")
+            .setLoggingLevel(1)
+            .construct()
+
+        val unoptimizedIr   = PassPipeline.base(ctx).run(module)
+        val unoptimisedCode = x64CodeGenerator.emit(unoptimizedIr)
+
+        val unoptimizedAsm = File("$filename/base.S")
+        unoptimizedAsm.writeText(unoptimisedCode.toString())
+    }
+
+    private fun optimized(filename: String, module: Module) {
+        val ctx = CompileContextBuilder(filename)
+            .setSuffix(".opt")
+            .setLoggingLevel(1)
+            .construct()
+
+        val destroyed        = PassPipeline.opt(ctx).run(module)
         val optimizedCodegen = x64CodeGenerator.emit(destroyed)
+
+        val optimizedAsm = File("$filename/opt.S")
+        optimizedAsm.writeText(optimizedCodegen.toString())
+    }
+
+    fun output(name: String, module: Module) {
+        val filename = getName(name)
 
         val directoryName = File(filename)
         if (directoryName.exists()) {
             println("[Directory '$directoryName' exist. Remove...]")
             directoryName.deleteRecursively()
         }
-
-        val unoptimizedAsm = File("$filename/base.S")
-        val optimizedAsm   = File("$filename/opt.S")
-        val dumpIr         = File("$filename/$filename.ir")
-        val baseDumpIrDestr = File("$filename/$filename.base.dest.ir")
-        val optDumpIrOpt   = File("$filename/$filename.opt.ir")
-        val optDumpIrDestr = File("$filename/$filename.opt.dest.ir")
-
         directoryName.mkdir()
 
-        baseDumpIrDestr.writeText(unoptimizedIr.toString())
-        unoptimizedAsm.writeText(unoptimisedCode.toString())
-        optimizedAsm.writeText(optimizedCodegen.toString())
-        dumpIr.writeText(dumpIrString)
-        optDumpIrOpt.writeText(optimizedModule.toString())
-        optDumpIrDestr.writeText(destroyed.toString())
+        unoptimized(filename, module)
+        optimized(filename, module)
+
         println("[Done '$filename']")
     }
 
