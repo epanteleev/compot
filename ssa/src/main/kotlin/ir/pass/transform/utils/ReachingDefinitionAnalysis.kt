@@ -1,6 +1,7 @@
 package ir.pass.transform.utils
 
 import ir.*
+import ir.dominance.DominatorTree
 import ir.instruction.*
 import ir.module.block.*
 import ir.module.BasicBlocks

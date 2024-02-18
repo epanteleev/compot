@@ -1,20 +1,18 @@
-package ssa.ir
+package ssa.ir.dominance
 
-import ir.FunctionPrototype
-import ir.I32Value
-import ir.U16Value
-import ir.instruction.IntPredicate
+import ir.*
+import ir.types.Type
 import ir.module.Module
+import ir.instruction.IntPredicate
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
-import ir.pass.ana.VerifySSA
-import ir.pass.transform.Mem2RegFabric
-import ir.types.Type
+import org.junit.jupiter.api.Assertions.assertFalse
+
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class DominatorTreeTest {
+
+class PostDominatorTreeTest {
     private fun withBasicBlocks(): Module {
         val moduleBuilder = ModuleBuilder.create()
         val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(Type.Ptr))
@@ -56,29 +54,16 @@ class DominatorTreeTest {
     }
 
     @Test
-    fun testDominator() {
+    fun testPostDominator() {
         val module = withBasicBlocks()
         val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.Ptr))
-        val domTree = module.findFunction(prototype).blocks.dominatorTree()
+        val domTree = module.findFunction(prototype).blocks.postDominatorTree()
 
-        assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(1)))
-        assertTrue(domTree.dominates(BlockViewer(1), BlockViewer(2)))
-        assertTrue(domTree.dominates(BlockViewer(1), BlockViewer(3)))
-        assertTrue(domTree.dominates(BlockViewer(1), BlockViewer(7)))
-        assertTrue(domTree.dominates(BlockViewer(3), BlockViewer(4)))
-        assertTrue(domTree.dominates(BlockViewer(4), BlockViewer(5)))
-        assertTrue(domTree.dominates(BlockViewer(4), BlockViewer(6)))
-    }
-
-    @Test
-    fun testCopy() {
-        val module = withBasicBlocks()
-        val moduleCopy = module.copy()
-        assertEquals(module.toString(), moduleCopy.toString())
-
-        val originalMem2Reg = VerifySSA.run(Mem2RegFabric.create(module).run())
-        val copyMem2Reg     = VerifySSA.run(Mem2RegFabric.create(module).run())
-        //println(originalMem2Reg.toString())
-        assertEquals(originalMem2Reg.toString(), copyMem2Reg.toString())
+        assertTrue(domTree.postDominates(BlockViewer(1), BlockViewer(0)))
+        assertTrue(domTree.postDominates(BlockViewer(7), BlockViewer(0)))
+        assertTrue(domTree.postDominates(BlockViewer(4), BlockViewer(6)))
+        assertTrue(domTree.postDominates(BlockViewer(5), BlockViewer(4)))
+        assertTrue(domTree.postDominates(BlockViewer(7), BlockViewer(2)))
+        assertFalse(domTree.postDominates(BlockViewer(3), BlockViewer(6)))
     }
 }
