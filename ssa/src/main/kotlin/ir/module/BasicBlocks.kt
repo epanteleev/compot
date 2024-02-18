@@ -11,13 +11,9 @@ import ir.utils.DefUseInfo
 
 
 class BasicBlocks(private val basicBlocks: MutableList<Block>) {
-    fun blocks(): MutableList<Block> {
-        return basicBlocks
-    }
+    fun blocks(): MutableList<Block> = basicBlocks
 
-    fun size(): Int {
-        return basicBlocks.size
-    }
+    fun size(): Int = basicBlocks.size
 
     fun findBlock(label: Label): Block {
         return basicBlocks.find { it.index == label.index }
@@ -33,23 +29,25 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
     }
 
     fun end(): Block {
-        return basicBlocks.find { it.last() is Return } as Block
+        val endBlock = basicBlocks.find { it.last() is Return }
+        assert(endBlock != null) { "graph doesn't have enr block" }
+        return endBlock as Block
     }
 
     fun preorder(): BasicBlocksIterator {
-        return PreorderIterator(begin(), blocks().size)
+        return PreorderIterator(begin(), size())
     }
 
     fun postorder(): BasicBlocksIterator {
-        return PostorderIterator(begin(), blocks().size)
+        return PostorderIterator(begin(), size())
     }
 
     fun backwardPostorder(): BasicBlocksIterator {
-        return BackwardPostorderIterator(end(), blocks().size)
+        return BackwardPostorderIterator(end(), size())
     }
 
     fun bfsTraversal(): BasicBlocksIterator {
-        return BfsTraversalIterator(begin(), blocks().size)
+        return BfsTraversalIterator(begin(), size())
     }
 
     fun linearScanOrder(): BasicBlocksIterator {
@@ -79,6 +77,7 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
     fun copy(): BasicBlocks {
         return Copy.copy(this)
     }
+
     companion object {
         fun create(startBB: Block): BasicBlocks {
             return BasicBlocks(arrayListOf(startBB))

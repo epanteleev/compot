@@ -5,7 +5,7 @@ import ir.module.block.AnyBlock
 
 
 internal object DominatorTreeCalculate : DominatorCalculate {
-    override fun calculateIncomings(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> {
+    override fun calculateIncoming(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> {
         val predecessors = hashMapOf<Int, List<Int>>()
 
         for (bb in postorder) {
@@ -13,6 +13,7 @@ internal object DominatorTreeCalculate : DominatorCalculate {
             if (blockPredecessors.isEmpty()) {
                 continue
             }
+
             predecessors[blockToIndex[bb]!!] = blockPredecessors.map { blockToIndex[it]!! }
         }
 

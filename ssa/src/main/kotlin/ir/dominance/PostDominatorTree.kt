@@ -6,7 +6,7 @@ import ir.module.block.AnyBlock
 
 
 class PostDominatorTree(private val ipdomMap: Map<AnyBlock, AnyBlock>) {
-    private val cachedDominators = hashMapOf<Label, List<Label>>()
+    private val cachedPostDominators = hashMapOf<Label, List<Label>>()
 
     private fun calculatePostDominators(target: Label): List<Label> {
         val dom = arrayListOf<Label>()
@@ -34,13 +34,13 @@ class PostDominatorTree(private val ipdomMap: Map<AnyBlock, AnyBlock>) {
     }
 
     fun postDominators(target: Label): List<Label> {
-        val saved = cachedDominators[target]
+        val saved = cachedPostDominators[target]
         if (saved != null) {
             return saved
         }
 
         val dom = calculatePostDominators(target)
-        cachedDominators[target] = dom
+        cachedPostDominators[target] = dom
         return dom
     }
 

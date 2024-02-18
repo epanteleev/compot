@@ -65,16 +65,25 @@ interface DominatorCalculate {
         return domTree
     }
 
-    fun calculateIncomings(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>>
+    fun calculateIncoming(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> //TODO not necessary to evaluate it
 
     fun blockOrdering(basicBlocks: BasicBlocks): List<AnyBlock>
+
+    fun evalIndexToBlock(blockToIndex: Map<AnyBlock, Int>): Map<Int, AnyBlock> {
+        val indexToBlock = hashMapOf<Int, AnyBlock>()
+        for ((key, value) in blockToIndex) {
+            indexToBlock[value] = key
+        }
+
+        return indexToBlock
+    }
 
     fun calculate(basicBlocks: BasicBlocks): Map<AnyBlock, AnyBlock> {
         val blocksOrder = blockOrdering(basicBlocks)
         val blockToIndex = indexBlocks(blocksOrder)
 
         val length = blocksOrder.size
-        val predecessorsMap = calculateIncomings(blocksOrder, blockToIndex)
+        val predecessorsMap = calculateIncoming(blocksOrder, blockToIndex)
         val dominators = initializeDominator(length)
         var changed = true
         while (changed) {
@@ -89,7 +98,7 @@ interface DominatorCalculate {
             }
         }
 
-        val indexToBlock = blockToIndex.map { (key, value) -> value to key }.toMap(hashMapOf())
+        val indexToBlock = evalIndexToBlock(blockToIndex)
         return enumerationToIdomMap(blocksOrder, indexToBlock, dominators)
     }
 
