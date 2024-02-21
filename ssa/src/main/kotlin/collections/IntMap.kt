@@ -1,55 +1,106 @@
 package collections
 
 
-class IntMap<V>(val array: Array<V>) : Map<Int, V> {
+class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Array<K?>, val closure: (K) -> Int) : MutableMap<K, V> {
+    override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
+        get() {
+            val keyToValue = hashSetOf<IntMapEntry<K, V>>()
+            keys.forEachWith(values) { k, v ->
+                if (k == null || v == null) {
+                    return@forEachWith
+                }
 
-    override val entries: Set<Map.Entry<Int, V>> = run() {
-        val set = hashSetOf<IntMapEntry<Int, V>>()
-        for ((idx, v) in array.withIndex()) {
-            set.add(IntMapEntry(idx, v))
+                keyToValue.add(IntMapEntry(k, v))
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            return keyToValue as MutableSet<MutableMap.MutableEntry<K, V>>
         }
-        set
+
+    override val keys: MutableSet<K>
+        get() = keysArray.fold(hashSetOf()) { acc, v ->
+            if (v != null) {
+                acc.add(v)
+            }
+            acc
+        }
+
+    override val size: Int
+        get() = valuesArray.size
+
+    override val values: MutableCollection<V>
+        get() = valuesArray.fold(arrayListOf()) { acc, v ->
+            if (v != null) {
+                acc.add(v)
+            }
+            acc
+        }
+
+    override fun clear() {
+        valuesArray.fill(null)
+        keysArray.fill(null)
     }
 
-    override val keys: Set<Int> = run() {
-        val set = hashSetOf<Int>()
-        for (i in array.indices) {
-            set.add(i)
-        }
+    override fun isEmpty(): Boolean = valuesArray.find { it != null } != null
 
-        set
-    }
-
-    override val size: Int = array.size
-
-    override val values: Collection<V> = array.toList()
-
-    override fun isEmpty(): Boolean = false
-
-    override fun get(key: Int): V? {
-        if (key >= array.size || key < 0) {
+    override fun remove(key: K): V? {
+        val idx = closure(key)
+        if (idx >= valuesArray.size || idx < 0) {
             return null
         }
-        return array[key]
+        val item = valuesArray[idx]
+        valuesArray[idx] = null
+        keysArray[idx] = null
+        return item
+    }
+
+    override fun putAll(from: Map<out K, V>) {
+        for ((k, v) in from) {
+            put(k, v)
+        }
+    }
+
+    override fun put(key: K, value: V): V? {
+        val idx = closure(key)
+        if (idx >= valuesArray.size || idx < 0) {
+            return null
+        }
+        val item = valuesArray[idx]
+        valuesArray[idx] = value
+        keysArray[idx] = key
+        return item
+    }
+
+    override fun get(key: K): V? {
+        val idx = closure(key)
+        if (idx >= valuesArray.size || idx < 0) {
+            return null
+        }
+
+        val ret = valuesArray[idx]
+        assert(ret == null || keysArray[idx] == key) {
+            "expect, but idx=$idx, key=$key"
+        }
+        return ret
     }
 
     override fun containsValue(value: V): Boolean {
-        return array.contains(value)
+        return valuesArray.contains(value)
     }
 
-    override fun containsKey(key: Int): Boolean {
-        return 0 <= key && key < array.size
+    override fun containsKey(key: K): Boolean {
+        val idx = closure(key)
+        assert(0 <= idx && keysArray[idx] == key) { "expect, but idx=$idx, key=$key" }
+        return idx < valuesArray.size
     }
 
-    private data class IntMapEntry<K, V>(override val key: K, override var value: V) : Map.Entry<K, V>
+    private data class IntMapEntry<K, V>(override val key: K, override var value: V?) : Map.Entry<K, V?>
 }
 
-inline fun <reified T> intMapOf(values: Collection<T>, closure: (T) -> Int): Map<Int, T> {
-    val array = arrayOfNulls<T>(values.size)
-    for (elem in values) {
-        array[closure(elem)] = elem
-    }
+inline fun <reified K, reified T> intMapOf(values: Collection<K>, noinline closure: (K) -> Int): MutableMap<K, T> {
+    return IntMap(arrayOfNulls<T>(values.size), values.toTypedArray(), closure)
+}
 
-    @Suppress("UNCHECKED_CAST")
-    return IntMap(array as Array<T>)
+inline fun <reified K, reified T> intMapOf(size: Int, noinline closure: (K) -> Int): MutableMap<K, T> {
+    return IntMap(arrayOfNulls<T>(size), arrayOfNulls<K>(size), closure)
 }

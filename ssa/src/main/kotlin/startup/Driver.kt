@@ -6,6 +6,7 @@ import java.nio.file.Paths
 import ir.pass.PassPipeline
 import ir.pass.CompileContextBuilder
 import ir.platform.x64.codegen.x64CodeGenerator
+import ir.read.ModuleReader
 
 
 object Driver {
@@ -59,5 +60,17 @@ object Driver {
         }
 
         return fileName
+    }
+
+    fun run(args: Array<String>) {
+        if (args.isEmpty()) {
+            println("<ir-file>.ir")
+            return
+        }
+
+        val text = File(args[0]).readText()
+        val module = ModuleReader(text).read()
+
+        output(args[0], module)
     }
 }

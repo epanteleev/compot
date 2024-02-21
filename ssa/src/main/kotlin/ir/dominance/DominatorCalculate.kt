@@ -1,12 +1,14 @@
 package ir.dominance
 
+import collections.intMapOf
 import ir.module.BasicBlocks
 import ir.module.block.AnyBlock
+import ir.module.block.Label
 
 
 interface DominatorCalculate {
     fun initializeDominator(length: Int): MutableMap<Int, Int> {
-        val dominators = hashMapOf<Int, Int>()
+        val dominators = intMapOf<Int, Int>(length) { it }
 
         for (idx in 0 until length) {
             if (idx == length - 1) { /* this is first block */
@@ -37,7 +39,7 @@ interface DominatorCalculate {
     }
 
     fun indexBlocks(blocksOrder: List<AnyBlock>): Map<AnyBlock, Int> {
-        val blockToIndex = hashMapOf<AnyBlock, Int>()
+        val blockToIndex = intMapOf<AnyBlock, Int>(blocksOrder) { it : Label -> it.index }
         for ((idx, bb) in blocksOrder.withIndex()) {
             blockToIndex[bb] = idx
         }
@@ -57,12 +59,12 @@ interface DominatorCalculate {
     fun enumerationToIdomMap(blocks: List<AnyBlock>, indexToBlock: Map<Int, AnyBlock>, dominators: MutableMap<Int, Int>): Map<AnyBlock, AnyBlock> {
         dominators.remove(blocks.size - 1)
 
-        val domTree = hashMapOf<AnyBlock, AnyBlock>()
+        val dominatorTree = intMapOf<AnyBlock, AnyBlock>(blocks) { it : Label -> it.index }
         for (entry in dominators) {
-            domTree[indexToBlock[entry.key]!!] = indexToBlock[entry.value]!!
+            dominatorTree[indexToBlock[entry.key]!!] = indexToBlock[entry.value]!!
         }
 
-        return domTree
+        return dominatorTree
     }
 
     fun calculateIncoming(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> //TODO not necessary to evaluate it

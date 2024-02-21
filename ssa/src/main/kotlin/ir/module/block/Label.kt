@@ -9,9 +9,7 @@ interface Label {
 }
 
 class BlockViewer(override val index: Int): Label {
-    override fun hashCode(): Int {
-        return index
-    }
+    override fun hashCode(): Int = index
 
     override fun toString(): String {
         return if (index == 0) {

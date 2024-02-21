@@ -31,3 +31,7 @@ tasks.named<Test>("test") {
 tasks.named<Jar>("jar") {
     dependsOn.add(tasks.findByName("test"))
 }
+
+run {
+
+}
