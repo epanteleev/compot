@@ -36,13 +36,12 @@ class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block
         return targets[1]
     }
 
-    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-    override fun copy(newUsages: List<Value>, newTargets: Array<Block>): BranchCond {
-        assert(newUsages.size == 1) {
-            "should be, but newUsages=$newUsages"
+    override fun copy(usages: List<Value>, newTargets: Array<Block>): BranchCond {
+        assert(usages.size == 1) {
+            "should be, but newUsages=$usages"
         }
 
-        return make(newUsages[0], newTargets[0], newTargets[1])
+        return make(usages[0], newTargets[0], newTargets[1])
     }
 
     override fun copy(newUsages: List<Value>): Instruction {

@@ -1,10 +1,12 @@
 package ir.pass.transform.utils
 
-import ir.dominance.DominatorTree
+import collections.intMapOf
 import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.BasicBlocks
+import ir.module.block.Label
 import ir.module.block.AnyBlock
+import ir.dominance.DominatorTree
 
 
 class JoinPointSet internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>) {
@@ -26,7 +28,7 @@ class JoinPointSet internal constructor(private val joinSet: Map<AnyBlock, Mutab
 }
 
 private class JoinPointSetEvaluate(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
-    private val joinSet = hashMapOf<AnyBlock, MutableSet<Alloc>>()
+    private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(blocks.size()) { bb: Label -> bb.index }
 
     private fun hasDef(bb: AnyBlock, variable: Alloc): Boolean {
         if (bb.instructions().contains(variable)) {

@@ -4,9 +4,9 @@ import java.io.File
 import ir.module.Module
 import java.nio.file.Paths
 import ir.pass.PassPipeline
+import ir.read.ModuleReader
 import ir.pass.CompileContextBuilder
 import ir.platform.x64.codegen.x64CodeGenerator
-import ir.read.ModuleReader
 
 
 object Driver {
