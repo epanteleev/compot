@@ -342,7 +342,7 @@ private class CodeEmitter(private val data: FunctionData,
                     FloatPredicate.Ugt -> TODO()
                     FloatPredicate.Uge -> TODO()
                     FloatPredicate.Ult -> TODO()
-                    FloatPredicate.Ule -> TODO()
+                    FloatPredicate.Ule -> JmpType.JBE
                     FloatPredicate.Uno -> TODO()
                     FloatPredicate.Une -> TODO()
                     else -> throw CodegenException("unknown conversion type: convType=$convType")

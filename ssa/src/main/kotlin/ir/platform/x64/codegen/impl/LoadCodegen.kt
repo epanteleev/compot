@@ -76,6 +76,10 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVi
     }
 
     override fun default(dst: Operand, src: Operand) {
+        if (dst is XmmRegister && src is GPRegister) { //TODO: add support for other cases
+            asm.movf(size, Address.from(src, 0), dst)
+            return
+        }
         throw RuntimeException("Internal error: '${Load.NAME}' dst=$dst, pointer=$src")
     }
 }
