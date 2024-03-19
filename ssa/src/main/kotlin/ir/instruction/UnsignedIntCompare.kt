@@ -30,8 +30,8 @@ class UnsignedIntCompare private constructor(name: String, a: Value, private val
         return make(identifier, newUsages[0], predicate, newUsages[1])
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {

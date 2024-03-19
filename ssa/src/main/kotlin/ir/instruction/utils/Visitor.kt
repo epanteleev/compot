@@ -2,40 +2,40 @@ package ir.instruction.utils
 
 import ir.instruction.*
 
-interface Visitor {
-    fun visit(alloc: Alloc)
-    fun visit(generate: Generate)
-    fun visit(lea: Lea)
-    fun visit(binary: ArithmeticBinary)
-    fun visit(neg: Neg)
-    fun visit(neg: Not)
-    fun visit(branch: Branch)
-    fun visit(branchCond: BranchCond)
-    fun visit(call: Call)
-    fun visit(bitcast: Bitcast)
-    fun visit(zext: ZeroExtend)
-    fun visit(sext: SignExtend)
-    fun visit(pcmp: PointerCompare)
-    fun visit(trunc: Truncate)
-    fun visit(fptruncate: FpTruncate)
-    fun visit(fpext: FpExtend)
-    fun visit(fptosi: FloatToSigned)
-    fun visit(copy: Copy)
-    fun visit(move: Move)
-    fun visit(downStackFrame: DownStackFrame)
-    fun visit(gep: GetElementPtr)
-    fun visit(gfp: GetFieldPtr)
-    fun visit(icmp: SignedIntCompare)
-    fun visit(ucmp: UnsignedIntCompare)
-    fun visit(floatCompare: FloatCompare)
-    fun visit(load: Load)
-    fun visit(phi: Phi)
-    fun visit(returnValue: ReturnValue)
-    fun visit(returnVoid: ReturnVoid)
-    fun visit(indirectionCall: IndirectionCall)
-    fun visit(indirectionVoidCall: IndirectionVoidCall)
-    fun visit(select: Select)
-    fun visit(store: Store)
-    fun visit(upStackFrame: UpStackFrame)
-    fun visit(voidCall: VoidCall)
+interface Visitor<T> {
+    fun visit(alloc: Alloc): T
+    fun visit(generate: Generate): T
+    fun visit(lea: Lea): T
+    fun visit(binary: ArithmeticBinary): T
+    fun visit(neg: Neg): T
+    fun visit(not: Not): T
+    fun visit(branch: Branch): T
+    fun visit(branchCond: BranchCond): T
+    fun visit(call: Call): T
+    fun visit(bitcast: Bitcast): T
+    fun visit(zext: ZeroExtend): T
+    fun visit(sext: SignExtend): T
+    fun visit(pcmp: PointerCompare): T
+    fun visit(trunc: Truncate): T
+    fun visit(fptruncate: FpTruncate): T
+    fun visit(fpext: FpExtend): T
+    fun visit(fptosi: FloatToSigned): T
+    fun visit(copy: Copy): T
+    fun visit(move: Move): T
+    fun visit(downStackFrame: DownStackFrame): T
+    fun visit(gep: GetElementPtr): T
+    fun visit(gfp: GetFieldPtr): T
+    fun visit(icmp: SignedIntCompare): T
+    fun visit(ucmp: UnsignedIntCompare): T
+    fun visit(floatCompare: FloatCompare): T
+    fun visit(load: Load): T
+    fun visit(phi: Phi): T
+    fun visit(returnValue: ReturnValue): T
+    fun visit(returnVoid: ReturnVoid): T
+    fun visit(indirectionCall: IndirectionCall): T
+    fun visit(indirectionVoidCall: IndirectionVoidCall): T
+    fun visit(select: Select): T
+    fun visit(store: Store): T
+    fun visit(upStackFrame: UpStackFrame): T
+    fun visit(voidCall: VoidCall): T
 }

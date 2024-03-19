@@ -19,8 +19,8 @@ class Generate private constructor(name: String, allocatedType: PrimitiveType):
         return make(identifier, type())
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {

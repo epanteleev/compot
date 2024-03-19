@@ -29,8 +29,8 @@ class Call private constructor(name: String, private val func: AnyFunctionProtot
         return make(identifier, func, newUsages)
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     override fun dump(): String {

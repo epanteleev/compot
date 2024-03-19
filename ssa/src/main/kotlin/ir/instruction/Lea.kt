@@ -32,8 +32,8 @@ class Lea private constructor(name: String, origin: Generate):
         return make(identifier, newUsages[0] as Generate)
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {

@@ -26,8 +26,8 @@ class Branch private constructor(target: Block): TerminateInstruction(arrayOf(),
         return make(newTargets[0])
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {

@@ -28,8 +28,8 @@ class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
         return make(newUsages[0])
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {

@@ -26,7 +26,7 @@ class IndirectionVoidCall private constructor(pointer: Value, private val func: 
         return operands
     }
 
-    override fun prototype(): AnyFunctionPrototype {
+    override fun prototype(): IndirectFunctionPrototype {
         return func
     }
 
@@ -53,8 +53,8 @@ class IndirectionVoidCall private constructor(pointer: Value, private val func: 
         return func.hashCode()
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     override fun dump(): String {

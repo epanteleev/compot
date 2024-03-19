@@ -49,8 +49,8 @@ class VoidCall private constructor(private val func: AnyFunctionPrototype, args:
         return make(func, newUsages)
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     override fun type(): Type {

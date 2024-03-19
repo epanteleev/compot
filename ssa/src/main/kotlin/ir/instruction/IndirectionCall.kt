@@ -26,7 +26,7 @@ class IndirectionCall private constructor(name: String, pointer: Value, private 
         return operands
     }
 
-    override fun prototype(): AnyFunctionPrototype {
+    override fun prototype(): IndirectFunctionPrototype {
         return func
     }
 
@@ -38,8 +38,8 @@ class IndirectionCall private constructor(name: String, pointer: Value, private 
         return make(identifier, newUsages[0], func, newUsages.takeLast(newUsages.size - 2)) // TODO Creation new list
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     override fun dump(): String {

@@ -39,8 +39,8 @@ class GetElementPtr private constructor(name: String, val basicType: PrimitiveTy
         return make(identifier, basicType, newUsages[0], newUsages[1])
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {

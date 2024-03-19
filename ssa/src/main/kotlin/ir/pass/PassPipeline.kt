@@ -13,7 +13,7 @@ class PassPipeline private constructor(private val passFabrics: List<PassFabric>
 
         for (fabric in passFabrics) {
             try {
-                val pass = fabric.create(start)
+                val pass = fabric.create(current)
                 current = pass.run()
                 ctx.log(pass.name(), current)
             } catch (ex: Throwable) {

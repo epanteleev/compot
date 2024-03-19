@@ -31,8 +31,8 @@ class ZeroExtend private constructor(name: String, toType: UnsignedIntType, valu
         return make(identifier, type(), newUsages[0])
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {

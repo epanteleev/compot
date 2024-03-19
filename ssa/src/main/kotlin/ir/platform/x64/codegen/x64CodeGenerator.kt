@@ -40,7 +40,7 @@ private class CodeEmitter(private val data: FunctionData,
                           private val functionCounter: Int,
                           private val unit: CompilationUnit,
                           private val valueToRegister: RegisterAllocation,
-): Visitor {
+): Visitor<Unit> {
     private val orderedLocation = evaluateOrder(data.blocks)
     private val asm: Assembler = unit.mkFunction(data.prototype.name)
 

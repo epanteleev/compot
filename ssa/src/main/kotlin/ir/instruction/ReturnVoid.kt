@@ -17,8 +17,8 @@ class ReturnVoid private constructor(): Return(arrayOf()) {
         return this
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {

@@ -42,8 +42,8 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
         return make(identifier, type(), incoming, newUsages.clone())
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     fun update(newUsages: List<Value>, newIncoming: List<Block>): Phi {

@@ -52,8 +52,8 @@ class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block
         return make(newUsages[0], onTrue(), onFalse())
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {

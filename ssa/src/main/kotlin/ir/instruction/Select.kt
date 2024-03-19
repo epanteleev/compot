@@ -47,8 +47,8 @@ class Select private constructor(name: String, ty: PrimitiveType, cond: Value, o
         return make(identifier, type(), newUsages[0], newUsages[1], newUsages[2])
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {

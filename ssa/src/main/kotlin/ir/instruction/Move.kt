@@ -49,8 +49,8 @@ class Move private constructor(toValue: Generate, fromValue: Value):
         return fromValue().type().hashCode() xor toValue().type().hashCode()
     }
 
-    override fun visit(visitor: Visitor) {
-        visitor.visit(this)
+    override fun<T> visit(visitor: Visitor<T>): T {
+        return visitor.visit(this)
     }
 
     companion object {
