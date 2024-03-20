@@ -1,0 +1,42 @@
+extern void @printInt(i32)
+
+
+define i32 @sumLoop2(i32, i32)
+define u64 @main()
+
+define ptr @sumLoop2(%0:i32, %1:i32) {
+entry:	
+	br label L1
+L1:	; pred=entry, L8
+	%phi1x5 = phi i32 [0: entry, %8x1: L8]
+	%phi1x4 = phi i32 [0: entry, %phi4x4: L8]
+	%cmp1x2 = icmp lt i32 %phi1x5, %0
+	br u1 %cmp1x2 label %L2, label %L3 
+L2:	; pred=L1
+	br label L4
+L4:	; pred=L2, L7
+	%phi4x4 = phi i32 [%phi1x4: L2, %5x4: L7]
+	%phi4x3 = phi i32 [0: L2, %7x1: L7]
+	%cmp4x2 = icmp lt i32 %phi4x3, %1
+	br u1 %cmp4x2 label %L5, label %L6 
+L5:	; pred=L4
+	%5x2 = add i32 %phi4x4, %phi1x5
+	%5x4 = add i32 %5x2, %phi4x3
+	br label L7
+L7:	; pred=L5
+	%7x1 = add i32 %phi4x3, 1
+	br label L4
+L6:	; pred=L4
+	br label L8
+L8:	; pred=L6
+	%8x1 = add i32 %phi1x5, 1
+	br label L1
+L3:	; pred=L1
+	ret i32 %phi1x4
+}
+define ptr @main() {
+entry:	
+	%0x0 = call i32 @sumLoop2(3:i32, 5:i32)
+	call void @printInt(%0x0:i32)
+	ret u64 0
+}

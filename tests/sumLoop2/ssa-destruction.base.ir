@@ -1,0 +1,68 @@
+extern void @printInt(i32)
+
+
+define i32 @sumLoop2(i32, i32)
+define u64 @main()
+
+define ptr @sumLoop2(%0:i32, %1:i32) {
+entry:	
+[-4(%rbp)]	%gen0x5 = gen i32
+[-8(%rbp)]	%gen0x6 = gen i32
+[-12(%rbp)]	%gen0x7 = gen i32
+[-16(%rbp)]	%gen0x8 = gen i32
+[-20(%rbp)]	%gen0x9 = gen i32
+	move i32 %gen0x5 %0	kill: %0
+	move i32 %gen0x6 %1	kill: %1
+	move i32 %gen0x7 0
+	move i32 %gen0x8 0
+	br label L1
+L1:	; pred=entry, L8
+[r15]	%1x3 = copy i32 %gen0x8
+[r14]	%1x4 = copy i32 %gen0x5
+[r15]	%cmp1x2 = icmp lt i32 %1x3, %1x4	kill: %1x3,%1x4
+	br u1 %cmp1x2 label %L2, label %L3 	kill: %cmp1x2
+L2:	; pred=L1
+	move i32 %gen0x9 0
+	br label L4
+L4:	; pred=L2, L7
+[r15]	%4x3 = copy i32 %gen0x9
+[r14]	%4x4 = copy i32 %gen0x6
+[r15]	%cmp4x2 = icmp lt i32 %4x3, %4x4	kill: %4x3,%4x4
+	br u1 %cmp4x2 label %L5, label %L6 	kill: %cmp4x2
+L5:	; pred=L4
+[r15]	%5x5 = copy i32 %gen0x7
+[r14]	%5x6 = copy i32 %gen0x8
+[r14]	%5x2 = add i32 %5x5, %5x6	kill: %5x5,%5x6
+[r15]	%5x7 = copy i32 %gen0x9
+[r14]	%5x4 = add i32 %5x2, %5x7	kill: %5x2,%5x7
+	move i32 %gen0x7 %5x4	kill: %5x4
+	br label L7
+L7:	; pred=L5
+[r14]	%7x2 = copy i32 %gen0x9
+[r14]	%7x1 = add i32 %7x2, 1	kill: %7x2
+	move i32 %gen0x9 %7x1	kill: %7x1
+	br label L4
+L6:	; pred=L4
+	br label L8
+L8:	; pred=L6
+[r14]	%8x2 = copy i32 %gen0x8
+[r14]	%8x1 = add i32 %8x2, 1	kill: %8x2
+	move i32 %gen0x8 %8x1	kill: %8x1
+	br label L1
+L3:	; pred=L1
+[r15]	%3x1 = copy i32 %gen0x7
+	ret i32 %3x1	kill: %3x1
+}
+define ptr @main() {
+entry:	
+	downstackframe [i32 @sumLoop2(i32, i32)]
+[rdi]	%0x1 = copy i32 3
+[rsi]	%0x2 = copy i32 5
+[r15]	%0x0 = call i32 @sumLoop2(%0x1:i32, %0x2:i32)	kill: %0x1,%0x2
+	upstackframe [i32 @sumLoop2(i32, i32)]
+	downstackframe [void @printInt(i32)]
+[rdi]	%0x3 = copy i32 %0x0	kill: %0x0
+	call void @printInt(%0x3:i32)	kill: %0x3
+	upstackframe [void @printInt(i32)]
+	ret u64 0
+}
