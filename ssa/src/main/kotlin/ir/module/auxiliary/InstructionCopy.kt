@@ -172,7 +172,7 @@ class InstructionCopy(private val oldValuesToNew: Map<LocalValue, LocalValue>, p
     }
 
     override fun visit(phi: Phi): Instruction {
-        val newUsages   = phi.operands()
+        val newUsages   = phi.operands().clone()
         val newIncoming = phi.incoming().map { mapBlock(it) } //TODO
 
         return Phi.make(phi.name(), phi.type(), newIncoming, newUsages) //TODO
