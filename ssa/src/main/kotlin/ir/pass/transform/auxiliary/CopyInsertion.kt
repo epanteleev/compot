@@ -29,6 +29,11 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
     }
 
     private fun isolateArgumentValues() {
+        if (isLeafCall()) {
+            // Not necessary to insert copies
+            return
+        }
+
         val begin = cfg.blocks.begin()
         val mapArguments = hashMapOf<ArgumentValue, ValueInstruction>()
         val copies = mutableSetOf<Copy>()
@@ -92,6 +97,18 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
                 idx += insertCopies(bb, idx - 1, c)
             }
         }
+    }
+
+    private fun isLeafCall(): Boolean {
+        for (bb in cfg.blocks) {
+            for (inst in bb.instructions()) {
+                if (inst is Callable) {
+                    return false
+                }
+            }
+        }
+
+        return true
     }
 
     fun pass() {

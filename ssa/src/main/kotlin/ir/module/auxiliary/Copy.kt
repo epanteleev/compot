@@ -19,7 +19,6 @@ internal object Copy {
 private class CopyCFG(val oldBasicBlocks: BasicBlocks) {
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
     private val oldToNewBlock = setupNewBasicBlock()
-    private val oldCallableToNew = hashMapOf<Callable, Callable>()
 
     private fun setupNewBasicBlock(): Map<Block, Block> {
         val oldToNew = hashMapOf<Block, Block>()
@@ -67,48 +66,6 @@ private class CopyCFG(val oldBasicBlocks: BasicBlocks) {
 
     private fun newInst(inst: Instruction): Instruction {
         return InstructionCopy.copy(oldValuesToNew, oldToNewBlock, inst)
-//        when (inst) {
-//            is Phi -> {
-//                val targets = inst.incoming()
-//                val newTargets = targets.mapTo(arrayListOf()) { oldToNewBlock[it]!! }
-//                val newInst = inst.copy(inst.operands(), newTargets) /** put in old usages **/
-//
-//                oldValuesToNew[inst] = newInst
-//                return newInst
-//            }
-//            is TerminateInstruction -> {
-//                val newUsages = newUsages(inst)
-//                val targets = inst.targets()
-//                val newTargets = targets.map { oldToNewBlock[it]!! }.toTypedArray()
-//
-//                return inst.copy(newUsages, newTargets)
-//            }
-//            is ValueInstruction -> {
-//                val newUsages = newUsages(inst)
-//                val newInst = inst.copy(newUsages)
-//                oldValuesToNew[inst] = newInst as ValueInstruction
-//
-//                if (newInst is Callable) {
-//                    oldCallableToNew[inst as Callable] = newInst
-//                }
-//                return newInst
-//            }
-//            is Callable -> {
-//                val newUsages = newUsages(inst)
-//                val newInst = inst.copy(newUsages)
-//                oldCallableToNew[inst] = newInst as Callable
-//                return newInst
-//            }
-//            is AdjustStackFrame -> {
-//                val newUsages = oldCallableToNew[inst.call()]!!
-//                return inst.copy(newUsages)
-//            }
-//            else -> {
-//                val newUsages = newUsages(inst)
-//                val newInst = inst.copy(newUsages)
-//                return newInst
-//            }
-//        }
     }
 
     private fun updatePhis(arrayBlocks: BasicBlocks) {
