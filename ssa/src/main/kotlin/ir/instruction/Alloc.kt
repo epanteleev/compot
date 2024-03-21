@@ -1,6 +1,5 @@
 package ir.instruction
 
-import ir.Value
 import ir.types.*
 import ir.instruction.utils.Visitor
 

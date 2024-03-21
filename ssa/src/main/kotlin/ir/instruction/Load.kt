@@ -1,10 +1,9 @@
 package ir.instruction
 
 import ir.Value
+import ir.types.*
 import ir.instruction.utils.Visitor
-import ir.types.PointerType
-import ir.types.PrimitiveType
-import ir.types.Type
+
 
 class Load private constructor(name: String, private val loadedType: PrimitiveType, ptr: Value):
     ValueInstruction(name, Type.Ptr, arrayOf(ptr)) {

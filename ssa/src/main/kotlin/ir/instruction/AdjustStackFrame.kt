@@ -9,7 +9,7 @@ abstract class AdjustStackFrame(protected open val callable: Callable): Instruct
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as DownStackFrame
+        other as AdjustStackFrame
         return other.callable == callable
     }
 
