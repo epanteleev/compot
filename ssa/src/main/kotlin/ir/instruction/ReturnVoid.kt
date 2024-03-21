@@ -9,14 +9,6 @@ class ReturnVoid private constructor(): Return(arrayOf()) {
         return "ret void"
     }
 
-    override fun copy(usages: List<Value>, newTargets: Array<Block>): ReturnVoid {
-        return this
-    }
-
-    override fun copy(newUsages: List<Value>): ReturnVoid {
-        return this
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

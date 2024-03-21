@@ -23,14 +23,6 @@ class FpExtend private constructor(name: String, toType: FloatingPointType, valu
         return tp as FloatingPointType
     }
 
-    override fun copy(newUsages: List<Value>): FpExtend {
-        assert(newUsages.size == 1) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, type(), newUsages[0])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

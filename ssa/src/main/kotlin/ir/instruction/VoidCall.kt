@@ -41,14 +41,6 @@ class VoidCall private constructor(private val func: AnyFunctionPrototype, args:
         return builder.toString()
     }
 
-    override fun copy(newUsages: List<Value>): VoidCall {
-        assert(newUsages.size == operands.size) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(func, newUsages)
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

@@ -16,7 +16,4 @@ abstract class AdjustStackFrame(protected open val callable: Callable): Instruct
     override fun hashCode(): Int {
         return callable.hashCode()
     }
-
-    override fun copy(newUsages: List<Value>): Instruction = TODO()
-    abstract fun copy(callable: Callable): AdjustStackFrame
 }

@@ -32,14 +32,6 @@ class IndirectionVoidCall private constructor(pointer: Value, private val func: 
 
     override fun type(): Type = Type.Void
 
-    override fun copy(newUsages: List<Value>): IndirectionVoidCall {
-        assert(newUsages.size == operands.size) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(newUsages[0], func, newUsages.takeLast(newUsages.size - 1)) // TODO Creation new list
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

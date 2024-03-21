@@ -85,10 +85,6 @@ class ArithmeticBinary private constructor(name: String, tp: ArithmeticType, a: 
         return operands[1]
     }
 
-    override fun copy(newUsages: List<Value>): ArithmeticBinary {
-        return make(identifier, type(), newUsages[0], op, newUsages[1])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

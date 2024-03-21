@@ -13,8 +13,6 @@ abstract class TerminateInstruction(usages: Array<Value>, val targets: Array<Blo
         return targets.hashCode()
     }
 
-    abstract fun copy(usages: List<Value>, newTargets: Array<Block>): TerminateInstruction
-
     fun updateTargets(newTargets: Collection<Block>) {
         for ((i, v) in newTargets.withIndex()) {
             targets[i] = v

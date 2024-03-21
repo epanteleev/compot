@@ -39,14 +39,6 @@ class Select private constructor(name: String, ty: PrimitiveType, cond: Value, o
         return operands[2]
     }
 
-    override fun copy(newUsages: List<Value>): Select {
-        assert(newUsages.size == 3) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, type(), newUsages[0], newUsages[1], newUsages[2])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

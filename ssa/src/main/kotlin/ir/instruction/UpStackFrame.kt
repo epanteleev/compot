@@ -11,8 +11,4 @@ class UpStackFrame(callable: Callable): AdjustStackFrame(callable) {
     override fun dump(): String {
         return "upstackframe [${callable.shortName()}]"
     }
-
-    override fun copy(callable: Callable): AdjustStackFrame {
-        return UpStackFrame(callable)
-    }
 }

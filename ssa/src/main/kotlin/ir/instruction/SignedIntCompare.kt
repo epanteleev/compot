@@ -22,14 +22,6 @@ class SignedIntCompare private constructor(name: String, a: Value, private val p
         return opType as SignedIntType
     }
 
-    override fun copy(newUsages: List<Value>): SignedIntCompare {
-        assert(newUsages.size == 2) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, newUsages[0], predicate, newUsages[1])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

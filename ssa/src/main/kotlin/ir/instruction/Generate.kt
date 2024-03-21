@@ -15,10 +15,6 @@ class Generate private constructor(name: String, allocatedType: PrimitiveType):
         return tp as PrimitiveType
     }
 
-    override fun copy(newUsages: List<Value>): Generate {
-        return make(identifier, type())
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

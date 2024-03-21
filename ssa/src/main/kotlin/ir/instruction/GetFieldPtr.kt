@@ -32,17 +32,6 @@ class GetFieldPtr private constructor(name: String, val basicType: AggregateType
         return operands[1]
     }
 
-    override fun copy(newUsages: List<Value>): GetFieldPtr {
-        assert(newUsages.size == 2) {
-            "should be, but newUsages=$newUsages"
-        }
-        val constant = newUsages[1]
-        assert(constant is IntegerConstant) {
-            "should be, but constant=$constant"
-        }
-        return make(identifier, basicType, newUsages[0], constant as IntegerConstant)
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

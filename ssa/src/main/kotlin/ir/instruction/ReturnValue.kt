@@ -20,14 +20,6 @@ class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
         return operands[0]
     }
 
-    override fun copy(usages: List<Value>, newTargets: Array<Block>): Return {
-        return make(usages[0])
-    }
-
-    override fun copy(newUsages: List<Value>): Return {
-        return make(newUsages[0])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

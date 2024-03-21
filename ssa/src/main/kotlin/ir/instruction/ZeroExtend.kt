@@ -23,14 +23,6 @@ class ZeroExtend private constructor(name: String, toType: UnsignedIntType, valu
         return tp as UnsignedIntType
     }
 
-    override fun copy(newUsages: List<Value>): ZeroExtend {
-        assert(newUsages.size == 1) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, type(), newUsages[0])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

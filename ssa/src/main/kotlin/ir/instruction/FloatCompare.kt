@@ -81,14 +81,6 @@ class FloatCompare private constructor(name: String, a: Value, private val predi
         return first().type() as FloatingPointType
     }
 
-    override fun copy(newUsages: List<Value>): FloatCompare {
-        assert(newUsages.size == 2) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, newUsages[0], predicate, newUsages[1])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

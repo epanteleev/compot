@@ -29,14 +29,6 @@ class Move private constructor(toValue: Generate, fromValue: Value):
         return operands[0] as Generate
     }
 
-    override fun copy(newUsages: List<Value>): Move {
-        assert(newUsages.size == 2) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(newUsages[0] as Generate, newUsages[1])
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

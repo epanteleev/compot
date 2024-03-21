@@ -24,14 +24,6 @@ class Load private constructor(name: String, private val loadedType: PrimitiveTy
         return loadedType
     }
 
-    override fun copy(newUsages: List<Value>): Load {
-        assert(newUsages.size == 1) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, loadedType, newUsages[0])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

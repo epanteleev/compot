@@ -36,22 +36,6 @@ class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block
         return targets[1]
     }
 
-    override fun copy(usages: List<Value>, newTargets: Array<Block>): BranchCond {
-        assert(usages.size == 1) {
-            "should be, but newUsages=$usages"
-        }
-
-        return make(usages[0], newTargets[0], newTargets[1])
-    }
-
-    override fun copy(newUsages: List<Value>): Instruction {
-        assert(newUsages.size == 1) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(newUsages[0], onTrue(), onFalse())
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

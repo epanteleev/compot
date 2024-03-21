@@ -22,14 +22,6 @@ class UnsignedIntCompare private constructor(name: String, a: Value, private val
         return first().type() as UnsignedIntType
     }
 
-    override fun copy(newUsages: List<Value>): UnsignedIntCompare {
-        assert(newUsages.size == 2) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, newUsages[0], predicate, newUsages[1])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }
