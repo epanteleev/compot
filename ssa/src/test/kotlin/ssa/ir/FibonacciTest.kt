@@ -6,7 +6,9 @@ import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate
 import ir.module.Module
 import ir.module.block.BlockViewer
+import ir.module.block.Label
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.ana.LoopDetection
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2RegFabric
 import ir.types.Type
@@ -107,6 +109,18 @@ class FibonacciTest {
         assertTrue(domTree.dominates(BlockViewer(3), BlockViewer(6)))
         assertTrue(domTree.dominates(BlockViewer(3), BlockViewer(4)))
         assertTrue(domTree.dominates(BlockViewer(4), BlockViewer(5)))
+    }
+
+    @Test
+    fun testLoopDetection() {
+        val module = withBasicBlocks()
+        println(module)
+        val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
+        val cfg = module.findFunction(prototype)
+        val loopInfo = LoopDetection.evaluate(cfg)
+
+        assertEquals(1, loopInfo.headers().size)
+        assertTrue { loopInfo.isLoopHeader(BlockViewer(3)) }
     }
 
     @Test
