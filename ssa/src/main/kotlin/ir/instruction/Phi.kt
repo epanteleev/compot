@@ -34,10 +34,6 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
         }
     }
 
-    override fun copy(newUsages: List<Value>): Instruction {
-        return make(identifier, type(), incoming, newUsages.toTypedArray())
-    }
-
     fun copy(newUsages: Array<Value>, incoming: List<Block>): Phi {
         return make(identifier, type(), incoming, newUsages.clone())
     }

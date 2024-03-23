@@ -31,14 +31,6 @@ class GetElementPtr private constructor(name: String, val basicType: PrimitiveTy
         return operands[1]
     }
 
-    override fun copy(newUsages: List<Value>): GetElementPtr {
-        assert(newUsages.size == 2) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, basicType, newUsages[0], newUsages[1])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

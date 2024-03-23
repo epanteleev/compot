@@ -61,7 +61,6 @@ abstract class Instruction(protected val operands: Array<Value>) {
     }
 
     abstract fun<T> visit(visitor: Visitor<T>): T
-    abstract fun copy(newUsages: List<Value>): Instruction // TODO refactor
     abstract override fun equals(other: Any?): Boolean
     abstract override fun hashCode(): Int
     abstract fun dump(): String

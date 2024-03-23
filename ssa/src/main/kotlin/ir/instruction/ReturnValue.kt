@@ -24,10 +24,6 @@ class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
         return make(usages[0])
     }
 
-    override fun copy(newUsages: List<Value>): Return {
-        return make(newUsages[0])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

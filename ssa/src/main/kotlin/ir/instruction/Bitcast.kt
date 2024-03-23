@@ -23,14 +23,6 @@ class Bitcast private constructor(name: String, toType: Type, value: Value):
         return tp as PrimitiveType
     }
 
-    override fun copy(newUsages: List<Value>): Bitcast {
-        assert(newUsages.size == 1) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, type(), newUsages[0])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

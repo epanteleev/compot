@@ -27,14 +27,6 @@ class Store private constructor(pointer: Value, value: Value):
         return operands[1]
     }
 
-    override fun copy(newUsages: List<Value>): Store {
-        assert(newUsages.size == 2) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(newUsages[0], newUsages[1])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

@@ -25,14 +25,6 @@ class Copy private constructor(name: String, origin: Value):
         return operands[0]
     }
 
-    override fun copy(newUsages: List<Value>): Copy {
-        assert(newUsages.size == 1) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, newUsages[0])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

@@ -13,10 +13,6 @@ class ReturnVoid private constructor(): Return(arrayOf()) {
         return this
     }
 
-    override fun copy(newUsages: List<Value>): ReturnVoid {
-        return this
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

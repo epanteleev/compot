@@ -18,10 +18,6 @@ class Branch private constructor(target: Block): TerminateInstruction(arrayOf(),
         return targets[0]
     }
 
-    override fun copy(newUsages: List<Value>): Instruction {
-        return make(target())
-    }
-
     override fun copy(usages: List<Value>, newTargets: Array<Block>): Branch {
         return make(newTargets[0])
     }

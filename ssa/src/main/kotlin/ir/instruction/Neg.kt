@@ -24,14 +24,6 @@ class Neg private constructor(name: String, tp: ArithmeticType, value: Value):
         return operands[0]
     }
 
-    override fun copy(newUsages: List<Value>): Neg {
-        assert(newUsages.size == 1) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, type(), newUsages[0])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

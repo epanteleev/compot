@@ -15,10 +15,6 @@ class Alloc private constructor(name: String, val allocatedType: Type):
         return tp as PointerType
     }
 
-    override fun copy(newUsages: List<Value>): Alloc {
-        return make(identifier, allocatedType)
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

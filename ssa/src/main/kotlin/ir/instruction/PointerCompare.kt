@@ -15,14 +15,6 @@ class PointerCompare private constructor(name: String, a: Value, private val pre
 
     override fun operandsType(): PointerType = Type.Ptr
 
-    override fun copy(newUsages: List<Value>): PointerCompare {
-        assert(newUsages.size == 2) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, newUsages[0], predicate, newUsages[1])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

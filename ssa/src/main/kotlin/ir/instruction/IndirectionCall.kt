@@ -30,14 +30,6 @@ class IndirectionCall private constructor(name: String, pointer: Value, private 
         return func
     }
 
-    override fun copy(newUsages: List<Value>): IndirectionCall {
-        assert(newUsages.size == operands.size) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, newUsages[0], func, newUsages.takeLast(newUsages.size - 2)) // TODO Creation new list
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

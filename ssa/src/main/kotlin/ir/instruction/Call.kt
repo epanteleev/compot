@@ -21,14 +21,6 @@ class Call private constructor(name: String, private val func: AnyFunctionProtot
         return func
     }
 
-    override fun copy(newUsages: List<Value>): Call {
-        assert(newUsages.size == operands.size) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, func, newUsages)
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

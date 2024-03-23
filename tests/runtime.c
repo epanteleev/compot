@@ -54,6 +54,13 @@ void printIntArray(int* array, int size) {
 	printf("\n");
 }
 
+void printByteArray(unsigned char* array, int size) {
+	for (int i = 0; i < size; i++) {
+		printf("%u ", array[i]);
+	}
+	printf("\n");
+}
+
 void printByteArrayWithSpaces(unsigned char* array, int size) {
         for (int i = 0; i < size; i++) {
                 printf("%d ", array[i]);

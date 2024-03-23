@@ -23,14 +23,6 @@ class Truncate private constructor(name: String, toType: IntegerType, value: Val
         return tp as IntegerType
     }
 
-    override fun copy(newUsages: List<Value>): Truncate {
-        assert(newUsages.size == 1) {
-            "should be, but newUsages=$newUsages"
-        }
-
-        return make(identifier, type(), newUsages[0])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }
