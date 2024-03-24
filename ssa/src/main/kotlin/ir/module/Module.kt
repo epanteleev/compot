@@ -1,7 +1,7 @@
 package ir.module
 
 import ir.*
-import ir.module.auxiliary.Copy
+import ir.module.auxiliary.CopyCFG
 import ir.module.auxiliary.DumpModule
 import ir.types.StructType
 
@@ -38,7 +38,7 @@ data class SSAModule(override val functions: List<FunctionData>,
                      override val types: List<StructType>):
     Module(functions, externFunctions, globals, types) {
     override fun copy(): Module {
-        return SSAModule(functions.map { Copy.copy(it) }, externFunctions, globals, types)
+        return SSAModule(functions.map { CopyCFG.copy(it) }, externFunctions, globals, types)
     }
 
     override fun toString(): String {

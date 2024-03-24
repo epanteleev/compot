@@ -5,7 +5,7 @@ import ir.types.*
 import ir.instruction.utils.Visitor
 
 
-class Bitcast private constructor(name: String, toType: Type, value: Value):
+class Bitcast private constructor(name: String, toType: NonTrivialType, value: Value):
     ValueInstruction(name, toType, arrayOf(value)) {
     override fun dump(): String {
         return "%$identifier = $NAME ${value().type()} ${value()} to ${type()}"

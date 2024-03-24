@@ -7,7 +7,6 @@ import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
-import ir.pass.transform.Mem2Reg
 import ir.pass.transform.Mem2RegFabric
 import ir.pass.transform.utils.JoinPointSet
 import ir.platform.x64.regalloc.LinearScan

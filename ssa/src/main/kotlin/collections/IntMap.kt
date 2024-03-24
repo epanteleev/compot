@@ -76,12 +76,11 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
         if (idx >= valuesArray.size || idx < 0) {
             return null
         }
-
-        val ret = valuesArray[idx]
-        assert(ret == null || keysArray[idx] == key) {
-            "expect, but idx=$idx, key=$key"
+        if (keysArray[idx] != key) {
+            return null
         }
-        return ret
+
+        return valuesArray[idx]
     }
 
     override fun containsValue(value: V): Boolean {
@@ -90,8 +89,7 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
 
     override fun containsKey(key: K): Boolean {
         val idx = closure(key)
-        assert(0 <= idx && keysArray[idx] == key) { "expect, but idx=$idx, key=$key" }
-        return idx < valuesArray.size
+        return 0 < idx && idx < keysArray.size && keysArray[idx] == key
     }
 
     private data class IntMapEntry<K, V>(override val key: K, override var value: V?) : Map.Entry<K, V?>

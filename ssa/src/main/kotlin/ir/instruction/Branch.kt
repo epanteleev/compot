@@ -1,6 +1,5 @@
 package ir.instruction
 
-import ir.Value
 import ir.module.block.Block
 import ir.instruction.utils.Visitor
 

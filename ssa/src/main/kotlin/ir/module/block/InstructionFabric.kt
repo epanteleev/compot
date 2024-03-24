@@ -24,7 +24,7 @@ interface InstructionFabric {
     fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>)
     fun branch(target: Block)
     fun branchCond(value: Value, onTrue: Block, onFalse: Block)
-    fun alloc(ty: Type): Alloc
+    fun alloc(ty: NonTrivialType): Alloc
     fun ret(value: Value)
     fun retVoid()
     fun gep(source: Value, ty: PrimitiveType, index: Value): GetElementPtr

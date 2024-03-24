@@ -1,6 +1,7 @@
 package ir.pass
 
 import ir.module.Module
+import ir.pass.ana.VerifySSA
 import kotlin.system.exitProcess
 import ir.pass.transform.Mem2RegFabric
 import ir.pass.transform.SSADestructionFabric
@@ -14,6 +15,7 @@ class PassPipeline private constructor(private val passFabrics: List<PassFabric>
             try {
                 val pass = fabric.create(current)
                 current = pass.run()
+                VerifySSA.run(current)
                 ctx.log(pass.name(), current)
             } catch (ex: Throwable) {
                 println(current.toString())

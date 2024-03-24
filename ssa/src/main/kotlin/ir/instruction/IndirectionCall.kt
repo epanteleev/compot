@@ -2,13 +2,13 @@ package ir.instruction
 
 import ir.Value
 import ir.types.Type
-import ir.AnyFunctionPrototype
+import ir.types.NonTrivialType
 import ir.IndirectFunctionPrototype
 import ir.instruction.utils.Visitor
 
 
 class IndirectionCall private constructor(name: String, pointer: Value, private val func: IndirectFunctionPrototype, args: List<Value>):
-    ValueInstruction(name, func.returnType(), (args + pointer).toTypedArray()),
+    ValueInstruction(name, func.returnType() as NonTrivialType, (args + pointer).toTypedArray()),
     Callable {
     init {
         assert(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }

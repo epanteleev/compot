@@ -110,9 +110,11 @@ private class DumpCSSAModule(module: CSSAModule) : DumpModule<CSSAModule>(module
     private var regAlloc: RegisterAllocation? = null
     private var liveness: LiveIntervals? = null
     private var currentBlock: Block? = null
-    private val killedInBlock = arrayListOf<LocalValue>()
+    private var currentFunctionData: FunctionData? = null
+
 
     override fun dumpFunctionData(functionData: FunctionData) {
+        currentFunctionData = functionData
         regAlloc = module.regAlloc(functionData)
         liveness = module.liveInfo(functionData)
         super.dumpFunctionData(functionData)
@@ -121,11 +123,7 @@ private class DumpCSSAModule(module: CSSAModule) : DumpModule<CSSAModule>(module
     override fun dumpBlock(bb: Block) {
         currentBlock = bb
         super.dumpBlock(bb)
-        if (killedInBlock.isNotEmpty()) {
-            builder.append("\tkilled in bb: ")
-            killedInBlock.joinTo(builder, separator = ",") { it.toString() }
-            killedInBlock.clear()
-        }
+        killedInBlock(bb)
     }
 
     override fun dumpInstruction(instruction: Instruction, idx: Int) {
@@ -146,14 +144,35 @@ private class DumpCSSAModule(module: CSSAModule) : DumpModule<CSSAModule>(module
             currentBlock as Block
             if (end.thisPlace(currentBlock!!, idx)) {
                 killed.add(use)
-            } else if (end.thisPlace(currentBlock!!, currentBlock!!.size)) {
-                killedInBlock.add(use)
             }
         }
 
         if (killed.isNotEmpty()) {
             builder.append("\tkill: ")
             killed.joinTo(builder, separator = ",") { it.toString() }
+        }
+    }
+
+    private fun killedInBlock(bb: Block) {
+        val killedInBlock = arrayListOf<LocalValue>()
+
+        for (current in currentFunctionData!!.blocks) {
+            for (inst in current.instructions()) {
+                if (inst !is ValueInstruction) {
+                    continue
+                }
+
+                val end = liveness!![inst].end()
+                if (end.thisPlace(bb, bb.size)) {
+                    killedInBlock.add(inst)
+                }
+            }
+        }
+
+        if (killedInBlock.isNotEmpty()) {
+            builder.append("\t; killed: ")
+            killedInBlock.joinTo(builder, separator = ", ") { it.toString() }
+            builder.append('\n')
         }
     }
 }

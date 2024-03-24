@@ -2,14 +2,18 @@ package ir.instruction
 
 import ir.Value
 import ir.instruction.utils.Visitor
-import ir.module.block.Block
+import ir.types.NonTrivialType
 import ir.types.Type
-import ir.types.UndefinedType
+import ir.types.AnyType
 import ir.types.VoidType
 
 class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
     override fun dump(): String {
         return "ret ${value().type()} ${value()}"
+    }
+
+    fun type(): NonTrivialType {
+        return value().type() as NonTrivialType
     }
 
     fun value(): Value {
@@ -35,7 +39,7 @@ class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
         }
 
         private fun isAppropriateType(retType: Type): Boolean {
-            return retType !is VoidType && retType !is UndefinedType
+            return retType !is VoidType && retType !is AnyType
         }
 
         fun isCorrect(retValue: ReturnValue): Boolean {

@@ -3,7 +3,7 @@ package ir
 import ir.types.*
 
 interface Value {
-    fun type(): Type
+    fun type(): NonTrivialType
 
     companion object {
         val UNDEF: Value = UndefinedValue()
@@ -14,12 +14,12 @@ interface LocalValue: Value {
     fun name(): String
 }
 
-data class ArgumentValue(private val index: Int, private val tp: Type): LocalValue {
+data class ArgumentValue(private val index: Int, private val tp: NonTrivialType): LocalValue {
     override fun name(): String {
         return "arg$index"
     }
 
-    override fun type(): Type {
+    override fun type(): NonTrivialType {
         return tp
     }
 
@@ -159,7 +159,7 @@ class UndefinedValue: Constant, LocalValue {
         return toString()
     }
 
-    override fun type(): UndefinedType {
+    override fun type(): AnyType {
         return Type.UNDEF
     }
 

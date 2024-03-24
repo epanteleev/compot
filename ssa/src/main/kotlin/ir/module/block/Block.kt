@@ -1,5 +1,6 @@
 package ir.module.block
 
+import collections.intMapOf
 import ir.*
 import ir.Value
 import ir.types.*
@@ -253,7 +254,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         add(BranchCond.make(value, onTrue, onFalse))
     }
 
-    override fun alloc(ty: Type): Alloc {
+    override fun alloc(ty: NonTrivialType): Alloc {
         return withOutput { it: Int -> Alloc.make(n(it), ty) }
     }
 

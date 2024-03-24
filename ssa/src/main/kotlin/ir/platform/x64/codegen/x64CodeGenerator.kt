@@ -106,8 +106,8 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(returnValue: ReturnValue) {
         val returnType = data.prototype.returnType()
-        val retInstType = returnValue.value().type()
-        val size = returnType.size()
+        val retInstType = returnValue.type()
+        val size = retInstType.size()
 
         assert(returnType == retInstType) { //Todo fix VerifySSA
             "should be the same, but: function.return.type=$returnType, ret.type=$retInstType"
@@ -158,13 +158,18 @@ private class CodeEmitter(private val data: FunctionData,
         if (retType == Type.Void) {
             return
         }
-        val size = call.type().size()
+
         when (retType) {
             is IntegerType, is PointerType, is BooleanType -> {
+                retType as NonTrivialType
+                val size = retType.size()
+                call as ValueInstruction
                 asm.movOld(size, rax, valueToRegister.operand(call))
             }
 
             is FloatingPointType -> {
+                val size = retType.size()
+                call as ValueInstruction
                 when (val op = valueToRegister.operand(call)) {
                     is Address -> asm.movf(size, fpRet, op)
                     is XmmRegister -> asm.movf(size, fpRet, op)
@@ -492,7 +497,7 @@ private class CodeEmitter(private val data: FunctionData,
     private fun evaluateOrder(blocks: BasicBlocks): Map<Callable, OrderedLocation> {
         val orderedLocation = identityHashMapOf<Callable, OrderedLocation>()
         var order = 0
-        for (bb in blocks.linearScanOrder()) {
+        for (bb in blocks.linearScanOrder(blocks.loopInfo())) {
             for ((idx, call) in bb.instructions().withIndex()) {
                 if (call is Callable) {
                     orderedLocation[call] = OrderedLocation(bb, idx, order)

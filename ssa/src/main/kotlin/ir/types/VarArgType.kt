@@ -1,11 +1,10 @@
 package ir.types
 
-class BooleanType : PrimitiveType {
-    override fun toString(): String = "u1"
-    override fun size(): Int = 1
+class VarArgType: TrivialType {
+    override fun toString(): String = "..."
 
     override fun hashCode(): Int {
-        return javaClass.hashCode()
+        return super.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {

@@ -63,15 +63,16 @@ class LiveRangeImpl internal constructor(creation: OrderedLocation, end: Ordered
 
         worklist.clear()
         visited.clear()
+
         end = if (currentKillerBlock == location.block) {
             if (end >= location) {
-                return
+                end
+            } else {
+                location
             }
-
-            location
         } else {
             OrderedLocation(currentKillerBlock,
-                currentKillerBlock.instructions().size - 1,
+                currentKillerBlock.instructions().size,
                 bbOrdering[currentKillerBlock]!!)
         }
     }
