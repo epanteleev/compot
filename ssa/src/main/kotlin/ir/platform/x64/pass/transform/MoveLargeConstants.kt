@@ -66,7 +66,7 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
 
                 constants.add(constant)
 
-                val loadedConstant = bb.insert(inst) {
+                val loadedConstant = bb.insert(idx) {
                     it.load(operand.type() as PrimitiveType, constant)
                 }
                 idx += 1

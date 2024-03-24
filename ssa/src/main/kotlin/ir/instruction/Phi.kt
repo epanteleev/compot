@@ -24,9 +24,7 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
         return tp as PrimitiveType
     }
 
-    fun incoming(): List<Block> {
-        return incoming
-    }
+    fun incoming(): List<Block> = incoming
 
     fun forAllIncoming(closure: (Block, Value) -> Unit) {
         incoming().forEachWith(operands().asIterable()) { bb, value ->

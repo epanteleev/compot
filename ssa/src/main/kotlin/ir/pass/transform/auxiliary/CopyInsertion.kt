@@ -18,7 +18,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
                 "Flow graph has critical edge from $incoming to $bb"
             }
 
-            val copy = incoming.insert(incoming.last()) {
+            val copy = incoming.insert(incoming.instructions().size - 1) {
                 it.copy(operand)
             }
 
