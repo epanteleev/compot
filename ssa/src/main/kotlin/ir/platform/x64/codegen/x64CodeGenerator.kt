@@ -492,7 +492,7 @@ private class CodeEmitter(private val data: FunctionData,
     private fun evaluateOrder(blocks: BasicBlocks): Map<Callable, OrderedLocation> {
         val orderedLocation = identityHashMapOf<Callable, OrderedLocation>()
         var order = 0
-        for (bb in blocks.linearScanOrder()) {
+        for (bb in blocks.linearScanOrder(blocks.loopInfo())) {
             for ((idx, call) in bb.instructions().withIndex()) {
                 if (call is Callable) {
                     orderedLocation[call] = OrderedLocation(bb, idx, order)

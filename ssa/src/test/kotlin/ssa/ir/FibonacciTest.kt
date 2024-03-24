@@ -8,12 +8,14 @@ import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.block.Label
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.ana.LoopBlockData
 import ir.pass.ana.LoopDetection
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2RegFabric
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class FibonacciTest {
@@ -117,10 +119,14 @@ class FibonacciTest {
         println(module)
         val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
         val cfg = module.findFunction(prototype)
-        val loopInfo = LoopDetection.evaluate(cfg)
+        val loopInfo = LoopDetection.evaluate(cfg.blocks)
 
         assertEquals(1, loopInfo.headers().size)
-        assertTrue { loopInfo.isLoopHeader(BlockViewer(3)) }
+
+        val loopData = loopInfo.get(BlockViewer(3))
+        assertNotNull(loopData)
+        assertEquals(BlockViewer(6), loopData.exit() as Label)
+        assertEquals(BlockViewer(4), loopData.enter() as Label)
     }
 
     @Test

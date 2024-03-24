@@ -7,6 +7,8 @@ import ir.module.auxiliary.Copy
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.iterator.*
+import ir.pass.ana.LoopDetection
+import ir.pass.ana.LoopInfo
 import ir.utils.DefUseInfo
 
 
@@ -50,8 +52,12 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
         return BfsTraversalIterator(begin(), size())
     }
 
-    fun linearScanOrder(): BasicBlocksIterator {
-        return bfsTraversal()
+    fun linearScanOrder(loopInfo: LoopInfo): BasicBlocksIterator {
+        return LinearScanOrderIterator(begin(), size(), loopInfo)
+    }
+
+    fun loopInfo(): LoopInfo {
+        return LoopDetection.evaluate(this)
     }
 
     fun dominatorTree(): DominatorTree {
