@@ -18,9 +18,6 @@ class IntSet<E>(private val bitmask: BooleanArray, val values: Array<E>, val clo
     }
 
     override fun contains(element: E): Boolean {
-        assert(values.contains(element)) {
-            "cannot find element=$element"
-        }
         val idx = closure(element)
         return bitmask[idx] && values[idx] == element
     }
