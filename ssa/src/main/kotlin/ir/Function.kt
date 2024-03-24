@@ -2,6 +2,7 @@ package ir
 
 import ir.types.Type
 
+
 abstract class AnyFunctionPrototype(val name: String,
                                     private val returnType: Type,
                                     protected val arguments: List<Type>) {

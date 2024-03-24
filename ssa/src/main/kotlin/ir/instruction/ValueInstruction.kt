@@ -1,10 +1,11 @@
 package ir.instruction
 
 import ir.*
+import ir.types.NonTrivialType
 import ir.types.Type
 
 
-abstract class ValueInstruction(protected val identifier: String, protected val tp: Type, operands: Array<Value>):
+abstract class ValueInstruction(protected val identifier: String, protected val tp: NonTrivialType, operands: Array<Value>):
     Instruction(operands),
     LocalValue {
     private var usedIn: MutableList<Instruction> = arrayListOf()
@@ -29,9 +30,7 @@ abstract class ValueInstruction(protected val identifier: String, protected val 
         return "%$identifier"
     }
 
-    override fun type(): Type {
-        return tp
-    }
+    override fun type(): NonTrivialType = tp
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -1,5 +1,5 @@
 package ir.types
 
-interface AggregateType : Type {
+interface AggregateType : NonTrivialType {
     fun offset(index: Int): Int
 }

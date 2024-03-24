@@ -1,10 +1,6 @@
 package ir.types
 
-class VoidType : Type {
-    override fun size(): Int {
-        throw TypeErrorException("cannot do it for void type")
-    }
-
+class VoidType : TrivialType {
     override fun toString(): String {
         return "void"
     }

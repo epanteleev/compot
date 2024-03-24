@@ -34,10 +34,6 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
         }
     }
 
-    fun copy(newUsages: Array<Value>, incoming: List<Block>): Phi {
-        return make(identifier, type(), incoming, newUsages.clone())
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }

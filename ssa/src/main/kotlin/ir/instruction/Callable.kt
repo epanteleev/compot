@@ -5,12 +5,14 @@ import ir.types.Type
 import ir.AnyFunctionPrototype
 
 
-interface Callable: Value {
+interface Callable{
     fun arguments(): Array<Value>
     fun prototype(): AnyFunctionPrototype
     fun shortName(): String {
         return prototype().shortName()
     }
+
+    fun type(): Type
 
     companion object {
         internal fun isAppropriateTypes(func: AnyFunctionPrototype, args: Array<Value>): Boolean {

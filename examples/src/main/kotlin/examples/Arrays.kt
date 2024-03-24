@@ -4,7 +4,6 @@ import ir.FunctionPrototype
 import ir.I32Value
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
-import ir.pass.transform.Mem2Reg
 import ir.pass.transform.Mem2RegFabric
 import ir.types.ArrayType
 import ir.types.Type

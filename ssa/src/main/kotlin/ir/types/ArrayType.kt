@@ -1,7 +1,7 @@
 package ir.types
 
 
-data class ArrayType(private val type: Type, val size: Int) : AggregateType {
+data class ArrayType(private val type: NonTrivialType, val size: Int) : AggregateType {
     fun elementType(): Type = type
 
     override fun size(): Int {

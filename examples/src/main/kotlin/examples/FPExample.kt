@@ -2,7 +2,6 @@ package examples
 
 import ir.*
 import ir.types.Type
-import ir.pass.transform.SSADestruction
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric

@@ -8,7 +8,6 @@ import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.block.Label
 import ir.module.builder.impl.ModuleBuilder
-import ir.pass.ana.LoopBlockData
 import ir.pass.ana.LoopDetection
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2RegFabric

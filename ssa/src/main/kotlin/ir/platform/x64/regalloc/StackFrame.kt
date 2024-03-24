@@ -6,6 +6,7 @@ import asm.x64.Address
 import asm.x64.GPRegister.*
 import ir.instruction.Alloc
 import ir.instruction.ValueInstruction
+import ir.types.NonTrivialType
 
 
 data class StackFrameException(override val message: String): Exception(message)
@@ -27,7 +28,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
     private var frameSize: Int = 0
     private val freeStackSlots = linkedMapOf<Int, Address>()
 
-    private fun getTypeSize(ty: Type): Int {
+    private fun getTypeSize(ty: NonTrivialType): Int {
         return if (ty != Type.U1) {
             ty.size()
         } else {

@@ -3,8 +3,6 @@ package ir.types
 data class TypeErrorException(override val message: String) : Exception(message)
 
 interface Type {
-    fun size(): Int
-
     companion object {
         val U1 = BooleanType()
 
@@ -24,6 +22,7 @@ interface Type {
         val Ptr = PointerType()
 
         val Void = VoidType()
-        val UNDEF = UndefinedType()
+        val UNDEF = AnyType()
+        val VarArgType = VarArgType()
     }
 }

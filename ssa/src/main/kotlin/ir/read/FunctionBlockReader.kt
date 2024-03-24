@@ -32,6 +32,9 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
     private fun parseStackAlloc(resultName: LocalValueToken) {
         val typeToken = iterator.expect<TypeToken>("loaded type")
         val type = typeToken.type(moduleBuilder)
+        if (type !is NonTrivialType) {
+            throw TypeErrorException("expected non-trivial type, but found type=${type}")
+        }
 
         builder.alloc(resultName, type)
     }

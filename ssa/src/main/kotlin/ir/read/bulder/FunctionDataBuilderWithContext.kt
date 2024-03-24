@@ -243,7 +243,7 @@ class FunctionDataBuilderWithContext private constructor(
         bb.branchCond(value, onTrue, onFalse)
     }
 
-    fun alloc(name: LocalValueToken, ty: Type): Alloc {
+    fun alloc(name: LocalValueToken, ty: NonTrivialType): Alloc {
         return memorize(name, bb.alloc(ty))
     }
 
@@ -342,6 +342,10 @@ class FunctionDataBuilderWithContext private constructor(
             fun handleArguments(argumentTypeTokens: List<Type>): List<ArgumentValue> {
                 val argumentValues = arrayListOf<ArgumentValue>()
                 for ((idx, arg) in argumentTypeTokens.withIndex()) {
+                    if (arg !is NonTrivialType) {
+                        continue
+                    }
+
                     argumentValues.add(ArgumentValue(idx, arg))
                 }
 

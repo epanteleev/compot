@@ -1,7 +1,7 @@
 package ir.types
 
 
-data class StructType(val name: String, val fields: List<Type>): AggregateType {
+data class StructType(val name: String, val fields: List<NonTrivialType>): AggregateType {
     override fun offset(index: Int): Int {
         var current = 0
         for (i in 0 until index) {

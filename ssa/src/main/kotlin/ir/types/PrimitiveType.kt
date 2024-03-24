@@ -1,3 +1,3 @@
 package ir.types
 
-interface PrimitiveType : Type
+interface PrimitiveType : NonTrivialType

@@ -48,7 +48,17 @@ class ModuleReader(string: String) {
 
         } while (true)
 
-        moduleBuilder.addStructType(StructType(struct.name, fieldTypes.map { it.type(moduleBuilder) }))
+        val resolvedFieldTypes = arrayListOf<NonTrivialType>()
+        for (f in fieldTypes) {
+            val resolved = f.type(moduleBuilder)
+            if (resolved !is NonTrivialType) {
+                throw ParseErrorException("")
+            }
+
+            resolvedFieldTypes.add(resolved)
+        }
+
+        moduleBuilder.addStructType(StructType(struct.name, resolvedFieldTypes))
     }
 
     private fun parseGlobals(name: SymbolValue) {

@@ -116,7 +116,12 @@ abstract class AggregateTypeToken(override val line: Int, override val pos: Int)
 
 data class ArrayTypeToken(val size: Long, val type: TypeToken, override val line: Int, override val pos: Int) : AggregateTypeToken(line, pos) {
     override fun type(resolver: TypeResolver): ArrayType {
-        return ArrayType(type.type(resolver), size.toInt())
+        val tp = type.type(resolver)
+        if (tp !is NonTrivialType) {
+            throw TypeErrorException("expect non-trivial type as array element, but type=${type}")
+        }
+
+        return ArrayType(tp, size.toInt())
     }
 
     override fun message(): String {

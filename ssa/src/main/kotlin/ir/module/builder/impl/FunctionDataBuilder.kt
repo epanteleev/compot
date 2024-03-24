@@ -113,7 +113,7 @@ class FunctionDataBuilder private constructor(
         branchCond(value, blocks.findBlock(onTrue), blocks.findBlock(onFalse))
     }
 
-    override fun alloc(ty: Type): Alloc {
+    override fun alloc(ty: NonTrivialType): Alloc {
         return bb.alloc(ty)
     }
 
@@ -186,8 +186,13 @@ class FunctionDataBuilder private constructor(
         }
 
         fun create(name: String, returnType: Type, argumentTypes: List<Type>): FunctionDataBuilder {
-            val argumentValues = argumentTypes.withIndex().mapTo(arrayListOf()) {
-                ArgumentValue(it.index, it.value)
+            val argumentValues = arrayListOf<ArgumentValue>()
+            for ((idx, arg) in argumentTypes.withIndex()) {
+                if (arg !is NonTrivialType) {
+                    continue
+                }
+
+                argumentValues.add(ArgumentValue(idx, arg))
             }
 
             return create(name, returnType, argumentTypes, argumentValues)

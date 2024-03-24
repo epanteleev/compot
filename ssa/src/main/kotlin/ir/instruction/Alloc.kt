@@ -1,11 +1,10 @@
 package ir.instruction
 
-import ir.Value
 import ir.types.*
 import ir.instruction.utils.Visitor
 
 
-class Alloc private constructor(name: String, val allocatedType: Type):
+class Alloc private constructor(name: String, val allocatedType: NonTrivialType):
     ValueInstruction(name, Type.Ptr, arrayOf()) {
     override fun dump(): String {
         return "%$identifier = $NAME $allocatedType"
@@ -22,7 +21,7 @@ class Alloc private constructor(name: String, val allocatedType: Type):
     companion object {
         const val NAME = "alloc"
 
-        fun make(name: String, ty: Type): Alloc {
+        fun make(name: String, ty: NonTrivialType): Alloc {
             require(isAppropriateType(ty)) {
                 "should not be $ty"
             }
@@ -31,7 +30,7 @@ class Alloc private constructor(name: String, val allocatedType: Type):
         }
 
         private fun isAppropriateType(ty: Type): Boolean {
-            return ty !is VoidType && ty !is UndefinedType
+            return ty !is VoidType && ty !is AnyType
         }
     }
 }

@@ -35,18 +35,16 @@ class VoidCall private constructor(private val func: AnyFunctionPrototype, args:
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("call ${type()} @${func.name}(")
+        builder.append("call ${Type.Void} @${func.name}(")
         operands.joinTo(builder) { "$it:${it.type()}"}
         builder.append(")")
         return builder.toString()
     }
 
+    override fun type(): Type = Type.Void
+
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
-    }
-
-    override fun type(): Type {
-        return Type.Void
     }
 
     companion object {

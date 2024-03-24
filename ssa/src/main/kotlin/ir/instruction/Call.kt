@@ -4,14 +4,12 @@ import ir.Value
 import ir.types.Type
 import ir.AnyFunctionPrototype
 import ir.instruction.utils.Visitor
+import ir.types.NonTrivialType
 
 
 class Call private constructor(name: String, private val func: AnyFunctionPrototype, args: Array<Value>):
-    ValueInstruction(name, func.returnType(), args),
+    ValueInstruction(name, func.returnType() as NonTrivialType, args),
     Callable {
-    init {
-        assert(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
-    }
 
     override fun arguments(): Array<Value> {
         return operands
@@ -35,6 +33,8 @@ class Call private constructor(name: String, private val func: AnyFunctionProtot
 
     companion object {
         fun make(name: String, func: AnyFunctionPrototype, args: List<Value>): Call {
+            assert(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
+
             val argsArray = args.toTypedArray()
             require(Callable.isAppropriateTypes(func, argsArray)) {
                 args.joinToString(prefix = "inconsistent types in $name, prototype='${func.shortName()}', ")
