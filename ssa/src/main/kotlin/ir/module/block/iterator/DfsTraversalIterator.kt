@@ -148,7 +148,7 @@ class LinearScanOrderIterator(start: Block, countOfBlocks: Int, private val loop
             visited[bb.index] = true
 
             // Special case for loops
-            val loopInfo = loopInfo.get(bb)
+            val loopInfo = loopInfo[bb]
             if (loopInfo != null) {
                 stack.add(loopInfo.exit())
                 stack.add(loopInfo.enter())

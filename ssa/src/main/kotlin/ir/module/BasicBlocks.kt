@@ -3,7 +3,7 @@ package ir.module
 import ir.dominance.DominatorTree
 import ir.dominance.PostDominatorTree
 import ir.instruction.Return
-import ir.module.auxiliary.Copy
+import ir.module.auxiliary.CopyCFG
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.iterator.*
@@ -81,7 +81,7 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
     }
 
     fun copy(): BasicBlocks {
-        return Copy.copy(this)
+        return CopyCFG.copy(this)
     }
 
     companion object {

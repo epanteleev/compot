@@ -10,7 +10,8 @@ import ir.utils.OrderedLocation
 class Liveness private constructor(val data: FunctionData) {
     private val liveness = linkedMapOf<LocalValue, LiveRangeImpl>()
     private val bbOrdering = hashMapOf<Block, Int>()
-    private val linearScanOrder = data.blocks.linearScanOrder(data.blocks.loopInfo()).order()
+    private val loopInfo = data.blocks.loopInfo()
+    private val linearScanOrder = data.blocks.linearScanOrder(loopInfo).order()
 
 
     init {

@@ -48,7 +48,7 @@ data class CSSAModule(override val functions: List<FunctionData>,
     }
 
     override fun copy(): Module {
-        return SSAModule(functions.map { Copy.copy(it) }, externFunctions, globals, types)
+        return SSAModule(functions.map { CopyCFG.copy(it) }, externFunctions, globals, types)
     }
 
     override fun toString(): String {

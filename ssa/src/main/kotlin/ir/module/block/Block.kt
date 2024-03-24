@@ -1,5 +1,6 @@
 package ir.module.block
 
+import collections.intMapOf
 import ir.*
 import ir.Value
 import ir.types.*

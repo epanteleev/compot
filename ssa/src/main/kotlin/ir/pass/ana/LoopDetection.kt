@@ -24,10 +24,7 @@ data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private va
 }
 
 data class LoopInfo(private val loopHeaders: Map<Block, LoopBlockData>) {
-    fun get(bb: Label): LoopBlockData? {
-        return loopHeaders[bb]
-    }
-
+    operator fun get(bb: Label): LoopBlockData? = loopHeaders[bb]
     fun headers(): Set<Block> = loopHeaders.keys
 }
 
@@ -72,7 +69,13 @@ class LoopDetection private constructor(val blocks: BasicBlocks, val dominatorTr
                 continue
             }
 
+            if (!dominatorTree.dominates(header, bb)) {
+                // Isn't in the loop. Skip
+                continue
+            }
+
             if (!loopBody.add(bb)) {
+                // Already inserted. Skip
                 continue
             }
             worklist.addAll(bb.predecessors())

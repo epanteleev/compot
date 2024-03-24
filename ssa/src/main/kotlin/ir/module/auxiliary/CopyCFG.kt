@@ -1,13 +1,75 @@
 package ir.module.auxiliary
 
+import collections.intMapOf
 import ir.*
 import ir.instruction.*
 import ir.instruction.Copy
-import ir.module.block.Block
 import ir.instruction.utils.Visitor
+import ir.module.BasicBlocks
+import ir.module.FunctionData
+import ir.module.block.Block
 
 
-class InstructionCopy(private val oldValuesToNew: Map<LocalValue, LocalValue>, private val oldToNewBlock: Map<Block, Block>): Visitor<Instruction> {
+class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : Visitor<Instruction> {
+    private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
+    private val oldToNewBlock = setupNewBasicBlock()
+
+    private fun setupNewBasicBlock(): Map<Block, Block> {
+        val oldToNew = intMapOf<Block, Block>(oldBasicBlocks.size()) { it.index }
+
+        for (old in oldBasicBlocks.blocks()) {
+            oldToNew[old] = Block.empty(old.index, old.maxValueIndex())
+        }
+
+        return oldToNew
+    }
+
+    fun copy(): BasicBlocks {
+        val arrayBlocks = arrayListOf<Block>()
+        for (bb in oldBasicBlocks.preorder()) {
+            arrayBlocks.add(oldToNewBlock[bb]!!)
+            copy(bb)
+        }
+
+        val newBB = BasicBlocks.create(arrayBlocks)
+        updatePhis(newBB)
+
+        return newBB
+    }
+
+    private fun copy(thisBlock: Block) {
+        val newBB = oldToNewBlock[thisBlock]!!
+        for (inst in thisBlock.instructions()) {
+            newBB.add(newInst(inst))
+        }
+    }
+
+    private fun newInst(inst: Instruction): Instruction {
+        val newInstruction = inst.visit(this)
+        if (inst is ValueInstruction) {
+            oldValuesToNew[inst] = newInstruction as ValueInstruction
+        }
+
+        return newInstruction
+    }
+
+    private fun updatePhis(arrayBlocks: BasicBlocks) {
+        for (bb in arrayBlocks) {
+            for (inst in bb.instructions()) {
+                if (inst !is Phi) {
+                    continue
+                }
+
+                val usages = newUsages(inst)
+                inst.update(usages, inst.incoming())
+            }
+        }
+    }
+
+    private fun newUsages(inst: Instruction): List<Value> {
+        return inst.operands().mapTo(arrayListOf()) { mapUsage<Value>(it)}
+    }
+
     private inline fun<reified T> mapUsage(old: Value): T {
         val newValue = if (old is ArgumentValue || old is Constant || old is GlobalSymbol) {
             return old as T
@@ -226,14 +288,12 @@ class InstructionCopy(private val oldValuesToNew: Map<LocalValue, LocalValue>, p
     }
 
     companion object {
-        fun copy(instructionMap: MutableMap<LocalValue, LocalValue>, oldToNewBlock: Map<Block, Block>, instruction: Instruction): Instruction {
-            val visitor = InstructionCopy(instructionMap, oldToNewBlock)
-            val newInstruction = instruction.visit(visitor)
-            if (instruction is ValueInstruction) {
-                instructionMap[instruction] = newInstruction as ValueInstruction
-            }
+        fun copy(old: FunctionData): FunctionData {
+            return FunctionData.create(old.prototype, copy(old.blocks), old.arguments())
+        }
 
-            return newInstruction
+        fun copy(oldBasicBlocks: BasicBlocks): BasicBlocks {
+            return CopyCFG(oldBasicBlocks).copy()
         }
     }
 }
