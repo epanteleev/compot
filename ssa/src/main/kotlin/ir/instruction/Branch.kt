@@ -18,10 +18,6 @@ class Branch private constructor(target: Block): TerminateInstruction(arrayOf(),
         return targets[0]
     }
 
-    override fun copy(usages: List<Value>, newTargets: Array<Block>): Branch {
-        return make(newTargets[0])
-    }
-
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }
