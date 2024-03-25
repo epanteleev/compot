@@ -1,10 +1,9 @@
 package ir.platform.x64.regalloc.liveness
 
-import ir.module.block.Block
 import ir.utils.OrderedLocation
 
 
-open class LiveRange internal constructor(protected val creation: OrderedLocation, protected var end: OrderedLocation) {
+open class LiveRange internal constructor(private val creation: OrderedLocation, protected var end: OrderedLocation) {
     fun begin(): OrderedLocation {
         return creation
     }
@@ -25,7 +24,7 @@ open class LiveRange internal constructor(protected val creation: OrderedLocatio
 }
 
 class LiveRangeImpl internal constructor(creation: OrderedLocation, end: OrderedLocation): LiveRange(creation, end) {
-    internal fun registerUsage(location: OrderedLocation, bbOrdering: Map<Block, Int>) {
+    internal fun registerUsage(location: OrderedLocation) {
         end = if (end >= location) {
             end
         } else {

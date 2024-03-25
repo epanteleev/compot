@@ -1,18 +1,15 @@
 package ir.platform.x64.regalloc.liveness
 
 import ir.LocalValue
-import ir.instruction.Instruction
 import ir.module.FunctionData
-import ir.module.block.Block
 import ir.utils.OrderedLocation
+import ir.instruction.Instruction
 
 
 class Liveness private constructor(val data: FunctionData) {
     private val liveness = linkedMapOf<LocalValue, LiveRangeImpl>()
-    private val bbOrdering = hashMapOf<Block, Int>()
     private val loopInfo = data.blocks.loopInfo()
     private val linearScanOrder = data.blocks.linearScanOrder(loopInfo).order()
-
 
     init {
         setupArguments()
@@ -41,7 +38,6 @@ class Liveness private constructor(val data: FunctionData) {
                 val begin = OrderedLocation(bb, idx, ordering)
                 liveness[inst] = LiveRangeImpl(begin, begin)
             }
-            bbOrdering[bb] = ordering
         }
     }
 
@@ -55,7 +51,7 @@ class Liveness private constructor(val data: FunctionData) {
                 val liveRange = liveness[usage]
                     ?: throw LiveIntervalsException("in $usage")
 
-                liveRange.registerUsage(instructionLocation, bbOrdering)
+                liveRange.registerUsage(instructionLocation)
             }
         }
 
