@@ -2,8 +2,8 @@ package ir.platform.x64.regalloc
 
 import ir.LocalValue
 import asm.x64.Operand
-import ir.instruction.Callable
 import ir.module.FunctionData
+import ir.instruction.Callable
 import ir.platform.x64.regalloc.liveness.LiveIntervals
 
 
