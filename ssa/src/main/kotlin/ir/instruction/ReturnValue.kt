@@ -13,7 +13,7 @@ class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
     }
 
     fun type(): NonTrivialType {
-        return value().type() as NonTrivialType
+        return value().type()
     }
 
     fun value(): Value {

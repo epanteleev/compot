@@ -145,10 +145,10 @@ private class CodeEmitter(private val data: FunctionData,
         NegCodegen(neg.type(), asm)(result, operand)
     }
 
-    override fun visit(neg: Not) {
-        val operand = valueToRegister.operand(neg.operand())
-        val result  = valueToRegister.operand(neg)
-        NotCodegen(neg.type(), asm)(result, operand)
+    override fun visit(not: Not) {
+        val operand = valueToRegister.operand(not.operand())
+        val result  = valueToRegister.operand(not)
+        NotCodegen(not.type(), asm)(result, operand)
     }
 
     private fun emitCall(call: Callable) {
