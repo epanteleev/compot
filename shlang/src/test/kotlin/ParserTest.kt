@@ -3,7 +3,7 @@ import parser.ProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.ParserException
 import parser.nodes.Node
-import tokenizer.Tokenizer
+import tokenizer.CTokenizer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -11,7 +11,7 @@ import kotlin.test.assertEquals
 class ParserTest {
     @Test
     fun testAssign() {
-        val tokens = Tokenizer.apply("t = 3 + 5;")
+        val tokens = CTokenizer.apply("t = 3 + 5;")
         val parser = ProgramParser(tokens)
 
         val expr = parser.assignment_expression()
@@ -20,7 +20,7 @@ class ParserTest {
 
     @Test
     fun testAssignBinary() {
-        val tokens = Tokenizer.apply("t *= 5")
+        val tokens = CTokenizer.apply("t *= 5")
         val parser = ProgramParser(tokens)
 
         val expr = parser.assignment_expression()
@@ -29,7 +29,7 @@ class ParserTest {
 
     @Test
     fun testConditional() {
-        val tokens = Tokenizer.apply("v = 0? a : b;")
+        val tokens = CTokenizer.apply("v = 0? a : b;")
         val parser = ProgramParser(tokens)
 
         val expr = parser.assignment_expression()
@@ -38,7 +38,7 @@ class ParserTest {
 
     @Test
     fun testDeclaration() {
-        val tokens = Tokenizer.apply("int t = 3 + 5;")
+        val tokens = CTokenizer.apply("int t = 3 + 5;")
         val parser = ProgramParser(tokens)
 
         val expr = parser.declaration() as Node
@@ -48,7 +48,7 @@ class ParserTest {
 
     @Test
     fun testDeclaration1() {
-        val tokens = Tokenizer.apply("int bb, *aa;")
+        val tokens = CTokenizer.apply("int bb, *aa;")
         val parser = ProgramParser(tokens)
 
         val expr = parser.declaration() as Node
@@ -57,7 +57,7 @@ class ParserTest {
 
     @Test
     fun testDeclaration2() {
-        val tokens = Tokenizer.apply("int* bb;")
+        val tokens = CTokenizer.apply("int* bb;")
         val parser = ProgramParser(tokens)
 
         val expr = parser.declaration() as Node
@@ -67,13 +67,13 @@ class ParserTest {
 
     @Test
     fun test_expr_stmt() {
-        val tokens = Tokenizer.apply("t = 3 + 5")
+        val tokens = CTokenizer.apply("t = 3 + 5")
         assertThrows<ParserException> { ProgramParser(tokens).expr_stmt() }
     }
 
     @Test
     fun test_for_stmt() {
-        val tokens = Tokenizer.apply("for (a = 0; a < 5; a++) {  }")
+        val tokens = CTokenizer.apply("for (a = 0; a < 5; a++) {  }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -82,7 +82,7 @@ class ParserTest {
 
     @Test
     fun test_for_stmt1() {
-        val tokens = Tokenizer.apply("for (int a = 0; a < 5; a++) {  }")
+        val tokens = CTokenizer.apply("for (int a = 0; a < 5; a++) {  }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -91,7 +91,7 @@ class ParserTest {
 
     @Test
     fun test_for_stmt2() {
-        val tokens = Tokenizer.apply("for (; a < 5; a++) {  }")
+        val tokens = CTokenizer.apply("for (; a < 5; a++) {  }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -100,7 +100,7 @@ class ParserTest {
 
     @Test
     fun test_for_stmt3() {
-        val tokens = Tokenizer.apply("for (; a < 5;) {  }")
+        val tokens = CTokenizer.apply("for (; a < 5;) {  }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -109,7 +109,7 @@ class ParserTest {
 
     @Test
     fun test_for_stmt4() {
-        val tokens = Tokenizer.apply("for (;;) {  }")
+        val tokens = CTokenizer.apply("for (;;) {  }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -118,7 +118,7 @@ class ParserTest {
 
     @Test
     fun test_for_stmt_with_body() {
-        val tokens = Tokenizer.apply("for (int a = 0; a < 5; a++) { char tt = a + 4; }")
+        val tokens = CTokenizer.apply("for (int a = 0; a < 5; a++) { char tt = a + 4; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -127,7 +127,7 @@ class ParserTest {
 
     @Test
     fun test_for_stmt_with_body1() {
-        val tokens = Tokenizer.apply("for (int a = 0; a < 5; a++) { char tt = a + 4; int rt; }")
+        val tokens = CTokenizer.apply("for (int a = 0; a < 5; a++) { char tt = a + 4; int rt; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -138,7 +138,7 @@ class ParserTest {
 
     @Test
     fun test_if_stmt() {
-        val tokens = Tokenizer.apply("if (a < 5) { char tt = a + 4; int rt; }")
+        val tokens = CTokenizer.apply("if (a < 5) { char tt = a + 4; int rt; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -149,7 +149,7 @@ class ParserTest {
 
     @Test
     fun test_if_stmt1() {
-        val tokens = Tokenizer.apply("if (a < 5) { char tt = a + 4; int rt; } else { int rt; }")
+        val tokens = CTokenizer.apply("if (a < 5) { char tt = a + 4; int rt; } else { int rt; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -160,7 +160,7 @@ class ParserTest {
 
     @Test
     fun test_if_stmt2() {
-        val tokens = Tokenizer.apply("if (a < 5) { char tt = a + 4; int rt; } else if (a < 6) { int rt; }")
+        val tokens = CTokenizer.apply("if (a < 5) { char tt = a + 4; int rt; } else if (a < 6) { int rt; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -171,7 +171,7 @@ class ParserTest {
 
     @Test
     fun test_if_stmt3() {
-        val tokens = Tokenizer.apply("if (a < 5) { char tt = a + 4; int rt; } else if (a < 6) { int rt; } else { int rt; }")
+        val tokens = CTokenizer.apply("if (a < 5) { char tt = a + 4; int rt; } else if (a < 6) { int rt; } else { int rt; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -182,7 +182,7 @@ class ParserTest {
 
     @Test
     fun test_while_stmt() {
-        val tokens = Tokenizer.apply("while (a < 5) { char tt = a + 4; int rt; }")
+        val tokens = CTokenizer.apply("while (a < 5) { char tt = a + 4; int rt; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -192,7 +192,7 @@ class ParserTest {
 
     @Test
     fun test_do_while_stmt() {
-        val tokens = Tokenizer.apply("do { char tt = a + 4; int rt; } while (a < 5);")
+        val tokens = CTokenizer.apply("do { char tt = a + 4; int rt; } while (a < 5);")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -202,7 +202,7 @@ class ParserTest {
 
     @Test
     fun test_goto_stmt() {
-        val tokens = Tokenizer.apply("goto L;")
+        val tokens = CTokenizer.apply("goto L;")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -212,7 +212,7 @@ class ParserTest {
 
     @Test
     fun test_switch_stmt() {
-        val tokens = Tokenizer.apply("switch (a) { case 1: break; case 2: break; default: break; }")
+        val tokens = CTokenizer.apply("switch (a) { case 1: break; case 2: break; default: break; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -222,7 +222,7 @@ class ParserTest {
 
     @Test
     fun test_continue_stmt() {
-        val tokens = Tokenizer.apply("while (a < 5) { char tt = a + 4; int rt; continue;}")
+        val tokens = CTokenizer.apply("while (a < 5) { char tt = a + 4; int rt; continue;}")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -232,7 +232,7 @@ class ParserTest {
 
     @Test
     fun test_break_stmt() {
-        val tokens = Tokenizer.apply("while (a < 5) { char tt = a + 4; int rt; break;}")
+        val tokens = CTokenizer.apply("while (a < 5) { char tt = a + 4; int rt; break;}")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -242,7 +242,7 @@ class ParserTest {
 
     @Test
     fun test_return_stmt() {
-        val tokens = Tokenizer.apply("while (a < 5) { char tt = a + 4; int rt; return 5;}")
+        val tokens = CTokenizer.apply("while (a < 5) { char tt = a + 4; int rt; return 5;}")
         val parser = ProgramParser(tokens)
 
         val expr = parser.stmt()
@@ -252,62 +252,62 @@ class ParserTest {
 
     @Test
     fun test_function_decl() {
-        val tokens = Tokenizer.apply("int main() { return 5; }")
+        val tokens = CTokenizer.apply("int main() { return 5; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int main () {return 5;}"
+        val expected = "int main() {return 5;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_function_decl1() {
-        val tokens = Tokenizer.apply("int main(void) { return 5; }")
+        val tokens = CTokenizer.apply("int main(void) { return 5; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int main (void ) {return 5;}"
+        val expected = "int main(void ) {return 5;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_function_decl2() {
-        val tokens = Tokenizer.apply("int main(int a) { return 5; }")
+        val tokens = CTokenizer.apply("int main(int a) { return 5; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int main (int a) {return 5;}"
+        val expected = "int main(int a) {return 5;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_function_decl3() {
-        val tokens = Tokenizer.apply("int main(int a, int b) { return 5; }")
+        val tokens = CTokenizer.apply("int main(int a, int b) { return 5; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
-        val expected = "int main (int a, int b) {return 5;}"
+        val expected = "int main(int a, int b) {return 5;}"
         println(expr)
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_function_decl4() {
-        val tokens = Tokenizer.apply("void fun(int(fn)(void) ) { }")
+        val tokens = CTokenizer.apply("void fun(int(fn)(void) ) { }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "void fun (int (fn) (void )) {}"
+        val expected = "void fun(int (fn)(void )) {}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_declaration_specifiers0(): Unit {
-        val tokens = Tokenizer.apply("int")
+        val tokens = CTokenizer.apply("int")
         val parser = ProgramParser(tokens)
 
         val expr = parser.declaration_specifiers() as Node
@@ -316,7 +316,7 @@ class ParserTest {
 
     @Test
     fun test_declaration_specifiers1(): Unit {
-        val tokens = Tokenizer.apply("volatile int restrict")
+        val tokens = CTokenizer.apply("volatile int restrict")
         val parser = ProgramParser(tokens)
 
         val expr = parser.declaration_specifiers() as Node
@@ -325,40 +325,40 @@ class ParserTest {
 
     @Test
     fun test_function_decl5() {
-        val tokens = Tokenizer.apply("void fun(int(*fn)(void)) { }")
+        val tokens = CTokenizer.apply("void fun(int(*fn)(void)) { }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "void fun (int (*fn) (void )) {}"
+        val expected = "void fun(int (*fn)(void )) {}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_direct_declarator4() {
-        val tokens = Tokenizer.apply("arr[idx]")
+        val tokens = CTokenizer.apply("arr[idx]")
         val parser = ProgramParser(tokens)
 
         val expr = parser.declarator() as Node
         println(expr)
-        val expected = "arr [idx]"
+        val expected = "arr[idx]"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_direct_declarator5() {
-        val tokens = Tokenizer.apply("arr[idx + 1]")
+        val tokens = CTokenizer.apply("arr[idx + 1]")
         val parser = ProgramParser(tokens)
 
         val expr = parser.declarator() as Node
         println(expr)
-        val expected = "arr [idx + 1]"
+        val expected = "arr[idx + 1]"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_direct_abstract_declarator1() {
-        val tokens = Tokenizer.apply("(int a)")
+        val tokens = CTokenizer.apply("(int a)")
         val parser = ProgramParser(tokens)
 
         val expr = parser.abstract_declarator() as Node
@@ -369,7 +369,7 @@ class ParserTest {
 
     @Test
     fun test_direct_abstract_declarator2() {
-        val tokens = Tokenizer.apply("(int a, int b)")
+        val tokens = CTokenizer.apply("(int a, int b)")
         val parser = ProgramParser(tokens)
 
         val expr = parser.abstract_declarator() as Node
@@ -380,7 +380,7 @@ class ParserTest {
 
     @Test
     fun test_direct_abstract_declarator3() {
-        val tokens = Tokenizer.apply("(int a)[23]")
+        val tokens = CTokenizer.apply("(int a)[23]")
         val parser = ProgramParser(tokens)
 
         val expr = parser.abstract_declarator() as Node
@@ -391,18 +391,18 @@ class ParserTest {
 
     @Test
     fun test_function_pointer() {
-        val tokens = Tokenizer.apply("int(fn)(void);")
+        val tokens = CTokenizer.apply("int(fn)(void);")
         val parser = ProgramParser(tokens)
 
         val expr = parser.declaration() as Node
         println(expr)
-        val expected = "int (fn) (void );"
+        val expected = "int (fn)(void );"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_init_declarator0() {
-        val tokens = Tokenizer.apply("a = 5")
+        val tokens = CTokenizer.apply("a = 5")
         val parser = ProgramParser(tokens)
 
         val expr = parser.init_declarator() as Node
@@ -413,7 +413,7 @@ class ParserTest {
 
     @Test
     fun test_init_declarator1() {
-        val tokens = Tokenizer.apply("*a = 5")
+        val tokens = CTokenizer.apply("*a = 5")
         val parser = ProgramParser(tokens)
 
         val expr = parser.init_declarator() as Node
@@ -424,84 +424,84 @@ class ParserTest {
 
     @Test
     fun test_array_access() {
-        val tokens = Tokenizer.apply("int fun() { arr[5]; }")
+        val tokens = CTokenizer.apply("int fun() { arr[5]; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int fun () {arr[5]}"
+        val expected = "int fun() {arr[5]}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_array_access1() {
-        val tokens = Tokenizer.apply("int fun() { arr[5][6]; }")
+        val tokens = CTokenizer.apply("int fun() { arr[5][6]; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int fun () {arr[5][6]}"
+        val expected = "int fun() {arr[5][6]}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_array_access2() {
-        val tokens = Tokenizer.apply("int fun() { arr[5][6][7]; }")
+        val tokens = CTokenizer.apply("int fun() { arr[5][6][7]; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int fun () {arr[5][6][7]}"
+        val expected = "int fun() {arr[5][6][7]}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_array_initializer_list() {
-        val tokens = Tokenizer.apply("int fun() { int arr[1] = {9}; }")
+        val tokens = CTokenizer.apply("int fun() { int arr[1] = {9}; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int fun () {int arr [1] = {9};}"
+        val expected = "int fun() {int arr[1] = {9};}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_array_initializer_list1() {
-        val tokens = Tokenizer.apply("int fun() { int arr[2] = {9, 8}; }")
+        val tokens = CTokenizer.apply("int fun() { int arr[2] = {9, 8}; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int fun () {int arr [2] = {9 , 8};}"
+        val expected = "int fun() {int arr[2] = {9 , 8};}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_array_initializer_list2() {
-        val tokens = Tokenizer.apply("int fun() { int arr[2][3] = {9, 8, 7, 6, 5, 4}; }")
+        val tokens = CTokenizer.apply("int fun() { int arr[2][3] = {9, 8, 7, 6, 5, 4}; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int fun () {int arr [2] [3] = {9 , 8 , 7 , 6 , 5 , 4};}"
+        val expected = "int fun() {int arr[2][3] = {9 , 8 , 7 , 6 , 5 , 4};}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_array_initializer_list3() {
-        val tokens = Tokenizer.apply("int fun() { int arr[] = {9}; }")
+        val tokens = CTokenizer.apply("int fun() { int arr[] = {9}; }")
         val parser = ProgramParser(tokens)
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int fun () {int arr [] = {9};}"
+        val expected = "int fun() {int arr[] = {9};}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test_cast() {
-        val tokens = Tokenizer.apply("(int) a")
+        val tokens = CTokenizer.apply("(int) a")
         val parser = ProgramParser(tokens)
 
         val expr = parser.cast_expression()
@@ -512,51 +512,51 @@ class ParserTest {
 
     @Test
     fun test_external_declaration() {
-        val tokens = Tokenizer.apply("int fun() { return 6; };")
+        val tokens = CTokenizer.apply("int fun() { return 6; };")
         val parser = ProgramParser(tokens)
 
         val expr = parser.external_declaration() as Node
         println(expr)
-        val expected = "int fun () {return 6;}"
+        val expected = "int fun() {return 6;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
     fun test2() {
-        val tokens = Tokenizer.apply("int main () { return 6; }")
+        val tokens = CTokenizer.apply("int main () { return 6; }")
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
-        assertEquals("int main () {return 6;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("int main() {return 6;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun test3() {
-        val tokens = Tokenizer.apply("extern int val; int main() { return 6; }")
+        val tokens = CTokenizer.apply("extern int val; int main() { return 6; }")
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
         println(LineAgnosticAstPrinter.print(program))
-        assertEquals("extern int val; int main () {return 6;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("extern int val; int main() {return 6;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun test4() {
-        val tokens = Tokenizer.apply("const int val = 50; int main() { return 6; }")
+        val tokens = CTokenizer.apply("const int val = 50; int main() { return 6; }")
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
-        assertEquals("const int val = 50; int main () {return 6;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("const int val = 50; int main() {return 6;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun test5() {
-        val tokens = Tokenizer.apply("int sumAndMul(int a, int b) { return 6 * a + b; }")
+        val tokens = CTokenizer.apply("int sumAndMul(int a, int b) { return 6 * a + b; }")
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
-        assertEquals("int sumAndMul (int a, int b) {return 6 * a + b;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("int sumAndMul(int a, int b) {return 6 * a + b;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
@@ -569,12 +569,12 @@ class ParserTest {
             
             int sum(struct point a) { return a.a + a.b; }
         """.trimIndent()
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("struct point {int a; int b;} ; int sum (struct point a) {return a.a + a.b;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("struct point {int a; int b;} ; int sum(struct point a) {return a.a + a.b;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
@@ -586,12 +586,12 @@ class ParserTest {
             }
         """.trimIndent()
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("int sum (int a) {int r = a + 56; return a + 4 + r;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("int sum(int a) {int r = a + 56; return a + 4 + r;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
@@ -600,7 +600,7 @@ class ParserTest {
             typedef struct point { int t; } P;
         """.trimIndent()
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
@@ -611,31 +611,31 @@ class ParserTest {
     fun floatTest() {
         val input = "int sum(float a) { return a + 4.97; }"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("int sum (float a) {return a + 4.97;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("int sum(float a) {return a + 4.97;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun helloWorldTest() {
         val input = "const char* str = \"Hello world\";\n void main() { printf(str); }"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("const char *str = \"Hello world\"; void main () {printf(str)}", LineAgnosticAstPrinter.print(program))
+        assertEquals("const char *str = \"Hello world\"; void main() {printf(str)}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun pointer3() {
         val input = "double***value;"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
@@ -647,7 +647,7 @@ class ParserTest {
     fun pointer() {
         val input = "double* value = NULL; "
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
@@ -658,124 +658,124 @@ class ParserTest {
     fun arrayDecl() {
         val input = "int arr[100];"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
-        assertEquals("int arr [100];", LineAgnosticAstPrinter.print(program))
+        assertEquals("int arr[100];", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun arrayDecl1() {
         val input = "int arr[100][20];"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
-        assertEquals("int arr [100] [20];", LineAgnosticAstPrinter.print(program))
+        assertEquals("int arr[100][20];", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun arrayAccess() {
         val input = "void fn() { arr[1] = 90; }"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("void fn () {arr[1] = 90;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("void fn() {arr[1] = 90;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun arrayAccess2() {
         val input = "void fn() { arr[1][2] = 90; }"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
-        assertEquals("void fn () {arr[1][2] = 90;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("void fn() {arr[1][2] = 90;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun lvaluePointer() {
         val input = "void fn() { int* arr; *arr = 90; }"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("void fn () {int *arr; *arr = 90;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("void fn() {int *arr; *arr = 90;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun loopFor() {
         val input = "void fn() { for(int i = 0; i < 10; i++) {} }"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("void fn () {for(int i = 0;i < 10;i++) {}}", LineAgnosticAstPrinter.print(program))
+        assertEquals("void fn() {for(int i = 0;i < 10;i++) {}}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun loopWhile() {
         val input = "void fn() { while(true) {} }"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("void fn () {while(true) {}}", LineAgnosticAstPrinter.print(program))
+        assertEquals("void fn() {while(true) {}}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun loopWhile1() {
         val input = "void fn(int t) { while(t < 100) { t++; } }"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("void fn (int t) {while(t < 100) {t++}}", LineAgnosticAstPrinter.print(program))
+        assertEquals("void fn(int t) {while(t < 100) {t++}}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun goto1() {
         val input = "int square(int num) { goto L; L: return num * num; }"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("int square (int num) {goto L; L: return num * num;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("int square(int num) {goto L; L: return num * num;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun goto2() {
         val input = "int square(int num) { goto L; int t; L: return num * num; }"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("int square (int num) {goto L; int t; L: return num * num;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("int square(int num) {goto L; int t; L: return num * num;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun enum() {
         val input = "enum Animal { CAT, DOG };"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
@@ -787,7 +787,7 @@ class ParserTest {
     fun union() {
         val input = "union { int x; float fp; };"
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
@@ -799,66 +799,66 @@ class ParserTest {
     fun functionDecl() {
         val input = "int main(int** args, int argv); "
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("int main (int **args, int argv);", LineAgnosticAstPrinter.print(program))
+        assertEquals("int main(int **args, int argv);", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun functionDecl1() {
         val input = "int main(); "
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("int main ();", LineAgnosticAstPrinter.print(program))
+        assertEquals("int main();", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun functionDecl2() {
         val input = "int main(void); "
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("int main (void );", LineAgnosticAstPrinter.print(program))
+        assertEquals("int main(void );", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun functionDecl3() {
         val input = "int main(int a); "
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
-        assertEquals("int main (int a);", LineAgnosticAstPrinter.print(program))
+        assertEquals("int main(int a);", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun functionDeclVararg() {
         val input = "int printf(char* fmt, ...); "
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("int printf (char *fmt, ...);", LineAgnosticAstPrinter.print(program))
+        assertEquals("int printf(char *fmt, ...);", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun typedef() {
         val input = "typedef int INT; "
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
@@ -876,33 +876,33 @@ class ParserTest {
             
             int sum(struct point* a) { return a->a + a->b; }
         """.trimIndent()
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
         println(program)
-        assertEquals("struct point {int a; int b;} ; int sum (struct point *a) {return a->a + a->b;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("struct point {int a; int b;} ; int sum(struct point *a) {return a->a + a->b;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun test_sizeof() {
         val input = "int main(int a) { return sizeof(int); } "
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
-        assertEquals("int main (int a) {return sizeof(int);}", LineAgnosticAstPrinter.print(program))
+        assertEquals("int main(int a) {return sizeof(int);}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
     fun test_sizeof1() {
         val input = "int main(int a) { return sizeof 90; } "
 
-        val tokens = Tokenizer.apply(input)
+        val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)
 
         val program = parser.program()
-        assertEquals("int main (int a) {return sizeof(90);}", LineAgnosticAstPrinter.print(program))
+        assertEquals("int main(int a) {return sizeof(90);}", LineAgnosticAstPrinter.print(program))
     }
 }

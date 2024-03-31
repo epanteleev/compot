@@ -5,7 +5,7 @@ import tokenizer.Specifiers.isOperator2
 import tokenizer.Specifiers.isOperator3
 
 
-class Tokenizer private constructor(private val filename: String, private val reader: StringReader) {
+class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
     private var out: Token? = null
     private var first: AnyToken = Eof
 
@@ -146,7 +146,7 @@ class Tokenizer private constructor(private val filename: String, private val re
 
     companion object {
         fun apply(file: StringReader): AnyToken {
-            return Tokenizer("<no-name>", file).doTokenize()
+            return CTokenizer("<no-name>", file).doTokenize()
         }
 
         fun apply(data: String): AnyToken {

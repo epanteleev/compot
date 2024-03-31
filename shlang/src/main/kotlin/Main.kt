@@ -1,7 +1,18 @@
-fun main(args: Array<String>) {
-    println("Hello World!")
 
-    // Try adding program arguments via Run/Debug configuration.
-    // Learn more about running applications: https://www.jetbrains.com/help/idea/running-applications.html.
-    println("Program arguments: ${args.joinToString()}")
+import gen.IRGen
+import parser.ProgramParser
+import tokenizer.CTokenizer
+
+
+fun main(args: Array<String>) {
+    val src = """
+        int main() {
+            return 0;
+        }
+    """.trimIndent()
+
+    val tokens = CTokenizer.apply(src)
+    val program = ProgramParser(tokens).program()
+    println(program)
+    println(IRGen.apply(program))
 }

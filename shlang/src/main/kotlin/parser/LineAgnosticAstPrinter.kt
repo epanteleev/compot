@@ -4,7 +4,7 @@ import parser.nodes.*
 import tokenizer.Ident
 
 
-class LineAgnosticAstPrinter: NodeVisitor {
+class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     private val buffer = StringBuilder()
 
     fun <T> joinTo(list: Iterable<T>, separator: CharSequence = ", ", prefix: CharSequence = "", transform: ((T) -> Unit)) {
@@ -73,13 +73,11 @@ class LineAgnosticAstPrinter: NodeVisitor {
     }
 
     override fun visit(declarator: Declarator) {
-        if (declarator.pointers is Pointers) {
-            declarator.pointers.accept(this)
-        }
-
-        joinTo(declarator.declspec, " ") {
+        joinTo(declarator.pointers, "") {
             it.accept(this)
         }
+
+        declarator.declspec.accept(this)
     }
 
     override fun visit(declaration: Declaration) {
@@ -90,12 +88,6 @@ class LineAgnosticAstPrinter: NodeVisitor {
         }
 
         buffer.append(';')
-    }
-
-    override fun visit(pointers: Pointers) {
-        for (pointer in pointers.pointers) {
-            pointer.accept(this)
-        }
     }
 
     override fun visit(returnStatement: ReturnStatement) {
@@ -197,7 +189,7 @@ class LineAgnosticAstPrinter: NodeVisitor {
     }
 
     override fun visit(functionNode: FunctionNode) {
-        functionNode.type.accept(this)
+        functionNode.specifier.accept(this)
         buffer.append(' ')
         functionNode.declarator.accept(this)
         buffer.append(" {")
@@ -398,7 +390,7 @@ class LineAgnosticAstPrinter: NodeVisitor {
     }
 
     override fun visit(typeNode: TypeNode) {
-       typeNode.node.accept(this)
+        buffer.append(typeNode.ident.str())
     }
 
     override fun visit(enumSpecifier: EnumSpecifier) {
@@ -439,8 +431,14 @@ class LineAgnosticAstPrinter: NodeVisitor {
         buffer.append("...")
     }
 
+    override fun visit(directDeclarator: DirectDeclarator) {
+        directDeclarator.decl.accept(this)
+        joinTo(directDeclarator.declarators, "") {
+            it.accept(this)
+        }
+    }
+
     override fun visit(emptyStatement: EmptyStatement) {
-        //buffer.append(';')
     }
 
     override fun visit(binop: BinaryOp) {
@@ -452,7 +450,7 @@ class LineAgnosticAstPrinter: NodeVisitor {
         }
     }
 
-    override fun visit(pointer: Pointer) {
+    override fun visit(pointer: NodePointer) {
         buffer.append('*')
         for (qualifier in pointer.qualifiers) {
             buffer.append(qualifier)

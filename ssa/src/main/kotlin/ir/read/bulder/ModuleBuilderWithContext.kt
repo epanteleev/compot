@@ -22,14 +22,6 @@ class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
         return data
     }
 
-    fun findGlobal(name: String): GlobalSymbol {
-        return globals.find { it.name() == name } ?: throw RuntimeException("not found name=$name")
-    }
-
-    private fun findStructType(name: String): StructType {
-        return structs.find { it.name == name } ?: throw RuntimeException("not found name=$name") //TODO
-    }
-
     override fun resolve(name: String): StructType {
         return findStructType(name)
     }

@@ -2,6 +2,9 @@ package parser
 
 import tokenizer.*
 import parser.nodes.*
+import types.PointerQualifier
+import types.StorageClass
+import types.TypeProperty
 
 
 data class ParserException(val info: ProgramMessage) : Exception(info.message)
@@ -44,7 +47,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	: external_declaration
     //	| translation_unit external_declaration
     //	;
-    fun program(): Node {//TODO
+    fun program(): ProgramNode {//TODO
         val nodes = mutableListOf<Node>()
         while (current !is Eof) {
             val node = external_declaration()?:
@@ -617,7 +620,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	| struct_or_union '{' struct_declaration_list '}'
     //	| struct_or_union IDENTIFIER
     //	;
-    fun struct_or_union_specifier(): Node? = rule {
+    fun struct_or_union_specifier(): AnyTypeNode? = rule {
         if (check("struct")) {
             eat()
             if (check("{")) {
@@ -715,7 +718,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	| 'enum' IDENTIFIER '{' enumerator_list '}'
     //	| 'enum' IDENTIFIER
     //	;
-    fun enum_specifier(): Node? = rule {
+    fun enum_specifier(): AnyTypeNode? = rule {
         if (!check("enum")) {
             return@rule null
         }
@@ -764,40 +767,39 @@ class ProgramParser(firstToken: AnyToken) {
         if (check("int")) {
             val tok = peak<Ident>()
             eat()
-            return@rule TypeNode(IdentNode(tok))
+            return@rule TypeNode(tok)
         }
         if (check("char")) {
             val tok = peak<Ident>()
             eat()
-            return@rule TypeNode(IdentNode(tok))
+            return@rule TypeNode(tok)
         }
         if (check("short")) {
             val tok = peak<Ident>()
             eat()
-            return@rule TypeNode(IdentNode(tok))
+            return@rule TypeNode(tok)
         }
         if (check("long")) {
             val tok = peak<Ident>()
             eat()
-            return@rule TypeNode(IdentNode(tok))
+            return@rule TypeNode(tok)
         }
         if (check("float")) {
             val tok = peak<Ident>()
             eat()
-            return@rule TypeNode(IdentNode(tok))
+            return@rule TypeNode(tok)
         }
         if (check("double")) {
             val tok = peak<Ident>()
             eat()
-            return@rule TypeNode(IdentNode(tok))
+            return@rule TypeNode(tok)
         }
         if (check("void")) {
             val tok = peak<Ident>()
             eat()
-            return@rule TypeNode(IdentNode(tok))
+            return@rule TypeNode(tok)
         }
-        val structOrUnionSpecifier = struct_or_union_specifier() ?: enum_specifier() ?: return@rule null
-        return@rule TypeNode(structOrUnionSpecifier)
+        return@rule struct_or_union_specifier() ?: enum_specifier()
     }
 
     // type_qualifier
@@ -829,8 +831,8 @@ class ProgramParser(firstToken: AnyToken) {
     //	| type_qualifier
     //	| type_qualifier declaration_specifiers
     //	;
-    fun declaration_specifiers(): Node? = rule {
-        val specifiers = mutableListOf<Any>()
+    fun declaration_specifiers(): DeclarationSpecifier? = rule {
+        val specifiers = mutableListOf<TypeProperty>()
         while (true) {
             val storageClass = storage_class_specifier()
             if (storageClass != null) {
@@ -881,7 +883,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	| direct_declarator '(' parameter_type_list ')'
     //	| direct_declarator '(' identifier_list ')'
     //	| direct_declarator '(' ')'
-    fun direct_declarator(): List<Node>? = rule {
+    fun direct_declarator(): DirectDeclarator? = rule {
         fun declarator_list(): List<Node> {
             val declarators = mutableListOf<Node>()
             while (true) {
@@ -937,7 +939,7 @@ class ProgramParser(firstToken: AnyToken) {
                 if (check(")")) {
                     eat()
                     val declarators = declarator_list()
-                    return@rule listOf(FunctionPointerDeclarator(listOf(declarator))) + declarators
+                    return@rule DirectDeclarator(FunctionPointerDeclarator(listOf(declarator)), declarators)
                 }
                 throw ParserException(ProgramMessage("Expected ')'", current))
             }
@@ -945,7 +947,7 @@ class ProgramParser(firstToken: AnyToken) {
         if (check<Ident>()) {
             val ident = peak<Ident>()
             eat()
-            return@rule listOf(IdentNode(ident)) + declarator_list()
+            return@rule DirectDeclarator(IdentNode(ident), declarator_list())
         }
         return@rule null
     }
@@ -978,8 +980,8 @@ class ProgramParser(firstToken: AnyToken) {
     }
 
     // pointers = ("*" ("const" | "volatile" | "restrict")*)*
-    fun pointers(): Node? = rule {
-        val pointers = mutableListOf<Pointer>()
+    fun pointers(): List<NodePointer>? = rule {
+        val pointers = mutableListOf<NodePointer>()
         while (check("*")) {
             eat()
             val qualifiers = mutableListOf<PointerQualifier>()
@@ -998,13 +1000,13 @@ class ProgramParser(firstToken: AnyToken) {
                     break
                 }
             }
-            pointers.add(Pointer(qualifiers))
+            pointers.add(NodePointer(qualifiers))
         }
 
         return@rule if (pointers.isEmpty()) {
             null
         } else {
-            Pointers(pointers)
+            pointers
         }
     }
 
@@ -1012,17 +1014,14 @@ class ProgramParser(firstToken: AnyToken) {
     //	: pointer direct_declarator
     //	| direct_declarator
     //	;
-    fun declarator(): Node? = rule {
+    fun declarator(): Declarator? = rule {
         val pointers = pointers()
         if (pointers != null) {
             val directDeclarator = direct_declarator()?: throw ParserException(ProgramMessage("Expected direct declarator", current))
             return@rule Declarator(directDeclarator, pointers)
         }
         val directDeclarator = direct_declarator()?: return@rule null
-        if (directDeclarator.isEmpty()) {
-            return@rule null
-        }
-        return@rule Declarator(directDeclarator, DummyNode)
+        return@rule Declarator(directDeclarator, listOf())
     }
 
     // direct_abstract_declarator
@@ -1523,7 +1522,7 @@ class ProgramParser(firstToken: AnyToken) {
         }
 
         val declarator = direct_abstract_declarator()?: return@rule null
-        return@rule AbstractDeclarator(DummyNode, declarator)
+        return@rule AbstractDeclarator(listOf(), declarator)
     }
 
     // primary_expression

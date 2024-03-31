@@ -1,4 +1,4 @@
-import tokenizer.Tokenizer
+import tokenizer.CTokenizer
 import preprocess.Preprocesssor
 import org.junit.jupiter.api.Test
 
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 class PreprocessorTest {
     @Test
     fun test1() {
-        val tokens = Tokenizer.apply("#define HEAD 34\n HEAD")
+        val tokens = CTokenizer.apply("#define HEAD 34\n HEAD")
         val p = Preprocesssor(tokens).preprocess()
         println(p)
     }

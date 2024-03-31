@@ -4,7 +4,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 
-class TokenizerTest {
+class CTokenizerTest {
     fun AnyToken.isEqual(l: Int, p: Int, string: String) {
         this as Token
         assertEquals(l, line)
@@ -14,7 +14,7 @@ class TokenizerTest {
 
     @Test
     fun test0() {
-        val tokens = Tokenizer.apply("4566,")
+        val tokens = CTokenizer.apply("4566,")
         tokens as Token
         assertTrue { tokens is Numeric }
         tokens.isEqual(1, 1, "4566")
@@ -26,7 +26,7 @@ class TokenizerTest {
 
     @Test
     fun test1() {
-        val tokens = Tokenizer.apply("\"sdfsdf\" \"   \"")
+        val tokens = CTokenizer.apply("\"sdfsdf\" \"   \"")
         tokens as Token
         assertTrue { tokens is StringLiteral }
         tokens.isEqual(1, 1, "\"sdfsdf\"")
@@ -38,7 +38,7 @@ class TokenizerTest {
 
     @Test
     fun test2() {
-        val tokens = Tokenizer.apply("4.7 /* comment */ 6")
+        val tokens = CTokenizer.apply("4.7 /* comment */ 6")
         tokens as Token
         assertTrue { tokens is Numeric }
         tokens.isEqual(1, 1, "4.7")
@@ -50,7 +50,7 @@ class TokenizerTest {
 
     @Test
     fun test3() {
-        val tokens = Tokenizer.apply("+++")
+        val tokens = CTokenizer.apply("+++")
         tokens as Token
         tokens.isEqual(1, 1, "++")
         tokens.next.isEqual(1, 3, "+")

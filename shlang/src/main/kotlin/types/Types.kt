@@ -4,7 +4,7 @@ import kotlin.math.*
 import parser.nodes.*
 
 
-interface Type {
+interface Type: TypeProperty {
     val isNumericIntegral: Boolean get() = when (this) {
         CHAR, SHORT, INT, LONG, UCHAR, USHORT, UINT, ULONG -> true
         else -> false
