@@ -5,7 +5,7 @@ import ir.types.Type
 import ir.AnyFunctionPrototype
 
 
-interface Callable{
+interface Callable {
     fun arguments(): Array<Value>
     fun prototype(): AnyFunctionPrototype
     fun shortName(): String {

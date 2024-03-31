@@ -12,7 +12,6 @@ class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilderWithContext>()
     private val externFunctions = mutableSetOf<ExternFunction>()
 
-
     fun createFunction(functionName: SymbolValue, returnType: TypeToken, argumentTypes: List<TypeToken>, argumentValues: List<LocalValueToken>): FunctionDataBuilderWithContext {
         val args        = argumentTypes.mapTo(arrayListOf()) { it.type(this) }
         val prototype   = FunctionPrototype(functionName.name, returnType.type(this), args)

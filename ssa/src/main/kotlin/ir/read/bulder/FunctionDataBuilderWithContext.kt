@@ -1,12 +1,12 @@
 package ir.read.bulder
 
-import collections.forEachWith
 import ir.*
 import ir.read.*
 import ir.types.*
 import ir.module.*
-import ir.module.block.*
 import ir.instruction.*
+import ir.module.block.*
+import collections.forEachWith
 
 
 class ParseErrorException(message: String): Exception(message) {
