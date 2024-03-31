@@ -6,8 +6,8 @@ import tokenizer.CTokenizer
 
 fun main(args: Array<String>) {
     val src = """
-        int main() {
-            return 0;
+        int main(int a) {
+            return a;
         }
     """.trimIndent()
 

@@ -242,7 +242,7 @@ data class FunctionParams(val params: List<AnyParameter>): Node() {
 
 abstract class AnyParameter : Node()
 
-data class Parameter(val declspec: Node, val declarator: Node) : AnyParameter() {
+data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) : AnyParameter() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

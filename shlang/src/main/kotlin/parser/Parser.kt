@@ -1511,7 +1511,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	: pointer
     //	| direct_abstract_declarator
     //	| pointer direct_abstract_declarator
-    fun abstract_declarator(): Node? = rule {
+    fun abstract_declarator(): AbstractDeclarator? = rule {
         val pointers = pointers()
         if (pointers != null) {
             val declarator = direct_abstract_declarator()

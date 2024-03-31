@@ -4,7 +4,10 @@ import types.*
 import ir.module.Module
 import ir.module.builder.impl.ModuleBuilder
 import parser.nodes.*
+import java.lang.Exception
 
+
+data class IRCodeGenError(override val message: String): Exception(message)
 
 class IRGen private constructor(): NodeVisitor<Any> {
     private val moduleBuilder = ModuleBuilder.create()
@@ -17,19 +20,55 @@ class IRGen private constructor(): NodeVisitor<Any> {
         return SpecifiedType.VOID
     }
 
-    override fun visit(functionNode: FunctionNode): SpecifiedType {
-        val returnType = functionNode.specifier.accept(this) as SpecifiedTypeBuilder
+    private fun getParameters(decl: DirectDeclarator): List<AnyParameter> {
+        val parameters = decl.declarators[0]
+        if (decl.declarators.size > 2) {
+            throw IRCodeGenError("Function can have only one parameter list")
+        }
+        if (parameters !is FunctionDeclarator) {
+            throw IRCodeGenError("Function parameters expected")
+        }
+        return parameters.params
+    }
 
-        for (p in functionNode.declarator.pointers) {
+    private fun createType(declspec: DeclarationSpecifier, declarator: Declarator): SpecifiedType {
+        val builder = visit(declspec)
+        for (p in declarator.pointers) {
             val finalizedPointer = visit(p)
-            returnType.addAll(finalizedPointer)
+            builder.addAll(finalizedPointer)
         }
 
-        val name = functionNode.declarator.declspec.decl as IdentNode
-        //val params = functionNode.declarator.params
-        //moduleBuilder.createFunction(name.str.str(), )
+        return builder.build()
+    }
 
-        return returnType.build()
+    private fun createReturnType(functionNode: FunctionNode): SpecifiedType {
+        val specifier = functionNode.specifier
+        if (specifier !is DeclarationSpecifier) {
+            throw IRCodeGenError("DeclarationSpecifier expected")
+        }
+
+        return createType(specifier, functionNode.declarator)
+    }
+
+    override fun visit(functionNode: FunctionNode): SpecifiedType {
+        val returnType = createReturnType(functionNode)
+
+        val name = functionNode.declarator.declspec.decl as IdentNode
+        val parameters = getParameters(functionNode.declarator.declspec)
+
+        for (p in parameters) {
+            when (p) {
+                is Parameter -> {
+                    val type = createType(p.declspec, p.declarator as Declarator)
+                    val arg = p.declarator
+
+                }
+                is ParameterVarArg -> TODO()
+                else -> throw IRCodeGenError("Parameter expected")
+            }
+        }
+
+        return returnType
     }
 
     override fun visit(specifierType: DeclarationSpecifier): SpecifiedTypeBuilder {
