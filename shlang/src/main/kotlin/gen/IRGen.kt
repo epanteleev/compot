@@ -15,13 +15,12 @@ data class IRCodeGenError(override val message: String): Exception(message)
 class IRGen private constructor(): NodeVisitor<Any> {
     private val moduleBuilder = ModuleBuilder.create()
     private val typeHolder = TypeHolder.default()
-    private val varStack = VarStack()
+    private val varStack = VarStack<SpecifiedType>()
     private var currentFunction: FunctionDataBuilder? = null
 
     private fun irFunction(): FunctionDataBuilder {
         return currentFunction ?: throw IRCodeGenError("Function expected")
     }
-
 
     override fun visit(programNode: ProgramNode): SpecifiedType {
         for (node in programNode.nodes) {

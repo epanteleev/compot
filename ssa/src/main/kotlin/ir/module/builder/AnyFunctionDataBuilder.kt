@@ -5,6 +5,7 @@ import ir.FunctionPrototype
 import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
+import ir.module.block.Label
 
 
 abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype,
@@ -13,15 +14,15 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
     protected var bb: Block = blocks.begin()
     private var allocatedLabel: Int = 0
 
-    private fun allocateBlock(): Block {
+    protected fun allocateBlock(): Block {
         allocatedLabel += 1
         val bb = Block.empty(allocatedLabel)
         blocks.putBlock(bb)
         return bb
     }
 
-    fun begin(): Block = blocks.begin()
-    fun createLabel(): Block = allocateBlock()
+    fun begin(): Label = blocks.begin()
+    fun createLabel(): Label = allocateBlock()
 
     fun argument(index: Int): ArgumentValue = argumentValues[index]
 

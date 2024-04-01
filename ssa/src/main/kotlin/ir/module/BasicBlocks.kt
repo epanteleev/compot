@@ -18,6 +18,10 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
     fun size(): Int = basicBlocks.size
 
     fun findBlock(label: Label): Block {
+        if (label is Block) {
+            assert(basicBlocks.contains(label)) { "Cannot find correspond block: $label" }
+            return label
+        }
         return basicBlocks.find { it.index == label.index }
             ?: throw IllegalArgumentException("Cannot find correspond block: $label")
     }

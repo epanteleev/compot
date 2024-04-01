@@ -32,8 +32,6 @@ enum class StorageClass: TypeProperty {
     }
 }
 
-object Pointer: TypeProperty
-
 data class SpecifiedType(val basicType: CType, val properties: List<TypeProperty>) {
 
     companion object {

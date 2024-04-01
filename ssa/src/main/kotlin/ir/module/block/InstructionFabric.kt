@@ -23,7 +23,7 @@ interface InstructionFabric {
     fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall
     fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>)
     fun branch(target: Block)
-    fun branchCond(value: Value, onTrue: Block, onFalse: Block)
+    fun branchCond(value: Value, onTrue: Block, onFalse: Block) //TODO Labels
     fun alloc(ty: NonTrivialType): Alloc
     fun ret(value: Value)
     fun retVoid()
@@ -37,7 +37,7 @@ interface InstructionFabric {
     fun fpext(value: Value, toType: FloatingPointType): FpExtend
     fun fptosi(value: Value, toType: SignedIntType): FloatToSigned
     fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select
-    fun phi(incoming: List<Value>, labels: List<Block>): Phi
+    fun phi(incoming: List<Value>, labels: List<Label>): Phi //TODO internal instruction???
 }
 
 interface InternalInstructionFabric {

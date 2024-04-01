@@ -204,7 +204,7 @@ class FunctionDataBuilderWithContext private constructor(
     private fun getBlockOrCreate(name: String): Block {
         val target = nameToLabel[name]
         return if (target == null) {
-            val new = createLabel()
+            val new = allocateBlock()
             nameToLabel[name] = new
             new
         } else {
