@@ -1,11 +1,11 @@
 package types
 
-class TypeHolder(private val typeMap: MutableMap<String, Type>) {
-    fun get(name: String): Type {
+class TypeHolder(private val typeMap: MutableMap<String, CType>) {
+    fun get(name: String): CType {
         return typeMap[name] ?: throw Exception("Type $name not found")
     }
 
-    fun add(name: String, type: Type) {
+    fun add(name: String, type: CType) {
         typeMap[name] = type
     }
 
@@ -13,31 +13,31 @@ class TypeHolder(private val typeMap: MutableMap<String, Type>) {
         return typeMap.containsKey(name)
     }
 
-    fun getStructType(name: String): Type {
+    fun getStructType(name: String): CType {
         TODO("Not yet implemented")
     }
 
-    fun getEnumType(name: String): Type {
+    fun getEnumType(name: String): CType {
         TODO("Not yet implemented")
     }
 
-    fun getUnionType(name: String): Type {
+    fun getUnionType(name: String): CType {
         TODO("Not yet implemented")
     }
 
     companion object {
         fun default(): TypeHolder {
-            val typeMap = hashMapOf<String, Type>(
-                "int" to Type.INT,
-                "char" to Type.CHAR,
-                "void" to Type.VOID,
-                "float" to Type.FLOAT,
-                "double" to Type.DOUBLE,
-                "long" to Type.LONG,
-                "short" to Type.SHORT,
-                "signed" to Type.INT,
-                "unsigned" to Type.UINT,
-                "bool" to Type.BOOL,
+            val typeMap = hashMapOf<String, CType>(
+                "int" to CType.INT,
+                "char" to CType.CHAR,
+                "void" to CType.VOID,
+                "float" to CType.FLOAT,
+                "double" to CType.DOUBLE,
+                "long" to CType.LONG,
+                "short" to CType.SHORT,
+                "signed" to CType.INT,
+                "unsigned" to CType.UINT,
+                "bool" to CType.BOOL,
             )
             return TypeHolder(typeMap)
         }

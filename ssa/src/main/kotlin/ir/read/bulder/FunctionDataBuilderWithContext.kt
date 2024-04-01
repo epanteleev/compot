@@ -7,6 +7,7 @@ import ir.module.*
 import ir.instruction.*
 import ir.module.block.*
 import collections.forEachWith
+import ir.module.builder.AnyFunctionDataBuilder
 
 
 class ParseErrorException(message: String): Exception(message) {
@@ -16,22 +17,13 @@ class ParseErrorException(message: String): Exception(message) {
 
 class FunctionDataBuilderWithContext private constructor(
     private val moduleBuilder: ModuleBuilderWithContext,
-    private val prototype: FunctionPrototype,
-    private val argumentValues: List<ArgumentValue>,
-    private val blocks: BasicBlocks,
+    prototype: FunctionPrototype,
+    argumentValues: List<ArgumentValue>,
+    blocks: BasicBlocks,
     private val nameMap: MutableMap<String, LocalValue>
-) {
-    private var allocatedLabel: Int = 0
-    private var bb: Block = blocks.begin()
+): AnyFunctionDataBuilder(prototype, argumentValues, blocks) {
     private val nameToLabel = hashMapOf("entry" to bb)
     private val incompletePhis = arrayListOf<PhiContext>()
-
-    private fun allocateBlock(): Block {
-        allocatedLabel += 1
-        val bb = Block.empty(allocatedLabel)
-        blocks.putBlock(bb)
-        return bb
-    }
 
     private fun getValue(token: AnyValueToken, ty: Type): Value {
         return when (token) {
@@ -74,11 +66,7 @@ class FunctionDataBuilderWithContext private constructor(
         return value
     }
 
-    fun begin(): Block {
-        return blocks.begin()
-    }
-
-    fun build(): FunctionData {
+    override fun build(): FunctionData {
         for (phi in incompletePhis) {
             phi.completePhi(nameMap)
         }
@@ -86,15 +74,9 @@ class FunctionDataBuilderWithContext private constructor(
         return FunctionData.create(prototype, blocks, argumentValues)
     }
 
-    fun createLabel(): Block = allocateBlock()
-
     fun switchLabel(labelTok: LabelDefinition) {
         val label = getBlockOrCreate(labelTok.name)
         bb = blocks.findBlock(label)
-    }
-
-    fun arguments(): List<ArgumentValue> {
-        return argumentValues
     }
 
     fun neg(name: LocalValueToken, valueTok: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticUnary {

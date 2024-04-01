@@ -3,7 +3,7 @@ package semantic
 import parser.nodes.Node
 import tokenizer.Token
 import types.FunctionType
-import types.Type
+import types.CType
 
 
 class SymbolScope(val parent: SymbolScope?, var start: Int = -1, var end: Int = -1) {
@@ -13,13 +13,13 @@ class SymbolScope(val parent: SymbolScope?, var start: Int = -1, var end: Int = 
     val children = arrayListOf<SymbolScope>()
     val symbols = LinkedHashMap<String, SymbolInfo>()
 
-    fun createInfo(name: String, type: Type, node: Node, token: Token) = SymbolInfo(this, name, type, node, token)
+    fun createInfo(name: String, type: CType, node: Node, token: Token) = SymbolInfo(this, name, type, node, token)
 
     init {
         parent?.children?.add(this)
     }
 
-    fun registerInfo(name: String, type: Type, node: Node, token: Token) = register(createInfo(name, type, node, token))
+    fun registerInfo(name: String, type: CType, node: Node, token: Token) = register(createInfo(name, type, node, token))
 
     private fun register(symbol: SymbolInfo) {
         symbols[symbol.name] = symbol
@@ -48,5 +48,5 @@ class FunctionScope {
     var name: String = ""
     var type: FunctionType? = null
     var hasGoto: Boolean = false
-    val rettype: Type get() = type?.retType ?: Type.UNRESOLVED
+    val rettype: CType get() = type?.retType ?: CType.UNRESOLVED
 }

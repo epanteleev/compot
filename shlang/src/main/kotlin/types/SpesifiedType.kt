@@ -34,15 +34,20 @@ enum class StorageClass: TypeProperty {
 
 object Pointer: TypeProperty
 
-data class SpecifiedType(val properties: List<TypeProperty>) {
+data class SpecifiedType(val basicType: CType, val properties: List<TypeProperty>) {
 
     companion object {
-        val VOID = SpecifiedType(emptyList())
+        val VOID = SpecifiedType(CType.VOID, emptyList())
     }
 }
 
 class SpecifiedTypeBuilder {
+    var basicType: CType? = null
     private val properties = mutableListOf<TypeProperty>()
+
+    fun basicType(type: CType) {
+        basicType = type
+    }
 
     fun add(property: TypeProperty) {
         properties.add(property)
@@ -53,6 +58,6 @@ class SpecifiedTypeBuilder {
     }
 
     fun build(): SpecifiedType {
-        return SpecifiedType(properties)
+        return SpecifiedType(basicType as CType, properties)
     }
 }

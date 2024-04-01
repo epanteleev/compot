@@ -1,8 +1,7 @@
 package parser.nodes
 
-import types.Type
+import types.CType
 import tokenizer.*
-import types.Pointer
 import types.PointerQualifier
 import types.TypeProperty
 
@@ -162,7 +161,7 @@ data class FunctionPointerParamDeclarator(val declarator: Node, val params: Node
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class Declaration(val declspec: Node, val declarators: List<Node>): Node() {
+data class Declaration(val declspec: DeclarationSpecifier, val declarators: List<AnyDeclarator>): Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -206,7 +205,7 @@ data class NodePointer(val qualifiers: List<PointerQualifier>) : Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class Declspec(val type: Type, val ident: Ident) : Node() {
+data class Declspec(val type: CType, val ident: Ident) : Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

@@ -1,8 +1,11 @@
 package gen
 
+import ir.module.FunctionData
 import types.*
 import ir.module.Module
+import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
+import ir.types.Type
 import parser.nodes.*
 import java.lang.Exception
 
@@ -12,6 +15,13 @@ data class IRCodeGenError(override val message: String): Exception(message)
 class IRGen private constructor(): NodeVisitor<Any> {
     private val moduleBuilder = ModuleBuilder.create()
     private val typeHolder = TypeHolder.default()
+    private val varStack = VarStack()
+    private var currentFunction: FunctionDataBuilder? = null
+
+    private fun irFunction(): FunctionDataBuilder {
+        return currentFunction ?: throw IRCodeGenError("Function expected")
+    }
+
 
     override fun visit(programNode: ProgramNode): SpecifiedType {
         for (node in programNode.nodes) {
@@ -50,24 +60,49 @@ class IRGen private constructor(): NodeVisitor<Any> {
         return createType(specifier, functionNode.declarator)
     }
 
+    private fun createVar(declarator: Declarator): String {
+        val identNode = declarator.declspec.decl as IdentNode
+        return identNode.str.str()
+    }
+
+    private fun toIRType(type: SpecifiedType): Type {
+        return when (type.basicType) {
+            CType.BOOL   -> Type.U1
+            CType.CHAR   -> Type.I8
+            CType.SHORT  -> Type.I16
+            CType.INT    -> Type.I32
+            CType.LONG   -> Type.I64
+            CType.FLOAT  -> Type.F32
+            CType.DOUBLE -> Type.F64
+            else -> throw IRCodeGenError("Unknown type")
+        }
+    }
+
     override fun visit(functionNode: FunctionNode): SpecifiedType {
         val returnType = createReturnType(functionNode)
 
         val name = functionNode.declarator.declspec.decl as IdentNode
         val parameters = getParameters(functionNode.declarator.declspec)
 
+        varStack.push()
+
+        val types = mutableListOf<Type>()
         for (p in parameters) {
             when (p) {
                 is Parameter -> {
-                    val type = createType(p.declspec, p.declarator as Declarator)
-                    val arg = p.declarator
-
+                    val decl = p.declarator as Declarator
+                    val type = createType(p.declspec, decl)
+                    val arg = createVar(decl)
+                    varStack.put(arg, type)
+                    types.add(toIRType(type))
                 }
                 is ParameterVarArg -> TODO()
                 else -> throw IRCodeGenError("Parameter expected")
             }
         }
+        currentFunction = moduleBuilder.createFunction(name.str.str(), toIRType(returnType), types)
 
+        functionNode.body.accept(this)
         return returnType
     }
 
@@ -76,12 +111,30 @@ class IRGen private constructor(): NodeVisitor<Any> {
         for (specifier in specifierType.specifiers) {
             when (specifier) {
                 is AnyTypeNode -> {
-                    builder.add(typeHolder.get(specifier.name()))
+                    builder.basicType(typeHolder.get(specifier.name()))
                 }
                 else -> builder.add(specifier)
             }
         }
         return builder
+    }
+
+    override fun visit(compoundStatement: CompoundStatement): SpecifiedType {
+        for (node in compoundStatement.statements) {
+            when (node) {
+                is Declaration -> {
+                    assert(node.declarators.size == 1)
+                    val decl = node.declarators[0] as Declarator
+
+                    val type = createType(node.declspec, decl)
+                    val varName = createVar(decl)
+                    varStack.put(varName, type)
+                }
+                is Statement -> node.accept(this)
+                else -> throw IRCodeGenError("Statement expected")
+            }
+        }
+        return SpecifiedType.VOID
     }
 
     override fun visit(node: DummyNode): SpecifiedType {
@@ -181,10 +234,6 @@ class IRGen private constructor(): NodeVisitor<Any> {
     }
 
     override fun visit(emptyStatement: EmptyStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(compoundStatement: CompoundStatement): SpecifiedType {
         TODO("Not yet implemented")
     }
 

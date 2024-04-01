@@ -4,7 +4,7 @@ import kotlin.math.*
 import parser.nodes.*
 
 
-interface Type: TypeProperty {
+interface CType: TypeProperty {
     val isNumericIntegral: Boolean get() = when (this) {
         CHAR, SHORT, INT, LONG, UCHAR, USHORT, UINT, ULONG -> true
         else -> false
@@ -46,8 +46,8 @@ interface Type: TypeProperty {
         val UNKNOWN_ELEMENT_TYPE = UnknownType("unknown_element_type")
         val UNRESOLVED = UnknownType("unresolved")
 
-        fun common(types: List<Type>): Type = if (types.isEmpty()) UNKNOWN else types.reduce { a, b -> common(a, b) }
-        fun common(a: Type, b: Type): Type {
+        fun common(types: List<CType>): CType = if (types.isEmpty()) UNKNOWN else types.reduce { a, b -> common(a, b) }
+        fun common(a: CType, b: CType): CType {
             if (a is NumberType && b is NumberType) {
                 if (a is IntType && b is IntType) {
                     return IntType(a.signed || b.signed, max(a.size, b.size))
@@ -57,31 +57,31 @@ interface Type: TypeProperty {
             return a
         }
 
-        fun binop(l: Type, op: String, r: Type): BinopTypes = when (op) {
-            "&&", "||" -> BinopTypes(Type.BOOL)
-            "<<", ">>" -> BinopTypes(l.growToWord(), Type.INT)
+        fun binop(l: CType, op: String, r: CType): BinopTypes = when (op) {
+            "&&", "||" -> BinopTypes(CType.BOOL)
+            "<<", ">>" -> BinopTypes(l.growToWord(), CType.INT)
             "==", "!=", "<", "<=", ">", ">=" -> {
-                val common = Type.common(l, r)
-                BinopTypes(common, common, Type.BOOL)
+                val common = CType.common(l, r)
+                BinopTypes(common, common, CType.BOOL)
             }
             "&", "|", "^" -> BinopTypes(l.growToWord())
             "*", "/", "%" -> BinopTypes(l.growToWord())
             "+" -> when {
-                l is ArrayType -> BinopTypes(l, Type.INT, l.elementType.ptr())
-                l is PointerType -> BinopTypes(l, Type.INT, l)
-                else -> BinopTypes(Type.common(l, r).growToWord())
+                l is ArrayType -> BinopTypes(l, CType.INT, l.elementType.ptr())
+                l is PointerType -> BinopTypes(l, CType.INT, l)
+                else -> BinopTypes(CType.common(l, r).growToWord())
             }
             "-" -> when {
-                l is ArrayType -> BinopTypes(l, Type.INT, l.elementType.ptr())
-                l is PointerType && r is PointerType -> BinopTypes(l, r, Type.INT)
-                l is PointerType -> BinopTypes(l, Type.INT, l)
-                else -> BinopTypes(Type.common(l, r).growToWord())
+                l is ArrayType -> BinopTypes(l, CType.INT, l.elementType.ptr())
+                l is PointerType && r is PointerType -> BinopTypes(l, r, CType.INT)
+                l is PointerType -> BinopTypes(l, CType.INT, l)
+                else -> BinopTypes(CType.common(l, r).growToWord())
             }
             else -> TODO("BINOP '$op' $l, $r")
         }
 
-        fun unop(op: String, r: Type): UnopTypes = when (op) {
-            "!" -> UnopTypes(Type.BOOL)
+        fun unop(op: String, r: CType): UnopTypes = when (op) {
+            "!" -> UnopTypes(CType.BOOL)
             "~" -> UnopTypes(r.growToWord())
             else -> TODO("UNOP '$op' $r")
         }
@@ -89,15 +89,15 @@ interface Type: TypeProperty {
 }
 
  
-data class BinopTypes(val l: Type, val r: Type = l, val out: Type = l)
+data class BinopTypes(val l: CType, val r: CType = l, val out: CType = l)
 
  
-data class UnopTypes(val r: Type, val out: Type = r)
+data class UnopTypes(val r: CType, val out: CType = r)
 
-fun Type.growToWord(resolver: TypeResolver = UncachedTypeResolver): Type {
+fun CType.growToWord(resolver: TypeResolver = UncachedTypeResolver): CType {
     val that = resolver.resolve(this)
     val res = when (that) {
-        is BoolType -> Type.INT
+        is BoolType -> CType.INT
         is IntType -> IntType(that.signed, max(that.size, 4))
         else -> that
     }
@@ -105,30 +105,30 @@ fun Type.growToWord(resolver: TypeResolver = UncachedTypeResolver): Type {
     return res
 }
 
-fun Type.withSign(signed: Boolean) = when (this) {
+fun CType.withSign(signed: Boolean) = when (this) {
     is IntType -> IntType(signed, size)
     else -> this
 }
 
-val Type.sign: Boolean?
+val CType.sign: Boolean?
     get() = when (this) {
         is IntType -> signed
         is NumberType -> true
         else -> null
     }
 
-val Type.signed get() = sign ?: false
-val Type.unsigned get() = !(sign ?: true)
+val CType.signed get() = sign ?: false
+val CType.unsigned get() = !(sign ?: true)
 
-val Type.elementType
+val CType.elementType
     get() = when (this) {
         is BasePointerType -> this.elementType
-        else -> Type.UNKNOWN_ELEMENT_TYPE
+        else -> CType.UNKNOWN_ELEMENT_TYPE
     }
 
-fun Type.ptr(const: Boolean = false) = PointerType(this, const)
+fun CType.ptr(const: Boolean = false) = PointerType(this, const)
 
-abstract class PrimType : Type
+abstract class PrimType : CType
 
  
 abstract class NumberType : PrimType() {
@@ -167,16 +167,16 @@ object DoubleType : FloatingType() {
     override fun toString(): String = "double"
 }
  
-abstract class BaseReferenceableType() : Type
+abstract class BaseReferenceableType() : CType
 
  
 abstract class BasePointerType() : BaseReferenceableType() {
-    abstract val elementType: Type
+    abstract val elementType: CType
     abstract val actsAsPointer: Boolean
 }
 
  
-data class PointerType(override val elementType: Type, val const: Boolean) : BasePointerType() {
+data class PointerType(override val elementType: CType, val const: Boolean) : BasePointerType() {
     //override fun toString(): String = "$type*"
     override val actsAsPointer: Boolean = true
 
@@ -187,7 +187,7 @@ data class PointerType(override val elementType: Type, val const: Boolean) : Bas
     }
 }
  
-data class ArrayType(override val elementType: Type, val numElements: Int) : BasePointerType() {
+data class ArrayType(override val elementType: CType, val numElements: Int) : BasePointerType() {
     val hasSubarrays get() = elementType is ArrayType
     // CAUSES PROBLEMS in initialization if there is something like array[8][23] and array[8][40] in the program
     //override val actsAsPointer: Boolean = !hasSubarrays || numElements == null
@@ -198,9 +198,9 @@ data class ArrayType(override val elementType: Type, val numElements: Int) : Bas
 data class UnknownType(val reason: Any?) : PrimType() {
     override fun toString(): String = "UnknownFType($reason)"
 }
-data class FunctionType(val name: String, val retType: Type, val args: List<Parameter>, var variadic: Boolean = false) : Type {
+data class FunctionType(val name: String, val retType: CType, val args: List<Parameter>, var variadic: Boolean = false) : CType {
     companion object {
-        fun from(returnType: Type) = FunctionType("", returnType, arrayListOf())
-        fun from(returnType: Type, args: List<Parameter>, isVariadic: Boolean) = FunctionType("", returnType, args, isVariadic)
+        fun from(returnType: CType) = FunctionType("", returnType, arrayListOf())
+        fun from(returnType: CType, args: List<Parameter>, isVariadic: Boolean) = FunctionType("", returnType, args, isVariadic)
     }
 }

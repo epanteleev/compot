@@ -461,7 +461,7 @@ class ProgramParser(firstToken: AnyToken) {
     //init_declarator = declarator
     //	              | declarator '=' initializer
     //	              ;
-    fun init_declarator(): Node? = rule {
+    fun init_declarator(): AnyDeclarator? = rule {
         val declarator = declarator()?: return@rule null
         if (check("=")) {
             eat()
@@ -475,8 +475,8 @@ class ProgramParser(firstToken: AnyToken) {
     //	: init_declarator
     //	| init_declarator_list ',' init_declarator
     //	;
-    fun init_declarator_list(): List<Node> {
-        val initDeclarators = mutableListOf<Node>()
+    fun init_declarator_list(): List<AnyDeclarator> {
+        val initDeclarators = mutableListOf<AnyDeclarator>()
         while (check<Token>()) {
             val initDeclarator = init_declarator() ?: return initDeclarators
             initDeclarators.add(initDeclarator)
