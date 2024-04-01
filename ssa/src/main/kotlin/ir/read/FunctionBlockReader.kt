@@ -87,14 +87,23 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseCall(currentTok: LocalValueToken) {
         val functionReturnType = iterator.expect<TypeToken>("function type")
-        val functionName       = iterator.expect<SymbolValue>("function name")
+        val funcNameOrValue       = iterator.next("function name or value")
 
         val argumentsTypes      = arrayListOf<TypeToken>()
         val argumentValues      = arrayListOf<AnyValueToken>()
         tryParseArgumentBlock(argumentsTypes, argumentValues)
 
-        val prototype = builder.makePrototype(functionName, functionReturnType, argumentsTypes)
-        builder.call(currentTok, prototype, argumentValues)
+        when (funcNameOrValue) {
+            is SymbolValue -> {
+                val prototype = builder.makePrototype(funcNameOrValue, functionReturnType, argumentsTypes)
+                builder.call(currentTok, prototype, argumentValues)
+            }
+            is LocalValueToken -> {
+                val prototype = builder.makePrototype(functionReturnType, argumentsTypes)
+                builder.icall(currentTok, funcNameOrValue, prototype, argumentValues)
+            }
+            else -> throw ParseErrorException("function name or value", funcNameOrValue)
+        }
     }
 
     private fun parseVCall() {
