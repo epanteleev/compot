@@ -259,5 +259,5 @@ enum class GPRegister : Register {
             }
             return string
         }
-    }
+    };
 }

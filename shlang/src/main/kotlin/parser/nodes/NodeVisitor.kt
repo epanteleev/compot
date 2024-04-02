@@ -1,0 +1,66 @@
+package parser.nodes
+
+
+interface NodeVisitor<T> {
+    fun visit(programNode: ProgramNode): T
+    fun visit(functionNode: FunctionNode): T
+    fun visit(node: DummyNode): T
+    fun visit(binop: BinaryOp): T
+    fun visit(pointer: NodePointer): T
+    fun visit(node: IdentNode): T
+    fun visit(cast: Cast): T
+    fun visit(arrayAccess: ArrayAccess): T
+    fun visit(unaryOp: UnaryOp): T
+    fun visit(sizeOf: SizeOf): T
+    fun visit(stringNode: StringNode): T
+    fun visit(numNode: NumNode): T
+    fun visit(switchStatement: SwitchStatement): T
+    fun visit(declarator: Declarator): T
+    fun visit(declaration: Declaration): T
+    fun visit(returnStatement: ReturnStatement): T
+    fun visit(ifStatement: IfStatement): T
+    fun visit(whileStatement: WhileStatement): T
+    fun visit(forStatement: ForStatement): T
+    fun visit(doWhileStatement: DoWhileStatement): T
+    fun visit(caseStatement: CaseStatement): T
+    fun visit(defaultStatement: DefaultStatement): T
+    fun visit(breakStatement: BreakStatement): T
+    fun visit(continueStatement: ContinueStatement): T
+    fun visit(gotoStatement: GotoStatement): T
+    fun visit(labeledStatement: LabeledStatement): T
+    fun visit(emptyStatement: EmptyStatement): T
+    fun visit(compoundStatement: CompoundStatement): T
+    fun visit(exprStatement: ExprStatement): T
+    fun visit(parameter: Parameter): T
+    fun visit(declspec: Declspec): T
+    fun visit(functionParams: FunctionParams): T
+    fun visit(assignmentDeclarator: AssignmentDeclarator): T
+    fun visit(rValueDeclarator: RValueDeclarator): T
+    fun visit(functionDeclarator: FunctionDeclarator): T
+    fun visit(functionPointerDeclarator: FunctionPointerDeclarator): T
+    fun visit(functionPointerParamDeclarator: FunctionPointerParamDeclarator): T
+    fun visit(conditional: Conditional): T
+    fun visit(memberAccess: MemberAccess): T
+    fun visit(initializerList: InitializerList): T
+    fun visit(compoundLiteral: CompoundLiteral): T
+    fun visit(arrayDeclarator: ArrayDeclarator): T
+    fun visit(typeName: TypeName): T
+    fun visit(directFunctionDeclarator: DirectFunctionDeclarator): T
+    fun visit(directArrayDeclarator: DirectArrayDeclarator): T
+    fun visit(abstractDeclarator: AbstractDeclarator): T
+    fun visit(specifierType: DeclarationSpecifier): T
+    fun visit(functionCall: FunctionCall): T
+    fun visit(structField: StructField): T
+    fun visit(structSpecifier: StructSpecifier): T
+    fun visit(structDeclaration: StructDeclaration): T
+    fun visit(unionSpecifier: UnionSpecifier): T
+    fun visit(unionDeclaration: UnionDeclaration): T
+    fun visit(typeNode: TypeNode): T
+    fun visit(enumSpecifier: EnumSpecifier): T
+    fun visit(enumDeclaration: EnumDeclaration): T
+    fun visit(enumerator: Enumerator): T
+    fun visit(varNode: VarNode): T
+    fun visit(arrowMemberAccess: ArrowMemberAccess): T
+    fun visit(parameterVarArg: ParameterVarArg): T
+    fun visit(directDeclarator: DirectDeclarator): T
+}

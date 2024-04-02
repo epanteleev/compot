@@ -12,7 +12,6 @@ class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilderWithContext>()
     private val externFunctions = mutableSetOf<ExternFunction>()
 
-
     fun createFunction(functionName: SymbolValue, returnType: TypeToken, argumentTypes: List<TypeToken>, argumentValues: List<LocalValueToken>): FunctionDataBuilderWithContext {
         val args        = argumentTypes.mapTo(arrayListOf()) { it.type(this) }
         val prototype   = FunctionPrototype(functionName.name, returnType.type(this), args)
@@ -21,14 +20,6 @@ class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
         functions.add(data)
         globals.add(prototype)
         return data
-    }
-
-    fun findGlobal(name: String): GlobalSymbol {
-        return globals.find { it.name() == name } ?: throw RuntimeException("not found name=$name")
-    }
-
-    private fun findStructType(name: String): StructType {
-        return structs.find { it.name == name } ?: throw RuntimeException("not found name=$name") //TODO
     }
 
     override fun resolve(name: String): StructType {

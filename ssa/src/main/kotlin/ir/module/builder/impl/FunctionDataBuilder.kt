@@ -7,42 +7,21 @@ import ir.module.FunctionData
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.InstructionFabric
+import ir.module.builder.AnyFunctionDataBuilder
 import ir.types.*
 
 
 class FunctionDataBuilder private constructor(
-    private val prototype: FunctionPrototype,
-    private var argumentValues: List<ArgumentValue>,
-    private val blocks: BasicBlocks
-): InstructionFabric {
-    private var allocatedLabel: Int = 0
-    private var bb: Block = blocks.begin()
-
-    private fun allocateBlock(): Block {
-        allocatedLabel += 1
-        val bb = Block.empty(allocatedLabel)
-        blocks.putBlock(bb)
-        return bb
-    }
-
-    fun begin(): Block {
-        return blocks.begin()
-    }
-
-    fun build(): FunctionData {
+    prototype: FunctionPrototype,
+    argumentValues: List<ArgumentValue>,
+    blocks: BasicBlocks
+): AnyFunctionDataBuilder(prototype, argumentValues, blocks), InstructionFabric {
+    override fun build(): FunctionData {
         return FunctionData.create(prototype, blocks, argumentValues)
     }
 
-    fun createLabel(): Block = allocateBlock()
-
     fun switchLabel(label: Label) {
         bb = blocks.findBlock(label)
-    }
-
-    fun argument(index: Int): ArgumentValue = argumentValues[index]
-
-    fun arguments(): List<ArgumentValue> {
-        return argumentValues
     }
 
     override fun not(value: Value): Not {
@@ -165,8 +144,13 @@ class FunctionDataBuilder private constructor(
         return bb.fptosi(value, toType)
     }
 
-    override fun phi(incoming: List<Value>, labels: List<Block>): Phi {
-        return bb.phi(incoming, labels)
+    override fun phi(incoming: List<Value>, labels: List<Label>): Phi {
+        val resolved = if (labels.first() !is Block) {
+            labels.map { blocks.findBlock(it) }
+        } else {
+            labels
+        }
+        return bb.phi(incoming, resolved)
     }
 
     companion object {
