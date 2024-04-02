@@ -6,7 +6,7 @@ interface AnyToken {
     fun str(): String
 }
 
-abstract class Token(open var next: AnyToken, open var line: Int, open var pos: Int, open val filename: String): AnyToken {
+abstract class CToken(open var next: AnyToken, open var line: Int, open var pos: Int, open val filename: String): AnyToken {
     override fun toString(): String {
         return "'${str()}'[$line: $pos]"
     }
@@ -15,7 +15,7 @@ abstract class Token(open var next: AnyToken, open var line: Int, open var pos: 
     override fun pos(): Int = pos
 
     companion object {
-        fun hasSpace(from: Token, to: Token): Boolean {
+        fun hasSpace(from: CToken, to: CToken): Boolean {
             if (from.line != to.line) {
                 return true
             }
@@ -23,7 +23,7 @@ abstract class Token(open var next: AnyToken, open var line: Int, open var pos: 
             return end < to.pos
         }
 
-        fun countSpaces(from: Token, to: Token): Int {
+        fun countSpaces(from: CToken, to: CToken): Int {
             if (from.line != to.line) {
                 assert(false)
             }
@@ -33,7 +33,7 @@ abstract class Token(open var next: AnyToken, open var line: Int, open var pos: 
     }
 }
 
-data class Ident(val data: String, override var line: Int, override var pos: Int, override val filename: String): Token(Eof, line, pos, filename) {
+data class Ident(val data: String, override var line: Int, override var pos: Int, override val filename: String): CToken(Eof, line, pos, filename) {
     override fun str(): String = data
     override fun toString(): String {
         return "'${str()}'[$line: $pos]"
@@ -44,34 +44,35 @@ data class Ident(val data: String, override var line: Int, override var pos: Int
     }
 }
 
-data class Punct(val data: Char, override var line: Int, override var pos: Int, override val filename: String): Token(Eof, line, pos, filename) {
+data class Punct(val data: Char, override var line: Int, override var pos: Int, override val filename: String): CToken(Eof, line, pos, filename) {
     override fun str(): String = data.toString()
     override fun toString(): String {
         return "'${str()}'[$line: $pos]"
     }
 }
 
-data class Keyword(val data: String, override var line: Int, override var pos: Int, override val filename: String): Token(Eof, line, pos, filename) {
+data class Keyword(val data: String, override var line: Int, override var pos: Int, override val filename: String): CToken(Eof, line, pos, filename) {
     override fun str(): String = data
     override fun toString(): String {
         return "'${str()}'[$line: $pos]"
     }
 }
 
-data class StringLiteral(val data: String, override var line: Int, override var pos: Int, override val filename: String): Token(Eof, line, pos, filename) {
+data class StringLiteral(val data: String, override var line: Int, override var pos: Int, override val filename: String): CToken(Eof, line, pos, filename) {
     override fun str(): String = data
     override fun toString(): String {
         return "'${str()}'[$line: $pos]"
     }
 }
 
-data class Numeric(val data: Number, override var line: Int, override var pos: Int, override val filename: String): Token(Eof, line, pos, filename) {
+data class Numeric(val data: Number, override var line: Int, override var pos: Int, override val filename: String): CToken(Eof, line, pos, filename) {
     override fun str(): String = data.toString()
     override fun toString(): String {
         return "'${str()}'[$line: $pos]"
     }
 }
-data class PreprocessingNumbers(val data: String, override var line: Int, override var pos: Int, override val filename: String): Token(Eof, line, pos, filename) {
+
+data class PreprocessingNumbers(val data: String, override var line: Int, override var pos: Int, override val filename: String): CToken(Eof, line, pos, filename) {
     override fun str(): String = data
     override fun toString(): String {
         return "'${str()}'[$line: $pos]"

@@ -92,7 +92,7 @@ class IRGen private constructor(): NodeVisitor<Any> {
                     val decl = p.declarator as Declarator
                     val type = createType(p.declspec, decl)
                     val arg = createVar(decl)
-                    varStack.put(arg, type)
+                    varStack[arg] = type
                     types.add(toIRType(type))
                 }
                 is ParameterVarArg -> TODO()
@@ -127,7 +127,7 @@ class IRGen private constructor(): NodeVisitor<Any> {
 
                     val type = createType(node.declspec, decl)
                     val varName = createVar(decl)
-                    varStack.put(varName, type)
+                    varStack[varName] = type
                 }
                 is Statement -> node.accept(this)
                 else -> throw IRCodeGenError("Statement expected")

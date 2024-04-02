@@ -19,15 +19,15 @@ class ProgramParser(firstToken: AnyToken) {
             throw ParserException(ProgramMessage("Unexpected EOF", current))
         }
 
-        current = (current as Token).next
+        current = (current as CToken).next
     }
 
-    private inline fun<reified T: Token> peak(): T {
+    private inline fun<reified T: CToken> peak(): T {
         return current as T
     }
 
     private fun check(s: String): Boolean {
-        return current is Token && (current as Token).str() == s
+        return current is CToken && (current as CToken).str() == s
     }
 
     private inline fun<reified T> check(): Boolean {
@@ -92,8 +92,8 @@ class ProgramParser(firstToken: AnyToken) {
     //      | "{" compound-stmt
     //      | expr-stmt
     fun stmt(): Statement {
-        while (check<Token>()) {
-            val token = peak<Token>()
+        while (check<CToken>()) {
+            val token = peak<CToken>()
             if (check("return")) {
                 eat()
                 val expr = conditional_expression()
@@ -268,7 +268,7 @@ class ProgramParser(firstToken: AnyToken) {
                     throw ParserException(ProgramMessage("Expected ';'", current))
                 }
             }
-            if (current is Ident && (current as Ident).next is Token && ((current as Ident).next as Token).str() == ":"){
+            if (current is Ident && (current as Ident).next is CToken && ((current as Ident).next as CToken).str() == ":"){
                 val label = peak<Ident>()
                 current = label.next
                 eat()
@@ -477,7 +477,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	;
     fun init_declarator_list(): List<AnyDeclarator> {
         val initDeclarators = mutableListOf<AnyDeclarator>()
-        while (check<Token>()) {
+        while (check<CToken>()) {
             val initDeclarator = init_declarator() ?: return initDeclarators
             initDeclarators.add(initDeclarator)
             if (check(",")) {
@@ -985,8 +985,8 @@ class ProgramParser(firstToken: AnyToken) {
         while (check("*")) {
             eat()
             val qualifiers = mutableListOf<PointerQualifier>()
-            while (check<Token>()) {
-                val token = peak<Token>()
+            while (check<CToken>()) {
+                val token = peak<CToken>()
                 if (token.str() == "const") {
                     qualifiers.add(PointerQualifier.CONST)
                     eat()
@@ -1428,8 +1428,8 @@ class ProgramParser(firstToken: AnyToken) {
     //	;
     fun postfix_expression(): Expression {
         var primary = primary_expression()
-        while (current is Token) {
-            val token = peak<Token>()
+        while (current is CToken) {
+            val token = peak<CToken>()
             if (token.str() == "[") {
                 eat()
                 val expr = expression()

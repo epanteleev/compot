@@ -12,7 +12,7 @@ class VarStack<T> {
         stack.removeAt(stack.size - 1)
     }
 
-    fun put(name: String, type: T) {
+    operator fun set(name: String, type: T) {
         stack.last()[name] = type
     }
 

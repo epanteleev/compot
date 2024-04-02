@@ -1,5 +1,5 @@
 package preprocess
 
-import tokenizer.Token
+import tokenizer.CToken
 
-data class Macros(val name: String, val value: List<Token>)
+data class Macros(val name: String, val value: List<CToken>)
