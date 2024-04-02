@@ -2,6 +2,7 @@ package parser
 
 import tokenizer.*
 import parser.nodes.*
+import tokenizer.Specifiers.keywords
 import types.PointerQualifier
 import types.StorageClass
 import types.TypeProperty
@@ -1299,18 +1300,21 @@ class ProgramParser(firstToken: AnyToken) {
     //	| '(' type_name ')' cast_expression
     //	;
     fun cast_expression(): Expression? = rule {
-        if (check("(")) {
+        val cast = rule castRule@ {
+            if (!check("(")) {
+                return@castRule null
+            }
             eat()
-            val declspec = type_name() ?: throw ParserException(ProgramMessage("Expected type name", current))
+            val declspec = type_name() ?: return@castRule null
             if (check(")")) {
                 eat()
-                val cast = cast_expression()?: throw ParserException(ProgramMessage("Expected cast expression", current))
-                return@rule Cast(declspec, cast)
-            } else {
-                throw ParserException(ProgramMessage("Expected ')'", current))
+                val cast = cast_expression() ?: throw ParserException(ProgramMessage("Expected cast expression", current))
+                return@castRule Cast(declspec, cast)
             }
+            throw ParserException(ProgramMessage("Expected ')'", current))
         }
-        return@rule unary_expression()
+
+        return@rule cast?: unary_expression()
     }
 
     // type_name
@@ -1553,7 +1557,7 @@ class ProgramParser(firstToken: AnyToken) {
             val genericSelection = genericSelection()
             return@rule genericSelection
         }
-        if (check<Ident>()) {
+        if (check<Ident>() && !keywords.contains(peak<Ident>().str())) { //TODO ??????????????????????????????????????????!!!!!!!!
             val ident = peak<Ident>()
             eat()
             return@rule VarNode(ident)
