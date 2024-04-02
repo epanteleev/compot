@@ -14,7 +14,7 @@ class ParserTest {
         val tokens = CTokenizer.apply("t = 3 + 5;")
         val parser = ProgramParser(tokens)
 
-        val expr = parser.assignment_expression()
+        val expr = parser.assignment_expression() as Node
         assertEquals("t = 3 + 5;", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -23,7 +23,7 @@ class ParserTest {
         val tokens = CTokenizer.apply("t *= 5")
         val parser = ProgramParser(tokens)
 
-        val expr = parser.assignment_expression()
+        val expr = parser.assignment_expression() as Node
         assertEquals("t *= 5", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -32,7 +32,7 @@ class ParserTest {
         val tokens = CTokenizer.apply("v = 0? a : b;")
         val parser = ProgramParser(tokens)
 
-        val expr = parser.assignment_expression()
+        val expr = parser.assignment_expression() as Node
         assertEquals("v = 0? a : b;", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -504,7 +504,7 @@ class ParserTest {
         val tokens = CTokenizer.apply("(int) a")
         val parser = ProgramParser(tokens)
 
-        val expr = parser.cast_expression()
+        val expr = parser.cast_expression() as Node
         println(expr)
         val expected = "(int) a"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -904,5 +904,16 @@ class ParserTest {
 
         val program = parser.program()
         assertEquals("int main(int a) {return sizeof(90);}", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Test
+    fun test_ret_void() {
+        val input = "void fn(int a) { return; } "
+
+        val tokens = CTokenizer.apply(input)
+        val parser = ProgramParser(tokens)
+
+        val program = parser.program()
+        assertEquals("void fn(int a) {return ;}", LineAgnosticAstPrinter.print(program))
     }
 }

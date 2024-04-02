@@ -1,10 +1,13 @@
 package gen
 
-import ir.module.FunctionData
+import ir.Value
 import types.*
 import ir.module.Module
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
+import ir.types.NonTrivialType
+import ir.types.PrimitiveType
+import ir.types.TrivialType
 import ir.types.Type
 import parser.nodes.*
 import java.lang.Exception
@@ -15,10 +18,10 @@ data class IRCodeGenError(override val message: String): Exception(message)
 class IRGen private constructor(): NodeVisitor<Any> {
     private val moduleBuilder = ModuleBuilder.create()
     private val typeHolder = TypeHolder.default()
-    private val varStack = VarStack<SpecifiedType>()
+    private val varStack = VarStack()
     private var currentFunction: FunctionDataBuilder? = null
 
-    private fun irFunction(): FunctionDataBuilder {
+    private fun ir(): FunctionDataBuilder {
         return currentFunction ?: throw IRCodeGenError("Function expected")
     }
 
@@ -64,7 +67,7 @@ class IRGen private constructor(): NodeVisitor<Any> {
         return identNode.str.str()
     }
 
-    private fun toIRType(type: SpecifiedType): Type {
+    private fun toIRType(type: SpecifiedType): NonTrivialType {
         return when (type.basicType) {
             CType.BOOL   -> Type.U1
             CType.CHAR   -> Type.I8
@@ -83,25 +86,41 @@ class IRGen private constructor(): NodeVisitor<Any> {
         val name = functionNode.declarator.declspec.decl as IdentNode
         val parameters = getParameters(functionNode.declarator.declspec)
 
-        varStack.push()
 
-        val types = mutableListOf<Type>()
+
+        val types = mutableListOf<SpecifiedType>()
+        val argumentNames = mutableListOf<String>()
         for (p in parameters) {
             when (p) {
                 is Parameter -> {
                     val decl = p.declarator as Declarator
                     val type = createType(p.declspec, decl)
                     val arg = createVar(decl)
-                    varStack[arg] = type
-                    types.add(toIRType(type))
+                    argumentNames.add(arg)
+                    types.add(type)
                 }
                 is ParameterVarArg -> TODO()
                 else -> throw IRCodeGenError("Parameter expected")
             }
         }
-        currentFunction = moduleBuilder.createFunction(name.str.str(), toIRType(returnType), types)
+        currentFunction = moduleBuilder.createFunction(name.str.str(), toIRType(returnType), types.map { toIRType(it) })
+
+        val fn = ir()
+        varStack.push()
+
+        for (idx in argumentNames.indices) {
+            val argName = argumentNames[idx]
+            val arg = fn.argument(idx)
+            val type = types[idx]
+
+            val rvalueAdr = fn.alloc(arg.type())
+            varStack[argName] = KeyType(type, rvalueAdr)
+            fn.store(rvalueAdr, arg)
+        }
 
         functionNode.body.accept(this)
+        varStack.pop()
+
         return returnType
     }
 
@@ -127,7 +146,11 @@ class IRGen private constructor(): NodeVisitor<Any> {
 
                     val type = createType(node.declspec, decl)
                     val varName = createVar(decl)
-                    varStack[varName] = type
+
+                    val irType = toIRType(type)
+                    val rvalueAdr = ir().alloc(irType)
+
+                    varStack[varName] = KeyType(type, rvalueAdr)
                 }
                 is Statement -> node.accept(this)
                 else -> throw IRCodeGenError("Statement expected")
@@ -189,7 +212,19 @@ class IRGen private constructor(): NodeVisitor<Any> {
     }
 
     override fun visit(returnStatement: ReturnStatement): SpecifiedType {
-        TODO("Not yet implemented")
+
+//        when (returnStatement.expr) {
+//            is EmptyExpr -> return ir().retVoid()
+//
+//        }
+        val type = returnStatement.expr.accept(this) as Value
+
+        when (type.type()) {
+            is NonTrivialType -> ir().ret(type)
+            is TrivialType    -> ir().retVoid()
+            else -> throw IRCodeGenError("Primitive type expected")
+        }
+        TODO()
     }
 
     override fun visit(ifStatement: IfStatement): SpecifiedType {
@@ -364,6 +399,9 @@ class IRGen private constructor(): NodeVisitor<Any> {
         TODO("Not yet implemented")
     }
 
+    override fun visit(emptyExpression: EmptyExpression): Any {
+        TODO("Not yet implemented")
+    }
 
     companion object {
         fun apply(node: ProgramNode): Module {
