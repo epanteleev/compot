@@ -212,19 +212,16 @@ class IRGen private constructor(): NodeVisitor<Any> {
     }
 
     override fun visit(returnStatement: ReturnStatement): SpecifiedType {
-
-//        when (returnStatement.expr) {
-//            is EmptyExpr -> return ir().retVoid()
-//
-//        }
-        val type = returnStatement.expr.accept(this) as Value
-
-        when (type.type()) {
-            is NonTrivialType -> ir().ret(type)
-            is TrivialType    -> ir().retVoid()
-            else -> throw IRCodeGenError("Primitive type expected")
+        when (returnStatement.expr) {
+            is EmptyExpression -> {
+                ir().retVoid()
+            }
+            else -> {
+                val type = returnStatement.expr.accept(this) as Value
+                ir().ret(type)
+            }
         }
-        TODO()
+        return SpecifiedType.VOID
     }
 
     override fun visit(ifStatement: IfStatement): SpecifiedType {
@@ -383,8 +380,10 @@ class IRGen private constructor(): NodeVisitor<Any> {
         TODO("Not yet implemented")
     }
 
-    override fun visit(varNode: VarNode): SpecifiedType {
-        TODO("Not yet implemented")
+    override fun visit(varNode: VarNode): Value {
+        val name = varNode.str.str()
+        val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable $name not found")
+        return ir().load(toIRType(rvalueAttr.first) as PrimitiveType, rvalueAttr.second)
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess): SpecifiedType {
