@@ -63,4 +63,5 @@ interface NodeVisitor<T> {
     fun visit(arrowMemberAccess: ArrowMemberAccess): T
     fun visit(parameterVarArg: ParameterVarArg): T
     fun visit(directDeclarator: DirectDeclarator): T
+    fun visit(emptyExpression: EmptyExpression): T
 }

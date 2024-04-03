@@ -1,8 +1,7 @@
 package preprocess
 
 import tokenizer.AnyToken
-import tokenizer.Ident
-import tokenizer.Token
+import tokenizer.CToken
 
 
 data class Preprocesssor(private val firstToken: AnyToken) {
@@ -59,7 +58,7 @@ data class Preprocesssor(private val firstToken: AnyToken) {
 //        }
 //    }
 //
-    fun preprocess(): Token {
+    fun preprocess(): CToken {
 //        preprocess2()
 //        if (cond_incl) {
 //            error("unterminated conditional directive")

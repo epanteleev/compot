@@ -1,8 +1,12 @@
 package gen
 
+import ir.LocalValue
+import types.SpecifiedType
 
-class VarStack<T> {
-    private val stack = mutableListOf<MutableMap<String, T>>()
+
+class VarStack {
+
+    private val stack = mutableListOf<MutableMap<String, KeyType>>()
 
     fun push() {
         stack.add(mutableMapOf())
@@ -12,11 +16,11 @@ class VarStack<T> {
         stack.removeAt(stack.size - 1)
     }
 
-    fun put(name: String, type: T) {
+    operator fun set(name: String, type: KeyType) {
         stack.last()[name] = type
     }
 
-    operator fun get(name: String): T? {
+    operator fun get(name: String): KeyType? {
         for (i in stack.size - 1 downTo 0) {
             val type = stack[i][name]
             if (type != null) {
@@ -26,3 +30,5 @@ class VarStack<T> {
         return null
     }
 }
+
+typealias KeyType = Pair<SpecifiedType, LocalValue>

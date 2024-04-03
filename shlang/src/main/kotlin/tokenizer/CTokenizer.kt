@@ -6,7 +6,7 @@ import tokenizer.Specifiers.isOperator3
 
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
-    private var out: Token? = null
+    private var out: CToken? = null
     private var first: AnyToken = Eof
 
     private var pos: Int = 1
@@ -32,7 +32,7 @@ class CTokenizer private constructor(private val filename: String, private val r
         reader.read(count)
     }
 
-    private fun append(next: Token) {
+    private fun append(next: CToken) {
         if (out == null) {
             out = next
             first = next

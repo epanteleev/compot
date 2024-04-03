@@ -173,7 +173,7 @@ data class UnaryOp(val primary: Node, val type: UnaryOpType) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class ArrayAccess(val primary: Node, val expr: Node) : Expression() {
+data class ArrayAccess(val primary: Expression, val expr: Expression) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -231,6 +231,11 @@ class ArrowMemberAccess(val primary: Node, val ident: Ident) : Expression() {
 
 abstract class Expression : Node()
 
+
+class EmptyExpression : Expression() {
+    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+}
+
 class Conditional(val cond: Node, val eTrue: Node, val eFalse: Node) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
@@ -283,7 +288,7 @@ class CaseStatement(val expr: Node, val stmt: Statement) : Statement() {
 
 abstract class Statement: Node()
 
-data class ReturnStatement(val expr: Node): Statement() {
+data class ReturnStatement(val expr: Expression): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

@@ -6,8 +6,8 @@ import ir.types.*
 import ir.module.*
 import ir.instruction.*
 import ir.module.block.*
+import ir.module.builder.*
 import collections.forEachWith
-import ir.module.builder.AnyFunctionDataBuilder
 
 
 class ParseErrorException(message: String): Exception(message) {

@@ -2,9 +2,11 @@ package parser
 
 import tokenizer.*
 import parser.nodes.*
+import tokenizer.Specifiers.keywords
 import types.PointerQualifier
 import types.StorageClass
 import types.TypeProperty
+import kotlin.math.E
 
 
 data class ParserException(val info: ProgramMessage) : Exception(info.message)
@@ -19,15 +21,15 @@ class ProgramParser(firstToken: AnyToken) {
             throw ParserException(ProgramMessage("Unexpected EOF", current))
         }
 
-        current = (current as Token).next
+        current = (current as CToken).next
     }
 
-    private inline fun<reified T: Token> peak(): T {
+    private inline fun<reified T: CToken> peak(): T {
         return current as T
     }
 
     private fun check(s: String): Boolean {
-        return current is Token && (current as Token).str() == s
+        return current is CToken && (current as CToken).str() == s
     }
 
     private inline fun<reified T> check(): Boolean {
@@ -92,11 +94,15 @@ class ProgramParser(firstToken: AnyToken) {
     //      | "{" compound-stmt
     //      | expr-stmt
     fun stmt(): Statement {
-        while (check<Token>()) {
-            val token = peak<Token>()
+        while (check<CToken>()) {
+            val token = peak<CToken>()
             if (check("return")) {
                 eat()
-                val expr = conditional_expression()
+                if (check(";")) {
+                    eat()
+                    return ReturnStatement(EmptyExpression())
+                }
+                val expr = conditional_expression()?: throw ParserException(ProgramMessage("Expected conditional expression", current))
                 if (check(";")) {
                     eat()
                     return ReturnStatement(expr)
@@ -108,7 +114,7 @@ class ProgramParser(firstToken: AnyToken) {
                 eat()
                 if (check("(")) {
                     eat()
-                    val condition = conditional_expression()
+                    val condition = conditional_expression()?: throw ParserException(ProgramMessage("Expected conditional expression", current))
                     if (check(")")) {
                         eat()
                         val then = stmt()
@@ -129,7 +135,7 @@ class ProgramParser(firstToken: AnyToken) {
                 eat()
                 if (check("(")) {
                     eat()
-                    val condition = conditional_expression()
+                    val condition = conditional_expression()?: throw ParserException(ProgramMessage("Expected conditional expression", current))
                     if (check(")")) {
                         eat()
                         val body = stmt()
@@ -146,10 +152,10 @@ class ProgramParser(firstToken: AnyToken) {
                 if (check("(")) {
                     eat()
 
-                    val init = declaration() ?: expr_stmt()
+                    val init = declaration() ?: expr_stmt()?: DummyNode
 
                     val condition = if (!check(";")) {
-                        expression()
+                        expression()?: throw ParserException(ProgramMessage("Expected expression", current))
                     } else {
                         DummyNode
                     }
@@ -158,7 +164,7 @@ class ProgramParser(firstToken: AnyToken) {
                         eat()
 
                         val update = if (!check(")")) {
-                            expression()
+                            expression()?: throw ParserException(ProgramMessage("Expected expression", current))
                         } else {
                             DummyNode
                         }
@@ -183,7 +189,7 @@ class ProgramParser(firstToken: AnyToken) {
                     eat()
                     if (check("(")) {
                         eat()
-                        val condition = conditional_expression()
+                        val condition = conditional_expression()?: throw ParserException(ProgramMessage("Expected conditional expression", current))
                         if (check(")")) {
                             eat()
                             if (check(";")) {
@@ -206,7 +212,7 @@ class ProgramParser(firstToken: AnyToken) {
                 eat()
                 if (check("(")) {
                     eat()
-                    val condition = conditional_expression()
+                    val condition = conditional_expression()?: throw ParserException(ProgramMessage("Expected conditional expression", current))
                     if (check(")")) {
                         eat()
                         val body = stmt()
@@ -220,7 +226,7 @@ class ProgramParser(firstToken: AnyToken) {
             }
             if (token.str() == "case") {
                 eat()
-                val expr = conditional_expression()
+                val expr = conditional_expression()?: throw ParserException(ProgramMessage("Expected conditional expression", current))
                 if (check(":")) {
                     eat()
                     val stmt = stmt()
@@ -268,7 +274,7 @@ class ProgramParser(firstToken: AnyToken) {
                     throw ParserException(ProgramMessage("Expected ';'", current))
                 }
             }
-            if (current is Ident && (current as Ident).next is Token && ((current as Ident).next as Token).str() == ":"){
+            if (current is Ident && (current as Ident).next is CToken && ((current as Ident).next as CToken).str() == ":"){
                 val label = peak<Ident>()
                 current = label.next
                 eat()
@@ -279,7 +285,7 @@ class ProgramParser(firstToken: AnyToken) {
                 eat()
                 return EmptyStatement()
             }
-            return compound_stmt()?: expr_stmt()
+            return compound_stmt()?: expr_stmt() ?: EmptyStatement()
         }
         // TODO unreachable
         return EmptyStatement()
@@ -290,13 +296,13 @@ class ProgramParser(firstToken: AnyToken) {
     //	| '{' initializer_list '}'
     //	| '{' initializer_list ',' '}'
     //	;
-    fun initializer(): Node {
+    fun initializer(): Node? = rule {
         if (check("{")) {
             eat()
             val list = initializerList()
             if (check("}")) {
                 eat()
-                return list
+                return@rule list
             } else {
                 throw ParserException(ProgramMessage("Expected '}'", current))
             }
@@ -304,9 +310,9 @@ class ProgramParser(firstToken: AnyToken) {
         if (check<StringLiteral>()) {
             val str = peak<StringLiteral>()
             eat()
-            return StringNode(str)
+            return@rule StringNode(str)
         }
-        return expression()
+        return@rule expression()
     }
 
 
@@ -337,77 +343,77 @@ class ProgramParser(firstToken: AnyToken) {
     //	: assignment_expression
     //	| expression ',' assignment_expression
     //	;
-    fun expression(): Expression {
-        val assign = assignment_expression()
+    fun expression(): Expression? = rule {
+        val assign = assignment_expression()?: return@rule null
         if (check(",")) {
             eat()
-            val expr = expression()
-            return BinaryOp(assign, expr, BinaryOpType.COMMA)
+            val expr = expression()?: throw ParserException(ProgramMessage("Expected expression", current))
+            return@rule BinaryOp(assign, expr, BinaryOpType.COMMA)
         }
-        return assign
+        return@rule assign
     }
 
     // assign    = conditional (assign-op assign)?
     // assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^="
     //           | "<<=" | ">>="
-    fun assignment_expression(): Expression {
-        val cond = conditional_expression()
+    fun assignment_expression(): Expression? = rule {
+        val cond = conditional_expression()?: return@rule null
         if (check("=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.ASSIGN)
         }
         if (check("+=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.ADD_ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.ADD_ASSIGN)
         }
         if (check("-=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.SUB_ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.SUB_ASSIGN)
         }
         if (check("*=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.MUL_ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.MUL_ASSIGN)
         }
         if (check("/=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.DIV_ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.DIV_ASSIGN)
         }
         if (check("%=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.MOD_ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.MOD_ASSIGN)
         }
         if (check("&=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.BIT_AND_ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.BIT_AND_ASSIGN)
         }
         if (check("|=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.BIT_OR_ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.BIT_OR_ASSIGN)
         }
         if (check("^=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.BIT_XOR_ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.BIT_XOR_ASSIGN)
         }
         if (check("<<=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.SHL_ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.SHL_ASSIGN)
         }
         if (check(">>=")) {
             eat()
-            val assign = assignment_expression()
-            return BinaryOp(cond, assign, BinaryOpType.SHR_ASSIGN)
+            val assign = assignment_expression()?: throw ParserException(ProgramMessage("Expected assignment expression", current))
+            return@rule BinaryOp(cond, assign, BinaryOpType.SHR_ASSIGN)
         }
-        return cond
+        return@rule cond
     }
 
     // storage_class_specifier
@@ -445,15 +451,15 @@ class ProgramParser(firstToken: AnyToken) {
     //	: ';'
     //	| expression ';'
     //	;
-    fun expr_stmt(): Statement {
+    fun expr_stmt(): Statement? = rule {
         if (check(";")) {
             eat()
-            return EmptyStatement()
+            return@rule EmptyStatement()
         }
-        val expr = expression()
+        val expr = expression()?: return@rule null
         if (check(";")) {
             eat()
-            return ExprStatement(expr)
+            return@rule ExprStatement(expr)
         }
         throw ParserException(ProgramMessage("Expected ';'", current))
     }
@@ -465,7 +471,7 @@ class ProgramParser(firstToken: AnyToken) {
         val declarator = declarator()?: return@rule null
         if (check("=")) {
             eat()
-            val initializer = initializer()
+            val initializer = initializer()?: throw ParserException(ProgramMessage("Expected initializer", current))
             return@rule AssignmentDeclarator(declarator, initializer) //TODO
         }
         return@rule RValueDeclarator(declarator)
@@ -477,7 +483,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	;
     fun init_declarator_list(): List<AnyDeclarator> {
         val initDeclarators = mutableListOf<AnyDeclarator>()
-        while (check<Token>()) {
+        while (check<CToken>()) {
             val initDeclarator = init_declarator() ?: return initDeclarators
             initDeclarators.add(initDeclarator)
             if (check(",")) {
@@ -688,7 +694,7 @@ class ProgramParser(firstToken: AnyToken) {
             eat()
             if (check("=")) {
                 eat()
-                val expr = constant_expression()
+                val expr = constant_expression()?: throw ParserException(ProgramMessage("Expected constant expression", current))
                 return@rule Enumerator(name, expr)
             }
             return@rule Enumerator(name, DummyNode)
@@ -919,7 +925,7 @@ class ProgramParser(firstToken: AnyToken) {
                         declarators.add(ArrayDeclarator(DummyNode))
                         continue
                     }
-                    val size = constant_expression()
+                    val size = constant_expression()?: throw ParserException(ProgramMessage("Expected constant expression", current))
                     if (check("]")) {
                         eat()
                         declarators.add(ArrayDeclarator(size))
@@ -955,8 +961,8 @@ class ProgramParser(firstToken: AnyToken) {
     // constant_expression
     //	: conditional_expression
     //	;
-    fun constant_expression(): Node {
-        return conditional_expression()
+    fun constant_expression(): Node? = rule {
+        return@rule conditional_expression()
     }
 
     // identifier_list
@@ -985,8 +991,8 @@ class ProgramParser(firstToken: AnyToken) {
         while (check("*")) {
             eat()
             val qualifiers = mutableListOf<PointerQualifier>()
-            while (check<Token>()) {
-                val token = peak<Token>()
+            while (check<CToken>()) {
+                val token = peak<CToken>()
                 if (token.str() == "const") {
                     qualifiers.add(PointerQualifier.CONST)
                     eat()
@@ -1068,7 +1074,7 @@ class ProgramParser(firstToken: AnyToken) {
                     abstractDeclarators.add(DirectArrayDeclarator(DummyNode))
                     continue
                 }
-                val size = constant_expression()
+                val size = constant_expression()?: throw ParserException(ProgramMessage("Expected constant expression", current))
                 if (check("]")) {
                     eat()
                     abstractDeclarators.add(DirectArrayDeclarator(size))
@@ -1085,90 +1091,90 @@ class ProgramParser(firstToken: AnyToken) {
     //	: logical_or_expression
     //	| logical_or_expression '?' expression ':' conditional_expression
     //	;
-    fun conditional_expression(): Expression {
-        val logor = logical_or_expression()
+    fun conditional_expression(): Expression? = rule {
+        val logor = logical_or_expression()?: return@rule null
         if (check("?")) {
             eat()
-            val expr = conditional_expression()
+            val expr = expression()?: throw ParserException(ProgramMessage("Expected expression", current))
             if (check(":")) {
                 eat()
-                val conditional = conditional_expression()
-                return Conditional(logor, expr, conditional)
+                val conditional = conditional_expression()?: throw ParserException(ProgramMessage("Expected conditional expression", current))
+                return@rule Conditional(logor, expr, conditional)
             } else {
                 throw ParserException(ProgramMessage("Expected ':'", current))
             }
         }
-        return logor
+        return@rule logor
     }
 
     // logical_or_expression
     //	: logical_and_expression
     //	| logical_or_expression '||' logical_and_expression
     //	;
-    fun logical_or_expression(): Expression {
-        val logand = logical_and_expression()
+    fun logical_or_expression(): Expression? = rule {
+        val logand = logical_and_expression()?: return@rule null
         if (check("||")) {
             eat()
-            val logor = logical_or_expression()
-            return BinaryOp(logand, logor, BinaryOpType.OR)
+            val logor = logical_or_expression()?: throw ParserException(ProgramMessage("Expected logical expression", current))
+            return@rule BinaryOp(logand, logor, BinaryOpType.OR)
         }
-        return logand
+        return@rule logand
     }
 
     // logical_and_expression
     //	: inclusive_or_expression
     //	| logical_and_expression '&&' inclusive_or_expression
     //	;
-    fun logical_and_expression(): Expression {
-        val bitor = inclusive_or_expression()
+    fun logical_and_expression(): Expression? = rule {
+        val bitor = inclusive_or_expression()?: return@rule null
         if (check("&&")) {
             eat()
-            val logand = logical_and_expression()
-            return BinaryOp(bitor, logand, BinaryOpType.AND)
+            val logand = logical_and_expression()?: throw ParserException(ProgramMessage("Expected logical expression", current))
+            return@rule BinaryOp(bitor, logand, BinaryOpType.AND)
         }
-        return bitor
+        return@rule bitor
     }
 
     // inclusive_or_expression
     //	: exclusive_or_expression
     //	| inclusive_or_expression '|' exclusive_or_expression
     //	;
-    fun inclusive_or_expression(): Expression {
-        val bitxor = exclusive_or_expression()
+    fun inclusive_or_expression(): Expression? = rule {
+        val bitxor = exclusive_or_expression()?: return@rule null
         if (check("|")) {
             eat()
-            val bitor = inclusive_or_expression()
-            return BinaryOp(bitxor, bitor, BinaryOpType.BIT_OR)
+            val bitor = inclusive_or_expression()?: throw ParserException(ProgramMessage("Expected inclusive expression", current))
+            return@rule BinaryOp(bitxor, bitor, BinaryOpType.BIT_OR)
         }
-        return bitxor
+        return@rule bitxor
     }
 
     // exclusive_or_expression
     //	: and_expression
     //	| exclusive_or_expression '^' and_expression
     //	;
-    fun exclusive_or_expression(): Expression {
-        val bitand = and_expression()
+    fun exclusive_or_expression(): Expression? = rule {
+        val bitand = and_expression()?: return@rule null
         if (check("^")) {
             eat()
-            val bitxor = exclusive_or_expression()
-            return BinaryOp(bitand, bitxor, BinaryOpType.BIT_XOR)
+            val bitxor = exclusive_or_expression()?: throw ParserException(ProgramMessage("Expected exclusive expression", current))
+            return@rule BinaryOp(bitand, bitxor, BinaryOpType.BIT_XOR)
         }
-        return bitand
+        return@rule bitand
     }
 
     // and_expression
     //	: equality_expression
     //	| and_expression '&' equality_expression
     //	;
-    fun and_expression(): Expression {
-        val equality = equality_expression()
+    fun and_expression(): Expression? = rule {
+        val equality = equality_expression()?: return@rule null
         if (check("&")) {
             eat()
-            val bitand = and_expression()
-            return BinaryOp(equality, bitand, BinaryOpType.BIT_AND)
+            val bitand = and_expression()?: throw ParserException(ProgramMessage("Expected 'and' expression", current))
+            return@rule BinaryOp(equality, bitand, BinaryOpType.BIT_AND)
         }
-        return equality
+        return@rule equality
     }
 
     // equality_expression
@@ -1176,19 +1182,19 @@ class ProgramParser(firstToken: AnyToken) {
     //	| equality_expression '==' relational_expression
     //	| equality_expression '!=' relational_expression
     //	;
-    fun equality_expression(): Expression {
-        val relational = relational_expression()
+    fun equality_expression(): Expression? = rule {
+        val relational = relational_expression()?: return@rule null
         if (check("==")) {
             eat()
-            val equality = equality_expression()
-            return BinaryOp(relational, equality, BinaryOpType.EQ)
+            val equality = equality_expression()?: throw ParserException(ProgramMessage("Expected equality expression", current))
+            return@rule BinaryOp(relational, equality, BinaryOpType.EQ)
         }
         if (check("!=")) {
             eat()
-            val equality = equality_expression()
-            return BinaryOp(relational, equality, BinaryOpType.NE)
+            val equality = equality_expression()?: throw ParserException(ProgramMessage("Expected equality expression", current))
+            return@rule BinaryOp(relational, equality, BinaryOpType.NE)
         }
-        return relational
+        return@rule relational
     }
 
     // relational_expression
@@ -1198,29 +1204,29 @@ class ProgramParser(firstToken: AnyToken) {
     //	| relational_expression '<=' shift_expression
     //	| relational_expression '>=' shift_expression
     //	;
-    fun relational_expression(): Expression {
-        val shift = shift_expression()
+    fun relational_expression(): Expression? = rule {
+        val shift = shift_expression()?: return@rule null
         if (check("<")) {
             eat()
-            val relational = relational_expression()
-            return BinaryOp(shift, relational, BinaryOpType.LT)
+            val relational = relational_expression()?: throw ParserException(ProgramMessage("Expected relational expression", current))
+            return@rule BinaryOp(shift, relational, BinaryOpType.LT)
         }
         if (check(">")) {
             eat()
-            val relational = relational_expression()
-            return BinaryOp(shift, relational, BinaryOpType.GT)
+            val relational = relational_expression()?: throw ParserException(ProgramMessage("Expected relational expression", current))
+            return@rule BinaryOp(shift, relational, BinaryOpType.GT)
         }
         if (check("<=")) {
             eat()
-            val relational = relational_expression()
-            return BinaryOp(shift, relational, BinaryOpType.LE)
+            val relational = relational_expression()?: throw ParserException(ProgramMessage("Expected relational expression", current))
+            return@rule BinaryOp(shift, relational, BinaryOpType.LE)
         }
         if (check(">=")) {
             eat()
-            val relational = relational_expression()
-            return BinaryOp(shift, relational, BinaryOpType.GE)
+            val relational = relational_expression()?: throw ParserException(ProgramMessage("Expected relational expression", current))
+            return@rule BinaryOp(shift, relational, BinaryOpType.GE)
         }
-        return shift
+        return@rule shift
     }
 
     // shift_expression
@@ -1228,19 +1234,19 @@ class ProgramParser(firstToken: AnyToken) {
     //	| shift_expression '<<' additive_expression
     //	| shift_expression '>>' additive_expression
     //	;
-    fun shift_expression(): Expression {
-        val additive = additive_expression()
+    fun shift_expression(): Expression? = rule {
+        val additive = additive_expression()?: return@rule null
         if (check("<<")) {
             eat()
-            val shift = shift_expression()
-            return BinaryOp(additive, shift, BinaryOpType.SHL)
+            val shift = shift_expression()?: throw ParserException(ProgramMessage("Expected shift expression", current))
+            return@rule BinaryOp(additive, shift, BinaryOpType.SHL)
         }
         if (check(">>")) {
             eat()
-            val shift = shift_expression()
-            return BinaryOp(additive, shift, BinaryOpType.SHR)
+            val shift = shift_expression()?: throw ParserException(ProgramMessage("Expected shift expression", current))
+            return@rule BinaryOp(additive, shift, BinaryOpType.SHR)
         }
-        return additive
+        return@rule additive
     }
 
     // additive_expression
@@ -1248,19 +1254,19 @@ class ProgramParser(firstToken: AnyToken) {
     //	| additive_expression '+' multiplicative_expression
     //	| additive_expression '-' multiplicative_expression
     //	;
-    fun additive_expression(): Expression {
-        val mult = multiplicative_expression()
+    fun additive_expression(): Expression? = rule {
+        val mult = multiplicative_expression()?: return@rule null
         if (check("+")) {
             eat()
-            val additive = additive_expression()
-            return BinaryOp(mult, additive, BinaryOpType.ADD)
+            val additive = additive_expression()?: throw ParserException(ProgramMessage("Expected additive expression", current))
+            return@rule BinaryOp(mult, additive, BinaryOpType.ADD)
         }
         if (check("-")) {
             eat()
-            val additive = additive_expression()
-            return BinaryOp(mult, additive, BinaryOpType.SUB)
+            val additive = additive_expression()?: throw ParserException(ProgramMessage("Expected additive expression", current))
+            return@rule BinaryOp(mult, additive, BinaryOpType.SUB)
         }
-        return mult
+        return@rule mult
     }
 
     // multiplicative_expression
@@ -1269,43 +1275,46 @@ class ProgramParser(firstToken: AnyToken) {
     //	| multiplicative_expression '/' cast_expression
     //	| multiplicative_expression '%' cast_expression
     //	;
-    fun multiplicative_expression(): Expression {
-        val cast = cast_expression()
+    fun multiplicative_expression(): Expression? = rule {
+        val cast = cast_expression() ?: return@rule null
         if (check("*")) {
             eat()
-            val mult = multiplicative_expression()
-            return BinaryOp(cast, mult, BinaryOpType.MUL)
+            val mult = multiplicative_expression()?: throw ParserException(ProgramMessage("Expected multiplicative expression", current))
+            return@rule BinaryOp(cast, mult, BinaryOpType.MUL)
         }
         if (check("/")) {
             eat()
-            val mult = multiplicative_expression()
-            return BinaryOp(cast, mult, BinaryOpType.DIV)
+            val mult = multiplicative_expression()?: throw ParserException(ProgramMessage("Expected multiplicative expression", current))
+            return@rule BinaryOp(cast, mult, BinaryOpType.DIV)
         }
         if (check("%")) {
             eat()
-            val mult = multiplicative_expression()
-            return BinaryOp(cast, mult, BinaryOpType.MOD)
+            val mult = multiplicative_expression()?: throw ParserException(ProgramMessage("Expected multiplicative expression", current))
+            return@rule BinaryOp(cast, mult, BinaryOpType.MOD)
         }
-        return cast
+        return@rule cast
     }
 
     // cast_expression
     //	: unary_expression
     //	| '(' type_name ')' cast_expression
     //	;
-    fun cast_expression(): Expression {
-        if (check("(")) {
+    fun cast_expression(): Expression? = rule {
+        val cast = rule castRule@ {
+            if (!check("(")) {
+                return@castRule null
+            }
             eat()
-            val declspec = type_name() ?: throw ParserException(ProgramMessage("Expected type name", current))
+            val declspec = type_name() ?: return@castRule null
             if (check(")")) {
                 eat()
-                val cast = cast_expression()
-                return Cast(declspec, cast)
-            } else {
-                throw ParserException(ProgramMessage("Expected ')'", current))
+                val cast = cast_expression() ?: throw ParserException(ProgramMessage("Expected cast expression", current))
+                return@castRule Cast(declspec, cast)
             }
+            throw ParserException(ProgramMessage("Expected ')'", current))
         }
-        return unary_expression()
+
+        return@rule cast?: unary_expression()
     }
 
     // type_name
@@ -1357,7 +1366,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	| sizeof unary_expression
     //	| sizeof '(' type_name ')'
     //	;
-    fun unary_expression(): Expression {
+    fun unary_expression(): Expression? = rule {
         if (check("sizeof")) {
             eat()
             if (check("(")) {
@@ -1365,55 +1374,55 @@ class ProgramParser(firstToken: AnyToken) {
                 val type = type_name()?: throw ParserException(ProgramMessage("Expected type name", current))
                 if (check(")")) {
                     eat()
-                    return SizeOf(type)
+                    return@rule SizeOf(type)
                 } else {
                     throw ParserException(ProgramMessage("Expected ')'", current))
                 }
             }
-            val expr = unary_expression()
-            return SizeOf(expr)
+            val expr = unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", current))
+            return@rule SizeOf(expr)
         }
         if (check("++")) {
             eat()
-            val unary = unary_expression()
-            return UnaryOp(unary, PrefixUnaryOpType.INC)
+            val unary = unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", current))
+            return@rule UnaryOp(unary, PrefixUnaryOpType.INC)
         }
         if (check("--")) {
             eat()
-            val unary = unary_expression()
-            return UnaryOp(unary, PrefixUnaryOpType.DEC)
+            val unary = unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", current))
+            return@rule UnaryOp(unary, PrefixUnaryOpType.DEC)
         }
         if (check("&")) {
             eat()
-            val unary = unary_expression()
-            return UnaryOp(unary, PrefixUnaryOpType.ADDRESS)
+            val unary = unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", current))
+            return@rule UnaryOp(unary, PrefixUnaryOpType.ADDRESS)
         }
         if (check("*")) {
             eat()
-            val unary = unary_expression()
-            return UnaryOp(unary, PrefixUnaryOpType.DEREF)
+            val unary = unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", current))
+            return@rule UnaryOp(unary, PrefixUnaryOpType.DEREF)
         }
         if (check("+")) {
             eat()
-            val unary = unary_expression()
-            return UnaryOp(unary, PrefixUnaryOpType.PLUS)
+            val unary = unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", current))
+            return@rule UnaryOp(unary, PrefixUnaryOpType.PLUS)
         }
         if (check("-")) {
             eat()
-            val unary = unary_expression()
-            return UnaryOp(unary, PrefixUnaryOpType.NEG)
+            val unary = unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", current))
+            return@rule UnaryOp(unary, PrefixUnaryOpType.NEG)
         }
         if (check("~")) {
             eat()
-            val unary = unary_expression()
-            return UnaryOp(unary, PrefixUnaryOpType.NOT)
+            val unary = unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", current))
+            return@rule UnaryOp(unary, PrefixUnaryOpType.NOT)
         }
         if (check("!")) {
             eat()
-            val unary = unary_expression()
-            return UnaryOp(unary, PrefixUnaryOpType.NOT)
+            val unary = unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", current))
+            return@rule UnaryOp(unary, PrefixUnaryOpType.NOT)
         }
-        return postfix_expression()
+        return@rule postfix_expression()
     }
 
     // postfix_expression
@@ -1426,13 +1435,14 @@ class ProgramParser(firstToken: AnyToken) {
     //	| postfix_expression '--'
     //	| postfix_expression '++'
     //	;
-    fun postfix_expression(): Expression {
-        var primary = primary_expression()
-        while (current is Token) {
-            val token = peak<Token>()
+    fun postfix_expression(): Expression? = rule {
+        val primary_expr: Expression = primary_expression() ?: return@rule null
+        var primary = primary_expr
+        while (current is CToken) {
+            val token = peak<CToken>()
             if (token.str() == "[") {
                 eat()
-                val expr = expression()
+                val expr = expression() ?: throw ParserException(ProgramMessage("Expected expression", current))
                 if (check("]")) {
                     eat()
                     primary = ArrayAccess(primary, expr)
@@ -1470,7 +1480,7 @@ class ProgramParser(firstToken: AnyToken) {
             }
         }
 
-        return primary
+        return@rule primary
     }
 
     // argument_expression_list
@@ -1480,7 +1490,7 @@ class ProgramParser(firstToken: AnyToken) {
     fun argument_expression_list(): List<Node> {
         val arguments = mutableListOf<Node>()
         while (true) {
-            val expr = assignment_expression()
+            val expr = assignment_expression()?: return arguments
             arguments.add(expr)
             if (check(",")) {
                 eat()
@@ -1497,7 +1507,7 @@ class ProgramParser(firstToken: AnyToken) {
     fun initializerList(): Node {
         val initializers = mutableListOf<Node>()
         while (true) {
-            val initializer = initializer()
+            val initializer = initializer() ?: return InitializerList(initializers)
             initializers.add(initializer)
             if (check(",")) {
                 eat()
@@ -1531,13 +1541,13 @@ class ProgramParser(firstToken: AnyToken) {
     //	| STRING_LITERAL
     //	| '(' expression ')'
     //	;
-    fun primary_expression(): Expression {
+    fun primary_expression(): Expression? = rule {
         if (check("(")) {
             eat()
             val expr = expression()
             if (check(")")) {
                 eat()
-                return expr
+                return@rule expr
             } else {
                 throw ParserException(ProgramMessage("Expected ')'", current))
             }
@@ -1545,24 +1555,24 @@ class ProgramParser(firstToken: AnyToken) {
         if (check("_Generic")) {
             eat()
             val genericSelection = genericSelection()
-            return genericSelection
+            return@rule genericSelection
         }
-        if (check<Ident>()) {
+        if (check<Ident>() && !keywords.contains(peak<Ident>().str())) { //TODO ??????????????????????????????????????????!!!!!!!!
             val ident = peak<Ident>()
             eat()
-            return VarNode(ident)
+            return@rule VarNode(ident)
         }
         if (check<StringLiteral>()) {
             val str = peak<StringLiteral>()
             eat()
-            return StringNode(str)
+            return@rule StringNode(str)
         }
         if (check<Numeric>()) {
             val num = peak<Numeric>()
             eat()
-            return NumNode(num)
+            return@rule NumNode(num)
         }
-        throw ParserException(ProgramMessage("Expected primary", current))
+        return@rule null
     }
 
     fun genericSelection(): Expression {

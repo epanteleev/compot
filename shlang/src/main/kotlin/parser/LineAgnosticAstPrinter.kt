@@ -438,6 +438,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
+    override fun visit(emptyExpression: EmptyExpression) {
+
+    }
+
     override fun visit(emptyStatement: EmptyStatement) {
     }
 
