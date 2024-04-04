@@ -30,7 +30,7 @@ class Driver(private val commandLineArguments: CommandLineArguments) {
         val unoptimizedAsm = File(temp.toString())
         unoptimizedAsm.writeText(unoptimisedCode.toString())
         AssemblerRunner.run(unoptimizedAsm.toString(), "$filename.o")
-
+        unoptimizedAsm.delete()
         if (commandLineArguments.isDumpIr()) {
             Files.copy(temp, File("$filename/base.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
@@ -55,7 +55,7 @@ class Driver(private val commandLineArguments: CommandLineArguments) {
 
         optimizedAsm.writeText(optimizedCodegen.toString())
         AssemblerRunner.run(optimizedAsm.toString(), "$filename.o")
-
+        optimizedAsm.delete()
         if (commandLineArguments.isDumpIr()) {
             Files.copy(temp, File("$filename/opt.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
