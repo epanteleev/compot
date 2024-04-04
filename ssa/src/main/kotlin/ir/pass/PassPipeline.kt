@@ -16,7 +16,7 @@ class PassPipeline private constructor(private val passFabrics: List<PassFabric>
                 val pass = fabric.create(current)
                 current = pass.run()
                 VerifySSA.run(current)
-                ctx.log(pass.name(), current)
+                ctx.log(pass.name()) { current.toString() }
             } catch (ex: Throwable) {
                 println(current.toString())
                 ex.printStackTrace()

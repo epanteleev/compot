@@ -2,75 +2,88 @@ package startup
 
 import java.io.File
 import ir.module.Module
-import java.nio.file.Paths
 import ir.pass.PassPipeline
 import ir.read.ModuleReader
 import ir.pass.CompileContextBuilder
-import ir.platform.x64.codegen.x64CodeGenerator
+import ir.platform.CodeGenerationFactory
+import ir.platform.Target
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 
-object Driver {
+class Driver(private val commandLineArguments: CommandLineArguments) {
     private fun unoptimized(filename: String, module: Module) {
         val ctx = CompileContextBuilder(filename)
             .setSuffix(".base")
-            .setLoggingLevel(1)
+            .withDumpIr(commandLineArguments.isDumpIr())
             .construct()
 
-        val unoptimizedIr   = PassPipeline.base(ctx).run(module)
-        val unoptimisedCode = x64CodeGenerator.emit(unoptimizedIr)
+        val unoptimizedIr = PassPipeline.base(ctx).run(module)
 
-        val unoptimizedAsm = File("$filename/base.S")
+        val codeGenerationFactory = CodeGenerationFactory()
+            .setContext(ctx)
+            .setTarget(Target.X64)
+
+        val unoptimisedCode = codeGenerationFactory.build(unoptimizedIr)
+
+        val temp = Files.createTempFile("base", ".S")
+        val unoptimizedAsm = File(temp.toString())
         unoptimizedAsm.writeText(unoptimisedCode.toString())
+        AssemblerRunner.run(unoptimizedAsm.toString(), "$filename.o")
+
+        if (commandLineArguments.isDumpIr()) {
+            Files.copy(temp, File("$filename/base.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
+        }
     }
 
     private fun optimized(filename: String, module: Module) {
         val ctx = CompileContextBuilder(filename)
             .setSuffix(".opt")
-            .setLoggingLevel(1)
+            .withDumpIr(commandLineArguments.isDumpIr())
             .construct()
 
-        val destroyed        = PassPipeline.opt(ctx).run(module)
-        val optimizedCodegen = x64CodeGenerator.emit(destroyed)
+        val destroyed = PassPipeline.opt(ctx).run(module)
 
-        val optimizedAsm = File("$filename/opt.S")
+        val codeGenerationFactory = CodeGenerationFactory()
+            .setContext(ctx)
+            .setTarget(Target.X64)
+
+        val optimizedCodegen = codeGenerationFactory.build(destroyed)
+
+        val temp = Files.createTempFile("opt", ".S")
+        val optimizedAsm = File(temp.toString())
+
         optimizedAsm.writeText(optimizedCodegen.toString())
-    }
+        AssemblerRunner.run(optimizedAsm.toString(), "$filename.o")
 
-    fun output(name: String, module: Module) {
-        val filename = getName(name)
-
-        val directoryName = File(filename)
-        if (directoryName.exists()) {
-            println("[Directory '$directoryName' exist. Remove...]")
-            directoryName.deleteRecursively()
+        if (commandLineArguments.isDumpIr()) {
+            Files.copy(temp, File("$filename/opt.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
-        directoryName.mkdir()
-
-        unoptimized(filename, module)
-        optimized(filename, module)
-
-        println("[Done '$filename']")
     }
 
-    private fun getName(name: String): String {
-        val fileName = Paths.get(name).fileName.toString()
-        val lastIndex = fileName.lastIndexOf('.')
-        if (lastIndex != -1) {
-            return fileName.substring(0, lastIndex)
-        }
-
-        return fileName
-    }
-
-    fun run(args: Array<String>) {
-        if (args.isEmpty()) {
-            println("<ir-file>.ir")
+    private fun removeOrCreateDir() {
+        if (!commandLineArguments.isDumpIr()) {
             return
         }
+        val directoryName = File(commandLineArguments.getLogDir())
+        if (!directoryName.exists()) {
+            directoryName.mkdir()
+        }
+    }
 
-        val text = File(args[0]).readText()
+    fun run() {
+        val text = File(commandLineArguments.getFilename()).readText()
+        removeOrCreateDir()
         val module = ModuleReader(text).read()
 
-        output(args[0], module)
+        val filename = commandLineArguments.getBasename()
+        if (commandLineArguments.getOptLevel() == 0) {
+            unoptimized(filename, module)
+        } else if (commandLineArguments.getOptLevel() == 1) {
+            optimized(filename, module)
+        } else {
+            println("Invalid optimization level: ${commandLineArguments.getOptLevel()}")
+            return
+        }
     }
 }

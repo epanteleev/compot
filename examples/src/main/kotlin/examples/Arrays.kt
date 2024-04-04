@@ -48,6 +48,4 @@ fun main() {
 
     VerifySSA.run(newModule)
     println(data.liveness())
-
-    Driver.output("fill-in-array", module)
 }

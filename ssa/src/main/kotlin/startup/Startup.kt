@@ -1,5 +1,7 @@
 package startup
 
+
 fun main(args: Array<String>) {
-    Driver.run(args)
+    val cli = CliParser().parse(args) ?: return
+    Driver(cli).run()
 }

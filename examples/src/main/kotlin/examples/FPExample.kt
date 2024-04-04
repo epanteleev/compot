@@ -5,7 +5,8 @@ import ir.types.Type
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
-import ir.platform.x64.codegen.x64CodeGenerator
+import ir.platform.CodeGenerationFactory
+import ir.platform.Target
 
 
 fun main() {
@@ -28,6 +29,9 @@ fun main() {
     println(module.toString())
     val des = SSADestructionFabric.create(module).run()
     println(des)
-    val asm = x64CodeGenerator.emit(des)
+    val asm = CodeGenerationFactory()
+        .setTarget(Target.X64)
+        .build(des)
+
     println(asm.toString())
 }

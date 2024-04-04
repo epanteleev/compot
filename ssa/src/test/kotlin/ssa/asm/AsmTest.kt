@@ -33,6 +33,7 @@ class AsmTest {
             movq $0, %rax
             movq %rbp, %rsp
             ret
+        
         """.trimIndent()
         assertEquals(expected, asm.toString())
     }

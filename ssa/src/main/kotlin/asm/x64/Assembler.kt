@@ -7,14 +7,14 @@ private data class BuilderContext(var label: Label, var instructions: Instructio
 private class InstructionList {
     private val list = arrayListOf<CPUInstruction>()
 
-    fun add(inst: CPUInstruction) {
-        list.add(inst)
-    }
+    fun add(inst: CPUInstruction) = list.add(inst)
 
     fun joinTo(builder: StringBuilder, prefix: String, separator: String) {
-        list.joinTo(builder, separator, prefix)
+        // GNU as requires a newline after the last instruction
+        list.joinTo(builder, separator, prefix, postfix = "\n")
     }
 }
+
 
 // X86 and amd64 instruction reference
 // https://www.felixcloutier.com/x86/

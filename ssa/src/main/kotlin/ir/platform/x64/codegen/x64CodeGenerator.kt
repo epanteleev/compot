@@ -16,6 +16,7 @@ import ir.module.block.Label
 import ir.pass.isLocalVariable
 import ir.utils.OrderedLocation
 import ir.instruction.utils.Visitor
+import ir.platform.AnyCodeGenerator
 import ir.platform.CompiledModule
 import ir.platform.x64.codegen.impl.*
 import ir.platform.x64.regalloc.RegisterAllocation
@@ -26,12 +27,11 @@ import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.STACK_ALIGNMENT
 
 
-
 data class CodegenException(override val message: String): Exception(message)
 
 
-object x64CodeGenerator {
-    fun emit(module: Module): CompiledModule {
+internal class X64CodeGenerator(val module: Module): AnyCodeGenerator {
+    override fun emit(): CompiledModule {
         return CodeEmitter.codegen(module)
     }
 }
@@ -145,10 +145,10 @@ private class CodeEmitter(private val data: FunctionData,
         NegCodegen(neg.type(), asm)(result, operand)
     }
 
-    override fun visit(neg: Not) {
-        val operand = valueToRegister.operand(neg.operand())
-        val result  = valueToRegister.operand(neg)
-        NotCodegen(neg.type(), asm)(result, operand)
+    override fun visit(not: Not) {
+        val operand = valueToRegister.operand(not.operand())
+        val result  = valueToRegister.operand(not)
+        NotCodegen(not.type(), asm)(result, operand)
     }
 
     private fun emitCall(call: Callable) {
