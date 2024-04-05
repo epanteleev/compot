@@ -3,13 +3,13 @@ package startup
 import java.nio.file.Paths
 
 
-class CommandLineArguments {
+class OptCLIArguments {
     private var dumpIrEnabled = false
     private var filename = "output"
     private var optLevel = 0
 
     fun isDumpIr(): Boolean = dumpIrEnabled
-    internal fun enableDumpIr() {
+    fun enableDumpIr() {
         dumpIrEnabled = true
     }
 
@@ -19,12 +19,12 @@ class CommandLineArguments {
         return getBasename()
     }
 
-    internal fun setFilename(name: String) {
+    fun setFilename(name: String) {
         filename = name
     }
 
     fun getOptLevel(): Int = optLevel
-    internal fun setOptLevel(level: Int) {
+    fun setOptLevel(level: Int) {
         optLevel = level
     }
 
@@ -40,7 +40,7 @@ class CommandLineArguments {
 }
 
 class CliParser {
-    fun parse(args: Array<String>): CommandLineArguments? {
+    fun parse(args: Array<String>): OptCLIArguments? {
         if (args.isEmpty()) {
             printHelp()
             return null
@@ -48,7 +48,7 @@ class CliParser {
 
         var cursor = 0
 
-        val commandLineArguments = CommandLineArguments()
+        val commandLineArguments = OptCLIArguments()
         while (cursor < args.size) {
             when (val arg = args[cursor]) {
                 "-c", "--compile" -> {

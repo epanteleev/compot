@@ -6,12 +6,12 @@ RESET=`tput sgr0`
 
 JAVA=java
 
-export JAVA_OPTS="-ea"
-IR_COMPILER="../build/ssa-1.0/bin/ssa" # --dump-ir"
+export JAVA_OPTS="-Xint -ea"
+IR_COMPILER="./build/ssa-1.0/bin/ssa --dump-ir"
 
 rm -rf ../build
 mkdir ../build
-unzip -o ../ssa/build/distributions/ssa-1.0.zip -d ../build
+unzip -o ../ssa/build/distributions/ssa-1.0.zip -d build
 
 function compile_test() {
 	${IR_COMPILER} -c "$1.ir"

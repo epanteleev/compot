@@ -446,9 +446,9 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(binop: BinaryOp) {
-        binop.cond.accept(this)
+        binop.left.accept(this)
         buffer.append(' ').append(binop.type).append(' ')
-        binop.assign.accept(this)
+        binop.right.accept(this)
         if (binop.type == BinaryOpType.ASSIGN) {
             buffer.append(';')
         }

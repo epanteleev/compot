@@ -1,6 +1,7 @@
 package gen
 
-import ir.Value
+import ir.*
+import ir.instruction.ArithmeticBinaryOp
 import types.*
 import ir.module.Module
 import ir.module.builder.impl.FunctionDataBuilder
@@ -23,13 +24,6 @@ class IRGen private constructor(): NodeVisitor<Any> {
 
     private fun ir(): FunctionDataBuilder {
         return currentFunction ?: throw IRCodeGenError("Function expected")
-    }
-
-    override fun visit(programNode: ProgramNode): SpecifiedType {
-        for (node in programNode.nodes) {
-            node.accept(this)
-        }
-        return SpecifiedType.VOID
     }
 
     private fun getParameters(decl: DirectDeclarator): List<AnyParameter> {
@@ -78,6 +72,23 @@ class IRGen private constructor(): NodeVisitor<Any> {
             CType.DOUBLE -> Type.F64
             else -> throw IRCodeGenError("Unknown type")
         }
+    }
+
+    private fun interfereTypes(a: Value, b: Value): Type {
+        val aType = a.type()
+        val bType = b.type()
+        if (aType == bType) {
+            return aType
+        }
+        TODO()
+        throw IRCodeGenError("Types $aType and $bType are not compatible")
+    }
+
+    override fun visit(programNode: ProgramNode): SpecifiedType {
+        for (node in programNode.nodes) {
+            node.accept(this)
+        }
+        return SpecifiedType.VOID
     }
 
     override fun visit(functionNode: FunctionNode): SpecifiedType {
@@ -163,8 +174,14 @@ class IRGen private constructor(): NodeVisitor<Any> {
         TODO("Not yet implemented")
     }
 
-    override fun visit(binop: BinaryOp): SpecifiedType {
-        TODO("Not yet implemented")
+    override fun visit(binop: BinaryOp): Value {
+        val left = binop.left.accept(this) as Value
+        val right = binop.right.accept(this) as Value
+
+        return when (binop.type) {
+            BinaryOpType.ADD -> ir().arithmeticBinary(left, ArithmeticBinaryOp.Add,  right)
+            else -> throw IRCodeGenError("Unknown binary operation")
+        }
     }
 
     override fun visit(pointer: NodePointer): List<TypeProperty> {
@@ -195,8 +212,16 @@ class IRGen private constructor(): NodeVisitor<Any> {
         TODO("Not yet implemented")
     }
 
-    override fun visit(numNode: NumNode): SpecifiedType {
-        TODO("Not yet implemented")
+    override fun visit(numNode: NumNode): Constant {
+        return when (numNode.toLong.data) {
+            in 0..255                  -> U8Value(numNode.toLong.data.toByte())
+            in 0..65535                -> U16Value(numNode.toLong.data.toShort())
+            in 0..4294967295           -> U32Value(numNode.toLong.data.toInt())
+            in -128..127               -> I8Value(numNode.toLong.data.toByte())
+            in -32768..32767           -> I16Value(numNode.toLong.data.toShort())
+            in -2147483648..2147483647 -> I32Value(numNode.toLong.data.toInt())
+            else -> I64Value(numNode.toLong.data.toLong())
+        }
     }
 
     override fun visit(switchStatement: SwitchStatement): SpecifiedType {

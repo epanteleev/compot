@@ -322,7 +322,7 @@ data class IfStatement(val condition: Node, val then: Node, val elseNode: Node):
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class BinaryOp(val cond: Node, val assign: Node, val type: BinaryOpType) : Expression() {
+data class BinaryOp(val left: Node, val right: Node, val type: BinaryOpType) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

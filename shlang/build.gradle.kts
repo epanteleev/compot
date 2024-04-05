@@ -30,5 +30,5 @@ java {
 }
 
 application {
-    mainClass.set("MainKt")
+    mainClass.set("startup.StartupKt")
 }
