@@ -32,5 +32,7 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
 
     fun arguments(): List<ArgumentValue> = argumentValues
 
+    fun prototype(): FunctionPrototype = prototype
+
     abstract fun build(): FunctionData
 }
