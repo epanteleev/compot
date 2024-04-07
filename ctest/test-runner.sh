@@ -53,3 +53,4 @@ function compile_and_run() {
 }
 
 compile_and_run 1 57
+compile_and_run 2 0

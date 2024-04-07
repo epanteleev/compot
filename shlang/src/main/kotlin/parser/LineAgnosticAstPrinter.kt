@@ -221,10 +221,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         assignmentDeclarator.lvalue.accept(this)
     }
 
-    override fun visit(rValueDeclarator: RValueDeclarator) {
-        rValueDeclarator.rvalue.accept(this)
-    }
-
     override fun visit(functionDeclarator: FunctionDeclarator) {
         buffer.append('(')
         joinTo(functionDeclarator.params, ", ") {

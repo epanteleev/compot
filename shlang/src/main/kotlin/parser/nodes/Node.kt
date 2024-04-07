@@ -296,7 +296,7 @@ data class CompoundStatement(val statements: List<Node>): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class ExprStatement(val expr: Node): Statement() {
+data class ExprStatement(val expr: Expression): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -307,10 +307,6 @@ data class Declarator(val declspec: DirectDeclarator, val pointers: List<NodePoi
 }
 
 data class AssignmentDeclarator(val rvalue: Node, val lvalue: Node): AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
-}
-
-data class RValueDeclarator(val rvalue: Node): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

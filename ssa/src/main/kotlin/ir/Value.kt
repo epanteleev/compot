@@ -49,6 +49,22 @@ interface Constant: Value {
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
         }
+
+        fun from(kind: Type, value: Constant): Constant {
+            return when (value) {
+                is I8Value  -> of(kind, value.i8)
+                is U8Value  -> of(kind, value.u8)
+                is I16Value -> of(kind, value.i16)
+                is U16Value -> of(kind, value.u16)
+                is I32Value -> of(kind, value.i32)
+                is U32Value -> of(kind, value.u32)
+                is I64Value -> of(kind, value.i64)
+                is U64Value -> of(kind, value.u64)
+                is F32Value -> of(kind, value.f32)
+                is F64Value -> of(kind, value.f64)
+                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            }
+        }
     }
 }
 

@@ -35,7 +35,6 @@ interface NodeVisitor<T> {
     fun visit(declspec: Declspec): T
     fun visit(functionParams: FunctionParams): T
     fun visit(assignmentDeclarator: AssignmentDeclarator): T
-    fun visit(rValueDeclarator: RValueDeclarator): T
     fun visit(functionDeclarator: FunctionDeclarator): T
     fun visit(functionPointerDeclarator: FunctionPointerDeclarator): T
     fun visit(functionPointerParamDeclarator: FunctionPointerParamDeclarator): T

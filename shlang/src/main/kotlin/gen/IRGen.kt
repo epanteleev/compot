@@ -1,5 +1,6 @@
 package gen
 
+import gen.TypeConverter.convertToType
 import ir.*
 import ir.instruction.ArithmeticBinaryOp
 import types.*
@@ -68,312 +69,6 @@ class IRGen private constructor(): NodeVisitor<Any> {
             CType.FLOAT  -> Type.F32
             CType.DOUBLE -> Type.F64
             else -> throw IRCodeGenError("Unknown type")
-        }
-    }
-
-    private fun interfereTypes(a: Value, b: Value): Type {
-        val aType = a.type()
-        val bType = b.type()
-        if (aType == bType) {
-            return aType
-        }
-
-        return when (aType) {
-            Type.I8 -> {
-                when (bType) {
-                    Type.I16 -> Type.I16
-                    Type.I32 -> Type.I32
-                    Type.I64 -> Type.I64
-                    Type.U8  -> Type.I8
-                    Type.U16 -> Type.I16
-                    Type.U32 -> Type.I32
-                    Type.U64 -> Type.I64
-                    Type.F32 -> Type.F32
-                    Type.F64 -> Type.F64
-                    else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-                }
-            }
-            Type.I16 -> {
-                when (bType) {
-                    Type.I8  -> Type.I16
-                    Type.I32 -> Type.I32
-                    Type.I64 -> Type.I64
-                    Type.U8  -> Type.I16
-                    Type.U16 -> Type.I16
-                    Type.U32 -> Type.I32
-                    Type.U64 -> Type.I64
-                    Type.F32 -> Type.F32
-                    Type.F64 -> Type.F64
-                    else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-                }
-            }
-            Type.I32 -> {
-                when (bType) {
-                    Type.I8  -> Type.I32
-                    Type.I16 -> Type.I32
-                    Type.I64 -> Type.I64
-                    Type.U8  -> Type.I32
-                    Type.U16 -> Type.I32
-                    Type.U32 -> Type.I32
-                    Type.U64 -> Type.I64
-                    Type.F32 -> Type.F32
-                    Type.F64 -> Type.F64
-                    else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-                }
-            }
-            Type.I64 -> {
-                when (bType) {
-                    Type.I8  -> Type.I64
-                    Type.I16 -> Type.I64
-                    Type.I32 -> Type.I64
-                    Type.U8  -> Type.I64
-                    Type.U16 -> Type.I64
-                    Type.U32 -> Type.I64
-                    Type.U64 -> Type.I64
-                    Type.F32 -> Type.F32
-                    Type.F64 -> Type.F64
-                    else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-                }
-            }
-            Type.U8 -> {
-                when (bType) {
-                    Type.I8  -> Type.I8
-                    Type.I16 -> Type.I16
-                    Type.I32 -> Type.I32
-                    Type.I64 -> Type.I64
-                    Type.U16 -> Type.U16
-                    Type.U32 -> Type.U32
-                    Type.U64 -> Type.U64
-                    Type.F32 -> Type.F32
-                    Type.F64 -> Type.F64
-                    else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-                }
-            }
-            Type.U16 -> {
-                when (bType) {
-                    Type.I8  -> Type.I16
-                    Type.I16 -> Type.I16
-                    Type.I32 -> Type.I32
-                    Type.I64 -> Type.I64
-                    Type.U8  -> Type.U16
-                    Type.U32 -> Type.U32
-                    Type.U64 -> Type.U64
-                    Type.F32 -> Type.F32
-                    Type.F64 -> Type.F64
-                    else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-                }
-            }
-            Type.U32 -> {
-                when (bType) {
-                    Type.I8  -> Type.I32
-                    Type.I16 -> Type.I32
-                    Type.I32 -> Type.I32
-                    Type.I64 -> Type.I64
-                    Type.U8  -> Type.U32
-                    Type.U16 -> Type.U32
-                    Type.U64 -> Type.U64
-                    Type.F32 -> Type.F32
-                    Type.F64 -> Type.F64
-                    else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-                }
-            }
-            Type.U64 -> {
-                when (bType) {
-                    Type.I8  -> Type.I64
-                    Type.I16 -> Type.I64
-                    Type.I32 -> Type.I64
-                    Type.I64 -> Type.I64
-                    Type.U8  -> Type.U64
-                    Type.U16 -> Type.U64
-                    Type.U32 -> Type.U64
-                    Type.F32 -> Type.F32
-                    Type.F64 -> Type.F64
-                    else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-                }
-            }
-            Type.F32 -> {
-                when (bType) {
-                    Type.I8  -> Type.F32
-                    Type.I16 -> Type.F32
-                    Type.I32 -> Type.F32
-                    Type.I64 -> Type.F32
-                    Type.U8  -> Type.F32
-                    Type.U16 -> Type.F32
-                    Type.U32 -> Type.F32
-                    Type.U64 -> Type.F32
-                    Type.F64 -> Type.F64
-                    else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-                }
-            }
-            Type.F64 -> {
-                when (bType) {
-                    Type.I8  -> Type.F64
-                    Type.I16 -> Type.F64
-                    Type.I32 -> Type.F64
-                    Type.I64 -> Type.F64
-                    Type.U8  -> Type.F64
-                    Type.U16 -> Type.F64
-                    Type.U32 -> Type.F64
-                    Type.U64 -> Type.F64
-                    Type.F32 -> Type.F64
-                    else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-                }
-            }
-            else -> throw IRCodeGenError("Types $aType and $bType are not compatible")
-        }
-    }
-
-    private fun convertToType(value: Value, type: Type): Value {
-        if (value.type() == type) {
-            return value
-        }
-
-        return when (type) {
-            Type.I8 -> {
-                type as SignedIntType
-                when (value.type()) {
-                    Type.I16 -> ir().trunc(value, type)
-                    Type.I32 -> ir().trunc(value, type)
-                    Type.I64 -> ir().trunc(value, type)
-                    Type.U8  -> ir().trunc(value, type)
-                    Type.U16 -> ir().trunc(value, type)
-                    Type.U32 -> ir().trunc(value, type)
-                    Type.U64 -> ir().trunc(value, type)
-                    Type.F32 -> ir().fptosi(value, type)
-                    Type.F64 -> ir().fptosi(value, type)
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
-                }
-            }
-
-            Type.I16 -> {
-                type as SignedIntType
-                when (value.type()) {
-                    Type.I8  -> ir().sext(value, type)
-                    Type.I32 -> ir().trunc(value, type)
-                    Type.I64 -> ir().trunc(value, type)
-                    Type.U8  -> ir().sext(value, type)
-                    Type.U16 -> ir().bitcast(value, type)
-                    Type.U32 -> ir().trunc(value, type)
-                    Type.U64 -> ir().trunc(value, type)
-                    Type.F32 -> ir().fptosi(value, type)
-                    Type.F64 -> ir().fptosi(value, type)
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
-                }
-            }
-
-            Type.I32 -> {
-                type as SignedIntType
-                when (value.type()) {
-                    Type.I8 -> ir().sext(value, type)
-                    Type.I16 -> ir().sext(value, type)
-                    Type.I64 -> ir().trunc(value, type)
-                    Type.U8  -> {
-                        val tmp = ir().sext(value, Type.I32)
-                        ir().trunc(tmp, type)
-                    }
-                    Type.U16 -> {
-                        val tmp = ir().zext(value, Type.U32)
-                        ir().trunc(tmp, type)
-                    }
-                    Type.U32 -> ir().bitcast(value, type)
-                    Type.U64 -> ir().trunc(value, type)
-                    Type.F32 -> ir().fptosi(value, type)
-                    Type.F64 -> ir().fptosi(value, type)
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
-                }
-            }
-
-            Type.I64 -> {
-                type as SignedIntType
-                when (value.type()) {
-                    Type.I8 -> ir().sext(value, type)
-                    Type.I16 -> ir().sext(value, type)
-                    Type.I32 -> ir().sext(value, type)
-                    Type.U8  -> {
-                        val tmp = ir().sext(value, Type.I64)
-                        ir().trunc(tmp, type)
-                    }
-                    Type.U16 -> {
-                        val tmp = ir().zext(value, Type.U64)
-                        ir().trunc(tmp, type)
-                    }
-                    Type.U32 -> {
-                        val tmp = ir().zext(value, Type.U64)
-                        ir().trunc(tmp, type)
-                    }
-                    Type.U64 -> ir().bitcast(value, type)
-                    Type.F32 -> ir().fptosi(value, type)
-                    Type.F64 -> ir().fptosi(value, type)
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
-                }
-            }
-
-            Type.U8 -> {
-                type as UnsignedIntType
-                when (value.type()) {
-                    Type.I8  -> ir().bitcast(value, type)
-                    Type.I16 -> ir().trunc(value, type)
-                    Type.I32 -> ir().trunc(value, type)
-                    Type.I64 -> ir().trunc(value, type)
-                    Type.U16 -> ir().trunc(value, type)
-                    Type.U32 -> ir().trunc(value, type)
-                    Type.U64 -> ir().trunc(value, type)
-                    Type.F32 -> {
-                        val tmp = ir().fptosi(value, Type.I32)
-                        ir().trunc(tmp, type)
-                    }
-                    Type.F64 -> {
-                        val tmp = ir().fptosi(value, Type.I64)
-                        ir().trunc(tmp, type)
-                    }
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
-                }
-            }
-
-            Type.U16 -> {
-                type as UnsignedIntType
-                when (value.type()) {
-                    Type.I8  -> ir().trunc(value, type)
-                    Type.I16 -> ir().bitcast(value, type)
-                    Type.I32 -> ir().trunc(value, type)
-                    Type.I64 -> ir().trunc(value, type)
-                    Type.U8  -> ir().trunc(value, type)
-                    Type.U32 -> ir().trunc(value, type)
-                    Type.U64 -> ir().trunc(value, type)
-                    Type.F32 -> {
-                        val tmp = ir().fptosi(value, Type.I32)
-                        ir().trunc(tmp, type)
-                    }
-                    Type.F64 -> {
-                        val tmp = ir().fptosi(value, Type.I64)
-                        ir().trunc(tmp, type)
-                    }
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
-                }
-            }
-
-            Type.U32 -> {
-                type as UnsignedIntType
-                when (value.type()) {
-                    Type.I8  -> ir().trunc(value, type)
-                    Type.I16 -> ir().trunc(value, type)
-                    Type.I32 -> ir().bitcast(value, type)
-                    Type.I64 -> ir().trunc(value, type)
-                    Type.U8  -> ir().trunc(value, type)
-                    Type.U16 -> ir().trunc(value, type)
-                    Type.U64 -> ir().trunc(value, type)
-                    Type.F32 -> {
-                        val tmp = ir().fptosi(value, Type.I32)
-                        ir().trunc(tmp, type)
-                    }
-                    Type.F64 -> {
-                        val tmp = ir().fptosi(value, Type.I64)
-                        ir().trunc(tmp, type)
-                    }
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
-                }
-            }
-            else -> throw IRCodeGenError("Cannot convert $value to $type")
         }
     }
 
@@ -446,15 +141,20 @@ class IRGen private constructor(): NodeVisitor<Any> {
             when (node) {
                 is Declaration -> {
                     assert(node.declarators.size == 1)
-                    val decl = node.declarators[0] as Declarator
+                    val decl = node.declarators[0]
 
-                    val type = createType(node.declspec, decl)
-                    val varName = createVar(decl)
+                    when (decl) {
+                        is Declarator -> {
+                            val type = createType(node.declspec, decl)
+                            val varName = createVar(decl)
 
-                    val irType = toIRType(type)
-                    val rvalueAdr = ir().alloc(irType)
+                            val irType = toIRType(type)
+                            val rvalueAdr = ir().alloc(irType)
 
-                    varStack[varName] = KeyType(type, rvalueAdr)
+                            varStack[varName] = KeyType(type, rvalueAdr)
+                        }
+                        else -> throw IRCodeGenError("Unknown declarator, delc=$decl")
+                    }
                 }
                 is Statement -> node.accept(this)
                 else -> throw IRCodeGenError("Statement expected")
@@ -471,13 +171,24 @@ class IRGen private constructor(): NodeVisitor<Any> {
         val left = binop.left.accept(this) as Value
         val right = binop.right.accept(this) as Value
 
-        val commonType     = interfereTypes(left, right)
-        val leftConverted  = convertToType(left, commonType)
-        val rightConverted = convertToType(right, commonType)
+        val commonType     = TypeConverter.interfereTypes(left, right)
+        val leftConverted  = ir().convertToType(left, commonType)
+        val rightConverted = ir().convertToType(right, commonType)
 
         return when (binop.type) {
             BinaryOpType.ADD -> ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Add,  rightConverted)
-            else -> throw IRCodeGenError("Unknown binary operation")
+            BinaryOpType.SUB -> ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Sub,  rightConverted)
+            BinaryOpType.ASSIGN -> {
+                val varName = (binop.left as VarNode).str.str()
+                val rvalueAttr = varStack[varName] ?: throw IRCodeGenError("Variable $varName not found")
+                val rvalueAdr = rvalueAttr.second
+                val rightType = rightConverted.type()
+                val rightValue = rightConverted
+                val rightValueConverted = ir().convertToType(rightValue, rightType)
+                ir().store(rvalueAdr, rightValueConverted)
+                rightValue
+            }
+            else -> throw IRCodeGenError("Unknown binary operation, op=${binop.type}")
         }
     }
 
@@ -541,7 +252,7 @@ class IRGen private constructor(): NodeVisitor<Any> {
             else -> {
                 val value = returnStatement.expr.accept(this) as Value
                 val realType = ir().prototype().returnType()
-                val returnType = convertToType(value, realType)
+                val returnType = ir().convertToType(value, realType)
                 ir().ret(returnType)
             }
         }
@@ -592,8 +303,8 @@ class IRGen private constructor(): NodeVisitor<Any> {
         TODO("Not yet implemented")
     }
 
-    override fun visit(exprStatement: ExprStatement): SpecifiedType {
-        TODO("Not yet implemented")
+    override fun visit(exprStatement: ExprStatement): Value {
+        return exprStatement.expr.accept(this) as Value
     }
 
     override fun visit(parameter: Parameter): SpecifiedType {
@@ -609,10 +320,6 @@ class IRGen private constructor(): NodeVisitor<Any> {
     }
 
     override fun visit(assignmentDeclarator: AssignmentDeclarator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(rValueDeclarator: RValueDeclarator): SpecifiedType {
         TODO("Not yet implemented")
     }
 

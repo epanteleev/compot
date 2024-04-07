@@ -474,7 +474,7 @@ class ProgramParser(firstToken: AnyToken) {
             val initializer = initializer()?: throw ParserException(ProgramMessage("Expected initializer", current))
             return@rule AssignmentDeclarator(declarator, initializer) //TODO
         }
-        return@rule RValueDeclarator(declarator)
+        return@rule declarator
     }
 
     // init_declarator_list
