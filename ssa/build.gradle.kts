@@ -21,7 +21,7 @@ java {
 }
 
 application {
-    mainClass.set("startup.StartupKt")
+    mainClass.set("startup.OptStartupKt")
 }
 
 tasks.named<Test>("test") {

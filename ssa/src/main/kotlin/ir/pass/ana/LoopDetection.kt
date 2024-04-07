@@ -48,18 +48,19 @@ class LoopDetection private constructor(val blocks: BasicBlocks, val dominatorTr
     }
 
     private fun getExitBlock(header: Block, loopBody: Set<Block>): Block {
-        for (s in header.successors()) {
-            if (loopBody.contains(s)) {
-                continue
+        for (l in loopBody) {
+            for (s in l.successors()) {
+                if (!loopBody.contains(s)) {
+                    return s
+                }
             }
-            return s
         }
 
-        throw RuntimeException("unreachable")
+        throw RuntimeException("unreachable, header=$header, loopBody=$loopBody")
     }
 
     private fun getLoopBody(header: Block, predecessor: Block): Set<Block> {
-        val loopBody = mutableSetOf<Block>()
+        val loopBody = mutableSetOf(header)
         val worklist = arrayListOf<Block>()
         worklist.add(predecessor)
 
