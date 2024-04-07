@@ -296,7 +296,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	| '{' initializer_list '}'
     //	| '{' initializer_list ',' '}'
     //	;
-    fun initializer(): Node? = rule {
+    fun initializer(): Expression? = rule {
         if (check("{")) {
             eat()
             val list = initializerList()
@@ -1504,7 +1504,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	: initializer
     //	| initializer_list ',' initializer
     //	;
-    fun initializerList(): Node {
+    fun initializerList(): Expression {
         val initializers = mutableListOf<Node>()
         while (true) {
             val initializer = initializer() ?: return InitializerList(initializers)

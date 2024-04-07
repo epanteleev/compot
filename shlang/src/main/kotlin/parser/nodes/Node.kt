@@ -217,7 +217,7 @@ data class CompoundLiteral(val typeName: Node, val initializerList: Node) : Node
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class InitializerList(val initializers: List<Node>) : Node() {
+data class InitializerList(val initializers: List<Node>) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -306,7 +306,7 @@ data class Declarator(val declspec: DirectDeclarator, val pointers: List<NodePoi
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class AssignmentDeclarator(val rvalue: Node, val lvalue: Node): AnyDeclarator() {
+data class AssignmentDeclarator(val rvalue: Declarator, val lvalue: Expression): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -314,7 +314,7 @@ data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class IfStatement(val condition: Node, val then: Node, val elseNode: Node): Statement() {
+data class IfStatement(val condition: Expression, val then: Statement, val elseNode: Statement): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

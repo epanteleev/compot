@@ -56,3 +56,4 @@ compile_and_run 1 57
 compile_and_run 2 0
 compile_and_run 3 20
 compile_and_run 4 0
+compile_and_run 5 20

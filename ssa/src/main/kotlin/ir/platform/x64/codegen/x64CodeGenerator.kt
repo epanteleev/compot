@@ -232,7 +232,7 @@ private class CodeEmitter(private val data: FunctionData,
         val second = valueToRegister.operand(icmp.second())
         val size = icmp.first().type().size()
 
-        first = if (first is Address2) {
+        first = if (first is Address2 || first is ImmInt) { //TODO???
             asm.movOld(size, first, temp1)
         } else {
             first

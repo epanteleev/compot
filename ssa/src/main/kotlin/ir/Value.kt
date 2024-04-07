@@ -6,7 +6,7 @@ interface Value {
     fun type(): NonTrivialType
 
     companion object {
-        val UNDEF: Value = UndefinedValue()
+        val UNDEF: UndefinedValue = UndefinedValue()
     }
 }
 
@@ -62,6 +62,7 @@ interface Constant: Value {
                 is U64Value -> of(kind, value.u64)
                 is F32Value -> of(kind, value.f32)
                 is F64Value -> of(kind, value.f64)
+                is UndefinedValue -> Value.UNDEF
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
         }

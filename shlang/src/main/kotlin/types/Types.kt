@@ -38,9 +38,6 @@ interface CType: TypeProperty {
         val FLOAT = FloatType
         val DOUBLE = DoubleType
 
-        val VOID_PTR = PointerType(VOID, false)
-        val CHAR_PTR = PointerType(CHAR, false)
-
         val UNKNOWN = UnknownType("unknown")
         val UNKNOWN_TYPEDEF = UnknownType("unknown_typedef")
         val UNKNOWN_ELEMENT_TYPE = UnknownType("unknown_element_type")
@@ -66,17 +63,6 @@ interface CType: TypeProperty {
             }
             "&", "|", "^" -> BinopTypes(l.growToWord())
             "*", "/", "%" -> BinopTypes(l.growToWord())
-            "+" -> when {
-                l is ArrayType -> BinopTypes(l, CType.INT, l.elementType.ptr())
-                l is PointerType -> BinopTypes(l, CType.INT, l)
-                else -> BinopTypes(CType.common(l, r).growToWord())
-            }
-            "-" -> when {
-                l is ArrayType -> BinopTypes(l, CType.INT, l.elementType.ptr())
-                l is PointerType && r is PointerType -> BinopTypes(l, r, CType.INT)
-                l is PointerType -> BinopTypes(l, CType.INT, l)
-                else -> BinopTypes(CType.common(l, r).growToWord())
-            }
             else -> TODO("BINOP '$op' $l, $r")
         }
 
@@ -126,8 +112,6 @@ val CType.elementType
         else -> CType.UNKNOWN_ELEMENT_TYPE
     }
 
-fun CType.ptr(const: Boolean = false) = PointerType(this, const)
-
 abstract class PrimType : CType
 
  
@@ -175,17 +159,6 @@ abstract class BasePointerType() : BaseReferenceableType() {
     abstract val actsAsPointer: Boolean
 }
 
- 
-data class PointerType(override val elementType: CType, val const: Boolean) : BasePointerType() {
-    //override fun toString(): String = "$type*"
-    override val actsAsPointer: Boolean = true
-
-    override fun toString(): String = "CPointer<$elementType>"
-
-    companion object {
-        const val POINTER_SIZE = 8
-    }
-}
  
 data class ArrayType(override val elementType: CType, val numElements: Int) : BasePointerType() {
     val hasSubarrays get() = elementType is ArrayType

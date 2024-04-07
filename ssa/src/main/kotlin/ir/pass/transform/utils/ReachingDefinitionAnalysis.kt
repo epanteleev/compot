@@ -23,7 +23,6 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, private v
         if (oldValue !is ValueInstruction) {
             return oldValue
         }
-
         val newValue = findActualValueOrNull(bb, oldValue)?: return oldValue
         return convertOrSkip(oldValue.type(), newValue)
     }

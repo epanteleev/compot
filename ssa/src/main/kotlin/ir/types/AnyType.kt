@@ -5,6 +5,8 @@ class AnyType : TrivialType, NonTrivialType {
         TODO("Not yet implemented")
     }
 
+    override fun toString(): String = "undef"
+
     override fun hashCode(): Int {
         return javaClass.hashCode()
     }
