@@ -925,4 +925,15 @@ class ParserTest {
         val program = parser.program()
         assertEquals("void fn(int a) {return ;}", LineAgnosticAstPrinter.print(program))
     }
+
+    @Test
+    fun test_dereference() {
+        val input = "void fn(int* a) { int val = *a; return val; } "
+
+        val tokens = CTokenizer.apply(input)
+        val parser = ProgramParser(tokens)
+
+        val program = parser.program()
+        assertEquals("void fn(int *a) {int val = *a; return val;}", LineAgnosticAstPrinter.print(program))
+    }
 }

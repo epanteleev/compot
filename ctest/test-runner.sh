@@ -6,7 +6,7 @@ RESET=`tput sgr0`
 
 JAVA=java
 
-export JAVA_OPTS="-Xint -ea"
+export JAVA_OPTS="-ea"
 IR_COMPILER="./build/shlang-1.0-SNAPSHOT/bin/shlang --dump-ir"
 
 rm -rf ../build
@@ -54,3 +54,4 @@ function compile_and_run() {
 
 compile_and_run 1 57
 compile_and_run 2 0
+compile_and_run 3 20

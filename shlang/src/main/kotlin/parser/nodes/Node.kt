@@ -169,7 +169,7 @@ data class Cast(val type: TypeName, val cast: Node) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class UnaryOp(val primary: Node, val type: UnaryOpType) : Expression() {
+data class UnaryOp(val primary: Expression, val type: UnaryOpType) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -318,7 +318,7 @@ data class IfStatement(val condition: Node, val then: Node, val elseNode: Node):
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class BinaryOp(val left: Node, val right: Node, val type: BinaryOpType) : Expression() {
+data class BinaryOp(val left: Expression, val right: Expression, val type: BinaryOpType) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

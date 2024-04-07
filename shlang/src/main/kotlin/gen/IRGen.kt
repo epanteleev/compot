@@ -14,7 +14,7 @@ import java.lang.Exception
 
 data class IRCodeGenError(override val message: String): Exception(message)
 
-class IRGen private constructor(): NodeVisitor<Any> {
+class IRGen private constructor() {
     private val moduleBuilder = ModuleBuilder.create()
     private val typeHolder = TypeHolder.default()
     private val varStack = VarStack()
@@ -38,7 +38,7 @@ class IRGen private constructor(): NodeVisitor<Any> {
     private fun createType(declspec: DeclarationSpecifier, declarator: Declarator): SpecifiedType {
         val builder = visit(declspec)
         for (p in declarator.pointers) {
-            val finalizedPointer = visit(p)
+            val finalizedPointer = p.qualifiers
             builder.addAll(finalizedPointer)
         }
 
@@ -72,14 +72,17 @@ class IRGen private constructor(): NodeVisitor<Any> {
         }
     }
 
-    override fun visit(programNode: ProgramNode): SpecifiedType {
+    fun visit(programNode: ProgramNode): SpecifiedType {
         for (node in programNode.nodes) {
-            node.accept(this)
+            when (node) {
+                is FunctionNode -> visit(node)
+                else -> throw IRCodeGenError("Function expected")
+            }
         }
         return SpecifiedType.VOID
     }
 
-    override fun visit(functionNode: FunctionNode): SpecifiedType {
+    fun visit(functionNode: FunctionNode): SpecifiedType {
         val returnType = createReturnType(functionNode)
 
         val name = functionNode.declarator.declspec.decl as IdentNode
@@ -117,13 +120,36 @@ class IRGen private constructor(): NodeVisitor<Any> {
             fn.store(rvalueAdr, arg)
         }
 
-        functionNode.body.accept(this)
+        visit(functionNode.body)
         varStack.pop()
 
         return returnType
     }
 
-    override fun visit(specifierType: DeclarationSpecifier): SpecifiedTypeBuilder {
+    fun visit(statement: Statement) {
+        when (statement) {
+            is CompoundStatement    -> visit(statement)
+            is ExprStatement  -> visitExpressionStatement(statement)
+            is ReturnStatement      -> visitReturn(statement)
+            else -> throw IRCodeGenError("Statement expected, but got $statement")
+        }
+    }
+
+    private fun visitExpressionStatement(expr: ExprStatement) {
+        visitExpression(expr.expr, true)
+    }
+
+    fun visitExpression(expression: Expression, isRvalue: Boolean): Value {
+        return when (expression) {
+            is BinaryOp -> visitBinary(expression, isRvalue)
+            is UnaryOp  -> visitUnary(expression, isRvalue)
+            is NumNode  -> visitNumNode(expression)
+            is VarNode  -> visitVarNode(expression, isRvalue)
+            else -> throw IRCodeGenError("Unknown expression")
+        }
+    }
+
+    fun visit(specifierType: DeclarationSpecifier): SpecifiedTypeBuilder {
         val builder = SpecifiedTypeBuilder()
         for (specifier in specifierType.specifiers) {
             when (specifier) {
@@ -136,7 +162,7 @@ class IRGen private constructor(): NodeVisitor<Any> {
         return builder
     }
 
-    override fun visit(compoundStatement: CompoundStatement): SpecifiedType {
+    fun visit(compoundStatement: CompoundStatement): SpecifiedType {
         for (node in compoundStatement.statements) {
             when (node) {
                 is Declaration -> {
@@ -156,71 +182,55 @@ class IRGen private constructor(): NodeVisitor<Any> {
                         else -> throw IRCodeGenError("Unknown declarator, delc=$decl")
                     }
                 }
-                is Statement -> node.accept(this)
+                is Statement -> visit(node)
                 else -> throw IRCodeGenError("Statement expected")
             }
         }
         return SpecifiedType.VOID
     }
 
-    override fun visit(node: DummyNode): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(binop: BinaryOp): Value {
-        val left = binop.left.accept(this) as Value
-        val right = binop.right.accept(this) as Value
-
-        val commonType     = TypeConverter.interfereTypes(left, right)
-        val leftConverted  = ir().convertToType(left, commonType)
-        val rightConverted = ir().convertToType(right, commonType)
+    fun visitBinary(binop: BinaryOp, isRvalue: Boolean): Value {
 
         return when (binop.type) {
-            BinaryOpType.ADD -> ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Add,  rightConverted)
-            BinaryOpType.SUB -> ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Sub,  rightConverted)
+            BinaryOpType.ADD -> {
+                val left = visitExpression(binop.left, true)
+                val right = visitExpression(binop.right, true)
+                val commonType     = TypeConverter.interfereTypes(left, right)
+                val leftConverted  = ir().convertToType(left, commonType)
+                val rightConverted = ir().convertToType(right, commonType)
+                ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Add,  rightConverted)
+            }
+            BinaryOpType.SUB -> {
+                val left = visitExpression(binop.left, true)
+                val right = visitExpression(binop.right, true)
+                val commonType     = TypeConverter.interfereTypes(left, right)
+                val leftConverted  = ir().convertToType(left, commonType)
+                val rightConverted = ir().convertToType(right, commonType)
+                ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Sub,  rightConverted)
+            }
             BinaryOpType.ASSIGN -> {
-                val varName = (binop.left as VarNode).str.str()
-                val rvalueAttr = varStack[varName] ?: throw IRCodeGenError("Variable $varName not found")
-                val rvalueAdr = rvalueAttr.second
-                val rightType = rightConverted.type()
-                val rightValue = rightConverted
-                val rightValueConverted = ir().convertToType(rightValue, rightType)
-                ir().store(rvalueAdr, rightValueConverted)
-                rightValue
+                val left = visitExpression(binop.left, false)
+                val right = visitExpression(binop.right, true)
+                ir().store(left, right)
+                right //TODO
             }
             else -> throw IRCodeGenError("Unknown binary operation, op=${binop.type}")
         }
     }
 
-    override fun visit(pointer: NodePointer): List<TypeProperty> {
-        TODO("Not yet implemented")
+    fun visitUnary(unaryOp: UnaryOp, isRvalue: Boolean): Value {
+        return when (unaryOp.type) {
+            PrefixUnaryOpType.ADDRESS -> {
+                visitExpression(unaryOp.primary, isRvalue)
+            }
+            PrefixUnaryOpType.DEREF -> {
+                visitExpression(unaryOp.primary, isRvalue)
+            }
+            else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.type}")
+        }
     }
 
-    override fun visit(node: IdentNode): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(cast: Cast): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(arrayAccess: ArrayAccess): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(unaryOp: UnaryOp): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(sizeOf: SizeOf): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(stringNode: StringNode): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(numNode: NumNode): Constant {
+    fun visitNumNode(numNode: NumNode): Constant {
         return when (numNode.toLong.data) {
             in 0..255                  -> U8Value(numNode.toLong.data.toByte())
             in 0..65535                -> U16Value(numNode.toLong.data.toShort())
@@ -232,211 +242,35 @@ class IRGen private constructor(): NodeVisitor<Any> {
         }
     }
 
-    override fun visit(switchStatement: SwitchStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(declarator: Declarator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(declaration: Declaration): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(returnStatement: ReturnStatement): SpecifiedType {
+    private fun visitReturn(returnStatement: ReturnStatement) {
         when (returnStatement.expr) {
             is EmptyExpression -> {
                 ir().retVoid()
             }
             else -> {
-                val value = returnStatement.expr.accept(this) as Value
+                val value = visitExpression(returnStatement.expr, true)
                 val realType = ir().prototype().returnType()
                 val returnType = ir().convertToType(value, realType)
                 ir().ret(returnType)
             }
         }
-        return SpecifiedType.VOID
     }
 
-    override fun visit(ifStatement: IfStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
 
-    override fun visit(whileStatement: WhileStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(forStatement: ForStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(doWhileStatement: DoWhileStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(caseStatement: CaseStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(defaultStatement: DefaultStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(breakStatement: BreakStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(continueStatement: ContinueStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(gotoStatement: GotoStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(labeledStatement: LabeledStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(emptyStatement: EmptyStatement): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(exprStatement: ExprStatement): Value {
-        return exprStatement.expr.accept(this) as Value
-    }
-
-    override fun visit(parameter: Parameter): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(declspec: Declspec): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(functionParams: FunctionParams): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(assignmentDeclarator: AssignmentDeclarator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(functionDeclarator: FunctionDeclarator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(functionPointerDeclarator: FunctionPointerDeclarator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(functionPointerParamDeclarator: FunctionPointerParamDeclarator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(conditional: Conditional): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(memberAccess: MemberAccess): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(initializerList: InitializerList): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(compoundLiteral: CompoundLiteral): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(arrayDeclarator: ArrayDeclarator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(typeName: TypeName): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(directFunctionDeclarator: DirectFunctionDeclarator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(directArrayDeclarator: DirectArrayDeclarator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(abstractDeclarator: AbstractDeclarator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(functionCall: FunctionCall): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(structField: StructField): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(structSpecifier: StructSpecifier): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(structDeclaration: StructDeclaration): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(unionSpecifier: UnionSpecifier): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(unionDeclaration: UnionDeclaration): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(typeNode: TypeNode): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(enumSpecifier: EnumSpecifier): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(enumDeclaration: EnumDeclaration): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(enumerator: Enumerator): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(varNode: VarNode): Value {
+    fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
         val name = varNode.str.str()
         val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable $name not found")
-        return ir().load(toIRType(rvalueAttr.first) as PrimitiveType, rvalueAttr.second)
-    }
-
-    override fun visit(arrowMemberAccess: ArrowMemberAccess): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(parameterVarArg: ParameterVarArg): SpecifiedType {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(directDeclarator: DirectDeclarator): Any {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(emptyExpression: EmptyExpression): Any {
-        TODO("Not yet implemented")
+        if (isRvalue) {
+            return ir().load(toIRType(rvalueAttr.first) as PrimitiveType, rvalueAttr.second)
+        } else {
+            return rvalueAttr.second
+        }
     }
 
     companion object {
         fun apply(node: ProgramNode): Module {
             val irGen = IRGen()
-            node.accept(irGen)
+            irGen.visit(node)
             return irGen.moduleBuilder.build()
         }
     }
