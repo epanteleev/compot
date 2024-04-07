@@ -322,11 +322,11 @@ data class BinaryOp(val left: Expression, val right: Expression, val type: Binar
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class DoWhileStatement(val body: Node, val condition: Node): Statement() {
+data class DoWhileStatement(val body: Statement, val condition: Expression): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class WhileStatement(val condition: Node, val body: Node): Statement() {
+data class WhileStatement(val condition: Expression, val body: Statement): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

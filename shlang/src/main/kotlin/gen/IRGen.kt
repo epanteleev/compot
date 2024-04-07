@@ -11,7 +11,6 @@ import ir.module.block.Label
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.*
-import parser.LineAgnosticAstPrinter
 import parser.nodes.*
 import java.lang.Exception
 
@@ -151,8 +150,68 @@ class IRGen private constructor() {
             is ExprStatement        -> visitExpressionStatement(statement)
             is ReturnStatement      -> visitReturn(statement)
             is IfStatement          -> visitIf(statement)
+            is WhileStatement       -> visitWhile(statement)
+            is DoWhileStatement     -> visitDoWhile(statement)
             else -> throw IRCodeGenError("Statement expected, but got $statement")
         }
+    }
+
+    fun visitDoWhile(doWhileStatement: DoWhileStatement): Boolean {
+        val bodyBlock      = ir().createLabel()
+        val endBlock       = ir().createLabel()
+
+        ir().branch(bodyBlock)
+        ir().switchLabel(bodyBlock)
+        visitStatement(doWhileStatement.body)
+
+        val conditionExpr = visitExpression(doWhileStatement.condition, true)
+        val condition = if (conditionExpr.type() != Type.U1) {
+            val type = conditionExpr.type()
+            when (type) {
+                is SignedIntType     -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+                is UnsignedIntType   -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+                is FloatingPointType -> ir().fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
+                is PointerType       -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+                else -> throw IRCodeGenError("Unknown type")
+            }
+        } else {
+            conditionExpr
+        }
+
+        ir().branchCond(condition, bodyBlock, endBlock)
+        ir().switchLabel(endBlock)
+        return true
+    }
+
+    fun visitWhile(whileStatement: WhileStatement): Boolean {
+        val conditionBlock = ir().createLabel()
+        val bodyBlock = ir().createLabel()
+        val endBlock = ir().createLabel()
+
+        ir().branch(conditionBlock)
+        ir().switchLabel(conditionBlock)
+        val conditionExpr = visitExpression(whileStatement.condition, true)
+        val condition = if (conditionExpr.type() != Type.U1) {
+            val type = conditionExpr.type()
+            when (type) {
+                is SignedIntType     -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+                is UnsignedIntType   -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+                is FloatingPointType -> ir().fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
+                is PointerType       -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+                else -> throw IRCodeGenError("Unknown type")
+            }
+        } else {
+            conditionExpr
+        }
+
+        ir().branchCond(condition, bodyBlock, endBlock)
+        ir().switchLabel(bodyBlock)
+        val needSwitch = visitStatement(whileStatement.body)
+        if (needSwitch) {
+            ir().branch(conditionBlock)
+        }
+        ir().switchLabel(endBlock)
+        return true
     }
 
     private fun visitIf(ifStatement: IfStatement): Boolean {
@@ -295,11 +354,29 @@ class IRGen private constructor() {
                 ir().store(left, right)
                 right //TODO
             }
+            BinaryOpType.NE -> {
+                val left = visitExpression(binop.left, true)
+                val right = visitExpression(binop.right, true)
+                val commonType     = TypeConverter.interfereTypes(left, right)
+                val leftConverted  = ir().convertToType(left, commonType)
+                val rightConverted = ir().convertToType(right, commonType)
+                val cmp = ir().icmp(leftConverted, IntPredicate.Ne, rightConverted)
+                ir().convertToType(cmp, Type.U1)
+            }
+            BinaryOpType.GT -> {
+                val left = visitExpression(binop.left, true)
+                val right = visitExpression(binop.right, true)
+                val commonType     = TypeConverter.interfereTypes(left, right)
+                val leftConverted  = ir().convertToType(left, commonType)
+                val rightConverted = ir().convertToType(right, commonType)
+                val cmp = ir().icmp(leftConverted, IntPredicate.Gt, rightConverted)
+                ir().convertToType(cmp, Type.U1)
+            }
             else -> throw IRCodeGenError("Unknown binary operation, op=${binop.type}")
         }
     }
 
-    fun visitUnary(unaryOp: UnaryOp, isRvalue: Boolean): Value {
+    private fun visitUnary(unaryOp: UnaryOp, isRvalue: Boolean): Value {
         return when (unaryOp.type) {
             PrefixUnaryOpType.ADDRESS -> {
                 visitExpression(unaryOp.primary, isRvalue)
@@ -325,9 +402,7 @@ class IRGen private constructor() {
 
     private fun visitReturn(returnStatement: ReturnStatement): Boolean {
         when (returnStatement.expr) {
-            is EmptyExpression -> {
-                ir().branch(exitBlock!!)
-            }
+            is EmptyExpression -> ir().branch(exitBlock!!)
             else -> {
                 val value = visitExpression(returnStatement.expr, true)
                 val realType = ir().prototype().returnType()
@@ -354,7 +429,6 @@ class IRGen private constructor() {
             val irGen = IRGen()
             irGen.visit(node)
             val module = irGen.moduleBuilder.build()
-            println(module)
             return module
         }
     }

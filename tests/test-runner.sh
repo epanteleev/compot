@@ -50,6 +50,7 @@ function compile_and_run() {
 	run_test "$test_name" "$expected_result"
 }
 
+compile_and_run doWhile 20
 compile_and_run bubble_sort_i8 "0 2 4 4 9 23 45 55 89 90 " 
 compile_and_run bubble_sort_fp "0.000000 2.000000 4.000000 4.000000 9.000000 23.000000 45.000000 55.000000 89.000000 90.000000 "
 compile_and_run collatz "1"
