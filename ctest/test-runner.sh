@@ -59,3 +59,4 @@ compile_and_run 4 0
 compile_and_run 5 20
 compile_and_run 6 10
 compile_and_run doWhile 20
+compile_and_run goto 20
