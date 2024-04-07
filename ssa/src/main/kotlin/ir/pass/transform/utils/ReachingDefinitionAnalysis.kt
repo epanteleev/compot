@@ -7,6 +7,7 @@ import ir.module.block.*
 import ir.module.BasicBlocks
 import ir.pass.isLocalVariable
 import ir.pass.transform.Mem2RegException
+import ir.types.Type
 
 
 class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, private val dominatorTree: DominatorTree) {
@@ -19,11 +20,20 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, private v
     }
 
     private fun rename(bb: Block, oldValue: Value): Value {
-        return if (oldValue is ValueInstruction) {
-            findActualValueOrNull(bb, oldValue) ?: oldValue
-        } else {
-            oldValue
+        if (oldValue !is ValueInstruction) {
+            return oldValue
         }
+
+        val newValue = findActualValueOrNull(bb, oldValue)?: return oldValue
+        return convertOrSkip(oldValue.type(), newValue)
+    }
+
+    private fun convertOrSkip(type: Type, value: Value): Value {
+        if (value !is Constant) {
+            return value
+        }
+
+        return Constant.from(type, value)
     }
 
     private fun rewriteValuesSetup(bb: Block) {
