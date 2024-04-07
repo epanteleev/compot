@@ -11,6 +11,7 @@ import ir.module.block.Label
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.*
+import parser.LineAgnosticAstPrinter
 import parser.nodes.*
 import java.lang.Exception
 
@@ -24,6 +25,7 @@ class IRGen private constructor() {
     private var currentFunction: FunctionDataBuilder? = null
     private var returnValueAddr: Value? = null
     private var exitBlock: Label? = null
+    private var stringTolabel = mutableMapOf<String, Label>()
 
 
     private fun ir(): FunctionDataBuilder {
@@ -152,8 +154,24 @@ class IRGen private constructor() {
             is IfStatement          -> visitIf(statement)
             is WhileStatement       -> visitWhile(statement)
             is DoWhileStatement     -> visitDoWhile(statement)
+            is LabeledStatement     -> visitLabeledStatement(statement)
+            is GotoStatement        -> visitGoto(statement)
             else -> throw IRCodeGenError("Statement expected, but got $statement")
         }
+    }
+
+    private fun visitLabeledStatement(statement: LabeledStatement): Boolean {
+        val label = stringTolabel[statement.label.str()] ?: throw IRCodeGenError("Label '${statement.label.str()}' not found ")
+        ir().branch(label)
+        ir().switchLabel(label)
+        return visitStatement(statement.stmt)
+    }
+
+    private fun visitGoto(statement: GotoStatement): Boolean {
+        val label = stringTolabel[statement.id.str()] ?: throw IRCodeGenError("Label '${statement.id.str()}' not found ")
+        ir().branch(label)
+        ir().switchLabel(label)
+        return true
     }
 
     fun visitDoWhile(doWhileStatement: DoWhileStatement): Boolean {
@@ -290,6 +308,16 @@ class IRGen private constructor() {
 
     fun visitCompoundStatement(compoundStatement: CompoundStatement): Boolean {
         var needSwitch = true
+
+        for (node in compoundStatement.statements) {
+            if (node !is LabeledStatement) {
+                continue
+            }
+
+            val label = ir().createLabel()
+            stringTolabel[node.label.str()] = label
+        }
+
         for (node in compoundStatement.statements) {
             when (node) {
                 is Declaration -> {
@@ -320,6 +348,9 @@ class IRGen private constructor() {
                         }
                         else -> throw IRCodeGenError("Unknown declarator, delc=$decl")
                     }
+                }
+                is GotoStatement -> {
+                    return visitGoto(node)
                 }
                 is Statement -> {
                     needSwitch = visitStatement(node)

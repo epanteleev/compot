@@ -30,5 +30,5 @@ java {
 }
 
 application {
-    mainClass.set("startup.StartupKt")
+    mainClass.set("startup.ShlangStartupKt")
 }

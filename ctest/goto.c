@@ -5,7 +5,6 @@ int main() {
 	success:
 		return 220;
 	next:
-	foo:
 		goto success;
 		return 1;
 }

@@ -262,7 +262,7 @@ class EmptyStatement : Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-class LabeledStatement(val label: Ident, val stmt: Statement) : Statement() {
+data class LabeledStatement(val label: Ident, val stmt: Statement) : Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
