@@ -60,7 +60,7 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
 
         bb.phis { phi ->
             val newUsages = arrayListOf<Value>()
-            phi.forAllIncoming { l, v -> renameValues(newUsages, l, v, phi.type()) }
+            phi.zip { l, v -> renameValues(newUsages, l, v, phi.type()) }
             phi.update(newUsages)
         }
     }

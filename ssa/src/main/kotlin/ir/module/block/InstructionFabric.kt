@@ -37,7 +37,6 @@ interface InstructionFabric {
     fun fpext(value: Value, toType: FloatingPointType): FpExtend
     fun fptosi(value: Value, toType: SignedIntType): FloatToSigned
     fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select
-    fun phi(incoming: List<Value>, labels: List<Label>): Phi //TODO internal instruction???
 }
 
 interface InternalInstructionFabric {
@@ -48,6 +47,7 @@ interface InternalInstructionFabric {
     fun move(toValue: Generate, fromValue: Value)
     fun downStackFrame(callable: Callable)
     fun upStackFrame(callable: Callable)
+    fun phi(incoming: List<Value>, blocks: List<Block>): Phi
 }
 
 interface AnyInstructionFabric : InstructionFabric, InternalInstructionFabric

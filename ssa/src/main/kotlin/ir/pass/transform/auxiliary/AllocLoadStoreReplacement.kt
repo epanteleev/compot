@@ -1,7 +1,7 @@
 package ir.pass.transform.auxiliary
 
-import ir.instruction.*
 import ir.module.*
+import ir.instruction.*
 import ir.module.block.Block
 import ir.pass.canBeReplaced
 import ir.types.PrimitiveType

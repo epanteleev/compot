@@ -13,8 +13,11 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("%$identifier = phi $tp [")
-        operands.zip(incoming).joinTo(builder) {//todo
-            "${it.first}: ${it.second}"
+        zipWithIndex { value, bb, idx ->
+            builder.append("$bb: $value")
+            if (idx != incoming.size - 1) {
+                builder.append(", ")
+            }
         }
         builder.append(']')
         return builder.toString()
@@ -26,9 +29,15 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
 
     fun incoming(): List<Block> = incoming
 
-    fun forAllIncoming(closure: (Block, Value) -> Unit) {
+    fun zip(closure: (Block, Value) -> Unit) {
         incoming().forEachWith(operands().asIterable()) { bb, value ->
             closure(bb, value)
+        }
+    }
+
+    fun zipWithIndex(closure: (Block, Value, Int) -> Unit) {
+        incoming().forEachWith(operands().asIterable()) { bb, value, i ->
+            closure(bb, value, i)
         }
     }
 

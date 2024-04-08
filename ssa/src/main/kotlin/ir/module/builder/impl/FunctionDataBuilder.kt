@@ -144,15 +144,6 @@ class FunctionDataBuilder private constructor(
         return bb.fptosi(value, toType)
     }
 
-    override fun phi(incoming: List<Value>, labels: List<Label>): Phi {
-        val resolved = if (labels.first() !is Block) {
-            labels.map { blocks.findBlock(it) }
-        } else {
-            labels
-        }
-        return bb.phi(incoming, resolved)
-    }
-
     companion object {
         fun create(
             name: String,

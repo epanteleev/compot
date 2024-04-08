@@ -1,6 +1,5 @@
 package ir.pass.transform.auxiliary
 
-import ir.Value
 import ir.instruction.*
 import ir.ArgumentValue
 import ir.module.Module
@@ -12,8 +11,7 @@ import ir.module.FunctionData
 
 internal class CopyInsertion private constructor(private val cfg: FunctionData) {
     private fun isolatePhis(bb: Block, phi: Phi) {
-        val newValues = hashMapOf<Value, Value>()
-        phi.forAllIncoming { incoming, operand ->
+        phi.zipWithIndex { incoming, operand, idx ->
             assert(!bb.hasCriticalEdgeFrom(incoming)) {
                 "Flow graph has critical edge from $incoming to $bb"
             }
@@ -21,11 +19,8 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
             val copy = incoming.insert(incoming.instructions().size - 1) {
                 it.copy(operand)
             }
-
-            newValues[operand] = copy
+            phi.update(idx, copy)
         }
-
-        phi.update { newValues[it]!! }
     }
 
     private fun isolateArgumentValues() {
@@ -36,27 +31,23 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
 
         val begin = cfg.blocks.begin()
         val mapArguments = hashMapOf<ArgumentValue, ValueInstruction>()
-        val copies = mutableSetOf<Copy>()
+
         for (arg in cfg.arguments()) { //Todo O(argSize * countOfInstructions) ?!?
-            val copy = begin.insert(0) {
-                it.copy(arg)
-            }
-            mapArguments[arg] = copy
-            copies.add(copy)
+            mapArguments[arg] = begin.insert(0) { it.copy(arg) }
         }
 
         for (bb in cfg.blocks) {
             for (inst in bb.instructions()) {
-                if (bb.equals(Label.entry) && copies.contains(inst)) {
+                if (bb.equals(Label.entry) && inst is Copy) {
                     continue
                 }
 
-                for ((idx, use) in inst.operands().withIndex()) { //TODO
-                    if (use !is ArgumentValue) {
-                        continue
+                inst.update { value ->
+                    if (value !is ArgumentValue) {
+                        return@update value
                     }
 
-                    inst.update(idx, mapArguments[use]!!)
+                    mapArguments[value]!!
                 }
             }
         }
