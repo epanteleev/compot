@@ -35,9 +35,18 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
     }
 
     fun end(): Block {
-        val endBlock = basicBlocks.find { it.last() is Return }
-        assert(endBlock != null) { "graph doesn't have enr block" }
-        return endBlock as Block
+        val endBlock = basicBlocks.last()
+        assert(endBlock.instructions().last() is Return) {
+            "Last instruction should be return, but got '${endBlock.instructions().last()}'"
+        }
+        return endBlock
+    }
+
+    fun swapBlocks(aIndex: Int, bIndex: Int) {
+        val a = basicBlocks[aIndex]
+        val b = basicBlocks[bIndex]
+        basicBlocks[aIndex] = b
+        basicBlocks[bIndex] = a
     }
 
     fun preorder(): BasicBlocksIterator {

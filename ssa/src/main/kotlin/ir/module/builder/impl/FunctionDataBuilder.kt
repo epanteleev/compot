@@ -17,6 +17,7 @@ class FunctionDataBuilder private constructor(
     blocks: BasicBlocks
 ): AnyFunctionDataBuilder(prototype, argumentValues, blocks), InstructionFabric {
     override fun build(): FunctionData {
+        normalizeBlocks()
         return FunctionData.create(prototype, blocks, argumentValues)
     }
 

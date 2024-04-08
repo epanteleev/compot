@@ -71,6 +71,7 @@ class FunctionDataBuilderWithContext private constructor(
             phi.completePhi(nameMap)
         }
 
+        normalizeBlocks()
         return FunctionData.create(prototype, blocks, argumentValues)
     }
 

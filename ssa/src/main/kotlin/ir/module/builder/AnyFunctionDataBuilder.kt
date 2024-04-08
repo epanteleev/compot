@@ -3,6 +3,7 @@ package ir.module.builder
 import ir.ArgumentValue
 import ir.FunctionPrototype
 import ir.instruction.ArithmeticUnary
+import ir.instruction.Return
 import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
@@ -35,4 +36,15 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
     fun prototype(): FunctionPrototype = prototype
 
     abstract fun build(): FunctionData
+
+    protected fun normalizeBlocks(): Boolean {
+        val last = blocks.blocks().find {
+            it.instructions().lastOrNull() is Return
+        }
+        if (last == null) {
+            throw IllegalStateException("Function '${prototype.name}' does not have return instruction")
+        }
+        blocks.swapBlocks(last.index, blocks.size() - 1)
+        return true
+    }
 }
