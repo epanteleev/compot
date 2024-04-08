@@ -50,6 +50,7 @@ function compile_and_run() {
 	run_test "$test_name" "$expected_result"
 }
 
+compile_and_run getAddress1 90
 compile_and_run getAddress 90
 compile_and_run doWhile 20
 compile_and_run bubble_sort_i8 "0 2 4 4 9 23 45 55 89 90 " 

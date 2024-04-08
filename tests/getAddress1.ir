@@ -1,0 +1,25 @@
+extern void @printInt(i32)
+
+; int main() {
+;    int x;
+;    int* p1 = &x;
+;    int** p = &p1;
+;    **p =90;
+;    return x;
+; }
+define i32 @main() {
+entry:
+  %retval = alloc i32
+  %x = alloc i32
+  %p1 = alloc ptr
+  %p = alloc ptr
+  store ptr %retval, i32 0
+  store ptr %p1, ptr %x
+  store ptr %p, ptr %p1
+  %0 = load ptr %p
+  %1 = load ptr %0
+  store ptr %1, i32 90
+  %2 = load i32 %x
+  call void @printInt(%2: i32)
+  ret i32 %2
+}
