@@ -11,7 +11,6 @@ import ir.module.block.Label
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.*
-import parser.LineAgnosticAstPrinter
 import parser.nodes.*
 import java.lang.Exception
 
@@ -174,7 +173,23 @@ class IRGen private constructor() {
         return true
     }
 
-    fun visitDoWhile(doWhileStatement: DoWhileStatement): Boolean {
+    private fun makeCondition(condition: Expression): Value {
+        val conditionExpr = visitExpression(condition, true)
+        if (conditionExpr.type() == Type.U1) {
+            return conditionExpr
+        }
+
+        val type = conditionExpr.type()
+        return when (type) {
+            is SignedIntType     -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            is UnsignedIntType   -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            is FloatingPointType -> ir().fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
+            is PointerType       -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            else -> throw IRCodeGenError("Unknown type")
+        }
+    }
+
+    private fun visitDoWhile(doWhileStatement: DoWhileStatement): Boolean {
         val bodyBlock      = ir().createLabel()
         val endBlock       = ir().createLabel()
 
@@ -182,19 +197,7 @@ class IRGen private constructor() {
         ir().switchLabel(bodyBlock)
         visitStatement(doWhileStatement.body)
 
-        val conditionExpr = visitExpression(doWhileStatement.condition, true)
-        val condition = if (conditionExpr.type() != Type.U1) {
-            val type = conditionExpr.type()
-            when (type) {
-                is SignedIntType     -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-                is UnsignedIntType   -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-                is FloatingPointType -> ir().fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
-                is PointerType       -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-                else -> throw IRCodeGenError("Unknown type")
-            }
-        } else {
-            conditionExpr
-        }
+        val condition = makeCondition(doWhileStatement.condition)
 
         ir().branchCond(condition, bodyBlock, endBlock)
         ir().switchLabel(endBlock)
@@ -208,19 +211,7 @@ class IRGen private constructor() {
 
         ir().branch(conditionBlock)
         ir().switchLabel(conditionBlock)
-        val conditionExpr = visitExpression(whileStatement.condition, true)
-        val condition = if (conditionExpr.type() != Type.U1) {
-            val type = conditionExpr.type()
-            when (type) {
-                is SignedIntType     -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-                is UnsignedIntType   -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-                is FloatingPointType -> ir().fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
-                is PointerType       -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-                else -> throw IRCodeGenError("Unknown type")
-            }
-        } else {
-            conditionExpr
-        }
+        val condition= makeCondition(whileStatement.condition)
 
         ir().branchCond(condition, bodyBlock, endBlock)
         ir().switchLabel(bodyBlock)
@@ -233,19 +224,7 @@ class IRGen private constructor() {
     }
 
     private fun visitIf(ifStatement: IfStatement): Boolean {
-        val conditionExpr = visitExpression(ifStatement.condition, true)
-        val condition = if (conditionExpr.type() != Type.U1) {
-            val type = conditionExpr.type()
-            when (type) {
-                is SignedIntType     -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-                is UnsignedIntType   -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-                is FloatingPointType -> ir().fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
-                is PointerType       -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-                else -> throw IRCodeGenError("Unknown type")
-            }
-        } else {
-            conditionExpr
-        }
+        val condition = makeCondition(ifStatement.condition)
 
         val thenBlock = ir().createLabel()
         val elseBlock  = ir().createLabel()
@@ -343,7 +322,6 @@ class IRGen private constructor() {
                             varStack[varName] = KeyType(type, rvalueAdr)
 
                             val rvalue = visitExpression(decl.lvalue, true)
-
                             ir().store(rvalueAdr, rvalue)
                         }
                         else -> throw IRCodeGenError("Unknown declarator, delc=$decl")
