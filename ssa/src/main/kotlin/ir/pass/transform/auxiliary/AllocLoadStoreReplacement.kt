@@ -1,10 +1,13 @@
 package ir.pass.transform.auxiliary
 
-import ir.module.*
+import collections.identityHashMapOf
+import collections.identityHashSetOf
 import ir.instruction.*
+import ir.module.*
 import ir.module.block.Block
 import ir.pass.canBeReplaced
 import ir.types.PrimitiveType
+import java.util.*
 
 
 class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks) {
@@ -16,7 +19,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
         bb.insert(i) { it.move(toValue, fromValue) }
     }
 
-    private fun replaceAlloc(bb: Block, inst: Alloc, i: Int) {
+    private fun replaceAlloc(bb: Block, inst: Alloc, i: Int): Generate {
         val allocatedType = inst.allocatedType
         assert(inst.allocatedType is PrimitiveType) {
             "should be, but allocatedType=${allocatedType}"
@@ -26,6 +29,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
 
         ValueInstruction.replaceUsages(inst, gen)
         bb.remove(i + 1)
+        return gen
     }
 
     private fun replaceLoad(bb: Block, inst: Load, i: Int) {
@@ -42,40 +46,66 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
         bb.remove(i + 1)
     }
 
-    private fun replaceAllocLoadStores(): Set<Copy> {
-        val allocPointerUsers = mutableSetOf<Copy>()
+    // store ptr %gen0x8, i32 0
+    private fun replaceAllocLoadStores(loadAndStores: Set<Instruction>){
         for (bb in cfg.preorder()) {
             val instructions = bb.instructions()
-            val size = instructions.size
-            for (i in 0 until size) {
+            var i = -1
+            while (i < instructions.size - 1) {
+                i += 1
                 val inst = instructions[i]
                 when {
-                    inst is Alloc && inst.canBeReplaced() -> {
-                        for (user in inst.usedIn()) {
-                            if (user !is Copy) {
+                    inst is Load && inst.operand() is Generate  -> replaceLoad(bb, inst, i)
+                    inst is Store && inst.pointer() is Generate -> replaceStore(bb, inst, i)
+                    inst is Copy && inst.origin() is Generate   -> replaceCopy(bb, inst, i)
+                    else -> {
+                        for (op in inst.operands()) {
+                            if (op !is Generate) {
                                 continue
                             }
-
-                            allocPointerUsers.add(user)
+                            val lea = bb.insert(i) { it.lea(op) }
+                            ValueInstruction.replaceUsages(op, lea)
+                            bb.remove(i + 1)
                         }
-
-                        replaceAlloc(bb, inst, i)
                     }
-                    inst is Load && inst.canBeReplaced() -> replaceLoad(bb, inst, i)
-                    inst is Store && inst.canBeReplaced() -> replaceStore(bb, inst, i)
-                    inst is Copy && allocPointerUsers.contains(inst) -> replaceCopy(bb, inst, i)
-                    else -> {}
+                }
+            }
+        }
+    }
+
+    private fun replaceAlloc(): Set<Instruction> {
+        val loadAndStores = identityHashSetOf<Instruction>()
+        for (bb in cfg) {
+            val instructions = bb.instructions()
+            var i = -1
+            while (i < instructions.size - 1) {
+                i += 1
+                val inst = instructions[i]
+                if (inst !is Alloc) {
+                    continue
+                }
+
+                if (!inst.canBeReplaced()) {
+                    continue
+                }
+
+                val gen = replaceAlloc(bb, inst, i)
+                for (user in gen.usedIn()) {
+                    if (user !is Load && user !is Store) {
+                        continue
+                    }
+
+                    loadAndStores.add(user)
                 }
             }
         }
 
-        return allocPointerUsers
+        return loadAndStores
     }
 
     private fun pass() {
-        replaceAllocLoadStores()
-
-
+        val allocPointerUsers = replaceAlloc()
+        replaceAllocLoadStores(allocPointerUsers)
     }
 
     companion object {

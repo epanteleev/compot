@@ -5,7 +5,7 @@ import ir.types.*
 import ir.instruction.utils.Visitor
 
 
-class Store private constructor(pointer: Value, value: Value):
+class Store private constructor(pointer: Value, value: Value, private val valueType: NonTrivialType):
     Instruction(arrayOf(pointer, value)) {
     override fun dump(): String {
         return "$NAME ptr ${pointer()}, ${value().type()} ${value()}"
@@ -27,12 +27,14 @@ class Store private constructor(pointer: Value, value: Value):
         return operands[1]
     }
 
+    fun valueType(): NonTrivialType = valueType
+
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)
     }
 
     override fun hashCode(): Int {
-        return pointer().type().hashCode() xor value().type().hashCode()
+        return valueType.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -53,7 +55,7 @@ class Store private constructor(pointer: Value, value: Value):
                 "inconsistent types: pointer.type=$pointerType, value.type=$valueType"
             }
 
-            return registerUser(Store(pointer, value), pointer, value)
+            return registerUser(Store(pointer, value, valueType), pointer, value)
         }
 
         private fun isAppropriateTypes(pointerType: Type, valueType: Type): Boolean {

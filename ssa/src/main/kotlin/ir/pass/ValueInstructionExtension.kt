@@ -37,7 +37,15 @@ fun Store.canBeReplaced(): Boolean {
 
 /** Check whether alloc result isn't leak to other function. **/
 fun Alloc.noEscape(): Boolean {
-    return usedIn().fold(true) { acc, value ->
-        acc && (value is Load || value is Store)
+    for (user in usedIn()) {
+        if (user is Load) {
+            continue
+        }
+
+        if (user is Store && user.pointer() is Alloc) {
+            continue
+        }
+        return false
     }
+    return true
 }

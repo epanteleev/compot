@@ -205,9 +205,6 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(store: Store) {
         val pointer = store.pointer()
-        assert(!store.isLocalVariable()) {
-            "cannot be, but operand=$pointer"
-        }
 
         val pointerOperand = valueToRegister.operand(pointer)
         val value          = valueToRegister.operand(store.value())
@@ -218,10 +215,6 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(load: Load) {
         val operand = load.operand()
-        assert(!load.isLocalVariable()) {
-            "cannot be, but operand=$operand"
-        }
-
         val pointer = valueToRegister.operand(operand)
         val value   = valueToRegister.operand(load)
         LoadCodegen(load.type(), asm)( value, pointer)
