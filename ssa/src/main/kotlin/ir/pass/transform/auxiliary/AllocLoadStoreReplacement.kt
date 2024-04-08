@@ -55,19 +55,19 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                 i += 1
                 val inst = instructions[i]
                 when {
-                    inst is Load && inst.operand() is Generate  -> replaceLoad(bb, inst, i)
-                    inst is Store && inst.pointer() is Generate -> replaceStore(bb, inst, i)
-                    inst is Copy && inst.origin() is Generate   -> replaceCopy(bb, inst, i)
-                    else -> {
-                        for (op in inst.operands()) {
-                            if (op !is Generate) {
-                                continue
-                            }
-                            val lea = bb.insert(i) { it.lea(op) }
-                            ValueInstruction.replaceUsages(op, lea)
-                            bb.remove(i + 1)
+                    inst is Load && inst.canBeReplaced()  -> replaceLoad(bb, inst, i)
+                    inst is Store && inst.pointer() is Generate -> {
+                        val value = inst.value()
+                        if (value is Generate) {
+                            val lea = bb.insert(i) { it.lea(value) }
+                            inst.update(1, lea)
+                            replaceStore(bb, inst, i + 1)
+                        } else {
+                            replaceStore(bb, inst, i)
                         }
                     }
+                    inst is Copy && inst.origin() is Generate   -> replaceCopy(bb, inst, i)
+                    else -> {}
                 }
             }
         }
@@ -92,9 +92,11 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                 val gen = replaceAlloc(bb, inst, i)
                 for (user in gen.usedIn()) {
                     if (user !is Load && user !is Store) {
+                        assert(user is Copy) {
+                            "should be, but user=${user}"
+                        }
                         continue
                     }
-
                     loadAndStores.add(user)
                 }
             }

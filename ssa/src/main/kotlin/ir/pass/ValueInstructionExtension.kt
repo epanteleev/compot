@@ -30,11 +30,6 @@ fun Store.isLocalVariable(): Boolean {
     return (pointer is Alloc && pointer.isLocalVariable()) || pointer is Generate
 }
 
-fun Store.canBeReplaced(): Boolean {
-    val pointer = pointer()
-    return pointer is Alloc || pointer is Generate
-}
-
 /** Check whether alloc result isn't leak to other function. **/
 fun Alloc.noEscape(): Boolean {
     for (user in usedIn()) {
@@ -42,7 +37,7 @@ fun Alloc.noEscape(): Boolean {
             continue
         }
 
-        if (user is Store && user.pointer() is Alloc) {
+        if (user is Store && user.pointer() == this) {
             continue
         }
         return false
