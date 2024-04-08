@@ -39,8 +39,8 @@ class Bitcast private constructor(name: String, toType: NonTrivialType, value: V
             return registerUser(Bitcast(name, toType, value), value)
         }
 
-        private fun isAppropriateType(toType: Type, valueType: Type): Boolean {
-            return valueType == toType && toType !is FloatingPointType
+        private fun isAppropriateType(toType: NonTrivialType, valueType: NonTrivialType): Boolean {
+            return valueType.size() == toType.size() && toType !is FloatingPointType
         }
 
         fun isCorrect(bitcast: Bitcast): Boolean {

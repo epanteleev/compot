@@ -6,7 +6,7 @@ interface Value {
     fun type(): NonTrivialType
 
     companion object {
-        val UNDEF: Value = UndefinedValue()
+        val UNDEF: UndefinedValue = UndefinedValue()
     }
 }
 
@@ -46,6 +46,23 @@ interface Constant: Value {
                 Type.U64 -> U64Value(value.toLong())
                 Type.F32 -> F32Value(value.toFloat())
                 Type.F64 -> F64Value(value.toDouble())
+                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            }
+        }
+
+        fun from(kind: Type, value: Constant): Constant {
+            return when (value) {
+                is I8Value  -> of(kind, value.i8)
+                is U8Value  -> of(kind, value.u8)
+                is I16Value -> of(kind, value.i16)
+                is U16Value -> of(kind, value.u16)
+                is I32Value -> of(kind, value.i32)
+                is U32Value -> of(kind, value.u32)
+                is I64Value -> of(kind, value.i64)
+                is U64Value -> of(kind, value.u64)
+                is F32Value -> of(kind, value.f32)
+                is F64Value -> of(kind, value.f64)
+                is UndefinedValue -> Value.UNDEF
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
         }

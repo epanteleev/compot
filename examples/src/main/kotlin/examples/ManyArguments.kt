@@ -68,6 +68,5 @@ fun main() {
     val ret = builder.load(Type.U64, regValue)
     builder.ret(ret)
 
-    val module = moduleBuilder.build()
-    Driver.output("manyArguments", module)
+    moduleBuilder.build()
 }

@@ -1,0 +1,27 @@
+
+extern void @printInt(i32)
+
+define i32 @main() {
+entry:	
+	%0x0 = alloc i32
+	%0x1 = alloc i32
+	store ptr %0x1, u32 50
+	br label %L2
+L2:	; pred=entry, L3
+	%v2x0 = load i32 %0x1
+	%2x1 = sub i32 %v2x0, 1
+	store ptr %0x1, i32 %2x1
+	br label %L3
+L3:	; pred=L2
+	%v3x0 = load i32 %0x1
+	%cmp3x1 = icmp gt i32 %v3x0, 20
+	br u1 %cmp3x1 label %L2, label %L4 
+L4:	; pred=L3
+	%v4x0 = load i32 %0x1
+	store ptr %0x0, i32 %v4x0
+	br label %L1
+L1:	; pred=L4
+	%v1x0 = load i32 %0x0
+	call void @printInt(%v1x0: i32)
+	ret i32 %v1x0
+}

@@ -6,26 +6,27 @@ RESET=`tput sgr0`
 
 JAVA=java
 
-export JAVA_OPTS="-ea"
-IR_COMPILER="../build/ssa-1.0/bin/ssa"
+export JAVA_OPTS="-Xint -ea"
+IR_COMPILER="./build/ssa-1.0/bin/ssa --dump-ir"
 
 rm -rf ../build
 mkdir ../build
-unzip -o ../ssa/build/distributions/ssa-1.0.zip -d ../build
+unzip -o ../ssa/build/distributions/ssa-1.0.zip -d build
 
 function compile_test() {
-	${IR_COMPILER} "$1.ir"
-        gcc "$1/base.S" runtime.c -o "$1/base"
-        gcc "$1/opt.S" runtime.c -o "$1/opt"
+	${IR_COMPILER} -c "$1.ir"
+        gcc "$1.o" runtime.c -o "base"
+	${IR_COMPILER} -c "$1.ir" -O 1
+        gcc "$1.o" runtime.c -o "opt"
 }
 
 function run_test() {
 	echo "${GREEN}[Run base: $1]${RESET}"
-	BASE_RESULT=$(./$1/base)
+	BASE_RESULT=$(./base)
 	check $1 "$2" "$BASE_RESULT"
 
 	echo "[Run opt: $1]"
-	OPT_RESULT=$(./$1/opt)
+	OPT_RESULT=$(./opt)
 	check $1 "$2" "$OPT_RESULT"
 }
 
@@ -49,6 +50,7 @@ function compile_and_run() {
 	run_test "$test_name" "$expected_result"
 }
 
+compile_and_run doWhile 20
 compile_and_run bubble_sort_i8 "0 2 4 4 9 23 45 55 89 90 " 
 compile_and_run bubble_sort_fp "0.000000 2.000000 4.000000 4.000000 9.000000 23.000000 45.000000 55.000000 89.000000 90.000000 "
 compile_and_run collatz "1"

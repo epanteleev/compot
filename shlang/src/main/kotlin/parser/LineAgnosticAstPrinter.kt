@@ -221,10 +221,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         assignmentDeclarator.lvalue.accept(this)
     }
 
-    override fun visit(rValueDeclarator: RValueDeclarator) {
-        rValueDeclarator.rvalue.accept(this)
-    }
-
     override fun visit(functionDeclarator: FunctionDeclarator) {
         buffer.append('(')
         joinTo(functionDeclarator.params, ", ") {
@@ -446,9 +442,9 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(binop: BinaryOp) {
-        binop.cond.accept(this)
+        binop.left.accept(this)
         buffer.append(' ').append(binop.type).append(' ')
-        binop.assign.accept(this)
+        binop.right.accept(this)
         if (binop.type == BinaryOpType.ASSIGN) {
             buffer.append(';')
         }

@@ -11,6 +11,7 @@ import ir.pass.TransformPass
 import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
 import ir.types.PrimitiveType
+import ir.types.Type
 import ir.utils.DefUseInfo
 
 
@@ -49,9 +50,9 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
     }
 
     private fun completePhis(bbToMapValues: ReachingDefinition, bb: Block) {
-        fun renameValues(newUsages: MutableList<Value>, block: Block, v: Value) {
+        fun renameValues(newUsages: MutableList<Value>, block: Block, v: Value, expectedType: Type) {
             val newValue = when (v) {
-                is ValueInstruction -> bbToMapValues.rename(block, v)
+                is ValueInstruction -> bbToMapValues.rename(block, v, expectedType)
                 else -> v
             }
             newUsages.add(newValue)
@@ -59,7 +60,7 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
 
         bb.phis { phi ->
             val newUsages = arrayListOf<Value>()
-            phi.forAllIncoming { l, v -> renameValues(newUsages, l, v) }
+            phi.forAllIncoming { l, v -> renameValues(newUsages, l, v, phi.type()) }
             phi.update(newUsages)
         }
     }

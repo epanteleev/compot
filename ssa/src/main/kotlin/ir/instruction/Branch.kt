@@ -6,7 +6,7 @@ import ir.instruction.utils.Visitor
 
 class Branch private constructor(target: Block): TerminateInstruction(arrayOf(), arrayOf(target)) {
     override fun dump(): String {
-        return "br label ${target()}"
+        return "br label %${target()}"
     }
 
     fun target(): Block {

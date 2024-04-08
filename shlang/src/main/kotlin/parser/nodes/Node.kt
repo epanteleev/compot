@@ -169,7 +169,7 @@ data class Cast(val type: TypeName, val cast: Node) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class UnaryOp(val primary: Node, val type: UnaryOpType) : Expression() {
+data class UnaryOp(val primary: Expression, val type: UnaryOpType) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -217,7 +217,7 @@ data class CompoundLiteral(val typeName: Node, val initializerList: Node) : Node
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class InitializerList(val initializers: List<Node>) : Node() {
+data class InitializerList(val initializers: List<Node>) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -262,7 +262,7 @@ class EmptyStatement : Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-class LabeledStatement(val label: Ident, val stmt: Statement) : Statement() {
+data class LabeledStatement(val label: Ident, val stmt: Statement) : Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -296,7 +296,7 @@ data class CompoundStatement(val statements: List<Node>): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class ExprStatement(val expr: Node): Statement() {
+data class ExprStatement(val expr: Expression): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -306,11 +306,7 @@ data class Declarator(val declspec: DirectDeclarator, val pointers: List<NodePoi
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class AssignmentDeclarator(val rvalue: Node, val lvalue: Node): AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
-}
-
-data class RValueDeclarator(val rvalue: Node): AnyDeclarator() {
+data class AssignmentDeclarator(val rvalue: Declarator, val lvalue: Expression): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -318,19 +314,19 @@ data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class IfStatement(val condition: Node, val then: Node, val elseNode: Node): Statement() {
+data class IfStatement(val condition: Expression, val then: Statement, val elseNode: Statement): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class BinaryOp(val cond: Node, val assign: Node, val type: BinaryOpType) : Expression() {
+data class BinaryOp(val left: Expression, val right: Expression, val type: BinaryOpType) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class DoWhileStatement(val body: Node, val condition: Node): Statement() {
+data class DoWhileStatement(val body: Statement, val condition: Expression): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class WhileStatement(val condition: Node, val body: Node): Statement() {
+data class WhileStatement(val condition: Expression, val body: Statement): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

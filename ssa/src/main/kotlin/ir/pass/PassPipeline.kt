@@ -10,13 +10,13 @@ import ir.pass.transform.SSADestructionFabric
 class PassPipeline private constructor(private val passFabrics: List<PassFabric>, private val ctx: CompileContext) {
     fun run(start: Module): Module {
         var current = start
-
+        ctx.log("initial") { current.toString() }
         for (fabric in passFabrics) {
             try {
                 val pass = fabric.create(current)
                 current = pass.run()
                 VerifySSA.run(current)
-                ctx.log(pass.name(), current)
+                ctx.log(pass.name()) { current.toString() }
             } catch (ex: Throwable) {
                 println(current.toString())
                 ex.printStackTrace()

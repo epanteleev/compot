@@ -16,6 +16,7 @@ import ir.module.block.Label
 import ir.pass.isLocalVariable
 import ir.utils.OrderedLocation
 import ir.instruction.utils.Visitor
+import ir.platform.AnyCodeGenerator
 import ir.platform.CompiledModule
 import ir.platform.x64.codegen.impl.*
 import ir.platform.x64.regalloc.RegisterAllocation
@@ -26,12 +27,11 @@ import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.STACK_ALIGNMENT
 
 
-
 data class CodegenException(override val message: String): Exception(message)
 
 
-object x64CodeGenerator {
-    fun emit(module: Module): CompiledModule {
+internal class X64CodeGenerator(val module: Module): AnyCodeGenerator {
+    override fun emit(): CompiledModule {
         return CodeEmitter.codegen(module)
     }
 }
@@ -232,7 +232,7 @@ private class CodeEmitter(private val data: FunctionData,
         val second = valueToRegister.operand(icmp.second())
         val size = icmp.first().type().size()
 
-        first = if (first is Address2) {
+        first = if (first is Address2 || first is ImmInt) { //TODO???
             asm.movOld(size, first, temp1)
         } else {
             first

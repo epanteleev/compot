@@ -19,9 +19,7 @@ class FloatToSigned private constructor(name: String, toType: SignedIntType, val
         return operands[0]
     }
 
-    override fun type(): SignedIntType {
-        return tp as SignedIntType
-    }
+    override fun type(): SignedIntType = tp as SignedIntType
 
     override fun<T> visit(visitor: Visitor<T>): T {
         return visitor.visit(this)

@@ -31,6 +31,9 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     }
 
     override fun last(): TerminateInstruction {
+        assert(instructions.isNotEmpty()) {
+            "bb=$this must have any instructions"
+        }
         val last = instructions.last()
         assert(last is TerminateInstruction) {
             "should be, but last=$last"
