@@ -4,6 +4,7 @@ import ir.*
 import ir.Value
 import ir.types.*
 import ir.instruction.*
+import ir.pass.canBeReplaced
 
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :
@@ -76,6 +77,14 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     private fun removePredecessors(old: Block) {
         predecessors.remove(old)
+    }
+
+    fun forEachInstruction(fn: (Int, Instruction) -> Unit) {
+        var i = -1
+        while (i < instructions.size - 1) {
+            i += 1
+            fn(i, instructions[i])
+        }
     }
 
     fun<T> insert(before: Instruction, builder: (AnyInstructionFabric) -> T): T {

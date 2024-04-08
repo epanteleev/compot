@@ -1,13 +1,10 @@
 package ir.pass.transform.auxiliary
 
-import collections.identityHashMapOf
-import collections.identityHashSetOf
 import ir.instruction.*
 import ir.module.*
 import ir.module.block.Block
 import ir.pass.canBeReplaced
 import ir.types.PrimitiveType
-import java.util.*
 
 
 class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks) {
@@ -46,68 +43,70 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
         bb.remove(i + 1)
     }
 
-    // store ptr %gen0x8, i32 0
-    private fun replaceAllocLoadStores(loadAndStores: Set<Instruction>){
-        for (bb in cfg.preorder()) {
-            val instructions = bb.instructions()
-            var i = -1
-            while (i < instructions.size - 1) {
-                i += 1
-                val inst = instructions[i]
-                when {
-                    inst is Load && inst.canBeReplaced()  -> replaceLoad(bb, inst, i)
-                    inst is Store && inst.pointer() is Generate -> {
-                        val value = inst.value()
-                        if (value is Generate) {
-                            val lea = bb.insert(i) { it.lea(value) }
-                            inst.update(1, lea)
-                            replaceStore(bb, inst, i + 1)
-                        } else {
-                            replaceStore(bb, inst, i)
-                        }
+    private fun replaceAllocLoadStores() {
+        fun replaceHelper(bb: Block, i: Int, instruction: Instruction) {
+            when (instruction) {
+                is Copy -> {
+                    if (instruction.origin() is Generate) {
+                        replaceCopy(bb, instruction, i)
                     }
-                    inst is Copy && inst.origin() is Generate   -> replaceCopy(bb, inst, i)
-                    else -> {}
+                }
+                is Load -> {
+                    if (instruction.canBeReplaced()) {
+                        replaceLoad(bb, instruction, i)
+                    }
+                }
+                is Store -> {
+                    if (instruction.pointer() !is Generate) {
+                        return
+                    }
+
+                    val value = instruction.value()
+                    if (value is Generate) {
+                        val lea = bb.insert(i) { it.lea(value) }
+                        instruction.update(1, lea)
+                        replaceStore(bb, instruction, i + 1)
+                    } else {
+                        replaceStore(bb, instruction, i)
+                    }
                 }
             }
+        }
+
+        for (bb in cfg) {
+            bb.forEachInstruction { i, inst -> replaceHelper(bb, i, inst) }
         }
     }
 
-    private fun replaceAlloc(): Set<Instruction> {
-        val loadAndStores = identityHashSetOf<Instruction>()
-        for (bb in cfg) {
-            val instructions = bb.instructions()
-            var i = -1
-            while (i < instructions.size - 1) {
-                i += 1
-                val inst = instructions[i]
-                if (inst !is Alloc) {
-                    continue
-                }
+    private fun replaceAlloc() {
+        fun replaceHelper(bb: Block, i: Int, inst: Instruction) {
+            if (inst !is Alloc) {
+                return
+            }
 
-                if (!inst.canBeReplaced()) {
-                    continue
-                }
+            if (!inst.canBeReplaced()) {
+                return
+            }
 
-                val gen = replaceAlloc(bb, inst, i)
-                for (user in gen.usedIn()) {
-                    if (user !is Load && user !is Store) {
-                        assert(user is Copy) {
-                            "should be, but user=${user}"
-                        }
-                        continue
+            val gen = replaceAlloc(bb, inst, i)
+            for (user in gen.usedIn()) {
+                if (user !is Load && user !is Store) {
+                    assert(user is Copy) {
+                        "should be, but user=${user}"
                     }
-                    loadAndStores.add(user)
+                    continue
                 }
             }
         }
 
-        return loadAndStores
+        for (bb in cfg) {
+            bb.forEachInstruction { i, inst -> replaceHelper(bb, i, inst)}
+        }
     }
 
     private fun pass() {
-        val allocPointerUsers = replaceAlloc()
-        replaceAllocLoadStores(allocPointerUsers)
+        replaceAlloc()
+        replaceAllocLoadStores()
     }
 
     companion object {
