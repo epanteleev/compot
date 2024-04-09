@@ -6,6 +6,9 @@ import asm.x64.XmmRegister.*
 
 // Calling conventions for different C++ compilers and operating systems
 // https://www.agner.org/optimize/calling_conventions.pdf
+//
+// Usefull links:
+// https://gitlab.com/x86-psABIs/x86-64-ABI/-/tree/master?ref_type=heads
 object CallConvention {
     val gpArgumentRegisters: Array<GPRegister> = arrayOf(
         rdi,
@@ -27,6 +30,27 @@ object CallConvention {
         r10,
         r11
     )
+
+    val xmmCallerSaveRegs: Array<XmmRegister> = arrayOf(
+        xmm0,
+        xmm1,
+        xmm2,
+        xmm3,
+        xmm4,
+        xmm5,
+        xmm6,
+        xmm7,
+        xmm8,
+        xmm9,
+        xmm10,
+        xmm11,
+        xmm12,
+        xmm13,
+        xmm14,
+        xmm15
+    )
+
+    val xmmCalleeSaveRegs = arrayOf<XmmRegister>()
 
     val gpCalleeSaveRegs: Array<GPRegister> = arrayOf(
         rbp,

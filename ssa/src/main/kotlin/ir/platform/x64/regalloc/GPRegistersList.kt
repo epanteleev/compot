@@ -17,7 +17,7 @@ class GPRegistersList(argumentValue: List<GPRegister>) {
             return null
         }
         val reg = freeRegisters.removeLast()
-        if (reg.isCallEESave) {
+        if (CallConvention.gpCalleeSaveRegs.contains(reg)) {
             usedCalleeSaveRegisters.add(reg)
         }
 
@@ -25,7 +25,7 @@ class GPRegistersList(argumentValue: List<GPRegister>) {
     }
 
     fun returnRegister(reg: GPRegister) {
-        if (reg.isArgument) {
+        if (CallConvention.gpArgumentRegisters.contains(reg)) {
             return
         }
 

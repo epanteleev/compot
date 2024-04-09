@@ -14,7 +14,7 @@ class XmmRegisterList(arguments: List<XmmRegister>) {
             return null
         }
         val reg = freeRegisters.removeLast()
-        if (reg.isCallEESave) {
+        if (CallConvention.xmmCalleeSaveRegs.contains(reg)) {
             usedCalleeSaveRegisters.add(reg)
         }
 
@@ -22,7 +22,7 @@ class XmmRegisterList(arguments: List<XmmRegister>) {
     }
 
     fun returnRegister(reg: XmmRegister) {
-        if (reg.isArgument) {
+        if (CallConvention.xmmArgumentRegister.contains(reg)) {
             return
         }
 

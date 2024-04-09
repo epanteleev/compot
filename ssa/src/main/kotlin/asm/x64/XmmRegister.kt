@@ -4,9 +4,6 @@ import java.lang.IllegalArgumentException
 
 enum class XmmRegister : Register {
     xmm0 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm0"
@@ -17,9 +14,6 @@ enum class XmmRegister : Register {
         }
     },
     xmm1 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm1"
@@ -31,9 +25,6 @@ enum class XmmRegister : Register {
     },
 
     xmm2 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm2"
@@ -45,9 +36,6 @@ enum class XmmRegister : Register {
     },
 
     xmm3 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm3"
@@ -59,9 +47,6 @@ enum class XmmRegister : Register {
     },
 
     xmm4 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm4"
@@ -73,9 +58,6 @@ enum class XmmRegister : Register {
     },
 
     xmm5 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm5"
@@ -87,9 +69,6 @@ enum class XmmRegister : Register {
     },
 
     xmm6 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm6"
@@ -101,9 +80,6 @@ enum class XmmRegister : Register {
     },
 
     xmm7 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm7"
@@ -115,9 +91,6 @@ enum class XmmRegister : Register {
     },
 
     xmm8 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm8"
@@ -129,9 +102,6 @@ enum class XmmRegister : Register {
     },
 
     xmm9 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm9"
@@ -143,9 +113,6 @@ enum class XmmRegister : Register {
     },
 
     xmm10 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm10"
@@ -157,9 +124,6 @@ enum class XmmRegister : Register {
     },
 
     xmm11 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm11"
@@ -171,9 +135,6 @@ enum class XmmRegister : Register {
     },
 
     xmm12 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm12"
@@ -185,9 +146,6 @@ enum class XmmRegister : Register {
     },
 
     xmm13 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm13"
@@ -199,9 +157,6 @@ enum class XmmRegister : Register {
     },
 
     xmm14 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm14"
@@ -213,9 +168,6 @@ enum class XmmRegister : Register {
     },
 
     xmm15 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 32 -> "%ymm15"

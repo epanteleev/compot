@@ -4,10 +4,6 @@ import java.lang.IllegalArgumentException
 
 enum class GPRegister : Register {
     rax {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
-
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%rax"
@@ -21,10 +17,6 @@ enum class GPRegister : Register {
     },
 
     rbx {
-        override val isCallEESave: Boolean = true
-        override val isCallERSave: Boolean = false
-        override val isArgument: Boolean = false
-
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%rbx"
@@ -38,10 +30,6 @@ enum class GPRegister : Register {
     },
 
     rcx {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
-
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%rcx"
@@ -55,10 +43,6 @@ enum class GPRegister : Register {
     },
 
     rsi {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
-
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%rsi"
@@ -72,9 +56,6 @@ enum class GPRegister : Register {
     },
 
     rdi {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%rdi"
@@ -88,9 +69,6 @@ enum class GPRegister : Register {
     },
 
     rdx {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%rdx"
@@ -104,9 +82,6 @@ enum class GPRegister : Register {
     },
 
     rbp {
-        override val isCallEESave: Boolean = true
-        override val isCallERSave: Boolean = false
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%rbp"
@@ -120,9 +95,6 @@ enum class GPRegister : Register {
     },
 
     r8 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%r8"
@@ -136,9 +108,6 @@ enum class GPRegister : Register {
     },
 
     r9 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = true
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%r9"
@@ -152,9 +121,6 @@ enum class GPRegister : Register {
     },
 
     r10 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%r10"
@@ -168,9 +134,6 @@ enum class GPRegister : Register {
     },
 
     r11 {
-        override val isCallEESave: Boolean = false
-        override val isCallERSave: Boolean = true
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%r11"
@@ -184,9 +147,6 @@ enum class GPRegister : Register {
     },
 
     r12 {
-        override val isCallEESave: Boolean = true
-        override val isCallERSave: Boolean = false
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%r12"
@@ -200,9 +160,6 @@ enum class GPRegister : Register {
     },
 
     r13 {
-        override val isCallEESave: Boolean = true
-        override val isCallERSave: Boolean = false
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%r13"
@@ -216,9 +173,6 @@ enum class GPRegister : Register {
     },
 
     r14 {
-        override val isCallEESave: Boolean = true
-        override val isCallERSave: Boolean = false
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%r14"
@@ -232,9 +186,6 @@ enum class GPRegister : Register {
     },
 
     r15 {
-        override val isCallEESave: Boolean = true
-        override val isCallERSave: Boolean = false
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%r15"
@@ -248,9 +199,6 @@ enum class GPRegister : Register {
     },
 
     rsp {
-        override val isCallEESave: Boolean = true
-        override val isCallERSave: Boolean = false
-        override val isArgument: Boolean = false
         override fun toString(size: Int): String {
             val string = when (size) {
                 8 -> "%rsp"

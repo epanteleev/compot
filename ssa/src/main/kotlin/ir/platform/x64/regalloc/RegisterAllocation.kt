@@ -6,6 +6,8 @@ import ir.utils.OrderedLocation
 import ir.platform.x64.CallConvention
 import ir.platform.x64.regalloc.liveness.LiveIntervals
 import ir.platform.x64.CallConvention.gpCalleeSaveRegs
+import ir.platform.x64.CallConvention.gpCallerSaveRegs
+import ir.platform.x64.CallConvention.xmmCallerSaveRegs
 
 
 class RegisterAllocation(private val stackSize: Int,
@@ -20,10 +22,9 @@ class RegisterAllocation(private val stackSize: Int,
                 continue
             }
 
-            if (!reg.isCallEESave) {
+            if (!gpCalleeSaveRegs.contains(reg)) {
                 continue
             }
-            assert(gpCalleeSaveRegs.contains(reg)) //TODO
 
             registers.add(reg)
         }
@@ -31,34 +32,42 @@ class RegisterAllocation(private val stackSize: Int,
         registers
     }
 
-    fun frameSize(savedRegisters: Set<GPRegister>): Int {
-        return (savedRegisters.size + calleeSaveRegisters.size + /** include retaddr and rbp **/ 2) * 8 + reservedStackSize()
+    private fun frameSize(savedRegisters: Set<GPRegister>, savedXmmRegisters: Set<XmmRegister>): Int {
+        return (savedRegisters.size + savedXmmRegisters.size + calleeSaveRegisters.size + /** include retaddr and rbp **/ 2) * 8 + stackSize
     }
 
-    fun reservedStackSize(): Int {
-        return stackSize
-    }
+    fun spilledLocalsSize(): Int = stackSize
 
     /** Get used caller save registers in given location. */
-    fun callerSaveRegisters(loc: OrderedLocation): Set<GPRegister> {
+    fun callerSaveRegisters(loc: OrderedLocation): SavedContext {
         val registers = linkedSetOf<GPRegister>()
+        val xmmRegisters = linkedSetOf<XmmRegister>()
         for ((value, reg) in registerMap) {
-            if (reg !is GPRegister) {
-                continue
-            }
-            if (!reg.isCallERSave) {
-                continue
-            }
+            when (reg) {
+                is GPRegister -> {
+                    if (!gpCallerSaveRegs.contains(reg)) {
+                        continue
+                    }
 
-            assert(CallConvention.gpCallerSaveRegs.contains(reg))
+                    val liveRange = liveness[value]
+                    if (liveRange.end() > loc && loc > liveRange.begin()) {
+                        registers.add(reg)
+                    }
+                }
+                is XmmRegister -> {
+                    if (xmmCallerSaveRegs.contains(reg)) {
+                        continue
+                    }
 
-            val liveRange = liveness[value]
-            if (liveRange.end() > loc && loc > liveRange.begin()) {
-                registers.add(reg)
+                    val liveRange = liveness[value]
+                    if (liveRange.end() > loc && loc > liveRange.begin()) {
+                        xmmRegisters.add(reg)
+                    }
+                }
             }
         }
 
-        return registers
+        return SavedContext(registers, xmmRegisters, frameSize(registers, xmmRegisters))
     }
 
     fun operand(value: Value): Operand {
@@ -92,5 +101,17 @@ class RegisterAllocation(private val stackSize: Int,
         }
 
         return builder.toString()
+    }
+}
+
+data class SavedContext(val savedRegisters: Set<GPRegister>, val savedXmmRegisters: Set<XmmRegister>, private val frameSize: Int) {
+    fun adjustStackSize(): Int {
+        var frameSIze = savedXmmRegisters.size * 16
+        val remains = frameSize % CallConvention.STACK_ALIGNMENT
+        if (remains != 0L) {
+            frameSIze += remains.toInt()
+        }
+
+        return frameSize
     }
 }

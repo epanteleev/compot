@@ -13,7 +13,6 @@ import asm.x64.GPRegister.*
 import collections.identityHashMapOf
 import ir.instruction.Lea
 import ir.module.block.Label
-import ir.pass.isLocalVariable
 import ir.utils.OrderedLocation
 import ir.instruction.utils.Visitor
 import ir.platform.AnyCodeGenerator
@@ -24,7 +23,6 @@ import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
-import ir.platform.x64.CallConvention.STACK_ALIGNMENT
 
 
 data class CodegenException(override val message: String): Exception(message)
@@ -45,24 +43,24 @@ private class CodeEmitter(private val data: FunctionData,
     private val asm: Assembler = unit.mkFunction(data.prototype.name)
 
     private fun emitPrologue() {
-        val stackSize = valueToRegister.reservedStackSize()
+        val stackSize = valueToRegister.spilledLocalsSize()
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
 
-        asm.push(8, rbp)
-        asm.mov(8, rsp, rbp)
+        asm.push(POINTER_SIZE, rbp)
+        asm.mov(POINTER_SIZE, rsp, rbp)
 
         if (stackSize != 0) {
-            asm.sub(8, Imm32(stackSize.toLong()), rsp)
+            asm.sub(POINTER_SIZE, Imm32(stackSize.toLong()), rsp)
         }
         for (reg in calleeSaveRegisters) {
-            asm.push(8, reg)
+            asm.push(POINTER_SIZE, reg)
         }
     }
 
     private fun emitEpilogue() {
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
         for (reg in calleeSaveRegisters.reversed()) { //TODO created new ds
-            asm.pop(8, reg)
+            asm.pop(POINTER_SIZE, reg)
         }
 
         asm.leave()
@@ -368,27 +366,36 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(downStackFrame: DownStackFrame) {
         val sdf = orderedLocation[downStackFrame.call()]
-        val savedRegisters = valueToRegister.callerSaveRegisters(sdf!!)
-        for (arg in savedRegisters) {
-            asm.push(8, arg)
+        val context = valueToRegister.callerSaveRegisters(sdf!!)
+        for (arg in context.savedRegisters) {
+            asm.push(POINTER_SIZE, arg)
         }
 
-        val totalStackSize = valueToRegister.frameSize(savedRegisters)
-        if (totalStackSize % STACK_ALIGNMENT != 0L) {
-            asm.sub(8, Imm32(8), rsp)
+        for ((idx, arg) in context.savedXmmRegisters.withIndex()) {
+            asm.movf(16, arg, Address.from(rsp, 16 * idx)) //TODO 16???
+        }
+
+        val size = context.adjustStackSize()
+        if (size != 0) {
+            asm.sub(POINTER_SIZE, Imm32(size.toLong()), rsp)
         }
     }
 
     override fun visit(upStackFrame: UpStackFrame) {
-        val savedRegisters = valueToRegister.callerSaveRegisters(orderedLocation[upStackFrame.call()]!!)
-        val totalStackSize = valueToRegister.frameSize(savedRegisters)
+        val usf = orderedLocation[upStackFrame.call()]!!
+        val context = valueToRegister.callerSaveRegisters(usf)
 
-        if (totalStackSize % STACK_ALIGNMENT != 0L) {
-            asm.add(8, Imm32(8), rsp)
+        val size = context.adjustStackSize()
+        if (size != 0) {
+            asm.add(POINTER_SIZE, Imm32(size.toLong()), rsp)
         }
 
-        for (arg in savedRegisters.reversed()) {
-            asm.pop(8, arg)
+        for ((idx, arg) in context.savedXmmRegisters.reversed().withIndex()) {
+            asm.movf(16, Address.from(rsp, 16 * idx), arg) //TODO 16???
+        }
+
+        for (arg in context.savedRegisters.reversed()) {
+            asm.pop(POINTER_SIZE, arg)
         }
     }
 
