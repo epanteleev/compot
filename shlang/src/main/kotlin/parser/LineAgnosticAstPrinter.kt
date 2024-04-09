@@ -439,6 +439,14 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     }
 
+    override fun visit(emptyDeclarator: EmptyDeclarator) {
+
+    }
+
+    override fun visit(varDeclarator: VarDeclarator) {
+        buffer.append(varDeclarator.ident.str())
+    }
+
     override fun visit(emptyStatement: EmptyStatement) {
     }
 

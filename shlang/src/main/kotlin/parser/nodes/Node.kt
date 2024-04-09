@@ -143,6 +143,10 @@ abstract class TypeSpecifier : Node()
 
 data class DeclarationSpecifier(val specifiers: List<TypeProperty>) : TypeSpecifier() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    companion object {
+        val EMPTY = DeclarationSpecifier(emptyList())
+    }
 }
 
 data class TypeName(val specifiers: List<Any>, val abstractDecl: Node) : TypeSpecifier() {
@@ -153,7 +157,11 @@ data class FunctionPointerDeclarator(val declarator: List<Node>): AnyDeclarator(
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class DirectDeclarator(val decl: Node, val declarators: List<Node>): AnyDeclarator() {
+data class DirectDeclarator(val decl: AnyDeclarator, val declarators: List<Node>): AnyDeclarator() {
+    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+}
+
+data class VarDeclarator(val ident: Ident) : AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -213,6 +221,10 @@ data class ArrayDeclarator(val constexpr: Node) : AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
+object EmptyDeclarator : AnyDeclarator() {
+    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+}
+
 data class CompoundLiteral(val typeName: Node, val initializerList: Node) : Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
@@ -246,7 +258,7 @@ data class FunctionParams(val params: List<AnyParameter>): Node() {
 
 abstract class AnyParameter : Node()
 
-data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) : AnyParameter() {
+data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyDeclarator) : AnyParameter() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -254,8 +266,13 @@ class ParameterVarArg: AnyParameter() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class FunctionNode(val specifier: Node, val declarator: Declarator, val body: Statement) : Node() {
+data class FunctionNode(val specifier: DeclarationSpecifier, val declarator: Declarator, val body: Statement) : Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    fun name(): String {
+        val varNode = declarator.declspec.decl as VarDeclarator
+        return varNode.ident.str()
+    }
 }
 
 class EmptyStatement : Statement() {
@@ -338,7 +355,7 @@ data class ProgramNode(val nodes: MutableList<Node>) : Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<Node>) : Node() {   //TODO
+data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<Node>) : AnyDeclarator() {   //TODO
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

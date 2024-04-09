@@ -2,6 +2,7 @@ import org.junit.jupiter.api.assertThrows
 import parser.ProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.ParserException
+import parser.nodes.FunctionNode
 import parser.nodes.Node
 import tokenizer.CTokenizer
 import kotlin.test.Test
@@ -275,10 +276,11 @@ class ParserTest {
         val tokens = CTokenizer.apply("int main(void) { return 5; }")
         val parser = ProgramParser(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "int main(void ) {return 5;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
+        assertEquals(expr.name(), "main")
     }
 
     @Test
@@ -286,10 +288,11 @@ class ParserTest {
         val tokens = CTokenizer.apply("int main(int a) { return 5; }")
         val parser = ProgramParser(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "int main(int a) {return 5;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
+        assertEquals(expr.name(), "main")
     }
 
     @Test
@@ -297,10 +300,11 @@ class ParserTest {
         val tokens = CTokenizer.apply("int main(int a, int b) { return 5; }")
         val parser = ProgramParser(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         val expected = "int main(int a, int b) {return 5;}"
         println(expr)
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
+        assertEquals(expr.name(), "main")
     }
 
     @Test
@@ -308,10 +312,11 @@ class ParserTest {
         val tokens = CTokenizer.apply("void fun(int(fn)(void) ) { }")
         val parser = ProgramParser(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "void fun(int (fn)(void )) {}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
+        assertEquals(expr.name(), "fun")
     }
 
     @Test
@@ -337,10 +342,11 @@ class ParserTest {
         val tokens = CTokenizer.apply("void fun(int(*fn)(void)) { }")
         val parser = ProgramParser(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "void fun(int (*fn)(void )) {}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
+        assertEquals(expr.name(), "fun")
     }
 
     @Test

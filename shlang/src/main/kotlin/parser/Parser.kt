@@ -71,7 +71,7 @@ class ProgramParser(firstToken: AnyToken) {
         if (declspec == null) {
             val declarator = declarator()?: return@rule null
             val body = compound_stmt() ?: throw ParserException(ProgramMessage("Expected compound statement", current))
-            return@rule FunctionNode(DummyNode, declarator, body)
+            return@rule FunctionNode(DeclarationSpecifier.EMPTY, declarator, body)
         }
         val declarator = declarator()?: return@rule null
         val body = compound_stmt() ?: throw ParserException(ProgramMessage("Expected compound statement", current))
@@ -875,7 +875,7 @@ class ProgramParser(firstToken: AnyToken) {
 
         val declarator = declarator()
         if (declarator == null) {
-            val abstractDeclarator = abstract_declarator()?: return@rule Parameter(declspec, DummyNode)
+            val abstractDeclarator = abstract_declarator()?: return@rule Parameter(declspec, EmptyDeclarator)
             return@rule Parameter(declspec, abstractDeclarator)
         }
         return@rule Parameter(declspec, declarator)
@@ -953,7 +953,7 @@ class ProgramParser(firstToken: AnyToken) {
         if (check<Ident>()) {
             val ident = peak<Ident>()
             eat()
-            return@rule DirectDeclarator(IdentNode(ident), declarator_list())
+            return@rule DirectDeclarator(VarDeclarator(ident), declarator_list())
         }
         return@rule null
     }

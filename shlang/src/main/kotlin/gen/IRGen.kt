@@ -2,11 +2,13 @@ package gen
 
 import gen.TypeConverter.convertToType
 import ir.*
+import ir.instruction.Alloc
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.FloatPredicate
 import ir.instruction.IntPredicate
 import types.*
 import ir.module.Module
+import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
@@ -15,7 +17,7 @@ import parser.nodes.*
 import java.lang.Exception
 
 
-data class IRCodeGenError(override val message: String): Exception(message)
+data class IRCodeGenError(override val message: String) : Exception(message)
 
 class IRGen private constructor() {
     private val moduleBuilder = ModuleBuilder.create()
@@ -24,10 +26,41 @@ class IRGen private constructor() {
     private var currentFunction: FunctionDataBuilder? = null
     private var returnValueAddr: Value? = null
     private var exitBlock: Label? = null
-    private var stringTolabel = mutableMapOf<String, Label>()
-
 
     private fun ir(): FunctionDataBuilder {
+        return currentFunction ?: throw IRCodeGenError("Function expected")
+    }
+
+    fun visit(programNode: ProgramNode): SpecifiedType {
+        for (node in programNode.nodes) {
+            when (node) {
+                is FunctionNode -> IrGenFunction(moduleBuilder, node)
+                else -> throw IRCodeGenError("Function expected")
+            }
+        }
+        return SpecifiedType.VOID
+    }
+
+    companion object {
+        fun apply(node: ProgramNode): Module {
+            //println(node)
+            val irGen = IRGen()
+            irGen.visit(node)
+            val module = irGen.moduleBuilder.build()
+            return module
+        }
+    }
+}
+
+class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
+    private val typeHolder = TypeHolder.default()
+    private val varStack = VarStack()
+    private var currentFunction: FunctionDataBuilder? = null
+    private var returnValueAddr: Alloc
+    private val exitBlock: Label
+    private var stringTolabel = mutableMapOf<String, Label>()
+
+    fun ir(): FunctionDataBuilder {
         return currentFunction ?: throw IRCodeGenError("Function expected")
     }
 
@@ -54,16 +87,12 @@ class IRGen private constructor() {
 
     private fun createReturnType(functionNode: FunctionNode): SpecifiedType {
         val specifier = functionNode.specifier
-        if (specifier !is DeclarationSpecifier) {
-            throw IRCodeGenError("DeclarationSpecifier expected")
-        }
-
         return createType(specifier, functionNode.declarator)
     }
 
     private fun createVar(declarator: Declarator): String {
-        val identNode = declarator.declspec.decl as IdentNode
-        return identNode.str.str()
+        val identNode = declarator.declspec.decl as VarDeclarator
+        return identNode.ident.str()
     }
 
     private fun toIRType(type: SpecifiedType): NonTrivialType {
@@ -73,93 +102,27 @@ class IRGen private constructor() {
             }
         }
         return when (type.basicType) {
-            CType.BOOL   -> Type.U1
-            CType.CHAR   -> Type.I8
-            CType.SHORT  -> Type.I16
-            CType.INT    -> Type.I32
-            CType.LONG   -> Type.I64
-            CType.FLOAT  -> Type.F32
+            CType.BOOL -> Type.U1
+            CType.CHAR -> Type.I8
+            CType.SHORT -> Type.I16
+            CType.INT -> Type.I32
+            CType.LONG -> Type.I64
+            CType.FLOAT -> Type.F32
             CType.DOUBLE -> Type.F64
             else -> throw IRCodeGenError("Unknown type")
         }
     }
 
-    fun visit(programNode: ProgramNode): SpecifiedType {
-        for (node in programNode.nodes) {
-            when (node) {
-                is FunctionNode -> visit(node)
-                else -> throw IRCodeGenError("Function expected")
-            }
-        }
-        return SpecifiedType.VOID
-    }
-
-    fun visit(functionNode: FunctionNode): SpecifiedType {
-        val returnType = createReturnType(functionNode)
-
-        val name = functionNode.declarator.declspec.decl as IdentNode
-        val parameters = getParameters(functionNode.declarator.declspec)
-
-
-        val types = mutableListOf<SpecifiedType>()
-        val argumentNames = mutableListOf<String>()
-        for (p in parameters) {
-            when (p) {
-                is Parameter -> {
-                    val decl = p.declarator as Declarator
-                    val type = createType(p.declspec, decl)
-                    val arg = createVar(decl)
-                    argumentNames.add(arg)
-                    types.add(type)
-                }
-                is ParameterVarArg -> TODO()
-                else -> throw IRCodeGenError("Parameter expected")
-            }
-        }
-        val retType = toIRType(returnType)
-        currentFunction = moduleBuilder.createFunction(name.str.str(), retType, types.map { toIRType(it) })
-
-        val fn = ir()
-        varStack.push()
-
-        for (idx in argumentNames.indices) {
-            val argName = argumentNames[idx]
-            val arg = fn.argument(idx)
-            val type = types[idx]
-
-            val rvalueAdr = fn.alloc(arg.type())
-            varStack[argName] = KeyType(type, rvalueAdr)
-            fn.store(rvalueAdr, arg)
-        }
-
-        returnValueAddr = fn.alloc(retType)
-
-        exitBlock = ir().createLabel()
-        ir().switchLabel(exitBlock!!)
-        val loadReturn = ir().load(retType as PrimitiveType, returnValueAddr!!)
-        ir().ret(loadReturn)
-
-        ir().switchLabel(Label.entry)
-        val needSwitch = visitStatement(functionNode.body)
-        if (needSwitch) {
-            ir().branch(exitBlock!!)
-        }
-
-        varStack.pop()
-
-        return returnType
-    }
-
     fun visitStatement(statement: Statement): Boolean {
         return when (statement) {
-            is CompoundStatement    -> visitCompoundStatement(statement)
-            is ExprStatement        -> visitExpressionStatement(statement)
-            is ReturnStatement      -> visitReturn(statement)
-            is IfStatement          -> visitIf(statement)
-            is WhileStatement       -> visitWhile(statement)
-            is DoWhileStatement     -> visitDoWhile(statement)
-            is LabeledStatement     -> visitLabeledStatement(statement)
-            is GotoStatement        -> visitGoto(statement)
+            is CompoundStatement -> visitCompoundStatement(statement)
+            is ExprStatement -> visitExpressionStatement(statement)
+            is ReturnStatement -> visitReturn(statement)
+            is IfStatement -> visitIf(statement)
+            is WhileStatement -> visitWhile(statement)
+            is DoWhileStatement -> visitDoWhile(statement)
+            is LabeledStatement -> visitLabeledStatement(statement)
+            is GotoStatement -> visitGoto(statement)
             else -> throw IRCodeGenError("Statement expected, but got $statement")
         }
     }
@@ -186,17 +149,17 @@ class IRGen private constructor() {
 
         val type = conditionExpr.type()
         return when (type) {
-            is SignedIntType     -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-            is UnsignedIntType   -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            is SignedIntType -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            is UnsignedIntType -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
             is FloatingPointType -> ir().fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
-            is PointerType       -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            is PointerType -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
             else -> throw IRCodeGenError("Unknown type")
         }
     }
 
     private fun visitDoWhile(doWhileStatement: DoWhileStatement): Boolean {
-        val bodyBlock      = ir().createLabel()
-        val endBlock       = ir().createLabel()
+        val bodyBlock = ir().createLabel()
+        val endBlock = ir().createLabel()
 
         ir().branch(bodyBlock)
         ir().switchLabel(bodyBlock)
@@ -216,7 +179,7 @@ class IRGen private constructor() {
 
         ir().branch(conditionBlock)
         ir().switchLabel(conditionBlock)
-        val condition= makeCondition(whileStatement.condition)
+        val condition = makeCondition(whileStatement.condition)
 
         ir().branchCond(condition, bodyBlock, endBlock)
         ir().switchLabel(bodyBlock)
@@ -232,7 +195,7 @@ class IRGen private constructor() {
         val condition = makeCondition(ifStatement.condition)
 
         val thenBlock = ir().createLabel()
-        val elseBlock  = ir().createLabel()
+        val elseBlock = ir().createLabel()
 
         if (ifStatement.elseNode is EmptyStatement) {
             ir().branchCond(condition, thenBlock, elseBlock)
@@ -270,9 +233,9 @@ class IRGen private constructor() {
     fun visitExpression(expression: Expression, isRvalue: Boolean): Value {
         return when (expression) {
             is BinaryOp -> visitBinary(expression, isRvalue)
-            is UnaryOp  -> visitUnary(expression, isRvalue)
-            is NumNode  -> visitNumNode(expression)
-            is VarNode  -> visitVarNode(expression, isRvalue)
+            is UnaryOp -> visitUnary(expression, isRvalue)
+            is NumNode -> visitNumNode(expression)
+            is VarNode -> visitVarNode(expression, isRvalue)
             else -> throw IRCodeGenError("Unknown expression")
         }
     }
@@ -284,6 +247,7 @@ class IRGen private constructor() {
                 is AnyTypeNode -> {
                     builder.basicType(typeHolder.get(specifier.name()))
                 }
+
                 else -> builder.add(specifier)
             }
         }
@@ -318,8 +282,9 @@ class IRGen private constructor() {
 
                             varStack[varName] = KeyType(type, rvalueAdr)
                         }
+
                         is AssignmentDeclarator -> {
-                            val type    = createType(node.declspec, decl.rvalue)
+                            val type = createType(node.declspec, decl.rvalue)
                             val varName = createVar(decl.rvalue)
 
                             val irType = toIRType(type)
@@ -329,15 +294,19 @@ class IRGen private constructor() {
                             val lvalue = visitExpression(decl.lvalue, false)
                             ir().store(rvalueAdr, lvalue)
                         }
+
                         else -> throw IRCodeGenError("Unknown declarator, delc=$decl")
                     }
                 }
+
                 is GotoStatement -> {
                     return visitGoto(node)
                 }
+
                 is Statement -> {
                     needSwitch = visitStatement(node)
                 }
+
                 else -> throw IRCodeGenError("Statement expected")
             }
         }
@@ -347,45 +316,50 @@ class IRGen private constructor() {
     fun visitBinary(binop: BinaryOp, isRvalue: Boolean): Value {
         return when (binop.type) {
             BinaryOpType.ADD -> {
-                val left  = visitExpression(binop.left, true)
+                val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType     = TypeConverter.interfereTypes(left, right)
-                val leftConverted  = ir().convertToType(left, commonType)
+                val commonType = TypeConverter.interfereTypes(left, right)
+                val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
-                ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Add,  rightConverted)
+                ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Add, rightConverted)
             }
+
             BinaryOpType.SUB -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType     = TypeConverter.interfereTypes(left, right)
-                val leftConverted  = ir().convertToType(left, commonType)
+                val commonType = TypeConverter.interfereTypes(left, right)
+                val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
-                ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Sub,  rightConverted)
+                ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Sub, rightConverted)
             }
+
             BinaryOpType.ASSIGN -> {
                 val left = visitExpression(binop.left, false)
                 val right = visitExpression(binop.right, true)
                 ir().store(left, right)
                 right //TODO
             }
+
             BinaryOpType.NE -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType     = TypeConverter.interfereTypes(left, right)
-                val leftConverted  = ir().convertToType(left, commonType)
+                val commonType = TypeConverter.interfereTypes(left, right)
+                val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 val cmp = ir().icmp(leftConverted, IntPredicate.Ne, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
+
             BinaryOpType.GT -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType     = TypeConverter.interfereTypes(left, right)
-                val leftConverted  = ir().convertToType(left, commonType)
+                val commonType = TypeConverter.interfereTypes(left, right)
+                val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 val cmp = ir().icmp(leftConverted, IntPredicate.Gt, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
+
             else -> throw IRCodeGenError("Unknown binary operation, op=${binop.type}")
         }
     }
@@ -395,21 +369,23 @@ class IRGen private constructor() {
             PrefixUnaryOpType.ADDRESS -> {
                 visitExpression(unaryOp.primary, isRvalue)
             }
+
             PrefixUnaryOpType.DEREF -> {
                 val addr = visitExpression(unaryOp.primary, isRvalue)
                 ir().load(Type.Ptr, addr)
             }
+
             else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.type}")
         }
     }
 
     fun visitNumNode(numNode: NumNode): Constant {
         return when (numNode.toLong.data) {
-            in 0..255                  -> U8Value(numNode.toLong.data.toByte())
-            in 0..65535                -> U16Value(numNode.toLong.data.toShort())
-            in 0..4294967295           -> U32Value(numNode.toLong.data.toInt())
-            in -128..127               -> I8Value(numNode.toLong.data.toByte())
-            in -32768..32767           -> I16Value(numNode.toLong.data.toShort())
+            in 0..255 -> U8Value(numNode.toLong.data.toByte())
+            in 0..65535 -> U16Value(numNode.toLong.data.toShort())
+            in 0..4294967295 -> U32Value(numNode.toLong.data.toInt())
+            in -128..127 -> I8Value(numNode.toLong.data.toByte())
+            in -32768..32767 -> I16Value(numNode.toLong.data.toShort())
             in -2147483648..2147483647 -> I32Value(numNode.toLong.data.toInt())
             else -> I64Value(numNode.toLong.data.toLong())
         }
@@ -417,13 +393,13 @@ class IRGen private constructor() {
 
     private fun visitReturn(returnStatement: ReturnStatement): Boolean {
         when (returnStatement.expr) {
-            is EmptyExpression -> ir().branch(exitBlock!!)
+            is EmptyExpression -> ir().branch(exitBlock)
             else -> {
                 val value = visitExpression(returnStatement.expr, true)
                 val realType = ir().prototype().returnType()
                 val returnType = ir().convertToType(value, realType)
                 ir().store(returnValueAddr!!, returnType)
-                ir().branch(exitBlock!!)
+                ir().branch(exitBlock)
             }
         }
         return false
@@ -439,13 +415,59 @@ class IRGen private constructor() {
         }
     }
 
-    companion object {
-        fun apply(node: ProgramNode): Module {
-            //println(node)
-            val irGen = IRGen()
-            irGen.visit(node)
-            val module = irGen.moduleBuilder.build()
-            return module
+    init {
+        val returnType = createReturnType(functionNode)
+
+        val name = functionNode.name()
+        val parameters = getParameters(functionNode.declarator.declspec)
+
+
+        val types = mutableListOf<SpecifiedType>()
+        val argumentNames = mutableListOf<String>()
+        for (p in parameters) {
+            when (p) {
+                is Parameter -> {
+                    val decl = p.declarator as Declarator
+                    val type = createType(p.declspec, decl)
+                    val arg = createVar(decl)
+                    argumentNames.add(arg)
+                    types.add(type)
+                }
+
+                is ParameterVarArg -> TODO()
+                else -> throw IRCodeGenError("Parameter expected")
+            }
         }
+        val retType = toIRType(returnType)
+
+        currentFunction = moduleBuilder.createFunction(name, retType, types.map { toIRType(it) })
+
+
+        varStack.push()
+
+        for (idx in argumentNames.indices) {
+            val argName = argumentNames[idx]
+            val arg = ir().argument(idx)
+            val type = types[idx]
+
+            val rvalueAdr = ir().alloc(arg.type())
+            varStack[argName] = KeyType(type, rvalueAdr)
+            ir().store(rvalueAdr, arg)
+        }
+
+        returnValueAddr = ir().alloc(retType)
+
+        exitBlock = ir().createLabel()
+        ir().switchLabel(exitBlock)
+        val loadReturn = ir().load(retType as PrimitiveType, returnValueAddr)
+        ir().ret(loadReturn)
+
+        ir().switchLabel(Label.entry)
+        val needSwitch = visitStatement(functionNode.body)
+        if (needSwitch) {
+            ir().branch(exitBlock)
+        }
+
+        varStack.pop()
     }
 }
