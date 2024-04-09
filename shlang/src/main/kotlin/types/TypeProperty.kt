@@ -34,31 +34,3 @@ enum class StorageClass: TypeProperty {
         override fun toString(): String = "auto"
     }
 }
-
-data class SpecifiedType(val basicType: CType, val properties: List<TypeProperty>) {
-
-    companion object {
-        val VOID = SpecifiedType(CType.VOID, emptyList())
-    }
-}
-
-class SpecifiedTypeBuilder {
-    var basicType: CType? = null
-    private val properties = mutableListOf<TypeProperty>()
-
-    fun basicType(type: CType) {
-        basicType = type
-    }
-
-    fun add(property: TypeProperty) {
-        properties.add(property)
-    }
-
-    fun addAll(properties: List<TypeProperty>) {
-        this.properties.addAll(properties)
-    }
-
-    fun build(): SpecifiedType {
-        return SpecifiedType(basicType as CType, properties)
-    }
-}

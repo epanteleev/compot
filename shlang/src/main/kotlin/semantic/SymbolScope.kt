@@ -33,20 +33,6 @@ class SymbolScope(val parent: SymbolScope?, var start: Int = -1, var end: Int = 
         return this.symbols[symbol]
     }
 
-    fun getAllSymbolNames(out: MutableSet<String> = mutableSetOf()): Set<String> {
-        out += symbols.keys
-        parent?.getAllSymbolNames(out)
-        return out
-    }
-
     override fun toString(): String =
         "SymbolScope(level=$level, symbols=${symbols.keys}, children=${children.size}, parent=${parent != null}, start=$start, end=$end)"
-}
-
-
-class FunctionScope {
-    var name: String = ""
-    var type: FunctionType? = null
-    var hasGoto: Boolean = false
-    val rettype: CType get() = type?.retType ?: CType.UNRESOLVED
 }

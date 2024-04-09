@@ -1,179 +1,68 @@
 package types
 
-import kotlin.math.*
-import parser.nodes.*
-
-
-interface CType: TypeProperty {
-    val isNumericIntegral: Boolean get() = when (this) {
-        CHAR, SHORT, INT, LONG, UCHAR, USHORT, UINT, ULONG -> true
-        else -> false
-    }
-    val isNumeric: Boolean get() = isNumericIntegral || when (this) {
-        FLOAT, DOUBLE -> true
-        else -> false
-    }
-    val isInt8Bits: Boolean get() = this == CHAR || this == UCHAR
-    val isInt16Bits: Boolean get() = this == SHORT || this == USHORT
-    val isInt32Bits: Boolean get() = this == INT || this == UINT
-    val isInt64Bits: Boolean get() = this == LONG || this == ULONG
-
-    val is32Bits: Boolean get() = isInt32Bits || this == FLOAT
-    val is64Bits: Boolean get() = isInt64Bits || this == DOUBLE
+data class BaseType private constructor(val name: String, val size: Int) {
+    override fun toString(): String = name
 
     companion object {
-        val BOOL = BoolType
-        val VOID = IntType(true, 0)
-
-        val CHAR = IntType(true, 1)
-        val SHORT = IntType(true, 2)
-        val INT = IntType(true, 4)
-        val LONG = IntType(true, 8)
-
-        val UCHAR = IntType(false, 1)
-        val USHORT = IntType(false, 2)
-        val UINT = IntType(false, 4)
-        val ULONG = IntType(false, 8)
-
-        val FLOAT = FloatType
-        val DOUBLE = DoubleType
-
-        val UNKNOWN = UnknownType("unknown")
-        val UNKNOWN_TYPEDEF = UnknownType("unknown_typedef")
-        val UNKNOWN_ELEMENT_TYPE = UnknownType("unknown_element_type")
-        val UNRESOLVED = UnknownType("unresolved")
-
-        fun common(types: List<CType>): CType = if (types.isEmpty()) UNKNOWN else types.reduce { a, b -> common(a, b) }
-        fun common(a: CType, b: CType): CType {
-            if (a is NumberType && b is NumberType) {
-                if (a is IntType && b is IntType) {
-                    return IntType(a.signed || b.signed, max(a.size, b.size))
-                }
-                return if (max(a.size, b.size) > 4) DOUBLE else FLOAT
-            }
-            return a
-        }
-
-        fun binop(l: CType, op: String, r: CType): BinopTypes = when (op) {
-            "&&", "||" -> BinopTypes(CType.BOOL)
-            "<<", ">>" -> BinopTypes(l.growToWord(), CType.INT)
-            "==", "!=", "<", "<=", ">", ">=" -> {
-                val common = CType.common(l, r)
-                BinopTypes(common, common, CType.BOOL)
-            }
-            "&", "|", "^" -> BinopTypes(l.growToWord())
-            "*", "/", "%" -> BinopTypes(l.growToWord())
-            else -> TODO("BINOP '$op' $l, $r")
-        }
-
-        fun unop(op: String, r: CType): UnopTypes = when (op) {
-            "!" -> UnopTypes(CType.BOOL)
-            "~" -> UnopTypes(r.growToWord())
-            else -> TODO("UNOP '$op' $r")
-        }
+        val BOOL = BaseType("bool", 1)
+        val CHAR = BaseType("char", 1)
+        val SHORT = BaseType("short", 2)
+        val INT = BaseType("int", 4)
+        val LONG = BaseType("long", 8)
+        val FLOAT = BaseType("float", 4)
+        val DOUBLE = BaseType("double", 8)
+        val UCHAR = BaseType("unsigned char", 1)
+        val USHORT = BaseType("unsigned short", 2)
+        val UINT = BaseType("unsigned int", 4)
+        val ULONG = BaseType("unsigned long", 8)
     }
 }
 
- 
-data class BinopTypes(val l: CType, val r: CType = l, val out: CType = l)
 
- 
-data class UnopTypes(val r: CType, val out: CType = r)
+interface CType {
+   fun baseType(): BaseType
+   fun qualifiers(): List<TypeProperty>
 
-fun CType.growToWord(resolver: TypeResolver = UncachedTypeResolver): CType {
-    val that = resolver.resolve(this)
-    val res = when (that) {
-        is BoolType -> CType.INT
-        is IntType -> IntType(that.signed, max(that.size, 4))
-        else -> that
-    }
-    //println("growToWord : $this[$that] -> $res")
-    return res
+   companion object {
+       val INT = CPrimitiveType(BaseType.INT)
+       val CHAR = CPrimitiveType(BaseType.CHAR)
+       val VOID = CPrimitiveType(BaseType.INT)
+       val FLOAT = CPrimitiveType(BaseType.FLOAT)
+       val DOUBLE = CPrimitiveType(BaseType.DOUBLE)
+       val LONG = CPrimitiveType(BaseType.LONG)
+       val SHORT = CPrimitiveType(BaseType.SHORT)
+       val UINT = CPrimitiveType(BaseType.UINT)
+       val BOOL = CPrimitiveType(BaseType.BOOL)
+   }
 }
 
-fun CType.withSign(signed: Boolean) = when (this) {
-    is IntType -> IntType(signed, size)
-    else -> this
-}
+class CTypeBuilder {
+    var basicType: BaseType? = null
+    private val properties = mutableListOf<TypeProperty>()
 
-val CType.sign: Boolean?
-    get() = when (this) {
-        is IntType -> signed
-        is NumberType -> true
-        else -> null
+    fun basicType(type: BaseType) {
+        basicType = type
     }
 
-val CType.signed get() = sign ?: false
-val CType.unsigned get() = !(sign ?: true)
-
-val CType.elementType
-    get() = when (this) {
-        is BasePointerType -> this.elementType
-        else -> CType.UNKNOWN_ELEMENT_TYPE
+    fun add(property: TypeProperty) {
+        properties.add(property)
     }
 
-abstract class PrimType : CType
+    fun addAll(properties: List<TypeProperty>) {
+        this.properties.addAll(properties)
+    }
 
- 
-abstract class NumberType : PrimType() {
-    abstract val size: Int
-}
-
- 
-object BoolType : PrimType() {
-    override fun toString(): String = "Bool"
-}
-
- 
-data class IntType(val signed: Boolean, override val size: Int) : NumberType() {
-    override fun toString(): String = when (size) {
-        0 -> "void"
-        1 -> if (this.signed) "char" else "unsigned char"
-        2 -> if (this.signed) "short" else "unsigned short"
-        4 -> if (this.signed) "int" else "unsigned int"
-        8 -> if (this.signed) "long" else "unsigned long"
-        else -> TODO("IntFType")
+    fun build(): CType {
+        return CPrimitiveType(basicType as BaseType, properties)
     }
 }
 
- 
-abstract class FloatingType : NumberType()
-
- 
-object FloatType : FloatingType() {
-    override val size: Int = 4
-    override fun toString(): String = "float"
+data class CPrimitiveType(val baseType: BaseType, val properties: List<TypeProperty> = emptyList()) : CType {
+    override fun baseType(): BaseType = baseType
+    override fun qualifiers(): List<TypeProperty> = properties
 }
 
- 
-object DoubleType : FloatingType() {
-    override val size: Int = 8
-    override fun toString(): String = "double"
-}
- 
-abstract class BaseReferenceableType() : CType
-
- 
-abstract class BasePointerType() : BaseReferenceableType() {
-    abstract val elementType: CType
-    abstract val actsAsPointer: Boolean
-}
-
- 
-data class ArrayType(override val elementType: CType, val numElements: Int) : BasePointerType() {
-    val hasSubarrays get() = elementType is ArrayType
-    // CAUSES PROBLEMS in initialization if there is something like array[8][23] and array[8][40] in the program
-    //override val actsAsPointer: Boolean = !hasSubarrays || numElements == null
-    override val actsAsPointer: Boolean = false
-    override fun toString(): String = if (numElements != null) "$elementType[$numElements]" else "$elementType[]"
-}
- 
-data class UnknownType(val reason: Any?) : PrimType() {
-    override fun toString(): String = "UnknownFType($reason)"
-}
-data class FunctionType(val name: String, val retType: CType, val args: List<Parameter>, var variadic: Boolean = false) : CType {
-    companion object {
-        fun from(returnType: CType) = FunctionType("", returnType, arrayListOf())
-        fun from(returnType: CType, args: List<Parameter>, isVariadic: Boolean) = FunctionType("", returnType, args, isVariadic)
-    }
+data class FunctionType(val name: String, val retType: CType, val args: List<String>, val argsTypes: List<CType>, var variadic: Boolean = false) : CType {
+    override fun baseType(): BaseType = retType.baseType()
+    override fun qualifiers(): List<TypeProperty> = retType.qualifiers()
 }

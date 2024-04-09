@@ -8,12 +8,12 @@ import ir.instruction.FloatPredicate
 import ir.instruction.IntPredicate
 import types.*
 import ir.module.Module
-import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.*
 import parser.nodes.*
+import types.CPrimitiveType
 import java.lang.Exception
 
 
@@ -21,24 +21,19 @@ data class IRCodeGenError(override val message: String) : Exception(message)
 
 class IRGen private constructor() {
     private val moduleBuilder = ModuleBuilder.create()
-    private val typeHolder = TypeHolder.default()
-    private val varStack = VarStack()
     private var currentFunction: FunctionDataBuilder? = null
-    private var returnValueAddr: Value? = null
-    private var exitBlock: Label? = null
 
     private fun ir(): FunctionDataBuilder {
         return currentFunction ?: throw IRCodeGenError("Function expected")
     }
 
-    fun visit(programNode: ProgramNode): SpecifiedType {
+    fun visit(programNode: ProgramNode) {
         for (node in programNode.nodes) {
             when (node) {
                 is FunctionNode -> IrGenFunction(moduleBuilder, node)
                 else -> throw IRCodeGenError("Function expected")
             }
         }
-        return SpecifiedType.VOID
     }
 
     companion object {
@@ -75,7 +70,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         return parameters.params
     }
 
-    private fun createType(declspec: DeclarationSpecifier, declarator: Declarator): SpecifiedType {
+    private fun createType(declspec: DeclarationSpecifier, declarator: Declarator): CType {
         val builder = visit(declspec)
         for (p in declarator.pointers) {
             val finalizedPointer = p.qualifiers
@@ -85,7 +80,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         return builder.build()
     }
 
-    private fun createReturnType(functionNode: FunctionNode): SpecifiedType {
+    private fun createReturnType(functionNode: FunctionNode): CType {
         val specifier = functionNode.specifier
         return createType(specifier, functionNode.declarator)
     }
@@ -95,20 +90,20 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         return identNode.ident.str()
     }
 
-    private fun toIRType(type: SpecifiedType): NonTrivialType {
-        for (p in type.properties) {
+    private fun toIRType(type: CType): NonTrivialType {
+        for (p in type.qualifiers()) {
             if (p is PointerQualifier) {
                 return Type.Ptr
             }
         }
-        return when (type.basicType) {
-            CType.BOOL -> Type.U1
-            CType.CHAR -> Type.I8
-            CType.SHORT -> Type.I16
-            CType.INT -> Type.I32
-            CType.LONG -> Type.I64
-            CType.FLOAT -> Type.F32
-            CType.DOUBLE -> Type.F64
+        return when (type.baseType()) {
+            BaseType.BOOL -> Type.U1
+            BaseType.CHAR -> Type.I8
+            BaseType.SHORT -> Type.I16
+            BaseType.INT -> Type.I32
+            BaseType.LONG -> Type.I64
+            BaseType.FLOAT -> Type.F32
+            BaseType.DOUBLE -> Type.F64
             else -> throw IRCodeGenError("Unknown type")
         }
     }
@@ -240,12 +235,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         }
     }
 
-    fun visit(specifierType: DeclarationSpecifier): SpecifiedTypeBuilder {
-        val builder = SpecifiedTypeBuilder()
+    fun visit(specifierType: DeclarationSpecifier): CTypeBuilder {
+        val builder = CTypeBuilder()
         for (specifier in specifierType.specifiers) {
             when (specifier) {
                 is AnyTypeNode -> {
-                    builder.basicType(typeHolder.get(specifier.name()))
+                    builder.basicType(typeHolder.get(specifier.name()).baseType())
                 }
 
                 else -> builder.add(specifier)
@@ -422,14 +417,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         val parameters = getParameters(functionNode.declarator.declspec)
 
 
-        val types = mutableListOf<SpecifiedType>()
+        val types = mutableListOf<CType>()
         val argumentNames = mutableListOf<String>()
         for (p in parameters) {
             when (p) {
                 is Parameter -> {
                     val decl = p.declarator as Declarator
                     val type = createType(p.declspec, decl)
-                    val arg = createVar(decl)
+                    val arg = p.name()
                     argumentNames.add(arg)
                     types.add(type)
                 }

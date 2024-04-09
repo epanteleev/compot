@@ -1,7 +1,7 @@
 package gen
 
 import ir.LocalValue
-import types.SpecifiedType
+import types.CType
 
 
 class VarStack {
@@ -31,4 +31,4 @@ class VarStack {
     }
 }
 
-typealias KeyType = Pair<SpecifiedType, LocalValue>
+typealias KeyType = Pair<CType, LocalValue>

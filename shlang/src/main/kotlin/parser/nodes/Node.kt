@@ -1,9 +1,7 @@
 package parser.nodes
 
-import types.CType
 import tokenizer.*
-import types.PointerQualifier
-import types.TypeProperty
+import types.*
 
 
 enum class BinaryOpType {
@@ -260,6 +258,11 @@ abstract class AnyParameter : Node()
 
 data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyDeclarator) : AnyParameter() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    fun name(): String {
+        val varNode = declarator as Declarator
+        return (varNode.declspec.decl as VarDeclarator).ident.str()
+    }
 }
 
 class ParameterVarArg: AnyParameter() {
