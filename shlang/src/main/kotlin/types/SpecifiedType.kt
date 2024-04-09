@@ -11,6 +11,9 @@ enum class PointerQualifier: TypeProperty {
     },
     RESTRICT {
         override fun toString() = "restrict"
+    },
+    EMPTY {
+        override fun toString(): String = ""
     }
 }
 

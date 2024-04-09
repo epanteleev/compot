@@ -67,6 +67,11 @@ class IRGen private constructor() {
     }
 
     private fun toIRType(type: SpecifiedType): NonTrivialType {
+        for (p in type.properties) {
+            if (p is PointerQualifier) {
+                return Type.Ptr
+            }
+        }
         return when (type.basicType) {
             CType.BOOL   -> Type.U1
             CType.CHAR   -> Type.I8
@@ -314,15 +319,15 @@ class IRGen private constructor() {
                             varStack[varName] = KeyType(type, rvalueAdr)
                         }
                         is AssignmentDeclarator -> {
-                            val type = createType(node.declspec, decl.rvalue)
+                            val type    = createType(node.declspec, decl.rvalue)
                             val varName = createVar(decl.rvalue)
 
                             val irType = toIRType(type)
                             val rvalueAdr = ir().alloc(irType)
                             varStack[varName] = KeyType(type, rvalueAdr)
 
-                            val rvalue = visitExpression(decl.lvalue, true)
-                            ir().store(rvalueAdr, rvalue)
+                            val lvalue = visitExpression(decl.lvalue, false)
+                            ir().store(rvalueAdr, lvalue)
                         }
                         else -> throw IRCodeGenError("Unknown declarator, delc=$decl")
                     }
@@ -391,7 +396,8 @@ class IRGen private constructor() {
                 visitExpression(unaryOp.primary, isRvalue)
             }
             PrefixUnaryOpType.DEREF -> {
-                visitExpression(unaryOp.primary, isRvalue)
+                val addr = visitExpression(unaryOp.primary, isRvalue)
+                ir().load(Type.Ptr, addr)
             }
             else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.type}")
         }
@@ -426,15 +432,16 @@ class IRGen private constructor() {
     fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
         val name = varNode.str.str()
         val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable $name not found")
-        if (isRvalue) {
-            return ir().load(toIRType(rvalueAttr.first) as PrimitiveType, rvalueAttr.second)
+        return if (isRvalue) {
+            ir().load(toIRType(rvalueAttr.first) as PrimitiveType, rvalueAttr.second)
         } else {
-            return rvalueAttr.second
+            rvalueAttr.second
         }
     }
 
     companion object {
         fun apply(node: ProgramNode): Module {
+            //println(node)
             val irGen = IRGen()
             irGen.visit(node)
             val module = irGen.moduleBuilder.build()

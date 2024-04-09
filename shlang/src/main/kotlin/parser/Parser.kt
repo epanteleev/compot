@@ -1006,6 +1006,9 @@ class ProgramParser(firstToken: AnyToken) {
                     break
                 }
             }
+            if (qualifiers.isEmpty()) {
+                qualifiers.add(PointerQualifier.EMPTY)
+            }
             pointers.add(NodePointer(qualifiers))
         }
 

@@ -42,7 +42,7 @@ class Store private constructor(pointer: Value, value: Value, private val valueT
         if (javaClass != other?.javaClass) return false
 
         other as Store
-        return pointer() == other.pointer() && value() == other.value()
+        return pointer() == other.pointer() && value() == other.value() // TODO Unsafe
     }
 
     companion object {

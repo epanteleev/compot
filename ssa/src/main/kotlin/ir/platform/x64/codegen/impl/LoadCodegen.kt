@@ -28,7 +28,7 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVi
         when (src) {
             is AddressLiteral -> asm.mov(size, src, dst)
             else -> {
-                asm.mov(size, src, temp1)
+                asm.mov(POINTER_SIZE, src, temp1)
                 asm.mov(size, Address.from(temp1, 0), dst)
             }
         }

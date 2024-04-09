@@ -2,6 +2,7 @@ package parser
 
 import parser.nodes.*
 import tokenizer.Ident
+import types.PointerQualifier
 
 
 class LineAgnosticAstPrinter: NodeVisitor<Unit> {
@@ -453,6 +454,9 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(pointer: NodePointer) {
         buffer.append('*')
         for (qualifier in pointer.qualifiers) {
+            if (qualifier == PointerQualifier.EMPTY) {
+                continue
+            }
             buffer.append(qualifier)
             buffer.append(' ')
         }

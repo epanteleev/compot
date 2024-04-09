@@ -80,7 +80,8 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandVi
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+       asm.mov(size, first, dst)
+       asm.add(size, second, dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {

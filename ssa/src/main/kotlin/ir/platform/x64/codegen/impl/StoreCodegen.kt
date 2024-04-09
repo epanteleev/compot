@@ -53,7 +53,7 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandV
         when (dst) {
             is AddressLiteral -> asm.mov(size, src, dst)
             else -> {
-                asm.mov(size, dst, temp1)
+                asm.mov(POINTER_SIZE, dst, temp1)
                 asm.mov(size, src, Address.from(temp1, 0))
             }
         }
@@ -78,8 +78,11 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandV
     override fun default(dst: Operand, src: Operand) {
         if (dst is GPRegister && src is XmmRegister) {
             asm.movf(size, src, Address.from(dst, 0))
+        } else if (dst is GPRegister && src is Address) {
+            asm.mov(size, src, temp1)
+            asm.mov(size, temp1, Address.from(dst, 0))
         } else {
-            throw RuntimeException("Internal error: '${Store.NAME}' dst=$dst, pointer=$src")
+            throw RuntimeException("Internal error: '${Store.NAME}' dst=$dst, src=$src")
         }
     }
 }

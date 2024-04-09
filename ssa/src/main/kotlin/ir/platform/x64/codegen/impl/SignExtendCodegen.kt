@@ -22,7 +22,7 @@ data class SignExtendCodegen(val fromType: IntegerType, val toType: IntegerType,
     }
 
     override fun ra(dst: GPRegister, src: Address) {
-        TODO("Not yet implemented")
+        asm.movsext(fromSize, toSize, src, dst)
     }
 
     override fun ar(dst: Address, src: GPRegister) {
