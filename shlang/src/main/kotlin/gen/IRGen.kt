@@ -70,13 +70,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
     }
 
     private fun createType(declspec: DeclarationSpecifier, declarator: Declarator): CType {
-        val builder = visit(declspec)
-        for (p in declarator.pointers) {
-            val finalizedPointer = p.qualifiers
-            builder.addAll(finalizedPointer)
-        }
+        var builder = visit(declspec)
+//        for (p in declarator.pointers) {
+//            val finalizedPointer = p.qualifiers
+//            builder = CPointerType(finalizedPointer)
+//        }
 
-        return builder.build()
+        return builder
     }
 
     private fun createReturnType(functionNode: FunctionNode): CType {
@@ -234,18 +234,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         }
     }
 
-    fun visit(specifierType: DeclarationSpecifier): CTypeBuilder {
-        val builder = CTypeBuilder()
-        for (specifier in specifierType.specifiers) {
-            when (specifier) {
-                is AnyTypeNode -> {
-                    builder.basicType(typeHolder.get(specifier.name()).baseType())
-                }
-
-                else -> builder.add(specifier)
-            }
-        }
-        return builder
+    fun visit(specifierType: DeclarationSpecifier): CType {
+        return specifierType.resolveType(typeHolder)
     }
 
     fun visitCompoundStatement(compoundStatement: CompoundStatement): Boolean {

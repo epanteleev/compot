@@ -1,9 +1,12 @@
 package types
 
-data class BaseType private constructor(val name: String, val size: Int) {
+import parser.nodes.TypeNode
+
+open class BaseType(open val name: String, val size: Int): TypeProperty {
     override fun toString(): String = name
 
     companion object {
+        val VOID: BaseType = BaseType("void", 0)
         val BOOL = BaseType("bool", 1)
         val CHAR = BaseType("char", 1)
         val SHORT = BaseType("short", 2)
@@ -74,29 +77,29 @@ data class NoType(val message: String) : CType {
 }
 
 class CTypeBuilder {
-    var basicType: BaseType? = null
     private val properties = mutableListOf<TypeProperty>()
-
-    fun basicType(type: BaseType) {
-        basicType = type
-    }
 
     fun add(property: TypeProperty) {
         properties.add(property)
     }
 
-    fun addAll(properties: List<TypeProperty>) {
-        this.properties.addAll(properties)
-    }
-
-    fun build(): CType {
-        return CPrimitiveType(basicType as BaseType, properties)
+    fun build(typeHolder: TypeHolder): CType {
+        val typeNodes = properties.filterIsInstance<BaseType>()
+        val baseType = typeNodes[0]
+        return CPrimitiveType(baseType, properties.filterNot { it is BaseType })
     }
 }
 
 data class CPrimitiveType(val baseType: BaseType, val properties: List<TypeProperty> = emptyList()) : CType {
     override fun baseType(): BaseType = baseType
     override fun qualifiers(): List<TypeProperty> = properties
+
+    override fun toString(): String {
+        return buildString {
+            properties.forEach { append("$it ") }
+            append(baseType)
+        }
+    }
 }
 
 class CStructType() : CType { //TODO
@@ -108,6 +111,32 @@ class CStructType() : CType { //TODO
 
     override fun baseType(): BaseType = BaseType.UNKNOWN
     override fun qualifiers(): List<TypeProperty> = emptyList()
+}
+
+class CUnionType() : CType { //TODO
+    val fields = mutableListOf<Pair<String, CType>>()
+
+    fun addField(name: String, type: CType) {
+        fields.add(name to type)
+    }
+
+    override fun baseType(): BaseType = BaseType.UNKNOWN
+    override fun qualifiers(): List<TypeProperty> = emptyList()
+}
+
+class CEnumType() : CType { //TODO
+    val fields = mutableListOf<Pair<String, Int>>()
+
+    fun addField(name: String, value: Int) {
+        fields.add(name to value)
+    }
+
+    override fun baseType(): BaseType = BaseType.UNKNOWN
+    override fun qualifiers(): List<TypeProperty> = emptyList()
+}
+
+data class StructDeclaration(override val name: String): BaseType(name, 8) {
+    override fun toString(): String = "struct $name"
 }
 
 data class CArrayType(val type: CType, val size: Int) : CType {

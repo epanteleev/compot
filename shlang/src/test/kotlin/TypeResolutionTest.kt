@@ -17,7 +17,6 @@ class TypeResolutionTest {
         val parser = ProgramParser(tokens)
 
         val expr = parser.assignment_expression() as Expression
-        println(expr)
         val typeResolver = TypeHolder.default()
         val type = expr.resolveType(typeResolver)
         assertEquals(CType.INT, type)
@@ -29,20 +28,42 @@ class TypeResolutionTest {
         val parser = ProgramParser(tokens)
 
         val expr = parser.assignment_expression() as Expression
-        println(expr)
         val typeResolver = TypeHolder.default()
         val type = expr.resolveType(typeResolver)
         assertEquals(CType.DOUBLE, type)
     }
 
     @Test
-    fun testDeclarationSpecifiers1(): Unit {
+    fun testDeclarationSpecifiers1() {
         val tokens = CTokenizer.apply("volatile int restrict")
         val parser = ProgramParser(tokens)
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
         println(expr)
-        assertEquals("volatile int restrict", expr.ctype().toString())
+        val typeResolver = TypeHolder.default()
+        assertEquals("volatile restrict int", expr.resolveType(typeResolver).toString())
+    }
+
+    @Test
+    fun testDeclarationSpecifiers2() {
+        val tokens = CTokenizer.apply("volatile float restrict")
+        val parser = ProgramParser(tokens)
+
+        val expr = parser.declaration_specifiers() as DeclarationSpecifier
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        assertEquals("volatile restrict float", expr.resolveType(typeResolver).toString())
+    }
+
+    @Test
+    fun testDeclarationSpecifiers3() {
+        val tokens = CTokenizer.apply("volatile struct point")
+        val parser = ProgramParser(tokens)
+
+        val expr = parser.declaration_specifiers() as DeclarationSpecifier
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        assertEquals("volatile struct point", expr.resolveType(typeResolver).toString())
     }
 
     @Test

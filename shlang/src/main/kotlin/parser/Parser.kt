@@ -423,26 +423,31 @@ class ProgramParser(firstToken: AnyToken) {
     //	| AUTO
     //	| REGISTER
     //	;
-    fun storage_class_specifier(): StorageClass? = rule {
+    fun storage_class_specifier(): StorageClassSpecifier? = rule {
         if (check("typedef")) {
+            val tok = peak<Ident>()
             eat()
-            return@rule StorageClass.TYPEDEF
+            return@rule StorageClassSpecifier(tok)
         }
         if (check("extern")) {
+            val tok = peak<Ident>()
             eat()
-            return@rule StorageClass.EXTERN
+            return@rule StorageClassSpecifier(tok)
         }
         if (check("static")) {
+            val tok = peak<Ident>()
             eat()
-            return@rule StorageClass.STATIC
+            return@rule StorageClassSpecifier(tok)
         }
         if (check("auto")) {
+            val tok = peak<Ident>()
             eat()
-            return@rule StorageClass.AUTO
+            return@rule StorageClassSpecifier(tok)
         }
         if (check("register")) {
+            val tok = peak<Ident>()
             eat()
-            return@rule StorageClass.REGISTER
+            return@rule StorageClassSpecifier(tok)
         }
         return@rule null
     }
@@ -813,18 +818,21 @@ class ProgramParser(firstToken: AnyToken) {
     //	| VOLATILE
     //  | RESTRICT
     //	;
-    fun type_qualifier(): PointerQualifier? = rule {
+    fun type_qualifier(): TypeQualifier? = rule {
         if (check("const")) {
+            val tok = peak<Ident>()
             eat()
-            return@rule PointerQualifier.CONST
+            return@rule TypeQualifier(tok)
         }
         if (check("volatile")) {
+            val tok = peak<Ident>()
             eat()
-            return@rule PointerQualifier.VOLATILE
+            return@rule TypeQualifier(tok)
         }
         if (check("restrict")) {
+            val tok = peak<Ident>()
             eat()
-            return@rule PointerQualifier.RESTRICT
+            return@rule TypeQualifier(tok)
         }
         return@rule null
     }
@@ -838,7 +846,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	| type_qualifier declaration_specifiers
     //	;
     fun declaration_specifiers(): DeclarationSpecifier? = rule {
-        val specifiers = mutableListOf<TypeProperty>()
+        val specifiers = mutableListOf<AnyTypeNode>()
         while (true) {
             val storageClass = storage_class_specifier()
             if (storageClass != null) {
@@ -993,7 +1001,7 @@ class ProgramParser(firstToken: AnyToken) {
             val qualifiers = mutableListOf<PointerQualifier>()
             while (check<CToken>()) {
                 val token = peak<CToken>()
-                if (token.str() == "const") {
+                if (token.str() == "const") { //TODO
                     qualifiers.add(PointerQualifier.CONST)
                     eat()
                 } else if (token.str() == "volatile") {

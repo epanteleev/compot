@@ -139,15 +139,41 @@ abstract class Node {
 
 abstract class TypeSpecifier : Node()
 
-data class DeclarationSpecifier(val specifiers: List<TypeProperty>) : TypeSpecifier() {
+data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier(), Resolvable {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 
-    fun ctype(): CType {
+    override fun resolveType(typeHolder: TypeHolder): CType {
         val ctypeBuilder = CTypeBuilder()
         specifiers.forEach {
-            ctypeBuilder.add(it)
+            when (it) {
+                is TypeNode -> {
+                    ctypeBuilder.add(it.type()) //TODO
+                }
+                is TypeQualifier -> {
+                    ctypeBuilder.add(it.qualifier())
+                }
+                is StorageClassSpecifier -> {
+                    ctypeBuilder.add(it.storageClass())
+                }
+                is StructSpecifier -> {
+                    TODO()
+                }
+                is UnionSpecifier -> {
+                    TODO()
+                }
+                is EnumSpecifier -> {
+                    TODO()
+                }
+                is EnumDeclaration -> {
+                    TODO()
+                }
+                is StructDeclaration -> {
+                    ctypeBuilder.add(it.typeResolver(typeHolder))
+                }
+            }
         }
-        return ctypeBuilder.build()
+
+        return ctypeBuilder.build(typeHolder)
     }
 
     companion object {
@@ -648,13 +674,65 @@ class Enumerator(val ident: Ident, val expr: Node) : Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-abstract class AnyTypeNode : Node(), TypeProperty {
+abstract class AnyTypeNode : Node() {
     abstract fun name(): String
 }
 
 data class TypeNode(val ident: Ident) : AnyTypeNode() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
+
+    fun type(): BaseType {
+        return when (ident.str()) {
+            "void"    -> BaseType.VOID
+            "char"    -> BaseType.CHAR
+            "short"   -> BaseType.SHORT
+            "int"     -> BaseType.INT
+            "long"    -> BaseType.LONG
+            "float"   -> BaseType.FLOAT
+            "double"  -> BaseType.DOUBLE
+            "signed"  -> BaseType.INT
+            "unsigned"-> BaseType.UINT
+            "bool"    -> BaseType.BOOL
+            else      -> BaseType.UNKNOWN
+        }
+    }
+}
+
+data class TypeQualifier(private val ident: Ident): AnyTypeNode() {
+    override fun name(): String = ident.str()
+
+    override fun <T> accept(visitor: NodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+
+    fun qualifier(): PointerQualifier {
+        return when (ident.str()) {
+            "const"    -> PointerQualifier.CONST
+            "volatile" -> PointerQualifier.VOLATILE
+            "restrict" -> PointerQualifier.RESTRICT
+            else       -> PointerQualifier.EMPTY
+        }
+    }
+}
+
+data class StorageClassSpecifier(private val ident: Ident): AnyTypeNode() {
+    override fun name(): String = ident.str()
+
+    override fun <T> accept(visitor: NodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+
+    fun storageClass(): StorageClass {
+        return when (ident.str()) {
+            "typedef"  -> StorageClass.TYPEDEF
+            "extern"   -> StorageClass.EXTERN
+            "static"   -> StorageClass.STATIC
+            "register" -> StorageClass.REGISTER
+            "auto"     -> StorageClass.AUTO
+            else       -> StorageClass.AUTO
+        }
+    }
 }
 
 data class UnionSpecifier(val ident: Ident, val fields: List<StructField>) : AnyTypeNode() {
@@ -670,6 +748,10 @@ data class UnionDeclaration(val name: Ident) : AnyTypeNode() {
 data class StructDeclaration(val name: Ident) : AnyTypeNode() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = name.str()
+
+    fun typeResolver(typeHolder: TypeHolder): BaseType {
+        return StructDeclaration(name.str())
+    }
 }
 
 data class StructSpecifier(val ident: Ident, val fields: List<StructField>) : AnyTypeNode() {
