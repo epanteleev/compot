@@ -28,7 +28,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(cast: Cast) {
         buffer.append('(')
-        cast.type.accept(this)
+        cast.typeName.accept(this)
         buffer.append(')')
         buffer.append(' ')
         cast.cast.accept(this)
@@ -42,12 +42,12 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(unaryOp: UnaryOp) {
-        if (unaryOp.type is PrefixUnaryOpType) {
-            buffer.append(unaryOp.type)
+        if (unaryOp.opType is PrefixUnaryOpType) {
+            buffer.append(unaryOp.opType)
         }
         unaryOp.primary.accept(this)
-        if (unaryOp.type is PostfixUnaryOpType) {
-            buffer.append(unaryOp.type)
+        if (unaryOp.opType is PostfixUnaryOpType) {
+            buffer.append(unaryOp.opType)
         }
     }
 
@@ -452,9 +452,9 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(binop: BinaryOp) {
         binop.left.accept(this)
-        buffer.append(' ').append(binop.type).append(' ')
+        buffer.append(' ').append(binop.opType).append(' ')
         binop.right.accept(this)
-        if (binop.type == BinaryOpType.ASSIGN) {
+        if (binop.opType == BinaryOpType.ASSIGN) {
             buffer.append(';')
         }
     }

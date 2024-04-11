@@ -1490,8 +1490,8 @@ class ProgramParser(firstToken: AnyToken) {
     //	: assignment_expression
     //	| argument_expression_list ',' assignment_expression
     //	;
-    fun argument_expression_list(): List<Node> {
-        val arguments = mutableListOf<Node>()
+    fun argument_expression_list(): List<Expression> {
+        val arguments = mutableListOf<Expression>()
         while (true) {
             val expr = assignment_expression()?: return arguments
             arguments.add(expr)
@@ -1508,7 +1508,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	| initializer_list ',' initializer
     //	;
     fun initializerList(): Expression {
-        val initializers = mutableListOf<Node>()
+        val initializers = mutableListOf<Expression>()
         while (true) {
             val initializer = initializer() ?: return InitializerList(initializers)
             initializers.add(initializer)

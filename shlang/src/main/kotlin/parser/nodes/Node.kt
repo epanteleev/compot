@@ -147,44 +147,141 @@ data class DeclarationSpecifier(val specifiers: List<TypeProperty>) : TypeSpecif
     }
 }
 
-data class TypeName(val specifiers: List<Any>, val abstractDecl: Node) : TypeSpecifier() {
+data class TypeName(val specifiers: List<Any>, val abstractDecl: Node) : TypeSpecifier(), Resolvable {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO("Not yet implemented")
+    }
 }
 
 data class FunctionPointerDeclarator(val declarator: List<Node>): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO()
+    }
 }
 
 data class DirectDeclarator(val decl: AnyDeclarator, val declarators: List<Node>): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO()
+    }
 }
 
 data class VarDeclarator(val ident: Ident) : AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO()
+    }
 }
 
 data class FunctionPointerParamDeclarator(val declarator: Node, val params: Node): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO()
+    }
 }
 
 data class Declaration(val declspec: DeclarationSpecifier, val declarators: List<AnyDeclarator>): Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class Cast(val type: TypeName, val cast: Node) : Expression() {
+data class Cast(val typeName: TypeName, val cast: Node) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        type = typeName.resolveType(typeHolder)
+        return type
+    }
 }
 
-data class UnaryOp(val primary: Expression, val type: UnaryOpType) : Expression() {
+data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        val primaryType = primary.resolveType(typeHolder)
+        if (opType is PrefixUnaryOpType) {
+            type = when (opType) {
+//                PrefixUnaryOpType.DEREF -> {
+//                    if (primaryType is CPointerType) {
+//                        primaryType.type
+//                    } else {
+//                        CType.UNRESOlVED
+//                    }
+//                }
+//                PrefixUnaryOpType.ADDRESS -> {
+//                    CPointerType(primaryType)
+//                }
+                PrefixUnaryOpType.NOT -> {
+                    if (primaryType == CType.BOOL) {
+                        CType.BOOL
+                    } else {
+                        CType.UNRESOlVED
+                    }
+                }
+                PrefixUnaryOpType.NEG -> {
+                    if (primaryType == CType.INT || primaryType == CType.LONG) {
+                        primaryType
+                    } else {
+                        CType.UNRESOlVED
+                    }
+                }
+                PrefixUnaryOpType.INC, PrefixUnaryOpType.DEC, PrefixUnaryOpType.PLUS -> {
+                    primaryType
+                }
+                else -> TODO()
+            }
+        } else {
+            type = primaryType
+        }
+        return type
+
+    }
 }
 
 data class ArrayAccess(val primary: Expression, val expr: Expression) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        val primaryType = primary.resolveType(typeHolder)
+        if (primaryType is CArrayType) {
+            type = primaryType.type
+            return type
+        }
+        type = CType.UNKNOWN
+        return type
+
+    }
 }
 
 data class SizeOf(val expr: Node) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        expr as Resolvable
+        type = expr.resolveType(typeHolder)
+        return type
+    }
 }
 
 data class IdentNode(val str: Ident) : Node() {
@@ -193,14 +290,45 @@ data class IdentNode(val str: Ident) : Node() {
 
 data class VarNode(val str: Ident) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        type = typeHolder[str.str()]
+        return type
+    }
 }
 
 data class StringNode(val str: StringLiteral) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+        type = CPointerType(CType.CHAR)
+        return type
+    }
 }
 
 data class NumNode(val toLong: Numeric) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+        when (toLong.data) {
+            is Int -> type = CType.INT
+            is Long -> type = CType.LONG
+            is Float -> type = CType.FLOAT
+            is Double -> type = CType.DOUBLE
+            else -> type = CType.UNKNOWN
+        }
+        return type
+    }
 }
 
 data class SwitchStatement(val condition: Node, val body: Statement): Statement() {
@@ -217,37 +345,123 @@ data class Declspec(val type: CType, val ident: Ident) : Node() {
 
 data class ArrayDeclarator(val constexpr: Node) : AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO()
+    }
 }
 
 object EmptyDeclarator : AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType = CType.UNKNOWN
 }
 
 data class CompoundLiteral(val typeName: Node, val initializerList: Node) : Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class InitializerList(val initializers: List<Node>) : Expression() {
+data class InitializerList(val initializers: List<Expression>) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        val types = initializers.map { it.resolveType(typeHolder) }
+        val commonType = types.reduce { acc, type -> CType.interfereTypes(acc, type) }
+        type = commonType
+        return commonType
+    }
 }
 
-class MemberAccess(val primary: Node, val ident: Ident) : Expression() {
+class MemberAccess(val primary: Expression, val ident: Ident) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        val structType = primary.resolveType(typeHolder)
+        if (structType !is CStructType) {
+            type = CType.UNKNOWN
+            return type
+        }
+        val field = structType.fields.find { it.first == ident.str() }
+        if (field != null) {
+            type = field.second
+            return type
+        }
+        type = CType.UNKNOWN
+        return CType.UNKNOWN
+    }
 }
 
-class ArrowMemberAccess(val primary: Node, val ident: Ident) : Expression() {
+class ArrowMemberAccess(val primary: Expression, val ident: Ident) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType { //TODO Copy-paste?!?
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        val structType = primary.resolveType(typeHolder)
+        if (structType !is CStructType) {
+            type = CType.UNKNOWN
+            return type
+        }
+        val field = structType.fields.find { it.first == ident.str() }
+        if (field != null) {
+            type = field.second
+            return type
+        }
+        type = CType.UNKNOWN
+        return type
+    }
 }
 
-abstract class Expression : Node()
+abstract class Expression : Node(), Resolvable {
+    protected var type: CType = CType.UNRESOlVED
+}
 
+data class BinaryOp(val left: Expression, val right: Expression, val opType: BinaryOpType) : Expression() {
+    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        val leftType = left.resolveType(typeHolder)
+        val rightType = right.resolveType(typeHolder)
+        val commonType = CType.interfereTypes(leftType, rightType)
+        type = commonType
+        return commonType
+    }
+}
 
 class EmptyExpression : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType = type
 }
 
-class Conditional(val cond: Node, val eTrue: Node, val eFalse: Node) : Expression() {
+class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expression) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        val typeTrue = eTrue.resolveType(typeHolder)
+        val typeFalse = eFalse.resolveType(typeHolder)
+        val commonType = CType.interfereTypes(typeTrue, typeFalse)
+        type = commonType
+        return commonType
+    }
 }
 
 data class FunctionParams(val params: List<AnyParameter>): Node() {
@@ -320,25 +534,37 @@ data class ExprStatement(val expr: Expression): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-abstract class AnyDeclarator: Node()
+abstract class AnyDeclarator: Node(), Resolvable
 
 data class Declarator(val declspec: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    fun name(): String {
+        return (declspec.decl as VarDeclarator).ident.str()
+    }
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO("Not yet implemented")
+    }
 }
 
 data class AssignmentDeclarator(val rvalue: Declarator, val lvalue: Expression): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO()
+    }
 }
 
 data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO()
+    }
 }
 
 data class IfStatement(val condition: Expression, val then: Statement, val elseNode: Statement): Statement() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
-}
-
-data class BinaryOp(val left: Expression, val right: Expression, val type: BinaryOpType) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
@@ -360,6 +586,10 @@ data class ProgramNode(val nodes: MutableList<Node>) : Node() {
 
 data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<Node>) : AnyDeclarator() {   //TODO
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO()
+    }
 }
 
 data class DirectFunctionDeclarator(val parameters: List<AnyParameter>) : Node() {
@@ -370,8 +600,36 @@ data class DirectArrayDeclarator(val size: Node) : Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class FunctionCall(val primary: Node, val args: List<Node>) : Expression() {
+data class FunctionCall(val primary: Expression, val args: List<Expression>) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+
+        val funcType = primary.resolveType(typeHolder)
+        if (funcType !is FunctionType) {
+            type = CType.UNKNOWN
+            return type
+        }
+
+        val params = funcType.argsTypes
+        if (params.size != args.size) {
+            type = CType.UNRESOlVED
+            return type
+        }
+
+        for (i in args.indices) {
+            val argType = args[i].resolveType(typeHolder)
+            if (argType != params[i]) {
+                type = CType.UNRESOlVED
+                return type
+            }
+        }
+        type = funcType.retType
+        return type
+    }
 }
 
 data class StructField(val declspec: List<Any>, val declarators: List<Node>): Node() {

@@ -13,7 +13,6 @@ import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.*
 import parser.nodes.*
-import types.CPrimitiveType
 import java.lang.Exception
 
 
@@ -309,7 +308,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
     }
 
     fun visitBinary(binop: BinaryOp, isRvalue: Boolean): Value {
-        return when (binop.type) {
+        return when (binop.opType) {
             BinaryOpType.ADD -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
@@ -355,12 +354,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
                 ir().convertToType(cmp, Type.U1)
             }
 
-            else -> throw IRCodeGenError("Unknown binary operation, op=${binop.type}")
+            else -> throw IRCodeGenError("Unknown binary operation, op=${binop.opType}")
         }
     }
 
     private fun visitUnary(unaryOp: UnaryOp, isRvalue: Boolean): Value {
-        return when (unaryOp.type) {
+        return when (unaryOp.opType) {
             PrefixUnaryOpType.ADDRESS -> {
                 visitExpression(unaryOp.primary, isRvalue)
             }
@@ -370,7 +369,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
                 ir().load(Type.Ptr, addr)
             }
 
-            else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.type}")
+            else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.opType}")
         }
     }
 

@@ -1,7 +1,7 @@
 package types
 
 class TypeHolder(private val typeMap: MutableMap<String, CType>) {
-    fun get(name: String): CType {
+    operator fun get(name: String): CType {
         return typeMap[name] ?: throw Exception("Type $name not found")
     }
 

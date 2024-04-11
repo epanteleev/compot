@@ -1,7 +1,7 @@
 package parser.nodes
 
 
-interface NodeVisitor<T> {
+interface NodeVisitor<T>: ExpressionVisitor<T> {
     fun visit(programNode: ProgramNode): T
     fun visit(functionNode: FunctionNode): T
     fun visit(node: DummyNode): T
