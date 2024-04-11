@@ -112,7 +112,7 @@ class StringReader(val str: String, var pos: Int = 0) {
             } else if (!peek().isLetter() && peek() != '_') {
                 // Integer
                 val intString = str.substring(start, pos)
-                intString.toLongOrNull()
+                intString.toIntOrNull() ?: intString.toLongOrNull()
             } else {
                 return null
             }

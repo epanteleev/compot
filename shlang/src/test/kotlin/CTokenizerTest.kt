@@ -55,4 +55,11 @@ class CTokenizerTest {
         tokens.isEqual(1, 1, "++")
         tokens.next.isEqual(1, 3, "+")
     }
+
+    @Test
+    fun test4() {
+        val tokens = CTokenizer.apply("2L")
+        tokens as CToken
+        tokens.isEqual(1, 1, "2")
+    }
 }

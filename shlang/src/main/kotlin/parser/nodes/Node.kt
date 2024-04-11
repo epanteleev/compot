@@ -142,6 +142,14 @@ abstract class TypeSpecifier : Node()
 data class DeclarationSpecifier(val specifiers: List<TypeProperty>) : TypeSpecifier() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 
+    fun ctype(): CType {
+        val ctypeBuilder = CTypeBuilder()
+        specifiers.forEach {
+            ctypeBuilder.add(it)
+        }
+        return ctypeBuilder.build()
+    }
+
     companion object {
         val EMPTY = DeclarationSpecifier(emptyList())
     }

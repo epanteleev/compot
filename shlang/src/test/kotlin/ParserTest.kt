@@ -76,6 +76,26 @@ class ParserTest {
     }
 
     @Test
+    fun testDeclaration3() {
+        val tokens = CTokenizer.apply("int t, *a;")
+        val parser = ProgramParser(tokens)
+
+        val expr = parser.declaration() as Node
+        println(expr)
+        assertEquals("int t, *a;", LineAgnosticAstPrinter.print(expr))
+    }
+
+    @Test
+    fun testDeclaration4() {
+        val tokens = CTokenizer.apply("int t = 90, *a = 0;")
+        val parser = ProgramParser(tokens)
+
+        val expr = parser.declaration() as Node
+        println(expr)
+        assertEquals("int t = 90 , *a = 0;;", LineAgnosticAstPrinter.print(expr))
+    }
+
+    @Test
     fun test_expr_stmt() {
         val tokens = CTokenizer.apply("t = 3 + 5")
         assertThrows<ParserException> { ProgramParser(tokens).expr_stmt() }
@@ -320,7 +340,7 @@ class ParserTest {
     }
 
     @Test
-    fun test_declaration_specifiers0(): Unit {
+    fun test_declaration_specifiers0() {
         val tokens = CTokenizer.apply("int")
         val parser = ProgramParser(tokens)
 
