@@ -241,7 +241,6 @@ data class Declaration(val declspec: DeclarationSpecifier, val declarators: List
                 is AssignmentDeclarator -> it.resolveType(type, typeHolder)
                 else -> TODO()
             }
-
         }
     }
 }
@@ -530,7 +529,7 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyDecl
 
     fun name(): String {
         val varNode = declarator as Declarator
-        return (varNode.declspec.decl as VarDeclarator).ident.str()
+        return (varNode.directDeclarator.decl as VarDeclarator).ident.str()
     }
 }
 
@@ -542,7 +541,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier, val declarator: Dec
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 
     fun name(): String {
-        val varNode = declarator.declspec.decl as VarDeclarator
+        val varNode = declarator.directDeclarator.decl as VarDeclarator
         return varNode.ident.str()
     }
 }
@@ -591,11 +590,11 @@ data class ExprStatement(val expr: Expression): Statement() {
 
 abstract class AnyDeclarator: Node(), Resolvable
 
-data class Declarator(val declspec: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
+data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 
     fun name(): String {
-        return declspec.name()
+        return directDeclarator.name()
     }
 
     override fun resolveType(typeHolder: TypeHolder): CType {

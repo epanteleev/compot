@@ -78,7 +78,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
             it.accept(this)
         }
 
-        declarator.declspec.accept(this)
+        declarator.directDeclarator.accept(this)
     }
 
     override fun visit(declaration: Declaration) {

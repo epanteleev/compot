@@ -1,6 +1,5 @@
 package types
 
-import parser.nodes.TypeNode
 
 open class BaseType(open val name: String, val size: Int): TypeProperty {
     override fun toString(): String = name
@@ -22,6 +21,7 @@ open class BaseType(open val name: String, val size: Int): TypeProperty {
     }
 }
 
+open class UncompletedType(override val name: String): BaseType(name, 0)
 
 interface CType {
    fun baseType(): BaseType
@@ -135,7 +135,7 @@ class CEnumType() : CType { //TODO
     override fun qualifiers(): List<TypeProperty> = emptyList()
 }
 
-data class StructDeclaration(override val name: String): BaseType(name, 8) {
+data class StructDeclaration(override val name: String): UncompletedType(name) {
     override fun toString(): String = "struct $name"
 }
 

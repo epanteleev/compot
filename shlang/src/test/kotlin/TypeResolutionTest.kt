@@ -2,9 +2,8 @@
 import parser.ProgramParser
 import parser.nodes.*
 import tokenizer.CTokenizer
-import types.CPointerType
-import types.CType
-import types.TypeHolder
+import types.*
+import types.StructDeclaration
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -100,5 +99,18 @@ class TypeResolutionTest {
         assertEquals(CType.INT, typeResolver["a"])
         assertEquals(CType.INT, typeResolver["v"])
         assertEquals(CPointerType(CType.INT), typeResolver["p"])
+    }
+
+    @Test
+    fun testDecl4() {
+        val tokens = CTokenizer.apply("struct point* a = 0;")
+        val parser = ProgramParser(tokens)
+
+        val expr = parser.declaration() as Declaration
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+       // assertEquals(, typeResolver["a"])
+
     }
 }

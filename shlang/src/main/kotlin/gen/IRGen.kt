@@ -85,7 +85,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
     }
 
     private fun createVar(declarator: Declarator): String {
-        val identNode = declarator.declspec.decl as VarDeclarator
+        val identNode = declarator.directDeclarator.decl as VarDeclarator
         return identNode.ident.str()
     }
 
@@ -403,7 +403,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         val returnType = createReturnType(functionNode)
 
         val name = functionNode.name()
-        val parameters = getParameters(functionNode.declarator.declspec)
+        val parameters = getParameters(functionNode.declarator.directDeclarator)
 
 
         val types = mutableListOf<CType>()
