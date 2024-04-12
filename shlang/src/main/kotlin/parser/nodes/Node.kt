@@ -77,7 +77,7 @@ data class DirectDeclarator(val decl: AnyDeclarator, val declarators: List<AnyDe
 
     fun name(): String {
         return when (decl) {
-            is VarDeclarator -> decl.name()
+            is VarDeclarator             -> decl.name()
             is FunctionPointerDeclarator -> decl.declarator().name()
             else -> throw IllegalStateException("$decl")
         }

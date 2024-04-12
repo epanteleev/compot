@@ -185,4 +185,16 @@ class TypeResolutionTest {
 
         assertEquals("struct point {int x;int y;}", typeResolver.getStructType("point").toString())
     }
+
+    @Test
+    fun testArrayDeclaration() {
+        val tokens = CTokenizer.apply("int a[10];")
+        val parser = ProgramParser(tokens)
+        val expr = parser.declaration() as Declaration
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        assertEquals("int[10]", typeResolver["a"].toString())
+    }
 }
