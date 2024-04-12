@@ -898,8 +898,8 @@ class ProgramParser(firstToken: AnyToken) {
     //	| direct_declarator '(' identifier_list ')'
     //	| direct_declarator '(' ')'
     fun direct_declarator(): DirectDeclarator? = rule {
-        fun declarator_list(): List<Node> {
-            val declarators = mutableListOf<Node>()
+        fun declarator_list(): List<AnyDeclarator> {
+            val declarators = mutableListOf<AnyDeclarator>()
             while (true) {
                 if (check("(")) {
                     eat()

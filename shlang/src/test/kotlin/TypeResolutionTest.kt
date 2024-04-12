@@ -110,7 +110,80 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.resolveType(typeResolver)
-       // assertEquals(, typeResolver["a"])
+        assertEquals("struct point*", typeResolver["a"].toString())
+    }
 
+    @Test
+    fun testDecl5() {
+        val tokens = CTokenizer.apply("struct point* a = 0, *b = 0;")
+        val parser = ProgramParser(tokens)
+
+        val expr = parser.declaration() as Declaration
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+        assertEquals("struct point*", typeResolver["a"].toString())
+        assertEquals("struct point*", typeResolver["b"].toString())
+    }
+
+    @Test
+    fun testDecl6() {
+        val tokens = CTokenizer.apply("int add(int a, int b) { return a + b; }")
+        val parser = ProgramParser(tokens)
+        val expr = parser.function_definition() as FunctionNode
+        val typeResolver = TypeHolder.default()
+        val fnType = expr.resolveType(typeResolver)
+
+        assertEquals("int add(int, int)", fnType.toString())
+        assertEquals(CType.INT, typeResolver["a"])
+        assertEquals(CType.INT, typeResolver["b"])
+    }
+
+    @Test
+    fun testDecl7() {
+        val tokens = CTokenizer.apply("int add(void) { }")
+        val parser = ProgramParser(tokens)
+        val expr = parser.function_definition() as FunctionNode
+        val typeResolver = TypeHolder.default()
+        val fnType = expr.resolveType(typeResolver)
+
+        assertEquals("int add(void)", fnType.toString())
+    }
+
+    @Test
+    fun testFunctionPointerDeclaration() {
+        val tokens = CTokenizer.apply("int (*add)(int, int) = 0;")
+        val parser = ProgramParser(tokens)
+        val expr = parser.declaration() as Declaration
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        assertEquals("int(*)(int, int)", typeResolver["add"].toString())
+    }
+
+    @Test
+    fun testFunctionPointerDeclaration2() {
+        val tokens = CTokenizer.apply("int (*add)(void) = 0, val = 999, *v = 0;")
+        val parser = ProgramParser(tokens)
+        val expr = parser.declaration() as Declaration
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        assertEquals("int(*)(void)", typeResolver["add"].toString())
+        assertEquals("int", typeResolver["val"].toString())
+        assertEquals("int*", typeResolver["v"].toString())
+    }
+
+    @Test
+    fun testStructDeclaration() {
+        val tokens = CTokenizer.apply("struct point { int x; int y; };")
+        val parser = ProgramParser(tokens)
+        val expr = parser.declaration() as Declaration
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        assertEquals("struct point { int x; int y; }", typeResolver.getStructType("point").toString())
     }
 }

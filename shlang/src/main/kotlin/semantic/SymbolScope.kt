@@ -2,7 +2,6 @@ package semantic
 
 import parser.nodes.Node
 import tokenizer.CToken
-import types.FunctionType
 import types.CType
 
 

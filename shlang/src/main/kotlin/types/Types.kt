@@ -66,9 +66,35 @@ interface CType {
     }
 }
 
-data class CPointerType(val type: CType) : CType {
+interface AnyCPointerType: CType
+
+data class CPointerType(val type: CType) : AnyCPointerType {
     override fun baseType(): BaseType = BaseType.UNKNOWN
     override fun qualifiers(): List<TypeProperty> = emptyList()
+
+    override fun toString(): String {
+        return buildString {
+            append(type)
+            append("*")
+        }
+    }
+}
+
+data class CFunPointerType(val returnType: CType, val argsTypes: List<CType>) : AnyCPointerType {
+    override fun baseType(): BaseType = BaseType.UNKNOWN
+    override fun qualifiers(): List<TypeProperty> = emptyList()
+
+    override fun toString(): String {
+        return buildString {
+            append(returnType)
+            append("(*)(")
+            argsTypes.forEachIndexed { index, type ->
+                append(type)
+                if (index < argsTypes.size - 1) append(", ")
+            }
+            append(")")
+        }
+    }
 }
 
 data class NoType(val message: String) : CType {
@@ -86,6 +112,13 @@ class CTypeBuilder {
     fun build(typeHolder: TypeHolder): CType {
         val typeNodes = properties.filterIsInstance<BaseType>()
         val baseType = typeNodes[0]
+        when (baseType) {
+            is StructDeclaration -> {
+                val struct = CStructType(baseType.name, properties.filterNot { it is BaseType })
+                typeHolder.addStructType(baseType.name, struct)
+                return struct
+            }
+        }
         return CPrimitiveType(baseType, properties.filterNot { it is BaseType })
     }
 }
@@ -102,11 +135,25 @@ data class CPrimitiveType(val baseType: BaseType, val properties: List<TypePrope
     }
 }
 
-class CStructType() : CType { //TODO
+data class CStructType(val name: String, val qualifiers: List<TypeProperty>) : CType { //TODO
     val fields = mutableListOf<Pair<String, CType>>()
 
     fun addField(name: String, type: CType) {
         fields.add(name to type)
+    }
+
+    override fun toString(): String {
+        return buildString {
+            qualifiers.forEach { append("$it ") }
+            append("struct $name")
+            if (fields.isNotEmpty()) {
+                append(" {\n")
+                fields.forEach { (name, type) ->
+                    append("    $type $name;\n")
+                }
+                append("}")
+            }
+        }
     }
 
     override fun baseType(): BaseType = BaseType.UNKNOWN
@@ -144,7 +191,20 @@ data class CArrayType(val type: CType, val size: Int) : CType {
     override fun qualifiers(): List<TypeProperty> = type.qualifiers()
 }
 
-data class FunctionType(val name: String, val retType: CType, val args: List<String>, val argsTypes: List<CType>, var variadic: Boolean = false) : CType {
+data class CFunctionType(val name: String, val retType: CType, val argsTypes: List<CType>, var variadic: Boolean = false) : CType {
     override fun baseType(): BaseType = retType.baseType()
     override fun qualifiers(): List<TypeProperty> = retType.qualifiers()
+
+    override fun toString(): String {
+        return buildString {
+            append(retType)
+            append(" $name(")
+            argsTypes.forEachIndexed { index, type ->
+                append(type)
+                if (index < argsTypes.size - 1) append(", ")
+            }
+            if (variadic) append(", ...")
+            append(")")
+        }
+    }
 }
