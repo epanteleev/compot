@@ -281,13 +281,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(typeName: TypeName) {
-        joinTo(typeName.specifiers, " ") {
-            if (it is Node) {
-                it.accept(this)
-            } else {
-                buffer.append(it)
-            }
-        }
+        typeName.specifiers.accept(this)
         typeName.abstractDecl.accept(this)
     }
 
@@ -337,13 +331,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(structField: StructField) {
-        joinTo(structField.declspec, " ") {
-            if (it is Node) {
-                it.accept(this)
-            } else {
-                buffer.append(it)
-            }
-        }
+        structField.declspec.accept(this)
         buffer.append(' ')
         joinTo(structField.declarators, ", ") {
             it.accept(this)
@@ -453,6 +441,15 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(storageClassSpecifier: StorageClassSpecifier) {
         buffer.append(storageClassSpecifier.name())
+    }
+
+    override fun visit(structDeclarator: StructDeclarator) {
+        structDeclarator.declarator.accept(this)
+
+        if (structDeclarator.expr !is EmptyExpression) {
+            buffer.append(':')
+            structDeclarator.expr.accept(this)
+        }
     }
 
     override fun visit(emptyStatement: EmptyStatement) {

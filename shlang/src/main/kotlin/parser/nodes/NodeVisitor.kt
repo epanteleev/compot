@@ -67,4 +67,5 @@ interface NodeVisitor<T>: ExpressionVisitor<T> {
     fun visit(varDeclarator: VarDeclarator): T
     fun visit(typeQualifier: TypeQualifier): T
     fun visit(storageClassSpecifier: StorageClassSpecifier): T
+    fun visit(structDeclarator: StructDeclarator): T
 }

@@ -1,7 +1,7 @@
 package types
 
 class TypeHolder(private val valueMap: MutableMap<String, CType>) {
-    private val typeMap = hashMapOf<String, CType>()
+    private val typeMap = hashMapOf<String, BaseType>()
 
     operator fun get(name: String): CType {
         return valueMap[name] ?: throw Exception("Type for variable $name not found")
@@ -15,27 +15,27 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>) {
         return valueMap.containsKey(name)
     }
 
-    fun getStructType(name: String): CType {
+    fun getStructType(name: String): BaseType {
         return typeMap[name] ?: throw Exception("Type for struct $name not found")
     }
 
-    fun addStructType(name: String, type: CType) {
+    fun addStructType(name: String, type: BaseType) {
         typeMap[name] = type
     }
 
-    fun getEnumType(name: String): CType {
+    fun getEnumType(name: String): BaseType {
         return typeMap[name] ?: throw Exception("Type for enum $name not found")
     }
 
-    fun addEnumType(name: String, type: CType) {
+    fun addEnumType(name: String, type: BaseType) {
         typeMap[name] = type
     }
 
-    fun getUnionType(name: String): CType {
+    fun getUnionType(name: String): BaseType {
         return typeMap[name] ?: throw Exception("Type for union $name not found")
     }
 
-    fun addUnionType(name: String, type: CType) {
+    fun addUnionType(name: String, type: BaseType) {
         typeMap[name] = type
     }
 

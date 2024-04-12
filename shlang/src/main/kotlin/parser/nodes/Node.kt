@@ -27,7 +27,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
                     ctypeBuilder.add(it.storageClass())
                 }
                 is StructSpecifier -> {
-                    TODO()
+                    ctypeBuilder.add(it.typeResolver(typeHolder))
                 }
                 is UnionSpecifier -> {
                     TODO()
@@ -52,7 +52,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
     }
 }
 
-data class TypeName(val specifiers: List<Any>, val abstractDecl: Node) : TypeSpecifier(), Resolvable {
+data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: Node) : TypeSpecifier(), Resolvable {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
@@ -282,8 +282,12 @@ data class DirectArrayDeclarator(val size: Node) : Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class StructField(val declspec: List<Any>, val declarators: List<Node>): Node() {
+data class StructField(val declspec: DeclarationSpecifier, val declarators: List<StructDeclarator>): Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+
+    fun resolveType(typeHolder: TypeHolder): CType {
+        TODO()
+    }
 }
 
 class Enumerator(val ident: Ident, val expr: Node) : Node() {
@@ -366,7 +370,8 @@ data class StructDeclaration(val name: Ident) : AnyTypeNode() {
     override fun name(): String = name.str()
 
     fun typeResolver(typeHolder: TypeHolder): BaseType {
-        return StructDeclaration(name.str())
+        typeHolder.addStructType(name.str(), UncompletedStructType(name.str()))
+        return UncompletedStructType(name.str())
     }
 }
 
@@ -374,8 +379,16 @@ data class StructSpecifier(val ident: Ident, val fields: List<StructField>) : An
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 
-    fun typeResolver(typeHolder: TypeHolder): CType {
-        TODO()
+    fun typeResolver(typeHolder: TypeHolder): StructBaseType {
+        val structType = StructBaseType(ident.str())
+        for (field in fields) {
+            val type = field.declspec.resolveType(typeHolder)
+            for (declarator in field.declarators) {
+                structType.addField(declarator.name(), type)
+            }
+
+        }
+        return structType
     }
 }
 
@@ -387,6 +400,23 @@ data class EnumSpecifier(val ident: Ident, val enumerators: List<Node>) : AnyTyp
 data class EnumDeclaration(val name: Ident) : AnyTypeNode() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = name.str()
+}
+
+data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression): Node() {
+    override fun <T> accept(visitor: NodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+
+    fun name(): String {
+        return when (declarator) {
+            is Declarator -> declarator.name()
+            else -> throw IllegalStateException("$declarator")
+        }
+    }
+
+    fun resolveType(typeHolder: TypeHolder): CType {
+        TODO()
+    }
 }
 
 object DummyNode : Node() {

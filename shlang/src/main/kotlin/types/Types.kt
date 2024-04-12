@@ -113,9 +113,9 @@ class CTypeBuilder {
         val typeNodes = properties.filterIsInstance<BaseType>()
         val baseType = typeNodes[0]
         when (baseType) {
-            is StructDeclaration -> {
-                val struct = CStructType(baseType.name, properties.filterNot { it is BaseType })
-                typeHolder.addStructType(baseType.name, struct)
+            is StructBaseType -> {
+                val struct = CompoundType(baseType, properties.filterNot { it is BaseType })
+                typeHolder.addStructType(baseType.name, baseType)
                 return struct
             }
         }
@@ -135,55 +135,41 @@ data class CPrimitiveType(val baseType: BaseType, val properties: List<TypePrope
     }
 }
 
-data class CStructType(val name: String, val qualifiers: List<TypeProperty>) : CType { //TODO
+data class CompoundType(val baseType: BaseType, val properties: List<TypeProperty> = emptyList()) : CType { //TODO
     val fields = mutableListOf<Pair<String, CType>>()
 
-    fun addField(name: String, type: CType) {
-        fields.add(name to type)
+    override fun toString(): String {
+        return baseType.toString()
     }
 
+    override fun baseType(): BaseType = baseType
+    override fun qualifiers(): List<TypeProperty> = properties
+}
+
+data class UncompletedStructType(override val name: String): UncompletedType(name) {
+    override fun toString(): String {
+        return "struct $name"
+    }
+}
+
+
+data class StructBaseType(override val name: String): BaseType(name, -1) { //TODO
+    private val fields = mutableListOf<Pair<String, CType>>()
     override fun toString(): String {
         return buildString {
-            qualifiers.forEach { append("$it ") }
             append("struct $name")
-            if (fields.isNotEmpty()) {
-                append(" {\n")
-                fields.forEach { (name, type) ->
-                    append("    $type $name;\n")
-                }
-                append("}")
+            append(" {")
+            fields.forEach { (name, type) ->
+                append("$type $name;")
             }
+            append("}")
+
         }
     }
 
-    override fun baseType(): BaseType = BaseType.UNKNOWN
-    override fun qualifiers(): List<TypeProperty> = emptyList()
-}
-
-class CUnionType() : CType { //TODO
-    val fields = mutableListOf<Pair<String, CType>>()
-
     fun addField(name: String, type: CType) {
         fields.add(name to type)
     }
-
-    override fun baseType(): BaseType = BaseType.UNKNOWN
-    override fun qualifiers(): List<TypeProperty> = emptyList()
-}
-
-class CEnumType() : CType { //TODO
-    val fields = mutableListOf<Pair<String, Int>>()
-
-    fun addField(name: String, value: Int) {
-        fields.add(name to value)
-    }
-
-    override fun baseType(): BaseType = BaseType.UNKNOWN
-    override fun qualifiers(): List<TypeProperty> = emptyList()
-}
-
-data class StructDeclaration(override val name: String): UncompletedType(name) {
-    override fun toString(): String = "struct $name"
 }
 
 data class CArrayType(val type: CType, val size: Int) : CType {

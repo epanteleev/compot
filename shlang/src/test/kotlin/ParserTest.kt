@@ -914,6 +914,22 @@ class ParserTest {
     }
 
     @Test
+    fun structDefinition() {
+        val input = """
+            struct point {
+                int a;
+                int b:89;
+            };
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = ProgramParser(tokens)
+
+        val program = parser.program()
+        println(program)
+        assertEquals("struct point {int a; int b:89;} ;", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Test
     fun structAccess() {
         val input = """
             struct point {

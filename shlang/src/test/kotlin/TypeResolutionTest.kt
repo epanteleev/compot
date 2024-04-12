@@ -3,7 +3,6 @@ import parser.ProgramParser
 import parser.nodes.*
 import tokenizer.CTokenizer
 import types.*
-import types.StructDeclaration
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -184,6 +183,6 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         expr.resolveType(typeResolver)
 
-        assertEquals("struct point { int x; int y; }", typeResolver.getStructType("point").toString())
+        assertEquals("struct point {int x;int y;}", typeResolver.getStructType("point").toString())
     }
 }

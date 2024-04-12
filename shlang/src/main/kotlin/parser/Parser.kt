@@ -566,27 +566,27 @@ class ProgramParser(firstToken: AnyToken) {
     //	| ':' constant_expression
     //	| declarator ':' constant_expression
     //	;
-    fun struct_declarator(): Node? = rule {
+    fun struct_declarator(): StructDeclarator? = rule {
         if (check(":")) {
             eat()
-            val expr = constant_expression()
-            return@rule expr
+            val expr = constant_expression() ?: throw ParserException(ProgramMessage("Expected constant expression", current))
+            return@rule StructDeclarator(EmptyDeclarator, expr)
         }
         val declarator = declarator()?: return@rule null
         if (check(":")) {
             eat()
-            val expr = constant_expression()
-            return@rule expr
+            val expr = constant_expression() ?: throw ParserException(ProgramMessage("Expected constant expression", current))
+            return@rule StructDeclarator(declarator, expr)
         }
-        return@rule declarator
+        return@rule StructDeclarator(declarator, EmptyExpression())
     }
 
     // struct_declarator_list
     //	: struct_declarator
     //	| struct_declarator_list ',' struct_declarator
     //	;
-    fun struct_declarator_list(): List<Node> {
-        val declarators = mutableListOf<Node>()
+    fun struct_declarator_list(): List<StructDeclarator> {
+        val declarators = mutableListOf<StructDeclarator>()
         while (true) {
             val declarator = struct_declarator()?: return declarators
             declarators.add(declarator)
@@ -969,7 +969,7 @@ class ProgramParser(firstToken: AnyToken) {
     // constant_expression
     //	: conditional_expression
     //	;
-    fun constant_expression(): Node? = rule {
+    fun constant_expression(): Expression? = rule {
         return@rule conditional_expression()
     }
 
@@ -1347,8 +1347,8 @@ class ProgramParser(firstToken: AnyToken) {
     //	| type_qualifier specifier_qualifier_list
     //	| type_qualifier
     //	;
-    fun specifier_qualifier_list(): List<Any>? = rule {
-        val specifiers = mutableListOf<Any>()
+    fun specifier_qualifier_list(): DeclarationSpecifier? = rule {
+        val specifiers = mutableListOf<AnyTypeNode>()
         while (true) {
             val type = type_specifier()
             if (type != null) {
@@ -1365,7 +1365,7 @@ class ProgramParser(firstToken: AnyToken) {
         return@rule if (specifiers.isEmpty()) {
             null
         } else {
-            specifiers
+            DeclarationSpecifier(specifiers)
         }
     }
 

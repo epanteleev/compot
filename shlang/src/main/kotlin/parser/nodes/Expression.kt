@@ -234,7 +234,7 @@ class MemberAccess(val primary: Expression, val ident: Ident) : Expression() {
         }
 
         val structType = primary.resolveType(typeHolder)
-        if (structType !is CStructType) {
+        if (structType !is CompoundType) {
             type = CType.UNKNOWN
             return type
         }
@@ -257,7 +257,7 @@ class ArrowMemberAccess(val primary: Expression, val ident: Ident) : Expression(
         }
 
         val structType = primary.resolveType(typeHolder)
-        if (structType !is CStructType) {
+        if (structType !is CompoundType) {
             type = CType.UNKNOWN
             return type
         }
