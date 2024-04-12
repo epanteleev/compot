@@ -92,7 +92,7 @@ class ParserTest {
 
         val expr = parser.declaration() as Node
         println(expr)
-        assertEquals("int t = 90 , *a = 0;;", LineAgnosticAstPrinter.print(expr))
+        assertEquals("int t = 90, *a = 0;", LineAgnosticAstPrinter.print(expr))
     }
 
     @Test
@@ -508,7 +508,7 @@ class ParserTest {
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int fun() {int arr[2] = {9 , 8};}"
+        val expected = "int fun() {int arr[2] = {9, 8};}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
@@ -519,7 +519,7 @@ class ParserTest {
 
         val expr = parser.function_definition() as Node
         println(expr)
-        val expected = "int fun() {int arr[2][3] = {9 , 8 , 7 , 6 , 5 , 4};}"
+        val expected = "int fun() {int arr[2][3] = {9, 8, 7, 6, 5, 4};}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 
@@ -902,6 +902,18 @@ class ParserTest {
     }
 
     @Test
+    fun typedef1() {
+        val input = "typedef struct Point {int a; int b;} P; "
+
+        val tokens = CTokenizer.apply(input)
+        val parser = ProgramParser(tokens)
+
+        val program = parser.program()
+        println(program)
+        assertEquals("typedef struct Point {int a; int b;} P;", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Test
     fun structAccess() {
         val input = """
             struct point {
@@ -910,6 +922,24 @@ class ParserTest {
             };
             
             int sum(struct point* a) { return a->a + a->b; }
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = ProgramParser(tokens)
+
+        val program = parser.program()
+        println(program)
+        assertEquals("struct point {int a; int b;} ; int sum(struct point *a) {return a->a + a->b;}", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Test
+    fun structAccess1() {
+        val input = """
+            typedef struct point {
+                int a;
+                int b;
+            } Point;
+            
+            int sum(Point* a) { return a->a + a->b; }
         """.trimIndent()
         val tokens = CTokenizer.apply(input)
         val parser = ProgramParser(tokens)

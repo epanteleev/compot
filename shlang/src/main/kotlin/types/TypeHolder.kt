@@ -2,7 +2,7 @@ package types
 
 class TypeHolder(private val typeMap: MutableMap<String, CType>) {
     operator fun get(name: String): CType {
-        return typeMap[name] ?: throw Exception("Type $name not found")
+        return typeMap[name] ?: throw Exception("Type for variable $name not found")
     }
 
     fun add(name: String, type: CType) {
@@ -27,18 +27,7 @@ class TypeHolder(private val typeMap: MutableMap<String, CType>) {
 
     companion object {
         fun default(): TypeHolder {
-            val typeMap = hashMapOf<String, CType>(
-                "int" to CType.INT,
-                "char" to CType.CHAR,
-                "void" to CType.VOID,
-                "float" to CType.FLOAT,
-                "double" to CType.DOUBLE,
-                "long" to CType.LONG,
-                "short" to CType.SHORT,
-                "signed" to CType.INT,
-                "unsigned" to CType.UINT,
-                "bool" to CType.BOOL,
-            )
+            val typeMap = hashMapOf<String, CType>()
             return TypeHolder(typeMap)
         }
     }

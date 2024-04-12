@@ -312,7 +312,7 @@ class ProgramParser(firstToken: AnyToken) {
             eat()
             return@rule StringNode(str)
         }
-        return@rule expression()
+        return@rule assignment_expression()
     }
 
 
