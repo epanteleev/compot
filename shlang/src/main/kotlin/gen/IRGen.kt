@@ -372,7 +372,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         }
     }
 
-    fun visitNumNode(numNode: NumNode): Constant {
+    private fun visitNumNode(numNode: NumNode): Constant {
         return when (numNode.toLong.data) {
             in 0..255 -> U8Value(numNode.toLong.data.toByte())
             in 0..65535 -> U16Value(numNode.toLong.data.toShort())

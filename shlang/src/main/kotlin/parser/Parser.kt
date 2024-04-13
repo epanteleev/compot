@@ -3,10 +3,6 @@ package parser
 import tokenizer.*
 import parser.nodes.*
 import tokenizer.Specifiers.keywords
-import types.PointerQualifier
-import types.StorageClass
-import types.TypeProperty
-import kotlin.math.E
 
 
 data class ParserException(val info: ProgramMessage) : Exception(info.message)
@@ -993,30 +989,18 @@ class ProgramParser(firstToken: AnyToken) {
         }
     }
 
-    // pointers = ("*" ("const" | "volatile" | "restrict")*)*
-    fun pointers(): List<NodePointer>? = rule {
+    // pointer
+    //	: '*'
+    //	| '*' type_qualifier_list
+    //	| '*' pointer
+    //	| '*' type_qualifier_list pointer
+    //	;
+    //
+    fun pointer(): List<NodePointer>? = rule {
         val pointers = mutableListOf<NodePointer>()
         while (check("*")) {
             eat()
-            val qualifiers = mutableListOf<PointerQualifier>()
-            while (check<CToken>()) {
-                val token = peak<CToken>()
-                if (token.str() == "const") { //TODO
-                    qualifiers.add(PointerQualifier.CONST)
-                    eat()
-                } else if (token.str() == "volatile") {
-                    qualifiers.add(PointerQualifier.VOLATILE)
-                    eat()
-                } else if (token.str() == "restrict") {
-                    qualifiers.add(PointerQualifier.RESTRICT)
-                    eat()
-                } else {
-                    break
-                }
-            }
-            if (qualifiers.isEmpty()) {
-                qualifiers.add(PointerQualifier.EMPTY)
-            }
+            val qualifiers = type_qualifier_list()
             pointers.add(NodePointer(qualifiers))
         }
 
@@ -1027,12 +1011,25 @@ class ProgramParser(firstToken: AnyToken) {
         }
     }
 
+    // type_qualifier_list
+    //	: type_qualifier
+    //	| type_qualifier_list type_qualifier
+    //	;
+    fun type_qualifier_list(): List<TypeQualifier> {
+        val qualifiers = mutableListOf<TypeQualifier>()
+        while (true) {
+            val qualifier = type_qualifier()?: break
+            qualifiers.add(qualifier)
+        }
+        return qualifiers
+    }
+
     // declarator
     //	: pointer direct_declarator
     //	| direct_declarator
     //	;
     fun declarator(): Declarator? = rule {
-        val pointers = pointers()
+        val pointers = pointer()
         if (pointers != null) {
             val directDeclarator = direct_declarator()?: throw ParserException(ProgramMessage("Expected direct declarator", current))
             return@rule Declarator(directDeclarator, pointers)
@@ -1533,7 +1530,7 @@ class ProgramParser(firstToken: AnyToken) {
     //	| direct_abstract_declarator
     //	| pointer direct_abstract_declarator
     fun abstract_declarator(): AbstractDeclarator? = rule {
-        val pointers = pointers()
+        val pointers = pointer()
         if (pointers != null) {
             val declarator = direct_abstract_declarator()
             if (declarator != null) {

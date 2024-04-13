@@ -32,8 +32,6 @@ interface NodeVisitor<T>: ExpressionVisitor<T> {
     fun visit(compoundStatement: CompoundStatement): T
     fun visit(exprStatement: ExprStatement): T
     fun visit(parameter: Parameter): T
-    fun visit(declspec: Declspec): T
-    fun visit(functionParams: FunctionParams): T
     fun visit(assignmentDeclarator: AssignmentDeclarator): T
     fun visit(functionDeclarator: FunctionDeclarator): T
     fun visit(functionPointerDeclarator: FunctionPointerDeclarator): T
@@ -41,7 +39,6 @@ interface NodeVisitor<T>: ExpressionVisitor<T> {
     fun visit(conditional: Conditional): T
     fun visit(memberAccess: MemberAccess): T
     fun visit(initializerList: InitializerList): T
-    fun visit(compoundLiteral: CompoundLiteral): T
     fun visit(arrayDeclarator: ArrayDeclarator): T
     fun visit(typeName: TypeName): T
     fun visit(directFunctionDeclarator: DirectFunctionDeclarator): T

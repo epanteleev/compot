@@ -204,18 +204,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         parameter.declarator.accept(this)
     }
 
-    override fun visit(declspec: Declspec) {
-        buffer.append(declspec.ident.str())
-    }
-
-    override fun visit(functionParams: FunctionParams) {
-        buffer.append('(')
-        joinTo(functionParams.params, ", ") {
-            it.accept(this)
-        }
-        buffer.append(')')
-    }
-
     override fun visit(assignmentDeclarator: AssignmentDeclarator) {
         assignmentDeclarator.rvalue.accept(this)
         buffer.append(" = ")
@@ -265,13 +253,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
             it.accept(this)
         }
         buffer.append('}')
-    }
-
-    override fun visit(compoundLiteral: CompoundLiteral) {
-        buffer.append('(')
-        buffer.append(compoundLiteral.typeName)
-        buffer.append(')')
-        compoundLiteral.initializerList.accept(this)
     }
 
     override fun visit(arrayDeclarator: ArrayDeclarator) {
@@ -467,9 +448,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(pointer: NodePointer) {
         buffer.append('*')
         for (qualifier in pointer.qualifiers) {
-            if (qualifier == PointerQualifier.EMPTY) {
-                continue
-            }
             buffer.append(qualifier)
             buffer.append(' ')
         }
