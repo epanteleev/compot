@@ -267,6 +267,17 @@ data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
         return CType.UNKNOWN
     }
 
+    fun params(): List<String> {
+        return params.map {
+            when (it) {
+                is Parameter -> it.name()
+                is ParameterVarArg -> "..."
+                else -> throw IllegalStateException("Unknown parameter $it")
+
+            }
+        }
+    }
+
     fun resolveParams(typeHolder: TypeHolder): List<CType> {
         return params.map { it.resolveType(typeHolder) }
     }

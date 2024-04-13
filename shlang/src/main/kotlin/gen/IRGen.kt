@@ -400,41 +400,22 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
 
     init {
         val returnType = createReturnType(functionNode)
-
         val name = functionNode.name()
-        val parameters = getParameters(functionNode.declarator.directDeclarator)
-
-
-        val types = mutableListOf<CType>()
-        val argumentNames = mutableListOf<String>()
-        for (p in parameters) {
-            when (p) {
-                is Parameter -> {
-                    val decl = p.declarator as Declarator
-                    val type = createType(p.declspec, decl)
-                    val arg = p.name()
-                    argumentNames.add(arg)
-                    types.add(type)
-                }
-
-                is ParameterVarArg -> TODO()
-                else -> throw IRCodeGenError("Parameter expected")
-            }
-        }
+        val parameters = functionNode.functionDeclarator().params()
+        val fnType = functionNode.resolveType(typeHolder)
         val retType = toIRType(returnType)
 
-        currentFunction = moduleBuilder.createFunction(name, retType, types.map { toIRType(it) })
-
-
+        currentFunction = moduleBuilder.createFunction(name, retType, fnType.argsTypes.map { toIRType(it) })
+        
         varStack.push()
 
-        for (idx in argumentNames.indices) {
-            val argName = argumentNames[idx]
+        for (idx in parameters.indices) {
+            val param = parameters[idx]
             val arg = ir().argument(idx)
-            val type = types[idx]
+            val type = fnType.argsTypes[idx]
 
             val rvalueAdr = ir().alloc(arg.type())
-            varStack[argName] = KeyType(type, rvalueAdr)
+            varStack[param] = KeyType(type, rvalueAdr)
             ir().store(rvalueAdr, arg)
         }
 
