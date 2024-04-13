@@ -336,11 +336,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
 //                    CPointerType(primaryType)
 //                }
                 PrefixUnaryOpType.NOT -> {
-                    if (primaryType == CType.BOOL) {
-                        CType.BOOL
-                    } else {
-                        CType.UNRESOlVED
-                    }
+                    TODO()
                 }
                 PrefixUnaryOpType.NEG -> {
                     if (primaryType == CType.INT || primaryType == CType.LONG) {

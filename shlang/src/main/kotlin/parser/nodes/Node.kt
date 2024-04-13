@@ -314,17 +314,16 @@ data class TypeNode(val ident: Ident) : AnyTypeNode() {
 
     fun type(): BaseType {
         return when (ident.str()) {
-            "void"    -> BaseType.VOID
-            "char"    -> BaseType.CHAR
-            "short"   -> BaseType.SHORT
-            "int"     -> BaseType.INT
-            "long"    -> BaseType.LONG
-            "float"   -> BaseType.FLOAT
-            "double"  -> BaseType.DOUBLE
-            "signed"  -> BaseType.INT
-            "unsigned"-> BaseType.UINT
-            "bool"    -> BaseType.BOOL
-            else      -> BaseType.UNKNOWN
+            "void"    -> CPrimitive.VOID
+            "char"    -> CPrimitive.CHAR
+            "short"   -> CPrimitive.SHORT
+            "int"     -> CPrimitive.INT
+            "long"    -> CPrimitive.LONG
+            "float"   -> CPrimitive.FLOAT
+            "double"  -> CPrimitive.DOUBLE
+            "signed"  -> CPrimitive.INT
+            "unsigned"-> CPrimitive.UINT
+            else      -> CPrimitive.UNKNOWN
         }
     }
 }

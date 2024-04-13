@@ -1,28 +1,6 @@
 package types
 
 
-open class BaseType(open val name: String, val size: Int): TypeProperty {
-    override fun toString(): String = name
-
-    companion object {
-        val VOID: BaseType = BaseType("void", 0)
-        val BOOL = BaseType("bool", 1)
-        val CHAR = BaseType("char", 1)
-        val SHORT = BaseType("short", 2)
-        val INT = BaseType("int", 4)
-        val LONG = BaseType("long", 8)
-        val FLOAT = BaseType("float", 4)
-        val DOUBLE = BaseType("double", 8)
-        val UCHAR = BaseType("unsigned char", 1)
-        val USHORT = BaseType("unsigned short", 2)
-        val UINT = BaseType("unsigned int", 4)
-        val ULONG = BaseType("unsigned long", 8)
-        val UNKNOWN = BaseType("<unknown>", 0)
-    }
-}
-
-open class UncompletedType(override val name: String): BaseType(name, 0)
-
 interface CType {
    fun baseType(): BaseType
    fun qualifiers(): List<TypeProperty>
@@ -30,15 +8,14 @@ interface CType {
     companion object {
         val UNRESOlVED: CType = NoType("<unresolved>")
         val UNKNOWN: CType = NoType("<unknown>")
-        val INT = CPrimitiveType(BaseType.INT)
-        val CHAR = CPrimitiveType(BaseType.CHAR)
-        val VOID = CPrimitiveType(BaseType.INT)
-        val FLOAT = CPrimitiveType(BaseType.FLOAT)
-        val DOUBLE = CPrimitiveType(BaseType.DOUBLE)
-        val LONG = CPrimitiveType(BaseType.LONG)
-        val SHORT = CPrimitiveType(BaseType.SHORT)
-        val UINT = CPrimitiveType(BaseType.UINT)
-        val BOOL = CPrimitiveType(BaseType.BOOL)
+        val INT = CPrimitiveType(CPrimitive.INT)
+        val CHAR = CPrimitiveType(CPrimitive.CHAR)
+        val VOID = CPrimitiveType(CPrimitive.VOID)
+        val FLOAT = CPrimitiveType(CPrimitive.FLOAT)
+        val DOUBLE = CPrimitiveType(CPrimitive.DOUBLE)
+        val LONG = CPrimitiveType(CPrimitive.LONG)
+        val SHORT = CPrimitiveType(CPrimitive.SHORT)
+        val UINT = CPrimitiveType(CPrimitive.UINT)
 
         fun interfereTypes(type1: CType, type2: CType): CType {
             if (type1 == type2) return type1
@@ -48,18 +25,14 @@ interface CType {
             if (type2 == UNKNOWN) return type1
 
             when {
-                type1.baseType() == BaseType.DOUBLE && type2.baseType() == BaseType.FLOAT -> return type1
-                type1.baseType() == BaseType.FLOAT && type2.baseType() == BaseType.DOUBLE -> return type2
-                type1.baseType() == BaseType.LONG && type2.baseType() == BaseType.INT -> return type1
-                type1.baseType() == BaseType.INT && type2.baseType() == BaseType.LONG -> return type2
-                type1.baseType() == BaseType.UINT && type2.baseType() == BaseType.INT -> return type1
-                type1.baseType() == BaseType.INT && type2.baseType() == BaseType.UINT -> return type2
-                type1.baseType() == BaseType.ULONG && type2.baseType() == BaseType.LONG -> return type1
-                type1.baseType() == BaseType.LONG && type2.baseType() == BaseType.ULONG -> return type2
-                type1.baseType() == BaseType.USHORT && type2.baseType() == BaseType.SHORT -> return type1
-                type1.baseType() == BaseType.SHORT && type2.baseType() == BaseType.USHORT -> return type2
-                type1.baseType() == BaseType.UCHAR && type2.baseType() == BaseType.CHAR -> return type1
-                type1.baseType() == BaseType.CHAR && type2.baseType() == BaseType.UCHAR -> return type2
+                type1.baseType() == CPrimitive.INT && type2.baseType() == CPrimitive.INT -> return INT
+                type1.baseType() == CPrimitive.DOUBLE && type2.baseType() == CPrimitive.DOUBLE -> return DOUBLE
+                type1.baseType() == CPrimitive.FLOAT && type2.baseType() == CPrimitive.FLOAT -> return FLOAT
+                type1.baseType() == CPrimitive.LONG && type2.baseType() == CPrimitive.LONG -> return LONG
+                type1.baseType() == CPrimitive.SHORT && type2.baseType() == CPrimitive.SHORT -> return SHORT
+                type1.baseType() == CPrimitive.UINT && type2.baseType() == CPrimitive.UINT -> return UINT
+                type1.baseType() == CPrimitive.CHAR && type2.baseType() == CPrimitive.CHAR -> return CHAR
+
             }
             return UNRESOlVED
         }
@@ -69,7 +42,7 @@ interface CType {
 interface AnyCPointerType: CType
 
 data class CPointerType(val type: CType) : AnyCPointerType {
-    override fun baseType(): BaseType = BaseType.UNKNOWN
+    override fun baseType(): BaseType = CPrimitive.UNKNOWN
     override fun qualifiers(): List<TypeProperty> = emptyList()
 
     override fun toString(): String {
@@ -81,7 +54,7 @@ data class CPointerType(val type: CType) : AnyCPointerType {
 }
 
 data class CFunPointerType(val returnType: CType, val argsTypes: List<CType>) : AnyCPointerType {
-    override fun baseType(): BaseType = BaseType.UNKNOWN
+    override fun baseType(): BaseType = CPrimitive.UNKNOWN
     override fun qualifiers(): List<TypeProperty> = emptyList()
 
     override fun toString(): String {
@@ -98,7 +71,7 @@ data class CFunPointerType(val returnType: CType, val argsTypes: List<CType>) : 
 }
 
 data class NoType(val message: String) : CType {
-    override fun baseType(): BaseType = BaseType.UNKNOWN
+    override fun baseType(): BaseType = CPrimitive.UNKNOWN
     override fun qualifiers(): List<TypeProperty> = emptyList()
 }
 
@@ -144,41 +117,6 @@ data class CompoundType(val baseType: BaseType, val properties: List<TypePropert
 
     override fun baseType(): BaseType = baseType
     override fun qualifiers(): List<TypeProperty> = properties
-}
-
-data class UncompletedStructType(override val name: String): UncompletedType(name) {
-    override fun toString(): String {
-        return "struct $name"
-    }
-}
-
-
-data class StructBaseType(override val name: String): BaseType(name, -1) { //TODO
-    private val fields = mutableListOf<Pair<String, CType>>()
-    override fun toString(): String {
-        return buildString {
-            append("struct $name")
-            append(" {")
-            fields.forEach { (name, type) ->
-                append("$type $name;")
-            }
-            append("}")
-
-        }
-    }
-
-    fun addField(name: String, type: CType) {
-        fields.add(name to type)
-    }
-}
-
-data class CArrayType(val type: CType, val dimension: Int) : BaseType("array", type.baseType().size * dimension) {
-    override fun toString(): String {
-        return buildString {
-            append(type)
-            append("[$dimension]")
-        }
-    }
 }
 
 data class CFunctionType(val name: String, val retType: CType, val argsTypes: List<CType>, var variadic: Boolean = false) : CType {

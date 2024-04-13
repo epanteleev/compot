@@ -96,13 +96,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
             }
         }
         return when (type.baseType()) {
-            BaseType.BOOL -> Type.U1
-            BaseType.CHAR -> Type.I8
-            BaseType.SHORT -> Type.I16
-            BaseType.INT -> Type.I32
-            BaseType.LONG -> Type.I64
-            BaseType.FLOAT -> Type.F32
-            BaseType.DOUBLE -> Type.F64
+            CPrimitive.CHAR -> Type.I8
+            CPrimitive.SHORT -> Type.I16
+            CPrimitive.INT -> Type.I32
+            CPrimitive.LONG -> Type.I64
+            CPrimitive.FLOAT -> Type.F32
+            CPrimitive.DOUBLE -> Type.F64
             else -> throw IRCodeGenError("Unknown type")
         }
     }
@@ -382,7 +381,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
                 val value = visitExpression(returnStatement.expr, true)
                 val realType = ir().prototype().returnType()
                 val returnType = ir().convertToType(value, realType)
-                ir().store(returnValueAddr!!, returnType)
+                ir().store(returnValueAddr, returnType)
                 ir().branch(exitBlock)
             }
         }
