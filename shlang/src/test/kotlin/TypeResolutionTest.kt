@@ -5,6 +5,7 @@ import tokenizer.CTokenizer
 import types.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 
 class TypeResolutionTest {
@@ -95,6 +96,10 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.resolveType(typeResolver)
+
+        assertTrue { typeResolver.contains("a") }
+        assertTrue { typeResolver.contains("v") }
+        assertTrue { typeResolver.contains("p") }
         assertEquals(CType.INT, typeResolver["a"])
         assertEquals(CType.INT, typeResolver["v"])
         assertEquals(CPointerType(CType.INT), typeResolver["p"])
@@ -108,7 +113,8 @@ class TypeResolutionTest {
         val expr = parser.declaration() as Declaration
         println(expr)
         val typeResolver = TypeHolder.default()
-        expr.resolveType(typeResolver)
+        val vars = expr.resolveType(typeResolver)
+        assertTrue { vars.contains("a") }
         assertEquals("struct point*", typeResolver["a"].toString())
     }
 
@@ -121,6 +127,8 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.resolveType(typeResolver)
+        assertTrue { typeResolver.contains("a") }
+        assertTrue { typeResolver.contains("b") }
         assertEquals("struct point*", typeResolver["a"].toString())
         assertEquals("struct point*", typeResolver["b"].toString())
     }

@@ -45,6 +45,8 @@ data class CPointerType(val type: CType) : AnyCPointerType {
     override fun baseType(): BaseType = CPrimitive.UNKNOWN
     override fun qualifiers(): List<TypeProperty> = emptyList()
 
+    fun dereference(): CType = type
+
     override fun toString(): String {
         return buildString {
             append(type)

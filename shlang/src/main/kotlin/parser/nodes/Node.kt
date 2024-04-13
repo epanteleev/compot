@@ -108,15 +108,23 @@ data class FunctionPointerParamDeclarator(val declarator: Node, val params: Node
 data class Declaration(val declspec: DeclarationSpecifier, val declarators: List<AnyDeclarator>): Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 
-    fun resolveType(typeHolder: TypeHolder) {
+    fun resolveType(typeHolder: TypeHolder): List<String> {
         val type = declspec.resolveType(typeHolder)
+        val vars = mutableListOf<String>()
         declarators.forEach {
             when (it) {
-                is Declarator           -> it.resolveType(type, typeHolder)
-                is AssignmentDeclarator -> it.resolveType(type, typeHolder)
+                is Declarator           -> {
+                    it.resolveType(type, typeHolder)
+                    vars.add(it.name())
+                }
+                is AssignmentDeclarator -> {
+                    it.resolveType(type, typeHolder)
+                    vars.add(it.name())
+                }
                 else -> TODO()
             }
         }
+        return vars
     }
 }
 
@@ -252,6 +260,10 @@ data class AssignmentDeclarator(val rvalue: Declarator, val lvalue: Expression):
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         TODO("Not yet implemented")
+    }
+
+    fun name(): String {
+        return rvalue.name()
     }
 
     fun resolveType(ctype: CType, typeHolder: TypeHolder): CType {

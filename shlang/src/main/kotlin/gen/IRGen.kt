@@ -95,6 +95,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
                 return Type.Ptr
             }
         }
+        if (type is CPointerType) {
+            return Type.Ptr
+        }
         return when (type.baseType()) {
             CPrimitive.CHAR -> Type.I8
             CPrimitive.SHORT -> Type.I16
@@ -106,7 +109,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         }
     }
 
-    fun visitStatement(statement: Statement): Boolean {
+    private fun visitStatement(statement: Statement): Boolean {
         return when (statement) {
             is CompoundStatement -> visitCompoundStatement(statement)
             is ExprStatement -> visitExpressionStatement(statement)
@@ -165,7 +168,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         return true
     }
 
-    fun visitWhile(whileStatement: WhileStatement): Boolean {
+    private fun visitWhile(whileStatement: WhileStatement): Boolean {
         val conditionBlock = ir().createLabel()
         val bodyBlock = ir().createLabel()
         val endBlock = ir().createLabel()
@@ -223,7 +226,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         return true
     }
 
-    fun visitExpression(expression: Expression, isRvalue: Boolean): Value {
+    private fun visitExpression(expression: Expression, isRvalue: Boolean): Value {
         return when (expression) {
             is BinaryOp -> visitBinary(expression, isRvalue)
             is UnaryOp -> visitUnary(expression, isRvalue)
@@ -233,11 +236,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         }
     }
 
-    fun visit(specifierType: DeclarationSpecifier): CType {
+    private fun visit(specifierType: DeclarationSpecifier): CType {
         return specifierType.resolveType(typeHolder)
     }
 
-    fun visitCompoundStatement(compoundStatement: CompoundStatement): Boolean {
+    private fun visitCompoundStatement(compoundStatement: CompoundStatement): Boolean {
         var needSwitch = true
 
         for (node in compoundStatement.statements) {
@@ -252,33 +255,33 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         for (node in compoundStatement.statements) {
             when (node) {
                 is Declaration -> {
-                    assert(node.declarators.size == 1)
-                    val decl = node.declarators[0]
+                    node.resolveType(typeHolder)
 
-                    when (decl) {
-                        is Declarator -> {
-                            val type = createType(node.declspec, decl)
-                            val varName = createVar(decl)
+                    for (decl in node.declarators) {
+                        when (decl) {
+                            is Declarator -> {
+                                val type = typeHolder[decl.name()]
+                                val varName = decl.name()
 
-                            val irType = toIRType(type)
-                            val rvalueAdr = ir().alloc(irType)
+                                val irType = toIRType(type)
+                                val rvalueAdr = ir().alloc(irType)
+                                varStack[varName] = KeyType(type, rvalueAdr)
+                            }
 
-                            varStack[varName] = KeyType(type, rvalueAdr)
+                            is AssignmentDeclarator -> {
+                                val type = typeHolder[decl.name()]
+                                val varName = decl.name()
+
+                                val irType = toIRType(type)
+                                val rvalueAdr = ir().alloc(irType)
+                                varStack[varName] = KeyType(type, rvalueAdr)
+
+                                val lvalue = visitExpression(decl.lvalue, false)
+                                ir().store(rvalueAdr, lvalue)
+                            }
+
+                            else -> throw IRCodeGenError("Unknown declarator, delc=$decl")
                         }
-
-                        is AssignmentDeclarator -> {
-                            val type = createType(node.declspec, decl.rvalue)
-                            val varName = createVar(decl.rvalue)
-
-                            val irType = toIRType(type)
-                            val rvalueAdr = ir().alloc(irType)
-                            varStack[varName] = KeyType(type, rvalueAdr)
-
-                            val lvalue = visitExpression(decl.lvalue, false)
-                            ir().store(rvalueAdr, lvalue)
-                        }
-
-                        else -> throw IRCodeGenError("Unknown declarator, delc=$decl")
                     }
                 }
 
@@ -301,7 +304,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
             BinaryOpType.ADD -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.interfereTypes(left, right)
+                val commonType = toIRType(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Add, rightConverted)
@@ -310,7 +313,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
             BinaryOpType.SUB -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.interfereTypes(left, right)
+                val commonType = toIRType(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Sub, rightConverted)
@@ -319,14 +322,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
             BinaryOpType.ASSIGN -> {
                 val left = visitExpression(binop.left, false)
                 val right = visitExpression(binop.right, true)
-                ir().store(left, right)
+                val commonType = toIRType(binop.resolveType(typeHolder))
+                val rightConverted = ir().convertToType(right, commonType)
+                ir().store(left, rightConverted)
                 right //TODO
             }
 
             BinaryOpType.NE -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.interfereTypes(left, right)
+                val commonType = toIRType(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 val cmp = ir().icmp(leftConverted, IntPredicate.Ne, rightConverted)
@@ -336,7 +341,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
             BinaryOpType.GT -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.interfereTypes(left, right)
+                val commonType = toIRType(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 val cmp = ir().icmp(leftConverted, IntPredicate.Gt, rightConverted)
@@ -349,13 +354,18 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
 
     private fun visitUnary(unaryOp: UnaryOp, isRvalue: Boolean): Value {
         return when (unaryOp.opType) {
-            PrefixUnaryOpType.ADDRESS -> {
-                visitExpression(unaryOp.primary, isRvalue)
-            }
+            PrefixUnaryOpType.ADDRESS -> visitExpression(unaryOp.primary, false)
 
             PrefixUnaryOpType.DEREF -> {
                 val addr = visitExpression(unaryOp.primary, isRvalue)
-                ir().load(Type.Ptr, addr)
+                val type = unaryOp.resolveType(typeHolder)
+
+                val loadedType = toIRType(type) as PrimitiveType
+                if (isRvalue) {
+                    ir().load(loadedType, addr)
+                } else {
+                    ir().load(Type.Ptr, addr) //TODO
+                }
             }
 
             else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.opType}")
@@ -388,7 +398,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         return false
     }
 
-    fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
+    private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
         val name = varNode.str.str()
         val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable $name not found")
         return if (isRvalue) {
@@ -406,7 +416,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
         val retType = toIRType(returnType)
 
         currentFunction = moduleBuilder.createFunction(name, retType, fnType.argsTypes.map { toIRType(it) })
-        
+
         varStack.push()
 
         for (idx in parameters.indices) {

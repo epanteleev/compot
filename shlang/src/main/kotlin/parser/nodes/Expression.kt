@@ -325,16 +325,13 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
         val primaryType = primary.resolveType(typeHolder)
         if (opType is PrefixUnaryOpType) {
             type = when (opType) {
-//                PrefixUnaryOpType.DEREF -> {
-//                    if (primaryType is CPointerType) {
-//                        primaryType.type
-//                    } else {
-//                        CType.UNRESOlVED
-//                    }
-//                }
-//                PrefixUnaryOpType.ADDRESS -> {
-//                    CPointerType(primaryType)
-//                }
+                PrefixUnaryOpType.DEREF -> {
+                    primaryType as CPointerType
+                    primaryType.dereference()
+                }
+                PrefixUnaryOpType.ADDRESS -> {
+                    CPointerType(primaryType)
+                }
                 PrefixUnaryOpType.NOT -> {
                     TODO()
                 }
@@ -348,6 +345,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 PrefixUnaryOpType.INC, PrefixUnaryOpType.DEC, PrefixUnaryOpType.PLUS -> {
                     primaryType
                 }
+
                 else -> TODO()
             }
         } else {
