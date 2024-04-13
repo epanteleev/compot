@@ -4,8 +4,8 @@ import ir.*
 import ir.types.Type
 import ir.module.Module
 import ir.module.SSAModule
-import ir.module.builder.AnyModuleBuilder
 import ir.pass.ana.VerifySSA
+import ir.module.builder.AnyModuleBuilder
 
 
 class ModuleBuilder private constructor(): AnyModuleBuilder() {

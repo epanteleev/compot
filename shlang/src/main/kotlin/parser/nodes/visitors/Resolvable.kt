@@ -1,4 +1,4 @@
-package parser.nodes
+package parser.nodes.visitors
 
 import types.CType
 import types.TypeHolder

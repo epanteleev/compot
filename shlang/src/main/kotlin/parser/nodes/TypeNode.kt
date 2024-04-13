@@ -1,24 +1,27 @@
 package parser.nodes
 
-import tokenizer.Ident
 import types.*
+import tokenizer.Ident
+import parser.nodes.visitors.TypeNodeVisitor
+
 
 abstract class AnyTypeNode : Node() {
     abstract fun name(): String
+    abstract fun<T> accept(visitor: TypeNodeVisitor<T>): T
 }
 
 data class UnionSpecifier(val ident: Ident, val fields: List<StructField>) : AnyTypeNode() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 }
 
-data class UnionDeclaration(val name: Ident) : AnyTypeNode() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+data class UnionDeclaration(val name: Ident) : AnyTypeNode() { //TODO separate class
+    override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = name.str()
 }
 
 data class StructDeclaration(val name: Ident) : AnyTypeNode() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = name.str()
 
     fun typeResolver(typeHolder: TypeHolder): BaseType {
@@ -30,7 +33,7 @@ data class StructDeclaration(val name: Ident) : AnyTypeNode() {
 data class TypeQualifier(private val ident: Ident): AnyTypeNode() {
     override fun name(): String = ident.str()
 
-    override fun <T> accept(visitor: NodeVisitor<T>): T {
+    override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -47,7 +50,7 @@ data class TypeQualifier(private val ident: Ident): AnyTypeNode() {
 data class StorageClassSpecifier(private val ident: Ident): AnyTypeNode() {
     override fun name(): String = ident.str()
 
-    override fun <T> accept(visitor: NodeVisitor<T>): T {
+    override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -64,7 +67,7 @@ data class StorageClassSpecifier(private val ident: Ident): AnyTypeNode() {
 }
 
 data class TypeNode(val ident: Ident) : AnyTypeNode() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 
     fun type(): BaseType {
@@ -84,7 +87,7 @@ data class TypeNode(val ident: Ident) : AnyTypeNode() {
 }
 
 data class StructSpecifier(val ident: Ident, val fields: List<StructField>) : AnyTypeNode() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 
     fun typeResolver(typeHolder: TypeHolder): StructBaseType {
@@ -101,11 +104,11 @@ data class StructSpecifier(val ident: Ident, val fields: List<StructField>) : An
 }
 
 data class EnumSpecifier(val ident: Ident, val enumerators: List<Node>) : AnyTypeNode() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 }
 
 data class EnumDeclaration(val name: Ident) : AnyTypeNode() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = name.str()
 }

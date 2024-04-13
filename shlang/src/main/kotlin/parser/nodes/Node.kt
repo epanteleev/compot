@@ -1,15 +1,22 @@
 package parser.nodes
 
+import parser.nodes.visitors.*
 import tokenizer.*
 import types.*
 
 
 abstract class Node {
-    abstract fun<T> accept(visitor: NodeVisitor<T>): T
+    fun<T> accept(visitor: NodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
-data class Declaration(val declspec: DeclarationSpecifier, val declarators: List<AnyDeclarator>): Node() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+abstract class UnclassifiedNode : Node() {
+    abstract fun<T> accept(visitor: UnclassifiedNodeVisitor<T>): T
+
+}
+
+data class Declaration(val declspec: DeclarationSpecifier, val declarators: List<AnyDeclarator>): UnclassifiedNode() {
 
     fun resolveType(typeHolder: TypeHolder): List<String> {
         val type = declspec.resolveType(typeHolder)
@@ -29,18 +36,19 @@ data class Declaration(val declspec: DeclarationSpecifier, val declarators: List
         }
         return vars
     }
+
+    override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class IdentNode(val str: Ident) : Node() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+data class IdentNode(val str: Ident) : UnclassifiedNode() {
+    override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class NodePointer(val qualifiers: List<TypeQualifier>) : Node() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+data class NodePointer(val qualifiers: List<TypeQualifier>) : UnclassifiedNode() {
+    override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class FunctionNode(val specifier: DeclarationSpecifier, val declarator: Declarator, val body: Statement) : Node() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+data class FunctionNode(val specifier: DeclarationSpecifier, val declarator: Declarator, val body: Statement) : UnclassifiedNode() {
 
     fun name(): String {
         val varNode = declarator.directDeclarator.decl as VarDeclarator
@@ -58,24 +66,22 @@ data class FunctionNode(val specifier: DeclarationSpecifier, val declarator: Dec
         typeHolder.addFunctionType(name(), fnType)
         return fnType
     }
+
+    override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class ProgramNode(val nodes: MutableList<Node>) : Node() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+data class ProgramNode(val nodes: MutableList<Node>) : UnclassifiedNode() {
+    override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class StructField(val declspec: DeclarationSpecifier, val declarators: List<StructDeclarator>): Node() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
-
-    fun resolveType(typeHolder: TypeHolder): CType {
-        TODO()
-    }
+data class StructField(val declspec: DeclarationSpecifier, val declarators: List<StructDeclarator>): UnclassifiedNode(){
+    override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-class Enumerator(val ident: Ident, val expr: Node) : Node() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+class Enumerator(val ident: Ident, val expr: Node) : UnclassifiedNode() {
+    override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-object DummyNode : Node() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+object DummyNode : UnclassifiedNode() {
+    override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }

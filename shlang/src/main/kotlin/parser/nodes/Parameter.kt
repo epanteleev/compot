@@ -2,11 +2,15 @@ package parser.nodes
 
 import types.CType
 import types.TypeHolder
+import parser.nodes.visitors.*
 
-abstract class AnyParameter : Node(), Resolvable
+
+abstract class AnyParameter : Node(), Resolvable {
+    abstract fun<T> accept(visitor: ParameterVisitor<T>): T
+}
 
 data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyDeclarator) : AnyParameter() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
 
     fun name(): String {
         val varNode = declarator as Declarator
@@ -24,8 +28,7 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyDecl
 }
 
 class ParameterVarArg: AnyParameter() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
-
+    override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): CType {
         return CType.UNKNOWN //TODO
     }

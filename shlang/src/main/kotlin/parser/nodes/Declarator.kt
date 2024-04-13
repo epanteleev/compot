@@ -1,12 +1,16 @@
 package parser.nodes
 
-import tokenizer.Ident
 import types.*
+import tokenizer.Ident
+import parser.nodes.visitors.*
 
-abstract class AnyDeclarator: Node(), Resolvable
+
+abstract class AnyDeclarator: Node(), Resolvable {
+    abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
+}
 
 data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<Node>) : AnyDeclarator() {   //TODO
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         TODO()
@@ -14,7 +18,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
 }
 
 data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     fun name(): String {
         return directDeclarator.name()
@@ -57,7 +61,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
 }
 
 data class AssignmentDeclarator(val rvalue: Declarator, val lvalue: Expression): AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         TODO("Not yet implemented")
@@ -73,7 +77,7 @@ data class AssignmentDeclarator(val rvalue: Declarator, val lvalue: Expression):
 }
 
 data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         params.forEach { it.resolveType(typeHolder) }
@@ -97,13 +101,13 @@ data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
 }
 
 object EmptyDeclarator : AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = CType.UNKNOWN
 }
 
 data class ArrayDeclarator(val constexpr: Expression) : AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         TODO()
@@ -111,7 +115,7 @@ data class ArrayDeclarator(val constexpr: Expression) : AnyDeclarator() {
 }
 
 data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression): AnyDeclarator() {
-    override fun <T> accept(visitor: NodeVisitor<T>): T {
+    override fun <T> accept(visitor: DeclaratorVisitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -128,7 +132,7 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
 }
 
 data class DirectDeclarator(val decl: AnyDeclarator, val declarators: List<AnyDeclarator>): AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     fun name(): String {
         return when (decl) {
@@ -144,7 +148,7 @@ data class DirectDeclarator(val decl: AnyDeclarator, val declarators: List<AnyDe
 }
 
 data class VarDeclarator(val ident: Ident) : AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     fun name(): String = ident.str()
     override fun resolveType(typeHolder: TypeHolder): CType {
@@ -153,7 +157,7 @@ data class VarDeclarator(val ident: Ident) : AnyDeclarator() {
 }
 
 data class FunctionPointerDeclarator(val declarator: List<Node>): AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     fun declarator(): Declarator {
         return declarator[0] as Declarator
@@ -165,7 +169,7 @@ data class FunctionPointerDeclarator(val declarator: List<Node>): AnyDeclarator(
 }
 
 data class FunctionPointerParamDeclarator(val declarator: Node, val params: Node): AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         TODO()
@@ -173,14 +177,14 @@ data class FunctionPointerParamDeclarator(val declarator: Node, val params: Node
 }
 
 data class DirectFunctionDeclarator(val parameters: List<AnyParameter>) : AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): CType {
         TODO("Not yet implemented")
     }
 }
 
 data class DirectArrayDeclarator(val size: Node) : AnyDeclarator() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): CType {
         TODO("Not yet implemented")
     }

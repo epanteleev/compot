@@ -1,8 +1,8 @@
 package parser
 
 import parser.nodes.*
+import parser.nodes.visitors.NodeVisitor
 import tokenizer.Ident
-import types.PointerQualifier
 
 
 class LineAgnosticAstPrinter: NodeVisitor<Unit> {
@@ -20,10 +20,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
-    override fun visit(node: DummyNode) {}
+    override fun visit(dummyNode: DummyNode) {}
 
-    override fun visit(node: IdentNode) {
-        buffer.append(node.str.str())
+    override fun visit(identNode: IdentNode) {
+        buffer.append(identNode.str.str())
     }
 
     override fun visit(cast: Cast) {
@@ -288,11 +288,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(specifierType: DeclarationSpecifier) {
         joinTo(specifierType.specifiers, " ") {
-            if (it is Node) {
-                it.accept(this)
-            } else {
-                buffer.append(it)
-            }
+            it.accept(this)
         }
     }
 
@@ -445,9 +441,9 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
-    override fun visit(pointer: NodePointer) {
+    override fun visit(nodePointer: NodePointer) {
         buffer.append('*')
-        for (qualifier in pointer.qualifiers) {
+        for (qualifier in nodePointer.qualifiers) {
             buffer.append(qualifier)
             buffer.append(' ')
         }

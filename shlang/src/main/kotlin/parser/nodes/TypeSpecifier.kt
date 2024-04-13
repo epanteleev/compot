@@ -1,14 +1,19 @@
 package parser.nodes
 
+
+import parser.nodes.visitors.Resolvable
+import parser.nodes.visitors.TypeSpecifierVisitor
+
 import types.CType
 import types.CTypeBuilder
 import types.TypeHolder
 
-abstract class TypeSpecifier : Node()
+
+abstract class TypeSpecifier : Node() {
+    abstract fun<T> accept(visitor: TypeSpecifierVisitor<T>): T
+}
 
 data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier(), Resolvable {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
-
     override fun resolveType(typeHolder: TypeHolder): CType {
         val ctypeBuilder = CTypeBuilder()
         specifiers.forEach {
@@ -43,13 +48,15 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
         return ctypeBuilder.build(typeHolder)
     }
 
+    override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
+
     companion object {
         val EMPTY = DeclarationSpecifier(emptyList())
     }
 }
 
 data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: Node) : TypeSpecifier(), Resolvable {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         TODO("Not yet implemented")

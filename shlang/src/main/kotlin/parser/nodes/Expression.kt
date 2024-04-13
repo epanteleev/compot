@@ -1,5 +1,8 @@
 package parser.nodes
 
+import parser.nodes.visitors.ExpressionVisitor
+import parser.nodes.visitors.NodeVisitor
+import parser.nodes.visitors.Resolvable
 import tokenizer.Ident
 import tokenizer.Numeric
 import tokenizer.StringLiteral
@@ -138,10 +141,12 @@ enum class PostfixUnaryOpType: UnaryOpType {
 
 abstract class Expression : Node(), Resolvable {
     protected var type: CType = CType.UNRESOlVED
+
+    abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
 }
 
 data class BinaryOp(val left: Expression, val right: Expression, val opType: BinaryOpType) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
@@ -157,13 +162,13 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
 }
 
 class EmptyExpression : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = type
 }
 
 class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expression) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
@@ -179,7 +184,7 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
 }
 
 data class FunctionCall(val primary: Expression, val args: List<Expression>) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     fun name(): String {
         return when (primary) {
@@ -212,7 +217,7 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
 }
 
 data class InitializerList(val initializers: List<Expression>) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
@@ -227,7 +232,7 @@ data class InitializerList(val initializers: List<Expression>) : Expression() {
 }
 
 class MemberAccess(val primary: Expression, val ident: Ident) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
@@ -250,7 +255,7 @@ class MemberAccess(val primary: Expression, val ident: Ident) : Expression() {
 }
 
 class ArrowMemberAccess(val primary: Expression, val ident: Ident) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType { //TODO Copy-paste?!?
         if (type != CType.UNRESOlVED) {
@@ -273,7 +278,7 @@ class ArrowMemberAccess(val primary: Expression, val ident: Ident) : Expression(
 }
 
 data class VarNode(val str: Ident) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
@@ -286,7 +291,7 @@ data class VarNode(val str: Ident) : Expression() {
 }
 
 data class StringNode(val str: StringLiteral) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
@@ -298,7 +303,7 @@ data class StringNode(val str: StringLiteral) : Expression() {
 }
 
 data class NumNode(val toLong: Numeric) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
@@ -316,7 +321,7 @@ data class NumNode(val toLong: Numeric) : Expression() {
 }
 
 data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
@@ -358,7 +363,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
 }
 
 data class ArrayAccess(val primary: Expression, val expr: Expression) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
             return type
@@ -376,7 +381,7 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
 }
 
 data class SizeOf(val expr: Node) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
@@ -390,7 +395,7 @@ data class SizeOf(val expr: Node) : Expression() {
 }
 
 data class Cast(val typeName: TypeName, val cast: Node) : Expression() {
-    override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
