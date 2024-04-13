@@ -1008,4 +1008,15 @@ class ParserTest {
         val program = parser.program()
         assertEquals("void fn(int *a) {int val = *a; return val;}", LineAgnosticAstPrinter.print(program))
     }
+
+    @Test
+    fun testCallRecursion() {
+        val input = "int fib(int n) { if (n <= 1) return n; return fib(n - 1) + fib(n - 2); }"
+
+        val tokens = CTokenizer.apply(input)
+        val parser = ProgramParser(tokens)
+
+        val program = parser.program()
+        assertEquals("int fib(int n) {if(n <= 1) {return n;} return fib(n - 1) + fib(n - 2);}", LineAgnosticAstPrinter.print(program))
+    }
 }

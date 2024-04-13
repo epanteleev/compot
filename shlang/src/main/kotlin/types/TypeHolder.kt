@@ -2,6 +2,7 @@ package types
 
 class TypeHolder(private val valueMap: MutableMap<String, CType>) {
     private val typeMap = hashMapOf<String, BaseType>()
+    private val functions = hashMapOf<String, CFunctionType>()
 
     operator fun get(name: String): CType {
         return valueMap[name] ?: throw Exception("Type for variable $name not found")
@@ -37,6 +38,14 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>) {
 
     fun addUnionType(name: String, type: BaseType) {
         typeMap[name] = type
+    }
+
+    fun getFunctionType(name: String): CType {
+        return functions[name] ?: throw Exception("Type for function $name not found")
+    }
+
+    fun addFunctionType(name: String, type: CFunctionType) {
+        functions[name] = type
     }
 
     companion object {

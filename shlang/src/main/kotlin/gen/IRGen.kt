@@ -22,10 +22,6 @@ class IRGen private constructor() {
     private val moduleBuilder = ModuleBuilder.create()
     private var currentFunction: FunctionDataBuilder? = null
 
-    private fun ir(): FunctionDataBuilder {
-        return currentFunction ?: throw IRCodeGenError("Function expected")
-    }
-
     fun visit(programNode: ProgramNode) {
         for (node in programNode.nodes) {
             when (node) {
@@ -46,7 +42,7 @@ class IRGen private constructor() {
     }
 }
 
-class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
+class IrGenFunction(private val moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
     private val typeHolder = TypeHolder.default()
     private val varStack = VarStack()
     private var currentFunction: FunctionDataBuilder? = null
@@ -265,7 +261,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
     }
 
     private fun visitFunctionCall(functionCall: FunctionCall): Value {
-       TODO()
+        val name = functionCall.name()
+        val function = moduleBuilder.findFunction(name)
+
+        val convertedArgs = mutableListOf<Value>()
+        for ((argType, argValue) in function.arguments() zip functionCall.args) {
+            val converted = visitExpression(argValue, true)
+            val convertedArg = ir().convertToType(converted, argType)
+            convertedArgs.add(convertedArg)
+        }
+
+        return ir().call(function, convertedArgs)
     }
 
     private fun visitCompoundStatement(compoundStatement: CompoundStatement): Boolean {
@@ -359,6 +365,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder, functionNode: FunctionNode) {
                 val cmp = ir().icmp(leftConverted, IntPredicate.Lt, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
+
+            BinaryOpType.LE -> {
+                val left = visitExpression(binop.left, true)
+                val right = visitExpression(binop.right, true)
+                val commonType = toIRType(binop.resolveType(typeHolder))
+                val leftConverted = ir().convertToType(left, commonType)
+                val rightConverted = ir().convertToType(right, commonType)
+                val cmp = ir().icmp(leftConverted, IntPredicate.Le, rightConverted)
+                ir().convertToType(cmp, Type.U1)
+            }
+
             else -> throw IRCodeGenError("Unknown binary operation, op=${binop.opType}")
         }
     }

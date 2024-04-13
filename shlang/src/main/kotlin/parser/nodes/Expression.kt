@@ -181,18 +181,19 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
 data class FunctionCall(val primary: Expression, val args: List<Expression>) : Expression() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 
+    fun name(): String {
+        return when (primary) {
+            is VarNode -> primary.str.str()
+            else -> throw IllegalStateException("Function call primary is not a VarNode, but got ${primary.javaClass.simpleName}")
+        }
+    }
+
     override fun resolveType(typeHolder: TypeHolder): CType {
         if (type != CType.UNRESOlVED) {
             return type
         }
 
-        val funcType = primary.resolveType(typeHolder)
-        if (funcType !is CFunctionType) {
-            type = CType.UNKNOWN
-            return type
-        }
-
-        val params = funcType.argsTypes
+        val params = args.map { it.resolveType(typeHolder) }
         if (params.size != args.size) {
             type = CType.UNRESOlVED
             return type
@@ -205,8 +206,8 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
                 return type
             }
         }
-        type = funcType.retType
-        return type
+
+        return typeHolder.getFunctionType(name())
     }
 }
 
