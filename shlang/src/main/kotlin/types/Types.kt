@@ -172,9 +172,13 @@ data class StructBaseType(override val name: String): BaseType(name, -1) { //TOD
     }
 }
 
-data class CArrayType(val type: CType, val size: Int) : CType {
-    override fun baseType(): BaseType = type.baseType()
-    override fun qualifiers(): List<TypeProperty> = type.qualifiers()
+data class CArrayType(val type: CType, val dimension: Int) : BaseType("array", type.baseType().size * dimension) {
+    override fun toString(): String {
+        return buildString {
+            append(type)
+            append("[$dimension]")
+        }
+    }
 }
 
 data class CFunctionType(val name: String, val retType: CType, val argsTypes: List<CType>, var variadic: Boolean = false) : CType {

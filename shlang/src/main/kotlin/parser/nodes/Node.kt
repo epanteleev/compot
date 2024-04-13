@@ -132,7 +132,7 @@ data class Declspec(val type: CType, val ident: Ident) : Node() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class ArrayDeclarator(val constexpr: Node) : AnyDeclarator() {
+data class ArrayDeclarator(val constexpr: Expression) : AnyDeclarator() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
@@ -229,6 +229,16 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
 
             typeHolder.add(functionPointerDeclarator.declarator().name(), pointerType)
         } else {
+            for (decl in directDeclarator.declarators) {
+                when (decl) {
+                    is ArrayDeclarator -> {
+                        val size = decl.constexpr as NumNode
+                        pointerType = CompoundType(CArrayType(pointerType, size.toLong.data.toInt()))
+                    }
+                    else -> throw IllegalStateException("Unknown declarator $decl")
+                }
+            }
+
             typeHolder.add(name(), pointerType)
         }
 

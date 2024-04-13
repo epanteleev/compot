@@ -930,7 +930,7 @@ class ProgramParser(firstToken: AnyToken) {
                     eat()
                     if (check("]")) {
                         eat()
-                        declarators.add(ArrayDeclarator(DummyNode))
+                        declarators.add(ArrayDeclarator(EmptyExpression()))
                         continue
                     }
                     val size = constant_expression()?: throw ParserException(ProgramMessage("Expected constant expression", current))

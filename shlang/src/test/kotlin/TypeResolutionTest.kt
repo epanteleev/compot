@@ -150,6 +150,19 @@ class TypeResolutionTest {
     }
 
     @Test
+    fun testDecl8() {
+        val tokens = CTokenizer.apply("int add(int (a)(int, int), int b) { }")
+        val parser = ProgramParser(tokens)
+        val expr = parser.function_definition() as FunctionNode
+        val typeResolver = TypeHolder.default()
+        val fnType = expr.resolveType(typeResolver)
+
+        assertEquals("int add(int(*)(int, int), int)", fnType.toString())
+        assertEquals("int(*)(int, int)", typeResolver["a"].toString())
+        assertEquals(CType.INT, typeResolver["b"])
+    }
+
+    @Test
     fun testFunctionPointerDeclaration() {
         val tokens = CTokenizer.apply("int (*add)(int, int) = 0;")
         val parser = ProgramParser(tokens)
@@ -195,6 +208,52 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         expr.resolveType(typeResolver)
 
-        assertEquals("int[10]", typeResolver["a"].toString())
+        val a = typeResolver["a"]
+        assertEquals("int[10]", a.toString())
+    }
+
+    @Test
+    fun testArrayDeclaration2() {
+        val tokens = CTokenizer.apply("int a[10], b[20];")
+        val parser = ProgramParser(tokens)
+        val expr = parser.declaration() as Declaration
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        val a = typeResolver["a"]
+        val b = typeResolver["b"]
+        assertEquals("int[10]", a.toString())
+        assertEquals("int[20]", b.toString())
+    }
+
+    @Test
+    fun testArrayDeclaration3() {
+        val tokens = CTokenizer.apply("int a[10], b[20], *c = 0;")
+        val parser = ProgramParser(tokens)
+        val expr = parser.declaration() as Declaration
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        val a = typeResolver["a"]
+        val b = typeResolver["b"]
+        val c = typeResolver["c"]
+        assertEquals("int[10]", a.toString())
+        assertEquals("int[20]", b.toString())
+        assertEquals("int*", c.toString())
+    }
+
+    @Test
+    fun testArrayDeclaration4() {
+        val tokens = CTokenizer.apply("int a[10][30];")
+        val parser = ProgramParser(tokens)
+        val expr = parser.declaration() as Declaration
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        val a = typeResolver["a"]
+        assertEquals("int[10][30]", a.toString())
     }
 }
