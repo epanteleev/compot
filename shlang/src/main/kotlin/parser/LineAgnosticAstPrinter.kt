@@ -23,7 +23,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(dummyNode: DummyNode) {}
 
     override fun visit(identNode: IdentNode) {
-        buffer.append(identNode.str.str())
+        buffer.append(identNode.str())
     }
 
     override fun visit(cast: Cast) {

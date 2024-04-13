@@ -126,6 +126,9 @@ enum class PrefixUnaryOpType: UnaryOpType {
     },
     PLUS {
         override fun toString(): String = "+"
+    },
+    BIT_NOT {
+        override fun toString(): String = "~"
     }
 }
 

@@ -1423,7 +1423,7 @@ class ProgramParser(firstToken: AnyToken) {
         if (check("~")) {
             eat()
             val unary = unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", current))
-            return@rule UnaryOp(unary, PrefixUnaryOpType.NOT)
+            return@rule UnaryOp(unary, PrefixUnaryOpType.BIT_NOT)
         }
         if (check("!")) {
             eat()

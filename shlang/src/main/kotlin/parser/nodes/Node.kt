@@ -40,7 +40,8 @@ data class Declaration(val declspec: DeclarationSpecifier, val declarators: List
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class IdentNode(val str: Ident) : UnclassifiedNode() {
+data class IdentNode(private val str: Ident) : UnclassifiedNode() {
+    fun str(): String = str.str()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 

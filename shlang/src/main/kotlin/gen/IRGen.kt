@@ -20,7 +20,6 @@ data class IRCodeGenError(override val message: String) : Exception(message)
 
 class IRGen private constructor() {
     private val moduleBuilder = ModuleBuilder.create()
-    private var currentFunction: FunctionDataBuilder? = null
 
     fun visit(programNode: ProgramNode) {
         for (node in programNode.nodes) {
