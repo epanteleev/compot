@@ -58,7 +58,7 @@ data class WhileStatement(val condition: Expression, val body: Statement): State
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 
-data class ForStatement(val init: Node, val condition: Node, val update: Node, val body: Node): Statement() {
+data class ForStatement(val init: Node, val condition: Expression, val update: Expression, val body: Statement): Statement() {
     override fun<T> accept(visitor: NodeVisitor<T>) = visitor.visit(this)
 }
 

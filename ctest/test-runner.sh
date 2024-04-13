@@ -59,5 +59,8 @@ compile_and_run 4 0
 compile_and_run 5 20
 compile_and_run 6 10
 compile_and_run doWhile 20
+compile_and_run forLoop 30
+compile_and_run functionCall1 8
+compile_and_run math1 4
 compile_and_run goto 20
 compile_and_run deref 67

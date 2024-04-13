@@ -153,7 +153,7 @@ class ProgramParser(firstToken: AnyToken) {
                     val condition = if (!check(";")) {
                         expression()?: throw ParserException(ProgramMessage("Expected expression", current))
                     } else {
-                        DummyNode
+                        EmptyExpression()
                     }
 
                     if (check(";")) {
@@ -162,7 +162,7 @@ class ProgramParser(firstToken: AnyToken) {
                         val update = if (!check(")")) {
                             expression()?: throw ParserException(ProgramMessage("Expected expression", current))
                         } else {
-                            DummyNode
+                            EmptyExpression()
                         }
                         if (check(")")) {
                             eat()
