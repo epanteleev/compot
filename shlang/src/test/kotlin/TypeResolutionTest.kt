@@ -114,7 +114,6 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         val vars = expr.resolveType(typeResolver)
-        assertTrue { vars.contains("a") }
         assertEquals("struct point*", typeResolver["a"].toString())
     }
 

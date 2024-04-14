@@ -32,6 +32,9 @@ tasks.named<Jar>("jar") {
     dependsOn.add(tasks.findByName("test"))
 }
 
-run {
-
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
