@@ -341,11 +341,6 @@ class ProgramParser(private val tokens: List<CToken>) {
                 throw ParserException(ProgramMessage("Expected '}'", peak()))
             }
         }
-        if (check<StringLiteral>()) {
-            val str = peak<StringLiteral>()
-            eat()
-            return@rule StringNode(str)
-        }
         return@rule assignment_expression()
     }
 
