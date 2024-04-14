@@ -15,7 +15,7 @@ class ConstEvalExpression(private val ctx: ConstEvalContext): ExpressionVisitor<
     }
 
     override fun visit(identNode: IdentNode): Int {
-        return ctx.getVariable(identNode.str())
+        throw ConstEvalException("identifier=${identNode}")
     }
 
     override fun visit(unaryOp: UnaryOp): Int {
@@ -94,7 +94,7 @@ class ConstEvalExpression(private val ctx: ConstEvalContext): ExpressionVisitor<
     }
 
     override fun visit(varNode: VarNode): Int {
-        TODO("Not yet implemented")
+        return ctx.getVariable(varNode.name())
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess): Int {
@@ -108,5 +108,4 @@ class ConstEvalExpression(private val ctx: ConstEvalContext): ExpressionVisitor<
     override fun visit(emptyExpression: EmptyExpression): Int {
         TODO("Not yet implemented")
     }
-
 }

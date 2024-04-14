@@ -380,7 +380,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(varNode: VarNode) {
-        buffer.append(varNode.str.str())
+        buffer.append(varNode.name())
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess) {
