@@ -399,7 +399,7 @@ data class SizeOf(val expr: Node) : Expression() {
     }
 }
 
-data class Cast(val typeName: TypeName, val cast: Node) : Expression() {
+data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {

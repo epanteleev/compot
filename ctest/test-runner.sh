@@ -52,6 +52,7 @@ function compile_and_run() {
 	run_test "$test_name" "$expected_result"
 }
 
+compile_and_run cast1 23
 compile_and_run 1 57
 compile_and_run 2 0
 compile_and_run 3 20

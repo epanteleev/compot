@@ -9,8 +9,30 @@ abstract class AnyDeclarator: Node(), Resolvable {
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
 }
 
-data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<Node>) : AnyDeclarator() {   //TODO
+data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<AnyDeclarator>?) : AnyDeclarator() {   //TODO
     override fun<T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)
+
+    fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
+        var pointerType = baseType
+        for (pointer in pointers) {
+            pointerType = CPointerType(pointerType)
+        }
+
+        if (directAbstractDeclarator == null) {
+            return pointerType
+        }
+
+        for (decl in directAbstractDeclarator) {
+            when (decl) {
+                is ArrayDeclarator -> {
+                    val size = decl.constexpr as NumNode
+                    pointerType = CompoundType(CArrayType(pointerType, size.toLong.data.toInt()))
+                }
+                else -> throw IllegalStateException("Unknown declarator $decl")
+            }
+        }
+        return pointerType
+    }
 
     override fun resolveType(typeHolder: TypeHolder): CType {
         TODO()

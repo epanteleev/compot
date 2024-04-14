@@ -1049,12 +1049,12 @@ class ProgramParser(firstToken: AnyToken) {
     //	| direct_abstract_declarator '(' ')'
     //	| direct_abstract_declarator '(' parameter_type_list ')'
     //	;
-    fun direct_abstract_declarator(): List<Node>? = rule {
+    fun direct_abstract_declarator(): List<AnyDeclarator>? = rule {
         if (!check("(") && !check("[")) {
             return@rule null
         }
 
-        val abstractDeclarators = mutableListOf<Node>()
+        val abstractDeclarators = mutableListOf<AnyDeclarator>()
         while (true) {
             if (check("(")) {
                 eat()
@@ -1332,10 +1332,7 @@ class ProgramParser(firstToken: AnyToken) {
     fun type_name(): TypeName? = rule {
         val specifierQualifierList = specifier_qualifier_list()?: return@rule null
         val abstractDeclarator = abstract_declarator()
-        if (abstractDeclarator != null) {
-            return@rule TypeName(specifierQualifierList, abstractDeclarator)
-        }
-        return@rule TypeName(specifierQualifierList, DummyNode)
+        return@rule TypeName(specifierQualifierList, abstractDeclarator)
     }
 
     // specifier_qualifier_list
@@ -1533,10 +1530,7 @@ class ProgramParser(firstToken: AnyToken) {
         val pointers = pointer()
         if (pointers != null) {
             val declarator = direct_abstract_declarator()
-            if (declarator != null) {
-                return@rule AbstractDeclarator(pointers, declarator)
-            }
-            return@rule AbstractDeclarator(pointers, listOf(DummyNode))
+            return@rule AbstractDeclarator(pointers, declarator)
         }
 
         val declarator = direct_abstract_declarator()?: return@rule null

@@ -263,7 +263,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(typeName: TypeName) {
         typeName.specifiers.accept(this)
-        typeName.abstractDecl.accept(this)
+        typeName.abstractDecl?.accept(this)
     }
 
     override fun visit(directFunctionDeclarator: DirectFunctionDeclarator) {
@@ -281,6 +281,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(abstractDeclarator: AbstractDeclarator) {
+        if (abstractDeclarator.directAbstractDeclarator == null) {
+            return
+        }
+
         joinTo(abstractDeclarator.directAbstractDeclarator, " ") {
             it.accept(this)
         }

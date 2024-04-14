@@ -108,7 +108,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder, functionNode: Func
             if (update is EmptyExpression) {
                 return
             }
-            
+
             visitExpression(update, true)
         }
 
@@ -240,9 +240,17 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder, functionNode: Func
             is NumNode -> visitNumNode(expression)
             is VarNode -> visitVarNode(expression, isRvalue)
             is FunctionCall -> visitFunctionCall(expression)
+            is Cast -> visitCast(expression)
             else -> throw IRCodeGenError("Unknown expression: $expression")
         }
     }
+
+    private fun visitCast(cast: Cast): Value {
+        val value = visitExpression(cast.cast, true)
+        val toType = toIRType(cast.resolveType(typeHolder))
+        return ir().convertToType(value, toType)
+    }
+
 
     private fun visitFunctionCall(functionCall: FunctionCall): Value {
         val name = functionCall.name()

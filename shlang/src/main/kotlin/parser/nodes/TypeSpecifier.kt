@@ -55,10 +55,14 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
     }
 }
 
-data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: Node) : TypeSpecifier(), Resolvable {
+data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: AbstractDeclarator?) : TypeSpecifier(), Resolvable {
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO("Not yet implemented")
+        val specifierType = specifiers.resolveType(typeHolder)
+        if (abstractDecl == null) {
+            return specifierType
+        }
+        return abstractDecl.resolveType(specifierType, typeHolder)
     }
 }
