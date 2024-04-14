@@ -15,9 +15,9 @@ unzip -o ../shlang/build/distributions/shlang-1.0-SNAPSHOT.zip -d build
 
 function compile_test() {
 	${IR_COMPILER} -c "$1.c"
-        gcc "$1.o" -o "base"
+        gcc "$1.o" -o "base" ../tests/runtime.c
 	${IR_COMPILER} -c "$1.c" -O1
-        gcc "$1.o" -o "opt"
+        gcc "$1.o" -o "opt" ../tests/runtime.c
 }
 
 function run_test() {
@@ -52,6 +52,7 @@ function compile_and_run() {
 	run_test "$test_name" "$expected_result"
 }
 
+compile_and_run printInt 20
 compile_and_run cast1 23
 compile_and_run 1 57
 compile_and_run 2 0

@@ -2,7 +2,6 @@ package parser
 
 import tokenizer.*
 import parser.nodes.*
-import tokenizer.LexicalElements.keywords
 
 
 data class ParserException(val info: ProgramMessage) : Exception(info.message)

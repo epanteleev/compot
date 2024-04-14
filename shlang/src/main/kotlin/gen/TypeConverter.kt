@@ -1,13 +1,34 @@
 package gen
 
-import ir.Constant
-import ir.Value
+import ir.*
+import types.*
+import ir.types.*
 import ir.module.builder.impl.FunctionDataBuilder
-import ir.types.SignedIntType
-import ir.types.Type
-import ir.types.UnsignedIntType
+
 
 object TypeConverter {
+
+    inline fun<reified T: Type> toIRType(type: CType): T {
+        for (p in type.qualifiers()) {
+            if (p is PointerQualifier) {
+                return Type.Ptr as T
+            }
+        }
+        if (type is CPointerType) {
+            return Type.Ptr as T
+        }
+        val ret = when (type.baseType()) {
+            CPrimitive.CHAR -> Type.I8
+            CPrimitive.SHORT -> Type.I16
+            CPrimitive.INT -> Type.I32
+            CPrimitive.LONG -> Type.I64
+            CPrimitive.FLOAT -> Type.F32
+            CPrimitive.DOUBLE -> Type.F64
+            CPrimitive.VOID -> Type.Void
+            else -> throw IRCodeGenError("Unknown type, type=$type")
+        }
+        return ret as T
+    }
 
    fun FunctionDataBuilder.convertToType(value: Value, type: Type): Value {
         if (value.type() == type) {

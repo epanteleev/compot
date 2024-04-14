@@ -70,6 +70,10 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
                         val size = decl.constexpr as NumNode
                         pointerType = CompoundType(CArrayType(pointerType, size.toLong.data.toInt()))
                     }
+                    is FunctionDeclarator -> {
+                        val params = decl.resolveParams(typeHolder)
+                        pointerType = CFunctionType(directDeclarator.name(), pointerType, params)
+                    }
                     else -> throw IllegalStateException("Unknown declarator $decl")
                 }
             }

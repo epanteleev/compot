@@ -12,10 +12,11 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilder>()
     private val externFunctions = mutableSetOf<ExternFunction>()
 
-    fun findFunction(name: String): FunctionPrototype {
-        val fnBuilder = functions.find { it.prototype().name() == name }
+    fun findFunction(name: String): AnyFunctionPrototype {
+        val fnBuilder: AnyFunctionPrototype = functions.find { it.prototype().name() == name }?.prototype()
+            ?: externFunctions.find { it.name() == name }
             ?: throw RuntimeException("not found name=$name") //TODO O(n)
-        return fnBuilder.prototype()
+        return fnBuilder
     }
 
     fun createFunction(name: String, returnType: Type, argumentTypes: List<Type>): FunctionDataBuilder {
