@@ -6,15 +6,14 @@ import tokenizer.Specifiers.isOperator3
 
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
-    private var out: CToken? = null
-    private var first: AnyToken = Eof
+    private val tokens: MutableList<CToken> = mutableListOf()
 
     private var pos: Int = 1
     private var line: Int = 1
 
-    fun doTokenize(): AnyToken {
+    fun doTokenize(): List<CToken> {
         doTokenizeHelper()
-        return first
+        return tokens
     }
 
     private fun incrementLine() {
@@ -33,13 +32,7 @@ class CTokenizer private constructor(private val filename: String, private val r
     }
 
     private fun append(next: CToken) {
-        if (out == null) {
-            out = next
-            first = next
-            return
-        }
-        out!!.next = next
-        out = next
+        tokens.add(next)
     }
 
     private fun doTokenizeHelper() {
@@ -145,11 +138,11 @@ class CTokenizer private constructor(private val filename: String, private val r
     }
 
     companion object {
-        fun apply(file: StringReader): AnyToken {
+        fun apply(file: StringReader): List<CToken> {
             return CTokenizer("<no-name>", file).doTokenize()
         }
 
-        fun apply(data: String): AnyToken {
+        fun apply(data: String): List<CToken> {
             return apply(StringReader(data))
         }
     }

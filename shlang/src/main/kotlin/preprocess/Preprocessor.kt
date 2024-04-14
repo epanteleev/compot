@@ -2,9 +2,10 @@ package preprocess
 
 import tokenizer.AnyToken
 import tokenizer.CToken
+import tokenizer.CTokenizer
 
 
-data class Preprocesssor(private val firstToken: AnyToken) {
+data class Preprocesssor(private val firstToken: List<CToken>) {
     private var cond_incl: Boolean = false
     private val macroses = mutableSetOf<Macros>()
 

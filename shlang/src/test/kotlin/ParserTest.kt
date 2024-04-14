@@ -23,7 +23,6 @@ class ParserTest {
     fun testAssign2() {
         val tokens = CTokenizer.apply("t = 3 + 5 * (67 << 56);")
         val parser = ProgramParser(tokens)
-
         val expr = parser.assignment_expression() as Node
         assertEquals("t = 3 + 5 * 67 << 56;", LineAgnosticAstPrinter.print(expr))
     }
