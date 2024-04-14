@@ -1,8 +1,9 @@
 package tokenizer
 
 import tokenizer.StringReader.Companion.tryPunct
-import tokenizer.Specifiers.isOperator2
-import tokenizer.Specifiers.isOperator3
+import tokenizer.LexicalElements.isOperator2
+import tokenizer.LexicalElements.isOperator3
+import tokenizer.LexicalElements.keywords
 
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
@@ -117,7 +118,12 @@ class CTokenizer private constructor(private val filename: String, private val r
                         pos += 1
                     }
                 }
-                append(Ident(identifier, line, pos - identifier.length, filename))
+
+                if (keywords.contains(identifier)) {
+                    append(Keyword(identifier, line, pos - identifier.length, filename))
+                } else {
+                    append(Ident(identifier, line, pos - identifier.length, filename))
+                }
                 continue
             }
 

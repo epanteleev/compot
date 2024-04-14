@@ -2,7 +2,7 @@ package parser
 
 import tokenizer.*
 import parser.nodes.*
-import tokenizer.Specifiers.keywords
+import tokenizer.LexicalElements.keywords
 
 
 data class ParserException(val info: ProgramMessage) : Exception(info.message)
@@ -460,27 +460,27 @@ class ProgramParser(private val tokens: List<CToken>) {
     //	;
     fun storage_class_specifier(): StorageClassSpecifier? = rule {
         if (check("typedef")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule StorageClassSpecifier(tok)
         }
         if (check("extern")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule StorageClassSpecifier(tok)
         }
         if (check("static")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule StorageClassSpecifier(tok)
         }
         if (check("auto")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule StorageClassSpecifier(tok)
         }
         if (check("register")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule StorageClassSpecifier(tok)
         }
@@ -541,15 +541,15 @@ class ProgramParser(private val tokens: List<CToken>) {
     //	| declaration_specifiers init_declarator_list ';'
     //	;
     fun declaration(): Declaration? = rule {
-        val declspec = declaration_specifiers() ?: return@rule null
+        val declarationSecisiers = declaration_specifiers() ?: return@rule null
         if (check(";")) {
             eat()
-            return@rule Declaration(declspec, listOf())
+            return@rule Declaration(declarationSecisiers, listOf())
         }
         val initDeclaratorList = init_declarator_list()
         if (check(";")) {
             eat()
-            return@rule Declaration(declspec, initDeclaratorList)
+            return@rule Declaration(declarationSecisiers, initDeclaratorList)
         }
         return@rule null
     }
@@ -811,37 +811,37 @@ class ProgramParser(private val tokens: List<CToken>) {
     //	;
     fun type_specifier(): AnyTypeNode? = rule {
         if (check("int")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule TypeNode(tok)
         }
         if (check("char")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule TypeNode(tok)
         }
         if (check("short")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule TypeNode(tok)
         }
         if (check("long")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule TypeNode(tok)
         }
         if (check("float")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule TypeNode(tok)
         }
         if (check("double")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule TypeNode(tok)
         }
         if (check("void")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule TypeNode(tok)
         }
@@ -855,17 +855,17 @@ class ProgramParser(private val tokens: List<CToken>) {
     //	;
     fun type_qualifier(): TypeQualifier? = rule {
         if (check("const")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule TypeQualifier(tok)
         }
         if (check("volatile")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule TypeQualifier(tok)
         }
         if (check("restrict")) {
-            val tok = peak<Ident>()
+            val tok = peak<Keyword>()
             eat()
             return@rule TypeQualifier(tok)
         }
@@ -1594,11 +1594,9 @@ class ProgramParser(private val tokens: List<CToken>) {
             }
         }
         if (check("_Generic")) {
-            eat()
-            val genericSelection = genericSelection()
-            return@rule genericSelection
+            TODO()
         }
-        if (check<Ident>() && !keywords.contains(peak<Ident>().str())) { //TODO ??????????????????????????????????????????!!!!!!!!
+        if (check<Ident>()) {
             val ident = peak<Ident>()
             eat()
             return@rule VarNode(ident)
@@ -1614,10 +1612,6 @@ class ProgramParser(private val tokens: List<CToken>) {
             return@rule NumNode(num)
         }
         return@rule null
-    }
-
-    fun genericSelection(): Expression {
-        TODO()
     }
 
     // external_declaration

@@ -3,6 +3,7 @@ package parser.nodes
 import types.*
 import tokenizer.Ident
 import parser.nodes.visitors.TypeNodeVisitor
+import tokenizer.Keyword
 
 
 abstract class AnyTypeNode : Node() {
@@ -30,7 +31,7 @@ data class StructDeclaration(val name: Ident) : AnyTypeNode() {
     }
 }
 
-data class TypeQualifier(private val ident: Ident): AnyTypeNode() {
+data class TypeQualifier(private val ident: Keyword): AnyTypeNode() {
     override fun name(): String = ident.str()
 
     override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
@@ -47,7 +48,7 @@ data class TypeQualifier(private val ident: Ident): AnyTypeNode() {
     }
 }
 
-data class StorageClassSpecifier(private val ident: Ident): AnyTypeNode() {
+data class StorageClassSpecifier(private val ident: Keyword): AnyTypeNode() {
     override fun name(): String = ident.str()
 
     override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
@@ -66,7 +67,7 @@ data class StorageClassSpecifier(private val ident: Ident): AnyTypeNode() {
     }
 }
 
-data class TypeNode(val ident: Ident) : AnyTypeNode() {
+data class TypeNode(val ident: Keyword) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 

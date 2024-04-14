@@ -1,6 +1,6 @@
 package tokenizer
 
-object Specifiers {
+object LexicalElements {
     // Annex A: (6.4.1)
     val keywords = setOf(
         "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern",
@@ -15,7 +15,9 @@ object Specifiers {
     // (6.7.2) type-specifier:
     val typeSpecifier = setOf("void", "char", "short", "int", "long", "float", "double", "signed", "unsigned", "_Bool", "_Complex")
 
+    // (6.5.3) Unary operators
     val unaryOperators = setOf("&", "*", "+", "-", "~", "!")
+
     val assignmentOperators = setOf("=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", "&=", "^=", "|=")
     val binaryOperators = setOf(
         "*", "/", "%",
