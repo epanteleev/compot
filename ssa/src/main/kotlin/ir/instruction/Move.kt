@@ -50,7 +50,7 @@ class Move private constructor(toValue: Generate, fromValue: Value):
 
         fun make(toValue: Generate, fromValue: Value): Move {
             require(isAppropriateType(toValue, fromValue)) {
-                "inconsistent types: toValue=$toValue, fromValue=$fromValue"
+                "inconsistent types: toValue=$toValue:${toValue.type()}, fromValue=$fromValue:${fromValue.type()}"
             }
 
             return registerUser(Move(toValue, fromValue), toValue, fromValue)

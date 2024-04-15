@@ -31,13 +31,13 @@ class Not private constructor(name: String, tp: IntegerType, value: Value):
     companion object {
         const val NAME = "not"
 
-        fun make(name: String, tp: IntegerType, value: Value): Not {
+        fun make(name: String, type: IntegerType, value: Value): Not {
             val valueType = value.type()
-            require(isAppropriateTypes(tp, valueType)) {
-                "should be the same type, but tp=$tp, value.type=$valueType"
+            require(isAppropriateTypes(type, valueType)) {
+                "inconsistent type in '$name', but type=$type, value=$value:$valueType"
             }
 
-            return registerUser(Not(name, tp, value), value)
+            return registerUser(Not(name, type, value), value)
         }
 
         private fun isAppropriateTypes(tp: IntegerType, argType: Type): Boolean {

@@ -33,7 +33,7 @@ class FpTruncate private constructor(name: String, toType: FloatingPointType, va
         fun make(name: String, toType: FloatingPointType, value: Value): FpTruncate {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
-                "inconsistent types in $name: ty=$toType, value.type=$valueType"
+                "inconsistent types in $name: ty=$toType, value=$value:$valueType"
             }
 
             return registerUser(FpTruncate(name, toType, value), value)

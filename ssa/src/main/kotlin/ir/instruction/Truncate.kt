@@ -33,7 +33,7 @@ class Truncate private constructor(name: String, toType: IntegerType, value: Val
         fun make(name: String, toType: IntegerType, value: Value): Truncate {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
-                "inconsistent types in $name: ty=$toType, value.type=$valueType"
+                "inconsistent types in '$name' type=$toType, value=$value:$valueType"
             }
 
             return registerUser(Truncate(name, toType, value), value)

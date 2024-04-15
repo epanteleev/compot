@@ -23,7 +23,7 @@ class Alloc private constructor(name: String, val allocatedType: NonTrivialType)
 
         fun make(name: String, ty: NonTrivialType): Alloc {
             require(isAppropriateType(ty)) {
-                "should not be $ty"
+                "should not be $ty, but type=$ty"
             }
 
             return Alloc(name, ty)

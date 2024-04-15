@@ -32,7 +32,7 @@ class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
         fun make(value: Value): Return {
             val retType = value.type()
             require(isAppropriateType(retType)) {
-                "cannot be $retType"
+                "cannot be $retType, but value=$value:${retType}"
             }
 
             return registerUser(ReturnValue(value), value)

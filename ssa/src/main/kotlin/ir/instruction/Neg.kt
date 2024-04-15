@@ -31,13 +31,13 @@ class Neg private constructor(name: String, tp: ArithmeticType, value: Value):
     companion object {
         const val NAME = "neg"
 
-        fun make(name: String, tp: ArithmeticType, value: Value): Neg {
+        fun make(name: String, type: ArithmeticType, value: Value): Neg {
             val valueType = value.type()
-            require(isAppropriateTypes(tp, valueType)) {
-                "should be the same type, but tp=$tp, value.type=$valueType"
+            require(isAppropriateTypes(type, valueType)) {
+                "should be the same type, but type=$type, value=$value:$valueType"
             }
 
-            return registerUser(Neg(name, tp, value), value)
+            return registerUser(Neg(name, type, value), value)
         }
 
         private fun isAppropriateTypes(tp: ArithmeticType, argType: Type): Boolean {

@@ -35,7 +35,7 @@ class Copy private constructor(name: String, origin: Value):
         fun make(name: String, origin: Value): Copy {
             val originType = origin.type()
             require(isAppropriateType(originType)) {
-                "should not be $originType"
+                "should not be $originType, but origin=$origin:$originType"
             }
 
             return registerUser(Copy(name, origin), origin)

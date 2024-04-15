@@ -52,7 +52,7 @@ class Store private constructor(pointer: Value, value: Value, private val valueT
             val pointerType = pointer.type()
             val valueType   = value.type()
             require(isAppropriateTypes(pointerType, valueType)) {
-                "inconsistent types: pointer.type=$pointerType, value.type=$valueType"
+                "inconsistent types: pointer=$pointer:$pointerType, value=$value:$valueType"
             }
 
             return registerUser(Store(pointer, value, valueType), pointer, value)

@@ -39,14 +39,14 @@ class GetFieldPtr private constructor(name: String, val basicType: AggregateType
     companion object {
         const val NAME = "gfp"
 
-        fun make(name: String, tp: AggregateType, source: Value, index: IntegerConstant): GetFieldPtr {
+        fun make(name: String, type: AggregateType, source: Value, index: IntegerConstant): GetFieldPtr {
             val sourceType = source.type()
             val indexType  = index.type()
             require(isAppropriateType(sourceType, indexType)) {
-                "inconsistent types source.type=$sourceType, index.type=$indexType"
+                "inconsistent types in '$name' type=$type, source=$source:$sourceType, index=$index:$indexType"
             }
 
-            return registerUser(GetFieldPtr(name, tp, source, index), source, index)
+            return registerUser(GetFieldPtr(name, type, source, index), source, index)
         }
 
         private fun isAppropriateType(sourceType: Type, indexType: Type): Boolean {

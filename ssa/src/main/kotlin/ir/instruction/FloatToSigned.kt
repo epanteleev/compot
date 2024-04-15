@@ -31,7 +31,7 @@ class FloatToSigned private constructor(name: String, toType: SignedIntType, val
         fun make(name: String, toType: SignedIntType, value: Value): FloatToSigned {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
-                "inconsistent types in $name: ty=$toType, value.type=$valueType"
+                "inconsistent types in $name: ty=$toType, value=$value:$valueType"
             }
 
             return registerUser(FloatToSigned(name, toType, value), value)

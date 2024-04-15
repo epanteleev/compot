@@ -44,7 +44,7 @@ class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block
         fun make(value: Value, onTrue: Block, onFalse: Block): BranchCond {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
-                "should be boolean type, but value.type=$valueType"
+                "should be boolean type, but value=$value:$valueType"
             }
 
             return registerUser(BranchCond(value, onTrue, onFalse), value)

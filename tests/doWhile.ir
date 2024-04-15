@@ -5,7 +5,7 @@ define i32 @main() {
 entry:	
 	%0x0 = alloc i32
 	%0x1 = alloc i32
-	store ptr %0x1, u32 50
+	store ptr %0x1, i32 50
 	br label %L2
 L2:	; pred=entry, L3
 	%v2x0 = load i32 %0x1

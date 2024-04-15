@@ -92,7 +92,7 @@ class FloatCompare private constructor(name: String, a: Value, private val predi
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateType(aType, bType)) {
-                "should be the same types, but a.type=$aType, b.type=$bType"
+                "should be the same types, but a=$a:$aType, b=$b:$bType"
             }
 
             return registerUser(FloatCompare(name, a, predicate, b), a, b)

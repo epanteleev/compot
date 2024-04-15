@@ -33,7 +33,7 @@ class Bitcast private constructor(name: String, toType: NonTrivialType, value: V
         fun make(name: String, toType: PrimitiveType, value: Value): Bitcast {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
-                "inconsistent types in $name: ty=$toType, value.type=$valueType"
+                "inconsistent types in $name: ty=$toType, value=$value:$valueType"
             }
 
             return registerUser(Bitcast(name, toType, value), value)

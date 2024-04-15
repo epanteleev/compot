@@ -22,6 +22,7 @@ enum class CPrimitive(val size: Int, val id: String): BaseType {
     override fun toString(): String = id
 
     override fun typename(): String = id
+
     override fun size(): Int = size
 }
 

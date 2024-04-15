@@ -45,7 +45,7 @@ class IndirectionCall private constructor(name: String, pointer: Value, private 
     companion object {
         fun make(name: String, pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
             require(Callable.isAppropriateTypes(func, args.toTypedArray())) {
-                args.joinToString(prefix = "inconsistent types in $name, prototype='${func.shortName()}', ")
+                args.joinToString(prefix = "inconsistent types in '$name', pointer=$pointer:${pointer.type()}, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
 

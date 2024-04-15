@@ -51,7 +51,7 @@ class Select private constructor(name: String, ty: PrimitiveType, cond: Value, o
             val onFalseType = onFalse.type()
             val condType = cond.type()
             require(isAppropriateType(ty, condType, onTrueType, onFalseType)) {
-                "inconsistent types: ty=$ty, condType=$condType, "
+                "inconsistent types: type=$ty, condition=$cond:$condType, onTrue=$onTrue:$onTrueType, onFalse=$onFalse:$onFalseType"
             }
 
             return registerUser(Select(name, ty, cond, onTrue, onFalse), cond, onTrue, onFalse)

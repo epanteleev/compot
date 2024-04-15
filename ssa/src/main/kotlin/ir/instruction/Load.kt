@@ -33,7 +33,7 @@ class Load private constructor(name: String, private val loadedType: PrimitiveTy
         fun make(name: String, loadedType: PrimitiveType, operand: Value): Load {
             val type = operand.type()
             require(isAppropriateTypes(type)) {
-                "should be pointer to primitive type, but operand.type=$type"
+                "inconsistent types in '$name' type=${loadedType}, but operand=${operand}:$type"
             }
 
             return registerUser(Load(name, loadedType, operand), operand)

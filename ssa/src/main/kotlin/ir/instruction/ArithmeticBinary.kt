@@ -89,14 +89,14 @@ class ArithmeticBinary private constructor(name: String, tp: ArithmeticType, a: 
     }
 
     companion object {
-        fun make(name: String, tp: ArithmeticType, a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
+        fun make(name: String, type: ArithmeticType, a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
             val aType = a.type()
             val bType = b.type()
-            require(isAppropriateTypes(tp, aType, bType)) {
-                "operands should be arithmetic type, but tp=$tp, a.type=$aType, b.type=$bType"
+            require(isAppropriateTypes(type, aType, bType)) {
+                "incorrect types in '$name' but type=$type, a=$a:$aType, b=$b:$bType"
             }
 
-            return registerUser(ArithmeticBinary(name, tp, a, op, b), a, b)
+            return registerUser(ArithmeticBinary(name, type, a, op, b), a, b)
         }
 
         private fun isAppropriateTypes(tp: ArithmeticType, aType: Type, bType: Type): Boolean {

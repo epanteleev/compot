@@ -33,7 +33,7 @@ class SignExtend private constructor(name: String, toType: SignedIntType, value:
         fun make(name: String, toType: SignedIntType, value: Value): SignExtend {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
-                "inconsistent types in $name: ty=$toType, value.type=$valueType"
+                "inconsistent types in '$name' type=$toType, value=$value:$valueType"
             }
 
             return registerUser(SignExtend(name, toType, value), value)

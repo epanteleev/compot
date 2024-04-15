@@ -33,7 +33,7 @@ class ZeroExtend private constructor(name: String, toType: UnsignedIntType, valu
         fun make(name: String, toType: UnsignedIntType, value: Value): ZeroExtend {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
-                "inconsistent types in $name: ty=$toType, value.type=$valueType"
+                "inconsistent types in $name: type=$toType, value=$value:$valueType"
             }
 
             return registerUser(ZeroExtend(name, toType, value), value)

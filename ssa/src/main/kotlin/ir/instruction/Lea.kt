@@ -33,7 +33,7 @@ class Lea private constructor(name: String, origin: Generate):
         fun make(name: String, gen: Generate): Lea {
             val originType = gen.type()
             require(isAppropriateType(originType)) {
-                "should not be $originType"
+                "inconsistent type '$name' generate=$gen:$originType"
             }
 
             return registerUser(Lea(name, gen), gen)

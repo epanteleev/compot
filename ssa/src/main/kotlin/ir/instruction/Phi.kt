@@ -63,7 +63,7 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
         fun makeUncompleted(name: String, type: PrimitiveType, incoming: Value, predecessors: List<Block>): Phi {
             val incomingType = incoming.type()
             require(incomingType is PointerType) {
-                "should be pointer type, but incoming.type=$incomingType"
+                "should be pointer type in '$name', type=$type, but incoming=$incoming:$incomingType"
             }
 
             val values = predecessors.mapTo(arrayListOf()) { incoming }.toTypedArray() //Todo

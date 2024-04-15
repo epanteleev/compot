@@ -33,7 +33,7 @@ class FpExtend private constructor(name: String, toType: FloatingPointType, valu
         fun make(name: String, toType: FloatingPointType, value: Value): FpExtend {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
-                "inconsistent types in $name: ty=$toType, value.type=$valueType"
+                "inconsistent types in $name: ty=$toType, value=$value:$valueType"
             }
 
             return registerUser(FpExtend(name, toType, value), value)
