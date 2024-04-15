@@ -44,7 +44,7 @@ class Neg private constructor(name: String, tp: ArithmeticType, value: Value):
             return tp == argType
         }
 
-        fun isCorrect(unary: Neg): Boolean {
+        fun typeCheck(unary: Neg): Boolean {
             return isAppropriateTypes(unary.type(), unary.operand().type())
         }
     }

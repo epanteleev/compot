@@ -1,8 +1,7 @@
 package ir.instruction
 
-import ir.Value
 import ir.instruction.utils.Visitor
-import ir.module.block.Block
+
 
 class ReturnVoid private constructor(): Return(arrayOf()) {
     override fun dump(): String = "ret void"

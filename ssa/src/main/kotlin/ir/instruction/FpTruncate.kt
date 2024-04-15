@@ -47,7 +47,7 @@ class FpTruncate private constructor(name: String, toType: FloatingPointType, va
             return toType.size() < valueType.size()
         }
 
-        fun isCorrect(trunc: FpTruncate): Boolean {
+        fun typeCheck(trunc: FpTruncate): Boolean {
             return isAppropriateType(trunc.type(), trunc.value().type())
         }
     }

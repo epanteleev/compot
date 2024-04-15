@@ -42,7 +42,7 @@ class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
             return retType !is VoidType && retType !is AnyType
         }
 
-        fun isCorrect(retValue: ReturnValue): Boolean {
+        fun typeCheck(retValue: ReturnValue): Boolean {
             return isAppropriateType(retValue.value().type())
         }
     }

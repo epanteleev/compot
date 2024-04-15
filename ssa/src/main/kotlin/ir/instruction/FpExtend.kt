@@ -47,7 +47,7 @@ class FpExtend private constructor(name: String, toType: FloatingPointType, valu
             return toType.size() > valueType.size()
         }
 
-        fun isCorrect(fpext: FpExtend): Boolean {
+        fun typeCheck(fpext: FpExtend): Boolean {
             return isAppropriateType(fpext.type(), fpext.value().type())
         }
     }

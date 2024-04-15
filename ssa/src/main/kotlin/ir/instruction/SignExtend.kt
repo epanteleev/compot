@@ -47,7 +47,7 @@ class SignExtend private constructor(name: String, toType: SignedIntType, value:
             return toType.size() > valueType.size()
         }
 
-        fun isCorrect(sext: SignExtend): Boolean {
+        fun typeCheck(sext: SignExtend): Boolean {
             return isAppropriateType(sext.type(), sext.value().type())
         }
     }

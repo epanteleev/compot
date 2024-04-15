@@ -32,5 +32,9 @@ class Alloc private constructor(name: String, val allocatedType: NonTrivialType)
         private fun isAppropriateType(ty: Type): Boolean {
             return ty !is VoidType && ty !is AnyType
         }
+
+        fun typeCheck(alloc: Alloc): Boolean {
+            return isAppropriateType(alloc.allocatedType)
+        }
     }
 }

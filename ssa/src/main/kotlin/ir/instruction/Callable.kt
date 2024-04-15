@@ -33,7 +33,7 @@ interface Callable {
             return isAppropriateTypes(func, args)
         }
 
-        fun isCorrect(call: Callable): Boolean {
+        fun typeCheck(call: Callable): Boolean {
             return when (call) {
                 is IndirectionVoidCall -> isAppropriateTypes(call.prototype(), call.pointer(), call.arguments())
                 is IndirectionCall     -> isAppropriateTypes(call.prototype(), call.pointer(), call.arguments())

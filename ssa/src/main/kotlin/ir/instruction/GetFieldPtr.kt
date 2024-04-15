@@ -60,7 +60,7 @@ class GetFieldPtr private constructor(name: String, val basicType: AggregateType
             return true
         }
 
-        fun isCorrect(gep: GetFieldPtr): Boolean {
+        fun typeCheck(gep: GetFieldPtr): Boolean {
             return isAppropriateType(gep.source().type(), gep.index().type())
         }
     }

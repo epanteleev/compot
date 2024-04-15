@@ -54,7 +54,7 @@ class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block
             return valueType is BooleanType
         }
 
-        fun isCorrect(branchCond: BranchCond): Boolean {
+        fun typeCheck(branchCond: BranchCond): Boolean {
             return isAppropriateType(branchCond.condition().type())
         }
     }

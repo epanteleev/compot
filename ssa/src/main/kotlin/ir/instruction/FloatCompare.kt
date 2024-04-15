@@ -102,7 +102,7 @@ class FloatCompare private constructor(name: String, a: Value, private val predi
             return aType == bType && aType is FloatingPointType
         }
 
-        fun isCorrect(icmp: SignedIntCompare): Boolean {
+        fun typeCheck(icmp: FloatCompare): Boolean {
             return isAppropriateType(icmp.first().type(), icmp.second().type())
         }
     }

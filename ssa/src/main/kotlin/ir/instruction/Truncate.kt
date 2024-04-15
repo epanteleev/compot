@@ -47,7 +47,7 @@ class Truncate private constructor(name: String, toType: IntegerType, value: Val
             return toType.size() < valueType.size()
         }
 
-        fun isCorrect(trunc: Truncate): Boolean {
+        fun typeCheck(trunc: Truncate): Boolean {
             return isAppropriateType(trunc.type(), trunc.value().type())
         }
     }

@@ -41,7 +41,7 @@ class Copy private constructor(name: String, origin: Value):
             return registerUser(Copy(name, origin), origin)
         }
 
-        fun isCorrect(copy: Copy): Boolean {
+        fun typeCheck(copy: Copy): Boolean {
             return isAppropriateType(copy.origin().type())
         }
 

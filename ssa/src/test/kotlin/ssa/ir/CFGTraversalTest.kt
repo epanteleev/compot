@@ -18,8 +18,8 @@ class CFGTraversalTest {
 
     private fun withBasicBlocks(): BasicBlocks {
         val moduleBuilder = ModuleBuilder.create()
-        val prototype = FunctionPrototype("hello", Type.I16, arrayListOf(Type.Ptr, Type.Ptr, Type.Ptr))
-        val builder = moduleBuilder.createFunction("hello", Type.I16, arrayListOf(Type.Ptr, Type.Ptr, Type.Ptr))
+        val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.Ptr, Type.Ptr, Type.Ptr))
+        val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(Type.Ptr, Type.Ptr, Type.Ptr))
         val arg1 = builder.argument(0)
         val arg2 = builder.argument(1)
         val arg3 = builder.argument(2)

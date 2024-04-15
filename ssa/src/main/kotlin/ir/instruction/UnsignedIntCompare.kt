@@ -43,7 +43,7 @@ class UnsignedIntCompare private constructor(name: String, a: Value, private val
             return aType == bType && aType is UnsignedIntType
         }
 
-        fun isCorrect(icmp: UnsignedIntCompare): Boolean {
+        fun typeCheck(icmp: UnsignedIntCompare): Boolean {
             return isAppropriateType(icmp.first().type(), icmp.second().type())
         }
     }

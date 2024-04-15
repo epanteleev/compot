@@ -56,13 +56,13 @@ class Move private constructor(toValue: Generate, fromValue: Value):
             return registerUser(Move(toValue, fromValue), toValue, fromValue)
         }
 
-        fun isCorrect(copy: Move): Boolean {
+        fun typeCheck(copy: Move): Boolean {
             return isAppropriateType(copy.toValue(), copy.fromValue())
         }
 
         private fun isAppropriateType(toValue: Value, fromValue: Value): Boolean {
             if (toValue is Generate || fromValue is Generate) {
-                return fromValue.type() is PrimitiveType
+                return fromValue.type() == toValue.type()
             }
 
             return false

@@ -39,7 +39,7 @@ class Lea private constructor(name: String, origin: Generate):
             return registerUser(Lea(name, gen), gen)
         }
 
-        fun isCorrect(lea: Lea): Boolean {
+        fun typeCheck(lea: Lea): Boolean {
             return isAppropriateType(lea.generate().type())
         }
 

@@ -41,7 +41,7 @@ class FloatToSigned private constructor(name: String, toType: SignedIntType, val
             return valueType is FloatingPointType
         }
 
-        fun isCorrect(fpext: FloatToSigned): Boolean {
+        fun typeCheck(fpext: FloatToSigned): Boolean {
             return isAppropriateType(fpext.value().type())
         }
     }

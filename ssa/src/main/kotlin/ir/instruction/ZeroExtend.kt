@@ -47,7 +47,7 @@ class ZeroExtend private constructor(name: String, toType: UnsignedIntType, valu
             return toType.size() > valueType.size()
         }
 
-        fun isCorrect(zext: ZeroExtend): Boolean {
+        fun typeCheck(zext: ZeroExtend): Boolean {
             return isAppropriateType(zext.type(), zext.value().type())
         }
     }

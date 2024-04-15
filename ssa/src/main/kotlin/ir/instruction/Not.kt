@@ -44,7 +44,7 @@ class Not private constructor(name: String, tp: IntegerType, value: Value):
             return tp == argType
         }
 
-        fun isCorrect(unary: Not): Boolean {
+        fun typeCheck(unary: Not): Boolean {
             return isAppropriateTypes(unary.type(), unary.operand().type())
         }
     }

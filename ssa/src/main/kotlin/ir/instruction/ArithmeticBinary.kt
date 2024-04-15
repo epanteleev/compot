@@ -3,7 +3,6 @@ package ir.instruction
 import ir.Value
 import ir.instruction.utils.Visitor
 import ir.types.ArithmeticType
-import ir.types.PrimitiveType
 import ir.types.Type
 
 enum class ArithmeticBinaryOp {
@@ -104,7 +103,7 @@ class ArithmeticBinary private constructor(name: String, tp: ArithmeticType, a: 
             return aType == tp && bType == tp
         }
 
-        fun isCorrect(binary: ArithmeticBinary): Boolean {
+        fun typeCheck(binary: ArithmeticBinary): Boolean {
             return isAppropriateTypes(binary.type(), binary.first().type(), binary.second().type())
         }
     }
