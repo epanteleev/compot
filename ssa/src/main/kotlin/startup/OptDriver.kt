@@ -11,7 +11,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 
-class Driver(private val commandLineArguments: OptCLIArguments) {
+class OptDriver(private val commandLineArguments: OptCLIArguments) {
     private fun unoptimized(filename: String, module: Module) {
         val ctx = CompileContextBuilder(filename)
             .setSuffix(".base")
@@ -29,7 +29,7 @@ class Driver(private val commandLineArguments: OptCLIArguments) {
         val temp = Files.createTempFile("base", ".S")
         val unoptimizedAsm = File(temp.toString())
         unoptimizedAsm.writeText(unoptimisedCode.toString())
-        AssemblerRunner.run(unoptimizedAsm.toString(), "$filename.o")
+        GNUAssemblerRunner.run(unoptimizedAsm.toString(), "$filename.o")
 
         if (commandLineArguments.isDumpIr()) {
             Files.copy(temp, File("$filename/base.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
@@ -55,7 +55,7 @@ class Driver(private val commandLineArguments: OptCLIArguments) {
         val optimizedAsm = temp.toFile()
 
         optimizedAsm.writeText(optimizedCodegen.toString())
-        AssemblerRunner.run(optimizedAsm.toString(), "$filename.o")
+        GNUAssemblerRunner.run(optimizedAsm.toString(), "$filename.o")
 
         if (commandLineArguments.isDumpIr()) {
             Files.copy(temp, File("$filename/opt.S").toPath(), StandardCopyOption.REPLACE_EXISTING)

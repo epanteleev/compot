@@ -1,7 +1,6 @@
 package examples
 
 import ir.types.Type
-import startup.Driver
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 

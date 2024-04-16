@@ -11,6 +11,6 @@ class CDriver(private val cli: CCLIArguments) {
         val tokens = CTokenizer.apply(source)
         val program = ProgramParser(tokens).program()
         val module = IRGen.apply(program)
-        Driver(cli.makeOptCLIArguments()).run(module)
+        OptDriver(cli.makeOptCLIArguments()).run(module)
     }
 }

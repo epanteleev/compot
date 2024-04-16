@@ -1,4 +1,4 @@
-package collections
+package common
 
 inline fun <T, R, V> Iterable<T>.forEachWith(other: Iterable<R>, transform: (a: T, b: R) -> V) {
     val first = iterator()

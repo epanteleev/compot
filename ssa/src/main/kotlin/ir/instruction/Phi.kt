@@ -3,7 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.types.*
 import ir.module.block.Block
-import collections.forEachWith
+import common.forEachWith
 import ir.instruction.utils.Visitor
 
 

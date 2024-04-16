@@ -10,9 +10,7 @@ class GPRegistersList(argumentValue: List<GPRegister>) {
     private var freeRegisters = CallConvention.availableRegisters(argumentValue).toMutableList()
     private val usedCalleeSaveRegisters = mutableSetOf(rbp)
 
-    fun pickRegister(type: PrimitiveType): GPRegister? {
-        require(type !is FloatingPointType ) { "found $type" }
-
+    fun pickRegister(): GPRegister? {
         if (freeRegisters.isEmpty()) {
             return null
         }

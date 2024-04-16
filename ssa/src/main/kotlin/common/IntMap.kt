@@ -1,4 +1,4 @@
-package collections
+package common
 
 
 class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Array<K?>, val closure: (K) -> Int) : MutableMap<K, V> {

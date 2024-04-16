@@ -1,4 +1,4 @@
-package collections
+package common
 
 
 class IdentityHashMap<K, V> internal constructor() : MutableMap<K, V> {

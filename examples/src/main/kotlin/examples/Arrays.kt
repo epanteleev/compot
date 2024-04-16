@@ -7,7 +7,6 @@ import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2RegFabric
 import ir.types.ArrayType
 import ir.types.Type
-import startup.Driver
 
 fun main() {
     val builder = ModuleBuilder.create()

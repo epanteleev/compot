@@ -1,6 +1,6 @@
 package ssa.collections
 
-import collections.identityHashMapOf
+import common.identityHashMapOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

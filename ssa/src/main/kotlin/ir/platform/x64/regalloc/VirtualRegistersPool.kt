@@ -19,8 +19,8 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
             is Alloc            -> frame.takeSlot(value)
             is ValueInstruction -> {
                 when (val tp = value.type()) {
-                    is FloatingPointType -> xmmRegisters.pickRegister(tp) ?: frame.takeSlot(value)
-                    is PrimitiveType -> gpRegisters.pickRegister(tp) ?: frame.takeSlot(value)
+                    is FloatingPointType -> xmmRegisters.pickRegister() ?: frame.takeSlot(value)
+                    is PrimitiveType -> gpRegisters.pickRegister() ?: frame.takeSlot(value)
                     else -> throw IllegalArgumentException("not allowed for this type=$tp")
                 }
             }

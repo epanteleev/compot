@@ -1,6 +1,6 @@
 package ir.dominance
 
-import collections.intMapOf
+import common.intMapOf
 import ir.module.BasicBlocks
 import ir.module.block.AnyBlock
 import ir.module.block.Label

@@ -1,4 +1,4 @@
-package collections
+package common
 
 
 class IntSet<E>(private val bitmask: BooleanArray, val values: Array<E>, val closure: (E) -> Int): Set<E> {

@@ -1,6 +1,6 @@
 package ir.pass.transform.utils
 
-import collections.intMapOf
+import common.intMapOf
 import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.BasicBlocks

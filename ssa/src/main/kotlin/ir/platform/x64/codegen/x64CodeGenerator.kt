@@ -10,7 +10,7 @@ import ir.instruction.Neg
 import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
-import collections.identityHashMapOf
+import common.identityHashMapOf
 import ir.instruction.Lea
 import ir.module.block.Label
 import ir.utils.OrderedLocation

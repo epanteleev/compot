@@ -1,4 +1,4 @@
-package collections
+package common
 
 
 class MutableIntSet<E>(private val bitmask: BooleanArray, val values: Array<E?>, val closure: (E) -> Int): MutableSet<E> {

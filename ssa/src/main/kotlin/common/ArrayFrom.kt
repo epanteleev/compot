@@ -1,4 +1,4 @@
-package collections
+package common
 
 inline fun<reified T> arrayFrom(values: Collection<T>): Array<T> {
     val array = arrayOfNulls<T>(values.size)

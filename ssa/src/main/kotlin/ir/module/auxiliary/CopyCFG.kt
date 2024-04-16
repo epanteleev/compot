@@ -1,6 +1,6 @@
 package ir.module.auxiliary
 
-import collections.intMapOf
+import common.intMapOf
 import ir.*
 import ir.instruction.*
 import ir.instruction.Copy
