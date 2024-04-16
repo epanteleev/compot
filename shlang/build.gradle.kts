@@ -31,6 +31,14 @@ java {
     }
 }
 
+tasks.named<Test>("test") {
+    useJUnitPlatform()
+}
+
+tasks.named<Jar>("jar") {
+    dependsOn.add(tasks.findByName("test"))
+}
+
 tasks.test {
     useJUnitPlatform()
     testLogging {

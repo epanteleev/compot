@@ -32,6 +32,10 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         assert(exitBlocks == 1) {
             "Allowed only one exit block, but found $exitBlocks blocks."
         }
+
+        assert(adjustStackFrame.isEmpty()) {
+            "Stack frame is not balanced: $adjustStackFrame"
+        }
     }
 
     private fun checkReturn() {

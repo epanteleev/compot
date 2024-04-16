@@ -58,7 +58,9 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         varStack[varName] = KeyType(type, rvalueAdr)
 
         val lvalue = visitExpression(decl.lvalue, false)
-        ir().store(rvalueAdr, lvalue)
+        val commonType = TypeConverter.toIRType<NonTrivialType>(type)
+        val converted = ir().convertToType(lvalue, commonType)
+        ir().store(rvalueAdr, converted)
     }
 
     private fun visitDeclaration(declaration: Declaration) {
