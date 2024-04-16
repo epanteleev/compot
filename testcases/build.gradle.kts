@@ -19,14 +19,6 @@ tasks.test {
     useJUnitPlatform()
 }
 
-sourceSets {
-    test {
-        resources {
-            srcDir("src/test/resources")
-        }
-    }
-}
-
 kotlin {
     jvmToolchain(17)
 }

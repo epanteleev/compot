@@ -2,20 +2,16 @@ package common
 
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.io.path.Path
 
 object RunExecutable {
-    fun runCommand(command: List<String>, workingDir: File? = null): ExecutionResult {
+    fun runCommand(command: List<String>, workingDir: String? = null): ExecutionResult {
         val process = ProcessBuilder(command)
-            .directory(workingDir)
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-            .redirectError(ProcessBuilder.Redirect.INHERIT)
+            .directory(workingDir?.let { File(it) })
             .start()
         if (!process.waitFor(60, TimeUnit.SECONDS)) {
             process.destroy()
             throw RuntimeException("execution timed out: $this")
-        }
-        if (process.exitValue() != 0) {
-            throw RuntimeException("execution failed with code ${process.exitValue()}: $this")
         }
         return ExecutionResult(process)
     }

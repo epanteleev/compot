@@ -7,6 +7,9 @@ object GNUAssemblerRunner {
 
     fun run(filename: String, outputFileName: String) {
         val gnuAsCommandLine = listOf("as", filename, "-o", outputFileName)
-        RunExecutable.runCommand(gnuAsCommandLine, null)
+        val result = RunExecutable.runCommand(gnuAsCommandLine, null)
+        if (result.exitCode != 0) {
+            throw RuntimeException("execution failed with code ${result.exitCode}:\n ${result.error}")
+        }
     }
 }
