@@ -5,8 +5,8 @@ import ir.module.Module
 import ir.pass.PassPipeline
 import ir.read.ModuleReader
 import ir.pass.CompileContextBuilder
-import ir.platform.CodeGenerationFactory
-import ir.platform.Target
+import ir.platform.common.CodeGenerationFactory
+import ir.platform.common.Target
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 

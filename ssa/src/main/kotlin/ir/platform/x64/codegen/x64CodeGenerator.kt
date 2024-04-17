@@ -16,8 +16,8 @@ import ir.module.block.Label
 import ir.utils.OrderedLocation
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
-import ir.platform.AnyCodeGenerator
-import ir.platform.CompiledModule
+import ir.platform.common.AnyCodeGenerator
+import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
 import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.CallConvention.xmmTemp1

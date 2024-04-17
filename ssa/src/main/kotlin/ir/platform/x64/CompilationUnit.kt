@@ -2,7 +2,7 @@ package ir.platform.x64
 
 import ir.*
 import asm.x64.*
-import ir.platform.CompiledModule
+import ir.platform.common.CompiledModule
 
 
 class CompilationUnit: CompiledModule() {

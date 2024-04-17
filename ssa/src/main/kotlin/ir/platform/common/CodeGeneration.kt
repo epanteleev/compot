@@ -1,4 +1,4 @@
-package ir.platform
+package ir.platform.common
 
 import ir.module.Module
 import ir.pass.CompileContext
