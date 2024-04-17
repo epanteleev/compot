@@ -67,10 +67,9 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(binary: ArithmeticBinary) {
-        var first  = valueToRegister.operand(binary.first())
+        val first  = valueToRegister.operand(binary.first())
         val second = valueToRegister.operand(binary.second())
         val dst    = valueToRegister.operand(binary)
-        val size   = binary.type().size()
 
         when (binary.op) {
             ArithmeticBinaryOp.Add -> AddCodegen(binary.type(), asm)(dst, first, second)
@@ -78,27 +77,9 @@ private class CodeEmitter(private val data: FunctionData,
             ArithmeticBinaryOp.Sub -> SubCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.And -> AndCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Or -> OrCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Div -> {
-                if (first is Address) {
-                    first = asm.movOld(size, first, temp1)
-                }
-
-                first = if (dst is Address) {
-                    asm.movOld(size, first, temp2)
-                } else {
-                    asm.movOld(size, first, dst)
-                }
-
-                asm.div(size, second, first as GPRegister)
-
-                if (dst is Address) {
-                    asm.movOld(size, first, dst)
-                }
-            }
-            else -> {
-                println("Unimplemented: ${binary.op}")
-            }
+            ArithmeticBinaryOp.Or  -> OrCodegen(binary.type(), asm)(dst, first, second)
+            ArithmeticBinaryOp.Div -> DivCodegen(binary.type(), asm)(dst, first, second)
+            else -> println("Unimplemented: ${binary.op}")
         }
     }
 
@@ -527,7 +508,6 @@ private class CodeEmitter(private val data: FunctionData,
 
     companion object {
         val temp1 = CallConvention.temp1
-        val temp2 = CallConvention.temp2
         val fpRet = CallConvention.fpRet
 
         fun codegen(module: Module): CompilationUnit {

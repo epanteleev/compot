@@ -92,7 +92,6 @@ object CallConvention {
     )
 
     val temp1 = rax
-    val temp2 = r10
     val retReg = rax
 
     val xmmTemp1 = xmm8
@@ -107,7 +106,6 @@ object CallConvention {
         allRegisters.remove(rbp)
         allRegisters.removeAll(usedArgumentRegisters.toSet())
         allRegisters.remove(temp1)
-        allRegisters.remove(temp2)
         allRegisters.remove(retReg)
         return allRegisters
     }
