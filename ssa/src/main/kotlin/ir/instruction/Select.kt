@@ -65,7 +65,7 @@ class Select private constructor(name: String, ty: PrimitiveType, cond: Value, o
             return (ty == onFalseType) && (ty == onTrueType)
         }
 
-        fun isCorrect(select: Select): Boolean {
+        fun typeCheck(select: Select): Boolean {
             return isAppropriateType(select.type(),
                 select.condition().type(),
                 select.onTrue().type(),

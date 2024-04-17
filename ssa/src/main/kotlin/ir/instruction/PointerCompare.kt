@@ -36,7 +36,7 @@ class PointerCompare private constructor(name: String, a: Value, private val pre
             return aType == bType && aType is PointerType
         }
 
-        fun isCorrect(icmp: PointerCompare): Boolean {
+        fun typeCheck(icmp: PointerCompare): Boolean {
             return isAppropriateType(icmp.first().type(), icmp.second().type())
         }
     }

@@ -80,7 +80,7 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
             return true
         }
 
-        fun isCorrect(phi: Phi): Boolean {
+        fun typeCheck(phi: Phi): Boolean {
             return isAppropriateTypes(phi.type(), phi.operands())
         }
     }

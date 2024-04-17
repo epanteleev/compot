@@ -7,6 +7,7 @@ import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
 import ir.module.block.Label
+import ir.types.Type
 import ir.utils.CreationInfo
 
 
@@ -63,7 +64,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
             val definedIn = creation.get(use).block
             val isDefDominatesUse = dominatorTree.dominates(definedIn, block)
-            assert(isDefDominatesUse) { "Definition doesn't dominate to usage: value defined in $definedIn, but used in $block" }
+            assert(isDefDominatesUse) { "Definition doesn't dominate to usage: value defined in '$definedIn', but used in '$block'" }
         }
     }
 
@@ -173,7 +174,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(bitcast: Bitcast) {
-        assert(Bitcast.isCorrect(bitcast)) {
+        assert(Bitcast.typeCheck(bitcast)) {
             "Cast instruction '${bitcast.dump()}' has inconsistent types."
         }
     }
@@ -191,7 +192,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(pcmp: PointerCompare) {
-        assert(PointerCompare.isCorrect(pcmp)) {
+        assert(PointerCompare.typeCheck(pcmp)) {
             "Instruction '${pcmp.dump()}' has inconsistent types."
         }
     }
@@ -237,7 +238,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(gep: GetElementPtr) {
-        assert(GetElementPtr.isCorrect(gep)) {
+        assert(GetElementPtr.typeCheck(gep)) {
             "Instruction '${gep.dump()}' has inconsistent types."
         }
     }
@@ -249,7 +250,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(icmp: SignedIntCompare) {
-        assert(SignedIntCompare.isCorrect(icmp)) {
+        assert(SignedIntCompare.typeCheck(icmp)) {
             "Instruction '${icmp.dump()}' requires all operands to be of the same type: a=${icmp.first().type()}, b=${icmp.second().type()}"
         }
     }
@@ -267,13 +268,13 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(load: Load) {
-        assert(Load.isCorrect(load)) {
+        assert(Load.typeCheck(load)) {
             "Instruction '${load.dump()}' requires all operands to be of the same type."
         }
     }
 
     override fun visit(phi: Phi) {
-        assert(Phi.isCorrect(phi)) {
+        assert(Phi.typeCheck(phi)) {
             "Inconsistent phi instruction '${phi.dump()}': different types ${phi.operands().map { it.type() }.joinToString()}"
         }
 
@@ -287,10 +288,10 @@ class VerifySSA private constructor(private val functionData: FunctionData,
             }
         }
 
-        val incomings = phi.incoming()
+        val incoming     = phi.incoming()
         val predecessors = bb.predecessors()
-        assert(predecessors.size == incomings.size) {
-            "Inconsistent phi instruction: incoming blocks and predecessors are not equal. incoming=$incomings predecessors=$predecessors"
+        assert(predecessors.size == incoming.size) {
+            "Inconsistent phi instruction: incoming blocks and predecessors are not equal. incoming=$incoming predecessors=$predecessors"
         }
     }
 
@@ -308,6 +309,11 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(returnVoid: ReturnVoid) {
+        val retType = functionData.prototype.returnType()
+        assert(Type.Void == retType) {
+            "Inconsistent return type: '${returnVoid.dump()}', but expected '${retType}'"
+        }
+
         checkReturn()
     }
 
@@ -324,13 +330,13 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(select: Select) {
-        assert(Select.isCorrect(select)) {
+        assert(Select.typeCheck(select)) {
             "Instruction '${select.dump()}' requires all operands to be of the same type."
         }
     }
 
     override fun visit(store: Store) {
-        assert(Store.isCorrect(store)) {
+        assert(Store.typeCheck(store)) {
             "Instruction '${store.dump()}' requires all operands to be of the same type."
         }
     }

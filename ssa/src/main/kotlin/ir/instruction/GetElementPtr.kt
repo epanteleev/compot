@@ -59,7 +59,7 @@ class GetElementPtr private constructor(name: String, val basicType: PrimitiveTy
             return true
         }
 
-        fun isCorrect(gep: GetElementPtr): Boolean {
+        fun typeCheck(gep: GetElementPtr): Boolean {
             return isAppropriateType(gep.source().type(), gep.index().type())
         }
     }

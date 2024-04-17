@@ -40,8 +40,21 @@ private class CodeEmitter(private val data: FunctionData,
                           private val unit: CompilationUnit,
                           private val valueToRegister: RegisterAllocation,
 ): IRInstructionVisitor<Unit> {
-    private val orderedLocation = evaluateOrder(data.blocks)
     private val asm: Assembler = unit.mkFunction(data.prototype.name)
+    private val orderedLocation = run {
+        val orderedLocation = identityHashMapOf<Callable, OrderedLocation>()
+        var order = 0
+        for (bb in data.blocks.linearScanOrder(data.blocks.loopInfo())) {
+            for ((idx, call) in bb.instructions().withIndex()) {
+                if (call is Callable) {
+                    orderedLocation[call] = OrderedLocation(bb, idx, order)
+                }
+                order += 1
+            }
+        }
+
+        orderedLocation
+    }
 
     private fun makeLabel(bb: Block) = ".L$functionCounter.${bb.index}"
 
@@ -476,21 +489,6 @@ private class CodeEmitter(private val data: FunctionData,
             }
             else -> TODO()
         }
-    }
-
-    private fun evaluateOrder(blocks: BasicBlocks): Map<Callable, OrderedLocation> {
-        val orderedLocation = identityHashMapOf<Callable, OrderedLocation>()
-        var order = 0
-        for (bb in blocks.linearScanOrder(blocks.loopInfo())) {
-            for ((idx, call) in bb.instructions().withIndex()) {
-                if (call is Callable) {
-                    orderedLocation[call] = OrderedLocation(bb, idx, order)
-                }
-                order += 1
-            }
-        }
-
-        return orderedLocation
     }
 
     private fun emit() {

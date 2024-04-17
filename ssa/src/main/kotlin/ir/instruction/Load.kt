@@ -43,7 +43,7 @@ class Load private constructor(name: String, private val loadedType: PrimitiveTy
             return tp is PointerType
         }
 
-        fun isCorrect(load: Load): Boolean {
+        fun typeCheck(load: Load): Boolean {
             return isAppropriateTypes(load.operand().type())
         }
     }

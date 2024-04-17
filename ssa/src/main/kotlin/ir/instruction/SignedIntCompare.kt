@@ -43,7 +43,7 @@ class SignedIntCompare private constructor(name: String, a: Value, private val p
             return aType == bType && aType is IntegerType
         }
 
-        fun isCorrect(icmp: SignedIntCompare): Boolean {
+        fun typeCheck(icmp: SignedIntCompare): Boolean {
             return isAppropriateType(icmp.first().type(), icmp.second().type())
         }
     }

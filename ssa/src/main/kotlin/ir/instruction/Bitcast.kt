@@ -43,7 +43,7 @@ class Bitcast private constructor(name: String, toType: NonTrivialType, value: V
             return valueType.size() == toType.size() && toType !is FloatingPointType
         }
 
-        fun isCorrect(bitcast: Bitcast): Boolean {
+        fun typeCheck(bitcast: Bitcast): Boolean {
             return isAppropriateType(bitcast.type(), bitcast.value().type())
         }
     }

@@ -70,7 +70,7 @@ class Store private constructor(pointer: Value, value: Value, private val valueT
             return true
         }
 
-        fun isCorrect(store: Store): Boolean {
+        fun typeCheck(store: Store): Boolean {
             return isAppropriateTypes(store.pointer().type(), store.value().type())
         }
     }
