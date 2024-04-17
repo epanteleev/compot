@@ -1,14 +1,15 @@
 package ir.pass.ana
 
-import ir.AnyFunctionPrototype
-import ir.instruction.*
-import ir.instruction.utils.IRInstructionVisitor
-import ir.module.FunctionData
+import common.forEachWith
+import ir.types.Type
 import ir.module.Module
+import ir.instruction.*
+import ir.utils.CreationInfo
 import ir.module.block.Block
 import ir.module.block.Label
-import ir.types.Type
-import ir.utils.CreationInfo
+import ir.module.FunctionData
+import ir.AnyFunctionPrototype
+import ir.instruction.utils.IRInstructionVisitor
 
 
 data class ValidateSSAErrorException(override val message: String): Exception(message)
@@ -62,7 +63,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
                 continue
             }
 
-            val definedIn = creation.get(use).block
+            val definedIn = creation[use].block
             val isDefDominatesUse = dominatorTree.dominates(definedIn, block)
             assert(isDefDominatesUse) { "Definition doesn't dominate to usage: value defined in '$definedIn', but used in '$block'" }
         }
@@ -278,11 +279,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
             "Inconsistent phi instruction '${phi.dump()}': different types ${phi.operands().map { it.type() }.joinToString()}"
         }
 
-        for ((use, incoming) in phi.operands().zip(phi.incoming())) { //TODO
+        val blocks = phi.incoming()
+        blocks.forEachWith(phi.operands()) { incoming, use ->
             if (use !is ValueInstruction) {
-                continue
+                return@forEachWith
             }
-            val actual = creation.get(use).block
+            val actual = creation[use].block
             assert(dominatorTree.dominates(actual, incoming)) {
                 "Inconsistent phi instruction $phi: value defined in $incoming, used in $actual"
             }

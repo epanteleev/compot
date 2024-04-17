@@ -7,7 +7,7 @@ import ir.instruction.ValueInstruction
 data class CreationInfoException(override val message: String): Exception(message)
 
 class CreationInfo private constructor(private val creationInfo: Map<ValueInstruction, Location>) {
-    fun get(instruction: ValueInstruction): Location {
+    operator fun get(instruction: ValueInstruction): Location {
         return creationInfo[instruction] ?:
             throw CreationInfoException("value doesn't exist: instruction=$instruction")
     }
