@@ -4,8 +4,8 @@ import ir.*
 import ir.types.*
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
-import ir.platform.CodeGenerationFactory
-import ir.platform.Target
+import ir.platform.common.CodeGenerationFactory
+import ir.platform.common.Target
 
 
 fun main() {
