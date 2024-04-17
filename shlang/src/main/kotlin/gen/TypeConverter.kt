@@ -9,14 +9,26 @@ import ir.module.builder.impl.FunctionDataBuilder
 object TypeConverter {
 
     inline fun<reified T: Type> toIRType(type: CType): T {
+        return toIRTypeUnchecked(type) as T
+    }
+
+    fun toIRTypeUnchecked(type: CType): Type {
         for (p in type.qualifiers()) {
             if (p is PointerQualifier) {
-                return Type.Ptr as T
+                return Type.Ptr
             }
         }
         if (type is CPointerType) {
-            return Type.Ptr as T
+            return Type.Ptr
         }
+
+        if (type is CompoundType) {
+            val baseType = type.baseType()
+            if (baseType is CArrayType) {
+                return ArrayType(toIRType<NonTrivialType>(baseType.type), baseType.dimension)
+            }
+        }
+
         val ret = when (type.baseType()) {
             CPrimitive.CHAR -> Type.I8
             CPrimitive.SHORT -> Type.I16
@@ -27,7 +39,7 @@ object TypeConverter {
             CPrimitive.VOID -> Type.Void
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
-        return ret as T
+        return ret
     }
 
    fun FunctionDataBuilder.convertToType(value: Value, type: Type): Value {

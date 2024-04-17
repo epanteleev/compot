@@ -38,14 +38,14 @@ class GetElementPtr private constructor(name: String, val basicType: PrimitiveTy
     companion object {
         const val NAME = "gep"
 
-        fun make(name: String, type: PrimitiveType, source: Value, index: Value): GetElementPtr {
+        fun make(name: String, elementType: PrimitiveType, source: Value, index: Value): GetElementPtr {
             val sourceType = source.type()
             val indexType  = index.type()
             require(isAppropriateType(sourceType, indexType)) {
-                "inconsistent types in '$name' type=$type source=$source:$sourceType, index=$index:$indexType"
+                "inconsistent types in '$name' type=$elementType source=$source:$sourceType, index=$index:$indexType"
             }
 
-            return registerUser(GetElementPtr(name, type, source, index), source, index)
+            return registerUser(GetElementPtr(name, elementType, source, index), source, index)
         }
 
         private fun isAppropriateType(sourceType: Type, indexType: Type): Boolean {

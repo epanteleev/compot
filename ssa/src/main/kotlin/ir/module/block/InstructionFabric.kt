@@ -27,7 +27,7 @@ interface InstructionFabric {
     fun alloc(ty: NonTrivialType): Alloc
     fun ret(value: Value)
     fun retVoid()
-    fun gep(source: Value, ty: PrimitiveType, index: Value): GetElementPtr
+    fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr
     fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr
     fun bitcast(value: Value, ty: PrimitiveType): Bitcast
     fun zext(value: Value, toType: UnsignedIntType): ZeroExtend

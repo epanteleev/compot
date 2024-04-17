@@ -372,7 +372,7 @@ private class CodeEmitter(private val data: FunctionData,
         }
 
         for ((idx, arg) in context.savedXmmRegisters.withIndex()) {
-            asm.movf(16, arg, Address.from(rsp, 16 * idx)) //TODO 16???
+            asm.movf(8, arg, Address.from(rsp, -(8 * idx + 8))) //TODO 16???
         }
 
         val size = context.adjustStackSize()
@@ -391,7 +391,7 @@ private class CodeEmitter(private val data: FunctionData,
         }
 
         for ((idx, arg) in context.savedXmmRegisters.reversed().withIndex()) {
-            asm.movf(16, Address.from(rsp, 16 * idx), arg) //TODO 16???
+            asm.movf(8, Address.from(rsp, -(8 * (context.savedXmmRegisters.size - idx - 1) + 8)), arg) //TODO 16???
         }
 
         for (arg in context.savedRegisters.reversed()) {

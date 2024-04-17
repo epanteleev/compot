@@ -55,7 +55,7 @@ class RegisterAllocation(private val stackSize: Int,
                     }
                 }
                 is XmmRegister -> {
-                    if (xmmCallerSaveRegs.contains(reg)) {
+                    if (!xmmCallerSaveRegs.contains(reg)) {
                         continue
                     }
 
@@ -106,12 +106,12 @@ class RegisterAllocation(private val stackSize: Int,
 
 data class SavedContext(val savedRegisters: Set<GPRegister>, val savedXmmRegisters: Set<XmmRegister>, private val frameSize: Int) {
     fun adjustStackSize(): Int {
-        var frameSIze = savedXmmRegisters.size * 16
+        var sizeToAdjust = savedXmmRegisters.size * 8
         val remains = frameSize % CallConvention.STACK_ALIGNMENT
         if (remains != 0L) {
-            frameSIze += remains.toInt()
+            sizeToAdjust += remains.toInt()
         }
 
-        return frameSize
+        return sizeToAdjust
     }
 }

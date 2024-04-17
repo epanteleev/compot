@@ -375,10 +375,22 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
         }
 
         val primaryType = primary.resolveType(typeHolder)
-        if (primaryType is CompoundType && primaryType.baseType is CArrayType) {
-            type = primaryType.baseType.type
+        if (primaryType is CompoundType) {
+            when (primaryType.baseType) {
+                is CArrayType -> {
+                    type = primaryType.baseType.type
+                    return type
+                }
+                else -> {
+                    type = CType.UNKNOWN
+                    return type
+                }
+            }
+        } else if (primaryType is CPointerType) {
+            type = primaryType.dereference()
             return type
         }
+
         type = CType.UNKNOWN
         return type
 

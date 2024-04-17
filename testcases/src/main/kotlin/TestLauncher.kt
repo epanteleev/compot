@@ -2,5 +2,6 @@ package testcases
 
 
 fun main() {
-    OptTests("testcases").collectAllTests()
+    ShlangTests("testcases").collectAllTests()
+    //OptTests("testcases").collectAllTests()
 }

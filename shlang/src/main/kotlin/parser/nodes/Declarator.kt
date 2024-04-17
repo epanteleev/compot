@@ -86,7 +86,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
     }
 }
 
-data class AssignmentDeclarator(val rvalue: Declarator, val lvalue: Expression): AnyDeclarator() {
+data class AssignmentDeclarator(val rvalue: Declarator, val lvalue: Expression): AnyDeclarator() { //TODO rename
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {

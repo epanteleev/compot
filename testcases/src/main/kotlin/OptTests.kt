@@ -6,6 +6,7 @@ import startup.OptDriver
 
 data class Result(val testName: String, val output: String, val error: String, val exitCode: Int)
 
+
 class OptTests(private val workingDir: String, val verbose: Boolean = false) {
 
     private fun testOpt() {
@@ -22,7 +23,7 @@ class OptTests(private val workingDir: String, val verbose: Boolean = false) {
 
         compile(filename, basename, lib)
 
-        val testResult = RunExecutable.runCommand(listOf("./$basename"), workingDir)
+        val testResult = RunExecutable.runCommand(listOf("./$basename"), null)
         return Result(basename, testResult.output, testResult.error, testResult.exitCode)
     }
 
@@ -32,10 +33,10 @@ class OptTests(private val workingDir: String, val verbose: Boolean = false) {
         val cli = CliParser().parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         OptDriver(cli).run()
 
-        val insertedPath = lib.map { "$TESTCASES_DIR/$it" }
+        val insertedPath = lib.map { "$workingDir/$TESTCASES_DIR/$it" }
 
-        val gnuAsCommandLine = listOf("gcc", "$basename.o") + insertedPath + listOf("-o", basename)
-        val result = RunExecutable.runCommand(gnuAsCommandLine, workingDir)
+        val gccCommandLine = listOf("gcc", "$basename.o") + insertedPath + listOf("-o", basename)
+        val result = RunExecutable.runCommand(gccCommandLine, null)
         if (result.exitCode != 0) {
             throw RuntimeException("execution failed with code ${result.exitCode}:\n${result.error}")
         }

@@ -105,8 +105,8 @@ class FunctionDataBuilder private constructor(
         bb.retVoid()
     }
 
-    override fun gep(source: Value, ty: PrimitiveType, index: Value): GetElementPtr {
-        return bb.gep(source, ty, index)
+    override fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr {
+        return bb.gep(source, elementType, index)
     }
 
     override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr {

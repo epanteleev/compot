@@ -1,5 +1,6 @@
 package gen
 
+import common.forEachWith
 import ir.*
 import types.*
 import ir.types.*
@@ -8,6 +9,7 @@ import ir.instruction.*
 import ir.instruction.Alloc
 import ir.module.block.Label
 import gen.TypeConverter.convertToType
+import gen.TypeConverter.toIRType
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
@@ -17,7 +19,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                     private val typeHolder: TypeHolder, functionNode: FunctionNode) {
     private val varStack = VarStack()
     private var currentFunction: FunctionDataBuilder? = null
-    private var returnValueAdr: Alloc
+    private var returnValueAdr: Alloc? = null
     private val exitBlock: Label
     private var stringTolabel = mutableMapOf<String, Label>()
 
@@ -46,7 +48,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
         val irType = TypeConverter.toIRType<NonTrivialType>(type)
         val rvalueAdr = ir().alloc(irType)
-        varStack[varName] = KeyType(type, rvalueAdr)
+        varStack[varName] = rvalueAdr
     }
 
     private fun visitAssignmentDeclarator(decl: AssignmentDeclarator) {
@@ -55,9 +57,9 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
         val irType = TypeConverter.toIRType<NonTrivialType>(type)
         val rvalueAdr = ir().alloc(irType)
-        varStack[varName] = KeyType(type, rvalueAdr)
+        varStack[varName] = rvalueAdr
 
-        val lvalue = visitExpression(decl.lvalue, false)
+        val lvalue = visitExpression(decl.lvalue, true)
         val commonType = TypeConverter.toIRType<NonTrivialType>(type)
         val converted = ir().convertToType(lvalue, commonType)
         ir().store(rvalueAdr, converted)
@@ -222,7 +224,25 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             is VarNode -> visitVarNode(expression, isRvalue)
             is FunctionCall -> visitFunctionCall(expression)
             is Cast -> visitCast(expression)
+            is ArrayAccess -> visitArrayAccess(expression, isRvalue)
             else -> throw IRCodeGenError("Unknown expression: $expression")
+        }
+    }
+
+    private fun visitArrayAccess(arrayAccess: ArrayAccess, isRvalue: Boolean): Value {
+        val array = visitExpression(arrayAccess.primary, true)
+        val index = visitExpression(arrayAccess.expr, true)
+
+        val arrayType = arrayAccess.resolveType(typeHolder)
+        val elementType = TypeConverter.toIRType<NonTrivialType>(arrayType) as PrimitiveType
+
+        val indexConverted = ir().convertToType(index, Type.I64)
+        val addr = ir().gep(array, elementType, indexConverted)
+
+        return if (isRvalue) {
+            ir().load(elementType,addr)
+        } else {
+            addr
         }
     }
 
@@ -238,9 +258,17 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val function = moduleBuilder.findFunction(name)
 
         val convertedArgs = mutableListOf<Value>()
-        for ((argType, argValue) in function.arguments() zip functionCall.args) {
+
+        functionCall.args.forEach { argValue ->
             val converted = visitExpression(argValue, true)
-            val convertedArg = ir().convertToType(converted, argType)
+            val type = toIRType<NonTrivialType>(argValue.resolveType(typeHolder))
+
+            val convertedArg = if (type is ArrayType) {
+                ir().gep(converted, type.elementType() as PrimitiveType, Constant.of(Type.I64, 0))
+            } else {
+                ir().convertToType(converted, type)
+            }
+
             convertedArgs.add(convertedArg)
         }
 
@@ -403,7 +431,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val value = visitExpression(returnStatement.expr, true)
                 val realType = ir().prototype().returnType()
                 val returnType = ir().convertToType(value, realType)
-                ir().store(returnValueAdr, returnType)
+                ir().store(returnValueAdr!!, returnType)
                 ir().branch(exitBlock)
             }
         }
@@ -413,10 +441,16 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
         val name = varNode.name()
         val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable $name not found")
+        val type = typeHolder[name]
+
+        if (type.baseType() is CArrayType) {
+            return rvalueAttr
+        }
+
         return if (isRvalue) {
-            ir().load(TypeConverter.toIRType(rvalueAttr.first) as PrimitiveType, rvalueAttr.second)
+            ir().load(TypeConverter.toIRType(type) as PrimitiveType, rvalueAttr)
         } else {
-            rvalueAttr.second
+            rvalueAttr
         }
     }
 
@@ -424,7 +458,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val name = functionNode.name()
         val parameters = functionNode.functionDeclarator().params()
         val fnType = functionNode.resolveType(typeHolder)
-        val retType = TypeConverter.toIRType<NonTrivialType>(fnType.retType)
+        val retType = TypeConverter.toIRType<Type>(fnType.retType)
 
         currentFunction = moduleBuilder.createFunction(name, retType, fnType.argsTypes.map { TypeConverter.toIRType(it) })
 
@@ -436,16 +470,21 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             val type = fnType.argsTypes[idx]
 
             val rvalueAdr = ir().alloc(arg.type())
-            varStack[param] = KeyType(type, rvalueAdr)
+            varStack[param] = rvalueAdr
             ir().store(rvalueAdr, arg)
         }
 
-        returnValueAdr = ir().alloc(retType)
-
-        exitBlock = ir().createLabel()
-        ir().switchLabel(exitBlock)
-        val loadReturn = ir().load(retType as PrimitiveType, returnValueAdr)
-        ir().ret(loadReturn)
+        if (retType is NonTrivialType) {
+            returnValueAdr = ir().alloc(retType)
+            exitBlock = ir().createLabel()
+            ir().switchLabel(exitBlock)
+            val loadReturn = ir().load(retType as PrimitiveType, returnValueAdr!!)
+            ir().ret(loadReturn)
+        } else {
+            exitBlock = ir().createLabel()
+            ir().switchLabel(exitBlock)
+            ir().retVoid()
+        }
 
         ir().switchLabel(Label.entry)
         val needSwitch = visitStatement(functionNode.body)

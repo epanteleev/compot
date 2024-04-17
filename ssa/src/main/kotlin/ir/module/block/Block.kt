@@ -4,7 +4,6 @@ import ir.*
 import ir.Value
 import ir.types.*
 import ir.instruction.*
-import ir.pass.canBeReplaced
 
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :
@@ -277,8 +276,8 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         add(ReturnVoid.make())
     }
 
-    override fun gep(source: Value, ty: PrimitiveType, index: Value): GetElementPtr {
-        return withOutput { it: Int -> GetElementPtr.make(n(it), ty, source, index) }
+    override fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr {
+        return withOutput { it: Int -> GetElementPtr.make(n(it), elementType, source, index) }
     }
 
     override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr {
