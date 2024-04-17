@@ -8,7 +8,7 @@ sealed interface ImmInt: Imm {
     fun asImm32(): Imm32
 
     companion object {
-        val minusZeroFloat: Long = 0x80000000
+        const val minusZeroFloat: Long = 0x80000000
         val minusZeroDouble: Long = (-0.0).toBits()
 
         fun canBeImm32(constant: Long): Boolean {
