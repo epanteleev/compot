@@ -15,6 +15,7 @@ import ir.instruction.Lea
 import ir.module.block.Label
 import ir.utils.OrderedLocation
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 import ir.platform.AnyCodeGenerator
 import ir.platform.CompiledModule
 import ir.platform.x64.codegen.impl.*
@@ -41,6 +42,8 @@ private class CodeEmitter(private val data: FunctionData,
 ): IRInstructionVisitor<Unit> {
     private val orderedLocation = evaluateOrder(data.blocks)
     private val asm: Assembler = unit.mkFunction(data.prototype.name)
+
+    private fun makeLabel(bb: Block) = ".L$functionCounter.${bb.index}"
 
     private fun emitPrologue() {
         val stackSize = valueToRegister.spilledLocalsSize()
@@ -277,7 +280,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(branch: Branch) {
-        asm.jump(".L$functionCounter.${branch.target().index}")
+        asm.jump(makeLabel(branch.target()))
     }
 
     override fun visit(branchCond: BranchCond) {
@@ -327,7 +330,7 @@ private class CodeEmitter(private val data: FunctionData,
             }
             else -> throw CodegenException("unknown type instruction=$cond")
         }
-        asm.jcc(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
+        asm.jcc(jmpType, makeLabel(branchCond.onFalse()))
     }
 
     override fun visit(copy: Copy) {
@@ -494,7 +497,7 @@ private class CodeEmitter(private val data: FunctionData,
         emitPrologue()
         for (bb in data.blocks.preorder()) {
             if (!bb.equals(Label.entry)) {
-                asm.label(".L$functionCounter.${bb.index}")
+                asm.label(makeLabel(bb))
             }
 
             val instructions = bb.instructions()
