@@ -14,7 +14,7 @@ import common.identityHashMapOf
 import ir.instruction.Lea
 import ir.module.block.Label
 import ir.utils.OrderedLocation
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 import ir.platform.AnyCodeGenerator
 import ir.platform.CompiledModule
 import ir.platform.x64.codegen.impl.*
@@ -38,7 +38,7 @@ private class CodeEmitter(private val data: FunctionData,
                           private val functionCounter: Int,
                           private val unit: CompilationUnit,
                           private val valueToRegister: RegisterAllocation,
-): Visitor<Unit> {
+): IRInstructionVisitor<Unit> {
     private val orderedLocation = evaluateOrder(data.blocks)
     private val asm: Assembler = unit.mkFunction(data.prototype.name)
 

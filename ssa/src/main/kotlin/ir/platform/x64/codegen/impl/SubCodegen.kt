@@ -6,18 +6,18 @@ import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandVisitorBinaryOp
-import ir.platform.x64.codegen.utils.XmmOperandVisitorBinaryOp
+import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.utils.XmmOperandsVisitorBinaryOp
 
 
-data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorBinaryOp,
-    XmmOperandVisitorBinaryOp {
+data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorBinaryOp,
+    XmmOperandsVisitorBinaryOp {
     private val size: Int = type.size()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
-            is FloatingPointType -> ApplyClosure(dst, first, second, this as XmmOperandVisitorBinaryOp)
-            is IntegerType       -> ApplyClosure(dst, first, second, this as GPOperandVisitorBinaryOp)
+            is FloatingPointType -> ApplyClosure(dst, first, second, this as XmmOperandsVisitorBinaryOp)
+            is IntegerType       -> ApplyClosure(dst, first, second, this as GPOperandsVisitorBinaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }

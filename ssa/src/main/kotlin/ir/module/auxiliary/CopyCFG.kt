@@ -4,13 +4,13 @@ import common.intMapOf
 import ir.*
 import ir.instruction.*
 import ir.instruction.Copy
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
 
 
-class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : Visitor<Instruction> {
+class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRInstructionVisitor<Instruction> {
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
     private val oldToNewBlock = setupNewBasicBlock()
 

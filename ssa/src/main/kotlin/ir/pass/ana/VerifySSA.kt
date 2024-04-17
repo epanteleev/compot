@@ -2,7 +2,7 @@ package ir.pass.ana
 
 import ir.AnyFunctionPrototype
 import ir.instruction.*
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
@@ -14,7 +14,7 @@ data class ValidateSSAErrorException(override val message: String): Exception(me
 
 
 class VerifySSA private constructor(private val functionData: FunctionData,
-                                    private val prototypes: List<AnyFunctionPrototype>): Visitor<Unit> {
+                                    private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit> {
     private val dominatorTree by lazy { functionData.blocks.dominatorTree() }
     private val creation by lazy { CreationInfo.create(functionData.blocks) }
     private var bb = functionData.blocks.begin()

@@ -4,7 +4,7 @@ import ir.Value
 import ir.types.Type
 import ir.types.NonTrivialType
 import ir.IndirectFunctionPrototype
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class IndirectionCall private constructor(name: String, pointer: Value, private val func: IndirectFunctionPrototype, args: List<Value>):
@@ -30,7 +30,7 @@ class IndirectionCall private constructor(name: String, pointer: Value, private 
         return func
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

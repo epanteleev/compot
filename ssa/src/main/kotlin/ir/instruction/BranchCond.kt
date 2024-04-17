@@ -3,7 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.types.*
 import ir.module.block.Block
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block) :
@@ -36,7 +36,7 @@ class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block
         return targets[1]
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

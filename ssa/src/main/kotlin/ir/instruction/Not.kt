@@ -3,7 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.types.Type
 import ir.types.IntegerType
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Not private constructor(name: String, tp: IntegerType, value: Value):
@@ -24,7 +24,7 @@ class Not private constructor(name: String, tp: IntegerType, value: Value):
         return operands[0]
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

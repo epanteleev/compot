@@ -1,7 +1,7 @@
 package ir.instruction
 
 import ir.Value
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 abstract class Instruction(protected val operands: Array<Value>) {
@@ -60,7 +60,7 @@ abstract class Instruction(protected val operands: Array<Value>) {
         }
     }
 
-    abstract fun<T> visit(visitor: Visitor<T>): T
+    abstract fun<T> visit(visitor: IRInstructionVisitor<T>): T
     abstract override fun equals(other: Any?): Boolean
     abstract override fun hashCode(): Int
     abstract fun dump(): String

@@ -4,7 +4,7 @@ import ir.Value
 import ir.types.*
 import ir.module.block.Block
 import common.forEachWith
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Phi private constructor(name: String, ty: PrimitiveType, private var incoming: List<Block>, incomingValue: Array<Value>):
@@ -41,7 +41,7 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
         }
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

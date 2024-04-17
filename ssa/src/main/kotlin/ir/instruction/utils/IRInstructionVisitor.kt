@@ -2,7 +2,7 @@ package ir.instruction.utils
 
 import ir.instruction.*
 
-interface Visitor<T> {
+interface IRInstructionVisitor<T> {
     fun visit(alloc: Alloc): T
     fun visit(generate: Generate): T
     fun visit(lea: Lea): T

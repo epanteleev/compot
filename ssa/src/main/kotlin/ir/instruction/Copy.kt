@@ -3,7 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.types.Type
 import ir.types.PrimitiveType
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Copy private constructor(name: String, origin: Value):
@@ -25,7 +25,7 @@ class Copy private constructor(name: String, origin: Value):
         return operands[0]
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

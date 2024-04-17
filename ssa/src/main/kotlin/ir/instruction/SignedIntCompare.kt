@@ -2,7 +2,7 @@ package ir.instruction
 
 import ir.Value
 import ir.types.*
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class SignedIntCompare private constructor(name: String, a: Value, private val predicate: IntPredicate, b: Value) :
@@ -22,7 +22,7 @@ class SignedIntCompare private constructor(name: String, a: Value, private val p
         return opType as SignedIntType
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

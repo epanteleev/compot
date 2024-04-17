@@ -2,7 +2,7 @@ package ir.instruction
 
 import ir.Value
 import ir.types.*
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Select private constructor(name: String, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value) :
@@ -39,7 +39,7 @@ class Select private constructor(name: String, ty: PrimitiveType, cond: Value, o
         return operands[2]
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

@@ -3,7 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.types.*
 import ir.IntegerConstant
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class GetFieldPtr private constructor(name: String, val basicType: AggregateType, source: Value, index: IntegerConstant):
@@ -32,7 +32,7 @@ class GetFieldPtr private constructor(name: String, val basicType: AggregateType
         return operands[1]
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

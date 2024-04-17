@@ -5,16 +5,16 @@ import ir.types.IntegerType
 import ir.instruction.SignExtend
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
+import ir.platform.x64.codegen.utils.GPOperandsVisitorUnaryOp
 
 
 data class SignExtendCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: Assembler):
-    GPOperandVisitorUnaryOp {
+    GPOperandsVisitorUnaryOp {
     private val toSize   = toType.size()
     private val fromSize = fromType.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ApplyClosure(dst, src, this as GPOperandVisitorUnaryOp)
+        ApplyClosure(dst, src, this as GPOperandsVisitorUnaryOp)
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {

@@ -1,8 +1,7 @@
 package ir.instruction
 
 import ir.Value
-import ir.types.PrimitiveType
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Move private constructor(toValue: Generate, fromValue: Value):
@@ -41,7 +40,7 @@ class Move private constructor(toValue: Generate, fromValue: Value):
         return fromValue().type().hashCode() xor toValue().type().hashCode()
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

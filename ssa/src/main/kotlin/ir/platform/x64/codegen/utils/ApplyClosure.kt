@@ -4,7 +4,7 @@ import asm.x64.*
 
 
 object ApplyClosure {
-    operator fun invoke(dst: Operand, first: Operand, second: Operand, closure: GPOperandVisitorBinaryOp) {
+    operator fun invoke(dst: Operand, first: Operand, second: Operand, closure: GPOperandsVisitorBinaryOp) {
         when (dst) {
             is GPRegister -> {
                 when (first) {
@@ -68,7 +68,7 @@ object ApplyClosure {
         }
     }
 
-    operator fun invoke(dst: Operand, first: Operand, second: Operand, closure: XmmOperandVisitorBinaryOp) {
+    operator fun invoke(dst: Operand, first: Operand, second: Operand, closure: XmmOperandsVisitorBinaryOp) {
         when (dst) {
             is XmmRegister -> {
                 when (first) {
@@ -112,7 +112,7 @@ object ApplyClosure {
         }
     }
 
-    operator fun invoke(dst: Operand, src: Operand, closure: GPOperandVisitorUnaryOp) {
+    operator fun invoke(dst: Operand, src: Operand, closure: GPOperandsVisitorUnaryOp) {
         when (dst) {
             is GPRegister -> {
                 when (src) {
@@ -134,7 +134,7 @@ object ApplyClosure {
         }
     }
 
-    operator fun invoke(dst: Operand, src: Operand, closure: XmmOperandVisitorUnaryOp) {
+    operator fun invoke(dst: Operand, src: Operand, closure: XmmOperandsVisitorUnaryOp) {
         when (dst) {
             is XmmRegister -> {
                 when (src) {
@@ -154,7 +154,7 @@ object ApplyClosure {
         }
     }
 
-    operator fun invoke(dst: Operand, src: Operand, closure: XmmToGPOperandVisitor) {
+    operator fun invoke(dst: Operand, src: Operand, closure: XmmToGPOperandsVisitor) {
         when (dst) {
             is GPRegister -> {
                 when (src) {

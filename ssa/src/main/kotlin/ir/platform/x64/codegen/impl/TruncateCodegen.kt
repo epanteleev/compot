@@ -3,16 +3,16 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.IntegerType
 import ir.instruction.Truncate
-import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
+import ir.platform.x64.codegen.utils.GPOperandsVisitorUnaryOp
 
 
 data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: Assembler):
-    GPOperandVisitorUnaryOp {
+    GPOperandsVisitorUnaryOp {
     private val toSize = toType.size()
     private val fromSize = fromType.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ir.platform.x64.codegen.utils.ApplyClosure(dst, src, this as GPOperandVisitorUnaryOp)
+        ir.platform.x64.codegen.utils.ApplyClosure(dst, src, this as GPOperandsVisitorUnaryOp)
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {

@@ -7,7 +7,7 @@ import ir.platform.x64.codegen.utils.*
 import ir.types.SignedIntType
 
 
-class FloatToSignedCodegen(val toType: SignedIntType, val fromType: FloatingPointType, val asm: Assembler): XmmToGPOperandVisitor {
+class FloatToSignedCodegen(val toType: SignedIntType, val fromType: FloatingPointType, val asm: Assembler): XmmToGPOperandsVisitor {
     private val toSize = toType.size()
     private val fromSize = fromType.size()
 

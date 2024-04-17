@@ -9,14 +9,14 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
 
 
-data class MoveCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp,
-    XmmOperandVisitorUnaryOp {
+data class MoveCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
+    XmmOperandsVisitorUnaryOp {
     private val size = type.size()
 
     operator fun invoke(value: Operand, pointer: Operand) {
         when (type) {
-            is FloatingPointType           -> ApplyClosure(pointer, value, this as XmmOperandVisitorUnaryOp)
-            is IntegerType, is PointerType -> ApplyClosure(pointer, value, this as GPOperandVisitorUnaryOp)
+            is FloatingPointType           -> ApplyClosure(pointer, value, this as XmmOperandsVisitorUnaryOp)
+            is IntegerType, is PointerType -> ApplyClosure(pointer, value, this as GPOperandsVisitorUnaryOp)
             else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
         }
     }
