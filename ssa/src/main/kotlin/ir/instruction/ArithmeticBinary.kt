@@ -1,7 +1,7 @@
 package ir.instruction
 
 import ir.Value
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 import ir.types.ArithmeticType
 import ir.types.Type
 
@@ -84,7 +84,7 @@ class ArithmeticBinary private constructor(name: String, tp: ArithmeticType, a: 
         return operands[1]
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

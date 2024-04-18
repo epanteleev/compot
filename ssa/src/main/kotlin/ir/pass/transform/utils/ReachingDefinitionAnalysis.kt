@@ -10,8 +10,49 @@ import ir.pass.transform.Mem2RegException
 import ir.types.Type
 
 
-class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, private val dominatorTree: DominatorTree) {
-    private val bbToMapValues = initialize(cfg)
+abstract class AbstractReachingDefinitionAnalysis(protected val dominatorTree: DominatorTree) {
+    protected fun rename(bb: Block, oldValue: Value): Value {
+        if (oldValue !is ValueInstruction) {
+            return oldValue
+        }
+
+        return rename(bb, oldValue, oldValue.type())
+    }
+
+    fun rename(bb: Block, oldValue: ValueInstruction, expectedType: Type): Value {
+        val newValue = findActualValueOrNull(bb, oldValue)
+            ?: return oldValue
+        return ReachingDefinitionAnalysis.convertOrSkip(expectedType, newValue)
+    }
+
+    protected fun findActualValue(bb: Label, value: Value): Value {
+        return findActualValueOrNull(bb, value)
+            ?: throw Mem2RegException("cannot find: basicBlock=$bb, value=$value")
+    }
+
+    protected fun findActualValueOrNull(bb: Label, value: Value): Value? { //TODO Duplicate code
+        for (d in dominatorTree.dominators(bb)) {
+            val newV = valueMap()[d]!![value]
+            if (newV != null) {
+                return newV
+            }
+        }
+
+        return null
+    }
+
+    abstract fun valueMap(): Map<Block, Map<Value, Value>>
+}
+
+class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, dominatorTree: DominatorTree): AbstractReachingDefinitionAnalysis(dominatorTree) {
+    private val bbToMapValues = run {
+        val bbToMapValues = hashMapOf<Block, MutableMap<Value, Value>>()
+        for (bb in cfg) {
+            bbToMapValues[bb] = hashMapOf()
+        }
+
+        bbToMapValues
+    }
 
     init {
         for (bb in cfg.preorder()) {
@@ -19,12 +60,8 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, private v
         }
     }
 
-    private fun rename(bb: Block, oldValue: Value): Value {
-        if (oldValue !is ValueInstruction) {
-            return oldValue
-        }
-        val newValue = findActualValueOrNull(bb, oldValue)?: return oldValue
-        return convertOrSkip(oldValue.type(), newValue)
+    override fun valueMap(): Map<Block, Map<Value, Value>> {
+        return bbToMapValues
     }
 
     private fun rewriteValuesSetup(bb: Block) {
@@ -70,31 +107,6 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, private v
         }
     }
 
-    private fun initialize(cfg: BasicBlocks): MutableMap<Block, MutableMap<Value, Value>> {
-        val bbToMapValues = hashMapOf<Block, MutableMap<Value, Value>>()
-        for (bb in cfg) {
-            bbToMapValues[bb] = hashMapOf()
-        }
-
-        return bbToMapValues
-    }
-
-    private fun findActualValue(bb: Label, value: Value): Value {
-        return findActualValueOrNull(bb, value)
-            ?: throw Mem2RegException("cannot find: basicBlock=$bb, value=$value")
-    }
-
-    private fun findActualValueOrNull(bb: Label, value: Value): Value? { //TODO Duplicate code
-        for (d in dominatorTree.dominators(bb)) {
-            val newV = bbToMapValues[d]!![value]
-            if (newV != null) {
-                return newV
-            }
-        }
-
-        return null
-    }
-
     companion object {
         internal fun convertOrSkip(type: Type, value: Value): Value {
             if (value !is Constant) {
@@ -111,7 +123,7 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, private v
     }
 }
 
-class ReachingDefinition(private val info: MutableMap<Block, MutableMap<Value, Value>>, private val dominatorTree: DominatorTree) {
+class ReachingDefinition internal constructor(private val info: Map<Block, Map<Value, Value>>, dominatorTree: DominatorTree): AbstractReachingDefinitionAnalysis(dominatorTree) {
     override fun toString(): String {
         val builder = StringBuilder()
         for ((bb, valueMap) in info) {
@@ -124,20 +136,5 @@ class ReachingDefinition(private val info: MutableMap<Block, MutableMap<Value, V
         return builder.toString()
     }
 
-    private fun findActualValueOrNull(bb: Label, value: Value): Value? {
-        for (d in dominatorTree.dominators(bb)) {
-            val newV = info[d]!![value]
-            if (newV != null) {
-                return newV
-            }
-        }
-
-        return null
-    }
-
-    fun rename(bb: Block, oldValue: ValueInstruction, expectedType: Type): Value {
-        val newValue = findActualValueOrNull(bb, oldValue)
-            ?: return oldValue
-        return ReachingDefinitionAnalysis.convertOrSkip(expectedType, newValue)
-    }
+    override fun valueMap(): Map<Block, Map<Value, Value>> = info
 }

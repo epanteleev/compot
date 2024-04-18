@@ -2,7 +2,7 @@ package ir.instruction
 
 import ir.Value
 import ir.types.*
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class GetElementPtr private constructor(name: String, val basicType: PrimitiveType, source: Value, index: Value):
@@ -31,7 +31,7 @@ class GetElementPtr private constructor(name: String, val basicType: PrimitiveTy
         return operands[1]
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -59,7 +59,7 @@ class GetElementPtr private constructor(name: String, val basicType: PrimitiveTy
             return true
         }
 
-        fun isCorrect(gep: GetElementPtr): Boolean {
+        fun typeCheck(gep: GetElementPtr): Boolean {
             return isAppropriateType(gep.source().type(), gep.index().type())
         }
     }

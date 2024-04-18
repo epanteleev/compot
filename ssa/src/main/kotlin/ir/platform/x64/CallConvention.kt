@@ -4,11 +4,14 @@ import asm.x64.*
 import asm.x64.GPRegister.*
 import asm.x64.XmmRegister.*
 
+// Useful links:
+//
 // Calling conventions for different C++ compilers and operating systems
 // https://www.agner.org/optimize/calling_conventions.pdf
 //
-// Usefull links:
+// x86-64 ABI
 // https://gitlab.com/x86-psABIs/x86-64-ABI/-/tree/master?ref_type=heads
+//
 object CallConvention {
     val gpArgumentRegisters: Array<GPRegister> = arrayOf(
         rdi,
@@ -92,7 +95,6 @@ object CallConvention {
     )
 
     val temp1 = rax
-    val temp2 = r10
     val retReg = rax
 
     val xmmTemp1 = xmm8
@@ -107,7 +109,6 @@ object CallConvention {
         allRegisters.remove(rbp)
         allRegisters.removeAll(usedArgumentRegisters.toSet())
         allRegisters.remove(temp1)
-        allRegisters.remove(temp2)
         allRegisters.remove(retReg)
         return allRegisters
     }

@@ -1,4 +1,4 @@
-package ir.platform
+package ir.platform.common
 
 
 abstract class CompiledModule

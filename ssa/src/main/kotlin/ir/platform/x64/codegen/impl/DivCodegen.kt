@@ -4,37 +4,22 @@ import asm.x64.*
 import ir.types.*
 import ir.platform.x64.codegen.utils.*
 import ir.instruction.ArithmeticBinaryOp
-import ir.platform.x64.CallConvention.temp1
 
 
-class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp,
+data class DivCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
     private val size: Int = type.size()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
             is FloatingPointType -> ApplyClosure(dst, first, second, this as XmmOperandsVisitorBinaryOp)
-            is IntegerType       -> ApplyClosure(dst, first, second, this as GPOperandsVisitorBinaryOp)
+            is IntegerType -> ApplyClosure(dst, first, second, this as GPOperandsVisitorBinaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        when (dst) {
-            first -> {
-                asm.mov(size, second, temp1)
-                asm.and(size, temp1, dst)
-            }
-            second -> {
-                asm.mov(size, first, temp1)
-                asm.and(size, temp1, dst)
-            }
-            else -> {
-                asm.mov(size, first, temp1)
-                asm.and(size, second, temp1)
-                asm.mov(size, temp1, dst)
-            }
-        }
+        TODO("Not yet implemented")
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
@@ -138,6 +123,6 @@ class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {
-        throw RuntimeException("Internal error: '${ArithmeticBinaryOp.And}' dst=$dst, first=$first, second=$second")
+        throw RuntimeException("Internal error: '${ArithmeticBinaryOp.Div}' dst=$dst, first=$first, second=$second")
     }
 }

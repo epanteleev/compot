@@ -4,15 +4,15 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.POINTER_SIZE
-import ir.platform.x64.codegen.utils.GPOperandVisitorBinaryOp
+import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
 
 
 data class GetElementPtrCodegenForAlloc (val type: PointerType, val basicType: PrimitiveType, val asm: Assembler):
-    GPOperandVisitorBinaryOp {
+    GPOperandsVisitorBinaryOp {
     private val size: Int = basicType.size()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
-        ir.platform.x64.codegen.utils.ApplyClosure(dst, source, index, this as GPOperandVisitorBinaryOp)
+        ir.platform.x64.codegen.utils.ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {

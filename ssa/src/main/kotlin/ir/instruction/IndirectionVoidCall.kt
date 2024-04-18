@@ -2,9 +2,8 @@ package ir.instruction
 
 import ir.Value
 import ir.types.Type
-import ir.AnyFunctionPrototype
 import ir.IndirectFunctionPrototype
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class IndirectionVoidCall private constructor(pointer: Value, private val func: IndirectFunctionPrototype, args: List<Value>):
@@ -45,7 +44,7 @@ class IndirectionVoidCall private constructor(pointer: Value, private val func: 
         return func.hashCode()
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

@@ -1,7 +1,7 @@
 package ir.instruction
 
 import ir.module.block.Block
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Branch private constructor(target: Block): TerminateInstruction(arrayOf(), arrayOf(target)) {
@@ -17,7 +17,7 @@ class Branch private constructor(target: Block): TerminateInstruction(arrayOf(),
         return targets[0]
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

@@ -3,15 +3,15 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.utils.GPOperandVisitorUnaryOp
+import ir.platform.x64.codegen.utils.GPOperandsVisitorUnaryOp
 
 
-data class NegCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp {
+data class NegCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp {
     private val size: Int = type.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
         when (type) {
-            is IntegerType -> ir.platform.x64.codegen.utils.ApplyClosure(dst, src, this as GPOperandVisitorUnaryOp)
+            is IntegerType -> ir.platform.x64.codegen.utils.ApplyClosure(dst, src, this as GPOperandsVisitorUnaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, src=$src")
         }
     }

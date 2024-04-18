@@ -2,7 +2,7 @@ package ir.instruction
 
 import ir.Value
 import ir.types.*
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class FloatToSigned private constructor(name: String, toType: SignedIntType, value: Value):
@@ -21,7 +21,7 @@ class FloatToSigned private constructor(name: String, toType: SignedIntType, val
 
     override fun type(): SignedIntType = tp as SignedIntType
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

@@ -2,7 +2,7 @@ package ir.instruction
 
 import ir.Value
 import ir.types.*
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class FpTruncate private constructor(name: String, toType: FloatingPointType, value: Value):
@@ -23,7 +23,7 @@ class FpTruncate private constructor(name: String, toType: FloatingPointType, va
         return tp as FloatingPointType
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

@@ -4,11 +4,11 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.FpTruncate
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.utils.XmmOperandVisitorUnaryOp
+import ir.platform.x64.codegen.utils.XmmOperandsVisitorUnaryOp
 
 
 data class FptruncateCodegen(val toType: FloatingPointType, val asm: Assembler):
-    XmmOperandVisitorUnaryOp {
+    XmmOperandsVisitorUnaryOp {
     private val toSize = toType.size()
 
     init {
@@ -18,7 +18,7 @@ data class FptruncateCodegen(val toType: FloatingPointType, val asm: Assembler):
     }
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ir.platform.x64.codegen.utils.ApplyClosure(dst, src, this as XmmOperandVisitorUnaryOp)
+        ir.platform.x64.codegen.utils.ApplyClosure(dst, src, this as XmmOperandsVisitorUnaryOp)
     }
 
     override fun rrF(dst: XmmRegister, src: XmmRegister) {

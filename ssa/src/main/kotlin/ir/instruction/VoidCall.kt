@@ -2,7 +2,7 @@ package ir.instruction
 
 import ir.AnyFunctionPrototype
 import ir.Value
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 import ir.types.Type
 
 
@@ -43,7 +43,7 @@ class VoidCall private constructor(private val func: AnyFunctionPrototype, args:
 
     override fun type(): Type = Type.Void
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

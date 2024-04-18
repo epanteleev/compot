@@ -14,9 +14,10 @@ import common.identityHashMapOf
 import ir.instruction.Lea
 import ir.module.block.Label
 import ir.utils.OrderedLocation
-import ir.instruction.utils.Visitor
-import ir.platform.AnyCodeGenerator
-import ir.platform.CompiledModule
+import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
+import ir.platform.common.AnyCodeGenerator
+import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
 import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.CallConvention.xmmTemp1
@@ -38,9 +39,24 @@ private class CodeEmitter(private val data: FunctionData,
                           private val functionCounter: Int,
                           private val unit: CompilationUnit,
                           private val valueToRegister: RegisterAllocation,
-): Visitor<Unit> {
-    private val orderedLocation = evaluateOrder(data.blocks)
+): IRInstructionVisitor<Unit> {
     private val asm: Assembler = unit.mkFunction(data.prototype.name)
+    private val orderedLocation = run {
+        val orderedLocation = identityHashMapOf<Callable, OrderedLocation>()
+        var order = 0
+        for (bb in data.blocks.linearScanOrder(data.blocks.loopInfo())) {
+            for ((idx, call) in bb.instructions().withIndex()) {
+                if (call is Callable) {
+                    orderedLocation[call] = OrderedLocation(bb, idx, order)
+                }
+                order += 1
+            }
+        }
+
+        orderedLocation
+    }
+
+    private fun makeLabel(bb: Block) = ".L$functionCounter.${bb.index}"
 
     private fun emitPrologue() {
         val stackSize = valueToRegister.spilledLocalsSize()
@@ -67,10 +83,9 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(binary: ArithmeticBinary) {
-        var first  = valueToRegister.operand(binary.first())
+        val first  = valueToRegister.operand(binary.first())
         val second = valueToRegister.operand(binary.second())
         val dst    = valueToRegister.operand(binary)
-        val size   = binary.type().size()
 
         when (binary.op) {
             ArithmeticBinaryOp.Add -> AddCodegen(binary.type(), asm)(dst, first, second)
@@ -78,27 +93,9 @@ private class CodeEmitter(private val data: FunctionData,
             ArithmeticBinaryOp.Sub -> SubCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.And -> AndCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Or -> OrCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Div -> {
-                if (first is Address) {
-                    first = asm.movOld(size, first, temp1)
-                }
-
-                first = if (dst is Address) {
-                    asm.movOld(size, first, temp2)
-                } else {
-                    asm.movOld(size, first, dst)
-                }
-
-                asm.div(size, second, first as GPRegister)
-
-                if (dst is Address) {
-                    asm.movOld(size, first, dst)
-                }
-            }
-            else -> {
-                println("Unimplemented: ${binary.op}")
-            }
+            ArithmeticBinaryOp.Or  -> OrCodegen(binary.type(), asm)(dst, first, second)
+            ArithmeticBinaryOp.Div -> DivCodegen(binary.type(), asm)(dst, first, second)
+            else -> println("Unimplemented: ${binary.op}")
         }
     }
 
@@ -296,7 +293,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(branch: Branch) {
-        asm.jump(".L$functionCounter.${branch.target().index}")
+        asm.jump(makeLabel(branch.target()))
     }
 
     override fun visit(branchCond: BranchCond) {
@@ -346,7 +343,7 @@ private class CodeEmitter(private val data: FunctionData,
             }
             else -> throw CodegenException("unknown type instruction=$cond")
         }
-        asm.jcc(jmpType, ".L$functionCounter.${branchCond.onFalse().index}")
+        asm.jcc(jmpType, makeLabel(branchCond.onFalse()))
     }
 
     override fun visit(copy: Copy) {
@@ -494,26 +491,11 @@ private class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun evaluateOrder(blocks: BasicBlocks): Map<Callable, OrderedLocation> {
-        val orderedLocation = identityHashMapOf<Callable, OrderedLocation>()
-        var order = 0
-        for (bb in blocks.linearScanOrder(blocks.loopInfo())) {
-            for ((idx, call) in bb.instructions().withIndex()) {
-                if (call is Callable) {
-                    orderedLocation[call] = OrderedLocation(bb, idx, order)
-                }
-                order += 1
-            }
-        }
-
-        return orderedLocation
-    }
-
     private fun emit() {
         emitPrologue()
         for (bb in data.blocks.preorder()) {
             if (!bb.equals(Label.entry)) {
-                asm.label(".L$functionCounter.${bb.index}")
+                asm.label(makeLabel(bb))
             }
 
             val instructions = bb.instructions()
@@ -527,7 +509,6 @@ private class CodeEmitter(private val data: FunctionData,
 
     companion object {
         val temp1 = CallConvention.temp1
-        val temp2 = CallConvention.temp2
         val fpRet = CallConvention.fpRet
 
         fun codegen(module: Module): CompilationUnit {

@@ -2,7 +2,7 @@ package ir.instruction
 
 import ir.Value
 import ir.types.*
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class ZeroExtend private constructor(name: String, toType: UnsignedIntType, value: Value):
@@ -23,7 +23,7 @@ class ZeroExtend private constructor(name: String, toType: UnsignedIntType, valu
         return tp as UnsignedIntType
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

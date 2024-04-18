@@ -9,7 +9,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 
 
 data class FpExtendCodegen(val toType: FloatingPointType, val asm: Assembler):
-    XmmOperandVisitorUnaryOp {
+    XmmOperandsVisitorUnaryOp {
     private val toSize = toType.size()
 
     init {
@@ -19,7 +19,7 @@ data class FpExtendCodegen(val toType: FloatingPointType, val asm: Assembler):
     }
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ApplyClosure(dst, src, this as XmmOperandVisitorUnaryOp)
+        ApplyClosure(dst, src, this as XmmOperandsVisitorUnaryOp)
     }
 
     override fun rrF(dst: XmmRegister, src: XmmRegister) {

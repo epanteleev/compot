@@ -2,7 +2,7 @@ package ir.instruction
 
 import ir.Value
 import ir.types.*
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Bitcast private constructor(name: String, toType: NonTrivialType, value: Value):
@@ -23,7 +23,7 @@ class Bitcast private constructor(name: String, toType: NonTrivialType, value: V
         return tp as PrimitiveType
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -43,7 +43,7 @@ class Bitcast private constructor(name: String, toType: NonTrivialType, value: V
             return valueType.size() == toType.size() && toType !is FloatingPointType
         }
 
-        fun isCorrect(bitcast: Bitcast): Boolean {
+        fun typeCheck(bitcast: Bitcast): Boolean {
             return isAppropriateType(bitcast.type(), bitcast.value().type())
         }
     }

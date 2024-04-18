@@ -6,16 +6,16 @@ import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.isIntRange
 import ir.platform.x64.CallConvention.POINTER_SIZE
-import ir.platform.x64.codegen.utils.GPOperandVisitorBinaryOp
+import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
 
 
 class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: PrimitiveType, val asm: Assembler) :
-    GPOperandVisitorBinaryOp {
+    GPOperandsVisitorBinaryOp {
     private val size: Int = basicType.size()
 
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
-        ir.platform.x64.codegen.utils.ApplyClosure(dst, source, index, this as GPOperandVisitorBinaryOp)
+        ir.platform.x64.codegen.utils.ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {

@@ -3,7 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.types.Type
 import ir.AnyFunctionPrototype
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 import ir.types.NonTrivialType
 
 
@@ -19,7 +19,7 @@ class Call private constructor(name: String, private val func: AnyFunctionProtot
         return func
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

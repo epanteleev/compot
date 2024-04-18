@@ -5,18 +5,17 @@ import ir.types.*
 import ir.instruction.Store
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.utils.*
 
 
-data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp,
-    XmmOperandVisitorUnaryOp {
+data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
+    XmmOperandsVisitorUnaryOp {
     private val size = type.size()
 
     operator fun invoke(value: Operand, pointer: Operand) {
         when (type) {
-            is FloatingPointType           -> ApplyClosure(pointer, value, this as XmmOperandVisitorUnaryOp)
-            is IntegerType, is PointerType -> ApplyClosure(pointer, value, this as GPOperandVisitorUnaryOp)
+            is FloatingPointType           -> ApplyClosure(pointer, value, this as XmmOperandsVisitorUnaryOp)
+            is IntegerType, is PointerType -> ApplyClosure(pointer, value, this as GPOperandsVisitorUnaryOp)
             else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
         }
     }
@@ -41,8 +40,8 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandV
             asm.mov(size, temp1, Address.from(temp1, 0))
         }
         asm.mov(size, src, temp1)
-        asm.mov(size, dst, temp2)
-        asm.mov(size, temp1, Address.from(temp2, 0))
+        asm.mov(size, Address.from(temp1, 0), temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {

@@ -7,14 +7,14 @@ import ir.platform.x64.codegen.utils.*
 import ir.platform.x64.CallConvention.temp1
 
 
-data class LoadCodegenForAlloc(val type: PrimitiveType, val asm: Assembler): GPOperandVisitorUnaryOp,
-    XmmOperandVisitorUnaryOp {
+data class LoadCodegenForAlloc(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
+    XmmOperandsVisitorUnaryOp {
     private val size = type.size()
 
     operator fun invoke(dst: Operand, pointer: Operand) {
         when (type) {
-            is FloatingPointType           -> ApplyClosure(dst, pointer, this as XmmOperandVisitorUnaryOp)
-            is IntegerType, is PointerType -> ApplyClosure(dst, pointer, this as GPOperandVisitorUnaryOp)
+            is FloatingPointType           -> ApplyClosure(dst, pointer, this as XmmOperandsVisitorUnaryOp)
+            is IntegerType, is PointerType -> ApplyClosure(dst, pointer, this as GPOperandsVisitorUnaryOp)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, pointer=$pointer")
         }
     }

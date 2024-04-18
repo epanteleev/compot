@@ -1,20 +1,22 @@
 package ir.pass.ana
 
-import ir.AnyFunctionPrototype
-import ir.instruction.*
-import ir.instruction.utils.Visitor
-import ir.module.FunctionData
+import common.forEachWith
+import ir.types.Type
 import ir.module.Module
+import ir.instruction.*
+import ir.utils.CreationInfo
 import ir.module.block.Block
 import ir.module.block.Label
-import ir.utils.CreationInfo
+import ir.module.FunctionData
+import ir.AnyFunctionPrototype
+import ir.instruction.utils.IRInstructionVisitor
 
 
 data class ValidateSSAErrorException(override val message: String): Exception(message)
 
 
 class VerifySSA private constructor(private val functionData: FunctionData,
-                                    private val prototypes: List<AnyFunctionPrototype>): Visitor<Unit> {
+                                    private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit> {
     private val dominatorTree by lazy { functionData.blocks.dominatorTree() }
     private val creation by lazy { CreationInfo.create(functionData.blocks) }
     private var bb = functionData.blocks.begin()
@@ -61,9 +63,9 @@ class VerifySSA private constructor(private val functionData: FunctionData,
                 continue
             }
 
-            val definedIn = creation.get(use).block
+            val definedIn = creation[use].block
             val isDefDominatesUse = dominatorTree.dominates(definedIn, block)
-            assert(isDefDominatesUse) { "Definition doesn't dominate to usage: value defined in $definedIn, but used in $block" }
+            assert(isDefDominatesUse) { "Definition doesn't dominate to usage: value defined in '$definedIn', but used in '$block'" }
         }
     }
 
@@ -173,7 +175,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(bitcast: Bitcast) {
-        assert(Bitcast.isCorrect(bitcast)) {
+        assert(Bitcast.typeCheck(bitcast)) {
             "Cast instruction '${bitcast.dump()}' has inconsistent types."
         }
     }
@@ -191,7 +193,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(pcmp: PointerCompare) {
-        assert(PointerCompare.isCorrect(pcmp)) {
+        assert(PointerCompare.typeCheck(pcmp)) {
             "Instruction '${pcmp.dump()}' has inconsistent types."
         }
     }
@@ -237,7 +239,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(gep: GetElementPtr) {
-        assert(GetElementPtr.isCorrect(gep)) {
+        assert(GetElementPtr.typeCheck(gep)) {
             "Instruction '${gep.dump()}' has inconsistent types."
         }
     }
@@ -249,7 +251,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(icmp: SignedIntCompare) {
-        assert(SignedIntCompare.isCorrect(icmp)) {
+        assert(SignedIntCompare.typeCheck(icmp)) {
             "Instruction '${icmp.dump()}' requires all operands to be of the same type: a=${icmp.first().type()}, b=${icmp.second().type()}"
         }
     }
@@ -267,30 +269,31 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(load: Load) {
-        assert(Load.isCorrect(load)) {
+        assert(Load.typeCheck(load)) {
             "Instruction '${load.dump()}' requires all operands to be of the same type."
         }
     }
 
     override fun visit(phi: Phi) {
-        assert(Phi.isCorrect(phi)) {
+        assert(Phi.typeCheck(phi)) {
             "Inconsistent phi instruction '${phi.dump()}': different types ${phi.operands().map { it.type() }.joinToString()}"
         }
 
-        for ((use, incoming) in phi.operands().zip(phi.incoming())) { //TODO
+        val blocks = phi.incoming()
+        blocks.forEachWith(phi.operands()) { incoming, use ->
             if (use !is ValueInstruction) {
-                continue
+                return@forEachWith
             }
-            val actual = creation.get(use).block
+            val actual = creation[use].block
             assert(dominatorTree.dominates(actual, incoming)) {
                 "Inconsistent phi instruction $phi: value defined in $incoming, used in $actual"
             }
         }
 
-        val incomings = phi.incoming()
+        val incoming     = phi.incoming()
         val predecessors = bb.predecessors()
-        assert(predecessors.size == incomings.size) {
-            "Inconsistent phi instruction: incoming blocks and predecessors are not equal. incoming=$incomings predecessors=$predecessors"
+        assert(predecessors.size == incoming.size) {
+            "Inconsistent phi instruction: incoming blocks and predecessors are not equal. incoming=$incoming predecessors=$predecessors"
         }
     }
 
@@ -308,6 +311,11 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(returnVoid: ReturnVoid) {
+        val retType = functionData.prototype.returnType()
+        assert(Type.Void == retType) {
+            "Inconsistent return type: '${returnVoid.dump()}', but expected '${retType}'"
+        }
+
         checkReturn()
     }
 
@@ -324,13 +332,13 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     override fun visit(select: Select) {
-        assert(Select.isCorrect(select)) {
+        assert(Select.typeCheck(select)) {
             "Instruction '${select.dump()}' requires all operands to be of the same type."
         }
     }
 
     override fun visit(store: Store) {
-        assert(Store.isCorrect(store)) {
+        assert(Store.typeCheck(store)) {
             "Instruction '${store.dump()}' requires all operands to be of the same type."
         }
     }

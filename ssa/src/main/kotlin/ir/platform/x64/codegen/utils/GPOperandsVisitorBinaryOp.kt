@@ -2,7 +2,7 @@ package ir.platform.x64.codegen.utils
 
 import asm.x64.*
 
-interface GPOperandVisitorBinaryOp {
+interface GPOperandsVisitorBinaryOp {
     fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister)
     fun arr(dst: Address, first: GPRegister, second: GPRegister)
     fun rar(dst: GPRegister, first: Address, second: GPRegister)

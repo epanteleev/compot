@@ -1,7 +1,7 @@
 package ir.instruction
 
 import ir.Value
-import ir.instruction.utils.Visitor
+import ir.instruction.utils.IRInstructionVisitor
 import ir.types.NonTrivialType
 import ir.types.Type
 import ir.types.AnyType
@@ -24,7 +24,7 @@ class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
         return operands[0]
     }
 
-    override fun<T> visit(visitor: Visitor<T>): T {
+    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

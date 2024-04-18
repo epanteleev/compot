@@ -3,7 +3,7 @@ package ir.platform.x64.codegen.utils
 import asm.x64.*
 
 
-interface GPOperandVisitorUnaryOp {
+interface GPOperandsVisitorUnaryOp {
     fun rr(dst: GPRegister, src: GPRegister)
     fun ra(dst: GPRegister, src: Address)
     fun ar(dst: Address, src: GPRegister)
