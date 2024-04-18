@@ -4,14 +4,21 @@ import common.RunExecutable
 import startup.CCLIParser
 import startup.ShlangDriver
 
+data class FailedTestException(override val message: String): Exception(message)
+
 
 class ShlangTests(private val workingDir: String, private val verbose: Boolean = false) {
+    private val testCases = linkedMapOf(
+        "doWhile" to ::testDoWhile,
+        "arrayAccess" to ::testArrayAccess,
+        "bubble_sort" to ::testBubbleSort,
+        "fibonacci1" to ::testFibonacci
+    )
 
     private fun testDoWhile() {
         val result = runTest("shlang/doWhile", listOf())
         assertReturnCode(result, 20)
     }
-
 
     private fun testArrayAccess() {
         val result = runTest("shlang/arrayAccess", listOf())
@@ -23,10 +30,22 @@ class ShlangTests(private val workingDir: String, private val verbose: Boolean =
         assert(result, "11 12 22 25 34 64 \n")
     }
 
+    private fun testFibonacci() {
+        val result = runTest("shlang/fibonacci1", listOf("runtime/runtime.c"))
+        assert(result, "55\n")
+    }
+
     fun collectAllTests() {
-        testDoWhile()
-        testArrayAccess()
-        testBubbleSort()
+        testCases.forEach { (name, test) ->
+            try {
+                test()
+            } catch (e: FailedTestException) {
+                println("[Test failed: ${name}]")
+                println(e.message)
+                return@forEach
+            }
+            println("[Test passed: $name]")
+        }
     }
 
     private fun runTest(filename: String, lib: List<String>): Result {
@@ -39,7 +58,7 @@ class ShlangTests(private val workingDir: String, private val verbose: Boolean =
     }
 
     private fun compile(filename: String, basename: String, lib: List<String>) {
-        val args = arrayOf("-c", "$workingDir/$TESTCASES_DIR/$filename.c", "--dump-ir")
+        val args = arrayOf("-c", "$workingDir/$TESTCASES_DIR/$filename.c", "--dump-ir", "-O1")
 
         val cli = CCLIParser().parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         ShlangDriver(cli).run()
@@ -55,27 +74,13 @@ class ShlangTests(private val workingDir: String, private val verbose: Boolean =
 
     private fun assert(result: Result, expectedStdio: String) {
         if (expectedStdio != result.output + result.error) {
-            throw RuntimeException("\nExpected: '$expectedStdio'\nActual:   '${result.output + result.error}'")
-        } else {
-            println("[Test passed: ${result.testName}]")
-            if (verbose) {
-                println("  Expected: '$expectedStdio'")
-                println("  Stdin:  '${result.output}'")
-                println("  Stderr: '${result.error}'")
-                println("  Exit code: ${result.exitCode}")
-            }
+            throw FailedTestException("\nExpected: '$expectedStdio'\nActual:   '${result.output + result.error}'")
         }
     }
 
     private fun assertReturnCode(result: Result, errorCode: Int) {
         if (errorCode != result.exitCode) {
-            throw RuntimeException("\nExpected: '$errorCode'\nActual:   '${result.exitCode}'")
-        } else {
-            println("[Test passed: ${result.testName}]")
-            if (verbose) {
-                println("  Expected: '$errorCode'")
-                println("  Actual:   '${result.exitCode}'")
-            }
+            throw FailedTestException("\nExpected: '$errorCode'\nActual:   '${result.exitCode}'")
         }
     }
 

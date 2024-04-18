@@ -46,14 +46,18 @@ abstract class ValueInstruction(protected val identifier: String, protected val 
     }
 
     companion object {
-        private val EMPTY_USED_IN = arrayListOf<Instruction>()
+
 
         fun replaceUsages(inst: ValueInstruction, toValue: Value) {
             val usedIn = inst.usedIn
-            inst.usedIn = EMPTY_USED_IN
+            inst.usedIn = arrayListOf()
             for (user in usedIn) {
                 for ((idxUse, use) in user.operands().withIndex()) {
                     if (use != inst) {
+                        continue
+                    }
+                    // New value can use the old value
+                    if (user == toValue) {
                         continue
                     }
 

@@ -78,7 +78,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
             if (instruction is ValueInstruction) {
                 for (user in instruction.usedIn()) {
                     assert(user.operands().contains(instruction)) {
-                        "should be inst='${instruction.dump()}'"
+                        "should be inst='${instruction.dump()}', user='${user.dump()}', usedIn='${instruction.usedIn()}'"
                     }
                 }
             }

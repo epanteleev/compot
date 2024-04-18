@@ -46,7 +46,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val type = typeHolder[decl.name()]
         val varName = decl.name()
 
-        val irType = TypeConverter.toIRType<NonTrivialType>(type)
+        val irType = toIRType<NonTrivialType>(type)
         val rvalueAdr = ir().alloc(irType)
         varStack[varName] = rvalueAdr
     }
@@ -55,12 +55,12 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val type = typeHolder[decl.name()]
         val varName = decl.name()
 
-        val irType = TypeConverter.toIRType<NonTrivialType>(type)
+        val irType = toIRType<NonTrivialType>(type)
         val rvalueAdr = ir().alloc(irType)
         varStack[varName] = rvalueAdr
 
         val lvalue = visitExpression(decl.lvalue, true)
-        val commonType = TypeConverter.toIRType<NonTrivialType>(type)
+        val commonType = toIRType<NonTrivialType>(type)
         val converted = ir().convertToType(lvalue, commonType)
         ir().store(rvalueAdr, converted)
     }
@@ -234,7 +234,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val index = visitExpression(arrayAccess.expr, true)
 
         val arrayType = arrayAccess.resolveType(typeHolder)
-        val elementType = TypeConverter.toIRType<NonTrivialType>(arrayType) as PrimitiveType
+        val elementType = toIRType<NonTrivialType>(arrayType) as PrimitiveType
 
         val indexConverted = ir().convertToType(index, Type.I64)
         val addr = ir().gep(array, elementType, indexConverted)
@@ -248,7 +248,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
     private fun visitCast(cast: Cast): Value {
         val value = visitExpression(cast.cast, true)
-        val toType = TypeConverter.toIRType<NonTrivialType>(cast.resolveType(typeHolder))
+        val toType = toIRType<NonTrivialType>(cast.resolveType(typeHolder))
         return ir().convertToType(value, toType)
     }
 
@@ -310,7 +310,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             BinaryOpType.ADD -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+                val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Add, rightConverted)
@@ -319,7 +319,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             BinaryOpType.SUB -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+                val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Sub, rightConverted)
@@ -328,7 +328,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             BinaryOpType.ASSIGN -> {
                 val left = visitExpression(binop.left, false)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+                val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val rightConverted = ir().convertToType(right, commonType)
                 ir().store(left, rightConverted)
                 right //TODO
@@ -337,7 +337,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             BinaryOpType.MUL -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+                val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Mul, rightConverted)
@@ -346,7 +346,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             BinaryOpType.NE -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+                val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 val cmp = ir().icmp(leftConverted, IntPredicate.Ne, rightConverted)
@@ -356,7 +356,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             BinaryOpType.GT -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+                val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 val cmp = ir().icmp(leftConverted, IntPredicate.Gt, rightConverted)
@@ -365,7 +365,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             BinaryOpType.LT -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+                val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 val cmp = ir().icmp(leftConverted, IntPredicate.Lt, rightConverted)
@@ -375,7 +375,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             BinaryOpType.LE -> {
                 val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
-                val commonType = TypeConverter.toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+                val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
                 val cmp = ir().icmp(leftConverted, IntPredicate.Le, rightConverted)
@@ -394,7 +394,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val addr = visitExpression(unaryOp.primary, isRvalue)
                 val type = unaryOp.resolveType(typeHolder)
 
-                val loadedType = TypeConverter.toIRType(type) as PrimitiveType
+                val loadedType = toIRType(type) as PrimitiveType
                 if (isRvalue) {
                     ir().load(loadedType, addr)
                 } else {
@@ -448,7 +448,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
 
         return if (isRvalue) {
-            ir().load(TypeConverter.toIRType(type) as PrimitiveType, rvalueAttr)
+            ir().load(toIRType(type) as PrimitiveType, rvalueAttr)
         } else {
             rvalueAttr
         }
@@ -458,16 +458,15 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val name = functionNode.name()
         val parameters = functionNode.functionDeclarator().params()
         val fnType = functionNode.resolveType(typeHolder)
-        val retType = TypeConverter.toIRType<Type>(fnType.retType)
+        val retType = toIRType<Type>(fnType.retType)
 
-        currentFunction = moduleBuilder.createFunction(name, retType, fnType.argsTypes.map { TypeConverter.toIRType(it) })
+        currentFunction = moduleBuilder.createFunction(name, retType, fnType.argsTypes.map { toIRType(it) })
 
         varStack.push()
 
         for (idx in parameters.indices) {
             val param = parameters[idx]
             val arg = ir().argument(idx)
-            val type = fnType.argsTypes[idx]
 
             val rvalueAdr = ir().alloc(arg.type())
             varStack[param] = rvalueAdr
