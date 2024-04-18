@@ -58,7 +58,7 @@ class ShlangTests(private val workingDir: String, private val verbose: Boolean =
     }
 
     private fun compile(filename: String, basename: String, lib: List<String>) {
-        val args = arrayOf("-c", "$workingDir/$TESTCASES_DIR/$filename.c", "--dump-ir", "-O1")
+        val args = arrayOf("-c", "$workingDir/$TESTCASES_DIR/$filename.c", "--dump-ir")
 
         val cli = CCLIParser().parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         ShlangDriver(cli).run()

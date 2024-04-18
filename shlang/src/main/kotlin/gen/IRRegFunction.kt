@@ -234,10 +234,9 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val index = visitExpression(arrayAccess.expr, true)
 
         val arrayType = arrayAccess.resolveType(typeHolder)
-        val elementType = toIRType<NonTrivialType>(arrayType) as PrimitiveType
+        val elementType = toIRType<PrimitiveType>(arrayType)
 
-        val indexConverted = ir().convertToType(index, Type.I64)
-        val addr = ir().gep(array, elementType, indexConverted)
+        val addr = ir().gep(array, elementType, index)
 
         return if (isRvalue) {
             ir().load(elementType,addr)
