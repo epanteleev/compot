@@ -17,7 +17,7 @@ unzip -o ../shlang/build/distributions/shlang-1.0-SNAPSHOT.zip -d build
 function compile_test() {
 	${IR_COMPILER} -c "$1.c" -o "$OUTPUT_DIR/$1"
         gcc "$OUTPUT_DIR/$1.o" ../tests/runtime.c -o "$OUTPUT_DIR/$1.base"
-	${IR_COMPILER} -c "$1.c" -O 1 -o "$OUTPUT_DIR/$1"
+	${IR_COMPILER} -c "$1.c" -O1 -o "$OUTPUT_DIR/$1"
         gcc "$OUTPUT_DIR/$1.o" ../tests/runtime.c -o "$OUTPUT_DIR/$1.opt"
 }
 

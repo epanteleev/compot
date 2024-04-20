@@ -316,8 +316,9 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Select.make(n(it), type, cond, onTrue, onFalse) }
     }
 
-    override fun phi(incoming: List<Value>, blocks: List<Block>): Phi {
-        return withOutput { it: Int -> Phi.make("phi${n(it)}", incoming[0].type() as PrimitiveType, blocks, incoming.toTypedArray()) }
+    override fun phi(incoming: List<Value>, labels: List<Label>): Phi {
+        val bbs = labels.map { it as Block }
+        return withOutput { it: Int -> Phi.make("phi${n(it)}", incoming[0].type() as PrimitiveType, bbs, incoming.toTypedArray()) }
     }
 
     override fun downStackFrame(callable: Callable) {

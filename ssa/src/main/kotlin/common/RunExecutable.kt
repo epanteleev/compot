@@ -16,6 +16,14 @@ object RunExecutable {
         return ExecutionResult(process)
     }
 
+    fun checkedRunCommand(command: List<String>, workingDir: String? = null): ExecutionResult {
+        val result = runCommand(command, workingDir)
+        if (result.exitCode != 0) {
+            throw RuntimeException("execution failed with code ${result.exitCode}:\n${result.error}")
+        }
+        return result
+    }
+
     fun getenv(name: String): String? {
         return System.getenv(name)
     }

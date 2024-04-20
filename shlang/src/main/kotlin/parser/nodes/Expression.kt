@@ -347,10 +347,10 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                     TODO()
                 }
                 PrefixUnaryOpType.NEG -> {
-                    if (primaryType == CType.INT || primaryType == CType.LONG) {
+                    if (primaryType.baseType() is CPrimitive) {
                         primaryType
                     } else {
-                        CType.UNRESOlVED
+                        CType.UNKNOWN
                     }
                 }
                 PrefixUnaryOpType.INC, PrefixUnaryOpType.DEC, PrefixUnaryOpType.PLUS -> {

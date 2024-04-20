@@ -379,7 +379,29 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val cmp = ir().icmp(leftConverted, IntPredicate.Le, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
-
+            BinaryOpType.AND -> {
+                val initialBB = ir().currentBlock()
+                val left = visitExpression(binop.left, true)
+                assert(left.type() == Type.U1)
+                val bb = ir().createLabel()
+                val end = ir().createLabel()
+                ir().branchCond(left, bb, end)
+                ir().switchLabel(bb)
+                val right = visitExpression(binop.right, true)
+                assert(right.type() == Type.U1)
+                ir().branch(end)
+                ir().switchLabel(end)
+                ir().phi(listOf(left, right), listOf(initialBB, bb)) //TODO false from left
+            }
+            BinaryOpType.GE -> {
+                val left = visitExpression(binop.left, true)
+                val right = visitExpression(binop.right, true)
+                val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+                val leftConverted = ir().convertToType(left, commonType)
+                val rightConverted = ir().convertToType(right, commonType)
+                val cmp = ir().icmp(leftConverted, IntPredicate.Ge, rightConverted)
+                ir().convertToType(cmp, Type.U1)
+            }
             else -> throw IRCodeGenError("Unknown binary operation, op=${binop.opType}")
         }
     }
@@ -406,11 +428,22 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 ir().store(addr, inc)
                 loaded
             }
+            PrefixUnaryOpType.NEG -> {
+                val value = visitExpression(unaryOp.primary, true)
+                val type = unaryOp.resolveType(typeHolder)
+                val converted = ir().convertToType(value, toIRType<NonTrivialType>(type))
+                ir().arithmeticBinary(converted, ArithmeticBinaryOp.Sub, Constant.of(toIRType<NonTrivialType>(type), 0))
+            }
             else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.opType}")
         }
     }
 
     private fun visitNumNode(numNode: NumNode): Constant {
+        when (numNode.toLong.data) {
+            is Double -> return F64Value(numNode.toLong.data)
+            is Float -> return F32Value(numNode.toLong.data)
+            else -> {}
+        }
         return when (numNode.toLong.data) {
             in 0..255 -> U8Value(numNode.toLong.data.toByte())
             in 0..65535 -> U16Value(numNode.toLong.data.toShort())

@@ -67,7 +67,12 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
             for (decl in directDeclarator.declarators) {
                 when (decl) {
                     is ArrayDeclarator -> {
-                        val size = decl.constexpr as NumNode
+                        if (decl.constexpr is EmptyExpression) {
+                            pointerType = CPointerType(pointerType)
+                            continue
+                        }
+
+                        val size = decl.constexpr as NumNode //TODO evaluate
                         pointerType = CompoundType(CArrayType(pointerType, size.toLong.data.toInt()))
                     }
                     is FunctionDeclarator -> {

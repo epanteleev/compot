@@ -145,6 +145,10 @@ class FunctionDataBuilder private constructor(
         return bb.fptosi(value, toType)
     }
 
+    override fun phi(incoming: List<Value>, labels: List<Label>): Phi {
+        return bb.phi(incoming, labels)
+    }
+
     companion object {
         fun create(
             name: String,

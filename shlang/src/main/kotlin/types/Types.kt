@@ -24,15 +24,68 @@ interface CType {
             if (type1 == UNKNOWN) return type2
             if (type2 == UNKNOWN) return type1
 
-            when {
-                type1.baseType() == CPrimitive.INT && type2.baseType() == CPrimitive.INT -> return INT
-                type1.baseType() == CPrimitive.DOUBLE && type2.baseType() == CPrimitive.DOUBLE -> return DOUBLE
-                type1.baseType() == CPrimitive.FLOAT && type2.baseType() == CPrimitive.FLOAT -> return FLOAT
-                type1.baseType() == CPrimitive.LONG && type2.baseType() == CPrimitive.LONG -> return LONG
-                type1.baseType() == CPrimitive.SHORT && type2.baseType() == CPrimitive.SHORT -> return SHORT
-                type1.baseType() == CPrimitive.UINT && type2.baseType() == CPrimitive.UINT -> return UINT
-                type1.baseType() == CPrimitive.CHAR && type2.baseType() == CPrimitive.CHAR -> return CHAR
-
+            when (type1.baseType()) {
+                CPrimitive.CHAR -> {
+                    when (type2.baseType()) {
+                        CPrimitive.INT -> return INT
+                        CPrimitive.LONG -> return LONG
+                        CPrimitive.SHORT -> return SHORT
+                        CPrimitive.UINT -> return UINT
+                        CPrimitive.DOUBLE -> return DOUBLE
+                        CPrimitive.FLOAT -> return FLOAT
+                    }
+                }
+                CPrimitive.SHORT -> {
+                    when (type2.baseType()) {
+                        CPrimitive.INT -> return INT
+                        CPrimitive.LONG -> return LONG
+                        CPrimitive.CHAR -> return SHORT
+                        CPrimitive.UINT -> return UINT
+                        CPrimitive.DOUBLE -> return DOUBLE
+                        CPrimitive.FLOAT -> return FLOAT
+                    }
+                }
+                CPrimitive.INT -> {
+                    when (type2.baseType()) {
+                        CPrimitive.CHAR -> return INT
+                        CPrimitive.LONG -> return LONG
+                        CPrimitive.SHORT -> return INT
+                        CPrimitive.UINT -> return UINT
+                        CPrimitive.DOUBLE -> return DOUBLE
+                        CPrimitive.FLOAT -> return FLOAT
+                    }
+                }
+                CPrimitive.LONG -> {
+                    when (type2.baseType()) {
+                        CPrimitive.CHAR -> return LONG
+                        CPrimitive.INT -> return LONG
+                        CPrimitive.SHORT -> return LONG
+                        CPrimitive.UINT -> return UINT
+                        CPrimitive.DOUBLE -> return DOUBLE
+                        CPrimitive.FLOAT -> return FLOAT
+                    }
+                }
+                CPrimitive.FLOAT -> {
+                    when (type2.baseType()) {
+                        CPrimitive.CHAR -> return FLOAT
+                        CPrimitive.INT -> return FLOAT
+                        CPrimitive.SHORT -> return FLOAT
+                        CPrimitive.UINT -> return FLOAT
+                        CPrimitive.DOUBLE -> return DOUBLE
+                        CPrimitive.LONG -> return DOUBLE
+                    }
+                }
+                CPrimitive.DOUBLE -> {
+                    when (type2.baseType()) {
+                        CPrimitive.CHAR -> return DOUBLE
+                        CPrimitive.INT -> return DOUBLE
+                        CPrimitive.SHORT -> return DOUBLE
+                        CPrimitive.UINT -> return DOUBLE
+                        CPrimitive.FLOAT -> return DOUBLE
+                        CPrimitive.LONG -> return DOUBLE
+                    }
+                }
+                else -> throw RuntimeException("Unknown type $type1, $type2")
             }
             return UNRESOlVED
         }
