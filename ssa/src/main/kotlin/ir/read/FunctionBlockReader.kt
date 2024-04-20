@@ -341,6 +341,14 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         builder.select(currentTok, v0, v1, v2, t1)
     }
 
+    private fun parseFlag2Int(currentTok: LocalValueToken) {
+        // %$identifier = flag2int %{value} to {operand type}
+        val source = iterator.expect<LocalValueToken>("source value")
+        iterator.expect<To>("'to' keyword")
+        val type = iterator.expect<IntegerTypeToken>("type")
+        builder.flag2int(currentTok, source, type)
+    }
+
     private fun parseInstruction(currentTok: Token) {
         when (currentTok) {
             is LocalValueToken -> {
@@ -364,6 +372,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "zext"       -> parseZext(currentTok)
                     "pcmp"       -> parsePcmp(currentTok)
                     "trunc"      -> parseTrunc(currentTok)
+                    "flag2int"   -> parseFlag2Int(currentTok)
                     "bitcast"    -> parseBitcast(currentTok)
                     "fptrunc"    -> parseFptrunc(currentTok)
                     "fpext"      -> parseFpext(currentTok)

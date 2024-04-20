@@ -186,6 +186,12 @@ private class CodeEmitter(private val data: FunctionData,
         emitCall(call)
     }
 
+    override fun visit(flag2Int: Flag2Int) {
+        val dst = valueToRegister.operand(flag2Int)
+        val compare = flag2Int.value() as CompareInstruction
+        Flag2IntCodegen(compare.predicate(), asm)(dst)
+    }
+
     override fun visit(indirectionCall: IndirectionCall) {
         TODO("Not yet implemented")
     }
@@ -302,40 +308,40 @@ private class CodeEmitter(private val data: FunctionData,
         val jmpType = when (cond) {
             is SignedIntCompare -> {
                 when (val convType = cond.predicate().invert()) {
-                    IntPredicate.Eq -> JmpType.JE
-                    IntPredicate.Ne -> JmpType.JNE
-                    IntPredicate.Gt -> JmpType.JG
-                    IntPredicate.Ge -> JmpType.JGE
-                    IntPredicate.Lt -> JmpType.JL
-                    IntPredicate.Le -> JmpType.JLE
+                    IntPredicate.Eq -> CondType.JE
+                    IntPredicate.Ne -> CondType.JNE
+                    IntPredicate.Gt -> CondType.JG
+                    IntPredicate.Ge -> CondType.JGE
+                    IntPredicate.Lt -> CondType.JL
+                    IntPredicate.Le -> CondType.JLE
                     else -> throw CodegenException("unknown conversion type: convType=$convType")
                 }
             }
             is UnsignedIntCompare, is PointerCompare -> {
                 when (val convType = cond.predicate().invert()) {
-                    IntPredicate.Eq -> JmpType.JE
-                    IntPredicate.Ne -> JmpType.JNE
-                    IntPredicate.Gt -> JmpType.JA
-                    IntPredicate.Ge -> JmpType.JAE
-                    IntPredicate.Lt -> JmpType.JB
-                    IntPredicate.Le -> JmpType.JBE
+                    IntPredicate.Eq -> CondType.JE
+                    IntPredicate.Ne -> CondType.JNE
+                    IntPredicate.Gt -> CondType.JA
+                    IntPredicate.Ge -> CondType.JAE
+                    IntPredicate.Lt -> CondType.JB
+                    IntPredicate.Le -> CondType.JBE
                     else -> throw CodegenException("unknown conversion type: convType=$convType")
                 }
             }
             is FloatCompare -> {
                 when (val convType = cond.predicate().invert()) {
-                    FloatPredicate.Oeq -> JmpType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
+                    FloatPredicate.Oeq -> CondType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
                     FloatPredicate.Ogt -> TODO()
-                    FloatPredicate.Oge -> JmpType.JAE
+                    FloatPredicate.Oge -> CondType.JAE
                     FloatPredicate.Olt -> TODO()
-                    FloatPredicate.Ole -> JmpType.JBE
-                    FloatPredicate.One -> JmpType.JNE // TODO Clang insert extra instruction 'jp ${labelName}"
+                    FloatPredicate.Ole -> CondType.JBE
+                    FloatPredicate.One -> CondType.JNE // TODO Clang insert extra instruction 'jp ${labelName}"
                     FloatPredicate.Ord -> TODO()
                     FloatPredicate.Ueq -> TODO()
                     FloatPredicate.Ugt -> TODO()
                     FloatPredicate.Uge -> TODO()
                     FloatPredicate.Ult -> TODO()
-                    FloatPredicate.Ule -> JmpType.JBE
+                    FloatPredicate.Ule -> CondType.JBE
                     FloatPredicate.Uno -> TODO()
                     FloatPredicate.Une -> TODO()
                     else -> throw CodegenException("unknown conversion type: convType=$convType")

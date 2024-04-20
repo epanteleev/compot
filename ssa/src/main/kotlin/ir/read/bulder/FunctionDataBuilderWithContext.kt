@@ -292,6 +292,11 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.select(cond, selectType.type(), onTrue, onFalse))
     }
 
+    fun flag2int(name: LocalValueToken, valueTok: AnyValueToken, expectedType: IntegerTypeToken): Flag2Int {
+        val value = getValue(valueTok, Type.U1)
+        return memorize(name, bb.flag2int(value, expectedType.type()))
+    }
+
     fun phi(name: LocalValueToken, incomingTok: ArrayList<AnyValueToken>, labelsTok: ArrayList<Identifier>, expectedType: PrimitiveTypeToken): Value {
         val blocks = arrayListOf<Block>()
         for (tok in labelsTok) {

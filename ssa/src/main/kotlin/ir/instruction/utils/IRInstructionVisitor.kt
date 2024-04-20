@@ -12,6 +12,7 @@ interface IRInstructionVisitor<T> {
     fun visit(branch: Branch): T
     fun visit(branchCond: BranchCond): T
     fun visit(call: Call): T
+    fun visit(flag2Int: Flag2Int): T
     fun visit(bitcast: Bitcast): T
     fun visit(zext: ZeroExtend): T
     fun visit(sext: SignExtend): T

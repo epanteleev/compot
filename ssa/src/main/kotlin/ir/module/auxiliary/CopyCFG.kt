@@ -140,6 +140,11 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         return Bitcast.make(bitcast.name(), bitcast.type(), operand)
     }
 
+    override fun visit(flag2Int: Flag2Int): Instruction {
+        val operand = mapUsage<Value>(flag2Int.value())
+        return Flag2Int.make(flag2Int.name(), flag2Int.type(), operand)
+    }
+
     override fun visit(zext: ZeroExtend): Instruction {
         val operand = mapUsage<Value>(zext.value())
         return ZeroExtend.make(zext.name(), zext.type(), operand)

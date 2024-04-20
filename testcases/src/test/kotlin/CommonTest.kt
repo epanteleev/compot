@@ -9,50 +9,62 @@ import kotlin.test.assertEquals
 abstract class CommonTest {
     protected fun runTest(filename: String, lib: List<String>): Result {
         val basename = filename.substringAfterLast("/").substringBeforeLast(".")
-
-        compile(filename, basename, lib)
+        compile(filename, basename, listOf(), lib)
 
         val testResult = RunExecutable.runCommand(listOf("./$TEST_OUTPUT_DIR/$basename.out"), null)
         return Result(basename, testResult.output, testResult.error, testResult.exitCode)
     }
 
-    protected fun runCTest(filename: String, lib: List<String>): Result {
+    protected fun runOptimizedTest(filename: String, lib: List<String>): Result {
         val basename = filename.substringAfterLast("/").substringBeforeLast(".")
-
-        compileCFile(filename, basename, lib)
+        compile(filename, basename, listOf("-O 1"), lib)
 
         val testResult = RunExecutable.runCommand(listOf("./$TEST_OUTPUT_DIR/$basename.out"), null)
         return Result(basename, testResult.output, testResult.error, testResult.exitCode)
     }
 
-    private fun compile(filename: String, basename: String, lib: List<String>) {
-        val args = arrayOf("-c", "$TESTCASES_DIR/$filename.ir", "--dump-ir", TEST_OUTPUT_DIR, "-o", "$TEST_OUTPUT_DIR/$basename")
+    protected fun runCTest(filename: String, extraFiles: List<String>): Result {
+        val basename = filename.substringAfterLast("/").substringBeforeLast(".")
+        compileCFile(filename, basename, listOf(), extraFiles)
+
+        val testResult = RunExecutable.runCommand(listOf("./$TEST_OUTPUT_DIR/$basename.out"), null)
+        return Result(basename, testResult.output, testResult.error, testResult.exitCode)
+    }
+
+    protected fun runOptimizedCTest(filename: String, lib: List<String>): Result {
+        val basename = filename.substringAfterLast("/").substringBeforeLast(".")
+        compileCFile(filename, basename, listOf("-O1"), lib)
+
+        val testResult = RunExecutable.runCommand(listOf("./$TEST_OUTPUT_DIR/$basename.out"), null)
+        return Result(basename, testResult.output, testResult.error, testResult.exitCode)
+    }
+
+    private fun compile(filename: String, basename: String, optOptions: List<String>, extraFiles: List<String>) {
+        val args = arrayOf("-c", "$TESTCASES_DIR/$filename.ir", "--dump-ir", TEST_OUTPUT_DIR) +
+                optOptions +
+                listOf("-o", "$TEST_OUTPUT_DIR/$basename")
 
         val cli = CliParser().parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         OptDriver(cli).run()
 
-        val insertedPath = lib.map { "$TESTCASES_DIR/$it" }
-
-        val gccCommandLine = listOf("gcc", "$TEST_OUTPUT_DIR/$basename.o") + insertedPath + listOf("-o", "$TEST_OUTPUT_DIR/$basename.out")
-        val result = RunExecutable.runCommand(gccCommandLine, null)
-        if (result.exitCode != 0) {
-            throw RuntimeException("execution failed with code ${result.exitCode}:\n${result.error}")
-        }
+        runGCC(basename, extraFiles)
     }
 
-    private fun compileCFile(filename: String, basename: String, lib: List<String>) {
-        val args = arrayOf("-c", "$TESTCASES_DIR/$filename.c", "--dump-ir", TEST_OUTPUT_DIR ,"-o", "$TEST_OUTPUT_DIR/$basename")
+    private fun compileCFile(filename: String, basename: String, optOptions: List<String>, extraFiles: List<String>) {
+        val args = arrayOf("-c", "$TESTCASES_DIR/$filename.c", "--dump-ir", TEST_OUTPUT_DIR) +
+                optOptions +
+                listOf("-o", "$TEST_OUTPUT_DIR/$basename")
 
         val cli = CCLIParser().parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         ShlangDriver(cli).run()
 
-        val insertedPath = lib.map { "$TESTCASES_DIR/$it" }
+        runGCC(basename, extraFiles)
+    }
 
+    private fun runGCC(basename: String, extraFiles: List<String>) {
+        val insertedPath = extraFiles.map { "$TESTCASES_DIR/$it" }
         val gccCommandLine = listOf("gcc", "$TEST_OUTPUT_DIR/$basename.o") + insertedPath + listOf("-o", "$TEST_OUTPUT_DIR/$basename.out")
-        val result = RunExecutable.runCommand(gccCommandLine, null)
-        if (result.exitCode != 0) {
-            throw RuntimeException("execution failed with code ${result.exitCode}:\n${result.error}")
-        }
+        RunExecutable.checkedRunCommand(gccCommandLine, null)
     }
 
     protected fun assertReturnCode(result: Result, errorCode: Int) {

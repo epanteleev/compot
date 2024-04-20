@@ -174,6 +174,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    override fun visit(flag2Int: Flag2Int) {
+        assert(Flag2Int.typeCheck(flag2Int)) {
+            "Instruction '${flag2Int.dump()}' has inconsistent types."
+        }
+    }
+
     override fun visit(bitcast: Bitcast) {
         assert(Bitcast.typeCheck(bitcast)) {
             "Cast instruction '${bitcast.dump()}' has inconsistent types."

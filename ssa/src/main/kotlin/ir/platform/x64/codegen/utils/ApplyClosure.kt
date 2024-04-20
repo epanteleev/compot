@@ -173,4 +173,12 @@ object ApplyClosure {
             else -> closure.default(dst, src)
         }
     }
+
+    operator fun invoke(dst: Operand, closure: GPOperandFlagInstrunctionVisitor) {
+        when (dst) {
+            is GPRegister -> closure.r(dst)
+            is Address    -> closure.a(dst)
+            else          -> closure.default(dst)
+        }
+    }
 }

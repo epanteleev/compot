@@ -113,6 +113,10 @@ class FunctionDataBuilder private constructor(
         return bb.gfp(source, ty, index)
     }
 
+    override fun flag2int(value: Value, ty: IntegerType): Flag2Int {
+        return bb.flag2int(value, ty)
+    }
+
     override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {
         return bb.bitcast(value, ty)
     }

@@ -16,6 +16,7 @@ dependencies {
 }
 
 tasks.test {
+    jvmArgs("-ea")
     mkdir("test-results")
     environment("TEST_RESULT_DIR", "test-results")
     useJUnitPlatform()

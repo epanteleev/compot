@@ -284,6 +284,10 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> GetFieldPtr.make(n(it), ty, source, index) }
     }
 
+    override fun flag2int(value: Value, ty: IntegerType): Flag2Int {
+        return withOutput { it: Int -> Flag2Int.make(n(it), ty, value) }
+    }
+
     override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {
         return withOutput { it: Int -> Bitcast.make(n(it), ty, value) }
     }

@@ -141,7 +141,7 @@ data class Label(val id: String) {
     }
 }
 
-enum class JmpType {
+enum class CondType {
     JE { // Jump if equal (ZF=1).
         override fun toString(): String = "je"
     },
@@ -195,7 +195,7 @@ enum class JmpType {
     }
 }
 
-data class Jcc(val jumpType: JmpType, val label: String): CPUInstruction {
+data class Jcc(val jumpType: CondType, val label: String): CPUInstruction {
     override fun toString(): String {
         return "$jumpType $label"
     }

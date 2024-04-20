@@ -180,7 +180,7 @@ class Assembler(private val name: String) {
 
     fun cmp(size: Int, first: Operand, second: Operand) = add(Cmp(size, first, second))
 
-    fun jcc(jmpType: JmpType, label: String) = add(Jcc(jmpType, label))
+    fun jcc(jmpType: CondType, label: String) = add(Jcc(jmpType, label))
     fun jump(label: String) = add(Jump(label))
 
     fun ret() = add(Ret)
