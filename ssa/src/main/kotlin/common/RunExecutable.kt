@@ -15,6 +15,10 @@ object RunExecutable {
         }
         return ExecutionResult(process)
     }
+
+    fun getenv(name: String): String? {
+        return System.getenv(name)
+    }
 }
 
 data class ExecutionResult(val process: Process) {

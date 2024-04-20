@@ -4,13 +4,13 @@ import java.io.File
 import ir.module.Module
 
 
-class CompileContext(private val filename: String, private val suffix: String, private val loggingLevel: Int) {
+class CompileContext(private val filename: String, private val suffix: String, private val outputDir: String?) {
 
     fun log(passName: String, message: () -> String) {
-        if (loggingLevel == 0) {
+        if (outputDir == null) {
             return
         }
-        val outputFile = File("$filename/${passName}${suffix}.ir")
+        val outputFile = File("${outputDir}/$filename/${passName}${suffix}.ir")
         outputFile.writeText(message())
     }
 }
@@ -18,19 +18,19 @@ class CompileContext(private val filename: String, private val suffix: String, p
 
 class CompileContextBuilder(private val filename: String) {
     private var suffix: String? = null
-    private var dumpIr: Boolean = false
+    private var dumpIr: String? = null
 
     fun setSuffix(name: String): CompileContextBuilder {
         suffix = name
         return this
     }
 
-    fun withDumpIr(isDumpIr: Boolean): CompileContextBuilder {
-        dumpIr = isDumpIr
+    fun withDumpIr(outputDir: String): CompileContextBuilder {
+        dumpIr = outputDir
         return this
     }
 
     fun construct(): CompileContext {
-        return CompileContext(filename, suffix ?: "", if (dumpIr) 1 else 0) //TODO: fix this
+        return CompileContext(filename, suffix ?: "", dumpIr) //TODO: fix this
     }
 }

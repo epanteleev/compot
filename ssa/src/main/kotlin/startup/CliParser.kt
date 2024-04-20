@@ -4,15 +4,31 @@ import java.nio.file.Paths
 
 
 class OptCLIArguments {
-    private var dumpIrEnabled = false
+    private var dumpIrDirectoryOutput: String? = null
     private var filename = "output"
     private var optLevel = 0
+    private var outputFilename: String? = null
 
-    fun isDumpIr(): Boolean = dumpIrEnabled
-    fun enableDumpIr() {
-        dumpIrEnabled = true
+    fun isDumpIr(): Boolean = dumpIrDirectoryOutput != null
+    fun getDumpIrDirectory(): String {
+        return dumpIrDirectoryOutput!!
     }
 
+    fun setDumpIrDirectory(out: String) {
+        dumpIrDirectoryOutput = out
+    }
+
+    fun outputFilename(): String {
+        if (outputFilename != null) {
+            return outputFilename!!
+        }
+
+        return getBasename()
+    }
+
+    fun setOutputFilename(name: String) {
+        outputFilename = name
+    }
     fun getFilename(): String = filename
     fun getBasename(): String = getName(filename)
     fun getLogDir(): String {
@@ -73,7 +89,20 @@ class CliParser {
                     commandLineArguments.setOptLevel(level)
                 }
                 "--dump-ir" -> {
-                    commandLineArguments.enableDumpIr()
+                    if (cursor + 1 >= args.size) {
+                        println("Expected output directory after --dump-ir")
+                        return null
+                    }
+                    cursor++
+                    commandLineArguments.setDumpIrDirectory(args[cursor])
+                }
+                "-o" -> {
+                    if (cursor + 1 >= args.size) {
+                        println("Expected output filename after -o")
+                        return null
+                    }
+                    cursor++
+                    commandLineArguments.setOutputFilename(args[cursor])
                 }
                 "-h", "--help" -> {
                     printHelp()

@@ -7,26 +7,27 @@ RESET=`tput sgr0`
 JAVA=java
 
 export JAVA_OPTS="-Xint -ea"
-IR_COMPILER="./build/ssa-1.0/bin/ssa --dump-ir"
+OUTPUT_DIR="outdir"
+IR_COMPILER="./build/ssa-1.0/bin/ssa --dump-ir $OUTPUT_DIR"
 
 rm -rf ../build
 mkdir ../build
 unzip -o ../ssa/build/distributions/ssa-1.0.zip -d build
 
 function compile_test() {
-	${IR_COMPILER} -c "$1.ir"
-        gcc "$1.o" runtime.c -o "base"
-	${IR_COMPILER} -c "$1.ir" -O 1
-        gcc "$1.o" runtime.c -o "opt"
+	${IR_COMPILER} -c "$1.ir" -o "$OUTPUT_DIR/$1"
+        gcc "$OUTPUT_DIR/$1.o" runtime.c -o "$OUTPUT_DIR/$1.base"
+	${IR_COMPILER} -c "$1.ir" -O 1 -o "$OUTPUT_DIR/$1" 
+        gcc "$OUTPUT_DIR/$1.o" runtime.c -o "$OUTPUT_DIR/$1.opt"
 }
 
 function run_test() {
 	echo "${GREEN}[Run base: $1]${RESET}"
-	BASE_RESULT=$(./base)
+	BASE_RESULT=$(./$OUTPUT_DIR/$1.base)
 	check $1 "$2" "$BASE_RESULT"
 
 	echo "[Run opt: $1]"
-	OPT_RESULT=$(./opt)
+	OPT_RESULT=$(./$OUTPUT_DIR/$1.opt)
 	check $1 "$2" "$OPT_RESULT"
 }
 

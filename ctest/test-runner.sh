@@ -7,27 +7,28 @@ RESET=`tput sgr0`
 JAVA=java
 
 export JAVA_OPTS="-ea"
-IR_COMPILER="./build/shlang-1.0-SNAPSHOT/bin/shlang --dump-ir"
+OUTPUT_DIR="outdir"
+IR_COMPILER="./build/shlang-1.0-SNAPSHOT/bin/shlang --dump-ir $OUTPUT_DIR"
 
 rm -rf ../build
 mkdir ../build
 unzip -o ../shlang/build/distributions/shlang-1.0-SNAPSHOT.zip -d build
 
 function compile_test() {
-	${IR_COMPILER} -c "$1.c"
-        gcc "$1.o" -o "base" ../tests/runtime.c
-	${IR_COMPILER} -c "$1.c" -O1
-        gcc "$1.o" -o "opt" ../tests/runtime.c
+	${IR_COMPILER} -c "$1.c" -o "$OUTPUT_DIR/$1"
+        gcc "$OUTPUT_DIR/$1.o" ../tests/runtime.c -o "$OUTPUT_DIR/$1.base"
+	${IR_COMPILER} -c "$1.c" -O 1 -o "$OUTPUT_DIR/$1"
+        gcc "$OUTPUT_DIR/$1.o" ../tests/runtime.c -o "$OUTPUT_DIR/$1.opt"
 }
 
 function run_test() {
 	echo "${GREEN}[Run base: $1]${RESET}"
-        ./base 
+  ./$OUTPUT_DIR/$1.base
 	BASE_RESULT=$(echo $?)
 	check $1 "$2" "$BASE_RESULT"
 
 	echo "[Run opt: $1]"
-	./opt
+	./$OUTPUT_DIR/$1.opt
 	OPT_RESULT=$(echo $?)
 	check $1 "$2" "$OPT_RESULT"
 }

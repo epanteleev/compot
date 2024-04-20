@@ -1,6 +1,5 @@
 package gen
 
-import common.forEachWith
 import ir.*
 import types.*
 import ir.types.*

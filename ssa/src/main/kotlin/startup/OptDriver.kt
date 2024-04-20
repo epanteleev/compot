@@ -12,11 +12,14 @@ import java.nio.file.StandardCopyOption
 
 
 class OptDriver(private val commandLineArguments: OptCLIArguments) {
-    private fun unoptimized(filename: String, module: Module) {
-        val ctx = CompileContextBuilder(filename)
+    private fun unoptimized(module: Module) {
+        val builder = CompileContextBuilder(commandLineArguments.getBasename())
             .setSuffix(".base")
-            .withDumpIr(commandLineArguments.isDumpIr())
-            .construct()
+
+        if (commandLineArguments.isDumpIr()) {
+            builder.withDumpIr(commandLineArguments.getDumpIrDirectory())
+        }
+        val ctx = builder.construct()
 
         val unoptimizedIr = PassPipeline.base(ctx).run(module)
 
@@ -29,19 +32,22 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         val temp = Files.createTempFile("base", ".S")
         val unoptimizedAsm = File(temp.toString())
         unoptimizedAsm.writeText(unoptimisedCode.toString())
-        GNUAssemblerRunner.run(unoptimizedAsm.toString(), "$filename.o")
+        GNUAssemblerRunner.run(unoptimizedAsm.toString(), "${commandLineArguments.outputFilename()}.o")
 
         if (commandLineArguments.isDumpIr()) {
-            Files.copy(temp, File("$filename/base.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
+            Files.copy(temp, File("${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/base.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
         unoptimizedAsm.delete()
     }
 
-    private fun optimized(filename: String, module: Module) {
-        val ctx = CompileContextBuilder(filename)
+    private fun optimized(module: Module) {
+        val builder = CompileContextBuilder(commandLineArguments.getBasename())
             .setSuffix(".opt")
-            .withDumpIr(commandLineArguments.isDumpIr())
-            .construct()
+
+        if (commandLineArguments.isDumpIr()) {
+            builder.withDumpIr(commandLineArguments.getDumpIrDirectory())
+        }
+        val ctx = builder.construct()
 
         val destroyed = PassPipeline.opt(ctx).run(module)
 
@@ -55,10 +61,10 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         val optimizedAsm = temp.toFile()
 
         optimizedAsm.writeText(optimizedCodegen.toString())
-        GNUAssemblerRunner.run(optimizedAsm.toString(), "$filename.o")
+        GNUAssemblerRunner.run(optimizedAsm.toString(), "${commandLineArguments.outputFilename()}.o")
 
         if (commandLineArguments.isDumpIr()) {
-            Files.copy(temp, File("$filename/opt.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
+            Files.copy(temp, File("${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/opt.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
         optimizedAsm.delete()
     }
@@ -67,18 +73,18 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         if (!commandLineArguments.isDumpIr()) {
             return
         }
-        val directoryName = File(commandLineArguments.getLogDir())
+        val directoryName = File("${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/")
         if (!directoryName.exists()) {
-            directoryName.mkdir()
+            directoryName.mkdirs()
         }
     }
 
     fun run(module: Module) {
         removeOrCreateDir()
         if (commandLineArguments.getOptLevel() == 0) {
-            unoptimized(commandLineArguments.getBasename(), module)
+            unoptimized(module)
         } else if (commandLineArguments.getOptLevel() == 1) {
-            optimized(commandLineArguments.getBasename(), module)
+            optimized(module)
         } else {
             println("Invalid optimization level: ${commandLineArguments.getOptLevel()}")
             return

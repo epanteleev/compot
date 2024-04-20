@@ -16,6 +16,8 @@ dependencies {
 }
 
 tasks.test {
+    mkdir("test-results")
+    environment("TEST_RESULT_DIR", "test-results")
     useJUnitPlatform()
 }
 
