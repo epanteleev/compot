@@ -56,7 +56,74 @@ private class CodeEmitter(private val data: FunctionData,
         orderedLocation
     }
 
+    private var aboveNeighbour: Instruction? = null
+    private var belowNeighbour: Instruction? = null
+
+    private inline fun<reified T: Instruction> above(): Instruction {
+        if (aboveNeighbour is T) {
+            throw RuntimeException("above neighbour is not ${T::class.simpleName}")
+        }
+
+        return aboveNeighbour!!
+    }
+
+    private inline fun<reified T: Instruction> below(): Instruction {
+        if (belowNeighbour is T) {
+            throw RuntimeException("below neighbour is not ${T::class.simpleName}, but ${belowNeighbour!!::class.simpleName}")
+        }
+
+        return belowNeighbour!!
+    }
+
     private fun makeLabel(bb: Block) = ".L$functionCounter.${bb.index}"
+
+    fun setcc(jmpType: AnyPredicateType, dst: Operand) {
+        when (jmpType) {
+            IntPredicate.Eq -> {
+                when (dst) {
+                    is Address    -> asm.setcc(8, SetCCType.SETE, dst)
+                    is GPRegister -> asm.setcc(8, SetCCType.SETE, dst)
+                    else -> throw CodegenException("unknown jmpType=$jmpType")
+                }
+            }
+            IntPredicate.Ne -> {
+                when (dst) {
+                    is Address    -> asm.setcc(8, SetCCType.SETNE, dst)
+                    is GPRegister -> asm.setcc(8, SetCCType.SETNE, dst)
+                    else -> throw CodegenException("unknown jmpType=$jmpType")
+                }
+            }
+            IntPredicate.Gt -> {
+                when (dst) {
+                    is Address    -> asm.setcc(8, SetCCType.SETG, dst)
+                    is GPRegister -> asm.setcc(8, SetCCType.SETG, dst)
+                    else -> throw CodegenException("unknown jmpType=$jmpType")
+                }
+            }
+            IntPredicate.Ge -> {
+                when (dst) {
+                    is Address    -> asm.setcc(8, SetCCType.SETGE, dst)
+                    is GPRegister -> asm.setcc(8, SetCCType.SETGE, dst)
+                    else -> throw CodegenException("unknown jmpType=$jmpType")
+                }
+            }
+            IntPredicate.Lt -> {
+                when (dst) {
+                    is Address    -> asm.setcc(8, SetCCType.SETL, dst)
+                    is GPRegister -> asm.setcc(8, SetCCType.SETL, dst)
+                    else -> throw CodegenException("unknown jmpType=$jmpType")
+                }
+            }
+            IntPredicate.Le -> {
+                when (dst) {
+                    is Address    -> asm.setcc(8, SetCCType.SETLE, dst)
+                    is GPRegister -> asm.setcc(8, SetCCType.SETLE, dst)
+                    else -> throw CodegenException("unknown jmpType=$jmpType")
+                }
+            }
+            else -> throw CodegenException("unknown jmpType=$jmpType")
+        }
+    }
 
     private fun emitPrologue() {
         val stackSize = valueToRegister.spilledLocalsSize()
@@ -103,10 +170,6 @@ private class CodeEmitter(private val data: FunctionData,
         val returnType = data.prototype.returnType()
         val retInstType = returnValue.type()
         val size = retInstType.size()
-
-        assert(returnType == retInstType) { //Todo fix VerifySSA
-            "should be the same, but: function.return.type=$returnType, ret.type=$retInstType"
-        }
 
         val value = valueToRegister.operand(returnValue.value())
         if (returnType is IntegerType || returnType is PointerType) {
@@ -188,8 +251,15 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(flag2Int: Flag2Int) {
         val dst = valueToRegister.operand(flag2Int)
+        val src = valueToRegister.operand(flag2Int.value())
         val compare = flag2Int.value() as CompareInstruction
-        Flag2IntCodegen(compare.predicate(), asm)(dst)
+
+        val isNeighbour = aboveNeighbour != null && aboveNeighbour == flag2Int.value()
+        if (isNeighbour) {
+            setcc(compare.predicate(), dst)
+        } else {
+            Flag2IntCodegen(asm, 1)(dst, src)
+        }
     }
 
     override fun visit(indirectionCall: IndirectionCall) {
@@ -224,6 +294,7 @@ private class CodeEmitter(private val data: FunctionData,
     override fun visit(icmp: SignedIntCompare) { //TODO
         var first  = valueToRegister.operand(icmp.first())
         val second = valueToRegister.operand(icmp.second())
+        val dst    = valueToRegister.operand(icmp)
         val size = icmp.first().type().size()
 
         first = if (first is Address2 || first is ImmInt) { //TODO???
@@ -233,11 +304,20 @@ private class CodeEmitter(private val data: FunctionData,
         }
 
         asm.cmp(size, second, first as GPRegister)
+        if (needSetcc(icmp)) {
+            setcc(icmp.predicate(), dst)
+        }
+    }
+
+    private fun needSetcc(cmp: CompareInstruction): Boolean {
+        val users = cmp.usedIn()
+        return users.size > 1 || users.first() != belowNeighbour
     }
 
     override fun visit(pcmp: PointerCompare) { //TODO
         var first  = valueToRegister.operand(pcmp.first())
         val second = valueToRegister.operand(pcmp.second())
+        val dst    = valueToRegister.operand(pcmp)
         val size = pcmp.first().type().size()
 
         first = if (first is Address2) {
@@ -247,11 +327,15 @@ private class CodeEmitter(private val data: FunctionData,
         }
 
         asm.cmp(size, second, first as GPRegister)
+        if (needSetcc(pcmp)) {
+            setcc(pcmp.predicate(), dst)
+        }
     }
 
     override fun visit(ucmp: UnsignedIntCompare) { //TODO
         var first  = valueToRegister.operand(ucmp.first())
         val second = valueToRegister.operand(ucmp.second())
+        val dst    = valueToRegister.operand(ucmp)
         val size = ucmp.first().type().size()
 
         first = if (first is Address2) {
@@ -261,12 +345,16 @@ private class CodeEmitter(private val data: FunctionData,
         }
 
         asm.cmp(size, second, first as GPRegister)
+        if (needSetcc(ucmp)) {
+            setcc(ucmp.predicate(), dst)
+        }
     }
 
-    override fun visit(floatCompare: FloatCompare) {
-        val first  = valueToRegister.operand(floatCompare.first())
-        val second = valueToRegister.operand(floatCompare.second())
-        val size = floatCompare.first().type().size()
+    override fun visit(fcmp: FloatCompare) {
+        val first  = valueToRegister.operand(fcmp.first())
+        val second = valueToRegister.operand(fcmp.second())
+        val dst    = valueToRegister.operand(fcmp)
+        val size = fcmp.first().type().size()
 
         when (first) {
             is XmmRegister -> {
@@ -295,6 +383,9 @@ private class CodeEmitter(private val data: FunctionData,
             is ImmInt -> {
                 TODO()
             }
+        }
+        if (needSetcc(fcmp)) {
+            setcc(fcmp.predicate(), dst)
         }
     }
 
@@ -505,10 +596,13 @@ private class CodeEmitter(private val data: FunctionData,
             }
 
             val instructions = bb.instructions()
-            for (idx in instructions.indices) {
+            var idx = 0
+            while (idx < instructions.size) {
                 val instruction = instructions[idx]
-                asm.comment(instruction.dump())
+                aboveNeighbour = if (idx == 0) null else instructions[idx - 1]
+                belowNeighbour = if (idx == instructions.size - 1) null else instructions[idx + 1]
                 instruction.visit(this)
+                idx += 1
             }
         }
     }

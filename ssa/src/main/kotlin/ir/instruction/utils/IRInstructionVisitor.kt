@@ -28,7 +28,7 @@ interface IRInstructionVisitor<T> {
     fun visit(gfp: GetFieldPtr): T
     fun visit(icmp: SignedIntCompare): T
     fun visit(ucmp: UnsignedIntCompare): T
-    fun visit(floatCompare: FloatCompare): T
+    fun visit(fcmp: FloatCompare): T
     fun visit(load: Load): T
     fun visit(phi: Phi): T
     fun visit(returnValue: ReturnValue): T

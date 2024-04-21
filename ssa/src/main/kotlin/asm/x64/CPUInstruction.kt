@@ -247,11 +247,32 @@ enum class SetCCType {
     SETNE {
         override fun toString(): String = "setne"
     },
+    SETA {
+        override fun toString(): String = "seta"
+    },
+    SETAE {
+        override fun toString(): String = "setae"
+    },
+    SETB {
+        override fun toString(): String = "setb"
+    },
+    SETBE {
+        override fun toString(): String = "setbe"
+    },
+    SETNA {
+        override fun toString(): String = "setna"
+    },
+    SETNAE {
+        override fun toString(): String = "setnae"
+    },
+    SETNB {
+        override fun toString(): String = "setnb"
+    },
 }
 
-data class SetCc(val size: Int, val tp: SetCCType, val reg: GPRegister): CPUInstruction {
+data class SetCc(val size: Int, val tp: SetCCType, val reg: Operand): CPUInstruction {
     override fun toString(): String {
-        return "$tp${prefix(size)} ${reg.toString(size)}"
+        return "$tp ${reg.toString(1)}"
     }
 }
 

@@ -268,9 +268,9 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
-    override fun visit(floatCompare: FloatCompare) {
-        assert(FloatCompare.typeCheck(floatCompare)) {
-            "Instruction '${floatCompare.dump()}' requires all operands to be of the same type: a=${floatCompare.first().type()}, b=${floatCompare.second().type()}"
+    override fun visit(fcmp: FloatCompare) {
+        assert(FloatCompare.typeCheck(fcmp)) {
+            "Instruction '${fcmp.dump()}' requires all operands to be of the same type: a=${fcmp.first().type()}, b=${fcmp.second().type()}"
         }
     }
 

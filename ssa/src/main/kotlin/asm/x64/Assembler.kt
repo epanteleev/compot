@@ -122,6 +122,10 @@ class Assembler(private val name: String) {
         add(SetCc(size, tp, reg))
     }
 
+    fun setcc(size: Int, tp: SetCCType, addr: Address) {
+        add(SetCc(size, tp, addr))
+    }
+
     fun push(size: Int, reg: GPRegister) = add(Push(size, reg))
 
     fun push(size: Int, imm: Imm32) = add(Push(size, imm))

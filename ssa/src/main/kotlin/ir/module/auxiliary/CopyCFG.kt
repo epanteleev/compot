@@ -226,11 +226,11 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         return UnsignedIntCompare.make(ucmp.name(), first, ucmp.predicate(), second)
     }
 
-    override fun visit(floatCompare: FloatCompare): Instruction {
-        val first  = mapUsage<Value>(floatCompare.first())
-        val second = mapUsage<Value>(floatCompare.second())
+    override fun visit(fcmp: FloatCompare): Instruction {
+        val first  = mapUsage<Value>(fcmp.first())
+        val second = mapUsage<Value>(fcmp.second())
 
-        return FloatCompare.make(floatCompare.name(), first, floatCompare.predicate(), second)
+        return FloatCompare.make(fcmp.name(), first, fcmp.predicate(), second)
     }
 
     override fun visit(load: Load): Instruction {
