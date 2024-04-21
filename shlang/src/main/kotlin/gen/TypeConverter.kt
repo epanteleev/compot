@@ -54,10 +54,7 @@ object TypeConverter {
             Type.I8 -> {
                 type as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> {
-                        val tmp = zext(value, Type.U8)
-                        bitcast(tmp, type)
-                    }
+                    Type.U1  -> flag2int(value, type)
                     Type.I16 -> trunc(value, type)
                     Type.I32 -> trunc(value, type)
                     Type.I64 -> trunc(value, type)
@@ -74,10 +71,7 @@ object TypeConverter {
             Type.I16 -> {
                 type as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> {
-                        val tmp = zext(value, Type.U16)
-                        bitcast(tmp, type)
-                    }
+                    Type.U1 -> flag2int(value, type)
                     Type.I8  -> sext(value, type)
                     Type.I32 -> trunc(value, type)
                     Type.I64 -> trunc(value, type)
@@ -94,10 +88,7 @@ object TypeConverter {
             Type.I32 -> {
                 type as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> {
-                        val tmp = zext(value, Type.U32)
-                        bitcast(tmp, type)
-                    }
+                    Type.U1 -> flag2int(value, type)
                     Type.I8 -> sext(value, type)
                     Type.I16 -> sext(value, type)
                     Type.I64 -> trunc(value, type)
@@ -120,10 +111,7 @@ object TypeConverter {
             Type.I64 -> {
                 type as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> {
-                        val tmp = zext(value, Type.U64)
-                        bitcast(tmp, type)
-                    }
+                    Type.U1 -> flag2int(value, type)
                     Type.I8 -> sext(value, type)
                     Type.I16 -> sext(value, type)
                     Type.I32 -> sext(value, type)
@@ -149,7 +137,7 @@ object TypeConverter {
             Type.U8 -> {
                 type as UnsignedIntType
                 when (value.type()) {
-                    Type.U1 -> zext(value, Type.U8)
+                    Type.U1 -> flag2int(value, type)
                     Type.I8  -> bitcast(value, type)
                     Type.I16 -> trunc(value, type)
                     Type.I32 -> trunc(value, type)
@@ -172,7 +160,7 @@ object TypeConverter {
             Type.U16 -> {
                 type as UnsignedIntType
                 when (value.type()) {
-                    Type.U1 -> zext(value, Type.U16)
+                    Type.U1 -> flag2int(value, type)
                     Type.I8  -> trunc(value, type)
                     Type.I16 -> bitcast(value, type)
                     Type.I32 -> trunc(value, type)
@@ -195,7 +183,7 @@ object TypeConverter {
             Type.U32 -> {
                 type as UnsignedIntType
                 when (value.type()) {
-                    Type.U1 -> zext(value, Type.U32)
+                    Type.U1  -> flag2int(value, type)
                     Type.I8  -> trunc(value, type)
                     Type.I16 -> trunc(value, type)
                     Type.I32 -> bitcast(value, type)

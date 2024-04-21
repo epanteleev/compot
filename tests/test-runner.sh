@@ -17,7 +17,7 @@ unzip -o ../ssa/build/distributions/ssa-1.0.zip -d build
 function compile_test() {
 	${IR_COMPILER} -c "$1.ir" -o "$OUTPUT_DIR/$1"
         gcc "$OUTPUT_DIR/$1.o" runtime.c -o "$OUTPUT_DIR/$1.base"
-	${IR_COMPILER} -c "$1.ir" -O 1 -o "$OUTPUT_DIR/$1" 
+	${IR_COMPILER} -c "$1.ir" -O1 -o "$OUTPUT_DIR/$1" 
         gcc "$OUTPUT_DIR/$1.o" runtime.c -o "$OUTPUT_DIR/$1.opt"
 }
 

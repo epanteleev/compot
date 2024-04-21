@@ -75,18 +75,8 @@ class CliParser {
                     cursor++
                     commandLineArguments.setFilename(args[cursor])
                 }
-                "-O", "--opt-level" -> {
-                    if (cursor + 1 >= args.size) {
-                        println("Expected optimization level after -O")
-                        return null
-                    }
-                    cursor++
-                    val level = args[cursor].toIntOrNull()
-                    if (level == null) {
-                        println("Invalid optimization level: ${args[cursor]}")
-                        return null
-                    }
-                    commandLineArguments.setOptLevel(level)
+                "-O1" -> {
+                    commandLineArguments.setOptLevel(1)
                 }
                 "--dump-ir" -> {
                     if (cursor + 1 >= args.size) {
@@ -123,7 +113,8 @@ class CliParser {
         println("Options:")
         println("  -c, --compile <filename> Set output filename")
         println("  -O, --opt-level <level>  Set optimization level")
-        println("  --dump-ir                Dump IR to files")
+        println("  -o <filename>            Set output filename")
+        println("  --dump-ir <directory>    Dump IR to directory")
         println("  -h, --help               Show this help message")
     }
 }
