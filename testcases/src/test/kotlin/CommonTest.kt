@@ -17,7 +17,7 @@ abstract class CommonTest {
 
     protected fun runOptimizedTest(filename: String, lib: List<String>): Result {
         val basename = filename.substringAfterLast("/").substringBeforeLast(".")
-        compile(filename, basename, listOf("-O 1"), lib)
+        compile(filename, basename, listOf("-O1"), lib)
 
         val testResult = RunExecutable.runCommand(listOf("./$TEST_OUTPUT_DIR/$basename.out"), null)
         return Result(basename, testResult.output, testResult.error, testResult.exitCode)

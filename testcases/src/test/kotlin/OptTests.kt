@@ -7,14 +7,26 @@ data class Result(val testName: String, val output: String, val error: String, v
 
 class OptTests: CommonTest() {
     @Test
-    fun testOpt() {
+    fun testBubbleSort() {
         val result = runTest("opt_ir/bubble_sort", listOf("runtime/runtime.c"))
         assert(result, "0 2 4 4 9 23 45 55 89 90 \n")
     }
 
     @Test
-    fun testOpt2() {
+    fun testOptBubbleSort() {
+        val result = runOptimizedTest("opt_ir/bubble_sort", listOf("runtime/runtime.c"))
+        assert(result, "0 2 4 4 9 23 45 55 89 90 \n")
+    }
+
+    @Test
+    fun testLess() {
         val result = runTest("opt_ir/less", listOf("runtime/runtime.c"))
+        assertEquals("0\n", result.output)
+    }
+
+    @Test
+    fun testOptLess() {
+        val result = runOptimizedTest("opt_ir/less", listOf("runtime/runtime.c"))
         assertEquals("0\n", result.output)
     }
 }
