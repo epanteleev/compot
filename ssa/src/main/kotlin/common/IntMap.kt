@@ -92,6 +92,16 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
         return 0 < idx && idx < keysArray.size && keysArray[idx] == key
     }
 
+    override fun toString(): String {
+        val builder = StringBuilder()
+        builder.append("{")
+        valuesArray.forEachIndexed { idx, v ->
+            builder.append(keysArray[idx]).append("=").append(v).append(", ")
+        }
+        builder.append("}")
+        return builder.toString()
+    }
+
     private data class IntMapEntry<K, V>(override val key: K, override var value: V?) : Map.Entry<K, V?>
 }
 

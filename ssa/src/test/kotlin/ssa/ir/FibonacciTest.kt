@@ -96,8 +96,6 @@ class FibonacciTest {
         VerifySSA.run(module)
 
         val fib = module.findFunction(FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32)));
-        val liveInfo = NewLivenessAnalysis.evaluate(fib)
-        println(liveInfo)
         return module
     }
 
@@ -147,5 +145,18 @@ class FibonacciTest {
 
         assertEquals(originalMem2Reg.toString(), copyMem2Reg.toString())
         assertEquals(copy.toString(), copyModule2String)
+    }
+
+    @Test
+    fun testLiveness() {
+        val module = withBasicBlocks()
+        val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
+        val cfg = module.findFunction(prototype)
+        val liveInfo = NewLivenessAnalysis.evaluate(cfg)
+        println(liveInfo)
+        assertEquals(8, liveInfo.size)
+        val entry = liveInfo[BlockViewer(0)]!!
+        assertTrue { entry.liveIn().containsAll(cfg.arguments()) }
+        assertTrue { entry.liveIn().size == 1 }
     }
 }

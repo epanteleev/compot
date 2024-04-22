@@ -1,15 +1,7 @@
 package gen
 
-import gen.TypeConverter.convertToType
-import ir.*
-import ir.instruction.Alloc
-import ir.instruction.ArithmeticBinaryOp
-import ir.instruction.FloatPredicate
-import ir.instruction.IntPredicate
 import types.*
 import ir.module.Module
-import ir.module.block.Label
-import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.*
 import parser.nodes.*

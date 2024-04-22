@@ -1,21 +1,35 @@
 package ir.platform.x64.regalloc.liveness
 
+import common.intMapOf
 import ir.LocalValue
 import ir.module.FunctionData
 import ir.module.block.Block
+import ir.module.block.Label
 
 
-data class LiveInfo(val liveIn: Set<LocalValue>, val gen: Set<LocalValue>, val liveOut: Set<LocalValue>)
+data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal val liveOut: MutableSet<LocalValue>) {
+    fun liveIn(): Set<LocalValue> = liveIn
+    fun liveOut(): Set<LocalValue> = liveOut
+}
+
+private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue>)
+
 
 class NewLivenessAnalysis private constructor(val data: FunctionData) {
-    private val liveness = hashMapOf<Block, LiveInfo>()
     private val loopInfo = data.blocks.loopInfo()
     private val linearScanOrder = data.blocks.linearScanOrder(loopInfo).order()
+    private val liveness = run {
+        val mapOf = intMapOf<Label, LiveInfo>(data.blocks.size()) { it.index }
+        for (bb in data.blocks) {
+            mapOf[bb] = LiveInfo(mutableSetOf(), mutableSetOf())
+        }
 
-    private fun computeLocalLiveSets() {
+        mapOf
+    }
+
+    private fun computeLocalLiveSets(): Map<Block, KillGenSet> {
+        val killGenSet = intMapOf<Block, KillGenSet>(data.blocks.size()) { it.index }
         for (bb in linearScanOrder) {
-            val liveIn = mutableSetOf<LocalValue>()
-            val liveOut = mutableSetOf<LocalValue>()
             val gen = mutableSetOf<LocalValue>()
             val kill = mutableSetOf<LocalValue>()
 
@@ -26,56 +40,46 @@ class NewLivenessAnalysis private constructor(val data: FunctionData) {
                         continue
                     }
 
-                    if (usage !in kill) {
-                        gen.add(usage)
+                    if (kill.contains(usage)) {
+                        continue
                     }
+
+                    gen.add(usage)
                 }
 
                 // Handle output operand
                 if (inst is LocalValue) {
                     kill.add(inst)
                 }
-
-                liveIn.addAll(gen)
-                liveIn.removeAll(kill)
-                liveOut.addAll(liveIn)
-                liveOut.removeAll(gen)
             }
 
-            liveness[bb] = LiveInfo(liveIn, gen, liveOut)
+            killGenSet[bb] = KillGenSet(kill, gen)
         }
+        return killGenSet
     }
 
     private fun computeGlobalLiveSets() {
-        computeLocalLiveSets()
+        val killGenSet = computeLocalLiveSets()
         do {
             var changed = false
             for (bb in linearScanOrder.reversed()) {
-                val liveIn = mutableSetOf<LocalValue>()
-                val liveOut = mutableSetOf<LocalValue>()
-                val gen = mutableSetOf<LocalValue>()
-
+                val liveOut = liveness[bb]!!.liveOut
                 for (succ in bb.successors()) {
-                    liveOut.addAll(liveness[succ]!!.liveIn)
+                    changed = changed or liveOut.addAll(liveness[succ]!!.liveIn)
                 }
 
-                val currentLiveIn = liveness[bb]!!.liveIn
-                val currentLiveOut = liveness[bb]!!.liveOut
-
-                if (currentLiveIn != liveIn || currentLiveOut != liveOut) {
-                    liveness[bb] = LiveInfo(liveIn, gen, liveOut)
-                    changed = true
-                }
+                val liveIn = (liveOut.toMutableSet() - killGenSet[bb]!!.kill) + killGenSet[bb]!!.gen
+                changed = changed or (liveIn != liveness[bb]!!.liveIn)
+                liveness[bb]!!.liveIn = liveIn.toMutableSet()
             }
         } while (changed)
     }
 
-
     companion object {
-        fun evaluate(data: FunctionData): Map<Block, LiveInfo> {
-            return NewLivenessAnalysis(data).apply {
-                computeGlobalLiveSets()
-            }.liveness
+        fun evaluate(data: FunctionData): Map<Label, LiveInfo> {
+            val analysis = NewLivenessAnalysis(data)
+            analysis.computeGlobalLiveSets()
+            return analysis.liveness
         }
     }
 }
