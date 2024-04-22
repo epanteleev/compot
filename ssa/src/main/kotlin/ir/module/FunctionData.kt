@@ -4,7 +4,7 @@ import ir.ArgumentValue
 import ir.FunctionPrototype
 import ir.module.auxiliary.CopyCFG
 import ir.platform.x64.regalloc.liveness.LiveIntervals
-import ir.platform.x64.regalloc.liveness.Liveness
+import ir.platform.x64.regalloc.liveness.LiveIntervalsBuilder
 
 
 class FunctionData private constructor(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {
@@ -13,7 +13,7 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
     }
 
     fun liveness(): LiveIntervals {
-        return Liveness.evaluate(this)
+        return LiveIntervalsBuilder.evaluate(this)
     }
 
     fun copy(): FunctionData {

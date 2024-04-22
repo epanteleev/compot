@@ -1,7 +1,7 @@
 package ir.platform.x64.regalloc.liveness
 
-import common.intMapOf
 import ir.LocalValue
+import common.intMapOf
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.module.block.Label
@@ -15,9 +15,7 @@ data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal val li
 private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue>)
 
 
-class NewLivenessAnalysis private constructor(val data: FunctionData) {
-    private val loopInfo = data.blocks.loopInfo()
-    private val linearScanOrder = data.blocks.linearScanOrder(loopInfo).order()
+class LivenessAnalysis private constructor(val data: FunctionData, private val linearScanOrder: List<Block>) {
     private val liveness = run {
         val mapOf = intMapOf<Label, LiveInfo>(data.blocks.size()) { it.index }
         for (bb in data.blocks) {
@@ -76,10 +74,15 @@ class NewLivenessAnalysis private constructor(val data: FunctionData) {
     }
 
     companion object {
-        fun evaluate(data: FunctionData): Map<Label, LiveInfo> {
-            val analysis = NewLivenessAnalysis(data)
+        fun evaluate(data: FunctionData, blockOrder: List<Block>): Map<Label, LiveInfo> {
+            val analysis = LivenessAnalysis(data, blockOrder)
             analysis.computeGlobalLiveSets()
             return analysis.liveness
+        }
+
+        fun evaluate(data: FunctionData): Map<Label, LiveInfo> {
+            val loopInfo = data.blocks.loopInfo()
+            return evaluate(data, data.blocks.linearScanOrder(loopInfo).order())
         }
     }
 }

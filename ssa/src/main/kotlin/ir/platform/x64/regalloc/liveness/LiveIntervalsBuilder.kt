@@ -6,10 +6,11 @@ import ir.utils.OrderedLocation
 import ir.instruction.Instruction
 
 
-class Liveness private constructor(val data: FunctionData) {
-    private val liveness = linkedMapOf<LocalValue, LiveRangeImpl>()
+class LiveIntervalsBuilder private constructor(val data: FunctionData) {
+    private val intervals = linkedMapOf<LocalValue, LiveRangeImpl>()
     private val loopInfo = data.blocks.loopInfo()
     private val linearScanOrder = data.blocks.linearScanOrder(loopInfo).order()
+    private val liveness = LivenessAnalysis.evaluate(data, linearScanOrder)
 
     init {
         setupArguments()
@@ -21,7 +22,7 @@ class Liveness private constructor(val data: FunctionData) {
         val arguments = data.arguments()
         for ((index, arg) in arguments.withIndex()) {
             val begin = OrderedLocation(data.blocks.begin(), -1, -(arguments.size - index))
-            liveness[arg] = LiveRangeImpl(begin, begin)
+            intervals[arg] = LiveRangeImpl(begin, begin)
         }
     }
 
@@ -36,7 +37,7 @@ class Liveness private constructor(val data: FunctionData) {
 
                 /** New definition. */
                 val begin = OrderedLocation(bb, idx, ordering)
-                liveness[inst] = LiveRangeImpl(begin, begin)
+                intervals[inst] = LiveRangeImpl(begin, begin)
             }
         }
     }
@@ -48,7 +49,7 @@ class Liveness private constructor(val data: FunctionData) {
                     continue
                 }
 
-                val liveRange = liveness[usage]
+                val liveRange = intervals[usage]
                     ?: throw LiveIntervalsException("in $usage")
 
                 liveRange.registerUsage(instructionLocation)
@@ -57,8 +58,18 @@ class Liveness private constructor(val data: FunctionData) {
 
         var ordering = -1
         for (bb in linearScanOrder) {
+            // TODO Improvement: skip this step if CFG doesn't have any loops.
+            for (op in liveness[bb]!!.liveOut()) {
+                val liveRange = intervals[op]
+                    ?: throw LiveIntervalsException("in $op")
+
+                val index = bb.size + 1
+                liveRange.registerUsage(OrderedLocation(bb, index, ordering + index))
+            }
+
             for ((idx, inst) in bb.instructions().withIndex()) {
                 ordering += 1
+
                 val location = OrderedLocation(bb, idx, ordering)
                 updateLiveRange(inst, location)
             }
@@ -67,7 +78,7 @@ class Liveness private constructor(val data: FunctionData) {
 
     private fun doAnalysis(): LiveIntervals {
         fun sortedByCreation(): Map<LocalValue, LiveRange> {
-            val pairList = liveness.toList().sortedBy { (_, value) -> value.begin().order }
+            val pairList = intervals.toList().sortedBy { (_, value) -> value.begin().order }
             val result = linkedMapOf<LocalValue, LiveRange>()
             for ((k, v) in pairList) {
                 result[k] = v
@@ -81,7 +92,7 @@ class Liveness private constructor(val data: FunctionData) {
 
     companion object {
         fun evaluate(data: FunctionData): LiveIntervals {
-            return Liveness(data).doAnalysis()
+            return LiveIntervalsBuilder(data).doAnalysis()
         }
     }
 }

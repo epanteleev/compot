@@ -11,7 +11,7 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.LoopDetection
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2RegFabric
-import ir.platform.x64.regalloc.liveness.NewLivenessAnalysis
+import ir.platform.x64.regalloc.liveness.LivenessAnalysis
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -152,7 +152,7 @@ class FibonacciTest {
         val module = withBasicBlocks()
         val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
         val cfg = module.findFunction(prototype)
-        val liveInfo = NewLivenessAnalysis.evaluate(cfg)
+        val liveInfo = LivenessAnalysis.evaluate(cfg)
         println(liveInfo)
         assertEquals(8, liveInfo.size)
         val entry = liveInfo[BlockViewer(0)]!!
