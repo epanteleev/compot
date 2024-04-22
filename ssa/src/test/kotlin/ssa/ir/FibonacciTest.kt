@@ -11,6 +11,7 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.LoopDetection
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2RegFabric
+import ir.platform.x64.regalloc.liveness.NewLivenessAnalysis
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -94,6 +95,9 @@ class FibonacciTest {
         val module = moduleBuilder.build()
         VerifySSA.run(module)
 
+        val fib = module.findFunction(FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32)));
+        val liveInfo = NewLivenessAnalysis.evaluate(fib)
+        println(liveInfo)
         return module
     }
 
