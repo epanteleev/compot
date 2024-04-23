@@ -11,13 +11,13 @@ class LinearScan(private val data: FunctionData, private val liveRanges: LiveInt
     private val registerMap = hashMapOf<LocalValue, Operand>()
     private val active = hashMapOf<Group, Operand>()
     private val pool = VirtualRegistersPool.create(data.arguments())
-    private val liveRangesGroup: CoalescedLiveIntervals
+    private val liveRangesGroup: GroupedLiveIntervals
 
     init {
         allocRegistersForArgumentValues()
         handleArguments()
 
-        liveRangesGroup = Coalescing.evaluate(liveRanges, registerMap)
+        liveRangesGroup = Precoloring.evaluate(liveRanges, registerMap)
 
         handleStackAlloc(liveRangesGroup)
         allocRegistersForLocalVariables(liveRangesGroup)
@@ -39,15 +39,15 @@ class LinearScan(private val data: FunctionData, private val liveRanges: LiveInt
                if (inst !is Callable) {
                    continue
                }
-               val allocation = CalleeArgumentAllocator.alloc(inst.arguments().toList())
-               for ((operand, arg) in allocation zip inst.arguments()) {
+               val allocation = CalleeArgumentAllocator.alloc(inst.arguments().toList()) //TODO allocation
+               for ((operand, arg) in allocation zip inst.arguments()) { //todo zip
                    registerMap[arg as LocalValue] = operand
                }
            }
        }
     }
 
-    private fun handleStackAlloc(liveRangesGroup: CoalescedLiveIntervals) {
+    private fun handleStackAlloc(liveRangesGroup: GroupedLiveIntervals) {
         for ((group, _) in liveRangesGroup) {
             if (!group.stackAllocGroup) {
                 continue
@@ -57,7 +57,7 @@ class LinearScan(private val data: FunctionData, private val liveRanges: LiveInt
         }
     }
 
-    private fun allocRegistersForLocalVariables(liveRangesGroup: CoalescedLiveIntervals) {
+    private fun allocRegistersForLocalVariables(liveRangesGroup: GroupedLiveIntervals) {
         for ((group, range) in liveRangesGroup) {
             val arg = group.precolored
             if (arg != null || group.stackAllocGroup) {

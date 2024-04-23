@@ -7,7 +7,7 @@ import ir.platform.x64.regalloc.liveness.LiveRange
 import ir.platform.x64.regalloc.liveness.LiveIntervals
 
 
-class CoalescedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
+class GroupedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
     private val valueToGroup: Map<LocalValue, Group>
 
     init {
@@ -41,24 +41,24 @@ class CoalescedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
     }
 }
 
-class Coalescing(private val intervals: LiveIntervals, private val precolored: Map<LocalValue, Operand>) {
+class Precoloring private constructor(private val intervals: LiveIntervals, private val precolored: Map<LocalValue, Operand>) {
     private val visited = hashSetOf<LocalValue>()
     private val liveness = hashMapOf<Group, LiveRange>()
 
-    private fun build(): CoalescedLiveIntervals {
-        coalescePhis()
+    private fun build(): GroupedLiveIntervals {
+        mergePhiOperands()
         completeOtherGroups()
 
-        val result = liveness.toList().sortedBy { (_, value) -> value.begin().order }
+        val result = liveness.toList().sortedBy { (_, value) -> value.begin().order } // TODO
         val map = linkedMapOf<Group, LiveRange>()
         for ((k, v) in result) {
             map[k] = v
         }
 
-        return CoalescedLiveIntervals(map)
+        return GroupedLiveIntervals(map)
     }
 
-    private fun coalescePhis() {
+    private fun mergePhiOperands() {
         for ((value, range) in intervals) {
             if (value !is Phi) {
                 continue
@@ -93,8 +93,8 @@ class Coalescing(private val intervals: LiveIntervals, private val precolored: M
     }
 
     companion object {
-        fun evaluate(liveIntervals: LiveIntervals, precolored: Map<LocalValue, Operand>): CoalescedLiveIntervals {
-            return Coalescing(liveIntervals, precolored).build()
+        fun evaluate(liveIntervals: LiveIntervals, registerMap: Map<LocalValue, Operand>): GroupedLiveIntervals {
+            return Precoloring(liveIntervals, registerMap).build()
         }
     }
 }

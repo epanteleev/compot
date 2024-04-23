@@ -258,7 +258,7 @@ private class CodeEmitter(private val data: FunctionData,
         if (isNeighbour) {
             setcc(compare.predicate(), dst)
         } else {
-            Flag2IntCodegen(asm, 1)(dst, src)
+            CopyCodegen(Type.U8, asm)(dst, src)
         }
     }
 
@@ -601,6 +601,7 @@ private class CodeEmitter(private val data: FunctionData,
                 val instruction = instructions[idx]
                 aboveNeighbour = if (idx == 0) null else instructions[idx - 1]
                 belowNeighbour = if (idx == instructions.size - 1) null else instructions[idx + 1]
+                asm.comment(instruction.dump())
                 instruction.visit(this)
                 idx += 1
             }

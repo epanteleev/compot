@@ -10,8 +10,8 @@ import ir.platform.x64.CallConvention
 
 class VirtualRegistersPool private constructor(private val argumentSlots: List<Operand>) {
     private val frame = StackFrame.create()
-    private val gpRegisters = GPRegistersList(argumentSlots.filterIsInstance<GPRegister>())
-    private val xmmRegisters = XmmRegisterList(argumentSlots.filterIsInstance<XmmRegister>())
+    private val gpRegisters = GPRegistersList(argumentSlots.filterIsInstance<GPRegister>()) //TODO
+    private val xmmRegisters = XmmRegisterList(argumentSlots.filterIsInstance<XmmRegister>()) //TODO
 
     fun allocSlot(value: Value): Operand {
         return when (value) {
