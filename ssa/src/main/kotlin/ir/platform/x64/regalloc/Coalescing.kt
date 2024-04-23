@@ -67,17 +67,13 @@ class Coalescing(private val intervals: LiveIntervals, private val precolored: M
             val group = arrayListOf<LocalValue>(value)
             visited.add(value)
             var liveRange = range
-            var operand: Operand? = null
             for (used in value.usedInstructions()) {
-                val op = precolored[used]
-                operand = op
-
                 liveRange = liveRange.merge(intervals[used])
                 group.add(used)
                 visited.add(used)
             }
 
-            liveness[Group(group, operand)] = liveRange
+            liveness[Group(group, null)] = liveRange
         }
     }
 

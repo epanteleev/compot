@@ -8,8 +8,8 @@ abstract class LiveRange internal constructor(private val creation: OrderedLocat
     fun end(): OrderedLocation = end
 
     fun merge(other: LiveRange): LiveRange {
-        val begin = minOf(other.creation, creation, compareBy { it.index })
-        val end = maxOf(other.end, end, compareBy { it.index })
+        val begin = minOf(other.creation, creation, compareBy { it.order })
+        val end = maxOf(other.end, end, compareBy { it.order })
         return LiveRangeImpl(begin, end)
     }
 
