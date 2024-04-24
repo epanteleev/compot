@@ -86,11 +86,11 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
     }
 
     private fun parseCall(currentTok: LocalValueToken) {
-        val functionReturnType = iterator.expect<TypeToken>("function type")
-        val funcNameOrValue       = iterator.next("function name or value")
+        val functionReturnType = iterator.expect<TypeToken>("function return type")
+        val funcNameOrValue    = iterator.next("function name or value")
 
-        val argumentsTypes      = arrayListOf<TypeToken>()
-        val argumentValues      = arrayListOf<AnyValueToken>()
+        val argumentsTypes     = arrayListOf<TypeToken>()
+        val argumentValues     = arrayListOf<AnyValueToken>()
         tryParseArgumentBlock(argumentsTypes, argumentValues)
 
         when (funcNameOrValue) {
@@ -345,7 +345,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         // %$identifier = flag2int %{value} to {operand type}
         val source = iterator.expect<LocalValueToken>("source value")
         iterator.expect<To>("'to' keyword")
-        val type = iterator.expect<IntegerTypeToken>("type")
+        val type = iterator.expect<IntegerTypeToken>("integer type")
         builder.flag2int(currentTok, source, type)
     }
 

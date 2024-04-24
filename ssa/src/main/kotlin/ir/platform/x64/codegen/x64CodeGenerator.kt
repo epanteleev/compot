@@ -77,7 +77,21 @@ private class CodeEmitter(private val data: FunctionData,
 
     private fun makeLabel(bb: Block) = ".L$functionCounter.${bb.index}"
 
-    fun setcc(jmpType: AnyPredicateType, dst: Operand) {
+
+    private fun setccFLoat(jmpType: FloatPredicate, dst: Operand) {
+        when (jmpType) {
+            FloatPredicate.Ult -> {
+                when (dst) {
+                    is Address    -> asm.setcc(8, SetCCType.SETB, dst)
+                    is GPRegister -> asm.setcc(8, SetCCType.SETB, dst)
+                    else -> throw CodegenException("unknown jmpType=$jmpType")
+                }
+            }
+            else -> throw CodegenException("unknown jmpType=$jmpType")
+        }
+    }
+
+    private fun setccInt(jmpType: IntPredicate, dst: Operand) {
         when (jmpType) {
             IntPredicate.Eq -> {
                 when (dst) {
@@ -121,6 +135,14 @@ private class CodeEmitter(private val data: FunctionData,
                     else -> throw CodegenException("unknown jmpType=$jmpType")
                 }
             }
+            else -> throw CodegenException("unknown jmpType=$jmpType")
+        }
+    }
+
+    fun setcc(jmpType: AnyPredicateType, dst: Operand) {
+        when (jmpType) {
+            is IntPredicate   -> setccInt(jmpType, dst)
+            is FloatPredicate -> setccFLoat(jmpType, dst)
             else -> throw CodegenException("unknown jmpType=$jmpType")
         }
     }

@@ -29,4 +29,16 @@ class OptTests: CommonTest() {
         val result = runOptimizedTest("opt_ir/less", listOf("runtime/runtime.c"))
         assertEquals("0\n", result.output)
     }
+
+    @Test
+    fun testLessFP32() {
+        val result = runTest("opt_ir/less_fp32", listOf("runtime/runtime.c"))
+        assertEquals("0\n", result.output)
+    }
+
+    @Test
+    fun testOptLessFP32() {
+        val result = runOptimizedTest("opt_ir/less_fp32", listOf("runtime/runtime.c"))
+        assertEquals("0\n", result.output)
+    }
 }

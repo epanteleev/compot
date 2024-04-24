@@ -1,0 +1,33 @@
+
+extern i32 @printInt(i32)
+
+; int less(float a) {
+;     return a < 0;
+; }
+define i32 @less(%a: f32) {
+entry:
+  %a.addr = alloc f32
+  store ptr %a.addr, f32 %a
+  %0 = load f32 %a.addr
+  %cmp = fcmp ult f32 %0, 0
+  %conv = flag2int %cmp to i32
+  ret i32 %conv
+}
+
+; int main() {
+;     float a = 1;
+;     int c = less(a);
+;     printInt(c);
+; }
+define i32 @main() {
+entry:
+  %a = alloc f32
+  %c = alloc i32
+  store ptr %a, f32 1
+  %0 = load f32 %a
+  %call = call i32 @less(%0: f32)
+  store ptr %c, i32 %call
+  %1 = load i32 %c
+  %call1 = call i32 @printInt(%1: i32)
+  ret i32 0
+}
