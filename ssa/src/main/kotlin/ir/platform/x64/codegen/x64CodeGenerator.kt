@@ -257,9 +257,8 @@ private class CodeEmitter(private val data: FunctionData,
         val isNeighbour = aboveNeighbour != null && aboveNeighbour == flag2Int.value()
         if (isNeighbour) {
             setcc(compare.predicate(), dst)
-        } else {
-            CopyCodegen(Type.U8, asm)(dst, src)
         }
+        Flag2IntCodegen(flag2Int.type().size(), asm)(dst, src)
     }
 
     override fun visit(indirectionCall: IndirectionCall) {

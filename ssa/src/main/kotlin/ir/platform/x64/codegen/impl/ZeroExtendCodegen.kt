@@ -18,7 +18,6 @@ data class ZeroExtendCodegen(val type: IntegerType, val asm: Assembler): GPOpera
         if (dst == src) {
             return
         }
-
         asm.mov(size, src, dst)
     }
 

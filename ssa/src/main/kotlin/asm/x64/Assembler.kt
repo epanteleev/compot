@@ -149,10 +149,10 @@ class Assembler(private val name: String) {
     fun mov(size: Int, imm32: Imm32, dst: GPRegister) = add(Mov(size, imm32, dst))
 
     // Move With Sign-Extension
-    fun movsx(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = add(Movsx(fromSize, toSize, src, dst))
-    fun movsx(fromSize: Int, toSize: Int, src: Address, dst: GPRegister) = add(Movsx(fromSize, toSize, src, dst))
-    fun movsxd(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = add(Movsxd(fromSize, toSize, src, dst))
-    fun movsxd(fromSize: Int, toSize: Int, src: Address, dst: GPRegister) = add(Movsxd(fromSize, toSize, src, dst))
+    private fun movsx(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = add(Movsx(fromSize, toSize, src, dst))
+    private fun movsx(fromSize: Int, toSize: Int, src: Address, dst: GPRegister) = add(Movsx(fromSize, toSize, src, dst))
+    private fun movsxd(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = add(Movsxd(fromSize, toSize, src, dst))
+    private fun movsxd(fromSize: Int, toSize: Int, src: Address, dst: GPRegister) = add(Movsxd(fromSize, toSize, src, dst))
 
     fun movsext(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = when (fromSize) {
         8, 4 -> movsxd(fromSize, toSize, src, dst)
@@ -163,6 +163,15 @@ class Assembler(private val name: String) {
     fun movsext(fromSize: Int, toSize: Int, src: Address, dst: GPRegister) = when (fromSize) {
         8, 4 -> movsxd(fromSize, toSize, src, dst)
         2, 1 -> movsx(fromSize, toSize, src, dst)
+        else -> throw IllegalArgumentException("fromSize=$fromSize, toSize=$toSize, src=$src, dst=$dst")
+    }
+
+    // Move With Zero-Extend
+    private fun movzx(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = add(Movzx(fromSize, toSize, src, dst))
+    private fun movzx(fromSize: Int, toSize: Int, src: Address, dst: GPRegister) = add(Movzx(fromSize, toSize, src, dst))
+
+    fun movzext(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = when (fromSize) {
+        8, 4, 2, 1 -> movzx(fromSize, toSize, src, dst)
         else -> throw IllegalArgumentException("fromSize=$fromSize, toSize=$toSize, src=$src, dst=$dst")
     }
 

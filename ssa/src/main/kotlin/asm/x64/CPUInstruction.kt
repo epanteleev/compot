@@ -73,6 +73,12 @@ data class Movsxd(val fromSize: Int, val toSize: Int, val src: Operand, val des:
     }
 }
 
+data class Movzx(val fromSize: Int, val toSize: Int, val src: Operand, val des: Operand): CPUInstruction {
+    override fun toString(): String {
+        return "movz${prefix(fromSize)}${prefix(toSize)} ${src.toString(fromSize)}, ${des.toString(toSize)}"
+    }
+}
+
 data class Lea(val size: Int, val src: Operand, val des: Register): CPUInstruction {
     init {
         assert(size == 2 || size == 4 || size == 8) {
