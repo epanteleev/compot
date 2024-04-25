@@ -426,9 +426,29 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             }
             PostfixUnaryOpType.INC -> {
                 val addr = visitExpression(unaryOp.primary, false)
-                val loaded = ir().load(Type.I32, addr)
-                val inc = ir().arithmeticBinary(loaded, ArithmeticBinaryOp.Add, Constant.of(Type.I32, 1))
-                ir().store(addr, inc)
+                val type = toIRType<PrimitiveType>(unaryOp.resolveType(typeHolder))
+                val loaded = ir().load(type, addr)
+                val converted = if (loaded.type() == Type.Ptr) {
+                    ir().convertToType(loaded, Type.I64)
+                } else {
+                    loaded
+                }
+                val inc = ir().arithmeticBinary(converted, ArithmeticBinaryOp.Add, Constant.of(converted.type(), 1))
+                ir().store(addr, ir().convertToType(inc, type))
+                loaded
+            }
+            PostfixUnaryOpType.DEC -> {
+                val addr = visitExpression(unaryOp.primary, false)
+                val type = toIRType<PrimitiveType>(unaryOp.resolveType(typeHolder))
+                val loaded = ir().load(type, addr)
+                val converted = if (loaded.type() == Type.Ptr) {
+                    ir().convertToType(loaded, Type.I64)
+                } else {
+                    loaded
+                }
+
+                val dec = ir().arithmeticBinary(converted, ArithmeticBinaryOp.Sub, Constant.of(converted.type(), 1))
+                ir().store(addr, ir().convertToType(dec, type))
                 loaded
             }
             PrefixUnaryOpType.NEG -> {

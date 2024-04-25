@@ -64,6 +64,10 @@ object TypeConverter {
                     Type.U64 -> trunc(value, type)
                     Type.F32 -> fptosi(value, type)
                     Type.F64 -> fptosi(value, type)
+                    Type.Ptr -> {
+                        val tmp = bitcast(value, Type.I64) //TODO
+                        trunc(tmp, type)
+                    }
                     else -> throw IRCodeGenError("Cannot convert $value to $type")
                 }
             }
@@ -81,6 +85,10 @@ object TypeConverter {
                     Type.U64 -> trunc(value, type)
                     Type.F32 -> fptosi(value, type)
                     Type.F64 -> fptosi(value, type)
+                    Type.Ptr -> {
+                        val tmp = bitcast(value, Type.I64) //TODO
+                        trunc(tmp, type)
+                    }
                     else -> throw IRCodeGenError("Cannot convert $value to $type")
                 }
             }
@@ -104,6 +112,10 @@ object TypeConverter {
                     Type.U64 -> trunc(value, type)
                     Type.F32 -> fptosi(value, type)
                     Type.F64 -> fptosi(value, type)
+                    Type.Ptr -> {
+                        val tmp = bitcast(value, Type.I64) //TODO
+                        trunc(tmp, type)
+                    }
                     else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $type")
                 }
             }
@@ -130,6 +142,7 @@ object TypeConverter {
                     Type.U64 -> bitcast(value, type)
                     Type.F32 -> fptosi(value, type)
                     Type.F64 -> fptosi(value, type)
+                    Type.Ptr -> bitcast(value, Type.I64) //TODO
                     else -> throw IRCodeGenError("Cannot convert $value to $type")
                 }
             }
@@ -151,6 +164,10 @@ object TypeConverter {
                     }
                     Type.F64 -> {
                         val tmp = fptosi(value, Type.I64)
+                        trunc(tmp, type)
+                    }
+                    Type.Ptr -> {
+                        val tmp = bitcast(value, Type.U64) //TODO
                         trunc(tmp, type)
                     }
                     else -> throw IRCodeGenError("Cannot convert $value to $type")
@@ -176,6 +193,10 @@ object TypeConverter {
                         val tmp = fptosi(value, Type.I64)
                         trunc(tmp, type)
                     }
+                    Type.Ptr -> {
+                        val tmp = bitcast(value, Type.U64) //TODO
+                        trunc(tmp, type)
+                    }
                     else -> throw IRCodeGenError("Cannot convert $value to $type")
                 }
             }
@@ -199,6 +220,44 @@ object TypeConverter {
                         val tmp = fptosi(value, Type.I64)
                         trunc(tmp, type)
                     }
+                    Type.Ptr -> {
+                        val tmp = bitcast(value, Type.U64) //TODO
+                        trunc(tmp, type)
+                    }
+                    else -> throw IRCodeGenError("Cannot convert $value to $type")
+                }
+            }
+            Type.Ptr -> {
+                type as PointerType
+                when (value.type()) {
+                    Type.I8  -> {
+                        val tmp = sext(value, Type.I64)
+                        bitcast(tmp, type)
+                    }
+                    Type.I16 -> {
+                        val tmp = sext(value, Type.I64)
+                        bitcast(tmp, type)
+                    }
+                    Type.I32 -> {
+                        val tmp = sext(value, Type.I64)
+                        bitcast(tmp, type)
+                    }
+                    Type.I64 -> {
+                        bitcast(value, type)
+                    }
+                    Type.U8  -> {
+                        val tmp = zext(value, Type.U64)
+                        bitcast(tmp, type)
+                    }
+                    Type.U16 -> {
+                        val tmp = zext(value, Type.U64)
+                        bitcast(tmp, type)
+                    }
+                    Type.U32 -> {
+                        val tmp = zext(value, Type.U64)
+                        bitcast(tmp, type)
+                    }
+                    Type.U64 -> bitcast(value, type)
                     else -> throw IRCodeGenError("Cannot convert $value to $type")
                 }
             }

@@ -36,15 +36,27 @@ class ShlangTests: CommonTest() {
     @Test
     fun testArrayAssign() {
         val result = runCTest("shlang/discriminant1", listOf("runtime/runtime.c"))
-        assertEquals(result.output, "1.000000\n")
+        assertEquals("1.000000\n", result.output)
         assertReturnCode(result, 0)
     }
 
     @Test
     fun testOptArrayAssign() {
         val result = runCTest("shlang/discriminant1", listOf("runtime/runtime.c"))
-        assertEquals(result.output, "1.000000\n")
+        assertEquals("1.000000\n", result.output)
         assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testMemsetMemcpy() {
+        val result = runCTest("shlang/memset/memset_arrays", listOf("shlang/memset/memset_test.c"))
+        assert(result, "Done")
+    }
+
+    @Test
+    fun testOptMemsetMemcpy() {
+        val result = runOptimizedCTest("shlang/memset/memset_arrays", listOf("shlang/memset/memset_test.c"))
+        assert(result, "Done")
     }
 
     @Test
