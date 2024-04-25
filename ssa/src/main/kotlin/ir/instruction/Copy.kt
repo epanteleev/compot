@@ -34,7 +34,7 @@ class Copy private constructor(name: String, origin: Value):
 
         fun make(name: String, origin: Value): Copy {
             val originType = origin.type()
-            require(isAppropriateType(originType)) {
+            require(isAppropriateType(originType, origin)) {
                 "should not be $originType, but origin=$origin:$originType"
             }
 
@@ -42,11 +42,11 @@ class Copy private constructor(name: String, origin: Value):
         }
 
         fun typeCheck(copy: Copy): Boolean {
-            return isAppropriateType(copy.origin().type())
+            return isAppropriateType(copy.type(), copy.origin())
         }
 
-        private fun isAppropriateType(originType: Type): Boolean {
-            return originType is PrimitiveType
+        private fun isAppropriateType(originType: Type, origin: Value): Boolean {
+            return originType is PrimitiveType && origin.type() == originType
         }
     }
 }

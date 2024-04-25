@@ -9,10 +9,22 @@ import ir.types.PrimitiveType
 
 
 class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks) {
+    private val replaced = identityHashSetOf<Instruction>()
+    private val escaped = identityHashSetOf<Instruction>()
+
+    init {
+        replaceAlloc()
+    }
+
     private fun replaceStore(bb: Block, inst: Store, i: Int) {
         val toValue   = inst.pointer() as Generate
         val fromValue = inst.value()
+        println("------------------------------")
+        println(inst.dump())
         bb.insert(i) { it.move(toValue, fromValue) }
+        println(bb.instructions()[i].dump())
+
+
         bb.remove(i + 1)
     }
 
@@ -36,12 +48,12 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     }
 
     private fun replaceCopy(bb: Block, inst: Copy, i: Int) {
-        val lea = bb.insert(i) { it.copy(inst.origin()) }
+        val lea = bb.insert(i) { it.lea(inst.origin() as Generate) }
         ValueInstruction.replaceUsages(inst, lea)
         bb.remove(i + 1)
     }
 
-    private fun replaceAllocLoadStores(replaced: Set<Instruction>) {
+    private fun replaceAllocLoadStores() {
         for (bb in cfg) {
             var idx = 0
             val instructions = bb.instructions()
@@ -69,8 +81,6 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     }
 
     private fun replaceAlloc(): Set<Instruction> {
-        val replaced = identityHashSetOf<Instruction>()
-
         fun replaceHelper(bb: Block, i: Int, inst: Instruction) {
             if (inst !is Alloc) {
                 return
@@ -81,7 +91,12 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
             }
 
             for (user in inst.usedIn()) {
-                replaced.add(user)
+                if (user is Load || (user is Store && user.pointer() == inst)) {
+                    replaced.add(user)
+                    continue
+                }
+
+                escaped.add(user)
             }
 
             val gen = replaceAlloc(bb, inst, i)
@@ -102,12 +117,34 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     }
 
     private fun pass() {
-        val replaced = replaceAlloc()
-        replaceAllocLoadStores(replaced)
+        for (bb in cfg) {
+            var idx = 0
+            val instructions = bb.instructions()
+            while (idx < instructions.size) {
+                val inst = instructions[idx]
+                if (inst !in escaped) {
+                    idx++
+                    continue
+                }
+
+                when (inst) {
+                    is Store -> {
+                        val lea = bb.insert(idx) { it.lea(inst.value() as Generate) }
+                        inst.update(1, lea)
+                        bb.remove(idx + 1)
+                        idx++
+                    }
+                    else -> assert(false) { "should be, but inst=${inst}" }
+                }
+            }
+        }
+
+        replaceAllocLoadStores()
     }
 
     companion object {
         fun run(module: Module): Module {
+            println(module)
             for (fn in module.functions) {
                 AllocLoadStoreReplacement(fn.blocks).pass()
             }

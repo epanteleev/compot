@@ -5,6 +5,7 @@ import ir.types.*
 import ir.instruction.Store
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.utils.*
 
 
@@ -36,12 +37,13 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperands
 
     override fun aa(dst: Address, src: Address) {
         if (dst == src) {
-            asm.mov(size, src, temp1)
+            asm.mov(POINTER_SIZE, dst, temp1)
             asm.mov(size, temp1, Address.from(temp1, 0))
+        } else {
+            asm.mov(POINTER_SIZE, dst, temp1)
+            asm.mov(size, src, temp2)
+            asm.mov(size, temp2, Address.from(temp1, 0))
         }
-        asm.mov(size, src, temp1)
-        asm.mov(size, Address.from(temp1, 0), temp1)
-        asm.mov(size, temp1, dst)
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {

@@ -26,7 +26,7 @@ data class BitcastCodegen (val type: PrimitiveType, val asm: Assembler): GPOpera
     }
 
     override fun ra(dst: GPRegister, src: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, src, dst)
     }
 
     override fun ar(dst: Address, src: GPRegister) {

@@ -152,7 +152,8 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun raaF(dst: XmmRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, dst)
+        asm.mulf(size, second, dst)
     }
 
     override fun araF(dst: Address, first: XmmRegister, second: Address) {
