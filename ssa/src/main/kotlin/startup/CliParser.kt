@@ -1,59 +1,9 @@
 package startup
 
-import java.nio.file.Paths
+import common.commandLine.AnyCLIArguments
 
+class OptCLIArguments : AnyCLIArguments()
 
-class OptCLIArguments {
-    private var dumpIrDirectoryOutput: String? = null
-    private var filename = "output"
-    private var optLevel = 0
-    private var outputFilename: String? = null
-
-    fun isDumpIr(): Boolean = dumpIrDirectoryOutput != null
-    fun getDumpIrDirectory(): String {
-        return dumpIrDirectoryOutput!!
-    }
-
-    fun setDumpIrDirectory(out: String) {
-        dumpIrDirectoryOutput = out
-    }
-
-    fun outputFilename(): String {
-        if (outputFilename != null) {
-            return outputFilename!!
-        }
-
-        return getBasename()
-    }
-
-    fun setOutputFilename(name: String) {
-        outputFilename = name
-    }
-    fun getFilename(): String = filename
-    fun getBasename(): String = getName(filename)
-    fun getLogDir(): String {
-        return getBasename()
-    }
-
-    fun setFilename(name: String) {
-        filename = name
-    }
-
-    fun getOptLevel(): Int = optLevel
-    fun setOptLevel(level: Int) {
-        optLevel = level
-    }
-
-    private fun getName(name: String): String {
-        val fileName = Paths.get(name).fileName.toString()
-        val lastIndex = fileName.lastIndexOf('.')
-        if (lastIndex != -1) {
-            return fileName.substring(0, lastIndex)
-        }
-
-        return fileName
-    }
-}
 
 class CliParser {
     fun parse(args: Array<String>): OptCLIArguments? {
