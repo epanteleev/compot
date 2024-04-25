@@ -44,7 +44,7 @@ abstract class CommonTest {
                 optOptions +
                 listOf("-o", "$TEST_OUTPUT_DIR/$basename")
 
-        val cli = CliParser().parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
+        val cli = CliParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         OptDriver(cli).run()
 
         runGCC(basename, extraFiles)
@@ -55,7 +55,7 @@ abstract class CommonTest {
                 optOptions +
                 listOf("-o", "$TEST_OUTPUT_DIR/$basename")
 
-        val cli = CCLIParser().parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
+        val cli = CCLIParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         ShlangDriver(cli).run()
 
         runGCC(basename, extraFiles)

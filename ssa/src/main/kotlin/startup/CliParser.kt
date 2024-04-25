@@ -5,7 +5,7 @@ import common.commandLine.AnyCLIArguments
 class OptCLIArguments : AnyCLIArguments()
 
 
-class CliParser {
+object CliParser {
     fun parse(args: Array<String>): OptCLIArguments? {
         if (args.isEmpty()) {
             printHelp()
@@ -62,7 +62,7 @@ class CliParser {
         println("Usage: ssa [options] <filename>")
         println("Options:")
         println("  -c, --compile <filename> Set output filename")
-        println("  -O, --opt-level <level>  Set optimization level")
+        println("  -O1                      Set optimization level")
         println("  -o <filename>            Set output filename")
         println("  --dump-ir <directory>    Dump IR to directory")
         println("  -h, --help               Show this help message")

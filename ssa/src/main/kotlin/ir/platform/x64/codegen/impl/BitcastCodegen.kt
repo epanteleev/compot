@@ -22,7 +22,7 @@ data class BitcastCodegen (val type: PrimitiveType, val asm: Assembler): GPOpera
             return
         }
 
-        asm.mov(size, dst, src)
+        asm.mov(size, src, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {

@@ -20,7 +20,7 @@ class CCLIArguments : AnyCLIArguments() {
 }
 
 
-class CCLIParser {
+object CCLIParser {
     fun parse(args: Array<String>): CCLIArguments? {
         if (args.isEmpty()) {
             printHelp()
