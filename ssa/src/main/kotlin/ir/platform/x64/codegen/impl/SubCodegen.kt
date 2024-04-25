@@ -70,7 +70,8 @@ data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.sub(size, second, dst)
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
