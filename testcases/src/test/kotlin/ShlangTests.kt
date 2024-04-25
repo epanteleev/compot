@@ -60,6 +60,18 @@ class ShlangTests: CommonTest() {
     }
 
     @Test
+    fun testDecrement() {
+        val result = runCTest("shlang/decrement", listOf("runtime/runtime.c"))
+        assert(result, "0 0 0 0 0 0 0 0 0 0\n")
+    }
+
+    @Test
+    fun testOptDecrement() {
+        val result = runOptimizedCTest("shlang/decrement", listOf("runtime/runtime.c"))
+        assert(result, "0 0 0 0 0 0 0 0 0 0\n")
+    }
+
+    @Test
     fun testInsertionSort() {
         val result = runCTest("shlang/insertionSort", listOf("runtime/runtime.c"))
         assert(result, "11 12 22 25 34 64 \n")

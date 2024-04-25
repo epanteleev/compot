@@ -1,6 +1,5 @@
 package gen
 
-import common.forEachWith
 import ir.*
 import types.*
 import ir.types.*
@@ -258,14 +257,15 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
         val convertedArgs = mutableListOf<Value>()
 
-        functionCall.args.forEach { argValue ->
-            val converted = visitExpression(argValue, true)
+        functionCall.args.forEachIndexed { idx, argValue ->
+            val expr = visitExpression(argValue, true)
             val type = toIRType<NonTrivialType>(argValue.resolveType(typeHolder))
 
             val convertedArg = if (type is ArrayType) {
-                ir().gep(converted, type.elementType() as PrimitiveType, Constant.of(Type.I64, 0))
+                ir().gep(expr, type.elementType() as PrimitiveType, Constant.of(Type.I64, 0))
             } else {
-                ir().convertToType(converted, type)
+                val cvt = function.arguments()[idx]
+                ir().convertToType(expr, cvt)
             }
 
             convertedArgs.add(convertedArg)
