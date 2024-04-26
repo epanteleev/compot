@@ -19,12 +19,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     private fun replaceStore(bb: Block, inst: Store, i: Int) {
         val toValue   = inst.pointer() as Generate
         val fromValue = inst.value()
-        println("------------------------------")
-        println(inst.dump())
         bb.insert(i) { it.move(toValue, fromValue) }
-        println(bb.instructions()[i].dump())
-
-
         bb.remove(i + 1)
     }
 
@@ -131,11 +126,16 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                     is Store -> {
                         val lea = bb.insert(idx) { it.lea(inst.value() as Generate) }
                         inst.update(1, lea)
-                        bb.remove(idx + 1)
                         idx++
                     }
-                    else -> assert(false) { "should be, but inst=${inst}" }
+                    is Copy -> {
+                        val lea = bb.insert(idx) { it.lea(inst.origin() as Generate) }
+                        ValueInstruction.replaceUsages(inst, lea)
+                        bb.remove(idx + 1)
+                    }
+                    else -> assert(false) { "should be, but inst=${inst.dump()}" }
                 }
+                idx++
             }
         }
 
@@ -144,7 +144,6 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
 
     companion object {
         fun run(module: Module): Module {
-            println(module)
             for (fn in module.functions) {
                 AllocLoadStoreReplacement(fn.blocks).pass()
             }
