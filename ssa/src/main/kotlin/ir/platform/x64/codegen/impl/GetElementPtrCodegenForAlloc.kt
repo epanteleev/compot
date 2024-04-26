@@ -24,7 +24,12 @@ data class GetElementPtrCodegenForAlloc (val type: PointerType, val basicType: P
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(POINTER_SIZE, second, dst)
+        val address = when (first) {
+            is Address2 -> Address.from(first.base, first.offset, dst, size)
+            else -> TODO()
+        }
+        asm.lea(POINTER_SIZE, address, dst)
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {

@@ -173,11 +173,17 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
     }
 
     override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.addf(size, second, dst)
+        } else {
+            asm.movf(size, first, dst)
+            asm.addf(size, second, dst)
+        }
     }
 
     override fun raaF(dst: XmmRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, dst)
+        asm.addf(size, second, dst)
     }
 
     override fun araF(dst: Address, first: XmmRegister, second: Address) {

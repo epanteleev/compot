@@ -67,7 +67,9 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        val disp = second.value() * size
+        asm.mov(POINTER_SIZE, first, dst)
+        asm.lea(POINTER_SIZE, Address.from(dst, disp.toInt()), dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {

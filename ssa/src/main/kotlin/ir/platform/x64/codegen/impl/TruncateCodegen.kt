@@ -19,11 +19,12 @@ data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, v
         if (dst == src) {
             return
         }
+        //TODO not correct
         asm.mov(fromSize, src, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {
-        TODO("Not yet implemented")
+        asm.mov(fromSize, src, dst)
     }
 
     override fun ar(dst: Address, src: GPRegister) {

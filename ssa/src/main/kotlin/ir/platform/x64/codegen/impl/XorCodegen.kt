@@ -3,6 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.ArithmeticBinaryOp
+import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.utils.XmmOperandsVisitorBinaryOp
@@ -121,7 +122,13 @@ data class XorCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
-        TODO("Not yet implemented")
+        if (second == dst) {
+            asm.movf(size, first, xmmTemp1)
+            asm.xorpf(size, xmmTemp1, dst)
+        } else {
+            asm.movf(size, first, dst)
+            asm.xorpf(size, second, dst)
+        }
     }
 
     override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {

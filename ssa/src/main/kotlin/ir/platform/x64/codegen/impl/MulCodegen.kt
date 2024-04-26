@@ -57,7 +57,12 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.mul(size, second, dst)
+        } else {
+            asm.mov(size, second, dst)
+            asm.mul(size, first, dst)
+        }
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
@@ -69,7 +74,8 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.mul(size, second, dst)
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
@@ -77,7 +83,9 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
-        TODO("Not yet implemented")
+        // TODO: IMUL r64, r/m64, imm8
+        asm.mov(size, second, dst)
+        asm.mul(size, first, dst)
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
@@ -132,9 +140,8 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
         } else if (second == dst) {
             asm.mulf(size, first, dst)
         } else {
-            asm.movf(size, first, xmmTemp1)
-            asm.mulf(size, second, xmmTemp1)
-            asm.movf(size, xmmTemp1, dst)
+            asm.movf(size, second, dst)
+            asm.mulf(size, first, dst)
         }
     }
 
@@ -148,7 +155,12 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
 
 
     override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.mulf(size, second, dst)
+        } else {
+            asm.movf(size, second, dst)
+            asm.mulf(size, first, dst)
+        }
     }
 
     override fun raaF(dst: XmmRegister, first: Address, second: Address) {

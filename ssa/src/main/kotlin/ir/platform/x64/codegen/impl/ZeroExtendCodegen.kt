@@ -7,8 +7,8 @@ import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandsVisitorUnaryOp
 
 
-data class ZeroExtendCodegen(val type: IntegerType, val asm: Assembler): GPOperandsVisitorUnaryOp {
-    private val size = type.size() // toSize
+data class ZeroExtendCodegen(val fromType: IntegerType, val asm: Assembler): GPOperandsVisitorUnaryOp {
+    private val typeSize = fromType.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
         ApplyClosure(dst, src, this as GPOperandsVisitorUnaryOp)
@@ -18,11 +18,11 @@ data class ZeroExtendCodegen(val type: IntegerType, val asm: Assembler): GPOpera
         if (dst == src) {
             return
         }
-        asm.mov(size, src, dst)
+        asm.mov(typeSize, src, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {
-        TODO("Not yet implemented")
+        asm.mov(typeSize, src, dst)
     }
 
     override fun ar(dst: Address, src: GPRegister) {

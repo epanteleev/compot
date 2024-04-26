@@ -24,7 +24,7 @@ class FloatToSignedCodegen(val toType: SignedIntType, val fromType: FloatingPoin
     }
 
     override fun ra(dst: GPRegister, src: Address) {
-        TODO("Not yet implemented")
+        asm.cvtfp2int(toSize, fromSize, src, dst)
     }
 
     override fun aa(dst: Address, src: Address) {
