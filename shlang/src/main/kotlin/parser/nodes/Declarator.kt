@@ -91,7 +91,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
     }
 }
 
-data class AssignmentDeclarator(val rvalue: Declarator, val lvalue: Expression): AnyDeclarator() { //TODO rename
+data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expression): AnyDeclarator() { //TODO rename
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
@@ -99,11 +99,11 @@ data class AssignmentDeclarator(val rvalue: Declarator, val lvalue: Expression):
     }
 
     fun name(): String {
-        return rvalue.name()
+        return declarator.name()
     }
 
     fun resolveType(ctype: CType, typeHolder: TypeHolder): CType {
-        return rvalue.resolveType(ctype, typeHolder)
+        return declarator.resolveType(ctype, typeHolder)
     }
 }
 

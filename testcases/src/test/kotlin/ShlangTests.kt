@@ -62,13 +62,13 @@ class ShlangTests: CommonTest() {
     @Test
     fun testDecrement() {
         val result = runCTest("shlang/decrement", listOf("runtime/runtime.c"))
-        assert(result, "0 0 0 0 0 0 0 0 0 0\n")
+        assert(result, "0 0 0 0 0 0 0 0 0\n")
     }
 
     @Test
     fun testOptDecrement() {
         val result = runOptimizedCTest("shlang/decrement", listOf("runtime/runtime.c"))
-        assert(result, "0 0 0 0 0 0 0 0 0 0\n")
+        assert(result, "0 0 0 0 0 0 0 0 0 0 \n")
     }
 
     @Test

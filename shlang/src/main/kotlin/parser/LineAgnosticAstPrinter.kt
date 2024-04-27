@@ -205,9 +205,9 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(assignmentDeclarator: AssignmentDeclarator) {
-        assignmentDeclarator.rvalue.accept(this)
+        assignmentDeclarator.declarator.accept(this)
         buffer.append(" = ")
-        assignmentDeclarator.lvalue.accept(this)
+        assignmentDeclarator.rvalue.accept(this)
     }
 
     override fun visit(functionDeclarator: FunctionDeclarator) {

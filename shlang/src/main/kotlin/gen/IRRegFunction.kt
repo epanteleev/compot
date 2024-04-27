@@ -55,13 +55,13 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val varName = decl.name()
 
         val irType = toIRType<NonTrivialType>(type)
-        val rvalueAdr = ir().alloc(irType)
-        varStack[varName] = rvalueAdr
+        val lvalueAdr = ir().alloc(irType)
+        varStack[varName] = lvalueAdr
 
-        val lvalue = visitExpression(decl.lvalue, true)
+        val rvalue = visitExpression(decl.rvalue, true)
         val commonType = toIRType<NonTrivialType>(type)
-        val converted = ir().convertToType(lvalue, commonType)
-        ir().store(rvalueAdr, converted)
+        val convertedRvalue = ir().convertToType(rvalue, commonType)
+        ir().store(lvalueAdr, convertedRvalue)
     }
 
     private fun visitDeclaration(declaration: Declaration) {
@@ -414,14 +414,14 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             PrefixUnaryOpType.ADDRESS -> visitExpression(unaryOp.primary, false)
 
             PrefixUnaryOpType.DEREF -> {
-                val addr = visitExpression(unaryOp.primary, isRvalue)
+                val addr = visitExpression(unaryOp.primary, true)
                 val type = unaryOp.resolveType(typeHolder)
 
                 val loadedType = toIRType(type) as PrimitiveType
                 if (isRvalue) {
                     ir().load(loadedType, addr)
                 } else {
-                    ir().load(Type.Ptr, addr) //TODO
+                    addr
                 }
             }
             PostfixUnaryOpType.INC -> {
