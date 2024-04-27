@@ -37,9 +37,9 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     }
 
     private fun replaceLoad(bb: Block, inst: Load, i: Int) {
-        val toValue = inst.operand()
-        ValueInstruction.replaceUsages(inst, toValue)
-        bb.remove(i)
+        val copy = bb.insert(i) { it.copy(inst.operand()) }
+        ValueInstruction.replaceUsages(inst, copy)
+        bb.remove(i + 1)
     }
 
     private fun replaceCopy(bb: Block, inst: Copy, i: Int) {
@@ -64,7 +64,10 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                         replaceStore(bb, inst, idx)
                         idx++
                     }
-                    is Load -> replaceLoad(bb, inst, idx)
+                    is Load -> {
+                        replaceLoad(bb, inst, idx)
+                        idx++
+                    }
                     is Copy -> {
                         replaceCopy(bb, inst, idx)
                         idx++

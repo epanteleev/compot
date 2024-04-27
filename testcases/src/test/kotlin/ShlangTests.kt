@@ -60,14 +60,14 @@ class ShlangTests: CommonTest() {
     }
 
     @Test
-    fun testDecrement() {
-        val result = runCTest("shlang/decrement", listOf("runtime/runtime.c"))
-        assert(result, "0 0 0 0 0 0 0 0 0\n")
+    fun testMemset1() {
+        val result = runCTest("shlang/memset1", listOf("runtime/runtime.c"))
+        assert(result, "0 0 0 0 0 0 0 0 0 0 \n")
     }
 
     @Test
-    fun testOptDecrement() {
-        val result = runOptimizedCTest("shlang/decrement", listOf("runtime/runtime.c"))
+    fun testOptMemset1() {
+        val result = runOptimizedCTest("shlang/memset1", listOf("runtime/runtime.c"))
         assert(result, "0 0 0 0 0 0 0 0 0 0 \n")
     }
 
