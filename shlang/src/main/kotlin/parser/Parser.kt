@@ -174,21 +174,21 @@ class ProgramParser(private val tokens: List<CToken>) {
         if (check("case")) {
             eat()
             val expr = constant_expression() ?: throw ParserException(ProgramMessage("Expected constant expression", peak()))
-            if (check(":")) {
-                eat()
-                val stmt = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
-                return@rule CaseStatement(expr, stmt)
+            if (!check(":")) {
+                throw ParserException(ProgramMessage("Expected ':'", peak()))
             }
-            throw ParserException(ProgramMessage("Expected ':'", peak()))
+            eat()
+            val stmt = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
+            return@rule CaseStatement(expr, stmt)
         }
         if (check("default")) {
             eat()
-            if (check(":")) {
-                eat()
-                val stmt = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
-                return@rule DefaultStatement(stmt)
+            if (!check(":")) {
+                throw ParserException(ProgramMessage("Expected ':'", peak()))
             }
-            throw ParserException(ProgramMessage("Expected ':'", peak()))
+            eat()
+            val stmt = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
+            return@rule DefaultStatement(stmt)
         }
         return@rule null
     }
@@ -223,31 +223,31 @@ class ProgramParser(private val tokens: List<CToken>) {
             }
             eat()
             val expr = expression() ?: throw ParserException(ProgramMessage("Expected expression", peak()))
-            if (check(")")) {
-                eat()
-                val then = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
-                if (check("else")) {
-                    eat()
-                    val els = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
-                    return@rule IfStatement(expr, then, els)
-                }
+            if (!check(")")) {
+                throw ParserException(ProgramMessage("Expected ')'", peak()))
+            }
+            eat()
+            val then = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
+            if (!check("else")) {
                 return@rule IfStatement(expr, then, EmptyStatement())
             }
-            throw ParserException(ProgramMessage("Expected ')'", peak()))
+            eat()
+            val els = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
+            return@rule IfStatement(expr, then, els)
         }
         if (check("switch")) {
             eat()
-            if (check("(")) {
-                eat()
-                val expr = expression() ?: throw ParserException(ProgramMessage("Expected expression", peak()))
-                if (check(")")) {
-                    eat()
-                    val stmt = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
-                    return@rule SwitchStatement(expr, stmt)
-                }
+            if (!check("(")) {
+                throw ParserException(ProgramMessage("Expected '('", peak()))
+            }
+            eat()
+            val expr = expression() ?: throw ParserException(ProgramMessage("Expected expression", peak()))
+            if (!check(")")) {
                 throw ParserException(ProgramMessage("Expected ')'", peak()))
             }
-            throw ParserException(ProgramMessage("Expected '('", peak()))
+            eat()
+            val stmt = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
+            return@rule SwitchStatement(expr, stmt)
         }
         return@rule null
     }
@@ -259,83 +259,74 @@ class ProgramParser(private val tokens: List<CToken>) {
     fun iteration_statement(): Statement? = rule {
         if (check("while")) {
             eat()
-            if (check("(")) {
-                eat()
-                val condition = conditional_expression() ?: throw ParserException(
-                    ProgramMessage("Expected conditional expression", peak())
-                )
-                if (check(")")) {
-                    eat()
-                    val body = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
-                    return WhileStatement(condition, body)
-                } else {
-                    throw ParserException(ProgramMessage("Expected ')'", peak()))
-                }
-            } else {
+            if (!check("(")) {
                 throw ParserException(ProgramMessage("Expected '('", peak()))
             }
+            eat()
+            val condition = conditional_expression() ?: throw ParserException(
+                ProgramMessage("Expected conditional expression", peak())
+            )
+            if (!check(")")) {
+                throw ParserException(ProgramMessage("Expected ')'", peak()))
+            }
+            eat()
+            val body = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
+            return WhileStatement(condition, body)
         }
         if (check("do")) {
             eat()
             val body = statement()?: throw ParserException(ProgramMessage("Expected statement", peak()))
-            if (check("while")) {
-                eat()
-                if (check("(")) {
-                    eat()
-                    val condition = conditional_expression()
-                        ?: throw ParserException(ProgramMessage("Expected conditional expression", peak()))
-                    if (check(")")) {
-                        eat()
-                        if (check(";")) {
-                            eat()
-                            return DoWhileStatement(body, condition)
-                        } else {
-                            throw ParserException(ProgramMessage("Expected ';'", peak()))
-                        }
-                    } else {
-                        throw ParserException(ProgramMessage("Expected ')'", peak()))
-                    }
-                } else {
-                    throw ParserException(ProgramMessage("Expected '('", peak()))
-                }
-            } else {
+            if (!check("while")) {
                 throw ParserException(ProgramMessage("Expected 'while'", peak()))
+            }
+            eat()
+            if (!check("(")) {
+                throw ParserException(ProgramMessage("Expected '('", peak()))
+            }
+            eat()
+            val condition = conditional_expression()
+                ?: throw ParserException(ProgramMessage("Expected conditional expression", peak()))
+            if (!check(")")) {
+                throw ParserException(ProgramMessage("Expected ')'", peak()))
+            }
+            eat()
+            if (check(";")) {
+                eat()
+                return DoWhileStatement(body, condition)
+            } else {
+                throw ParserException(ProgramMessage("Expected ';'", peak()))
             }
         }
         if (check("for")) {
             eat()
-            if (check("(")) {
-                eat()
-
-                val init = declaration() ?: expression_statement() ?: DummyNode
-
-                val condition = if (!check(";")) {
-                    expression() ?: throw ParserException(ProgramMessage("Expected expression", peak()))
-                } else {
-                    EmptyExpression()
-                }
-
-                if (check(";")) {
-                    eat()
-
-                    val update = if (!check(")")) {
-                        expression() ?: throw ParserException(ProgramMessage("Expected expression", peak()))
-                    } else {
-                        EmptyExpression()
-                    }
-                    if (check(")")) {
-                        eat()
-                        val body = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
-                        return ForStatement(init, condition, update, body)
-                    } else {
-                        throw ParserException(ProgramMessage("Expected ')'", peak()))
-                    }
-                } else {
-                    throw ParserException(ProgramMessage("Expected ';'", peak()))
-                }
-            } else {
+            if (!check("(")) {
                 throw ParserException(ProgramMessage("Expected '('", peak()))
             }
+            eat()
+            val init = declaration() ?: expression_statement() ?: DummyNode
+
+            val condition = if (!check(";")) {
+                expression() ?: throw ParserException(ProgramMessage("Expected expression", peak()))
+            } else {
+                EmptyExpression()
+            }
+
+            if (!check(";")) {
+                throw ParserException(ProgramMessage("Expected ';'", peak()))
+            }
+            eat()
+
+            val update = if (!check(")")) {
+                expression() ?: throw ParserException(ProgramMessage("Expected expression", peak()))
+            } else {
+                EmptyExpression()
+            }
+            if (!check(")")) {
+                throw ParserException(ProgramMessage("Expected ')'", peak()))
+            }
+            eat()
+            val body = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
+            return ForStatement(init, condition, update, body)
         }
         return@rule null
     }
@@ -346,17 +337,17 @@ class ProgramParser(private val tokens: List<CToken>) {
     //	| '{' initializer_list ',' '}'
     //	;
     fun initializer(): Expression? = rule {
-        if (check("{")) {
-            eat()
-            val list = initializerList()
-            if (check("}")) {
-                eat()
-                return@rule list
-            } else {
-                throw ParserException(ProgramMessage("Expected '}'", peak()))
-            }
+        if (!check("{")) {
+            return@rule assignment_expression()
         }
-        return@rule assignment_expression()
+        eat()
+        val list = initializerList()
+        if (check("}")) {
+            eat()
+            return@rule list
+        } else {
+            throw ParserException(ProgramMessage("Expected '}'", peak()))
+        }
     }
 
     // 6.8.2 Compound statement
@@ -680,16 +671,16 @@ class ProgramParser(private val tokens: List<CToken>) {
             if (check<Ident>()) {
                 val name = peak<Ident>()
                 eat()
-                if (check("{")) {
-                    eat()
-                    val fields = struct_declaration_list()
-                    if (check("}")) {
-                        eat()
-                        return@rule StructSpecifier(name, fields)
-                    }
+                if (!check("{")) {
+                    return@rule StructDeclaration(name)
+                }
+                eat()
+                val fields = struct_declaration_list()
+                if (!check("}")) {
                     throw ParserException(ProgramMessage("Expected '}'", peak()))
                 }
-                return@rule StructDeclaration(name)
+                eat()
+                return@rule StructSpecifier(name, fields)
             }
             throw ParserException(ProgramMessage("Expected identifier", peak()))
         }
@@ -707,16 +698,16 @@ class ProgramParser(private val tokens: List<CToken>) {
             if (check<Ident>()) {
                 val name = peak<Ident>()
                 eat()
-                if (check("{")) {
-                    eat()
-                    val fields = struct_declaration_list()
-                    if (check("}")) {
-                        eat()
-                        return@rule UnionSpecifier(name, fields)
-                    }
-                    throw ParserException(ProgramMessage("Expected '}'", peak()))
+                if (!check("{")) {
+                    return@rule UnionDeclaration(name)
                 }
-                return@rule UnionDeclaration(name)
+                eat()
+                val fields = struct_declaration_list()
+                if (check("}")) {
+                    eat()
+                    return@rule UnionSpecifier(name, fields)
+                }
+                throw ParserException(ProgramMessage("Expected '}'", peak()))
             }
             throw ParserException(ProgramMessage("Expected identifier", peak()))
         }
@@ -728,17 +719,17 @@ class ProgramParser(private val tokens: List<CToken>) {
     //	| IDENTIFIER '=' constant_expression
     //	;
     fun enumerator(): Enumerator? = rule {
-        if (check<Ident>()) {
-            val name = peak<Ident>()
-            eat()
-            if (check("=")) {
-                eat()
-                val expr = constant_expression()?: throw ParserException(ProgramMessage("Expected constant expression", peak()))
-                return@rule Enumerator(name, expr)
-            }
-            return@rule Enumerator(name, DummyNode)
+        if (!check<Ident>()) {
+            return@rule null
         }
-        return@rule null
+        val name = peak<Ident>()
+        eat()
+        if (check("=")) {
+            eat()
+            val expr = constant_expression()?: throw ParserException(ProgramMessage("Expected constant expression", peak()))
+            return@rule Enumerator(name, expr)
+        }
+        return@rule Enumerator(name, DummyNode)
     }
 
     // enumerator_list
