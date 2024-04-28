@@ -14,7 +14,13 @@ internal object DominatorTreeCalculate : DominatorCalculate {
                 continue
             }
 
-            predecessors[blockToIndex[bb]!!] = blockPredecessors.map { blockToIndex[it]!! }
+            val idx = blockToIndex[bb]
+            assert(idx != null) { "Block not found in index: bb=${bb}" }
+            predecessors[idx!!] = blockPredecessors.map {
+                val i = blockToIndex[it]
+                assert(i != null) { "Block not found in index: predecessor=$it, bb=${bb}" }
+                i!!
+            }
         }
 
         return predecessors

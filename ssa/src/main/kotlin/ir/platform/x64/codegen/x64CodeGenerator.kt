@@ -361,6 +361,8 @@ private class CodeEmitter(private val data: FunctionData,
 
         first = if (first is Address2) {
             asm.movOld(size, first, temp1)
+        } else if (first is ImmInt) {
+            asm.movOld(size, first, temp1)
         } else {
             first
         }

@@ -72,6 +72,12 @@ class ShlangTests: CommonTest() {
     }
 
     @Test
+    fun testSameNames() {
+        val result = runCTest("shlang/sameNames", listOf("runtime/runtime.c"))
+        assert(result, "1\n")
+    }
+
+    @Test
     fun testInsertionSort() {
         val result = runCTest("shlang/insertionSort", listOf("runtime/runtime.c"))
         assert(result, "11 12 22 25 34 64 \n")

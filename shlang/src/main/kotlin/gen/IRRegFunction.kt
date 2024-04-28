@@ -180,26 +180,27 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val condition = makeCondition(ifStatement.condition)
 
         val thenBlock = ir().createLabel()
-        val elseBlock = ir().createLabel()
+
 
         if (ifStatement.elseNode is EmptyStatement) {
-            ir().branchCond(condition, thenBlock, elseBlock)
+            val endBlock = ir().createLabel()
+            ir().branchCond(condition, thenBlock, endBlock)
             ir().switchLabel(thenBlock)
             val needSwitch = visitStatement(ifStatement.then)
             if (needSwitch) {
-                ir().branch(elseBlock)
+                ir().branch(endBlock)
             }
-            ir().switchLabel(elseBlock)
+            ir().switchLabel(endBlock)
             return true
         } else {
+            val elseBlock = ir().createLabel()
             ir().branchCond(condition, thenBlock, elseBlock)
             // then
             ir().switchLabel(thenBlock)
             val needSwitch = visitStatement(ifStatement.then)
             val switchBl = if (needSwitch) {
-                val endBlock = ir().createLabel()
-                ir().branch(endBlock)
-                endBlock
+                ir().branch(elseBlock)
+                elseBlock
             } else {
                 elseBlock
             }
