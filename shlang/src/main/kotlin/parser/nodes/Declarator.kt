@@ -121,7 +121,6 @@ data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
                 is Parameter -> it.name()
                 is ParameterVarArg -> "..."
                 else -> throw IllegalStateException("Unknown parameter $it")
-
             }
         }
     }

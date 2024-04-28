@@ -47,8 +47,9 @@ data class NodePointer(val qualifiers: List<TypeQualifier>) : UnclassifiedNode()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class FunctionNode(val specifier: DeclarationSpecifier, val declarator: Declarator, val body: Statement) : UnclassifiedNode() {
-
+data class FunctionNode(val specifier: DeclarationSpecifier,
+                        val declarator: Declarator,
+                        val body: Statement) : UnclassifiedNode() {
     fun name(): String {
         val varNode = declarator.directDeclarator.decl as VarDeclarator
         return varNode.ident.str()

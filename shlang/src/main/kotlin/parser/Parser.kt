@@ -15,6 +15,7 @@ data class ParserException(val info: ProgramMessage) : Exception(info.message)
 //
 class ProgramParser(private val tokens: List<CToken>) {
     private var current: Int = 0
+    private val typeNames = mutableMapOf<String, TypeName>()
 
     private fun eat() {
         if (eof()) {
