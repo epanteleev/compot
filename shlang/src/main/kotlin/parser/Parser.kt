@@ -6,8 +6,13 @@ import parser.nodes.*
 
 data class ParserException(val info: ProgramMessage) : Exception(info.message)
 
-
+// Parser for C language
+// Based on C11 standard
+// https://port70.net/~nsz/c/c11/n1570.html
+//
+// Grammar:
 // https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
+//
 class ProgramParser(private val tokens: List<CToken>) {
     private var current: Int = 0
 
