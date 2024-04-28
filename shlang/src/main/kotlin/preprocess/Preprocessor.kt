@@ -1,71 +1,143 @@
 package preprocess
 
-import tokenizer.AnyToken
-import tokenizer.CToken
-import tokenizer.CTokenizer
+import tokenizer.*
 
 
-data class Preprocesssor(private val firstToken: List<CToken>) {
-    private var cond_incl: Boolean = false
+data class Preprocesssor(private val original: MutableList<CToken>) {
+    private var current: Int = 0
     private val macroses = mutableSetOf<Macros>()
 
-//    fun read_macro_definition() {
-//        val id = tokens.peek()
-//        tokens.removeCurrent()
-//        if (id !is Ident) {
-//            error("expect")
-//        }
-//
-//
-//        val next = tokens.peek()
-//
-//        if (!Token.hasSpace(id, next) && next.str() == "(") {
-//            TODO()
-//        } else {
-//            macroses.add(Macros(id.str(), tokens.readAndRemoveUntilEol()))
-//        }
-//    }
-//
-//    private fun tryExpandMacro(id: Token): Boolean {
-//        val macro = macroses.find { it.name == id.str() } ?: return false
-//
-//        tokens.append(macro.value)
-//
-//        return true
-//    }
-//
-//    fun preprocess2() {
-//        while (!tokens.eof) {
-//            var tok = tokens.read()
-//
-//            if (tryExpandMacro(tok)) {
-//                continue
-//            }
-//
-//            if (tok.str() != "#") {
-//                continue
-//            }
-//            tok = tokens.read()
-//
-//            when (tok.str()) {
-//                "define" -> {
-//                    read_macro_definition()
-//                    continue
-//                }
-//                else -> {
-//
-//                }
-//            }
-//        }
-//    }
-//
-    fun preprocess(): CToken {
-//        preprocess2()
-//        if (cond_incl) {
-//            error("unterminated conditional directive")
-//        }
-//
-//        return tokens
-        TODO()
+    private fun eat(): CToken {
+        return original[current++]
+    }
+
+    private fun peek(): CToken {
+        return original[current]
+    }
+
+    private fun removeCurrent() {
+        original.removeAt(current)
+    }
+
+    private fun eof(): Boolean {
+        return current >= original.size
+    }
+
+    private fun check(token: String): Boolean {
+        return !eof() && peek().str() == token
+    }
+
+
+    fun readAndRemoveUntilEol(tokens: MutableList<CToken>): List<CToken> {
+        val subLine = mutableListOf<CToken>()
+        val line = tokens[0].line()
+        while (tokens.isNotEmpty() && tokens[0].line() == line) {
+            subLine.add(tokens.removeFirst())
+        }
+
+        return subLine
+    }
+
+    fun preprocess(): List<CToken> {
+        val result = mutableListOf<CToken>()
+        while (!eof()) {
+            if (!check("#")) {
+                macroses.forEach { macros ->
+                    if (peek().str() == macros.name) {
+                        removeCurrent()
+                        result.addAll(macros.value)
+                    }
+                }
+                continue
+            }
+            eat()
+            val directive = eat()
+            if (directive !is Ident) {
+                throw IllegalStateException("Expected identifier after #")
+            }
+            when (directive.str()) {
+                "define" -> {
+                    val name = eat()
+                    if (name !is Ident) {
+                        throw IllegalStateException("Expected identifier after #define")
+                    }
+                    val tokens = mutableListOf<CToken>()
+                    while (!eof() && peek().line() == directive.line()) {
+                        tokens.add(eat())
+                    }
+                    val macros = Macros(name.str(), tokens)
+                    macroses.add(macros)
+                }
+
+                "undef" -> {
+                    val name = eat()
+                    if (name !is Ident) {
+                        throw IllegalStateException("Expected identifier after #undef")
+                    }
+                    macroses.removeIf { it.name == name.str() }
+                }
+
+                "ifdef" -> {
+                    val name = eat()
+                    if (name !is Ident) {
+                        throw IllegalStateException("Expected identifier after #ifdef")
+                    }
+                    val isDefined = macroses.any { it.name == name.str() }
+                    val tokens = mutableListOf<CToken>()
+                    while (!eof() && peek().line() == directive.line()) {
+                        tokens.add(eat())
+                    }
+                    if (isDefined) {
+                        result.addAll(tokens)
+                    }
+                }
+
+                "ifndef" -> {
+                    val name = eat()
+                    if (name !is Ident) {
+                        throw IllegalStateException("Expected identifier after #ifndef")
+                    }
+                    val isDefined = macroses.any { it.name == name.str() }
+                    val tokens = mutableListOf<CToken>()
+                    while (!eof() && peek().line() == directive.line()) {
+                        tokens.add(eat())
+                    }
+                    if (!isDefined) {
+                        result.addAll(tokens)
+                    }
+                }
+
+                "else" -> {
+                    val tokens = mutableListOf<CToken>()
+                    while (!eof() && peek().line() == directive.line()) {
+                        tokens.add(eat())
+                    }
+                    result.addAll(tokens)
+                }
+
+                "endif" -> {
+                    val tokens = mutableListOf<CToken>()
+                    while (!eof() && peek().line() == directive.line()) {
+                        tokens.add(eat())
+                    }
+                }
+
+                "include" -> {
+                    val name = eat()
+                    if (name !is Ident) {
+                        throw IllegalStateException("Expected identifier after #include")
+                    }
+                    val tokens = mutableListOf<CToken>()
+                    while (!eof() && peek().line() == directive.line()) {
+                        tokens.add(eat())
+                    }
+                }
+
+                else -> {
+                    throw IllegalStateException("Unknown directive ${directive.str()}")
+                }
+            }
+        }
+        return result
     }
 }

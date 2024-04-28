@@ -5,10 +5,10 @@ import kotlin.test.Ignore
 
 
 class PreprocessorTest {
-    @Ignore
+    @Test
     fun test1() {
         val tokens = CTokenizer.apply("#define HEAD 34\n HEAD")
-        val p = Preprocesssor(tokens).preprocess()
+        val p = Preprocesssor(tokens.toMutableList()).preprocess()
         println(p)
     }
 }
