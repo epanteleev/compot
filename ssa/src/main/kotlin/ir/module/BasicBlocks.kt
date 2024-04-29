@@ -85,6 +85,10 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
         basicBlocks.add(block)
     }
 
+    fun removeBlock(block: Block) {
+        TODO()
+    }
+
     fun defUseInfo(): DefUseInfo {
         return DefUseInfo.create(this)
     }

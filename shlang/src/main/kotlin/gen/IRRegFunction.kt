@@ -10,6 +10,7 @@ import ir.module.block.Label
 import gen.TypeConverter.convertToType
 import gen.TypeConverter.toIRType
 import ir.instruction.ArithmeticBinaryOp
+import ir.module.block.Block
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
 
@@ -29,14 +30,14 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     private fun visitStatement(statement: Statement): Boolean {
         return when (statement) {
             is CompoundStatement -> visitCompoundStatement(statement)
-            is ExprStatement -> visitExpressionStatement(statement)
-            is ReturnStatement -> visitReturn(statement)
-            is IfStatement -> visitIf(statement)
-            is WhileStatement -> visitWhile(statement)
-            is DoWhileStatement -> visitDoWhile(statement)
-            is LabeledStatement -> visitLabeledStatement(statement)
-            is GotoStatement -> visitGoto(statement)
-            is ForStatement -> visitFor(statement)
+            is ExprStatement     -> visitExpressionStatement(statement)
+            is ReturnStatement   -> visitReturn(statement)
+            is IfStatement       -> visitIf(statement)
+            is WhileStatement    -> visitWhile(statement)
+            is DoWhileStatement  -> visitDoWhile(statement)
+            is LabeledStatement  -> visitLabeledStatement(statement)
+            is GotoStatement     -> visitGoto(statement)
+            is ForStatement      -> visitFor(statement)
             else -> throw IRCodeGenError("Statement expected, but got $statement")
         }
     }
@@ -193,21 +194,33 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             ir().switchLabel(endBlock)
             return true
         } else {
+
             val elseBlock = ir().createLabel()
             ir().branchCond(condition, thenBlock, elseBlock)
             // then
             ir().switchLabel(thenBlock)
             val needSwitch = visitStatement(ifStatement.then)
-            val switchBl = if (needSwitch) {
-                ir().branch(elseBlock)
-                elseBlock
+            val endBlock = if (needSwitch) {
+                val endBlock = ir().createLabel()
+                ir().branch(endBlock)
+                endBlock
             } else {
-                elseBlock
+                null
             }
 
             // else
-            ir().switchLabel(switchBl)
-            return visitStatement(ifStatement.elseNode)
+            ir().switchLabel(elseBlock)
+            val switch1 = visitStatement(ifStatement.elseNode)
+
+            if (switch1) {
+                val newEndBlock = endBlock ?: ir().createLabel()
+                ir().branch(newEndBlock)
+                ir().switchLabel(newEndBlock)
+            } else if (endBlock != null) {
+                ir().switchLabel(endBlock)
+            }
+
+            return true
         }
     }
 
@@ -250,7 +263,6 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val toType = toIRType<NonTrivialType>(cast.resolveType(typeHolder))
         return ir().convertToType(value, toType)
     }
-
 
     private fun visitFunctionCall(functionCall: FunctionCall): Value {
         val name = functionCall.name()
@@ -541,8 +553,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
 
         ir().switchLabel(Label.entry)
-        val needSwitch = visitStatement(functionNode.body)
-        if (needSwitch) {
+        visitStatement(functionNode.body)
+        if (ir().lastInstruction() !is TerminateInstruction) {
             ir().branch(exitBlock)
         }
 

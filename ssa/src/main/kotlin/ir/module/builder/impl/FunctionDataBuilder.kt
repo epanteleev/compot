@@ -25,6 +25,11 @@ class FunctionDataBuilder private constructor(
         bb = blocks.findBlock(label)
     }
 
+    //TODO bad design???
+    fun lastInstruction(): Instruction? {
+        return bb.instructions().lastOrNull()
+    }
+
     override fun not(value: Value): Not {
         return bb.not(value)
     }
