@@ -2,15 +2,11 @@ package ir.module.builder
 
 import ir.ArgumentValue
 import ir.FunctionPrototype
-import ir.instruction.ArithmeticUnary
 import ir.instruction.Return
 import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.module.block.Label
-import ir.read.AnyValueToken
-import ir.read.ArithmeticTypeToken
-import ir.read.LocalValueToken
 
 
 abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype,
@@ -26,7 +22,7 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
         return bb
     }
 
-    fun currentBlock(): Label = bb
+    fun currentLabel(): Label = bb
 
     fun begin(): Label = blocks.begin()
     fun createLabel(): Label = allocateBlock()

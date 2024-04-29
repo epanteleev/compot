@@ -10,7 +10,7 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.ValidateSSAErrorException
 
 
-class InconsistentReturn {
+class InconsistentCFG {
     @Test
     fun testInconsistentReturn() {
         val builder = ModuleBuilder.create()
@@ -38,8 +38,36 @@ class InconsistentReturn {
         val invalidPrototype = FunctionPrototype("calc", Type.I32, arrayListOf(Type.F32))
 
         builder.createFunction("main", Type.I32, arrayListOf()).apply {
-            val t = call(invalidPrototype, arrayListOf(F32Value(0.0F)))
+            call(invalidPrototype, arrayListOf(F32Value(0.0F)))
             ret(I32Value(0))
+        }
+
+        assertThrows<ValidateSSAErrorException>{ builder.build() }
+    }
+
+    @Test
+    fun testMultiplyTerminateInstructions() {
+        val builder = ModuleBuilder.create()
+
+        builder.createFunction("main", Type.I32, arrayListOf()).apply {
+            val header = currentLabel().let {
+                val header = createLabel()
+                branch(header)
+                header
+            }
+
+            val label = header.let {
+                switchLabel(header)
+                val label = createLabel()
+                branch(label)
+                ret(I32Value(0))
+                label
+            }
+
+            label.apply {
+                switchLabel(label)
+                branch(header)
+            }
         }
 
         assertThrows<ValidateSSAErrorException>{ builder.build() }

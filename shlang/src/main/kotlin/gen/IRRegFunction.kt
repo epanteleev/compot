@@ -10,7 +10,6 @@ import ir.module.block.Label
 import gen.TypeConverter.convertToType
 import gen.TypeConverter.toIRType
 import ir.instruction.ArithmeticBinaryOp
-import ir.module.block.Block
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
 
@@ -394,7 +393,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 ir().convertToType(cmp, Type.U1)
             }
             BinaryOpType.AND -> {
-                val initialBB = ir().currentBlock()
+                val initialBB = ir().currentLabel()
                 val left = visitExpression(binop.left, true)
                 val convertedLeft = ir().convertToType(left, Type.U8)
                 assert(left.type() == Type.U1)

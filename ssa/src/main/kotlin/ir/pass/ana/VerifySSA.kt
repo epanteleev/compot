@@ -49,9 +49,10 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
     private fun validateBlock(block: Block) {
         if (block.equals(Label.entry)) {
-            assert(block.predecessors().isEmpty()) { "Begin block must not have predecessors." }
+            val predecessors = block.predecessors()
+            assert(predecessors.isEmpty()) { "Begin block must not have predecessors: $predecessors" }
         }
-        assert(!block.isEmpty()) { "Block must not be empty" }
+        assert(!block.isEmpty()) { "Block '$block' must not be empty" }
         bb = block
         validateInstructions(block)
     }
