@@ -78,6 +78,12 @@ class ShlangTests: CommonTest() {
     }
 
     @Test
+    fun testHelloWorld() {
+        val result = runCTest("shlang/helloWorld", listOf())
+        assert(result, "Hello, World!\n")
+    }
+
+    @Test
     fun testInsertionSort() {
         val result = runCTest("shlang/insertionSort", listOf("runtime/runtime.c"))
         assert(result, "11 12 22 25 34 64 \n")
