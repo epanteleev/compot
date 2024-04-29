@@ -2,6 +2,7 @@ package parser
 
 import tokenizer.*
 import parser.nodes.*
+import common.AnyParser
 
 
 data class ParserException(val info: ProgramMessage) : Exception(info.message)
@@ -13,50 +14,7 @@ data class ParserException(val info: ProgramMessage) : Exception(info.message)
 // Grammar:
 // https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
 //
-class ProgramParser(private val tokens: List<CToken>) {
-    private var current: Int = 0
-    private val typeNames = mutableMapOf<String, TypeName>()
-
-    private fun eat() {
-        if (eof()) {
-            throw ParserException(ProgramMessage("Unexpected EOF", peak()))
-        }
-
-        current += 1
-    }
-
-    private fun eof(): Boolean {
-        return current >= tokens.size
-    }
-
-    private inline fun<reified T: CToken> peak(): T {
-        if (eof()) {
-            throw ParserException(ProgramMessage("Unexpected EOF", Eof))
-        }
-        return tokens[current] as T
-    }
-
-    private fun check(s: String): Boolean {
-        if (eof()) {
-            return false
-        }
-        return tokens[current].str() == s
-    }
-
-    private fun checkOffset(offset: Int, s: String): Boolean {
-        if (current + offset >= tokens.size) {
-            return false
-        }
-        return tokens[current + offset].str() == s
-    }
-
-    private inline fun<reified T> check(): Boolean {
-        if (eof()) {
-            return false
-        }
-        return tokens[current] is T
-    }
-
+class CProgramParser(tokens: List<CToken>): AnyParser(tokens) {
     private inline fun<reified T> rule(fn: () -> T?): T? {
         val saved = current
         val result = fn()
@@ -70,7 +28,7 @@ class ProgramParser(private val tokens: List<CToken>) {
     //	: external_declaration
     //	| translation_unit external_declaration
     //	;
-    fun program(): ProgramNode {//TODO
+    fun translation_unit(): ProgramNode {//TODO
         val nodes = mutableListOf<Node>()
         while (!eof()) {
             val node = external_declaration()?:

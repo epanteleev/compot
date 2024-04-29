@@ -62,7 +62,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                         eat()
                     }
                 }
-                append(StringLiteral(literal, line, pos - literal.length, filename))
+                append(StringLiteral(literal, OriginalPosition(line, pos - literal.length, filename)))
                 continue
             }
 
@@ -99,14 +99,14 @@ class CTokenizer private constructor(private val filename: String, private val r
                     val operator = reader.peek(3)
                     reader.read(3)
                     pos += 2
-                    append(Ident(operator, line, pos - 3, filename))
+                    append(Ident(operator, OriginalPosition(line, pos - 3, filename)))
                 } else if (reader.inRange(1) && isOperator2(v, reader.peekOffset(1))) {
                     val operator = reader.peek(2)
                     reader.read(2)
                     pos += 1
-                    append(Ident(operator, line, pos - 2, filename))
+                    append(Ident(operator, OriginalPosition(line, pos - 2, filename)))
                 } else {
-                    append(Punct(reader.read(), line, pos - 1, filename))
+                    append(Punct(reader.read(), OriginalPosition(line, pos - 1, filename)))
                 }
                 continue
             }
@@ -120,9 +120,9 @@ class CTokenizer private constructor(private val filename: String, private val r
                 }
 
                 if (keywords.contains(identifier)) {
-                    append(Keyword(identifier, line, pos - identifier.length, filename))
+                    append(Keyword(identifier, OriginalPosition(line, pos - identifier.length, filename)))
                 } else {
-                    append(Ident(identifier, line, pos - identifier.length, filename))
+                    append(Ident(identifier, OriginalPosition(line, pos - identifier.length, filename)))
                 }
                 continue
             }
@@ -134,13 +134,14 @@ class CTokenizer private constructor(private val filename: String, private val r
                 number != null -> {
                     val diff = reader.pos - saved
                     pos += diff
-                    append(Numeric(number, line, pos - diff, filename))
+                    append(Numeric(number, OriginalPosition(line, pos - diff, filename)))
                 }
                 else -> when {
                     else -> error("Unknown symbol: '$v'")
                 }
             }
         }
+        append(Eof(OriginalPosition(line, pos, filename)))
     }
 
     companion object {

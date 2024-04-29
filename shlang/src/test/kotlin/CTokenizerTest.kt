@@ -6,10 +6,9 @@ import kotlin.test.assertTrue
 
 
 class CTokenizerTest {
-    fun AnyToken.isEqual(l: Int, p: Int, string: String) {
-        this as CToken
-        assertEquals(l, line)
-        assertEquals(p, pos)
+    fun CToken.isEqual(l: Int, p: Int, string: String) {
+        assertEquals(l, line())
+        assertEquals(p, pos())
         assertEquals(string, str())
     }
 

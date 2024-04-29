@@ -1,7 +1,9 @@
 import tokenizer.CTokenizer
 import preprocess.Preprocesssor
-import org.junit.jupiter.api.Test
-import kotlin.test.Ignore
+
+import tokenizer.TokenPrinter
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 
 class PreprocessorTest {
@@ -9,6 +11,10 @@ class PreprocessorTest {
     fun test1() {
         val tokens = CTokenizer.apply("#define HEAD 34\n HEAD")
         val p = Preprocesssor(tokens.toMutableList()).preprocess()
-        println(p)
+        val expected = """
+            |
+            |  34
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
     }
 }

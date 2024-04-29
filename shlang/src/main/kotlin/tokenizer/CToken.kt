@@ -1,86 +1,83 @@
 package tokenizer
 
-interface AnyToken {
-    fun line(): Int
-    fun pos(): Int
-    fun str(): String
-}
 
-abstract class CToken(open var line: Int, open var pos: Int, open val filename: String): AnyToken {
+abstract class CToken(private val position: Position) {
+    abstract fun cloneWith(pos: PreprocessedPosition): CToken
+
+    abstract fun str(): String
+    fun line(): Int = position.line()
+    fun pos(): Int = position.pos()
+
+    fun position(): Position = position
+
     override fun toString(): String {
-        return "'${str()}'[$line: $pos]"
+        return "'${str()}'$position'"
     }
 
-    override fun line(): Int = line
-    override fun pos(): Int = pos
 
     companion object {
-        fun hasSpace(from: CToken, to: CToken): Boolean {
-            if (from.line != to.line) {
-                return true
-            }
-            val end = from.str().length + from.pos
-            return end < to.pos
+        fun hasNewLine(from: CToken, to: CToken): Boolean {
+            return from.position.line() != to.position.line()
         }
 
         fun countSpaces(from: CToken, to: CToken): Int {
-            if (from.line != to.line) {
-                assert(false)
+            assert(!hasNewLine(from, to)) {
+                "Cannot count spaces between tokens on different lines: '$from' and '$to'"
             }
-            val end = from.str().length + from.pos
-            return end - to.pos
+            val end = from.str().length + from.position.pos()
+            return end - to.position.pos()
         }
     }
 }
 
-data class Ident(val data: String, override var line: Int, override var pos: Int, override val filename: String): CToken(line, pos, filename) {
+class Ident(val data: String, position: Position): CToken(position) {
     override fun str(): String = data
-    override fun toString(): String {
-        return "'${str()}'[$line: $pos]"
+
+    override fun cloneWith(pos: PreprocessedPosition): CToken {
+        return Ident(data, pos)
     }
 
     companion object {
-        val UNKNOWN = Ident("<unknown>",  -1, -1, "<unknown>")
+        val UNKNOWN = Ident("<unknown>",  Position.UNKNOWN)
     }
 }
 
-data class Punct(val data: Char, override var line: Int, override var pos: Int, override val filename: String): CToken(line, pos, filename) {
+class Punct(val data: Char, position: Position): CToken(position) {
     override fun str(): String = data.toString()
-    override fun toString(): String {
-        return "'${str()}'[$line: $pos]"
+
+    override fun cloneWith(pos: PreprocessedPosition): CToken {
+        return Punct(data, pos)
     }
 }
 
-data class Keyword(val data: String, override var line: Int, override var pos: Int, override val filename: String): CToken(line, pos, filename) {
+class Keyword(val data: String, position: Position): CToken(position) {
     override fun str(): String = data
-    override fun toString(): String {
-        return "'${str()}'[$line: $pos]"
+
+    override fun cloneWith(pos: PreprocessedPosition): CToken {
+        return Keyword(data, pos)
     }
 }
 
-data class StringLiteral(val data: String, override var line: Int, override var pos: Int, override val filename: String): CToken(line, pos, filename) {
+class StringLiteral(val data: String, position: Position): CToken(position) {
     override fun str(): String = data
-    override fun toString(): String {
-        return "'${str()}'[$line: $pos]"
+
+    override fun cloneWith(pos: PreprocessedPosition): CToken {
+        return StringLiteral(data, pos)
     }
 }
 
-data class Numeric(val data: Number, override var line: Int, override var pos: Int, override val filename: String): CToken(line, pos, filename) {
+class Numeric(val data: Number, position: Position): CToken(position) {
     override fun str(): String = data.toString()
-    override fun toString(): String {
-        return "'${str()}'[$line: $pos]"
+
+    override fun cloneWith(pos: PreprocessedPosition): CToken {
+        return Numeric(data, pos)
     }
 }
 
-data class PreprocessingNumbers(val data: String, override var line: Int, override var pos: Int, override val filename: String): CToken(line, pos, filename) {
-    override fun str(): String = data
-    override fun toString(): String {
-        return "'${str()}'[$line: $pos]"
-    }
-}
-
-object Eof: AnyToken {
-    override fun line(): Int = -1
-    override fun pos(): Int = -1
+class Eof(position: Position): CToken(position) {
     override fun str(): String = "<eof>"
+
+    override fun cloneWith(pos: PreprocessedPosition): CToken {
+        return Eof(pos)
+    }
 }

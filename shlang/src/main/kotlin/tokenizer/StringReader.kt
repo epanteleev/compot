@@ -52,23 +52,6 @@ class StringReader(val str: String, var pos: Int = 0) {
         peek(count).also { pos += it.length }
     }
 
-    fun skip(count: Int) = run { pos += count }
-
-    fun expect(expect: String) {
-        val actual = peek(expect.length)
-        if (actual != expect) {
-            error("Expected '$expect' actual '$actual'")
-        }
-        read(expect.length)
-    }
-
-    fun expect(expect: Char) {
-        val actual = read()
-        if (actual != expect) {
-            error("Expected '$expect' actual '$actual'")
-        }
-    }
-
     fun tryPeek(str: String): Boolean {
         for (n in str.indices) {
             if (peekOffset(n) != str[n]) {
@@ -82,15 +65,6 @@ class StringReader(val str: String, var pos: Int = 0) {
         val startPos = pos
         callback()
         return str.substring(startPos, pos)
-    }
-
-    fun <T> keepPos(callback: () -> T): T {
-        val old = pos
-        try {
-            return callback()
-        } finally {
-            pos = old
-        }
     }
 
     fun readNumeric(): Number? {
@@ -127,7 +101,6 @@ class StringReader(val str: String, var pos: Int = 0) {
         }
         return result
     }
-
 
     companion object {
         private val punctuation = arrayOf(
