@@ -8,10 +8,12 @@ class TokenPrinter private constructor(val tokens: List<CToken>) {
         if (CToken.hasNewLine(previous, current)) {
             stringBuilder.append("\n")
         }
+
         val spaces = CToken.countSpaces(previous, current)
         if (spaces > 0) {
             stringBuilder.append(" ".repeat(spaces))
         }
+
         stringBuilder.append(current.str())
     }
 
@@ -24,7 +26,6 @@ class TokenPrinter private constructor(val tokens: List<CToken>) {
         for (i in 1 until tokens.size) {
             val current = tokens[i]
             print(previous, current)
-            stringBuilder.append(current)
             previous = current
         }
         return stringBuilder.toString()

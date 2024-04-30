@@ -5,8 +5,9 @@ import tokenizer.OriginalPosition
 import tokenizer.Position
 import tokenizer.PreprocessedPosition
 
-data class Macros(val name: String, val value: List<CToken>) {
-    fun withUpdatedPosition(macrosNamePos: Position): List<CToken> {
+
+data class Macros(val name: String, private val value: List<CToken>) {
+    fun cloneContentWith(macrosNamePos: Position): List<CToken> {
         val firstPos = value.first().position().pos()
         fun calculate(tok: CToken): CToken {
             val realPos = tok.position().pos() - firstPos

@@ -18,10 +18,14 @@ class Preprocesssor(original: MutableList<CToken>): AnyParser(original) {
                 macroses.forEach { macros ->
                     val tok = peak<CToken>()
                     if (tok.str() == macros.name) {
-                        result.addAll(macros.withUpdatedPosition(tok.position()))
+                        result.addAll(macros.cloneContentWith(tok.position()))
+                        eat()
+                        return@forEach
                     }
+                    result.add(peak())
                     eat()
                 }
+
                 continue
             }
             eat()

@@ -24,8 +24,7 @@ abstract class CToken(private val position: Position) {
             assert(!hasNewLine(from, to)) {
                 "Cannot count spaces between tokens on different lines: '$from' and '$to'"
             }
-            val end = from.str().length + from.position.pos()
-            return end - to.position.pos()
+            return to.position.pos() - (from.pos() + from.str().length)
         }
     }
 }
