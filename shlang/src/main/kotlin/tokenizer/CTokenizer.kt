@@ -12,7 +12,7 @@ class CTokenizer private constructor(private val filename: String, private val r
     private var pos: Int = 1
     private var line: Int = 1
 
-    fun doTokenize(): List<AnyToken> {
+    fun doTokenize(): MutableList<AnyToken> {
         doTokenizeHelper()
         return tokens
     }

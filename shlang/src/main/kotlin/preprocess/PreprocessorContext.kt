@@ -3,6 +3,7 @@ package preprocess
 
 class PreprocessorContext private constructor(private val macroReplacements: MutableMap<String, MacroReplacement>,
                                               private val macroDefinitions: MutableSet<MacroDefinition>,
+                                              private val macroFunctions: MutableMap<String, MacroFunction>,
                                               private val headerHolder: HeaderHolder) {
     fun define(macros: MacroReplacement) {
         macroReplacements[macros.name] = macros
@@ -12,8 +13,16 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         macroDefinitions.add(macros)
     }
 
+    fun define(macros: MacroFunction) {
+        macroFunctions[macros.name] = macros
+    }
+
     fun findMacroReplacement(name: String): MacroReplacement? {
         return macroReplacements[name]
+    }
+
+    fun findMacroFunction(name: String): MacroFunction? {
+        return macroFunctions[name]
     }
 
     fun findMacros(name: String): AnyMacros? {
@@ -34,7 +43,7 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
 
     companion object {
         fun empty(headerHolder: HeaderHolder): PreprocessorContext {
-            return PreprocessorContext(mutableMapOf(), mutableSetOf(), headerHolder)
+            return PreprocessorContext(mutableMapOf(), mutableSetOf(), mutableMapOf(), headerHolder)
         }
     }
 }

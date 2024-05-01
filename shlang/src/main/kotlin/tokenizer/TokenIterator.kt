@@ -1,11 +1,11 @@
 package tokenizer
 
 interface TokenIterator: Iterator<AnyToken> {
-    fun toCTokenList(): List<CToken>
-    fun tokens(): List<AnyToken>
+    fun toCTokenList(): MutableList<AnyToken>
+    fun tokens(): MutableList<AnyToken>
 }
 
-class TokenIteratorImpl(private val tokens: List<AnyToken>): TokenIterator {
+class TokenIteratorImpl(private val tokens: MutableList<AnyToken>): TokenIterator {
     private var current: Int = 0
 
     override fun hasNext(): Boolean {
@@ -16,8 +16,8 @@ class TokenIteratorImpl(private val tokens: List<AnyToken>): TokenIterator {
         return tokens[current++]
     }
 
-    override fun toCTokenList(): List<CToken> {
-        val result = mutableListOf<CToken>()
+    override fun toCTokenList(): MutableList<AnyToken> {
+        val result = mutableListOf<AnyToken>()
         while (hasNext()) {
             val token = next()
             if (token is CToken) {
@@ -27,7 +27,7 @@ class TokenIteratorImpl(private val tokens: List<AnyToken>): TokenIterator {
         return result
     }
 
-    override fun tokens(): List<AnyToken> {
+    override fun tokens(): MutableList<AnyToken> {
         return tokens
     }
 }

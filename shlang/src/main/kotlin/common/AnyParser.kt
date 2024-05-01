@@ -8,7 +8,7 @@ import tokenizer.AnyToken
 import tokenizer.Indent
 
 
-abstract class AnyParser(protected val tokens: List<AnyToken>) {
+abstract class AnyParser(protected val tokens: MutableList<AnyToken>) {
     protected var current: Int = 0
 
     protected fun eat() {

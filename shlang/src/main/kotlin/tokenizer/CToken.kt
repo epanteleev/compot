@@ -65,7 +65,6 @@ abstract class CToken(private val position: Position): AnyToken() {
         return "'${str()}'$position'"
     }
 
-
     companion object {
         fun hasNewLine(from: CToken, to: CToken): Boolean {
             return from.position.line() != to.position.line()
@@ -87,6 +86,19 @@ class Ident(val data: String, position: Position): CToken(position) {
         return Ident(data, pos)
     }
 
+    override fun hashCode(): Int {
+        return data.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Ident
+
+        return data == other.data
+    }
+
     companion object {
         val UNKNOWN = Ident("<unknown>",  Position.UNKNOWN)
     }
@@ -94,6 +106,19 @@ class Ident(val data: String, position: Position): CToken(position) {
 
 class Punct(val data: Char, position: Position): CToken(position) {
     override fun str(): String = data.toString()
+
+    override fun hashCode(): Int {
+        return data.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Punct
+
+        return data == other.data
+    }
 
     override fun cloneWith(pos: PreprocessedPosition): CToken {
         return Punct(data, pos)
@@ -103,6 +128,19 @@ class Punct(val data: Char, position: Position): CToken(position) {
 class Keyword(val data: String, position: Position): CToken(position) {
     override fun str(): String = data
 
+    override fun hashCode(): Int {
+        return data.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Keyword
+
+        return data == other.data
+    }
+
     override fun cloneWith(pos: PreprocessedPosition): CToken {
         return Keyword(data, pos)
     }
@@ -110,6 +148,19 @@ class Keyword(val data: String, position: Position): CToken(position) {
 
 class StringLiteral(val data: String, position: Position): CToken(position) {
     override fun str(): String = data
+
+    override fun hashCode(): Int {
+        return data.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as StringLiteral
+
+        return data == other.data
+    }
 
     fun unquote(): String {
         return data.substring(1, data.length - 1)
@@ -123,6 +174,19 @@ class StringLiteral(val data: String, position: Position): CToken(position) {
 class Numeric(val data: Number, position: Position): CToken(position) {
     override fun str(): String = data.toString()
 
+    override fun hashCode(): Int {
+        return data.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Numeric
+
+        return data == other.data
+    }
+
     override fun cloneWith(pos: PreprocessedPosition): CToken {
         return Numeric(data, pos)
     }
@@ -130,6 +194,14 @@ class Numeric(val data: Number, position: Position): CToken(position) {
 
 class Eof(position: Position): CToken(position) {
     override fun str(): String = "<eof>"
+
+    override fun hashCode(): Int {
+        return 7
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is Eof
+    }
 
     override fun cloneWith(pos: PreprocessedPosition): CToken {
         return Eof(pos)
