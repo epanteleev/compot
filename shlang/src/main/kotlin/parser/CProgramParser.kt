@@ -14,7 +14,7 @@ data class ParserException(val info: ProgramMessage) : Exception(info.message)
 // Grammar:
 // https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
 //
-class CProgramParser(tokens: List<CToken>): AnyParser(tokens) {
+class CProgramParser(iterator: TokenIterator): AnyParser(iterator.toCTokenList()) {
     private inline fun<reified T> rule(fn: () -> T?): T? {
         val saved = current
         val result = fn()

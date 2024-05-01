@@ -14,7 +14,7 @@ class CTokenizerTest {
 
     @Test
     fun test0() {
-        val tokens = CTokenizer.apply("4566,")
+        val tokens = CTokenizer.apply("4566,").toCTokenList()
 
         assertTrue { tokens[0] is Numeric }
         tokens[0].isEqual(1, 1, "4566")
@@ -23,7 +23,7 @@ class CTokenizerTest {
 
     @Test
     fun test1() {
-        val tokens = CTokenizer.apply("\"sdfsdf\" \"   \"")
+        val tokens = CTokenizer.apply("\"sdfsdf\" \"   \"").toCTokenList()
 
         assertTrue { tokens[0] is StringLiteral }
         assertEquals("\"sdfsdf\"", tokens[0].str())
@@ -34,7 +34,7 @@ class CTokenizerTest {
 
     @Test
     fun test2() {
-        val tokens = CTokenizer.apply("4.7 /* comment */ 6")
+        val tokens = CTokenizer.apply("4.7 /* comment */ 6").toCTokenList()
         assertTrue { tokens[0] is Numeric }
         tokens[0].isEqual(1, 1, "4.7")
 
@@ -44,14 +44,14 @@ class CTokenizerTest {
 
     @Test
     fun test3() {
-        val tokens = CTokenizer.apply("+++")
+        val tokens = CTokenizer.apply("+++").toCTokenList()
         tokens[0].isEqual(1, 1, "++")
         tokens[1].isEqual(1, 3, "+")
     }
 
     @Ignore
     fun test4() {
-        val tokens = CTokenizer.apply("2L")
+        val tokens = CTokenizer.apply("2L").toCTokenList()
         tokens[0].isEqual(1, 1, "2")
     }
 }

@@ -7,12 +7,12 @@ import tokenizer.LexicalElements.keywords
 
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
-    private val tokens: MutableList<CToken> = mutableListOf()
+    private val tokens: MutableList<AnyToken> = mutableListOf()
 
     private var pos: Int = 1
     private var line: Int = 1
 
-    fun doTokenize(): List<CToken> {
+    fun doTokenize(): List<AnyToken> {
         doTokenizeHelper()
         return tokens
     }
@@ -32,7 +32,7 @@ class CTokenizer private constructor(private val filename: String, private val r
         reader.read(count)
     }
 
-    private fun append(next: CToken) {
+    private fun append(next: AnyToken) {
         tokens.add(next)
     }
 
@@ -43,10 +43,17 @@ class CTokenizer private constructor(private val filename: String, private val r
             if (v == '\n') {
                 reader.read()
                 incrementLine()
+                append(NewLine.of(1))
                 continue
             }
             if (v.isWhitespace() || v == '\r') {
+                var spaces = 1
                 eat()
+                while (!reader.eof && (reader.peek() == ' ' || reader.peek() == '\t')) {
+                    eat()
+                    spaces += 1
+                }
+                append(Indent.of(spaces))
                 continue
             }
             if (v == '"' || v == '\'' || v == '`') {
@@ -145,11 +152,11 @@ class CTokenizer private constructor(private val filename: String, private val r
     }
 
     companion object {
-        fun apply(file: StringReader): List<CToken> {
-            return CTokenizer("<no-name>", file).doTokenize()
+        fun apply(file: StringReader): TokenIterator {
+            return TokenIteratorImpl(CTokenizer("<no-name>", file).doTokenize())
         }
 
-        fun apply(data: String): List<CToken> {
+        fun apply(data: String): TokenIterator {
             return apply(StringReader(data))
         }
     }

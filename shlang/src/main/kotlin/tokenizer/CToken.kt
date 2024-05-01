@@ -1,10 +1,61 @@
 package tokenizer
 
 
-abstract class CToken(private val position: Position) {
+abstract class AnyToken {
+    abstract fun str(): String
+}
+
+class Indent private constructor(private val spaces: Int): AnyToken() {
+    private val data by lazy { " ".repeat(spaces) }
+
+    override fun str(): String = data
+
+    companion object {
+        private val ONE = Indent(1)
+        private val TWO = Indent(2)
+        private val FOUR = Indent(4)
+
+        fun of(spaces: Int): Indent {
+            assert(spaces > 0) {
+                "Indent should be greater than 0, but was $spaces"
+            }
+
+            when (spaces) {
+                1 -> return ONE
+                2 -> return TWO
+                4 -> return FOUR
+            }
+            return Indent(spaces)
+        }
+    }
+}
+
+class NewLine private constructor(private val spaces: Int): AnyToken() {
+    private val data by lazy { "\n".repeat(spaces) }
+
+    override fun str(): String = data
+
+    companion object {
+        private val ONE = NewLine(1)
+        private val TWO = NewLine(2)
+
+        fun of(lines: Int): NewLine {
+            assert(lines > 0) {
+                "NewLine should be greater than 0, but was $lines"
+            }
+
+            when (lines) {
+                1 -> return ONE
+                2 -> return TWO
+            }
+            return NewLine(lines)
+        }
+    }
+}
+
+abstract class CToken(private val position: Position): AnyToken() {
     abstract fun cloneWith(pos: PreprocessedPosition): CToken
 
-    abstract fun str(): String
     fun line(): Int = position.line()
     fun pos(): Int = position.pos()
 

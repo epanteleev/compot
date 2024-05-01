@@ -4,9 +4,11 @@ import tokenizer.Eof
 import tokenizer.CToken
 import parser.ProgramMessage
 import parser.ParserException
+import tokenizer.AnyToken
+import tokenizer.Indent
 
 
-abstract class AnyParser(protected val tokens: List<CToken>) {
+abstract class AnyParser(protected val tokens: List<AnyToken>) {
     protected var current: Int = 0
 
     protected fun eat() {
@@ -16,26 +18,34 @@ abstract class AnyParser(protected val tokens: List<CToken>) {
         current += 1
     }
 
+    protected fun eatWithSpaces() {
+        eat()
+        while (!eof() && check<Indent>()) {
+            eat()
+        }
+    }
+
     protected fun eof(): Boolean {
-        return tokens[current] is Eof
+        return eof(0)
     }
 
     protected fun eof(offset: Int): Boolean {
         return current + offset >= tokens.size || tokens[current + offset] is Eof
     }
 
-    protected inline fun<reified T: CToken> peak(): T {
-        if (eof()) {
-            throw ParserException(ProgramMessage("Unexpected EOF", tokens[current]))
-        }
-        return tokens[current] as T
+    protected inline fun<reified T: AnyToken> peak(): T {
+        return peak(0)
     }
 
-    protected inline fun<reified T: CToken> peak(offset: Int): T {
+    protected inline fun<reified T: AnyToken> peak(offset: Int): T {
         if (eof(offset)) {
             throw ParserException(ProgramMessage("Unexpected EOF", tokens[current]))
         }
-        return tokens[current + offset] as T
+        val tok = tokens[current + offset]
+        if (tok !is T) {
+            throw ParserException(ProgramMessage("Unexpected token $tok", tok))
+        }
+        return tok
     }
 
     protected fun check(s: String): Boolean {
