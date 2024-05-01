@@ -105,7 +105,7 @@ class StringReader(val str: String, var pos: Int = 0) {
     companion object {
         private val punctuation = arrayOf(
             '!', '"', '#', '$', '%', '&', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=',
-            '>','?','@','[','\\',']','^','_','`','{','|','}','~'
+            '>','?','@','[','\\',']','^','`','{','|','}','~'
         )
 
         fun tryPunct(ch: Char): Boolean {

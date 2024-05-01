@@ -111,6 +111,10 @@ class Keyword(val data: String, position: Position): CToken(position) {
 class StringLiteral(val data: String, position: Position): CToken(position) {
     override fun str(): String = data
 
+    fun unquote(): String {
+        return data.substring(1, data.length - 1)
+    }
+
     override fun cloneWith(pos: PreprocessedPosition): CToken {
         return StringLiteral(data, pos)
     }

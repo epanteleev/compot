@@ -2,8 +2,24 @@ package preprocess
 
 import tokenizer.*
 
+abstract class AnyMacros(val name: String) {
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
 
-data class Macros(val name: String, private val value: List<AnyToken>) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AnyMacros
+
+        return name == other.name
+    }
+}
+
+class MacroDefinition(name: String): AnyMacros(name)
+
+class MacroReplacement(name: String, private val value: List<AnyToken>): AnyMacros(name) {
     private fun first(): CToken {
         return value.first() as CToken
     }

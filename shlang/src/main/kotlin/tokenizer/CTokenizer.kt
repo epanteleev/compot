@@ -120,7 +120,7 @@ class CTokenizer private constructor(private val filename: String, private val r
 
             if (v.isLetter()) {
                 val identifier = reader.readBlock {
-                    while (reader.peek().isLetter()) {
+                    while (reader.peek().isLetter() || reader.peek().isDigit() || reader.peek() == '_') {
                         reader.read()
                         pos += 1
                     }
