@@ -25,7 +25,7 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         return macroFunctions[name]
     }
 
-    fun findMacros(name: String): AnyMacros? {
+    fun findMacros(name: String): Macros? {
         val def = MacroDefinition(name)
         if (macroDefinitions.contains(def)) {
             return def

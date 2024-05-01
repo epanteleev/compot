@@ -134,6 +134,101 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         ctx.define(MacroFunction(name.str(), args, value))
     }
 
+    private fun handleDirective() {
+        if (!check<CToken>()) {
+            throw PreprocessorException("Expected directive: '${peak<AnyToken>()}'")
+        }
+
+        val directive = peak<CToken>()
+        kill()
+        when (directive.str()) {
+            "define" -> {
+                killWithSpaces()
+                val name = peak<Ident>()
+                killWithSpaces()
+                if (check("(")) {
+                    parseMacroFunction(name)
+                    return
+                }
+
+                val value = parseDefineBody()
+                if (value.isEmpty()) {
+                    ctx.define(MacroDefinition(name.str()))
+                } else {
+                    ctx.define(MacroReplacement(name.str(), value))
+                }
+            }
+            "undef" -> {
+                killWithSpaces()
+                if (!check<Ident>()) {
+                    throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
+                }
+                val name = peak<Ident>()
+                killWithSpaces()
+                ctx.undef(name.str())
+            }
+            "include" -> {
+                killWithSpaces()
+                if (!check<StringLiteral>()) {
+                    throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
+                }
+                val name = peak<StringLiteral>()
+                kill()
+                val header = ctx.findHeader(name.unquote()) ?: throw PreprocessorException("Cannot find header '$name'")
+                val tokens = header.tokenize()
+                val preprocessor = CProgramPreprocessor(tokens, ctx)
+                addAll(preprocessor.preprocess())
+            }
+            "ifdef" -> {
+                killWithSpaces()
+                if (!check<Ident>()) {
+                    throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
+                }
+                val name = peak<Ident>()
+                kill()
+                val macros = ctx.findMacros(name.str())
+                if (macros != null) {
+                    return
+                }
+                skipBlock()
+            }
+            "ifndef" -> {
+                killWithSpaces()
+                if (!check<Ident>()) {
+                    throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
+                }
+                val name = peak<Ident>()
+                kill()
+                ctx.findMacros(name.str()) ?: return
+                skipBlock()
+            }
+            "endif" -> {}
+            "else" -> skipBlock()
+
+            else -> throw PreprocessorException("Unknown directive '${directive.str()}'")
+        }
+    }
+
+    private fun handleToken(tok: CToken) {
+        val macros = ctx.findMacroReplacement(tok.str())
+        if (macros != null) {
+            kill()
+            val replacement = macros.cloneContentWith(tok.position())
+            addAll(replacement)
+            if (macros.first().str() == tok.str()) {
+                eat()
+            }
+            return
+        }
+
+        val macroFunction = ctx.findMacroFunction(tok.str())
+        if (macroFunction != null) {
+            macroFunctionReplacement(tok, macroFunction)
+            return
+        }
+        eat()
+    }
+
     fun preprocess(): List<AnyToken> {
         while (!eof()) {
             if (check<NewLine>()) {
@@ -146,98 +241,11 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
             }
             if (!check("#")) {
                 val tok = peak<CToken>()
-                val macros = ctx.findMacroReplacement(tok.str())
-                if (macros != null) {
-                    kill()
-                    val replacement = macros.cloneContentWith(tok.position())
-                    addAll(replacement)
-                    if (macros.first().str() == tok.str()) {
-                        eat()
-                    }
-                    continue
-                }
-
-                val macroFunction = ctx.findMacroFunction(tok.str())
-                if (macroFunction != null) {
-                    macroFunctionReplacement(tok, macroFunction)
-                    continue
-                }
-                eat()
+                handleToken(tok)
                 continue
             }
             kill()
-            if (!check<CToken>()) {
-                throw PreprocessorException("Expected directive: '${peak<AnyToken>()}'")
-            }
-
-            val directive = peak<CToken>()
-            kill()
-            when (directive.str()) {
-                "define" -> {
-                    killWithSpaces()
-                    val name = peak<Ident>()
-                    killWithSpaces()
-                    if (check("(")) {
-                        parseMacroFunction(name)
-                        continue
-                    }
-
-                    val value = parseDefineBody()
-                    if (value.isEmpty()) {
-                        ctx.define(MacroDefinition(name.str()))
-                    } else {
-                        ctx.define(MacroReplacement(name.str(), value))
-                    }
-                }
-                "undef" -> {
-                    killWithSpaces()
-                    if (!check<Ident>()) {
-                        throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
-                    }
-                    val name = peak<Ident>()
-                    killWithSpaces()
-                    ctx.undef(name.str())
-                }
-                "include" -> {
-                    killWithSpaces()
-                    if (!check<StringLiteral>()) {
-                        throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
-                    }
-                    val name = peak<StringLiteral>()
-                    kill()
-                    val header = ctx.findHeader(name.unquote()) ?: throw PreprocessorException("Cannot find header '$name'")
-                    val tokens = header.tokenize()
-                    val preprocessor = CProgramPreprocessor(tokens, ctx)
-                    addAll(preprocessor.preprocess())
-                }
-                "ifdef" -> {
-                    killWithSpaces()
-                    if (!check<Ident>()) {
-                        throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
-                    }
-                    val name = peak<Ident>()
-                    kill()
-                    val macros = ctx.findMacros(name.str())
-                    if (macros != null) {
-                        continue
-                    }
-                    skipBlock()
-                }
-                "ifndef" -> {
-                    killWithSpaces()
-                    if (!check<Ident>()) {
-                        throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
-                    }
-                    val name = peak<Ident>()
-                    kill()
-                    ctx.findMacros(name.str()) ?: continue
-                    skipBlock()
-                }
-                "endif" -> {}
-                "else" -> skipBlock()
-
-                else -> throw PreprocessorException("Unknown directive ${directive.str()}")
-            }
+            handleDirective()
         }
         return tokens
     }

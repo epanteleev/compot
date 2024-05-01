@@ -1,12 +1,8 @@
 import tokenizer.CTokenizer
-import preprocess.CProgramPreprocessor
-import preprocess.Header
-import preprocess.PredefinedHeaderHolder
-import preprocess.PreprocessorContext
+
+import preprocess.*
 
 import tokenizer.TokenPrinter
-import kotlin.test.BeforeTest
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -261,6 +257,74 @@ class CProgramPreprocessorTest {
         //3) g(0) + t(1)
         //4) f(2 * (0)) + t(1)
 
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testStringify() {
+        val data = """
+            |#define x(a) #a
+            |x(abc)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |"abc"
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testStringify1() {
+        val data = """
+            |#define x(a, b) #a + b
+            |x(abc, 4)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |"abc" + 4
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testStringify2() {
+        val data = """
+            |#define x(a, b) #a + #b
+            |x(abc, 4)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |"abc" + "4"
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testStringify3() {
+        val data = """
+            |#define x(a, b) a ## b
+            |x(1, 2)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |12
+        """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
 }
