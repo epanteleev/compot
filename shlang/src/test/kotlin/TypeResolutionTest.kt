@@ -170,6 +170,17 @@ class TypeResolutionTest {
     }
 
     @Test
+    fun testDecl9() {
+        val tokens = CTokenizer.apply("int printf(const char* format, ...) { }")
+        val parser = CProgramParser.build(tokens)
+        val expr = parser.function_definition() as FunctionNode
+        val typeResolver = TypeHolder.default()
+        val fnType = expr.resolveType(typeResolver)
+
+        assertEquals("int printf(const char*, ...)", fnType.toString())
+    }
+
+    @Test
     fun testFunctionPointerDeclaration() {
         val tokens = CTokenizer.apply("int (*add)(int, int) = 0;")
         val parser = CProgramParser.build(tokens)
@@ -262,5 +273,17 @@ class TypeResolutionTest {
 
         val a = typeResolver["a"]
         assertEquals("int[10][30]", a.toString())
+    }
+
+    @Test
+    fun testConstString() {
+        val tokens = CTokenizer.apply("const char* a = \"hello\";")
+        val parser = CProgramParser.build(tokens)
+        val expr = parser.declaration() as Declaration
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        val a = typeResolver["a"]
+        assertEquals("const char*", a.toString())
     }
 }

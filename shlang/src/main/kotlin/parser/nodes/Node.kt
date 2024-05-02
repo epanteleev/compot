@@ -62,7 +62,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
         val type = specifier.resolveType(typeHolder)
         val s = functionDeclarator().resolveParams(typeHolder)
-        val fnType = CFunctionType(name(), type, s)
+        val fnType = CFunctionType(name(), type, s, functionDeclarator().isVarArg())
         typeHolder.addFunctionType(name(), fnType)
         return fnType
     }

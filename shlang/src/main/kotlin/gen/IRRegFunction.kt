@@ -230,15 +230,21 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
     private fun visitExpression(expression: Expression, isRvalue: Boolean): Value {
         return when (expression) {
-            is BinaryOp -> visitBinary(expression, isRvalue)
-            is UnaryOp -> visitUnary(expression, isRvalue)
-            is NumNode -> visitNumNode(expression)
-            is VarNode -> visitVarNode(expression, isRvalue)
+            is BinaryOp     -> visitBinary(expression, isRvalue)
+            is UnaryOp      -> visitUnary(expression, isRvalue)
+            is NumNode      -> visitNumNode(expression)
+            is VarNode      -> visitVarNode(expression, isRvalue)
             is FunctionCall -> visitFunctionCall(expression)
-            is Cast -> visitCast(expression)
-            is ArrayAccess -> visitArrayAccess(expression, isRvalue)
+            is Cast         -> visitCast(expression)
+            is ArrayAccess  -> visitArrayAccess(expression, isRvalue)
+            is StringNode   -> visitStringNode(expression)
             else -> throw IRCodeGenError("Unknown expression: $expression")
         }
+    }
+
+    private fun visitStringNode(stringNode: StringNode): Value {
+        val stringLiteral = StringLiteralGlobal("str", ArrayType(Type.I8, 11), stringNode.str.unquote())
+        return moduleBuilder.addConstant(stringLiteral)
     }
 
     private fun visitArrayAccess(arrayAccess: ArrayAccess, isRvalue: Boolean): Value {

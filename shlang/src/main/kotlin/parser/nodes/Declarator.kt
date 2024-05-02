@@ -77,7 +77,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
                     }
                     is FunctionDeclarator -> {
                         val params = decl.resolveParams(typeHolder)
-                        pointerType = CFunctionType(directDeclarator.name(), pointerType, params)
+                        pointerType = CFunctionType(directDeclarator.name(), pointerType, params, decl.isVarArg())
                     }
                     else -> throw IllegalStateException("Unknown declarator $decl")
                 }
@@ -125,8 +125,24 @@ data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
         }
     }
 
+    fun isVarArg(): Boolean {
+        return params.any { it is ParameterVarArg }
+    }
+
     fun resolveParams(typeHolder: TypeHolder): List<CType> {
-        return params.map { it.resolveType(typeHolder) }
+        val paramTypes = mutableListOf<CType>()
+        for (param in params) {
+            when (param) {
+                is Parameter -> {
+                    val type = param.resolveType(typeHolder)
+                    paramTypes.add(type)
+                }
+                is ParameterVarArg -> {}
+                else -> throw IllegalStateException("Unknown parameter $param")
+            }
+        }
+
+        return paramTypes
     }
 }
 

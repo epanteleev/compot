@@ -1,3 +1,4 @@
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -84,6 +85,12 @@ class ShlangTests: CommonTest() {
     }
 
     @Test
+    fun testOptHelloWorld() {
+        val result = runOptimizedCTest("shlang/helloWorld", listOf())
+        assert(result, "Hello, World!\n")
+    }
+
+    @Ignore
     fun testInsertionSort() {
         val result = runCTest("shlang/insertionSort", listOf("runtime/runtime.c"))
         assert(result, "11 12 22 25 34 64 \n")

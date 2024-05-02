@@ -174,7 +174,7 @@ data class CompoundType(val baseType: BaseType, val properties: List<TypePropert
     override fun qualifiers(): List<TypeProperty> = properties
 }
 
-data class CFunctionType(val name: String, val retType: CType, val argsTypes: List<CType>, var variadic: Boolean = false) : CType {
+data class CFunctionType(val name: String, val retType: CType, val argsTypes: List<CType>, var variadic: Boolean) : CType {
     override fun baseType(): BaseType = retType.baseType()
     override fun qualifiers(): List<TypeProperty> = retType.qualifiers()
 
