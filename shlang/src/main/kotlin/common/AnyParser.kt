@@ -18,13 +18,6 @@ abstract class AnyParser(protected val tokens: MutableList<AnyToken>) {
         current += 1
     }
 
-    protected fun eatWithSpaces() {
-        eat()
-        while (!eof() && check<Indent>()) {
-            eat()
-        }
-    }
-
     protected fun eof(): Boolean {
         return eof(0)
     }

@@ -33,6 +33,10 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         return  macroReplacements[name]
     }
 
+    fun hasMacroDefinition(name: String): Boolean {
+        return macroDefinitions.contains(MacroDefinition(name))
+    }
+
     fun undef(name: String) {
         macroReplacements.remove(name)
     }

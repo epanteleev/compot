@@ -52,7 +52,6 @@ class CProgramPreprocessorTest {
             |
             |
             |int a = 9;
-            |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -66,7 +65,6 @@ class CProgramPreprocessorTest {
             |
             |
             |int a = 9;
-            |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -79,7 +77,6 @@ class CProgramPreprocessorTest {
             |
             |
             |int a = 9;
-            |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -93,7 +90,6 @@ class CProgramPreprocessorTest {
             |
             |
             |int a = 9;
-            |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -106,8 +102,9 @@ class CProgramPreprocessorTest {
         val expected = """
             |
             |
-            |int a = 10;
             |
+            |
+            |int a = 10;
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -324,6 +321,87 @@ class CProgramPreprocessorTest {
         val expected = """
             |
             |12
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testStringify4() {
+        val data = """
+            |#define x(a, b, c) a ## b ## c
+            |x(1, 2, 4)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |124
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testIfdefined() {
+        val data = """
+            |#define TEST
+            |#if defined(TEST)
+            |int a = 9;
+            |#endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |
+            |int a = 9;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testIfdefined2() {
+        val data = """
+            |#define TEST
+            |#if defined(TEST)
+            |int a = 9;
+            |#else
+            |int a = 10;
+            |#endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |
+            |int a = 9;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testIfdefined3() {
+        val data = """
+            |#if defined(TEST)
+            |int a = 9;
+            |#else
+            |int a = 10;
+            |#endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |
+            |
+            |int a = 10;
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }

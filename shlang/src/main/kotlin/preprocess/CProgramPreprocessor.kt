@@ -1,15 +1,17 @@
 package preprocess
 
 import common.AnyParser
+import gen.consteval.ConstEvalExpression
+import parser.CProgramParser
 import tokenizer.*
 
 data class PreprocessorException(override val message: String): Exception(message)
 
 
 class CProgramPreprocessor(original: TokenIterator, private val ctx: PreprocessorContext): AnyParser(original.tokens()) {
-    private fun kill() {
-        tokens.removeAt(current)
-    }
+    private fun kill() = killAt(current)
+
+    private fun killAt(index: Int) = tokens.removeAt(index)
 
     private fun killWithSpaces() {
         kill()
@@ -29,6 +31,10 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
     private fun skipBlock(): Boolean {
         var depth = 1
         while (!eof()) {
+            if (check<NewLine>()) {
+                eat()
+                continue
+            }
             if (!check("#")) {
                 kill()
                 continue
@@ -93,10 +99,23 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         return true
     }
 
-    private fun parseDefineBody(): List<AnyToken> {
+    private fun parseDefineBody(): MutableList<AnyToken> {
         val value = mutableListOf<AnyToken>()
-        while (!check<NewLine>()) {
+        while (!eof() && !check<NewLine>()) {
             value.add(peak())
+            kill()
+        }
+        return value
+    }
+
+    private fun parseCTokensInLine(): MutableList<CToken> {
+        val value = mutableListOf<CToken>()
+        while (!eof() && !check<NewLine>()) {
+            val peak = peak<AnyToken>();
+            if (peak is CToken) {
+                value.add(peak)
+            }
+
             kill()
         }
         return value
@@ -192,6 +211,18 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                 }
                 skipBlock()
             }
+            "if" -> {
+                killWithSpaces()
+                val expr = parseCTokensInLine()
+                val constexpr = CProgramParser.build(expr).constant_expression() ?:
+                    throw PreprocessorException("Cannot parse expression: '$expr'")
+
+                val evaluationContext = ConditionEvaluationContext(ctx)
+                val result = ConstEvalExpression.eval(constexpr, evaluationContext)
+                if (result == 0) {
+                    skipBlock()
+                }
+            }
             "ifndef" -> {
                 killWithSpaces()
                 if (!check<Ident>()) {
@@ -229,6 +260,19 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         eat()
     }
 
+    private fun trimSpacesAtEnding() {
+        var end = tokens.size - 1
+        do {
+            val last = tokens[end - 1]
+            if (last is Indent || last is NewLine) {
+                killAt(end - 1)
+                end -= 1
+                continue
+            }
+            break
+        } while (true)
+    }
+
     fun preprocess(): List<AnyToken> {
         while (!eof()) {
             if (check<NewLine>()) {
@@ -247,6 +291,7 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
             kill()
             handleDirective()
         }
+        trimSpacesAtEnding()
         return tokens
     }
 

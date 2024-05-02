@@ -6,10 +6,10 @@ import parser.nodes.visitors.ExpressionVisitor
 
 data class ConstEvalException(override val message: String): Exception(message)
 
-class ConstEvalExpression(private val ctx: ConstEvalContext): ExpressionVisitor<Int> {
+class ConstEvalExpression private constructor(private val ctx: ConstEvalContext): ExpressionVisitor<Int> {
 
     companion object {
-        fun eval(expression: Expression, ctx: ConstEvalContext): Number {
+        fun eval(expression: Expression, ctx: ConstEvalContext): Int {
             return expression.accept(ConstEvalExpression(ctx))
         }
     }
@@ -66,7 +66,8 @@ class ConstEvalExpression(private val ctx: ConstEvalContext): ExpressionVisitor<
     }
 
     override fun visit(functionCall: FunctionCall): Int {
-        throw ConstEvalException("Cannot evaluate function call")
+        val evaluated = functionCall.args.map { it.accept(this) }
+        return ctx.callFunction(functionCall.name(), evaluated)
     }
 
     override fun visit(arrayAccess: ArrayAccess): Int {
