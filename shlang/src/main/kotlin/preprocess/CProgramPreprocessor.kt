@@ -390,6 +390,12 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         return tokens
     }
 
+    fun preprocessWithKilledSpaces(): MutableList<CToken> {
+        val tokens = preprocess0()
+        tokens.removeIf { it is Indent || it is NewLine }
+        return tokens as MutableList<CToken> //TODO
+    }
+
     companion object {
         fun create(tokens: TokenIterator, ctx: PreprocessorContext): CProgramPreprocessor {
             return CProgramPreprocessor(tokens, ctx)

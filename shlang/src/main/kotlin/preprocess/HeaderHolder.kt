@@ -34,3 +34,15 @@ class PredefinedHeaderHolder(includeDirectories: Set<String>): HeaderHolder(incl
         return headers[name]
     }
 }
+
+class FileHeaderHolder(includeDirectories: Set<String>): HeaderHolder(includeDirectories) {
+    override fun getHeader(name: String, includeType: HeaderType): Header? {
+        val file = File(name)
+        if (!file.exists()) {
+            return null
+        }
+
+        val content = file.readText() //TODO read file everytime
+        return Header(file.name, content, includeType)
+    }
+}
