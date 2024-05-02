@@ -1,9 +1,13 @@
 package preprocess
 
+import tokenizer.Numeric
+import tokenizer.StringLiteral
+
 
 class PreprocessorContext private constructor(private val macroReplacements: MutableMap<String, MacroReplacement>,
                                               private val macroDefinitions: MutableSet<MacroDefinition>,
                                               private val macroFunctions: MutableMap<String, MacroFunction>,
+                                              private val predefinedMacroses: MutableMap<String, PredefinedMacros>,
                                               private val headerHolder: HeaderHolder) {
     fun define(macros: MacroReplacement) {
         macroReplacements[macros.name] = macros
@@ -21,16 +25,25 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         return macroReplacements[name]
     }
 
+    fun findPredefinedMacros(name: String): PredefinedMacros? {
+        return predefinedMacroses[name]
+    }
+
     fun findMacroFunction(name: String): MacroFunction? {
         return macroFunctions[name]
     }
 
     fun findMacros(name: String): Macros? {
-        val def = MacroDefinition(name)
-        if (macroDefinitions.contains(def)) {
-            return def
+        val definition = MacroDefinition(name)
+        if (macroDefinitions.contains(definition)) {
+            return definition
         }
-        return  macroReplacements[name]
+        val replacement = macroReplacements[name]
+        if (replacement != null) {
+            return replacement
+        }
+
+        return predefinedMacroses[name]
     }
 
     fun hasMacroDefinition(name: String): Boolean {
@@ -46,8 +59,27 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
     }
 
     companion object {
+        // 6.10.8.1 Mandatory macros
+        private val LINE = PredefinedMacros("__LINE__") { Numeric(it.line(), it) }
+        private val FILE = PredefinedMacros("__FILE__") { StringLiteral.quote(it.filename(), it) }
+        private val DATE = PredefinedMacros("__DATE__") { StringLiteral.quote("June  6 666", it)}
+        private val TIME = PredefinedMacros("__TIME__") { StringLiteral.quote("66:66:66", it) }
+        private val STDC = PredefinedMacros("__STDC__") { Numeric(1, it) }
+        private val STDC_HOSTED = PredefinedMacros("__STDC_HOSTED__") { Numeric(1, it) }
+        private val STDC_VERSION = PredefinedMacros("__STDC_VERSION__") { Numeric(201112L, it) }
+
+        private val predefined = mutableMapOf(
+            "__LINE__" to LINE,
+            "__FILE__" to FILE,
+            "__DATE__" to DATE,
+            "__TIME__" to TIME,
+            "__STDC__" to STDC,
+            "__STDC_HOSTED__" to STDC_HOSTED,
+            "__STDC_VERSION__" to STDC_VERSION
+        )
+
         fun empty(headerHolder: HeaderHolder): PreprocessorContext {
-            return PreprocessorContext(mutableMapOf(), mutableSetOf(), mutableMapOf(), headerHolder)
+            return PreprocessorContext(mutableMapOf(), mutableSetOf(), mutableMapOf(), predefined, headerHolder)
         }
     }
 }

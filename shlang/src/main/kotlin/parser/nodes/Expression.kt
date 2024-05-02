@@ -190,8 +190,12 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     fun name(): String {
+        return nameIdent().str()
+    }
+
+    fun nameIdent(): Ident {
         return when (primary) {
-            is VarNode -> primary.name()
+            is VarNode -> primary.nameIdent()
             else -> throw IllegalStateException("Function call primary is not a VarNode, but got ${primary.javaClass.simpleName}")
         }
     }
@@ -282,6 +286,8 @@ class ArrowMemberAccess(val primary: Expression, val ident: Ident) : Expression(
 
 data class VarNode(private val str: Ident) : Expression() {
     fun name(): String = str.str()
+    fun nameIdent(): Ident = str
+
 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 

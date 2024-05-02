@@ -67,7 +67,7 @@ class ConstEvalExpression private constructor(private val ctx: ConstEvalContext)
 
     override fun visit(functionCall: FunctionCall): Int {
         val evaluated = functionCall.args.map { it.accept(this) }
-        return ctx.callFunction(functionCall.name(), evaluated)
+        return ctx.callFunction(functionCall.nameIdent(), evaluated)
     }
 
     override fun visit(arrayAccess: ArrayAccess): Int {
@@ -95,7 +95,7 @@ class ConstEvalExpression private constructor(private val ctx: ConstEvalContext)
     }
 
     override fun visit(varNode: VarNode): Int {
-        return ctx.getVariable(varNode.name())
+        return ctx.getVariable(varNode.nameIdent())
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess): Int {

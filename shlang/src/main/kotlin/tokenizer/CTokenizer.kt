@@ -118,7 +118,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
-            if (v.isLetter()) {
+            if (reader.peek() == '_' || v.isLetter()) {
                 val identifier = reader.readBlock {
                     while (reader.peek().isLetter() || reader.peek().isDigit() || reader.peek() == '_') {
                         reader.read()

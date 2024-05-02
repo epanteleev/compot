@@ -33,4 +33,10 @@ data class PreprocessedPosition(private val line: Int, private val pos: Int, pri
     override fun line(): Int = line
     override fun pos(): Int = pos
     override fun filename(): String = filename
+
+    companion object {
+        fun makeFrom(macrosPos: Position, origin: OriginalPosition): PreprocessedPosition {
+            return PreprocessedPosition(macrosPos.line(), macrosPos.pos(), macrosPos.filename(), origin)
+        }
+    }
 }

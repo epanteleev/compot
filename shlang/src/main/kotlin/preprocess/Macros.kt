@@ -23,6 +23,25 @@ abstract class Macros(val name: String) {
 
 class MacroDefinition(name: String): Macros(name)
 
+class PredefinedMacros(name: String, private val callback: (Position) -> CToken): Macros(name) {
+    fun cloneContentWith(macrosNamePos: Position): CToken {
+        val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos,
+            callback(macrosNamePos).position() as OriginalPosition)
+
+        return callback(preprocessedPosition)
+    }
+
+    fun constEval(): Int {
+        val pos = Position.UNKNOWN
+        val token = callback(pos)
+        if (token !is Numeric) {
+            throw PreprocessorException("Predefined macro '$name' is not a number")
+        }
+
+        return token.data.toInt()
+    }
+}
+
 class MacroReplacement(name: String, private val value: List<AnyToken>): Macros(name) {
     fun first(): CToken {
         return value.first() as CToken
@@ -38,13 +57,8 @@ class MacroReplacement(name: String, private val value: List<AnyToken>): Macros(
             if (tok !is CToken) {
                 return tok
             }
-            val realPos = tok.position().pos() - firstPos
-            val preprocessedPosition = PreprocessedPosition(macrosNamePos.line(),
-                macrosNamePos.pos() + realPos,
-                macrosNamePos.filename(),
-                tok.position() as OriginalPosition
-            )
 
+            val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, tok.position() as OriginalPosition)
             return tok.cloneWith(preprocessedPosition)
         }
 
@@ -58,17 +72,11 @@ class MacroFunction(name: String, private val args: List<CToken>, private val va
     }
 
     private fun calculate(macrosNamePos: Position, tok: AnyToken): AnyToken {
-        val firstPos = first().position().pos()
         if (tok !is CToken) {
             return tok
         }
-        val realPos = tok.position().pos() - firstPos
-        val preprocessedPosition = PreprocessedPosition(macrosNamePos.line(),
-            macrosNamePos.pos() + realPos,
-            macrosNamePos.filename(),
-            tok.position() as OriginalPosition
-        )
 
+        val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, tok.position() as OriginalPosition)
         return tok.cloneWith(preprocessedPosition)
     }
 
@@ -122,8 +130,6 @@ class MacroFunction(name: String, private val args: List<CToken>, private val va
     }
 
     fun cloneContentWith(macrosNamePos: Position, args: List<List<CToken>>): List<AnyToken> {
-        val firstPos = first().position().pos()
-
         val argToValue = run {
             val res = mutableMapOf<CToken, List<CToken>>()
             this.args.forEachWith(args) { arg, value ->
@@ -157,12 +163,8 @@ class MacroFunction(name: String, private val args: List<CToken>, private val va
             }
 
             val arg = argToValue[v]!!
-            val realPos = v.position().pos() - firstPos
-            val preprocessedPosition = PreprocessedPosition(macrosNamePos.line(),
-                macrosNamePos.pos() + realPos,
-                macrosNamePos.filename(),
-                v.position() as OriginalPosition
-            )
+
+            val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, v.position() as OriginalPosition)
             val r = arg.map { it.cloneWith(preprocessedPosition) }
 
             result.addAll(r)

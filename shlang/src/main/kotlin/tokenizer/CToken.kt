@@ -169,6 +169,12 @@ class StringLiteral(val data: String, position: Position): CToken(position) {
     override fun cloneWith(pos: PreprocessedPosition): CToken {
         return StringLiteral(data, pos)
     }
+
+    companion object {
+        fun quote(data: String, position: Position): StringLiteral {
+            return StringLiteral("\"$data\"", position)
+        }
+    }
 }
 
 class Numeric(val data: Number, position: Position): CToken(position) {

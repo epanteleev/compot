@@ -405,4 +405,92 @@ class CProgramPreprocessorTest {
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
+
+    @Test
+    fun testIfdefined4() {
+        val data = """
+            |#define TEST
+            |#if !defined(TEST)
+            |int a = 9;
+            |#elif defined(TEST)
+            |int a = 6;
+            |#else
+            |int a = 10;
+            |#endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |
+            |
+            |
+            |int a = 6;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testSeveralIf() {
+        val data = """
+            |#ifndef TEST
+            |#define TEST
+            |#endif
+            |
+            |#if !defined(TEST)
+            |int a = 9;
+            |#elif defined(TEST)
+            |int a = 6;
+            |#else
+            |int a = 10;
+            |#endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |
+            |
+            |
+            |
+            |
+            |
+            |int a = 6;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testPredefinedMacros() {
+        val data = """
+            |__LINE__
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |1
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test                                           //TODO not fully correct test
+    fun testPredefinedMacros2() {
+        val data = """
+            |__FILE__
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |"<no-name>"
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
 }

@@ -5,6 +5,7 @@ import gen.consteval.ConstEvalExpression
 import parser.CProgramParser
 import tokenizer.*
 
+
 data class PreprocessorException(override val message: String): Exception(message)
 
 
@@ -28,7 +29,16 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         tokens.add(current, tok)
     }
 
-    private fun skipBlock(): Boolean {
+    private fun evaluateCondition(tokens: MutableList<CToken>): Int {
+        val parser = CProgramParser.build(tokens)
+        val constexpr = parser.constant_expression() ?:
+            throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(tokens)}'")
+
+        val evaluationContext = ConditionEvaluationContext(ctx)
+        return ConstEvalExpression.eval(constexpr, evaluationContext)
+    }
+
+    private fun skipBlock() {
         var depth = 1
         while (!eof()) {
             if (check<NewLine>()) {
@@ -46,11 +56,19 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
             }
             if (check("else") && depth == 1) {
                 kill()
-                return true
+                return
             }
             if (check("endif") && depth == 1) {
                 kill()
-                return false
+                return
+            }
+            if (check("elif") && depth == 1) {
+                kill()
+                val expr = takeCTokensInLine()
+                val result = evaluateCondition(expr)
+                if (result == 1) {
+                    return
+                }
             }
         }
         throw PreprocessorException("Cannot find #endif")
@@ -108,7 +126,7 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         return value
     }
 
-    private fun parseCTokensInLine(): MutableList<CToken> {
+    private fun takeCTokensInLine(): MutableList<CToken> {
         val value = mutableListOf<CToken>()
         while (!eof() && !check<NewLine>()) {
             val peak = peak<AnyToken>();
@@ -153,6 +171,18 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         ctx.define(MacroFunction(name.str(), args, value))
     }
 
+    private fun checkNewLine() {
+        if (eof()) {
+            return
+        }
+        if (check<NewLine>()) {
+            eat()
+            return
+        }
+        throw PreprocessorException("Expected newline: '${peak<AnyToken>()}'")
+    }
+
+    // 6.10 Preprocessing directives
     private fun handleDirective() {
         if (!check<CToken>()) {
             throw PreprocessorException("Expected directive: '${peak<AnyToken>()}'")
@@ -205,6 +235,7 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                 }
                 val name = peak<Ident>()
                 kill()
+                checkNewLine()
                 val macros = ctx.findMacros(name.str())
                 if (macros != null) {
                     return
@@ -213,15 +244,15 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
             }
             "if" -> {
                 killWithSpaces()
-                val expr = parseCTokensInLine()
-                val constexpr = CProgramParser.build(expr).constant_expression() ?:
-                    throw PreprocessorException("Cannot parse expression: '$expr'")
-
-                val evaluationContext = ConditionEvaluationContext(ctx)
-                val result = ConstEvalExpression.eval(constexpr, evaluationContext)
+                val expr   = takeCTokensInLine()
+                checkNewLine()
+                val result = evaluateCondition(expr)
                 if (result == 0) {
                     skipBlock()
                 }
+            }
+            "elif" -> {
+                skipBlock()
             }
             "ifndef" -> {
                 killWithSpaces()
@@ -257,6 +288,18 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
             macroFunctionReplacement(tok, macroFunction)
             return
         }
+
+        val predefinedMacros = ctx.findPredefinedMacros(tok.str())
+        if (predefinedMacros != null) {
+            kill()
+            val replacement = predefinedMacros.cloneContentWith(tok.position())
+            add(replacement)
+            if (replacement.str() == tok.str()) {
+                eat()
+            }
+            return
+        }
+
         eat()
     }
 
