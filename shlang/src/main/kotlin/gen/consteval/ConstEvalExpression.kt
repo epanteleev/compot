@@ -91,7 +91,7 @@ class ConstEvalExpression private constructor(private val ctx: ConstEvalContext)
     }
 
     override fun visit(numNode: NumNode): Int {
-        TODO("Not yet implemented")
+        return numNode.toLong.data.toInt()
     }
 
     override fun visit(varNode: VarNode): Int {

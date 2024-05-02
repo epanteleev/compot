@@ -54,8 +54,8 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         macroReplacements.remove(name)
     }
 
-    fun findHeader(name: String): Header? {
-        return headerHolder.getHeader(name)
+    fun findHeader(name: String, includeType: HeaderType): Header? {
+        return headerHolder.getHeader(name, includeType)
     }
 
     companion object {

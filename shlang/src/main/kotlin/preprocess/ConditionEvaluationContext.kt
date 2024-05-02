@@ -2,7 +2,6 @@ package preprocess
 
 import gen.consteval.ConstEvalContext
 import tokenizer.CToken
-import tokenizer.Numeric
 
 
 class ConditionEvaluationContext(private val preprocessorContext: PreprocessorContext): ConstEvalContext {

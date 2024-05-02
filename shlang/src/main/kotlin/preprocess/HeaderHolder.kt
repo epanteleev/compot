@@ -4,7 +4,13 @@ import tokenizer.CTokenizer
 import tokenizer.TokenIterator
 import java.io.File
 
-data class Header(val filename: String, val content: String) {
+enum class HeaderType {
+    SYSTEM,
+    USER
+}
+
+
+data class Header(val filename: String, val content: String, val includeType: HeaderType) {
     fun tokenize(): TokenIterator {
         return CTokenizer.apply(content)
     }
@@ -13,7 +19,7 @@ data class Header(val filename: String, val content: String) {
 abstract class HeaderHolder(val includeDirectories: Set<String>) {
     protected val headers = hashMapOf<String, Header>()
 
-    abstract fun getHeader(name: String): Header?
+    abstract fun getHeader(name: String, includeType: HeaderType): Header?
 
     fun clear() = headers.clear()
 }
@@ -24,7 +30,7 @@ class PredefinedHeaderHolder(includeDirectories: Set<String>): HeaderHolder(incl
         return this
     }
 
-    override fun getHeader(name: String): Header? {
+    override fun getHeader(name: String, includeType: HeaderType): Header? {
         return headers[name]
     }
 }

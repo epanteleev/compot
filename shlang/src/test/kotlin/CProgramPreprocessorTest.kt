@@ -15,8 +15,16 @@ class CProgramPreprocessorTest {
         |#endif
     """.trimMargin()
 
+    private val stdioHeaderContent = """
+        |#ifndef STDIO_H
+        |#define STDIO_H
+        |int printf(char* format, ...);
+        |#endif
+    """.trimMargin()
+
     private val headerHolder = PredefinedHeaderHolder(setOf())
-        .addHeader(Header("test.h", testHeaderContent))
+        .addHeader(Header("test.h", testHeaderContent, HeaderType.USER))
+        .addHeader(Header("stdio.h", stdioHeaderContent, HeaderType.SYSTEM))
 
     @Test
     fun testSubstitution() {
@@ -50,6 +58,25 @@ class CProgramPreprocessorTest {
         val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
+            |
+            |int a = 9;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testInclude1() {
+        val input = """
+            |#include "test.h"
+            |int a = 9;
+        """.trimMargin()
+        val tokens = CTokenizer.apply(input)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |
+            |int a = 9;
             |
             |int a = 9;
         """.trimMargin()
@@ -492,5 +519,93 @@ class CProgramPreprocessorTest {
             |"<no-name>"
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testError() {
+        val data = """
+            |#error Error message
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        try {
+            p.preprocess()
+        } catch (e: PreprocessorException) {
+            assertEquals("#error Error message", e.message)
+        }
+    }
+
+    @Test
+    fun testSysInclude() {
+        val data = """
+            |#include <stdio.h>
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |
+            |int printf(char* format, ...);
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
+
+    // 6.10.2 Source file inclusion
+    // EXAMPLE 2
+    @Test
+    fun testSysInclude2() {
+        val data = """
+            |#if VERSION == 1
+            |#define INCFILE            "vers1.h"
+            |#elif VERSION == 2
+            |#define INCFILE            "vers2.h"
+            |#else
+            |#define INCFILE           "test.h"
+            |#endif
+            |#include INCFILE
+            |int aa = 90;
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |
+            |
+            |
+            |
+            |
+            |
+            |
+            |
+            |int a = 9;
+            |
+            |int aa = 90;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
+
+    @Test
+    fun testSysInclude3() {
+        val data = """
+            |#define  HEADER(name) #name ".h"
+            |#include "stdio.h"
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |
+            |
+            |int printf(char* format, ...);
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }
 }
