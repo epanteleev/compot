@@ -4,13 +4,14 @@ import ir.LocalValue
 import asm.x64.Operand
 import ir.module.FunctionData
 import ir.instruction.Callable
-import ir.platform.x64.regalloc.liveness.LiveIntervals
+import ir.liveness.GroupedLiveIntervals
+import ir.liveness.LiveIntervals
 
 
-class LinearScan(private val data: FunctionData, private val liveRanges: LiveIntervals) {
+class LinearScan private constructor(private val data: FunctionData, private val liveRanges: LiveIntervals) {
     private val registerMap = hashMapOf<LocalValue, Operand>()
-    private val active = hashMapOf<Group, Operand>()
-    private val pool = VirtualRegistersPool.create(data.arguments())
+    private val active      = hashMapOf<Group, Operand>()
+    private val pool        = VirtualRegistersPool.create(data.arguments())
     private val liveRangesGroup: GroupedLiveIntervals
 
     init {
@@ -23,7 +24,7 @@ class LinearScan(private val data: FunctionData, private val liveRanges: LiveInt
         allocRegistersForLocalVariables(liveRangesGroup)
     }
 
-    fun build(): RegisterAllocation {
+    private fun build(): RegisterAllocation {
         return RegisterAllocation(pool.stackSize(), registerMap, liveRanges)
     }
 

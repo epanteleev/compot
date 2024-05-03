@@ -1,4 +1,4 @@
-package ir.platform.x64.regalloc.liveness
+package ir.liveness
 
 import ir.LocalValue
 import common.intMapOf

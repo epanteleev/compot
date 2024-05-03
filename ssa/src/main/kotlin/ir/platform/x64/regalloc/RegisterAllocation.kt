@@ -4,7 +4,7 @@ import ir.*
 import asm.x64.*
 import ir.utils.OrderedLocation
 import ir.platform.x64.CallConvention
-import ir.platform.x64.regalloc.liveness.LiveIntervals
+import ir.liveness.LiveIntervals
 import ir.platform.x64.CallConvention.gpCalleeSaveRegs
 import ir.platform.x64.CallConvention.gpCallerSaveRegs
 import ir.platform.x64.CallConvention.xmmCallerSaveRegs

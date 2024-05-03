@@ -19,7 +19,7 @@ data class ArgumentValue(private val index: Int, private val tp: NonTrivialType)
         return "arg$index"
     }
 
-    override fun type(): NonTrivialType {
+    override fun type(): NonTrivialType { //TODO is this primitive type???
         return tp
     }
 

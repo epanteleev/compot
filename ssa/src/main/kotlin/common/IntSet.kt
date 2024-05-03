@@ -3,7 +3,7 @@ package common
 
 class IntSet<E>(private val bitmask: BooleanArray, val values: Array<E>, val closure: (E) -> Int): Set<E> {
     override val size: Int
-        get() = bitmask.size
+        get() = bitmask.count { it }
 
     override fun isEmpty(): Boolean = bitmask.isEmpty()
 
@@ -26,7 +26,7 @@ class IntSet<E>(private val bitmask: BooleanArray, val values: Array<E>, val clo
         return bitmask.hashCode()
     }
 
-    override fun iterator(): Iterator<E> = values.iterator()
+    override fun iterator(): Iterator<E> = IntSetIterator(bitmask, values)
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -34,10 +34,30 @@ class IntSet<E>(private val bitmask: BooleanArray, val values: Array<E>, val clo
         other as IntSet<*>
 
         if (!bitmask.contentEquals(other.bitmask)) return false
-        if (!values.contentEquals(other.values)) return false
+        if (values.contentEquals(other.values)) return false
         if (closure != other.closure) return false
 
         return true
+    }
+
+    private class IntSetIterator<E>(private val bitmask: BooleanArray, val values: Array<E>) : Iterator<E> {
+        private var current = 0
+
+        override fun hasNext(): Boolean {
+            while (current < bitmask.size && !bitmask[current]) {
+                current++
+            }
+
+            return current < bitmask.size
+        }
+
+        override fun next(): E {
+            if (!hasNext()) {
+                throw NoSuchElementException()
+            }
+
+            return values[current++]
+        }
     }
 }
 
@@ -49,4 +69,16 @@ inline fun <reified E> intSetOf(values: Collection<E>, noinline closure: (E) -> 
     }
 
     return IntSet(boolArray, array, closure)
+}
+
+inline fun <reified E> intSetOf(max: Int, vararg values: E, noinline closure: (E) -> Int): Set<E> {
+    val boolArray = BooleanArray(max)
+    val valArray = arrayOfNulls<E>(max)
+    for (v in values) {
+        val idx = closure(v)
+        boolArray[idx] = true
+        valArray[idx] = v
+    }
+
+    return IntSet(boolArray, valArray as Array<E>, closure)
 }

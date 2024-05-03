@@ -12,6 +12,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 0
     },
     xmm1 {
         override fun toString(size: Int): String {
@@ -22,6 +24,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 1
     },
 
     xmm2 {
@@ -33,6 +37,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 2
     },
 
     xmm3 {
@@ -44,6 +50,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 3
     },
 
     xmm4 {
@@ -55,6 +63,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 4
     },
 
     xmm5 {
@@ -66,6 +76,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 5
     },
 
     xmm6 {
@@ -77,6 +89,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 6
     },
 
     xmm7 {
@@ -88,6 +102,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 7
     },
 
     xmm8 {
@@ -99,6 +115,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 8
     },
 
     xmm9 {
@@ -110,6 +128,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 9
     },
 
     xmm10 {
@@ -121,6 +141,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 10
     },
 
     xmm11 {
@@ -132,6 +154,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 11
     },
 
     xmm12 {
@@ -143,6 +167,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 12
     },
 
     xmm13 {
@@ -154,6 +180,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 13
     },
 
     xmm14 {
@@ -165,6 +193,8 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 14
     },
 
     xmm15 {
@@ -176,5 +206,7 @@ enum class XmmRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 15
     },
 }

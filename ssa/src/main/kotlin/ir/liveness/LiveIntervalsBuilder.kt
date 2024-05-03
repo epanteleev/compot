@@ -1,4 +1,4 @@
-package ir.platform.x64.regalloc.liveness
+package ir.liveness
 
 import ir.LocalValue
 import ir.module.FunctionData
@@ -42,26 +42,25 @@ class LiveIntervalsBuilder private constructor(val data: FunctionData) {
         }
     }
 
-    private fun evaluateUsages() {
-        fun updateLiveRange(inst: Instruction, instructionLocation: OrderedLocation) {
-            for (usage in inst.operands()) {
-                if (usage !is LocalValue) {
-                    continue
-                }
-
-                val liveRange = intervals[usage]
-                    ?: throw LiveIntervalsException("in $usage")
-
-                liveRange.registerUsage(instructionLocation)
+    private fun updateLiveRange(inst: Instruction, instructionLocation: OrderedLocation) {
+        for (usage in inst.operands()) {
+            if (usage !is LocalValue) {
+                continue
             }
-        }
 
+            val liveRange = intervals[usage]
+                ?: throw LiveIntervalsException("in $usage")
+
+            liveRange.registerUsage(instructionLocation)
+        }
+    }
+
+    private fun evaluateUsages() {
         var ordering = -1
         for (bb in linearScanOrder) {
             // TODO Improvement: skip this step if CFG doesn't have any loops.
             for (op in liveness[bb]!!.liveOut()) {
-                val liveRange = intervals[op]
-                    ?: throw LiveIntervalsException("in $op")
+                val liveRange = intervals[op] ?: throw LiveIntervalsException("in $op")
 
                 val index = bb.size + 1
                 liveRange.registerUsage(OrderedLocation(bb, index, ordering + index))

@@ -953,7 +953,7 @@ class ParserTest {
             typedef struct point {
                 int a;
                 int b;
-            } Point;fd
+            } Point;
             
             int sum(Point* a) { return a->a + a->b; }
         """.trimIndent()

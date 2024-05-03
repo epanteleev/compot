@@ -11,7 +11,7 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.LoopDetection
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2RegFabric
-import ir.platform.x64.regalloc.liveness.LivenessAnalysis
+import ir.liveness.LivenessAnalysis
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals

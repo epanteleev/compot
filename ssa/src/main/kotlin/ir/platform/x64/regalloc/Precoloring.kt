@@ -3,43 +3,10 @@ package ir.platform.x64.regalloc
 import ir.LocalValue
 import asm.x64.Operand
 import ir.instruction.Phi
-import ir.platform.x64.regalloc.liveness.LiveRange
-import ir.platform.x64.regalloc.liveness.LiveIntervals
+import ir.liveness.GroupedLiveIntervals
+import ir.liveness.LiveRange
+import ir.liveness.LiveIntervals
 
-
-class GroupedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
-    private val valueToGroup: Map<LocalValue, Group>
-
-    init {
-        valueToGroup = hashMapOf()
-        for (group in liveness.keys) {
-            for (value in group) {
-                valueToGroup[value] = group
-            }
-        }
-    }
-
-    override fun toString(): String {
-        val builder = StringBuilder()
-        for ((group, range) in liveness) {
-            builder.append("$group - $range\n")
-        }
-
-        return builder.toString()
-    }
-
-    operator fun get(v: LocalValue): LiveRange {
-        return liveness[valueToGroup[v]]!!
-    }
-
-    operator fun get(v: Group): LiveRange {
-        return liveness[v]!!
-    }
-
-    operator fun iterator(): Iterator<Map.Entry<Group, LiveRange>> {
-        return liveness.iterator()
-    }
-}
 
 class Precoloring private constructor(private val intervals: LiveIntervals, private val precolored: Map<LocalValue, Operand>) {
     private val visited = hashSetOf<LocalValue>()

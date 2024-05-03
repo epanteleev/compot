@@ -3,6 +3,7 @@ package ir.platform.x64
 import asm.x64.*
 import asm.x64.GPRegister.*
 import asm.x64.XmmRegister.*
+import common.intSetOf
 
 // Useful links:
 //
@@ -22,7 +23,7 @@ object CallConvention {
         r9
     )
 
-    val gpCallerSaveRegs: Array<GPRegister> = arrayOf(
+    val gpCallerSaveRegs: Set<GPRegister> = intSetOf(GPRegister.NUMBER_OF_GP_REGISTERS,
         rax,
         rcx,
         rdx,
@@ -32,7 +33,7 @@ object CallConvention {
         r9,
         r10,
         r11
-    )
+    ) { it.encoding() }
 
     val xmmCallerSaveRegs: Array<XmmRegister> = arrayOf(
         xmm0,

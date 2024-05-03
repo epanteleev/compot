@@ -9,7 +9,7 @@ import ir.module.FunctionData
 import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
-import ir.platform.x64.regalloc.liveness.LiveIntervals
+import ir.liveness.LiveIntervals
 import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.CSSAModule
 

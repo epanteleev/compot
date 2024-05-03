@@ -53,35 +53,44 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
             private var freeXmmArgumentRegisters = CallConvention.xmmArgumentRegister.toMutableList().asReversed()
             private var argumentSlotIndex: Int = 0
 
-            fun pickArgument(type: PrimitiveType): Operand {
-                return when (type) {
-                    is IntegerType, is PointerType -> {
-                        if (freeArgumentRegisters.isNotEmpty()) {
-                            freeArgumentRegisters.removeLast()
-                        } else {
-                            val old = argumentSlotIndex
-                            argumentSlotIndex += 1
-                            ArgumentSlot(rbp, old * 8 + 16)
-                        }
-                    }
-                    is FloatingPointType -> {
-                        if (freeXmmArgumentRegisters.isNotEmpty()) {
-                            freeXmmArgumentRegisters.removeLast()
-                        } else {
-                            val old = argumentSlotIndex
-                            argumentSlotIndex += 1
-                            ArgumentSlot(rbp, old * 16 + 16)
-                        }
-                    }
+            private fun peakIntegerArgument(): Operand {
+                return if (freeArgumentRegisters.isNotEmpty()) {
+                    freeArgumentRegisters.removeLast()
+                } else {
+                    val old = argumentSlotIndex
+                    argumentSlotIndex += 1
+                    ArgumentSlot(rbp, old * 8 + 16)
+                }
+            }
 
+            private fun peakFPArgument(): Operand {
+                return if (freeXmmArgumentRegisters.isNotEmpty()) {
+                    freeXmmArgumentRegisters.removeLast()
+                } else {
+                    val old = argumentSlotIndex
+                    argumentSlotIndex += 1
+                    ArgumentSlot(rbp, old * 16 + 16)
+                }
+            }
+
+            private fun pickArgument(type: PrimitiveType): Operand {
+                return when (type) {
+                    is IntegerType, is PointerType -> peakIntegerArgument()
+                    is FloatingPointType -> peakFPArgument()
                     else -> throw RuntimeException("type=$type")
+                }
+            }
+
+            fun allocate(arguments: List<ArgumentValue>): List<Operand> {
+                return arguments.mapTo(arrayListOf()) {
+                    pickArgument(it.type() as PrimitiveType)
                 }
             }
         }
 
-        fun create(argumentValue: List<ArgumentValue>): VirtualRegistersPool {
+        fun create(argumentValues: List<ArgumentValue>): VirtualRegistersPool {
             val allocator = ArgumentAllocator()
-            return VirtualRegistersPool(argumentValue.map { allocator.pickArgument(it.type() as PrimitiveType) })
+            return VirtualRegistersPool(allocator.allocate(argumentValues))
         }
     }
 }

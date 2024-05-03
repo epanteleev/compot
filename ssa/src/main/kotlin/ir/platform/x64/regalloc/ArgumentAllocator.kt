@@ -44,19 +44,11 @@ class CalleeArgumentAllocator(private val arguments: List<Value>) {
 
     fun calculate(): List<Operand> {
         val allocation = arrayListOf<Operand>()
-        val places = arguments.mapTo(arrayListOf()) { arg -> emit(arg.type()) }
-
-        for (pos in places) {
-            when (pos) {
-                is RealGPRegister -> {
-                    allocation.add(gpRegisters[pos.registerIndex])
-                }
-                is RealFpRegister -> {
-                    allocation.add(fpRegisters[pos.registerIndex])
-                }
-                is Memory -> {
-                    allocation.add(Address.from(rsp, -(pos.slotSize * pos.index) + 8))
-                }
+        for (arg in arguments) {
+            when (val pos = emit(arg.type())) {
+                is RealGPRegister -> allocation.add(gpRegisters[pos.registerIndex])
+                is RealFpRegister -> allocation.add(fpRegisters[pos.registerIndex])
+                is Memory -> allocation.add(Address.from(rsp, -(pos.slotSize * pos.index) + 8))
             }
         }
 

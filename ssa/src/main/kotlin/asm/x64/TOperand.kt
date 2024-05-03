@@ -4,4 +4,6 @@ interface Operand {
     fun toString(size: Int): String
 }
 
-interface Register : Operand
+interface Register : Operand {
+    fun encoding(): Int
+}

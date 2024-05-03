@@ -1,7 +1,6 @@
 package ir.platform.x64.regalloc
 
 import asm.x64.*
-import ir.types.*
 import asm.x64.GPRegister.*
 import ir.platform.x64.CallConvention
 

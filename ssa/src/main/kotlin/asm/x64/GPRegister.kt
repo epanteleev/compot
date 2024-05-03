@@ -14,6 +14,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 0
     },
 
     rbx {
@@ -27,6 +29,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 3
     },
 
     rcx {
@@ -40,6 +44,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 1
     },
 
     rsi {
@@ -53,6 +59,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 6
     },
 
     rdi {
@@ -66,6 +74,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 7
     },
 
     rdx {
@@ -79,6 +89,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 2
     },
 
     rbp {
@@ -92,6 +104,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 5
     },
 
     r8 {
@@ -105,6 +119,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 8
     },
 
     r9 {
@@ -118,6 +134,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 9
     },
 
     r10 {
@@ -131,6 +149,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 10
     },
 
     r11 {
@@ -144,6 +164,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 11
     },
 
     r12 {
@@ -157,6 +179,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 12
     },
 
     r13 {
@@ -170,6 +194,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 13
     },
 
     r14 {
@@ -183,6 +209,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 14
     },
 
     r15 {
@@ -196,6 +224,8 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 15
     },
 
     rsp {
@@ -207,5 +237,11 @@ enum class GPRegister : Register {
             }
             return string
         }
+
+        override fun encoding(): Int = 4
     };
+
+    companion object {
+        const val NUMBER_OF_GP_REGISTERS = 16
+    }
 }
