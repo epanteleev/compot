@@ -19,17 +19,16 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         if (commandLineArguments.isDumpIr()) {
             builder.withDumpIr(commandLineArguments.getDumpIrDirectory())
         }
-        val ctx = builder.construct()
 
-        val unoptimizedIr = PassPipeline.base(ctx).run(module)
-
+        val ctx                   = builder.construct()
+        val unoptimizedIr         = PassPipeline.base(ctx).run(module)
         val codeGenerationFactory = CodeGenerationFactory()
             .setContext(ctx)
             .setTarget(Target.X64)
 
         val unoptimisedCode = codeGenerationFactory.build(unoptimizedIr)
 
-        val temp = Files.createTempFile("base", ".S")
+        val temp           = Files.createTempFile("base", ".S")
         val unoptimizedAsm = File(temp.toString())
         unoptimizedAsm.writeText(unoptimisedCode.toString())
         GNUAssemblerRunner.run(unoptimizedAsm.toString(), "${commandLineArguments.getOutputFilename()}.o")
@@ -47,17 +46,16 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         if (commandLineArguments.isDumpIr()) {
             builder.withDumpIr(commandLineArguments.getDumpIrDirectory())
         }
-        val ctx = builder.construct()
 
-        val destroyed = PassPipeline.opt(ctx).run(module)
-
+        val ctx                   = builder.construct()
+        val destroyed             = PassPipeline.opt(ctx).run(module)
         val codeGenerationFactory = CodeGenerationFactory()
             .setContext(ctx)
             .setTarget(Target.X64)
 
         val optimizedCodegen = codeGenerationFactory.build(destroyed)
 
-        val temp = Files.createTempFile("opt", ".S")
+        val temp         = Files.createTempFile("opt", ".S")
         val optimizedAsm = temp.toFile()
 
         optimizedAsm.writeText(optimizedCodegen.toString())

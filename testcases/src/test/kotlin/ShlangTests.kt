@@ -90,6 +90,20 @@ class ShlangTests: CommonTest() {
         assert(result, "Hello, World!\n")
     }
 
+    @Test
+    fun testSum8() {
+        val result = runCTest("shlang/sum8", listOf("runtime/runtime.c"))
+        assert(result, "8.000000\n")
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testOptSum8() {
+        val result = runOptimizedCTest("shlang/sum8", listOf("runtime/runtime.c"))
+        assert(result, "8.000000\n")
+        assertEquals(0, result.exitCode)
+    }
+
     @Ignore
     fun testInsertionSort() {
         val result = runCTest("shlang/insertionSort", listOf("runtime/runtime.c"))

@@ -261,7 +261,7 @@ object TypeConverter {
                     else -> throw IRCodeGenError("Cannot convert $value to $type")
                 }
             }
-            else -> throw IRCodeGenError("Cannot convert $value to $type")
+            else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $type")
         }
     }
 

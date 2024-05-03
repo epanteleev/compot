@@ -37,6 +37,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             is LabeledStatement  -> visitLabeledStatement(statement)
             is GotoStatement     -> visitGoto(statement)
             is ForStatement      -> visitFor(statement)
+            is EmptyStatement    -> false
             else -> throw IRCodeGenError("Statement expected, but got $statement")
         }
     }

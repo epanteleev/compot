@@ -11,7 +11,8 @@ import parser.CProgramParser
 class ShlangDriver(private val cli: CCLIArguments) {
 
     private fun initializePreprocessorContext(): PreprocessorContext {
-        val headerHolder = FileHeaderHolder(setOf(File(cli.getFilename()).parent))
+        val pwd = System.getProperty("user.dir")
+        val headerHolder = FileHeaderHolder(pwd, cli.getIncludeDirectories())
         return PreprocessorContext.empty(headerHolder)
     }
 

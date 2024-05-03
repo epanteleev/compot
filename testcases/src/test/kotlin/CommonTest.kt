@@ -51,7 +51,7 @@ abstract class CommonTest {
     }
 
     private fun compileCFile(filename: String, basename: String, optOptions: List<String>, extraFiles: List<String>) {
-        val args = arrayOf("-c", "$TESTCASES_DIR/$filename.c", "--dump-ir", TEST_OUTPUT_DIR) +
+        val args = arrayOf("-c", "$TESTCASES_DIR/$filename.c", "--dump-ir", TEST_OUTPUT_DIR, "-I$TESTCASES_DIR") +
                 optOptions +
                 listOf("-o", "$TEST_OUTPUT_DIR/$basename")
 

@@ -4,6 +4,13 @@ import common.commandLine.AnyCLIArguments
 
 
 class CCLIArguments : AnyCLIArguments() {
+    private val includeDirectories = mutableSetOf<String>()
+
+    fun addIncludeDirectory(directory: String) {
+        includeDirectories.add(directory)
+    }
+
+    fun getIncludeDirectories(): Set<String> = includeDirectories
 
     fun makeOptCLIArguments(): OptCLIArguments {
         val optCLIArguments = OptCLIArguments()
@@ -58,9 +65,14 @@ object CCLIParser {
                     cursor++
                     commandLineArguments.setOutputFilename(args[cursor])
                 }
+
                 else -> {
-                    println("Unknown argument: $arg")
-                    return null
+                    if (arg.startsWith("-I")) {
+                        commandLineArguments.addIncludeDirectory(arg.substring(2))
+                    } else {
+                        println("Unknown argument: $arg")
+                        return null
+                    }
                 }
             }
             cursor++
@@ -76,5 +88,7 @@ object CCLIParser {
         println("  -O0                       Disable optimizations")
         println("  -O1                       Enable optimizations")
         println("  --dump-ir                 Dump IR to files")
+        println("  -o <filename>             Specify output filename")
+        println("  -I <directory>            Add include directory")
     }
 }
