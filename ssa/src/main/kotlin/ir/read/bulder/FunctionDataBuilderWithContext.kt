@@ -297,6 +297,11 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.flag2int(value, expectedType.type()))
     }
 
+    fun int2Float(name: LocalValueToken, valueTok: AnyValueToken, operandType: IntegerTypeToken, expectedType: FloatTypeToken): Int2Float {
+        val value = getValue(valueTok, operandType.type())
+        return memorize(name, bb.int2fp(value, expectedType.type()))
+    }
+
     fun phi(name: LocalValueToken, incomingTok: ArrayList<AnyValueToken>, labelsTok: ArrayList<Identifier>, expectedType: PrimitiveTypeToken): Value {
         val blocks = arrayListOf<Block>()
         for (tok in labelsTok) {

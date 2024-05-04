@@ -10,7 +10,7 @@ import ir.platform.x64.CallConvention.gpCallerSaveRegs
 import ir.platform.x64.CallConvention.xmmCallerSaveRegs
 
 
-class RegisterAllocation(private val stackSize: Int,
+class RegisterAllocation(private val spilledLocalsStackSize: Int,
                          private val registerMap: Map<LocalValue, Operand>,
                          private val liveness: LiveIntervals
 ) {
@@ -33,10 +33,10 @@ class RegisterAllocation(private val stackSize: Int,
     }
 
     private fun frameSize(savedRegisters: Set<GPRegister>, savedXmmRegisters: Set<XmmRegister>): Int {
-        return (savedRegisters.size + savedXmmRegisters.size + calleeSaveRegisters.size + /** include retaddr and rbp **/ 2) * 8 + stackSize
+        return (savedRegisters.size + savedXmmRegisters.size + calleeSaveRegisters.size + /** include retaddr and rbp **/ 2) * 8 + spilledLocalsStackSize
     }
 
-    fun spilledLocalsSize(): Int = stackSize
+    fun spilledLocalsSize(): Int = spilledLocalsStackSize
 
     /** Get used caller save registers in given location. */
     fun callerSaveRegisters(loc: OrderedLocation): SavedContext {

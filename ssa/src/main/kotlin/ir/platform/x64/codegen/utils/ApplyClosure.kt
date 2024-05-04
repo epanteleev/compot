@@ -173,4 +173,24 @@ object ApplyClosure {
             else -> closure.default(dst, src)
         }
     }
+
+    operator fun invoke(dst: Operand, src: Operand, closure: GPOperandToXmmVisitor) {
+        when (dst) {
+            is XmmRegister -> {
+                when (src) {
+                    is GPRegister -> closure.rx(dst, src)
+                    is Address    -> closure.ax(dst, src)
+                    else -> closure.default(dst, src)
+                }
+            }
+            is Address -> {
+                when (src) {
+                    is GPRegister -> closure.ar(dst, src)
+                    is Address    -> closure.aa(dst, src)
+                    else -> closure.default(dst, src)
+                }
+            }
+            else -> closure.default(dst, src)
+        }
+    }
 }

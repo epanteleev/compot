@@ -14,6 +14,7 @@ interface IRInstructionVisitor<T> {
     fun visit(call: Call): T
     fun visit(flag2Int: Flag2Int): T
     fun visit(bitcast: Bitcast): T
+    fun visit(itofp: Int2Float): T
     fun visit(zext: ZeroExtend): T
     fun visit(sext: SignExtend): T
     fun visit(pcmp: PointerCompare): T

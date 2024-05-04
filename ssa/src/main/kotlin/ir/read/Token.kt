@@ -50,7 +50,7 @@ interface ArithmeticTypeToken: AnyToken {
     fun type(resolver: TypeResolver): Type
 }
 
-abstract class PrimitiveTypeToken(open val type: PrimitiveType, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+abstract class PrimitiveTypeToken(protected open val type: PrimitiveType, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
     override fun type(resolver: TypeResolver): Type {
         return type
     }

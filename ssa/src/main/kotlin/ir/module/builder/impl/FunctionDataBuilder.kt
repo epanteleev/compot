@@ -122,6 +122,10 @@ class FunctionDataBuilder private constructor(
         return bb.flag2int(value, ty)
     }
 
+    override fun int2fp(value: Value, ty: FloatingPointType): Int2Float {
+        return bb.int2fp(value, ty)
+    }
+
     override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {
         return bb.bitcast(value, ty)
     }

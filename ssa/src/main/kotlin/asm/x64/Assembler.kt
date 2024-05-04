@@ -276,14 +276,14 @@ class Assembler(private val name: String) {
     }
 
     // Move Scalar Single-Precision Floating-Point Values
-    fun movss(src: Address, dst: XmmRegister) = add(Movss(16, src, dst))
-    fun movss(src: XmmRegister, dst: XmmRegister) = add(Movss(16, src, dst))
-    fun movss(src: XmmRegister, dst: Address) = add(Movss(16, src, dst))
+    private fun movss(src: Address, dst: XmmRegister) = add(Movss(16, src, dst))
+    private fun movss(src: XmmRegister, dst: XmmRegister) = add(Movss(16, src, dst))
+    private fun movss(src: XmmRegister, dst: Address) = add(Movss(16, src, dst))
 
     // Move Scalar Double-Precision Floating-Point Values
-    fun movsd(src: Address, dst: XmmRegister) = add(Movsd(16, src, dst))
-    fun movsd(src: XmmRegister, dst: XmmRegister) = add(Movsd(16, src, dst))
-    fun movsd(src: XmmRegister, dst: Address) = add(Movsd(16, src, dst))
+    private fun movsd(src: Address, dst: XmmRegister) = add(Movsd(16, src, dst))
+    private fun movsd(src: XmmRegister, dst: XmmRegister) = add(Movsd(16, src, dst))
+    private fun movsd(src: XmmRegister, dst: Address) = add(Movsd(16, src, dst))
 
     fun movf(size: Int, src: XmmRegister, dst: XmmRegister) = when (size) {
         4 -> movss(src, dst)
@@ -346,23 +346,23 @@ class Assembler(private val name: String) {
     fun cvtss2sd(src: Address, dst: XmmRegister) = add(Cvtss2sd(src, dst))
 
     // Convert Scalar Single Precision Floating-Point Value to Doubleword Integer
-    fun cvtss2si(toSize: Int, src: XmmRegister, dst: GPRegister) = when (toSize) {
+    private fun cvtss2si(toSize: Int, src: XmmRegister, dst: GPRegister) = when (toSize) {
         8, 4 -> add(Cvtss2si(toSize, src, dst))
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 
-    fun cvtss2si(toSize: Int, src: Address, dst: GPRegister) = when (toSize) {
+    private fun cvtss2si(toSize: Int, src: Address, dst: GPRegister) = when (toSize) {
         8, 4 -> add(Cvtss2si(toSize, src, dst))
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 
     // Convert Double Single Precision Floating-Point Value to Doubleword Integer
-    fun cvtsd2si(toSize: Int, src: XmmRegister, dst: GPRegister) = when (toSize) {
+    private fun cvtsd2si(toSize: Int, src: XmmRegister, dst: GPRegister) = when (toSize) {
         8, 4 -> add(Cvtsd2si(toSize, src, dst))
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 
-    fun cvtsd2si(toSize: Int, src: Address, dst: GPRegister) = when (toSize) {
+    private fun cvtsd2si(toSize: Int, src: Address, dst: GPRegister) = when (toSize) {
         8, 4 -> add(Cvtsd2si(toSize, src, dst))
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
@@ -376,6 +376,26 @@ class Assembler(private val name: String) {
     fun cvtfp2int(toSize: Int, fromSize: Int, src: XmmRegister, dst: GPRegister) = when (fromSize) {
         8 -> cvtsd2si(toSize, src, dst)
         4 -> cvtss2si(toSize, src, dst)
+        else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
+    }
+
+    // Convert Doubleword Integer to Scalar Single Precision Floating-Point Value
+    private fun cvtsi2ss(fromSize: Int, dst: XmmRegister, src: GPRegister) = add(Cvtsi2ss(fromSize, src, dst))
+    private fun cvtsi2ss(fromSize: Int, dst: XmmRegister, src: Address) = add(Cvtsi2ss(fromSize, src, dst))
+
+    // Convert Doubleword Integer to Scalar Double Precision Floating-Point Value
+    private fun cvtsi2sd(fromSize: Int, src: GPRegister, dst: XmmRegister) = add(Cvtsi2sd(fromSize, src, dst))
+    private fun cvtsi2sd(fromSize: Int, src: Address, dst: XmmRegister) = add(Cvtsi2sd(fromSize, src, dst))
+
+    fun cvtint2fp(fromSize: Int, toSize: Int, src: GPRegister, dst: XmmRegister) = when (toSize) {
+        8 -> cvtsi2sd(fromSize, src, dst)
+        4 -> cvtsi2ss(fromSize, dst, src)
+        else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
+    }
+
+    fun cvtint2fp(fromSize: Int, toSize: Int, src: Address, dst: XmmRegister) = when (toSize) {
+        8 -> cvtsi2sd(fromSize, src, dst)
+        4 -> cvtsi2ss(fromSize, dst, src)
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 

@@ -183,7 +183,13 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
     override fun visit(bitcast: Bitcast) {
         assert(Bitcast.typeCheck(bitcast)) {
-            "Cast instruction '${bitcast.dump()}' has inconsistent types."
+            "Instruction '${bitcast.dump()}' has inconsistent types."
+        }
+    }
+
+    override fun visit(itofp: Int2Float) {
+        assert(Int2Float.typeCheck(itofp)) {
+            "Instruction '${itofp.dump()}' has inconsistent types."
         }
     }
 

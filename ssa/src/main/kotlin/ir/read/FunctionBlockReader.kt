@@ -222,7 +222,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseFcmp(resultTypeToken: LocalValueToken) {
         val compareTypeToken = iterator.expect<Identifier>("compare type")
-        val operandsTypes       = iterator.expect<FloatTypeToken>("floating point operands type")
+        val operandsTypes    = iterator.expect<FloatTypeToken>("floating point operands type")
         val first            = iterator.expect<AnyValueToken>("first compare operand")
         iterator.expect<Comma>("','")
         val second           = iterator.expect<AnyValueToken>("second compare operand")
@@ -349,6 +349,15 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         builder.flag2int(currentTok, source, type)
     }
 
+    private fun parseInt2Float(currentTok: LocalValueToken) {
+        // %$identifier = int2fp %{type} %{value} to {operand type}
+        val dstType = iterator.expect<IntegerTypeToken>("integer type")
+        val source = iterator.expect<LocalValueToken>("source value")
+        iterator.expect<To>("'to' keyword")
+        val type = iterator.expect<FloatTypeToken>("floating point type")
+        builder.int2Float(currentTok, source, dstType, type)
+    }
+
     private fun parseInstruction(currentTok: Token) {
         when (currentTok) {
             is LocalValueToken -> {
@@ -373,6 +382,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "pcmp"       -> parsePcmp(currentTok)
                     "trunc"      -> parseTrunc(currentTok)
                     "flag2int"   -> parseFlag2Int(currentTok)
+                    "int2fp"     -> parseInt2Float(currentTok)
                     "bitcast"    -> parseBitcast(currentTok)
                     "fptrunc"    -> parseFptrunc(currentTok)
                     "fpext"      -> parseFpext(currentTok)
@@ -390,11 +400,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     else -> throw ParseErrorException("instruction name", instruction)
                 }
             }
-
-            is LabelDefinition -> {
-                builder.switchLabel(currentTok)
-            }
-
+            is LabelDefinition -> builder.switchLabel(currentTok)
             is Identifier -> {
                 when (currentTok.string) {
                     "ret"   -> parseRet()

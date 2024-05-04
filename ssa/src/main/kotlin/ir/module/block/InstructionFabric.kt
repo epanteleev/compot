@@ -30,6 +30,7 @@ interface InstructionFabric {
     fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr
     fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr
     fun flag2int(value: Value, ty: IntegerType): Flag2Int
+    fun int2fp(value: Value, ty: FloatingPointType): Int2Float
     fun bitcast(value: Value, ty: PrimitiveType): Bitcast
     fun zext(value: Value, toType: UnsignedIntType): ZeroExtend
     fun sext(value: Value, toType: SignedIntType): SignExtend
@@ -38,7 +39,6 @@ interface InstructionFabric {
     fun fpext(value: Value, toType: FloatingPointType): FpExtend
     fun fptosi(value: Value, toType: SignedIntType): FloatToSigned
     fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select
-
     fun phi(incoming: List<Value>, labels: List<Label>): Phi
 }
 

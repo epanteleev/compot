@@ -414,6 +414,18 @@ data class Cvtss2si(val toSize: Int, val src1: Operand, val src2: Operand): CPUI
     }
 }
 
+data class Cvtsi2ss(val fromSize: Int, val src: Operand, val dst: Operand): CPUInstruction {
+    override fun toString(): String {
+        return "cvtsi2ss ${src.toString(fromSize)}, ${dst.toString(16)}"
+    }
+}
+
+data class Cvtsi2sd(val fromSize: Int, val src: Operand, val dst: Operand): CPUInstruction {
+    override fun toString(): String {
+        return "cvtsi2sd ${src.toString(fromSize)}, ${dst.toString(16)}"
+    }
+}
+
 enum class CMoveFlag {
     CMOVA { // Move if above (CF=0 and ZF=0).
         override fun toString(): String = "cmova"

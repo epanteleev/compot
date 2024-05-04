@@ -548,6 +548,12 @@ private class CodeEmitter(private val data: FunctionData,
         BitcastCodegen(bitcast.type(), asm)(des, src)
     }
 
+    override fun visit(itofp: Int2Float) {
+        val dst = valueToRegister.operand(itofp)
+        val src = valueToRegister.operand(itofp.value())
+        Int2FloatCodegen(itofp.type(), itofp.value().type() as IntegerType, asm)(dst, src)
+    }
+
     override fun visit(zext: ZeroExtend) {
         val dst = valueToRegister.operand(zext)
         val src = valueToRegister.operand(zext.value())

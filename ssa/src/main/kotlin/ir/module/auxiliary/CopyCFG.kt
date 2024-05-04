@@ -150,6 +150,11 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         return ZeroExtend.make(zext.name(), zext.type(), operand)
     }
 
+    override fun visit(itofp: Int2Float): Instruction {
+        val operand = mapUsage<Value>(itofp.value())
+        return Int2Float.make(itofp.name(), itofp.type(), operand)
+    }
+
     override fun visit(sext: SignExtend): Instruction {
         val operand = mapUsage<Value>(sext.value())
         return SignExtend.make(sext.name(), sext.type(), operand)
