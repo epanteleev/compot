@@ -75,6 +75,13 @@ void printIntArrayWithSpaces(int* array, int size) {
         printf("\n");
 }
 
+void printLongArrayWithSpaces(long* array, int size) {
+        for (int i = 0; i < size; i++) {
+                printf("%d ", array[i]);
+        }
+        printf("\n");
+}
+
 void printFloatArray(float* array, int size) {
         for (int i = 0; i < size; i++) {
                 printf("%f ", array[i]);

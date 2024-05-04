@@ -112,13 +112,13 @@ class ShlangTests: CommonTest() {
 
     @Test
     fun testBubbleSort() {
-        val result = runCTest("shlang/bubble_sort", listOf("runtime/runtime.c"))
+        val result = runCTest("shlang/bubble_sort_int", listOf("runtime/runtime.c"))
         assert(result, "11 12 22 25 34 64 \n")
     }
 
     @Test
     fun testOptBubbleSort() {
-        val result = runOptimizedCTest("shlang/bubble_sort", listOf("runtime/runtime.c"))
+        val result = runOptimizedCTest("shlang/bubble_sort_int", listOf("runtime/runtime.c"))
         assert(result, "11 12 22 25 34 64 \n")
     }
 

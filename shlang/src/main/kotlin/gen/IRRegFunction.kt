@@ -244,6 +244,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     }
 
     private fun visitStringNode(stringNode: StringNode): Value {
+        // TODO
         val stringLiteral = StringLiteralGlobal("str", ArrayType(Type.I8, 11), stringNode.str.unquote())
         return moduleBuilder.addConstant(stringLiteral)
     }

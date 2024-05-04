@@ -1,20 +1,27 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
-import ir.types.IntegerType
-import ir.types.SignedIntType
-import ir.types.FloatingPointType
 import ir.instruction.Int2Float
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandToXmmVisitor
-import ir.types.Type
+import ir.types.*
 
 
 class Int2FloatCodegen(val toType: FloatingPointType, val fromType: IntegerType, val asm: Assembler) : GPOperandToXmmVisitor {
     private val toSize   = toType.size()
-    private val fromSize = fromType.size()
+    private val fromSize by lazy {
+        if (fromType is UnsignedIntType) {
+            val size = fromType.size()
+            if (size < TEMP_SIZE) {
+                return@lazy TEMP_SIZE
+            } else {
+                return@lazy size
+            }
+        }
+        fromType.size()
+    }
 
     operator fun invoke(dst: Operand, src: Operand) {
         ApplyClosure(dst, src, this)

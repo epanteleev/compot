@@ -1,0 +1,19 @@
+extern void @printFloat(f32)
+
+define i32 @main() {
+  %float = call f32 @u8_to_f32(255: u8)
+  call void @printFloat(%float: f32)
+  ret i32 0
+}
+
+;float u8_to_f32( int i) {
+;    return (float)i;
+;}
+define f32 @u8_to_f32(%i: u8) {
+entry:
+  %1 = alloc u8
+  store ptr %1, u8 %i
+  %2 = load u8 %1
+  %3 = int2fp u8 %2 to f32
+  ret f32 %3
+}
