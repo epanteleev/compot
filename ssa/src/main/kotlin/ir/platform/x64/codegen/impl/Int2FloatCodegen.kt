@@ -10,7 +10,7 @@ import ir.types.*
 
 
 class Int2FloatCodegen(val toType: FloatingPointType, val fromType: IntegerType, val asm: Assembler) : GPOperandToXmmVisitor {
-    private val toSize   = toType.size()
+    private val toSize = toType.size()
     private val fromSize by lazy {
         if (fromType is UnsignedIntType) {
             val size = fromType.size()
@@ -30,28 +30,28 @@ class Int2FloatCodegen(val toType: FloatingPointType, val fromType: IntegerType,
     override fun rx(dst: XmmRegister, src: GPRegister) {
         val isConverted = convertOnDemand(src)
         if (isConverted) {
-            asm.cvtint2fp(toSize, TEMP_SIZE, src, dst)
+            asm.cvtint2fp(TEMP_SIZE, toSize, temp1, dst)
         } else {
-            asm.cvtint2fp(toSize, fromSize, src, dst)
+            asm.cvtint2fp(fromSize, toSize, src, dst)
         }
     }
 
     override fun ax(dst: XmmRegister, src: Address) {
         val temp = convertOnDemand(src)
         if (temp != null) {
-            asm.cvtint2fp(toSize, TEMP_SIZE, temp, dst)
+            asm.cvtint2fp(TEMP_SIZE, toSize, temp, dst)
         } else {
-            asm.cvtint2fp(toSize, fromSize, src, dst)
+            asm.cvtint2fp(fromSize, toSize, src, dst)
         }
     }
 
     override fun ar(dst: Address, src: GPRegister) {
         val isConverted = convertOnDemand(src)
         if (isConverted) {
-            asm.cvtint2fp(toSize, TEMP_SIZE, src, xmmTemp1)
+            asm.cvtint2fp(TEMP_SIZE, toSize, temp1, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
         } else {
-            asm.cvtint2fp(toSize, fromSize, src, xmmTemp1)
+            asm.cvtint2fp(fromSize, toSize, src, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
         }
     }
@@ -59,10 +59,10 @@ class Int2FloatCodegen(val toType: FloatingPointType, val fromType: IntegerType,
     override fun aa(dst: Address, src: Address) {
         val temp = convertOnDemand(src)
         if (temp != null) {
-            asm.cvtint2fp(toSize, TEMP_SIZE, temp, xmmTemp1)
+            asm.cvtint2fp(TEMP_SIZE, toSize, temp, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
         } else {
-            asm.cvtint2fp(toSize, fromSize, src, xmmTemp1)
+            asm.cvtint2fp(fromSize, toSize, src, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
         }
     }
@@ -80,7 +80,7 @@ class Int2FloatCodegen(val toType: FloatingPointType, val fromType: IntegerType,
            return false
         }
 
-        asm.movsext(fromSize, TEMP_SIZE, src, src)
+        asm.movsext(fromSize, TEMP_SIZE, src, temp1)
         return true
     }
 

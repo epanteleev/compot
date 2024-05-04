@@ -1,8 +1,8 @@
-extern void @printFloat(f64)
+extern void @printDouble(f64)
 
 define i32 @main() {
   %float = call f64 @i8_to_f64(-1: i8)
-  call void @printFloat(%float: f64)
+  call void @printDouble(%float: f64)
   ret i32 0
 }
 
