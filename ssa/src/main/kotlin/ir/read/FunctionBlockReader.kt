@@ -1,5 +1,7 @@
 package ir.read
 
+import ir.Constant
+import ir.UnsignedIntegerConstant
 import ir.types.*
 import ir.instruction.*
 import ir.read.bulder.*
@@ -368,6 +370,22 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         builder.ptr2int(currentTok, source, pointerType, intType)
     }
 
+    private fun parseMemcpy() {
+        // memcpy %{dstType} %{dst}, %{srcType} %{src}, %{lengthType} %{length}
+        val dstType = iterator.expect<PointerTypeToken>("destination type")
+        val dst = iterator.expect<ValueToken>("destination value")
+        iterator.expect<Comma>("','")
+
+        val srcType = iterator.expect<PointerTypeToken>("source type")
+        val src = iterator.expect<ValueToken>("source value")
+        iterator.expect<Comma>("','")
+
+        val lengthType = iterator.expect<UnsignedIntegerTypeToken>("length type")
+        val length = iterator.expect<IntValue>("length value")
+        val constant = Constant.valueOf<UnsignedIntegerConstant>(lengthType.type(), length.int)
+        builder.memcpy(dst, dstType, src, srcType, constant)
+    }
+
     private fun parseInstruction(currentTok: Token) {
         when (currentTok) {
             is LocalValueToken -> {
@@ -415,11 +433,12 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
             is LabelDefinition -> builder.switchLabel(currentTok)
             is Identifier -> {
                 when (currentTok.string) {
-                    "ret"   -> parseRet()
-                    "call"  -> parseVCall()
-                    "store" -> parseStore()
-                    "br"    -> parseBranch()
-                    else    -> throw ParseErrorException("instruction", currentTok)
+                    "ret"       -> parseRet()
+                    "call"      -> parseVCall()
+                    "store"     -> parseStore()
+                    "br"        -> parseBranch()
+                    Memcpy.NAME -> parseMemcpy()
+                    else        -> throw ParseErrorException("instruction", currentTok)
                 }
             }
 

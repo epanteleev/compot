@@ -34,7 +34,7 @@ data class ArgumentValue(private val index: Int, private val tp: NonTrivialType)
 
 interface Constant: Value {
     companion object {
-        inline fun<reified T: Number> of(kind: Type, value: T): Constant {
+        fun of(kind: Type, value: Number): Constant {
             return when (kind) {
                 Type.I8  -> I8Value(value.toByte())
                 Type.U8  -> U8Value(value.toByte())
@@ -48,6 +48,15 @@ interface Constant: Value {
                 Type.F64 -> F64Value(value.toDouble())
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
+        }
+
+        inline fun<reified U: Constant> valueOf(kind: Type, value: Number): U {
+            val result = of(kind, value)
+            if (result !is U) {
+                throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            }
+
+            return result
         }
 
         fun from(kind: Type, value: Constant): Constant {
@@ -71,7 +80,12 @@ interface Constant: Value {
 
 interface IntegerConstant: Constant
 
-data class U8Value(val u8: Byte): IntegerConstant {
+interface SignedIntegerConstant: IntegerConstant
+interface UnsignedIntegerConstant: IntegerConstant
+interface FloatingPointConstant: Constant
+
+
+data class U8Value(val u8: Byte): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType {
         return Type.U8
     }
@@ -81,7 +95,7 @@ data class U8Value(val u8: Byte): IntegerConstant {
     }
 }
 
-data class I8Value(val i8: Byte): IntegerConstant {
+data class I8Value(val i8: Byte): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I8
     }
@@ -91,7 +105,7 @@ data class I8Value(val i8: Byte): IntegerConstant {
     }
 }
 
-data class U16Value(val u16: Short): IntegerConstant {
+data class U16Value(val u16: Short): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType {
         return Type.U16
     }
@@ -101,7 +115,7 @@ data class U16Value(val u16: Short): IntegerConstant {
     }
 }
 
-data class I16Value(val i16: Short): IntegerConstant {
+data class I16Value(val i16: Short): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I16
     }
@@ -111,7 +125,7 @@ data class I16Value(val i16: Short): IntegerConstant {
     }
 }
 
-data class U32Value(val u32: Int): IntegerConstant {
+data class U32Value(val u32: Int): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType {
         return Type.U32
     }
@@ -121,7 +135,7 @@ data class U32Value(val u32: Int): IntegerConstant {
     }
 }
 
-data class I32Value(val i32: Int): IntegerConstant {
+data class I32Value(val i32: Int): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I32
     }
@@ -131,7 +145,7 @@ data class I32Value(val i32: Int): IntegerConstant {
     }
 }
 
-data class U64Value(val u64: Long): IntegerConstant {
+data class U64Value(val u64: Long): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType {
         return Type.U64
     }
@@ -141,7 +155,7 @@ data class U64Value(val u64: Long): IntegerConstant {
     }
 }
 
-data class I64Value(val i64: Long): IntegerConstant {
+data class I64Value(val i64: Long): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I64
     }
@@ -151,7 +165,7 @@ data class I64Value(val i64: Long): IntegerConstant {
     }
 }
 
-data class F32Value(val f32: Float): Constant {
+data class F32Value(val f32: Float): FloatingPointConstant {
     override fun type(): FloatingPointType {
         return Type.F32
     }
@@ -161,7 +175,7 @@ data class F32Value(val f32: Float): Constant {
     }
 }
 
-data class F64Value(val f64: Double): Constant {
+data class F64Value(val f64: Double): FloatingPointConstant {
     override fun type(): FloatingPointType {
         return Type.F64
     }

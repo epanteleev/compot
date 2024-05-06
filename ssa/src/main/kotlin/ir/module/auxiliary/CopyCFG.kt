@@ -307,6 +307,13 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         return Pointer2Int.make(ptr2Int.name(), ptr2Int.type(), operand)
     }
 
+    override fun visit(memcpy: Memcpy): Instruction {
+        val dst = mapUsage<Value>(memcpy.destination())
+        val src = mapUsage<Value>(memcpy.source())
+
+        return Memcpy.make(dst, src, memcpy.length())
+    }
+
     companion object {
         fun copy(old: FunctionData): FunctionData {
             return FunctionData.create(old.prototype, copy(old.blocks), old.arguments())

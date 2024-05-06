@@ -387,6 +387,16 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    override fun visit(memcpy: Memcpy) {
+        assert(memcpy.destination() != memcpy.source()) {
+            "Inconsistent memcpy instruction: destination=${memcpy.destination()}, source=${memcpy.source()}"
+        }
+
+        assert(Memcpy.typeCheck(memcpy)) {
+            "Instruction '${memcpy.dump()}' has inconsistent types."
+        }
+    }
+
     companion object {
         fun run(module: Module): Module {
             val prototypes = module.prototypes

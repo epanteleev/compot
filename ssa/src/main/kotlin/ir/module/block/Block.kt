@@ -337,6 +337,10 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Pointer2Int.make(n(it), toType, value) }
     }
 
+    override fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant) {
+        add(Memcpy.make(dst, src, length))
+    }
+
     override fun downStackFrame(callable: Callable) {
         add(DownStackFrame(callable))
     }

@@ -307,6 +307,12 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.ptr2int(value, intType.type()))
     }
 
+    fun memcpy(dstTok: AnyValueToken, dstTypeTok: PointerTypeToken, srcTok: AnyValueToken, srcTyeToken: PointerTypeToken, lengthTok: UnsignedIntegerConstant) {
+        val dst = getValue(dstTok, dstTypeTok.type())
+        val src = getValue(srcTok, srcTyeToken.type())
+        bb.memcpy(dst, src, lengthTok)
+    }
+
     fun int2ptr(name: LocalValueToken, valueTok: AnyValueToken, intType: IntegerTypeToken): Int2Pointer {
         val value = getValue(valueTok, intType.type())
         return memorize(name, bb.int2ptr(value))

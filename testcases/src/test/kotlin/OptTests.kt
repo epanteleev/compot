@@ -22,6 +22,12 @@ abstract class OptTests: CommonIrTest() {
         val result = runTest("opt_ir/less_fp32", listOf("runtime/runtime.c"), options())
         assertEquals("0\n", result.output)
     }
+
+    @Test
+    fun testMemcpy() {
+        val result = runTest("opt_ir/memcpy", listOf("runtime/runtime.c"), options())
+        assertEquals("0\n", result.output)
+    }
 }
 
 class OptO1Tests: OptTests() {

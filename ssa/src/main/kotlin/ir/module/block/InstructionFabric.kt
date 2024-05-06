@@ -1,11 +1,8 @@
 package ir.module.block
 
-import ir.Value
+import ir.*
 import ir.types.*
 import ir.instruction.*
-import ir.AnyFunctionPrototype
-import ir.IndirectFunctionPrototype
-import ir.IntegerConstant
 
 
 interface InstructionFabric {
@@ -42,6 +39,7 @@ interface InstructionFabric {
     fun phi(incoming: List<Value>, labels: List<Label>): Phi
     fun int2ptr(value: Value): Int2Pointer
     fun ptr2int(value: Value, toType: IntegerType): Pointer2Int
+    fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant)
 }
 
 interface InternalInstructionFabric {

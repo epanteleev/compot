@@ -170,6 +170,10 @@ class FunctionDataBuilder private constructor(
         return bb.ptr2int(value, toType)
     }
 
+    override fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant) {
+        bb.memcpy(dst, src, length)
+    }
+
     companion object {
         fun create(
             name: String,

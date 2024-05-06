@@ -112,7 +112,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
             val instructions = bb.instructions()
             while (idx < instructions.size) {
                 val inst = instructions[idx]
-                if (inst !in escaped) {
+                if (!escaped.contains(inst)) {
                     idx++
                     continue
                 }
@@ -133,7 +133,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                         inst.update(0, lea)
                         idx++
                     }
-                    else -> assert(false) { "should be, but inst=${inst.dump()}" }
+                    else -> assert(false) { "always unreachable, inst=${inst.dump()}" }
                 }
                 idx++
             }

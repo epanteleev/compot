@@ -278,6 +278,12 @@ private class CodeEmitter(private val data: FunctionData,
         CopyCodegen(ptr2Int.type(), asm)(dst, src)
     }
 
+    override fun visit(memcpy: Memcpy) {
+        val dst = valueToRegister.operand(memcpy.destination())
+        val src = valueToRegister.operand(memcpy.source())
+        MemcpyCodegen(memcpy.length(), asm)(dst, src)
+    }
+
     override fun visit(call: Call) {
         emitCall(call)
     }
