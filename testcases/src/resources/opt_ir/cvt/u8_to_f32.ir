@@ -6,7 +6,7 @@ define i32 @main() {
   ret i32 0
 }
 
-;float u8_to_f32( int i) {
+;float u8_to_f32(unsigned char i) {
 ;    return (float)i;
 ;}
 define f32 @u8_to_f32(%i: u8) {

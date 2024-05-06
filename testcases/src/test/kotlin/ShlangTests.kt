@@ -1,9 +1,11 @@
+import common.CommonCTest
+import common.CommonTest
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
-class ShlangTests: CommonTest() {
+class ShlangTests: CommonCTest() {
     @Test
     fun testDoWhile() {
         val result = runCTest("shlang/doWhile", listOf())
