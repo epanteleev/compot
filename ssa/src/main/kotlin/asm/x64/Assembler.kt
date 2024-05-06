@@ -175,6 +175,11 @@ class Assembler(private val name: String) {
         else -> throw IllegalArgumentException("fromSize=$fromSize, toSize=$toSize, src=$src, dst=$dst")
     }
 
+    fun movzext(fromSize: Int, toSize: Int, src: Address, dst: GPRegister) = when (fromSize) {
+        8, 4, 2, 1 -> movzx(fromSize, toSize, src, dst)
+        else -> throw IllegalArgumentException("fromSize=$fromSize, toSize=$toSize, src=$src, dst=$dst")
+    }
+
     // Conditional Move
     fun cmovcc(size: Int, flag: CMoveFlag, src: Address, dst: GPRegister) = when (size) {
         2, 4, 8 -> add(CMOVcc(size, flag, src, dst))

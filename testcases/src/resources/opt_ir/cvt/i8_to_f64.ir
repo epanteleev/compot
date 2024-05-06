@@ -1,13 +1,13 @@
 extern void @printDouble(f64)
 
 define i32 @main() {
-  %float = call f64 @i8_to_f64(-1: i8)
-  call void @printDouble(%float: f64)
+  %double = call f64 @i8_to_f64(-1: i8)
+  call void @printDouble(%double: f64)
   ret i32 0
 }
 
-;float i8_to_f64( int i) {
-;    return (float)i;
+;double i8_to_f64( int i) {
+;    return (double)i;
 ;}
 define f64 @i8_to_f64(%i: i8) {
 entry:

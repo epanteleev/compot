@@ -1,36 +1,26 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
+import ir.types.*
 import ir.instruction.Int2Float
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandToXmmVisitor
-import ir.types.*
 
 
-class Int2FloatCodegen(val toType: FloatingPointType, val fromType: IntegerType, val asm: Assembler) : GPOperandToXmmVisitor {
+class Int2FloatCodegen(toType: FloatingPointType, private val fromType: IntegerType, val asm: Assembler) : GPOperandToXmmVisitor {
     private val toSize = toType.size()
-    private val fromSize by lazy {
-        if (fromType is UnsignedIntType) {
-            val size = fromType.size()
-            if (size < TEMP_SIZE) {
-                return@lazy TEMP_SIZE
-            } else {
-                return@lazy size
-            }
-        }
-        fromType.size()
-    }
+    private val fromSize = fromType.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
         ApplyClosure(dst, src, this)
     }
 
     override fun rx(dst: XmmRegister, src: GPRegister) {
-        val isConverted = convertOnDemand(src)
-        if (isConverted) {
-            asm.cvtint2fp(TEMP_SIZE, toSize, temp1, dst)
+        val temp = convertOnDemand(src)
+        if (temp != null) {
+            asm.cvtint2fp(TEMP_SIZE, toSize, temp, dst)
         } else {
             asm.cvtint2fp(fromSize, toSize, src, dst)
         }
@@ -46,9 +36,9 @@ class Int2FloatCodegen(val toType: FloatingPointType, val fromType: IntegerType,
     }
 
     override fun ar(dst: Address, src: GPRegister) {
-        val isConverted = convertOnDemand(src)
-        if (isConverted) {
-            asm.cvtint2fp(TEMP_SIZE, toSize, temp1, xmmTemp1)
+        val temp = convertOnDemand(src)
+        if (temp != null) {
+            asm.cvtint2fp(TEMP_SIZE, toSize, temp, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
         } else {
             asm.cvtint2fp(fromSize, toSize, src, xmmTemp1)
@@ -71,30 +61,58 @@ class Int2FloatCodegen(val toType: FloatingPointType, val fromType: IntegerType,
         throw RuntimeException("Internal error: '${Int2Float.NAME}' dst=$dst, src=$src")
     }
 
-    private fun convertOnDemand(src: GPRegister): Boolean {
-        if (fromType !is SignedIntType) {
-            return false
-        }
+    private fun convertOnDemand(src: GPRegister): GPRegister? {
+        when (fromType) {
+            is SignedIntType -> {
+                if (fromSize == Type.I32.size() || fromSize == Type.I64.size()) {
+                    return null
+                }
 
-        if (fromSize == Type.I32.size() || fromSize == Type.I64.size()) {
-           return false
-        }
+                asm.movsext(fromSize, TEMP_SIZE, src, temp1)
+                return temp1
+            }
 
-        asm.movsext(fromSize, TEMP_SIZE, src, temp1)
-        return true
+            is UnsignedIntType -> {
+                if (fromSize == Type.U32.size() || fromSize == Type.U64.size()) {
+                    return null
+                }
+
+                asm.movzext(fromSize, TEMP_SIZE, src, temp1)
+                return temp1
+            }
+
+            else -> {
+                assert(false) { "always unreachable, fromType=$fromType" }
+                return null
+            }
+        }
     }
 
-    private fun convertOnDemand(src: Address): GPRegister? {
-        if (fromType !is SignedIntType) {
-            return null
-        }
+    private fun convertOnDemand(src: Address): GPRegister? { //todo code duplication
+        when (fromType) {
+            is SignedIntType -> {
+                if (fromSize == Type.I32.size() || fromSize == Type.I64.size()) {
+                    return null
+                }
 
-        if (fromSize == Type.I32.size() || fromSize == Type.I64.size()) {
-           return null
-        }
+                asm.movsext(fromSize, TEMP_SIZE, src, temp1)
+                return temp1
+            }
 
-        asm.movsext(fromSize, TEMP_SIZE, src, temp1)
-        return temp1
+            is UnsignedIntType -> {
+                if (fromSize == Type.U32.size() || fromSize == Type.U64.size()) {
+                    return null
+                }
+
+                asm.movzext(fromSize, TEMP_SIZE, src, temp1)
+                return temp1
+            }
+
+            else -> {
+                assert(false) { "always unreachable, fromType=$fromType" }
+                return null
+            }
+        }
     }
 
     companion object {
