@@ -5,7 +5,7 @@ import ir.types.*
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class FloatToSigned private constructor(name: String, toType: SignedIntType, value: Value):
+class FloatToInt private constructor(name: String, toType: IntegerType, value: Value):
     ValueInstruction(name, toType, arrayOf(value)) {
     override fun dump(): String {
         return "%$identifier = $NAME ${value().type()} ${value()} to ${type()}"
@@ -19,29 +19,29 @@ class FloatToSigned private constructor(name: String, toType: SignedIntType, val
         return operands[0]
     }
 
-    override fun type(): SignedIntType = tp as SignedIntType
+    override fun type(): IntegerType = tp as IntegerType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 
     companion object {
-        const val NAME = "fptosi"
+        const val NAME = "fp2int"
 
-        fun make(name: String, toType: SignedIntType, value: Value): FloatToSigned {
+        fun make(name: String, toType: IntegerType, value: Value): FloatToInt {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
                 "inconsistent types in $name: ty=$toType, value=$value:$valueType"
             }
 
-            return registerUser(FloatToSigned(name, toType, value), value)
+            return registerUser(FloatToInt(name, toType, value), value)
         }
 
         private fun isAppropriateType(valueType: Type): Boolean {
             return valueType is FloatingPointType
         }
 
-        fun typeCheck(fpext: FloatToSigned): Boolean {
+        fun typeCheck(fpext: FloatToInt): Boolean {
             return isAppropriateType(fpext.value().type())
         }
     }

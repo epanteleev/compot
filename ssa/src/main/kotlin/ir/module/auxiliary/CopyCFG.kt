@@ -182,9 +182,9 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         return FpExtend.make(fpext.name(), fpext.type(), operand)
     }
 
-    override fun visit(fptosi: FloatToSigned): Instruction {
+    override fun visit(fptosi: FloatToInt): Instruction {
         val operand = mapUsage<Value>(fptosi.value())
-        return FloatToSigned.make(fptosi.name(), fptosi.type(), operand)
+        return FloatToInt.make(fptosi.name(), fptosi.type(), operand)
     }
 
     override fun visit(copy: Copy): Instruction {

@@ -2,13 +2,22 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.types.FloatingPointType
-import ir.instruction.FloatToSigned
+import ir.instruction.FloatToInt
 import ir.platform.x64.codegen.utils.*
+import ir.types.IntegerType
 import ir.types.SignedIntType
 
 
-class FloatToSignedCodegen(val toType: SignedIntType, fromType: FloatingPointType, val asm: Assembler): XmmToGPOperandsVisitor {
-    private val toSize = toType.size()
+class FloatToSignedCodegen(val toType: IntegerType, fromType: FloatingPointType, val asm: Assembler): XmmToGPOperandsVisitor {
+    private val toSize = run {
+        val size = toType.size()
+        if (size >= 4) {
+            size
+        } else {
+            4
+        }
+    }
+
     private val fromSize = fromType.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
@@ -32,6 +41,6 @@ class FloatToSignedCodegen(val toType: SignedIntType, fromType: FloatingPointTyp
     }
 
     override fun default(dst: Operand, src: Operand) {
-        throw RuntimeException("Internal error: '${FloatToSigned.NAME}' dst=$dst, src=$$src")
+        throw RuntimeException("Internal error: '${FloatToInt.NAME}' dst=$dst, src=$$src")
     }
 }

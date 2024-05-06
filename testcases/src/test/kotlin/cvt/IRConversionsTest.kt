@@ -35,6 +35,18 @@ abstract class IRConversionsTest: CommonIrTest() {
         val result = runTest("opt_ir/cvt/u32_to_f32", listOf("runtime/runtime.c"), options())
         assertEquals("255.000000\n", result.output)
     }
+
+    @Test
+    fun testF32toI8() {
+        val result = runTest("opt_ir/cvt/f32_to_i8", listOf("runtime/runtime.c"), options())
+        assertEquals("-1\n", result.output)
+    }
+
+    @Test
+    fun testF32toU8() {
+        val result = runTest("opt_ir/cvt/f32_to_u8", listOf("runtime/runtime.c"), options())
+        assertEquals("255\n", result.output)
+    }
 }
 
 class BaseIrConversionTest: IRConversionsTest() {

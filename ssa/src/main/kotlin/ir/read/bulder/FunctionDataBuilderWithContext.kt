@@ -279,9 +279,9 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.fpext(value, resultType.type()))
     }
 
-    fun fptosi(name: LocalValueToken, operandToken: AnyValueToken, operandType: FloatTypeToken, resultType: SignedIntegerTypeToken): FloatToSigned {
+    fun fp2int(name: LocalValueToken, operandToken: AnyValueToken, operandType: FloatTypeToken, resultType: IntegerTypeToken): FloatToInt {
         val value = getValue(operandToken, operandType.type())
-        return memorize(name, bb.fptosi(value, resultType.type()))
+        return memorize(name, bb.fp2Int(value, resultType.type()))
     }
 
     fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: PrimitiveTypeToken): Value {

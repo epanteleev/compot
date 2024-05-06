@@ -172,13 +172,13 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         builder.fpext(resultName, operand, operandType, castValueToken)
     }
 
-    private fun parseFptosi(resultName: LocalValueToken) {
+    private fun parseFloat2Int(resultName: LocalValueToken) {
         val operandType = iterator.expect<FloatTypeToken>("value type")
         val operand     = iterator.expect<LocalValueToken>("value to cast")
         iterator.expect<To>("'to' keyword")
-        val castValueToken = iterator.expect<SignedIntegerTypeToken>("${FloatToSigned.NAME} type")
+        val castValueToken = iterator.expect<IntegerTypeToken>("${FloatToInt.NAME} type")
 
-        builder.fptosi(resultName, operand, operandType, castValueToken)
+        builder.fp2int(resultName, operand, operandType, castValueToken)
     }
 
     private fun parseSext(resultName: LocalValueToken) {
@@ -386,7 +386,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "bitcast"    -> parseBitcast(currentTok)
                     "fptrunc"    -> parseFptrunc(currentTok)
                     "fpext"      -> parseFpext(currentTok)
-                    "fptosi"     -> parseFptosi(currentTok)
+                    FloatToInt.NAME -> parseFloat2Int(currentTok)
                     "alloc"      -> parseStackAlloc(currentTok)
                     "phi"        -> parsePhi(currentTok)
                     "gep"        -> parseGep(currentTok)

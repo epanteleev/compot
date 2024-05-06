@@ -229,8 +229,8 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
-    override fun visit(fptosi: FloatToSigned) {
-        assert(FloatToSigned.typeCheck(fptosi)) {
+    override fun visit(fptosi: FloatToInt) {
+        assert(FloatToInt.typeCheck(fptosi)) {
             "Instruction '${fptosi.dump()}' has inconsistent types."
         }
     }

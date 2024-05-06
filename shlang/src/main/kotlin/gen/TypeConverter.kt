@@ -62,8 +62,8 @@ object TypeConverter {
                     Type.U16 -> trunc(value, type)
                     Type.U32 -> trunc(value, type)
                     Type.U64 -> trunc(value, type)
-                    Type.F32 -> fptosi(value, type)
-                    Type.F64 -> fptosi(value, type)
+                    Type.F32 -> fp2Int(value, type)
+                    Type.F64 -> fp2Int(value, type)
                     Type.Ptr -> {
                         val tmp = bitcast(value, Type.I64) //TODO
                         trunc(tmp, type)
@@ -83,8 +83,8 @@ object TypeConverter {
                     Type.U16 -> bitcast(value, type)
                     Type.U32 -> trunc(value, type)
                     Type.U64 -> trunc(value, type)
-                    Type.F32 -> fptosi(value, type)
-                    Type.F64 -> fptosi(value, type)
+                    Type.F32 -> fp2Int(value, type)
+                    Type.F64 -> fp2Int(value, type)
                     Type.Ptr -> {
                         val tmp = bitcast(value, Type.I64) //TODO
                         trunc(tmp, type)
@@ -110,8 +110,8 @@ object TypeConverter {
                     }
                     Type.U32 -> bitcast(value, type)
                     Type.U64 -> trunc(value, type)
-                    Type.F32 -> fptosi(value, type)
-                    Type.F64 -> fptosi(value, type)
+                    Type.F32 -> fp2Int(value, type)
+                    Type.F64 -> fp2Int(value, type)
                     Type.Ptr -> {
                         val tmp = bitcast(value, Type.I64) //TODO
                         trunc(tmp, type)
@@ -140,8 +140,8 @@ object TypeConverter {
                         trunc(tmp, type)
                     }
                     Type.U64 -> bitcast(value, type)
-                    Type.F32 -> fptosi(value, type)
-                    Type.F64 -> fptosi(value, type)
+                    Type.F32 -> fp2Int(value, type)
+                    Type.F64 -> fp2Int(value, type)
                     Type.Ptr -> bitcast(value, Type.I64) //TODO
                     else -> throw IRCodeGenError("Cannot convert $value to $type")
                 }
@@ -159,11 +159,11 @@ object TypeConverter {
                     Type.U32 -> trunc(value, type)
                     Type.U64 -> trunc(value, type)
                     Type.F32 -> {
-                        val tmp = fptosi(value, Type.I32)
+                        val tmp = fp2Int(value, Type.I32)
                         trunc(tmp, type)
                     }
                     Type.F64 -> {
-                        val tmp = fptosi(value, Type.I64)
+                        val tmp = fp2Int(value, Type.I64)
                         trunc(tmp, type)
                     }
                     Type.Ptr -> {
@@ -186,11 +186,11 @@ object TypeConverter {
                     Type.U32 -> trunc(value, type)
                     Type.U64 -> trunc(value, type)
                     Type.F32 -> {
-                        val tmp = fptosi(value, Type.I32)
+                        val tmp = fp2Int(value, Type.I32)
                         trunc(tmp, type)
                     }
                     Type.F64 -> {
-                        val tmp = fptosi(value, Type.I64)
+                        val tmp = fp2Int(value, Type.I64)
                         trunc(tmp, type)
                     }
                     Type.Ptr -> {
@@ -213,11 +213,11 @@ object TypeConverter {
                     Type.U16 -> trunc(value, type)
                     Type.U64 -> trunc(value, type)
                     Type.F32 -> {
-                        val tmp = fptosi(value, Type.I32)
+                        val tmp = fp2Int(value, Type.I32)
                         trunc(tmp, type)
                     }
                     Type.F64 -> {
-                        val tmp = fptosi(value, Type.I64)
+                        val tmp = fp2Int(value, Type.I64)
                         trunc(tmp, type)
                     }
                     Type.Ptr -> {

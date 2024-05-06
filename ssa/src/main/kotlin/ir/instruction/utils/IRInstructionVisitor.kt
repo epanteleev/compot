@@ -21,7 +21,7 @@ interface IRInstructionVisitor<T> {
     fun visit(trunc: Truncate): T
     fun visit(fptruncate: FpTruncate): T
     fun visit(fpext: FpExtend): T
-    fun visit(fptosi: FloatToSigned): T
+    fun visit(fptosi: FloatToInt): T
     fun visit(copy: Copy): T
     fun visit(move: Move): T
     fun visit(downStackFrame: DownStackFrame): T

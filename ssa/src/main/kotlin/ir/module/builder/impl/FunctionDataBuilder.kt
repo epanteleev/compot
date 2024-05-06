@@ -154,8 +154,8 @@ class FunctionDataBuilder private constructor(
         return bb.fpext(value, toType)
     }
 
-    override fun fptosi(value: Value, toType: SignedIntType): FloatToSigned {
-        return bb.fptosi(value, toType)
+    override fun fp2Int(value: Value, toType: IntegerType): FloatToInt {
+        return bb.fp2Int(value, toType)
     }
 
     override fun phi(incoming: List<Value>, labels: List<Label>): Phi {
