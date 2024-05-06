@@ -162,6 +162,14 @@ class FunctionDataBuilder private constructor(
         return bb.phi(incoming, labels)
     }
 
+    override fun int2ptr(value: Value): Int2Pointer {
+        return bb.int2ptr(value)
+    }
+
+    override fun ptr2int(value: Value, toType: IntegerType): Pointer2Int {
+        return bb.ptr2int(value, toType)
+    }
+
     companion object {
         fun create(
             name: String,

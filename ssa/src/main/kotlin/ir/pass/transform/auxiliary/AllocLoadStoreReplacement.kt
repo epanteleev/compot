@@ -98,14 +98,6 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
             }
 
             val gen = replaceAlloc(bb, inst, i)
-            for (user in gen.usedIn()) { //TODO: checker
-                if (user !is Load && user !is Store) {
-                    assert(user is Copy) {
-                        "should be, but user=${user}"
-                    }
-                    continue
-                }
-            }
         }
 
         for (bb in cfg) {
@@ -135,6 +127,11 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                         val lea = bb.insert(idx) { it.lea(inst.origin() as Generate) }
                         ValueInstruction.replaceUsages(inst, lea)
                         bb.remove(idx + 1)
+                    }
+                    is Pointer2Int -> {
+                        val lea = bb.insert(idx) { it.lea(inst.value() as Generate) }
+                        inst.update(0, lea)
+                        idx++
                     }
                     else -> assert(false) { "should be, but inst=${inst.dump()}" }
                 }

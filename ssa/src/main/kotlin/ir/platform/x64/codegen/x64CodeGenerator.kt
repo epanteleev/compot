@@ -135,7 +135,6 @@ private class CodeEmitter(private val data: FunctionData,
                     else -> throw CodegenException("unknown jmpType=$jmpType")
                 }
             }
-            else -> throw CodegenException("unknown jmpType=$jmpType")
         }
     }
 
@@ -265,6 +264,18 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(voidCall: VoidCall) {
         emitCall(voidCall)
+    }
+
+    override fun visit(int2ptr: Int2Pointer) {
+        val dst = valueToRegister.operand(int2ptr)
+        val src = valueToRegister.operand(int2ptr.value())
+        CopyCodegen(int2ptr.type(), asm)(dst, src)
+    }
+
+    override fun visit(ptr2Int: Pointer2Int) {
+        val dst = valueToRegister.operand(ptr2Int)
+        val src = valueToRegister.operand(ptr2Int.value())
+        CopyCodegen(ptr2Int.type(), asm)(dst, src)
     }
 
     override fun visit(call: Call) {

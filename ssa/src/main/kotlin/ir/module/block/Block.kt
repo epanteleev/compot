@@ -329,6 +329,14 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Phi.make("phi${n(it)}", incoming[0].type() as PrimitiveType, bbs, incoming.toTypedArray()) }
     }
 
+    override fun int2ptr(value: Value): Int2Pointer {
+        return withOutput { it: Int -> Int2Pointer.make(n(it), value) }
+    }
+
+    override fun ptr2int(value: Value, toType: IntegerType): Pointer2Int {
+        return withOutput { it: Int -> Pointer2Int.make(n(it), toType, value) }
+    }
+
     override fun downStackFrame(callable: Callable) {
         add(DownStackFrame(callable))
     }

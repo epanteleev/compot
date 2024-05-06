@@ -16,7 +16,7 @@ forCond:
 
 forBody:
   %1 = load f64 %i
-  %idx = fptosi f64 %1 to i64
+  %idx = fp2int f64 %1 to i64
   %arrayidx = gep f64, ptr %array, i64 %idx
   store ptr %arrayidx, f64 %1
   br label %forInc

@@ -40,4 +40,6 @@ interface IRInstructionVisitor<T> {
     fun visit(store: Store): T
     fun visit(upStackFrame: UpStackFrame): T
     fun visit(voidCall: VoidCall): T
+    fun visit(int2ptr: Int2Pointer): T
+    fun visit(ptr2Int: Pointer2Int): T
 }

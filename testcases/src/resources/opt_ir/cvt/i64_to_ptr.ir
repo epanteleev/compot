@@ -1,0 +1,21 @@
+
+extern void @printInt(i32)
+
+define i32 @main() {
+  %adr = alloc i32
+  store ptr %adr, i32 7
+  %cvt = ptr2int ptr %adr to i64
+  call void @print_by_adr(%cvt: i64)
+  ret i32 0
+}
+
+;char f32_to_i8(float i) {
+;    return (char)i;
+;}
+define void @print_by_adr(%i: i64) {
+entry:
+  %1 = int2ptr i64 %i to ptr
+  %val = load i32 %1
+  call void @printInt(%val: i32)
+  ret void
+}

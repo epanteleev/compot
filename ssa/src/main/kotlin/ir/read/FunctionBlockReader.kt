@@ -358,6 +358,16 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         builder.int2Float(currentTok, source, dstType, type)
     }
 
+    private fun parsePointer2Int(currentTok: LocalValueToken) {
+        // %$identifier = ptr2int %{pointer_type} %{value} to {operand type}
+        val pointerType = iterator.expect<PointerTypeToken>("pointer type")
+        val source = iterator.expect<LocalValueToken>("source value")
+
+        iterator.expect<To>("'to' keyword")
+        val intType = iterator.expect<IntegerTypeToken>("integer type")
+        builder.ptr2int(currentTok, source, pointerType, intType)
+    }
+
     private fun parseInstruction(currentTok: Token) {
         when (currentTok) {
             is LocalValueToken -> {
@@ -386,7 +396,9 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "bitcast"    -> parseBitcast(currentTok)
                     "fptrunc"    -> parseFptrunc(currentTok)
                     "fpext"      -> parseFpext(currentTok)
-                    FloatToInt.NAME -> parseFloat2Int(currentTok)
+                    FloatToInt.NAME  -> parseFloat2Int(currentTok)
+                    Int2Pointer.NAME -> parseInt2Pointer(currentTok)
+                    Pointer2Int.NAME -> parsePointer2Int(currentTok)
                     "alloc"      -> parseStackAlloc(currentTok)
                     "phi"        -> parsePhi(currentTok)
                     "gep"        -> parseGep(currentTok)
@@ -413,6 +425,16 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
             else -> throw ParseErrorException("instruction", currentTok)
         }
+    }
+
+    private fun parseInt2Pointer(currentTok: LocalValueToken) {
+        // %$identifier = int2ptr %{int_type} %{value}
+        val intType = iterator.expect<IntegerTypeToken>("integer type")
+        val source = iterator.expect<LocalValueToken>("source value")
+
+        iterator.expect<To>("'to' keyword")
+        iterator.expect<PointerTypeToken>("pointer type")
+        builder.int2ptr(currentTok, source, intType)
     }
 
     private fun parseInstructions() {

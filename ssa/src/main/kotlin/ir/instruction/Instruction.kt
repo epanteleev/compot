@@ -26,7 +26,7 @@ abstract class Instruction(protected val operands: Array<Value>) {
         }
     }
 
-    fun update(index: Int, new: Value) {
+    fun update(index: Int, new: Value) { // TODO inline class for 'index'?
         assert(0 <= index && index < operands.size) {
             "out of range in $this"
         }

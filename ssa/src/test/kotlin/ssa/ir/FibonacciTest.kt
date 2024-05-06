@@ -95,7 +95,7 @@ class FibonacciTest {
         val module = moduleBuilder.build()
         VerifySSA.run(module)
 
-        val fib = module.findFunction(FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32)));
+        module.findFunction(FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32)));
         return module
     }
 

@@ -297,6 +297,16 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         return VoidCall.make(voidCall.prototype(), newUsages)
     }
 
+    override fun visit(int2ptr: Int2Pointer): Instruction {
+        val operand = mapUsage<Value>(int2ptr.value())
+        return Int2Pointer.make(int2ptr.name(), operand)
+    }
+
+    override fun visit(ptr2Int: Pointer2Int): Instruction {
+        val operand = mapUsage<Value>(ptr2Int.value())
+        return Pointer2Int.make(ptr2Int.name(), ptr2Int.type(), operand)
+    }
+
     companion object {
         fun copy(old: FunctionData): FunctionData {
             return FunctionData.create(old.prototype, copy(old.blocks), old.arguments())

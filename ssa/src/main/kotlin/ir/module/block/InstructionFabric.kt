@@ -40,6 +40,8 @@ interface InstructionFabric {
     fun fp2Int(value: Value, toType: IntegerType): FloatToInt
     fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select
     fun phi(incoming: List<Value>, labels: List<Label>): Phi
+    fun int2ptr(value: Value): Int2Pointer
+    fun ptr2int(value: Value, toType: IntegerType): Pointer2Int
 }
 
 interface InternalInstructionFabric {

@@ -302,6 +302,16 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.int2fp(value, expectedType.type()))
     }
 
+    fun ptr2int(name: LocalValueToken, valueTok: AnyValueToken, operandType: PointerTypeToken, intType: IntegerTypeToken): Pointer2Int {
+        val value = getValue(valueTok, operandType.type())
+        return memorize(name, bb.ptr2int(value, intType.type()))
+    }
+
+    fun int2ptr(name: LocalValueToken, valueTok: AnyValueToken, intType: IntegerTypeToken): Int2Pointer {
+        val value = getValue(valueTok, intType.type())
+        return memorize(name, bb.int2ptr(value))
+    }
+
     fun phi(name: LocalValueToken, incomingTok: ArrayList<AnyValueToken>, labelsTok: ArrayList<Identifier>, expectedType: PrimitiveTypeToken): Value {
         val blocks = arrayListOf<Block>()
         for (tok in labelsTok) {

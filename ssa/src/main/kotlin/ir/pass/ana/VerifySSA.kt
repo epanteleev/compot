@@ -375,6 +375,18 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    override fun visit(int2ptr: Int2Pointer) {
+        assert(Int2Pointer.typeCheck(int2ptr)) {
+            "Instruction '${int2ptr.dump()}' has inconsistent types."
+        }
+    }
+
+    override fun visit(ptr2Int: Pointer2Int) {
+        assert(Pointer2Int.typeCheck(ptr2Int)) {
+            "Instruction '${ptr2Int.dump()}' has inconsistent types."
+        }
+    }
+
     companion object {
         fun run(module: Module): Module {
             val prototypes = module.prototypes
