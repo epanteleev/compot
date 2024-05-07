@@ -1,5 +1,7 @@
-package ir
+package ir.module
 
+import ir.global.GlobalSymbol
+import ir.types.NonTrivialType
 import ir.types.Type
 
 
@@ -42,6 +44,7 @@ class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
     }
 
     override fun dump(): String = toString()
+    override fun type(): NonTrivialType = Type.Ptr
     override fun name(): String = name
 }
 
@@ -66,6 +69,7 @@ class ExternFunction internal constructor(name: String, returnType: Type, argume
         return "extern ${shortName()}"
     }
 
+    override fun type(): NonTrivialType = Type.Ptr
     override fun name(): String = name
     override fun dump(): String = toString()
 }

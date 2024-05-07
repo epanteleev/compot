@@ -52,7 +52,6 @@ class MacroReplacement(name: String, private val value: List<AnyToken>): Macros(
     }
 
     fun cloneContentWith(macrosNamePos: Position): List<AnyToken> {
-        val firstPos = first().position().pos()
         fun calculate(tok: AnyToken): AnyToken {
             if (tok !is CToken) {
                 return tok

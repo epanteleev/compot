@@ -1,6 +1,7 @@
 package ir.platform.x64
 
 import ir.*
+import ir.global.GlobalSymbol
 import ir.module.*
 import ir.types.StructType
 import ir.module.auxiliary.*

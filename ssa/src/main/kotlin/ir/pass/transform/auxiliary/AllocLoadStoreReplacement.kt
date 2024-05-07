@@ -97,7 +97,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                 escaped.add(user)
             }
 
-            val gen = replaceAlloc(bb, inst, i)
+            replaceAlloc(bb, inst, i)
         }
 
         for (bb in cfg) {

@@ -80,5 +80,6 @@ inline fun <reified E> intSetOf(max: Int, vararg values: E, noinline closure: (E
         valArray[idx] = v
     }
 
+    @Suppress("UNCHECKED_CAST")
     return IntSet(boolArray, valArray as Array<E>, closure)
 }

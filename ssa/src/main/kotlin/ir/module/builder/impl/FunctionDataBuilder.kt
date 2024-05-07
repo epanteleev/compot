@@ -2,8 +2,7 @@ package ir.module.builder.impl
 
 import ir.*
 import ir.instruction.*
-import ir.module.BasicBlocks
-import ir.module.FunctionData
+import ir.module.*
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.InstructionFabric

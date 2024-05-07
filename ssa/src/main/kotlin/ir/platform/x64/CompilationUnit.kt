@@ -1,7 +1,7 @@
 package ir.platform.x64
 
-import ir.*
 import asm.x64.*
+import ir.global.*
 import ir.platform.common.CompiledModule
 
 
@@ -15,23 +15,23 @@ class CompilationUnit: CompiledModule() {
         return fn
     }
 
-    fun mkSymbol(globalValue: GlobalValue) {
+    fun mkConstant(globalValue: GlobalConstant) {
         symbols.add(ObjSymbol(globalValue.name(), globalValue.data(), convertToSymbolType(globalValue)))
     }
 
-    private fun convertToSymbolType(globalValue: GlobalValue): SymbolType {
+    private fun convertToSymbolType(globalValue: GlobalSymbol): SymbolType {
         return when (globalValue) {
             is StringLiteralGlobal -> SymbolType.StringLiteral
-            is I64GlobalValue      -> SymbolType.Quad
-            is U64GlobalValue      -> SymbolType.Quad
-            is I32GlobalValue      -> SymbolType.Long
-            is U32GlobalValue      -> SymbolType.Long
-            is I16GlobalValue      -> SymbolType.Short
-            is U16GlobalValue      -> SymbolType.Short
-            is I8GlobalValue       -> SymbolType.Byte
-            is U8GlobalValue       -> SymbolType.Byte
-            is F32GlobalValue      -> SymbolType.Long
-            is F64GlobalValue      -> SymbolType.Quad
+            is I64GlobalValue -> SymbolType.Quad
+            is U64GlobalValue -> SymbolType.Quad
+            is I32GlobalValue -> SymbolType.Long
+            is U32GlobalValue -> SymbolType.Long
+            is I16GlobalValue -> SymbolType.Short
+            is U16GlobalValue -> SymbolType.Short
+            is I8GlobalValue -> SymbolType.Byte
+            is U8GlobalValue -> SymbolType.Byte
+            is F32GlobalValue -> SymbolType.Long
+            is F64GlobalValue -> SymbolType.Quad
             else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue")
         }
     }

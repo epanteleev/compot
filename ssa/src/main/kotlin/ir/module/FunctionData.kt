@@ -1,9 +1,7 @@
 package ir.module
 
 import ir.ArgumentValue
-import ir.FunctionPrototype
 import ir.module.auxiliary.CopyCFG
-import ir.module.auxiliary.DumpModule
 import ir.liveness.LiveIntervals
 import ir.liveness.LiveIntervalsBuilder
 

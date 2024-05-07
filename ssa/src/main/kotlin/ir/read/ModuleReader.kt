@@ -1,6 +1,6 @@
 package ir.read
 
-import ir.*
+import ir.global.*
 import ir.types.*
 import ir.module.Module
 import ir.read.bulder.*

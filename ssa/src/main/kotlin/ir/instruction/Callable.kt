@@ -2,7 +2,7 @@ package ir.instruction
 
 import ir.Value
 import ir.types.Type
-import ir.AnyFunctionPrototype
+import ir.module.AnyFunctionPrototype
 
 
 interface Callable {

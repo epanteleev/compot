@@ -3,6 +3,8 @@ package ir.module.block
 import ir.*
 import ir.types.*
 import ir.instruction.*
+import ir.module.AnyFunctionPrototype
+import ir.module.IndirectFunctionPrototype
 
 
 interface InstructionFabric {

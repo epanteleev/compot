@@ -1,6 +1,6 @@
 package ir.instruction
 
-import ir.AnyFunctionPrototype
+import ir.module.AnyFunctionPrototype
 import ir.Value
 import ir.instruction.utils.IRInstructionVisitor
 import ir.types.Type

@@ -1,6 +1,8 @@
 package ir.module.builder.impl
 
 import ir.*
+import ir.module.AnyFunctionPrototype
+import ir.module.ExternFunction
 import ir.types.Type
 import ir.module.Module
 import ir.module.SSAModule

@@ -1,6 +1,6 @@
 package ssa.ir
 
-import ir.FunctionPrototype
+import ir.module.FunctionPrototype
 import ir.I32Value
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate

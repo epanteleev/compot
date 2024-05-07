@@ -1,6 +1,6 @@
 package ssa.ir.dominance
 
-import ir.FunctionPrototype
+import ir.module.FunctionPrototype
 import ir.I32Value
 import ir.U16Value
 import ir.instruction.IntPredicate

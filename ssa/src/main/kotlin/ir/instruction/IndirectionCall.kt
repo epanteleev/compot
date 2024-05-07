@@ -3,7 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.types.Type
 import ir.types.NonTrivialType
-import ir.IndirectFunctionPrototype
+import ir.module.IndirectFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 
 

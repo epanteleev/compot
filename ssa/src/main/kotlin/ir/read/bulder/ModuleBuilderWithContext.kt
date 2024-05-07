@@ -1,6 +1,5 @@
 package ir.read.bulder
 
-import ir.*
 import ir.read.*
 import ir.module.*
 import ir.module.builder.AnyModuleBuilder

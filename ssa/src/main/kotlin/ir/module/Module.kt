@@ -1,6 +1,6 @@
 package ir.module
 
-import ir.*
+import ir.global.GlobalSymbol
 import ir.module.auxiliary.CopyCFG
 import ir.module.auxiliary.DumpModule
 import ir.types.StructType

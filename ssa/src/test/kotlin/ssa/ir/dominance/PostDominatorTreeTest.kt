@@ -4,6 +4,7 @@ import ir.*
 import ir.types.Type
 import ir.module.Module
 import ir.instruction.IntPredicate
+import ir.module.FunctionPrototype
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import org.junit.jupiter.api.Assertions.assertFalse

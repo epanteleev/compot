@@ -2,6 +2,7 @@ package ir.module.auxiliary
 
 import common.intMapOf
 import ir.*
+import ir.global.GlobalSymbol
 import ir.instruction.*
 import ir.instruction.Copy
 import ir.instruction.utils.IRInstructionVisitor

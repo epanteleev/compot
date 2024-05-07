@@ -1,7 +1,7 @@
 package ssa.ir
 
 import ir.F32Value
-import ir.FunctionPrototype
+import ir.module.FunctionPrototype
 import ir.I32Value
 import ir.types.Type
 import kotlin.test.Test

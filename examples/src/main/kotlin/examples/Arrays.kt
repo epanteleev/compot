@@ -1,6 +1,6 @@
 package examples
 
-import ir.FunctionPrototype
+import ir.module.FunctionPrototype
 import ir.I32Value
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA

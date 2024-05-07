@@ -2,6 +2,7 @@ package ir.platform.x64.regalloc
 
 import ir.*
 import asm.x64.*
+import ir.global.GlobalSymbol
 import ir.utils.OrderedLocation
 import ir.platform.x64.CallConvention
 import ir.liveness.LiveIntervals

@@ -113,7 +113,7 @@ class TypeResolutionTest {
         val expr = parser.declaration() as Declaration
         println(expr)
         val typeResolver = TypeHolder.default()
-        val vars = expr.resolveType(typeResolver)
+        expr.resolveType(typeResolver)
         assertEquals("struct point*", typeResolver["a"].toString())
     }
 

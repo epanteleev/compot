@@ -1,6 +1,6 @@
 package ir.module.auxiliary
 
-import ir.FunctionPrototype
+import ir.module.FunctionPrototype
 import ir.LocalValue
 import ir.Value
 import ir.instruction.Instruction

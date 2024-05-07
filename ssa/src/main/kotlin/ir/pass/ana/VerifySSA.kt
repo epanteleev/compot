@@ -8,7 +8,7 @@ import ir.utils.CreationInfo
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.FunctionData
-import ir.AnyFunctionPrototype
+import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 
 

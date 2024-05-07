@@ -1,6 +1,7 @@
 package examples
 
 import ir.*
+import ir.global.StringLiteralGlobal
 import ir.types.*
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric

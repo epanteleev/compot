@@ -4,6 +4,8 @@ import ir.*
 import ir.Value
 import ir.types.*
 import ir.instruction.*
+import ir.module.AnyFunctionPrototype
+import ir.module.IndirectFunctionPrototype
 
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :

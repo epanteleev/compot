@@ -3,7 +3,7 @@ package ir.platform.x64.codegen
 import asm.x64.*
 import ir.types.*
 import ir.module.*
-import ir.GlobalValue
+import ir.global.GlobalValue
 import ir.instruction.*
 import ir.platform.x64.*
 import ir.instruction.Neg
@@ -11,6 +11,7 @@ import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.identityHashMapOf
+import ir.global.GlobalConstant
 import ir.instruction.Lea
 import ir.module.block.Label
 import ir.utils.OrderedLocation
@@ -216,9 +217,9 @@ private class CodeEmitter(private val data: FunctionData,
         val operand = valueToRegister.operand(neg.operand())
         val result  = valueToRegister.operand(neg)
         if (neg.type() == Type.F32) {
-            unit.mkSymbol(GlobalValue.of(FLOAT_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroFloat))
+            unit.mkConstant(GlobalConstant.of(FLOAT_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroFloat))
         } else if (neg.type() == Type.F64) {
-            unit.mkSymbol(GlobalValue.of(DOUBLE_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroDouble))
+            unit.mkConstant(GlobalConstant.of(DOUBLE_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroDouble))
         }
 
         NegCodegen(neg.type(), asm)(result, operand)
@@ -665,11 +666,11 @@ private class CodeEmitter(private val data: FunctionData,
             val asm = CompilationUnit()
 
             for (c in module.globals) {
-                if (c !is GlobalValue) {
+                if (c !is GlobalConstant) {
                     continue
                 }
 
-                asm.mkSymbol(c)
+                asm.mkConstant(c)
             }
 
             for ((idx, data) in module.functions().withIndex()) {
