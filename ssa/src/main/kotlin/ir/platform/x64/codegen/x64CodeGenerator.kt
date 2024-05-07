@@ -3,7 +3,6 @@ package ir.platform.x64.codegen
 import asm.x64.*
 import ir.types.*
 import ir.module.*
-import ir.global.GlobalValue
 import ir.instruction.*
 import ir.platform.x64.*
 import ir.instruction.Neg
@@ -660,7 +659,7 @@ private class CodeEmitter(private val data: FunctionData,
         val fpRet = CallConvention.fpRet
 
         fun codegen(module: Module): CompilationUnit {
-            if (module !is CSSAModule) {
+            if (module !is LModule) {
                 throw CodegenException("cannot transform module")
             }
             val asm = CompilationUnit()

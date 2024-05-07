@@ -3,7 +3,7 @@ package ir.pass.transform
 import ir.module.Module
 import ir.pass.PassFabric
 import ir.pass.TransformPass
-import ir.platform.x64.CSSAModule
+import ir.platform.x64.LModule
 import ir.pass.transform.auxiliary.*
 import ir.platform.x64.pass.transform.*
 
@@ -11,18 +11,14 @@ import ir.platform.x64.pass.transform.*
 class SSADestruction(module: Module): TransformPass(module) {
     override fun name(): String = "ssa-destruction"
     override fun run(): Module {
-        val copy = module.copy()
         val transformed = AllocLoadStoreReplacement.run(
             MoveLargeConstants.run(
                 ReplaceFloatNeg.run(
-                    CopyInsertion.run(
-                        SplitCriticalEdge.run(copy)
-                    )
-                )
+                    FunctionsIsolation.run(module))
             )
         )
 
-        return CSSAModule(transformed.functions, transformed.externFunctions, transformed.globals, transformed.types)
+        return LModule(transformed.functions, transformed.externFunctions, transformed.globals, transformed.types)
     }
 }
 

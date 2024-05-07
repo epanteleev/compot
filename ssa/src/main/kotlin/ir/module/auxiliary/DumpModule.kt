@@ -11,7 +11,7 @@ import ir.module.SSAModule
 import ir.module.block.Block
 import ir.liveness.LiveIntervals
 import ir.platform.x64.regalloc.RegisterAllocation
-import ir.platform.x64.CSSAModule
+import ir.platform.x64.LModule
 
 abstract class DumpModule<T: Module> protected constructor(protected val module: T) {
     protected val builder = StringBuilder()
@@ -95,7 +95,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
         fun dump(module: Module): String {
             val dump = when (module) {
                 is SSAModule  -> DumpSSAlModule(module)
-                is CSSAModule -> DumpCSSAModule(module)
+                is LModule -> DumpCSSAModule(module)
                 else -> throw RuntimeException("undefined")
             }
 
@@ -106,7 +106,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
 
 private class DumpSSAlModule(module: SSAModule) : DumpModule<SSAModule>(module)
 
-private class DumpCSSAModule(module: CSSAModule) : DumpModule<CSSAModule>(module) {
+private class DumpCSSAModule(module: LModule) : DumpModule<LModule>(module) {
     private var regAlloc: RegisterAllocation? = null
     private var liveness: LiveIntervals? = null
     private var currentBlock: Block? = null
