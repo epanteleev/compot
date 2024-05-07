@@ -26,7 +26,7 @@ abstract class OptTests: CommonIrTest() {
     @Test
     fun testMemcpy() {
         val result = runTest("opt_ir/memcpy", listOf("runtime/runtime.c"), options())
-        assertEquals("0\n", result.output)
+        assertEquals("Hello world", result.output)
     }
 }
 

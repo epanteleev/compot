@@ -620,7 +620,7 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(lea: Lea) {
         val dst = valueToRegister.operand(lea)
-        val gen = valueToRegister.operand(lea.generate()) as Address
+        val gen = valueToRegister.operand(lea.operand()) as Address
 
         when (dst) {
             is Address -> {

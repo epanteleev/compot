@@ -81,13 +81,19 @@ interface Constant: Value {
 interface IntegerConstant: Constant
 
 interface SignedIntegerConstant: IntegerConstant
-interface UnsignedIntegerConstant: IntegerConstant
+interface UnsignedIntegerConstant: IntegerConstant {
+    fun value(): ULong
+}
 interface FloatingPointConstant: Constant
 
 
 data class U8Value(val u8: Byte): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType {
         return Type.U8
+    }
+
+    override fun value(): ULong {
+        return u8.toUByte().toULong()
     }
 
     override fun toString(): String {
@@ -110,6 +116,10 @@ data class U16Value(val u16: Short): UnsignedIntegerConstant {
         return Type.U16
     }
 
+    override fun value(): ULong {
+        return u16.toUShort().toULong()
+    }
+
     override fun toString(): String {
         return u16.toString()
     }
@@ -130,6 +140,10 @@ data class U32Value(val u32: Int): UnsignedIntegerConstant {
         return Type.U32
     }
 
+    override fun value(): ULong {
+        return u32.toUInt().toULong()
+    }
+
     override fun toString(): String {
         return u32.toString()
     }
@@ -148,6 +162,10 @@ data class I32Value(val i32: Int): SignedIntegerConstant {
 data class U64Value(val u64: Long): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType {
         return Type.U64
+    }
+
+    override fun value(): ULong {
+        return u64.toULong()
     }
 
     override fun toString(): String {

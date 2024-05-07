@@ -69,7 +69,8 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperands
     }
 
     override fun arF(dst: Address, src: XmmRegister) {
-        TODO("Not yet implemented")
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.movf(size, src, Address.from(temp1, 0))
     }
 
     override fun aaF(dst: Address, src: Address) {

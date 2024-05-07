@@ -4,6 +4,7 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.POINTER_SIZE
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
 
 
@@ -41,7 +42,12 @@ data class GetElementPtrCodegenForAlloc (val type: PointerType, val basicType: P
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        val address = when (first) {
+            is Address2 -> Address.from(first.base, first.offset + (second.value() * size).toInt()) //TODO int overflow leads to error
+            else -> TODO()
+        }
+        asm.lea(POINTER_SIZE, address, temp1)
+        asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

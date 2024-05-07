@@ -131,6 +131,7 @@ object CallConvention {
 
     const val STACK_ALIGNMENT = 16L
     const val POINTER_SIZE = 8
+    const val WORD_SIZE = 4
 
     fun isIntRange(value: Long): Boolean {
         return (Int.MIN_VALUE..Int.MAX_VALUE).contains(value)

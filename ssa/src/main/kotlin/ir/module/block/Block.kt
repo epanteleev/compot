@@ -360,7 +360,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Generate.make("gen${n(it)}", ty) }
     }
 
-    override fun lea(generate: Generate): Lea {
+    override fun lea(generate: Value): Lea {
         return withOutput { it: Int -> Lea.make("lea${n(it)}", generate) }
     }
 

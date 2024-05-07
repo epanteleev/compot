@@ -99,7 +99,7 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
     }
 
     override fun visit(lea: Lea): Instruction {
-        return Lea.make(lea.name(), mapUsage<Generate>(lea.generate()))
+        return Lea.make(lea.name(), mapUsage<Generate>(lea.operand()))
     }
 
     override fun visit(binary: ArithmeticBinary): Instruction {

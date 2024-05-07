@@ -12,10 +12,6 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     private val replaced = identityHashSetOf<Instruction>()
     private val escaped = identityHashSetOf<Instruction>()
 
-    init {
-        replaceAlloc()
-    }
-
     private fun replaceStore(bb: Block, inst: Store, i: Int) {
         val toValue   = inst.pointer() as Generate
         val fromValue = inst.value()
@@ -107,6 +103,8 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     }
 
     private fun pass() {
+        replaceAlloc()
+
         for (bb in cfg) {
             var idx = 0
             val instructions = bb.instructions()
