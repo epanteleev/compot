@@ -51,7 +51,7 @@ class PhiFunctionPruning private constructor(private val cfg: BasicBlocks) {
     private fun usefulnessPropagation() {
         while (worklist.isNotEmpty()) {
             val phi = worklist.last()
-            worklist.removeAt(worklist.size - 1)
+            worklist.removeLast()
 
             for (op in phi.operands()) {
                 if (op !is Phi) {

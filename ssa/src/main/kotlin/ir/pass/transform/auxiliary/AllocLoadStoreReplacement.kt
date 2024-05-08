@@ -64,10 +64,6 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                         replaceLoad(bb, inst, idx)
                         idx++
                     }
-                    is Copy -> {
-                        replaceCopy(bb, inst, idx)
-                        idx++
-                    }
                     else -> assert(false) { "should be, but inst=${inst}" }
                 }
             }
@@ -122,9 +118,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                         idx++
                     }
                     is Copy -> {
-                        val lea = bb.insert(idx) { it.lea(inst.origin() as Generate) }
-                        ValueInstruction.replaceUsages(inst, lea)
-                        bb.remove(idx + 1)
+                        replaceCopy(bb, inst, idx)
                     }
                     is Pointer2Int -> {
                         val lea = bb.insert(idx) { it.lea(inst.value() as Generate) }
