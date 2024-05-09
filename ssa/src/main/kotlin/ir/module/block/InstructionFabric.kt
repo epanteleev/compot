@@ -49,7 +49,8 @@ interface InternalInstructionFabric {
     fun lea(generate: Value): Lea
     fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi
     fun copy(value: Value): Copy
-    fun move(toValue: Generate, fromValue: Value)
+    fun move(dst: Generate, fromValue: Value)
+    fun move(dst: Value, base: Value, index: Value)
     fun downStackFrame(callable: Callable)
     fun upStackFrame(callable: Callable)
 }

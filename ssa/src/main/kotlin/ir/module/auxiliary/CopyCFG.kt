@@ -194,8 +194,9 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
     }
 
     override fun visit(move: Move): Instruction {
-        val fromValue = mapUsage<Generate>(move.fromValue())
-        val toValue   = mapUsage<Value>(move.toValue())
+        val fromValue = mapUsage<Value>(move.source())
+        val toValue   = mapUsage<Value>(move.destination())
+        val index     = mapUsage<Value>(move.index())
 
         return Move.make(fromValue, toValue)
     }

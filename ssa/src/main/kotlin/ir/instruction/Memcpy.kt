@@ -7,7 +7,8 @@ import ir.types.PointerType
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Memcpy private constructor(dst: Value, src: Value, private val length: UnsignedIntegerConstant): Instruction(arrayOf(dst, src)) {
+class Memcpy private constructor(dst: Value, src: Value, length: UnsignedIntegerConstant):
+    Instruction(arrayOf(dst, src, length)) {
     override fun <T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
@@ -18,21 +19,19 @@ class Memcpy private constructor(dst: Value, src: Value, private val length: Uns
 
         other as Memcpy
 
-        return length == other.length && operands.contentEquals(other.operands())
+        return operands.contentEquals(other.operands())
     }
 
     override fun hashCode(): Int {
-        var result = length.hashCode()
-        result = 31 * result + operands[0].hashCode() + operands[1].hashCode()
-        return result
+        return operands[0].hashCode() + operands[1].hashCode() + operands[2].hashCode()
     }
 
     override fun dump(): String {
-        return "$NAME ${destination().type()} ${destination()}, ${destination().type()} ${source()}, ${length.type()} $length"
+        return "$NAME ${destination().type()} ${destination()}, ${destination().type()} ${source()}, ${length().type()} ${length()}"
     }
 
     fun destination(): Value {
-        assert(operands.size == 2) {
+        assert(operands.size == 3) {
             "size should be 2 in $this instruction"
         }
 
@@ -40,14 +39,21 @@ class Memcpy private constructor(dst: Value, src: Value, private val length: Uns
     }
 
     fun source(): Value {
-        assert(operands.size == 2) {
+        assert(operands.size == 3) {
             "size should be 2 in $this instruction"
         }
 
         return operands[1]
     }
 
-    fun length(): UnsignedIntegerConstant = length
+    fun length(): UnsignedIntegerConstant {
+        assert(operands.size == 3) {
+            "size should be 2 in $this instruction"
+        }
+
+        return operands[2] as UnsignedIntegerConstant
+
+    }
 
     companion object {
         const val NAME = "memcpy"

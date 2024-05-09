@@ -372,8 +372,12 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Copy.make(n(it), value) }
     }
 
-    override fun move(toValue: Generate, fromValue: Value) {
-        append(Move.make(toValue, fromValue))
+    override fun move(dst: Generate, fromValue: Value) {
+        append(Move.make(dst, fromValue))
+    }
+
+    override fun move(dst: Value, base: Value, index: Value) {
+        add(Move.make(dst, base, index))
     }
 
     fun add(instruction: Instruction): Instruction { //TODO simplify???

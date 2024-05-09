@@ -98,6 +98,28 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
         return replaced
     }
 
+    private fun replaceGEPAndStore() {
+        for (bb in cfg) {
+            var idx = 0
+            val instructions = bb.instructions()
+            while (idx < instructions.size) {
+                val inst = instructions[idx]
+                if (inst !is Store) {
+                    idx++
+                    continue
+                }
+
+                val pointer = inst.pointer()
+                if (pointer !is GetElementPtr) {
+                    idx++
+                    continue
+                }
+                bb.insert(idx) { it.move(pointer.source(), pointer, pointer.index()) }
+                bb.remove(idx + 1)
+            }
+        }
+    }
+
     private fun pass() {
         replaceAlloc()
 
@@ -130,7 +152,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                 idx++
             }
         }
-
+        //replaceGEPAndStore()
         replaceAllocLoadStores()
     }
 

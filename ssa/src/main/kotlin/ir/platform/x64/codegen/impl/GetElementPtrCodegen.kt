@@ -37,7 +37,7 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        asm.mov(size, second, temp1)
+        asm.mov(secondOpSize, second, temp1)
         asm.lea(POINTER_SIZE, Address.from(first, 0, temp1, size), temp1)
         asm.mov(POINTER_SIZE, temp1, dst)
     }
@@ -52,10 +52,9 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        asm.mov(size, second, temp1)
+        asm.mov(secondOpSize, second, temp1)
         asm.mov(POINTER_SIZE, first, dst)
-        asm.lea(POINTER_SIZE, Address.from(dst, 0, temp1, size), temp1)
-        asm.mov(POINTER_SIZE, temp1, dst)
+        asm.lea(POINTER_SIZE, Address.from(dst, 0, temp1, size), dst)
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
@@ -91,11 +90,16 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        val disp = second.value() * size
+        asm.lea(POINTER_SIZE, Address.from(first, disp.toInt()), temp1)
+        asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        val disp = second.value() * size
+        asm.mov(POINTER_SIZE, first, temp1)
+        asm.lea(POINTER_SIZE, Address.from(temp1, disp.toInt()), temp1)
+        asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

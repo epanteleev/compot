@@ -203,8 +203,8 @@ data class F64Value(val f64: Double): FloatingPointConstant {
     }
 }
 
-class UndefinedValue: Constant, LocalValue {
-    override fun name(): String {
+class UndefinedValue: Constant {
+    fun name(): String {
         return toString()
     }
 

@@ -1,31 +1,41 @@
 package ir.instruction
 
+import ir.Constant
 import ir.Value
 import ir.instruction.utils.IRInstructionVisitor
+import ir.types.Type
 
 
-class Move private constructor(toValue: Generate, fromValue: Value):
-    Instruction(arrayOf(toValue, fromValue)) {
+class Move private constructor(destination: Value, source: Value, index: Value):
+    Instruction(arrayOf(destination, source, index)) {
 
     override fun dump(): String {
-        val fromValue = fromValue()
-        return "$NAME ${fromValue.type()} ${toValue()} $fromValue"
+        val fromValue = source()
+        return "$NAME ${fromValue.type()} ${destination()}:${index()} $fromValue"
     }
 
-    fun fromValue(): Value {
-        assert(operands.size == 2) {
+    fun source(): Value {
+        assert(operands.size == 3) {
             "size should be 2 in $this instruction"
         }
 
         return operands[1]
     }
 
-    fun toValue(): Generate {
-        assert(operands.size == 2) {
+    fun destination(): Value {
+        assert(operands.size == 3) {
             "size should be 2 in $this instruction"
         }
 
-        return operands[0] as Generate
+        return operands[0]
+    }
+
+    fun index(): Value {
+        assert(operands.size == 3) {
+            "size should be 2 in $this instruction"
+        }
+
+        return operands[2]
     }
 
     override fun equals(other: Any?): Boolean {
@@ -33,11 +43,11 @@ class Move private constructor(toValue: Generate, fromValue: Value):
         if (javaClass != other?.javaClass) return false
 
         other as Move
-        return fromValue() == other.fromValue() && toValue() == other.toValue()
+        return source() == other.source() && destination() == other.destination()
     }
 
     override fun hashCode(): Int {
-        return fromValue().type().hashCode() xor toValue().type().hashCode()
+        return source().type().hashCode() xor destination().type().hashCode()
     }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
@@ -47,24 +57,28 @@ class Move private constructor(toValue: Generate, fromValue: Value):
     companion object {
         const val NAME = "move"
 
-        fun make(toValue: Generate, fromValue: Value): Move {
-            require(isAppropriateType(toValue, fromValue)) {
-                "inconsistent types: toValue=$toValue:${toValue.type()}, fromValue=$fromValue:${fromValue.type()}"
+        fun make(dst: Value, src: Value): Move {
+            require(isAppropriateType(dst, src)) {
+                "inconsistent types: toValue=$dst:${dst.type()}, fromValue=$src:${src.type()}"
             }
 
-            return registerUser(Move(toValue, fromValue), toValue, fromValue)
+            return registerUser(Move(dst, src, Value.UNDEF), dst, src) //TODO: fix index
+        }
+
+        fun make(dst: Value, src: Value, index: Value): Move {
+            require(isAppropriateType(dst, src)) {
+                "inconsistent types: toValue=$dst:${dst.type()}, base=$src:${src.type()}"
+            }
+
+            return registerUser(Move(dst, src, index), dst, src, index)
         }
 
         fun typeCheck(copy: Move): Boolean {
-            return isAppropriateType(copy.toValue(), copy.fromValue())
+            return isAppropriateType(copy.destination(), copy.source())
         }
 
         private fun isAppropriateType(toValue: Value, fromValue: Value): Boolean {
-            if (toValue is Generate || fromValue is Generate) {
-                return fromValue.type() == toValue.type()
-            }
-
-            return false
+            return true
         }
     }
 }

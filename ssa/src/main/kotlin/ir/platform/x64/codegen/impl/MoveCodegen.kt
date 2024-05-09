@@ -13,11 +13,11 @@ data class MoveCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsV
     XmmOperandsVisitorUnaryOp {
     private val size = type.size()
 
-    operator fun invoke(value: Operand, pointer: Operand) {
+    operator fun invoke(dst: Operand, value: Operand) {
         when (type) {
-            is FloatingPointType           -> ApplyClosure(pointer, value, this as XmmOperandsVisitorUnaryOp)
-            is IntegerType, is PointerType -> ApplyClosure(pointer, value, this as GPOperandsVisitorUnaryOp)
-            else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
+            is FloatingPointType           -> ApplyClosure(dst, value, this as XmmOperandsVisitorUnaryOp)
+            is IntegerType, is PointerType -> ApplyClosure(dst, value, this as GPOperandsVisitorUnaryOp)
+            else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$dst")
         }
     }
 
@@ -30,20 +30,11 @@ data class MoveCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsV
             return
         }
 
-        when (src) {
-            is AddressLiteral -> {
-                asm.lea(size, src, temp1)
-                asm.mov(size, temp1, dst)
-            }
-            else -> {
-                asm.mov(size, src, temp1)
-                asm.mov(size, temp1, dst)
-            }
-        }
-
+        asm.mov(size, src, temp1)
+        asm.mov(size, temp1, dst)
     }
 
-    override fun ri(dst: GPRegister, src: Imm32) {
+    override fun ri(dst: GPRegister, src: Imm32) { //TODO: default?
         asm.mov(size, src, Address.from(dst, 0))
     }
 
