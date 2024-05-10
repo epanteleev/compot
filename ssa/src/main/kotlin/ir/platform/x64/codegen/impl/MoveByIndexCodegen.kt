@@ -8,18 +8,34 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.utils.XmmOperandsVisitorBinaryOp
+import ir.types.FloatingPointType
+import ir.types.IntegerType
 import ir.types.PrimitiveType
+import ir.types.Type
 
-class MoveByIndexCodegen(val size: Int, basicType: PrimitiveType, val asm: Assembler) :
+
+class MoveByIndexCodegen(val type: PrimitiveType, val asm: Assembler) :
     GPOperandsVisitorBinaryOp {
 
+    private val size = type.size()
+
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
-        ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)
+        when (type) {
+            is FloatingPointType -> {
+                if (dst is GPRegister && source is XmmRegister && index is GPRegister) {
+                    asm.movf(size, source, Address.from(dst, 0, index, size))
+                } else {
+                    default(dst, source, index)
+                }
+            }
+            is IntegerType -> ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)
+            else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
+        }
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        //asm.mov(size, Address.from(first, 0, second, size), dst)
-        TODO()
+        asm.mov(size, first, Address.from(dst, 0, second, size))
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
@@ -47,7 +63,7 @@ class MoveByIndexCodegen(val size: Int, basicType: PrimitiveType, val asm: Assem
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, Address.from(dst, second.value().toInt() * size))
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -78,9 +94,6 @@ class MoveByIndexCodegen(val size: Int, basicType: PrimitiveType, val asm: Assem
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
         val disp = second.value() * size
-        assert(isIntRange(disp)) {
-            "should be, but disp=$disp"
-        }
 
         asm.mov(size, Address.from(first, disp.toInt()), temp1)
         asm.mov(size, temp1, dst)

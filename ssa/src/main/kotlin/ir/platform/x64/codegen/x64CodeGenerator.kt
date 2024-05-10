@@ -495,13 +495,13 @@ private class CodeEmitter(private val data: FunctionData,
         val source = valueToRegister.operand(move.source())
         val destination    = valueToRegister.operand(move.destination())
 
-        val type = move.source().type()
+        val type = move.source().type() as PrimitiveType
         val movIdx = move.index()
         if (movIdx != Value.UNDEF) {
             val index = valueToRegister.operand(movIdx)
-            MoveByIndexCodegen(type.size(), sourceType as PrimitiveType, asm)(destination, source, index)
+            MoveByIndexCodegen(type, asm)(destination, source, index)
         } else {
-            MoveCodegen(type as PrimitiveType, asm)(destination, source)
+            MoveCodegen(type, asm)(destination, source)
         }
     }
 
