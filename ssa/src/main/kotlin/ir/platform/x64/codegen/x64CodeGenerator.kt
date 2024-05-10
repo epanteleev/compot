@@ -12,6 +12,7 @@ import asm.x64.GPRegister.*
 import common.identityHashMapOf
 import ir.Value
 import ir.global.GlobalConstant
+import ir.instruction.lir.CopyByIndex
 import ir.instruction.lir.Lea
 import ir.instruction.lir.Move
 import ir.instruction.lir.MoveByIndex
@@ -287,6 +288,10 @@ private class CodeEmitter(private val data: FunctionData,
         MemcpyCodegen(memcpy.length(), asm)(dst, src)
     }
 
+    override fun visit(copy: CopyByIndex) {
+        TODO("Not yet implemented")
+    }
+
     override fun visit(call: Call) {
         emitCall(call)
     }
@@ -493,17 +498,16 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(move: Move) {
-        val sourceType = move.source().type()
-        val source = valueToRegister.operand(move.source())
-        val destination    = valueToRegister.operand(move.destination())
+        val source      = valueToRegister.operand(move.source())
+        val destination = valueToRegister.operand(move.destination())
 
         val type = move.source().type() as PrimitiveType
         MoveCodegen(type, asm)(destination, source)
     }
 
     override fun visit(move: MoveByIndex) {
-        val source = valueToRegister.operand(move.source())
-        val destination    = valueToRegister.operand(move.destination())
+        val source      = valueToRegister.operand(move.source())
+        val destination = valueToRegister.operand(move.destination())
 
         val type = move.source().type() as PrimitiveType
         val movIdx = move.index()

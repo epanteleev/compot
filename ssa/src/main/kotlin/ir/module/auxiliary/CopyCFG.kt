@@ -5,6 +5,7 @@ import ir.*
 import ir.global.GlobalSymbol
 import ir.instruction.*
 import ir.instruction.Copy
+import ir.instruction.lir.CopyByIndex
 import ir.instruction.lir.Lea
 import ir.instruction.lir.Move
 import ir.instruction.lir.MoveByIndex
@@ -309,6 +310,13 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
     override fun visit(ptr2Int: Pointer2Int): Instruction {
         val operand = mapUsage<Value>(ptr2Int.value())
         return Pointer2Int.make(ptr2Int.name(), ptr2Int.type(), operand)
+    }
+
+    override fun visit(copy: CopyByIndex): Instruction {
+        val fromValue = mapUsage<Value>(copy.origin())
+        val toValue   = mapUsage<Value>(copy.index())
+
+        return CopyByIndex.make(copy.name(), fromValue, toValue)
     }
 
     override fun visit(memcpy: Memcpy): Instruction {

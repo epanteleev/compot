@@ -2,6 +2,7 @@ package ir.instruction.matching
 
 import ir.Value
 import ir.instruction.*
+import ir.types.PrimitiveType
 import ir.types.Type
 
 typealias ValueMatcher = (Value) -> Boolean
@@ -52,4 +53,10 @@ inline fun alloc(): ValueMatcher = {
 }
 
 fun nop(): ValueMatcher = { true }
+
+////////////////////////////////////////////////////////////////////////////////////////
+// Type matchers
+////////////////////////////////////////////////////////////////////////////////////////
 fun anytype(): TypeMatcher = { true }
+
+fun primitive(): TypeMatcher = { it is PrimitiveType }

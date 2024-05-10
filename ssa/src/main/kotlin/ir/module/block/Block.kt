@@ -4,6 +4,7 @@ import ir.*
 import ir.Value
 import ir.types.*
 import ir.instruction.*
+import ir.instruction.lir.CopyByIndex
 import ir.instruction.lir.Lea
 import ir.instruction.lir.Move
 import ir.instruction.lir.MoveByIndex
@@ -381,6 +382,10 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     override fun move(dst: Value, base: Value, index: Value) {
         add(MoveByIndex.make(dst, base, index))
+    }
+
+    override fun copy(index: Value, origin: Value): CopyByIndex {
+        return withOutput { it: Int -> CopyByIndex.make("copy${n(it)}", origin, index) }
     }
 
     fun add(instruction: Instruction): Instruction { //TODO simplify???

@@ -4,6 +4,7 @@ import common.forEachWith
 import ir.types.Type
 import ir.module.Module
 import ir.instruction.*
+import ir.instruction.lir.CopyByIndex
 import ir.instruction.lir.Lea
 import ir.instruction.lir.Move
 import ir.instruction.lir.MoveByIndex
@@ -387,6 +388,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     override fun visit(ptr2Int: Pointer2Int) {
         assert(Pointer2Int.typeCheck(ptr2Int)) {
             "Instruction '${ptr2Int.dump()}' has inconsistent types."
+        }
+    }
+
+    override fun visit(copy: CopyByIndex) {
+        assert(CopyByIndex.typeCheck(copy)) {
+            "Instruction '${copy.dump()}' has inconsistent types."
         }
     }
 

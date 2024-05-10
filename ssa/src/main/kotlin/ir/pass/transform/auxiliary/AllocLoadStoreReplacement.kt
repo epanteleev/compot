@@ -1,12 +1,10 @@
 package ir.pass.transform.auxiliary
 
-import common.identityHashSetOf
 
 import ir.module.*
 import ir.instruction.*
 import ir.instruction.matching.*
 import ir.module.block.Block
-import ir.pass.canBeReplaced
 import ir.types.PrimitiveType
 
 
@@ -58,23 +56,18 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     }
 
     private fun replaceAlloc() {
-        fun replaceHelper(bb: Block, i: Int, inst: Instruction) {
+        fun replaceHelper(bb: Block, i: Int, inst: Instruction): Int {
             if (inst !is Alloc) {
-                return
+                return 0
             }
-
-            if (!inst.canBeReplaced()) {
-                return
+            when {
+                alloc(primitive()) (inst) -> replaceAlloc(bb, inst, i)
             }
-
-            replaceAlloc(bb, inst, i)
+            return 0
         }
 
         for (bb in cfg) {
-            bb.forEachInstruction { i, inst ->
-                replaceHelper(bb, i, inst)
-                0
-            }
+            bb.forEachInstruction { i, inst -> replaceHelper(bb, i, inst) }
         }
     }
 
@@ -128,9 +121,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
 
     private fun pass() {
         replaceAlloc()
-
         replaceEscaped()
-
         replaceAllocLoadStores()
         replaceGEPAndStore()
     }
