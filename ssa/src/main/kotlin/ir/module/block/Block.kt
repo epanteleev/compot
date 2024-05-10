@@ -83,11 +83,11 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         predecessors.remove(old)
     }
 
-    fun forEachInstruction(fn: (Int, Instruction) -> Unit) {
+    fun forEachInstruction(fn: (Int, Instruction) -> Int) {
         var i = -1
         while (i < instructions.size - 1) {
             i += 1
-            fn(i, instructions[i])
+            i += fn(i, instructions[i])
         }
     }
 

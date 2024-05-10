@@ -1,17 +1,16 @@
 package ir.pass.transform.auxiliary
 
 import common.identityHashSetOf
+
 import ir.module.*
 import ir.instruction.*
+import ir.instruction.matching.*
 import ir.module.block.Block
 import ir.pass.canBeReplaced
 import ir.types.PrimitiveType
 
 
 class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks) {
-    private val replaced = identityHashSetOf<Instruction>()
-    private val escaped = identityHashSetOf<Instruction>()
-
     private fun replaceStore(bb: Block, inst: Store, i: Int) {
         val toValue   = inst.pointer() as Generate
         val fromValue = inst.value()
@@ -45,32 +44,20 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     }
 
     private fun replaceAllocLoadStores() {
-        for (bb in cfg) {
-            var idx = 0
-            val instructions = bb.instructions()
-            while (idx < instructions.size) {
-                val inst = instructions[idx]
-                if (inst !in replaced) {
-                    idx++
-                    continue
-                }
-
-                when (inst) {
-                    is Store -> {
-                        replaceStore(bb, inst, idx)
-                        idx++
-                    }
-                    is Load -> {
-                        replaceLoad(bb, inst, idx)
-                        idx++
-                    }
-                    else -> assert(false) { "should be, but inst=${inst}" }
-                }
+        fun closure(bb: Block, inst: Instruction, i: Int): Int {
+            when {
+                store(generate(), nop()) (inst) -> replaceStore(bb, inst as Store, i)
+                load(generate()) (inst)         -> replaceLoad(bb, inst as Load, i)
             }
+            return 0
+        }
+
+        for (bb in cfg) {
+            bb.forEachInstruction { i, inst -> closure(bb, inst, i) }
         }
     }
 
-    private fun replaceAlloc(): Set<Instruction> {
+    private fun replaceAlloc() {
         fun replaceHelper(bb: Block, i: Int, inst: Instruction) {
             if (inst !is Alloc) {
                 return
@@ -80,83 +67,70 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                 return
             }
 
-            for (user in inst.usedIn()) {
-                if (user is Load || (user is Store && user.pointer() == inst)) {
-                    replaced.add(user)
-                    continue
-                }
-
-                escaped.add(user)
-            }
-
             replaceAlloc(bb, inst, i)
         }
 
         for (bb in cfg) {
-            bb.forEachInstruction { i, inst -> replaceHelper(bb, i, inst)}
+            bb.forEachInstruction { i, inst ->
+                replaceHelper(bb, i, inst)
+                0
+            }
         }
-        return replaced
     }
 
-    private fun replaceGEPAndStore() {
-        for (bb in cfg) {
-            var idx = 0
-            val instructions = bb.instructions()
-            while (idx < instructions.size) {
-                val inst = instructions[idx]
-                if (inst !is Store) {
-                    idx++
-                    continue
-                }
 
-                val pointer = inst.pointer()
-                if (pointer !is GetElementPtr) {
-                    idx++
-                    continue
+    private fun replaceGEPAndStore() {
+        fun closure(bb: Block, inst: Instruction, i: Int): Int {
+            val genOrAlloc = generate() or alloc()
+            when {
+                store(gep(genOrAlloc.not(), nop()), nop()) (inst) -> {
+                    inst as Store
+                    val pointer = inst.pointer() as GetElementPtr
+                    bb.insert(i) { it.move(pointer.source(), inst.value(), pointer.index()) }
+                    bb.remove(i + 1)
+                    return 0
                 }
-                val source = pointer.source()
-                if (source is Generate || source is Alloc) {
-                    idx++
-                    continue
-                }
-                bb.insert(idx) { it.move(pointer.source(), inst.value(), pointer.index()) }
-                bb.remove(idx + 1)
+                else -> return 0
             }
+        }
+
+        for (bb in cfg) {
+            bb.forEachInstruction { i, inst -> closure(bb, inst, i) }
+        }
+    }
+    private fun replaceEscaped() {
+        fun closure(bb: Block, inst: Instruction, i: Int): Int {
+            when {
+                store(nop(), generate()) (inst) -> {
+                    inst as Store
+                    val lea = bb.insert(i) { it.lea(inst.value() as Generate) }
+                    inst.update(1, lea)
+                    return 1
+                }
+                copy(generate()) (inst) -> {
+                    replaceCopy(bb, inst as Copy, i)
+                    return 0
+                }
+                ptr2int(generate()) (inst) -> {
+                    inst as Pointer2Int
+                    val lea = bb.insert(i) { it.lea(inst.value() as Generate) }
+                    inst.update(0, lea)
+                    return 1
+                }
+            }
+            return 0
+        }
+
+        for (bb in cfg) {
+            bb.forEachInstruction { i, inst -> closure(bb, inst, i) }
         }
     }
 
     private fun pass() {
         replaceAlloc()
 
-        for (bb in cfg) {
-            var idx = 0
-            val instructions = bb.instructions()
-            while (idx < instructions.size) {
-                val inst = instructions[idx]
-                if (!escaped.contains(inst)) {
-                    idx++
-                    continue
-                }
+        replaceEscaped()
 
-                when (inst) {
-                    is Store -> {
-                        val lea = bb.insert(idx) { it.lea(inst.value() as Generate) }
-                        inst.update(1, lea)
-                        idx++
-                    }
-                    is Copy -> {
-                        replaceCopy(bb, inst, idx)
-                    }
-                    is Pointer2Int -> {
-                        val lea = bb.insert(idx) { it.lea(inst.value() as Generate) }
-                        inst.update(0, lea)
-                        idx++
-                    }
-                    else -> assert(false) { "always unreachable, inst=${inst.dump()}" }
-                }
-                idx++
-            }
-        }
         replaceAllocLoadStores()
         replaceGEPAndStore()
     }
