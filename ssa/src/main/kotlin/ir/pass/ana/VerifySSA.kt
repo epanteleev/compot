@@ -4,7 +4,7 @@ import common.forEachWith
 import ir.types.Type
 import ir.module.Module
 import ir.instruction.*
-import ir.instruction.lir.CopyByIndex
+import ir.instruction.lir.IndexedLoad
 import ir.instruction.lir.Lea
 import ir.instruction.lir.Move
 import ir.instruction.lir.MoveByIndex
@@ -391,8 +391,8 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
-    override fun visit(copy: CopyByIndex) {
-        assert(CopyByIndex.typeCheck(copy)) {
+    override fun visit(copy: IndexedLoad) {
+        assert(IndexedLoad.typeCheck(copy)) {
             "Instruction '${copy.dump()}' has inconsistent types."
         }
     }

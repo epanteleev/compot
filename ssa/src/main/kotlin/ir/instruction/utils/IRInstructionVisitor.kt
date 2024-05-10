@@ -46,5 +46,5 @@ interface IRInstructionVisitor<T> {
     fun visit(int2ptr: Int2Pointer): T
     fun visit(ptr2Int: Pointer2Int): T
     fun visit(memcpy: Memcpy): T
-    fun visit(copy: CopyByIndex): T
+    fun visit(copy: IndexedLoad): T
 }

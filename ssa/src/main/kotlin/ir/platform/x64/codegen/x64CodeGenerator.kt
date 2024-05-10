@@ -10,9 +10,8 @@ import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.identityHashMapOf
-import ir.Value
 import ir.global.GlobalConstant
-import ir.instruction.lir.CopyByIndex
+import ir.instruction.lir.IndexedLoad
 import ir.instruction.lir.Lea
 import ir.instruction.lir.Move
 import ir.instruction.lir.MoveByIndex
@@ -288,8 +287,11 @@ private class CodeEmitter(private val data: FunctionData,
         MemcpyCodegen(memcpy.length(), asm)(dst, src)
     }
 
-    override fun visit(copy: CopyByIndex) {
-        TODO("Not yet implemented")
+    override fun visit(copy: IndexedLoad) {
+        val dst = valueToRegister.operand(copy)
+        val first = valueToRegister.operand(copy.origin())
+        val second = valueToRegister.operand(copy.index())
+        IndexedLoadCodegen(copy.type(), asm)(dst, first, second)
     }
 
     override fun visit(call: Call) {

@@ -5,10 +5,10 @@ import ir.types.*
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Load private constructor(name: String, private val loadedType: PrimitiveType, ptr: Value):
-    ValueInstruction(name, Type.Ptr, arrayOf(ptr)) {
+class Load private constructor(name: String, loadedType: PrimitiveType, ptr: Value):
+    ValueInstruction(name, loadedType, arrayOf(ptr)) {
     override fun dump(): String {
-        return "%$identifier = $NAME $loadedType ${operand()}"
+        return "%$identifier = $NAME $tp ${operand()}"
     }
 
     fun operand(): Value {
@@ -20,7 +20,7 @@ class Load private constructor(name: String, private val loadedType: PrimitiveTy
     }
 
     override fun type(): PrimitiveType {
-        return loadedType
+        return tp as PrimitiveType
     }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {

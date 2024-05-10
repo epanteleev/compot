@@ -4,7 +4,7 @@ import ir.*
 import ir.Value
 import ir.types.*
 import ir.instruction.*
-import ir.instruction.lir.CopyByIndex
+import ir.instruction.lir.IndexedLoad
 import ir.instruction.lir.Lea
 import ir.instruction.lir.Move
 import ir.instruction.lir.MoveByIndex
@@ -384,8 +384,8 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         add(MoveByIndex.make(dst, base, index))
     }
 
-    override fun copy(index: Value, origin: Value): CopyByIndex {
-        return withOutput { it: Int -> CopyByIndex.make("copy${n(it)}", origin, index) }
+    override fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad {
+        return withOutput { it: Int -> IndexedLoad.make(n(it), loadedType, origin, index) }
     }
 
     fun add(instruction: Instruction): Instruction { //TODO simplify???

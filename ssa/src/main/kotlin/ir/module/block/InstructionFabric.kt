@@ -3,7 +3,7 @@ package ir.module.block
 import ir.*
 import ir.types.*
 import ir.instruction.*
-import ir.instruction.lir.CopyByIndex
+import ir.instruction.lir.IndexedLoad
 import ir.instruction.lir.Lea
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
@@ -53,7 +53,7 @@ interface InternalInstructionFabric {
     fun copy(value: Value): Copy
     fun move(dst: Generate, fromValue: Value)
     fun move(dst: Value, base: Value, index: Value)
-    fun copy(index: Value, origin: Value): CopyByIndex
+    fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad
     fun downStackFrame(callable: Callable)
     fun upStackFrame(callable: Callable)
 }
