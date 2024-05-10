@@ -1,5 +1,6 @@
 package ir.pass.transform.auxiliary
 
+import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
 import ir.module.BasicBlocks
 import ir.module.Module
@@ -14,7 +15,7 @@ internal class ConstantLoading private constructor(private val cfg: BasicBlocks)
                 val inst = instructions[idx]
 
                 for ((i, use) in inst.operands().withIndex()) {
-                    if (use !is GlobalConstant) {
+                    if (use !is GlobalConstant && use !is FunctionSymbol) {
                         continue
                     }
 

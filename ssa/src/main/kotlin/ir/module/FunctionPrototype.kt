@@ -1,5 +1,6 @@
 package ir.module
 
+import ir.global.FunctionSymbol
 import ir.global.GlobalSymbol
 import ir.types.NonTrivialType
 import ir.types.Type
@@ -38,7 +39,7 @@ abstract class AnyFunctionPrototype(val name: String,
 }
 
 class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
-    AnyFunctionPrototype(name, returnType, arguments), GlobalSymbol {
+    AnyFunctionPrototype(name, returnType, arguments), FunctionSymbol {
     override fun toString(): String {
         return "define ${shortName()}"
     }
@@ -64,7 +65,7 @@ class IndirectFunctionPrototype(returnType: Type, arguments: List<Type>):
 }
 
 class ExternFunction internal constructor(name: String, returnType: Type, arguments: List<Type>):
-    AnyFunctionPrototype(name, returnType, arguments), GlobalSymbol {
+    AnyFunctionPrototype(name, returnType, arguments), FunctionSymbol {
     override fun toString(): String {
         return "extern ${shortName()}"
     }

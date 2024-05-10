@@ -114,7 +114,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                     idx++
                     continue
                 }
-                bb.insert(idx) { it.move(pointer.source(), pointer, pointer.index()) }
+                bb.insert(idx) { it.move(pointer.source(), inst.value(), pointer.index()) }
                 bb.remove(idx + 1)
             }
         }

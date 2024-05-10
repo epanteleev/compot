@@ -9,3 +9,5 @@ interface GlobalSymbol: Value {
     fun dump(): String
     override fun type(): NonTrivialType
 }
+
+interface FunctionSymbol: GlobalSymbol

@@ -1,6 +1,7 @@
 package ir.instruction
 
 import ir.Value
+import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
 import ir.types.*
 import ir.instruction.utils.IRInstructionVisitor
@@ -37,7 +38,7 @@ class Lea private constructor(name: String, value: Value):
             require(isAppropriateType(originType)) {
                 "inconsistent type '$name' generate=$value:$originType"
             }
-            require(value is Generate || value is GlobalConstant) {
+            require(value is Generate || value is GlobalConstant || value is FunctionSymbol) {
                 "should be '${Generate.NAME}' or global constant, but '$value'"
             }
 

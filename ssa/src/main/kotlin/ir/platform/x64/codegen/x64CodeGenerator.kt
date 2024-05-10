@@ -499,7 +499,7 @@ private class CodeEmitter(private val data: FunctionData,
         val movIdx = move.index()
         if (movIdx != Value.UNDEF) {
             val index = valueToRegister.operand(movIdx)
-            GetElementPtrCodegen(Type.Ptr, type.size(), sourceType as PrimitiveType, asm)(destination, source, index)
+            MoveByIndexCodegen(type.size(), sourceType as PrimitiveType, asm)(destination, source, index)
         } else {
             MoveCodegen(type as PrimitiveType, asm)(destination, source)
         }
