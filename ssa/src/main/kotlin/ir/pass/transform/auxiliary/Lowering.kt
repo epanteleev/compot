@@ -7,7 +7,7 @@ import ir.module.block.Block
 import ir.types.PrimitiveType
 
 
-class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks) {
+class Lowering private constructor(private val cfg: BasicBlocks) {
     private fun replaceStore(bb: Block, inst: Store, i: Int) {
         val toValue   = inst.pointer() as Generate
         val fromValue = inst.value()
@@ -63,6 +63,9 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                     val pointer = inst.pointer() as GetElementPtr
                     bb.insert(i) { it.move(pointer.source(), inst.value(), pointer.index()) }
                     bb.remove(i + 1)
+                    if (pointer.usedIn().isEmpty()) {
+                        bb.remove(bb.indexOf(pointer))
+                    }
                 }
                 load(gep(genOrAlloc.not(), nop())) (inst) -> {
                     inst as Load
@@ -70,6 +73,9 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
                     val copy = bb.insert(i) { it.indexedLoad(pointer.source(), inst.type(), pointer.index()) }
                     ValueInstruction.replaceUsages(inst, copy)
                     bb.remove(i + 1)
+                    if (pointer.usedIn().isEmpty()) {
+                        bb.remove(bb.indexOf(pointer))
+                    }
                 }
             }
             return 0
@@ -117,7 +123,7 @@ class AllocLoadStoreReplacement private constructor(private val cfg: BasicBlocks
     companion object {
         fun run(module: Module): Module {
             for (fn in module.functions) {
-                AllocLoadStoreReplacement(fn.blocks).pass()
+                Lowering(fn.blocks).pass()
             }
             return module
         }

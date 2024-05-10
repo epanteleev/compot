@@ -43,7 +43,7 @@ abstract class Instruction(protected val operands: Array<Value>) {
         }
     }
 
-    fun finalize() {
+    fun destroy() {
         if (this is ValueInstruction) {
             assert(usedIn().isEmpty()) {
                 "removed useful instruction: removed=$this, users=${usedIn()}"

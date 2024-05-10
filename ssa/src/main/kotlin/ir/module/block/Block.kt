@@ -187,7 +187,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     fun remove(instructionIndex: Int) {
         val removed = instructions.removeAt(instructionIndex)
-        removed.finalize()
+        removed.destroy()
     }
 
     override fun not(value: Value): Not {
