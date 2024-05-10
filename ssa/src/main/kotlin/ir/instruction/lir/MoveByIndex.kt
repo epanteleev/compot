@@ -1,12 +1,11 @@
-package ir.instruction
+package ir.instruction.lir
 
-import ir.Constant
 import ir.Value
+import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
-import ir.types.Type
 
 
-class Move private constructor(destination: Value, source: Value, index: Value):
+class MoveByIndex private constructor(destination: Value, source: Value, index: Value):
     Instruction(arrayOf(destination, source, index)) {
 
     override fun dump(): String {
@@ -57,28 +56,28 @@ class Move private constructor(destination: Value, source: Value, index: Value):
     companion object {
         const val NAME = "move"
 
-        fun make(dst: Value, src: Value): Move {
+        fun make(dst: Value, src: Value): MoveByIndex {
             require(isAppropriateType(dst, src)) {
                 "inconsistent types: toValue=$dst:${dst.type()}, fromValue=$src:${src.type()}"
             }
 
-            return registerUser(Move(dst, src, Value.UNDEF), dst, src) //TODO: fix index
+            return registerUser(MoveByIndex(dst, src, Value.UNDEF), dst, src) //TODO: fix index
         }
 
-        fun make(dst: Value, src: Value, index: Value): Move {
+        fun make(dst: Value, src: Value, index: Value): MoveByIndex {
             require(isAppropriateType(dst, src)) {
                 "inconsistent types: toValue=$dst:${dst.type()}, base=$src:${src.type()}"
             }
 
-            return registerUser(Move(dst, src, index), dst, src, index)
+            return registerUser(MoveByIndex(dst, src, index), dst, src, index)
         }
 
-        fun typeCheck(copy: Move): Boolean {
+        fun typeCheck(copy: MoveByIndex): Boolean {
             return isAppropriateType(copy.destination(), copy.source())
         }
 
         private fun isAppropriateType(toValue: Value, fromValue: Value): Boolean {
-            return true
+            return true //TODO
         }
     }
 }

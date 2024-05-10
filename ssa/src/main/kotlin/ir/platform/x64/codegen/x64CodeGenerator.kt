@@ -12,7 +12,9 @@ import asm.x64.GPRegister.*
 import common.identityHashMapOf
 import ir.Value
 import ir.global.GlobalConstant
-import ir.instruction.Lea
+import ir.instruction.lir.Lea
+import ir.instruction.lir.Move
+import ir.instruction.lir.MoveByIndex
 import ir.module.block.Label
 import ir.utils.OrderedLocation
 import ir.instruction.utils.IRInstructionVisitor
@@ -496,13 +498,17 @@ private class CodeEmitter(private val data: FunctionData,
         val destination    = valueToRegister.operand(move.destination())
 
         val type = move.source().type() as PrimitiveType
+        MoveCodegen(type, asm)(destination, source)
+    }
+
+    override fun visit(move: MoveByIndex) {
+        val source = valueToRegister.operand(move.source())
+        val destination    = valueToRegister.operand(move.destination())
+
+        val type = move.source().type() as PrimitiveType
         val movIdx = move.index()
-        if (movIdx != Value.UNDEF) {
-            val index = valueToRegister.operand(movIdx)
-            MoveByIndexCodegen(type, asm)(destination, source, index)
-        } else {
-            MoveCodegen(type, asm)(destination, source)
-        }
+        val index = valueToRegister.operand(movIdx)
+        MoveByIndexCodegen(type, asm)(destination, source, index)
     }
 
     override fun visit(downStackFrame: DownStackFrame) {

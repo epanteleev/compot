@@ -1,10 +1,12 @@
-package ir.instruction
+package ir.instruction.lir
 
 import ir.Value
+import ir.types.*
+import ir.instruction.Generate
+import ir.instruction.ValueInstruction
+import ir.instruction.utils.IRInstructionVisitor
 import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
-import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
 
 
 class Lea private constructor(name: String, value: Value):

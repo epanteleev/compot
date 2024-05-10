@@ -1,18 +1,15 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
-import ir.instruction.Move
+import ir.instruction.lir.Move
 import ir.platform.x64.CallConvention.POINTER_SIZE
-import ir.platform.x64.CallConvention.isIntRange
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
-import ir.platform.x64.codegen.utils.XmmOperandsVisitorBinaryOp
 import ir.types.FloatingPointType
 import ir.types.IntegerType
 import ir.types.PrimitiveType
-import ir.types.Type
 
 
 class MoveByIndexCodegen(val type: PrimitiveType, val asm: Assembler) :

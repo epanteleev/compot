@@ -5,6 +5,9 @@ import ir.*
 import ir.global.GlobalSymbol
 import ir.instruction.*
 import ir.instruction.Copy
+import ir.instruction.lir.Lea
+import ir.instruction.lir.Move
+import ir.instruction.lir.MoveByIndex
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.BasicBlocks
 import ir.module.FunctionData
@@ -196,7 +199,6 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
     override fun visit(move: Move): Instruction {
         val fromValue = mapUsage<Value>(move.source())
         val toValue   = mapUsage<Value>(move.destination())
-        val index     = mapUsage<Value>(move.index())
 
         return Move.make(fromValue, toValue)
     }
@@ -314,6 +316,14 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         val src = mapUsage<Value>(memcpy.source())
 
         return Memcpy.make(dst, src, memcpy.length())
+    }
+
+    override fun visit(move: MoveByIndex): Instruction {
+        val fromValue = mapUsage<Value>(move.source())
+        val toValue   = mapUsage<Value>(move.destination())
+        val index     = mapUsage<Value>(move.index())
+
+        return MoveByIndex.make(fromValue, toValue, index)
     }
 
     companion object {

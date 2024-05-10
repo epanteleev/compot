@@ -1,6 +1,8 @@
 package ir.instruction.utils
 
 import ir.instruction.*
+import ir.instruction.lir.*
+
 
 interface IRInstructionVisitor<T> {
     fun visit(alloc: Alloc): T
@@ -24,6 +26,7 @@ interface IRInstructionVisitor<T> {
     fun visit(fptosi: FloatToInt): T
     fun visit(copy: Copy): T
     fun visit(move: Move): T
+    fun visit(move: MoveByIndex): T
     fun visit(downStackFrame: DownStackFrame): T
     fun visit(gep: GetElementPtr): T
     fun visit(gfp: GetFieldPtr): T

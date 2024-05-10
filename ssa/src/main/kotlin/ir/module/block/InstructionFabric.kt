@@ -3,6 +3,7 @@ package ir.module.block
 import ir.*
 import ir.types.*
 import ir.instruction.*
+import ir.instruction.lir.Lea
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 
