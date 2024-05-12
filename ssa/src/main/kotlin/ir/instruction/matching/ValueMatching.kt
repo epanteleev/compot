@@ -30,8 +30,16 @@ inline fun gep(crossinline src: ValueMatcher, crossinline idx: ValueMatcher): Va
     it is GetElementPtr && src(it.source()) && idx(it.index())
 }
 
+inline fun gfp(crossinline src: ValueMatcher, crossinline idx: ValueMatcher): ValueMatcher = {
+    it is GetFieldPtr && src(it.source()) && idx(it.index())
+}
+
 inline infix fun ValueMatcher.or(crossinline second: ValueMatcher): ValueMatcher = {
     this(it) || second(it)
+}
+
+inline infix fun ValueMatcher.and(crossinline second: ValueMatcher): ValueMatcher = {
+    this(it) && second(it)
 }
 
 operator fun ValueMatcher.not(): ValueMatcher = { !this(it) }

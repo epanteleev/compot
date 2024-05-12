@@ -4,10 +4,7 @@ import common.forEachWith
 import ir.types.Type
 import ir.module.Module
 import ir.instruction.*
-import ir.instruction.lir.IndexedLoad
-import ir.instruction.lir.Lea
-import ir.instruction.lir.Move
-import ir.instruction.lir.MoveByIndex
+import ir.instruction.lir.*
 import ir.utils.CreationInfo
 import ir.module.block.Block
 import ir.module.block.Label
@@ -400,6 +397,24 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     override fun visit(move: MoveByIndex) {
         assert(MoveByIndex.typeCheck(move)) {
             "Instruction '${move.dump()}' has inconsistent types."
+        }
+    }
+
+    override fun visit(store: StoreOnStack) {
+        assert(StoreOnStack.typeCheck(store)) {
+            "Instruction '${store.dump()}' has inconsistent types."
+        }
+    }
+
+    override fun visit(instruction: LoadFromStack) {
+        assert(LoadFromStack.typeCheck(instruction)) {
+            "Instruction '${instruction.dump()}' has inconsistent types."
+        }
+    }
+
+    override fun visit(instruction: LeaStack) {
+        assert(LeaStack.typeCheck(instruction)) {
+            "Instruction '${instruction.dump()}' has inconsistent types."
         }
     }
 

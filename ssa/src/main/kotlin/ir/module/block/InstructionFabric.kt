@@ -3,8 +3,7 @@ package ir.module.block
 import ir.*
 import ir.types.*
 import ir.instruction.*
-import ir.instruction.lir.IndexedLoad
-import ir.instruction.lir.Lea
+import ir.instruction.lir.*
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 
@@ -47,13 +46,16 @@ interface InstructionFabric {
 }
 
 interface InternalInstructionFabric {
-    fun gen(ty: PrimitiveType): Generate
+    fun gen(ty: NonTrivialType): Generate
     fun lea(generate: Value): Lea
     fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi
     fun copy(value: Value): Copy
     fun move(dst: Generate, fromValue: Value)
     fun move(dst: Value, base: Value, index: Value)
     fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad
+    fun storeOnStack(destination: Value, index: Value, source: Value)
+    fun loadFromStack(origin: Value, loadedType: PrimitiveType, index: Value): LoadFromStack
+    fun leaStack(origin: Value, loadedType: PrimitiveType, index: Value): LeaStack
     fun downStackFrame(callable: Callable)
     fun upStackFrame(callable: Callable)
 }

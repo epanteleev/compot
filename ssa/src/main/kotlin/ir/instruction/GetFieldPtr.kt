@@ -24,12 +24,12 @@ class GetFieldPtr private constructor(name: String, val basicType: AggregateType
         return operands[0]
     }
 
-    fun index(): Value {
+    fun index(): IntegerConstant {
         assert(operands.size == 2) {
             "size should be 2 in $this instruction"
         }
 
-        return operands[1]
+        return operands[1] as IntegerConstant
     }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {

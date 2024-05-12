@@ -1,25 +1,38 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
-import ir.types.*
-import ir.instruction.lir.Move
-import ir.platform.x64.CallConvention.POINTER_SIZE
-import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.CallConvention.temp2
+import ir.types.PrimitiveType
+import ir.instruction.lir.StoreOnStack
 import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
+import ir.types.FloatingPointType
+import ir.types.IntegerType
 
 
-class MoveByIndexCodegen(val type: PrimitiveType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
+class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
     private val size = type.size()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {
             is FloatingPointType -> {
-                if (dst is GPRegister && source is XmmRegister && index is GPRegister) {
-                    asm.movf(size, source, Address.from(dst, 0, index, size))
-                } else {
-                    default(dst, source, index)
+                when {
+                    dst is Address && source is XmmRegister && index is GPRegister -> {
+                        when (dst) {
+                            is Address2 -> {
+                                asm.movf(size, source, Address.from(dst.base, dst.offset, index, size))
+                            }
+                            else -> default(dst, source, index)
+                        }
+                    }
+                    dst is Address && source is XmmRegister && index is Imm32 -> {
+                        when (dst) {
+                            is Address2 -> {
+                                asm.movf(size, source, Address.from(dst.base, dst.offset + index.value().toInt() * size))
+                            }
+                            else -> default(dst, source, index)
+                        }
+                    }
+                    else -> default(dst, source, index)
                 }
             }
             is IntegerType -> ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)
@@ -28,11 +41,16 @@ class MoveByIndexCodegen(val type: PrimitiveType, val asm: Assembler) : GPOperan
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        asm.mov(size, first, Address.from(dst, 0, second, size))
+        TODO("Not yet implemented")
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
+        when (dst) {
+            is Address2 -> {
+                asm.mov(size, first, Address.from(dst.base, dst.offset, second, size))
+            }
+            else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
+        }
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
@@ -56,7 +74,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, val asm: Assembler) : GPOperan
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        asm.mov(size, first, Address.from(dst, second.value().toInt() * size))
+        TODO("Not yet implemented")
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -72,9 +90,12 @@ class MoveByIndexCodegen(val type: PrimitiveType, val asm: Assembler) : GPOperan
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        asm.mov(POINTER_SIZE, dst, temp1)
-        asm.mov(size, first, temp2)
-        asm.mov(size, temp2, Address.from(temp1, second.value().toInt() * size))
+        when (dst) {
+            is Address2 -> {
+                asm.mov(size, first, Address.from(dst.base, dst.offset + second.value().toInt() * size))
+            }
+            else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
+        }
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
@@ -86,10 +107,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, val asm: Assembler) : GPOperan
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        val disp = second.value() * size
-
-        asm.mov(size, Address.from(first, disp.toInt()), temp1)
-        asm.mov(size, temp1, dst)
+        TODO("Not yet implemented")
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
@@ -105,6 +123,6 @@ class MoveByIndexCodegen(val type: PrimitiveType, val asm: Assembler) : GPOperan
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {
-        throw RuntimeException("Internal error: '${Move.NAME}' dst=$dst, first=$first, second=$second")
+        throw RuntimeException("Internal error: '${StoreOnStack.NAME}' dst=$dst, first=$first, second=$second")
     }
 }

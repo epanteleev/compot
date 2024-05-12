@@ -1,5 +1,4 @@
 import common.CommonCTest
-import common.CommonTest
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -37,7 +36,7 @@ class ShlangTests: CommonCTest() {
     }
 
     @Test
-    fun testArrayAssign() {
+    fun testDiscriminant() {
         val result = runCTest("shlang/discriminant1", listOf("runtime/runtime.c"))
         assertEquals("1.000000\n", result.output)
         assertReturnCode(result, 0)

@@ -1,10 +1,17 @@
 package ir.pass.transform.auxiliary
 
+import asm.x64.Imm32
+import ir.Constant
+import ir.SignedIntegerConstant
+import ir.UnsignedIntegerConstant
 import ir.module.*
 import ir.instruction.*
 import ir.instruction.matching.*
 import ir.module.block.Block
+import ir.types.ArrayType
 import ir.types.PrimitiveType
+import ir.types.StructType
+import ir.types.Type
 
 
 class Lowering private constructor(private val cfg: BasicBlocks) {
@@ -16,13 +23,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
     }
 
     private fun replaceAlloc(bb: Block, inst: Alloc, i: Int): Generate {
-        val allocatedType = inst.allocatedType
-        assert(inst.allocatedType is PrimitiveType) {
-            "should be, but allocatedType=${allocatedType}"
-        }
-        allocatedType as PrimitiveType
-        val gen = bb.insert(i) { it.gen(allocatedType) }
-
+        val gen = bb.insert(i) { it.gen(inst.allocatedType) }
         ValueInstruction.replaceUsages(inst, gen)
         bb.remove(i + 1)
         return gen
@@ -54,26 +55,124 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         }
     }
 
+    private fun replaceGepToLea() {
+        fun closure(bb: Block, inst: Instruction, i: Int): Int {
+            if (inst !is ValueInstruction) {
+                return 0
+            }
+            when {
+                gep(generate(), nop()) (inst) -> {
+                    inst as GetElementPtr
+                    val lea = bb.insert(i) { it.leaStack(inst.source(), inst.basicType, inst.index()) }
+                    ValueInstruction.replaceUsages(inst, lea)
+                    bb.remove(i + 1)
+                }
+                gfp(generate(), nop()) (inst) -> {
+                    inst as GetFieldPtr
+
+                    when (val base = inst.basicType) {
+                        is ArrayType -> {
+                            val lea = bb.insert(i) {
+                                it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index())
+                            }
+                            ValueInstruction.replaceUsages(inst, lea)
+                            bb.remove(i + 1)
+                        }
+                        is StructType -> {
+                            val lea = bb.insert(i) {
+                                it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index().toInt())))
+                            }
+                            ValueInstruction.replaceUsages(inst, lea)
+                            bb.remove(i + 1)
+                        }
+                    }
+                }
+            }
+            return 0
+        }
+
+        for (bb in cfg) {
+            bb.forEachInstruction { i, inst -> closure(bb, inst, i) }
+        }
+    }
     private fun replaceGEPAndStore() {
         fun closure(bb: Block, inst: Instruction, i: Int): Int {
-            val genOrAlloc = generate() or alloc()
             when {
-                store(gep(genOrAlloc.not(), nop()), nop()) (inst) -> {
+                store(gep(generate().not(), nop()), nop()) (inst) -> {
                     inst as Store
                     val pointer = inst.pointer() as GetElementPtr
                     bb.insert(i) { it.move(pointer.source(), inst.value(), pointer.index()) }
                     bb.remove(i + 1)
-                    if (pointer.usedIn().isEmpty()) {
+                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.remove(bb.indexOf(pointer))
                     }
                 }
-                load(gep(genOrAlloc.not(), nop())) (inst) -> {
+                store(gfp(generate().not(), nop()), nop()) (inst) -> {
+                    inst as Store
+                    val pointer = inst.pointer() as GetFieldPtr
+
+                    bb.insert(i) { it.move(pointer.source(), inst.value(), pointer.index()) }
+
+                    bb.remove(i + 1)
+                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
+                        bb.remove(bb.indexOf(pointer))
+                    }
+                }
+                store(gep(generate(), nop()), nop()) (inst) -> {
+                    inst as Store
+                    val pointer = inst.pointer() as GetElementPtr
+                    bb.insert(i) { it.storeOnStack(pointer.source(), pointer.index(), inst.value()) }
+                    bb.remove(i + 1)
+                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
+                        bb.remove(bb.indexOf(pointer))
+                    }
+                }
+                store(gfp(generate(), nop()), nop()) (inst) -> {
+                    inst as Store
+                    val pointer = inst.pointer() as GetFieldPtr
+                    bb.insert(i) { it.storeOnStack(pointer.source(), pointer.index(), inst.value()) }
+                    bb.remove(i + 1)
+                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
+                        bb.remove(bb.indexOf(pointer))
+                    }
+                }
+                load(gep(generate().not(), nop())) (inst) -> {
                     inst as Load
                     val pointer = inst.operand() as GetElementPtr
                     val copy = bb.insert(i) { it.indexedLoad(pointer.source(), inst.type(), pointer.index()) }
                     ValueInstruction.replaceUsages(inst, copy)
                     bb.remove(i + 1)
-                    if (pointer.usedIn().isEmpty()) {
+                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
+                        bb.remove(bb.indexOf(pointer))
+                    }
+                }
+                load(gfp(generate().not(), nop())) (inst) -> {
+                    inst as Load
+                    val pointer = inst.operand() as GetFieldPtr
+                    val copy = bb.insert(i) { it.indexedLoad(pointer.source(), inst.type(), pointer.index()) }
+                    ValueInstruction.replaceUsages(inst, copy)
+                    bb.remove(i + 1)
+                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
+                        bb.remove(bb.indexOf(pointer))
+                    }
+                }
+                load(gep(generate(), nop())) (inst) -> {
+                    inst as Load
+                    val pointer = inst.operand() as GetElementPtr
+                    val copy = bb.insert(i) { it.loadFromStack(pointer.source(), inst.type(), pointer.index()) }
+                    ValueInstruction.replaceUsages(inst, copy)
+                    bb.remove(i + 1)
+                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
+                        bb.remove(bb.indexOf(pointer))
+                    }
+                }
+                load(gfp(generate(), nop())) (inst) -> {
+                    inst as Load
+                    val pointer = inst.operand() as GetFieldPtr
+                    val copy = bb.insert(i) { it.loadFromStack(pointer.source(), inst.type(), pointer.index()) }
+                    ValueInstruction.replaceUsages(inst, copy)
+                    bb.remove(i + 1)
+                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.remove(bb.indexOf(pointer))
                     }
                 }
@@ -88,7 +187,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
     private fun replaceEscaped() {
         fun closure(bb: Block, inst: Instruction, i: Int): Int {
             when {
-                inst is Alloc && alloc(primitive()) (inst) -> replaceAlloc(bb, inst, i)
+                inst is Alloc && alloc() (inst) -> replaceAlloc(bb, inst, i)
                 store(nop(), generate()) (inst) -> {
                     inst as Store
                     val lea = bb.insert(i) { it.lea(inst.value() as Generate) }
@@ -118,6 +217,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         replaceEscaped()
         replaceAllocLoadStores()
         replaceGEPAndStore()
+        replaceGepToLea()
     }
 
     companion object {

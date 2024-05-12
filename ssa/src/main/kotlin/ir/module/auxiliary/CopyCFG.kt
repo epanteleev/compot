@@ -5,10 +5,7 @@ import ir.*
 import ir.global.GlobalSymbol
 import ir.instruction.*
 import ir.instruction.Copy
-import ir.instruction.lir.IndexedLoad
-import ir.instruction.lir.Lea
-import ir.instruction.lir.Move
-import ir.instruction.lir.MoveByIndex
+import ir.instruction.lir.*
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.BasicBlocks
 import ir.module.FunctionData
@@ -317,6 +314,27 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         val toValue   = mapUsage<Value>(copy.index())
 
         return IndexedLoad.make(copy.name(), copy.type(), fromValue, toValue)
+    }
+
+    override fun visit(store: StoreOnStack): Instruction {
+        val source = mapUsage<Value>(store.source())
+        val index  = mapUsage<Value>(store.index())
+        val dest   = mapUsage<Value>(store.destination())
+        return StoreOnStack.make(dest, index, source)
+    }
+
+    override fun visit(instruction: LoadFromStack): Instruction {
+        val origin = mapUsage<Value>(instruction.origin())
+        val index  = mapUsage<Value>(instruction.index())
+
+        return LoadFromStack.make(instruction.name(), instruction.type(), origin, index)
+    }
+
+    override fun visit(instruction: LeaStack): Instruction {
+        val origin = mapUsage<Value>(instruction.origin())
+        val index  = mapUsage<Value>(instruction.index())
+
+        return LeaStack.make(instruction.name(), instruction.type(), origin, index)
     }
 
     override fun visit(memcpy: Memcpy): Instruction {

@@ -78,12 +78,24 @@ interface Constant: Value {
     }
 }
 
-interface IntegerConstant: Constant
+interface IntegerConstant: Constant {
+    fun toInt(): Int {
+        return when (val c = this) {
+            is UnsignedIntegerConstant -> c.value().toInt()
+            is SignedIntegerConstant   -> c.value().toInt()
+            else                        -> error("Unexpected index type")
+        }
+    }
+}
 
-interface SignedIntegerConstant: IntegerConstant
+interface SignedIntegerConstant: IntegerConstant {
+    fun value(): Long
+}
+
 interface UnsignedIntegerConstant: IntegerConstant {
     fun value(): ULong
 }
+
 interface FloatingPointConstant: Constant
 
 
@@ -104,6 +116,10 @@ data class U8Value(val u8: Byte): UnsignedIntegerConstant {
 data class I8Value(val i8: Byte): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I8
+    }
+
+    override fun value(): Long {
+        return i8.toLong()
     }
 
     override fun toString(): String {
@@ -130,6 +146,10 @@ data class I16Value(val i16: Short): SignedIntegerConstant {
         return Type.I16
     }
 
+    override fun value(): Long {
+        return i16.toLong()
+    }
+
     override fun toString(): String {
         return i16.toString()
     }
@@ -154,6 +174,10 @@ data class I32Value(val i32: Int): SignedIntegerConstant {
         return Type.I32
     }
 
+    override fun value(): Long {
+        return i32.toLong()
+    }
+
     override fun toString(): String {
         return i32.toString()
     }
@@ -176,6 +200,10 @@ data class U64Value(val u64: Long): UnsignedIntegerConstant {
 data class I64Value(val i64: Long): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I64
+    }
+
+    override fun value(): Long {
+        return i64
     }
 
     override fun toString(): String {

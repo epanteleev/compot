@@ -11,10 +11,8 @@ import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.identityHashMapOf
 import ir.global.GlobalConstant
-import ir.instruction.lir.IndexedLoad
+import ir.instruction.lir.*
 import ir.instruction.lir.Lea
-import ir.instruction.lir.Move
-import ir.instruction.lir.MoveByIndex
 import ir.module.block.Label
 import ir.utils.OrderedLocation
 import ir.instruction.utils.IRInstructionVisitor
@@ -294,6 +292,30 @@ private class CodeEmitter(private val data: FunctionData,
         IndexedLoadCodegen(copy.type(), asm)(dst, first, second)
     }
 
+    override fun visit(store: StoreOnStack) {
+        val pointerOperand = valueToRegister.operand(store.destination())
+        val value = valueToRegister.operand(store.source())
+        val index = valueToRegister.operand(store.index())
+
+        StoreOnStackCodegen(store.source().type() as PrimitiveType, asm)(pointerOperand, value, index)
+    }
+
+    override fun visit(instruction: LoadFromStack) {
+        val origin = valueToRegister.operand(instruction.origin())
+        val index = valueToRegister.operand(instruction.index())
+        val dst = valueToRegister.operand(instruction)
+
+        LoadFromStackCodegen(instruction.type(), asm)(dst, origin, index)
+    }
+
+    override fun visit(lea: LeaStack) {
+        val sourceOperand = valueToRegister.operand(lea.origin())
+        val index         = valueToRegister.operand(lea.index())
+        val dest          = valueToRegister.operand(lea)
+
+        GetElementPtrCodegenForAlloc(Type.Ptr, lea.type(), asm)(dest, sourceOperand, index)
+    }
+
     override fun visit(call: Call) {
         emitCall(call)
     }
@@ -329,7 +351,7 @@ private class CodeEmitter(private val data: FunctionData,
         val value          = valueToRegister.operand(store.value())
         val type = store.value().type()
 
-        StoreCodegen(type as PrimitiveType, asm)( value, pointerOperand)
+        StoreCodegen(type as PrimitiveType, asm)(value, pointerOperand)
     }
 
     override fun visit(load: Load) {

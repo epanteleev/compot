@@ -4,10 +4,7 @@ import ir.*
 import ir.Value
 import ir.types.*
 import ir.instruction.*
-import ir.instruction.lir.IndexedLoad
-import ir.instruction.lir.Lea
-import ir.instruction.lir.Move
-import ir.instruction.lir.MoveByIndex
+import ir.instruction.lir.*
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 
@@ -360,7 +357,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return withOutput { it: Int -> Phi.makeUncompleted("phi${n(it)}", ty, incoming, blocks) }
     }
 
-    override fun gen(ty: PrimitiveType): Generate {
+    override fun gen(ty: NonTrivialType): Generate {
         return withOutput { it: Int -> Generate.make("gen${n(it)}", ty) }
     }
 
@@ -387,6 +384,19 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     override fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad {
         return withOutput { it: Int -> IndexedLoad.make(n(it), loadedType, origin, index) }
     }
+
+    override fun storeOnStack(destination: Value, index: Value, source: Value) {
+        add(StoreOnStack.make(destination, index, source))
+    }
+
+    override fun loadFromStack(origin: Value, loadedType: PrimitiveType, index: Value): LoadFromStack {
+        return withOutput { it: Int -> LoadFromStack.make(n(it), loadedType, origin, index) }
+    }
+
+    override fun leaStack(origin: Value, loadedType: PrimitiveType, index: Value): LeaStack {
+        return withOutput { it: Int -> LeaStack.make(n(it), loadedType, origin, index) }
+    }
+
 
     fun add(instruction: Instruction): Instruction { //TODO simplify???
         fun makeEdge(to: Block) {

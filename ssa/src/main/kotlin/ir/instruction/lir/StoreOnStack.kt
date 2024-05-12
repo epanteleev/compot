@@ -3,10 +3,12 @@ package ir.instruction.lir
 import ir.Value
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
+import ir.types.AggregateType
+import ir.types.ArithmeticType
+import ir.types.PrimitiveType
 
-
-class MoveByIndex private constructor(destination: Value, source: Value, index: Value):
-    Instruction(arrayOf(destination, source, index)) {
+class StoreOnStack private constructor(destination: Value, index: Value, source: Value):
+    Instruction(arrayOf(destination, index, source)) {
 
     override fun dump(): String {
         val fromValue = source()
@@ -18,7 +20,7 @@ class MoveByIndex private constructor(destination: Value, source: Value, index: 
             "size should be 2 in $this instruction"
         }
 
-        return operands[1]
+        return operands[2]
     }
 
     fun destination(): Value {
@@ -34,7 +36,7 @@ class MoveByIndex private constructor(destination: Value, source: Value, index: 
             "size should be 2 in $this instruction"
         }
 
-        return operands[2]
+        return operands[1]
     }
 
     override fun equals(other: Any?): Boolean {
@@ -54,22 +56,22 @@ class MoveByIndex private constructor(destination: Value, source: Value, index: 
     }
 
     companion object {
-        const val NAME = "move"
+        const val NAME = "movst"
 
-        fun make(dst: Value, src: Value, index: Value): MoveByIndex {
-            require(isAppropriateType(dst, src)) {
+        fun make(dst: Value, index: Value, src: Value): StoreOnStack {
+            require(isAppropriateType(dst, index, src)) {
                 "inconsistent types: toValue=$dst:${dst.type()}, base=$src:${src.type()}"
             }
 
-            return registerUser(MoveByIndex(dst, src, index), dst, src, index)
+            return registerUser(StoreOnStack(dst, index, src), dst, index, src)
         }
 
-        fun typeCheck(copy: MoveByIndex): Boolean {
-            return isAppropriateType(copy.destination(), copy.source())
+        fun typeCheck(copy: StoreOnStack): Boolean {
+            return isAppropriateType(copy.destination(), copy.index(), copy.source())
         }
 
-        private fun isAppropriateType(toValue: Value, fromValue: Value): Boolean {
-            return true //TODO
+        private fun isAppropriateType(toValue: Value, index: Value, fromValue: Value): Boolean {
+            return toValue.type() is AggregateType && index.type() is ArithmeticType && fromValue.type() is PrimitiveType
         }
     }
 }
