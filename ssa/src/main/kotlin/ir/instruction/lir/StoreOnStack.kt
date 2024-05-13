@@ -12,7 +12,7 @@ class StoreOnStack private constructor(destination: Value, index: Value, source:
 
     override fun dump(): String {
         val fromValue = source()
-        return "$NAME ${fromValue.type()} ${destination()}:${index()} $fromValue"
+        return "$NAME ${fromValue.type()} ${destination()}: ${index().type()} ${index()} $fromValue"
     }
 
     fun source(): Value {

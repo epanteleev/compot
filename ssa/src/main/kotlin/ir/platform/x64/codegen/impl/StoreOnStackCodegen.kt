@@ -24,15 +24,19 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
                             else -> default(dst, source, index)
                         }
                     }
-                    dst is Address && source is XmmRegister && index is Imm32 -> {
+                    dst is Address && source is XmmRegister && index is Imm -> {
+                        val index = index as ImmInt
                         when (dst) {
                             is Address2 -> {
-                                asm.movf(size, source, Address.from(dst.base, dst.offset + index.value().toInt() * size))
+                                asm.movf(size, source, Address.from(dst.base, dst.offset + index.asImm32().value().toInt() * size))
                             }
                             else -> default(dst, source, index)
                         }
                     }
-                    else -> default(dst, source, index)
+                    else -> {
+                        println("${index.javaClass}")
+                        default(dst, source, index)
+                    }
                 }
             }
             is IntegerType -> ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)

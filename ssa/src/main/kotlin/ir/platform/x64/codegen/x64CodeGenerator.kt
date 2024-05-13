@@ -313,7 +313,7 @@ private class CodeEmitter(private val data: FunctionData,
         val index         = valueToRegister.operand(lea.index())
         val dest          = valueToRegister.operand(lea)
 
-        GetElementPtrCodegenForAlloc(Type.Ptr, lea.type(), asm)(dest, sourceOperand, index)
+        GetElementPtrCodegenForAlloc(Type.Ptr, lea.loadedType, asm)(dest, sourceOperand, index)
     }
 
     override fun visit(call: Call) {

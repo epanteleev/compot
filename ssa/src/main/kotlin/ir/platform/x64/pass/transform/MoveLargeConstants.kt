@@ -7,6 +7,8 @@ import asm.x64.ImmInt.Companion.canBeImm32
 import ir.global.GlobalConstant
 import ir.global.GlobalSymbol
 import ir.global.GlobalValue
+import ir.instruction.lir.LoadFromStack
+import ir.instruction.lir.StoreOnStack
 import ir.module.Module
 import ir.module.block.Block
 import ir.types.PrimitiveType
@@ -15,7 +17,7 @@ import ir.module.SSAModule
 import ir.platform.x64.CallConvention
 
 
-// Move large constant to data segment
+// Move large constant to constant pool
 class MoveLargeConstants private constructor(val functions: List<FunctionData>, private val constants: MutableSet<GlobalSymbol>) {
     private var constantIndex = 0
 

@@ -1,0 +1,128 @@
+extern void @printFloatArray(ptr, i32)
+
+define void @bubble_sort(%a: ptr, %n: i32) {
+entry:
+  %a.addr = alloc ptr
+  %n.addr = alloc i32
+  %i      = alloc i32
+  %j      = alloc i32
+  %tmp    = alloc f32
+  store ptr %a.addr, ptr %a
+  store ptr %n.addr, i32 %n
+  store ptr %i, i32 0
+  store ptr %j, i32 0
+  br label %for.cond
+
+for.cond:
+  %0 = load i32 %i
+  %1 = load i32 %n.addr
+  %cmp = icmp lt i32 %0, %1
+  br u1 %cmp label %for.body, label %for.end20
+
+for.body:
+  store ptr %j, i32 0
+  br label %for.cond1
+
+for.cond1:
+  %2 = load i32 %j
+  %3 = load i32 %n.addr
+  %4 = load i32 %i
+  %sub = sub i32 %3, %4
+  %sub2 = sub i32 %sub, 1
+  %cmp3 = icmp lt i32 %2, %sub2
+  br u1 %cmp3 label %for.body4, label %for.end
+
+for.body4:
+  %5 = load ptr %a.addr
+  %6 = load i32 %j
+  %idxprom = sext i32 %6 to i64
+  %arrayidx = gep f32, ptr %5, i64 %idxprom
+  %7 = load f32 %arrayidx
+  %8 = load ptr %a.addr
+  %9 = load i32 %j
+  %add = add i32 %9, 1
+  %idxprom5 = sext i32 %add to i64
+  %arrayidx6 = gep f32, ptr %8, i64 %idxprom5
+  %10 = load f32 %arrayidx6
+  %cmp7 = fcmp ugt f32 %7, %10
+  br u1 %cmp7 label %if.then, label %if.end
+
+if.then:
+  %11 = load ptr  %a.addr
+  %12 = load i32  %j
+  %idxprom8 = sext i32 %12 to i64
+  %arrayidx9 = gep f32, ptr %11, i64 %idxprom8
+  %13 = load f32  %arrayidx9
+  store ptr %tmp, f32 %13
+  %14 = load ptr %a.addr
+  %15 = load i32 %j
+  %add10 = add i32 %15, 1
+  %idxprom11 = sext i32 %add10 to i64
+  %arrayidx12 = gep f32, ptr %14, i64 %idxprom11
+  %16 = load f32 %arrayidx12
+  %17 = load ptr %a.addr
+  %18 = load i32 %j
+  %idxprom13 = sext i32 %18 to i64
+  %arrayidx14 = gep f32, ptr %17, i64 %idxprom13
+  store ptr %arrayidx14, f32 %16
+  %19 = load f32 %tmp
+  %20 = load ptr %a.addr
+  %21 = load i32 %j
+  %add15 = add i32 %21, 1
+  %idxprom16 = sext i32 %add15 to i64
+  %arrayidx17 = gep f32, ptr %20, i64 %idxprom16
+  store ptr %arrayidx17, f32 %19
+  br label %if.end
+
+if.end:
+  br label %for.inc
+
+for.inc:
+  %22 = load i32 %j
+  %inc = add i32 %22, 1
+  store ptr %j, i32 %inc
+  br label %for.cond1
+
+for.end:
+  br label %for.inc18
+
+for.inc18:
+  %23 = load i32 %i
+  %inc19 = add i32 %23, 1
+  store ptr %i, i32 %inc19
+  br label %for.cond
+
+for.end20:
+  ret void
+}
+
+; arr[] = {4, 2, 0, 9, 90, 45, 55, 89, 4, 23}
+define i32 @main() {
+entry:
+  %retval = alloc f32
+  %arr = alloc <f32x10>
+  store ptr %retval, f32 0
+  %arrayidx = gep f32, ptr %arr, i64 0
+  store ptr %arrayidx, f32 4
+  %arrayidx1 = gep f32, ptr %arr, i64 1
+  store ptr %arrayidx1, f32 2
+  %arrayidx2 = gep f32, ptr %arr, i64 2
+  store ptr %arrayidx2, f32 0
+  %arrayidx3 = gep f32, ptr %arr, i64 3
+  store ptr %arrayidx3, f32 9
+  %arrayidx4 = gep f32, ptr %arr, i64 4
+  store ptr %arrayidx4, f32 90
+  %arrayidx5 = gep f32, ptr %arr, i64 5
+  store ptr %arrayidx5, f32 45
+  %arrayidx6 = gep f32, ptr %arr, i64 6
+  store ptr %arrayidx6, f32 55
+  %arrayidx7 = gep f32, ptr %arr, i64 7
+  store ptr %arrayidx7, f32 89
+  %arrayidx8 = gep f32, ptr %arr, i64 8
+  store ptr %arrayidx8, f32 4
+  %arrayidx9 = gep f32, ptr %arr, i64 9
+  store ptr %arrayidx9, f32 23
+  call void @bubble_sort(%arrayidx: ptr, 10: i32) 
+  call void @printFloatArray(%arrayidx: ptr, 10: i32)
+  ret i32 0
+}

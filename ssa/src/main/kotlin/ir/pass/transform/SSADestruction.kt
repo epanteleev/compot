@@ -12,7 +12,7 @@ class SSADestruction(module: Module): TransformPass(module) {
     override fun name(): String = "ssa-destruction"
     override fun run(): Module {
         val transformed = ConstantLoading.run(
-            Lowering.run(MoveLargeConstants.run(ReplaceFloatNeg.run(FunctionsIsolation.run(module))))
+            MoveLargeConstants.run(Lowering.run(ReplaceFloatNeg.run(FunctionsIsolation.run(module))))
         )
         return LModule(transformed.functions, transformed.externFunctions, transformed.globals, transformed.types)
     }

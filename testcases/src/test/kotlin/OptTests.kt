@@ -28,6 +28,12 @@ abstract class OptTests: CommonIrTest() {
         val result = runTest("opt_ir/memcpy", listOf("runtime/runtime.c"), options())
         assertEquals("Hello world", result.output)
     }
+
+    @Test
+    fun testsBubbleSortFloats() {
+        val result = runTest("opt_ir/bubble_sort_fp", listOf("runtime/runtime.c"), options())
+        assert(result, "0.000000 2.000000 4.000000 4.000000 9.000000 23.000000 45.000000 55.000000 89.000000 90.000000 \n")
+    }
 }
 
 class OptO1Tests: OptTests() {
