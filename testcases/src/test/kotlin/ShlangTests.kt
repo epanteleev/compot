@@ -134,4 +134,10 @@ class ShlangTests: CommonCTest() {
         val result = runOptimizedCTest("shlang/fibonacci1", listOf("runtime/runtime.c"))
         assert(result, "55\n")
     }
+
+    @Test
+    fun testForLoop0() {
+        val result = runCTest("shlang/forLoop0", listOf("runtime/runtime.c"))
+        assert(result, "Done\n")
+    }
 }
