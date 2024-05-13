@@ -1,0 +1,15 @@
+extern i32 @printf(ptr)
+
+@str = constant <i8 x 12> "Hello world!"
+
+define i32 @main() {
+entry:
+  %retAdr = alloc i32
+  store ptr %retAdr, i32 0
+  %adr = alloc <i8 x 13>
+  %first = gep i8, ptr %adr, i32 0
+  memcpy ptr %first, ptr @str, u32 13
+  %0x0 = call i32 @printf(%first: ptr)
+  %ret = load i32 %retAdr
+  ret i32 %ret
+}

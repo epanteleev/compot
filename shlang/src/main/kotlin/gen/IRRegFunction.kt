@@ -43,26 +43,24 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitDeclarator(decl: Declarator) {
+    private fun visitDeclarator(decl: Declarator): Alloc {
         val type = typeHolder[decl.name()]
         val varName = decl.name()
 
         val irType = toIRType<NonTrivialType>(type)
         val rvalueAdr = ir().alloc(irType)
         varStack[varName] = rvalueAdr
+        return rvalueAdr
     }
 
     private fun visitAssignmentDeclarator(decl: AssignmentDeclarator) {
         val type = typeHolder[decl.name()]
-        val varName = decl.name()
-
-        val irType = toIRType<NonTrivialType>(type)
-        val lvalueAdr = ir().alloc(irType)
-        varStack[varName] = lvalueAdr
 
         val rvalue = visitExpression(decl.rvalue, true)
         val commonType = toIRType<NonTrivialType>(type)
         val convertedRvalue = ir().convertToType(rvalue, commonType)
+
+        val lvalueAdr = visitDeclarator(decl.declarator)
         ir().store(lvalueAdr, convertedRvalue)
     }
 
@@ -251,8 +249,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     }
 
     private fun visitArrayAccess(arrayAccess: ArrayAccess, isRvalue: Boolean): Value {
-        val array = visitExpression(arrayAccess.primary, true)
         val index = visitExpression(arrayAccess.expr, true)
+        val array = visitExpression(arrayAccess.primary, true)
 
         val arrayType = arrayAccess.resolveType(typeHolder)
         val elementType = toIRType<PrimitiveType>(arrayType)
@@ -328,8 +326,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     private fun visitBinary(binop: BinaryOp, isRvalue: Boolean): Value {
         return when (binop.opType) {
             BinaryOpType.ADD -> {
-                val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
+                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
@@ -337,8 +335,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             }
 
             BinaryOpType.SUB -> {
-                val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
+                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
@@ -346,8 +344,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             }
 
             BinaryOpType.ASSIGN -> {
-                val left = visitExpression(binop.left, false)
                 val right = visitExpression(binop.right, true)
+                val left = visitExpression(binop.left, false)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val rightConverted = ir().convertToType(right, commonType)
                 ir().store(left, rightConverted)
@@ -355,8 +353,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             }
 
             BinaryOpType.MUL -> {
-                val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
+                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
@@ -364,8 +362,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             }
 
             BinaryOpType.NE -> {
-                val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
+                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
@@ -374,8 +372,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             }
 
             BinaryOpType.GT -> {
-                val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
+                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
@@ -383,8 +381,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 ir().convertToType(cmp, Type.U1)
             }
             BinaryOpType.LT -> {
-                val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
+                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
@@ -393,8 +391,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             }
 
             BinaryOpType.LE -> {
-                val left = visitExpression(binop.left, true)
                 val right = visitExpression(binop.right, true)
+                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val leftConverted = ir().convertToType(left, commonType)
                 val rightConverted = ir().convertToType(right, commonType)
