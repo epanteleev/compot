@@ -138,6 +138,24 @@ class ShlangTests: CommonCTest() {
     @Test
     fun testForLoop0() {
         val result = runCTest("shlang/forLoop0", listOf("runtime/runtime.c"))
-        assert(result, "Done\n")
+        assert(result, "Done")
+    }
+
+    @Test
+    fun testForOptimizedLoop0() {
+        val result = runOptimizedCTest("shlang/forLoop0", listOf("runtime/runtime.c"))
+        assert(result, "Done")
+    }
+
+    @Test
+    fun testForLoop1() {
+        val result = runCTest("shlang/forLoop1", listOf("runtime/runtime.c"))
+        assert(result, "Done")
+    }
+
+    @Test
+    fun testForOptLoop1() {
+        val result = runOptimizedCTest("shlang/forLoop1", listOf("runtime/runtime.c"))
+        assert(result, "Done")
     }
 }

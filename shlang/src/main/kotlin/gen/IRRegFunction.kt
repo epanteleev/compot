@@ -104,9 +104,9 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val condition = makeCondition(forStatement.condition)
         ir().branchCond(condition, bodyBlock, endBlock)
         ir().switchLabel(bodyBlock)
-        val needSwitch = visitStatement(forStatement.body)
+        visitStatement(forStatement.body)
         visitUpdate(forStatement.update)
-        if (needSwitch) {
+        if (ir().lastInstruction() !is TerminateInstruction) {
             ir().branch(conditionBlock)
         }
         ir().switchLabel(endBlock)
@@ -326,76 +326,98 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     private fun visitBinary(binop: BinaryOp, isRvalue: Boolean): Value {
         return when (binop.opType) {
             BinaryOpType.ADD -> {
-                val right = visitExpression(binop.right, true)
-                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
-                val leftConverted = ir().convertToType(left, commonType)
+
+                val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
+
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir().convertToType(left, commonType)
+
                 ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Add, rightConverted)
             }
 
             BinaryOpType.SUB -> {
-                val right = visitExpression(binop.right, true)
-                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
-                val leftConverted = ir().convertToType(left, commonType)
+
+                val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
+
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir().convertToType(left, commonType)
+
                 ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Sub, rightConverted)
             }
 
             BinaryOpType.ASSIGN -> {
                 val right = visitExpression(binop.right, true)
-                val left = visitExpression(binop.left, false)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
                 val rightConverted = ir().convertToType(right, commonType)
+
+                val left = visitExpression(binop.left, false)
                 ir().store(left, rightConverted)
                 right //TODO
             }
 
             BinaryOpType.MUL -> {
-                val right = visitExpression(binop.right, true)
-                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
-                val leftConverted = ir().convertToType(left, commonType)
+
+                val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
+
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir().convertToType(left, commonType)
+
                 ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Mul, rightConverted)
             }
 
             BinaryOpType.NE -> {
-                val right = visitExpression(binop.right, true)
-                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
-                val leftConverted = ir().convertToType(left, commonType)
+
+                val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
+
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir().convertToType(left, commonType)
+
                 val cmp = ir().icmp(leftConverted, IntPredicate.Ne, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
 
             BinaryOpType.GT -> {
-                val right = visitExpression(binop.right, true)
-                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
-                val leftConverted = ir().convertToType(left, commonType)
+
+                val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
+
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir().convertToType(left, commonType)
+
                 val cmp = ir().icmp(leftConverted, IntPredicate.Gt, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
             BinaryOpType.LT -> {
-                val right = visitExpression(binop.right, true)
-                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
-                val leftConverted = ir().convertToType(left, commonType)
+
+                val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
+
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir().convertToType(left, commonType)
+
                 val cmp = ir().icmp(leftConverted, IntPredicate.Lt, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
 
             BinaryOpType.LE -> {
-                val right = visitExpression(binop.right, true)
-                val left = visitExpression(binop.left, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
-                val leftConverted = ir().convertToType(left, commonType)
+
+                val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
+
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir().convertToType(left, commonType)
+
                 val cmp = ir().icmp(leftConverted, IntPredicate.Le, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
@@ -416,12 +438,16 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 ir().phi(listOf(convertedLeft, convertedRight), listOf(initialBB, bb)) //TODO false from left
             }
             BinaryOpType.GE -> {
-                val left = visitExpression(binop.left, true)
-                val right = visitExpression(binop.right, true)
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+
+                val left = visitExpression(binop.left, true)
                 val leftConverted = ir().convertToType(left, commonType)
+
+                val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
+
                 val cmp = ir().icmp(leftConverted, IntPredicate.Ge, rightConverted)
+
                 ir().convertToType(cmp, Type.U1)
             }
             else -> throw IRCodeGenError("Unknown binary operation, op=${binop.opType}")
@@ -474,7 +500,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val value = visitExpression(unaryOp.primary, true)
                 val type = unaryOp.resolveType(typeHolder)
                 val converted = ir().convertToType(value, toIRType<NonTrivialType>(type))
-                ir().arithmeticBinary(converted, ArithmeticBinaryOp.Sub, Constant.of(toIRType<NonTrivialType>(type), 0))
+                // TODO: handle case '-1'
+                ir().arithmeticBinary(Constant.of(toIRType<NonTrivialType>(type), 0), ArithmeticBinaryOp.Sub, converted)
             }
             else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.opType}")
         }

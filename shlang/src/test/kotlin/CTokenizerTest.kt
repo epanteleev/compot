@@ -50,6 +50,13 @@ class CTokenizerTest {
         tokens[1].isEqual(1, 3, "+")
     }
 
+    @Test
+    fun test5() {
+        val tokens = CTokenizer.apply("int x = -1;").toCTokenList()
+        println(tokens.joinToString { it.str() })
+
+    }
+
     @Ignore
     fun test4() {
         val tokens = CTokenizer.apply("2L").toCTokenList()
