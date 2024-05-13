@@ -52,6 +52,23 @@ class CProgramPreprocessorTest {
     }
 
     @Test
+    fun testSubstitution3() {
+        val input = """
+            |#define check(a, b) if (a != b) { exit(1); }
+            |check(sub3(9, 3, 2), 90);
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(input)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |if (sub3(9, 3, 2) != 90) { exit(1); };
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
     fun testInclude() {
         val tokens = CTokenizer.apply("#include \"test.h\"")
         val ctx = PreprocessorContext.empty(headerHolder)
@@ -162,12 +179,12 @@ class CProgramPreprocessorTest {
 
     @Test
     fun testMacroFunction2() {
-        val tokens = CTokenizer.apply("#define SUM(a, b) a + b\nSUM(3, 4) + SUM(5, 6)")
+        val tokens = CTokenizer.apply("#define SUM(a, b) a + b\nSUM ( 3, 4)")
         val ctx = PreprocessorContext.empty(headerHolder)
         val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
-            |3 + 4 + 5 + 6
+            |3 + 4
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -212,6 +229,18 @@ class CProgramPreprocessorTest {
         val expected = """
             |
             |(0) + 1
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testMacroFunction6() {
+        val tokens = CTokenizer.apply("#define SUM(a, b) a + b\nSUM(3 + b, 4)")
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |3 + b + 4
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -273,7 +302,7 @@ class CProgramPreprocessorTest {
             |
             |
             |
-            |f(2 * (y+1)) + f(2 * (f(2 * (z[0])))) % f(2 * (0))+1;
+            |f(2 * (y+1)) + f(2 * (f(2 * (z[0])))) % f(2 * (0)) + 1;
         """.trimMargin()
 
         //1) t(t(g)(0) + t)(1)

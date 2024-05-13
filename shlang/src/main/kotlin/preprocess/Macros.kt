@@ -128,9 +128,17 @@ class MacroFunction(name: String, private val args: List<CToken>, private val va
         return i + 1
     }
 
-    fun cloneContentWith(macrosNamePos: Position, args: List<List<CToken>>): List<AnyToken> {
+    private fun cloneTokenOrNot(tok: AnyToken, position: PreprocessedPosition): AnyToken {
+        return when (tok) {
+            is CToken -> tok.cloneWith(position)
+            is AnySpaceToken -> tok
+            else -> throw PreprocessorException("Unknown token type: $tok")
+        }
+    }
+
+    fun cloneContentWith(macrosNamePos: Position, args: List<List<AnyToken>>): List<AnyToken> {
         val argToValue = run {
-            val res = mutableMapOf<CToken, List<CToken>>()
+            val res = mutableMapOf<CToken, List<AnyToken>>()
             this.args.forEachWith(args) { arg, value ->
                 res[arg] = value
             }
@@ -164,7 +172,7 @@ class MacroFunction(name: String, private val args: List<CToken>, private val va
             val arg = argToValue[v]!!
 
             val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, v.position() as OriginalPosition)
-            val r = arg.map { it.cloneWith(preprocessedPosition) }
+            val r = arg.map { cloneTokenOrNot(it, preprocessedPosition) }
 
             result.addAll(r)
             idx += 1

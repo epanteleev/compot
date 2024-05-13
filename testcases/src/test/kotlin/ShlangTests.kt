@@ -90,6 +90,12 @@ abstract class ShlangTests: CommonCTest() {
         val result = runCTest("shlang/forLoop1", listOf("runtime/runtime.c"), options())
         assert(result, "Done")
     }
+
+    @Test
+    fun testArithmetic0() {
+        val result = runCTest("shlang/arithmetic0", listOf("runtime/runtime.c"), options())
+        assert(result, "4\n")
+    }
 }
 
 class ShlangTestsO0: ShlangTests() {

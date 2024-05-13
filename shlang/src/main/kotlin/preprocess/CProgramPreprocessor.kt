@@ -77,8 +77,8 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         throw PreprocessorException("Cannot find #endif")
     }
 
-    private fun parseArguments(): List<List<CToken>> {
-        val args = mutableListOf<MutableList<CToken>>(mutableListOf())
+    private fun parseArguments(): List<List<AnyToken>> {
+        val args = mutableListOf<MutableList<AnyToken>>(mutableListOf())
         var depth = 1
         while (depth != 0) {
             if (check("(")) {
@@ -90,13 +90,13 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                     break
                 }
             }
-            if (check(",")) {
+            if (check(",") && depth == 1) {
                 args.add(mutableListOf())
                 killWithSpaces()
                 continue
             }
-            args.last().add(peak<CToken>())
-            killWithSpaces()
+            args.last().add(peak())
+            kill()
         }
         kill()
         return args

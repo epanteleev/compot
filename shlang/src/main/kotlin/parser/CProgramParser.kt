@@ -1088,18 +1088,22 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| logical_or_expression '?' expression ':' conditional_expression
     //	;
     fun conditional_expression(): Expression? = rule {
-        val logor = logical_or_expression()?: return@rule null
-        if (check("?")) {
-            eat()
-            val expr = expression()?: throw ParserException(ProgramMessage("Expected expression", peak()))
-            if (check(":")) {
+        var logor = logical_or_expression()?: return@rule null
+        while (true) {
+            if (check("?")) {
                 eat()
-                val conditional = conditional_expression()?: throw ParserException(ProgramMessage("Expected conditional expression", peak()))
-                return@rule Conditional(logor, expr, conditional)
-            } else {
-                throw ParserException(ProgramMessage("Expected ':'", peak()))
+                val then = expression()?: throw ParserException(ProgramMessage("Expected expression", peak()))
+                if (!check(":")) {
+                    throw ParserException(ProgramMessage("Expected ':'", peak()))
+                }
+                eat()
+                val els = conditional_expression()?: throw ParserException(ProgramMessage("Expected conditional expression", peak()))
+                logor = Conditional(logor, then, els)
+                continue
             }
+            break
         }
+
         return@rule logor
     }
 
@@ -1109,10 +1113,14 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	;
     fun logical_or_expression(): Expression? = rule {
         val logand = logical_and_expression()?: return@rule null
-        if (check("||")) {
-            eat()
-            val logor = logical_or_expression()?: throw ParserException(ProgramMessage("Expected logical expression", peak()))
-            return@rule BinaryOp(logand, logor, BinaryOpType.OR)
+        while (true) {
+            if (check("||")) {
+                eat()
+                val bitor =
+                    logical_and_expression() ?: throw ParserException(ProgramMessage("Expected or expression", peak()))
+                return@rule BinaryOp(logand, bitor, BinaryOpType.OR)
+            }
+            break
         }
         return@rule logand
     }
@@ -1122,11 +1130,15 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| logical_and_expression '&&' inclusive_or_expression
     //	;
     fun logical_and_expression(): Expression? = rule {
-        val bitor = inclusive_or_expression()?: return@rule null
-        if (check("&&")) {
-            eat()
-            val logand = logical_and_expression()?: throw ParserException(ProgramMessage("Expected logical expression", peak()))
-            return@rule BinaryOp(bitor, logand, BinaryOpType.AND)
+        var bitor = inclusive_or_expression()?: return@rule null
+        while (true) {
+            if (check("&&")) {
+                eat()
+                val bitand = inclusive_or_expression()?: throw ParserException(ProgramMessage("Expected and expression", peak()))
+                bitor = BinaryOp(bitor, bitand, BinaryOpType.AND)
+                continue
+            }
+            break
         }
         return@rule bitor
     }
@@ -1136,11 +1148,15 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| inclusive_or_expression '|' exclusive_or_expression
     //	;
     fun inclusive_or_expression(): Expression? = rule {
-        val bitxor = exclusive_or_expression()?: return@rule null
-        if (check("|")) {
-            eat()
-            val bitor = inclusive_or_expression()?: throw ParserException(ProgramMessage("Expected inclusive expression", peak()))
-            return@rule BinaryOp(bitxor, bitor, BinaryOpType.BIT_OR)
+        var bitxor = exclusive_or_expression()?: return@rule null
+        while (true) {
+            if (check("|")) {
+                eat()
+                val bitor = exclusive_or_expression()?: throw ParserException(ProgramMessage("Expected inclusive expression", peak()))
+                bitxor = BinaryOp(bitxor, bitor, BinaryOpType.BIT_OR)
+                continue
+            }
+            break
         }
         return@rule bitxor
     }
@@ -1150,11 +1166,15 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| exclusive_or_expression '^' and_expression
     //	;
     fun exclusive_or_expression(): Expression? = rule {
-        val bitand = and_expression()?: return@rule null
-        if (check("^")) {
-            eat()
-            val bitxor = exclusive_or_expression()?: throw ParserException(ProgramMessage("Expected exclusive expression", peak()))
-            return@rule BinaryOp(bitand, bitxor, BinaryOpType.BIT_XOR)
+        var bitand = and_expression()?: return@rule null
+        while (true) {
+            if (check("^")) {
+                eat()
+                val xor = and_expression()?: throw ParserException(ProgramMessage("Expected exclusive expression", peak()))
+                bitand = BinaryOp(bitand, xor, BinaryOpType.BIT_XOR)
+                continue
+            }
+            break
         }
         return@rule bitand
     }
@@ -1164,11 +1184,15 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| and_expression '&' equality_expression
     //	;
     fun and_expression(): Expression? = rule {
-        val equality = equality_expression()?: return@rule null
-        if (check("&")) {
-            eat()
-            val bitand = and_expression()?: throw ParserException(ProgramMessage("Expected 'and' expression", peak()))
-            return@rule BinaryOp(equality, bitand, BinaryOpType.BIT_AND)
+        var equality = equality_expression()?: return@rule null
+        while (true) {
+            if (check("&")) {
+                eat()
+                val bitand = equality_expression()?: throw ParserException(ProgramMessage("Expected and expression", peak()))
+                equality = BinaryOp(equality, bitand, BinaryOpType.BIT_AND)
+                continue
+            }
+            break
         }
         return@rule equality
     }
@@ -1179,16 +1203,21 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| equality_expression '!=' relational_expression
     //	;
     fun equality_expression(): Expression? = rule {
-        val relational = relational_expression()?: return@rule null
-        if (check("==")) {
-            eat()
-            val equality = equality_expression()?: throw ParserException(ProgramMessage("Expected equality expression", peak()))
-            return@rule BinaryOp(relational, equality, BinaryOpType.EQ)
-        }
-        if (check("!=")) {
-            eat()
-            val equality = equality_expression()?: throw ParserException(ProgramMessage("Expected equality expression", peak()))
-            return@rule BinaryOp(relational, equality, BinaryOpType.NE)
+        var relational = relational_expression()?: return@rule null
+        while (true) {
+            if (check("==")) {
+                eat()
+                val equal = relational_expression()?: throw ParserException(ProgramMessage("Expected relational expression", peak()))
+                relational = BinaryOp(relational, equal, BinaryOpType.EQ)
+                continue
+            }
+            if (check("!=")) {
+                eat()
+                val notEqual = relational_expression()?: throw ParserException(ProgramMessage("Expected relational expression", peak()))
+                relational = BinaryOp(relational, notEqual, BinaryOpType.NE)
+                continue
+            }
+            break
         }
         return@rule relational
     }
@@ -1201,26 +1230,33 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| relational_expression '>=' shift_expression
     //	;
     fun relational_expression(): Expression? = rule {
-        val shift = shift_expression()?: return@rule null
-        if (check("<")) {
-            eat()
-            val relational = relational_expression()?: throw ParserException(ProgramMessage("Expected relational expression", peak()))
-            return@rule BinaryOp(shift, relational, BinaryOpType.LT)
-        }
-        if (check(">")) {
-            eat()
-            val relational = relational_expression()?: throw ParserException(ProgramMessage("Expected relational expression", peak()))
-            return@rule BinaryOp(shift, relational, BinaryOpType.GT)
-        }
-        if (check("<=")) {
-            eat()
-            val relational = relational_expression()?: throw ParserException(ProgramMessage("Expected relational expression", peak()))
-            return@rule BinaryOp(shift, relational, BinaryOpType.LE)
-        }
-        if (check(">=")) {
-            eat()
-            val relational = relational_expression()?: throw ParserException(ProgramMessage("Expected relational expression", peak()))
-            return@rule BinaryOp(shift, relational, BinaryOpType.GE)
+        var shift = shift_expression()?: return@rule null
+        while (true) {
+            if (check("<")) {
+                eat()
+                val less = shift_expression()?: throw ParserException(ProgramMessage("Expected shift expression", peak()))
+                shift = BinaryOp(shift, less, BinaryOpType.LT)
+                continue
+            }
+            if (check(">")) {
+                eat()
+                val greater = shift_expression()?: throw ParserException(ProgramMessage("Expected shift expression", peak()))
+                shift = BinaryOp(shift, greater, BinaryOpType.GT)
+                continue
+            }
+            if (check("<=")) {
+                eat()
+                val lessEq = shift_expression()?: throw ParserException(ProgramMessage("Expected shift expression", peak()))
+                shift = BinaryOp(shift, lessEq, BinaryOpType.LE)
+                continue
+            }
+            if (check(">=")) {
+                eat()
+                val greaterEq = shift_expression()?: throw ParserException(ProgramMessage("Expected shift expression", peak()))
+                shift = BinaryOp(shift, greaterEq, BinaryOpType.GE)
+                continue
+            }
+            break
         }
         return@rule shift
     }
@@ -1231,16 +1267,21 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| shift_expression '>>' additive_expression
     //	;
     fun shift_expression(): Expression? = rule {
-        val additive = additive_expression()?: return@rule null
-        if (check("<<")) {
-            eat()
-            val shift = shift_expression()?: throw ParserException(ProgramMessage("Expected shift expression", peak()))
-            return@rule BinaryOp(additive, shift, BinaryOpType.SHL)
-        }
-        if (check(">>")) {
-            eat()
-            val shift = shift_expression()?: throw ParserException(ProgramMessage("Expected shift expression", peak()))
-            return@rule BinaryOp(additive, shift, BinaryOpType.SHR)
+        var additive = additive_expression()?: return@rule null
+        while (true) {
+            if (check("<<")) {
+                eat()
+                val shift = additive_expression()?: throw ParserException(ProgramMessage("Expected shift expression", peak()))
+                additive = BinaryOp(additive, shift, BinaryOpType.SHL)
+                continue
+            }
+            if (check(">>")) {
+                eat()
+                val shift = additive_expression()?: throw ParserException(ProgramMessage("Expected shift expression", peak()))
+                additive = BinaryOp(additive, shift, BinaryOpType.SHR)
+                continue
+            }
+            break
         }
         return@rule additive
     }
@@ -1251,16 +1292,21 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| additive_expression '-' multiplicative_expression
     //	;
     fun additive_expression(): Expression? = rule {
-        val mult = multiplicative_expression()?: return@rule null
-        if (check("+")) {
-            eat()
-            val additive = additive_expression()?: throw ParserException(ProgramMessage("Expected additive expression", peak()))
-            return@rule BinaryOp(mult, additive, BinaryOpType.ADD)
-        }
-        if (check("-")) {
-            eat()
-            val additive = additive_expression()?: throw ParserException(ProgramMessage("Expected additive expression", peak()))
-            return@rule BinaryOp(mult, additive, BinaryOpType.SUB)
+        var mult = multiplicative_expression()?: return@rule null
+        while (true) {
+            if (check("+")) {
+                eat()
+                val add = multiplicative_expression()?: throw ParserException(ProgramMessage("Expected additive expression", peak()))
+                mult = BinaryOp(mult, add, BinaryOpType.ADD)
+                continue
+            }
+            if (check("-")) {
+                eat()
+                val add = multiplicative_expression()?: throw ParserException(ProgramMessage("Expected additive expression", peak()))
+                mult = BinaryOp(mult, add, BinaryOpType.SUB)
+                continue
+            }
+            break
         }
         return@rule mult
     }
@@ -1272,21 +1318,27 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| multiplicative_expression '%' cast_expression
     //	;
     fun multiplicative_expression(): Expression? = rule {
-        val cast = cast_expression() ?: return@rule null
-        if (check("*")) {
-            eat()
-            val mult = multiplicative_expression()?: throw ParserException(ProgramMessage("Expected multiplicative expression", peak()))
-            return@rule BinaryOp(cast, mult, BinaryOpType.MUL)
-        }
-        if (check("/")) {
-            eat()
-            val mult = multiplicative_expression()?: throw ParserException(ProgramMessage("Expected multiplicative expression", peak()))
-            return@rule BinaryOp(cast, mult, BinaryOpType.DIV)
-        }
-        if (check("%")) {
-            eat()
-            val mult = multiplicative_expression()?: throw ParserException(ProgramMessage("Expected multiplicative expression", peak()))
-            return@rule BinaryOp(cast, mult, BinaryOpType.MOD)
+        var cast = cast_expression() ?: return@rule null
+        while (true) {
+            if (check("*")) {
+                eat()
+                val mul = cast_expression() ?: throw ParserException(ProgramMessage("Expected multiplicative expression", peak()))
+                cast = BinaryOp(cast, mul, BinaryOpType.MUL)
+                continue
+            }
+            if (check("/")) {
+                eat()
+                val mul = cast_expression() ?: throw ParserException(ProgramMessage("Expected multiplicative expression", peak()))
+                cast = BinaryOp(cast, mul, BinaryOpType.DIV)
+                continue
+            }
+            if (check("%")) {
+                eat()
+                val mul = cast_expression() ?: throw ParserException(ProgramMessage("Expected multiplicative expression", peak()))
+                cast = BinaryOp(cast, mul, BinaryOpType.MOD)
+                continue
+            }
+            break
         }
         return@rule cast
     }

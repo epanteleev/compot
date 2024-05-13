@@ -5,7 +5,9 @@ abstract class AnyToken {
     abstract fun str(): String
 }
 
-class Indent private constructor(private val spaces: Int): AnyToken() {
+abstract class AnySpaceToken: AnyToken()
+
+class Indent private constructor(private val spaces: Int): AnySpaceToken() {
     private val data by lazy { " ".repeat(spaces) }
 
     override fun str(): String = data
@@ -30,7 +32,7 @@ class Indent private constructor(private val spaces: Int): AnyToken() {
     }
 }
 
-class NewLine private constructor(private val spaces: Int): AnyToken() {
+class NewLine private constructor(private val spaces: Int): AnySpaceToken() {
     private val data by lazy { "\n".repeat(spaces) }
 
     override fun str(): String = data
