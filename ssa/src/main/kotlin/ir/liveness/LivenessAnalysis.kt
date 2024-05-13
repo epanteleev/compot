@@ -7,14 +7,14 @@ import ir.module.block.Block
 import ir.module.block.Label
 
 
-data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal val liveOut: MutableSet<LocalValue>) {
+data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal var liveOut: MutableSet<LocalValue>) {
     fun liveIn(): Set<LocalValue> = liveIn
     fun liveOut(): Set<LocalValue> = liveOut
 }
 
 private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue>)
 
-
+// TODO Inefficient implementation, should be optimized
 class LivenessAnalysis private constructor(val data: FunctionData, private val linearScanOrder: List<Block>) {
     private val liveness = run {
         val mapOf = intMapOf<Label, LiveInfo>(data.blocks.size()) { it.index }
@@ -25,8 +25,8 @@ class LivenessAnalysis private constructor(val data: FunctionData, private val l
         mapOf
     }
 
-    private fun computeLocalLiveSets(): Map<Block, KillGenSet> {
-        val killGenSet = intMapOf<Block, KillGenSet>(data.blocks.size()) { it.index }
+    private fun computeLocalLiveSets(): Map<Label, KillGenSet> {
+        val killGenSet = intMapOf<Label, KillGenSet>(data.blocks.size()) { it.index }
         for (bb in linearScanOrder) {
             val gen = mutableSetOf<LocalValue>()
             val kill = mutableSetOf<LocalValue>()
@@ -61,14 +61,25 @@ class LivenessAnalysis private constructor(val data: FunctionData, private val l
         do {
             var changed = false
             for (bb in linearScanOrder.reversed()) {
-                val liveOut = liveness[bb]!!.liveOut
+                val liveOut = mutableSetOf<LocalValue>()
                 for (succ in bb.successors()) {
-                    changed = changed or liveOut.addAll(liveness[succ]!!.liveIn)
+                    // live_out = b.live_out ∪ succ.live_in
+                    liveOut.addAll(liveness[succ]!!.liveIn)
                 }
 
-                val liveIn = (liveOut.toMutableSet() - killGenSet[bb]!!.kill) + killGenSet[bb]!!.gen
-                changed = changed or (liveIn != liveness[bb]!!.liveIn)
-                liveness[bb]!!.liveIn = liveIn.toMutableSet()
+                if (!liveness[bb]!!.liveOut.containsAll(liveOut)) {
+                    changed = true
+                    liveness[bb]!!.liveOut = liveOut
+                }
+
+                // live_in = (b.live_out – b.live_kill) ∪ b.live_gen
+                val liveIn = run {
+                    val clone = liveOut.toMutableSet()
+                    clone.removeAll(killGenSet[bb]!!.kill)
+                    clone.addAll(killGenSet[bb]!!.gen)
+                    clone
+                }
+                liveness[bb]!!.liveIn = liveIn
             }
         } while (changed)
     }
