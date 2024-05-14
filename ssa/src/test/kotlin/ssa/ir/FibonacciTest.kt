@@ -12,6 +12,8 @@ import ir.pass.ana.LoopDetection
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2RegFabric
 import ir.liveness.LivenessAnalysis
+import ir.pass.CompileContextBuilder
+import ir.pass.PassPipeline
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -153,10 +155,28 @@ class FibonacciTest {
         val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
         val cfg = module.findFunction(prototype)
         val liveInfo = LivenessAnalysis.evaluate(cfg)
-        println(liveInfo)
+
         assertEquals(8, liveInfo.size)
         val entry = liveInfo[BlockViewer(0)]!!
         assertTrue { entry.liveIn().containsAll(cfg.arguments()) }
-        assertTrue { entry.liveIn().size == 1 }
+        assertEquals(1, entry.liveIn().size)
+    }
+
+    @Test
+    fun testLiveness2() {
+        val module = withBasicBlocks()
+        val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
+        val builder = CompileContextBuilder("fib")
+            .setSuffix(".base")
+
+        val optimized = PassPipeline.opt(builder.construct()).run(module)
+
+        val cfg = optimized.findFunction(prototype)
+        val liveInfo = LivenessAnalysis.evaluate(cfg)
+
+        assertEquals(8, liveInfo.size)
+        val entry = liveInfo[BlockViewer(0)]!!
+        assertTrue { entry.liveIn().containsAll(cfg.arguments()) }
+        assertEquals(1, entry.liveIn().size)
     }
 }
