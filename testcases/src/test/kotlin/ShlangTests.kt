@@ -61,7 +61,7 @@ abstract class ShlangTests: CommonCTest() {
         assertEquals(0, result.exitCode)
     }
 
-    @Ignore
+    @Test
     fun testInsertionSort() {
         val result = runCTest("shlang/insertionSort", listOf("runtime/runtime.c"), options())
         assert(result, "11 12 22 25 34 64 \n")

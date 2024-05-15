@@ -81,7 +81,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     fun jump_statement(): Statement? = rule {
         if (check("goto")) {
             eat()
-            val ident = peak<Ident>()
+            val ident = peak<Identifier>()
             eat()
             if (check(";")) {
                 eat()
@@ -123,8 +123,8 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //                      | case <constant-expression> : <statement>
     //                      | default : <statement>
     fun labeled_statement(): Statement? = rule {
-        if (check<Ident>() && checkOffset(1, ":")) {
-            val ident = peak<Ident>()
+        if (check<Identifier>() && checkOffset(1, ":")) {
+            val ident = peak<Identifier>()
             eat()
             eat()
             val stmt = statement() ?: throw ParserException(ProgramMessage("Expected statement", peak()))
@@ -623,12 +623,12 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                 val fields = struct_declaration_list()
                 if (check("}")) {
                     eat()
-                    return@rule StructSpecifier(Ident.UNKNOWN, fields)
+                    return@rule StructSpecifier(Identifier.UNKNOWN, fields)
                 }
                 throw ParserException(ProgramMessage("Expected '}'", peak()))
             }
-            if (check<Ident>()) {
-                val name = peak<Ident>()
+            if (check<Identifier>()) {
+                val name = peak<Identifier>()
                 eat()
                 if (!check("{")) {
                     return@rule StructDeclaration(name)
@@ -650,12 +650,12 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                 val fields = struct_declaration_list()
                 if (check("}")) {
                     eat()
-                    return@rule UnionSpecifier(Ident.UNKNOWN, fields)
+                    return@rule UnionSpecifier(Identifier.UNKNOWN, fields)
                 }
                 throw ParserException(ProgramMessage("Expected '}'", peak()))
             }
-            if (check<Ident>()) {
-                val name = peak<Ident>()
+            if (check<Identifier>()) {
+                val name = peak<Identifier>()
                 eat()
                 if (!check("{")) {
                     return@rule UnionDeclaration(name)
@@ -678,10 +678,10 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| IDENTIFIER '=' constant_expression
     //	;
     fun enumerator(): Enumerator? = rule {
-        if (!check<Ident>()) {
+        if (!check<Identifier>()) {
             return@rule null
         }
-        val name = peak<Ident>()
+        val name = peak<Identifier>()
         eat()
         if (check("=")) {
             eat()
@@ -723,12 +723,12 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             val enumerators = enumerator_list()
             if (check("}")) {
                 eat()
-                return@rule EnumSpecifier(Ident.UNKNOWN, enumerators)
+                return@rule EnumSpecifier(Identifier.UNKNOWN, enumerators)
             }
             throw ParserException(ProgramMessage("Expected '}'", peak()))
         }
-        if (check<Ident>()) {
-            val name = peak<Ident>()
+        if (check<Identifier>()) {
+            val name = peak<Identifier>()
             eat()
             if (check("{")) {
                 eat()
@@ -942,8 +942,8 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                 throw ParserException(ProgramMessage("Expected ')'", peak()))
             }
         }
-        if (check<Ident>()) {
-            val ident = peak<Ident>()
+        if (check<Identifier>()) {
+            val ident = peak<Identifier>()
             eat()
             return@rule DirectDeclarator(VarDeclarator(ident), declarator_list())
         }
@@ -964,8 +964,8 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     fun identifier_list(): List<IdentNode> {
         val identifiers = mutableListOf<IdentNode>()
         while (true) {
-            if (check<Ident>()) {
-                val ident = peak<Ident>()
+            if (check<Identifier>()) {
+                val ident = peak<Identifier>()
                 eat()
                 identifiers.add(IdentNode(ident))
                 if (check(",")) {
@@ -1506,12 +1506,12 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             }
             else if (token.str() == ".") {
                 eat()
-                val ident = peak<Ident>()
+                val ident = peak<Identifier>()
                 eat()
                 primary = MemberAccess(primary, ident)
             } else if (token.str() == "->") {
                 eat()
-                val ident = peak<Ident>()
+                val ident = peak<Identifier>()
                 eat()
                 primary = ArrowMemberAccess(primary, ident)
             } else if (token.str() == "++") {
@@ -1597,8 +1597,8 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
         if (check("_Generic")) {
             TODO()
         }
-        if (check<Ident>()) {
-            val ident = peak<Ident>()
+        if (check<Identifier>()) {
+            val ident = peak<Identifier>()
             eat()
             return@rule VarNode(ident)
         }

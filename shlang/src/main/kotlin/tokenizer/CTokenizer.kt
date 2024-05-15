@@ -75,9 +75,12 @@ class CTokenizer private constructor(private val filename: String, private val r
 
             // Single line comments
             if (reader.tryPeek("//")) {
-                eat()
-                while (!reader.eof || reader.peek() == '\n') {
-                    pos += 1
+                eat(2)
+                while (!reader.eof) {
+                    if (reader.peek() == '\n') {
+                        break
+                    }
+                    eat()
                 }
                 continue
             }
@@ -99,6 +102,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
+            // Punctuations and operators (or indentifiers)
             if (tryPunct(v)) {
                 pos += 1
                 if (reader.inRange(2) &&
@@ -106,12 +110,12 @@ class CTokenizer private constructor(private val filename: String, private val r
                     val operator = reader.peek(3)
                     reader.read(3)
                     pos += 2
-                    append(Ident(operator, OriginalPosition(line, pos - 3, filename)))
+                    append(Identifier(operator, OriginalPosition(line, pos - 3, filename)))
                 } else if (reader.inRange(1) && isOperator2(v, reader.peekOffset(1))) {
                     val operator = reader.peek(2)
                     reader.read(2)
                     pos += 1
-                    append(Ident(operator, OriginalPosition(line, pos - 2, filename)))
+                    append(Identifier(operator, OriginalPosition(line, pos - 2, filename)))
                 } else {
                     append(Punct(reader.read(), OriginalPosition(line, pos - 1, filename)))
                 }
@@ -129,7 +133,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 if (keywords.contains(identifier)) {
                     append(Keyword(identifier, OriginalPosition(line, pos - identifier.length, filename)))
                 } else {
-                    append(Ident(identifier, OriginalPosition(line, pos - identifier.length, filename)))
+                    append(Identifier(identifier, OriginalPosition(line, pos - identifier.length, filename)))
                 }
                 continue
             }

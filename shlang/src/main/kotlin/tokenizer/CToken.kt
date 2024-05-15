@@ -81,11 +81,11 @@ abstract class CToken(private val position: Position): AnyToken() {
     }
 }
 
-class Ident(val data: String, position: Position): CToken(position) {
+class Identifier(val data: String, position: Position): CToken(position) {
     override fun str(): String = data
 
     override fun cloneWith(pos: PreprocessedPosition): CToken {
-        return Ident(data, pos)
+        return Identifier(data, pos)
     }
 
     override fun hashCode(): Int {
@@ -96,13 +96,13 @@ class Ident(val data: String, position: Position): CToken(position) {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Ident
+        other as Identifier
 
         return data == other.data
     }
 
     companion object {
-        val UNKNOWN = Ident("<unknown>",  Position.UNKNOWN)
+        val UNKNOWN = Identifier("<unknown>",  Position.UNKNOWN)
     }
 }
 

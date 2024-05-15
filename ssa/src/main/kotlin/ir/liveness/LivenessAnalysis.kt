@@ -2,6 +2,7 @@ package ir.liveness
 
 import ir.LocalValue
 import common.intMapOf
+import ir.instruction.Phi
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.module.block.Label
@@ -17,7 +18,7 @@ private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue
 // TODO Inefficient implementation, should be optimized
 class LivenessAnalysis private constructor(val data: FunctionData, private val linearScanOrder: List<Block>) {
     private val liveness = run {
-        val mapOf = intMapOf<Label, LiveInfo>(data.blocks.size()) { it.index }
+        val mapOf = mutableMapOf<Label, LiveInfo>()
         for (bb in data.blocks) {
             mapOf[bb] = LiveInfo(mutableSetOf(), mutableSetOf())
         }
@@ -26,24 +27,27 @@ class LivenessAnalysis private constructor(val data: FunctionData, private val l
     }
 
     private fun computeLocalLiveSets(): Map<Label, KillGenSet> {
-        val killGenSet = intMapOf<Label, KillGenSet>(data.blocks.size()) { it.index }
+        val killGenSet = mutableMapOf<Label, KillGenSet>()
         for (bb in linearScanOrder) {
             val gen = mutableSetOf<LocalValue>()
             val kill = mutableSetOf<LocalValue>()
 
             for (inst in bb.instructions()) {
                 // Handle input operands
-                for (usage in inst.operands()) {
-                    if (usage !is LocalValue) {
-                        continue
-                    }
+                if (inst !is Phi) {
+                    for (usage in inst.operands()) {
+                        if (usage !is LocalValue) {
+                            continue
+                        }
 
-                    if (kill.contains(usage)) {
-                        continue
-                    }
+                        if (kill.contains(usage)) {
+                            continue
+                        }
 
-                    gen.add(usage)
+                        gen.add(usage)
+                    }
                 }
+
 
                 // Handle output operand
                 if (inst is LocalValue) {
@@ -82,6 +86,17 @@ class LivenessAnalysis private constructor(val data: FunctionData, private val l
                 liveness[bb]!!.liveIn = liveIn
             }
         } while (changed)
+
+        for (bb in linearScanOrder) {
+            bb.phis { phi ->
+                phi.zip { block, value ->
+                    if (value is LocalValue) {
+                        liveness[block]!!.liveOut.add(value)
+                        liveness[bb]!!.liveIn.add(value)
+                    }
+                }
+            }
+        }
     }
 
     companion object {

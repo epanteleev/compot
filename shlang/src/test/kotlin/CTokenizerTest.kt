@@ -52,9 +52,14 @@ class CTokenizerTest {
 
     @Test
     fun test5() {
-        val tokens = CTokenizer.apply("int x = -1;").toCTokenList()
-        println(tokens.joinToString { it.str() })
-
+        val tokens = CTokenizer.apply("int x = -1; // comment").toCTokenList()
+        assertEquals(7, tokens.size)
+        tokens[0].isEqual(1, 1, "int")
+        tokens[1].isEqual(1, 5, "x")
+        tokens[2].isEqual(1, 7, "=")
+        tokens[3].isEqual(1, 9, "-")
+        tokens[4].isEqual(1, 10, "1")
+        tokens[5].isEqual(1, 11, ";")
     }
 
     @Ignore

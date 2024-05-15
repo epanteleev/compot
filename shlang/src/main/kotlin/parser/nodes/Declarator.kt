@@ -1,7 +1,7 @@
 package parser.nodes
 
 import types.*
-import tokenizer.Ident
+import tokenizer.Identifier
 import parser.nodes.visitors.*
 
 
@@ -193,7 +193,7 @@ data class DirectDeclarator(val decl: AnyDeclarator, val declarators: List<AnyDe
     }
 }
 
-data class VarDeclarator(val ident: Ident) : AnyDeclarator() {
+data class VarDeclarator(val ident: Identifier) : AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     fun name(): String = ident.str()

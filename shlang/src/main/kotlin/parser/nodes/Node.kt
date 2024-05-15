@@ -38,7 +38,7 @@ data class Declaration(val declspec: DeclarationSpecifier, val declarators: List
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class IdentNode(private val str: Ident) : UnclassifiedNode() {
+data class IdentNode(private val str: Identifier) : UnclassifiedNode() {
     fun str(): String = str.str()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
@@ -78,7 +78,7 @@ data class StructField(val declspec: DeclarationSpecifier, val declarators: List
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-class Enumerator(val ident: Ident, val expr: Node) : UnclassifiedNode() {
+class Enumerator(val ident: Identifier, val expr: Node) : UnclassifiedNode() {
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 

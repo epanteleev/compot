@@ -109,7 +109,7 @@ class MacroFunction(name: String, private val args: List<CToken>, private val va
         if (result.last() is Indent) {
             result.removeLast()
         }
-        result.add(Ident(str1 + str, v.position() as OriginalPosition)) //TODO identifier not everytime
+        result.add(Identifier(str1 + str, v.position() as OriginalPosition)) //TODO identifier not everytime
         return i + 1
     }
 

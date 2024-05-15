@@ -423,16 +423,21 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             }
             BinaryOpType.AND -> {
                 val initialBB = ir().currentLabel()
+
                 val left = visitExpression(binop.left, true)
                 val convertedLeft = ir().convertToType(left, Type.U8)
                 assert(left.type() == Type.U1)
+
                 val bb = ir().createLabel()
+
                 val end = ir().createLabel()
                 ir().branchCond(left, bb, end)
                 ir().switchLabel(bb)
+
                 val right = visitExpression(binop.right, true)
                 val convertedRight = ir().convertToType(right, Type.U8)
                 assert(right.type() == Type.U1)
+
                 ir().branch(end)
                 ir().switchLabel(end)
                 ir().phi(listOf(convertedLeft, convertedRight), listOf(initialBB, bb)) //TODO false from left

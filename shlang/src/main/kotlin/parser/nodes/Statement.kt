@@ -1,7 +1,7 @@
 package parser.nodes
 
 import parser.nodes.visitors.StatementVisitor
-import tokenizer.Ident
+import tokenizer.Identifier
 
 
 abstract class Statement: Node() {
@@ -13,11 +13,11 @@ class EmptyStatement : Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class LabeledStatement(val label: Ident, val stmt: Statement) : Statement() {
+data class LabeledStatement(val label: Identifier, val stmt: Statement) : Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class GotoStatement(val id: Ident) : Statement() {
+data class GotoStatement(val id: Identifier) : Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 

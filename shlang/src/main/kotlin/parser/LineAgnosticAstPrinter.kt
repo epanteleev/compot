@@ -2,7 +2,7 @@ package parser
 
 import parser.nodes.*
 import parser.nodes.visitors.NodeVisitor
-import tokenizer.Ident
+import tokenizer.Identifier
 
 
 class LineAgnosticAstPrinter: NodeVisitor<Unit> {
@@ -337,7 +337,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(unionSpecifier: UnionSpecifier) {
         buffer.append("union")
-        if (unionSpecifier.ident != Ident.UNKNOWN) {
+        if (unionSpecifier.ident != Identifier.UNKNOWN) {
             buffer.append(' ')
             buffer.append(unionSpecifier.ident.str())
         }

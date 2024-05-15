@@ -1,7 +1,7 @@
 package parser.nodes
 
 import types.*
-import tokenizer.Ident
+import tokenizer.Identifier
 import parser.nodes.visitors.TypeNodeVisitor
 import tokenizer.Keyword
 
@@ -11,17 +11,17 @@ abstract class AnyTypeNode : Node() {
     abstract fun<T> accept(visitor: TypeNodeVisitor<T>): T
 }
 
-data class UnionSpecifier(val ident: Ident, val fields: List<StructField>) : AnyTypeNode() {
+data class UnionSpecifier(val ident: Identifier, val fields: List<StructField>) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 }
 
-data class UnionDeclaration(val name: Ident) : AnyTypeNode() { //TODO separate class
+data class UnionDeclaration(val name: Identifier) : AnyTypeNode() { //TODO separate class
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = name.str()
 }
 
-data class StructDeclaration(val name: Ident) : AnyTypeNode() {
+data class StructDeclaration(val name: Identifier) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = name.str()
 
@@ -87,7 +87,7 @@ data class TypeNode(val ident: Keyword) : AnyTypeNode() {
     }
 }
 
-data class StructSpecifier(val ident: Ident, val fields: List<StructField>) : AnyTypeNode() {
+data class StructSpecifier(val ident: Identifier, val fields: List<StructField>) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 
@@ -104,12 +104,12 @@ data class StructSpecifier(val ident: Ident, val fields: List<StructField>) : An
     }
 }
 
-data class EnumSpecifier(val ident: Ident, val enumerators: List<Node>) : AnyTypeNode() {
+data class EnumSpecifier(val ident: Identifier, val enumerators: List<Node>) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 }
 
-data class EnumDeclaration(val name: Ident) : AnyTypeNode() {
+data class EnumDeclaration(val name: Identifier) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = name.str()
 }

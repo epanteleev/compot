@@ -211,7 +211,7 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         killWithSpaces()
         when (directive.str()) {
             "define" -> {
-                val name = peak<Ident>()
+                val name = peak<Identifier>()
                 killWithSpaces()
                 if (check("(")) {
                     parseMacroFunction(name)
@@ -226,10 +226,10 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                 }
             }
             "undef" -> {
-                if (!check<Ident>()) {
+                if (!check<Identifier>()) {
                     throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
                 }
-                val name = peak<Ident>()
+                val name = peak<Identifier>()
                 killWithSpaces()
                 ctx.undef(name.str())
             }
@@ -249,7 +249,7 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
 
                 } else if (nameOrBracket.str() == "<") {
                     kill()
-                    if (!check<Ident>()) {
+                    if (!check<Identifier>()) {
                         throw PreprocessorException("Expected file name: but '${peak<AnyToken>()}'")
                     }
                     val name = readHeaderName()
@@ -264,7 +264,7 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                     addAll(result)
                     return
 
-                } else if (nameOrBracket is Ident && ctx.findMacros(nameOrBracket.str()) != null) {
+                } else if (nameOrBracket is Identifier && ctx.findMacros(nameOrBracket.str()) != null) {
                     val start = current //TODO unsafe
                     add(Indent.of(1))
                     add(directive)
@@ -277,10 +277,10 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                 }
             }
             "ifdef" -> {
-                if (!check<Ident>()) {
+                if (!check<Identifier>()) {
                     throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
                 }
-                val name = peak<Ident>()
+                val name = peak<Identifier>()
                 kill()
                 checkNewLine()
                 val macros = ctx.findMacros(name.str())
@@ -299,10 +299,10 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
             }
             "elif" -> skipBlock()
             "ifndef" -> {
-                if (!check<Ident>()) {
+                if (!check<Identifier>()) {
                     throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
                 }
-                val name = peak<Ident>()
+                val name = peak<Identifier>()
                 kill()
                 ctx.findMacros(name.str()) ?: return
                 skipBlock()

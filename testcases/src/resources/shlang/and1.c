@@ -1,4 +1,4 @@
-
+#include <runtime/runtime.h>
 
 int and(int a, int b) {
     return a > 0 && b > 0;

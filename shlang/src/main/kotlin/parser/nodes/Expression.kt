@@ -1,9 +1,8 @@
 package parser.nodes
 
 import parser.nodes.visitors.ExpressionVisitor
-import parser.nodes.visitors.NodeVisitor
 import parser.nodes.visitors.Resolvable
-import tokenizer.Ident
+import tokenizer.Identifier
 import tokenizer.Numeric
 import tokenizer.StringLiteral
 import types.*
@@ -193,7 +192,7 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
         return nameIdent().str()
     }
 
-    fun nameIdent(): Ident {
+    fun nameIdent(): Identifier {
         return when (primary) {
             is VarNode -> primary.nameIdent()
             else -> throw IllegalStateException("Function call primary is not a VarNode, but got ${primary.javaClass.simpleName}")
@@ -238,7 +237,7 @@ data class InitializerList(val initializers: List<Expression>) : Expression() {
     }
 }
 
-class MemberAccess(val primary: Expression, val ident: Ident) : Expression() {
+class MemberAccess(val primary: Expression, val ident: Identifier) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
@@ -261,7 +260,7 @@ class MemberAccess(val primary: Expression, val ident: Ident) : Expression() {
     }
 }
 
-class ArrowMemberAccess(val primary: Expression, val ident: Ident) : Expression() {
+class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType { //TODO Copy-paste?!?
@@ -284,9 +283,9 @@ class ArrowMemberAccess(val primary: Expression, val ident: Ident) : Expression(
     }
 }
 
-data class VarNode(private val str: Ident) : Expression() {
+data class VarNode(private val str: Identifier) : Expression() {
     fun name(): String = str.str()
-    fun nameIdent(): Ident = str
+    fun nameIdent(): Identifier = str
 
 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
