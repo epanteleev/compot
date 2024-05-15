@@ -1,7 +1,6 @@
 package gen
 
 import ir.LocalValue
-import types.CType
 
 
 class VarStack {

@@ -106,7 +106,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         ir().switchLabel(bodyBlock)
         visitStatement(forStatement.body)
         visitUpdate(forStatement.update)
-        if (ir().lastInstruction() !is TerminateInstruction) {
+        if (ir().last() !is TerminateInstruction) {
             ir().branch(conditionBlock)
         }
         ir().switchLabel(endBlock)
@@ -592,7 +592,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
         ir().switchLabel(Label.entry)
         visitStatement(functionNode.body)
-        if (ir().lastInstruction() !is TerminateInstruction) {
+        if (ir().last() !is TerminateInstruction) {
             ir().branch(exitBlock)
         }
 

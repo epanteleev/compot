@@ -1,11 +1,9 @@
 package common
 
 import tokenizer.Eof
-import tokenizer.CToken
 import parser.ProgramMessage
 import parser.ParserException
 import tokenizer.AnyToken
-import tokenizer.Indent
 
 
 abstract class AnyParser(protected val tokens: MutableList<AnyToken>) {

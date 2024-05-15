@@ -5,7 +5,7 @@ import tokenizer.Identifier
 import parser.nodes.visitors.*
 
 
-abstract class AnyDeclarator: Node(), Resolvable {
+abstract class AnyDeclarator: Node() {
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
 }
 
@@ -33,10 +33,6 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
         }
         return pointerType
     }
-
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO()
-    }
 }
 
 data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
@@ -44,10 +40,6 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
 
     fun name(): String {
         return directDeclarator.name()
-    }
-
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO()
     }
 
     fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
@@ -94,10 +86,6 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
 data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expression): AnyDeclarator() { //TODO rename
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO("Not yet implemented")
-    }
-
     fun name(): String {
         return declarator.name()
     }
@@ -110,7 +98,7 @@ data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expressi
 data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
+    fun resolveType(typeHolder: TypeHolder): CType {
         params.forEach { it.resolveType(typeHolder) }
         return CType.UNKNOWN
     }
@@ -148,16 +136,10 @@ data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
 
 object EmptyDeclarator : AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CType = CType.UNKNOWN
 }
 
 data class ArrayDeclarator(val constexpr: Expression) : AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO()
-    }
 }
 
 data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression): AnyDeclarator() {
@@ -171,10 +153,6 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
             else -> throw IllegalStateException("$declarator")
         }
     }
-
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO()
-    }
 }
 
 data class DirectDeclarator(val decl: AnyDeclarator, val declarators: List<AnyDeclarator>): AnyDeclarator() {
@@ -187,19 +165,12 @@ data class DirectDeclarator(val decl: AnyDeclarator, val declarators: List<AnyDe
             else -> throw IllegalStateException("$decl")
         }
     }
-
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO()
-    }
 }
 
 data class VarDeclarator(val ident: Identifier) : AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     fun name(): String = ident.str()
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO()
-    }
 }
 
 data class FunctionPointerDeclarator(val declarator: List<Node>): AnyDeclarator() {
@@ -208,30 +179,16 @@ data class FunctionPointerDeclarator(val declarator: List<Node>): AnyDeclarator(
     fun declarator(): Declarator {
         return declarator[0] as Declarator
     }
-
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO()
-    }
 }
 
 data class FunctionPointerParamDeclarator(val declarator: Node, val params: Node): AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO()
-    }
 }
 
 data class DirectFunctionDeclarator(val parameters: List<AnyParameter>) : AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO("Not yet implemented")
-    }
 }
 
 data class DirectArrayDeclarator(val size: Node) : AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO("Not yet implemented")
-    }
 }

@@ -18,19 +18,22 @@ class IRGen private constructor() {
         for (node in programNode.nodes) {
             when (node) {
                 is FunctionNode -> IrGenFunction(moduleBuilder, typeHolder, node)
-                is Declaration ->  {
-                    val types = node.resolveType(typeHolder)
-                    for (type in types) {
-                        when (type) {
-                            is CFunctionType -> {
-                                val argTypes = type.argsTypes.map { TypeConverter.toIRType<NonTrivialType>(it) }
-                                moduleBuilder.createExternFunction(type.name, TypeConverter.toIRType(type.retType), argTypes)
-                            }
-                            else -> throw IRCodeGenError("Function or struct expected")
-                        }
-                    }
-                }
+                is Declaration ->  declare(node)
                 else -> throw IRCodeGenError("Function expected")
+            }
+        }
+    }
+
+    private fun declare(node: Declaration) {
+        val types = node.resolveType(typeHolder)
+        for (type in types) {
+            when (type) {
+                is CFunctionType -> {
+                    val argTypes = type.argsTypes.map { TypeConverter.toIRType<NonTrivialType>(it) }
+                    val returnType = TypeConverter.toIRType<Type>(type.retType)
+                    moduleBuilder.createExternFunction(type.name, returnType, argTypes)
+                }
+                else -> throw IRCodeGenError("Function or struct expected")
             }
         }
     }

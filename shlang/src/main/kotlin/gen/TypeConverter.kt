@@ -42,226 +42,183 @@ object TypeConverter {
         return ret
     }
 
-   fun FunctionDataBuilder.convertToType(value: Value, type: Type): Value {
-        if (value.type() == type) {
+   fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {
+        if (value.type() == toType) {
             return value
         }
         if (value is Constant) {
-            return convertConstant(value, type)
+            return convertConstant(value, toType)
         }
 
-        return when (type) {
+        return when (toType) {
             Type.I8 -> {
-                type as SignedIntType
+                toType as SignedIntType
                 when (value.type()) {
-                    Type.U1  -> flag2int(value, type)
-                    Type.I16 -> trunc(value, type)
-                    Type.I32 -> trunc(value, type)
-                    Type.I64 -> trunc(value, type)
-                    Type.U8  -> trunc(value, type)
-                    Type.U16 -> trunc(value, type)
-                    Type.U32 -> trunc(value, type)
-                    Type.U64 -> trunc(value, type)
-                    Type.F32 -> fp2Int(value, type)
-                    Type.F64 -> fp2Int(value, type)
-                    Type.Ptr -> {
-                        val tmp = bitcast(value, Type.I64) //TODO
-                        trunc(tmp, type)
-                    }
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
+                    Type.U1  -> flag2int(value, toType)
+                    Type.I16 -> trunc(value, toType)
+                    Type.I32 -> trunc(value, toType)
+                    Type.I64 -> trunc(value, toType)
+                    Type.U8  -> trunc(value, toType)
+                    Type.U16 -> trunc(value, toType)
+                    Type.U32 -> trunc(value, toType)
+                    Type.U64 -> trunc(value, toType)
+                    Type.F32 -> fp2Int(value, toType)
+                    Type.F64 -> fp2Int(value, toType)
+                    Type.Ptr -> ptr2int(value, toType)
+                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
 
             Type.I16 -> {
-                type as SignedIntType
+                toType as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, type)
-                    Type.I8  -> sext(value, type)
-                    Type.I32 -> trunc(value, type)
-                    Type.I64 -> trunc(value, type)
-                    Type.U8  -> sext(value, type)
-                    Type.U16 -> bitcast(value, type)
-                    Type.U32 -> trunc(value, type)
-                    Type.U64 -> trunc(value, type)
-                    Type.F32 -> fp2Int(value, type)
-                    Type.F64 -> fp2Int(value, type)
-                    Type.Ptr -> {
-                        val tmp = bitcast(value, Type.I64) //TODO
-                        trunc(tmp, type)
-                    }
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
+                    Type.U1 -> flag2int(value, toType)
+                    Type.I8  -> sext(value, toType)
+                    Type.I32 -> trunc(value, toType)
+                    Type.I64 -> trunc(value, toType)
+                    Type.U8  -> sext(value, toType)
+                    Type.U16 -> bitcast(value, toType)
+                    Type.U32 -> trunc(value, toType)
+                    Type.U64 -> trunc(value, toType)
+                    Type.F32 -> fp2Int(value, toType)
+                    Type.F64 -> fp2Int(value, toType)
+                    Type.Ptr -> ptr2int(value, toType)
+                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
 
             Type.I32 -> {
-                type as SignedIntType
+                toType as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, type)
-                    Type.I8 -> sext(value, type)
-                    Type.I16 -> sext(value, type)
-                    Type.I64 -> trunc(value, type)
+                    Type.U1 -> flag2int(value, toType)
+                    Type.I8 -> sext(value, toType)
+                    Type.I16 -> sext(value, toType)
+                    Type.I64 -> trunc(value, toType)
                     Type.U8  -> {
                         val bitcast = bitcast(value, Type.I8)
                         sext(bitcast, Type.I32)
                     }
                     Type.U16 -> {
                         val tmp = zext(value, Type.U32)
-                        trunc(tmp, type)
+                        trunc(tmp, toType)
                     }
-                    Type.U32 -> bitcast(value, type)
-                    Type.U64 -> trunc(value, type)
-                    Type.F32 -> fp2Int(value, type)
-                    Type.F64 -> fp2Int(value, type)
-                    Type.Ptr -> {
-                        val tmp = bitcast(value, Type.I64) //TODO
-                        trunc(tmp, type)
-                    }
-                    else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $type")
+                    Type.U32 -> bitcast(value, toType)
+                    Type.U64 -> trunc(value, toType)
+                    Type.F32 -> fp2Int(value, toType)
+                    Type.F64 -> fp2Int(value, toType)
+                    Type.Ptr -> ptr2int(value, toType)
+                    else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $toType")
                 }
             }
 
             Type.I64 -> {
-                type as SignedIntType
+                toType as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, type)
-                    Type.I8 -> sext(value, type)
-                    Type.I16 -> sext(value, type)
-                    Type.I32 -> sext(value, type)
+                    Type.U1 -> flag2int(value, toType)
+                    Type.I8 -> sext(value, toType)
+                    Type.I16 -> sext(value, toType)
+                    Type.I32 -> sext(value, toType)
                     Type.U8  -> {
                         val tmp = sext(value, Type.I64)
-                        trunc(tmp, type)
+                        trunc(tmp, toType)
                     }
                     Type.U16 -> {
                         val tmp = zext(value, Type.U64)
-                        trunc(tmp, type)
+                        trunc(tmp, toType)
                     }
                     Type.U32 -> {
                         val tmp = zext(value, Type.U64)
-                        trunc(tmp, type)
+                        trunc(tmp, toType)
                     }
-                    Type.U64 -> bitcast(value, type)
-                    Type.F32 -> fp2Int(value, type)
-                    Type.F64 -> fp2Int(value, type)
-                    Type.Ptr -> bitcast(value, Type.I64) //TODO
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
+                    Type.U64 -> bitcast(value, toType)
+                    Type.F32 -> fp2Int(value, toType)
+                    Type.F64 -> fp2Int(value, toType)
+                    Type.Ptr -> ptr2int(value, toType)
+                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
 
             Type.U8 -> {
-                type as UnsignedIntType
+                toType as UnsignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, type)
-                    Type.I8  -> bitcast(value, type)
-                    Type.I16 -> trunc(value, type)
-                    Type.I32 -> trunc(value, type)
-                    Type.I64 -> trunc(value, type)
-                    Type.U16 -> trunc(value, type)
-                    Type.U32 -> trunc(value, type)
-                    Type.U64 -> trunc(value, type)
+                    Type.U1 -> flag2int(value, toType)
+                    Type.I8  -> bitcast(value, toType)
+                    Type.I16 -> trunc(value, toType)
+                    Type.I32 -> trunc(value, toType)
+                    Type.I64 -> trunc(value, toType)
+                    Type.U16 -> trunc(value, toType)
+                    Type.U32 -> trunc(value, toType)
+                    Type.U64 -> trunc(value, toType)
                     Type.F32 -> {
                         val tmp = fp2Int(value, Type.I32)
-                        trunc(tmp, type)
+                        trunc(tmp, toType)
                     }
                     Type.F64 -> {
                         val tmp = fp2Int(value, Type.I64)
-                        trunc(tmp, type)
+                        trunc(tmp, toType)
                     }
-                    Type.Ptr -> {
-                        val tmp = bitcast(value, Type.U64) //TODO
-                        trunc(tmp, type)
-                    }
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
+                    Type.Ptr -> ptr2int(value, toType)
+                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
 
             Type.U16 -> {
-                type as UnsignedIntType
+                toType as UnsignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, type)
-                    Type.I8  -> trunc(value, type)
-                    Type.I16 -> bitcast(value, type)
-                    Type.I32 -> trunc(value, type)
-                    Type.I64 -> trunc(value, type)
-                    Type.U8  -> trunc(value, type)
-                    Type.U32 -> trunc(value, type)
-                    Type.U64 -> trunc(value, type)
+                    Type.U1 -> flag2int(value, toType)
+                    Type.I8  -> trunc(value, toType)
+                    Type.I16 -> bitcast(value, toType)
+                    Type.I32 -> trunc(value, toType)
+                    Type.I64 -> trunc(value, toType)
+                    Type.U8  -> trunc(value, toType)
+                    Type.U32 -> trunc(value, toType)
+                    Type.U64 -> trunc(value, toType)
                     Type.F32 -> {
                         val tmp = fp2Int(value, Type.I32)
-                        trunc(tmp, type)
+                        trunc(tmp, toType)
                     }
                     Type.F64 -> {
                         val tmp = fp2Int(value, Type.I64)
-                        trunc(tmp, type)
+                        trunc(tmp, toType)
                     }
-                    Type.Ptr -> {
-                        val tmp = bitcast(value, Type.U64) //TODO
-                        trunc(tmp, type)
-                    }
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
+                    Type.Ptr -> ptr2int(value, toType)
+                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
 
             Type.U32 -> {
-                type as UnsignedIntType
+                toType as UnsignedIntType
                 when (value.type()) {
-                    Type.U1  -> flag2int(value, type)
-                    Type.I8  -> trunc(value, type)
-                    Type.I16 -> trunc(value, type)
-                    Type.I32 -> bitcast(value, type)
-                    Type.I64 -> trunc(value, type)
-                    Type.U8  -> trunc(value, type)
-                    Type.U16 -> trunc(value, type)
-                    Type.U64 -> trunc(value, type)
+                    Type.U1  -> flag2int(value, toType)
+                    Type.I8  -> trunc(value, toType)
+                    Type.I16 -> trunc(value, toType)
+                    Type.I32 -> bitcast(value, toType)
+                    Type.I64 -> trunc(value, toType)
+                    Type.U8  -> trunc(value, toType)
+                    Type.U16 -> trunc(value, toType)
+                    Type.U64 -> trunc(value, toType)
                     Type.F32 -> {
                         val tmp = fp2Int(value, Type.I32)
-                        trunc(tmp, type)
+                        trunc(tmp, toType)
                     }
                     Type.F64 -> {
                         val tmp = fp2Int(value, Type.I64)
-                        trunc(tmp, type)
+                        trunc(tmp, toType)
                     }
-                    Type.Ptr -> {
-                        val tmp = bitcast(value, Type.U64) //TODO
-                        trunc(tmp, type)
-                    }
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
+                    Type.Ptr -> ptr2int(value, toType)
+                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
             Type.Ptr -> {
-                type as PointerType
-                when (value.type()) {
-                    Type.I8  -> {
-                        val tmp = sext(value, Type.I64)
-                        bitcast(tmp, type)
-                    }
-                    Type.I16 -> {
-                        val tmp = sext(value, Type.I64)
-                        bitcast(tmp, type)
-                    }
-                    Type.I32 -> {
-                        val tmp = sext(value, Type.I64)
-                        bitcast(tmp, type)
-                    }
-                    Type.I64 -> {
-                        bitcast(value, type)
-                    }
-                    Type.U8  -> {
-                        val tmp = zext(value, Type.U64)
-                        bitcast(tmp, type)
-                    }
-                    Type.U16 -> {
-                        val tmp = zext(value, Type.U64)
-                        bitcast(tmp, type)
-                    }
-                    Type.U32 -> {
-                        val tmp = zext(value, Type.U64)
-                        bitcast(tmp, type)
-                    }
-                    Type.U64 -> bitcast(value, type)
-                    else -> throw IRCodeGenError("Cannot convert $value to $type")
+                toType as PointerType
+                val valueType = value.type()
+                if (valueType is IntegerType) {
+                    return int2ptr(value)
+                } else {
+                    throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
-            else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $type")
+            else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $toType")
         }
     }
 

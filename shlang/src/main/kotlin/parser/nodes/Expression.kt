@@ -1,11 +1,8 @@
 package parser.nodes
 
-import parser.nodes.visitors.ExpressionVisitor
-import parser.nodes.visitors.Resolvable
-import tokenizer.Identifier
-import tokenizer.Numeric
-import tokenizer.StringLiteral
 import types.*
+import tokenizer.*
+import parser.nodes.visitors.*
 
 
 enum class BinaryOpType {
@@ -142,46 +139,44 @@ enum class PostfixUnaryOpType: UnaryOpType {
 
 
 abstract class Expression : Node(), Resolvable {
-    protected var type: CType = CType.UNRESOlVED
+    private var type: CType = CType.UNRESOlVED
 
     abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
+
+    protected fun memoize(closure: () -> CType): CType {
+        if (type != CType.UNRESOlVED) {
+            return type
+        }
+        type = closure()
+        return type
+    }
 }
 
 data class BinaryOp(val left: Expression, val right: Expression, val opType: BinaryOpType) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
-        val leftType = left.resolveType(typeHolder)
-        val rightType = right.resolveType(typeHolder)
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        val leftType   = left.resolveType(typeHolder)
+        val rightType  = right.resolveType(typeHolder)
         val commonType = CType.interfereTypes(leftType, rightType)
-        type = commonType
-        return commonType
+        return@memoize commonType
     }
 }
 
 class EmptyExpression : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = type
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize { CType.UNKNOWN }
 }
 
 class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expression) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
-        val typeTrue = eTrue.resolveType(typeHolder)
-        val typeFalse = eFalse.resolveType(typeHolder)
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        val typeTrue   = eTrue.resolveType(typeHolder)
+        val typeFalse  = eFalse.resolveType(typeHolder)
         val commonType = CType.interfereTypes(typeTrue, typeFalse)
-        type = commonType
-        return commonType
+        return@memoize commonType
     }
 }
 
@@ -189,97 +184,74 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     fun name(): String {
-        return nameIdent().str()
+        return nameIdentifier().str()
     }
 
-    fun nameIdent(): Identifier {
+    fun nameIdentifier(): Identifier {
         return when (primary) {
             is VarNode -> primary.nameIdent()
             else -> throw IllegalStateException("Function call primary is not a VarNode, but got ${primary.javaClass.simpleName}")
         }
     }
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val params = args.map { it.resolveType(typeHolder) }
         if (params.size != args.size) {
-            type = CType.UNRESOlVED
-            return type
+            return@memoize CType.UNKNOWN
         }
 
         for (i in args.indices) {
             val argType = args[i].resolveType(typeHolder)
-            if (argType != params[i]) {
-                type = CType.UNRESOlVED
-                return type
+            if (argType == params[i]) {
+                continue
             }
+
+            return@memoize CType.UNKNOWN
         }
 
-        return typeHolder.getFunctionType(name())
+        return@memoize typeHolder.getFunctionType(name())
     }
 }
 
 data class InitializerList(val initializers: List<Expression>) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
-        val types = initializers.map { it.resolveType(typeHolder) }
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        val types      = initializers.map { it.resolveType(typeHolder) }
         val commonType = types.reduce { acc, type -> CType.interfereTypes(acc, type) }
-        type = commonType
-        return commonType
+        return@memoize commonType
     }
 }
 
 class MemberAccess(val primary: Expression, val ident: Identifier) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val structType = primary.resolveType(typeHolder)
         if (structType !is CompoundType) {
-            type = CType.UNKNOWN
-            return type
+            return@memoize CType.UNKNOWN
         }
         val field = structType.fields.find { it.first == ident.str() }
         if (field != null) {
-            type = field.second
-            return type
+            return@memoize field.second
         }
-        type = CType.UNKNOWN
-        return CType.UNKNOWN
+        return@memoize CType.UNKNOWN
     }
 }
 
 class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType { //TODO Copy-paste?!?
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val structType = primary.resolveType(typeHolder)
         if (structType !is CompoundType) {
-            type = CType.UNKNOWN
-            return type
+            return@memoize CType.UNKNOWN
         }
         val field = structType.fields.find { it.first == ident.str() }
         if (field != null) {
-            type = field.second
-            return type
+            return@memoize field.second
         }
-        type = CType.UNKNOWN
-        return type
+        return@memoize CType.UNKNOWN
     }
 }
 
@@ -287,144 +259,108 @@ data class VarNode(private val str: Identifier) : Expression() {
     fun name(): String = str.str()
     fun nameIdent(): Identifier = str
 
-
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
-        type = typeHolder[str.str()]
-        return type
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        return@memoize typeHolder[str.str()]
     }
 }
 
 data class StringNode(val str: StringLiteral) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-        type = CPointerType(CType.CHAR)
-        return type
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        return@memoize CPointerType(CType.CHAR)
     }
 }
 
 data class NumNode(val toLong: Numeric) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        return@memoize when (toLong.data) {
+            is Int    -> CType.INT
+            is Long   -> CType.LONG
+            is Float  -> CType.FLOAT
+            is Double -> CType.DOUBLE
+            else      -> CType.UNKNOWN //TODO more types
         }
-        when (toLong.data) {
-            is Int -> type = CType.INT
-            is Long -> type = CType.LONG
-            is Float -> type = CType.FLOAT
-            is Double -> type = CType.DOUBLE
-            else -> type = CType.UNKNOWN
-        }
-        return type
     }
 }
 
 data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val primaryType = primary.resolveType(typeHolder)
-        if (opType is PrefixUnaryOpType) {
-            type = when (opType) {
-                PrefixUnaryOpType.DEREF -> {
-                    primaryType as CPointerType
-                    primaryType.dereference()
-                }
-                PrefixUnaryOpType.ADDRESS -> {
-                    CPointerType(primaryType)
-                }
-                PrefixUnaryOpType.NOT -> {
-                    TODO()
-                }
-                PrefixUnaryOpType.NEG -> {
-                    if (primaryType.baseType() is CPrimitive) {
-                        primaryType
-                    } else {
-                        CType.UNKNOWN
-                    }
-                }
-                PrefixUnaryOpType.INC, PrefixUnaryOpType.DEC, PrefixUnaryOpType.PLUS -> {
-                    primaryType
-                }
-
-                else -> TODO()
-            }
-        } else {
-            type = primaryType
+        if (opType !is PrefixUnaryOpType) {
+            return@memoize primaryType
         }
-        return type
 
+        val resolvedType = when (opType) {
+            PrefixUnaryOpType.DEREF -> {
+                primaryType as CPointerType
+                primaryType.dereference()
+            }
+            PrefixUnaryOpType.ADDRESS -> {
+                CPointerType(primaryType)
+            }
+            PrefixUnaryOpType.NOT -> {
+                TODO()
+            }
+            PrefixUnaryOpType.NEG -> {
+                if (primaryType.baseType() is CPrimitive) {
+                    primaryType
+                } else {
+                    CType.UNKNOWN
+                }
+            }
+            PrefixUnaryOpType.INC,
+            PrefixUnaryOpType.DEC,
+            PrefixUnaryOpType.PLUS -> {
+                primaryType
+            }
+
+            else -> TODO()
+        }
+
+        return@memoize resolvedType
     }
 }
 
 data class ArrayAccess(val primary: Expression, val expr: Expression) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val primaryType = primary.resolveType(typeHolder)
         if (primaryType is CompoundType) {
             when (primaryType.baseType) {
                 is CArrayType -> {
-                    type = primaryType.baseType.type
-                    return type
+                    return@memoize primaryType.baseType.type
                 }
                 else -> {
-                    type = CType.UNKNOWN
-                    return type
+                    return@memoize CType.UNKNOWN
                 }
             }
         } else if (primaryType is CPointerType) {
-            type = primaryType.dereference()
-            return type
+            return@memoize primaryType.dereference()
         }
-
-        type = CType.UNKNOWN
-        return type
-
+        return@memoize CType.UNKNOWN
     }
 }
 
 data class SizeOf(val expr: Node) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         expr as Resolvable
-        type = expr.resolveType(typeHolder)
-        return type
+        return@memoize expr.resolveType(typeHolder)
     }
 }
 
 data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        if (type != CType.UNRESOlVED) {
-            return type
-        }
-
-        type = typeName.resolveType(typeHolder)
-        return type
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        return@memoize typeName.resolveType(typeHolder)
     }
 }

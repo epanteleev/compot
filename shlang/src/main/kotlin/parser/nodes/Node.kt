@@ -17,7 +17,6 @@ abstract class UnclassifiedNode : Node() {
 }
 
 data class Declaration(val declspec: DeclarationSpecifier, val declarators: List<AnyDeclarator>): UnclassifiedNode() {
-
     fun resolveType(typeHolder: TypeHolder): List<CType> {
         val type = declspec.resolveType(typeHolder)
         val vars = mutableListOf<CType>()

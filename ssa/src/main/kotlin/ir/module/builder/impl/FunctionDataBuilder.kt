@@ -25,7 +25,7 @@ class FunctionDataBuilder private constructor(
     }
 
     //TODO bad design???
-    fun lastInstruction(): Instruction? {
+    fun last(): Instruction? {
         return bb.instructions().lastOrNull()
     }
 
