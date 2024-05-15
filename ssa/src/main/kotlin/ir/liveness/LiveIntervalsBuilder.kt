@@ -13,7 +13,6 @@ class LiveIntervalsBuilder private constructor(val data: FunctionData) {
     private val liveness = LivenessAnalysis.evaluate(data, linearScanOrder)
 
     init {
-        println(loopInfo)
         setupArguments()
         setupLiveRanges()
         evaluateUsages()
