@@ -8,7 +8,6 @@ abstract class Statement: Node() {
     abstract fun<T> accept(visitor: StatementVisitor<T>): T
 }
 
-
 class EmptyStatement : Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }

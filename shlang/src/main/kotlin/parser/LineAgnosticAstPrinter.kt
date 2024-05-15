@@ -210,7 +210,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         assignmentDeclarator.rvalue.accept(this)
     }
 
-    override fun visit(functionDeclarator: FunctionDeclarator) {
+    override fun visit(functionDeclarator: ParameterTypeList) {
         buffer.append('(')
         joinTo(functionDeclarator.params, ", ") {
             it.accept(this)

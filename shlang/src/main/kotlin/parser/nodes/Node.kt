@@ -54,8 +54,8 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
         return varNode.ident.str()
     }
 
-    fun functionDeclarator(): FunctionDeclarator {
-        return declarator.directDeclarator.declarators[0] as FunctionDeclarator
+    fun functionDeclarator(): ParameterTypeList {
+        return declarator.directDeclarator.declarators[0] as ParameterTypeList
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {

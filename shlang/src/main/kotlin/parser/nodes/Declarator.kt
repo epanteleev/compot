@@ -50,7 +50,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
 
         if (directDeclarator.decl is FunctionPointerDeclarator) {
             val functionPointerDeclarator = directDeclarator.decl
-            val fnDecl = directDeclarator.declarators[0] as FunctionDeclarator
+            val fnDecl = directDeclarator.declarators[0] as ParameterTypeList
             val params = fnDecl.resolveParams(typeHolder)
             pointerType = CFunPointerType(pointerType, params)
 
@@ -67,7 +67,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
                         val size = decl.constexpr as NumNode //TODO evaluate
                         pointerType = CompoundType(CArrayType(pointerType, size.toLong.data.toInt()))
                     }
-                    is FunctionDeclarator -> {
+                    is ParameterTypeList -> {
                         val params = decl.resolveParams(typeHolder)
                         pointerType = CFunctionType(directDeclarator.name(), pointerType, params, decl.isVarArg())
                     }
@@ -95,7 +95,7 @@ data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expressi
     }
 }
 
-data class FunctionDeclarator(val params: List<AnyParameter>): AnyDeclarator() {
+data class ParameterTypeList(val params: List<AnyParameter>): AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     fun resolveType(typeHolder: TypeHolder): CType {

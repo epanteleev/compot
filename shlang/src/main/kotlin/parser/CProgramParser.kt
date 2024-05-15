@@ -889,14 +889,14 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                     eat()
                     if (check(")")) {
                         eat()
-                        declarators.add(FunctionDeclarator(listOf()))
+                        declarators.add(ParameterTypeList(listOf()))
                         continue
                     }
                     val declspec = parameter_type_list()
                     if (declspec != null) {
                         if (check(")")) {
                             eat()
-                            declarators.add(FunctionDeclarator(declspec))
+                            declarators.add(ParameterTypeList(declspec))
                             continue
                         }
                         throw ParserException(ProgramMessage("Expected ')'", peak()))
