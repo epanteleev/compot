@@ -1,17 +1,11 @@
 package ir.pass.transform.auxiliary
 
-import asm.x64.Imm32
-import ir.Constant
-import ir.SignedIntegerConstant
-import ir.UnsignedIntegerConstant
+import ir.*
+import ir.types.*
 import ir.module.*
 import ir.instruction.*
-import ir.instruction.matching.*
 import ir.module.block.Block
-import ir.types.ArrayType
-import ir.types.PrimitiveType
-import ir.types.StructType
-import ir.types.Type
+import ir.instruction.matching.*
 
 
 class Lowering private constructor(private val cfg: BasicBlocks) {
@@ -96,80 +90,56 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         }
     }
     private fun replaceGEPAndStore() {
+        fun getSource(inst: Instruction): Value {
+            return when (inst) {
+                is GetElementPtr -> inst.source()
+                is GetFieldPtr   -> inst.source()
+                else             -> throw IllegalArgumentException("Expected GEP or GFP")
+            }
+        }
+
+        fun getIndex(inst: Instruction): Value {
+            return when (inst) {
+                is GetElementPtr -> inst.index()
+                is GetFieldPtr   -> inst.index()
+                else             -> throw IllegalArgumentException("Expected GEP or GFP")
+            }
+        }
+
         fun closure(bb: Block, inst: Instruction, i: Int): Int {
             when {
-                store(gep(generate().not(), nop()), nop()) (inst) -> {
+                store(gfpOrGep(generate().not(), nop()), nop()) (inst) -> {
                     inst as Store
-                    val pointer = inst.pointer() as GetElementPtr
-                    bb.insert(i) { it.move(pointer.source(), inst.value(), pointer.index()) }
+                    val pointer = inst.pointer() as ValueInstruction
+                    bb.insert(i) { it.move(getSource(pointer), inst.value(), getIndex(pointer)) }
                     bb.remove(i + 1)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.remove(bb.indexOf(pointer))
                     }
                 }
-                store(gfp(generate().not(), nop()), nop()) (inst) -> {
+                store(gfpOrGep(generate(), nop()), nop()) (inst) -> {
                     inst as Store
-                    val pointer = inst.pointer() as GetFieldPtr
-
-                    bb.insert(i) { it.move(pointer.source(), inst.value(), pointer.index()) }
-
+                    val pointer = inst.pointer() as ValueInstruction
+                    bb.insert(i) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
                     bb.remove(i + 1)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.remove(bb.indexOf(pointer))
                     }
                 }
-                store(gep(generate(), nop()), nop()) (inst) -> {
-                    inst as Store
-                    val pointer = inst.pointer() as GetElementPtr
-                    bb.insert(i) { it.storeOnStack(pointer.source(), pointer.index(), inst.value()) }
-                    bb.remove(i + 1)
-                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.remove(bb.indexOf(pointer))
-                    }
-                }
-                store(gfp(generate(), nop()), nop()) (inst) -> {
-                    inst as Store
-                    val pointer = inst.pointer() as GetFieldPtr
-                    bb.insert(i) { it.storeOnStack(pointer.source(), pointer.index(), inst.value()) }
-                    bb.remove(i + 1)
-                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.remove(bb.indexOf(pointer))
-                    }
-                }
-                load(gep(generate().not(), nop())) (inst) -> {
+                load(gfpOrGep(generate().not(), nop())) (inst) -> {
                     inst as Load
-                    val pointer = inst.operand() as GetElementPtr
-                    val copy = bb.insert(i) { it.indexedLoad(pointer.source(), inst.type(), pointer.index()) }
+                    val pointer = inst.operand() as ValueInstruction
+                    val copy = bb.insert(i) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
                     ValueInstruction.replaceUsages(inst, copy)
                     bb.remove(i + 1)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.remove(bb.indexOf(pointer))
                     }
                 }
-                load(gfp(generate().not(), nop())) (inst) -> {
+                load(gfpOrGep(generate(), nop())) (inst) -> {
                     inst as Load
-                    val pointer = inst.operand() as GetFieldPtr
-                    val copy = bb.insert(i) { it.indexedLoad(pointer.source(), inst.type(), pointer.index()) }
-                    ValueInstruction.replaceUsages(inst, copy)
-                    bb.remove(i + 1)
-                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.remove(bb.indexOf(pointer))
-                    }
-                }
-                load(gep(generate(), nop())) (inst) -> {
-                    inst as Load
-                    val pointer = inst.operand() as GetElementPtr
-                    val copy = bb.insert(i) { it.loadFromStack(pointer.source(), inst.type(), pointer.index()) }
-                    ValueInstruction.replaceUsages(inst, copy)
-                    bb.remove(i + 1)
-                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.remove(bb.indexOf(pointer))
-                    }
-                }
-                load(gfp(generate(), nop())) (inst) -> {
-                    inst as Load
-                    val pointer = inst.operand() as GetFieldPtr
-                    val copy = bb.insert(i) { it.loadFromStack(pointer.source(), inst.type(), pointer.index()) }
+                    val pointer = inst.operand() as ValueInstruction
+                    val copy = bb.insert(i) { it.loadFromStack(getSource(pointer), inst.type(), getIndex(pointer)) }
                     ValueInstruction.replaceUsages(inst, copy)
                     bb.remove(i + 1)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE

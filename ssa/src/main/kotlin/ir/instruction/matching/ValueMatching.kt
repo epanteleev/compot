@@ -34,6 +34,9 @@ inline fun gfp(crossinline src: ValueMatcher, crossinline idx: ValueMatcher): Va
     it is GetFieldPtr && src(it.source()) && idx(it.index())
 }
 
+inline fun gfpOrGep(crossinline source: ValueMatcher, crossinline idx: ValueMatcher): ValueMatcher =
+    gfp(source, idx) or gep(source, idx)
+
 inline infix fun ValueMatcher.or(crossinline second: ValueMatcher): ValueMatcher = {
     this(it) || second(it)
 }
