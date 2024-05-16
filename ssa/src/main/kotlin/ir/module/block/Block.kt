@@ -117,21 +117,11 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         predecessors.remove(old)
     }
 
-    fun forEachInstruction(fn: (Int, Instruction) -> Int) {
-        var i = -1
-        while (i < instructions.size - 1) {
-            i += 1
-            i += fn(i, instructions[i])
+    fun forEachInstruction(fn: (Instruction) -> Int) {
+        var i = 0
+        while (i < instructions.size) {
+            i += fn(instructions[i]) + 1
         }
-    }
-
-    fun<T> insert(before: Instruction, builder: (AnyInstructionFabric) -> T): T {
-        val beforeIndex = instructions.indexOf(before)
-        assert(beforeIndex != -1) {
-            "flow graph doesn't contains instruction=$before"
-        }
-
-        return insert(beforeIndex, builder)
     }
 
     fun<T> insert(index: Int, builder: (AnyInstructionFabric) -> T): T {

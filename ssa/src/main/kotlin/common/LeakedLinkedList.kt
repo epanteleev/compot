@@ -51,11 +51,10 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
     // if node is null, add to the beginning
     fun addBefore(node: T?, value: T) {
         if (node == null) {
-            value.next = head
+            val oldHead = head
             head = value
-            if (tail == null) {
-                tail = value
-            }
+            head!!.next = oldHead
+            oldHead?.prev = head
             size++
             return
         }
@@ -174,6 +173,33 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
         }
     }
 
+    fun mutableIterator(): MutableIterator<T> {
+        return object : MutableIterator<T> {
+            private var current = head
+            override fun hasNext(): Boolean = current != null
+            override fun next(): T {
+                val result = current
+                current = current!!.next as T?
+                return result!!
+            }
+            override fun remove() {
+                val prev = current!!.prev as T?
+                val next = current!!.next as T?
+                if (prev != null) {
+                    prev.next = next
+                } else {
+                    head = next
+                }
+                if (next != null) {
+                    next.prev = prev
+                } else {
+                    tail = prev
+                }
+                size--
+            }
+        }
+    }
+
     override fun listIterator(): ListIterator<T> {
         return object : ListIterator<T> {
             private var current = head
@@ -267,13 +293,13 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
         }
     }
 
-    fun first(): LListNode = head!!
+    fun first(): T = head!!
 
-    fun firstOrNull(): LListNode? = head
+    fun firstOrNull(): T? = head
 
-    fun last(): LListNode = tail!!
+    fun last(): T = tail!!
 
-    fun lastOrNull(): LListNode? = tail
+    fun lastOrNull(): T? = tail
 
     fun clear() {
         head = null

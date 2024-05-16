@@ -9,75 +9,74 @@ import ir.instruction.matching.*
 
 
 class Lowering private constructor(private val cfg: BasicBlocks) {
-    private fun replaceStore(bb: Block, inst: Store, i: Int) {
+    private fun replaceStore(bb: Block, inst: Store) {
         val toValue   = inst.pointer() as Generate
         val fromValue = inst.value()
-        bb.insert(i) { it.move(toValue, fromValue) }
-        bb.kill(i + 1)
+        bb.insertBefore(inst) { it.move(toValue, fromValue) }
+        bb.kill(inst)
     }
 
-    private fun replaceAlloc(bb: Block, inst: Alloc, i: Int): Generate {
-        val gen = bb.insert(i) { it.gen(inst.allocatedType) }
+    private fun replaceAlloc(bb: Block, inst: Alloc) {
+        val gen = bb.insertBefore(inst) { it.gen(inst.allocatedType) }
         ValueInstruction.replaceUsages(inst, gen)
-        bb.kill(i + 1)
-        return gen
+        bb.kill(inst)
     }
 
-    private fun replaceLoad(bb: Block, inst: Load, i: Int) {
-        val copy = bb.insert(i) { it.copy(inst.operand()) }
+    private fun replaceLoad(bb: Block, inst: Load) {
+        val copy = bb.insertBefore(inst) { it.copy(inst.operand()) }
         ValueInstruction.replaceUsages(inst, copy)
-        bb.kill(i + 1)
+        bb.kill(inst)
     }
 
-    private fun replaceCopy(bb: Block, inst: Copy, i: Int) {
-        val lea = bb.insert(i) { it.lea(inst.origin() as Generate) }
+    private fun replaceCopy(bb: Block, inst: Copy) {
+        val lea = bb.insertBefore(inst) { it.lea(inst.origin() as Generate) }
         ValueInstruction.replaceUsages(inst, lea)
-        bb.kill(i + 1)
+        bb.kill(inst)
     }
 
     private fun replaceAllocLoadStores() {
-        fun closure(bb: Block, inst: Instruction, i: Int): Int {
+        fun closure(bb: Block, inst: Instruction): Int {
             when {
-                store(generate(), nop()) (inst) -> replaceStore(bb, inst as Store, i)
-                load(generate()) (inst)         -> replaceLoad(bb, inst as Load, i)
+                store(generate(), nop()) (inst) -> replaceStore(bb, inst as Store)
+                load(generate()) (inst)         -> replaceLoad(bb, inst as Load)
             }
             return 0
         }
 
         for (bb in cfg) {
-            bb.forEachInstruction { i, inst -> closure(bb, inst, i) }
+            bb.forEachInstruction { inst -> closure(bb, inst) }
         }
     }
 
     private fun replaceGepToLea() {
-        fun closure(bb: Block, inst: Instruction, i: Int): Int {
+        fun closure(bb: Block, inst: Instruction): Int {
             if (inst !is ValueInstruction) {
                 return 0
             }
             when {
                 gep(generate(), nop()) (inst) -> {
                     inst as GetElementPtr
-                    val lea = bb.insert(i) { it.leaStack(inst.source(), inst.basicType, inst.index()) }
+                    val lea = bb.insertBefore(inst) { it.leaStack(inst.source(), inst.basicType, inst.index()) }
                     ValueInstruction.replaceUsages(inst, lea)
-                    bb.kill(i + 1)
+                    bb.kill(inst)
                 }
                 gfp(generate(), nop()) (inst) -> {
                     inst as GetFieldPtr
 
                     when (val base = inst.basicType) {
                         is ArrayType -> {
-                            val lea = bb.insert(i) {
+                            val lea = bb.insertBefore(inst) {
                                 it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index())
                             }
                             ValueInstruction.replaceUsages(inst, lea)
-                            bb.kill(i + 1)
+                            bb.kill(inst)
                         }
                         is StructType -> {
-                            val lea = bb.insert(i) {
+                            val lea = bb.insertBefore(inst) {
                                 it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index().toInt())))
                             }
                             ValueInstruction.replaceUsages(inst, lea)
-                            bb.kill(i + 1)
+                            bb.kill(inst)
                         }
                     }
                 }
@@ -86,7 +85,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         }
 
         for (bb in cfg) {
-            bb.forEachInstruction { i, inst -> closure(bb, inst, i) }
+            bb.forEachInstruction { inst -> closure(bb, inst) }
         }
     }
     private fun replaceGEPAndStore() {
@@ -106,44 +105,44 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
             }
         }
 
-        fun closure(bb: Block, inst: Instruction, i: Int): Int {
+        fun closure(bb: Block, inst: Instruction): Int {
             when {
                 store(gfpOrGep(generate().not(), nop()), nop()) (inst) -> {
                     inst as Store
                     val pointer = inst.pointer() as ValueInstruction
-                    bb.insert(i) { it.move(getSource(pointer), inst.value(), getIndex(pointer)) }
-                    bb.kill(i + 1)
+                    bb.insertBefore(inst) { it.move(getSource(pointer), inst.value(), getIndex(pointer)) }
+                    bb.kill(inst)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.kill(bb.indexOf(pointer))
+                        bb.kill(pointer) // TODO bb may not contain pointer
                     }
                 }
                 store(gfpOrGep(generate(), nop()), nop()) (inst) -> {
                     inst as Store
                     val pointer = inst.pointer() as ValueInstruction
-                    bb.insert(i) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
-                    bb.kill(i + 1)
+                    bb.insertBefore(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
+                    bb.kill(inst)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.kill(bb.indexOf(pointer))
+                        bb.kill(pointer) // TODO bb may not contain pointer
                     }
                 }
                 load(gfpOrGep(generate().not(), nop())) (inst) -> {
                     inst as Load
                     val pointer = inst.operand() as ValueInstruction
-                    val copy = bb.insert(i) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
+                    val copy = bb.insertBefore(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
                     ValueInstruction.replaceUsages(inst, copy)
-                    bb.kill(i + 1)
+                    bb.kill(inst)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.kill(bb.indexOf(pointer))
+                        bb.kill(pointer) // TODO bb may not contain pointer
                     }
                 }
                 load(gfpOrGep(generate(), nop())) (inst) -> {
                     inst as Load
                     val pointer = inst.operand() as ValueInstruction
-                    val copy = bb.insert(i) { it.loadFromStack(getSource(pointer), inst.type(), getIndex(pointer)) }
+                    val copy = bb.insertBefore(inst) { it.loadFromStack(getSource(pointer), inst.type(), getIndex(pointer)) }
                     ValueInstruction.replaceUsages(inst, copy)
-                    bb.kill(i + 1)
+                    bb.kill(inst)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.kill(bb.indexOf(pointer))
+                        bb.kill(pointer) // TODO bb may not contain pointer
                     }
                 }
             }
@@ -151,26 +150,26 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         }
 
         for (bb in cfg) {
-            bb.forEachInstruction { i, inst -> closure(bb, inst, i) }
+            bb.forEachInstruction { inst -> closure(bb, inst) }
         }
     }
     private fun replaceEscaped() {
-        fun closure(bb: Block, inst: Instruction, i: Int): Int {
+        fun closure(bb: Block, inst: Instruction): Int {
             when {
-                inst is Alloc && alloc() (inst) -> replaceAlloc(bb, inst, i)
+                inst is Alloc && alloc() (inst) -> replaceAlloc(bb, inst)
                 store(nop(), generate()) (inst) -> {
                     inst as Store
-                    val lea = bb.insert(i) { it.lea(inst.value() as Generate) }
+                    val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
                     inst.update(1, lea)
                     return 1
                 }
                 copy(generate()) (inst) -> {
-                    replaceCopy(bb, inst as Copy, i)
+                    replaceCopy(bb, inst as Copy)
                     return 0
                 }
                 ptr2int(generate()) (inst) -> {
                     inst as Pointer2Int
-                    val lea = bb.insert(i) { it.lea(inst.value() as Generate) }
+                    val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
                     inst.update(0, lea)
                     return 1
                 }
@@ -179,7 +178,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         }
 
         for (bb in cfg.bfsTraversal()) {
-            bb.forEachInstruction { i, inst -> closure(bb, inst, i) }
+            bb.forEachInstruction { inst -> closure(bb, inst) }
         }
     }
 

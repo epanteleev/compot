@@ -42,7 +42,7 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
         for ((bb, vSet) in joinSet) {
             bb as Block
             for (v in vSet) {
-                bb.insert(0) {
+                bb.prepend {
                     it.uncompletedPhi(v.allocatedType as PrimitiveType, v)
                 }
             }

@@ -28,29 +28,26 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
     }
 
     private fun handleBlock(bb: Block) {
-        val instructions = bb.instructions()
-        var idx = 0
-
-        while (idx < instructions.size) {
-            val inst = instructions[idx]
-            idx += 1
-
+        fun  closure(bb: Block, inst: Instruction): Int {
             if (inst !is Neg) {
-                continue
+                return 0
             }
 
             val type = inst.type()
             if (type !is FloatingPointType) {
-                continue
+                return 0
             }
 
-            val xor = bb.insert(idx - 1) {
+            val xor = bb.insertBefore(inst) {
                 it.arithmeticBinary(inst.operand(), ArithmeticBinaryOp.Xor, minusZero(type))
             }
 
             ValueInstruction.replaceUsages(inst, xor)
-            bb.kill(idx)
+            bb.kill(inst)
+            return 1
         }
+
+        bb.forEachInstruction { inst -> closure(bb, inst) }
     }
 
     companion object {

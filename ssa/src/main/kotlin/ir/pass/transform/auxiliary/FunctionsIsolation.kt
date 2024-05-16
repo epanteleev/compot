@@ -19,8 +19,8 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         val begin = cfg.blocks.begin()
         val mapArguments = hashMapOf<ArgumentValue, ValueInstruction>()
 
-        for (arg in cfg.arguments()) { //Todo O(argSize * countOfInstructions) ?!?
-            mapArguments[arg] = begin.insert(0) { it.copy(arg) }
+        for (arg in cfg.arguments()) {
+            mapArguments[arg] = begin.prepend { it.copy(arg) }
         }
 
         for (bb in cfg.blocks) { //TODO we don't need to iterate over all instructions if 'ArgumentValue' will hold their users
@@ -41,38 +41,23 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     private fun isolateCall() {
-        fun insertCopies(bb: Block, idx: Int, call: Callable): Int {
+        fun insertCopies(bb: Block, call: Callable): Int {
             call as Instruction
-            bb.insert(idx) {
-                it.downStackFrame(call)
-            }
+            bb.insertBefore(call) { it.downStackFrame(call) }
 
             for ((i, arg) in call.arguments().withIndex()) {
-                val copy = bb.insert(idx + 1 + i) {
-                    it.copy(arg)
-                }
+                val copy = bb.insertBefore(call) { it.copy(arg) }
                 call.update(i, copy)
             }
-
-            val upStackFramePosition = idx + call.arguments().size + 2
-            bb.insert(upStackFramePosition) {
-                it.upStackFrame(call)
-            }
+            bb.insertAfter(call) { it.upStackFrame(call) }
 
             return call.arguments().size + 2
         }
 
         for (bb in cfg.blocks) {
-            val instructions = bb.instructions()
-            var idx = 0
-            while (idx < instructions.size) {
-                val c = instructions[idx]
-                idx += 1
-                if (c !is Callable) {
-                    continue
-                }
-
-                idx += insertCopies(bb, idx - 1, c)
+            bb.forEachInstruction { inst ->
+                val call = inst as? Callable ?: return@forEachInstruction 0
+                return@forEachInstruction insertCopies(bb, call)
             }
         }
     }
