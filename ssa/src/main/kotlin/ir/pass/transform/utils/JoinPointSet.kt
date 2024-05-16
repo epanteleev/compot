@@ -5,12 +5,12 @@ import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.BasicBlocks
 import ir.module.block.Label
+import ir.module.block.AnyBlock
 import ir.dominance.DominatorTree
-import ir.module.block.Block
 
 
-class JoinPointSet internal constructor(private val joinSet: Map<Block, MutableSet<Alloc>>) {
-    operator fun iterator(): Iterator<Map.Entry<Block, Set<Alloc>>> {
+class JoinPointSet internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>) {
+    operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<Alloc>>> {
         return joinSet.iterator()
     }
 
@@ -27,26 +27,26 @@ class JoinPointSet internal constructor(private val joinSet: Map<Block, MutableS
     }
 }
 
-private class JoinPointSetEvaluate(private val blocks: BasicBlocks, private val frontiers: Map<Block, List<Block>>) {
-    private val joinSet = intMapOf<Block, MutableSet<Alloc>>(blocks.size()) { bb: Label -> bb.index }
+private class JoinPointSetEvaluate(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
+    private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(blocks.size()) { bb: Label -> bb.index }
 
-    private fun hasDef(bb: Block, variable: Alloc): Boolean {
-        if (bb.instructions().contains(variable)) {
+    private fun hasDef(bb: AnyBlock, variable: Alloc): Boolean {
+        if (bb.contains(variable)) {
             return true
         }
         for (users in variable.usedIn()) {
             if (users !is Store) {
                 continue
             }
-            if (bb.instructions().contains(users)) {
+            if (bb.contains(users)) {
                 return true
             }
         }
         return false
     }
 
-    private fun calculateForVariable(v: Alloc, stores: MutableSet<Block>) {
-        val phiPlaces = mutableSetOf<Block>()
+    private fun calculateForVariable(v: Alloc, stores: MutableSet<AnyBlock>) {
+        val phiPlaces = mutableSetOf<AnyBlock>()
 
         while (stores.isNotEmpty()) {
             val x = stores.first()
@@ -77,7 +77,7 @@ private class JoinPointSetEvaluate(private val blocks: BasicBlocks, private val 
         val stores = allocInfo.allStores()
 
         for ((v, vStores) in stores) {
-            calculateForVariable(v, vStores as MutableSet<Block>)
+            calculateForVariable(v, vStores as MutableSet<AnyBlock>)
         }
 
         return JoinPointSet(joinSet)
