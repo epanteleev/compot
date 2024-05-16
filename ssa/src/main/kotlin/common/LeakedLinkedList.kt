@@ -2,21 +2,21 @@ package common
 
 
 // Ordinary linked list with leaked abstraction
-class LeakedLinkedList<T> : List<LListNode<T>> {
-    private var head: LListNode<T>? = null
-    private var tail: LListNode<T>? = null
+open class LeakedLinkedList<T: LListNode> : List<T> {
+    private var head: T? = null
+    private var tail: T? = null
     override var size = 0
 
-    override fun get(index: Int): LListNode<T> {
-        var current = head
+    override fun get(index: Int): T {
+        var current: LListNode? = head
         for (i in 0 until index) {
             current = current!!.next
         }
-        return current!!
+        return current as T
     }
 
-    override fun indexOf(element: LListNode<T>): Int {
-        var current = head
+    override fun indexOf(element: T): Int {
+        var current: LListNode? = head
         var index = 0
         while (current != null) {
             if (current == element) {
@@ -28,7 +28,70 @@ class LeakedLinkedList<T> : List<LListNode<T>> {
         return -1
     }
 
-    override fun containsAll(elements: Collection<LListNode<T>>): Boolean {
+    fun add(index: Int, value: T) {
+        if (index == size) {
+            add(value)
+            return
+        }
+        var current: LListNode? = head
+        for (i in 0 until index) {
+            current = current!!.next
+        }
+        value.next = current
+        value.prev = current!!.prev
+        current.prev = value
+        if (value.prev != null) {
+            value.prev!!.next = value
+        } else {
+            head = value
+        }
+        size++
+    }
+
+    operator fun set(index: Int, value: T) {
+        var current: LListNode? = head
+        for (i in 0 until index) {
+            current = current!!.next
+        }
+        value.next = current!!.next
+        value.prev = current.prev
+        if (value.prev != null) {
+            value.prev!!.next = value
+        } else {
+            head = value
+        }
+        if (value.next != null) {
+            value.next!!.prev = value
+        } else {
+            tail = value
+        }
+    }
+
+
+    fun removeIf(predicate: (T) -> Boolean): Boolean {
+        var current: LListNode? = head
+        while (current != null) {
+            if (predicate(current as T)) {
+                val next = current.next
+                remove(current)
+                current = next
+                continue
+            }
+            current = current.next
+        }
+        return false
+    }
+
+    fun removeAt(index: Int): T {
+        var current: LListNode? = head
+        for (i in 0 until index) {
+            current = current!!.next
+        }
+        remove(current as T)
+        return current
+    }
+
+    override fun containsAll(elements: Collection<T>): Boolean {
         for (element in elements) {
             if (!contains(element)) {
                 return false
@@ -37,8 +100,8 @@ class LeakedLinkedList<T> : List<LListNode<T>> {
         return true
     }
 
-    override fun contains(element: LListNode<T>): Boolean {
-        var current = head
+    override fun contains(element: T): Boolean {
+        var current: LListNode? = head
         while (current != null) {
             if (current == element) {
                 return true
@@ -48,64 +111,65 @@ class LeakedLinkedList<T> : List<LListNode<T>> {
         return false
     }
 
-    fun add(value: T): LListNode<T> {
-        val node = LListNode(value)
+    fun add(value: T) {
         if (head == null) {
-            head = node
-            tail = node
+            head = value
+            tail = value
         } else {
-            tail!!.next = node
-            node.prev = tail
-            tail = node
+            tail!!.next = value
+            value.prev = tail
+            tail = value
         }
         size++
-        return node
     }
 
-    fun remove(node: LListNode<T>) {
+    fun remove(node: T): T {
         if (node.prev != null) {
             node.prev!!.next = node.next
         } else {
-            head = node.next
+            head = node.next as T?
         }
         if (node.next != null) {
             node.next!!.prev = node.prev
         } else {
-            tail = node.prev
+            tail = node.prev as T?
         }
         size--
+        node.next = null
+        node.prev = null
+        return node
     }
 
     override fun isEmpty(): Boolean = size == 0
 
-    override fun iterator(): Iterator<LListNode<T>> {
-        return object : Iterator<LListNode<T>> {
+    override fun iterator(): Iterator<T> {
+        return object : Iterator<T> {
             private var current = head
             override fun hasNext(): Boolean = current != null
-            override fun next(): LListNode<T> {
+            override fun next(): T {
                 val result = current
-                current = current!!.next
+                current = current!!.next as T?
                 return result!!
             }
         }
     }
 
-    override fun listIterator(): ListIterator<LListNode<T>> {
-        return object : ListIterator<LListNode<T>> {
+    override fun listIterator(): ListIterator<T> {
+        return object : ListIterator<T> {
             private var current = head
             private var index = 0
             override fun hasNext(): Boolean = current != null
             override fun hasPrevious(): Boolean = current != null
-            override fun next(): LListNode<T> {
+            override fun next(): T {
                 val result = current
-                current = current!!.next
+                current = current!!.next as T?
                 index++
                 return result!!
             }
             override fun nextIndex(): Int = index
-            override fun previous(): LListNode<T> {
+            override fun previous(): T {
                 val result = current
-                current = current!!.prev
+                current = current!!.prev as T?
                 index--
                 return result!!
             }
@@ -113,28 +177,28 @@ class LeakedLinkedList<T> : List<LListNode<T>> {
         }
     }
 
-    override fun listIterator(index: Int): ListIterator<LListNode<T>> {
-        return object : ListIterator<LListNode<T>> {
+    override fun listIterator(index: Int): ListIterator<T> {
+        return object : ListIterator<T> {
             private var current = head
             private var currentIndex = 0
             init {
                 for (i in 0 until index) {
-                    current = current!!.next
+                    current = current!!.next as T?
                     currentIndex++
                 }
             }
             override fun hasNext(): Boolean = current != null
             override fun hasPrevious(): Boolean = current != null
-            override fun next(): LListNode<T> {
+            override fun next(): T {
                 val result = current
-                current = current!!.next
+                current = current!!.next as T?
                 currentIndex++
                 return result!!
             }
             override fun nextIndex(): Int = currentIndex
-            override fun previous(): LListNode<T> {
+            override fun previous(): T {
                 val result = current
-                current = current!!.prev
+                current = current!!.prev as T?
                 currentIndex--
                 return result!!
             }
@@ -142,27 +206,27 @@ class LeakedLinkedList<T> : List<LListNode<T>> {
         }
     }
 
-    override fun subList(fromIndex: Int, toIndex: Int): List<LListNode<T>> {
-        val result = mutableListOf<LListNode<T>>()
+    override fun subList(fromIndex: Int, toIndex: Int): List<T> {
+        val result = mutableListOf<T>()
         var current = head
         for (i in 0 until fromIndex) {
-            current = current!!.next
+            current = current!!.next as T?
         }
         for (i in fromIndex until toIndex) {
             result.add(current!!)
-            current = current.next
+            current = current.next as T?
         }
         return result
     }
 
-    override fun lastIndexOf(element: LListNode<T>): Int {
+    override fun lastIndexOf(element: T): Int {
         var current = tail
         var index = size - 1
         while (current != null) {
             if (current == element) {
                 return index
             }
-            current = current.prev
+            current = current.prev as T?
             index--
         }
         return -1
@@ -173,8 +237,8 @@ class LeakedLinkedList<T> : List<LListNode<T>> {
             append("[")
             var current = head
             while (current != null) {
-                append(current.value)
-                current = current.next
+                append(current.toString())
+                current = current.next as T?
                 if (current != null) {
                     append(", ")
                 }
@@ -183,42 +247,13 @@ class LeakedLinkedList<T> : List<LListNode<T>> {
         }
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+    fun first(): LListNode = head!!
 
-        other as LeakedLinkedList<*>
+    fun firstOrNull(): LListNode? = head
 
-        if (size != other.size) return false
-        var current = head
-        var otherCurrent = other.head
-        while (current != null) {
-            if (current.value != otherCurrent!!.value) {
-                return false
-            }
-            current = current.next
-            otherCurrent = otherCurrent.next
-        }
-        return true
-    }
+    fun last(): LListNode = tail!!
 
-    override fun hashCode(): Int {
-        var result = 1
-        var current = head
-        while (current != null) {
-            result = 31 * result + current.value.hashCode()
-            current = current.next
-        }
-        return result
-    }
-
-    fun first(): LListNode<T> = head!!
-
-    fun firstOrNull(): T? = head?.value
-
-    fun last(): LListNode<T> = tail!!
-
-    fun lastOrNull(): T? = tail?.value
+    fun lastOrNull(): LListNode? = tail
 
     fun clear() {
         head = null
@@ -227,22 +262,7 @@ class LeakedLinkedList<T> : List<LListNode<T>> {
     }
 }
 
-class LListNode<T>(val value: T) {
-    internal var next: LListNode<T>? = null
-    internal var prev: LListNode<T>? = null
-
-    fun next(): T? = next?.value
-    fun prev(): T? = prev?.value
-}
-
-inline fun<reified T> leakedLinkedListOf(values: Collection<T>): LeakedLinkedList<T> {
-    val list = LeakedLinkedList<T>()
-    for (v in values) {
-        list.add(v)
-    }
-    return list
-}
-
-inline fun<reified T> leakedLinkedListOf(vararg values: T): LeakedLinkedList<T> {
-    return leakedLinkedListOf(values.asList())
+abstract class LListNode {
+    internal var next: LListNode? = null
+    internal var prev: LListNode? = null
 }

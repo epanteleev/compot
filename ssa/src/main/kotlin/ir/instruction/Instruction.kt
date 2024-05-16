@@ -1,10 +1,11 @@
 package ir.instruction
 
+import common.LListNode
 import ir.Value
 import ir.instruction.utils.IRInstructionVisitor
 
 
-abstract class Instruction(protected val operands: Array<Value>) {
+abstract class Instruction(protected val operands: Array<Value>): LListNode() {
     fun usedInstructions(): List<ValueInstruction> {
         return operands.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
     }

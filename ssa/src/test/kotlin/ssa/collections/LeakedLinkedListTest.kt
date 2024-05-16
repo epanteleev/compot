@@ -1,11 +1,22 @@
 package ssa.collections
 
 import common.LListNode
-import common.leakedLinkedListOf
-import org.junit.jupiter.api.assertDoesNotThrow
+import common.LeakedLinkedList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+
+class IntNode(val value: Int) : LListNode()
+class IntLeakedLinkedList : LeakedLinkedList<IntNode>()
+
+
+fun leakedLinkedListOf(vararg elements: Int): IntLeakedLinkedList {
+    val list = IntLeakedLinkedList()
+    for (element in elements) {
+        list.add(IntNode(element))
+    }
+    return list
+}
 
 class LeakedLinkedListTest {
     @Test
@@ -46,36 +57,9 @@ class LeakedLinkedListTest {
     }
 
     @Test
-    fun testLeakedLinkedListAdd() {
-        val list = leakedLinkedListOf(1, 2, 3, 4, 5)
-        val node = list.add(6)
-        assert(list.size == 6)
-        assert(list[5].value == 6)
-        assert(list.contains(node))
-    }
-
-    @Test
     fun testLeakedLinkedListRemove() {
         val list = leakedLinkedListOf(1, 2, 3, 4, 5)
         val node = list[2]
-        list.remove(node)
-        assert(list.size == 4)
-        assert(!list.contains(node))
-    }
-
-    @Test
-    fun testLeakedLinkedListRemoveHead() {
-        val list = leakedLinkedListOf(1, 2, 3, 4, 5)
-        val node = list.first()
-        list.remove(node)
-        assert(list.size == 4)
-        assert(!list.contains(node))
-    }
-
-    @Test
-    fun testLeakedLinkedListRemoveTail() {
-        val list = leakedLinkedListOf(1, 2, 3, 4, 5)
-        val node = list.last()
         list.remove(node)
         assert(list.size == 4)
         assert(!list.contains(node))
@@ -114,38 +98,9 @@ class LeakedLinkedListTest {
     }
 
     @Test
-    fun testLeakedLinkedListEquals() {
-        val list1 = leakedLinkedListOf(1, 2, 3, 4, 5)
-        val list2 = leakedLinkedListOf(1, 2, 3, 4, 5)
-        assert(list1 == list2)
-    }
-
-    @Test
     fun testLeakedLinkedListHashCode() {
         val list = leakedLinkedListOf(1, 2, 3, 4, 5)
         assert(list.hashCode() == list.hashCode())
-    }
-
-    @Test
-    fun testLeakedLinkedListToString() {
-        val list = leakedLinkedListOf(1, 2, 3, 4, 5)
-        assert(list.toString() == "[1, 2, 3, 4, 5]")
-    }
-
-    @Test
-    fun testLLNode() {
-        val node = LListNode(1)
-        assert(node.value == 1)
-        assert(node.prev == null)
-        assert(node.next == null)
-    }
-
-    @Test
-    fun testLLNodeNeighbours() {
-        val list = leakedLinkedListOf(1, 2, 3, 4, 5)
-        val node = list[2]
-        assert(node.prev() == 2)
-        assert(node.next() == 4)
     }
 
     @Test

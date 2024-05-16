@@ -1,5 +1,6 @@
 package ir.module.block
 
+import common.LeakedLinkedList
 import ir.*
 import ir.Value
 import ir.types.*
@@ -11,7 +12,7 @@ import ir.module.IndirectFunctionPrototype
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     AnyInstructionFabric, AnyBlock {
-    private val instructions = arrayListOf<Instruction>()
+    private val instructions = LeakedLinkedList<Instruction>()
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
 

@@ -1,7 +1,5 @@
 package ir.instruction
 
-import ir.Value
-
 abstract class AdjustStackFrame(protected open val callable: Callable): Instruction(arrayOf()) {
     fun call(): Callable = callable
 

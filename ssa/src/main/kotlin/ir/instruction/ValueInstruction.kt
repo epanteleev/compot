@@ -46,8 +46,6 @@ abstract class ValueInstruction(protected val identifier: String, protected val 
     }
 
     companion object {
-
-
         fun replaceUsages(inst: ValueInstruction, toValue: Value) {
             val usedIn = inst.usedIn
             inst.usedIn = arrayListOf()
