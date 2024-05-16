@@ -26,7 +26,7 @@ class FunctionDataBuilder private constructor(
 
     //TODO bad design???
     fun last(): Instruction? {
-        return bb.instructions().lastOrNull()
+        return bb.lastOrNull()
     }
 
     override fun not(value: Value): Not {

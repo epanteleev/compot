@@ -45,6 +45,19 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return last as TerminateInstruction
     }
 
+    fun lastOrNull(): TerminateInstruction? {
+        if (instructions.isEmpty()) {
+            return null
+        }
+
+        val last = instructions.last()
+        if (last !is TerminateInstruction) {
+            return null
+        }
+
+        return last
+    }
+
     fun begin(): Instruction {
         assert(instructions.isNotEmpty()) {
             "bb=$this must have any instructions"

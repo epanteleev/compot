@@ -37,7 +37,7 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
 
     protected fun normalizeBlocks(): Boolean {
         val last = blocks.blocks().find {
-            it.instructions().lastOrNull() is Return
+            it.lastOrNull() is Return
         }
         if (last == null) {
             throw IllegalStateException("Function '${prototype.name}' does not have return instruction")

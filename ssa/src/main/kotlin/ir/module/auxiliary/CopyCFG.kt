@@ -41,7 +41,7 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
 
     private fun copy(thisBlock: Block) {
         val newBB = oldToNewBlock[thisBlock]!!
-        for (inst in thisBlock.instructions()) {
+        for (inst in thisBlock) {
             newBB.add(newInst(inst))
         }
     }
