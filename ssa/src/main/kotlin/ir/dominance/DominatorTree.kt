@@ -1,11 +1,11 @@
 package ir.dominance
 
 import ir.module.BasicBlocks
+import ir.module.block.Block
 import ir.module.block.Label
-import ir.module.block.AnyBlock
 
 
-class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
+class DominatorTree(private val idomMap: Map<Block, Block>) {
     private val cachedDominators = hashMapOf<Label, List<Label>>()
 
     private fun calculateDominators(target: Label): List<Label> {
@@ -44,8 +44,8 @@ class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
         return dom
     }
 
-    fun frontiers(): Map<AnyBlock, List<AnyBlock>> {
-        val dominanceFrontiers = hashMapOf<AnyBlock, MutableList<AnyBlock>>()
+    fun frontiers(): Map<Block, List<Block>> {
+        val dominanceFrontiers = hashMapOf<Block, MutableList<Block>>()
 
         idomMap.forEach { (bb, idom) ->
             val predecessors = bb.predecessors()
@@ -54,7 +54,7 @@ class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
             }
 
             for (p in predecessors) {
-                var runner: AnyBlock = p
+                var runner: Block = p
                 while (runner != idom) {
                     (dominanceFrontiers.getOrPut(runner) { arrayListOf() }).add(bb)
                     runner = idomMap[runner]!!
@@ -65,7 +65,7 @@ class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
         return dominanceFrontiers
     }
 
-    operator fun iterator(): Iterator<Map.Entry<AnyBlock, AnyBlock>> {
+    operator fun iterator(): Iterator<Map.Entry<Block, Block>> {
         return idomMap.iterator()
     }
 

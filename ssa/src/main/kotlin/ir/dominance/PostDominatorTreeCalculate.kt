@@ -1,11 +1,11 @@
 package ir.dominance
 
 import ir.module.BasicBlocks
-import ir.module.block.AnyBlock
+import ir.module.block.Block
 
 
 internal object PostDominatorTreeCalculate : DominatorCalculate {
-    override fun calculateIncoming(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> {
+    override fun calculateIncoming(postorder: List<Block>, blockToIndex: Map<Block, Int>): Map<Int, List<Int>> {
         val successors = hashMapOf<Int, List<Int>>()
 
         for (bb in postorder) {
@@ -20,7 +20,7 @@ internal object PostDominatorTreeCalculate : DominatorCalculate {
         return successors
     }
 
-    override fun blockOrdering(basicBlocks: BasicBlocks): List<AnyBlock> {
+    override fun blockOrdering(basicBlocks: BasicBlocks): List<Block> {
         return basicBlocks.backwardPostorder().order()
     }
 

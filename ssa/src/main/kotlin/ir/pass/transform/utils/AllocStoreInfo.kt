@@ -3,17 +3,17 @@ package ir.pass.transform.utils
 import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.BasicBlocks
+import ir.module.block.Block
 import ir.pass.isLocalVariable
-import ir.module.block.AnyBlock
 
 
 class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     private val allocated: Set<Alloc> by lazy { allocatedVariablesInternal() }
-    private val stores: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal(allocated) }
+    private val stores: Map<Alloc, Set<Block>> by lazy { allStoresInternal(allocated) }
 
     private fun allocatedVariablesInternal(): Set<Alloc> {
         val stores = hashSetOf<Alloc>()
-        fun allocatedInGivenBlock(bb: AnyBlock) {
+        fun allocatedInGivenBlock(bb: Block) {
             for (inst in bb) {
                 if (inst !is Alloc) {
                     continue
@@ -34,8 +34,8 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
         return stores
     }
 
-    private fun allStoresInternal(variables: Set<Alloc>): Map<Alloc, Set<AnyBlock>> {
-        val stores = hashMapOf<Alloc, MutableSet<AnyBlock>>()
+    private fun allStoresInternal(variables: Set<Alloc>): Map<Alloc, Set<Block>> {
+        val stores = hashMapOf<Alloc, MutableSet<Block>>()
         for (v in variables) {
             stores[v] = mutableSetOf()
         }
@@ -65,7 +65,7 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     }
 
     /** Find all bd where are stores of given local variable. */
-    fun allStores(): Map<Alloc, Set<AnyBlock>> {
+    fun allStores(): Map<Alloc, Set<Block>> {
         return stores
     }
 

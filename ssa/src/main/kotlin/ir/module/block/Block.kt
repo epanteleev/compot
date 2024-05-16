@@ -10,22 +10,22 @@ import ir.module.IndirectFunctionPrototype
 
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :
-    AnyInstructionFabric, AnyBlock {
+    AnyInstructionFabric, Label {
     private val instructions = arrayListOf<Instruction>()
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
 
     private var indexToAppend = 0
 
-    override fun instructions(): List<Instruction> {
+    fun instructions(): List<Instruction> {
         return instructions
     }
 
-    override fun predecessors(): List<Block> {
+    fun predecessors(): List<Block> {
         return predecessors
     }
 
-    override fun successors(): List<Block> {
+    fun successors(): List<Block> {
         return successors
     }
 
@@ -33,7 +33,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return predecessor.successors().size > 1 && predecessors().size > 1
     }
 
-    override fun last(): TerminateInstruction {
+    fun last(): TerminateInstruction {
         assert(instructions.isNotEmpty()) {
             "bb=$this must have any instructions"
         }
@@ -45,7 +45,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return last as TerminateInstruction
     }
 
-    override fun begin(): Instruction {
+    fun begin(): Instruction {
         assert(instructions.isNotEmpty()) {
             "bb=$this must have any instructions"
         }
@@ -150,7 +150,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return instructions.isEmpty()
     }
 
-    override operator fun iterator(): Iterator<Instruction> {
+    operator fun iterator(): Iterator<Instruction> {
         return instructions.iterator()
     }
 

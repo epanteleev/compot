@@ -40,7 +40,6 @@ object Mem2RegFabric: PassFabric {
 private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: JoinPointSet) {
     private fun insertPhis() {
         for ((bb, vSet) in joinSet) {
-            bb as Block
             for (v in vSet) {
                 bb.insert(0) {
                     it.uncompletedPhi(v.allocatedType as PrimitiveType, v)
