@@ -11,8 +11,6 @@ class ReturnVoid private constructor(): Return(arrayOf()) {
     }
 
     companion object {
-        private val ret = ReturnVoid()
-
-        fun make(): ReturnVoid = ret
+        fun make(): ReturnVoid = ReturnVoid()
     }
 }

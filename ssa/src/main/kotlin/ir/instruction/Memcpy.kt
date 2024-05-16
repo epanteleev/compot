@@ -52,7 +52,6 @@ class Memcpy private constructor(dst: Value, src: Value, length: UnsignedInteger
         }
 
         return operands[2] as UnsignedIntegerConstant
-
     }
 
     companion object {

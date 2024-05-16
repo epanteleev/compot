@@ -48,26 +48,6 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
         size++
     }
 
-    operator fun set(index: Int, value: T) {
-        var current: LListNode? = head
-        for (i in 0 until index) {
-            current = current!!.next
-        }
-        value.next = current!!.next
-        value.prev = current.prev
-        if (value.prev != null) {
-            value.prev!!.next = value
-        } else {
-            head = value
-        }
-        if (value.next != null) {
-            value.next!!.prev = value
-        } else {
-            tail = value
-        }
-    }
-
-
     fun removeIf(predicate: (T) -> Boolean): Boolean {
         var current: LListNode? = head
         while (current != null) {
@@ -119,6 +99,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
             tail!!.next = value
             value.prev = tail
             tail = value
+            value.next = null
         }
         size++
     }

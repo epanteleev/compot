@@ -118,15 +118,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return builder(this)
     }
 
-    fun swap(firstIndex: Int, secondIndex: Int) {
-        assert(instructions.size > firstIndex && firstIndex >= 0)
-        assert(instructions.size > secondIndex && secondIndex >= 0)
-
-        val temp = instructions[firstIndex]
-        instructions[firstIndex] = instructions[secondIndex]
-        instructions[secondIndex] = temp
-    }
-
     fun indexOf(instruction: Instruction): Int {
         val index = instructions.indexOf(instruction)
         assert(index != -1) {

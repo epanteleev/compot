@@ -258,7 +258,7 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
     }
 
     override fun visit(returnVoid: ReturnVoid): Instruction {
-        return returnVoid
+        return ReturnVoid.make()
     }
 
     override fun visit(indirectionCall: IndirectionCall): Instruction {

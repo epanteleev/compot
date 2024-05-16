@@ -65,27 +65,6 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
         }
     }
 
-    private fun swapDependentPhis(bb: Block) {
-        bb.phis { phi ->
-            // Exchange phi functions
-            for (used in phi.operands()) {
-                if (used !is Phi) {
-                    continue
-                }
-                if (!bb.contains(used)) {
-                    continue
-                }
-
-                val usedIdx = bb.indexOf(used)
-                val phiIndex = bb.indexOf(phi)
-
-                if (usedIdx < phiIndex) {
-                    bb.swap(usedIdx, phiIndex)
-                }
-            }
-        }
-    }
-
     private fun removeRedundantPhis(defUseInfo: DefUseInfo, deadPool: MutableSet<Instruction>, bb: Block) {
         fun filter(instruction: Instruction): Boolean {
             if (instruction !is Phi) {
@@ -109,7 +88,6 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
         val bbToMapValues = ReachingDefinitionAnalysis.run(cfg, dominatorTree)
         for (bb in cfg) {
             completePhis(bbToMapValues, bb)
-            swapDependentPhis(bb)
         }
 
         val defUseInfo = cfg.defUseInfo()

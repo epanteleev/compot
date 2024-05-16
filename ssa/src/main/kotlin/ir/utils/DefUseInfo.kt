@@ -1,33 +1,29 @@
 package ir.utils
 
 import ir.instruction.Instruction
+import ir.instruction.ValueInstruction
 import ir.module.BasicBlocks
 
-class DefUseInfo private constructor(private val defUse: MutableMap<Instruction, MutableList<Instruction>>) {
-    private fun addUsages(instruction: Instruction, usages: List<Instruction>) {
-        for (v in usages) {
-            (defUse.getOrPut(v) { arrayListOf() }).add(instruction)
-        }
-    }
 
+class DefUseInfo private constructor() {
     fun isNotUsed(v: Instruction): Boolean {
-        return defUse[v] == null
+        if (v is ValueInstruction) {
+            return v.usedIn().isEmpty()
+        }
+        return true
     }
 
     fun usedIn(v: Instruction): List<Instruction> {
-        return defUse[v] as List<Instruction>
+        if (v is  ValueInstruction) {
+            return v.usedIn()
+        }
+
+        return arrayListOf()
     }
 
     companion object {
         fun create(basicBlocks: BasicBlocks): DefUseInfo {
-            val defUseInfo = DefUseInfo(hashMapOf())
-            for (bb in basicBlocks) {
-                for (instruction in bb) {
-                    defUseInfo.addUsages(instruction, instruction.usedInstructions())
-                }
-            }
-
-            return defUseInfo
+            return DefUseInfo()
         }
     }
 }
