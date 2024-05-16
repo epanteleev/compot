@@ -16,7 +16,29 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
 
-    private var indexToAppend = 0
+    private var insertionStrategy: InsertionStrategy = InsertAt(0)
+
+    abstract inner class InsertionStrategy() {
+        abstract fun insert(instruction: Instruction);
+    }
+
+    inner class InsertBefore(private val before: Instruction?) : InsertionStrategy() {
+        override fun insert(instruction: Instruction) {
+            instructions.addBefore(before, instruction)
+        }
+    }
+
+    inner class InsertAt(val idx: Int) : InsertionStrategy() {
+        override fun insert(instruction: Instruction) {
+            instructions.add(idx, instruction)
+        }
+    }
+
+    inner class InsertAfter(private val after: Instruction?) : InsertionStrategy() {
+        override fun insert(instruction: Instruction) {
+            instructions.addAfter(after, instruction)
+        }
+    }
 
     fun instructions(): List<Instruction> {
         return instructions
@@ -114,7 +136,22 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     fun<T> insert(index: Int, builder: (AnyInstructionFabric) -> T): T {
         assert(index >= 0)
-        indexToAppend = index
+        insertionStrategy = InsertAt(index)
+        return builder(this)
+    }
+
+    fun<T> prepend(builder: (AnyInstructionFabric) -> T): T {
+        insertionStrategy = InsertBefore(null)
+        return builder(this)
+    }
+
+    fun<T> insertAfter(after: Instruction, builder: (AnyInstructionFabric) -> T): T {
+        insertionStrategy = InsertAfter(after)
+        return builder(this)
+    }
+
+    fun<T> insertBefore(before: Instruction, builder: (AnyInstructionFabric) -> T): T {
+        insertionStrategy = InsertBefore(before)
         return builder(this)
     }
 
@@ -187,8 +224,13 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return instructions.removeIf { filter(it) }
     }
 
-    fun remove(instructionIndex: Int) {
+    fun kill(instructionIndex: Int) {
         val removed = instructions.removeAt(instructionIndex)
+        removed.destroy()
+    }
+
+    fun kill(instruction: Instruction) {
+        val removed = instructions.remove(instruction)
         removed.destroy()
     }
 
@@ -436,8 +478,8 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     }
 
     private fun append(instruction: Instruction) {
-        instructions.add(indexToAppend, instruction)
-        indexToAppend = instructions.size
+        insertionStrategy.insert(instruction)
+        insertionStrategy = InsertAt(instructions.size)
     }
 
     override fun toString(): String {

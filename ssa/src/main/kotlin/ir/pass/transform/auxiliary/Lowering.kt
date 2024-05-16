@@ -13,26 +13,26 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         val toValue   = inst.pointer() as Generate
         val fromValue = inst.value()
         bb.insert(i) { it.move(toValue, fromValue) }
-        bb.remove(i + 1)
+        bb.kill(i + 1)
     }
 
     private fun replaceAlloc(bb: Block, inst: Alloc, i: Int): Generate {
         val gen = bb.insert(i) { it.gen(inst.allocatedType) }
         ValueInstruction.replaceUsages(inst, gen)
-        bb.remove(i + 1)
+        bb.kill(i + 1)
         return gen
     }
 
     private fun replaceLoad(bb: Block, inst: Load, i: Int) {
         val copy = bb.insert(i) { it.copy(inst.operand()) }
         ValueInstruction.replaceUsages(inst, copy)
-        bb.remove(i + 1)
+        bb.kill(i + 1)
     }
 
     private fun replaceCopy(bb: Block, inst: Copy, i: Int) {
         val lea = bb.insert(i) { it.lea(inst.origin() as Generate) }
         ValueInstruction.replaceUsages(inst, lea)
-        bb.remove(i + 1)
+        bb.kill(i + 1)
     }
 
     private fun replaceAllocLoadStores() {
@@ -59,7 +59,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     inst as GetElementPtr
                     val lea = bb.insert(i) { it.leaStack(inst.source(), inst.basicType, inst.index()) }
                     ValueInstruction.replaceUsages(inst, lea)
-                    bb.remove(i + 1)
+                    bb.kill(i + 1)
                 }
                 gfp(generate(), nop()) (inst) -> {
                     inst as GetFieldPtr
@@ -70,14 +70,14 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                                 it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index())
                             }
                             ValueInstruction.replaceUsages(inst, lea)
-                            bb.remove(i + 1)
+                            bb.kill(i + 1)
                         }
                         is StructType -> {
                             val lea = bb.insert(i) {
                                 it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index().toInt())))
                             }
                             ValueInstruction.replaceUsages(inst, lea)
-                            bb.remove(i + 1)
+                            bb.kill(i + 1)
                         }
                     }
                 }
@@ -112,18 +112,18 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     inst as Store
                     val pointer = inst.pointer() as ValueInstruction
                     bb.insert(i) { it.move(getSource(pointer), inst.value(), getIndex(pointer)) }
-                    bb.remove(i + 1)
+                    bb.kill(i + 1)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.remove(bb.indexOf(pointer))
+                        bb.kill(bb.indexOf(pointer))
                     }
                 }
                 store(gfpOrGep(generate(), nop()), nop()) (inst) -> {
                     inst as Store
                     val pointer = inst.pointer() as ValueInstruction
                     bb.insert(i) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
-                    bb.remove(i + 1)
+                    bb.kill(i + 1)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.remove(bb.indexOf(pointer))
+                        bb.kill(bb.indexOf(pointer))
                     }
                 }
                 load(gfpOrGep(generate().not(), nop())) (inst) -> {
@@ -131,9 +131,9 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     val pointer = inst.operand() as ValueInstruction
                     val copy = bb.insert(i) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
                     ValueInstruction.replaceUsages(inst, copy)
-                    bb.remove(i + 1)
+                    bb.kill(i + 1)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.remove(bb.indexOf(pointer))
+                        bb.kill(bb.indexOf(pointer))
                     }
                 }
                 load(gfpOrGep(generate(), nop())) (inst) -> {
@@ -141,9 +141,9 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     val pointer = inst.operand() as ValueInstruction
                     val copy = bb.insert(i) { it.loadFromStack(getSource(pointer), inst.type(), getIndex(pointer)) }
                     ValueInstruction.replaceUsages(inst, copy)
-                    bb.remove(i + 1)
+                    bb.kill(i + 1)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.remove(bb.indexOf(pointer))
+                        bb.kill(bb.indexOf(pointer))
                     }
                 }
             }

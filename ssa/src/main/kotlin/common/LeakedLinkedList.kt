@@ -48,6 +48,45 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
         size++
     }
 
+    // if node is null, add to the beginning
+    fun addBefore(node: T?, value: T) {
+        if (node == null) {
+            value.next = head
+            head = value
+            if (tail == null) {
+                tail = value
+            }
+            size++
+            return
+        }
+        value.prev = node.prev
+        value.next = node
+        node.prev = value
+        if (value.prev != null) {
+            value.prev!!.next = value
+        } else {
+            head = value
+        }
+        size++
+    }
+
+    // if node is null, add to the end
+    fun addAfter(node: T?, value: T) {
+        if (node == null) {
+            add(value)
+            return
+        }
+        value.next = node.next
+        value.prev = node
+        node.next = value
+        if (value.next != null) {
+            value.next!!.prev = value
+        } else {
+            tail = value
+        }
+        size++
+    }
+
     fun removeIf(predicate: (T) -> Boolean): Boolean {
         var current: LListNode? = head
         while (current != null) {

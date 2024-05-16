@@ -1,11 +1,9 @@
 package ir.pass.transform.auxiliary
 
 import ir.instruction.*
-import ir.ArgumentValue
 import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
-import ir.module.block.Label
 import ir.module.FunctionData
 
 

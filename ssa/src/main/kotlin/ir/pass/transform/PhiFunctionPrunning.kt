@@ -70,13 +70,12 @@ class PhiFunctionPruning private constructor(private val cfg: BasicBlocks) {
 
     private fun prunePhis() {
         fun removePhi(phi: Phi, bb: Block) {
-            val idx = bb.indexOf(phi)
             assert(phi.usedIn().fold(true) { acc, value -> acc && (value is Phi) }) {
                 "phi value is used in non phi instruction: operands=${phi.operands()}"
             }
 
             ValueInstruction.replaceUsages(phi, Value.UNDEF)
-            bb.remove(idx)
+            bb.kill(phi)
         }
 
         usefull.forEachUseless { phi, bb -> removePhi(phi, bb)}

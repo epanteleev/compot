@@ -49,7 +49,7 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
             }
 
             ValueInstruction.replaceUsages(inst, xor)
-            bb.remove(idx)
+            bb.kill(idx)
         }
     }
 
