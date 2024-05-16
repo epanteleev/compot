@@ -311,4 +311,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
 abstract class LListNode {
     internal var next: LListNode? = null
     internal var prev: LListNode? = null
+
+    abstract fun prev(): LListNode?
+    abstract fun next(): LListNode?
 }

@@ -56,12 +56,8 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
     }
 
     private fun handleBlock(bb: Block) {
-        val instructions = bb.instructions()
-        var idx = 0
-
-        while (idx < instructions.size) {
-            val inst = instructions[idx]
-
+        bb.forEachInstruction { inst ->
+            var inserted = 0
             for ((opIdx, operand) in inst.operands().withIndex()) {
                 if (operand !is Constant) {
                     continue
@@ -71,13 +67,13 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
 
                 constants.add(constant)
 
-                val loadedConstant = bb.insert(idx) {
+                val loadedConstant = bb.insertBefore(inst) {
                     it.load(operand.type() as PrimitiveType, constant)
                 }
-                idx += 1
+                inserted += 1
                 inst.update(opIdx, loadedConstant)
             }
-            idx += 1
+            inserted
         }
     }
 

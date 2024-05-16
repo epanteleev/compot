@@ -15,7 +15,7 @@ class PhiFunctionPruning private constructor(private val cfg: BasicBlocks) {
     private fun setupPhiPlacesInfo(): Map<Phi, Block> {
         val phiInfo = hashMapOf<Phi, Block>()
         for (bb in cfg) {
-            for (inst in bb.instructions()) {
+            for (inst in bb) {
                 if (inst !is Phi) {
                     continue
                 }

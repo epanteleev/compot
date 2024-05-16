@@ -37,7 +37,7 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
     fun end(): Block {
         val endBlock = basicBlocks.last()
         assert(endBlock.lastOrNull() is Return) {
-            "Last instruction should be return, but got '${endBlock.instructions().last()}'"
+            "Last instruction should be return, but got '${endBlock.last()}'"
         }
         return endBlock
     }

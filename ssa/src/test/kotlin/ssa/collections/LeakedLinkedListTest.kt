@@ -6,7 +6,16 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
-class IntNode(val value: Int) : LListNode()
+class IntNode(val value: Int) : LListNode(){
+    override fun prev(): LListNode? {
+        return prev
+    }
+
+    override fun next(): LListNode? {
+        return next
+    }
+}
+
 class IntLeakedLinkedList : LeakedLinkedList<IntNode>()
 
 

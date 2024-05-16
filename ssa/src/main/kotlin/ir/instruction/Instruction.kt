@@ -10,6 +10,9 @@ abstract class Instruction(protected val operands: Array<Value>): LListNode() {
         return operands.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
     }
 
+    override fun next(): Instruction? = next as Instruction?
+    override fun prev(): Instruction? = prev as Instruction?
+
     fun operands(): Array<Value> {
         return operands
     }
