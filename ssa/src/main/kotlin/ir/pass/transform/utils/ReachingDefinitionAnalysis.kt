@@ -1,15 +1,17 @@
 package ir.pass.transform.utils
 
 import ir.*
-import ir.dominance.DominatorTree
+import ir.types.Type
 import ir.instruction.*
 import ir.module.block.*
 import ir.module.BasicBlocks
 import ir.pass.isLocalVariable
+import ir.dominance.DominatorTree
 import ir.pass.transform.Mem2RegException
-import ir.types.Type
 
 
+
+//TODO this is not a Reaching Definition Analysis
 abstract class AbstractReachingDefinitionAnalysis(protected val dominatorTree: DominatorTree) {
     protected fun rename(bb: Block, oldValue: Value): Value {
         if (oldValue !is ValueInstruction) {
@@ -65,11 +67,9 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, dominator
     }
 
     private fun rewriteValuesSetup(bb: Block) {
-        val instructions = bb.instructions()
         val valueMap = bbToMapValues[bb]!!
-        for (index in instructions.indices) {
-            val instruction = instructions[index]
-            if (instruction is Branch || instruction is ReturnVoid) {
+        for (instruction in bb) {
+            if (instruction.operands().isEmpty()) {
                 continue
             }
 

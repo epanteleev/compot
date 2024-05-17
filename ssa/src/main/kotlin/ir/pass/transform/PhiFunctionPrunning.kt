@@ -29,7 +29,7 @@ class PhiFunctionPruning private constructor(private val cfg: BasicBlocks) {
 
     private fun initialSetup() {
         for (bb in cfg.preorder()) {
-            for (inst in bb.instructions()) {
+            for (inst in bb) {
                 if (inst is Phi) {
                     usefull.markUseless(inst, bb)
                     continue

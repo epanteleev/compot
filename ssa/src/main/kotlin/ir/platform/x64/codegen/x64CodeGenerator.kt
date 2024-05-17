@@ -42,11 +42,11 @@ private class CodeEmitter(private val data: FunctionData,
                           private val valueToRegister: RegisterAllocation,
 ): IRInstructionVisitor<Unit> {
     private val asm: Assembler = unit.mkFunction(data.prototype.name)
-    private val orderedLocation = run {
+    private val callableLocations = run {
         val orderedLocation = identityHashMapOf<Callable, OrderedLocation>()
         var order = 0
         for (bb in data.blocks.linearScanOrder(data.blocks.loopInfo())) {
-            for ((idx, call) in bb.instructions().withIndex()) {
+            for ((idx, call) in bb.withIndex()) {
                 if (call is Callable) {
                     orderedLocation[call] = OrderedLocation(bb, idx, order)
                 }
@@ -300,12 +300,12 @@ private class CodeEmitter(private val data: FunctionData,
         StoreOnStackCodegen(store.source().type() as PrimitiveType, asm)(pointerOperand, value, index)
     }
 
-    override fun visit(instruction: LoadFromStack) {
-        val origin = valueToRegister.operand(instruction.origin())
-        val index = valueToRegister.operand(instruction.index())
-        val dst = valueToRegister.operand(instruction)
+    override fun visit(loadst: LoadFromStack) {
+        val origin = valueToRegister.operand(loadst.origin())
+        val index = valueToRegister.operand(loadst.index())
+        val dst = valueToRegister.operand(loadst)
 
-        LoadFromStackCodegen(instruction.type(), asm)(dst, origin, index)
+        LoadFromStackCodegen(loadst.type(), asm)(dst, origin, index)
     }
 
     override fun visit(lea: LeaStack) {
@@ -540,7 +540,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(downStackFrame: DownStackFrame) {
-        val sdf = orderedLocation[downStackFrame.call()]
+        val sdf = callableLocations[downStackFrame.call()]
         val context = valueToRegister.callerSaveRegisters(sdf!!)
         for (arg in context.savedRegisters) {
             asm.push(POINTER_SIZE, arg)
@@ -557,7 +557,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(upStackFrame: UpStackFrame) {
-        val usf = orderedLocation[upStackFrame.call()]!!
+        val usf = callableLocations[upStackFrame.call()]!!
         val context = valueToRegister.callerSaveRegisters(usf)
 
         val size = context.adjustStackSize()

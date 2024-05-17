@@ -29,7 +29,7 @@ class LiveIntervalsBuilder private constructor(val data: FunctionData) {
     private fun setupLiveRanges() {
         var ordering = -1
         for (bb in linearScanOrder) {
-            for ((idx, inst) in bb.instructions().withIndex()) {
+            for ((idx, inst) in bb.withIndex()) {
                 ordering += 1
                 if (inst !is LocalValue) {
                     continue
@@ -64,7 +64,7 @@ class LiveIntervalsBuilder private constructor(val data: FunctionData) {
                 liveRange.registerUsage(OrderedLocation(bb, index, ordering + index))
             }
 
-            for ((idx, inst) in bb.instructions().withIndex()) {
+            for ((idx, inst) in bb.withIndex()) {
                 ordering += 1
 
                 val location = OrderedLocation(bb, idx, ordering)

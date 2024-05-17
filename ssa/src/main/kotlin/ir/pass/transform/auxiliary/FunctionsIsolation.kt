@@ -24,7 +24,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         }
 
         for (bb in cfg.blocks) { //TODO we don't need to iterate over all instructions if 'ArgumentValue' will hold their users
-            for (inst in bb.instructions()) {
+            for (inst in bb) {
                 if (bb.equals(Label.entry) && inst is Copy) {
                     continue
                 }

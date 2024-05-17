@@ -69,7 +69,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
             predecessors.joinTo(builder)
         }
         builder.append('\n')
-        for ((idx, instruction) in bb.instructions().withIndex()) {
+        for ((idx, instruction) in bb.withIndex()) {
             dumpInstruction(instruction, idx)
             builder.append('\n')
         }
@@ -157,7 +157,7 @@ private class DumpCSSAModule(module: LModule) : DumpModule<LModule>(module) {
         val killedInBlock = arrayListOf<LocalValue>()
 
         for (current in currentFunctionData!!.blocks) {
-            for (inst in current.instructions()) {
+            for (inst in current) {
                 if (inst !is ValueInstruction) {
                     continue
                 }

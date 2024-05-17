@@ -406,15 +406,15 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
-    override fun visit(instruction: LoadFromStack) {
-        assert(LoadFromStack.typeCheck(instruction)) {
-            "Instruction '${instruction.dump()}' has inconsistent types."
+    override fun visit(loadst: LoadFromStack) {
+        assert(LoadFromStack.typeCheck(loadst)) {
+            "Instruction '${loadst.dump()}' has inconsistent types."
         }
     }
 
-    override fun visit(instruction: LeaStack) {
-        assert(LeaStack.typeCheck(instruction)) {
-            "Instruction '${instruction.dump()}' has inconsistent types."
+    override fun visit(leaStack: LeaStack) {
+        assert(LeaStack.typeCheck(leaStack)) {
+            "Instruction '${leaStack.dump()}' has inconsistent types."
         }
     }
 

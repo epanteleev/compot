@@ -1,24 +1,24 @@
 package ir.module.block
 
-import common.LeakedLinkedList
 import ir.*
 import ir.Value
 import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.*
+import common.LeakedLinkedList
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :
-    AnyInstructionFabric, AnyBlock {
+    AnyInstructionFabric, AnyBlock, Iterable<Instruction> {
     private val instructions = LeakedLinkedList<Instruction>()
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
 
     private var insertionStrategy: InsertionStrategy = InsertAt(0)
 
-    abstract inner class InsertionStrategy() {
+    abstract inner class InsertionStrategy {
         abstract fun insert(instruction: Instruction);
     }
 
@@ -38,10 +38,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         override fun insert(instruction: Instruction) {
             instructions.addAfter(after, instruction)
         }
-    }
-
-    fun instructions(): List<Instruction> {
-        return instructions
     }
 
     override fun predecessors(): List<Block> {
@@ -145,17 +141,8 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         return builder(this)
     }
 
-    fun indexOf(instruction: Instruction): Int {
-        val index = instructions.indexOf(instruction)
-        assert(index != -1) {
-            "instruction=$instruction doesn't exist in $this block."
-        }
-
-        return index
-    }
-
-    override fun contains(element: Instruction): Boolean {
-        return instructions.contains(element)
+    override fun contains(instruction: Instruction): Boolean {
+        return instructions.contains(instruction)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -196,10 +183,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         }
     }
 
-    fun phis(): List<Phi> {
-        return instructions.filterIsInstanceTo<Phi, MutableList<Phi>>(arrayListOf())
-    }
-
     fun phis(fn: (Phi) -> Unit) {
         instructions.forEach {
             if (it !is Phi) {
@@ -212,11 +195,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     fun removeIf(filter: (Instruction) -> Boolean): Boolean {
         return instructions.removeIf { filter(it) }
-    }
-
-    fun kill(instructionIndex: Int) {
-        val removed = instructions.removeAt(instructionIndex)
-        removed.destroy()
     }
 
     fun kill(instruction: Instruction) {

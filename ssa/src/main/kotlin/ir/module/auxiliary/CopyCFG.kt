@@ -57,7 +57,7 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
 
     private fun updatePhis(arrayBlocks: BasicBlocks) {
         for (bb in arrayBlocks) {
-            for (inst in bb.instructions()) {
+            for (inst in bb) {
                 if (inst !is Phi) {
                     continue
                 }
@@ -323,18 +323,18 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         return StoreOnStack.make(dest, index, source)
     }
 
-    override fun visit(instruction: LoadFromStack): Instruction {
-        val origin = mapUsage<Value>(instruction.origin())
-        val index  = mapUsage<Value>(instruction.index())
+    override fun visit(loadst: LoadFromStack): Instruction {
+        val origin = mapUsage<Value>(loadst.origin())
+        val index  = mapUsage<Value>(loadst.index())
 
-        return LoadFromStack.make(instruction.name(), instruction.type(), origin, index)
+        return LoadFromStack.make(loadst.name(), loadst.type(), origin, index)
     }
 
-    override fun visit(instruction: LeaStack): Instruction {
-        val origin = mapUsage<Value>(instruction.origin())
-        val index  = mapUsage<Value>(instruction.index())
+    override fun visit(leaStack: LeaStack): Instruction {
+        val origin = mapUsage<Value>(leaStack.origin())
+        val index  = mapUsage<Value>(leaStack.index())
 
-        return LeaStack.make(instruction.name(), instruction.type(), origin, index)
+        return LeaStack.make(leaStack.name(), leaStack.type(), origin, index)
     }
 
     override fun visit(memcpy: Memcpy): Instruction {

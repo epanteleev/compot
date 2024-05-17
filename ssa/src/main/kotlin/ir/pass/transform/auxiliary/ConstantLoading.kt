@@ -9,11 +9,8 @@ import ir.module.Module
 internal class ConstantLoading private constructor(private val cfg: BasicBlocks) {
     private fun pass() {
         for (bb in cfg) {
-            var idx = 0
-            val instructions = bb.instructions()
-            while (idx < instructions.size) {
-                val inst = instructions[idx]
-
+            bb.forEachInstruction { inst ->
+                var inserted = 0
                 for ((i, use) in inst.operands().withIndex()) {
                     if (use !is GlobalConstant && use !is FunctionSymbol) {
                         continue
@@ -21,9 +18,9 @@ internal class ConstantLoading private constructor(private val cfg: BasicBlocks)
 
                     val lea = bb.insert(i) { it.lea(use) }
                     inst.update(i, lea)
-                    idx++
+                    inserted++
                 }
-                idx++
+                inserted
             }
         }
     }

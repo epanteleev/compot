@@ -36,7 +36,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
 
     private fun handleArguments() {
        for (bb in data.blocks) {
-           for (inst in bb.instructions()) {
+           for (inst in bb) {
                if (inst !is Callable) {
                    continue
                }

@@ -48,6 +48,6 @@ interface IRInstructionVisitor<T> {
     fun visit(memcpy: Memcpy): T
     fun visit(copy: IndexedLoad): T
     fun visit(store: StoreOnStack): T
-    fun visit(instruction: LoadFromStack): T
-    fun visit(instruction: LeaStack): T
+    fun visit(loadst: LoadFromStack): T
+    fun visit(leaStack: LeaStack): T
 }

@@ -32,7 +32,7 @@ class LivenessAnalysis private constructor(val data: FunctionData, private val l
             val gen = mutableSetOf<LocalValue>()
             val kill = mutableSetOf<LocalValue>()
 
-            for (inst in bb.instructions()) {
+            for (inst in bb) {
                 // Handle input operands
                 if (inst !is Phi) {
                     for (usage in inst.operands()) {
