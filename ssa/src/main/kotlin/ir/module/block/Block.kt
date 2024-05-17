@@ -10,13 +10,13 @@ import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 
 
-class Block(override val index: Int, private var maxValueIndex: Int = 0) :
+class Block(override val index: Int, private var maxValueIndex: Int = 0):
     AnyInstructionFabric, AnyBlock, Iterable<Instruction> {
     private val instructions = InstructionList()
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
 
-    private var insertionStrategy: InsertionStrategy = InsertAt(0)
+    private var insertionStrategy: InsertionStrategy = InsertAfter(null)
 
     abstract inner class InsertionStrategy {
         abstract fun insert(instruction: Instruction);
@@ -25,12 +25,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     inner class InsertBefore(private val before: Instruction?) : InsertionStrategy() {
         override fun insert(instruction: Instruction) {
             instructions.addBefore(before, instruction)
-        }
-    }
-
-    inner class InsertAt(val idx: Int) : InsertionStrategy() {
-        override fun insert(instruction: Instruction) {
-            instructions.add(idx, instruction)
         }
     }
 
@@ -114,12 +108,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         while (i < instructions.size) {
             i += fn(instructions[i]) + 1
         }
-    }
-
-    fun<T> insert(index: Int, builder: (AnyInstructionFabric) -> T): T {
-        assert(index >= 0)
-        insertionStrategy = InsertAt(index)
-        return builder(this)
     }
 
     fun<T> prepend(builder: (AnyInstructionFabric) -> T): T {
@@ -443,7 +431,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     private fun append(instruction: Instruction) {
         insertionStrategy.insert(instruction)
-        insertionStrategy = InsertAt(instructions.size)
+        insertionStrategy = InsertAfter(instructions.last())
     }
 
     override fun toString(): String {

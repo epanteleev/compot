@@ -16,7 +16,7 @@ internal class ConstantLoading private constructor(private val cfg: BasicBlocks)
                         continue
                     }
 
-                    val lea = bb.insert(i) { it.lea(use) }
+                    val lea = bb.insertBefore(inst) { it.lea(use) }
                     inst.update(i, lea)
                     inserted++
                 }
