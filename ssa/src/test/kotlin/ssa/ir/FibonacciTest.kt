@@ -136,7 +136,6 @@ class FibonacciTest {
     fun testCopy() {
         val module = withBasicBlocks()
         val moduleCopy = module.copy()
-        assertEquals(module.toString(), moduleCopy.toString())
 
         val copy = moduleCopy.copy()
         val copyModule2String = copy.toString()

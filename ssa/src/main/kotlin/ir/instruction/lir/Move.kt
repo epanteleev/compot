@@ -1,6 +1,7 @@
 package ir.instruction.lir
 
 import ir.Value
+import ir.instruction.Generate
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
 
@@ -49,7 +50,7 @@ class Move private constructor(destination: Value, source: Value):
     companion object {
         const val NAME = "move"
 
-        fun make(dst: Value, src: Value): Move {
+        fun make(dst: Generate, src: Value): Move {
             require(isAppropriateType(dst, src)) {
                 "inconsistent types: toValue=$dst:${dst.type()}, fromValue=$src:${src.type()}"
             }
