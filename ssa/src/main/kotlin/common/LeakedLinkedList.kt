@@ -2,7 +2,7 @@ package common
 
 
 // Ordinary linked list with leaked abstraction
-open class LeakedLinkedList<T: LListNode> : List<T> {
+abstract class LeakedLinkedList<T: LListNode> : List<T> {
     private var head: T? = null
     private var tail: T? = null
     override var size = 0
@@ -12,6 +12,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
         for (i in 0 until index) {
             current = current!!.next
         }
+        @Suppress("UNCHECKED_CAST")
         return current as T
     }
 
@@ -89,6 +90,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
     fun removeIf(predicate: (T) -> Boolean): Boolean {
         var current: LListNode? = head
         while (current != null) {
+            @Suppress("UNCHECKED_CAST")
             if (predicate(current as T)) {
                 val next = current.next
                 remove(current)
@@ -105,6 +107,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
         for (i in 0 until index) {
             current = current!!.next
         }
+        @Suppress("UNCHECKED_CAST")
         remove(current as T)
         return current
     }
@@ -146,11 +149,13 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
         if (node.prev != null) {
             node.prev!!.next = node.next
         } else {
+            @Suppress("UNCHECKED_CAST")
             head = node.next as T?
         }
         if (node.next != null) {
             node.next!!.prev = node.prev
         } else {
+            @Suppress("UNCHECKED_CAST")
             tail = node.prev as T?
         }
         size--
@@ -167,38 +172,13 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
             override fun hasNext(): Boolean = current != null
             override fun next(): T {
                 val result = current
+                @Suppress("UNCHECKED_CAST")
                 current = current!!.next as T?
                 return result!!
             }
         }
     }
 
-    fun mutableIterator(): MutableIterator<T> {
-        return object : MutableIterator<T> {
-            private var current = head
-            override fun hasNext(): Boolean = current != null
-            override fun next(): T {
-                val result = current
-                current = current!!.next as T?
-                return result!!
-            }
-            override fun remove() {
-                val prev = current!!.prev as T?
-                val next = current!!.next as T?
-                if (prev != null) {
-                    prev.next = next
-                } else {
-                    head = next
-                }
-                if (next != null) {
-                    next.prev = prev
-                } else {
-                    tail = prev
-                }
-                size--
-            }
-        }
-    }
 
     override fun listIterator(): ListIterator<T> {
         return object : ListIterator<T> {
@@ -208,6 +188,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
             override fun hasPrevious(): Boolean = current != null
             override fun next(): T {
                 val result = current
+                @Suppress("UNCHECKED_CAST")
                 current = current!!.next as T?
                 index++
                 return result!!
@@ -215,6 +196,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
             override fun nextIndex(): Int = index
             override fun previous(): T {
                 val result = current
+                @Suppress("UNCHECKED_CAST")
                 current = current!!.prev as T?
                 index--
                 return result!!
@@ -229,6 +211,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
             private var currentIndex = 0
             init {
                 for (i in 0 until index) {
+                    @Suppress("UNCHECKED_CAST")
                     current = current!!.next as T?
                     currentIndex++
                 }
@@ -237,6 +220,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
             override fun hasPrevious(): Boolean = current != null
             override fun next(): T {
                 val result = current
+                @Suppress("UNCHECKED_CAST")
                 current = current!!.next as T?
                 currentIndex++
                 return result!!
@@ -244,6 +228,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
             override fun nextIndex(): Int = currentIndex
             override fun previous(): T {
                 val result = current
+                @Suppress("UNCHECKED_CAST")
                 current = current!!.prev as T?
                 currentIndex--
                 return result!!
@@ -256,10 +241,12 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
         val result = mutableListOf<T>()
         var current = head
         for (i in 0 until fromIndex) {
+            @Suppress("UNCHECKED_CAST")
             current = current!!.next as T?
         }
         for (i in fromIndex until toIndex) {
             result.add(current!!)
+            @Suppress("UNCHECKED_CAST")
             current = current.next as T?
         }
         return result
@@ -272,6 +259,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
             if (current == element) {
                 return index
             }
+            @Suppress("UNCHECKED_CAST")
             current = current.prev as T?
             index--
         }
@@ -284,6 +272,7 @@ open class LeakedLinkedList<T: LListNode> : List<T> {
             var current = head
             while (current != null) {
                 append(current.toString())
+                @Suppress("UNCHECKED_CAST")
                 current = current.next as T?
                 if (current != null) {
                     append(", ")

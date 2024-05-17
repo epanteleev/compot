@@ -12,7 +12,7 @@ import ir.module.IndirectFunctionPrototype
 
 class Block(override val index: Int, private var maxValueIndex: Int = 0) :
     AnyInstructionFabric, AnyBlock, Iterable<Instruction> {
-    private val instructions = LeakedLinkedList<Instruction>()
+    private val instructions = InstructionList()
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
 
@@ -46,10 +46,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     override fun successors(): List<Block> {
         return successors
-    }
-
-    fun hasCriticalEdgeFrom(predecessor: Block): Boolean {
-        return predecessor.successors().size > 1 && predecessors().size > 1
     }
 
     override fun last(): TerminateInstruction {
@@ -87,7 +83,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
 
     val size get(): Int = instructions.size
 
-    fun maxValueIndex(): Int {
+    fun maxValueIndex(): Int { //TODO
         return maxValueIndex
     }
 
@@ -473,3 +469,5 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0) :
         }
     }
 }
+
+private class InstructionList(): LeakedLinkedList<Instruction>()

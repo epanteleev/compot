@@ -83,3 +83,7 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
         }
     }
 }
+
+fun Block.hasCriticalEdgeFrom(predecessor: Block): Boolean {
+    return predecessor.successors().size > 1 && predecessors().size > 1
+}
