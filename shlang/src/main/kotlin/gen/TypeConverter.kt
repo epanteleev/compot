@@ -209,6 +209,61 @@ object TypeConverter {
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
+            Type.U64 -> {
+                toType as UnsignedIntType
+                when (value.type()) {
+                    Type.U1  -> flag2int(value, toType)
+                    Type.I8  -> trunc(value, toType)
+                    Type.I16 -> trunc(value, toType)
+                    Type.I32 -> trunc(value, toType)
+                    Type.I64 -> bitcast(value, toType)
+                    Type.U8  -> trunc(value, toType)
+                    Type.U16 -> trunc(value, toType)
+                    Type.U32 -> trunc(value, toType)
+                    Type.F32 -> {
+                        val tmp = fp2Int(value, Type.I32)
+                        trunc(tmp, toType)
+                    }
+                    Type.F64 -> {
+                        val tmp = fp2Int(value, Type.I64)
+                        trunc(tmp, toType)
+                    }
+                    Type.Ptr -> ptr2int(value, toType)
+                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                }
+            }
+            Type.F32 -> {
+                toType as FloatingPointType
+                when (value.type()) {
+                    Type.U1  -> int2fp(value, toType)
+                    Type.I8  -> int2fp(value, toType)
+                    Type.I16 -> int2fp(value, toType)
+                    Type.I32 -> int2fp(value, toType)
+                    Type.I64 -> int2fp(value, toType)
+                    Type.U8  -> int2fp(value, toType)
+                    Type.U16 -> int2fp(value, toType)
+                    Type.U32 -> int2fp(value, toType)
+                    Type.U64 -> int2fp(value, toType)
+                    Type.F64 -> fptrunc(value, toType)
+                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                }
+            }
+            Type.F64 -> {
+                toType as FloatingPointType
+                when (value.type()) {
+                    Type.U1  -> int2fp(value, toType)
+                    Type.I8  -> int2fp(value, toType)
+                    Type.I16 -> int2fp(value, toType)
+                    Type.I32 -> int2fp(value, toType)
+                    Type.I64 -> int2fp(value, toType)
+                    Type.U8  -> int2fp(value, toType)
+                    Type.U16 -> int2fp(value, toType)
+                    Type.U32 -> int2fp(value, toType)
+                    Type.U64 -> int2fp(value, toType)
+                    Type.F32 -> fpext(value, toType)
+                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                }
+            }
             Type.Ptr -> {
                 toType as PointerType
                 val valueType = value.type()

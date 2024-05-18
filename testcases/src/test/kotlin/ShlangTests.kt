@@ -57,8 +57,15 @@ abstract class ShlangTests: CommonCTest() {
     @Test
     fun testSum8() {
         val result = runCTest("shlang/sum8", listOf("runtime/runtime.c"), options())
-        assert(result, "8.000000\n")
+        assert(result, "8.000000\n9.000000\n")
         assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testIfElse0() {
+        val result = runCTest("shlang/ifElse0", listOf("runtime/runtime.c"), options())
+        assert(result, "")
+        assertReturnCode(result, 0)
     }
 
     @Ignore

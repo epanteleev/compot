@@ -96,3 +96,7 @@ void printDoubleArray(double* array, int size) {
         printf("\n");
 }
 
+void reportError() {
+    printf("Error\n");
+    exit(1);
+}

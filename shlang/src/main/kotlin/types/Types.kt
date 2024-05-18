@@ -1,6 +1,8 @@
 package types
 
 
+data class TypeInferenceException(override val message: String) : Exception(message)
+
 interface CType {
    fun baseType(): BaseType
    fun qualifiers(): List<TypeProperty>
@@ -23,6 +25,9 @@ interface CType {
             if (type2 == UNRESOlVED) return UNRESOlVED
             if (type1 == UNKNOWN) return type2
             if (type2 == UNKNOWN) return type1
+            if (type1.baseType() == type2.baseType()) {
+                return type1
+            }
 
             when (type1.baseType()) {
                 CPrimitive.CHAR -> {
@@ -87,7 +92,7 @@ interface CType {
                 }
                 else -> throw RuntimeException("Unknown type $type1, $type2")
             }
-            return UNRESOlVED
+            throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
         }
     }
 }

@@ -2,11 +2,13 @@
 #define RUNTIME_H
 
 extern int exit(int);
+void reportError();
 
-#define check(a, b) if (a != b) { exit(1); }
+#define check(a, b) if (a != b) { reportError(); }
+
+#define unreachable() reportError()
 
 void printFloat(float);
-
 void printInt(int a);
 
 #endif

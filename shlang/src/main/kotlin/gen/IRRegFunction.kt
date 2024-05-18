@@ -455,6 +455,19 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
                 ir().convertToType(cmp, Type.U1)
             }
+            BinaryOpType.EQ -> {
+                val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))
+
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir().convertToType(left, commonType)
+
+                val right = visitExpression(binop.right, true)
+                val rightConverted = ir().convertToType(right, commonType)
+
+                val cmp = ir().icmp(leftConverted, IntPredicate.Eq, rightConverted)
+
+                ir().convertToType(cmp, Type.U1)
+            }
             else -> throw IRCodeGenError("Unknown binary operation, op=${binop.opType}")
         }
     }
