@@ -92,11 +92,8 @@ class Block(override val index: Int):
         predecessors.remove(old)
     }
 
-    fun instructions(fn: (Instruction) -> Int) {
-        var i = 0
-        while (i < instructions.size) {
-            i += fn(instructions[i]) + 1
-        }
+    fun instructions(fn: (Instruction) -> Unit) {
+        instructions.forEach(fn)
     }
 
     fun transform(fn: (Instruction) -> Instruction) {
