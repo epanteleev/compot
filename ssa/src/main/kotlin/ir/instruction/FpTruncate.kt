@@ -6,10 +6,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class FpTruncate private constructor(name: String, owner: Block, toType: FloatingPointType, value: Value):
-    ValueInstruction(name, owner, toType, arrayOf(value)) {
+class FpTruncate private constructor(id: Identity, owner: Block, toType: FloatingPointType, value: Value):
+    ValueInstruction(id, owner, toType, arrayOf(value)) {
     override fun dump(): String {
-        return "%$id = $NAME ${value().type()} ${value()} to ${type()}"
+        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
     }
 
     fun value(): Value {
@@ -31,13 +31,13 @@ class FpTruncate private constructor(name: String, owner: Block, toType: Floatin
     companion object {
         const val NAME = "fptrunc"
 
-        fun make(name: String, owner: Block, toType: FloatingPointType, value: Value): FpTruncate {
+        fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): FpTruncate {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
-                "inconsistent types in $name: ty=$toType, value=$value:$valueType"
+                "inconsistent types in '$id': ty=$toType, value=$value:$valueType"
             }
 
-            return registerUser(FpTruncate(name, owner, toType, value), value)
+            return registerUser(FpTruncate(id, owner, toType, value), value)
         }
 
         private fun isAppropriateType(toType: FloatingPointType, valueType: Type): Boolean {

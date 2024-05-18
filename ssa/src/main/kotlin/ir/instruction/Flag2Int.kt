@@ -6,10 +6,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Flag2Int private constructor(name: String, owner: Block, toType: IntegerType, value: Value):
-    ValueInstruction(name, owner, toType, arrayOf(value)) {
+class Flag2Int private constructor(id: Identity, owner: Block, toType: IntegerType, value: Value):
+    ValueInstruction(id, owner, toType, arrayOf(value)) {
     override fun dump(): String {
-        return "%$id = $NAME ${value().type()} ${value()} to ${type()}"
+        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
     }
 
     fun value(): Value {
@@ -31,12 +31,12 @@ class Flag2Int private constructor(name: String, owner: Block, toType: IntegerTy
     companion object {
         const val NAME = "flag2int"
 
-        fun make(name: String, owner: Block, toType: IntegerType, value: Value): Flag2Int {
+        fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Flag2Int {
             require(isAppropriateType(value.type())) {
-                "inconsistent types in $name: type=${value.type()}"
+                "inconsistent types in '$id': type=${value.type()}"
             }
 
-            return registerUser(Flag2Int(name, owner, toType, value), value)
+            return registerUser(Flag2Int(id, owner, toType, value), value)
         }
 
         fun isAppropriateType(valueType: Type): Boolean {

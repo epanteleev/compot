@@ -4,8 +4,9 @@ import ir.*
 import ir.module.block.Block
 import ir.types.NonTrivialType
 
+typealias Identity = Int
 
-abstract class ValueInstruction(protected val id: String,
+abstract class ValueInstruction(protected val id: Identity,
                                 owner: Block,
                                 protected val tp: NonTrivialType,
                                 operands: Array<Value>):
@@ -26,11 +27,11 @@ abstract class ValueInstruction(protected val id: String,
     }
 
     override fun name(): String {
-        return id
+        return "${owner.index}x${id}"
     }
 
     override fun toString(): String {
-        return "%$id"
+        return "%${name()}"
     }
 
     override fun type(): NonTrivialType = tp
@@ -41,11 +42,11 @@ abstract class ValueInstruction(protected val id: String,
 
         other as ValueInstruction
 
-        return id == other.id && tp == other.tp
+        return id == other.id && owner.index == other.owner.index
     }
 
     override fun hashCode(): Int {
-        return id.hashCode() + tp.hashCode()
+        return id + owner.index
     }
 
     companion object {

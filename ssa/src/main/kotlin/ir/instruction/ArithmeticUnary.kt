@@ -5,5 +5,5 @@ import ir.module.block.Block
 import ir.types.ArithmeticType
 
 
-abstract class ArithmeticUnary(name: String, owner: Block, tp: ArithmeticType, value: Value):
-    ValueInstruction(name, owner, tp, arrayOf(value))
+abstract class ArithmeticUnary(id: Identity, owner: Block, tp: ArithmeticType, value: Value):
+    ValueInstruction(id, owner, tp, arrayOf(value))

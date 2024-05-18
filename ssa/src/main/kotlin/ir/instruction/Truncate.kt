@@ -6,10 +6,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Truncate private constructor(name: String, owner: Block, toType: IntegerType, value: Value):
-    ValueInstruction(name, owner, toType, arrayOf(value)) {
+class Truncate private constructor(id: Identity, owner: Block, toType: IntegerType, value: Value):
+    ValueInstruction(id, owner, toType, arrayOf(value)) {
     override fun dump(): String {
-        return "%$id = $NAME ${value().type()} ${value()} to ${type()}"
+        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
     }
 
     fun value(): Value {
@@ -31,13 +31,13 @@ class Truncate private constructor(name: String, owner: Block, toType: IntegerTy
     companion object {
         const val NAME = "trunc"
 
-        fun make(name: String, owner: Block, toType: IntegerType, value: Value): Truncate {
+        fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Truncate {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
-                "inconsistent types in '$name' type=$toType, value=$value:$valueType"
+                "inconsistent types in '$id' type=$toType, value=$value:$valueType"
             }
 
-            return registerUser(Truncate(name, owner, toType, value), value)
+            return registerUser(Truncate(id, owner, toType, value), value)
         }
 
         private fun isAppropriateType(toType: IntegerType, valueType: Type): Boolean {

@@ -8,10 +8,10 @@ import ir.types.NonTrivialType
 import ir.types.PointerType
 
 
-class Pointer2Int private constructor(name: String, owner: Block, toType: IntegerType, value: Value):
-    ValueInstruction(name, owner, toType, arrayOf(value)) {
+class Pointer2Int private constructor(id: Identity, owner: Block, toType: IntegerType, value: Value):
+    ValueInstruction(id, owner, toType, arrayOf(value)) {
     override fun dump(): String {
-        return "%$id = $NAME ${value().type()} ${value()} to ${type()}"
+        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
     }
 
     fun value(): Value {
@@ -33,13 +33,13 @@ class Pointer2Int private constructor(name: String, owner: Block, toType: Intege
     companion object {
         const val NAME = "ptr2int"
 
-        fun make(name: String, owner: Block, toType: IntegerType, value: Value): Pointer2Int {
+        fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Pointer2Int {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
-                "inconsistent types in $name: ty=$toType, value=$value:$valueType"
+                "inconsistent types in '$id': ty=$toType, value=$value:$valueType"
             }
 
-            return registerUser(Pointer2Int(name, owner, toType, value), value)
+            return registerUser(Pointer2Int(id, owner, toType, value), value)
         }
 
         private fun isAppropriateType(valueType: NonTrivialType): Boolean {

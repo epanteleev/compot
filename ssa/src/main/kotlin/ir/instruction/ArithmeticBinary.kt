@@ -59,10 +59,10 @@ enum class ArithmeticBinaryOp {
     };
 }
 
-class ArithmeticBinary private constructor(name: String, owner: Block, tp: ArithmeticType, a: Value, val op: ArithmeticBinaryOp, b: Value) :
-    ValueInstruction(name, owner, tp, arrayOf(a, b)) {
+class ArithmeticBinary private constructor(id: Identity, owner: Block, tp: ArithmeticType, a: Value, val op: ArithmeticBinaryOp, b: Value) :
+    ValueInstruction(id, owner, tp, arrayOf(a, b)) {
     override fun dump(): String {
-        return "%$id = $op $tp ${first()}, ${second()}"
+        return "%${name()} = $op $tp ${first()}, ${second()}"
     }
 
     override fun type(): ArithmeticType {
@@ -90,14 +90,14 @@ class ArithmeticBinary private constructor(name: String, owner: Block, tp: Arith
     }
 
     companion object {
-        fun make(name: String, owner: Block, type: ArithmeticType, a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
+        fun make(id: Identity, owner: Block, type: ArithmeticType, a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateTypes(type, aType, bType)) {
-                "incorrect types in '$name' but type=$type, a=$a:$aType, b=$b:$bType"
+                "incorrect types in '$id' but type=$type, a=$a:$aType, b=$b:$bType"
             }
 
-            return registerUser(ArithmeticBinary(name, owner, type, a, op, b), a, b)
+            return registerUser(ArithmeticBinary(id, owner, type, a, op, b), a, b)
         }
 
         private fun isAppropriateTypes(tp: ArithmeticType, aType: Type, bType: Type): Boolean {

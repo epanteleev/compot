@@ -10,13 +10,14 @@ import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 
 
-class Block(override val index: Int, private var maxValueIndex: Int = 0):
+class Block(override val index: Int):
     AnyInstructionFabric, AnyBlock, Iterable<Instruction> {
     private val instructions = InstructionList()
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
 
     private var insertionStrategy: InsertionStrategy = InsertAfter(null)
+    private var instructionIndex: Int = 0
 
     abstract inner class InsertionStrategy {
         abstract fun insert(instruction: Instruction);
@@ -180,7 +181,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
             "should be integer type, but ty=$valueType"
         }
 
-        return withOutput { it: Int -> Not.make(n(it), this, valueType, value) }
+        return withOutput { Not.make(it, this, valueType, value) }
     }
 
     override fun neg(value: Value): Neg {
@@ -189,7 +190,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
             "should be integer type, but ty=$valueType"
         }
 
-        return withOutput { it: Int -> Neg.make(n(it), this, valueType, value) }
+        return withOutput { Neg.make(it, this, valueType, value) }
     }
 
     override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
@@ -198,27 +199,27 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
             "should be arithmetic type, but ty=$ty"
         }
 
-        return withOutput { it: Int -> ArithmeticBinary.make(n(it), this, ty, a, op, b) }
+        return withOutput { ArithmeticBinary.make(it, this, ty, a, op, b) }
     }
 
     override fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
-        return withOutput { it: Int -> SignedIntCompare.make("cmp${n(it)}", this, a, predicate, b) }
+        return withOutput { SignedIntCompare.make(it, this, a, predicate, b) }
     }
 
     override fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare {
-        return withOutput { it: Int -> UnsignedIntCompare.make("cmp${n(it)}", this, a, predicate, b) }
+        return withOutput { UnsignedIntCompare.make(it, this, a, predicate, b) }
     }
 
     override fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare {
-        return withOutput { it: Int -> PointerCompare.make("cmp${n(it)}", this, a, predicate, b) }
+        return withOutput { PointerCompare.make(it, this, a, predicate, b) }
     }
 
     override fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
-        return withOutput { it: Int -> FloatCompare.make("cmp${n(it)}", this, a, predicate, b) }
+        return withOutput { FloatCompare.make(it, this, a, predicate, b) }
     }
 
     override fun load(loadedType: PrimitiveType, ptr: Value): Load {
-        return withOutput { it: Int -> Load.make("v${n(it)}", this, loadedType, ptr) }
+        return withOutput { Load.make(it, this, loadedType, ptr) }
     }
 
     override fun store(ptr: Value, value: Value) {
@@ -228,7 +229,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
 
     override fun call(func: AnyFunctionPrototype, args: List<Value>): Call {
         require(func.returnType() != Type.Void)
-        return withOutput { it: Int -> Call.make(n(it), this, func, args) }
+        return withOutput { Call.make(it, this, func, args) }
     }
 
     override fun vcall(func: AnyFunctionPrototype, args: List<Value>) {
@@ -238,7 +239,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
 
     override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
         require(func.returnType() != Type.Void)
-        return withOutput { it: Int -> IndirectionCall.make(n(it), this, pointer, func, args) }
+        return withOutput { IndirectionCall.make(it, this, pointer, func, args) }
     }
 
     override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>) {
@@ -255,7 +256,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
     }
 
     override fun alloc(ty: NonTrivialType): Alloc {
-        return withOutput { it: Int -> Alloc.make(n(it), this, ty) }
+        return withOutput { it: Int -> Alloc.make(it, this, ty) }
     }
 
     override fun ret(value: Value) {
@@ -267,97 +268,97 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
     }
 
     override fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr {
-        return withOutput { it: Int -> GetElementPtr.make(n(it), this, elementType, source, index) }
+        return withOutput { GetElementPtr.make(it, this, elementType, source, index) }
     }
 
     override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr {
-        return withOutput { it: Int -> GetFieldPtr.make(n(it), this, ty, source, index) }
+        return withOutput { GetFieldPtr.make(it, this, ty, source, index) }
     }
 
     override fun flag2int(value: Value, ty: IntegerType): Flag2Int {
-        return withOutput { it: Int -> Flag2Int.make(n(it), this, ty, value) }
+        return withOutput { Flag2Int.make(it, this, ty, value) }
     }
 
     override fun int2fp(value: Value, ty: FloatingPointType): Int2Float {
-        return withOutput { it: Int -> Int2Float.make(n(it), this, ty, value) }
+        return withOutput { Int2Float.make(it, this, ty, value) }
     }
 
     override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {
-        return withOutput { it: Int -> Bitcast.make(n(it), this, ty, value) }
+        return withOutput { Bitcast.make(it, this, ty, value) }
     }
 
     override fun zext(value: Value, toType: UnsignedIntType): ZeroExtend {
-        return withOutput { it: Int -> ZeroExtend.make(n(it), this, toType, value) }
+        return withOutput { ZeroExtend.make(it, this, toType, value) }
     }
 
     override fun sext(value: Value, toType: SignedIntType): SignExtend {
-        return withOutput { it: Int -> SignExtend.make(n(it), this, toType, value) }
+        return withOutput { SignExtend.make(it, this, toType, value) }
     }
 
     override fun trunc(value: Value, toType: IntegerType): Truncate {
-        return withOutput { it: Int -> Truncate.make(n(it), this, toType, value) }
+        return withOutput { Truncate.make(it, this, toType, value) }
     }
 
     override fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate {
-        return withOutput { it: Int -> FpTruncate.make(n(it), this, toType, value) }
+        return withOutput { FpTruncate.make(it, this, toType, value) }
     }
 
     override fun fpext(value: Value, toType: FloatingPointType): FpExtend {
-        return withOutput { it: Int -> FpExtend.make(n(it), this, toType, value) }
+        return withOutput { FpExtend.make(it, this, toType, value) }
     }
 
     override fun fp2Int(value: Value, toType: IntegerType): FloatToInt {
-        return withOutput { it: Int -> FloatToInt.make(n(it),  this, toType, value) }
+        return withOutput { FloatToInt.make(it,  this, toType, value) }
     }
 
     override fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select {
-        return withOutput { it: Int -> Select.make(n(it), this, type, cond, onTrue, onFalse) }
+        return withOutput { Select.make(it, this, type, cond, onTrue, onFalse) }
     }
 
     override fun phi(incoming: List<Value>, labels: List<Label>): Phi {
         val bbs = labels.map { it as Block }
-        return withOutput { it: Int -> Phi.make("phi${n(it)}", this, incoming[0].type() as PrimitiveType, bbs, incoming.toTypedArray()) }
+        return withOutput { Phi.make(it, this, incoming[0].type() as PrimitiveType, bbs, incoming.toTypedArray()) }
     }
 
     override fun int2ptr(value: Value): Int2Pointer {
-        return withOutput { it: Int -> Int2Pointer.make(n(it), this, value) }
+        return withOutput { Int2Pointer.make(it, this, value) }
     }
 
     override fun ptr2int(value: Value, toType: IntegerType): Pointer2Int {
-        return withOutput { it: Int -> Pointer2Int.make(n(it), this, toType, value) }
+        return withOutput { Pointer2Int.make(it, this, toType, value) }
     }
 
     override fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant) {
-        add(Memcpy.make(this, dst, src, length))
+        append(Memcpy.make(this, dst, src, length))
     }
 
     override fun downStackFrame(callable: Callable) {
-        add(DownStackFrame(this, callable))
+        append(DownStackFrame(this, callable))
     }
 
     override fun upStackFrame(callable: Callable) {
-        add(UpStackFrame(this, callable))
+        append(UpStackFrame(this, callable))
     }
 
     override fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi {
         val blocks = predecessors()
-        return withOutput { it: Int -> Phi.makeUncompleted("phi${n(it)}", this, ty, incoming, blocks) }
+        return withOutput { Phi.makeUncompleted(it, this, ty, incoming, blocks) }
     }
 
     override fun gen(ty: NonTrivialType): Generate {
-        return withOutput { it: Int -> Generate.make("gen${n(it)}", this, ty) }
+        return withOutput { Generate.make(it, this, ty) }
     }
 
     override fun lea(generate: Value): Lea {
-        return withOutput { it: Int -> Lea.make("lea${n(it)}", this, generate) }
+        return withOutput { Lea.make(it, this, generate) }
     }
 
     fun uncompletedPhi(incomingType: PrimitiveType, incoming: List<Value>, labels: List<Block>): Phi {
-        return withOutput { it: Int -> Phi.make("phi${n(it)}", this, incomingType, labels, incoming.toTypedArray()) }
+        return withOutput { Phi.make(it, this, incomingType, labels, incoming.toTypedArray()) }
     }
 
     override fun copy(value: Value): Copy {
-        return withOutput { it: Int -> Copy.make(n(it), this, value) }
+        return withOutput { Copy.make(it, this, value) }
     }
 
     override fun move(dst: Generate, fromValue: Value) {
@@ -365,23 +366,23 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
     }
 
     override fun move(dst: Value, base: Value, index: Value) {
-        add(MoveByIndex.make(this, dst, base, index))
+        append(MoveByIndex.make(this, dst, base, index))
     }
 
     override fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad {
-        return withOutput { it: Int -> IndexedLoad.make(n(it), this, loadedType, origin, index) }
+        return withOutput { IndexedLoad.make(it, this, loadedType, origin, index) }
     }
 
     override fun storeOnStack(destination: Value, index: Value, source: Value) {
-        add(StoreOnStack.make(this, destination, index, source))
+        append(StoreOnStack.make(this, destination, index, source))
     }
 
     override fun loadFromStack(origin: Value, loadedType: PrimitiveType, index: Value): LoadFromStack {
-        return withOutput { it: Int -> LoadFromStack.make(n(it), this, loadedType, origin, index) }
+        return withOutput { LoadFromStack.make(it, this, loadedType, origin, index) }
     }
 
     override fun leaStack(origin: Value, loadedType: PrimitiveType, index: Value): LeaStack {
-        return withOutput { it: Int -> LeaStack.make(n(it), this, loadedType, origin, index) }
+        return withOutput { LeaStack.make(it, this, loadedType, origin, index) }
     }
 
     private fun addTerminate(instruction: TerminateInstruction) {
@@ -394,18 +395,13 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
         append(instruction)
     }
 
-    fun add(instruction: Instruction): Instruction { //TODO simplify???
-        append(instruction)
-        return instruction
-    }
-
     private fun n(i: Int): String {
         return "${index}x$i"
     }
 
     private fun allocateValue(): Int {
-        val currentValue = maxValueIndex
-        maxValueIndex += 1
+        val currentValue = instructionIndex
+        instructionIndex += 1
         return currentValue
     }
 
@@ -438,10 +434,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
 
         fun empty(blockIndex: Int): Block {
             return Block(blockIndex)
-        }
-
-        fun empty(blockIndex: Int, maxValueIndex: Int): Block {
-            return Block(blockIndex, maxValueIndex)
         }
     }
 }

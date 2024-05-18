@@ -6,10 +6,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Load private constructor(name: String, owner: Block, loadedType: PrimitiveType, ptr: Value):
-    ValueInstruction(name, owner, loadedType, arrayOf(ptr)) {
+class Load private constructor(id: Identity, owner: Block, loadedType: PrimitiveType, ptr: Value):
+    ValueInstruction(id, owner, loadedType, arrayOf(ptr)) {
     override fun dump(): String {
-        return "%$id = $NAME $tp ${operand()}"
+        return "%${name()} = $NAME $tp ${operand()}"
     }
 
     fun operand(): Value {
@@ -31,13 +31,13 @@ class Load private constructor(name: String, owner: Block, loadedType: Primitive
     companion object {
         const val NAME = "load"
 
-        fun make(name: String, owner: Block, loadedType: PrimitiveType, operand: Value): Load {
+        fun make(id: Identity, owner: Block, loadedType: PrimitiveType, operand: Value): Load {
             val type = operand.type()
             require(isAppropriateTypes(type)) {
-                "inconsistent types in '$name' type=${loadedType}, but operand=${operand}:$type"
+                "inconsistent types in '$id' type=${loadedType}, but operand=${operand}:$type"
             }
 
-            return registerUser(Load(name, owner, loadedType, operand), operand)
+            return registerUser(Load(id, owner, loadedType, operand), operand)
         }
 
         private fun isAppropriateTypes(tp: Type): Boolean {

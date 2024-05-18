@@ -6,10 +6,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class GetElementPtr private constructor(name: String, owner: Block, val basicType: PrimitiveType, source: Value, index: Value):
-    ValueInstruction(name, owner, Type.Ptr, arrayOf(source, index)) {
+class GetElementPtr private constructor(id: Identity, owner: Block, val basicType: PrimitiveType, source: Value, index: Value):
+    ValueInstruction(id, owner, Type.Ptr, arrayOf(source, index)) {
     override fun dump(): String {
-        return "%$id = $NAME $basicType, ptr ${source()}, ${index().type()} ${index()}"
+        return "%${name()} = $NAME $basicType, ptr ${source()}, ${index().type()} ${index()}"
     }
 
     override fun type(): PointerType {
@@ -39,14 +39,14 @@ class GetElementPtr private constructor(name: String, owner: Block, val basicTyp
     companion object {
         const val NAME = "gep"
 
-        fun make(name: String, owner: Block, elementType: PrimitiveType, source: Value, index: Value): GetElementPtr {
+        fun make(id: Identity, owner: Block, elementType: PrimitiveType, source: Value, index: Value): GetElementPtr {
             val sourceType = source.type()
             val indexType  = index.type()
             require(isAppropriateType(sourceType, indexType)) {
-                "inconsistent types in '$name' type=$elementType source=$source:$sourceType, index=$index:$indexType"
+                "inconsistent types in '$id' type=$elementType source=$source:$sourceType, index=$index:$indexType"
             }
 
-            return registerUser(GetElementPtr(name, owner, elementType, source, index), source, index)
+            return registerUser(GetElementPtr(id, owner, elementType, source, index), source, index)
         }
 
         private fun isAppropriateType(sourceType: Type, indexType: Type): Boolean {

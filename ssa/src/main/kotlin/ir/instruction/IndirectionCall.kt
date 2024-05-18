@@ -8,8 +8,8 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class IndirectionCall private constructor(name: String, owner: Block, pointer: Value, private val func: IndirectFunctionPrototype, args: List<Value>):
-    ValueInstruction(name, owner, func.returnType() as NonTrivialType, (args + pointer).toTypedArray()), //TODO
+class IndirectionCall private constructor(id: Identity, owner: Block, pointer: Value, private val func: IndirectFunctionPrototype, args: List<Value>):
+    ValueInstruction(id, owner, func.returnType() as NonTrivialType, (args + pointer).toTypedArray()), //TODO
     Callable {
     init {
         assert(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
@@ -37,20 +37,20 @@ class IndirectionCall private constructor(name: String, owner: Block, pointer: V
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%$id = call $tp ${pointer()}(")
+        builder.append("%${name()} = call $tp ${pointer()}(")
         operands.joinTo(builder) { "$it:${it.type()}"}
         builder.append(")")
         return builder.toString()
     }
 
     companion object {
-        fun make(name: String, owner: Block, pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
+        fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
             require(Callable.isAppropriateTypes(func, args.toTypedArray())) {
-                args.joinToString(prefix = "inconsistent types in '$name', pointer=$pointer:${pointer.type()}, prototype='${func.shortName()}', ")
+                args.joinToString(prefix = "inconsistent types in '$id', pointer=$pointer:${pointer.type()}, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
 
-            return registerUser(IndirectionCall(name, owner, pointer, func, args), args.iterator())
+            return registerUser(IndirectionCall(id, owner, pointer, func, args), args.iterator())
         }
     }
 }

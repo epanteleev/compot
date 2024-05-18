@@ -5,10 +5,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Generate private constructor(name: String, owner: Block, allocatedType: NonTrivialType):
-    ValueInstruction(name, owner, allocatedType, arrayOf()) {
+class Generate private constructor(id: Identity, owner: Block, allocatedType: NonTrivialType):
+    ValueInstruction(id, owner, allocatedType, arrayOf()) {
     override fun dump(): String {
-        return "%$id = $NAME ${type()}"
+        return "%${name()} = $NAME ${type()}"
     }
 
     override fun type(): NonTrivialType {
@@ -22,11 +22,12 @@ class Generate private constructor(name: String, owner: Block, allocatedType: No
     companion object {
         const val NAME = "gen"
 
-        fun make(name: String, owner: Block, ty: NonTrivialType): Generate {
+        fun make(id: Identity, owner: Block, ty: NonTrivialType): Generate {
             require(isAppropriateType(ty)) {
-                "should not be $ty, but expected a primitive type"
+                "should not be $ty in '$id', but expected a primitive type"
             }
-            return Generate(name, owner, ty)
+
+            return Generate(id, owner, ty)
         }
 
         private fun isAppropriateType(ty: Type): Boolean {

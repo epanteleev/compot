@@ -7,10 +7,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Not private constructor(name: String, owner: Block, tp: IntegerType, value: Value):
-    ArithmeticUnary(name, owner, tp, value) {
+class Not private constructor(id: Identity, owner: Block, tp: IntegerType, value: Value):
+    ArithmeticUnary(id, owner, tp, value) {
     override fun dump(): String {
-        return "%$id = $NAME $tp ${operand()}"
+        return "%${name()} = $NAME $tp ${operand()}"
     }
 
     override fun type(): IntegerType {
@@ -32,13 +32,13 @@ class Not private constructor(name: String, owner: Block, tp: IntegerType, value
     companion object {
         const val NAME = "not"
 
-        fun make(name: String, owner: Block, type: IntegerType, value: Value): Not {
+        fun make(id: Identity, owner: Block, type: IntegerType, value: Value): Not {
             val valueType = value.type()
             require(isAppropriateTypes(type, valueType)) {
-                "inconsistent type in '$name', but type=$type, value=$value:$valueType"
+                "inconsistent type in '$id', but type=$type, value=$value:$valueType"
             }
 
-            return registerUser(Not(name, owner, type, value), value)
+            return registerUser(Not(id, owner, type, value), value)
         }
 
         private fun isAppropriateTypes(tp: IntegerType, argType: Type): Boolean {

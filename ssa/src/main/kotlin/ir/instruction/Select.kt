@@ -6,14 +6,14 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Select private constructor(name: String, owner: Block, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value) :
-    ValueInstruction(name, owner, ty, arrayOf(cond, onTrue, onFalse)) {
+class Select private constructor(id: Identity, owner: Block, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value) :
+    ValueInstruction(id, owner, ty, arrayOf(cond, onTrue, onFalse)) {
     override fun type(): PrimitiveType {
         return tp as PrimitiveType
     }
 
     override fun dump(): String {
-        return "%$id = $NAME ${Type.U1} ${condition()}, ${onTrue().type()} ${onTrue()}, ${onFalse().type()} ${onFalse()}"
+        return "%${name()} = $NAME ${Type.U1} ${condition()}, ${onTrue().type()} ${onTrue()}, ${onFalse().type()} ${onFalse()}"
     }
 
     fun condition(): Value {
@@ -47,7 +47,7 @@ class Select private constructor(name: String, owner: Block, ty: PrimitiveType, 
     companion object {
         const val NAME = "select"
 
-        fun make(name: String, owner: Block, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value): Select {
+        fun make(id: Identity, owner: Block, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value): Select {
             val onTrueType = onTrue.type()
             val onFalseType = onFalse.type()
             val condType = cond.type()
@@ -55,7 +55,7 @@ class Select private constructor(name: String, owner: Block, ty: PrimitiveType, 
                 "inconsistent types: type=$ty, condition=$cond:$condType, onTrue=$onTrue:$onTrueType, onFalse=$onFalse:$onFalseType"
             }
 
-            return registerUser(Select(name, owner, ty, cond, onTrue, onFalse), cond, onTrue, onFalse)
+            return registerUser(Select(id, owner, ty, cond, onTrue, onFalse), cond, onTrue, onFalse)
         }
 
         private fun isAppropriateType(ty: PrimitiveType, condType: Type, onTrueType: Type, onFalseType: Type): Boolean {

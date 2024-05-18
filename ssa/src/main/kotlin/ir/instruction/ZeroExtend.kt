@@ -6,10 +6,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class ZeroExtend private constructor(name: String, owner: Block, toType: UnsignedIntType, value: Value):
-    ValueInstruction(name, owner, toType, arrayOf(value)) {
+class ZeroExtend private constructor(id: Identity, owner: Block, toType: UnsignedIntType, value: Value):
+    ValueInstruction(id, owner, toType, arrayOf(value)) {
     override fun dump(): String {
-        return "%$id = $NAME ${value().type()} ${value()} to ${type()}"
+        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
     }
 
     fun value(): Value {
@@ -31,13 +31,13 @@ class ZeroExtend private constructor(name: String, owner: Block, toType: Unsigne
     companion object {
         const val NAME = "zext"
 
-        fun make(name: String, owner: Block, toType: UnsignedIntType, value: Value): ZeroExtend {
+        fun make(id: Identity, owner: Block, toType: UnsignedIntType, value: Value): ZeroExtend {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
-                "inconsistent types in $name: type=$toType, value=$value:$valueType"
+                "inconsistent types in '$id': type=$toType, value=$value:$valueType"
             }
 
-            return registerUser(ZeroExtend(name, owner, toType, value), value)
+            return registerUser(ZeroExtend(id, owner, toType, value), value)
         }
 
         private fun isAppropriateType(toType: UnsignedIntType, valueType: Type): Boolean {

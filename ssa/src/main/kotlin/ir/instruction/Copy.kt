@@ -7,15 +7,15 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Copy private constructor(name: String, owner: Block, origin: Value):
-    ValueInstruction(name, owner, origin.type(), arrayOf(origin)) {
+class Copy private constructor(id: Identity, owner: Block, origin: Value):
+    ValueInstruction(id, owner, origin.type(), arrayOf(origin)) {
 
     override fun type(): PrimitiveType {
         return tp as PrimitiveType
     }
 
     override fun dump(): String {
-        return "%$id = $NAME $tp ${origin()}"
+        return "%${name()} = $NAME $tp ${origin()}"
     }
 
     fun origin(): Value {
@@ -33,13 +33,13 @@ class Copy private constructor(name: String, owner: Block, origin: Value):
     companion object {
         const val NAME = "copy"
 
-        fun make(name: String, owner: Block, origin: Value): Copy {
+        fun make(id: Identity, owner: Block, origin: Value): Copy {
             val originType = origin.type()
             require(isAppropriateType(originType, origin)) {
                 "should not be $originType, but origin=$origin:$originType"
             }
 
-            return registerUser(Copy(name, owner, origin), origin)
+            return registerUser(Copy(id, owner, origin), origin)
         }
 
         fun typeCheck(copy: Copy): Boolean {

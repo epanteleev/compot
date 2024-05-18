@@ -6,10 +6,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class SignedIntCompare private constructor(name: String, owner: Block, a: Value, private val predicate: IntPredicate, b: Value) :
-    CompareInstruction(name, owner, a, b) {
+class SignedIntCompare private constructor(id: Identity, owner: Block, a: Value, private val predicate: IntPredicate, b: Value) :
+    CompareInstruction(id, owner, a, b) {
     override fun dump(): String {
-        return "%$id = $NAME $predicate ${first().type()} ${first()}, ${second()}"
+        return "%${name()} = $NAME $predicate ${first().type()} ${first()}, ${second()}"
     }
 
     override fun predicate(): IntPredicate = predicate
@@ -30,14 +30,14 @@ class SignedIntCompare private constructor(name: String, owner: Block, a: Value,
     companion object {
         const val NAME = "icmp"
 
-        fun make(name: String, owner: Block, a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
+        fun make(id: Identity, owner: Block, a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateType(aType, bType)) {
-                "should be the same types in '$name', but a=$a:$aType, b=$b:$bType"
+                "should be the same types in '$id', but a=$a:$aType, b=$b:$bType"
             }
 
-            return registerUser(SignedIntCompare(name, owner, a, predicate, b), a, b)
+            return registerUser(SignedIntCompare(id, owner, a, predicate, b), a, b)
         }
 
         private fun isAppropriateType(aType: Type, bType: Type): Boolean {

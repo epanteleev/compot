@@ -7,10 +7,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class GetFieldPtr private constructor(name: String, owner: Block, val basicType: AggregateType, source: Value, index: IntegerConstant):
-    ValueInstruction(name, owner, Type.Ptr, arrayOf(source, index)) {
+class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType: AggregateType, source: Value, index: IntegerConstant):
+    ValueInstruction(id, owner, Type.Ptr, arrayOf(source, index)) {
     override fun dump(): String {
-        return "%$id = $NAME $basicType, ptr ${source()}, ${index().type()} ${index()}"
+        return "%${name()} = $NAME $basicType, ptr ${source()}, ${index().type()} ${index()}"
     }
 
     override fun type(): PointerType {
@@ -40,14 +40,14 @@ class GetFieldPtr private constructor(name: String, owner: Block, val basicType:
     companion object {
         const val NAME = "gfp"
 
-        fun make(name: String, owner: Block, type: AggregateType, source: Value, index: IntegerConstant): GetFieldPtr {
+        fun make(id: Identity, owner: Block, type: AggregateType, source: Value, index: IntegerConstant): GetFieldPtr {
             val sourceType = source.type()
             val indexType  = index.type()
             require(isAppropriateType(sourceType, indexType)) {
-                "inconsistent types in '$name' type=$type, source=$source:$sourceType, index=$index:$indexType"
+                "inconsistent types in '$id' type=$type, source=$source:$sourceType, index=$index:$indexType"
             }
 
-            return registerUser(GetFieldPtr(name, owner, type, source, index), source, index)
+            return registerUser(GetFieldPtr(id, owner, type, source, index), source, index)
         }
 
         private fun isAppropriateType(sourceType: Type, indexType: Type): Boolean {

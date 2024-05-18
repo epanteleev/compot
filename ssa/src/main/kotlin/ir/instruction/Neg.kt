@@ -7,10 +7,10 @@ import ir.module.block.Block
 import ir.types.ArithmeticType
 
 
-class Neg private constructor(name: String, owner: Block, tp: ArithmeticType, value: Value):
-    ArithmeticUnary(name, owner, tp, value) {
+class Neg private constructor(id: Identity, owner: Block, tp: ArithmeticType, value: Value):
+    ArithmeticUnary(id, owner, tp, value) {
     override fun dump(): String {
-        return "%$id = $NAME $tp ${operand()}"
+        return "%${name()} = $NAME $tp ${operand()}"
     }
 
     override fun type(): ArithmeticType {
@@ -32,13 +32,13 @@ class Neg private constructor(name: String, owner: Block, tp: ArithmeticType, va
     companion object {
         const val NAME = "neg"
 
-        fun make(name: String, owner: Block, type: ArithmeticType, value: Value): Neg {
+        fun make(id: Identity, owner: Block, type: ArithmeticType, value: Value): Neg {
             val valueType = value.type()
             require(isAppropriateTypes(type, valueType)) {
                 "should be the same type, but type=$type, value=$value:$valueType"
             }
 
-            return registerUser(Neg(name, owner, type, value), value)
+            return registerUser(Neg(id, owner, type, value), value)
         }
 
         private fun isAppropriateTypes(tp: ArithmeticType, argType: Type): Boolean {

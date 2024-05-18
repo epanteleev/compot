@@ -5,10 +5,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Alloc private constructor(name: String, owner: Block, val allocatedType: NonTrivialType):
-    ValueInstruction(name, owner, Type.Ptr, arrayOf()) {
+class Alloc private constructor(id: Identity, owner: Block, val allocatedType: NonTrivialType):
+    ValueInstruction(id, owner, Type.Ptr, arrayOf()) {
     override fun dump(): String {
-        return "%$id = $NAME $allocatedType"
+        return "${name()} = $NAME $allocatedType"
     }
 
     override fun type(): PointerType {
@@ -22,12 +22,12 @@ class Alloc private constructor(name: String, owner: Block, val allocatedType: N
     companion object {
         const val NAME = "alloc"
 
-        fun make(name: String, owner: Block, ty: NonTrivialType): Alloc {
+        fun make(id: Identity, owner: Block, ty: NonTrivialType): Alloc {
             require(isAppropriateType(ty)) {
                 "should not be $ty, but type=$ty"
             }
 
-            return Alloc(name, owner, ty)
+            return Alloc(id, owner, ty)
         }
 
         private fun isAppropriateType(ty: Type): Boolean {

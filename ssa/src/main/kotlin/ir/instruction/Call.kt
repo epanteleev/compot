@@ -8,8 +8,8 @@ import ir.module.block.Block
 import ir.types.NonTrivialType
 
 
-class Call private constructor(name: String, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>):
-    ValueInstruction(name, owner, func.returnType() as NonTrivialType, args),
+class Call private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>):
+    ValueInstruction(id, owner, func.returnType() as NonTrivialType, args),
     Callable {
 
     override fun arguments(): Array<Value> {
@@ -26,23 +26,23 @@ class Call private constructor(name: String, owner: Block, private val func: Any
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%$id = call $tp @${func.name}(")
+        builder.append("%${name()} = call $tp @${func.name}(")
         operands.joinTo(builder) { "$it:${it.type()}"}
         builder.append(")")
         return builder.toString()
     }
 
     companion object {
-        fun make(name: String, owner: Block, func: AnyFunctionPrototype, args: List<Value>): Call {
+        fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>): Call {
             assert(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
 
             val argsArray = args.toTypedArray()
             require(Callable.isAppropriateTypes(func, argsArray)) {
-                args.joinToString(prefix = "inconsistent types in $name, prototype='${func.shortName()}', ")
+                args.joinToString(prefix = "inconsistent types in '$id', prototype='${func.shortName()}', ")
                     { "$it: ${it.type()}" }
             }
 
-            return registerUser(Call(name, owner, func, argsArray), args.iterator())
+            return registerUser(Call(id, owner, func, argsArray), args.iterator())
         }
     }
 }

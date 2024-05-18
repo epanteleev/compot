@@ -1,21 +1,22 @@
 package ir.instruction.lir
 
 import ir.Value
+import ir.instruction.Identity
 import ir.types.*
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class LeaStack private constructor(name: String, owner: Block, val loadedType: PrimitiveType, origin: Value, index: Value):
-    ValueInstruction(name, owner, Type.Ptr, arrayOf(origin, index)) {
+class LeaStack private constructor(id: Identity, owner: Block, val loadedType: PrimitiveType, origin: Value, index: Value):
+    ValueInstruction(id, owner, Type.Ptr, arrayOf(origin, index)) {
 
     override fun type(): PrimitiveType {
         return tp as PrimitiveType
     }
 
     override fun dump(): String {
-        return "%$id = $NAME $loadedType, $tp ${origin()}, ${index().type()} ${index()}"
+        return "%${name()} = $NAME $loadedType, $tp ${origin()}, ${index().type()} ${index()}"
     }
 
     fun origin(): Value {
@@ -41,13 +42,13 @@ class LeaStack private constructor(name: String, owner: Block, val loadedType: P
     companion object {
         const val NAME = "leastv"
 
-        fun make(name: String, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value): LeaStack {
+        fun make(id: Identity, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value): LeaStack {
             val originType = origin.type()
             require(isAppropriateType(originType, index.type())) {
                 "should not be $originType, but origin=$origin:$originType"
             }
 
-            return registerUser(LeaStack(name, owner, loadedType, origin, index), origin)
+            return registerUser(LeaStack(id, owner, loadedType, origin, index), origin)
         }
 
         fun typeCheck(copy: LeaStack): Boolean {

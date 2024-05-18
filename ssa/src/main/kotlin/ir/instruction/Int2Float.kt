@@ -6,10 +6,10 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Int2Float private constructor(name: String, owner: Block, toType: FloatingPointType, value: Value):
-    ValueInstruction(name, owner, toType, arrayOf(value)) {
+class Int2Float private constructor(id: Identity, owner: Block, toType: FloatingPointType, value: Value):
+    ValueInstruction(id, owner, toType, arrayOf(value)) {
     override fun dump(): String {
-        return "%$id = $NAME ${value().type()} ${value()} to ${type()}"
+        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
     }
 
     fun value(): Value {
@@ -29,13 +29,13 @@ class Int2Float private constructor(name: String, owner: Block, toType: Floating
     companion object {
         const val NAME = "itofp"
 
-        fun make(name: String, owner: Block, toType: FloatingPointType, value: Value): Int2Float {
+        fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): Int2Float {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
-                "inconsistent types in $name: ty=$toType, value=$value:$valueType"
+                "inconsistent types in '$id': ty=$toType, value=$value:$valueType"
             }
 
-            return registerUser(Int2Float(name, owner, toType, value), value)
+            return registerUser(Int2Float(id, owner, toType, value), value)
         }
 
         private fun isAppropriateType(valueType: Type): Boolean {
