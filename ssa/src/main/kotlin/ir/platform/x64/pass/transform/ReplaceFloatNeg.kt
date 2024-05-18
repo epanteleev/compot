@@ -28,14 +28,14 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
     }
 
     private fun handleBlock(bb: Block) {
-        fun  closure(bb: Block, inst: Instruction): Int {
+        fun closure(bb: Block, inst: Instruction): Instruction {
             if (inst !is Neg) {
-                return 0
+                return inst
             }
 
             val type = inst.type()
             if (type !is FloatingPointType) {
-                return 0
+                return inst
             }
 
             val xor = bb.insertBefore(inst) {
@@ -44,10 +44,10 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
 
             ValueInstruction.replaceUsages(inst, xor)
             bb.kill(inst)
-            return 1
+            return xor
         }
 
-        bb.instructions { inst -> closure(bb, inst) }
+        bb.transform { inst -> closure(bb, inst) }
     }
 
     companion object {

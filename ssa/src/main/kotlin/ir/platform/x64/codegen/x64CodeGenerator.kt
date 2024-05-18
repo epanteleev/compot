@@ -57,25 +57,6 @@ private class CodeEmitter(private val data: FunctionData,
         orderedLocation
     }
 
-    private var aboveNeighbour: Instruction? = null
-    private var belowNeighbour: Instruction? = null
-
-    private inline fun<reified T: Instruction> above(): Instruction {
-        if (aboveNeighbour is T) {
-            throw RuntimeException("above neighbour is not ${T::class.simpleName}")
-        }
-
-        return aboveNeighbour!!
-    }
-
-    private inline fun<reified T: Instruction> below(): Instruction {
-        if (belowNeighbour is T) {
-            throw RuntimeException("below neighbour is not ${T::class.simpleName}, but ${belowNeighbour!!::class.simpleName}")
-        }
-
-        return belowNeighbour!!
-    }
-
     private fun makeLabel(bb: Block) = ".L$functionCounter.${bb.index}"
 
 
@@ -325,7 +306,7 @@ private class CodeEmitter(private val data: FunctionData,
         val src = valueToRegister.operand(flag2Int.value())
         val compare = flag2Int.value() as CompareInstruction
 
-        val isNeighbour = aboveNeighbour != null && aboveNeighbour == flag2Int.value()
+        val isNeighbour = flag2Int.prev() != null && flag2Int.prev() == flag2Int.value()
         if (isNeighbour) {
             setcc(compare.predicate(), dst)
         }
@@ -381,7 +362,7 @@ private class CodeEmitter(private val data: FunctionData,
 
     private fun needSetcc(cmp: CompareInstruction): Boolean {
         val users = cmp.usedIn()
-        return users.size > 1 || users.first() != belowNeighbour
+        return users.size > 1 || users.first() != cmp.next()
     }
 
     override fun visit(pcmp: PointerCompare) { //TODO
@@ -683,8 +664,6 @@ private class CodeEmitter(private val data: FunctionData,
             }
 
             bb.instructions { instruction ->
-                aboveNeighbour = instruction.prev()
-                belowNeighbour = instruction.next()
                 asm.comment(instruction.dump())
                 instruction.visit(this)
                 0

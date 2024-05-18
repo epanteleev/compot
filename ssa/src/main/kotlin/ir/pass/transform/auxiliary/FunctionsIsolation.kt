@@ -55,7 +55,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         }
 
         for (bb in cfg.blocks) {
-            bb.transform{ inst -> insertCopies(bb, inst) }
+            bb.transform { inst -> insertCopies(bb, inst) }
         }
     }
 

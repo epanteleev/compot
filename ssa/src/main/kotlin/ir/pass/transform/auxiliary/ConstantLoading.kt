@@ -2,26 +2,30 @@ package ir.pass.transform.auxiliary
 
 import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
+import ir.instruction.Instruction
 import ir.module.BasicBlocks
 import ir.module.Module
+import ir.module.block.Block
 
 
 internal class ConstantLoading private constructor(private val cfg: BasicBlocks) {
     private fun pass() {
-        for (bb in cfg) {
-            bb.instructions { inst ->
-                var inserted = 0
-                for ((i, use) in inst.operands().withIndex()) {
-                    if (use !is GlobalConstant && use !is FunctionSymbol) {
-                        continue
-                    }
-
-                    val lea = bb.insertBefore(inst) { it.lea(use) }
-                    inst.update(i, lea)
-                    inserted++
+        fun closure(bb: Block, inst: Instruction): Instruction {
+            var inserted: Instruction? = null
+            for ((i, use) in inst.operands().withIndex()) {
+                if (use !is GlobalConstant && use !is FunctionSymbol) {
+                    continue
                 }
-                inserted
+
+                val lea = bb.insertBefore(inst) { it.lea(use) }
+                inst.update(i, lea)
+                inserted = lea
             }
+            return inserted?: inst
+        }
+
+        for (bb in cfg) {
+            bb.transform { inst -> closure(bb, inst) }
         }
     }
 

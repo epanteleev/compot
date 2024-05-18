@@ -8,7 +8,11 @@ import ir.module.FunctionData
 
 
 internal class CopyInsertion private constructor(private val cfg: FunctionData) {
-    private fun isolatePhis(bb: Block, phi: Phi): Int {
+    private fun isolatePhis(bb: Block, phi: Instruction): Instruction {
+        if (phi !is Phi) {
+            return phi
+        }
+
         phi.zipWithIndex { incoming, operand, idx ->
             assert(!bb.hasCriticalEdgeFrom(incoming)) {
                 "Flow graph has critical edge from $incoming to $bb"
@@ -22,15 +26,12 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
 
         val copy = bb.insertAfter(phi) { it.copy(phi) }
         ValueInstruction.replaceUsages(phi, copy)
-        return 1
+        return copy
     }
 
     fun pass() {
         for (bb in cfg.blocks) {
-            bb.instructions { inst ->
-                val phi =  inst as? Phi ?: return@instructions 0
-                isolatePhis(bb, phi)
-            }
+            bb.transform { phi -> isolatePhis(bb, phi) }
         }
     }
 
