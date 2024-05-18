@@ -49,9 +49,9 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
     }
 
     private fun replaceGepToLea() {
-        fun closure(bb: Block, inst: Instruction): Int {
+        fun closure(bb: Block, inst: Instruction): Instruction {
             if (inst !is ValueInstruction) {
-                return 0
+                return inst
             }
             when {
                 gep(generate(), nop()) (inst) -> {
@@ -59,6 +59,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     val lea = bb.insertBefore(inst) { it.leaStack(inst.source(), inst.basicType, inst.index()) }
                     ValueInstruction.replaceUsages(inst, lea)
                     bb.kill(inst)
+                    return lea
                 }
                 gfp(generate(), nop()) (inst) -> {
                     inst as GetFieldPtr
@@ -70,6 +71,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                             }
                             ValueInstruction.replaceUsages(inst, lea)
                             bb.kill(inst)
+                            return lea
                         }
                         is StructType -> {
                             val lea = bb.insertBefore(inst) {
@@ -77,15 +79,16 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                             }
                             ValueInstruction.replaceUsages(inst, lea)
                             bb.kill(inst)
+                            return lea
                         }
                     }
                 }
             }
-            return 0
+            return inst
         }
 
         for (bb in cfg) {
-            bb.instructions { inst -> closure(bb, inst) }
+            bb.transform { inst -> closure(bb, inst) }
         }
     }
     private fun replaceGEPAndStore() {
