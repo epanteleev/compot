@@ -6,9 +6,7 @@ import asm.x64.ImmInt
 import asm.x64.ImmInt.Companion.canBeImm32
 import ir.global.GlobalConstant
 import ir.global.GlobalSymbol
-import ir.global.GlobalValue
-import ir.instruction.lir.LoadFromStack
-import ir.instruction.lir.StoreOnStack
+import ir.instruction.Instruction
 import ir.module.Module
 import ir.module.block.Block
 import ir.types.PrimitiveType
@@ -56,24 +54,23 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
     }
 
     private fun handleBlock(bb: Block) {
-        bb.forEachInstruction { inst ->
-            var inserted = 0
+        bb.transform { inst ->
+            var lastInserted: Instruction? = null
             for ((opIdx, operand) in inst.operands().withIndex()) {
                 if (operand !is Constant) {
                     continue
                 }
 
                 val constant = makeConstantOrNull(operand) ?: continue
-
                 constants.add(constant)
 
                 val loadedConstant = bb.insertBefore(inst) {
                     it.load(operand.type() as PrimitiveType, constant)
                 }
-                inserted += 1
+                lastInserted = loadedConstant
                 inst.update(opIdx, loadedConstant)
             }
-            inserted
+            lastInserted?: inst
         }
     }
 

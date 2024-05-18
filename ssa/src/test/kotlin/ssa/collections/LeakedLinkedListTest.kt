@@ -2,6 +2,7 @@ package ssa.collections
 
 import common.LListNode
 import common.LeakedLinkedList
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -115,15 +116,32 @@ class LeakedLinkedListTest {
     @Test
     fun testConcurrentModification() {
         val list = leakedLinkedListOf(1, 2, 3, 4, 5)
-        for (node in list) {
-            if (node.value == 3) {
-                list.remove(node)
+        assertThrows<ConcurrentModificationException> {
+            for (node in list) {
+                if (node.value == 3) {
+                    list.remove(node)
+                }
             }
         }
-        assertEquals(4, list.size)
+    }
+
+    @Test
+    fun testTransform() {
+        val list = leakedLinkedListOf(1, 2, 3, 4, 5)
+        list.transform {
+            val new = IntNode(90)
+            list.addAfter(it, new)
+            new
+        }
+
         assertEquals(1, list[0].value)
-        assertEquals(2, list[1].value)
-        assertEquals(4, list[2].value)
-        assertEquals(5, list[3].value)
+        assertEquals(90, list[1].value)
+        assertEquals(2, list[2].value)
+        assertEquals(90, list[3].value)
+        assertEquals(3, list[4].value)
+        assertEquals(90, list[5].value)
+        assertEquals(4, list[6].value)
+        assertEquals(90, list[7].value)
+        assertEquals(5, list[8].value)
     }
 }

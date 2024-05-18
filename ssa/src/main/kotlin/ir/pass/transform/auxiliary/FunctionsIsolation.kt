@@ -55,9 +55,9 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         }
 
         for (bb in cfg.blocks) {
-            bb.forEachInstruction { inst ->
-                val call = inst as? Callable ?: return@forEachInstruction 0
-                return@forEachInstruction insertCopies(bb, call)
+            bb.instructions { inst ->
+                val call = inst as? Callable ?: return@instructions 0
+                return@instructions insertCopies(bb, call)
             }
         }
     }

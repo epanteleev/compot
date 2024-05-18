@@ -27,8 +27,8 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
 
     fun pass() {
         for (bb in cfg.blocks) {
-            bb.forEachInstruction { inst ->
-                val phi =  inst as? Phi ?: return@forEachInstruction 0
+            bb.instructions { inst ->
+                val phi =  inst as? Phi ?: return@instructions 0
                 isolatePhis(bb, phi)
             }
         }

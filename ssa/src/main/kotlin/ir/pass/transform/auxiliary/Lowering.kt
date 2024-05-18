@@ -44,7 +44,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         }
 
         for (bb in cfg) {
-            bb.forEachInstruction { inst -> closure(bb, inst) }
+            bb.instructions { inst -> closure(bb, inst) }
         }
     }
 
@@ -85,7 +85,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         }
 
         for (bb in cfg) {
-            bb.forEachInstruction { inst -> closure(bb, inst) }
+            bb.instructions { inst -> closure(bb, inst) }
         }
     }
     private fun replaceGEPAndStore() {
@@ -150,7 +150,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         }
 
         for (bb in cfg) {
-            bb.forEachInstruction { inst -> closure(bb, inst) }
+            bb.instructions { inst -> closure(bb, inst) }
         }
     }
     private fun replaceEscaped() {
@@ -178,7 +178,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         }
 
         for (bb in cfg.bfsTraversal()) {
-            bb.forEachInstruction { inst -> closure(bb, inst) }
+            bb.instructions { inst -> closure(bb, inst) }
         }
     }
 

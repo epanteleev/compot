@@ -2,12 +2,13 @@ package common
 
 
 // Ordinary linked list with leaked abstraction
-abstract class LeakedLinkedList<T: LListNode> : List<T> {
+abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
     private var head: T? = null
     private var tail: T? = null
     override var size = 0
+    private var modificationCount = 0
 
-    override fun get(index: Int): T {
+    operator fun get(index: Int): T {
         var current: LListNode? = head
         for (i in 0 until index) {
             current = current!!.next
@@ -16,7 +17,7 @@ abstract class LeakedLinkedList<T: LListNode> : List<T> {
         return current as T
     }
 
-    override fun indexOf(element: T): Int {
+    fun indexOf(element: T): Int {
         var current: LListNode? = head
         var index = 0
         while (current != null) {
@@ -30,6 +31,7 @@ abstract class LeakedLinkedList<T: LListNode> : List<T> {
     }
 
     fun add(index: Int, value: T) {
+        modificationCount++
         if (index == size) {
             add(value)
             return
@@ -51,6 +53,7 @@ abstract class LeakedLinkedList<T: LListNode> : List<T> {
 
     // if node is null, add to the beginning
     fun addBefore(node: T?, value: T) {
+        modificationCount++
         if (node == null) {
             val oldHead = head
             head = value
@@ -72,6 +75,7 @@ abstract class LeakedLinkedList<T: LListNode> : List<T> {
 
     // if node is null, add to the end
     fun addAfter(node: T?, value: T) {
+        modificationCount++
         if (node == null) {
             add(value)
             return
@@ -133,6 +137,7 @@ abstract class LeakedLinkedList<T: LListNode> : List<T> {
     }
 
     fun add(value: T) {
+        modificationCount++
         if (head == null) {
             head = value
             tail = value
@@ -146,6 +151,7 @@ abstract class LeakedLinkedList<T: LListNode> : List<T> {
     }
 
     fun remove(node: T): T {
+        modificationCount++
         if (node.prev != null) {
             node.prev!!.next = node.next
         } else {
@@ -164,95 +170,50 @@ abstract class LeakedLinkedList<T: LListNode> : List<T> {
         return node
     }
 
+    fun forEach(action: (T) -> Unit) {
+        var current: LListNode? = head
+        val expectedModificationCount = modificationCount
+        while (current != null) {
+            @Suppress("UNCHECKED_CAST")
+            action(current as T)
+            if (expectedModificationCount != modificationCount) {
+                throw ConcurrentModificationException()
+            }
+            current = current.next
+        }
+    }
+
+    fun transform(action: (T) -> T) {
+        var current: LListNode? = head
+        while (current != null) {
+            @Suppress("UNCHECKED_CAST")
+            current = action(current as T)
+            current = current.next
+        }
+    }
+
     override fun isEmpty(): Boolean = size == 0
+    fun isNotEmpty(): Boolean = size != 0
 
     override fun iterator(): Iterator<T> {
         return object : Iterator<T> {
             private var current = head
+            private val expectedModificationCount = modificationCount
             override fun hasNext(): Boolean = current != null
             override fun next(): T {
                 val result = current
-                @Suppress("UNCHECKED_CAST")
-                current = current!!.next as T?
-                return result!!
-            }
-        }
-    }
-
-
-    override fun listIterator(): ListIterator<T> {
-        return object : ListIterator<T> {
-            private var current = head
-            private var index = 0
-            override fun hasNext(): Boolean = current != null
-            override fun hasPrevious(): Boolean = current != null
-            override fun next(): T {
-                val result = current
-                @Suppress("UNCHECKED_CAST")
-                current = current!!.next as T?
-                index++
-                return result!!
-            }
-            override fun nextIndex(): Int = index
-            override fun previous(): T {
-                val result = current
-                @Suppress("UNCHECKED_CAST")
-                current = current!!.prev as T?
-                index--
-                return result!!
-            }
-            override fun previousIndex(): Int = index - 1
-        }
-    }
-
-    override fun listIterator(index: Int): ListIterator<T> {
-        return object : ListIterator<T> {
-            private var current = head
-            private var currentIndex = 0
-            init {
-                for (i in 0 until index) {
-                    @Suppress("UNCHECKED_CAST")
-                    current = current!!.next as T?
-                    currentIndex++
+                if (expectedModificationCount != modificationCount) {
+                    throw ConcurrentModificationException()
                 }
-            }
-            override fun hasNext(): Boolean = current != null
-            override fun hasPrevious(): Boolean = current != null
-            override fun next(): T {
-                val result = current
                 @Suppress("UNCHECKED_CAST")
                 current = current!!.next as T?
-                currentIndex++
                 return result!!
             }
-            override fun nextIndex(): Int = currentIndex
-            override fun previous(): T {
-                val result = current
-                @Suppress("UNCHECKED_CAST")
-                current = current!!.prev as T?
-                currentIndex--
-                return result!!
-            }
-            override fun previousIndex(): Int = currentIndex - 1
         }
     }
 
-    override fun subList(fromIndex: Int, toIndex: Int): List<T> {
-        val result = mutableListOf<T>()
-        var current = head
-        for (i in 0 until fromIndex) {
-            @Suppress("UNCHECKED_CAST")
-            current = current!!.next as T?
-        }
-        for (i in fromIndex until toIndex) {
-            result.add(current!!)
-            @Suppress("UNCHECKED_CAST")
-            current = current.next as T?
-        }
-        return result
-    }
 
-    override fun lastIndexOf(element: T): Int {
+    fun lastIndexOf(element: T): Int {
         var current = tail
         var index = size - 1
         while (current != null) {

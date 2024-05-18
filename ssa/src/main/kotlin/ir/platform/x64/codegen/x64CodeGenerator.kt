@@ -682,7 +682,7 @@ private class CodeEmitter(private val data: FunctionData,
                 asm.label(makeLabel(bb))
             }
 
-            bb.forEachInstruction { instruction ->
+            bb.instructions { instruction ->
                 aboveNeighbour = instruction.prev()
                 belowNeighbour = instruction.next()
                 asm.comment(instruction.dump())

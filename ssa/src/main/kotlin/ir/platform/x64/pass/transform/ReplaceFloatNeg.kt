@@ -47,7 +47,7 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
             return 1
         }
 
-        bb.forEachInstruction { inst -> closure(bb, inst) }
+        bb.instructions { inst -> closure(bb, inst) }
     }
 
     companion object {

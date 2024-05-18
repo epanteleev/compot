@@ -65,7 +65,7 @@ class Block(override val index: Int):
             "bb=$this must have any instructions"
         }
 
-        return instructions[0]
+        return instructions.first()
     }
 
     val size get(): Int = instructions.size
@@ -92,11 +92,15 @@ class Block(override val index: Int):
         predecessors.remove(old)
     }
 
-    fun forEachInstruction(fn: (Instruction) -> Int) {
+    fun instructions(fn: (Instruction) -> Int) {
         var i = 0
         while (i < instructions.size) {
             i += fn(instructions[i]) + 1
         }
+    }
+
+    fun transform(fn: (Instruction) -> Instruction) {
+        instructions.transform { fn(it) }
     }
 
     fun<T> prepend(builder: (AnyInstructionFabric) -> T): T {
@@ -149,7 +153,7 @@ class Block(override val index: Int):
     fun valueInstructions(fn: (ValueInstruction) -> Unit) {
         instructions.forEach {
             if (it !is ValueInstruction) {
-                return
+                return@forEach
             }
 
             fn(it)
@@ -159,7 +163,7 @@ class Block(override val index: Int):
     fun phis(fn: (Phi) -> Unit) {
         instructions.forEach {
             if (it !is Phi) {
-                return // Assume that phi functions are in the beginning of bb.
+                return@forEach // Assume that phi functions are in the beginning of bb.
             }
 
             fn(it)

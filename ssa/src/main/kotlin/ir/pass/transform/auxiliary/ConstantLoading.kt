@@ -9,7 +9,7 @@ import ir.module.Module
 internal class ConstantLoading private constructor(private val cfg: BasicBlocks) {
     private fun pass() {
         for (bb in cfg) {
-            bb.forEachInstruction { inst ->
+            bb.instructions { inst ->
                 var inserted = 0
                 for ((i, use) in inst.operands().withIndex()) {
                     if (use !is GlobalConstant && use !is FunctionSymbol) {
