@@ -6,7 +6,7 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-abstract class Instruction(val owner: Block, protected val operands: Array<Value>): LListNode() {
+abstract class Instruction(val id: Identity, val owner: Block, protected val operands: Array<Value>): LListNode() {
     fun usedInstructions(): List<ValueInstruction> {
         return operands.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
     }

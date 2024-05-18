@@ -8,8 +8,8 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Memcpy private constructor(owner: Block, dst: Value, src: Value, length: UnsignedIntegerConstant):
-    Instruction(owner, arrayOf(dst, src, length)) {
+class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Value, length: UnsignedIntegerConstant):
+    Instruction(id, owner, arrayOf(dst, src, length)) {
     override fun <T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
@@ -58,12 +58,12 @@ class Memcpy private constructor(owner: Block, dst: Value, src: Value, length: U
     companion object {
         const val NAME = "memcpy"
 
-        fun make(owner: Block, dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy {
+        fun make(id: Identity, owner: Block, dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy {
             require(isAppropriateTypes(dst.type(), src.type())) {
                 "inconsistent types: dst=$dst, src=$src"
             }
 
-            return registerUser(Memcpy(owner, dst, src, length), dst, src)
+            return registerUser(Memcpy(id, owner, dst, src, length), dst, src)
         }
 
         private fun isAppropriateTypes(dstType: Type, srcType: Type): Boolean {

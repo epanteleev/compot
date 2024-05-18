@@ -4,7 +4,7 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class ReturnVoid private constructor(owner: Block): Return(owner, arrayOf()) {
+class ReturnVoid private constructor(id: Identity, owner: Block): Return(id, owner, arrayOf()) {
     override fun dump(): String = "ret void"
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
@@ -12,6 +12,6 @@ class ReturnVoid private constructor(owner: Block): Return(owner, arrayOf()) {
     }
 
     companion object {
-        fun make(owner: Block): ReturnVoid = ReturnVoid(owner)
+        fun make(id: Identity, owner: Block): ReturnVoid = ReturnVoid(id, owner)
     }
 }

@@ -1,14 +1,11 @@
 package ir.instruction.lir
 
 import ir.Value
+import ir.types.*
 import ir.instruction.Identity
-import ir.types.Type
-import ir.types.PrimitiveType
-import ir.types.ArithmeticType
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
-import ir.types.PointerType
 
 
 class IndexedLoad private constructor(id: Identity, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value):

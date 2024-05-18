@@ -1,15 +1,15 @@
 package ir.instruction.lir
 
 import ir.Value
+import ir.types.*
+import ir.module.block.Block
+import ir.instruction.Identity
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
-import ir.module.block.Block
-import ir.types.AggregateType
-import ir.types.ArithmeticType
-import ir.types.PrimitiveType
 
-class StoreOnStack private constructor(owner: Block, destination: Value, index: Value, source: Value):
-    Instruction(owner, arrayOf(destination, index, source)) {
+
+class StoreOnStack private constructor(id: Identity, owner: Block, destination: Value, index: Value, source: Value):
+    Instruction(id, owner, arrayOf(destination, index, source)) {
 
     override fun dump(): String {
         val fromValue = source()
@@ -59,12 +59,12 @@ class StoreOnStack private constructor(owner: Block, destination: Value, index: 
     companion object {
         const val NAME = "movst"
 
-        fun make(owner: Block, dst: Value, index: Value, src: Value): StoreOnStack {
+        fun make(id: Identity, owner: Block, dst: Value, index: Value, src: Value): StoreOnStack {
             require(isAppropriateType(dst, index, src)) {
                 "inconsistent types: toValue=$dst:${dst.type()}, base=$src:${src.type()}"
             }
 
-            return registerUser(StoreOnStack(owner, dst, index, src), dst, index, src)
+            return registerUser(StoreOnStack(id, owner, dst, index, src), dst, index, src)
         }
 
         fun typeCheck(copy: StoreOnStack): Boolean {

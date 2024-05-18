@@ -3,11 +3,10 @@ package ir.instruction
 import ir.Value
 import ir.module.block.Block
 
-abstract class TerminateInstruction(owner: Block, usages: Array<Value>, val targets: Array<Block>):
-    Instruction(owner, usages) {
-    fun targets(): Array<Block> {
-        return targets
-    }
+
+abstract class TerminateInstruction(id: Identity, owner: Block, usages: Array<Value>, val targets: Array<Block>):
+    Instruction(id, owner, usages) {
+    fun targets(): Array<Block> = targets
 
     override fun hashCode(): Int {
         return targets.hashCode()

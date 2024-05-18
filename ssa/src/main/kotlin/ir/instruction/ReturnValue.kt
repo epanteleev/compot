@@ -9,7 +9,7 @@ import ir.types.AnyType
 import ir.types.VoidType
 
 
-class ReturnValue private constructor(owner: Block, value: Value): Return(owner, arrayOf(value)) {
+class ReturnValue private constructor(id: Identity, owner: Block, value: Value): Return(id, owner, arrayOf(value)) {
     override fun dump(): String {
         return "ret ${value().type()} ${value()}"
     }
@@ -31,13 +31,13 @@ class ReturnValue private constructor(owner: Block, value: Value): Return(owner,
     }
 
     companion object {
-        fun make(owner: Block, value: Value): Return {
+        fun make(id: Identity, owner: Block, value: Value): Return {
             val retType = value.type()
             require(isAppropriateType(retType)) {
                 "cannot be $retType, but value=$value:${retType}"
             }
 
-            return registerUser(ReturnValue(owner, value), value)
+            return registerUser(ReturnValue(id, owner, value), value)
         }
 
         private fun isAppropriateType(retType: Type): Boolean {

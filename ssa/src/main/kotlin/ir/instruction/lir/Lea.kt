@@ -43,7 +43,7 @@ class Lea private constructor(id: Identity, owner: Block, value: Value):
                 "inconsistent type '$id' generate=$value:$originType"
             }
             require(value is Generate || value is GlobalConstant || value is FunctionSymbol) {
-                "should be '${Generate.NAME}' or global constant, but '$value'"
+                "should be '${NAME}' or global constant, but '$value'"
             }
 
             return registerUser(Lea(id, owner, value), value)

@@ -7,8 +7,8 @@ import ir.module.block.Block
 import ir.types.Type
 
 
-class VoidCall private constructor(owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>):
-    Instruction(owner, args),
+class VoidCall private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>):
+    Instruction(id, owner, args),
     Callable {
     init {
         assert(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
@@ -49,14 +49,14 @@ class VoidCall private constructor(owner: Block, private val func: AnyFunctionPr
     }
 
     companion object {
-        fun make(owner: Block, func: AnyFunctionPrototype, args: List<Value>): VoidCall {
+        fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>): VoidCall {
             val argsArray = args.toTypedArray()
             require(Callable.isAppropriateTypes(func, argsArray)) {
                 args.joinToString(prefix = "inconsistent types, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
 
-            return registerUser(VoidCall(owner, func, argsArray), args.iterator())
+            return registerUser(VoidCall(id, owner, func, argsArray), args.iterator())
         }
     }
 }

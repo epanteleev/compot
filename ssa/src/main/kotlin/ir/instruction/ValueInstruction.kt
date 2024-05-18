@@ -6,11 +6,11 @@ import ir.types.NonTrivialType
 
 typealias Identity = Int
 
-abstract class ValueInstruction(protected val id: Identity,
+abstract class ValueInstruction(id: Identity,
                                 owner: Block,
                                 protected val tp: NonTrivialType,
                                 operands: Array<Value>):
-    Instruction(owner, operands),
+    Instruction(id, owner, operands),
     LocalValue {
     private var usedIn: MutableList<Instruction> = arrayListOf()
 

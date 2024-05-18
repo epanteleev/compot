@@ -1,13 +1,14 @@
 package ir.instruction.lir
 
 import ir.Value
+import ir.instruction.Identity
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class MoveByIndex private constructor(owner: Block, destination: Value, source: Value, index: Value):
-    Instruction(owner, arrayOf(destination, source, index)) {
+class MoveByIndex private constructor(id: Identity, owner: Block, destination: Value, source: Value, index: Value):
+    Instruction(id, owner, arrayOf(destination, source, index)) {
 
     override fun dump(): String {
         val fromValue = source()
@@ -57,12 +58,12 @@ class MoveByIndex private constructor(owner: Block, destination: Value, source: 
     companion object {
         const val NAME = "move"
 
-        fun make(owner: Block, dst: Value, src: Value, index: Value): MoveByIndex {
+        fun make(id: Identity, owner: Block, dst: Value, src: Value, index: Value): MoveByIndex {
             require(isAppropriateType(dst, src)) {
                 "inconsistent types: toValue=$dst:${dst.type()}, base=$src:${src.type()}"
             }
 
-            return registerUser(MoveByIndex(owner, dst, src, index), dst, src, index)
+            return registerUser(MoveByIndex(id, owner, dst, src, index), dst, src, index)
         }
 
         fun typeCheck(copy: MoveByIndex): Boolean {
