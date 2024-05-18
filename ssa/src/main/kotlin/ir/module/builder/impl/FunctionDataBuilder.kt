@@ -61,7 +61,7 @@ class FunctionDataBuilder private constructor(
         return bb.load(loadedType, ptr)
     }
 
-    override fun store(ptr: Value, value: Value) {
+    override fun store(ptr: Value, value: Value): Store {
         return bb.store(ptr, value)
     }
 
@@ -69,28 +69,28 @@ class FunctionDataBuilder private constructor(
         return bb.call(func, args)
     }
 
-    override fun vcall(func: AnyFunctionPrototype, args: List<Value>) {
-        bb.vcall(func, args)
+    override fun vcall(func: AnyFunctionPrototype, args: List<Value>): VoidCall {
+        return bb.vcall(func, args)
     }
 
     override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
         return bb.icall(pointer, func, args)
     }
 
-    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>) {
-        bb.ivcall(pointer, func, args)
+    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionVoidCall {
+        return bb.ivcall(pointer, func, args)
     }
 
     fun branch(target: Label) {
         branch(blocks.findBlock(target))
     }
 
-    override fun branch(target: Block) {
-        bb.branch(target)
+    override fun branch(target: Block): Branch {
+        return bb.branch(target)
     }
 
-    override fun branchCond(value: Value, onTrue: Block, onFalse: Block) {
-        bb.branchCond(value, onTrue, onFalse)
+    override fun branchCond(value: Value, onTrue: Block, onFalse: Block): BranchCond {
+        return bb.branchCond(value, onTrue, onFalse)
     }
 
     fun branchCond(value: Value, onTrue: Label, onFalse: Label) {
@@ -101,12 +101,12 @@ class FunctionDataBuilder private constructor(
         return bb.alloc(ty)
     }
 
-    override fun ret(value: Value) {
-        bb.ret(value)
+    override fun ret(value: Value): Return {
+        return bb.ret(value)
     }
 
-    override fun retVoid() {
-        bb.retVoid()
+    override fun retVoid(): ReturnVoid {
+        return bb.retVoid()
     }
 
     override fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr {

@@ -17,16 +17,16 @@ interface InstructionFabric {
     fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare
     fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare
     fun load(loadedType: PrimitiveType, ptr: Value): Load
-    fun store(ptr: Value, value: Value)
+    fun store(ptr: Value, value: Value): Store
     fun call(func: AnyFunctionPrototype, args: List<Value>): Call
-    fun vcall(func: AnyFunctionPrototype, args: List<Value>)
+    fun vcall(func: AnyFunctionPrototype, args: List<Value>): VoidCall
     fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall
-    fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>)
-    fun branch(target: Block)
-    fun branchCond(value: Value, onTrue: Block, onFalse: Block) //TODO Labels
+    fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionVoidCall
+    fun branch(target: Block): Branch
+    fun branchCond(value: Value, onTrue: Block, onFalse: Block): BranchCond //TODO Labels
     fun alloc(ty: NonTrivialType): Alloc
-    fun ret(value: Value)
-    fun retVoid()
+    fun ret(value: Value): Return
+    fun retVoid(): ReturnVoid
     fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr
     fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr
     fun flag2int(value: Value, ty: IntegerType): Flag2Int
@@ -50,14 +50,14 @@ interface InternalInstructionFabric {
     fun lea(generate: Value): Lea
     fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi
     fun copy(value: Value): Copy
-    fun move(dst: Generate, fromValue: Value)
-    fun move(dst: Value, base: Value, index: Value)
+    fun move(dst: Generate, fromValue: Value): Move
+    fun move(dst: Value, base: Value, index: Value): MoveByIndex
     fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad
-    fun storeOnStack(destination: Value, index: Value, source: Value)
+    fun storeOnStack(destination: Value, index: Value, source: Value): StoreOnStack
     fun loadFromStack(origin: Value, loadedType: PrimitiveType, index: Value): LoadFromStack
     fun leaStack(origin: Value, loadedType: PrimitiveType, index: Value): LeaStack
-    fun downStackFrame(callable: Callable)
-    fun upStackFrame(callable: Callable)
+    fun downStackFrame(callable: Callable): DownStackFrame
+    fun upStackFrame(callable: Callable): UpStackFrame
 }
 
 interface AnyInstructionFabric : InstructionFabric, InternalInstructionFabric

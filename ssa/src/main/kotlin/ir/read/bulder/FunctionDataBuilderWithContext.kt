@@ -165,7 +165,7 @@ class FunctionDataBuilderWithContext private constructor(
     fun store(ptr: AnyValueToken, valueTok: AnyValueToken, expectedType: PrimitiveTypeToken) {
         val pointer = getValue(ptr, expectedType.type())
         val value   = getValue(valueTok, expectedType.asType<PrimitiveType>())
-        return bb.store(pointer, value)
+        bb.store(pointer, value)
     }
 
     private fun convertToValues(types: List<Type>, args: List<AnyValueToken>): List<Value> {

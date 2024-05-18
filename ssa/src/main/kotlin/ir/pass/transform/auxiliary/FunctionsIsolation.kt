@@ -41,24 +41,21 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     private fun isolateCall() {
-        fun insertCopies(bb: Block, call: Callable): Int {
-            call as Instruction
+        fun insertCopies(bb: Block, call: Instruction): Instruction {
+            if (call !is Callable) {
+                return call
+            }
             bb.insertBefore(call) { it.downStackFrame(call) }
 
             for ((i, arg) in call.arguments().withIndex()) {
                 val copy = bb.insertBefore(call) { it.copy(arg) }
                 call.update(i, copy)
             }
-            bb.insertAfter(call) { it.upStackFrame(call) }
-
-            return call.arguments().size + 2
+            return bb.insertAfter(call) { it.upStackFrame(call) }
         }
 
         for (bb in cfg.blocks) {
-            bb.instructions { inst ->
-                val call = inst as? Callable ?: return@instructions 0
-                return@instructions insertCopies(bb, call)
-            }
+            bb.transform{ inst -> insertCopies(bb, inst) }
         }
     }
 

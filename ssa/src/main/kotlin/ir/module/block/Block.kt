@@ -226,8 +226,8 @@ class Block(override val index: Int):
         return withOutput { Load.make(it, this, loadedType, ptr) }
     }
 
-    override fun store(ptr: Value, value: Value) {
-        withOutput { Store.make(it,this, ptr, value) }
+    override fun store(ptr: Value, value: Value): Store {
+        return withOutput { Store.make(it,this, ptr, value) }
     }
 
     override fun call(func: AnyFunctionPrototype, args: List<Value>): Call {
@@ -235,9 +235,9 @@ class Block(override val index: Int):
         return withOutput { Call.make(it, this, func, args) }
     }
 
-    override fun vcall(func: AnyFunctionPrototype, args: List<Value>) {
+    override fun vcall(func: AnyFunctionPrototype, args: List<Value>): VoidCall {
         require(func.returnType() == Type.Void)
-        withOutput { VoidCall.make(it, this, func, args) }
+        return withOutput { VoidCall.make(it, this, func, args) }
     }
 
     override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
@@ -245,29 +245,29 @@ class Block(override val index: Int):
         return withOutput { IndirectionCall.make(it, this, pointer, func, args) }
     }
 
-    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>) {
+    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionVoidCall {
         require(func.returnType() == Type.Void)
-        withOutput { IndirectionVoidCall.make(it, this, pointer, func, args) }
+        return withOutput { IndirectionVoidCall.make(it, this, pointer, func, args) }
     }
 
-    override fun branch(target: Block) {
-        addTerminate { Branch.make(it, this, target) }
+    override fun branch(target: Block): Branch {
+        return addTerminate { Branch.make(it, this, target) }
     }
 
-    override fun branchCond(value: Value, onTrue: Block, onFalse: Block) {
-        addTerminate { BranchCond.make(it, this, value, onTrue, onFalse) }
+    override fun branchCond(value: Value, onTrue: Block, onFalse: Block): BranchCond {
+        return addTerminate { BranchCond.make(it, this, value, onTrue, onFalse) }
     }
 
     override fun alloc(ty: NonTrivialType): Alloc {
         return withOutput { it: Int -> Alloc.make(it, this, ty) }
     }
 
-    override fun ret(value: Value) {
-        addTerminate { ReturnValue.make(it, this, value) }
+    override fun ret(value: Value): Return {
+        return addTerminate { ReturnValue.make(it, this, value) }
     }
 
-    override fun retVoid() {
-        addTerminate{ ReturnVoid.make(it, this) }
+    override fun retVoid(): ReturnVoid {
+        return addTerminate{ ReturnVoid.make(it, this) }
     }
 
     override fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr {
@@ -335,12 +335,12 @@ class Block(override val index: Int):
         withOutput { Memcpy.make(it, this, dst, src, length) }
     }
 
-    override fun downStackFrame(callable: Callable) {
-        withOutput { DownStackFrame(it, this, callable) }
+    override fun downStackFrame(callable: Callable): DownStackFrame {
+        return withOutput { DownStackFrame(it, this, callable) }
     }
 
-    override fun upStackFrame(callable: Callable) {
-        withOutput { UpStackFrame(it, this, callable) }
+    override fun upStackFrame(callable: Callable): UpStackFrame {
+        return withOutput { UpStackFrame(it, this, callable) }
     }
 
     override fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi {
@@ -364,20 +364,20 @@ class Block(override val index: Int):
         return withOutput { Copy.make(it, this, value) }
     }
 
-    override fun move(dst: Generate, fromValue: Value) {
-        withOutput { Move.make(it, this, dst, fromValue) }
+    override fun move(dst: Generate, fromValue: Value): Move {
+        return withOutput { Move.make(it, this, dst, fromValue) }
     }
 
-    override fun move(dst: Value, base: Value, index: Value) {
-        withOutput { MoveByIndex.make(it, this, dst, base, index) }
+    override fun move(dst: Value, base: Value, index: Value): MoveByIndex {
+        return withOutput { MoveByIndex.make(it, this, dst, base, index) }
     }
 
     override fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad {
         return withOutput { IndexedLoad.make(it, this, loadedType, origin, index) }
     }
 
-    override fun storeOnStack(destination: Value, index: Value, source: Value) {
-        withOutput { StoreOnStack.make(it, this, destination, index, source) }
+    override fun storeOnStack(destination: Value, index: Value, source: Value): StoreOnStack {
+        return withOutput { StoreOnStack.make(it, this, destination, index, source) }
     }
 
     override fun loadFromStack(origin: Value, loadedType: PrimitiveType, index: Value): LoadFromStack {
@@ -388,17 +388,18 @@ class Block(override val index: Int):
         return withOutput { LeaStack.make(it, this, loadedType, origin, index) }
     }
 
-    private fun addTerminate(f: (Int) -> TerminateInstruction) {
+    private fun makeEdge(to: Block) {
+        addSuccessor(to)
+        to.addPredecessor(this)
+    }
+
+    private inline fun<reified T: TerminateInstruction> addTerminate(f: (Int) -> T): T {
         val value = allocateValue()
         val instruction = f(value)
 
-        fun makeEdge(to: Block) {
-            addSuccessor(to)
-            to.addPredecessor(this)
-        }
-
         instruction.targets().forEach { makeEdge(it) }
         append(instruction)
+        return instruction
     }
 
     private fun allocateValue(): Int {
