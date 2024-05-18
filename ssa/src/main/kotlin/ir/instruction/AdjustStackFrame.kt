@@ -1,6 +1,9 @@
 package ir.instruction
 
-abstract class AdjustStackFrame(protected open val callable: Callable): Instruction(arrayOf()) {
+import ir.module.block.Block
+
+
+abstract class AdjustStackFrame(owner: Block, protected open val callable: Callable): Instruction(owner, arrayOf()) {
     fun call(): Callable = callable
 
     override fun equals(other: Any?): Boolean {

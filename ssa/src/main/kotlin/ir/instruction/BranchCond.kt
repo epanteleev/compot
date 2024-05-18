@@ -6,8 +6,8 @@ import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block) :
-    TerminateInstruction(arrayOf(value), arrayOf(onTrue, onFalse)) {
+class BranchCond private constructor(owner: Block, value: Value, onTrue: Block, onFalse: Block) :
+    TerminateInstruction(owner, arrayOf(value), arrayOf(onTrue, onFalse)) {
     override fun dump(): String {
         return "br u1 ${condition()} label %${onTrue()}, label %${onFalse()} "
     }
@@ -41,13 +41,13 @@ class BranchCond private constructor(value: Value, onTrue: Block, onFalse: Block
     }
 
     companion object {
-        fun make(value: Value, onTrue: Block, onFalse: Block): BranchCond {
+        fun make(owner: Block, value: Value, onTrue: Block, onFalse: Block): BranchCond {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
                 "should be boolean type, but value=$value:$valueType"
             }
 
-            return registerUser(BranchCond(value, onTrue, onFalse), value)
+            return registerUser(BranchCond(owner, value, onTrue, onFalse), value)
         }
 
         private fun isAppropriateType(valueType: Type): Boolean {

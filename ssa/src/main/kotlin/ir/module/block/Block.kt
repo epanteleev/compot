@@ -69,10 +69,6 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
 
     val size get(): Int = instructions.size
 
-    fun maxValueIndex(): Int { //TODO
-        return maxValueIndex
-    }
-
     private fun addPredecessor(bb: Block) {
         predecessors.add(bb)
     }
@@ -184,7 +180,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
             "should be integer type, but ty=$valueType"
         }
 
-        return withOutput { it: Int -> Not.make(n(it), valueType, value) }
+        return withOutput { it: Int -> Not.make(n(it), this, valueType, value) }
     }
 
     override fun neg(value: Value): Neg {
@@ -193,7 +189,7 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
             "should be integer type, but ty=$valueType"
         }
 
-        return withOutput { it: Int -> Neg.make(n(it), valueType, value) }
+        return withOutput { it: Int -> Neg.make(n(it), this, valueType, value) }
     }
 
     override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
@@ -202,203 +198,203 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
             "should be arithmetic type, but ty=$ty"
         }
 
-        return withOutput { it: Int -> ArithmeticBinary.make(n(it), ty, a, op, b) }
+        return withOutput { it: Int -> ArithmeticBinary.make(n(it), this, ty, a, op, b) }
     }
 
     override fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
-        return withOutput { it: Int -> SignedIntCompare.make("cmp${n(it)}", a, predicate, b) }
+        return withOutput { it: Int -> SignedIntCompare.make("cmp${n(it)}", this, a, predicate, b) }
     }
 
     override fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare {
-        return withOutput { it: Int -> UnsignedIntCompare.make("cmp${n(it)}", a, predicate, b) }
+        return withOutput { it: Int -> UnsignedIntCompare.make("cmp${n(it)}", this, a, predicate, b) }
     }
 
     override fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare {
-        return withOutput { it: Int -> PointerCompare.make("cmp${n(it)}", a, predicate, b) }
+        return withOutput { it: Int -> PointerCompare.make("cmp${n(it)}", this, a, predicate, b) }
     }
 
     override fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
-        return withOutput { it: Int -> FloatCompare.make("cmp${n(it)}", a, predicate, b) }
+        return withOutput { it: Int -> FloatCompare.make("cmp${n(it)}", this, a, predicate, b) }
     }
 
     override fun load(loadedType: PrimitiveType, ptr: Value): Load {
-        return withOutput { it: Int -> Load.make("v${n(it)}", loadedType, ptr) }
+        return withOutput { it: Int -> Load.make("v${n(it)}", this, loadedType, ptr) }
     }
 
     override fun store(ptr: Value, value: Value) {
-        val store = Store.make(ptr, value)
+        val store = Store.make(this, ptr, value)
         append(store)
     }
 
     override fun call(func: AnyFunctionPrototype, args: List<Value>): Call {
         require(func.returnType() != Type.Void)
-        return withOutput { it: Int -> Call.make(n(it), func, args) }
+        return withOutput { it: Int -> Call.make(n(it), this, func, args) }
     }
 
     override fun vcall(func: AnyFunctionPrototype, args: List<Value>) {
         require(func.returnType() == Type.Void)
-        append(VoidCall.make(func, args))
+        append(VoidCall.make(this, func, args))
     }
 
     override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
         require(func.returnType() != Type.Void)
-        return withOutput { it: Int -> IndirectionCall.make(n(it), pointer, func, args) }
+        return withOutput { it: Int -> IndirectionCall.make(n(it), this, pointer, func, args) }
     }
 
     override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>) {
         require(func.returnType() == Type.Void)
-        append(IndirectionVoidCall.make(pointer, func, args))
+        append(IndirectionVoidCall.make(this, pointer, func, args))
     }
 
     override fun branch(target: Block) {
-        add(Branch.make(target))
+        addTerminate(Branch.make(this, target))
     }
 
     override fun branchCond(value: Value, onTrue: Block, onFalse: Block) {
-        add(BranchCond.make(value, onTrue, onFalse))
+        addTerminate(BranchCond.make(this, value, onTrue, onFalse))
     }
 
     override fun alloc(ty: NonTrivialType): Alloc {
-        return withOutput { it: Int -> Alloc.make(n(it), ty) }
+        return withOutput { it: Int -> Alloc.make(n(it), this, ty) }
     }
 
     override fun ret(value: Value) {
-        add(ReturnValue.make(value))
+        addTerminate(ReturnValue.make(this, value))
     }
 
     override fun retVoid() {
-        add(ReturnVoid.make())
+        addTerminate(ReturnVoid.make(this))
     }
 
     override fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr {
-        return withOutput { it: Int -> GetElementPtr.make(n(it), elementType, source, index) }
+        return withOutput { it: Int -> GetElementPtr.make(n(it), this, elementType, source, index) }
     }
 
     override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr {
-        return withOutput { it: Int -> GetFieldPtr.make(n(it), ty, source, index) }
+        return withOutput { it: Int -> GetFieldPtr.make(n(it), this, ty, source, index) }
     }
 
     override fun flag2int(value: Value, ty: IntegerType): Flag2Int {
-        return withOutput { it: Int -> Flag2Int.make(n(it), ty, value) }
+        return withOutput { it: Int -> Flag2Int.make(n(it), this, ty, value) }
     }
 
     override fun int2fp(value: Value, ty: FloatingPointType): Int2Float {
-        return withOutput { it: Int -> Int2Float.make(n(it), ty, value) }
+        return withOutput { it: Int -> Int2Float.make(n(it), this, ty, value) }
     }
 
     override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {
-        return withOutput { it: Int -> Bitcast.make(n(it), ty, value) }
+        return withOutput { it: Int -> Bitcast.make(n(it), this, ty, value) }
     }
 
     override fun zext(value: Value, toType: UnsignedIntType): ZeroExtend {
-        return withOutput { it: Int -> ZeroExtend.make(n(it), toType, value) }
+        return withOutput { it: Int -> ZeroExtend.make(n(it), this, toType, value) }
     }
 
     override fun sext(value: Value, toType: SignedIntType): SignExtend {
-        return withOutput { it: Int -> SignExtend.make(n(it), toType, value) }
+        return withOutput { it: Int -> SignExtend.make(n(it), this, toType, value) }
     }
 
     override fun trunc(value: Value, toType: IntegerType): Truncate {
-        return withOutput { it: Int -> Truncate.make(n(it), toType, value) }
+        return withOutput { it: Int -> Truncate.make(n(it), this, toType, value) }
     }
 
     override fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate {
-        return withOutput { it: Int -> FpTruncate.make(n(it), toType, value) }
+        return withOutput { it: Int -> FpTruncate.make(n(it), this, toType, value) }
     }
 
     override fun fpext(value: Value, toType: FloatingPointType): FpExtend {
-        return withOutput { it: Int -> FpExtend.make(n(it), toType, value) }
+        return withOutput { it: Int -> FpExtend.make(n(it), this, toType, value) }
     }
 
     override fun fp2Int(value: Value, toType: IntegerType): FloatToInt {
-        return withOutput { it: Int -> FloatToInt.make(n(it), toType, value) }
+        return withOutput { it: Int -> FloatToInt.make(n(it),  this, toType, value) }
     }
 
     override fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select {
-        return withOutput { it: Int -> Select.make(n(it), type, cond, onTrue, onFalse) }
+        return withOutput { it: Int -> Select.make(n(it), this, type, cond, onTrue, onFalse) }
     }
 
     override fun phi(incoming: List<Value>, labels: List<Label>): Phi {
         val bbs = labels.map { it as Block }
-        return withOutput { it: Int -> Phi.make("phi${n(it)}", incoming[0].type() as PrimitiveType, bbs, incoming.toTypedArray()) }
+        return withOutput { it: Int -> Phi.make("phi${n(it)}", this, incoming[0].type() as PrimitiveType, bbs, incoming.toTypedArray()) }
     }
 
     override fun int2ptr(value: Value): Int2Pointer {
-        return withOutput { it: Int -> Int2Pointer.make(n(it), value) }
+        return withOutput { it: Int -> Int2Pointer.make(n(it), this, value) }
     }
 
     override fun ptr2int(value: Value, toType: IntegerType): Pointer2Int {
-        return withOutput { it: Int -> Pointer2Int.make(n(it), toType, value) }
+        return withOutput { it: Int -> Pointer2Int.make(n(it), this, toType, value) }
     }
 
     override fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant) {
-        add(Memcpy.make(dst, src, length))
+        add(Memcpy.make(this, dst, src, length))
     }
 
     override fun downStackFrame(callable: Callable) {
-        add(DownStackFrame(callable))
+        add(DownStackFrame(this, callable))
     }
 
     override fun upStackFrame(callable: Callable) {
-        add(UpStackFrame(callable))
+        add(UpStackFrame(this, callable))
     }
 
     override fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi {
         val blocks = predecessors()
-        return withOutput { it: Int -> Phi.makeUncompleted("phi${n(it)}", ty, incoming, blocks) }
+        return withOutput { it: Int -> Phi.makeUncompleted("phi${n(it)}", this, ty, incoming, blocks) }
     }
 
     override fun gen(ty: NonTrivialType): Generate {
-        return withOutput { it: Int -> Generate.make("gen${n(it)}", ty) }
+        return withOutput { it: Int -> Generate.make("gen${n(it)}", this, ty) }
     }
 
     override fun lea(generate: Value): Lea {
-        return withOutput { it: Int -> Lea.make("lea${n(it)}", generate) }
+        return withOutput { it: Int -> Lea.make("lea${n(it)}", this, generate) }
     }
 
     fun uncompletedPhi(incomingType: PrimitiveType, incoming: List<Value>, labels: List<Block>): Phi {
-        return withOutput { it: Int -> Phi.make("phi${n(it)}", incomingType, labels, incoming.toTypedArray()) }
+        return withOutput { it: Int -> Phi.make("phi${n(it)}", this, incomingType, labels, incoming.toTypedArray()) }
     }
 
     override fun copy(value: Value): Copy {
-        return withOutput { it: Int -> Copy.make(n(it), value) }
+        return withOutput { it: Int -> Copy.make(n(it), this, value) }
     }
 
     override fun move(dst: Generate, fromValue: Value) {
-        append(Move.make(dst, fromValue))
+        append(Move.make(this, dst, fromValue))
     }
 
     override fun move(dst: Value, base: Value, index: Value) {
-        add(MoveByIndex.make(dst, base, index))
+        add(MoveByIndex.make(this, dst, base, index))
     }
 
     override fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad {
-        return withOutput { it: Int -> IndexedLoad.make(n(it), loadedType, origin, index) }
+        return withOutput { it: Int -> IndexedLoad.make(n(it), this, loadedType, origin, index) }
     }
 
     override fun storeOnStack(destination: Value, index: Value, source: Value) {
-        add(StoreOnStack.make(destination, index, source))
+        add(StoreOnStack.make(this, destination, index, source))
     }
 
     override fun loadFromStack(origin: Value, loadedType: PrimitiveType, index: Value): LoadFromStack {
-        return withOutput { it: Int -> LoadFromStack.make(n(it), loadedType, origin, index) }
+        return withOutput { it: Int -> LoadFromStack.make(n(it), this, loadedType, origin, index) }
     }
 
     override fun leaStack(origin: Value, loadedType: PrimitiveType, index: Value): LeaStack {
-        return withOutput { it: Int -> LeaStack.make(n(it), loadedType, origin, index) }
+        return withOutput { it: Int -> LeaStack.make(n(it), this, loadedType, origin, index) }
     }
 
-
-    fun add(instruction: Instruction): Instruction { //TODO simplify???
+    private fun addTerminate(instruction: TerminateInstruction) {
         fun makeEdge(to: Block) {
             addSuccessor(to)
             to.addPredecessor(this)
         }
 
-        if (instruction is TerminateInstruction) {
-            instruction.targets().forEach { makeEdge(it) }
-        }
+        instruction.targets().forEach { makeEdge(it) }
+        append(instruction)
+    }
 
+    fun add(instruction: Instruction): Instruction { //TODO simplify???
         append(instruction)
         return instruction
     }
@@ -450,4 +446,4 @@ class Block(override val index: Int, private var maxValueIndex: Int = 0):
     }
 }
 
-private class InstructionList(): LeakedLinkedList<Instruction>()
+private class InstructionList: LeakedLinkedList<Instruction>()

@@ -4,10 +4,11 @@ import ir.Value
 import ir.types.Type
 import ir.module.IndirectFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 
 
-class IndirectionVoidCall private constructor(pointer: Value, private val func: IndirectFunctionPrototype, args: List<Value>):
-    Instruction((args + pointer).toTypedArray()),
+class IndirectionVoidCall private constructor(owner: Block, pointer: Value, private val func: IndirectFunctionPrototype, args: List<Value>):
+    Instruction(owner, (args + pointer).toTypedArray()), //TODO
     Callable {
     init {
         assert(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
@@ -57,13 +58,13 @@ class IndirectionVoidCall private constructor(pointer: Value, private val func: 
     }
 
     companion object {
-        fun make(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionVoidCall {
+        fun make(owner: Block, pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionVoidCall {
             require(Callable.isAppropriateTypes(func, pointer, args.toTypedArray())) {
                 args.joinToString(prefix = "inconsistent types: pointer=${pointer}:${pointer.type()}, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
 
-            return registerUser(IndirectionVoidCall(pointer, func, args), args.iterator())
+            return registerUser(IndirectionVoidCall(owner, pointer, func, args), args.iterator())
         }
     }
 }

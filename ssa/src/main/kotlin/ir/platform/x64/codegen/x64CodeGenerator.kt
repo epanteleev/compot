@@ -308,12 +308,12 @@ private class CodeEmitter(private val data: FunctionData,
         LoadFromStackCodegen(loadst.type(), asm)(dst, origin, index)
     }
 
-    override fun visit(lea: LeaStack) {
-        val sourceOperand = valueToRegister.operand(lea.origin())
-        val index         = valueToRegister.operand(lea.index())
-        val dest          = valueToRegister.operand(lea)
+    override fun visit(leaStack: LeaStack) {
+        val sourceOperand = valueToRegister.operand(leaStack.origin())
+        val index         = valueToRegister.operand(leaStack.index())
+        val dest          = valueToRegister.operand(leaStack)
 
-        GetElementPtrCodegenForAlloc(Type.Ptr, lea.loadedType, asm)(dest, sourceOperand, index)
+        GetElementPtrCodegenForAlloc(Type.Ptr, leaStack.loadedType, asm)(dest, sourceOperand, index)
     }
 
     override fun visit(call: Call) {

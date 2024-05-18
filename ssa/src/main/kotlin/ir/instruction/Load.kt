@@ -3,12 +3,13 @@ package ir.instruction
 import ir.Value
 import ir.types.*
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 
 
-class Load private constructor(name: String, loadedType: PrimitiveType, ptr: Value):
-    ValueInstruction(name, loadedType, arrayOf(ptr)) {
+class Load private constructor(name: String, owner: Block, loadedType: PrimitiveType, ptr: Value):
+    ValueInstruction(name, owner, loadedType, arrayOf(ptr)) {
     override fun dump(): String {
-        return "%$identifier = $NAME $tp ${operand()}"
+        return "%$id = $NAME $tp ${operand()}"
     }
 
     fun operand(): Value {
@@ -30,13 +31,13 @@ class Load private constructor(name: String, loadedType: PrimitiveType, ptr: Val
     companion object {
         const val NAME = "load"
 
-        fun make(name: String, loadedType: PrimitiveType, operand: Value): Load {
+        fun make(name: String, owner: Block, loadedType: PrimitiveType, operand: Value): Load {
             val type = operand.type()
             require(isAppropriateTypes(type)) {
                 "inconsistent types in '$name' type=${loadedType}, but operand=${operand}:$type"
             }
 
-            return registerUser(Load(name, loadedType, operand), operand)
+            return registerUser(Load(name, owner, loadedType, operand), operand)
         }
 
         private fun isAppropriateTypes(tp: Type): Boolean {

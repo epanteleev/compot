@@ -1,9 +1,10 @@
 package ir.instruction
 
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 
 
-class DownStackFrame(callable: Callable): AdjustStackFrame(callable) {
+class DownStackFrame(owner: Block, callable: Callable): AdjustStackFrame(owner, callable) {
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

@@ -4,11 +4,12 @@ import ir.Value
 import ir.types.Type
 import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 import ir.types.NonTrivialType
 
 
-class Call private constructor(name: String, private val func: AnyFunctionPrototype, args: Array<Value>):
-    ValueInstruction(name, func.returnType() as NonTrivialType, args),
+class Call private constructor(name: String, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>):
+    ValueInstruction(name, owner, func.returnType() as NonTrivialType, args),
     Callable {
 
     override fun arguments(): Array<Value> {
@@ -25,14 +26,14 @@ class Call private constructor(name: String, private val func: AnyFunctionProtot
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%$identifier = call $tp @${func.name}(")
+        builder.append("%$id = call $tp @${func.name}(")
         operands.joinTo(builder) { "$it:${it.type()}"}
         builder.append(")")
         return builder.toString()
     }
 
     companion object {
-        fun make(name: String, func: AnyFunctionPrototype, args: List<Value>): Call {
+        fun make(name: String, owner: Block, func: AnyFunctionPrototype, args: List<Value>): Call {
             assert(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
 
             val argsArray = args.toTypedArray()
@@ -41,7 +42,7 @@ class Call private constructor(name: String, private val func: AnyFunctionProtot
                     { "$it: ${it.type()}" }
             }
 
-            return registerUser(Call(name, func, argsArray), args.iterator())
+            return registerUser(Call(name, owner, func, argsArray), args.iterator())
         }
     }
 }

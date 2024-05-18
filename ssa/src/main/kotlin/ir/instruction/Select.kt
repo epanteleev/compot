@@ -3,16 +3,17 @@ package ir.instruction
 import ir.Value
 import ir.types.*
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 
 
-class Select private constructor(name: String, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value) :
-    ValueInstruction(name, ty, arrayOf(cond, onTrue, onFalse)) {
+class Select private constructor(name: String, owner: Block, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value) :
+    ValueInstruction(name, owner, ty, arrayOf(cond, onTrue, onFalse)) {
     override fun type(): PrimitiveType {
         return tp as PrimitiveType
     }
 
     override fun dump(): String {
-        return "%$identifier = $NAME ${Type.U1} ${condition()}, ${onTrue().type()} ${onTrue()}, ${onFalse().type()} ${onFalse()}"
+        return "%$id = $NAME ${Type.U1} ${condition()}, ${onTrue().type()} ${onTrue()}, ${onFalse().type()} ${onFalse()}"
     }
 
     fun condition(): Value {
@@ -46,7 +47,7 @@ class Select private constructor(name: String, ty: PrimitiveType, cond: Value, o
     companion object {
         const val NAME = "select"
 
-        fun make(name: String, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value): Select {
+        fun make(name: String, owner: Block, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value): Select {
             val onTrueType = onTrue.type()
             val onFalseType = onFalse.type()
             val condType = cond.type()
@@ -54,7 +55,7 @@ class Select private constructor(name: String, ty: PrimitiveType, cond: Value, o
                 "inconsistent types: type=$ty, condition=$cond:$condType, onTrue=$onTrue:$onTrueType, onFalse=$onFalse:$onFalseType"
             }
 
-            return registerUser(Select(name, ty, cond, onTrue, onFalse), cond, onTrue, onFalse)
+            return registerUser(Select(name, owner, ty, cond, onTrue, onFalse), cond, onTrue, onFalse)
         }
 
         private fun isAppropriateType(ty: PrimitiveType, condType: Type, onTrueType: Type, onFalseType: Type): Boolean {

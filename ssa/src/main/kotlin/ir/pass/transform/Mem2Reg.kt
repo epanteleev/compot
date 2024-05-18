@@ -12,7 +12,6 @@ import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
 import ir.types.PrimitiveType
 import ir.types.Type
-import ir.utils.DefUseInfo
 
 
 data class Mem2RegException(override val message: String): Exception(message)
@@ -65,13 +64,13 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
         }
     }
 
-    private fun removeRedundantPhis(defUseInfo: DefUseInfo, deadPool: MutableSet<Instruction>, bb: Block) {
+    private fun removeRedundantPhis(deadPool: MutableSet<Instruction>, bb: Block) {
         fun filter(instruction: Instruction): Boolean {
             if (instruction !is Phi) {
                 return false
             }
 
-            if (defUseInfo.isNotUsed(instruction) || deadPool.containsAll(defUseInfo.usedIn(instruction))) {
+            if (instruction.usedIn().isEmpty() || deadPool.containsAll(instruction.usedIn())) {
                 deadPool.add(instruction)
                 return true
             }
@@ -90,10 +89,9 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
             completePhis(bbToMapValues, bb)
         }
 
-        val defUseInfo = cfg.defUseInfo()
         val deadPool = hashSetOf<Instruction>()
         for (bb in cfg.postorder()) {
-            removeRedundantPhis(defUseInfo, deadPool, bb)
+            removeRedundantPhis(deadPool, bb)
         }
     }
 }

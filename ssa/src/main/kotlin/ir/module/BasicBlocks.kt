@@ -9,7 +9,6 @@ import ir.module.block.Label
 import ir.module.block.iterator.*
 import ir.pass.ana.LoopDetection
 import ir.pass.ana.LoopInfo
-import ir.utils.DefUseInfo
 
 
 class BasicBlocks(private val basicBlocks: MutableList<Block>) {
@@ -83,14 +82,6 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
 
     fun putBlock(block: Block) {
         basicBlocks.add(block)
-    }
-
-    fun removeBlock(block: Block) {
-        TODO()
-    }
-
-    fun defUseInfo(): DefUseInfo {
-        return DefUseInfo.create(this)
     }
 
     operator fun iterator(): Iterator<Block> {

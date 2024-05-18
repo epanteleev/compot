@@ -4,17 +4,18 @@ import ir.Value
 import ir.types.*
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 
 
-class LoadFromStack private constructor(name: String, loadedType: PrimitiveType, origin: Value, index: Value):
-    ValueInstruction(name, loadedType, arrayOf(origin, index)) {
+class LoadFromStack private constructor(name: String, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value):
+    ValueInstruction(name, owner, loadedType, arrayOf(origin, index)) {
 
     override fun type(): PrimitiveType {
         return tp as PrimitiveType
     }
 
     override fun dump(): String {
-        return "%$identifier = $NAME $tp ${origin()}, ${index().type()} ${index()}"
+        return "%$id = $NAME $tp ${origin()}, ${index().type()} ${index()}"
     }
 
     fun origin(): Value {
@@ -40,13 +41,13 @@ class LoadFromStack private constructor(name: String, loadedType: PrimitiveType,
     companion object {
         const val NAME = "loadst"
 
-        fun make(name: String, loadedType: PrimitiveType, origin: Value, index: Value): LoadFromStack {
+        fun make(name: String, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value): LoadFromStack {
             val originType = origin.type()
             require(isAppropriateType(originType, index.type())) {
                 "should not be $originType, but origin=$origin:$originType"
             }
 
-            return registerUser(LoadFromStack(name, loadedType, origin, index), origin)
+            return registerUser(LoadFromStack(name, owner, loadedType, origin, index), origin)
         }
 
         fun typeCheck(copy: LoadFromStack): Boolean {

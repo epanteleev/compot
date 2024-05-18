@@ -3,11 +3,12 @@ package ir.instruction
 import ir.module.AnyFunctionPrototype
 import ir.Value
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 import ir.types.Type
 
 
-class VoidCall private constructor(private val func: AnyFunctionPrototype, args: Array<Value>):
-    Instruction(args),
+class VoidCall private constructor(owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>):
+    Instruction(owner, args),
     Callable {
     init {
         assert(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
@@ -48,14 +49,14 @@ class VoidCall private constructor(private val func: AnyFunctionPrototype, args:
     }
 
     companion object {
-        fun make(func: AnyFunctionPrototype, args: List<Value>): VoidCall {
+        fun make(owner: Block, func: AnyFunctionPrototype, args: List<Value>): VoidCall {
             val argsArray = args.toTypedArray()
             require(Callable.isAppropriateTypes(func, argsArray)) {
                 args.joinToString(prefix = "inconsistent types, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
 
-            return registerUser(VoidCall(func, argsArray), args.iterator())
+            return registerUser(VoidCall(owner, func, argsArray), args.iterator())
         }
     }
 }

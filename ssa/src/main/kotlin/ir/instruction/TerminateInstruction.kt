@@ -3,8 +3,8 @@ package ir.instruction
 import ir.Value
 import ir.module.block.Block
 
-abstract class TerminateInstruction(usages: Array<Value>, val targets: Array<Block>):
-    Instruction(usages) {
+abstract class TerminateInstruction(owner: Block, usages: Array<Value>, val targets: Array<Block>):
+    Instruction(owner, usages) {
     fun targets(): Array<Block> {
         return targets
     }

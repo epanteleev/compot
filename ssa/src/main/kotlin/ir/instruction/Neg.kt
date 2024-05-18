@@ -3,13 +3,14 @@ package ir.instruction
 import ir.Value
 import ir.types.Type
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 import ir.types.ArithmeticType
 
 
-class Neg private constructor(name: String, tp: ArithmeticType, value: Value):
-    ArithmeticUnary(name, tp, value) {
+class Neg private constructor(name: String, owner: Block, tp: ArithmeticType, value: Value):
+    ArithmeticUnary(name, owner, tp, value) {
     override fun dump(): String {
-        return "%$identifier = $NAME $tp ${operand()}"
+        return "%$id = $NAME $tp ${operand()}"
     }
 
     override fun type(): ArithmeticType {
@@ -31,13 +32,13 @@ class Neg private constructor(name: String, tp: ArithmeticType, value: Value):
     companion object {
         const val NAME = "neg"
 
-        fun make(name: String, type: ArithmeticType, value: Value): Neg {
+        fun make(name: String, owner: Block, type: ArithmeticType, value: Value): Neg {
             val valueType = value.type()
             require(isAppropriateTypes(type, valueType)) {
                 "should be the same type, but type=$type, value=$value:$valueType"
             }
 
-            return registerUser(Neg(name, type, value), value)
+            return registerUser(Neg(name, owner, type, value), value)
         }
 
         private fun isAppropriateTypes(tp: ArithmeticType, argType: Type): Boolean {

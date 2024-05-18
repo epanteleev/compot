@@ -1,12 +1,15 @@
 package ir.instruction
 
 import ir.*
+import ir.module.block.Block
 import ir.types.NonTrivialType
-import ir.types.Type
 
 
-abstract class ValueInstruction(protected val identifier: String, protected val tp: NonTrivialType, operands: Array<Value>):
-    Instruction(operands),
+abstract class ValueInstruction(protected val id: String,
+                                owner: Block,
+                                protected val tp: NonTrivialType,
+                                operands: Array<Value>):
+    Instruction(owner, operands),
     LocalValue {
     private var usedIn: MutableList<Instruction> = arrayListOf()
 
@@ -23,11 +26,11 @@ abstract class ValueInstruction(protected val identifier: String, protected val 
     }
 
     override fun name(): String {
-        return identifier
+        return id
     }
 
     override fun toString(): String {
-        return "%$identifier"
+        return "%$id"
     }
 
     override fun type(): NonTrivialType = tp
@@ -38,11 +41,11 @@ abstract class ValueInstruction(protected val identifier: String, protected val 
 
         other as ValueInstruction
 
-        return identifier == other.identifier && tp == other.tp
+        return id == other.id && tp == other.tp
     }
 
     override fun hashCode(): Int {
-        return identifier.hashCode() + tp.hashCode()
+        return id.hashCode() + tp.hashCode()
     }
 
     companion object {

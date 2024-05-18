@@ -6,18 +6,19 @@ import ir.types.PrimitiveType
 import ir.types.ArithmeticType
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 import ir.types.PointerType
 
 
-class IndexedLoad private constructor(name: String, loadedType: PrimitiveType, origin: Value, index: Value):
-    ValueInstruction(name, loadedType, arrayOf(origin, index)) {
+class IndexedLoad private constructor(name: String, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value):
+    ValueInstruction(name, owner, loadedType, arrayOf(origin, index)) {
 
     override fun type(): PrimitiveType {
         return tp as PrimitiveType
     }
 
     override fun dump(): String {
-        return "%$identifier = $NAME $tp ${origin()}, ${index().type()} ${index()}"
+        return "%$id = $NAME $tp ${origin()}, ${index().type()} ${index()}"
     }
 
     fun origin(): Value {
@@ -43,13 +44,13 @@ class IndexedLoad private constructor(name: String, loadedType: PrimitiveType, o
     companion object {
         const val NAME = "indexedLoad"
 
-        fun make(name: String, loadedType: PrimitiveType, origin: Value, index: Value): IndexedLoad {
+        fun make(name: String, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value): IndexedLoad {
             val originType = origin.type()
             require(isAppropriateType(originType, index.type())) {
                 "should not be $originType, but origin=$origin:$originType"
             }
 
-            return registerUser(IndexedLoad(name, loadedType, origin, index), origin)
+            return registerUser(IndexedLoad(name, owner, loadedType, origin, index), origin)
         }
 
         fun typeCheck(copy: IndexedLoad): Boolean {

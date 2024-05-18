@@ -1,17 +1,20 @@
 package ir.instruction
 
-import common.LListNode
 import ir.Value
+import common.LListNode
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 
 
-abstract class Instruction(protected val operands: Array<Value>): LListNode() {
+abstract class Instruction(val owner: Block, protected val operands: Array<Value>): LListNode() {
     fun usedInstructions(): List<ValueInstruction> {
         return operands.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
     }
 
     override fun next(): Instruction? = next as Instruction?
     override fun prev(): Instruction? = prev as Instruction?
+
+    fun owner(): Block = owner
 
     fun operands(): Array<Value> {
         return operands

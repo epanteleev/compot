@@ -1,6 +1,7 @@
 package ir.instruction
 
 import ir.Value
+import ir.module.block.Block
 import ir.types.*
 
 interface AnyPredicateType {
@@ -34,8 +35,8 @@ enum class IntPredicate: AnyPredicateType {
     };
 }
 
-abstract class CompareInstruction(name: String, first: Value, second: Value) :
-    ValueInstruction(name, Type.U1, arrayOf(first, second)) {
+abstract class CompareInstruction(name: String, owner: Block, first: Value, second: Value) :
+    ValueInstruction(name, owner, Type.U1, arrayOf(first, second)) {
     abstract fun operandsType(): PrimitiveType
     abstract fun predicate(): AnyPredicateType
 

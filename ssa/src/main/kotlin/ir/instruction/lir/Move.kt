@@ -4,10 +4,11 @@ import ir.Value
 import ir.instruction.Generate
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 
 
-class Move private constructor(destination: Value, source: Value):
-    Instruction(arrayOf(destination, source)) {
+class Move private constructor(owner: Block, destination: Value, source: Value):
+    Instruction(owner, arrayOf(destination, source)) {
 
     override fun dump(): String {
         val fromValue = source()
@@ -50,12 +51,12 @@ class Move private constructor(destination: Value, source: Value):
     companion object {
         const val NAME = "move"
 
-        fun make(dst: Generate, src: Value): Move {
+        fun make(owner: Block, dst: Generate, src: Value): Move {
             require(isAppropriateType(dst, src)) {
                 "inconsistent types: toValue=$dst:${dst.type()}, fromValue=$src:${src.type()}"
             }
 
-            return registerUser(Move(dst, src), dst, src)
+            return registerUser(Move(owner, dst, src), dst, src)
         }
 
         fun typeCheck(copy: Move): Boolean {

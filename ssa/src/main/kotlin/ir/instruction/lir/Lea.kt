@@ -7,17 +7,18 @@ import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
+import ir.module.block.Block
 
 
-class Lea private constructor(name: String, value: Value):
-    ValueInstruction(name, Type.Ptr, arrayOf(value)) {
+class Lea private constructor(name: String, owner: Block, value: Value):
+    ValueInstruction(name, owner, Type.Ptr, arrayOf(value)) {
 
     override fun type(): PointerType {
         return Type.Ptr
     }
 
     override fun dump(): String {
-        return "%$identifier = $NAME $tp ${operand()}"
+        return "%$id = $NAME $tp ${operand()}"
     }
 
     fun operand(): Value {
@@ -35,7 +36,7 @@ class Lea private constructor(name: String, value: Value):
     companion object {
         const val NAME = "lea"
 
-        fun make(name: String, value: Value): Lea {
+        fun make(name: String, owner: Block, value: Value): Lea {
             val originType = value.type()
             require(isAppropriateType(originType)) {
                 "inconsistent type '$name' generate=$value:$originType"
@@ -44,7 +45,7 @@ class Lea private constructor(name: String, value: Value):
                 "should be '${Generate.NAME}' or global constant, but '$value'"
             }
 
-            return registerUser(Lea(name, value), value)
+            return registerUser(Lea(name, owner, value), value)
         }
 
         fun typeCheck(lea: Lea): Boolean {

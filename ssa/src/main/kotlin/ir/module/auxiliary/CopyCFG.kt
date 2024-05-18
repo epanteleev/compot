@@ -25,7 +25,7 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         val oldToNew = intMapOf<Block, Block>(oldBasicBlocks.size()) { it.index }
 
         for (old in oldBasicBlocks.blocks()) {
-            oldToNew[old] = Block.empty(old.index, old.maxValueIndex())
+            oldToNew[old] = Block.empty(old.index)
         }
 
         return oldToNew

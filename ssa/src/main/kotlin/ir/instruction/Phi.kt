@@ -7,12 +7,12 @@ import common.forEachWith
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Phi private constructor(name: String, ty: PrimitiveType, private var incoming: List<Block>, incomingValue: Array<Value>):
-    ValueInstruction(name, ty, incomingValue) {
+class Phi private constructor(name: String, owner: Block, ty: PrimitiveType, private var incoming: List<Block>, incomingValue: Array<Value>):
+    ValueInstruction(name, owner, ty, incomingValue) {
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%$identifier = phi $tp [")
+        builder.append("%$id = phi $tp [")
         zipWithIndex { value, bb, idx ->
             builder.append("$bb: $value")
             if (idx != incoming.size - 1) {
@@ -52,22 +52,22 @@ class Phi private constructor(name: String, ty: PrimitiveType, private var incom
     }
 
     companion object {
-        fun make(name: String, ty: PrimitiveType): Phi {
-            return Phi(name, ty, arrayListOf(), arrayOf())
+        fun make(name: String, owner: Block, ty: PrimitiveType): Phi {
+            return Phi(name, owner, ty, arrayListOf(), arrayOf())
         }
 
-        fun make(name: String, ty: PrimitiveType, incoming: List<Block>, incomingValue: Array<Value>): Phi {
-            return registerUser(Phi(name, ty, incoming, incomingValue), incomingValue.iterator())
+        fun make(name: String, owner: Block, ty: PrimitiveType, incoming: List<Block>, incomingValue: Array<Value>): Phi {
+            return registerUser(Phi(name, owner, ty, incoming, incomingValue), incomingValue.iterator())
         }
 
-        fun makeUncompleted(name: String, type: PrimitiveType, incoming: Value, predecessors: List<Block>): Phi {
+        fun makeUncompleted(name: String, owner: Block, type: PrimitiveType, incoming: Value, predecessors: List<Block>): Phi {
             val incomingType = incoming.type()
             require(incomingType is PointerType) {
                 "should be pointer type in '$name', type=$type, but incoming=$incoming:$incomingType"
             }
 
             val values = predecessors.mapTo(arrayListOf()) { incoming }.toTypedArray() //Todo
-            return Phi(name, type, predecessors, values)
+            return Phi(name, owner, type, predecessors, values)
         }
 
         private fun isAppropriateTypes(type: PrimitiveType, incomingValue: Array<Value>): Boolean {

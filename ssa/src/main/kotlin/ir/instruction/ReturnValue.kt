@@ -2,12 +2,14 @@ package ir.instruction
 
 import ir.Value
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 import ir.types.NonTrivialType
 import ir.types.Type
 import ir.types.AnyType
 import ir.types.VoidType
 
-class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
+
+class ReturnValue private constructor(owner: Block, value: Value): Return(owner, arrayOf(value)) {
     override fun dump(): String {
         return "ret ${value().type()} ${value()}"
     }
@@ -29,13 +31,13 @@ class ReturnValue private constructor(value: Value): Return(arrayOf(value)) {
     }
 
     companion object {
-        fun make(value: Value): Return {
+        fun make(owner: Block, value: Value): Return {
             val retType = value.type()
             require(isAppropriateType(retType)) {
                 "cannot be $retType, but value=$value:${retType}"
             }
 
-            return registerUser(ReturnValue(value), value)
+            return registerUser(ReturnValue(owner, value), value)
         }
 
         private fun isAppropriateType(retType: Type): Boolean {

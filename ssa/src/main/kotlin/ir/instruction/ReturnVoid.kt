@@ -1,9 +1,10 @@
 package ir.instruction
 
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.block.Block
 
 
-class ReturnVoid private constructor(): Return(arrayOf()) {
+class ReturnVoid private constructor(owner: Block): Return(owner, arrayOf()) {
     override fun dump(): String = "ret void"
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
@@ -11,6 +12,6 @@ class ReturnVoid private constructor(): Return(arrayOf()) {
     }
 
     companion object {
-        fun make(): ReturnVoid = ReturnVoid()
+        fun make(owner: Block): ReturnVoid = ReturnVoid(owner)
     }
 }

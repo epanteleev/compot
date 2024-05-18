@@ -51,7 +51,7 @@ inline fun generate(crossinline type: TypeMatcher): ValueMatcher = {
     it is Generate && type(it.type())
 }
 
-inline fun generate(): ValueMatcher = {
+fun generate(): ValueMatcher = {
     it is Generate
 }
 
@@ -59,7 +59,7 @@ inline fun alloc(crossinline type: TypeMatcher): ValueMatcher = {
     it is Alloc && type(it.allocatedType)
 }
 
-inline fun alloc(): ValueMatcher = {
+fun alloc(): ValueMatcher = {
     it is Alloc
 }
 

@@ -25,12 +25,12 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
                         }
                     }
                     dst is Address && source is XmmRegister && index is Imm -> {
-                        val index = index as ImmInt
+                        val indexImm = index as ImmInt
                         when (dst) {
                             is Address2 -> {
-                                asm.movf(size, source, Address.from(dst.base, dst.offset + index.asImm32().value().toInt() * size))
+                                asm.movf(size, source, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
                             }
-                            else -> default(dst, source, index)
+                            else -> default(dst, source, indexImm)
                         }
                     }
                     else -> {

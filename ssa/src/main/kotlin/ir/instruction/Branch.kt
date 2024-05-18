@@ -4,7 +4,7 @@ import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Branch private constructor(target: Block): TerminateInstruction(arrayOf(), arrayOf(target)) {
+class Branch private constructor(owner: Block, target: Block): TerminateInstruction(owner, arrayOf(), arrayOf(target)) {
     override fun dump(): String {
         return "br label %${target()}"
     }
@@ -22,8 +22,8 @@ class Branch private constructor(target: Block): TerminateInstruction(arrayOf(),
     }
 
     companion object {
-        fun make(target: Block): Branch {
-            return Branch(target)
+        fun make(owner: Block, target: Block): Branch {
+            return Branch(owner, target)
         }
     }
 }
