@@ -23,14 +23,18 @@ data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private va
     }
 }
 
-data class LoopInfo(private val loopHeaders: Map<Block, LoopBlockData>) {
-    operator fun get(bb: Label): LoopBlockData? = loopHeaders[bb]
+data class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>) {
+    val size: Int by lazy {
+        loopHeaders.values.fold(0) { acc, list -> acc + list.size }
+    }
+
+    operator fun get(bb: Label): List<LoopBlockData>? = loopHeaders[bb]
     fun headers(): Set<Block> = loopHeaders.keys
 }
 
 class LoopDetection private constructor(val blocks: BasicBlocks, val dominatorTree: DominatorTree) {
     private fun evaluate(): LoopInfo {
-        val loopHeaders = hashMapOf<Block, LoopBlockData>()
+        val loopHeaders = hashMapOf<Block, List<LoopBlockData>>()
         for (bb in blocks.postorder()) {
             for (p in bb.predecessors()) {
                 if (!dominatorTree.dominates(bb, p)) {
@@ -40,7 +44,7 @@ class LoopDetection private constructor(val blocks: BasicBlocks, val dominatorTr
                 val loopBody = getLoopBody(bb, p)
                 val exit     = getExitBlock(bb, loopBody)
 
-                loopHeaders[bb] = LoopBlockData(bb, loopBody, exit)
+                loopHeaders[bb] = loopHeaders.getOrDefault(bb, emptyList()) + LoopBlockData(bb, loopBody, exit)
             }
         }
 

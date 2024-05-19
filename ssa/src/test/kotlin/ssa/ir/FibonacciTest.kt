@@ -128,8 +128,8 @@ class FibonacciTest {
 
         val loopData = loopInfo.get(BlockViewer(3))
         assertNotNull(loopData)
-        assertEquals(BlockViewer(6), loopData.exit() as Label)
-        assertEquals(BlockViewer(4), loopData.enter() as Label)
+        assertEquals(BlockViewer(6), loopData.first().exit() as Label)
+        assertEquals(BlockViewer(4), loopData.first().enter() as Label)
     }
 
     @Test
