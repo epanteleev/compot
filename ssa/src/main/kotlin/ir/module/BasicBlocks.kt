@@ -88,10 +88,6 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>) {
         return basicBlocks.iterator()
     }
 
-    fun copy(): BasicBlocks {
-        return CopyCFG.copy(this)
-    }
-
     companion object {
         fun create(startBB: Block): BasicBlocks {
             return BasicBlocks(arrayListOf(startBB))

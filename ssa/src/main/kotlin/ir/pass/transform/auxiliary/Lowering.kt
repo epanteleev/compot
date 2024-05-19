@@ -19,21 +19,21 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
 
     private fun replaceAlloc(bb: Block, inst: Alloc): Instruction {
         val gen = bb.insertBefore(inst) { it.gen(inst.allocatedType) }
-        ValueInstruction.replaceUsages(inst, gen)
+        LocalValue.replaceUsages(inst, gen)
         bb.kill(inst)
         return gen
     }
 
     private fun replaceLoad(bb: Block, inst: Load): Instruction {
         val copy = bb.insertBefore(inst) { it.copy(inst.operand()) }
-        ValueInstruction.replaceUsages(inst, copy)
+        LocalValue.replaceUsages(inst, copy)
         bb.kill(inst)
         return copy
     }
 
     private fun replaceCopy(bb: Block, inst: Copy): Instruction {
         val lea = bb.insertBefore(inst) { it.lea(inst.origin() as Generate) }
-        ValueInstruction.replaceUsages(inst, lea)
+        LocalValue.replaceUsages(inst, lea)
         bb.kill(inst)
         return lea
     }
@@ -61,7 +61,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 gep(generate(), nop()) (inst) -> {
                     inst as GetElementPtr
                     val lea = bb.insertBefore(inst) { it.leaStack(inst.source(), inst.basicType, inst.index()) }
-                    ValueInstruction.replaceUsages(inst, lea)
+                    LocalValue.replaceUsages(inst, lea)
                     bb.kill(inst)
                     return lea
                 }
@@ -73,7 +73,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                             val lea = bb.insertBefore(inst) {
                                 it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index())
                             }
-                            ValueInstruction.replaceUsages(inst, lea)
+                            LocalValue.replaceUsages(inst, lea)
                             bb.kill(inst)
                             return lea
                         }
@@ -81,7 +81,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                             val lea = bb.insertBefore(inst) {
                                 it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index().toInt())))
                             }
-                            ValueInstruction.replaceUsages(inst, lea)
+                            LocalValue.replaceUsages(inst, lea)
                             bb.kill(inst)
                             return lea
                         }
@@ -138,7 +138,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     inst as Load
                     val pointer = inst.operand() as ValueInstruction
                     val copy = bb.insertBefore(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
-                    ValueInstruction.replaceUsages(inst, copy)
+                    LocalValue.replaceUsages(inst, copy)
                     bb.kill(inst)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer
@@ -149,7 +149,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     inst as Load
                     val pointer = inst.operand() as ValueInstruction
                     val copy = bb.insertBefore(inst) { it.loadFromStack(getSource(pointer), inst.type(), getIndex(pointer)) }
-                    ValueInstruction.replaceUsages(inst, copy)
+                    LocalValue.replaceUsages(inst, copy)
                     bb.kill(inst)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer

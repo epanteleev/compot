@@ -1,5 +1,6 @@
 package ir.pass.transform.auxiliary
 
+import ir.LocalValue
 import ir.instruction.*
 import ir.module.Module
 import ir.module.SSAModule
@@ -25,7 +26,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
         }
 
         val copy = bb.insertAfter(phi) { it.copy(phi) }
-        ValueInstruction.replaceUsages(phi, copy)
+        LocalValue.replaceUsages(phi, copy)
         return copy
     }
 

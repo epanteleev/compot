@@ -1,6 +1,7 @@
 package ir.pass.ana
 
 import common.forEachWith
+import ir.LocalValue
 import ir.types.Type
 import ir.module.Module
 import ir.instruction.*
@@ -19,16 +20,27 @@ data class ValidateSSAErrorException(override val message: String): Exception(me
 class VerifySSA private constructor(private val functionData: FunctionData,
                                     private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit> {
     private val dominatorTree by lazy { functionData.blocks.dominatorTree() }
-    private val creation by lazy { CreationInfo.create(functionData.blocks) }
+    private val creation by lazy { CreationInfo.create(functionData) }
     private var bb = functionData.blocks.begin()
     private var exitBlocks = 0
     private val adjustStackFrame = arrayListOf<AdjustStackFrame>()
 
     private fun pass() {
+        validateArguments()
         for (bb in functionData.blocks) {
             validateBlock(bb)
         }
         validateExitBlock()
+    }
+
+    private fun validateArguments() {
+        for (arg in functionData.arguments()) {
+            for (user in arg.usedIn()) {
+                assert(user.operands().contains(arg)) {
+                    "should be inst='${arg}', user='${user.dump()}', usedIn='${arg.usedIn()}'"
+                }
+            }
+        }
     }
 
     private fun validateExitBlock() {
@@ -61,7 +73,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     /** Check whether definition dominates to usage. */
     private fun validateDefUse(instruction: Instruction, block: Block) {
         for (use in instruction.operands()) {
-            if (use !is ValueInstruction) {
+            if (use !is LocalValue) {
                 continue
             }
 
@@ -77,7 +89,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
                 validateDefUse(instruction, block)
             }
 
-            if (instruction is ValueInstruction) {
+            if (instruction is LocalValue) {
                 for (user in instruction.usedIn()) {
                     assert(user.operands().contains(instruction)) {
                         "should be inst='${instruction.dump()}', user='${user.dump()}', usedIn='${instruction.usedIn()}'"

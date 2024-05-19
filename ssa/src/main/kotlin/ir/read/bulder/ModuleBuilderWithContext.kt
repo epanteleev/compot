@@ -7,6 +7,7 @@ import ir.pass.ana.VerifySSA
 import ir.read.tokens.LocalValueToken
 import ir.read.tokens.SymbolValue
 import ir.read.tokens.TypeToken
+import ir.types.NonTrivialType
 
 
 class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
@@ -14,7 +15,7 @@ class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
     private val externFunctions = mutableSetOf<ExternFunction>()
 
     fun createFunction(functionName: SymbolValue, returnType: TypeToken, argumentTypes: List<TypeToken>, argumentValues: List<LocalValueToken>): FunctionDataBuilderWithContext {
-        val args        = argumentTypes.mapTo(arrayListOf()) { it.type(this) }
+        val args        = resolveArgumentType(argumentTypes)
         val prototype   = FunctionPrototype(functionName.name, returnType.type(this), args)
 
         val data = FunctionDataBuilderWithContext.create(this, prototype, argumentValues)
@@ -28,7 +29,8 @@ class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
     }
 
     fun createExternFunction(functionName: SymbolValue, returnType: TypeToken, arguments: List<TypeToken>): ExternFunction {
-        val extern = ExternFunction(functionName.name, returnType.type(this), arguments.map { it.type(this) })
+        val resolvedArguments = resolveArgumentType(arguments)
+        val extern = ExternFunction(functionName.name, returnType.type(this), resolvedArguments)
         externFunctions.add(extern)
         return extern
     }
@@ -40,6 +42,16 @@ class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
 
         val ssa = SSAModule(fns, externFunctions, globals, structs)
         return VerifySSA.run(ssa)
+    }
+
+    internal fun resolveArgumentType(tokens: List<TypeToken>): List<NonTrivialType> {
+        return tokens.mapTo(arrayListOf()) {
+            val resolved = it.type(this)
+            if (resolved !is NonTrivialType) {
+                throw ParseErrorException("non-trivial type", it)
+            }
+            resolved
+        }
     }
 
     companion object {

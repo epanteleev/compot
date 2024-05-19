@@ -1,5 +1,6 @@
 package ir.module.auxiliary
 
+import common.forEachWith
 import common.intMapOf
 import ir.*
 import ir.global.GlobalSymbol
@@ -10,9 +11,12 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
+import ir.types.NonTrivialType
 
 
-class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRInstructionVisitor<ValueInstruction?> {
+class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<ValueInstruction?> {
+    private val oldBasicBlocks: BasicBlocks = fd.blocks
+
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
     private val oldToNewBlock = setupNewBasicBlock()
     private var currentBB: Block? = null
@@ -31,11 +35,29 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         return oldToNew
     }
 
-    fun copy(): BasicBlocks {
+    private fun copyArguments(): List<ArgumentValue> {
+        val newArgs = arrayListOf<ArgumentValue>()
+        fd.arguments().forEachWith(fd.prototype.arguments()) { arg, type, i ->
+            if (type !is NonTrivialType) {
+                TODO() /// Varargs!!?
+            }
+
+            val newArg = ArgumentValue(i, type)
+            oldValuesToNew[arg] = newArg
+            newArgs.add(newArg)
+        }
+        return newArgs
+    }
+
+    fun copy(): FunctionData {
+        return FunctionData.create(fd.prototype, copyBasicBlocks(), copyArguments())
+    }
+
+    private fun copyBasicBlocks(): BasicBlocks {
         val arrayBlocks = arrayListOf<Block>()
         for (bb in oldBasicBlocks.preorder()) {
             arrayBlocks.add(oldToNewBlock[bb]!!)
-            copy(bb)
+            copyBasicBlocks(bb)
         }
 
         val newBB = BasicBlocks.create(arrayBlocks)
@@ -44,7 +66,7 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
         return newBB
     }
 
-    private fun copy(thisBlock: Block) {
+    private fun copyBasicBlocks(thisBlock: Block) {
         currentBB = oldToNewBlock[thisBlock]!!
         for (inst in thisBlock) {
             newInst(inst)
@@ -373,11 +395,7 @@ class CopyCFG private constructor(private val oldBasicBlocks: BasicBlocks) : IRI
 
     companion object {
         fun copy(old: FunctionData): FunctionData {
-            return FunctionData.create(old.prototype, copy(old.blocks), old.arguments())
-        }
-
-        fun copy(oldBasicBlocks: BasicBlocks): BasicBlocks {
-            return CopyCFG(oldBasicBlocks).copy()
+            return CopyCFG(old).copy()
         }
     }
 }

@@ -2,6 +2,7 @@ package ir.instruction
 
 import ir.Value
 import common.LListNode
+import ir.LocalValue
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
@@ -39,19 +40,19 @@ abstract class Instruction(val id: Identity, val owner: Block, protected val ope
         }
 
         val op = operands[index]
-        if (op is ValueInstruction) {
+        if (op is LocalValue) {
             op.killUser(this)
         }
 
         operands[index] = new
 
-        if (new is ValueInstruction) {
+        if (new is LocalValue) {
             new.addUser(this)
         }
     }
 
     fun destroy() {
-        if (this is ValueInstruction) {
+        if (this is LocalValue) {
             assert(usedIn().isEmpty()) {
                 "removed useful instruction: removed=$this, users=${usedIn()}"
             }
@@ -59,7 +60,7 @@ abstract class Instruction(val id: Identity, val owner: Block, protected val ope
 
         for (idx in operands.indices) {
             val op = operands[idx]
-            if (op is ValueInstruction) {
+            if (op is LocalValue) {
                 op.killUser(this)
             }
 
@@ -75,7 +76,7 @@ abstract class Instruction(val id: Identity, val owner: Block, protected val ope
     companion object {
         internal fun<T: Instruction> registerUser(user: T, vararg instructions: Value): T {
             for (i in instructions) {
-                if (i !is ValueInstruction) {
+                if (i !is LocalValue) {
                     continue
                 }
 
@@ -87,7 +88,7 @@ abstract class Instruction(val id: Identity, val owner: Block, protected val ope
 
         internal fun<T: Instruction> registerUser(user: T, instructions: Iterator<Value>): T {
             for (i in instructions) {
-                if (i !is ValueInstruction) {
+                if (i !is LocalValue) {
                     continue
                 }
 

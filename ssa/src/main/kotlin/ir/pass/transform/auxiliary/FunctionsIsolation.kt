@@ -1,6 +1,8 @@
 package ir.pass.transform.auxiliary
 
 import ir.ArgumentValue
+import ir.LocalValue
+import ir.Value
 import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module
@@ -20,23 +22,8 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         val mapArguments = hashMapOf<ArgumentValue, ValueInstruction>()
 
         for (arg in cfg.arguments()) {
-            mapArguments[arg] = begin.prepend { it.copy(arg) }
-        }
-
-        for (bb in cfg.blocks) { //TODO we don't need to iterate over all instructions if 'ArgumentValue' will hold their users
-            for (inst in bb) {
-                if (bb.equals(Label.entry) && inst is Copy) {
-                    continue
-                }
-
-                inst.update { value ->
-                    if (value !is ArgumentValue) {
-                        return@update value
-                    }
-
-                    mapArguments[value]!!
-                }
-            }
+            val copy = begin.prepend { it.copy(arg) }
+            LocalValue.replaceUsages(arg, copy)
         }
     }
 

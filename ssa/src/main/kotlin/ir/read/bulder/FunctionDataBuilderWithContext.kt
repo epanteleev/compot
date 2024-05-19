@@ -339,12 +339,12 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun makePrototype(functionName: SymbolValue, returnType: TypeToken, argTypes: List<TypeToken>): FunctionPrototype {
-        val types = argTypes.mapTo(arrayListOf()) { it.type(moduleBuilder) }
+        val types = moduleBuilder.resolveArgumentType(argTypes)
         return FunctionPrototype(functionName.name, returnType.type(moduleBuilder), types)
     }
 
     fun makePrototype(returnType: TypeToken, argTypes: List<TypeToken>): IndirectFunctionPrototype {
-        val types = argTypes.mapTo(arrayListOf()) { it.type(moduleBuilder) }
+        val types = moduleBuilder.resolveArgumentType(argTypes)
         return IndirectFunctionPrototype(returnType.type(moduleBuilder), types)
     }
 

@@ -1,5 +1,7 @@
 package ir
 
+import ir.instruction.Instruction
+import ir.instruction.ValueInstruction
 import ir.types.*
 
 interface Value {
@@ -12,9 +14,55 @@ interface Value {
 
 interface LocalValue: Value {
     fun name(): String
+    fun usedIn(): List<Instruction>
+
+    // DON'T USE THIS METHOD DIRECTLY
+    fun addUser(instruction: Instruction)
+    // DON'T USE THIS METHOD DIRECTLY
+    fun killUser(instruction: Instruction)
+    fun release(): List<Instruction>
+
+    companion object {
+        fun replaceUsages(inst: LocalValue, toValue: Value) {
+            val usedIn = inst.release()
+            for (user in usedIn) {
+                for ((idxUse, use) in user.operands().withIndex()) {
+                    if (use != inst) {
+                        continue
+                    }
+                    // New value can use the old value
+                    if (user == toValue) {
+                        continue
+                    }
+
+                    user.update(idxUse, toValue)
+                }
+            }
+        }
+    }
 }
 
 data class ArgumentValue(private val index: Int, private val tp: NonTrivialType): LocalValue {
+    private var usedIn: MutableList<Instruction> = arrayListOf()
+
+    override fun usedIn(): List<Instruction> {
+        return usedIn
+    }
+
+    override fun release(): List<Instruction> {
+        val result = usedIn
+        usedIn = arrayListOf()
+        return result
+    }
+
+    override fun addUser(instruction: Instruction) {
+        usedIn.add(instruction)
+    }
+
+    override fun killUser(instruction: Instruction) {
+        usedIn.remove(instruction)
+    }
+
     override fun name(): String {
         return "arg$index"
     }

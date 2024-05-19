@@ -14,15 +14,21 @@ abstract class ValueInstruction(id: Identity,
     LocalValue {
     private var usedIn: MutableList<Instruction> = arrayListOf()
 
-    internal fun addUser(instruction: Instruction) {
+    override fun addUser(instruction: Instruction) {
         usedIn.add(instruction)
     }
 
-    internal fun killUser(instruction: Instruction) {
+    override fun killUser(instruction: Instruction) {
         usedIn.remove(instruction)
     }
 
-    fun usedIn(): List<Instruction> {
+    override fun release(): List<Instruction> {
+        val result = usedIn
+        usedIn = arrayListOf()
+        return result
+    }
+
+    override fun usedIn(): List<Instruction> {
         return usedIn
     }
 
@@ -47,25 +53,5 @@ abstract class ValueInstruction(id: Identity,
 
     override fun hashCode(): Int {
         return id + owner.index
-    }
-
-    companion object {
-        fun replaceUsages(inst: ValueInstruction, toValue: Value) {
-            val usedIn = inst.usedIn
-            inst.usedIn = arrayListOf()
-            for (user in usedIn) {
-                for ((idxUse, use) in user.operands().withIndex()) {
-                    if (use != inst) {
-                        continue
-                    }
-                    // New value can use the old value
-                    if (user == toValue) {
-                        continue
-                    }
-
-                    user.update(idxUse, toValue)
-                }
-            }
-        }
     }
 }
