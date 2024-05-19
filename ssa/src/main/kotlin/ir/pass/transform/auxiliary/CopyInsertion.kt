@@ -26,7 +26,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
         }
 
         val copy = bb.insertAfter(phi) { it.copy(phi) }
-        LocalValue.replaceUsages(phi, copy)
+        phi.replaceUsages(copy)
         return copy
     }
 

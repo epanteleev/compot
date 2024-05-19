@@ -230,7 +230,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
     private fun visitExpression(expression: Expression, isRvalue: Boolean): Value {
         return when (expression) {
-            is BinaryOp     -> visitBinary(expression, isRvalue)
+            is BinaryOp     -> visitBinary(expression)
             is UnaryOp      -> visitUnary(expression, isRvalue)
             is NumNode      -> visitNumNode(expression)
             is VarNode      -> visitVarNode(expression, isRvalue)
@@ -323,7 +323,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         return needSwitch
     }
 
-    private fun visitBinary(binop: BinaryOp, isRvalue: Boolean): Value {
+    private fun visitBinary(binop: BinaryOp): Value {
         return when (binop.opType) {
             BinaryOpType.ADD -> {
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))

@@ -42,7 +42,7 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
                 it.arithmeticBinary(inst.operand(), ArithmeticBinaryOp.Xor, minusZero(type))
             }
 
-            LocalValue.replaceUsages(inst, xor)
+            inst.replaceUsages(xor)
             bb.kill(inst)
             return xor
         }

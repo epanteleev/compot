@@ -1,14 +1,10 @@
 package ir.pass.transform.auxiliary
 
-import ir.ArgumentValue
-import ir.LocalValue
-import ir.Value
 import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
-import ir.module.block.Label
 
 
 internal class FunctionsIsolation private constructor(private val cfg: FunctionData) {
@@ -19,11 +15,9 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         }
 
         val begin = cfg.blocks.begin()
-        val mapArguments = hashMapOf<ArgumentValue, ValueInstruction>()
-
         for (arg in cfg.arguments()) {
             val copy = begin.prepend { it.copy(arg) }
-            LocalValue.replaceUsages(arg, copy)
+            arg.replaceUsages(copy)
         }
     }
 

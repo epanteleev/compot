@@ -20,23 +20,22 @@ interface LocalValue: Value {
     fun addUser(instruction: Instruction)
     // DON'T USE THIS METHOD DIRECTLY
     fun killUser(instruction: Instruction)
+
     fun release(): List<Instruction>
 
-    companion object {
-        fun replaceUsages(inst: LocalValue, toValue: Value) {
-            val usedIn = inst.release()
-            for (user in usedIn) {
-                for ((idxUse, use) in user.operands().withIndex()) {
-                    if (use != inst) {
-                        continue
-                    }
-                    // New value can use the old value
-                    if (user == toValue) {
-                        continue
-                    }
-
-                    user.update(idxUse, toValue)
+    fun replaceUsages(toValue: Value) {
+        val usedIn = release()
+        for (user in usedIn) {
+            for ((idxUse, use) in user.operands().withIndex()) {
+                if (use !== this) {
+                    continue
                 }
+                // New value can use the old value
+                if (user == toValue) {
+                    continue
+                }
+
+                user.update(idxUse, toValue)
             }
         }
     }

@@ -73,7 +73,7 @@ class DominatorTreeTest {
     @Test
     fun testCopy() {
         val module = withBasicBlocks()
-        val moduleCopy = module.copy()
+        module.copy()
 
         val originalMem2Reg = VerifySSA.run(Mem2RegFabric.create(module).run())
         val copyMem2Reg     = VerifySSA.run(Mem2RegFabric.create(module).run())

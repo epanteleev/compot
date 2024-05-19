@@ -75,7 +75,7 @@ class PhiFunctionPruning private constructor(private val cfg: BasicBlocks) {
                 "phi value is used in non phi instruction: operands=${phi.operands()}"
             }
 
-            LocalValue.replaceUsages(phi, Value.UNDEF)
+            phi.replaceUsages(Value.UNDEF)
             bb.kill(phi)
         }
 
