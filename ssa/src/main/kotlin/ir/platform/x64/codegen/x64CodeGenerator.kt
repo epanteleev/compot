@@ -517,7 +517,7 @@ private class CodeEmitter(private val data: FunctionData,
         val type = move.source().type() as PrimitiveType
         val movIdx = move.index()
         val index = valueToRegister.operand(movIdx)
-        MoveByIndexCodegen(type, asm)(destination, source, index)
+        MoveByIndexCodegen(type, movIdx.type(), asm)(destination, source, index)
     }
 
     override fun visit(downStackFrame: DownStackFrame) {

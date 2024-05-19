@@ -1,4 +1,5 @@
-package read
+package ssa.read
+
 import ir.read.*
 import ir.types.Type
 import org.junit.jupiter.api.assertThrows
@@ -6,6 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+
 
 class TokenizerTest {
     @Test

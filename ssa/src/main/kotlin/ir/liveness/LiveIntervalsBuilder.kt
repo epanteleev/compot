@@ -48,7 +48,11 @@ class LiveIntervalsBuilder private constructor(val data: FunctionData) {
                 continue
             }
 
-            val liveRange = intervals[usage]?: throw LiveIntervalsException("in $usage")
+            val liveRange = intervals[usage]
+            if (liveRange == null) {
+                throw LiveIntervalsException("in $usage")
+            }
+
             liveRange.registerUsage(instructionLocation)
         }
     }
@@ -58,7 +62,10 @@ class LiveIntervalsBuilder private constructor(val data: FunctionData) {
         for (bb in linearScanOrder) {
             // TODO Improvement: skip this step if CFG doesn't have any loops.
             for (op in liveness[bb]!!.liveOut()) {
-                val liveRange = intervals[op] ?: throw LiveIntervalsException("in $op")
+                val liveRange = intervals[op]
+                if (liveRange == null) {
+                    throw LiveIntervalsException("cannot find $op")
+                }
 
                 val index = bb.size + 1
                 liveRange.registerUsage(OrderedLocation(bb, index, ordering + index))

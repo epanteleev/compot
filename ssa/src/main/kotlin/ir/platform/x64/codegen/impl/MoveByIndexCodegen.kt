@@ -10,8 +10,9 @@ import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
 
 
-class MoveByIndexCodegen(val type: PrimitiveType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
+class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
     private val size = type.size()
+    private val indexSize = indexType.size()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {
@@ -44,7 +45,8 @@ class MoveByIndexCodegen(val type: PrimitiveType, val asm: Assembler) : GPOperan
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(indexSize, second, temp1)
+        asm.mov(size, first, Address.from(dst, 0, temp1, size))
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {

@@ -147,6 +147,11 @@ class LinearScanOrderIterator(start: Block, countOfBlocks: Int, private val loop
             callback(bb)
             visited[bb.index] = true
 
+            val successors = bb.successors()
+            for (idx in successors.indices.reversed()) {
+                stack.add(successors[idx])
+            }
+
             // Special case for loops
             val loopInfo = loopInfo[bb]
             if (loopInfo != null) {
@@ -154,11 +159,6 @@ class LinearScanOrderIterator(start: Block, countOfBlocks: Int, private val loop
                 // Order of adding isn't important
                 stack.add(loopInfo.first().exit())
                 stack.add(loopInfo.first().enter())
-            } else {
-                val successors = bb.successors()
-                for (idx in successors.indices.reversed()) {
-                    stack.add(successors[idx])
-                }
             }
         }
 
