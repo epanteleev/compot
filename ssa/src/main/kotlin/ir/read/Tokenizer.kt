@@ -96,6 +96,9 @@ class Tokenizer(val data: String) {
             "constant" -> ConstantKeyword(line, begin)
             "global"   -> GlobalKeyword(line, begin)
             "type"     -> TypeKeyword(line, begin)
+            "true"     -> BoolValueToken(true, line, begin)
+            "false"    -> BoolValueToken(false, line, begin)
+            "null"     -> NULLValueToken(line, begin)
             "label"    -> {
                 skipWhitespace()
                 if (getChar() != '%') {

@@ -8,6 +8,7 @@ import ir.instruction.*
 import ir.module.block.*
 import ir.module.builder.*
 import common.forEachWith
+import ir.BoolValue
 
 
 class ParseErrorException(message: String): Exception(message) {
@@ -29,9 +30,11 @@ class FunctionDataBuilderWithContext private constructor(
         return when (token) {
             is IntValue   -> Constant.of(ty, token.int)
             is FloatValue -> Constant.of(ty, token.fp)
+            is BoolValueToken  -> BoolValue.of(token.bool)
+            is NULLValueToken  -> NullValue.NULLPTR
             is LocalValueToken -> {
                 val operand = nameMap[token.name]
-                    ?: throw RuntimeException("in ${token.position()} undefined value ${token.name}")
+                    ?: throw ParseErrorException("in ${token.position()} undefined value '${token.value()}'")
 
                 if (operand.type() != ty && operand.type() !is PointerType) {
                     throw ParseErrorException("must be the same type: in_file=$ty, find=${operand.type()} in ${token.position()}")
@@ -218,7 +221,7 @@ class FunctionDataBuilderWithContext private constructor(
         bb.branch(block)
     }
 
-    fun branchCond(valueTok: LocalValueToken, onTrueName: LabelUsage, onFalseName: LabelUsage) {
+    fun branchCond(valueTok: AnyValueToken, onTrueName: LabelUsage, onFalseName: LabelUsage) {
         val onTrue  = getBlockOrCreate(onTrueName.labelName)
         val onFalse = getBlockOrCreate(onFalseName.labelName)
 

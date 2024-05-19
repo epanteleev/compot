@@ -10,6 +10,7 @@ import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.identityHashMapOf
+import ir.BoolValue
 import ir.global.GlobalConstant
 import ir.instruction.lir.*
 import ir.instruction.lir.Lea
@@ -448,6 +449,15 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(branchCond: BranchCond) {
         val cond = branchCond.condition()
+        if (cond is BoolValue) {
+            if (cond.bool) {
+                asm.jump(makeLabel(branchCond.onTrue()))
+            } else {
+                asm.jump(makeLabel(branchCond.onFalse()))
+            }
+            return
+        }
+
         cond as CompareInstruction
         val jmpType = when (cond) {
             is SignedIntCompare -> {

@@ -91,7 +91,8 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
             is F32Value    -> ImmFp32(value.f32)
             is F64Value    -> ImmFp64(value.f64)
             is GlobalSymbol -> Address.from(value.name())
-            else -> throw RuntimeException("expect $value: ${value.type()}")
+            is NullValue   -> Imm64(0)
+            else -> throw RuntimeException("found '$value': '${value.type()}'")
         }
     }
 

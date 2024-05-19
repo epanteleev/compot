@@ -1,0 +1,38 @@
+
+extern i32 @printInt(i32)
+
+; int test(int* a) {
+;     if (a != NULL) {
+;         return *a;
+;     }
+;     return 0;
+; }
+define i32 @test(%a: ptr) {
+entry:
+  %ret = alloc i32
+  %is_null = pcmp ne ptr %a, null
+  br u1 %is_null label %if, label %else
+if:
+  %0 = load i32 %a
+  store ptr %ret, i32 %0
+  br label %end
+else:
+  store ptr %ret, i32 0
+  br label %end
+end:
+  %1 = load i32 %ret
+  ret i32 %1
+}
+
+; int main() {
+;     int a;
+;     printInt(test(&a));
+; }
+define i32 @main() {
+entry:
+  %a = alloc i32
+  store ptr %a, i32 10
+  %call = call i32 @test(%a: ptr)
+  %call1 = call i32 @printInt(%call: i32)
+  ret i32 0
+}

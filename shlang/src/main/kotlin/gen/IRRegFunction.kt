@@ -425,7 +425,6 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val initialBB = ir().currentLabel()
 
                 val left = visitExpression(binop.left, true)
-                val convertedLeft = ir().convertToType(left, Type.U8)
                 assert(left.type() == Type.U1)
 
                 val bb = ir().createLabel()
@@ -440,7 +439,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
                 ir().branch(end)
                 ir().switchLabel(end)
-                ir().phi(listOf(convertedLeft, convertedRight), listOf(initialBB, bb)) //TODO false from left
+                ir().phi(listOf(U8Value(0), convertedRight), listOf(initialBB, bb))
             }
             BinaryOpType.GE -> {
                 val commonType = toIRType<NonTrivialType>(binop.resolveType(typeHolder))

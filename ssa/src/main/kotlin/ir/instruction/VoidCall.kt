@@ -1,10 +1,10 @@
 package ir.instruction
 
-import ir.module.AnyFunctionPrototype
 import ir.Value
-import ir.instruction.utils.IRInstructionVisitor
-import ir.module.block.Block
 import ir.types.Type
+import ir.module.block.Block
+import ir.module.AnyFunctionPrototype
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class VoidCall private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>):

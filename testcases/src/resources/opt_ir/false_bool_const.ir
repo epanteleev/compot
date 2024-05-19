@@ -1,0 +1,34 @@
+
+extern i32 @printInt(i32)
+
+; int test(int a) {
+;     if (true) {
+;         return 1;
+;     } else {
+;         return 2;
+;     }
+; }
+define i32 @test() {
+entry:
+  %ret = alloc i32
+  br u1 false label %if, label %else
+if:
+  store ptr %ret, i32 1
+  br label %end
+else:
+  store ptr %ret, i32 2
+  br label %end
+end:
+  %0 = load i32 %ret
+  ret i32 %0
+}
+
+; int main() {
+;     printInt(test());
+; }
+define i32 @main() {
+entry:
+  %call = call i32 @test()
+  %call1 = call i32 @printInt(%call: i32)
+  ret i32 0
+}

@@ -268,7 +268,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
             is PrimitiveTypeToken -> {
                 // br {cmpValue} label {trueLabel}, label {falseLabel}
-                val cmpValue = iterator.expect<LocalValueToken>("value type")
+                val cmpValue = iterator.expect<AnyValueToken>("value token")
 
                 val trueLabel = iterator.expect<LabelUsage>("'label' with name")
                 iterator.expect<Comma>("','")

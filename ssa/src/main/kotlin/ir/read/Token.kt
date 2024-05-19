@@ -1,6 +1,5 @@
 package ir.read
 
-import ir.Constant
 import ir.types.*
 import ir.read.bulder.TypeResolver
 
@@ -35,11 +34,27 @@ data class FloatValue(val fp: Double, override val line: Int, override val pos: 
     }
 }
 
+data class BoolValueToken(val bool: Boolean, override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
+    override fun message(): String {
+        return "bool value '$bool'"
+    }
+}
+
+data class NULLValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
+    override fun message(): String {
+        return "null"
+    }
+}
+
 abstract class ValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos)
 
 data class LocalValueToken(val name: String, override val line: Int, override val pos: Int): ValueToken(line, pos) {
     override fun message(): String {
         return "value '%$name'"
+    }
+
+    fun value(): String {
+        return "%${name}"
     }
 }
 
