@@ -4,6 +4,7 @@ import ir.Value
 import ir.types.Type
 import asm.x64.Address
 import asm.x64.GPRegister.*
+import ir.LocalValue
 import ir.instruction.Alloc
 import ir.instruction.ValueInstruction
 import ir.types.NonTrivialType
@@ -48,7 +49,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
     }
 
     /** Spilled value. */
-    private fun valueInstructionAlloc(value: ValueInstruction): Address {
+    private fun valueInstructionAlloc(value: LocalValue): Address {
         val typeSize = getTypeSize(value.type())
 
         val freeSlot = freeStackSlots[typeSize]
@@ -64,7 +65,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
     override fun takeSlot(value: Value): Address {
         return when (value) {
             is Alloc            -> stackSlotAlloc(value)
-            is ValueInstruction -> valueInstructionAlloc(value)
+            is LocalValue -> valueInstructionAlloc(value)
             else -> throw StackFrameException("Cannot alloc slot for this value=$value")
         }
     }

@@ -1,11 +1,8 @@
 package ir.pass.transform
 
-import ir.LocalValue
-import ir.Value
 import ir.module.*
 import ir.instruction.Phi
 import ir.module.block.Block
-import ir.instruction.ValueInstruction
 
 
 class PhiFunctionPruning private constructor(private val cfg: BasicBlocks) {
@@ -75,8 +72,7 @@ class PhiFunctionPruning private constructor(private val cfg: BasicBlocks) {
                 "phi value is used in non phi instruction: operands=${phi.operands()}"
             }
 
-            phi.replaceUsages(Value.UNDEF)
-            bb.kill(phi)
+            bb.remove(phi)
         }
 
         usefull.forEachUseless { phi, bb -> removePhi(phi, bb)}

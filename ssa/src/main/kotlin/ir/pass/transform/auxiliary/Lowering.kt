@@ -54,7 +54,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
 
     private fun replaceGepToLea() {
         fun closure(bb: Block, inst: Instruction): Instruction {
-            if (inst !is ValueInstruction) {
+            if (inst !is LocalValue) {
                 return inst
             }
             when {

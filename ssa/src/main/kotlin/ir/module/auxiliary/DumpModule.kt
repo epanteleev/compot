@@ -158,7 +158,7 @@ private class DumpCSSAModule(module: LModule) : DumpModule<LModule>(module) {
 
         for (current in currentFunctionData!!.blocks) {
             for (inst in current) {
-                if (inst !is ValueInstruction) {
+                if (inst !is LocalValue) {
                     continue
                 }
 

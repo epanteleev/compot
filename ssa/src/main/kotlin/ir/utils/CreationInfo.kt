@@ -1,8 +1,6 @@
 package ir.utils
 
 import ir.LocalValue
-import ir.module.BasicBlocks
-import ir.instruction.ValueInstruction
 import ir.module.FunctionData
 
 

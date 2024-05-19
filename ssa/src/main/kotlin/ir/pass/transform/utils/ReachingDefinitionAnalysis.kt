@@ -14,14 +14,14 @@ import ir.pass.transform.Mem2RegException
 //TODO this is not a Reaching Definition Analysis
 abstract class AbstractReachingDefinitionAnalysis(protected val dominatorTree: DominatorTree) {
     protected fun rename(bb: Block, oldValue: Value): Value {
-        if (oldValue !is ValueInstruction) {
+        if (oldValue !is LocalValue) {
             return oldValue
         }
 
         return rename(bb, oldValue, oldValue.type())
     }
 
-    fun rename(bb: Block, oldValue: ValueInstruction, expectedType: Type): Value {
+    fun rename(bb: Block, oldValue: LocalValue, expectedType: Type): Value {
         val newValue = findActualValueOrNull(bb, oldValue)
             ?: return oldValue
         return ReachingDefinitionAnalysis.convertOrSkip(expectedType, newValue)

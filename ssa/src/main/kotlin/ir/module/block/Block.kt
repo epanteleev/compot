@@ -147,16 +147,6 @@ class Block(override val index: Int):
         return instructions.iterator()
     }
 
-    fun valueInstructions(fn: (ValueInstruction) -> Unit) {
-        instructions.forEach {
-            if (it !is ValueInstruction) {
-                return@forEach
-            }
-
-            fn(it)
-        }
-    }
-
     fun phis(fn: (Phi) -> Unit) {
         instructions.forEach {
             if (it !is Phi) {
@@ -172,8 +162,12 @@ class Block(override val index: Int):
     }
 
     fun kill(instruction: Instruction) {
-        val removed = instructions.remove(instruction)
+        val removed = remove(instruction)
         removed.destroy()
+    }
+
+    fun remove(instruction: Instruction): Instruction {
+        return instructions.remove(instruction)
     }
 
     override fun not(value: Value): Not {

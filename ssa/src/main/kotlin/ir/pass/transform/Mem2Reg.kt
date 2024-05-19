@@ -41,9 +41,7 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
         for ((bb, vSet) in joinSet) {
             bb as Block
             for (v in vSet) {
-                bb.prepend {
-                    it.uncompletedPhi(v.allocatedType as PrimitiveType, v)
-                }
+                bb.prepend { it.uncompletedPhi(v.allocatedType as PrimitiveType, v) }
             }
         }
     }
@@ -51,7 +49,7 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
     private fun completePhis(bbToMapValues: ReachingDefinition, bb: Block) {
         fun renameValues(newUsages: MutableList<Value>, block: Block, v: Value, expectedType: Type) {
             val newValue = when (v) {
-                is ValueInstruction -> bbToMapValues.rename(block, v, expectedType)
+                is LocalValue -> bbToMapValues.rename(block, v, expectedType)
                 else -> v
             }
             newUsages.add(newValue)

@@ -75,8 +75,8 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<V
 
     private fun newInst(inst: Instruction): ValueInstruction? {
         val newInstruction = inst.visit(this)
-        if (inst is ValueInstruction) {
-            oldValuesToNew[inst] = newInstruction as ValueInstruction
+        if (inst is LocalValue) {
+            oldValuesToNew[inst] = newInstruction as LocalValue
         }
 
         return newInstruction

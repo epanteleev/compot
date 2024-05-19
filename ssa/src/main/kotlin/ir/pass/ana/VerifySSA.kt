@@ -307,7 +307,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
         val blocks = phi.incoming()
         blocks.forEachWith(phi.operands()) { incoming, use ->
-            if (use !is ValueInstruction) {
+            if (use !is LocalValue) {
                 return@forEachWith
             }
             val actual = creation[use].block
