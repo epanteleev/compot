@@ -1,6 +1,7 @@
 package ssa.read
 
 import ir.read.*
+import ir.read.tokens.*
 import ir.types.Type
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test

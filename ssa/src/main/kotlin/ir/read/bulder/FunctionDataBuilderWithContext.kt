@@ -1,7 +1,6 @@
 package ir.read.bulder
 
 import ir.*
-import ir.read.*
 import ir.types.*
 import ir.module.*
 import ir.instruction.*
@@ -9,6 +8,7 @@ import ir.module.block.*
 import ir.module.builder.*
 import common.forEachWith
 import ir.BoolValue
+import ir.read.tokens.*
 
 
 class ParseErrorException(message: String): Exception(message) {
@@ -28,8 +28,8 @@ class FunctionDataBuilderWithContext private constructor(
 
     private fun getValue(token: AnyValueToken, ty: Type): Value {
         return when (token) {
-            is IntValue   -> Constant.of(ty, token.int)
-            is FloatValue -> Constant.of(ty, token.fp)
+            is IntValue        -> Constant.of(ty, token.int)
+            is FloatValue      -> Constant.of(ty, token.fp)
             is BoolValueToken  -> BoolValue.of(token.bool)
             is NULLValueToken  -> NullValue.NULLPTR
             is LocalValueToken -> {
@@ -366,7 +366,7 @@ class FunctionDataBuilderWithContext private constructor(
 
             fun setupNameMap(argument: List<ArgumentValue>, tokens: List<LocalValueToken>): MutableMap<String, LocalValue> {
                 val nameToValue = hashMapOf<String, LocalValue>()
-                for ((arg, tok) in argument zip tokens) {
+                argument.forEachWith(tokens) { arg, tok ->
                     nameToValue[tok.name] = arg
                 }
 

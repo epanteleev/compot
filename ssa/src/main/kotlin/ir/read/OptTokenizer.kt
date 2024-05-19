@@ -1,5 +1,6 @@
 package ir.read
 
+import ir.read.tokens.*
 import ir.types.Type
 
 class EOFException(message: String): Exception(message)

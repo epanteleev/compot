@@ -4,6 +4,7 @@ import ir.global.*
 import ir.types.*
 import ir.module.Module
 import ir.read.bulder.*
+import ir.read.tokens.*
 
 
 class ModuleReader(string: String) {

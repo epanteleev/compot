@@ -1,10 +1,12 @@
 package ir.read.bulder
 
-import ir.read.*
 import ir.module.*
 import ir.module.builder.AnyModuleBuilder
 import ir.types.StructType
 import ir.pass.ana.VerifySSA
+import ir.read.tokens.LocalValueToken
+import ir.read.tokens.SymbolValue
+import ir.read.tokens.TypeToken
 
 
 class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
