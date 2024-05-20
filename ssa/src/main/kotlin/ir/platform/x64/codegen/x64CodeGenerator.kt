@@ -43,7 +43,7 @@ private class CodeEmitter(private val data: FunctionData,
                           private val valueToRegister: RegisterAllocation,
 ): IRInstructionVisitor<Unit> {
     private val asm: Assembler = unit.mkFunction(data.prototype.name)
-    private val callableLocations = run {
+    private val callableLocations = run { //TODO inefficient
         val orderedLocation = identityHashMapOf<Callable, OrderedLocation>()
         var order = 0
         for (bb in data.blocks.linearScanOrder(data.blocks.loopInfo())) {
@@ -57,6 +57,11 @@ private class CodeEmitter(private val data: FunctionData,
 
         orderedLocation
     }
+    private var previous: Block? = null
+    private var next: Block? = null
+
+    fun next(): Block = next?: throw RuntimeException("next block is null")
+    fun previous(): Block = previous?: throw RuntimeException("previous block is null")
 
     private fun makeLabel(bb: Block) = ".L$functionCounter.${bb.index}"
 
@@ -443,17 +448,27 @@ private class CodeEmitter(private val data: FunctionData,
         }
     }
 
+    private fun doJump(target: Block) {
+        if (target == next()) {
+            // Not necessary to emit jump instruction
+            // because the next block is the target of the branch
+            return
+        }
+
+        asm.jump(makeLabel(target))
+    }
+
     override fun visit(branch: Branch) {
-        asm.jump(makeLabel(branch.target()))
+        doJump(branch.target())
     }
 
     override fun visit(branchCond: BranchCond) {
         val cond = branchCond.condition()
         if (cond is BoolValue) {
             if (cond.bool) {
-                asm.jump(makeLabel(branchCond.onTrue()))
+                doJump(branchCond.onTrue())
             } else {
-                asm.jump(makeLabel(branchCond.onFalse()))
+                doJump(branchCond.onFalse())
             }
             return
         }
@@ -668,7 +683,21 @@ private class CodeEmitter(private val data: FunctionData,
 
     private fun emit() {
         emitPrologue()
-        for (bb in data.blocks.preorder()) {
+        val order = data.blocks.preorder().order()
+
+        for (idx in order.indices) {
+            val bb = order[idx]
+            next = if (idx + 1 < order.size) {
+                order[idx + 1]
+            } else {
+                null
+            }
+            previous = if (idx - 1 >= 0) {
+                order[idx - 1]
+            } else {
+                null
+            }
+
             if (!bb.equals(Label.entry)) {
                 asm.label(makeLabel(bb))
             }
@@ -676,7 +705,6 @@ private class CodeEmitter(private val data: FunctionData,
             bb.instructions { instruction ->
                 asm.comment(instruction.dump())
                 instruction.visit(this)
-                0
             }
         }
     }

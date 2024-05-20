@@ -100,18 +100,15 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<V
     }
 
     private inline fun<reified T> mapUsage(old: Value): T {
-        val newValue = if (old is ArgumentValue || old is Constant || old is GlobalSymbol) {
+        if (old is ArgumentValue || old is Constant || old is GlobalSymbol) {
             return old as T
-        } else {
-            val value = oldValuesToNew[old]?: throw RuntimeException("cannot find localValue=${old}")
-            if (value !is T) {
-                throw RuntimeException("unexpected type for value=$value")
-            }
-
-            value
+        }
+        val value = oldValuesToNew[old]?: throw RuntimeException("cannot find localValue=${old}")
+        if (value !is T) {
+            throw RuntimeException("unexpected type for value=$value")
         }
 
-        return newValue
+        return value
     }
 
     private fun mapBlock(old: Block): Block {
