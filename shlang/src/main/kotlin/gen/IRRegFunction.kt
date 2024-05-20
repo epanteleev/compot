@@ -291,7 +291,9 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
 
         if (function.returnType() == Type.Void) {
-            ir().vcall(function, convertedArgs)
+            val cont = ir().createLabel()
+            ir().vcall(function, convertedArgs, cont)
+            ir().switchLabel(cont)
             return Value.UNDEF
         } else {
             return ir().call(function, convertedArgs)

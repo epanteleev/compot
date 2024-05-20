@@ -16,6 +16,8 @@ entry:
   %0 = load ptr %p
   store ptr %0, i32 90
   %1 = load i32 %x
-  call void @printInt(%1: i32)
+  call void @printInt(%1: i32) br label %exit
+
+exit:
   ret i32 %1
 }

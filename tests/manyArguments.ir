@@ -34,7 +34,9 @@ entry:
   %29 = add u64 %27, %28
   %30 = load u64 %16
   %31 = add u64 %29, %30
-  call void @printULong(%31:u64)
+  call void @printULong(%31:u64) br label %exit
+
+exit:
   store ptr %8, u64 %31
   %32 = load u64 %8
   ret u64 %32

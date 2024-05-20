@@ -19,7 +19,7 @@ interface InstructionFabric {
     fun load(loadedType: PrimitiveType, ptr: Value): Load
     fun store(ptr: Value, value: Value): Store
     fun call(func: AnyFunctionPrototype, args: List<Value>): Call
-    fun vcall(func: AnyFunctionPrototype, args: List<Value>): VoidCall
+    fun vcall(func: AnyFunctionPrototype, args: List<Value>, target: Label): VoidCall
     fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall
     fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionVoidCall
     fun branch(target: Block): Branch

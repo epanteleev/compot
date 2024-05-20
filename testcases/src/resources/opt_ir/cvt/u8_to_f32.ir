@@ -2,7 +2,8 @@ extern void @printFloat(f32)
 
 define i32 @main() {
   %float = call f32 @u8_to_f32(255: u8)
-  call void @printFloat(%float: f32)
+  call void @printFloat(%float: f32) br label %end
+end:
   ret i32 0
 }
 

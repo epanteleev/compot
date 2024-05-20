@@ -4,8 +4,12 @@ extern void @free(ptr)
 
 define i32 @main() {
   %array = call ptr @malloc(40: i32)
-  call void @fill_in_array(%array: ptr, 10: i32)
-  call void @free(%array: ptr)
+  call void @fill_in_array(%array: ptr, 10: i32) br label %next
+
+next:
+  call void @free(%array: ptr) br label %ret
+
+ret:
   ret i32 0
 }
 
@@ -42,6 +46,8 @@ forInc:
 
 forEnd:
   %arraydecay = gep i32, ptr %array, i32 0
-  call void @printIntArray(%arraydecay: ptr, %len: i32)
+  call void @printIntArray(%arraydecay: ptr, %len: i32) br label %ret
+
+ret:
   ret void
 }

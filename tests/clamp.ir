@@ -3,11 +3,17 @@ extern void @printInt(i32)
 define u64 @main() {
 entry:
   %1 = call i32 @clamp(8: i32, 9: i32, 10: i32)
-  call void @printInt(%1: i32)
+  call void @printInt(%1: i32) br label %cont1
+
+cont1:
   %2 = call i32 @clamp(8: i32, 20: i32, 10: i32)
-  call void @printInt(%2: i32)
+  call void @printInt(%2: i32) br label %cont2
+
+cont2:
   %3 = call i32 @clamp(8: i32, 1: i32, 10: i32)
-  call void @printInt(%3: i32)
+  call void @printInt(%3: i32) br label %cont3
+
+cont3:
   ret u64 0
 }
 

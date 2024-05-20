@@ -3,7 +3,9 @@ extern void @printDouble(f64)
 define i32 @main() {
 entry:
   %1 = call f64 @compare(8.0: f64, 8.0: f64)
-  call void @printDouble(%1: f64)
+  call void @printDouble(%1: f64) br label %exit
+
+exit:
   ret i32 0
 }
 

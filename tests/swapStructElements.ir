@@ -31,9 +31,13 @@ entry:
   store ptr %j, i32 67
   %i1 = gfp $struct.Point, ptr %p, i32 0
   %j2 = gfp $struct.Point, ptr %p, i32 1
-  call void @swap(%i1: ptr, %j2: ptr)
+  call void @swap(%i1: ptr, %j2: ptr) br label %cont
+
+cont:
   %start = gep i32, ptr %p, i8 0
-  call void @printIntArrayWithSpaces(%start: ptr, 2: i32)
+  call void @printIntArrayWithSpaces(%start: ptr, 2: i32) br label %end
+
+end:
   ret i32 0
 }
 

@@ -117,10 +117,17 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         val argumentValues      = arrayListOf<AnyValueToken>()
         tryParseArgumentBlock(argumentsTypes, argumentValues)
 
+        val br = iterator.expect<Identifier>("'br' keyword")
+        if (br.string != "br") {
+            throw ParseErrorException("'br' keyword", br)
+        }
+
+        val target = iterator.expect<LabelUsage>("label name")
+
         when (funcNameOrValue) {
             is SymbolValue -> {
                 val prototype = builder.makePrototype(funcNameOrValue, functionReturnType, argumentsTypes)
-                builder.vcall(prototype, argumentValues)
+                builder.vcall(prototype, argumentValues, target)
             }
             is LocalValueToken -> {
                 val prototype = builder.makePrototype(functionReturnType, argumentsTypes)

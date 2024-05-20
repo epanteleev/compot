@@ -24,7 +24,9 @@ entry:
   %s = load i32 %x0.x
   %f = load i32 %y0.x
   %sum = add i32 %f, %s
-  call void @printInt(%sum: i32)
+  call void @printInt(%sum: i32) br label %exit
+
+exit:
   ret i32 0
 }
 

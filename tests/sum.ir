@@ -6,7 +6,9 @@ entry:
   store ptr %intPtr, i32 8
   %v = load i32 %intPtr
   %sum = add i32 %v, %v 
-  call void @printInt(%sum: i32)
+  call void @printInt(%sum: i32) br label %ret
+
+ret:
   ret u64 0
 }
 

@@ -48,8 +48,12 @@ entry:
 
   %v0 = gep i32, ptr %arr, i8 8
   %v1 = gep i32, ptr %arr, i8 9
-  call void @swap(%v0: ptr, %v1: ptr)
-  call void @printIntArrayWithSpaces(%arrayidx: ptr, 10: i32)
+  call void @swap(%v0: ptr, %v1: ptr) br label %cont
+
+cont:
+  call void @printIntArrayWithSpaces(%arrayidx: ptr, 10: i32) br label %end
+
+end:
   ret i32 0
 }
 

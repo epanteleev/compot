@@ -29,7 +29,9 @@ forInc:
 
 forEnd:
   %arraydecay = gep f64, ptr %array, i8 0
-  call void @printDoubleArray(%arraydecay: ptr, 5: i64)
+  call void @printDoubleArray(%arraydecay: ptr, 5: i64) br label %end
+
+end:
   %r = load i32 %retval
   ret i32 %r
 }

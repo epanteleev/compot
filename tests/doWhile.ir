@@ -22,6 +22,8 @@ L4:	; pred=L3
 	br label %L1
 L1:	; pred=L4
 	%v1x0 = load i32 %0x0
-	call void @printInt(%v1x0: i32)
+	call void @printInt(%v1x0: i32) br label %L5
+
+L5:	; pred=L1
 	ret i32 %v1x0
 }

@@ -329,7 +329,8 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<V
 
     override fun visit(voidCall: VoidCall): ValueInstruction? {
         val newUsages = voidCall.operands().map { mapUsage<Value>(it) }
-        bb().vcall(voidCall.prototype(), newUsages)
+        val target    = mapBlock(voidCall.target())
+        bb().vcall(voidCall.prototype(), newUsages, target)
         return null
     }
 

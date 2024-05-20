@@ -185,16 +185,18 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.call(func, argumentValues))
     }
 
-    fun vcall(func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>) {
+    fun vcall(func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage) {
         require(func.returnType() is VoidType)
+
         val argumentValues = convertToValues(func.arguments(), args)
-        bb.vcall(func, argumentValues)
+        val block          = getBlockOrCreate(target.labelName)
+        bb.vcall(func, argumentValues, block)
     }
 
     fun icall(name: LocalValueToken, pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>): Value {
         require(func.returnType() !is VoidType)
         val argumentValues = convertToValues(func.arguments(), args)
-        val pointer = getValue(pointerToken, Type.Ptr)
+        val pointer        = getValue(pointerToken, Type.Ptr)
         return memorize(name, bb.icall(pointer, func, argumentValues))
     }
 

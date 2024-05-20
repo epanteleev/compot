@@ -70,7 +70,11 @@ entry:
   store ptr %arrayidx8, i8 4
   %arrayidx9 = gep i8, ptr %arr, i64 9
   store ptr %arrayidx9, i8 23
-  call void @remove_element(%arrayidx: ptr, 4: i32, 10: i32)
-  call void @printByteArrayWithSpaces(%arrayidx: ptr, 9: i32)
+  call void @remove_element(%arrayidx: ptr, 4: i32, 10: i32) br label %cont
+
+cont:
+  call void @printByteArrayWithSpaces(%arrayidx: ptr, 9: i32) br label %end
+
+end:
   ret i32 0
 }

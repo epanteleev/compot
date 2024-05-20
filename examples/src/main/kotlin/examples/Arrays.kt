@@ -30,7 +30,9 @@ fun main() {
         store(e4, I32Value(4))
 
         val arrPtr = gep(array, Type.I32, I32Value(0))
-        vcall(proto, arrayListOf(arrPtr, I32Value(5)))
+        val cont = createLabel()
+        vcall(proto, arrayListOf(arrPtr, I32Value(5)), cont)
+        switchLabel(cont)
         ret(I32Value(0))
     }
 

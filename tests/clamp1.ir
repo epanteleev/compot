@@ -3,11 +3,17 @@ extern void @printFloat(f32)
 define u64 @main() {
 entry:
   %1 = call f32 @clamp(8: f32, 9: f32, 10: f32)
-  call void @printFloat(%1: f32)
+  call void @printFloat(%1: f32) br label %cont1
+
+cont1:
   %2 = call f32 @clamp(8: f32, 20: f32, 10: f32)
-  call void @printFloat(%2: f32)
+  call void @printFloat(%2: f32) br label %cont2
+
+cont2:
   %3 = call f32 @clamp(8: f32, 1: f32, 10: f32)
-  call void @printFloat(%3: f32)
+  call void @printFloat(%3: f32) br label %cont3
+
+cont3:
   ret u64 0
 }
 

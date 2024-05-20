@@ -31,14 +31,16 @@ class CodegenTest {
         val add = builder.arithmeticBinary(a, ArithmeticBinaryOp.Add, b)
 
         val printInt = moduleBuilder.createExternFunction("printInt", Type.Void, arrayListOf(Type.U64))
-        builder.vcall(printInt, arrayListOf(add))
+        val cont = builder.createLabel()
+        builder.vcall(printInt, arrayListOf(add), cont)
+        builder.switchLabel(cont)
 
         builder.store(retValue, add)
 
         val ret = builder.load(Type.U64, retValue)
         builder.ret(ret)
 
-        val module = moduleBuilder.build()
+         val module = moduleBuilder.build()
 
         //println(DumpModule.apply(module))
         //println(LinearScan.alloc(module.findFunction(prototype)))

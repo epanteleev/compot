@@ -123,7 +123,9 @@ entry:
   store ptr %arrayidx8, i8 4
   %arrayidx9 = gep i8, ptr %arr, i64 9
   store ptr %arrayidx9, i8 23
-  call void @bubble_sort(%arrayidx: ptr, 10: i32)
-  call void @printByteArray(%arrayidx: ptr, 10: i32)
+  call void @bubble_sort(%arrayidx: ptr, 10: i32) br label %cont1
+cont1:
+  call void @printByteArray(%arrayidx: ptr, 10: i32) br label %cont2
+cont2:
   ret i32 0
 }

@@ -15,7 +15,9 @@ entry:
   %y1 = gfp $Point, ptr %point, i32 1
   %y1v = load i32 %y1
   %sum = add i32 %x1v, %y1v
-  call void @printInt(%sum: i32)
+  call void @printInt(%sum: i32) br label %exit
+
+exit:
   ret i32 0
 }
 

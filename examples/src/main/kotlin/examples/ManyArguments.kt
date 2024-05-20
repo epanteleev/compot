@@ -62,7 +62,9 @@ fun main() {
     val f2 = builder.load(Type.U64, arg8Alloc)
     val add7 = builder.arithmeticBinary(add6, ArithmeticBinaryOp.Add, f2)
 
-    builder.vcall(printInt, arrayListOf(add7))
+    val cont = builder.createLabel()
+    builder.vcall(printInt, arrayListOf(add7), cont)
+    builder.switchLabel(cont)
     builder.store(regValue, add7)
     val ret = builder.load(Type.U64, regValue)
     builder.ret(ret)

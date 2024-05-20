@@ -14,7 +14,9 @@ entry:
   %forth = gep i32, ptr %array, i32 4
   store ptr %forth, i32 4
   %begin = gep i32, ptr %array, i32 0
-  call void @printIntArray(%begin: ptr, 5: i32)
+  call void @printIntArray(%begin: ptr, 5: i32) br label %ret
+
+ret:
   ret u64 0
 }
 

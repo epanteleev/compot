@@ -23,28 +23,37 @@ extern void @printULong(u64)
 define i32 @main() {
 entry:
   %byte = load i8 @byte
-  call void @printByte(%byte: i8)
+  call void @printByte(%byte: i8) br label %cont
 
+cont:
   %short = load i16 @short
-  call void @printShort(%short: i16)
+  call void @printShort(%short: i16) br label %cont2
 
+cont2:
   %int = load i32 @integer
-  call void @printInt(%int: i32)
+  call void @printInt(%int: i32) br label %cont3
 
+cont3:
   %long = load i64 @long
-  call void @printLong(%long: i64)
+  call void @printLong(%long: i64) br label %cont4
 
+cont4:
   %ubyte = load u8 @ubyte
-  call void @printUByte(%ubyte: u8)
+  call void @printUByte(%ubyte: u8) br label %cont5
 
+cont5:
   %ushort = load u16 @ushort
-  call void @printUShort(%ushort: u16)
+  call void @printUShort(%ushort: u16) br label %cont6
 
+cont6:
   %uint = load u32 @uinteger
-  call void @printUInt(%uint: u32)
+  call void @printUInt(%uint: u32) br label %cont7
 
+cont7:
   %ulong = load u64 @ulong
-  call void @printULong(%ulong: u64)
+  call void @printULong(%ulong: u64) br label %end
+
+end:
   ret i32 0
 }
 

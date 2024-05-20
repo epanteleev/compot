@@ -2,7 +2,9 @@ extern void @printDouble(f64)
 
 define i32 @main() {
   %float = call f64 @neg(-1.0: f64)
-  call void @printDouble(%float: f64)
+  call void @printDouble(%float: f64) br label %end
+
+end:
   ret i32 0
 }
 

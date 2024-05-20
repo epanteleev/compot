@@ -2,7 +2,9 @@ extern void @printInt(i32)
 
 define i32 @main() {
   %int = call i32 @neg(-1: i32)
-  call void @printInt(%int: i32)
+  call void @printInt(%int: i32) br label %end
+
+end:
   ret i32 0
 }
 

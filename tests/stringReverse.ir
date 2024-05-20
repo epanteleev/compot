@@ -61,11 +61,16 @@ extern void @free(ptr)
 define i32 @main() {
 entry:
   %memory = call ptr @malloc(12: i64)
-  call void @memcpy(%memory: ptr, @str: ptr, 12: i32)
-  call void @stringReverse(%memory: ptr)
-  %0x0 = call i32 @printf(%memory: ptr)
-  call void @free(%memory: ptr)
+  call void @memcpy(%memory: ptr, @str: ptr, 12: i32) br label %cont1
 
+cont1:
+  call void @stringReverse(%memory: ptr) br label %cont2
+
+cont2:
+  %0x0 = call i32 @printf(%memory: ptr)
+  call void @free(%memory: ptr) br label %return
+
+return:
   ret i32 0
 }
 

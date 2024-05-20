@@ -28,7 +28,9 @@ forInc:
 
 forEnd:
   %arraydecay = gep i64, ptr %array, i64 0
-  call void @printLongArray(%arraydecay: ptr, 5: i64)
+  call void @printLongArray(%arraydecay: ptr, 5: i64) br label %end
+
+end:
   %r = load i32 %retval
   ret i32 %r
 }

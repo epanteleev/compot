@@ -3,7 +3,8 @@ extern void @printInt(i32)
 define u64 @main() {
 entry:
   %1 = call i32 @fib(8: i32)
-  call void @printInt(%1: i32)
+  call void @printInt(%1: i32) br label %L1
+L1:	; pred=entry
   ret u64 0
 }
 

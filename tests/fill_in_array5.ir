@@ -17,7 +17,9 @@ entry:
   %begin = gfp <i32x5>, ptr %array, i32 0
   store ptr %retVal, i32 154
   %ret = load i32 %retVal
-  call void @printIntArray(%begin: ptr, 5: i32)	
+  call void @printIntArray(%begin: ptr, 5: i32)	br label %exit
+
+exit:
   ret i32 %ret
 }
 

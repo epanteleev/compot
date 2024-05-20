@@ -21,7 +21,9 @@ fun main() {
         load(Type.F32, first)
         val s = load(Type.F32, second)
         val res = arithmeticBinary(s, ArithmeticBinaryOp.Add, s)
-        vcall(printFloat, arrayListOf(res))
+        val cont = createLabel()
+        vcall(printFloat, arrayListOf(res), cont)
+        switchLabel(cont)
         ret(I32Value(0))
     }
 

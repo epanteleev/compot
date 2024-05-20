@@ -7,9 +7,8 @@ import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class VoidCall private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>):
-    Instruction(id, owner, args),
-    Callable {
+class VoidCall private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>, target: Block):
+    TerminateInstruction(id, owner, args, arrayOf(target)), Callable {
     init {
         assert(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
     }
@@ -20,6 +19,14 @@ class VoidCall private constructor(id: Identity, owner: Block, private val func:
 
     override fun prototype(): AnyFunctionPrototype {
         return func
+    }
+
+    fun target(): Block {
+        assert(targets.size == 1) {
+            "should be only one target, but '$targets' found"
+        }
+
+        return targets[0]
     }
 
     override fun equals(other: Any?): Boolean {
@@ -38,7 +45,7 @@ class VoidCall private constructor(id: Identity, owner: Block, private val func:
         val builder = StringBuilder()
         builder.append("call ${Type.Void} @${func.name}(")
         operands.joinTo(builder) { "$it:${it.type()}"}
-        builder.append(")")
+        builder.append(") br label ${target()}")
         return builder.toString()
     }
 
@@ -49,14 +56,14 @@ class VoidCall private constructor(id: Identity, owner: Block, private val func:
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>): VoidCall {
+        fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>, target: Block): VoidCall {
             val argsArray = args.toTypedArray()
             require(Callable.isAppropriateTypes(func, argsArray)) {
                 args.joinToString(prefix = "inconsistent types, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
 
-            return registerUser(VoidCall(id, owner, func, argsArray), args.iterator())
+            return registerUser(VoidCall(id, owner, func, argsArray, target), args.iterator())
         }
     }
 }

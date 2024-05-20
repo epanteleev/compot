@@ -32,7 +32,12 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                 val copy = bb.insertBefore(call) { it.copy(arg) }
                 call.update(i, copy)
             }
-            return bb.insertAfter(call) { it.upStackFrame(call) }
+            if (call is VoidCall) {
+                call.target().prepend { it.upStackFrame(call) }
+                return call
+            } else {
+                return bb.insertAfter(call) { it.upStackFrame(call) }
+            }
         }
 
         for (bb in cfg.blocks) {

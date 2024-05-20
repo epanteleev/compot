@@ -34,7 +34,9 @@ entry:
   %29 = add f64 %27, %28
   %30 = load f64 %16
   %31 = add f64 %29, %30
-  call void @printDouble(%31:f64)
+  call void @printDouble(%31:f64) br label %exit
+
+exit:
   store ptr %8, f64 %31
   %32 = load f64 %8
   ret f64 %32
