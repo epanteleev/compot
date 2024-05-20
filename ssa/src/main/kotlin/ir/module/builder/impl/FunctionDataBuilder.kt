@@ -65,8 +65,8 @@ class FunctionDataBuilder private constructor(
         return bb.store(ptr, value)
     }
 
-    override fun call(func: AnyFunctionPrototype, args: List<Value>): Call {
-        return bb.call(func, args)
+    override fun call(func: AnyFunctionPrototype, args: List<Value>, target: Label): Call {
+        return bb.call(func, args, target as Block)
     }
 
     override fun vcall(func: AnyFunctionPrototype, args: List<Value>, target: Label): VoidCall {

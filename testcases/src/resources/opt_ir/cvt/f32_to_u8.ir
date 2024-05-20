@@ -1,7 +1,9 @@
 extern void @printUByte(u8)
 
 define i32 @main() {
-  %char = call u8 @f32_to_u8(-1.0: f32)
+  %char = call u8 @f32_to_u8(-1.0: f32) br label %next
+
+next:
   call void @printUByte(%char: u8) br label %end
 
 end:

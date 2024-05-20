@@ -39,6 +39,10 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                 call.target().prepend { it.upStackFrame(call) }
                 return call
 
+            } else if (call is Call) {
+                call.target().prepend { it.upStackFrame(call) }
+                return call
+
             } else {
                 return bb.insertAfter(call) { it.upStackFrame(call) }
             }

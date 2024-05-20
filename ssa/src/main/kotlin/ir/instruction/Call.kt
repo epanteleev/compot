@@ -8,8 +8,8 @@ import ir.module.block.Block
 import ir.types.NonTrivialType
 
 
-class Call private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>):
-    ValueInstruction(id, owner, func.returnType() as NonTrivialType, args),
+class Call private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>, target: Block):
+    TerminateValueInstruction(id, owner, func.returnType() as NonTrivialType, args, arrayOf(target)),
     Callable {
 
     override fun arguments(): Array<Value> {
@@ -28,12 +28,20 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
         val builder = StringBuilder()
         builder.append("%${name()} = call $tp @${func.name}(")
         operands.joinTo(builder) { "$it:${it.type()}"}
-        builder.append(")")
+        builder.append(") bt label %${target()}")
         return builder.toString()
     }
 
+    fun target(): Block {
+        assert(targets.size == 1) {
+            "size should be 1 target in $this instruction, but '$targets' found"
+        }
+
+        return targets[0]
+    }
+
     companion object {
-        fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>): Call {
+        fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>, target: Block): Call {
             assert(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
 
             val argsArray = args.toTypedArray()
@@ -42,7 +50,7 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
                     { "$it: ${it.type()}" }
             }
 
-            return registerUser(Call(id, owner, func, argsArray), args.iterator())
+            return registerUser(Call(id, owner, func, argsArray, target), args.iterator())
         }
     }
 }

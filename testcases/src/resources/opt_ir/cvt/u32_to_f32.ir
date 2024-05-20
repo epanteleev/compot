@@ -1,8 +1,11 @@
 extern void @printFloat(f32)
 
 define i32 @main() {
-  %float = call f32 @u32_to_f32(255: u32)
+  %float = call f32 @u32_to_f32(255: u32) br label %next
+
+next:
   call void @printFloat(%float: f32) br label %end
+
 end:
   ret i32 0
 }

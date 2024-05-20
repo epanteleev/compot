@@ -25,9 +25,13 @@ entry:
   %c = alloc i32
   store ptr %a, i32 1
   %0 = load i32 %a
-  %call = call i32 @less(%0: i32)
+  %call = call i32 @less(%0: i32) br label %next
+
+next:
   store ptr %c, i32 %call
   %1 = load i32 %c
-  %call1 = call i32 @printInt(%1: i32)
+  %call1 = call i32 @printInt(%1: i32) br label %end
+
+end:
   ret i32 0
 }

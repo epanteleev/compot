@@ -230,13 +230,13 @@ private class CodeEmitter(private val data: FunctionData,
             is IntegerType, is PointerType, is BooleanType -> {
                 retType as NonTrivialType
                 val size = retType.size()
-                call as ValueInstruction
+                call as TerminateValueInstruction
                 asm.movOld(size, rax, valueToRegister.operand(call))
             }
 
             is FloatingPointType -> {
                 val size = retType.size()
-                call as ValueInstruction
+                call as TerminateValueInstruction
                 when (val op = valueToRegister.operand(call)) {
                     is Address -> asm.movf(size, fpRet, op)
                     is XmmRegister -> asm.movf(size, fpRet, op)

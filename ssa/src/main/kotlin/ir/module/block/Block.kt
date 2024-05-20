@@ -44,7 +44,8 @@ class Block(override val index: Int):
     }
 
     override fun last(): TerminateInstruction {
-        return lastOrNull() ?: throw RuntimeException("Last instruction is not terminate: bb=$this")
+        return lastOrNull() ?:
+            throw RuntimeException("Last instruction is not terminate: bb=$this, last=${instructions.lastOrNull()}")
     }
 
     fun lastOrNull(): TerminateInstruction? {
@@ -221,9 +222,9 @@ class Block(override val index: Int):
         return withOutput { Store.make(it,this, ptr, value) }
     }
 
-    override fun call(func: AnyFunctionPrototype, args: List<Value>): Call {
+    override fun call(func: AnyFunctionPrototype, args: List<Value>, target: Label): Call {
         require(func.returnType() != Type.Void)
-        return withOutput { Call.make(it, this, func, args) }
+        return addTerminate { Call.make(it, this, func, args, target as Block) }
     }
 
     override fun vcall(func: AnyFunctionPrototype, args: List<Value>, target: Label): VoidCall {

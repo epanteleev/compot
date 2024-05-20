@@ -59,7 +59,7 @@ class FunctionDataBuilderWithContext private constructor(
         }
     }
 
-    private inline fun<reified T: ValueInstruction> memorize(name: LocalValueToken, value: T): T {
+    private inline fun<reified T: LocalValue> memorize(name: LocalValueToken, value: T): T {
         val existed = nameMap[name.name]
         if (existed != null) {
             throw ParseErrorException("already has value with the same name=$existed in ${name.position()}")
@@ -179,10 +179,11 @@ class FunctionDataBuilderWithContext private constructor(
         return argumentValues
     }
 
-    fun call(name: LocalValueToken, func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>): Value {
+    fun call(name: LocalValueToken, func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): Value {
         require(func.returnType() !is VoidType)
         val argumentValues = convertToValues(func.arguments(), args)
-        return memorize(name, bb.call(func, argumentValues))
+        val block          = getBlockOrCreate(labelUsage.labelName)
+        return memorize(name, bb.call(func, argumentValues, block))
     }
 
     fun vcall(func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage) {

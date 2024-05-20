@@ -14,7 +14,9 @@ fun main() {
     val helloStr = builder.addConstant(StringLiteralGlobal("str", ArrayType(Type.I8, 11),"Hello world"))
     val printf = builder.createExternFunction("printf", Type.I32, arrayListOf(Type.Ptr))
     builder.createFunction("main", Type.I32, arrayListOf()).apply {
-        call(printf, arrayListOf(helloStr))
+        val cont = createLabel()
+        call(printf, arrayListOf(helloStr), cont)
+        switchLabel(cont)
         ret(I32Value(0))
     }
 

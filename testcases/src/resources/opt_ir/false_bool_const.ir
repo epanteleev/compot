@@ -28,7 +28,11 @@ end:
 ; }
 define i32 @main() {
 entry:
-  %call = call i32 @test()
-  %call1 = call i32 @printInt(%call: i32)
+  %call = call i32 @test() br label %next
+
+next:
+  %call1 = call i32 @printInt(%call: i32) br label %end
+
+end:
   ret i32 0
 }

@@ -14,7 +14,7 @@ import ir.module.block.Block
 import ir.types.NonTrivialType
 
 
-class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<ValueInstruction?> {
+class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<LocalValue?> {
     private val oldBasicBlocks: BasicBlocks = fd.blocks
 
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
@@ -73,7 +73,7 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<V
         }
     }
 
-    private fun newInst(inst: Instruction): ValueInstruction? {
+    private fun newInst(inst: Instruction): LocalValue? {
         val newInstruction = inst.visit(this)
         if (inst is LocalValue) {
             oldValuesToNew[inst] = newInstruction as LocalValue
@@ -159,9 +159,11 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<V
         return null
     }
 
-    override fun visit(call: Call): ValueInstruction {
+    override fun visit(call: Call): LocalValue {
         val newUsages = call.operands().map { mapUsage<Value>(it) }
-        return bb().call(call.prototype(), newUsages)
+        val target    = mapBlock(call.target())
+
+        return bb().call(call.prototype(), newUsages, target)
     }
 
     override fun visit(bitcast: Bitcast): ValueInstruction {
