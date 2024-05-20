@@ -6,7 +6,9 @@ extern i32 @printf(ptr)
 
 define i32 @main() {
 entry:
-  %unused = call i32 @printf(@str: ptr)
+  %unused = call i32 @printf(@str: ptr) br label %load
+
+load:
   %v = load i32 @integer
   call void @printInt(%v: i32) br label %ret
 

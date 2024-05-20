@@ -110,7 +110,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
             }
             is LocalValueToken -> {
                 val prototype = builder.makePrototype(functionReturnType, argumentsTypes)
-                builder.icall(currentTok, funcNameOrValue, prototype, argumentValues)
+                builder.icall(currentTok, funcNameOrValue, prototype, argumentValues, target)
             }
             else -> throw ParseErrorException("function name or value", funcNameOrValue)
         }

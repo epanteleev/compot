@@ -226,28 +226,7 @@ private class CodeEmitter(private val data: FunctionData,
             return
         }
 
-        when (retType) {
-            is IntegerType, is PointerType, is BooleanType -> {
-                retType as NonTrivialType
-                val size = retType.size()
-                call as TerminateValueInstruction
-                asm.movOld(size, rax, valueToRegister.operand(call))
-            }
-
-            is FloatingPointType -> {
-                val size = retType.size()
-                call as TerminateValueInstruction
-                when (val op = valueToRegister.operand(call)) {
-                    is Address -> asm.movf(size, fpRet, op)
-                    is XmmRegister -> asm.movf(size, fpRet, op)
-                    else -> TODO()
-                }
-            }
-
-            else -> {
-                throw RuntimeException("unknown value type=$retType")
-            }
-        }
+        emitReturnValue(call)
     }
 
     override fun visit(voidCall: VoidCall) {
@@ -305,6 +284,7 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(call: Call) {
         emitCall(call)
+        emitReturnValue(call)
     }
 
     override fun visit(flag2Int: Flag2Int) {
@@ -319,16 +299,53 @@ private class CodeEmitter(private val data: FunctionData,
         Flag2IntCodegen(flag2Int.type().size(), asm)(dst, src)
     }
 
+    private fun emitReturnValue(call: Callable) {
+        val retType = call.type()
+        if (retType == Type.Void) {
+            return
+        }
+
+        when (retType) {
+            is IntegerType, is PointerType, is BooleanType -> {
+                retType as NonTrivialType
+                val size = retType.size()
+                call as TerminateValueInstruction
+                asm.movOld(size, rax, valueToRegister.operand(call))
+            }
+
+            is FloatingPointType -> {
+                val size = retType.size()
+                call as TerminateValueInstruction
+                when (val op = valueToRegister.operand(call)) {
+                    is Address -> asm.movf(size, fpRet, op)
+                    is XmmRegister -> asm.movf(size, fpRet, op)
+                    else -> TODO()
+                }
+            }
+
+            else -> {
+                throw RuntimeException("unknown value type=$retType")
+            }
+        }
+    }
+
+    private fun indirectCall(pointer: Operand) {
+        when (pointer) {
+            is GPRegister -> asm.call(pointer)
+            is Address    -> asm.call(pointer)
+            else -> throw CodegenException("invalid operand: pointer=$pointer")
+        }
+    }
+
     override fun visit(indirectionCall: IndirectionCall) {
-        TODO("Not yet implemented")
+        val pointer = valueToRegister.operand(indirectionCall.pointer())
+        indirectCall(pointer)
+        emitReturnValue(indirectionCall)
     }
 
     override fun visit(indirectionVoidCall: IndirectionVoidCall) {
-        when (val pointer = valueToRegister.operand(indirectionVoidCall.pointer())) {
-            is GPRegister -> asm.call(pointer)
-            is Address -> asm.call(pointer)
-            else -> throw CodegenException("invalid operand: pointer=$pointer")
-        }
+        val pointer = valueToRegister.operand(indirectionVoidCall.pointer())
+        indirectCall(pointer)
     }
 
     override fun visit(store: Store) {

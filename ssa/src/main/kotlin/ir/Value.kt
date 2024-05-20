@@ -1,8 +1,8 @@
 package ir
 
-import ir.instruction.Instruction
-import ir.instruction.ValueInstruction
 import ir.types.*
+import ir.instruction.Instruction
+
 
 interface Value {
     fun type(): NonTrivialType
@@ -13,15 +13,26 @@ interface Value {
 }
 
 interface LocalValue: Value {
+    var usedIn: MutableList<Instruction>
+
+    fun addUser(instruction: Instruction) {
+        usedIn.add(instruction)
+    }
+    fun killUser(instruction: Instruction) {
+        usedIn.remove(instruction)
+    }
+
+    fun release(): List<Instruction> {
+        val result = usedIn
+        usedIn = arrayListOf()
+        return result
+    }
+
+    fun usedIn(): List<Instruction> {
+        return usedIn
+    }
+
     fun name(): String
-    fun usedIn(): List<Instruction>
-
-    // DON'T USE THIS METHOD DIRECTLY
-    fun addUser(instruction: Instruction)
-    // DON'T USE THIS METHOD DIRECTLY
-    fun killUser(instruction: Instruction)
-
-    fun release(): List<Instruction>
 
     fun replaceUsages(toValue: Value) {
         val usedIn = release()
@@ -42,26 +53,7 @@ interface LocalValue: Value {
 }
 
 data class ArgumentValue(private val index: Int, private val tp: NonTrivialType): LocalValue {
-    private var usedIn: MutableList<Instruction> = arrayListOf()
-
-    override fun usedIn(): List<Instruction> {
-        return usedIn
-    }
-
-    override fun release(): List<Instruction> {
-        val result = usedIn
-        usedIn = arrayListOf()
-        return result
-    }
-
-    override fun addUser(instruction: Instruction) {
-        usedIn.add(instruction)
-    }
-
-    override fun killUser(instruction: Instruction) {
-        usedIn.remove(instruction)
-    }
-
+    override var usedIn: MutableList<Instruction> = arrayListOf()
     override fun name(): String {
         return "arg$index"
     }

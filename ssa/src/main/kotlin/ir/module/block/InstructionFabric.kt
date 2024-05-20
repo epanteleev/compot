@@ -20,7 +20,7 @@ interface InstructionFabric {
     fun store(ptr: Value, value: Value): Store
     fun call(func: AnyFunctionPrototype, args: List<Value>, target: Label): Call
     fun vcall(func: AnyFunctionPrototype, args: List<Value>, target: Label): VoidCall
-    fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall
+    fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionCall
     fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Block): IndirectionVoidCall
     fun branch(target: Block): Branch
     fun branchCond(value: Value, onTrue: Block, onFalse: Block): BranchCond //TODO Labels

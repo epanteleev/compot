@@ -60,7 +60,9 @@ extern void @printInt(i32)
 
 define u64 @main() {
 entry:
-  %1 = call i32 @sumLoop2(3: i32, 5: i32)
+  %1 = call i32 @sumLoop2(3: i32, 5: i32) br label %cont
+
+cont:
   call void @printInt(%1: i32) br label %return
 
 return:

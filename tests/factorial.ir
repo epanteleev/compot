@@ -2,7 +2,9 @@ extern void @printInt(i32)
 
 define u64 @main() {
 entry:
-  %1 = call i32 @factorial(8: i32)
+  %1 = call i32 @factorial(8: i32) br label %cont
+
+cont:
   call void @printInt(%1: i32) br label %end
 
 end:

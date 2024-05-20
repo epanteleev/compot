@@ -3,7 +3,9 @@ extern ptr @malloc(i32)
 extern void @free(ptr)
 
 define i32 @main() {
-  %array = call ptr @malloc(40: i32)
+  %array = call ptr @malloc(40: i32) br label %next0
+
+next0:
   call void @fill_in_array(%array: ptr, 10: i32) br label %next
 
 next:

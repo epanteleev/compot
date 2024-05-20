@@ -1,0 +1,22 @@
+extern void @printInt(i32)
+
+define i32 @returnConst() {
+entry:
+  ret i32 42
+}
+
+define i32 @main() {
+entry:
+  %fn = alloc ptr
+  store ptr %fn, ptr @returnConst
+  %0 = load ptr %fn
+  %c = call i32 %0() br label %continue
+
+continue:
+  call void @printInt(%c: i32) br label %end
+
+end:
+  ret i32 0
+}
+
+

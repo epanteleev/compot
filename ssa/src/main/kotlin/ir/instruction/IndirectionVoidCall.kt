@@ -15,7 +15,7 @@ class IndirectionVoidCall private constructor(id: Identity, owner: Block, pointe
         assert(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
     }
 
-    fun target(): Block {
+    override fun target(): Block {
         assert(targets.size == 1) {
             "size should be 1 target in $this instruction, but '$targets' found"
         }

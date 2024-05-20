@@ -232,9 +232,9 @@ class Block(override val index: Int):
         return addTerminate { VoidCall.make(it, this, func, args, target as Block) }
     }
 
-    override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
+    override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionCall {
         require(func.returnType() != Type.Void)
-        return withOutput { IndirectionCall.make(it, this, pointer, func, args) }
+        return addTerminate { IndirectionCall.make(it, this, pointer, func, args, target as Block) }
     }
 
     override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Block): IndirectionVoidCall {

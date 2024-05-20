@@ -21,7 +21,7 @@ class VoidCall private constructor(id: Identity, owner: Block, private val func:
         return func
     }
 
-    fun target(): Block {
+    override fun target(): Block {
         assert(targets.size == 1) {
             "should be only one target, but '$targets' found"
         }

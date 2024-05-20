@@ -8,16 +8,28 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class IndirectionCall private constructor(id: Identity, owner: Block, pointer: Value, private val func: IndirectFunctionPrototype, args: List<Value>):
-    ValueInstruction(id, owner, func.returnType() as NonTrivialType, (args + pointer).toTypedArray()), //TODO
+class IndirectionCall private constructor(id: Identity, owner: Block,
+                                          pointer: Value,
+                                          private val func: IndirectFunctionPrototype,
+                                          args: List<Value>,
+                                          target: Block):
+    TerminateValueInstruction(id, owner, func.returnType() as NonTrivialType, (args + pointer).toTypedArray(), arrayOf(target)),
     Callable {
     init {
         assert(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
     }
 
+    override fun target(): Block {
+        assert(targets.size == 1) {
+            "size should be 1 target in $this instruction, but '$targets' found"
+        }
+
+        return targets[0]
+    }
+
     fun pointer(): Value {
-        assert(operands.size > 1) {
-            "size should be at least 1 operand in $this instruction"
+        assert(operands.isNotEmpty()) {
+            "size should be at least 1 operand in $this instruction, but '${operands.joinToString { it.toString() }}' found"
         }
 
         return operands[0]
@@ -44,13 +56,13 @@ class IndirectionCall private constructor(id: Identity, owner: Block, pointer: V
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionCall {
+        fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Block): IndirectionCall {
             require(Callable.isAppropriateTypes(func, args.toTypedArray())) {
                 args.joinToString(prefix = "inconsistent types in '$id', pointer=$pointer:${pointer.type()}, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
 
-            return registerUser(IndirectionCall(id, owner, pointer, func, args), args.iterator())
+            return registerUser(IndirectionCall(id, owner, pointer, func, args, target), args.iterator())
         }
     }
 }

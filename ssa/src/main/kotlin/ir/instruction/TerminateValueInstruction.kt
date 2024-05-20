@@ -9,26 +9,9 @@ abstract class TerminateValueInstruction(id: Identity, owner: Block,
                                          protected val tp: NonTrivialType,
                                          usages: Array<Value>,
                                          targets: Array<Block>):
-    TerminateInstruction(id, owner, usages, targets), LocalValue {
-    private var usedIn: MutableList<Instruction> = arrayListOf()
-
-    override fun addUser(instruction: Instruction) {
-        usedIn.add(instruction)
-    }
-
-    override fun killUser(instruction: Instruction) {
-        usedIn.remove(instruction)
-    }
-
-    override fun release(): List<Instruction> {
-        val result = usedIn
-        usedIn = arrayListOf()
-        return result
-    }
-
-    override fun usedIn(): List<Instruction> {
-        return usedIn
-    }
+    TerminateInstruction(id, owner, usages, targets),
+    LocalValue {
+    override var usedIn: MutableList<Instruction> = arrayListOf()
 
     override fun name(): String {
         return "${owner.index}x${id}"

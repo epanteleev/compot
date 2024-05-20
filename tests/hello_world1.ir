@@ -4,7 +4,9 @@ extern i32 @printf(ptr)
 
 define void @sayHello() {
 entry:	
-  %0x0 = call i32 @printf(@str:ptr)
+  %0x0 = call i32 @printf(@str:ptr) br label %exit
+
+exit:
   ret void
 }
 

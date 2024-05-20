@@ -2,7 +2,9 @@ extern void @printFloat(f32)
 
 define u64 @main() {
 entry:
-  %1 = call f32 @discriminant(8: f32, 8: f32, 8: f32)
+  %1 = call f32 @discriminant(8: f32, 8: f32, 8: f32) br label %continue
+
+continue:
   call void @printFloat(%1: f32) br label %exit
 
 exit:

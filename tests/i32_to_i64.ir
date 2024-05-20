@@ -1,7 +1,9 @@
 extern void @printLong(i64)
 
 define i32 @main() {
-  %long = call i64 @i32_to_i64(-1: i32)
+  %long = call i64 @i32_to_i64(-1: i32) br label %cont
+
+cont:
   call void @printLong(%long: i64) br label %end
 
 end:

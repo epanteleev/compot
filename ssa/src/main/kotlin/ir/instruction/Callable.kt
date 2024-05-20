@@ -3,6 +3,7 @@ package ir.instruction
 import ir.Value
 import ir.types.Type
 import ir.module.AnyFunctionPrototype
+import ir.module.block.Block
 
 
 interface Callable {
@@ -11,6 +12,8 @@ interface Callable {
     fun shortName(): String {
         return prototype().shortName()
     }
+
+    fun target(): Block
 
     fun type(): Type
 

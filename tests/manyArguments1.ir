@@ -44,7 +44,9 @@ exit:
 
 define f64 @main() {
 entry:
-  %1 = call f64 @sum8(1: f64, 2: f64, 3: f64, 4: f64, 5: f64, 6: f64, 7: f64, 8: f64)
+  %1 = call f64 @sum8(1: f64, 2: f64, 3: f64, 4: f64, 5: f64, 6: f64, 7: f64, 8: f64) br label %exit
+
+exit:
   ret f64 %1 
 }
 

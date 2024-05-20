@@ -9,7 +9,9 @@ entry:
   %temp = alloc i8
   store ptr %str.addr, ptr %str
   %0 = load ptr %str.addr
-  %call = call i64 @strlen(%0: ptr)
+  %call = call i64 @strlen(%0: ptr) br label %cont0
+
+cont0:
   %conv = trunc i64 %call to i32
   store ptr %len, i32 %conv
   %1 = load ptr %str.addr
@@ -60,14 +62,18 @@ extern void @free(ptr)
 
 define i32 @main() {
 entry:
-  %memory = call ptr @malloc(12: i64)
+  %memory = call ptr @malloc(12: i64) br label %cont0
+
+cont0:
   call void @memcpy(%memory: ptr, @str: ptr, 12: i32) br label %cont1
 
 cont1:
   call void @stringReverse(%memory: ptr) br label %cont2
 
 cont2:
-  %0x0 = call i32 @printf(%memory: ptr)
+  %0x0 = call i32 @printf(%memory: ptr) br label %cont3
+
+cont3:
   call void @free(%memory: ptr) br label %return
 
 return:

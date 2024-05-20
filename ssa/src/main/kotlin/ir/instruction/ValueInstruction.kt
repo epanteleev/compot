@@ -12,26 +12,7 @@ abstract class ValueInstruction(id: Identity,
                                 operands: Array<Value>):
     Instruction(id, owner, operands),
     LocalValue {
-    private var usedIn: MutableList<Instruction> = arrayListOf()
-
-    override fun addUser(instruction: Instruction) {
-        usedIn.add(instruction)
-    }
-
-    override fun killUser(instruction: Instruction) {
-        usedIn.remove(instruction)
-    }
-
-    override fun release(): List<Instruction> {
-        val result = usedIn
-        usedIn = arrayListOf()
-        return result
-    }
-
-    override fun usedIn(): List<Instruction> {
-        return usedIn
-    }
-
+    override var usedIn: MutableList<Instruction> = arrayListOf()
     override fun name(): String {
         return "${owner.index}x${id}"
     }

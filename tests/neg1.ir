@@ -1,7 +1,9 @@
 extern void @printFloat(f32)
 
 define i32 @main() {
-  %float = call f32 @neg(-1.0: f32)
+  %float = call f32 @neg(-1.0: f32) br label %cont
+
+cont:
   call void @printFloat(%float: f32) br label %end
 
 end:

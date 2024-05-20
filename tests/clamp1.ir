@@ -2,15 +2,21 @@ extern void @printFloat(f32)
 
 define u64 @main() {
 entry:
-  %1 = call f32 @clamp(8: f32, 9: f32, 10: f32)
+  %1 = call f32 @clamp(8: f32, 9: f32, 10: f32) br label %cont0
+
+cont0:
   call void @printFloat(%1: f32) br label %cont1
 
 cont1:
-  %2 = call f32 @clamp(8: f32, 20: f32, 10: f32)
+  %2 = call f32 @clamp(8: f32, 20: f32, 10: f32) br label %cont1.1
+
+cont1.1:
   call void @printFloat(%2: f32) br label %cont2
 
 cont2:
-  %3 = call f32 @clamp(8: f32, 1: f32, 10: f32)
+  %3 = call f32 @clamp(8: f32, 1: f32, 10: f32) br label %cont2.1
+
+cont2.1:
   call void @printFloat(%3: f32) br label %cont3
 
 cont3:
@@ -98,11 +104,15 @@ entry:
   store ptr %toAddr, f32 %to
   %0 = load f32 %valueAddr
   %1 = load f32 %toAddr
-  %call = call f32 @min(%0: f32, %1: f32)
+  %call = call f32 @min(%0: f32, %1: f32) br label %cont
+
+cont:
   store ptr %b, f32 %call
   %2 = load f32 %fromAddr
   %3 = load f32 %b
-  %call1 = call f32 @max(%2: f32, %3: f32)
+  %call1 = call f32 @max(%2: f32, %3: f32) br label %return
+
+return:
   ret f32 %call1
 }
 

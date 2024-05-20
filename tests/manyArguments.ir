@@ -44,7 +44,9 @@ exit:
 
 define u64 @main() {
 entry:
-  %1 = call u64 @sum8(1: u64, 2: u64, 3: u64, 4: u64, 5: u64, 6: u64, 7: u64, 8: u64)
+  %1 = call u64 @sum8(1: u64, 2: u64, 3: u64, 4: u64, 5: u64, 6: u64, 7: u64, 8: u64) br label %exit
+
+exit:
   ret u64 %1 
 }
 

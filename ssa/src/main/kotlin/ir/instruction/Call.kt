@@ -32,7 +32,7 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
         return builder.toString()
     }
 
-    fun target(): Block {
+    override fun target(): Block {
         assert(targets.size == 1) {
             "size should be 1 target in $this instruction, but '$targets' found"
         }

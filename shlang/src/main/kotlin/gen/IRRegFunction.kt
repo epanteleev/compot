@@ -296,7 +296,10 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             ir().switchLabel(cont)
             return Value.UNDEF
         } else {
-            return ir().call(function, convertedArgs)
+            val cont = ir().createLabel()
+            val ret = ir().call(function, convertedArgs, cont)
+            ir().switchLabel(cont)
+            return ret
         }
     }
 

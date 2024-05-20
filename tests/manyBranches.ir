@@ -2,11 +2,15 @@ extern void @printInt(i32)
 
 define u64 @main() {
 entry:
-  %1 = call i32 @manyBranches(8: i32)
+  %1 = call i32 @manyBranches(8: i32) br label %cont0
+
+cont0:
   call void @printInt(%1: i32) br label %cont
 
 cont:
-  %2 = call i32 @manyBranches(40: i32)
+  %2 = call i32 @manyBranches(40: i32) br label %cont1
+
+cont1:
   call void @printInt(%2: i32) br label %cont2
 
 cont2:

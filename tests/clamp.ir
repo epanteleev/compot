@@ -2,15 +2,21 @@ extern void @printInt(i32)
 
 define u64 @main() {
 entry:
-  %1 = call i32 @clamp(8: i32, 9: i32, 10: i32)
+  %1 = call i32 @clamp(8: i32, 9: i32, 10: i32) br label %cont0
+
+cont0:
   call void @printInt(%1: i32) br label %cont1
 
 cont1:
-  %2 = call i32 @clamp(8: i32, 20: i32, 10: i32)
+  %2 = call i32 @clamp(8: i32, 20: i32, 10: i32) br label %cont1.1
+
+cont1.1:
   call void @printInt(%2: i32) br label %cont2
 
 cont2:
-  %3 = call i32 @clamp(8: i32, 1: i32, 10: i32)
+  %3 = call i32 @clamp(8: i32, 1: i32, 10: i32) br label %cont2.1
+
+cont2.1:
   call void @printInt(%3: i32) br label %cont3
 
 cont3:
@@ -98,11 +104,15 @@ entry:
   store ptr %toAddr, i32 %to
   %0 = load i32 %valueAddr
   %1 = load i32 %toAddr
-  %call = call i32 @min(%0: i32, %1: i32)
+  %call = call i32 @min(%0: i32, %1: i32) br label %cont0
+
+cont0:
   store ptr %b, i32 %call
   %2 = load i32 %fromAddr
   %3 = load i32 %b
-  %call1 = call i32 @max(%2: i32, %3: i32)
+  %call1 = call i32 @max(%2: i32, %3: i32) br label %cont1
+
+cont1:
   ret i32 %call1
 }
 

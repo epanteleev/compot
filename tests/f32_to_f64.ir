@@ -1,7 +1,9 @@
 extern void @printDouble(f64)
 
 define f32 @main() {
-  %double = call f64 @f32_to_f64(-1: f32)
+  %double = call f64 @f32_to_f64(-1: f32) br label %cont
+
+cont:
   call void @printDouble(%double: f64) br label %end
 
 end:

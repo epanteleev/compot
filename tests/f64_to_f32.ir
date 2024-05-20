@@ -1,7 +1,9 @@
 extern void @printFloat(f32)
 
 define i32 @main() {
-  %float = call f32 @f64_to_f32(-1.0: f64)
+  %float = call f32 @f64_to_f32(-1.0: f64) br label %continue
+
+continue:
   call void @printFloat(%float: f32) br label %end
 
 end:
