@@ -13,7 +13,9 @@ entry:
   %fn = alloc ptr
   store ptr %fn, ptr @sayHello
   %0 = load ptr %fn
-  call void %0()
+  call void %0() br label %exit
+
+exit:
   ret i32 0
 }
 

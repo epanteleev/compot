@@ -236,9 +236,9 @@ class Block(override val index: Int):
         return withOutput { IndirectionCall.make(it, this, pointer, func, args) }
     }
 
-    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>): IndirectionVoidCall {
+    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Block): IndirectionVoidCall {
         require(func.returnType() == Type.Void)
-        return withOutput { IndirectionVoidCall.make(it, this, pointer, func, args) }
+        return addTerminate { IndirectionVoidCall.make(it, this, pointer, func, args, target) }
     }
 
     override fun branch(target: Block): Branch {

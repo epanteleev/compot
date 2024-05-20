@@ -200,11 +200,12 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.icall(pointer, func, argumentValues))
     }
 
-    fun ivcall(pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>) {
+    fun ivcall(pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage) {
         require(func.returnType() is VoidType)
         val argumentValues = convertToValues(func.arguments(), args)
         val pointer = getValue(pointerToken, Type.Ptr)
-        bb.ivcall(pointer, func,argumentValues)
+        val output = getBlockOrCreate(target.labelName)
+        bb.ivcall(pointer, func, argumentValues, output)
     }
 
     private fun getBlockOrCreate(name: String): Block {

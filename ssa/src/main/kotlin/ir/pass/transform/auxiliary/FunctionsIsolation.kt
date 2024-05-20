@@ -35,6 +35,10 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             if (call is VoidCall) {
                 call.target().prepend { it.upStackFrame(call) }
                 return call
+            } else if (call is IndirectionVoidCall) {
+                call.target().prepend { it.upStackFrame(call) }
+                return call
+
             } else {
                 return bb.insertAfter(call) { it.upStackFrame(call) }
             }
