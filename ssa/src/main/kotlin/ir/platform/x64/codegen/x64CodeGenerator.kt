@@ -9,14 +9,12 @@ import ir.instruction.Neg
 import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
-import common.identityHashMapOf
 import ir.BoolValue
 import ir.LocalValue
 import ir.global.GlobalConstant
 import ir.instruction.lir.*
 import ir.instruction.lir.Lea
 import ir.module.block.Label
-import ir.utils.OrderedLocation
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.platform.common.AnyCodeGenerator
