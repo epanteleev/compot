@@ -274,6 +274,10 @@ private class CodeEmitter(private val data: FunctionData,
         GetElementPtrCodegenForAlloc(Type.Ptr, leaStack.loadedType, asm)(dest, sourceOperand, index)
     }
 
+    override fun visit(binary: TupleArithmeticBinary) {
+        TODO()
+    }
+
     override fun visit(call: Call) {
         emitCall(call)
     }
@@ -310,7 +314,7 @@ private class CodeEmitter(private val data: FunctionData,
                 when (val op = valueToRegister.operand(call)) {
                     is Address     -> asm.movf(size, fpRet, op)
                     is XmmRegister -> asm.movf(size, fpRet, op)
-                    else -> TODO()
+                    else -> throw CodegenException("unknown value type=$op")
                 }
             }
 
@@ -703,7 +707,7 @@ private class CodeEmitter(private val data: FunctionData,
             is GPRegister -> {
                 asm.lea(POINTER_SIZE, gen, dst)
             }
-            else -> TODO()
+            else -> throw CodegenException("unknown dst=$dst")
         }
     }
 

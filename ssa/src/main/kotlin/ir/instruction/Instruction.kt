@@ -6,6 +6,7 @@ import ir.LocalValue
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
+typealias Identity = Int
 
 abstract class Instruction(val id: Identity, val owner: Block, protected val operands: Array<Value>): LListNode() {
     fun usedInstructions(): List<ValueInstruction> {

@@ -41,6 +41,10 @@ class FunctionDataBuilder private constructor(
         return bb.arithmeticBinary(a, op, b)
     }
 
+    override fun tupleArithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): TupleArithmeticBinary {
+        return bb.tupleArithmeticBinary(a, op, b)
+    }
+
     override fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
         return bb.icmp(a, predicate, b)
     }

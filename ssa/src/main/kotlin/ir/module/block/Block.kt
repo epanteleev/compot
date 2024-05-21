@@ -198,6 +198,15 @@ class Block(override val index: Int):
         return withOutput { ArithmeticBinary.make(it, this, ty, a, op, b) }
     }
 
+    override fun tupleArithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): TupleArithmeticBinary {
+        val ty = a.type()
+        require(ty is ArithmeticType) {
+            "should be arithmetic type, but ty=$ty"
+        }
+
+        return withOutput { TupleArithmeticBinary.make(it, this, ty, a, op, b) }
+    }
+
     override fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
         return withOutput { SignedIntCompare.make(it, this, a, predicate, b) }
     }

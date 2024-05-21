@@ -12,6 +12,7 @@ interface InstructionFabric {
     fun neg(value: Value): Neg
     fun not(value: Value): Not
     fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary
+    fun tupleArithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): TupleArithmeticBinary
     fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare
     fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare
     fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare

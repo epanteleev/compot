@@ -10,7 +10,7 @@ import ir.dominance.DominatorTree
 import ir.pass.transform.Mem2RegException
 
 
-
+//TODO Add test for uninitialized values
 //TODO this is not a Reaching Definition Analysis
 abstract class AbstractReachingDefinitionAnalysis(protected val dominatorTree: DominatorTree) {
     protected fun rename(bb: Block, oldValue: Value): Value {

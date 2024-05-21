@@ -430,6 +430,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    override fun visit(binary: TupleArithmeticBinary) {
+        assert(TupleArithmeticBinary.typeCheck(binary)) {
+            "Instruction '${binary.dump()}' requires all operands to be of the same type: a=${binary.first().type()}, b=${binary.second().type()}"
+        }
+    }
+
     override fun visit(memcpy: Memcpy) {
         assert(memcpy.destination() != memcpy.source()) {
             "Inconsistent memcpy instruction: destination=${memcpy.destination()}, source=${memcpy.source()}"
