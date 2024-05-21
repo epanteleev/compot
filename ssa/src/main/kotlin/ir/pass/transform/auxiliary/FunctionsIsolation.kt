@@ -43,10 +43,8 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
 
     private fun isLeafCall(): Boolean {
         for (bb in cfg.blocks) {
-            for (inst in bb) {
-                if (inst is Callable) {
-                    return false
-                }
+            if (bb.last() is Callable) {
+                return false
             }
         }
 

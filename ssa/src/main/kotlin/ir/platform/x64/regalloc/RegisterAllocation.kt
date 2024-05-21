@@ -3,7 +3,6 @@ package ir.platform.x64.regalloc
 import ir.*
 import asm.x64.*
 import ir.global.GlobalSymbol
-import ir.utils.OrderedLocation
 import ir.platform.x64.CallConvention
 import ir.liveness.LiveIntervals
 import ir.platform.x64.CallConvention.gpCalleeSaveRegs
@@ -13,7 +12,7 @@ import ir.platform.x64.CallConvention.xmmCallerSaveRegs
 
 class RegisterAllocation(private val spilledLocalsStackSize: Int,
                          private val registerMap: Map<LocalValue, Operand>,
-                         private val liveness: LiveIntervals
+                         val liveness: LiveIntervals
 ) {
     /** Count of callee save registers in given function. */
     val calleeSaveRegisters: Set<GPRegister> by lazy { //TODO get this from *RegisterList
@@ -39,31 +38,28 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
 
     fun spilledLocalsSize(): Int = spilledLocalsStackSize
 
-    /** Get used caller save registers in given location. */
-    fun callerSaveRegisters(loc: OrderedLocation): SavedContext {
+    fun callerSaveRegisters(operands: Collection<LocalValue>, exclude: Set<LocalValue>): SavedContext {
         val registers = linkedSetOf<GPRegister>()
         val xmmRegisters = linkedSetOf<XmmRegister>()
-        for ((value, reg) in registerMap) {
-            when (reg) {
+        for (value in operands) {
+            if (exclude.contains(value)) {
+                continue
+            }
+
+            when (val reg = registerMap[value]!!) {
                 is GPRegister -> {
                     if (!gpCallerSaveRegs.contains(reg)) {
                         continue
                     }
 
-                    val liveRange = liveness[value]
-                    if (liveRange.end() > loc && loc > liveRange.begin()) {
-                        registers.add(reg)
-                    }
+                    registers.add(reg)
                 }
                 is XmmRegister -> {
                     if (!xmmCallerSaveRegs.contains(reg)) {
                         continue
                     }
 
-                    val liveRange = liveness[value]
-                    if (liveRange.end() > loc && loc > liveRange.begin()) {
-                        xmmRegisters.add(reg)
-                    }
+                    xmmRegisters.add(reg)
                 }
             }
         }

@@ -1,6 +1,7 @@
 package ir.liveness
 
 import ir.LocalValue
+import ir.module.block.Label
 import ir.platform.x64.regalloc.Group
 
 data class LiveIntervalsException(override val message: String): Exception(message)
@@ -39,10 +40,10 @@ class GroupedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
     }
 }
 
-class LiveIntervals(private val liveness: Map<LocalValue, LiveRange>) {
+class LiveIntervals(private val liveIntervals: Map<LocalValue, LiveRange>, private val liveness: Map<Label, LiveInfo>) {
     override fun toString(): String {
         val builder = StringBuilder()
-        for ((v, ranges) in liveness) {
+        for ((v, ranges) in liveIntervals) {
             builder.append("$v -> $ranges\n")
         }
 
@@ -50,7 +51,7 @@ class LiveIntervals(private val liveness: Map<LocalValue, LiveRange>) {
     }
 
     operator fun get(v: LocalValue): LiveRange {
-        val range = liveness[v]
+        val range = liveIntervals[v]
         assert(range != null) {
             "cannot find v=$v"
         }
@@ -58,7 +59,16 @@ class LiveIntervals(private val liveness: Map<LocalValue, LiveRange>) {
         return range as LiveRange
     }
 
+    fun liveOut(bb: Label): Set<LocalValue> {
+        val info = liveness[bb]
+        assert(info != null) {
+            "cannot find liveness information for $bb"
+        }
+
+        return info!!.liveOut()
+    }
+
     operator fun iterator(): Iterator<Map.Entry<LocalValue, LiveRange>> {
-        return liveness.iterator()
+        return liveIntervals.iterator()
     }
 }

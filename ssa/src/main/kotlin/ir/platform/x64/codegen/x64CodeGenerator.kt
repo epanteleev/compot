@@ -11,6 +11,7 @@ import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.identityHashMapOf
 import ir.BoolValue
+import ir.LocalValue
 import ir.global.GlobalConstant
 import ir.instruction.lir.*
 import ir.instruction.lir.Lea
@@ -26,6 +27,8 @@ import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
+import ir.platform.x64.CallConvention.retReg
+import ir.platform.x64.regalloc.SavedContext
 
 
 data class CodegenException(override val message: String): Exception(message)
@@ -43,20 +46,6 @@ private class CodeEmitter(private val data: FunctionData,
                           private val valueToRegister: RegisterAllocation,
 ): IRInstructionVisitor<Unit> {
     private val asm: Assembler = unit.mkFunction(data.prototype.name)
-    private val callableLocations = run { //TODO inefficient
-        val orderedLocation = identityHashMapOf<Callable, OrderedLocation>()
-        var order = 0
-        for (bb in data.blocks.linearScanOrder(data.blocks.loopInfo())) {
-            for ((idx, call) in bb.withIndex()) {
-                if (call is Callable) {
-                    orderedLocation[call] = OrderedLocation(bb, idx, order)
-                }
-                order += 1
-            }
-        }
-
-        orderedLocation
-    }
     private var previous: Block? = null
     private var next: Block? = null
 
@@ -182,12 +171,12 @@ private class CodeEmitter(private val data: FunctionData,
 
         val value = valueToRegister.operand(returnValue.value())
         if (returnType is IntegerType || returnType is PointerType) {
-            asm.movOld(size, value, temp1)
+            asm.movOld(size, value, retReg)
         } else if (returnType is FloatingPointType) {
             when (value) {
-                is Address -> asm.movf(size, value, fpRet)
+                is Address     -> asm.movf(size, value, fpRet)
                 is XmmRegister -> asm.movf(size, value, fpRet)
-                else -> TODO()
+                else -> throw CodegenException("unknown value=$value")
             }
         }
 
@@ -219,6 +208,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     private fun emitCall(call: Callable) {
+        call as TerminateInstruction
         asm.call(call.prototype().name)
 
         val retType = call.type()
@@ -227,6 +217,10 @@ private class CodeEmitter(private val data: FunctionData,
         }
 
         emitReturnValue(call)
+        assert(call.target() === next()) {
+            // This is a bug in the compiler if this assertion fails
+            "expected invariant failed: call.target=${call.target()}, next=${next()}"
+        }
     }
 
     override fun visit(voidCall: VoidCall) {
@@ -268,8 +262,8 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(loadst: LoadFromStack) {
         val origin = valueToRegister.operand(loadst.origin())
-        val index = valueToRegister.operand(loadst.index())
-        val dst = valueToRegister.operand(loadst)
+        val index  = valueToRegister.operand(loadst.index())
+        val dst    = valueToRegister.operand(loadst)
 
         LoadFromStackCodegen(loadst.type(), asm)(dst, origin, index)
     }
@@ -284,7 +278,6 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(call: Call) {
         emitCall(call)
-        emitReturnValue(call)
     }
 
     override fun visit(flag2Int: Flag2Int) {
@@ -305,19 +298,19 @@ private class CodeEmitter(private val data: FunctionData,
             return
         }
 
+        call as TerminateValueInstruction
         when (retType) {
             is IntegerType, is PointerType, is BooleanType -> {
                 retType as NonTrivialType
                 val size = retType.size()
-                call as TerminateValueInstruction
-                asm.movOld(size, rax, valueToRegister.operand(call))
+
+                asm.movOld(size, retReg, valueToRegister.operand(call))
             }
 
             is FloatingPointType -> {
                 val size = retType.size()
-                call as TerminateValueInstruction
                 when (val op = valueToRegister.operand(call)) {
-                    is Address -> asm.movf(size, fpRet, op)
+                    is Address     -> asm.movf(size, fpRet, op)
                     is XmmRegister -> asm.movf(size, fpRet, op)
                     else -> TODO()
                 }
@@ -562,9 +555,27 @@ private class CodeEmitter(private val data: FunctionData,
         MoveByIndexCodegen(type, movIdx.type(), asm)(destination, source, index)
     }
 
+    fun getState(call: Callable): SavedContext {
+        // Any callable instruction is TerminateInstruction
+        // so that we can easily get the caller save registers
+        // from the live-out of the block
+        call as Instruction
+        val liveOut = valueToRegister.liveness.liveOut(call.owner())
+        val exclude = if (call is LocalValue) {
+            // Exclude call from liveOut
+            // because this is value haven't been existed when the call is executed
+            setOf(call)
+        } else {
+            setOf()
+        }
+
+        return valueToRegister.callerSaveRegisters(liveOut, exclude)
+    }
+
     override fun visit(downStackFrame: DownStackFrame) {
-        val sdf = callableLocations[downStackFrame.call()]
-        val context = valueToRegister.callerSaveRegisters(sdf!!)
+        val call = downStackFrame.call()
+        val context = getState(call)
+
         for (arg in context.savedRegisters) {
             asm.push(POINTER_SIZE, arg)
         }
@@ -580,8 +591,8 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(upStackFrame: UpStackFrame) {
-        val usf = callableLocations[upStackFrame.call()]!!
-        val context = valueToRegister.callerSaveRegisters(usf)
+        val call = upStackFrame.call()
+        val context = getState(call)
 
         val size = context.adjustStackSize()
         if (size != 0) {
