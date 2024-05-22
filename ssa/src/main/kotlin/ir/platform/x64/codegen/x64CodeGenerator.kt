@@ -158,7 +158,12 @@ private class CodeEmitter(private val data: FunctionData,
             ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.And -> AndCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Or  -> OrCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Div -> DivCodegen(binary.type(), asm)(dst, first, second)
+            // Floating point division ignores the second operand.
+            ArithmeticBinaryOp.Div -> {
+                asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+                DivCodegen(binary.type(), rdx, asm)(dst, first, second)
+                asm.pop(POINTER_SIZE, rdx)
+            }
             else -> println("Unimplemented: ${binary.op}")
         }
     }
@@ -276,7 +281,14 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(binary: TupleDiv) {
-        TODO()
+        val first  = valueToRegister.operand(binary.first())
+        val second = valueToRegister.operand(binary.second())
+        //val quotient = valueToRegister.operand(binary)
+        //val reminder = valueToRegister.operand(binary, 1)
+
+        asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+        DivCodegen(binary.type().innerType(1) as ArithmeticType, rdx, asm)(rdx, first, second)
+        asm.pop(POINTER_SIZE, rdx)
     }
 
     override fun visit(proj: Projection) {

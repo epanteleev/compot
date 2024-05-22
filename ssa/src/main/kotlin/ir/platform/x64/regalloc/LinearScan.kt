@@ -2,9 +2,11 @@ package ir.platform.x64.regalloc
 
 import ir.LocalValue
 import asm.x64.Operand
+import common.forEachWith
 import ir.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
+import ir.instruction.TupleInstruction
 import ir.liveness.GroupedLiveIntervals
 import ir.liveness.LiveIntervals
 import ir.types.NonTrivialType
@@ -18,7 +20,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
 
     init {
         allocRegistersForArgumentValues()
-        handleArguments()
+        handleCallArguments()
 
         liveRangesGroup = Precoloring.evaluate(liveRanges, registerMap)
 
@@ -36,16 +38,15 @@ class LinearScan private constructor(private val data: FunctionData, private val
         }
     }
 
-    private fun handleArguments() {
+    private fun handleCallArguments() {
        for (bb in data.blocks) {
-           for (inst in bb) {
-               if (inst !is Callable) {
-                   continue
-               }
-               val allocation = CalleeArgumentAllocator.alloc(inst.arguments().toList()) //TODO allocation
-               for ((operand, arg) in allocation zip inst.arguments()) { //todo zip
-                   registerMap[arg as LocalValue] = operand
-               }
+           val inst = bb.last()
+           if (inst !is Callable) {
+               continue
+           }
+           val allocation = CalleeArgumentAllocator.alloc(inst.arguments().toList()) //TODO allocation
+           allocation.forEachWith(inst.arguments()) { operand, arg ->
+               registerMap[arg as LocalValue] = operand
            }
        }
     }
@@ -64,6 +65,11 @@ class LinearScan private constructor(private val data: FunctionData, private val
         for ((group, range) in liveRangesGroup) {
             val arg = group.precolored
             if (arg != null || group.stackAllocGroup) {
+                continue
+            }
+            if (group.first() is TupleInstruction) {
+                // Skip tuple instructions
+                // Register allocation for tuple instructions will be done for their projections
                 continue
             }
 

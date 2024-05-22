@@ -9,10 +9,6 @@ import ir.module.block.Block
 typealias Identity = Int
 
 abstract class Instruction(val id: Identity, val owner: Block, protected val operands: Array<Value>): LListNode() {
-    fun usedInstructions(): List<ValueInstruction> {
-        return operands.filterIsInstanceTo<ValueInstruction, MutableList<ValueInstruction>>(arrayListOf())
-    }
-
     override fun next(): Instruction? = next as Instruction?
     override fun prev(): Instruction? = prev as Instruction?
 
