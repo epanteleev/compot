@@ -5,6 +5,10 @@ class TupleType(val tuple: Array<NonTrivialType>): TrivialType {
         return "{${tuple.joinToString()}}"
     }
 
+    fun innerType(index: Int): NonTrivialType {
+        return tuple[index]
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

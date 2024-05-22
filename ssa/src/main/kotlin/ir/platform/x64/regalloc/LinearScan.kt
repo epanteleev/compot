@@ -2,10 +2,12 @@ package ir.platform.x64.regalloc
 
 import ir.LocalValue
 import asm.x64.Operand
+import ir.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
 import ir.liveness.GroupedLiveIntervals
 import ir.liveness.LiveIntervals
+import ir.types.NonTrivialType
 
 
 class LinearScan private constructor(private val data: FunctionData, private val liveRanges: LiveIntervals) {
@@ -67,7 +69,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
 
             active.entries.removeIf {
                 if (liveRangesGroup[it.key].end() <= range.begin()) {
-                    pool.free(it.value, it.key.first().type().size())
+                    pool.free(it.value, it.key.first().asType<NonTrivialType>().size())
                     return@removeIf true
                 } else {
                     return@removeIf false

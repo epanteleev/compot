@@ -5,11 +5,19 @@ import ir.instruction.Instruction
 
 
 interface Value {
-    fun type(): NonTrivialType
+    fun type(): Type
 
     companion object {
         val UNDEF: UndefinedValue = UndefinedValue()
     }
+}
+
+inline fun<reified T> Value.asType(): T {
+    val t = type()
+    if (t !is T) {
+        throw RuntimeException("Cannot cast $t to ${T::class}")
+    }
+    return t
 }
 
 interface LocalValue: Value {

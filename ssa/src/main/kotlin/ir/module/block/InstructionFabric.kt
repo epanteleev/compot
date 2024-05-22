@@ -12,7 +12,7 @@ interface InstructionFabric {
     fun neg(value: Value): Neg
     fun not(value: Value): Not
     fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary
-    fun tupleArithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): TupleArithmeticBinary
+    fun tupleDiv(a: Value, b: Value): TupleDiv
     fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare
     fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare
     fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare
@@ -44,6 +44,7 @@ interface InstructionFabric {
     fun int2ptr(value: Value): Int2Pointer
     fun ptr2int(value: Value, toType: IntegerType): Pointer2Int
     fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant)
+    fun proj(tuple: TupleInstruction, index: Int): Projection
 }
 
 interface InternalInstructionFabric {

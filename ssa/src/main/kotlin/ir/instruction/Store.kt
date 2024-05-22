@@ -1,6 +1,7 @@
 package ir.instruction
 
 import ir.Value
+import ir.asType
 import ir.types.*
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
@@ -56,7 +57,7 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
                 "inconsistent types: pointer=$pointer:$pointerType, value=$value:$valueType"
             }
 
-            return registerUser(Store(id, owner, pointer, value, valueType), pointer, value)
+            return registerUser(Store(id, owner, pointer, value, value.asType()), pointer, value)
         }
 
         private fun isAppropriateTypes(pointerType: Type, valueType: Type): Boolean {

@@ -198,13 +198,13 @@ class Block(override val index: Int):
         return withOutput { ArithmeticBinary.make(it, this, ty, a, op, b) }
     }
 
-    override fun tupleArithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): TupleArithmeticBinary {
+    override fun tupleDiv(a: Value, b: Value): TupleDiv {
         val ty = a.type()
         require(ty is ArithmeticType) {
             "should be arithmetic type, but ty=$ty"
         }
 
-        return withOutput { TupleArithmeticBinary.make(it, this, ty, a, op, b) }
+        return withOutput { TupleDiv.make(it, this, ty, a, b) }
     }
 
     override fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
@@ -334,6 +334,10 @@ class Block(override val index: Int):
 
     override fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant) {
         withOutput { Memcpy.make(it, this, dst, src, length) }
+    }
+
+    override fun proj(tuple: TupleInstruction, index: Int): Projection {
+        return withOutput { Projection.make(it, this, tuple, index) }
     }
 
     override fun downStackFrame(callable: Callable): DownStackFrame {

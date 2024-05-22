@@ -40,7 +40,7 @@ class Int2Pointer private constructor(id: Identity, owner: Block, value: Value):
             return registerUser(Int2Pointer(id, owner, value), value)
         }
 
-        private fun isAppropriateType(valueType: NonTrivialType): Boolean {
+        private fun isAppropriateType(valueType: Type): Boolean {
             return valueType is IntegerType
         }
 

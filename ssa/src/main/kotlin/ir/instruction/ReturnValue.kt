@@ -1,6 +1,7 @@
 package ir.instruction
 
 import ir.Value
+import ir.asType
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.types.NonTrivialType
@@ -15,7 +16,7 @@ class ReturnValue private constructor(id: Identity, owner: Block, value: Value):
     }
 
     fun type(): NonTrivialType {
-        return value().type()
+        return value().asType()
     }
 
     fun value(): Value {

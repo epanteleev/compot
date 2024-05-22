@@ -5,6 +5,7 @@ import ir.types.Type
 import asm.x64.Address
 import asm.x64.GPRegister.*
 import ir.LocalValue
+import ir.asType
 import ir.instruction.Alloc
 import ir.instruction.ValueInstruction
 import ir.types.NonTrivialType
@@ -50,7 +51,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     /** Spilled value. */
     private fun valueInstructionAlloc(value: LocalValue): Address {
-        val typeSize = getTypeSize(value.type())
+        val typeSize = getTypeSize(value.asType())
 
         val freeSlot = freeStackSlots[typeSize]
         if (freeSlot != null) {

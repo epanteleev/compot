@@ -8,10 +8,10 @@ import ir.types.TupleType
 import ir.types.Type
 
 
-class TupleArithmeticBinary private constructor(id: Identity, owner: Block, tp: TupleType, a: Value, val op: ArithmeticBinaryOp, b: Value) :
+class TupleDiv private constructor(id: Identity, owner: Block, tp: TupleType, a: Value, b: Value) :
     TupleInstruction(id, owner, tp, arrayOf(a, b)) {
     override fun dump(): String {
-        return "%${name()} = $op $tp ${first()}, ${second()}"
+        return "%${name()} = $NAME $tp, ${first().type()} ${first()}, ${second().type()} ${second()}"
     }
 
     override fun type(): TupleType {
@@ -39,22 +39,26 @@ class TupleArithmeticBinary private constructor(id: Identity, owner: Block, tp: 
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, type: ArithmeticType, a: Value, op: ArithmeticBinaryOp, b: Value): TupleArithmeticBinary {
+        const val NAME = "div"
+
+        fun make(id: Identity, owner: Block, type: ArithmeticType, a: Value, b: Value): TupleDiv {
             val aType = a.type()
             val bType = b.type()
-            val tp = TupleType(arrayOf(type, Type.U1))
+            val tp = TupleType(arrayOf(type, type))
             require(isAppropriateTypes(tp, aType, bType)) {
                 "incorrect types in '$id' but type=$type, a=$a:$aType, b=$b:$bType"
             }
 
-            return registerUser(TupleArithmeticBinary(id, owner, tp, a, op, b), a, b)
+            return registerUser(TupleDiv(id, owner, tp, a, b), a, b)
         }
 
         private fun isAppropriateTypes(tp: TupleType, aType: Type, bType: Type): Boolean {
-            return aType == tp && bType == tp
+            return aType == tp.innerType(0) &&
+                    bType == tp.innerType(1) &&
+                    tp.innerType(1) == tp.innerType(0)
         }
 
-        fun typeCheck(binary: TupleArithmeticBinary): Boolean {
+        fun typeCheck(binary: TupleDiv): Boolean {
             return isAppropriateTypes(binary.type(), binary.first().type(), binary.second().type())
         }
     }

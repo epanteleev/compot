@@ -50,5 +50,6 @@ interface IRInstructionVisitor<T> {
     fun visit(store: StoreOnStack): T
     fun visit(loadst: LoadFromStack): T
     fun visit(leaStack: LeaStack): T
-    fun visit(binary: TupleArithmeticBinary): T
+    fun visit(binary: TupleDiv): T
+    fun visit(proj: Projection): T
 }

@@ -1,17 +1,19 @@
 package ir.instruction
 
-import ir.Value
+import ir.*
 import ir.module.block.Block
 import ir.types.TrivialType
+import ir.types.TupleType
 
 
 abstract class TupleInstruction(id: Identity,
                        owner: Block,
                        protected val tp: TrivialType,
                        operands: Array<Value>):
-    Instruction(id, owner, operands) {
+    Instruction(id, owner, operands), LocalValue {
+    override var usedIn: MutableList<Instruction> = mutableListOf()
 
-    fun name(): String {
+    override fun name(): String {
         return "${owner.index}x${id}"
     }
 
@@ -19,7 +21,7 @@ abstract class TupleInstruction(id: Identity,
         return "%${name()}"
     }
 
-    abstract fun type(): TrivialType
+    abstract override fun type(): TupleType
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

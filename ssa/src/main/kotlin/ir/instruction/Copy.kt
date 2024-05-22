@@ -1,6 +1,7 @@
 package ir.instruction
 
 import ir.Value
+import ir.asType
 import ir.types.Type
 import ir.types.PrimitiveType
 import ir.instruction.utils.IRInstructionVisitor
@@ -8,7 +9,7 @@ import ir.module.block.Block
 
 
 class Copy private constructor(id: Identity, owner: Block, origin: Value):
-    ValueInstruction(id, owner, origin.type(), arrayOf(origin)) {
+    ValueInstruction(id, owner, origin.asType(), arrayOf(origin)) {
 
     override fun type(): PrimitiveType {
         return tp as PrimitiveType

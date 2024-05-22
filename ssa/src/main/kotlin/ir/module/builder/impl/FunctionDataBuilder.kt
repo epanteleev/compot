@@ -41,8 +41,8 @@ class FunctionDataBuilder private constructor(
         return bb.arithmeticBinary(a, op, b)
     }
 
-    override fun tupleArithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): TupleArithmeticBinary {
-        return bb.tupleArithmeticBinary(a, op, b)
+    override fun tupleDiv(a: Value, b: Value): TupleDiv {
+        return bb.tupleDiv(a, b)
     }
 
     override fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
@@ -175,6 +175,10 @@ class FunctionDataBuilder private constructor(
 
     override fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant) {
         bb.memcpy(dst, src, length)
+    }
+
+    override fun proj(tuple: TupleInstruction, index: Int): Projection {
+        return bb.proj(tuple, index)
     }
 
     companion object {

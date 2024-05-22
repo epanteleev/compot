@@ -6,6 +6,7 @@ import ir.module.block.Block
 import ir.types.IntegerType
 import ir.types.NonTrivialType
 import ir.types.PointerType
+import ir.types.Type
 
 
 class Pointer2Int private constructor(id: Identity, owner: Block, toType: IntegerType, value: Value):
@@ -42,7 +43,7 @@ class Pointer2Int private constructor(id: Identity, owner: Block, toType: Intege
             return registerUser(Pointer2Int(id, owner, toType, value), value)
         }
 
-        private fun isAppropriateType(valueType: NonTrivialType): Boolean {
+        private fun isAppropriateType(valueType: Type): Boolean {
             return valueType is PointerType
         }
 

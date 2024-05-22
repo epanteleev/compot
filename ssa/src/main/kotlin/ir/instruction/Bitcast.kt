@@ -40,8 +40,11 @@ class Bitcast private constructor(id: Identity, owner: Block, toType: NonTrivial
             return registerUser(Bitcast(id, owner, toType, value), value)
         }
 
-        private fun isAppropriateType(toType: NonTrivialType, valueType: NonTrivialType): Boolean {
-            return valueType.size() == toType.size() && toType !is FloatingPointType
+        private fun isAppropriateType(toType: Type, valueType: Type): Boolean {
+            return toType is NonTrivialType &&
+                    valueType is NonTrivialType &&
+                    valueType.size() == toType.size() &&
+                    toType !is FloatingPointType
         }
 
         fun typeCheck(bitcast: Bitcast): Boolean {

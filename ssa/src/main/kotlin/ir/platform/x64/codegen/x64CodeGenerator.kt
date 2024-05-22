@@ -11,6 +11,7 @@ import ir.instruction.Call
 import asm.x64.GPRegister.*
 import ir.BoolValue
 import ir.LocalValue
+import ir.asType
 import ir.global.GlobalConstant
 import ir.instruction.lir.*
 import ir.instruction.lir.Lea
@@ -274,8 +275,12 @@ private class CodeEmitter(private val data: FunctionData,
         GetElementPtrCodegenForAlloc(Type.Ptr, leaStack.loadedType, asm)(dest, sourceOperand, index)
     }
 
-    override fun visit(binary: TupleArithmeticBinary) {
+    override fun visit(binary: TupleDiv) {
         TODO()
+    }
+
+    override fun visit(proj: Projection) {
+        TODO("Not yet implemented")
     }
 
     override fun visit(call: Call) {
@@ -364,7 +369,7 @@ private class CodeEmitter(private val data: FunctionData,
         var first  = valueToRegister.operand(icmp.first())
         val second = valueToRegister.operand(icmp.second())
         val dst    = valueToRegister.operand(icmp)
-        val size = icmp.first().type().size()
+        val size = icmp.first().asType<NonTrivialType>().size()
 
         first = if (first is Address2 || first is ImmInt) { //TODO???
             asm.movOld(size, first, temp1)
@@ -387,7 +392,7 @@ private class CodeEmitter(private val data: FunctionData,
         var first  = valueToRegister.operand(pcmp.first())
         val second = valueToRegister.operand(pcmp.second())
         val dst    = valueToRegister.operand(pcmp)
-        val size = pcmp.first().type().size()
+        val size = pcmp.first().asType<NonTrivialType>().size()
 
         first = if (first is Address2) {
             asm.movOld(size, first, temp1)
@@ -405,7 +410,7 @@ private class CodeEmitter(private val data: FunctionData,
         var first  = valueToRegister.operand(ucmp.first())
         val second = valueToRegister.operand(ucmp.second())
         val dst    = valueToRegister.operand(ucmp)
-        val size = ucmp.first().type().size()
+        val size = ucmp.first().asType<NonTrivialType>().size()
 
         first = if (first is Address2) {
             asm.movOld(size, first, temp1)
@@ -425,7 +430,7 @@ private class CodeEmitter(private val data: FunctionData,
         val first  = valueToRegister.operand(fcmp.first())
         val second = valueToRegister.operand(fcmp.second())
         val dst    = valueToRegister.operand(fcmp)
-        val size = fcmp.first().type().size()
+        val size = fcmp.first().asType<NonTrivialType>().size()
 
         when (first) {
             is XmmRegister -> {
@@ -554,7 +559,7 @@ private class CodeEmitter(private val data: FunctionData,
         val type = move.source().type() as PrimitiveType
         val movIdx = move.index()
         val index = valueToRegister.operand(movIdx)
-        MoveByIndexCodegen(type, movIdx.type(), asm)(destination, source, index)
+        MoveByIndexCodegen(type, movIdx.asType(), asm)(destination, source, index)
     }
 
     fun getState(call: Callable): SavedContext {
@@ -619,7 +624,7 @@ private class CodeEmitter(private val data: FunctionData,
         if (source is Alloc) {
             GetElementPtrCodegenForAlloc(gep.type(), gep.basicType, asm)(dest, sourceOperand, index)
         } else {
-            GetElementPtrCodegen(gep.type(), gep.index().type().size(), gep.basicType, asm)(dest, sourceOperand, index)
+            GetElementPtrCodegen(gep.type(), gep.index().asType<NonTrivialType>().size(), gep.basicType, asm)(dest, sourceOperand, index)
         }
     }
 

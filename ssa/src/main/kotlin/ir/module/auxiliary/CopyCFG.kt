@@ -379,12 +379,16 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<L
         return bb().leaStack(origin, leaStack.type(), index)
     }
 
-    override fun visit(binary: TupleArithmeticBinary): LocalValue? {
+    override fun visit(binary: TupleDiv): LocalValue {
         val first  = mapUsage<Value>(binary.first())
         val second = mapUsage<Value>(binary.second())
 
-        bb().tupleArithmeticBinary(first, binary.op, second) //todo put in a hashmap
-        return null
+        return bb().tupleDiv(first,  second)
+    }
+
+    override fun visit(proj: Projection): LocalValue {
+        val origin = mapUsage<TupleInstruction>(proj.tuple())
+        return bb().proj(origin, proj.index())
     }
 
     override fun visit(memcpy: Memcpy): ValueInstruction? {
