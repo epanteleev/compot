@@ -34,6 +34,18 @@ class TupleDiv private constructor(id: Identity, owner: Block, tp: TupleType, a:
         return operands[1]
     }
 
+    fun quotients(): List<Projection> {
+        val projs = arrayListOf<Projection>()
+        proj(0) { projs.add(it) }
+        return projs
+    }
+
+    fun remainders(): List<Projection> {
+        val projs = arrayListOf<Projection>()
+        proj(1) { projs.add(it) }
+        return projs
+    }
+
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }

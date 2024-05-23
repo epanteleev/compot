@@ -283,8 +283,7 @@ private class CodeEmitter(private val data: FunctionData,
     override fun visit(binary: TupleDiv) {
         val first  = valueToRegister.operand(binary.first())
         val second = valueToRegister.operand(binary.second())
-        //val quotient = valueToRegister.operand(binary)
-        //val reminder = valueToRegister.operand(binary, 1)
+        val quotients = binary.quotients()
 
         asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
         DivCodegen(binary.type().innerType(1) as ArithmeticType, rdx, asm)(rdx, first, second)

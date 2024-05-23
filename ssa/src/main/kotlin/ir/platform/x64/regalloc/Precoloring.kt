@@ -4,6 +4,8 @@ import ir.LocalValue
 import asm.x64.Operand
 import ir.instruction.Copy
 import ir.instruction.Phi
+import ir.instruction.Projection
+import ir.instruction.TupleInstruction
 import ir.liveness.GroupedLiveIntervals
 import ir.liveness.LiveRange
 import ir.liveness.LiveIntervals
@@ -26,27 +28,48 @@ class Precoloring private constructor(private val intervals: LiveIntervals, priv
         return GroupedLiveIntervals(map)
     }
 
-    private fun mergePhiOperands() {
-        for ((value, range) in intervals) {
-            if (value !is Phi) {
+    private fun handlePhiOperands(value: Phi, range: LiveRange) {
+        val group = arrayListOf<LocalValue>(value)
+        visited.add(value)
+        var liveRange = range
+        for (used in value.operands()) {
+            if (used !is LocalValue) {
                 continue
             }
+            assert(used is Copy) { "expect this invariant: used=$used" }
 
+            liveRange = liveRange.merge(intervals[used])
+            group.add(used)
+            visited.add(used)
+        }
+
+        groups[Group(group, null)] = liveRange
+    }
+
+    private fun handleTuple(value: TupleInstruction, range: LiveRange) {
+        visited.add(value)
+        for (i in value.usedIn().indices) {
             val group = arrayListOf<LocalValue>(value)
-            visited.add(value)
-            var liveRange = range
-            for (used in value.operands()) {
-                if (used !is LocalValue) {
-                    continue
+            value.proj(i) { proj ->
+                if (visited.contains(proj)) {
+                    return@proj
                 }
-                assert(used is Copy) { "expect this invariant: used=$used" }
 
-                liveRange = liveRange.merge(intervals[used])
-                group.add(used)
-                visited.add(used)
+                val op = precolored[proj]
+
+                group.add(proj)
+                groups[Group(group, op)] = range
+                visited.add(proj)
             }
+        }
+    }
 
-            groups[Group(group, null)] = liveRange
+    private fun mergePhiOperands() {
+        for ((value, range) in intervals) {
+            when (value) {
+                is Phi              -> handlePhiOperands(value, range)
+                is TupleInstruction -> handleTuple(value, range)
+            }
         }
     }
 

@@ -21,6 +21,15 @@ abstract class TupleInstruction(id: Identity,
         return "%${name()}"
     }
 
+    fun proj(index: Int, fn: (Projection) -> Unit) {
+        for (user in usedIn()) {
+            user as Projection
+            if (user.index() == index) {
+                fn(user)
+            }
+        }
+    }
+
     abstract override fun type(): TupleType
 
     override fun equals(other: Any?): Boolean {

@@ -6,7 +6,7 @@ import ir.platform.x64.codegen.utils.*
 import ir.instruction.ArithmeticBinaryOp
 
 
-data class DivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Assembler): GPOperandsVisitorBinaryOp,
+data class DivCodegen(val type: ArithmeticType, val rem: GPRegister?, val asm: Assembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
     private val size: Int = type.size()
 
