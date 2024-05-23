@@ -102,6 +102,12 @@ abstract class ShlangTests: CommonCTest() {
         val result = runCTest("shlang/arithmetic0", listOf("runtime/runtime.c"), options())
         assert(result, "4\n")
     }
+
+    @Test
+    fun testSizeof0() {
+        val result = runCTest("shlang/sizeof0", listOf("runtime/runtime.c"), options())
+        assertEquals(result.exitCode, 0)
+    }
 }
 
 class ShlangTestsO0: ShlangTests() {
