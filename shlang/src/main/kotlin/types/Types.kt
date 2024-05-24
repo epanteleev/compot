@@ -4,8 +4,12 @@ package types
 data class TypeInferenceException(override val message: String) : Exception(message)
 
 interface CType {
-   fun baseType(): BaseType
-   fun qualifiers(): List<TypeProperty>
+    fun baseType(): BaseType
+    fun qualifiers(): List<TypeProperty>
+
+    fun size(): Int {
+        return baseType().size()
+    }
 
     companion object {
         val UNRESOlVED: CType = NoType("<unresolved>")
@@ -40,6 +44,7 @@ interface CType {
                         CPrimitive.FLOAT -> return FLOAT
                     }
                 }
+
                 CPrimitive.SHORT -> {
                     when (type2.baseType()) {
                         CPrimitive.INT -> return INT
@@ -50,6 +55,7 @@ interface CType {
                         CPrimitive.FLOAT -> return FLOAT
                     }
                 }
+
                 CPrimitive.INT -> {
                     when (type2.baseType()) {
                         CPrimitive.CHAR -> return INT
@@ -60,6 +66,7 @@ interface CType {
                         CPrimitive.FLOAT -> return FLOAT
                     }
                 }
+
                 CPrimitive.LONG -> {
                     when (type2.baseType()) {
                         CPrimitive.CHAR -> return LONG
@@ -70,6 +77,7 @@ interface CType {
                         CPrimitive.FLOAT -> return FLOAT
                     }
                 }
+
                 CPrimitive.FLOAT -> {
                     when (type2.baseType()) {
                         CPrimitive.CHAR -> return FLOAT
@@ -80,6 +88,7 @@ interface CType {
                         CPrimitive.LONG -> return DOUBLE
                     }
                 }
+
                 CPrimitive.DOUBLE -> {
                     when (type2.baseType()) {
                         CPrimitive.CHAR -> return DOUBLE
@@ -90,6 +99,7 @@ interface CType {
                         CPrimitive.LONG -> return DOUBLE
                     }
                 }
+
                 else -> throw RuntimeException("Unknown type $type1, $type2")
             }
             throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")

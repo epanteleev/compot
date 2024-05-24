@@ -13,6 +13,7 @@ import ir.global.StringLiteralGlobal
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
+import parser.nodes.visitors.Resolvable
 
 
 class IrGenFunction(private val moduleBuilder: ModuleBuilder,
@@ -238,7 +239,21 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             is Cast         -> visitCast(expression)
             is ArrayAccess  -> visitArrayAccess(expression, isRvalue)
             is StringNode   -> visitStringNode(expression)
+            is SizeOf       -> visitSizeOf(expression)
             else -> throw IRCodeGenError("Unknown expression: $expression")
+        }
+    }
+
+    private fun visitSizeOf(sizeOf: SizeOf): Value {
+        val type = sizeOf.resolveType(typeHolder)
+        when (val expr = sizeOf.expr) {
+            is TypeName, is VarNode -> {
+                expr as Resolvable
+                val resolved = expr.resolveType(typeHolder)
+                return Constant.of(Type.I64, resolved.size())
+            }
+            else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
+
         }
     }
 

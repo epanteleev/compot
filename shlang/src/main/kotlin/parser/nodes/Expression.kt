@@ -353,7 +353,7 @@ data class SizeOf(val expr: Node) : Expression() {
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         expr as Resolvable
-        return@memoize expr.resolveType(typeHolder)
+        return@memoize CType.INT
     }
 }
 
