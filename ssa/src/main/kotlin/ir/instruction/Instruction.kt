@@ -18,7 +18,7 @@ abstract class Instruction(val id: Identity, val owner: Block, protected val ope
         return operands
     }
 
-    fun update(newUsages: Collection<Value>) {
+    fun update(newUsages: Collection<Value>) { //TODO must be removed
         for ((i, v) in newUsages.withIndex()) {
             update(i, v)
         }

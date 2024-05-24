@@ -1,0 +1,38 @@
+extern void @printInt(i32)
+
+define i32 @main() {
+  %int = call i32 @get_constant(32: i32) br label %next
+
+next:
+  call void @printInt(%int: i32) br label %end
+
+end:
+  ret i32 0
+}
+
+;int get_constant(int i) {
+;    int ret;
+;    if (i == 32) {
+;        ret = i;
+;    }
+;    return ret;
+;}
+define i32 @get_constant(%i: i32) {
+entry:
+  %1 = alloc i32
+
+  %eq = icmp eq i32 %i, 32
+  br u1 %eq label %if, label %else
+
+if:
+  store ptr %1, i32 %i
+  br label %end
+
+else:
+; %1 = undef
+  br label %end
+
+end:
+  %2 = load i32 %1
+  ret i32 %2
+}

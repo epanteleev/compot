@@ -11,6 +11,7 @@ import ir.instruction.Call
 import asm.x64.GPRegister.*
 import ir.BoolValue
 import ir.LocalValue
+import ir.UndefinedValue
 import ir.asType
 import ir.global.GlobalConstant
 import ir.instruction.lir.*
@@ -550,6 +551,10 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(copy: Copy) {
+        if (copy.origin() is UndefinedValue) {
+            // Do nothing. UB is UB
+            return
+        }
         val result  = valueToRegister.operand(copy)
         val operand = valueToRegister.operand(copy.origin())
         CopyCodegen(copy.type(), asm)(result, operand)

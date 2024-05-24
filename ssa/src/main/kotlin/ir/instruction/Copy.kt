@@ -1,5 +1,6 @@
 package ir.instruction
 
+import ir.UndefinedValue
 import ir.Value
 import ir.asType
 import ir.types.Type
@@ -48,6 +49,11 @@ class Copy private constructor(id: Identity, owner: Block, origin: Value):
         }
 
         private fun isAppropriateType(originType: Type, origin: Value): Boolean {
+            if (origin is UndefinedValue) {
+                // Copy instruction can copy UndefinedValue
+                return true
+            }
+            
             return originType is PrimitiveType && origin.type() == originType
         }
     }

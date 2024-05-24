@@ -48,10 +48,7 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
 
     private fun completePhis(bbToMapValues: ReachingDefinition, bb: Block) {
         fun renameValues(newUsages: MutableList<Value>, block: Block, v: Value, expectedType: Type) {
-            val newValue = when (v) {
-                is LocalValue -> bbToMapValues.rename(block, v, expectedType)
-                else -> v
-            }
+            val newValue = bbToMapValues.tryRename(block, v, expectedType)?: Value.UNDEF
             newUsages.add(newValue)
         }
 
