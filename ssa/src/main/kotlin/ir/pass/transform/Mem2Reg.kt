@@ -37,13 +37,17 @@ object Mem2RegFabric: PassFabric {
 }
 
 private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: JoinPointSet) {
-    private fun insertPhis() {
+    private fun insertPhis(): Int {
+        var insertedPhis = 0
         for ((bb, vSet) in joinSet) {
             bb as Block
             for (v in vSet) {
+                insertedPhis++
                 bb.prepend { it.uncompletedPhi(v.allocatedType as PrimitiveType, v) }
             }
         }
+
+        return insertedPhis
     }
 
     private fun completePhis(bbToMapValues: ReachingDefinition, bb: Block) {
@@ -59,6 +63,7 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
         }
     }
 
+    // Remove unused phis
     private fun removeRedundantPhis(deadPool: MutableSet<Instruction>, bb: Block) {
         fun filter(instruction: Instruction): Boolean {
             if (instruction !is Phi) {
@@ -77,9 +82,13 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
     }
 
     fun pass(dominatorTree: DominatorTree) {
-        insertPhis()
-
+        val insertedPhis = insertPhis()
         val bbToMapValues = ReachingDefinitionAnalysis.run(cfg, dominatorTree)
+
+        if (insertedPhis == 0) {
+            // No phis were inserted, so no need to make steps further
+            return
+        }
         for (bb in cfg) {
             completePhis(bbToMapValues, bb)
         }
