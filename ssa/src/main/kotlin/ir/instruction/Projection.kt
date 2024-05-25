@@ -6,7 +6,7 @@ import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Projection private constructor(id: Identity, owner: Block, type: NonTrivialType, tuple: TupleInstruction, val index: Int):
+class Projection private constructor(id: Identity, owner: Block, type: NonTrivialType, tuple: TupleInstruction, private val index: Int):
     ValueInstruction(id, owner, type, arrayOf(tuple)) {
 
     override fun type(): PrimitiveType {

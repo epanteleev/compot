@@ -284,15 +284,32 @@ private class CodeEmitter(private val data: FunctionData,
     override fun visit(binary: TupleDiv) {
         val first  = valueToRegister.operand(binary.first())
         val second = valueToRegister.operand(binary.second())
-        val quotients = binary.quotients()
+
+        val quotientOperand = run {
+            val quotient = binary.quotient()
+            if (quotient != null) {
+                valueToRegister.operand(quotient)
+            } else {
+                rax
+            }
+        }
+
+        val remainderOperand = run {
+            val remainder = binary.remainder()
+            if (remainder != null) {
+                valueToRegister.operand(remainder)
+            } else {
+                rdx
+            }
+        }
 
         asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
-        DivCodegen(binary.type().innerType(1) as ArithmeticType, rdx, asm)(rdx, first, second)
+        DivCodegen(binary.type().innerType(1) as ArithmeticType, rdx, asm)(quotientOperand, first, second)
         asm.pop(POINTER_SIZE, rdx)
     }
 
     override fun visit(proj: Projection) {
-        TODO("Not yet implemented")
+        // Skip. Projection must be handled by its user
     }
 
     override fun visit(call: Call) {

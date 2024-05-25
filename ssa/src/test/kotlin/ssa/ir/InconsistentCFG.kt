@@ -3,6 +3,7 @@ package ssa.ir
 import ir.F32Value
 import ir.module.FunctionPrototype
 import ir.I32Value
+import ir.U32Value
 import ir.types.Type
 import kotlin.test.Test
 import org.junit.jupiter.api.assertThrows
@@ -70,6 +71,21 @@ class InconsistentCFG {
                 switchLabel(label)
                 branch(header)
             }
+        }
+
+        assertThrows<ValidateSSAErrorException>{ builder.build() }
+    }
+
+    @Test
+    fun testMultiplyProjections() {
+        val builder = ModuleBuilder.create()
+
+        builder.createFunction("main", Type.U32, arrayListOf()).apply {
+            val tuple = tupleDiv(U32Value(100), U32Value(20))
+
+            proj(tuple, 0)
+            val proj1 = proj(tuple, 0)
+            ret(proj1)
         }
 
         assertThrows<ValidateSSAErrorException>{ builder.build() }

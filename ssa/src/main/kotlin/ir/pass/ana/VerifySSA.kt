@@ -434,6 +434,18 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         assert(TupleDiv.typeCheck(binary)) {
             "Instruction '${binary.dump()}' requires all operands to be of the same type: a=${binary.first().type()}, b=${binary.second().type()}"
         }
+
+        val projSet = hashSetOf<Int>()
+        for (proj in binary.usedIn()) {
+            assert(proj is Projection) {
+                "Operand '${proj}' must be a '${Projection.NAME}'"
+            }
+            proj as Projection
+            val unchanged = projSet.add(proj.index())
+            assert(unchanged) {
+                "Projection '${proj}' is duplicated in '${binary.dump()}'"
+            }
+        }
     }
 
     override fun visit(memcpy: Memcpy) {

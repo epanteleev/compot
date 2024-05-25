@@ -6,7 +6,7 @@ import ir.platform.x64.codegen.utils.*
 import ir.instruction.ArithmeticBinaryOp
 
 
-data class DivCodegen(val type: ArithmeticType, val rem: GPRegister?, val asm: Assembler): GPOperandsVisitorBinaryOp,
+data class DivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: Assembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
     private val size: Int = type.size()
 
@@ -47,7 +47,9 @@ data class DivCodegen(val type: ArithmeticType, val rem: GPRegister?, val asm: A
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
+        val imm = first.value() / second.value()
+        asm.mov(size, Imm32(imm), dst)
+        asm.mov(size, Imm32(first.value() % second.value()), rem!!)
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {

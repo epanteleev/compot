@@ -48,19 +48,18 @@ class Precoloring private constructor(private val intervals: LiveIntervals, priv
 
     private fun handleTuple(value: TupleInstruction, range: LiveRange) {
         visited.add(value)
-        for (i in value.usedIn().indices) {
-            val group = arrayListOf<LocalValue>(value)
-            value.proj(i) { proj ->
-                if (visited.contains(proj)) {
-                    return@proj
-                }
 
-                val op = precolored[proj]
-
-                group.add(proj)
-                groups[Group(group, op)] = range
-                visited.add(proj)
+        value.usedIn().forEach { proj ->
+            proj as Projection
+            if (visited.contains(proj)) {
+                return@forEach
             }
+
+            val liveRange = range.merge(intervals[proj])
+            val group = Group(arrayListOf<LocalValue>(proj), null)
+            groups[group] = liveRange
+
+            visited.add(proj)
         }
     }
 
