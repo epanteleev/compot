@@ -3,8 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Bitcast
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandsVisitorUnaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
 data class BitcastCodegen (val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp {
@@ -12,7 +11,7 @@ data class BitcastCodegen (val type: PrimitiveType, val asm: Assembler): GPOpera
 
     operator fun invoke(dst: Operand, src: Operand) {
         when (type) {
-            is IntegerType, is PointerType -> ApplyClosure(dst, src, this as GPOperandsVisitorUnaryOp)
+            is IntegerType, is PointerType -> GPOperandsVisitorUnaryOp.apply(dst, src, this)
             else -> throw RuntimeException("Unknown '${Bitcast.NAME}' type=$type, dst=$dst, src=$src")
         }
     }

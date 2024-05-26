@@ -4,9 +4,8 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
-import ir.platform.x64.codegen.utils.XmmOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
 data class XorCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorBinaryOp,
@@ -15,8 +14,8 @@ data class XorCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
-            is FloatingPointType -> ApplyClosure(dst, first, second, this as XmmOperandsVisitorBinaryOp)
-            is IntegerType       -> ApplyClosure(dst, first, second, this as GPOperandsVisitorBinaryOp)
+            is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
+            is IntegerType       -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }

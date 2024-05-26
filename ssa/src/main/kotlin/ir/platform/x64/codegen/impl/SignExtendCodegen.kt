@@ -4,8 +4,7 @@ import asm.x64.*
 import ir.types.IntegerType
 import ir.instruction.SignExtend
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandsVisitorUnaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
 data class SignExtendCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: Assembler):
@@ -14,7 +13,7 @@ data class SignExtendCodegen(val fromType: IntegerType, val toType: IntegerType,
     private val fromSize = fromType.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ApplyClosure(dst, src, this as GPOperandsVisitorUnaryOp)
+        GPOperandsVisitorUnaryOp.apply(dst, src, this)
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {

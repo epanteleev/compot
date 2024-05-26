@@ -3,7 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.FpExtend
-import ir.platform.x64.codegen.utils.*
+import ir.platform.x64.codegen.visitors.*
 import ir.platform.x64.CallConvention.xmmTemp1
 
 
@@ -19,7 +19,7 @@ data class FpExtendCodegen(val toType: FloatingPointType, val asm: Assembler):
     }
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ApplyClosure(dst, src, this as XmmOperandsVisitorUnaryOp)
+        XmmOperandsVisitorUnaryOp.apply(dst, src, this)
     }
 
     override fun rrF(dst: XmmRegister, src: XmmRegister) {

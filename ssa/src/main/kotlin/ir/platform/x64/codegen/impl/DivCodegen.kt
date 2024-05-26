@@ -2,7 +2,7 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.types.*
-import ir.platform.x64.codegen.utils.*
+import ir.platform.x64.codegen.visitors.*
 import ir.instruction.ArithmeticBinaryOp
 
 
@@ -12,8 +12,8 @@ data class DivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: As
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
-            is FloatingPointType -> ApplyClosure(dst, first, second, this as XmmOperandsVisitorBinaryOp)
-            is IntegerType       -> ApplyClosure(dst, first, second, this as GPOperandsVisitorBinaryOp)
+            is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
+            is IntegerType       -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }
@@ -49,7 +49,7 @@ data class DivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: As
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
         val imm = first.value() / second.value()
         asm.mov(size, Imm32(imm), dst)
-        asm.mov(size, Imm32(first.value() % second.value()), rem!!)
+        asm.mov(size, Imm32(first.value() % second.value()), rem)
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {

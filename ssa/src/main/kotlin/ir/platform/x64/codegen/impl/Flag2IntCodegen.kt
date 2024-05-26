@@ -3,8 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.Type
 import ir.instruction.Flag2Int
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandsVisitorUnaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
 class Flag2IntCodegen(private val toSize: Int, private val asm: Assembler): GPOperandsVisitorUnaryOp {
@@ -13,7 +12,7 @@ class Flag2IntCodegen(private val toSize: Int, private val asm: Assembler): GPOp
         if (toSize == fromSize) {
             return
         }
-        ApplyClosure(dst, src, this as GPOperandsVisitorUnaryOp)
+        GPOperandsVisitorUnaryOp.apply(dst, src, this)
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {

@@ -4,14 +4,14 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.POINTER_SIZE
-import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
 class GetFieldPtrCodegen(val type: PointerType, val basicType: AggregateType, val asm: Assembler):
     GPOperandsVisitorBinaryOp {
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
-        ir.platform.x64.codegen.utils.ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)
+        GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) = default(dst, first, second)

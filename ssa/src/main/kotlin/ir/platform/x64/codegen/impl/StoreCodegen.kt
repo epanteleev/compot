@@ -6,7 +6,7 @@ import ir.instruction.Store
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
-import ir.platform.x64.codegen.utils.*
+import ir.platform.x64.codegen.visitors.*
 
 
 data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
@@ -15,8 +15,8 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperands
 
     operator fun invoke(value: Operand, pointer: Operand) {
         when (type) {
-            is FloatingPointType           -> ApplyClosure(pointer, value, this as XmmOperandsVisitorUnaryOp)
-            is IntegerType, is PointerType -> ApplyClosure(pointer, value, this as GPOperandsVisitorUnaryOp)
+            is FloatingPointType           -> XmmOperandsVisitorUnaryOp.apply(pointer, value, this)
+            is IntegerType, is PointerType -> GPOperandsVisitorUnaryOp.apply(pointer, value, this)
             else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
         }
     }

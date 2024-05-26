@@ -3,7 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Copy
-import ir.platform.x64.codegen.utils.*
+import ir.platform.x64.codegen.visitors.*
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
 
@@ -13,8 +13,8 @@ data class CopyCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsV
 
     operator fun invoke(dst: Operand, src: Operand) {
         when (type) {
-            is FloatingPointType            -> ApplyClosure(dst, src, this as XmmOperandsVisitorUnaryOp)
-            is IntegerType, is PointerType  -> ApplyClosure(dst, src, this as GPOperandsVisitorUnaryOp)
+            is FloatingPointType            -> XmmOperandsVisitorUnaryOp.apply(dst, src, this)
+            is IntegerType, is PointerType  -> GPOperandsVisitorUnaryOp.apply(dst, src, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, src=$src")
         }
     }

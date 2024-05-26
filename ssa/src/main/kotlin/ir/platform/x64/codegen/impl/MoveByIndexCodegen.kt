@@ -6,8 +6,7 @@ import ir.instruction.lir.Move
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
 class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
@@ -23,7 +22,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
                     default(dst, source, index)
                 }
             }
-            is IntegerType -> ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)
+            is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }
     }

@@ -3,16 +3,15 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Not
-import ir.platform.x64.codegen.utils.ApplyClosure
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.utils.GPOperandsVisitorUnaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
 data class NotCodegen(val type: IntegerType, val asm: Assembler): GPOperandsVisitorUnaryOp {
     private val size = type.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ApplyClosure(dst, src, this as GPOperandsVisitorUnaryOp)
+        GPOperandsVisitorUnaryOp.apply(dst, src, this)
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {

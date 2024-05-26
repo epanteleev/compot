@@ -5,8 +5,7 @@ import ir.types.*
 import ir.instruction.Int2Float
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandToXmmVisitor
+import ir.platform.x64.codegen.visitors.GPOperandToXmmVisitor
 
 
 class Int2FloatCodegen(toType: FloatingPointType, private val fromType: IntegerType, val asm: Assembler) : GPOperandToXmmVisitor {
@@ -14,7 +13,7 @@ class Int2FloatCodegen(toType: FloatingPointType, private val fromType: IntegerT
     private val fromSize = fromType.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ApplyClosure(dst, src, this)
+        GPOperandToXmmVisitor.apply(dst, src, this)
     }
 
     override fun rx(dst: XmmRegister, src: GPRegister) {

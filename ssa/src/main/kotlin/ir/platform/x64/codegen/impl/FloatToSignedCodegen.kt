@@ -3,9 +3,8 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.FloatingPointType
 import ir.instruction.FloatToInt
-import ir.platform.x64.codegen.utils.*
+import ir.platform.x64.codegen.visitors.*
 import ir.types.IntegerType
-import ir.types.SignedIntType
 
 
 class FloatToSignedCodegen(val toType: IntegerType, fromType: FloatingPointType, val asm: Assembler): XmmToGPOperandsVisitor {
@@ -21,7 +20,7 @@ class FloatToSignedCodegen(val toType: IntegerType, fromType: FloatingPointType,
     private val fromSize = fromType.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ApplyClosure(dst, src, this)
+        XmmToGPOperandsVisitor.apply(dst, src, this)
     }
 
     override fun rx(dst: GPRegister, src: XmmRegister) {

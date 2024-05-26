@@ -6,14 +6,13 @@ import ir.UnsignedIntegerConstant
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.WORD_SIZE
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandsVisitorUnaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
 class MemcpyCodegen(val length: UnsignedIntegerConstant, val asm: Assembler):
     GPOperandsVisitorUnaryOp {
     operator fun invoke(dst: Operand, src: Operand) {
-        ApplyClosure(dst, src, this)
+        GPOperandsVisitorUnaryOp.apply(dst, src, this)
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {

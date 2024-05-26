@@ -3,7 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.lir.IndexedLoad
-import ir.platform.x64.codegen.utils.*
+import ir.platform.x64.codegen.visitors.*
 
 
 class IndexedLoadCodegen(private val loadedType: PrimitiveType, val asm: Assembler): GPOperandsVisitorBinaryOp {
@@ -12,7 +12,7 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, val asm: Assembl
     operator fun invoke(dst: Operand, operand: Operand, index: Operand) {
         when (loadedType) {
             is FloatingPointType -> handleXmm(dst, operand, index)
-            is IntegerType -> ApplyClosure(dst, operand, index, this as GPOperandsVisitorBinaryOp)
+            is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, operand, index, this)
             else           -> default(dst, operand, index)
         }
     }

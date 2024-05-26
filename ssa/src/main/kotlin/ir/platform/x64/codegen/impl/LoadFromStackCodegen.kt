@@ -1,12 +1,9 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
-import ir.types.PrimitiveType
+import ir.types.*
 import ir.instruction.lir.LoadFromStack
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
-import ir.types.FloatingPointType
-import ir.types.IntegerType
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
 class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
@@ -15,7 +12,7 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {
             is FloatingPointType -> default(dst, source, index)
-            is IntegerType -> ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)
+            is IntegerType       -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }
     }

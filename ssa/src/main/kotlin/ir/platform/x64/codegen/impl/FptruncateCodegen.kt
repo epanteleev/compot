@@ -4,7 +4,7 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.FpTruncate
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.utils.XmmOperandsVisitorUnaryOp
+import ir.platform.x64.codegen.visitors.XmmOperandsVisitorUnaryOp
 
 
 data class FptruncateCodegen(val toType: FloatingPointType, val asm: Assembler):
@@ -18,7 +18,7 @@ data class FptruncateCodegen(val toType: FloatingPointType, val asm: Assembler):
     }
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ir.platform.x64.codegen.utils.ApplyClosure(dst, src, this as XmmOperandsVisitorUnaryOp)
+        XmmOperandsVisitorUnaryOp.apply(dst, src, this)
     }
 
     override fun rrF(dst: XmmRegister, src: XmmRegister) {

@@ -4,7 +4,7 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.*
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.utils.*
+import ir.platform.x64.codegen.visitors.*
 
 
 class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, val asm: Assembler): GPOperandsVisitorBinaryOp,
@@ -13,8 +13,8 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
-            is FloatingPointType -> ApplyClosure(dst, first, second, this as XmmOperandsVisitorBinaryOp)
-            is IntegerType       -> ApplyClosure(dst, first, second, this as GPOperandsVisitorBinaryOp)
+            is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
+            is IntegerType       -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }

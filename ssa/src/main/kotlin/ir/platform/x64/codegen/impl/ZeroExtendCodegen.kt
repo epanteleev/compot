@@ -3,15 +3,14 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.IntegerType
 import ir.instruction.ZeroExtend
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandsVisitorUnaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
 data class ZeroExtendCodegen(val fromType: IntegerType, val asm: Assembler): GPOperandsVisitorUnaryOp {
     private val typeSize = fromType.size()
 
     operator fun invoke(dst: Operand, src: Operand) {
-        ApplyClosure(dst, src, this as GPOperandsVisitorUnaryOp)
+        GPOperandsVisitorUnaryOp.apply(dst, src, this)
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {

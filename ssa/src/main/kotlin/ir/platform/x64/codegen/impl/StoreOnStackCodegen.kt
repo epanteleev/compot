@@ -3,8 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.PrimitiveType
 import ir.instruction.lir.StoreOnStack
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.types.FloatingPointType
 import ir.types.IntegerType
 
@@ -39,7 +38,7 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
                     }
                 }
             }
-            is IntegerType -> ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)
+            is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }
     }

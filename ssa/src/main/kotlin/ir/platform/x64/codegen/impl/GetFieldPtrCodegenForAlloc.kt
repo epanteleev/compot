@@ -4,15 +4,14 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention
-import ir.platform.x64.codegen.utils.ApplyClosure
-import ir.platform.x64.codegen.utils.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
 class GetFieldPtrCodegenForAlloc(val type: PointerType, val basicType: AggregateType, val asm: Assembler):
     GPOperandsVisitorBinaryOp {
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
-        ApplyClosure(dst, source, index, this as GPOperandsVisitorBinaryOp)
+        GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) = default(dst, first, second)
