@@ -6,7 +6,7 @@ import ir.types.*
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
-import ir.platform.common.Target
+import ir.platform.common.TargetPlatform
 
 
 fun main() {
@@ -24,7 +24,7 @@ fun main() {
     println(module.toString())
 
     val asm = CodeGenerationFactory()
-        .setTarget(Target.X64)
+        .setTarget(TargetPlatform.X64)
         .build(SSADestructionFabric.create(module).run())
 
     println(asm.toString())

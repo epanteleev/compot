@@ -6,7 +6,7 @@ import ir.pass.PassPipeline
 import ir.read.ModuleReader
 import ir.pass.CompileContextBuilder
 import ir.platform.common.CodeGenerationFactory
-import ir.platform.common.Target
+import ir.platform.common.TargetPlatform
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
@@ -24,7 +24,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         val unoptimizedIr         = PassPipeline.base(ctx).run(module)
         val codeGenerationFactory = CodeGenerationFactory()
             .setContext(ctx)
-            .setTarget(Target.X64)
+            .setTarget(TargetPlatform.X64)
 
         val unoptimisedCode = codeGenerationFactory.build(unoptimizedIr)
 
@@ -51,7 +51,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         val destroyed             = PassPipeline.opt(ctx).run(module)
         val codeGenerationFactory = CodeGenerationFactory()
             .setContext(ctx)
-            .setTarget(Target.X64)
+            .setTarget(TargetPlatform.X64)
 
         val optimizedCodegen = codeGenerationFactory.build(destroyed)
 

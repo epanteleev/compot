@@ -5,7 +5,7 @@ import ir.pass.CompileContext
 import ir.platform.x64.codegen.X64CodeGenerator
 
 
-enum class Target {
+enum class TargetPlatform {
     X64
 }
 
@@ -15,21 +15,21 @@ interface AnyCodeGenerator {
 
 class CodeGenerationFactory {
     private var ctx: CompileContext? = null
-    private var target: Target? = null
+    private var target: TargetPlatform? = null
 
     fun setContext(context: CompileContext): CodeGenerationFactory {
         ctx = context
         return this
     }
 
-    fun setTarget(target: Target): CodeGenerationFactory {
+    fun setTarget(target: TargetPlatform): CodeGenerationFactory {
         this.target = target
         return this
     }
 
     fun build(module: Module): CompiledModule {
-        val compiled = when (target as Target) {
-            Target.X64 -> X64CodeGenerator(module).emit()
+        val compiled = when (target as TargetPlatform) {
+            TargetPlatform.X64 -> X64CodeGenerator(module).emit()
         }
 
         return compiled

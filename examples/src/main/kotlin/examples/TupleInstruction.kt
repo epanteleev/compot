@@ -1,6 +1,9 @@
 package examples
 
 import ir.I32Value
+import ir.platform.common.CodeGenerationFactory
+import ir.platform.common.TargetPlatform
+
 
 fun main() {
     val builder = ir.module.builder.impl.ModuleBuilder.create()
@@ -12,8 +15,8 @@ fun main() {
 
     val module = builder.build()
     println(module.toString())
-    val asm = ir.platform.common.CodeGenerationFactory()
-        .setTarget(ir.platform.common.Target.X64)
+    val asm = CodeGenerationFactory()
+        .setTarget(TargetPlatform.X64)
         .build(ir.pass.transform.SSADestructionFabric.create(module).run())
 
     println(asm.toString())
