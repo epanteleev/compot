@@ -1,11 +1,21 @@
 package ir.read.tokens
 
+import common.arrayFrom
 import ir.read.bulder.TypeResolver
 import ir.types.*
 
 
 abstract class TypeToken(override val line: Int, override val pos: Int) : Token(line, pos) {
     abstract fun type(resolver: TypeResolver): Type
+
+    inline fun<reified T: Type> asType(resolver: TypeResolver): T {
+        val ty = type(resolver)
+        if (ty !is T) {
+            throw RuntimeException("actual type=$ty")
+        }
+
+        return ty
+    }
 }
 
 abstract class PrimitiveTypeToken(protected open val type: PrimitiveType, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
@@ -99,4 +109,15 @@ data class VoidTypeToken(override val line: Int, override val pos: Int) : TypeTo
 
     override fun message(): String = "type '${Type.Void}'"
     fun type(): Type = Type.Void
+}
+
+data class TupleTypeToken(val types: List<TypeToken>, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+    override fun type(resolver: TypeResolver): TupleType {
+        val types = arrayFrom(types) { it.asType<NonTrivialType>(resolver) }
+        return TupleType(types)
+    }
+
+    override fun message(): String {
+        return "|${types.joinToString()}|"
+    }
 }

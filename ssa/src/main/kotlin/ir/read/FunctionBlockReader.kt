@@ -25,6 +25,26 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         builder.arithmeticBinary(resultName, first, op, second, resultType)
     }
 
+    private fun parseDiv(resultName: LocalValueToken) {
+        when (val resultType = iterator.expect<TypeToken>("result type")) {
+            is TupleTypeToken -> {
+                // %$resultName = div {tuple_type}, {firstType} {first}, {secondType} {second}
+                iterator.expect<Comma>("','")
+                val firstType = iterator.expect<IntegerTypeToken>("first operand type")
+                val first = parseOperand("first operand")
+                iterator.expect<Comma>("','")
+                val secondType = iterator.expect<IntegerTypeToken>("second operand type")
+                val second = parseOperand("second operand")
+                if (firstType.type() != secondType.type()) {
+                    throw ParseErrorException("should be the same integer type: first=${firstType.type()}, second=${secondType.type()}")
+                }
+
+                builder.tupleDiv(resultName, resultType, first, second, secondType)
+            }
+            else -> parseBinary(resultName, ArithmeticBinaryOp.Div)
+        }
+    }
+
     private fun parseLoad(resultName: LocalValueToken) {
         val typeToken    = iterator.expect<PrimitiveTypeToken>("loaded type")
         val pointerToken = iterator.expect<ValueToken>("type '${Type.Ptr}'")
@@ -358,6 +378,17 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         builder.select(currentTok, v0, v1, v2, t1)
     }
 
+    private fun parseProjection(currentTok: LocalValueToken) {
+        // %$identifier = proj {tuple_type}, {type} {tuple_value}, {index}
+        val tupleType = iterator.expect<TupleTypeToken>("tuple type")
+        iterator.expect<Comma>("','")
+        val returnType = iterator.expect<PrimitiveTypeToken>("return type")
+        val tupleValue = iterator.expect<LocalValueToken>("tuple value")
+        iterator.expect<Comma>("','")
+        val index = iterator.expect<IntValue>("index")
+        builder.proj(currentTok, tupleType, tupleValue, returnType, index)
+    }
+
     private fun parseFlag2Int(currentTok: LocalValueToken) {
         // %$identifier = flag2int %{value} to {operand type}
         val source = iterator.expect<LocalValueToken>("source value")
@@ -411,7 +442,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "add"        -> parseBinary(currentTok, ArithmeticBinaryOp.Add)
                     "sub"        -> parseBinary(currentTok, ArithmeticBinaryOp.Sub)
                     "mul"        -> parseBinary(currentTok, ArithmeticBinaryOp.Mul)
-                    "div"        -> parseBinary(currentTok, ArithmeticBinaryOp.Div)
+                    "div"        -> parseDiv(currentTok)
                     "mod"        -> parseBinary(currentTok, ArithmeticBinaryOp.Mod)
                     "shr"        -> parseBinary(currentTok, ArithmeticBinaryOp.Shr)
                     "shl"        -> parseBinary(currentTok, ArithmeticBinaryOp.Shl)
@@ -442,6 +473,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "fcmp"       -> parseFcmp(currentTok)
                     "gfp"        -> parseGfp(currentTok)
                     "select"     -> parseSelect(currentTok)
+                    Projection.NAME -> parseProjection(currentTok)
                     else -> throw ParseErrorException("instruction name", instruction)
                 }
             }

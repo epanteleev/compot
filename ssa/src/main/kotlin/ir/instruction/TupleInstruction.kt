@@ -37,7 +37,7 @@ abstract class TupleInstruction(id: Identity,
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as ValueInstruction
+        other as TupleInstruction
 
         return id == other.id && owner.index == other.owner.index
     }

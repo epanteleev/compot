@@ -100,6 +100,18 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, result)
     }
 
+    fun tupleDiv(name: LocalValueToken, resultType: TupleTypeToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): TupleDiv {
+        val first  = getValue(a, expectedType.type())
+        val second = getValue(b, expectedType.type())
+        val result = bb.tupleDiv(first, second)
+        val resolvedResultType = resultType.type(moduleBuilder)
+        if (resolvedResultType != result.type()) {
+            throw ParseErrorException("mismatch type: expected=$resolvedResultType, found=${result.type()}")
+        }
+
+        return memorize(name, result)
+    }
+
     private fun matchCompareType(predicate: Identifier): IntPredicate {
         return when (predicate.string) {
             "eq" -> IntPredicate.Eq
@@ -342,6 +354,15 @@ class FunctionDataBuilderWithContext private constructor(
         val phi = bb.uncompletedPhi(type, values, blocks)
         incompletePhis.add(PhiContext(phi, incomingTok, type))
         return memorize(name, phi)
+    }
+
+    fun proj(name: LocalValueToken, typeToken: TupleTypeToken, valueTok: AnyValueToken, expectedType: PrimitiveTypeToken, index: IntValue): Projection {
+        val value = getValue(valueTok, typeToken.type(moduleBuilder))
+        if (value !is TupleInstruction) {
+            throw ParseErrorException("tuple type", valueTok)
+        }
+
+        return memorize(name, bb.proj(value, index.int.toInt()))
     }
 
     fun makePrototype(functionName: SymbolValue, returnType: TypeToken, argTypes: List<TypeToken>): FunctionPrototype {

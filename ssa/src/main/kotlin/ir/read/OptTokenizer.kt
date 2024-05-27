@@ -249,6 +249,27 @@ class Tokenizer(val data: String) {
         return SymbolValue(name, line, begin)
     }
 
+    private fun readTupleType(): TupleTypeToken {
+        nextChar()
+        val begin = pos
+        val types = arrayListOf<TypeToken>()
+        while (getChar() != '|') {
+            val type = readType() ?: throw TokenizerException("$line:$pos expect type")
+            types.add(type)
+            skipWhitespace()
+            if (getChar() == '|') {
+                break
+            }
+            if (getChar() != ',') {
+                throw TokenizerException("$line:$pos expect ','")
+            }
+            nextChar()
+            skipWhitespace()
+        }
+        nextChar()
+        return TupleTypeToken(types, line, begin)
+    }
+
     internal fun nextToken(): Token {
         skipWhitespace()
         val ch = getChar()
@@ -273,6 +294,7 @@ class Tokenizer(val data: String) {
         when (ch) {
             '"' -> return readStringLiteral()
             '@' -> return readSymbolName()
+            '|' -> return readTupleType()
             else -> {}
         }
 

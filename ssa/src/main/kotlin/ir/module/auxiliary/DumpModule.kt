@@ -4,6 +4,7 @@ import ir.module.FunctionPrototype
 import ir.LocalValue
 import ir.Value
 import ir.instruction.Instruction
+import ir.instruction.TupleInstruction
 import ir.instruction.ValueInstruction
 import ir.module.FunctionData
 import ir.module.Module
@@ -127,7 +128,7 @@ private class DumpCSSAModule(module: LModule) : DumpModule<LModule>(module) {
     }
 
     override fun dumpInstruction(instruction: Instruction, idx: Int) {
-        if (instruction is LocalValue) {
+        if (instruction is LocalValue && instruction !is TupleInstruction) {
             val operand = regAlloc!!.operand(instruction)
             builder.append("[$operand]")
         }

@@ -2,7 +2,7 @@ package ir.types
 
 class TupleType(val tuple: Array<NonTrivialType>): TrivialType {
     override fun toString(): String {
-        return "{${tuple.joinToString()}}"
+        return "|${tuple.joinToString()}|"
     }
 
     fun innerType(index: Int): NonTrivialType {

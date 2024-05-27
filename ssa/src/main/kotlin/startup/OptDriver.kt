@@ -91,7 +91,13 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
 
     fun run() {
         val text = File(commandLineArguments.getFilename()).readText()
-        val module = ModuleReader(text).read()
+        val module = try {
+            ModuleReader(text).read()
+        } catch (e: Exception) {
+            println("Error: ${e.message}")
+            throw e
+        }
+
         run(module)
     }
 }

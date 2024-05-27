@@ -13,3 +13,13 @@ inline fun<reified T> arrayNullsFrom(values: Collection<T>): Array<T?> {
 
     return array
 }
+
+inline fun<reified T, reified U> arrayFrom(values: Collection<T>, initializer: (T) -> U): Array<U> {
+    val array = arrayOfNulls<U>(values.size)
+    for ((idx, v) in values.withIndex()) {
+        array[idx] = initializer(v)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    return array as Array<U>
+}

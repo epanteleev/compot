@@ -1,8 +1,5 @@
 package ir.read.tokens
 
-import ir.types.BooleanType
-import ir.types.PointerType
-import ir.types.Type
 
 abstract class AnyValueToken(override val line: Int, override val pos: Int): Token(line, pos)
 

@@ -19,7 +19,9 @@ data class DivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: As
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.cqo()
+        asm.idiv(size, second)
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
