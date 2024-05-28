@@ -13,7 +13,6 @@ abstract class Node {
 
 abstract class UnclassifiedNode : Node() {
     abstract fun<T> accept(visitor: UnclassifiedNodeVisitor<T>): T
-
 }
 
 data class Declaration(val declspec: DeclarationSpecifier, val declarators: List<AnyDeclarator>): UnclassifiedNode() {
@@ -50,8 +49,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
                         val declarator: Declarator,
                         val body: Statement) : UnclassifiedNode() {
     fun name(): String {
-        val varNode = declarator.directDeclarator.decl as VarDeclarator
-        return varNode.ident.str()
+        return declarator.directDeclarator.decl.name()
     }
 
     fun functionDeclarator(): ParameterTypeList {

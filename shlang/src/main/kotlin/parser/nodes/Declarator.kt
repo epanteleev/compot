@@ -9,7 +9,7 @@ abstract class AnyDeclarator: Node() {
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
 }
 
-data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<AnyDeclarator>?) : AnyDeclarator() {   //TODO
+data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<DirectDeclaratorParam>?) : AnyDeclarator() {   //TODO
     override fun<T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)
 
     fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
@@ -95,50 +95,7 @@ data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expressi
     }
 }
 
-data class ParameterTypeList(val params: List<AnyParameter>): AnyDeclarator() {
-    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-
-    fun resolveType(typeHolder: TypeHolder): CType {
-        params.forEach { it.resolveType(typeHolder) }
-        return CType.UNKNOWN
-    }
-
-    fun params(): List<String> {
-        return params.map {
-            when (it) {
-                is Parameter -> it.name()
-                is ParameterVarArg -> "..."
-                else -> throw IllegalStateException("Unknown parameter $it")
-            }
-        }
-    }
-
-    fun isVarArg(): Boolean {
-        return params.any { it is ParameterVarArg }
-    }
-
-    fun resolveParams(typeHolder: TypeHolder): List<CType> {
-        val paramTypes = mutableListOf<CType>()
-        for (param in params) {
-            when (param) {
-                is Parameter -> {
-                    val type = param.resolveType(typeHolder)
-                    paramTypes.add(type)
-                }
-                is ParameterVarArg -> {}
-                else -> throw IllegalStateException("Unknown parameter $param")
-            }
-        }
-
-        return paramTypes
-    }
-}
-
 object EmptyDeclarator : AnyDeclarator() {
-    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-}
-
-data class ArrayDeclarator(val constexpr: Expression) : AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 }
 
@@ -155,16 +112,10 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
     }
 }
 
-data class DirectDeclarator(val decl: AnyDeclarator, val declarators: List<AnyDeclarator>): AnyDeclarator() {
+data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val declarators: List<DirectDeclaratorParam>): AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
-    fun name(): String {
-        return when (decl) {
-            is VarDeclarator             -> decl.name()
-            is FunctionPointerDeclarator -> decl.declarator().name()
-            else -> throw IllegalStateException("$decl")
-        }
-    }
+    fun name(): String = decl.name()
 }
 
 data class VarDeclarator(val ident: Identifier) : AnyDeclarator() {
@@ -173,22 +124,10 @@ data class VarDeclarator(val ident: Identifier) : AnyDeclarator() {
     fun name(): String = ident.str()
 }
 
-data class FunctionPointerDeclarator(val declarator: List<Node>): AnyDeclarator() {
-    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-
-    fun declarator(): Declarator {
-        return declarator[0] as Declarator
-    }
-}
-
 data class FunctionPointerParamDeclarator(val declarator: Node, val params: Node): AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 }
 
 data class DirectFunctionDeclarator(val parameters: List<AnyParameter>) : AnyDeclarator() {
-    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-}
-
-data class DirectArrayDeclarator(val size: Node) : AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 }

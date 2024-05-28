@@ -7,8 +7,6 @@ interface DeclaratorVisitor<T> {
     fun visit(abstractDeclarator: AbstractDeclarator): T
     fun visit(declarator: Declarator): T
     fun visit(assignmentDeclarator: AssignmentDeclarator): T
-    fun visit(functionDeclarator: ParameterTypeList): T
-    fun visit(functionPointerDeclarator: FunctionPointerDeclarator): T
     fun visit(functionPointerParamDeclarator: FunctionPointerParamDeclarator): T
     fun visit(arrayDeclarator: ArrayDeclarator): T
     fun visit(directFunctionDeclarator: DirectFunctionDeclarator): T

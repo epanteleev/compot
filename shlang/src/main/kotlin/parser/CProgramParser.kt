@@ -882,8 +882,8 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| direct_declarator '(' identifier_list ')'
     //	| direct_declarator '(' ')'
     fun direct_declarator(): DirectDeclarator? = rule {
-        fun declarator_list(): List<AnyDeclarator> {
-            val declarators = mutableListOf<AnyDeclarator>()
+        fun declarator_list(): List<DirectDeclaratorParam> {
+            val declarators = mutableListOf<DirectDeclaratorParam>()
             while (true) {
                 if (check("(")) {
                     eat()
@@ -904,7 +904,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                     val identifiers = identifier_list()
                     if (check(")")) {
                         eat()
-                        declarators.add(FunctionPointerDeclarator(identifiers))
+                        declarators.add(identifiers)
                         continue
                     }
 
@@ -937,7 +937,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                 if (check(")")) {
                     eat()
                     val declarators = declarator_list()
-                    return@rule DirectDeclarator(FunctionPointerDeclarator(listOf(declarator)), declarators)
+                    return@rule DirectDeclarator(FunctionPointerDeclarator(declarator), declarators)
                 }
                 throw ParserException(ProgramMessage("Expected ')'", peak()))
             }
@@ -945,7 +945,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
         if (check<Identifier>()) {
             val ident = peak<Identifier>()
             eat()
-            return@rule DirectDeclarator(VarDeclarator(ident), declarator_list())
+            return@rule DirectDeclarator(DirectVarDeclarator(ident), declarator_list())
         }
         return@rule null
     }
@@ -961,7 +961,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	: IDENTIFIER
     //	| identifier_list ',' IDENTIFIER
     //	;
-    fun identifier_list(): List<IdentNode> {
+    fun identifier_list(): IndentifierList {
         val identifiers = mutableListOf<IdentNode>()
         while (true) {
             if (check<Identifier>()) {
@@ -971,7 +971,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                 if (check(",")) {
                     eat()
                 } else {
-                    return identifiers
+                    return IndentifierList(identifiers)
                 }
             }
         }
@@ -1037,18 +1037,18 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| direct_abstract_declarator '(' ')'
     //	| direct_abstract_declarator '(' parameter_type_list ')'
     //	;
-    fun direct_abstract_declarator(): List<AnyDeclarator>? = rule {
+    fun direct_abstract_declarator(): List<DirectDeclaratorParam>? = rule {
         if (!check("(") && !check("[")) {
             return@rule null
         }
 
-        val abstractDeclarators = mutableListOf<AnyDeclarator>()
+        val abstractDeclarators = mutableListOf<DirectDeclaratorParam>()
         while (true) {
             if (check("(")) {
                 eat()
                 if (check(")")) {
                     eat()
-                    abstractDeclarators.add(DirectFunctionDeclarator(listOf()))
+                    abstractDeclarators.add(ParameterTypeList(listOf()))
                     continue
                 }
 
@@ -1056,7 +1056,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                 if (parameters != null) {
                     if (check(")")) {
                         eat()
-                        abstractDeclarators.add(DirectFunctionDeclarator(parameters))
+                        abstractDeclarators.add(ParameterTypeList(parameters))
                         continue
                     }
                     throw ParserException(ProgramMessage("Expected ')'", peak()))

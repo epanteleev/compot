@@ -9,7 +9,8 @@ interface NodeVisitor<T> : ExpressionVisitor<T>,
     TypeNodeVisitor<T>,
     UnclassifiedNodeVisitor<T>,
     TypeSpecifierVisitor<T>,
-    ParameterVisitor<T> {
+    ParameterVisitor<T>,
+    DirectDeclaratorParamVisitor<T> {
     fun visit(node: Node): T {
         return when (node) {
             is AnyDeclarator    -> node.accept(this as DeclaratorVisitor<T>)
@@ -19,6 +20,7 @@ interface NodeVisitor<T> : ExpressionVisitor<T>,
             is UnclassifiedNode -> node.accept(this as UnclassifiedNodeVisitor<T>)
             is AnyTypeNode      -> node.accept(this as TypeNodeVisitor<T>)
             is AnyParameter     -> node.accept(this as ParameterVisitor<T>)
+            is DirectDeclaratorParam -> node.accept(this as DirectDeclaratorParamVisitor<T>)
             else -> throw IllegalStateException("Unknown node $node")
         }
     }

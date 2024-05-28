@@ -14,7 +14,7 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyDecl
 
     fun name(): String {
         val varNode = declarator as Declarator
-        return (varNode.directDeclarator.decl as VarDeclarator).ident.str()
+        return varNode.directDeclarator.decl.name()
     }
 
     override fun resolveType(typeHolder: TypeHolder): CType {
