@@ -108,6 +108,12 @@ abstract class ShlangTests: CommonCTest() {
         val result = runCTest("shlang/sizeof0", listOf("runtime/runtime.c"), options())
         assertEquals(result.exitCode, 0)
     }
+
+    @Test
+    fun testSizeof1() {
+        val result = runCTest("shlang/sizeof1", listOf("runtime/runtime.c"), options())
+        assertEquals(result.exitCode, 0)
+    }
 }
 
 class ShlangTestsO0: ShlangTests() {

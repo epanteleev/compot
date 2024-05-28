@@ -1416,7 +1416,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             eat()
             if (check("(")) {
                 eat()
-                val type = type_name()?: throw ParserException(ProgramMessage("Expected type name", peak()))
+                val type = type_name()?: unary_expression()?: throw ParserException(ProgramMessage("Expected unary expression", peak()))
                 if (check(")")) {
                     eat()
                     return@rule SizeOf(type)

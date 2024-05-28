@@ -1,10 +1,8 @@
 package ir.module
 
-import ir.global.FunctionSymbol
-import ir.global.GlobalSymbol
-import ir.types.NonTrivialType
 import ir.types.Type
-
+import ir.global.FunctionSymbol
+import ir.types.NonTrivialType
 
 abstract class AnyFunctionPrototype(val name: String,
                                     private val returnType: Type,
