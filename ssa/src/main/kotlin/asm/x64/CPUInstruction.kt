@@ -135,9 +135,26 @@ data class Or(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
     }
 }
 
-data class Div(val size: Int, val first: Operand, val second: Operand): Arithmetic {
+data class Div(val size: Int, val divider: Operand): Arithmetic {
     override fun toString(): String {
-        return "div${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
+        return "div${prefix(size)} ${divider.toString(size)}"
+    }
+}
+
+data class Idiv(val size: Int, val divider: Operand): Arithmetic {
+    override fun toString(): String {
+        return "idiv${prefix(size)} ${divider.toString(size)}"
+    }
+}
+
+data class Convert(val toSize: Int): CPUInstruction {
+    override fun toString(): String {
+        return when (toSize) {
+            2 -> "cwd"
+            4 -> "cdq"
+            8 -> "cqo"
+            else -> throw RuntimeException("Unknown size: $toSize")
+        }
     }
 }
 

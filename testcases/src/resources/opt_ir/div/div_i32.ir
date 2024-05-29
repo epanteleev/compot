@@ -12,7 +12,13 @@ entry:
     %0x0 = call i32 @div(10: i32, 5: i32) br label %next
 
 next:
-    call void @printInt(%0x0: i32) br label %exit
+    call void @printInt(%0x0: i32) br label %next1
+
+next1:
+    %0x1 = call i32 @div(-10: i32, 5: i32) br label %next2
+
+next2:
+    call void @printInt(%0x1: i32) br label %exit
 
 exit:
     ret i32 %0x0

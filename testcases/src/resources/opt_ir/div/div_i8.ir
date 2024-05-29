@@ -1,0 +1,25 @@
+extern void @printShort(i8)
+
+define i8 @div(%a: i8, %b: i8) {
+entry:
+	%0x0 = div |i8, i8|, i8 %a, i8 %b
+	%0x1 = proj |i8, i8|, i8 %0x0, 0
+	ret i8 %0x1
+}
+
+define i32 @main() {
+entry:
+    %0x0 = call i8 @div(10: i8, 5: i8) br label %next
+
+next:
+    call void @printShort(%0x0: i8) br label %next1
+
+next1:
+    %0x1 = call i8 @div(-10: i8, 5: i8) br label %next2
+
+next2:
+    call void @printShort(%0x1: i8) br label %exit
+
+exit:
+    ret i32 0
+}

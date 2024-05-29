@@ -1,0 +1,25 @@
+extern void @printLong(i64)
+
+define i64 @div(%a: i64, %b: i64) {
+entry:
+	%0x0 = div |i64, i64|, i64 %a, i64 %b
+	%0x1 = proj |i64, i64|, i32 %0x0, 0
+	ret i64 %0x1
+}
+
+define i32 @main() {
+entry:
+    %0x0 = call i64 @div(10: i64, 5: i64) br label %next
+
+next:
+    call void @printLong(%0x0: i64) br label %next1
+
+next1:
+    %0x1 = call i64 @div(-10: i64, 5: i64) br label %next2
+
+next2:
+    call void @printLong(%0x1: i64) br label %exit
+
+exit:
+    ret i32 0
+}

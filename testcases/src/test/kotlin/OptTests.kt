@@ -69,12 +69,6 @@ abstract class OptTests: CommonIrTest() {
         val result = runTest("opt_ir/fib_opt", listOf("runtime/runtime.c"), options())
         assertEquals("21\n", result.output)
     }
-
-    @Test
-    fun testDiv() {
-        val result = runTest("opt_ir/div", listOf("runtime/runtime.c"), options())
-        assertEquals("2\n", result.output)
-    }
 }
 
 class OptO1Tests: OptTests() {

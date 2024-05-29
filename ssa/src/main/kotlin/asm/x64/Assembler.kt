@@ -104,9 +104,18 @@ class Assembler(private val name: String) {
     fun not(size: Int, dst: GPRegister) = add(Not(size, dst))
     fun not(size: Int, dst: Address) = add(Not(size, dst))
 
-    fun div(size: Int, first: Operand, destination: GPRegister): Operand {
-        add(Div(size, first, destination))
-        return destination
+    // Unsigned Divide
+    fun div(size: Int, divider: GPRegister) = add(Div(size, divider))
+    fun div(size: Int, divider: Address) = add(Div(size, divider))
+
+    // Signed Divide
+    fun idiv(size: Int, divider: GPRegister) = add(Idiv(size, divider))
+    fun idiv(size: Int, divider: Address) = add(Idiv(size, divider))
+
+    // Convert Word to Doubleword/Convert Doubleword to Quadword
+    fun cdq(size: Int) = when (size) {
+        8, 4, 2, 1 -> add(Convert(size))
+        else -> throw IllegalArgumentException("size=$size")
     }
 
     fun xor(size: Int, first: Operand, destination: GPRegister): Operand {

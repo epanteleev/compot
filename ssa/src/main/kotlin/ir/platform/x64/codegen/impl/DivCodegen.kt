@@ -19,9 +19,10 @@ data class DivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: As
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        asm.mov(size, first, dst)
-        //asm.cqo()
-        //asm.idiv(size, second)
+        asm.mov(size, first, GPRegister.rax)
+        asm.cdq(size)
+        asm.idiv(size, second)
+        asm.mov(size, GPRegister.rax, dst)
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
