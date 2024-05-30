@@ -10,5 +10,6 @@ void reportError();
 
 void printFloat(float);
 void printInt(int a);
+void printUByte(unsigned char value);
 
 #endif

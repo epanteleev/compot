@@ -1,0 +1,25 @@
+extern void @printUByte(u8)
+
+define u8 @div(%a: u8, %b: u8) {
+entry:
+	%0x0 = div |u8, u8|, u8 %a, u8 %b
+	%0x1 = proj |u8, u8|, u8 %0x0, 0
+	ret u8 %0x1
+}
+
+define i32 @main() {
+entry:
+    %0x0 = call u8 @div(10: u8, 5: u8) br label %next
+
+next:
+    call void @printUByte(%0x0: u8) br label %next1
+
+next1:
+    %0x1 = call u8 @div(-10: u8, 5: u8) br label %next2
+
+next2:
+    call void @printUByte(%0x1: u8) br label %exit
+
+exit:
+    ret i32 0
+}

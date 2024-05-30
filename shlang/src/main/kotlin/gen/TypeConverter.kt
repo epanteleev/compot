@@ -30,13 +30,17 @@ object TypeConverter {
         }
 
         val ret = when (type.baseType()) {
-            CPrimitive.CHAR -> Type.I8
-            CPrimitive.SHORT -> Type.I16
-            CPrimitive.INT -> Type.I32
-            CPrimitive.LONG -> Type.I64
-            CPrimitive.FLOAT -> Type.F32
+            CPrimitive.CHAR   -> Type.I8
+            CPrimitive.UCHAR  -> Type.U8
+            CPrimitive.SHORT  -> Type.I16
+            CPrimitive.USHORT -> Type.U16
+            CPrimitive.INT    -> Type.I32
+            CPrimitive.UINT   -> Type.U32
+            CPrimitive.LONG   -> Type.I64
+            CPrimitive.ULONG  -> Type.U64
+            CPrimitive.FLOAT  -> Type.F32
             CPrimitive.DOUBLE -> Type.F64
-            CPrimitive.VOID -> Type.Void
+            CPrimitive.VOID   -> Type.Void
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
         return ret

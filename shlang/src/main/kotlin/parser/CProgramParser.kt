@@ -759,7 +759,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| TYPE_NAME
     //	;
     fun type_specifier(): AnyTypeNode? = rule {
-        if (check("int")) {
+        if (check("void")) {
             val tok = peak<Keyword>()
             eat()
             return@rule TypeNode(tok)
@@ -770,6 +770,11 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             return@rule TypeNode(tok)
         }
         if (check("short")) {
+            val tok = peak<Keyword>()
+            eat()
+            return@rule TypeNode(tok)
+        }
+        if (check("int")) {
             val tok = peak<Keyword>()
             eat()
             return@rule TypeNode(tok)
@@ -789,7 +794,12 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             eat()
             return@rule TypeNode(tok)
         }
-        if (check("void")) {
+        if (check("signed")) {
+            val tok = peak<Keyword>()
+            eat()
+            return@rule TypeNode(tok)
+        }
+        if (check("unsigned")) {
             val tok = peak<Keyword>()
             eat()
             return@rule TypeNode(tok)
@@ -901,7 +911,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                         }
                         throw ParserException(ProgramMessage("Expected ')'", peak()))
                     }
-                    val identifiers = identifier_list()
+                    val identifiers = identifier_list()?: throw ParserException(ProgramMessage("Expected identifier list", peak()))
                     if (check(")")) {
                         eat()
                         declarators.add(identifiers)
@@ -961,19 +971,25 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	: IDENTIFIER
     //	| identifier_list ',' IDENTIFIER
     //	;
-    fun identifier_list(): IndentifierList {
+    fun identifier_list(): IndentifierList? = rule<IndentifierList> {
         val identifiers = mutableListOf<IdentNode>()
         while (true) {
-            if (check<Identifier>()) {
-                val ident = peak<Identifier>()
-                eat()
-                identifiers.add(IdentNode(ident))
-                if (check(",")) {
-                    eat()
-                } else {
-                    return IndentifierList(identifiers)
-                }
+            if (!check<Identifier>()) {
+                return@rule null
             }
+            val ident = peak<Identifier>()
+            eat()
+            identifiers.add(IdentNode(ident))
+            if (check(",")) {
+                eat()
+            } else {
+                break
+            }
+        }
+        if (identifiers.isEmpty()) {
+            return@rule null
+        } else {
+            return@rule IndentifierList(identifiers)
         }
     }
 
