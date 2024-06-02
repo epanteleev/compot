@@ -1,4 +1,4 @@
-name: Shlang CI
+name: Run testcases
 
 on:
   workflow_run:
