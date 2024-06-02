@@ -19,7 +19,7 @@ jobs:
         build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
         build-scan-terms-of-use-agree: "yes"
     - name: Build all
-      run: ./gradlew build
+      run: gradle build
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.3.3
       with:
