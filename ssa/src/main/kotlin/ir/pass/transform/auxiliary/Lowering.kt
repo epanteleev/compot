@@ -95,6 +95,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
             bb.transform { inst -> closure(bb, inst) }
         }
     }
+
     private fun replaceGEPAndStore() {
         fun getSource(inst: Instruction): Value {
             return when (inst) {
@@ -164,6 +165,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
             bb.transform { inst -> closure(bb, inst) }
         }
     }
+    
     private fun replaceEscaped() {
         fun closure(bb: Block, inst: Instruction): Instruction {
             when {

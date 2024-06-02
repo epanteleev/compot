@@ -41,6 +41,18 @@ abstract class DivideOperationTest: CommonIrTest() {
         val result = runTest("opt_ir/div/div_u16", listOf("runtime/runtime.c"), options())
         assertEquals("2\n", result.output)
     }
+
+    @Test
+    fun testDivU32() {
+        val result = runTest("opt_ir/div/div_u32", listOf("runtime/runtime.c"), options())
+        assertEquals("2\n", result.output)
+    }
+
+    @Test
+    fun testDivU64() {
+        val result = runTest("opt_ir/div/div_u64", listOf("runtime/runtime.c"), options())
+        assertEquals("2\n", result.output)
+    }
 }
 
 class BaseIrDivideOperationTest: DivideOperationTest() {

@@ -1,0 +1,19 @@
+extern void @printUInt(u32)
+
+define u32 @div(%a: u32, %b: u32) {
+entry:
+	%0x0 = div |u32, u32|, u32 %a, u32 %b
+	%0x1 = proj |u32, u32|, u32 %0x0, 0
+	ret u32 %0x1
+}
+
+define i32 @main() {
+entry:
+    %0x0 = call u32 @div(10: u32, 5: u32) br label %next
+
+next:
+    call void @printUInt(%0x0: u32) br label %exit
+
+exit:
+    ret i32 0
+}
