@@ -1,0 +1,19 @@
+extern void @printUShort(u16)
+
+define u16 @div(%a: u16, %b: u16) {
+entry:
+	%0x0 = div |u16, u16|, u16 %a, u16 %b
+	%0x1 = proj |u16, u16|, u16 %0x0, 0
+	ret u16 %0x1
+}
+
+define i32 @main() {
+entry:
+    %0x0 = call u16 @div(10: u16, 5: u16) br label %next
+
+next:
+    call void @printUShort(%0x0: u16) br label %exit
+
+exit:
+    ret i32 0
+}

@@ -6,14 +6,12 @@ import ir.platform.x64.codegen.visitors.*
 import ir.instruction.ArithmeticBinaryOp
 
 
-data class DivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: Assembler): GPOperandsVisitorBinaryOp,
-    XmmOperandsVisitorBinaryOp {
+data class IntDivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: Assembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.size()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
-            is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
-            is IntegerType       -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
+            is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }
@@ -92,38 +90,6 @@ data class DivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: As
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun arrF(dst: Address, first: XmmRegister, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun raaF(dst: XmmRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun araF(dst: Address, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aarF(dst: Address, first: Address, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aaaF(dst: Address, first: Address, second: Address) {
         TODO("Not yet implemented")
     }
 

@@ -162,7 +162,11 @@ private class CodeEmitter(private val data: FunctionData,
             // Floating point division ignores the second operand.
             ArithmeticBinaryOp.Div -> {
                 asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
-                DivCodegen(binary.type(), rdx, asm)(dst, first, second)
+                when (binary.type()) {
+                    is UnsignedIntType -> UIntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
+                    is SignedIntType -> IntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
+                    else -> TODO()
+                }
                 asm.pop(POINTER_SIZE, rdx)
             }
             else -> println("Unimplemented: ${binary.op}")
@@ -304,7 +308,13 @@ private class CodeEmitter(private val data: FunctionData,
         }
 
         asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
-        DivCodegen(binary.type().innerType(1) as ArithmeticType, rdx, asm)(quotientOperand, first, second)
+        val type = binary.type().innerType(1) as ArithmeticType
+        when (type) {
+            is SignedIntType -> IntDivCodegen(type, rdx, asm)(quotientOperand, first, second)
+            is UnsignedIntType -> UIntDivCodegen(type, rdx, asm)(quotientOperand, first, second)
+            else -> TODO()
+        }
+
         asm.pop(POINTER_SIZE, rdx)
     }
 

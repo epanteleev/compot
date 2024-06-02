@@ -12,13 +12,7 @@ entry:
     %0x0 = call u8 @div(10: u8, 5: u8) br label %next
 
 next:
-    call void @printUByte(%0x0: u8) br label %next1
-
-next1:
-    %0x1 = call u8 @div(-10: u8, 5: u8) br label %next2
-
-next2:
-    call void @printUByte(%0x1: u8) br label %exit
+    call void @printUByte(%0x0: u8) br label %exit
 
 exit:
     ret i32 0
