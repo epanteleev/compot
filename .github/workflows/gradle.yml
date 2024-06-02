@@ -18,6 +18,8 @@ jobs:
       uses: gradle/gradle-build-action@v3.3.2
     - name: Build all
       run: gradle :ssa:build :shlang:build
+    - name: Run testcases
+      run: gradle build
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.3.3
       with:
@@ -25,11 +27,3 @@ jobs:
         path: |
           shlang/build/
           ssa/build/
-
-  testcases:
-    name: Testcases
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Run testcases
-        run: gradle :testcases:build
