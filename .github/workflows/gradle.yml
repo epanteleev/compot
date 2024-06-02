@@ -25,4 +25,11 @@ jobs:
         path: |
           shlang/build/
           ssa/build/
-  
+
+  testcases:
+    name: Testcases
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Run testcases
+        run: gradle :testcases:build
