@@ -20,6 +20,10 @@ jobs:
       run: gradle :ssa:build :shlang:build
     - name: Run testcases
       run: gradle build
+    - name: Run-tests
+      run: |
+        (cd tests && ./test-runner.sh)
+        (cd ctest && ./test-runner.sh)
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.3.3
       with:
