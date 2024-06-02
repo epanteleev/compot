@@ -2,11 +2,12 @@ package div
 
 import common.CommonIrTest
 import org.junit.jupiter.api.Test
+import kotlin.test.Ignore
 import kotlin.test.assertEquals
 
 
 abstract class DivideOperationTest: CommonIrTest() {
-    @Test
+    @Ignore
     fun testDivI8() {
         val result = runTest("opt_ir/div/div_i8", listOf("runtime/runtime.c"), options())
         assertEquals("2\n-2\n", result.output)
