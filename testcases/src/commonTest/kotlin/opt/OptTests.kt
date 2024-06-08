@@ -1,3 +1,5 @@
+package opt
+
 import common.CommonIrTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

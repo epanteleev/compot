@@ -1,4 +1,4 @@
-package div
+package opt.div
 
 import common.CommonIrTest
 import kotlin.test.Ignore

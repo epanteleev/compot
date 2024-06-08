@@ -1,4 +1,7 @@
+package shlang
+
 import common.CommonCTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -86,6 +89,18 @@ abstract class ShlangTests: CommonCTest() {
     }
 
     @Test
+    fun testFibonacciRecursive() {
+        val result = runCTest("shlang/fibonacci_rec", listOf("runtime/runtime.c"), options())
+        assertEquals(55, result.exitCode)
+    }
+
+    @Test
+    fun testForLoop() {
+        val result = runCTest("shlang/forLoop", listOf("runtime/runtime.c"), options())
+        assertEquals(30, result.exitCode)
+    }
+
+    @Test
     fun testForLoop0() {
         val result = runCTest("shlang/forLoop0", listOf("runtime/runtime.c"), options())
         assert(result, "Done")
@@ -98,6 +113,12 @@ abstract class ShlangTests: CommonCTest() {
     }
 
     @Test
+    fun testForLoop2() {
+        val result = runCTest("shlang/forLoop2", listOf("runtime/runtime.c"), options())
+        assertEquals(30, result.exitCode)
+    }
+
+    @Test
     fun testArithmetic0() {
         val result = runCTest("shlang/arithmetic0", listOf("runtime/runtime.c"), options())
         assert(result, "4\n")
@@ -106,13 +127,48 @@ abstract class ShlangTests: CommonCTest() {
     @Test
     fun testSizeof0() {
         val result = runCTest("shlang/sizeof0", listOf("runtime/runtime.c"), options())
-        assertEquals(result.exitCode, 0)
+        assertEquals(0, result.exitCode)
     }
 
     @Test
     fun testSizeof1() {
         val result = runCTest("shlang/sizeof1", listOf("runtime/runtime.c"), options())
-        assertEquals(result.exitCode, 0)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testCast1() {
+        val result = runCTest("shlang/cast1", listOf("runtime/runtime.c"), options())
+        assertEquals(23, result.exitCode)
+    }
+
+    @Test
+    fun testDeref1() {
+        val result = runCTest("shlang/deref", listOf("runtime/runtime.c"), options())
+        assertEquals(67, result.exitCode)
+    }
+
+    @Test
+    fun testPrintInt() {
+        val result = runCTest("shlang/printInt", listOf("runtime/runtime.c"), options())
+        assertEquals(20, result.exitCode)
+    }
+
+    @Test
+    fun testFunctionCall1() {
+        val result = runCTest("shlang/functionCall1", listOf("runtime/runtime.c"), options())
+        assertEquals(8, result.exitCode)
+    }
+
+    @Test
+    fun testMath1() {
+        val result = runCTest("shlang/math1", listOf("runtime/runtime.c"), options())
+        assertEquals(4, result.exitCode)
+    }
+
+    @Ignore
+    fun testGOTO() {
+        val result = runCTest("shlang/goto", listOf("runtime/runtime.c"), options())
     }
 }
 
