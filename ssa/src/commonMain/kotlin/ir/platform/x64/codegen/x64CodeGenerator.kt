@@ -162,6 +162,10 @@ private class CodeEmitter(private val data: FunctionData,
             ArithmeticBinaryOp.Or  -> OrCodegen(binary.type(), asm)(dst, first, second)
             // Floating point division ignores the second operand.
             ArithmeticBinaryOp.Div -> {
+                assertion(binary.type() != Type.I8) {
+                    "can't generate code for byte div: type=${binary.type()}"
+                }
+
                 asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
                 when (binary.type()) {
                     is UnsignedIntType -> UIntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
@@ -287,6 +291,8 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(binary: TupleDiv) {
+        val divType = binary.type().innerType(0)
+
         val first  = valueToRegister.operand(binary.first())
         val second = valueToRegister.operand(binary.second())
 

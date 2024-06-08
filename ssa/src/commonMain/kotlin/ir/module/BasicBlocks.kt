@@ -3,6 +3,7 @@ package ir.module
 import common.assertion
 import ir.dominance.DominatorTree
 import ir.dominance.PostDominatorTree
+import ir.instruction.Instruction
 import ir.instruction.Return
 import ir.module.auxiliary.CopyCFG
 import ir.module.block.Block

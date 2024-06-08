@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 
 
 abstract class DivideOperationTest: CommonIrTest() {
-    @Ignore
+    @Test
     fun testDivI8() {
         val result = runTest("opt_ir/div/div_i8", listOf("runtime/runtime.c"), options())
         assertEquals("2\n-2\n", result.output)
@@ -52,6 +52,12 @@ abstract class DivideOperationTest: CommonIrTest() {
     @Test
     fun testDivU64() {
         val result = runTest("opt_ir/div/div_u64", listOf("runtime/runtime.c"), options())
+        assertEquals("2\n", result.output)
+    }
+
+    @Ignore
+    fun testCollatz() {
+        val result = runTest("opt_ir/div/collatz", listOf("runtime/runtime.c"), options())
         assertEquals("2\n", result.output)
     }
 }

@@ -41,7 +41,16 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
                 builder.tupleDiv(resultName, resultType, first, second, secondType)
             }
-            else -> parseBinary(resultName, ArithmeticBinaryOp.Div)
+            else -> {
+                val first      = parseOperand("first operand")
+                iterator.expect<Comma>("','")
+
+                val second = parseOperand("second operand")
+                if (resultType !is ArithmeticTypeToken) {
+                    throw ParseErrorException("should be arithmetic type, but '${resultType}'")
+                }
+                builder.arithmeticBinary(resultName, first, ArithmeticBinaryOp.Div, second, resultType)
+            }
         }
     }
 

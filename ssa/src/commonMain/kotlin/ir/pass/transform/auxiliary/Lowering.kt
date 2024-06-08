@@ -166,6 +166,83 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         }
     }
 
+    private fun killOnDemand(bb: Block, instruction: LocalValue) {
+        instruction as Instruction
+        if (instruction.usedIn().isEmpty()) { //TODO Need DCE
+            bb.kill(instruction) // TODO bb may not contain pointer
+        }
+    }
+
+    private fun replaceByteDiv() {
+        fun extend(bb: Block, inst: Instruction, value: Value): LocalValue {
+            return when (val type = value.type()) {
+                Type.I8 -> bb.insertBefore(inst) { it.sext(value, Type.I16) }
+                else -> throw RuntimeException("type $type")
+            }
+        }
+
+        fun closure(bb: Block, inst: Instruction): Instruction {
+            when {
+                binary(ArithmeticBinaryOp.Div, value(i8()), value(i8())) (inst) -> {
+                    // Before:
+                    //  %res = div i8 %a, %b
+                    //
+                    // After:
+                    //  %extFirst  = sext %a to i16
+                    //  %extSecond = sext %b to i16
+                    //  %resI16 = div i16, %extFirst, %extSecond
+                    //  %res = trunc i16 %resI16 to i8
+
+                    inst as ArithmeticBinary
+                    val extFirst  = extend(bb, inst, inst.first())
+                    val extSecond = extend(bb, inst, inst.second())
+
+                    val newDiv   = bb.insertBefore(inst) { it.arithmeticBinary(extFirst, ArithmeticBinaryOp.Div, extSecond) }
+                    val truncate = bb.insertBefore(inst) { it.trunc(newDiv, Type.I8) }
+                    inst.replaceUsages(truncate)
+                    killOnDemand(bb, inst)
+                    return newDiv
+                }
+                tupleDiv(value(i8()), value(i8())) (inst) -> {
+                    inst as TupleDiv
+
+                    val extFirst  = extend(bb, inst, inst.first())
+                    val extSecond = extend(bb, inst,  inst.second())
+                    val newDiv = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
+                    var last: Instruction = newDiv
+
+                    val divProj = inst.proj(0)
+                    if (divProj != null) {
+                        val proj     = bb.insertBefore(inst) { it.proj(newDiv, 0) }
+                        val truncate = bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
+
+                        divProj.replaceUsages(truncate)
+                        killOnDemand(bb, divProj)
+                        last = truncate
+                    }
+
+                    val remProj = inst.proj(1)
+                    if (remProj != null) {
+                        val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
+                        val truncate = bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
+
+                        remProj.replaceUsages(truncate)
+                        killOnDemand(bb, remProj)
+                        last = truncate
+                    }
+
+                    killOnDemand(bb, inst)
+                    return last
+                }
+            }
+            return inst
+        }
+
+        for (bb in cfg.bfsTraversal()) {
+            bb.transform { inst -> closure(bb, inst) }
+        }
+    }
+
     private fun replaceEscaped() {
         fun closure(bb: Block, inst: Instruction): Instruction {
             when {
@@ -197,6 +274,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
     }
 
     private fun pass() {
+        replaceByteDiv()
         replaceEscaped()
         replaceAllocLoadStores()
         replaceGEPAndStore()

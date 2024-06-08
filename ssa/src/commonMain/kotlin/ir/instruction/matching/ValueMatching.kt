@@ -22,6 +22,14 @@ inline fun copy(crossinline origin: ValueMatcher): InstructionMatcher = {
     it is Copy && origin(it.origin())
 }
 
+inline fun binary(op: ArithmeticBinaryOp, crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
+    it is ArithmeticBinary && it.op == op && a(it.first()) && b(it.second())
+}
+
+inline fun tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
+    it is TupleDiv && a(it.first()) && b(it.second())
+}
+
 inline fun ptr2int(crossinline origin: ValueMatcher): InstructionMatcher = {
     it is Pointer2Int && origin(it.value())
 }
@@ -65,9 +73,13 @@ fun alloc(): ValueMatcher = {
 
 fun nop(): ValueMatcher = { true }
 
+inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()) }
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // Type matchers
 ////////////////////////////////////////////////////////////////////////////////////////
 fun anytype(): TypeMatcher = { true }
 
 fun primitive(): TypeMatcher = { it is PrimitiveType }
+
+fun i8(): TypeMatcher = { it == Type.I8 }
