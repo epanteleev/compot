@@ -1,40 +1,42 @@
 plugins {
-    kotlin("jvm") version "2.0.0"
-    application
+    kotlin("multiplatform") version "2.0.0"
+    distribution
 }
 
 group = "org.ssa"
 version = "1.0"
 
 repositories {
+    mavenLocal()
     mavenCentral()
-}
-
-dependencies {
-    testImplementation(kotlin("test"))
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+    maven { url = uri("https://repo1.maven.org/maven2/") }
+    maven {
+        url = uri("https://repo.spring.io/release")
     }
+    maven {
+        url = uri("https://repository.jboss.org/maven2")
+    }
+    maven { url = uri("https://kotlin.bintray.com/kotlinx") }
 }
 
-application {
-    mainClass.set("startup.OptStartupKt")
-}
+kotlin {
+    jvm {
 
-tasks.named<Test>("test") {
-    useJUnitPlatform()
-}
+    }
+    linuxX64 {
+        binaries {
+            executable()
+        }
+    }
 
-tasks.named<Jar>("jar") {
-    dependsOn.add(tasks.findByName("test"))
-}
+    dependencies {
+        commonMainImplementation("org.jetbrains.kotlin:kotlin-stdlib-common")
+        commonTestImplementation("org.jetbrains.kotlin:kotlin-test-annotations-common")
+        commonTestImplementation("org.jetbrains.kotlin:kotlin-test-common")
+        commonMainImplementation("com.squareup.okio:okio:3.9.0")
 
-tasks.test {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
+        add("jvmTestImplementation", "org.jetbrains.kotlin:kotlin-test-junit")
+        add("jvmTestImplementation", "junit:junit:4.13")
+        add("jvmMainImplementation", "org.jetbrains.kotlin:kotlin-compiler")
     }
 }

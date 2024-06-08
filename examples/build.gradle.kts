@@ -14,12 +14,6 @@ dependencies {
     implementation(project(":ssa"))
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
-
 application {
     mainClass.set("examples.AnalysisKt")
 }

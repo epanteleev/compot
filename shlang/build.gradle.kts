@@ -1,49 +1,53 @@
 plugins {
-    kotlin("jvm") version "2.0.0"
-    application
+    kotlin("multiplatform") version "2.0.0"
+    distribution
 }
 
-group = "org.ssa"
+group = "org.shlang"
 version = "1.0-SNAPSHOT"
 
 repositories {
+    mavenLocal()
     mavenCentral()
-}
-
-dependencies {
-    testImplementation(kotlin("test"))
-    implementation(project(":ssa"))
-}
-
-tasks.test {
-    useJUnitPlatform()
+    maven { url = uri("https://repo1.maven.org/maven2/") }
+    maven {
+        url = uri("https://repo.spring.io/release")
+    }
+    maven {
+        url = uri("https://repository.jboss.org/maven2")
+    }
+    maven { url = uri("https://kotlin.bintray.com/kotlinx") }
 }
 
 kotlin {
-    jvmToolchain(17)
-}
+    jvm {
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
     }
-}
-
-tasks.named<Test>("test") {
-    useJUnitPlatform()
-}
-
-tasks.named<Jar>("jar") {
-    dependsOn.add(tasks.findByName("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
+    linuxX64 {
+        binaries {
+            executable()
+        }
     }
-}
 
-application {
-    mainClass.set("startup.ShlangStartupKt")
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation(project(":ssa"))
+                implementation("org.jetbrains.kotlin:kotlin-test-common")
+                implementation("org.jetbrains.kotlin:kotlin-test-annotations-common")
+                implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
+            }
+        }
+        jvmMain {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-compiler")
+            }
+        }
+        jvmTest {
+            dependencies {
+                implementation("junit:junit:4.13")
+                implementation("org.jetbrains.kotlin:kotlin-test-junit")
+            }
+        }
+    }
 }

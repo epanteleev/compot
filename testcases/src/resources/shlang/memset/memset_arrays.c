@@ -1,5 +1,5 @@
 
-void memset(void *dest, char val, int n) {
+void memset_m(void *dest, char val, int n) {
     char *d = dest;
     for (int i = 0; i < n; i++) {
         d[i] = val;
