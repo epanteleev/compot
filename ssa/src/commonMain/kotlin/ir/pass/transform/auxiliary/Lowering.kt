@@ -204,6 +204,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     return newDiv
                 }
                 binary(ArithmeticBinaryOp.Div, constant().not(), constant()) (inst) -> {
+                    // TODO temporal
                     inst as ArithmeticBinary
                     val second = inst.second()
                     val copy = bb.insertBefore(inst) { it.copy(second) }
@@ -211,6 +212,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     return inst
                 }
                 tupleDiv(constant().not(), constant()) (inst) -> {
+                    // TODO temporal
                     inst as TupleDiv
                     val second = inst.second()
                     val copy = bb.insertBefore(inst) { it.copy(second) }

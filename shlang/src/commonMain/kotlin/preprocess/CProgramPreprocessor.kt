@@ -392,7 +392,7 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
 
     fun preprocessWithKilledSpaces(): MutableList<CToken> {
         val tokens = preprocess0()
-        tokens.removeIf { it is Indent || it is NewLine }
+        tokens.retainAll { it !is Indent && it !is NewLine }
         return tokens as MutableList<CToken> //TODO
     }
 

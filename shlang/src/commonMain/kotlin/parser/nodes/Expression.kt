@@ -190,7 +190,7 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
     fun nameIdentifier(): Identifier {
         return when (primary) {
             is VarNode -> primary.nameIdent()
-            else -> throw IllegalStateException("Function call primary is not a VarNode, but got ${primary.javaClass.simpleName}")
+            else -> throw IllegalStateException("Function call primary is not a VarNode, but got ${primary::class.simpleName}")
         }
     }
 
