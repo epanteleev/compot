@@ -203,6 +203,20 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     killOnDemand(bb, inst)
                     return newDiv
                 }
+                binary(ArithmeticBinaryOp.Div, constant().not(), constant()) (inst) -> {
+                    inst as ArithmeticBinary
+                    val second = inst.second()
+                    val copy = bb.insertBefore(inst) { it.copy(second) }
+                    inst.update(1, copy )
+                    return inst
+                }
+                tupleDiv(constant().not(), constant()) (inst) -> {
+                    inst as TupleDiv
+                    val second = inst.second()
+                    val copy = bb.insertBefore(inst) { it.copy(second) }
+                    inst.update(1, copy )
+                    return inst
+                }
                 tupleDiv(value(i8()), value(i8())) (inst) -> {
                     inst as TupleDiv
 

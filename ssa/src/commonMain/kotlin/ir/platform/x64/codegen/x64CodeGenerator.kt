@@ -291,7 +291,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(binary: TupleDiv) {
-        val divType = binary.type().innerType(0)
+        val divType = binary.type()
 
         val first  = valueToRegister.operand(binary.first())
         val second = valueToRegister.operand(binary.second())
@@ -315,11 +315,10 @@ private class CodeEmitter(private val data: FunctionData,
         }
 
         asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
-        val type = binary.type().innerType(1) as ArithmeticType
-        when (type) {
-            is SignedIntType -> IntDivCodegen(type, rdx, asm)(quotientOperand, first, second)
-            is UnsignedIntType -> UIntDivCodegen(type, rdx, asm)(quotientOperand, first, second)
-            else -> TODO()
+        when (val type = divType.asInnerType<ArithmeticType>(1)) {
+            is SignedIntType   -> IntDivCodegen(type, remainderOperand, asm)(quotientOperand, first, second)
+            is UnsignedIntType -> UIntDivCodegen(type, remainderOperand, asm)(quotientOperand, first, second)
+            else -> throw RuntimeException("type=$type")
         }
 
         asm.pop(POINTER_SIZE, rdx)

@@ -32,11 +32,11 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         val temp           = Files.createTempFile("base", ".S")
         val unoptimizedAsm = File(temp.toString())
         unoptimizedAsm.writeText(unoptimisedCode.toString())
-        GNUAssemblerRunner.run(unoptimizedAsm.toString(), "${commandLineArguments.getOutputFilename()}.o")
 
         if (commandLineArguments.isDumpIr()) {
             Files.copy(temp, File("${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/base.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
+        GNUAssemblerRunner.run(unoptimizedAsm.toString(), "${commandLineArguments.getOutputFilename()}.o")
         unoptimizedAsm.delete()
     }
 
@@ -60,11 +60,11 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         val optimizedAsm = temp.toFile()
 
         optimizedAsm.writeText(optimizedCodegen.toString())
-        GNUAssemblerRunner.run(optimizedAsm.toString(), "${commandLineArguments.getOutputFilename()}.o")
 
         if (commandLineArguments.isDumpIr()) {
             Files.copy(temp, File("${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/opt.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
+        GNUAssemblerRunner.run(optimizedAsm.toString(), "${commandLineArguments.getOutputFilename()}.o")
         optimizedAsm.delete()
     }
 

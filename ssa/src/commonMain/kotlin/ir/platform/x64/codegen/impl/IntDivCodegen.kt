@@ -2,11 +2,12 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.types.*
+import asm.x64.GPRegister.*
 import ir.platform.x64.codegen.visitors.*
 import ir.instruction.ArithmeticBinaryOp
 
 
-data class IntDivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: Assembler): GPOperandsVisitorBinaryOp {
+data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Assembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.size()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
@@ -16,11 +17,23 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm:
         }
     }
 
+    private fun moveRem() {
+        if (rem == rdx) {
+            return
+        }
+        when (rem) {
+            is GPRegister -> asm.mov(size, rdx, rem)
+            is Address    -> asm.mov(size, rdx, rem)
+            else -> throw RuntimeException("rem=$rem")
+        }
+    }
+
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        asm.mov(size, first, GPRegister.rax)
+        asm.mov(size, first, rax)
         asm.cdq(size)
         asm.idiv(size, second)
-        asm.mov(size, GPRegister.rax, dst)
+        asm.mov(size, rax, dst)
+        moveRem()
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
@@ -39,9 +52,7 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm:
         TODO("Not yet implemented")
     }
 
-    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
-    }
+    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) = default(dst, first, second)
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
         TODO("Not yet implemented")
@@ -50,7 +61,15 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm:
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
         val imm = first.value() / second.value()
         asm.mov(size, Imm32(imm), dst)
-        asm.mov(size, Imm32(first.value() % second.value()), rem)
+        val remImm = first.value() % second.value()
+        if (rem == rdx) {
+            return
+        }
+        when (rem) {
+            is GPRegister -> asm.mov(size, Imm32(remImm), rdx)
+            is Address    -> asm.mov(size, Imm32(remImm), rdx)
+            else -> throw RuntimeException("rem=$rem")
+        }
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {

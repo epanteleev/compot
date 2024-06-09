@@ -8,6 +8,11 @@ sealed interface ImmInt: Imm {
 
     fun asImm32(): Imm32
 
+    fun isScaleFactor(): Boolean = when (value()) {
+        1L, 2L, 4L, 8L -> true
+        else -> false
+    }
+
     companion object {
         const val minusZeroFloat: Long = 0x80000000
         val minusZeroDouble: Long = (-0.0).toBits()

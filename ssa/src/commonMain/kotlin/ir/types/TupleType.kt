@@ -9,6 +9,15 @@ class TupleType(val tuple: Array<NonTrivialType>): TrivialType {
         return tuple[index]
     }
 
+    inline fun<reified T: NonTrivialType> asInnerType(index: Int): T {
+        val type = innerType(index)
+        if (type !is T) {
+            throw RuntimeException("unexpected type: '$type'")
+        }
+
+        return type
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false

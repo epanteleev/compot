@@ -1,5 +1,6 @@
 package ir.instruction.matching
 
+import ir.Constant
 import ir.Value
 import ir.instruction.*
 import ir.types.PrimitiveType
@@ -71,7 +72,9 @@ fun alloc(): ValueMatcher = {
     it is Alloc
 }
 
-fun nop(): ValueMatcher = { true }
+inline fun nop(): ValueMatcher = { true }
+
+inline fun constant(): ValueMatcher = { it is Constant }
 
 inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()) }
 

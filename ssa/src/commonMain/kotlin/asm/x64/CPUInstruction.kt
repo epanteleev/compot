@@ -109,7 +109,7 @@ data class Sub(val size: Int, val first: Operand, val second: Operand): Arithmet
 data class iMull(val size: Int, val third: Imm32?, val first: Operand, val second: Operand): Arithmetic {
     override fun toString(): String {
         val t = if (third != null) {
-            " ,$third"
+            " $third,"
         } else {
             ""
         }

@@ -49,8 +49,10 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
         if (dst == second) {
             asm.mul(size, first, dst)
-        } else {
+        } else if (first.isScaleFactor()) {
             asm.lea(size, Address.from(null, 0, second, first.value().toInt()), dst)
+        } else {
+            asm.mul(size, first, second, dst)
         }
     }
 
@@ -66,8 +68,10 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
         if (dst == first) {
             asm.mul(size, second, dst)
-        } else {
+        } else if (second.isScaleFactor()) {
             asm.lea(size, Address.from(null, 0, first, second.value().toInt()), dst)
+        } else {
+            asm.mul(size, second, first, dst)
         }
     }
 
@@ -81,9 +85,7 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
-        // TODO: IMUL r64, r/m64, imm8
-        asm.mov(size, second, dst)
-        asm.mul(size, first, dst)
+        asm.mul(size, first, second, dst)
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {

@@ -1,7 +1,6 @@
 package opt.div
 
 import common.CommonIrTest
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -55,10 +54,16 @@ abstract class DivideOperationTest: CommonIrTest() {
         assertEquals("2\n", result.output)
     }
 
-    @Ignore
+    @Test
     fun testCollatz() {
         val result = runTest("opt_ir/div/collatz", listOf("runtime/runtime.c"), options())
-        assertEquals("2\n", result.output)
+        assertEquals("1\n", result.output)
+    }
+
+    @Test
+    fun testRem() {
+        val result = runTest("opt_ir/div/rem_i32", listOf("runtime/runtime.c"), options())
+        assertEquals("1\n", result.output)
     }
 }
 

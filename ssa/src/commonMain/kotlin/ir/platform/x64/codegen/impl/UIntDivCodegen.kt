@@ -9,7 +9,7 @@ import ir.platform.x64.CallConvention.WORD_SIZE
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class UIntDivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: Assembler):
+class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Assembler):
     GPOperandsVisitorBinaryOp {
     private val size: Int = type.size()
 
@@ -26,10 +26,22 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: Ass
         }
     }
 
+    private fun moveRem() {
+        if (rem == rdx) {
+            return
+        }
+        when (rem) {
+            is GPRegister -> asm.mov(size, rem, rdx)
+            is Address    -> asm.mov(size, rem, rdx)
+            else -> throw RuntimeException("rem=$rem")
+        }
+    }
+
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         prepareRegs(first)
         asm.div(size, second)
         asm.mov(size, rax, dst)
+        moveRem()
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
@@ -59,7 +71,15 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: GPRegister, val asm: Ass
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
         val imm = first.value() / second.value()
         asm.mov(size, Imm32(imm), dst)
-        asm.mov(size, Imm32(first.value() % second.value()), rem)
+        val remImm = first.value() % second.value()
+        if (rem == rdx) {
+            return
+        }
+        when (rem) {
+            is GPRegister -> asm.mov(size, Imm32(remImm), rdx)
+            is Address    -> asm.mov(size, Imm32(remImm), rdx)
+            else -> throw RuntimeException("rem=$rem")
+        }
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
