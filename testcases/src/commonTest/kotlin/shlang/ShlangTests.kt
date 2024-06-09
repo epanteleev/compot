@@ -166,6 +166,12 @@ abstract class ShlangTests: CommonCTest() {
         assertEquals(4, result.exitCode)
     }
 
+    @Test
+    fun testCollatz() {
+        val result = runCTest("shlang/collatz_rec", listOf("runtime/runtime.c"), options())
+        assertEquals(0, result.exitCode)
+    }
+
     @Ignore
     fun testGOTO() {
         val result = runCTest("shlang/goto", listOf("runtime/runtime.c"), options())

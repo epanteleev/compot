@@ -18,6 +18,7 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: As
     }
 
     private fun moveRem() {
+        // TODO duplication!!! Introduce MacroAssembler class.
         if (rem == rdx) {
             return
         }
