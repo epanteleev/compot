@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
     kotlin("multiplatform") version "2.0.0"
     application
@@ -10,14 +12,6 @@ version = "unspecified"
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url = uri("https://repo1.maven.org/maven2/") }
-    maven {
-        url = uri("https://repo.spring.io/release")
-    }
-    maven {
-        url = uri("https://repository.jboss.org/maven2")
-    }
-    maven { url = uri("https://kotlin.bintray.com/kotlinx") }
 }
 
 kotlin {
@@ -54,14 +48,13 @@ kotlin {
     }
 }
 
-tasks.test {
+tasks.withType(Test::class.java).all {
     jvmArgs("-ea")
     mkdir("test-results")
     environment("TEST_RESULT_DIR", "test-results")
-}
 
-tasks.test {
     testLogging {
         events("passed", "skipped", "failed")
+        exceptionFormat = TestExceptionFormat.FULL
     }
 }
