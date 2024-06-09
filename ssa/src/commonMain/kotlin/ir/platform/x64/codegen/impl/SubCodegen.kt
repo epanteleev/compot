@@ -74,7 +74,7 @@ data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        asm.mov(size, Imm32(first.value() - second.value()), dst) //TODO overflow
+        asm.mov(size, Imm32.of(first.value() - second.value()), dst) //TODO overflow
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -92,7 +92,7 @@ data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        asm.mov(size, Imm32(first.value() - second.value()), dst)
+        asm.mov(size, Imm32.of(first.value() - second.value()), dst)
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {

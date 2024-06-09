@@ -63,7 +63,7 @@ private class CodeEmitter(private val data: FunctionData,
         asm.mov(POINTER_SIZE, rsp, rbp)
 
         if (stackSize != 0) {
-            asm.sub(POINTER_SIZE, Imm32(stackSize.toLong()), rsp)
+            asm.sub(POINTER_SIZE, Imm32.of(stackSize.toLong()), rsp)
         }
         for (reg in calleeSaveRegisters) {
             asm.push(POINTER_SIZE, reg)
@@ -91,7 +91,6 @@ private class CodeEmitter(private val data: FunctionData,
             ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.And -> AndCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Or  -> OrCodegen(binary.type(), asm)(dst, first, second)
-            // Floating point division ignores the second operand.
             ArithmeticBinaryOp.Div -> {
                 assertion(binary.type() != Type.I8) {
                     "can't generate code for byte div: type=${binary.type()}"
@@ -533,7 +532,7 @@ private class CodeEmitter(private val data: FunctionData,
 
         val size = context.adjustStackSize()
         if (size != 0) {
-            asm.sub(POINTER_SIZE, Imm32(size.toLong()), rsp)
+            asm.sub(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
         }
     }
 
@@ -543,7 +542,7 @@ private class CodeEmitter(private val data: FunctionData,
 
         val size = context.adjustStackSize()
         if (size != 0) {
-            asm.add(POINTER_SIZE, Imm32(size.toLong()), rsp)
+            asm.add(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
         }
 
         for ((idx, arg) in context.savedXmmRegisters.reversed().withIndex()) {

@@ -60,14 +60,14 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
         val imm = first.value() / second.value()
-        asm.mov(size, Imm32(imm), dst)
+        asm.mov(size, Imm32.of(imm), dst)
         val remImm = first.value() % second.value()
         if (rem == rdx) {
             return
         }
         when (rem) {
-            is GPRegister -> asm.mov(size, Imm32(remImm), rdx)
-            is Address    -> asm.mov(size, Imm32(remImm), rdx)
+            is GPRegister -> asm.mov(size, Imm32.of(remImm), rdx)
+            is Address    -> asm.mov(size, Imm32.of(remImm), rdx)
             else -> throw RuntimeException("rem=$rem")
         }
     }

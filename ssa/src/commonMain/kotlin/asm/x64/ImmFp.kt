@@ -15,7 +15,7 @@ data class ImmFp32(val fp: Float): ImmFp {
     }
 
     override fun bits(): ImmInt {
-        return Imm64(fp.toBits().toLong())
+        return Imm64.of(fp.toBits().toLong())
     }
 
     override operator fun unaryMinus(): ImmFp {
@@ -40,7 +40,7 @@ data class ImmFp64(val fp: Double): ImmFp {
     }
 
     override fun bits(): ImmInt {
-        return Imm64(fp.toBits())
+        return Imm64.of(fp.toBits())
     }
 
     override operator fun unaryMinus(): ImmFp {

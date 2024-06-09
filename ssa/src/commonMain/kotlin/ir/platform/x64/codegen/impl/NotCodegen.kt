@@ -44,11 +44,11 @@ data class NotCodegen(val type: IntegerType, val asm: Assembler): GPOperandsVisi
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        asm.mov(size, Imm32(src.value().inv()), dst)
+        asm.mov(size, Imm32.of(src.value().inv()), dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {
-        asm.mov(size, Imm32(src.value().inv()), dst)
+        asm.mov(size, Imm32.of(src.value().inv()), dst)
     }
 
     override fun default(dst: Operand, src: Operand) {
