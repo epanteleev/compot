@@ -6,10 +6,11 @@ import ir.instruction.ArithmeticBinaryOp
 import asm.x64.GPRegister.*
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.WORD_SIZE
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Assembler):
+class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroAssembler):
     GPOperandsVisitorBinaryOp {
     private val size: Int = type.size()
 
@@ -26,22 +27,11 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Assemb
         }
     }
 
-    private fun moveRem() {
-        if (rem == rdx) {
-            return
-        }
-        when (rem) {
-            is GPRegister -> asm.mov(size, rem, rdx)
-            is Address    -> asm.mov(size, rem, rdx)
-            else -> throw RuntimeException("rem=$rem")
-        }
-    }
-
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         prepareRegs(first)
         asm.div(size, second)
         asm.mov(size, rax, dst)
-        moveRem()
+        asm.moveRem(size, rem)
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {

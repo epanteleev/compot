@@ -18,7 +18,7 @@ private class InstructionList {
 
 // X86 and amd64 instruction reference
 // https://www.felixcloutier.com/x86/
-class Assembler(private val name: String) {
+abstract class Assembler(private val name: String) {
     private val codeBlocks: LinkedHashMap<Label, InstructionList>
     private val activeContext: BuilderContext
 

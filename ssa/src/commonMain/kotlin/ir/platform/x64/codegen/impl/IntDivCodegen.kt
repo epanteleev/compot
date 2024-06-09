@@ -5,9 +5,10 @@ import ir.types.*
 import asm.x64.GPRegister.*
 import ir.platform.x64.codegen.visitors.*
 import ir.instruction.ArithmeticBinaryOp
+import ir.platform.x64.codegen.MacroAssembler
 
 
-data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Assembler): GPOperandsVisitorBinaryOp {
+data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.size()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
@@ -17,24 +18,12 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: As
         }
     }
 
-    private fun moveRem() {
-        // TODO duplication!!! Introduce MacroAssembler class.
-        if (rem == rdx) {
-            return
-        }
-        when (rem) {
-            is GPRegister -> asm.mov(size, rdx, rem)
-            is Address    -> asm.mov(size, rdx, rem)
-            else -> throw RuntimeException("rem=$rem")
-        }
-    }
-
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         asm.mov(size, first, rax)
         asm.cdq(size)
         asm.idiv(size, second)
         asm.mov(size, rax, dst)
-        moveRem()
+        asm.moveRem(size, rem)
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {

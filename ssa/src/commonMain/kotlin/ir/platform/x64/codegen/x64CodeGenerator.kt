@@ -32,7 +32,7 @@ import ir.platform.x64.CallConvention.retReg
 import ir.platform.x64.regalloc.SavedContext
 
 
-data class CodegenException(override val message: String): Exception(message)
+internal data class CodegenException(override val message: String): Exception(message)
 
 
 internal class X64CodeGenerator(val module: Module): AnyCodeGenerator {
@@ -46,7 +46,7 @@ private class CodeEmitter(private val data: FunctionData,
                           private val unit: CompilationUnit,
                           private val valueToRegister: RegisterAllocation,
 ): IRInstructionVisitor<Unit> {
-    private val asm: Assembler = unit.mkFunction(data.prototype.name)
+    private val asm = unit.mkFunction(data.prototype.name)
     private var previous: Block? = null
     private var next: Block? = null
 
@@ -54,75 +54,6 @@ private class CodeEmitter(private val data: FunctionData,
     fun previous(): Block = previous?: throw RuntimeException("previous block is null")
 
     private fun makeLabel(bb: Block) = ".L$functionCounter.${bb.index}"
-
-
-    private fun setccFLoat(jmpType: FloatPredicate, dst: Operand) {
-        when (jmpType) {
-            FloatPredicate.Ult -> {
-                when (dst) {
-                    is Address    -> asm.setcc(8, SetCCType.SETB, dst)
-                    is GPRegister -> asm.setcc(8, SetCCType.SETB, dst)
-                    else -> throw CodegenException("unknown jmpType=$jmpType")
-                }
-            }
-            else -> throw CodegenException("unknown jmpType=$jmpType")
-        }
-    }
-
-    private fun setccInt(jmpType: IntPredicate, dst: Operand) {
-        when (jmpType) {
-            IntPredicate.Eq -> {
-                when (dst) {
-                    is Address    -> asm.setcc(8, SetCCType.SETE, dst)
-                    is GPRegister -> asm.setcc(8, SetCCType.SETE, dst)
-                    else -> throw CodegenException("unknown jmpType=$jmpType")
-                }
-            }
-            IntPredicate.Ne -> {
-                when (dst) {
-                    is Address    -> asm.setcc(8, SetCCType.SETNE, dst)
-                    is GPRegister -> asm.setcc(8, SetCCType.SETNE, dst)
-                    else -> throw CodegenException("unknown jmpType=$jmpType")
-                }
-            }
-            IntPredicate.Gt -> {
-                when (dst) {
-                    is Address    -> asm.setcc(8, SetCCType.SETG, dst)
-                    is GPRegister -> asm.setcc(8, SetCCType.SETG, dst)
-                    else -> throw CodegenException("unknown jmpType=$jmpType")
-                }
-            }
-            IntPredicate.Ge -> {
-                when (dst) {
-                    is Address    -> asm.setcc(8, SetCCType.SETGE, dst)
-                    is GPRegister -> asm.setcc(8, SetCCType.SETGE, dst)
-                    else -> throw CodegenException("unknown jmpType=$jmpType")
-                }
-            }
-            IntPredicate.Lt -> {
-                when (dst) {
-                    is Address    -> asm.setcc(8, SetCCType.SETL, dst)
-                    is GPRegister -> asm.setcc(8, SetCCType.SETL, dst)
-                    else -> throw CodegenException("unknown jmpType=$jmpType")
-                }
-            }
-            IntPredicate.Le -> {
-                when (dst) {
-                    is Address    -> asm.setcc(8, SetCCType.SETLE, dst)
-                    is GPRegister -> asm.setcc(8, SetCCType.SETLE, dst)
-                    else -> throw CodegenException("unknown jmpType=$jmpType")
-                }
-            }
-        }
-    }
-
-    fun setcc(jmpType: AnyPredicateType, dst: Operand) {
-        when (jmpType) {
-            is IntPredicate   -> setccInt(jmpType, dst)
-            is FloatPredicate -> setccFLoat(jmpType, dst)
-            else -> throw CodegenException("unknown jmpType=$jmpType")
-        }
-    }
 
     private fun emitPrologue() {
         val stackSize = valueToRegister.spilledLocalsSize()
@@ -339,7 +270,7 @@ private class CodeEmitter(private val data: FunctionData,
 
         val isNeighbour = flag2Int.prev() != null && flag2Int.prev() == flag2Int.value()
         if (isNeighbour) {
-            setcc(compare.predicate(), dst)
+            asm.setcc(compare.predicate(), dst)
         }
         Flag2IntCodegen(flag2Int.type().size(), asm)(dst, src)
     }
@@ -424,7 +355,7 @@ private class CodeEmitter(private val data: FunctionData,
 
         asm.cmp(size, second, first as GPRegister)
         if (needSetcc(icmp)) {
-            setcc(icmp.predicate(), dst)
+            asm.setcc(icmp.predicate(), dst)
         }
     }
 
@@ -447,7 +378,7 @@ private class CodeEmitter(private val data: FunctionData,
 
         asm.cmp(size, second, first as GPRegister)
         if (needSetcc(pcmp)) {
-            setcc(pcmp.predicate(), dst)
+            asm.setcc(pcmp.predicate(), dst)
         }
     }
 
@@ -467,7 +398,7 @@ private class CodeEmitter(private val data: FunctionData,
 
         asm.cmp(size, second, first as GPRegister)
         if (needSetcc(ucmp)) {
-            setcc(ucmp.predicate(), dst)
+            asm.setcc(ucmp.predicate(), dst)
         }
     }
 
@@ -506,7 +437,7 @@ private class CodeEmitter(private val data: FunctionData,
             }
         }
         if (needSetcc(fcmp)) {
-            setcc(fcmp.predicate(), dst)
+            asm.setcc(fcmp.predicate(), dst)
         }
     }
 
@@ -525,62 +456,22 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(branchCond: BranchCond) {
-        val cond = branchCond.condition()
-        if (cond is BoolValue) {
-            if (cond.bool) {
-                doJump(branchCond.onTrue())
-            } else {
-                doJump(branchCond.onFalse())
+        when (val cond = branchCond.condition()) {
+            is BoolValue -> {
+                // Condition is constant - true or false.
+                // Just select necessary branch and jump to it.
+                if (cond.bool) {
+                    doJump(branchCond.onTrue())
+                } else {
+                    doJump(branchCond.onFalse())
+                }
             }
-            return
+            is CompareInstruction -> {
+                val jmpType = asm.condType(cond)
+                asm.jcc(jmpType, makeLabel(branchCond.onFalse()))
+            }
+            else -> throw CodegenException("unknown condition type, cond=${cond}")
         }
-
-        cond as CompareInstruction
-        val jmpType = when (cond) {
-            is SignedIntCompare -> {
-                when (val convType = cond.predicate().invert()) {
-                    IntPredicate.Eq -> CondType.JE
-                    IntPredicate.Ne -> CondType.JNE
-                    IntPredicate.Gt -> CondType.JG
-                    IntPredicate.Ge -> CondType.JGE
-                    IntPredicate.Lt -> CondType.JL
-                    IntPredicate.Le -> CondType.JLE
-                    else -> throw CodegenException("unknown conversion type: convType=$convType")
-                }
-            }
-            is UnsignedIntCompare, is PointerCompare -> {
-                when (val convType = cond.predicate().invert()) {
-                    IntPredicate.Eq -> CondType.JE
-                    IntPredicate.Ne -> CondType.JNE
-                    IntPredicate.Gt -> CondType.JA
-                    IntPredicate.Ge -> CondType.JAE
-                    IntPredicate.Lt -> CondType.JB
-                    IntPredicate.Le -> CondType.JBE
-                    else -> throw CodegenException("unknown conversion type: convType=$convType")
-                }
-            }
-            is FloatCompare -> {
-                when (val convType = cond.predicate().invert()) {
-                    FloatPredicate.Oeq -> CondType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
-                    FloatPredicate.Ogt -> TODO()
-                    FloatPredicate.Oge -> CondType.JAE
-                    FloatPredicate.Olt -> TODO()
-                    FloatPredicate.Ole -> CondType.JBE
-                    FloatPredicate.One -> CondType.JNE // TODO Clang insert extra instruction 'jp ${labelName}"
-                    FloatPredicate.Ord -> TODO()
-                    FloatPredicate.Ueq -> TODO()
-                    FloatPredicate.Ugt -> TODO()
-                    FloatPredicate.Uge -> TODO()
-                    FloatPredicate.Ult -> TODO()
-                    FloatPredicate.Ule -> CondType.JBE
-                    FloatPredicate.Uno -> TODO()
-                    FloatPredicate.Une -> TODO()
-                    else -> throw CodegenException("unknown conversion type: convType=$convType")
-                }
-            }
-            else -> throw CodegenException("unknown type instruction=$cond")
-        }
-        asm.jcc(jmpType, makeLabel(branchCond.onFalse()))
     }
 
     override fun visit(copy: Copy) {
@@ -699,25 +590,25 @@ private class CodeEmitter(private val data: FunctionData,
     override fun visit(itofp: Int2Float) {
         val dst = valueToRegister.operand(itofp)
         val src = valueToRegister.operand(itofp.value())
-        Int2FloatCodegen(itofp.type(), itofp.value().type() as IntegerType, asm)(dst, src)
+        Int2FloatCodegen(itofp.type(), itofp.value().asType<IntegerType>(), asm)(dst, src)
     }
 
     override fun visit(zext: ZeroExtend) {
         val dst = valueToRegister.operand(zext)
         val src = valueToRegister.operand(zext.value())
-        ZeroExtendCodegen(zext.value().type() as IntegerType, asm)(dst, src)
+        ZeroExtendCodegen(zext.value().asType<IntegerType>(), asm)(dst, src)
     }
 
     override fun visit(sext: SignExtend) {
         val dst = valueToRegister.operand(sext)
         val src = valueToRegister.operand(sext.value())
-        SignExtendCodegen(sext.value().type() as IntegerType, sext.type(), asm)(dst, src)
+        SignExtendCodegen(sext.value().asType<IntegerType>(), sext.type(), asm)(dst, src)
     }
 
     override fun visit(trunc: Truncate) {
         val dst = valueToRegister.operand(trunc)
         val src = valueToRegister.operand(trunc.value())
-        TruncateCodegen(trunc.value().type() as IntegerType, trunc.type(), asm)(dst, src)
+        TruncateCodegen(trunc.value().asType<IntegerType>(), trunc.type(), asm)(dst, src)
     }
 
     override fun visit(fptruncate: FpTruncate) {
@@ -735,12 +626,12 @@ private class CodeEmitter(private val data: FunctionData,
     override fun visit(fptosi: FloatToInt) {
         val dst = valueToRegister.operand(fptosi)
         val src = valueToRegister.operand(fptosi.value())
-        FloatToSignedCodegen(fptosi.type(), fptosi.value().type() as FloatingPointType, asm)(dst, src)
+        FloatToSignedCodegen(fptosi.type(), fptosi.value().asType<FloatingPointType>(), asm)(dst, src)
     }
 
     override fun visit(select: Select) {
-        val dst = valueToRegister.operand(select)
-        val onTrue = valueToRegister.operand(select.onTrue())
+        val dst     = valueToRegister.operand(select)
+        val onTrue  = valueToRegister.operand(select.onTrue())
         val onFalse = valueToRegister.operand(select.onFalse())
         SelectCodegen(select.type(), select.condition() as CompareInstruction, asm)(dst, onTrue, onFalse)
     }

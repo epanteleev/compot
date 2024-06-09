@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
     kotlin("multiplatform") version "2.0.0"
     distribution
@@ -30,5 +32,13 @@ kotlin {
         add("jvmTestImplementation", "org.jetbrains.kotlin:kotlin-test-junit")
         add("jvmTestImplementation", "junit:junit:4.13")
         add("jvmMainImplementation", "org.jetbrains.kotlin:kotlin-compiler")
+    }
+}
+
+tasks.withType(Test::class.java).all {
+    jvmArgs("-ea")
+    testLogging {
+        events("passed", "skipped", "failed")
+        exceptionFormat = TestExceptionFormat.FULL
     }
 }

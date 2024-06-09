@@ -3,14 +3,15 @@ package ir.platform.x64
 import asm.x64.*
 import ir.global.*
 import ir.platform.common.CompiledModule
+import ir.platform.x64.codegen.MacroAssembler
 
 
 class CompilationUnit: CompiledModule() {
-    private val functions = arrayListOf<Assembler>()
+    private val functions = arrayListOf<MacroAssembler>()
     private val symbols = mutableSetOf<ObjSymbol>()
 
-    fun mkFunction(name: String): Assembler {
-        val fn = Assembler(name)
+    fun mkFunction(name: String): MacroAssembler {
+        val fn = MacroAssembler(name)
         functions.add(fn)
         return fn
     }
