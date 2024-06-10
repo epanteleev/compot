@@ -391,6 +391,16 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<L
         return bb().proj(origin, proj.index())
     }
 
+    override fun visit(switch: Switch): LocalValue? {
+        val newValue   = mapUsage<Value>(switch.value())
+        val newDefault = mapBlock(switch.default())
+        val newTargets = switch.targets().map { mapBlock(it) }
+        val newTable   = switch.table().map { mapUsage<Value>(it) }
+
+        bb().switch(newValue, newDefault, newTable, newTargets)
+        return null
+    }
+
     override fun visit(memcpy: Memcpy): ValueInstruction? {
         val dst = mapUsage<Value>(memcpy.destination())
         val src = mapUsage<Value>(memcpy.source())

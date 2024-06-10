@@ -2,6 +2,7 @@ package asm.x64
 
 import asm.x64.ImmInt.Companion.canBeImm32
 import common.assertion
+import kotlin.jvm.JvmInline
 
 
 sealed interface ImmInt: Imm {
@@ -24,7 +25,8 @@ sealed interface ImmInt: Imm {
     }
 }
 
-class Imm32 private constructor(private val value: Long) : ImmInt {
+@JvmInline
+value class Imm32 private constructor(private val value: Long) : ImmInt {
     init {
         require(Int.MIN_VALUE < value && value < Int.MAX_VALUE) //TODO
     }
@@ -41,28 +43,15 @@ class Imm32 private constructor(private val value: Long) : ImmInt {
 
     override fun asImm32(): Imm32 = this
 
-    override fun hashCode(): Int {
-        return value.hashCode()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as Imm32
-
-        return value == other.value
-    }
-
     companion object {
         fun of(value: Long): Imm32 {
-            // TODO object pool???
             return Imm32(value)
         }
     }
 }
 
-class Imm64 private constructor(val value: Long) : ImmInt {
+@JvmInline
+value class Imm64 private constructor(val value: Long) : ImmInt {
     override fun toString(): String {
         return "$$value"
     }
@@ -73,10 +62,6 @@ class Imm64 private constructor(val value: Long) : ImmInt {
         return toString()
     }
 
-    override fun hashCode(): Int {
-        return value.hashCode()
-    }
-
     override fun asImm32(): Imm32 {
         assertion(canBeImm32(value)) {
             "cannot be cast to imm32: value=$value"
@@ -85,18 +70,8 @@ class Imm64 private constructor(val value: Long) : ImmInt {
         return Imm32.of(value)
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as Imm64
-
-        return value == other.value
-    }
-
     companion object {
         fun of(value: Long): Imm64 {
-            // TODO object pool???
             return Imm64(value)
         }
     }

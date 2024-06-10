@@ -1,10 +1,10 @@
 package ir.instruction
 
-import common.assertion
 import ir.Value
 import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
+import common.assertion
 import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Flag2Int private constructor(id: Identity, owner: Block, toType: IntegerType, value: Value):

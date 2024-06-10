@@ -52,4 +52,5 @@ interface IRInstructionVisitor<T> {
     fun visit(leaStack: LeaStack): T
     fun visit(binary: TupleDiv): T
     fun visit(proj: Projection): T
+    fun visit(switch: Switch): T
 }

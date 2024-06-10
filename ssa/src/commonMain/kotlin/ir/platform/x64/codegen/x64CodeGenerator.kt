@@ -258,6 +258,10 @@ private class CodeEmitter(private val data: FunctionData,
         // Skip. Projection must be handled by its user
     }
 
+    override fun visit(switch: Switch) {
+        TODO("Not yet implemented")
+    }
+
     override fun visit(call: Call) {
         emitCall(call)
     }

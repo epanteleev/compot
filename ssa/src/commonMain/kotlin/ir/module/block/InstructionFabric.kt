@@ -45,6 +45,7 @@ interface InstructionFabric {
     fun ptr2int(value: Value, toType: IntegerType): Pointer2Int
     fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant)
     fun proj(tuple: TupleInstruction, index: Int): Projection
+    fun switch(value: Value, default: Label, table: List<Value>, targets: List<Label>): Switch
 }
 
 interface InternalInstructionFabric {

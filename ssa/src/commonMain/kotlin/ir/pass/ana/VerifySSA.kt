@@ -464,6 +464,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    override fun visit(switch: Switch) {
+        assert(Switch.typeCheck(switch)) {
+            "Instruction '${switch.dump()}' has inconsistent types."
+        }
+    }
+
     companion object {
         fun run(module: Module): Module {
             val prototypes = module.prototypes

@@ -7,6 +7,7 @@ import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.types.NonTrivialType
+import kotlin.jvm.JvmInline
 
 
 class Call private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>, target: Block):

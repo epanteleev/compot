@@ -1,7 +1,15 @@
 package ir.module.block
 
+interface LabelResolver {
+    fun findBlock(label: Label): Block
+}
+
 interface Label {
     val index: Int
+
+    fun resolve(labelResolver: LabelResolver): Block {
+        return labelResolver.findBlock(this)
+    }
 
     companion object {
         val entry = BlockViewer(0)

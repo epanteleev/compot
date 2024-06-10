@@ -6,6 +6,7 @@ import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.*
 import common.LeakedLinkedList
+import common.arrayFrom
 import common.assertion
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
@@ -339,6 +340,11 @@ class Block(override val index: Int):
 
     override fun proj(tuple: TupleInstruction, index: Int): Projection {
         return withOutput { Projection.make(it, this, tuple, index) }
+    }
+
+    override fun switch(value: Value, default: Label, table: List<Value>, targets: List<Label>): Switch {
+        val resolved = arrayFrom(targets) { it as Block }
+        return addTerminate { Switch.make(it, this, value, default as Block, table.toTypedArray(), resolved) }
     }
 
     override fun downStackFrame(callable: Callable): DownStackFrame {

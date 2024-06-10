@@ -8,17 +8,18 @@ import ir.instruction.Return
 import ir.module.auxiliary.CopyCFG
 import ir.module.block.Block
 import ir.module.block.Label
+import ir.module.block.LabelResolver
 import ir.module.block.iterator.*
 import ir.pass.ana.LoopDetection
 import ir.pass.ana.LoopInfo
 
 
-class BasicBlocks(private val basicBlocks: MutableList<Block>) {
+class BasicBlocks(private val basicBlocks: MutableList<Block>): LabelResolver {
     fun blocks(): MutableList<Block> = basicBlocks
 
     fun size(): Int = basicBlocks.size
 
-    fun findBlock(label: Label): Block {
+    override fun findBlock(label: Label): Block {
         if (label is Block) {
             assertion(basicBlocks.contains(label)) { "Cannot find correspond block: $label" }
             return label
