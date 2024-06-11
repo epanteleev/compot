@@ -230,8 +230,32 @@ class TypeResolutionTest {
     }
 
     @Test
+    fun testStructDeclaration1() {
+        val tokens = CTokenizer.apply("struct point;")
+        val parser = CProgramParser.build(tokens)
+        val expr = parser.declaration() as Declaration
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        assertEquals("struct point", typeResolver.getStructType("point").toString())
+    }
+
+    @Test
     fun testArrayDeclaration() {
         val tokens = CTokenizer.apply("int a[10];")
+        val parser = CProgramParser.build(tokens)
+        val expr = parser.declaration() as Declaration
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        val a = typeResolver["a"]
+        assertEquals("int[10]", a.toString())
+    }
+
+    @Test
+    fun testArrayDeclaration1() {
+        val tokens = CTokenizer.apply("int a[5 + 5];")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         println(expr)

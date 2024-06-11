@@ -1,11 +1,15 @@
 package parser.nodes
 
+import gen.consteval.ConstEvalContext
+import gen.consteval.ConstEvalExpression
+import parser.ParserException
+import parser.ProgramMessage
 import parser.nodes.visitors.DirectDeclaratorParamVisitor
+import tokenizer.CToken
 import tokenizer.Identifier
 import types.*
 
 abstract class DirectDeclaratorParam: Node() {
-
     abstract fun resolveType(baseType: CType, typeHolder: TypeHolder): CType
     abstract fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T
 }
@@ -18,8 +22,22 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
             return CPointerType(baseType)
         }
 
-        val size = constexpr as NumNode //TODO evaluate
-        return CompoundType(CArrayType(baseType, size.toLong.data.toInt()))
+        val size = ConstEvalExpression.eval(constexpr, constExpressionCtx)
+        return CompoundType(CArrayType(baseType, size))
+    }
+
+    companion object {
+        val constExpressionCtx = object: ConstEvalContext {
+            override fun getVariable(name: CToken): Int {
+                val error = ProgramMessage("Cannot consteval expression: found variable", name)
+                throw ParserException(error)
+            }
+
+            override fun callFunction(name: CToken, args: List<Int>): Int {
+                val error = ProgramMessage("Cannot consteval expression: found function", name)
+                throw ParserException(error)
+            }
+        }
     }
 }
 
