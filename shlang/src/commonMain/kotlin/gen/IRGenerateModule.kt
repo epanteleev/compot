@@ -28,8 +28,9 @@ class IRGen private constructor() {
         for (type in types) {
             when (type) {
                 is CFunctionType -> {
-                    val argTypes = type.argsTypes.map { TypeConverter.toIRType<NonTrivialType>(it) }
-                    val returnType = TypeConverter.toIRType<Type>(type.retType)
+                    val abstrType = type.functionType
+                    val argTypes = abstrType .argsTypes.map { TypeConverter.toIRType<NonTrivialType>(it) }
+                    val returnType = TypeConverter.toIRType<Type>(abstrType .retType)
                     moduleBuilder.createExternFunction(type.name, returnType, argTypes)
                 }
                 else -> throw IRCodeGenError("Function or struct expected")

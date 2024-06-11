@@ -58,10 +58,9 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
         val type = specifier.resolveType(typeHolder)
-        val s = functionDeclarator().resolveParams(typeHolder)
-        val fnType = CFunctionType(name(), type, s, functionDeclarator().isVarArg())
-        typeHolder.addFunctionType(name(), fnType)
-        return fnType
+        val s = declarator.resolveType(type, typeHolder) as CFunctionType
+        typeHolder.addFunctionType(name(), s) //TODO already added???
+        return s
     }
 
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)

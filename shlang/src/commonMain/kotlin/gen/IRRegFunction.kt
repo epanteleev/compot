@@ -619,9 +619,9 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val name = functionNode.name()
         val parameters = functionNode.functionDeclarator().params()
         val fnType = functionNode.resolveType(typeHolder)
-        val retType = toIRType<Type>(fnType.retType)
+        val retType = toIRType<Type>(fnType.retType())
 
-        currentFunction = moduleBuilder.createFunction(name, retType, fnType.argsTypes.map { toIRType(it) })
+        currentFunction = moduleBuilder.createFunction(name, retType, fnType.args().map { toIRType(it) })
 
         varStack.push()
 

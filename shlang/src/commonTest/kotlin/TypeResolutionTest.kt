@@ -193,6 +193,18 @@ class TypeResolutionTest {
     }
 
     @Test
+    fun testFunctionPointerDeclaration1() {
+        val tokens = CTokenizer.apply("int (*add)(int, int);")
+        val parser = CProgramParser.build(tokens)
+        val expr = parser.declaration() as Declaration
+        println(expr)
+        val typeResolver = TypeHolder.default()
+        expr.resolveType(typeResolver)
+
+        assertEquals("int(*)(int, int)", typeResolver["add"].toString())
+    }
+
+    @Test
     fun testFunctionPointerDeclaration2() {
         val tokens = CTokenizer.apply("int (*add)(void) = 0, val = 999, *v = 0;")
         val parser = CProgramParser.build(tokens)

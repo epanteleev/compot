@@ -110,7 +110,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             val expr = expression()
             if (check(";")) {
                 eat()
-                return@rule ReturnStatement(expr ?: EmptyExpression())
+                return@rule ReturnStatement(expr ?: EmptyExpression)
             }
             throw ParserException(ProgramMessage("Expected ';'", peak()))
         }
@@ -267,7 +267,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             val condition = if (!check(";")) {
                 expression() ?: throw ParserException(ProgramMessage("Expected expression", peak()))
             } else {
-                EmptyExpression()
+                EmptyExpression
             }
 
             if (!check(";")) {
@@ -278,7 +278,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             val update = if (!check(")")) {
                 expression() ?: throw ParserException(ProgramMessage("Expected expression", peak()))
             } else {
-                EmptyExpression()
+                EmptyExpression
             }
             if (!check(")")) {
                 throw ParserException(ProgramMessage("Expected ')'", peak()))
@@ -562,7 +562,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             val expr = constant_expression() ?: throw ParserException(ProgramMessage("Expected constant expression", peak()))
             return@rule StructDeclarator(declarator, expr)
         }
-        return@rule StructDeclarator(declarator, EmptyExpression())
+        return@rule StructDeclarator(declarator, EmptyExpression)
     }
 
     // struct_declarator_list
@@ -924,7 +924,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                     eat()
                     if (check("]")) {
                         eat()
-                        declarators.add(ArrayDeclarator(EmptyExpression()))
+                        declarators.add(ArrayDeclarator(EmptyExpression))
                         continue
                     }
                     val size = constant_expression()?: throw ParserException(ProgramMessage("Expected constant expression", peak()))
@@ -1083,13 +1083,13 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                 eat()
                 if (check("]")) {
                     eat()
-                    abstractDeclarators.add(DirectArrayDeclarator(DummyNode))
+                    abstractDeclarators.add(ArrayDeclarator(EmptyExpression))
                     continue
                 }
                 val size = constant_expression()?: throw ParserException(ProgramMessage("Expected constant expression", peak()))
                 if (check("]")) {
                     eat()
-                    abstractDeclarators.add(DirectArrayDeclarator(size))
+                    abstractDeclarators.add(ArrayDeclarator(size))
                     continue
                 }
                 throw ParserException(ProgramMessage("Expected ']'", peak()))

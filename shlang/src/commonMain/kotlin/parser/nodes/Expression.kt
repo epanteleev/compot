@@ -163,7 +163,7 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     }
 }
 
-class EmptyExpression : Expression() {
+object EmptyExpression : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize { CType.UNKNOWN }

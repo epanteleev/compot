@@ -123,17 +123,17 @@ data class CPointerType(val type: CType) : AnyCPointerType {
     }
 }
 
-data class CFunPointerType(val returnType: CType, val argsTypes: List<CType>) : AnyCPointerType {
+data class CFunPointerType(val cFunctionType: AbstractCFunctionType) : AnyCPointerType {
     override fun baseType(): BaseType = CPrimitive.UNKNOWN
     override fun qualifiers(): List<TypeProperty> = emptyList()
 
     override fun toString(): String {
         return buildString {
-            append(returnType)
+            append(cFunctionType.retType)
             append("(*)(")
-            argsTypes.forEachIndexed { index, type ->
+            cFunctionType.argsTypes.forEachIndexed { index, type ->
                 append(type)
-                if (index < argsTypes.size - 1) append(", ")
+                if (index < cFunctionType.argsTypes.size - 1) append(", ")
             }
             append(")")
         }
@@ -189,19 +189,40 @@ data class CompoundType(val baseType: BaseType, val properties: List<TypePropert
     override fun qualifiers(): List<TypeProperty> = properties
 }
 
-data class CFunctionType(val name: String, val retType: CType, val argsTypes: List<CType>, var variadic: Boolean) : CType {
+data class AbstractCFunctionType(val retType: CType, val argsTypes: List<CType>, var variadic: Boolean): CType {
     override fun baseType(): BaseType = retType.baseType()
     override fun qualifiers(): List<TypeProperty> = retType.qualifiers()
 
     override fun toString(): String {
         return buildString {
             append(retType)
-            append(" $name(")
+            append("(")
             argsTypes.forEachIndexed { index, type ->
                 append(type)
                 if (index < argsTypes.size - 1) append(", ")
             }
             if (variadic) append(", ...")
+            append(")")
+        }
+    }
+}
+
+data class CFunctionType(val name: String, val functionType: AbstractCFunctionType) : CType {
+    override fun baseType(): BaseType = functionType.baseType()
+    override fun qualifiers(): List<TypeProperty> = functionType.qualifiers()
+
+    fun retType() = functionType.retType
+    fun args() = functionType.argsTypes
+
+    override fun toString(): String {
+        return buildString {
+            append(functionType.retType)
+            append(" $name(")
+            functionType.argsTypes.forEachIndexed { index, type ->
+                append(type)
+                if (index < functionType.argsTypes.size - 1) append(", ")
+            }
+            if (functionType.variadic) append(", ...")
             append(")")
         }
     }

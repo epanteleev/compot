@@ -98,13 +98,13 @@ data class StructSpecifier(val ident: Identifier, val fields: List<StructField>)
             for (declarator in field.declarators) {
                 structType.addField(declarator.name(), type)
             }
-
         }
+
         return structType
     }
 }
 
-data class EnumSpecifier(val ident: Identifier, val enumerators: List<Node>) : AnyTypeNode() {
+data class EnumSpecifier(val ident: Identifier, val enumerators: List<Enumerator>) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 }
