@@ -5,7 +5,8 @@ import types.TypeHolder
 import parser.nodes.visitors.*
 
 
-abstract class AnyParameter : Node(), Resolvable {
+abstract class AnyParameter : Node() {
+    abstract fun resolveType(typeHolder: TypeHolder): CType
     abstract fun<T> accept(visitor: ParameterVisitor<T>): T
 }
 

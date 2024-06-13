@@ -18,11 +18,15 @@ abstract class UnclassifiedNode : Node() {
 data class Declaration(val declspec: DeclarationSpecifier, val declarators: List<AnyDeclarator>): UnclassifiedNode() {
     fun resolveType(typeHolder: TypeHolder): List<CType> {
         val type = declspec.resolveType(typeHolder)
+
         val vars = mutableListOf<CType>()
         declarators.forEach {
             when (it) {
                 is Declarator           -> {
                     vars.add(it.resolveType(type, typeHolder))
+                    if (declspec.isTypedef) {
+                        typeHolder.add(it.name(), type)
+                    }
                 }
                 is AssignmentDeclarator -> {
                     vars.add(it.resolveType(type, typeHolder))

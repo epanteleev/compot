@@ -1,5 +1,7 @@
 package tokenizer
 
+import common.assertion
+
 
 abstract class AnyToken {
     abstract fun str(): String
@@ -18,7 +20,7 @@ class Indent private constructor(private val spaces: Int): AnySpaceToken() {
         private val FOUR = Indent(4)
 
         fun of(spaces: Int): Indent {
-            assert(spaces > 0) {
+            assertion(spaces > 0) {
                 "Indent should be greater than 0, but was $spaces"
             }
 
@@ -42,7 +44,7 @@ class NewLine private constructor(private val spaces: Int): AnySpaceToken() {
         private val TWO = NewLine(2)
 
         fun of(lines: Int): NewLine {
-            assert(lines > 0) {
+            assertion(lines > 0) {
                 "NewLine should be greater than 0, but was $lines"
             }
 
@@ -73,7 +75,7 @@ abstract class CToken(private val position: Position): AnyToken() {
         }
 
         fun countSpaces(from: CToken, to: CToken): Int {
-            assert(!hasNewLine(from, to)) {
+            assertion(!hasNewLine(from, to)) {
                 "Cannot count spaces between tokens on different lines: '$from' and '$to'"
             }
             return to.position.pos() - (from.pos() + from.str().length)

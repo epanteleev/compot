@@ -1,20 +1,23 @@
 package parser.nodes
 
-
-import parser.nodes.visitors.Resolvable
 import parser.nodes.visitors.TypeSpecifierVisitor
 
 import types.CType
 import types.CTypeBuilder
+import types.StorageClass
 import types.TypeHolder
 
 
 abstract class TypeSpecifier : Node() {
     abstract fun<T> accept(visitor: TypeSpecifierVisitor<T>): T
+    abstract fun resolveType(typeHolder: TypeHolder): CType
 }
 
-data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier(), Resolvable {
+data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier() {
+    var isTypedef = false
+
     override fun resolveType(typeHolder: TypeHolder): CType {
+
         val ctypeBuilder = CTypeBuilder()
         specifiers.forEach {
             when (it) {
@@ -25,6 +28,9 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
                     ctypeBuilder.add(it.qualifier())
                 }
                 is StorageClassSpecifier -> {
+                    if (it.storageClass() == StorageClass.TYPEDEF) {
+                        isTypedef = true
+                    }
                     ctypeBuilder.add(it.storageClass())
                 }
                 is StructSpecifier -> {
@@ -55,7 +61,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
     }
 }
 
-data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: AbstractDeclarator?) : TypeSpecifier(), Resolvable {
+data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: AbstractDeclarator?) : TypeSpecifier() {
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {

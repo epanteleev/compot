@@ -14,8 +14,6 @@ import ir.global.StringLiteralGlobal
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
-import parser.nodes.visitors.Resolvable
-
 
 class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                     private val typeHolder: TypeHolder, functionNode: FunctionNode) {
@@ -246,15 +244,16 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     }
 
     private fun visitSizeOf(sizeOf: SizeOf): Value {
-        val type = sizeOf.resolveType(typeHolder)
         when (val expr = sizeOf.expr) {
-            is TypeName, is VarNode -> {
-                expr as Resolvable
+            is TypeName -> {
+                val resolved = expr.resolveType(typeHolder)
+                return Constant.of(Type.I64, resolved.size())
+            }
+            is VarNode -> {
                 val resolved = expr.resolveType(typeHolder)
                 return Constant.of(Type.I64, resolved.size())
             }
             else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
-
         }
     }
 

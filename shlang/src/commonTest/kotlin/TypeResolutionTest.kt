@@ -1,8 +1,10 @@
 
 import parser.CProgramParser
+import parser.LineAgnosticAstPrinter
 import parser.nodes.*
 import tokenizer.CTokenizer
 import types.*
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -321,5 +323,53 @@ class TypeResolutionTest {
 
         val a = typeResolver["a"]
         assertEquals("const char*", a.toString())
+    }
+
+    // https://port70.net/~nsz/c/c11/n1570.html#6.7.2.3p11
+    @Ignore
+    fun testTypedef1() {
+        val input = """
+          typedef struct tnode TNODE;
+          struct tnode {
+                int count;
+                TNODE *left, *right;
+          };
+          TNODE s, *sp;
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("typedef struct tnode TNODE; struct tnode {int count; TNODE *left, *right;} ; TNODE s, *sp;", LineAgnosticAstPrinter.print(program))
+
+        val typeHolder = parser.typeHolder()
+        assertEquals("struct tnode { int count; TNODE *left, *right; }", typeHolder.getStructType("tnode").toString())
+    }
+
+    // https://port70.net/~nsz/c/c11/n1570.html#6.7.3p12
+    @Ignore
+    fun testTypedef2() {
+        val input = """
+          typedef int A[2][3];
+          const A a = {{4, 5, 6}, {7, 8, 9}};
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("typedef int A[2][3]; const A a = {{4, 5, 6}, {7, 8, 9}};", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Ignore
+    fun testTypedef3() {
+        val input = """
+          typedef struct s1 { int x; } t1, *tp1;
+          typedef struct s2 { int x; } t2, *tp2;
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("typedef struct s1 {int x;} t1, *tp1; typedef struct s2 {int x;} t2, *tp2;", LineAgnosticAstPrinter.print(program))
     }
 }

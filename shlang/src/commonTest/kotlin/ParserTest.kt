@@ -946,7 +946,7 @@ class ParserTest {
         assertEquals("struct point {int a; int b;} ; int sum(struct point *a) {return a->a + a->b;}", LineAgnosticAstPrinter.print(program))
     }
 
-    @Ignore
+    @Test
     fun structAccess1() {
         val input = """
             typedef struct point {
@@ -960,7 +960,7 @@ class ParserTest {
         val parser = CProgramParser.build(tokens)
 
         val program = parser.translation_unit()
-        assertEquals("struct point {int a; int b;} ; int sum(struct point *a) {return a->a + a->b;}", LineAgnosticAstPrinter.print(program))
+        assertEquals("typedef struct point {int a; int b;} Point; int sum(Point *a) {return a->a + a->b;}", LineAgnosticAstPrinter.print(program))
     }
 
     @Test

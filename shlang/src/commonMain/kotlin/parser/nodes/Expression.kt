@@ -138,10 +138,12 @@ enum class PostfixUnaryOpType: UnaryOpType {
 }
 
 
-abstract class Expression : Node(), Resolvable {
+abstract class Expression : Node() {
     private var type: CType = CType.UNRESOlVED
 
     abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
+
+    abstract fun resolveType(typeHolder: TypeHolder): CType
 
     protected fun memoize(closure: () -> CType): CType {
         if (type != CType.UNRESOlVED) {
@@ -352,7 +354,6 @@ data class SizeOf(val expr: Node) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        expr as Resolvable
         return@memoize CType.INT
     }
 }

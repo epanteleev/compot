@@ -3,6 +3,7 @@ package parser
 import tokenizer.*
 import parser.nodes.*
 import common.AnyParser
+import types.TypeHolder
 
 
 data class ParserException(val info: ProgramMessage) : Exception(info.message)
@@ -15,6 +16,10 @@ data class ParserException(val info: ProgramMessage) : Exception(info.message)
 // https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
 //
 class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyParser(iterator) {
+    private val typeHolder = TypeHolder.default()
+
+    fun typeHolder(): TypeHolder = typeHolder
+
     private inline fun<reified T> rule(fn: () -> T?): T? {
         val saved = current
         val result = fn()
@@ -804,7 +809,19 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             eat()
             return@rule TypeNode(tok)
         }
-        return@rule struct_or_union_specifier() ?: enum_specifier()
+        val structOrEnum = struct_or_union_specifier() ?: enum_specifier()
+        if (structOrEnum != null) {
+            return@rule structOrEnum
+        }
+
+        if (check<Identifier>()) {
+            val tok = peak<CToken>()
+            if (typeHolder.getOrNull(tok.str()) != null) {
+                eat()
+                return@rule TypeNode(tok)
+            }
+        }
+        return@rule null
     }
 
     // type_qualifier
@@ -1636,7 +1653,13 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
     //	| declaration
     //	;
     fun external_declaration(): Node? = rule {
-        return@rule declaration() ?: function_definition()
+        val declaration = declaration()
+        if (declaration != null) {
+            // Early resolve type.
+            declaration.resolveType(typeHolder)
+            return@rule declaration
+        }
+        return@rule function_definition()
     }
 
     companion object {
