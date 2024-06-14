@@ -362,9 +362,9 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(enumerator: Enumerator) {
         buffer.append(enumerator.ident.str())
-        if (enumerator.expr !is DummyNode) {
+        if (enumerator.constExpr !is EmptyExpression) {
             buffer.append(" = ")
-            enumerator.expr.accept(this)
+            enumerator.constExpr.accept(this)
         }
     }
 

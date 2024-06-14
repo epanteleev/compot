@@ -96,7 +96,7 @@ class Identifier(val data: String, position: Position): CToken(position) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (other == null || this::class != other::class) return false
 
         other as Identifier
 
@@ -117,7 +117,7 @@ class Punct(val data: Char, position: Position): CToken(position) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (other == null || this::class != other::class) return false
 
         other as Punct
 
@@ -138,7 +138,7 @@ class Keyword(val data: String, position: Position): CToken(position) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (other == null || this::class != other::class) return false
 
         other as Keyword
 
@@ -159,7 +159,7 @@ class StringLiteral(val data: String, position: Position): CToken(position) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (other == null || this::class != other::class) return false
 
         other as StringLiteral
 
@@ -190,7 +190,7 @@ class Numeric(val data: Number, position: Position): CToken(position) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (other == null || this::class != other::class) return false
 
         other as Numeric
 

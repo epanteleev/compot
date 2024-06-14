@@ -37,16 +37,19 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
                     ctypeBuilder.add(it.typeResolver(typeHolder))
                 }
                 is UnionSpecifier -> {
-                    TODO()
+                    ctypeBuilder.add(it.typeResolver(typeHolder))
                 }
                 is EnumSpecifier -> {
-                    TODO()
+                    ctypeBuilder.add(it.typeResolver(typeHolder))
                 }
                 is EnumDeclaration -> {
-                    TODO()
+                    ctypeBuilder.add(it.typeResolver(typeHolder))
                 }
                 is StructDeclaration -> {
                     ctypeBuilder.add(it.typeResolver(typeHolder))
+                }
+                else -> {
+                    TODO()
                 }
             }
         }

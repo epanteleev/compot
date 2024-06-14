@@ -693,7 +693,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
             val expr = constant_expression()?: throw ParserException(ProgramMessage("Expected constant expression", peak()))
             return@rule Enumerator(name, expr)
         }
-        return@rule Enumerator(name, DummyNode)
+        return@rule Enumerator(name, EmptyExpression)
     }
 
     // enumerator_list
@@ -815,8 +815,8 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
         }
 
         if (check<Identifier>()) {
-            val tok = peak<CToken>()
-            if (typeHolder.getOrNull(tok.str()) != null) {
+            val tok = peak<Identifier>()
+            if (typeHolder.getTypeOrNull(tok.str()) != null) {
                 eat()
                 return@rule TypeNode(tok)
             }

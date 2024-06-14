@@ -14,22 +14,32 @@ abstract class AnyTypeNode : Node() {
 
 data class UnionSpecifier(val ident: Identifier, val fields: List<StructField>) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
+
+    fun typeResolver(typeHolder: TypeHolder): BaseType {
+        val structType = UnionBaseType(name())
+        for (field in fields) {
+            val type = field.declspec.resolveType(typeHolder)
+            for (declarator in field.declarators) {
+                structType.addField(declarator.name(), type)
+            }
+        }
+
+        typeHolder.addStructType(ident.str(), structType)
+        return structType
+    }
+
     override fun name(): String = ident.str()
 }
 
 data class UnionDeclaration(val name: Identifier) : AnyTypeNode() { //TODO separate class
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
-    override fun name(): String = name.str()
-}
-
-data class StructDeclaration(val name: Identifier) : AnyTypeNode() {
-    override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
-    override fun name(): String = name.str()
 
     fun typeResolver(typeHolder: TypeHolder): BaseType {
-        typeHolder.addStructType(name.str(), UncompletedStructType(name.str()))
-        return UncompletedStructType(name.str())
+        typeHolder.addStructType(name(), UncompletedUnionType(name()))
+        return UncompletedStructType(name())
     }
+
+    override fun name(): String = name.str()
 }
 
 data class TypeQualifier(private val ident: Keyword): AnyTypeNode() {
@@ -101,16 +111,44 @@ data class StructSpecifier(val ident: Identifier, val fields: List<StructField>)
             }
         }
 
+        typeHolder.addStructType(ident.str(), structType)
         return structType
+    }
+}
+
+data class StructDeclaration(val name: Identifier) : AnyTypeNode() {
+    override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
+    override fun name(): String = name.str()
+
+    fun typeResolver(typeHolder: TypeHolder): BaseType {
+        typeHolder.addStructType(name.str(), UncompletedStructType(name.str()))
+        return UncompletedStructType(name.str())
     }
 }
 
 data class EnumSpecifier(val ident: Identifier, val enumerators: List<Enumerator>) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
+
+    fun typeResolver(typeHolder: TypeHolder): EnumBaseType {
+        val enumBaseType = EnumBaseType(name())
+        for (field in enumerators) {
+            enumBaseType.addEnumeration(field.name())
+        }
+
+        typeHolder.addStructType(name(), enumBaseType)
+        return enumBaseType
+    }
+
     override fun name(): String = ident.str()
 }
 
 data class EnumDeclaration(val name: Identifier) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
+
+    fun typeResolver(typeHolder: TypeHolder): BaseType {
+        typeHolder.addStructType(name(), UncompletedEnumType(name()))
+        return UncompletedStructType(name())
+    }
+
     override fun name(): String = name.str()
 }

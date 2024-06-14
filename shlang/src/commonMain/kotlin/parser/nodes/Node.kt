@@ -25,7 +25,7 @@ data class Declaration(val declspec: DeclarationSpecifier, val declarators: List
                 is Declarator           -> {
                     vars.add(it.resolveType(type, typeHolder))
                     if (declspec.isTypedef) {
-                        typeHolder.add(it.name(), type)
+                        typeHolder.addStructType(it.name(), type.baseType()) //TODO BASETYPE???
                     }
                 }
                 is AssignmentDeclarator -> {
@@ -78,7 +78,8 @@ data class StructField(val declspec: DeclarationSpecifier, val declarators: List
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-class Enumerator(val ident: Identifier, val expr: Node) : UnclassifiedNode() {
+class Enumerator(val ident: Identifier, val constExpr: Expression) : UnclassifiedNode() {
+    fun name() = ident.str()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 

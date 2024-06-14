@@ -5,11 +5,11 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>) {
     private val functions = hashMapOf<String, CFunctionType>()
 
     operator fun get(name: String): CType {
-        return getOrNull(name) ?: throw Exception("Type for variable $name not found")
+        return valueMap[name] ?: throw Exception("Type for variable $name not found")
     }
 
-    fun getOrNull(name: String): CType? {
-        return valueMap[name]
+    fun getTypeOrNull(name: String): BaseType? {
+        return typeMap[name]
     }
 
     fun add(name: String, type: CType) {

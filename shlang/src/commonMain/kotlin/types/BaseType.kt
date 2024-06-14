@@ -1,5 +1,6 @@
 package types
 
+
 interface BaseType: TypeProperty {
     fun typename(): String
     fun size(): Int
@@ -53,6 +54,45 @@ data class StructBaseType(val name: String): BaseType { //TODO
     }
 }
 
+data class UnionBaseType(val name: String): BaseType {
+    private val fields = mutableListOf<Pair<String, CType>>()
+
+    override fun typename(): String = name
+
+    override fun size(): Int {
+        return fields.maxOf { it.second.baseType().size() }
+    }
+
+    override fun toString(): String {
+        return buildString {
+            append("union $name")
+            append(" {")
+            fields.forEach { (name, type) ->
+                append("$type $name;")
+            }
+            append("}")
+        }
+    }
+
+    fun addField(name: String, type: CType) {
+        fields.add(name to type)
+    }
+}
+
+data class EnumBaseType(val name: String): BaseType {
+    private val enumerators = mutableListOf<String>()
+    override fun typename(): String = name
+
+    override fun size(): Int {
+        return CType.INT.size()
+    }
+
+    fun addEnumeration(name: String) {
+        enumerators.add(name)
+    }
+}
+
+
 data class CArrayType(val type: CType, val dimension: Int) : BaseType {
     override fun typename(): String {
         return toString()
@@ -77,5 +117,25 @@ data class UncompletedStructType(override val name: String): UncompletedType(nam
 
     override fun toString(): String {
         return "struct $name"
+    }
+}
+
+data class UncompletedUnionType(override val name: String): UncompletedType(name) {
+    override fun typename(): String = name
+
+    override fun size(): Int = throw Exception("Uncompleted type")
+
+    override fun toString(): String {
+        return "union $name"
+    }
+}
+
+data class UncompletedEnumType(override val name: String): UncompletedType(name) {
+    override fun typename(): String = name
+
+    override fun size(): Int = throw Exception("Uncompleted type")
+
+    override fun toString(): String {
+        return "enum $name"
     }
 }
