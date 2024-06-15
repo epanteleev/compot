@@ -16,8 +16,8 @@ abstract class CommonTest {
 
     protected fun runGCC(basename: String, extraFiles: List<String>) {
         val insertedPath = extraFiles.map { "$TESTCASES_DIR/$it" }
-        val gccCommandLine = listOf("gcc", "$TEST_OUTPUT_DIR/$basename.o") + insertedPath + listOf("-o", "$TEST_OUTPUT_DIR/$basename.out")
-        RunExecutable.checkedRunCommand(gccCommandLine, null)
+        val gccCommandLine = listOf("$TEST_OUTPUT_DIR/$basename.o") + insertedPath + listOf("-o", "$TEST_OUTPUT_DIR/$basename.out")
+        RunExecutable.checkedRunCommand("gcc", gccCommandLine, null)
     }
 
     companion object {

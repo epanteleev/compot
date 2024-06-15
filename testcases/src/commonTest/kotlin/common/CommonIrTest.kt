@@ -11,7 +11,7 @@ abstract class CommonIrTest: CommonTest() {
         val basename = filename.substringAfterLast("/").substringBeforeLast(".")
         compile(filename, basename, opts, lib)
 
-        val testResult = RunExecutable.runCommand(listOf("./$TEST_OUTPUT_DIR/$basename.out"), null)
+        val testResult = RunExecutable.runCommand("./$TEST_OUTPUT_DIR/$basename.out", listOf(), null)
         return Result(basename, testResult.output, testResult.error, testResult.exitCode)
     }
 

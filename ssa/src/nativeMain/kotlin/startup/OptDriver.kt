@@ -1,13 +1,15 @@
 package startup
 
-import platform.posix.*
+import common.GNUAssemblerRunner
 import ir.module.Module
 import ir.pass.PassPipeline
 import ir.read.ModuleReader
 import ir.pass.CompileContextBuilder
 import ir.platform.common.CodeGenerationFactory
+import ir.platform.common.CompiledModule
 import ir.platform.common.TargetPlatform
-
+import okio.FileSystem
+import okio.Path.Companion.toPath
 
 
 class OptDriver(private val commandLineArguments: OptCLIArguments) {
@@ -26,16 +28,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
             .setTarget(TargetPlatform.X64)
 
         val unoptimisedCode = codeGenerationFactory.build(unoptimizedIr)
-
-        val temp           = Files.createTempFile("base", ".S")
-        val unoptimizedAsm = File(temp.toString())
-        unoptimizedAsm.writeText(unoptimisedCode.toString())
-        GNUAssemblerRunner.run(unoptimizedAsm.toString(), "${commandLineArguments.getOutputFilename()}.o")
-
-        if (commandLineArguments.isDumpIr()) {
-            Files.copy(temp, File("${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/base.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
-        }
-        unoptimizedAsm.delete()
+        writeAsmFile(unoptimisedCode, BASE)
     }
 
     private fun optimized(module: Module) {
@@ -53,26 +46,35 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
             .setTarget(TargetPlatform.X64)
 
         val optimizedCodegen = codeGenerationFactory.build(destroyed)
+        writeAsmFile(optimizedCodegen, OPT)
+    }
 
-        val temp         = Files.createTempFile("opt", ".S")
-        val optimizedAsm = temp.toFile()
+    private fun writeAsmFile(compiledModule: CompiledModule, asmFileName: String) {
+        val temp = FileSystem.SYSTEM_TEMPORARY_DIRECTORY.resolve(OPT)
+        val optimizedAsm = temp.toString()
+        try {
+            FileSystem.SYSTEM.write(temp) {
+                writeUtf8(compiledModule.toString())
+            }
 
-        optimizedAsm.writeText(optimizedCodegen.toString())
-        GNUAssemblerRunner.run(optimizedAsm.toString(), "${commandLineArguments.getOutputFilename()}.o")
-
-        if (commandLineArguments.isDumpIr()) {
-            Files.copy(temp, File("${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/opt.S").toPath(), StandardCopyOption.REPLACE_EXISTING)
+            if (commandLineArguments.isDumpIr()) {
+                val dst = "${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/$asmFileName".toPath()
+                FileSystem.SYSTEM.copy(temp, dst)
+            }
+            GNUAssemblerRunner.run(optimizedAsm, "${commandLineArguments.getOutputFilename()}.o")
+        } finally {
+            FileSystem.SYSTEM.delete(optimizedAsm.toPath())
         }
-        optimizedAsm.delete()
     }
 
     private fun removeOrCreateDir() {
         if (!commandLineArguments.isDumpIr()) {
             return
         }
-        val directoryName = File("${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/")
-        if (!directoryName.exists()) {
-            directoryName.mkdirs()
+        val directoryName = "${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/".toPath()
+
+        if (!FileSystem.SYSTEM.exists(directoryName)) {
+            FileSystem.SYSTEM.createDirectory(directoryName)
         }
     }
 
@@ -89,7 +91,9 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
     }
 
     fun run() {
-        val text = File(commandLineArguments.getFilename()).readText()
+        val text = FileSystem.SYSTEM.read(commandLineArguments.getFilename().toPath()) {
+            readUtf8()
+        }
         val module = try {
             ModuleReader(text).read()
         } catch (e: Exception) {
@@ -98,5 +102,10 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         }
 
         run(module)
+    }
+
+    companion object {
+        const val BASE = "base.S"
+        const val OPT = "opt.S"
     }
 }

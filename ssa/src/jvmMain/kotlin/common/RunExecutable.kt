@@ -5,8 +5,8 @@ import java.util.concurrent.TimeUnit
 
 
 object RunExecutable {
-    fun runCommand(command: List<String>, workingDir: String? = null): ExecutionResult {
-        val process = ProcessBuilder(command)
+    fun runCommand(command: String, args: List<String>, workingDir: String? = null): ExecutionResult {
+        val process = ProcessBuilder(listOf(command) + args)
             .directory(workingDir?.let { File(it) })
             .start()
         if (!process.waitFor(60, TimeUnit.SECONDS)) {
@@ -16,11 +16,12 @@ object RunExecutable {
         return ExecutionResult(process)
     }
 
-    fun checkedRunCommand(command: List<String>, workingDir: String? = null): ExecutionResult {
-        val result = runCommand(command, workingDir)
+    fun checkedRunCommand(command: String, args: List<String>, workingDir: String? = null): ExecutionResult {
+        val result = runCommand(command, args, workingDir)
         if (result.exitCode != 0) {
             throw RuntimeException("execution failed with code ${result.exitCode}:\n${result.error}")
         }
+
         return result
     }
 
