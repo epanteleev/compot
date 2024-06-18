@@ -22,7 +22,7 @@ abstract class CommonTest {
 
     companion object {
         const val TESTCASES_DIR = "src/resources/"
-        val TEST_OUTPUT_DIR = RunExecutable.getenv("TEST_RESULT_DIR") ?:
+        val TEST_OUTPUT_DIR = RunExecutable.env("TEST_RESULT_DIR") ?:
           throw RuntimeException("TEST_OUTPUT_DIR is not set")
     }
 }

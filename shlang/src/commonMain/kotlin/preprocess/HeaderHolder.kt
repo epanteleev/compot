@@ -1,8 +1,10 @@
 package preprocess
 
+import okio.FileSystem
+import okio.Path.Companion.toPath
+import okio.SYSTEM
 import tokenizer.CTokenizer
 import tokenizer.TokenIterator
-import java.io.File
 
 enum class HeaderType {
     SYSTEM,
@@ -37,22 +39,28 @@ class PredefinedHeaderHolder(includeDirectories: Set<String>): HeaderHolder(incl
 
 class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>): HeaderHolder(includeDirectories) {
     private fun getUserHeader(name: String): Header? {
-        val file = File("$pwd/$name")
-        if (!file.exists()) {
+        val filePath = "$pwd/$name".toPath()
+        if (!FileSystem.SYSTEM.exists(filePath)) {
             return null
         }
 
-        val content = file.readText() //TODO read file everytime
-        return Header(file.name, content, HeaderType.USER)
+        val content = FileSystem.SYSTEM.read(filePath) {
+            readUtf8()
+        }
+        return Header(name, content, HeaderType.USER)
     }
 
     private fun getSystemHeader(name: String): Header? {
         for (includeDirectory in includeDirectories) {
-            val file = File(includeDirectory + name)
-            if (file.exists()) {
-                val content = file.readText() //TODO read file everytime
-                return Header(file.name, content, HeaderType.SYSTEM)
+            val filePath = "$includeDirectory/$name".toPath()
+            if (!FileSystem.SYSTEM.exists(filePath)) {
+                continue
             }
+
+            val content = FileSystem.SYSTEM.read(filePath) {
+                readUtf8()
+            }
+            return Header(name, content, HeaderType.SYSTEM)
         }
         return null
     }

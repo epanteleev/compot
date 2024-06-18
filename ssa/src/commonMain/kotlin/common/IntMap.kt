@@ -110,5 +110,6 @@ inline fun <reified K, reified T> intMapOf(values: Collection<K>, noinline closu
 }
 
 inline fun <reified K, reified T> intMapOf(size: Int, noinline closure: (K) -> Int): MutableMap<K, T> {
-    return IntMap(arrayOfNulls<T>(size), arrayOfNulls<K>(size), closure)
+    //return IntMap(arrayOfNulls<T>(size), arrayOfNulls<K>(size), closure)
+    return hashMapOf()
 }

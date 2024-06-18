@@ -25,7 +25,7 @@ object RunExecutable {
         return result
     }
 
-    fun getenv(name: String): String? {
+    fun env(name: String): String? {
         return System.getenv(name)
     }
 }

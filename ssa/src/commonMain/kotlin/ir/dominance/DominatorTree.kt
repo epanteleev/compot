@@ -46,6 +46,10 @@ class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
 
     fun frontiers(): Map<AnyBlock, List<AnyBlock>> {
         val dominanceFrontiers = hashMapOf<AnyBlock, MutableList<AnyBlock>>()
+        for (bb in idomMap.keys) {
+            dominanceFrontiers[bb] = arrayListOf()
+        }
+
 
         idomMap.forEach { (bb, idom) ->
             val predecessors = bb.predecessors()
@@ -56,8 +60,9 @@ class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
             for (p in predecessors) {
                 var runner: AnyBlock = p
                 while (runner != idom) {
-                    (dominanceFrontiers.getOrPut(runner) { arrayListOf() }).add(bb)
-                    runner = idomMap[runner]!!
+                    dominanceFrontiers[runner]!!.add(bb)
+                    val runnerIdom = idomMap[runner] ?: throw NoSuchElementException("No idom for '$runner'")
+                    runner = runnerIdom
                 }
             }
         }

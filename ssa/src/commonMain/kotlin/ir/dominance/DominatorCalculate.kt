@@ -59,7 +59,7 @@ interface DominatorCalculate {
     fun enumerationToIdomMap(blocks: List<AnyBlock>, indexToBlock: Map<Int, AnyBlock>, dominators: MutableMap<Int, Int>): Map<AnyBlock, AnyBlock> {
         dominators.remove(blocks.size - 1)
 
-        val dominatorTree = intMapOf<AnyBlock, AnyBlock>(blocks) { it : Label -> it.index }
+        val dominatorTree = hashMapOf<AnyBlock, AnyBlock>()
         for (entry in dominators) {
             dominatorTree[indexToBlock[entry.key]!!] = indexToBlock[entry.value]!!
         }
