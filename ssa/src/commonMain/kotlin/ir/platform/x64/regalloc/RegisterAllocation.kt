@@ -39,10 +39,10 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
 
     fun spilledLocalsSize(): Int = spilledLocalsStackSize
 
-    fun callerSaveRegisters(operands: Collection<LocalValue>, exclude: Set<LocalValue>): SavedContext {
+    fun callerSaveRegisters(liveOutOperands: Collection<LocalValue>, exclude: Set<LocalValue>): SavedContext {
         val registers = linkedSetOf<GPRegister>()
         val xmmRegisters = linkedSetOf<XmmRegister>()
-        for (value in operands) {
+        for (value in liveOutOperands) {
             if (exclude.contains(value)) {
                 continue
             }

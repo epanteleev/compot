@@ -1,5 +1,6 @@
 package parser.nodes
 
+import common.assertion
 import types.*
 import parser.nodes.visitors.*
 
@@ -78,7 +79,11 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
     }
 
     override fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
-        TODO("Not yet implemented")
+        require(expr is EmptyExpression) {
+            "unsupported expression in struct declarator $expr"
+        }
+
+        return declarator.resolveType(baseType, typeHolder)
     }
 
     fun name(): String {

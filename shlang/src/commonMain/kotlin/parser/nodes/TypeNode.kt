@@ -82,7 +82,7 @@ data class TypeNode(val ident: CToken) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 
-    fun type(): BaseType {
+    fun resolveType(typeHolder: TypeHolder): BaseType {
         return when (ident.str()) {
             "void"    -> CPrimitive.VOID
             "char"    -> CPrimitive.CHAR
@@ -93,7 +93,9 @@ data class TypeNode(val ident: CToken) : AnyTypeNode() {
             "double"  -> CPrimitive.DOUBLE
             "signed"  -> CPrimitive.INT
             "unsigned"-> CPrimitive.UINT
-            else      -> CPrimitive.UNKNOWN
+            else      -> {
+                return typeHolder.getStructType(ident.str())
+            }
         }
     }
 }
@@ -107,7 +109,8 @@ data class StructSpecifier(val ident: Identifier, val fields: List<StructField>)
         for (field in fields) {
             val type = field.declspec.resolveType(typeHolder)
             for (declarator in field.declarators) {
-                structType.addField(declarator.name(), type)
+                val resolved = declarator.resolveType(type, typeHolder)
+                structType.addField(declarator.name(), resolved)
             }
         }
 

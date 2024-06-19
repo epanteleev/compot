@@ -22,7 +22,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
         specifiers.forEach {
             when (it) {
                 is TypeNode -> {
-                    ctypeBuilder.add(it.type()) //TODO
+                    ctypeBuilder.add(it.resolveType(typeHolder)) //TODO
                 }
                 is TypeQualifier -> {
                     ctypeBuilder.add(it.qualifier())
@@ -30,8 +30,9 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
                 is StorageClassSpecifier -> {
                     if (it.storageClass() == StorageClass.TYPEDEF) {
                         isTypedef = true
+                    } else {
+                        ctypeBuilder.add(it.storageClass())
                     }
-                    ctypeBuilder.add(it.storageClass())
                 }
                 is StructSpecifier -> {
                     ctypeBuilder.add(it.typeResolver(typeHolder))

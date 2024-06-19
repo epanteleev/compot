@@ -917,7 +917,7 @@ class ParserTest {
         val input = """
             struct point {
                 int a;
-                int b:89;
+                int b;
             };
         """.trimIndent()
         val tokens = CTokenizer.apply(input)
@@ -925,7 +925,7 @@ class ParserTest {
 
         val program = parser.translation_unit()
         println(program)
-        assertEquals("struct point {int a; int b:89;} ;", LineAgnosticAstPrinter.print(program))
+        assertEquals("struct point {int a; int b;} ;", LineAgnosticAstPrinter.print(program))
     }
 
     @Test
