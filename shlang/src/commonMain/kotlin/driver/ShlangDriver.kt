@@ -1,17 +1,20 @@
-package startup
+package driver
 
+import common.pwd
 import gen.IRGen
 import preprocess.*
 import ir.module.Module
 import okio.FileSystem
 import okio.Path.Companion.toPath
+import okio.SYSTEM
 import tokenizer.CTokenizer
 import parser.CProgramParser
+import startup.*
 
 
 class ShlangDriver(private val cli: CCLIArguments) {
     private fun initializePreprocessorContext(): PreprocessorContext {
-        val pwd = System.getProperty("user.dir")
+        val pwd = pwd()
         val headerHolder = FileHeaderHolder(pwd, cli.getIncludeDirectories())
         return PreprocessorContext.empty(headerHolder)
     }

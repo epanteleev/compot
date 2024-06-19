@@ -10,6 +10,7 @@ import ir.platform.common.CompiledModule
 import ir.platform.common.TargetPlatform
 import okio.FileSystem
 import okio.Path.Companion.toPath
+import okio.SYSTEM
 
 
 class OptDriver(private val commandLineArguments: OptCLIArguments) {
@@ -94,6 +95,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         val text = FileSystem.SYSTEM.read(commandLineArguments.getFilename().toPath()) {
             readUtf8()
         }
+
         val module = try {
             ModuleReader(text).read()
         } catch (e: Exception) {

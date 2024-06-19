@@ -15,9 +15,7 @@ repositories {
 }
 
 kotlin {
-    jvm {
-
-    }
+    jvm()
     linuxX64 {
         binaries {
             executable()
@@ -27,16 +25,20 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":ssa"))
                 implementation(project(":shlang"))
-                implementation("org.jetbrains.kotlin:kotlin-test-common")
-                implementation("org.jetbrains.kotlin:kotlin-test-annotations-common")
+                implementation(project(":ssa"))
                 implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
             }
         }
         jvmMain {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-compiler")
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-test-common")
+                implementation("org.jetbrains.kotlin:kotlin-test-annotations-common")
             }
         }
         jvmTest {

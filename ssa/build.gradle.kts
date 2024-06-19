@@ -14,24 +14,35 @@ repositories {
 }
 
 kotlin {
-    jvm {
-
-    }
+    jvm()
     linuxX64 {
         binaries {
-            executable()
+            sharedLib {
+                baseName = "ssa"
+            }
         }
     }
 
-    dependencies {
-        commonMainImplementation("org.jetbrains.kotlin:kotlin-stdlib-common")
-        commonTestImplementation("org.jetbrains.kotlin:kotlin-test-annotations-common")
-        commonTestImplementation("org.jetbrains.kotlin:kotlin-test-common")
-        commonMainImplementation("com.squareup.okio:okio:3.9.0")
-
-        add("jvmTestImplementation", "org.jetbrains.kotlin:kotlin-test-junit")
-        add("jvmTestImplementation", "junit:junit:4.13")
-        add("jvmMainImplementation", "org.jetbrains.kotlin:kotlin-compiler")
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-test-common")
+                implementation("org.jetbrains.kotlin:kotlin-test-annotations-common")
+                implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
+                implementation("com.squareup.okio:okio:3.9.0")
+            }
+        }
+        jvmMain {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-compiler")
+            }
+        }
+        jvmTest {
+            dependencies {
+                implementation("junit:junit:4.13")
+                implementation("org.jetbrains.kotlin:kotlin-test-junit")
+            }
+        }
     }
 }
 

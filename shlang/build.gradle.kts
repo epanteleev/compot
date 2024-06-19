@@ -14,12 +14,12 @@ repositories {
 }
 
 kotlin {
-    jvm {
-
-    }
+    jvm()
     linuxX64 {
         binaries {
-            executable()
+            sharedLib {
+                baseName = "ShlangDriver"
+            }
         }
     }
 
