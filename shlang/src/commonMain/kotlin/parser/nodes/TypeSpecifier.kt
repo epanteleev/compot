@@ -1,11 +1,7 @@
 package parser.nodes
 
 import parser.nodes.visitors.TypeSpecifierVisitor
-
-import types.CType
-import types.CTypeBuilder
-import types.StorageClass
-import types.TypeHolder
+import types.*
 
 
 abstract class TypeSpecifier : Node() {
@@ -47,6 +43,9 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
                     ctypeBuilder.add(it.typeResolver(typeHolder))
                 }
                 is StructDeclaration -> {
+                    ctypeBuilder.add(it.typeResolver(typeHolder))
+                }
+                is UnionDeclaration -> {
                     ctypeBuilder.add(it.typeResolver(typeHolder))
                 }
                 else -> {

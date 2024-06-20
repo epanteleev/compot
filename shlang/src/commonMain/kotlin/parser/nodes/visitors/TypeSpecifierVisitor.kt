@@ -5,5 +5,5 @@ import parser.nodes.*
 
 interface TypeSpecifierVisitor<T> {
     fun visit(specifierType: DeclarationSpecifier): T
-    fun visit(node: TypeName): T
+    fun visit(typeName: TypeName): T
 }

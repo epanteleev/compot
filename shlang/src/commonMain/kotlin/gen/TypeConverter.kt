@@ -49,6 +49,14 @@ object TypeConverter {
                 val structType = typeHolder.getStructType(baseType.name)
                 convertStructType(typeHolder, structType as StructBaseType)
             }
+            is UncompletedUnionType -> {
+                val unionType = typeHolder.getUnionType(baseType.name)
+                convertStructType(typeHolder, unionType as StructBaseType)
+            }
+            is UnionBaseType -> {
+                val unionType = type.baseType() as UnionBaseType
+                convertUnionType(typeHolder, unionType)
+            }
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
         return ret
@@ -57,6 +65,11 @@ object TypeConverter {
     private fun convertStructType(typeHolder: TypeHolder, type: StructBaseType): Type {
         val fields = type.fields().map { toIRType<NonTrivialType>(typeHolder, it.second) }
         return StructType(type.name, fields)
+    }
+
+    private fun convertUnionType(typeHolder: TypeHolder, type: UnionBaseType): Type {
+        val field = type.fields().maxBy { it.second.size() }.let { toIRType<NonTrivialType>(typeHolder, it.second) }
+        return StructType(type.name, listOf(field)) //TODO Type.U64????
     }
 
    fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {

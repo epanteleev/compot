@@ -12,7 +12,7 @@ abstract class AnyTypeNode : Node() {
     abstract fun<T> accept(visitor: TypeNodeVisitor<T>): T
 }
 
-data class UnionSpecifier(val name: Identifier?, val fields: List<StructField>) : AnyTypeNode() {
+data class UnionSpecifier(val name: Identifier, val fields: List<StructField>) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     fun typeResolver(typeHolder: TypeHolder): BaseType {
@@ -24,12 +24,12 @@ data class UnionSpecifier(val name: Identifier?, val fields: List<StructField>) 
             }
         }
 
-        name?.let { typeHolder.addStructType(it.str(), structType) }
+        name.let { typeHolder.addStructType(it.str(), structType) }
         return structType
     }
 
     override fun name(): String {
-        return name?.str() ?: "<no-name>"
+        return name.str()
     }
 }
 

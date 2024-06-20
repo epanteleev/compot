@@ -156,7 +156,7 @@ class CTypeBuilder {
         val typeNodes = properties.filterIsInstance<BaseType>()
         val baseType = typeNodes[0]
         when (baseType) {
-            is StructBaseType -> {
+            is AggregateType -> {
                 val struct = CompoundType(baseType, properties.filterNot { it is BaseType })
                 typeHolder.addStructType(baseType.name, baseType)
                 return struct
