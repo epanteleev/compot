@@ -24,8 +24,9 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>) {
         return typeMap[name] ?: throw Exception("Type for struct $name not found")
     }
 
-    fun addStructType(name: String, type: BaseType) {
+    fun<T: BaseType> addStructType(name: String, type: T):T {
         typeMap[name] = type
+        return type
     }
 
     fun getEnumType(name: String): BaseType {

@@ -233,9 +233,13 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
         if (structType !is CompoundType) {
             return@memoize CType.UNKNOWN
         }
-        val field = structType.fields.find { it.first == ident.str() }
-        if (field != null) {
-            return@memoize field.second
+        val aggregate = structType.baseType()
+        if (aggregate !is AggregateType) {
+            return@memoize CType.UNKNOWN
+        }
+        val field = aggregate.fieldIndex(ident.str())
+        if (field != -1) {
+            return@memoize aggregate.fields()[field].second
         }
         return@memoize CType.UNKNOWN
     }
@@ -246,12 +250,20 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val structType = primary.resolveType(typeHolder)
-        if (structType !is CompoundType) {
+        if (structType !is CPointerType) {
             return@memoize CType.UNKNOWN
         }
-        val field = structType.fields.find { it.first == ident.str() }
-        if (field != null) {
-            return@memoize field.second
+        val baseType = structType.dereference()
+        if (baseType !is CompoundType) {
+            return@memoize CType.UNKNOWN
+        }
+        val aggregate = structType.baseType()
+        if (aggregate !is AggregateType) {
+            return@memoize CType.UNKNOWN
+        }
+        val field = aggregate.fieldIndex(ident.str())
+        if (field != -1) {
+            return@memoize aggregate.fields()[field].second
         }
         return@memoize CType.UNKNOWN
     }

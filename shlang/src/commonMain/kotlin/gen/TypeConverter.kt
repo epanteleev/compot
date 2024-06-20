@@ -8,11 +8,11 @@ import ir.module.builder.impl.FunctionDataBuilder
 
 object TypeConverter {
 
-    inline fun<reified T: Type> toIRType(type: CType): T {
-        return toIRTypeUnchecked(type) as T
+    inline fun<reified T: Type> toIRType(typeHolder: TypeHolder, type: CType): T {
+        return toIRTypeUnchecked(typeHolder, type) as T
     }
 
-    fun toIRTypeUnchecked(type: CType): Type {
+    fun toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type {
         for (p in type.qualifiers()) {
             if (p is PointerQualifier) {
                 return Type.Ptr
@@ -25,11 +25,11 @@ object TypeConverter {
         if (type is CompoundType) {
             val baseType = type.baseType()
             if (baseType is CArrayType) {
-                return ArrayType(toIRType<NonTrivialType>(baseType.type), baseType.dimension)
+                return ArrayType(toIRType<NonTrivialType>(typeHolder, baseType.type), baseType.dimension)
             }
         }
 
-        val ret = when (type.baseType()) {
+        val ret = when (val baseType= type.baseType()) {
             CPrimitive.CHAR   -> Type.I8
             CPrimitive.UCHAR  -> Type.U8
             CPrimitive.SHORT  -> Type.I16
@@ -41,9 +41,22 @@ object TypeConverter {
             CPrimitive.FLOAT  -> Type.F32
             CPrimitive.DOUBLE -> Type.F64
             CPrimitive.VOID   -> Type.Void
+            is StructBaseType -> {
+                val structType = type.baseType() as StructBaseType
+                convertStructType(typeHolder, structType)
+            }
+            is UncompletedStructType -> {
+                val structType = typeHolder.getStructType(baseType.name)
+                convertStructType(typeHolder, structType as StructBaseType)
+            }
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
         return ret
+    }
+
+    private fun convertStructType(typeHolder: TypeHolder, type: StructBaseType): Type {
+        val fields = type.fields().map { toIRType<NonTrivialType>(typeHolder, it.second) }
+        return StructType(type.name, fields)
     }
 
    fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {

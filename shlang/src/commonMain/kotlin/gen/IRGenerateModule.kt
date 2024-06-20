@@ -9,9 +9,8 @@ import parser.nodes.*
 
 data class IRCodeGenError(override val message: String) : Exception(message)
 
-class IRGen private constructor() {
+class IRGen private constructor(val typeHolder: TypeHolder) {
     private val moduleBuilder = ModuleBuilder.create()
-    private val typeHolder = TypeHolder.default()
 
     fun visit(programNode: ProgramNode) {
         for (node in programNode.nodes) {
@@ -29,8 +28,8 @@ class IRGen private constructor() {
             when (type) {
                 is CFunctionType -> {
                     val abstrType = type.functionType
-                    val argTypes = abstrType .argsTypes.map { TypeConverter.toIRType<NonTrivialType>(it) }
-                    val returnType = TypeConverter.toIRType<Type>(abstrType .retType)
+                    val argTypes = abstrType .argsTypes.map { TypeConverter.toIRType<NonTrivialType>(typeHolder, it) }
+                    val returnType = TypeConverter.toIRType<Type>(typeHolder, abstrType.retType)
                     moduleBuilder.createExternFunction(type.name, returnType, argTypes)
                 }
                 else -> throw IRCodeGenError("Function or struct expected")
@@ -39,9 +38,9 @@ class IRGen private constructor() {
     }
 
     companion object {
-        fun apply(node: ProgramNode): Module {
+        fun apply(typeHolder: TypeHolder, node: ProgramNode): Module {
             //println(node)
-            val irGen = IRGen()
+            val irGen = IRGen(typeHolder)
             irGen.visit(node)
             val module = irGen.moduleBuilder.build()
             return module

@@ -236,9 +236,8 @@ class TypeResolutionTest {
         val tokens = CTokenizer.apply("struct point;")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        val typeResolver = TypeHolder.default()
+        val typeResolver = parser.typeHolder()
         expr.resolveType(typeResolver)
-
         assertEquals("struct point", typeResolver.getStructType("point").toString())
     }
 

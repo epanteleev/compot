@@ -29,8 +29,10 @@ class ShlangDriver(private val cli: CCLIArguments) {
         val preprocessor        = CProgramPreprocessor.create(tokens, ctx)
         val postProcessedTokens = preprocessor.preprocessWithKilledSpaces()
 
-        val program = CProgramParser.build(postProcessedTokens).translation_unit()
-        return IRGen.apply(program)
+        val parser     = CProgramParser.build(postProcessedTokens)
+        val program    = parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        return IRGen.apply(typeHolder, program)
     }
 
     fun run() {

@@ -179,8 +179,6 @@ data class CPrimitiveType(val baseType: BaseType, val properties: List<TypePrope
 }
 
 data class CompoundType(val baseType: BaseType, val properties: List<TypeProperty> = emptyList()) : CType { //TODO
-    val fields = mutableListOf<Pair<String, CType>>()
-
     override fun toString(): String {
         return baseType.toString()
     }

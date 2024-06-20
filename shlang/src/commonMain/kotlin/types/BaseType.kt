@@ -27,12 +27,29 @@ enum class CPrimitive(val size: Int, val id: String): BaseType {
     override fun size(): Int = size
 }
 
-abstract class UncompletedType(open val name: String): BaseType
-
-data class StructBaseType(val name: String): BaseType { //TODO
-    private val fields = mutableListOf<Pair<String, CType>>()
+abstract class AggregateType(open val name: String): BaseType {
+    protected val fields = arrayListOf<Pair<String, CType>>()
     override fun typename(): String = name
 
+    fun fieldIndex(name: String): Int {
+        return fields.indexOfFirst { it.first == name }
+    }
+
+    fun fields(): List<Pair<String, CType>> {
+        return fields
+    }
+
+    //TODO avoid???
+    internal fun addField(name: String, type: CType) {
+        fields.add(name to type)
+    }
+}
+
+abstract class UncompletedType(name: String): AggregateType(name) {
+    override fun size(): Int = throw Exception("Uncompleted type")
+}
+
+data class StructBaseType(override val name: String): AggregateType(name) { //TODO
     override fun size(): Int {
         return fields.sumOf { it.second.baseType().size() }
     }
@@ -48,17 +65,9 @@ data class StructBaseType(val name: String): BaseType { //TODO
 
         }
     }
-
-    fun addField(name: String, type: CType) {
-        fields.add(name to type)
-    }
 }
 
-data class UnionBaseType(val name: String): BaseType {
-    private val fields = mutableListOf<Pair<String, CType>>()
-
-    override fun typename(): String = name
-
+data class UnionBaseType(override val name: String): AggregateType(name) {
     override fun size(): Int {
         return fields.maxOf { it.second.baseType().size() }
     }
@@ -72,10 +81,6 @@ data class UnionBaseType(val name: String): BaseType {
             }
             append("}")
         }
-    }
-
-    fun addField(name: String, type: CType) {
-        fields.add(name to type)
     }
 }
 

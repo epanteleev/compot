@@ -35,8 +35,7 @@ data class UnionDeclaration(val name: Identifier) : AnyTypeNode() { //TODO separ
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     fun typeResolver(typeHolder: TypeHolder): BaseType {
-        typeHolder.addStructType(name(), UncompletedUnionType(name()))
-        return UncompletedStructType(name())
+        return typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addStructType(name.str(), UncompletedUnionType(name.str()))
     }
 
     override fun name(): String = name.str()
@@ -124,8 +123,7 @@ data class StructDeclaration(val name: Identifier) : AnyTypeNode() {
     override fun name(): String = name.str()
 
     fun typeResolver(typeHolder: TypeHolder): BaseType {
-        typeHolder.addStructType(name.str(), UncompletedStructType(name.str()))
-        return UncompletedStructType(name.str())
+        return typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addStructType(name.str(), UncompletedStructType(name.str()))
     }
 }
 
@@ -149,8 +147,7 @@ data class EnumDeclaration(val name: Identifier) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     fun typeResolver(typeHolder: TypeHolder): BaseType {
-        typeHolder.addStructType(name(), UncompletedEnumType(name()))
-        return UncompletedStructType(name())
+        return typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addStructType(name.str(), UncompletedEnumType(name.str()))
     }
 
     override fun name(): String = name.str()
