@@ -1,6 +1,5 @@
 package parser.nodes
 
-import common.assertion
 import types.*
 import parser.nodes.visitors.*
 
@@ -48,7 +47,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         }
 
         pointerType = directDeclarator.resolveType(pointerType, typeHolder)
-        typeHolder.add(name(), pointerType)
+        typeHolder.addVar(name(), pointerType)
         return pointerType
     }
 }

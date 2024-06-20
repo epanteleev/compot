@@ -307,7 +307,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(structSpecifier: StructSpecifier) {
         buffer.append("struct ")
-        buffer.append(structSpecifier.ident.str())
+        buffer.append(structSpecifier.name())
         buffer.append(" {")
         joinTo(structSpecifier.fields, " ") {
             it.accept(this)
@@ -317,14 +317,14 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(structDeclaration: StructDeclaration) {
         buffer.append("struct ")
-        buffer.append(structDeclaration.name.str())
+        buffer.append(structDeclaration.name())
     }
 
     override fun visit(unionSpecifier: UnionSpecifier) {
         buffer.append("union")
-        if (unionSpecifier.ident != Identifier.UNKNOWN) {
+        if (unionSpecifier.name != null) {
             buffer.append(' ')
-            buffer.append(unionSpecifier.ident.str())
+            buffer.append(unionSpecifier.name.str())
         }
 
         buffer.append(" {")
@@ -341,12 +341,12 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(typeNode: TypeNode) {
-        buffer.append(typeNode.ident.str())
+        buffer.append(typeNode.name())
     }
 
     override fun visit(enumSpecifier: EnumSpecifier) {
         buffer.append("enum ")
-        buffer.append(enumSpecifier.ident.str())
+        buffer.append(enumSpecifier.name())
         buffer.append(" {")
         joinTo(enumSpecifier.enumerators, ", ") {
             it.accept(this)
@@ -356,7 +356,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(enumDeclaration: EnumDeclaration) {
         buffer.append("enum ")
-        buffer.append(enumDeclaration.name.str())
+        buffer.append(enumDeclaration.name())
         buffer.append(';')
     }
 

@@ -1,48 +1,61 @@
 package types
 
-class TypeHolder(private val valueMap: MutableMap<String, CType>) {
-    private val typeMap = hashMapOf<String, BaseType>()
+
+class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
+    private val typeMap = arrayListOf(hashMapOf<String, BaseType>()) //TODO separate holder for struct, enum, union.
     private val functions = hashMapOf<String, CFunctionType>()
 
-    operator fun get(name: String): CType {
-        return valueMap[name] ?: throw Exception("Type for variable $name not found")
+    operator fun get(varName: String): CType {
+        return valueMap[varName] ?: throw Exception("Type for variable '$varName' not found")
     }
 
     fun getTypeOrNull(name: String): BaseType? {
-        return typeMap[name]
+        for (i in typeMap.size - 1 downTo 0) {
+            val type = typeMap[i][name]
+            if (type != null) {
+                return type
+            }
+        }
+        return null
     }
 
-    fun add(name: String, type: CType) {
+    fun addVar(name: String, type: CType) {
         valueMap[name] = type
     }
 
-    fun contains(name: String): Boolean {
-        return valueMap.containsKey(name)
+    fun containsVar(varName: String): Boolean {
+        return valueMap.containsKey(varName)
     }
 
     fun getStructType(name: String): BaseType {
-        return typeMap[name] ?: throw Exception("Type for struct $name not found")
+        return getTypeOrNull(name) ?: throw Exception("Type for struct $name not found")
     }
 
-    fun<T: BaseType> addStructType(name: String, type: T):T {
-        typeMap[name] = type
+    fun <T : BaseType> addStructType(name: String, type: T): T {
+        typeMap.last()[name] = type
         return type
     }
 
     fun getEnumType(name: String): BaseType {
-        return typeMap[name] ?: throw Exception("Type for enum $name not found")
+        return getTypeOrNull(name) ?: throw Exception("Type for enum $name not found")
     }
 
-    fun addEnumType(name: String, type: BaseType) {
-        typeMap[name] = type
+    fun addEnumType(name: String, type: EnumBaseType): EnumBaseType {
+        typeMap.last()[name] = type
+        return type
+    }
+
+    fun addEnumType(name: String, type: UncompletedEnumType): UncompletedEnumType {
+        typeMap.last()[name] = type
+        return type
     }
 
     fun getUnionType(name: String): BaseType {
-        return typeMap[name] ?: throw Exception("Type for union $name not found")
+        return getTypeOrNull(name) ?: throw Exception("Type for union $name not found")
     }
 
     fun addUnionType(name: String, type: BaseType) {
-        typeMap[name] = type
+        typeMap.last()[name] = type
     }
 
     fun getFunctionType(name: String): CType {
@@ -51,6 +64,14 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>) {
 
     fun addFunctionType(name: String, type: CFunctionType) {
         functions[name] = type
+    }
+
+    override fun enter() {
+        typeMap.add(hashMapOf())
+    }
+
+    override fun leave() {
+        typeMap.removeLast()
     }
 
     companion object {

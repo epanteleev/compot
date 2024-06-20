@@ -655,7 +655,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
                 val fields = struct_declaration_list()
                 if (check("}")) {
                     eat()
-                    return@rule UnionSpecifier(Identifier.UNKNOWN, fields)
+                    return@rule UnionSpecifier(null, fields)
                 }
                 throw ParserException(ProgramMessage("Expected '}'", peak()))
             }
