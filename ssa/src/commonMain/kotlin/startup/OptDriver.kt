@@ -75,7 +75,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         val directoryName = "${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/".toPath()
 
         if (!FileSystem.SYSTEM.exists(directoryName)) {
-            FileSystem.SYSTEM.createDirectory(directoryName)
+            FileSystem.SYSTEM.createDirectories(directoryName)
         }
     }
 
