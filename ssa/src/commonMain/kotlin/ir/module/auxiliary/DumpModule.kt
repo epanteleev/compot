@@ -1,18 +1,13 @@
 package ir.module.auxiliary
 
-import ir.module.FunctionPrototype
-import ir.LocalValue
-import ir.Value
-import ir.instruction.Instruction
-import ir.instruction.TupleInstruction
-import ir.instruction.ValueInstruction
-import ir.module.FunctionData
-import ir.module.Module
-import ir.module.SSAModule
+import ir.*
+import ir.module.*
+import ir.instruction.*
 import ir.module.block.Block
 import ir.liveness.LiveIntervals
 import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.LModule
+
 
 abstract class DumpModule<T: Module> protected constructor(protected val module: T) {
     protected val builder = StringBuilder()

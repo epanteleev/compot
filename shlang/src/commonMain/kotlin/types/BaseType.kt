@@ -69,6 +69,9 @@ data class StructBaseType(override val name: String): AggregateType(name) { //TO
 
 data class UnionBaseType(override val name: String): AggregateType(name) {
     override fun size(): Int {
+        if (fields.isEmpty()) {
+            return 0
+        }
         return fields.maxOf { it.second.baseType().size() }
     }
 

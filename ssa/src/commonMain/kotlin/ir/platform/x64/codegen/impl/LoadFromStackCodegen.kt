@@ -11,7 +11,15 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {
-            is FloatingPointType -> default(dst, source, index)
+            is FloatingPointType -> {
+                if (dst is XmmRegister && source is Address2 && index is ImmInt) {
+                    asm.movf(size, Address.from(source.base, source.offset + index.value().toInt() * size), dst)
+                } else if (dst is XmmRegister && source is Address2 && index is GPRegister) {
+                    asm.movf(size, Address.from(source.base, source.offset, index, size), dst)
+                } else {
+                    default(dst, source, index)
+                }
+            }
             is IntegerType       -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }

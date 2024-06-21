@@ -391,12 +391,12 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
             BinaryOpType.ASSIGN -> {
                 val right = visitExpression(binop.right, true)
-                val commonType = toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-                val rightConverted = ir().convertToType(right, commonType)
+                val rightType = binop.left.resolveType(typeHolder)
+                val rightConverted = ir().convertToType(right, toIRType<NonTrivialType>(typeHolder, rightType))
 
                 val left = visitExpression(binop.left, false)
                 ir().store(left, rightConverted)
-                right //TODO
+                rightConverted //TODO
             }
 
             BinaryOpType.MUL -> {
