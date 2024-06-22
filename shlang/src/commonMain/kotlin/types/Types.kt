@@ -110,7 +110,7 @@ interface CType {
 interface AnyCPointerType: CType
 
 data class CPointerType(val type: CType) : AnyCPointerType {
-    override fun baseType(): BaseType = CPrimitive.UNKNOWN
+    override fun baseType(): BaseType = type.baseType()
     override fun qualifiers(): List<TypeProperty> = emptyList()
 
     fun dereference(): CType = type

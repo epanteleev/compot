@@ -8,11 +8,11 @@ JAVA=java
 
 export JAVA_OPTS="-Xint -ea"
 OUTPUT_DIR="outdir"
-IR_COMPILER="./build/ssa-1.0/bin/ssa --dump-ir $OUTPUT_DIR"
+IR_COMPILER="../ssa-driver/build/bin/linuxX64/debugExecutable/OptStartup.kexe --dump-ir $OUTPUT_DIR"
 
 rm -rf ../build
 mkdir ../build
-unzip -o ../ssa/build/distributions/ssa-1.0.zip -d build
+unzip -o ../ssa-driver/build/distributions/ssa-driver-1.0.zip -d build
 
 function compile_test() {
 	${IR_COMPILER} -c "$1.ir" -o "$OUTPUT_DIR/$1"

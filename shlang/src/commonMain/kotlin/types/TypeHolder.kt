@@ -4,6 +4,7 @@ package types
 class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
     private val typeMap = arrayListOf(hashMapOf<String, BaseType>()) //TODO separate holder for struct, enum, union.
     private val functions = hashMapOf<String, CFunctionType>()
+    private val typedefs = arrayListOf(hashMapOf<String, CType>())
 
     operator fun get(varName: String): CType {
         return valueMap[varName] ?: throw Exception("Type for variable '$varName' not found")
@@ -17,6 +18,24 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
             }
         }
         return null
+    }
+
+    fun getTypedefOrNull(name: String): CType? {
+        for (i in typedefs.size - 1 downTo 0) {
+            val type = typedefs[i][name]
+            if (type != null) {
+                return type
+            }
+        }
+        return null
+    }
+
+    fun getTypedef(name: String): CType {
+        return getTypedefOrNull(name) ?: throw Exception("Type for typedef $name not found")
+    }
+
+    fun addTypedef(name: String, type: CType) {
+        typedefs.last()[name] = type
     }
 
     fun addVar(name: String, type: CType) {
