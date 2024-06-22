@@ -241,12 +241,30 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             is StringNode   -> visitStringNode(expression)
             is SizeOf       -> visitSizeOf(expression)
             is MemberAccess -> visitMemberAccess(expression, isRvalue)
+            is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
             else -> throw IRCodeGenError("Unknown expression: $expression")
         }
     }
 
+    private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
+        val struct = visitExpression(arrowMemberAccess.primary, true)
+        val structType = arrowMemberAccess.primary.resolveType(typeHolder) as CPointerType
+        val structIRType = moduleBuilder.toIRType<StructType>(typeHolder, structType.dereference())
+
+        val baseStructType = structType.baseType() as AggregateBaseType
+        val member = baseStructType.fieldIndex(arrowMemberAccess.ident.str())
+        val memberType = baseStructType.fields()[member].second
+        val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
+        return if (isRvalue) {
+            val memberIRType = moduleBuilder.toIRType<PrimitiveType>(typeHolder, memberType)
+            ir().load(memberIRType, gep)
+        } else {
+            gep
+        }
+    }
+
     private fun visitMemberAccess(memberAccess: MemberAccess, isRvalue: Boolean): Value {
-        val struct = visitExpression(memberAccess.primary, false)
+        val struct = visitExpression(memberAccess.primary, false) //TODO isRvalue???
         val structType = memberAccess.primary.resolveType(typeHolder)
         val structIRType = moduleBuilder.toIRType<StructType>(typeHolder, structType)
 

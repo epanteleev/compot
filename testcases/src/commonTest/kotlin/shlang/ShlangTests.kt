@@ -187,6 +187,13 @@ abstract class ShlangTests: CommonCTest() {
     }
 
     @Test
+    fun testStruct2() {
+        val result = runCTest("shlang/struct2", listOf("runtime/runtime.c"), options())
+        assertEquals("Rect: (10, 20) - (30, 40)\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
     fun testUnion0() {
         val result = runCTest("shlang/union0", listOf("runtime/runtime.c"), options())
         assertEquals("1.000000\n", result.output)

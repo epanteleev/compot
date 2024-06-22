@@ -55,7 +55,7 @@ class Lea private constructor(id: Identity, owner: Block, value: Value):
         }
 
         private fun isAppropriateType(originType: Type): Boolean {
-            return originType is PrimitiveType
+            return true//originType is PrimitiveType
         }
     }
 }

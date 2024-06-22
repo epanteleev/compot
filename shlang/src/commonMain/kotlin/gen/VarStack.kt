@@ -4,7 +4,6 @@ import ir.LocalValue
 
 
 class VarStack {
-
     private val stack = mutableListOf<MutableMap<String, LocalValue>>()
 
     fun push() {

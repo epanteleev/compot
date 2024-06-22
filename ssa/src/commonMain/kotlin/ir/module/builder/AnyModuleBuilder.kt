@@ -34,7 +34,11 @@ abstract class AnyModuleBuilder {
     }
 
     fun findStructType(name: String): StructType {
-        return structs[name] ?: throw NoSuchElementException("not found name=$name")
+        return findStructTypeOrNull(name) ?: throw NoSuchElementException("not found name=$name")
+    }
+
+    fun findStructTypeOrNull(name: String): StructType? {
+        return structs[name]
     }
 
     abstract fun build(): Module

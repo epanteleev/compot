@@ -29,7 +29,7 @@ object TypeConverter {
             }
         }
 
-        val ret = when (val baseType= type.baseType()) {
+        val ret = when (val baseType = type.baseType()) {
             CPrimitive.CHAR   -> Type.I8
             CPrimitive.UCHAR  -> Type.U8
             CPrimitive.SHORT  -> Type.I16
@@ -64,11 +64,21 @@ object TypeConverter {
 
     private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: StructBaseType): Type {
         val fields = type.fields().map { toIRType<NonTrivialType>(typeHolder, it.second) }
+        val structType = findStructTypeOrNull(type.name)
+        if (structType != null) {
+            return structType
+        }
+
         return structType(type.name, fields)
     }
 
     private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: UnionBaseType): Type {
         val field = type.fields().maxBy { it.second.size() }.let { toIRType<NonTrivialType>(typeHolder, it.second) }
+        val structType = findStructTypeOrNull(type.name)
+        if (structType != null) {
+            return structType
+        }
+
         return structType(type.name, listOf(field))
     }
 
