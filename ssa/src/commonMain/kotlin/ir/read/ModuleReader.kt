@@ -59,7 +59,7 @@ class ModuleReader(string: String) {
             resolvedFieldTypes.add(resolved)
         }
 
-        moduleBuilder.addStructType(StructType(struct.name, resolvedFieldTypes))
+        moduleBuilder.structType(struct.name, resolvedFieldTypes)
     }
 
     private fun parseGlobals(name: SymbolValue) {

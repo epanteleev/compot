@@ -10,8 +10,7 @@ import ir.platform.common.TargetPlatform
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val pointStruct = StructType("point", arrayListOf(Type.I32, Type.I32))
-    builder.addStructType(pointStruct)
+    val pointStruct = builder.structType("point", arrayListOf(Type.I32, Type.I32))
 
     builder.createFunction("main", Type.I32, arrayListOf()).apply {
         val first = alloc(pointStruct)

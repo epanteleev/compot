@@ -1,5 +1,6 @@
 package gen
 
+import gen.TypeConverter.toIRType
 import types.*
 import ir.module.Module
 import ir.module.builder.impl.ModuleBuilder
@@ -28,8 +29,8 @@ class IRGen private constructor(val typeHolder: TypeHolder) {
             when (type) {
                 is CFunctionType -> {
                     val abstrType = type.functionType
-                    val argTypes = abstrType .argsTypes.map { TypeConverter.toIRType<NonTrivialType>(typeHolder, it) }
-                    val returnType = TypeConverter.toIRType<Type>(typeHolder, abstrType.retType)
+                    val argTypes = abstrType.argsTypes.map { moduleBuilder.toIRType<NonTrivialType>(typeHolder, it) }
+                    val returnType = moduleBuilder.toIRType<Type>(typeHolder, abstrType.retType)
                     moduleBuilder.createExternFunction(type.name, returnType, argTypes)
                 }
                 else -> throw IRCodeGenError("Function or struct expected")

@@ -4,15 +4,15 @@ import ir.*
 import types.*
 import ir.types.*
 import ir.module.builder.impl.FunctionDataBuilder
+import ir.module.builder.impl.ModuleBuilder
 
 
 object TypeConverter {
-
-    inline fun<reified T: Type> toIRType(typeHolder: TypeHolder, type: CType): T {
+    inline fun<reified T: Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: CType): T {
         return toIRTypeUnchecked(typeHolder, type) as T
     }
 
-    fun toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type {
+    fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type {
         for (p in type.qualifiers()) {
             if (p is PointerQualifier) {
                 return Type.Ptr
@@ -62,14 +62,14 @@ object TypeConverter {
         return ret
     }
 
-    private fun convertStructType(typeHolder: TypeHolder, type: StructBaseType): Type {
+    private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: StructBaseType): Type {
         val fields = type.fields().map { toIRType<NonTrivialType>(typeHolder, it.second) }
-        return StructType(type.name, fields)
+        return structType(type.name, fields)
     }
 
-    private fun convertUnionType(typeHolder: TypeHolder, type: UnionBaseType): Type {
+    private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: UnionBaseType): Type {
         val field = type.fields().maxBy { it.second.size() }.let { toIRType<NonTrivialType>(typeHolder, it.second) }
-        return StructType(type.name, listOf(field)) //TODO Type.U64????
+        return structType(type.name, listOf(field))
     }
 
    fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {
