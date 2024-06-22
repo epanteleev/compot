@@ -155,14 +155,19 @@ class CTypeBuilder {
     fun build(typeHolder: TypeHolder): CType {
         val typeNodes = properties.filterIsInstance<BaseType>()
         val baseType = typeNodes[0]
+        if (baseType !is AggregateBaseType) {
+            return CPrimitiveType(baseType, properties.filterNot { it is BaseType })
+        }
+        val struct = CompoundType(baseType, properties.filterNot { it is BaseType })
         when (baseType) {
-            is AggregateType -> {
-                val struct = CompoundType(baseType, properties.filterNot { it is BaseType })
+            is StructBaseType, is UnionBaseType -> {
                 typeHolder.addStructType(baseType.name, baseType)
                 return struct
             }
+            else -> {
+                return struct
+            }
         }
-        return CPrimitiveType(baseType, properties.filterNot { it is BaseType })
     }
 }
 
@@ -180,7 +185,10 @@ data class CPrimitiveType(val baseType: BaseType, val properties: List<TypePrope
 
 data class CompoundType(val baseType: BaseType, val properties: List<TypeProperty> = emptyList()) : CType { //TODO
     override fun toString(): String {
-        return baseType.toString()
+        return buildString {
+            properties.forEach { append("$it ") }
+            append(baseType)
+        }
     }
 
     override fun baseType(): BaseType = baseType

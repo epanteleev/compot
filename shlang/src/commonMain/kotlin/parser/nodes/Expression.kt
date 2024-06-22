@@ -234,7 +234,7 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
             return@memoize CType.UNKNOWN
         }
         val aggregate = structType.baseType()
-        if (aggregate !is AggregateType) {
+        if (aggregate !is AggregateBaseType) {
             return@memoize CType.UNKNOWN
         }
         val field = aggregate.fieldIndex(ident.str())
@@ -258,7 +258,7 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
             return@memoize CType.UNKNOWN
         }
         val aggregate = structType.baseType()
-        if (aggregate !is AggregateType) {
+        if (aggregate !is AggregateBaseType) {
             return@memoize CType.UNKNOWN
         }
         val field = aggregate.fieldIndex(ident.str())

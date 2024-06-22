@@ -79,7 +79,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         }
     }
 
-    fun run(module: Module) {
+    fun compile(module: Module) {
         removeOrCreateDir()
         if (commandLineArguments.getOptLevel() == 0) {
             unoptimized(module)
@@ -91,7 +91,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         }
     }
 
-    fun run() {
+    fun compile() {
         val text = FileSystem.SYSTEM.read(commandLineArguments.getFilename().toPath()) {
             readUtf8()
         }
@@ -103,7 +103,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
             throw e
         }
 
-        run(module)
+        compile(module)
     }
 
     companion object {

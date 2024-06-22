@@ -5,24 +5,21 @@ import ir.module.auxiliary.CopyCFG
 import ir.module.auxiliary.DumpModule
 import ir.types.StructType
 
-data class ModuleException(override val message: String): Exception(message)
-
-abstract class Module(internal open val functions: List<FunctionData>,
-                      internal open val externFunctions: Set<ExternFunction>,
-                      internal open val globals: Set<GlobalSymbol>,
-                      internal open val types: List<StructType>) {
+abstract class Module(internal val functions: List<FunctionData>,
+                      internal val externFunctions: Map<String, ExternFunction>,
+                      internal val globals: Map<String, GlobalSymbol>,
+                      internal val types: Map<String, StructType>) {
     val prototypes: List<AnyFunctionPrototype> by lazy {
-        externFunctions.toList() + functions.map { it.prototype }
+        externFunctions.values + functions.map { it.prototype }
     }
 
     fun findFunction(prototype: FunctionPrototype): FunctionData {
         return functions.find { it.prototype == prototype }
-            ?: throw ModuleException("Cannot find function: $prototype")
+            ?: throw NoSuchElementException("Cannot find function: $prototype")
     }
 
     fun findGlobal(name: String): GlobalSymbol {
-        return globals.find { it.name() == name } //TODO O(n)
-            ?: throw ModuleException("Cannot find function: $name")
+        return globals[name] ?: throw NoSuchElementException("Cannot find function: $name")
     }
 
     abstract fun copy(): Module
@@ -32,10 +29,10 @@ abstract class Module(internal open val functions: List<FunctionData>,
     }
 }
 
-data class SSAModule(override val functions: List<FunctionData>,
-                     override val externFunctions: Set<ExternFunction>,
-                     override val globals: Set<GlobalSymbol>,
-                     override val types: List<StructType>):
+class SSAModule(functions: List<FunctionData>,
+                externFunctions: Map<String, ExternFunction>,
+                globals: Map<String, GlobalSymbol>,
+                types: Map<String, StructType>):
     Module(functions, externFunctions, globals, types) {
     override fun copy(): Module {
         return SSAModule(functions.map { CopyCFG.copy(it) }, externFunctions, globals, types)

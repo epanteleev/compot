@@ -8,25 +8,25 @@ import ir.types.StructType
 
 
 abstract class AnyModuleBuilder {
-    protected val globals = mutableSetOf<GlobalSymbol>()
-    protected val structs = arrayListOf<StructType>()
+    protected val globals = hashMapOf<String, GlobalSymbol>()
+    protected val structs = hashMapOf<String, StructType>()
 
     fun addConstant(global: GlobalConstant): GlobalConstant {
-        globals.add(global)
+        globals[global.name()] = global
         return global
     }
 
     fun addStructType(structType: StructType): StructType {
-        structs.add(structType)
+        structs[structType.name] = structType
         return structType
     }
 
     fun findGlobal(name: String): GlobalSymbol {
-        return globals.find { it.name() == name } ?: throw RuntimeException("not found name=$name") //TODO O(n)
+        return globals[name] ?: throw NoSuchElementException("not found name=$name")
     }
 
     fun findStructType(name: String): StructType {
-        return structs.find { it.name == name } ?: throw RuntimeException("not found name=$name") //TODO O(n)
+        return structs[name] ?: throw NoSuchElementException("not found name=$name")
     }
 
     abstract fun build(): Module

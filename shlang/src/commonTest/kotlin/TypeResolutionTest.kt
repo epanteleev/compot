@@ -59,7 +59,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
-        val typeResolver = TypeHolder.default()
+        val typeResolver = parser.typeHolder()
         assertEquals("volatile struct point", expr.resolveType(typeResolver).toString())
     }
 

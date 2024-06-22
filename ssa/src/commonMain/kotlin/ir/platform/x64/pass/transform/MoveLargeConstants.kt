@@ -16,7 +16,7 @@ import ir.platform.x64.CallConvention
 
 
 // Move large constant to constant pool
-class MoveLargeConstants private constructor(val functions: List<FunctionData>, private val constants: MutableSet<GlobalSymbol>) {
+class MoveLargeConstants private constructor(val functions: List<FunctionData>, private val constants: MutableMap<String, GlobalSymbol>) {
     private var constantIndex = 0
 
     private fun run() {
@@ -62,10 +62,10 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
                 }
 
                 val constant = makeConstantOrNull(operand) ?: continue
-                constants.add(constant)
+                constants[constant.name()] = constant
 
                 val loadedConstant = bb.insertBefore(inst) {
-                    it.load(operand.type() as PrimitiveType, constant)
+                    it.load(operand.asType<PrimitiveType>(), constant)
                 }
                 lastInserted = loadedConstant
                 inst.update(opIdx, loadedConstant)
@@ -79,7 +79,10 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
 
         fun run(module: Module): Module {
             val functions = module.functions.map { it }
-            val constants = module.globals.mapTo(mutableSetOf()) { it }
+            val constants = hashMapOf<String, GlobalSymbol>()
+            for ((name, global) in module.globals) {
+                constants[name] = global
+            }
             MoveLargeConstants(functions, constants).run()
 
             return SSAModule(functions, module.externFunctions, constants, module.types)

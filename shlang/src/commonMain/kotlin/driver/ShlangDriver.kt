@@ -23,7 +23,7 @@ class ShlangDriver(private val cli: CCLIArguments) {
         val source = FileSystem.SYSTEM.read(cli.getFilename().toPath()) {
             readUtf8()
         }
-        val ctx    = initializePreprocessorContext()
+        val ctx = initializePreprocessorContext()
 
         val tokens              = CTokenizer.apply(source)
         val preprocessor        = CProgramPreprocessor.create(tokens, ctx)
@@ -37,6 +37,6 @@ class ShlangDriver(private val cli: CCLIArguments) {
 
     fun run() {
         val module = compile()
-        OptDriver(cli.makeOptCLIArguments()).run(module)
+        OptDriver(cli.makeOptCLIArguments()).compile(module)
     }
 }

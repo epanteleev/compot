@@ -10,10 +10,10 @@ import ir.platform.x64.regalloc.RegisterAllocation
 import ir.liveness.LiveIntervals
 
 
-data class LModule(override val functions: List<FunctionData>,
-                   override val externFunctions: Set<ExternFunction>,
-                   override val globals: Set<GlobalSymbol>,
-                   override val types: List<StructType>):
+class LModule(functions: List<FunctionData>,
+                   externFunctions: Map<String, ExternFunction>,
+                   globals: Map<String, GlobalSymbol>,
+                   types: Map<String, StructType>):
     Module(functions, externFunctions, globals, types) {
     private val liveIntervals: Map<FunctionData, LiveIntervals>
     private val registerAllocation: Map<FunctionData, RegisterAllocation>

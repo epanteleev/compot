@@ -12,12 +12,11 @@ import ir.module.builder.AnyModuleBuilder
 
 class ModuleBuilder private constructor(): AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilder>()
-    private val externFunctions = mutableSetOf<ExternFunction>()
+    private val externFunctions = hashMapOf<String, ExternFunction>()
 
     fun findFunction(name: String): AnyFunctionPrototype {
         val fnBuilder: AnyFunctionPrototype = functions.find { it.prototype().name() == name }?.prototype()
-            ?: externFunctions.find { it.name() == name }
-            ?: throw RuntimeException("not found name=$name") //TODO O(n)
+            ?: externFunctions[name] ?: throw RuntimeException("not found name=$name") //TODO O(n)
         return fnBuilder
     }
 
@@ -35,7 +34,7 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
 
     fun createExternFunction(name: String, returnType: Type, arguments: List<Type>): ExternFunction {
         val extern = ExternFunction(name, returnType, arguments)
-        externFunctions.add(extern)
+        externFunctions[name] = extern
         return extern
     }
 

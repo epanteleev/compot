@@ -13,7 +13,6 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
     var isTypedef = false
 
     override fun resolveType(typeHolder: TypeHolder): CType {
-
         val ctypeBuilder = CTypeBuilder()
         specifiers.forEach {
             when (it) {

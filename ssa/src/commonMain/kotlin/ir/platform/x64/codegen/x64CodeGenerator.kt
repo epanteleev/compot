@@ -697,7 +697,7 @@ private class CodeEmitter(private val data: FunctionData,
             }
             val asm = CompilationUnit()
 
-            for (c in module.globals) {
+            for (c in module.globals.values) {
                 if (c !is GlobalConstant) {
                     continue
                 }

@@ -25,6 +25,7 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
     fun currentLabel(): Label = bb
 
     fun begin(): Label = blocks.begin()
+
     fun createLabel(): Label = allocateBlock()
 
     fun argument(index: Int): ArgumentValue = argumentValues[index]

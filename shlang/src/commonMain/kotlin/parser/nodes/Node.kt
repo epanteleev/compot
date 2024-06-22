@@ -23,9 +23,10 @@ data class Declaration(val declspec: DeclarationSpecifier, val declarators: List
         declarators.forEach {
             when (it) {
                 is Declarator           -> {
-                    vars.add(it.resolveType(type, typeHolder))
                     if (declspec.isTypedef) {
                         typeHolder.addStructType(it.name(), type.baseType()) //TODO BASETYPE???
+                    } else {
+                        vars.add(it.resolveType(type, typeHolder))
                     }
                 }
                 is AssignmentDeclarator -> {

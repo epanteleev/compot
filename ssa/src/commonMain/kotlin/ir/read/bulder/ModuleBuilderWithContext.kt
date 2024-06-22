@@ -12,7 +12,7 @@ import ir.types.NonTrivialType
 
 class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilderWithContext>()
-    private val externFunctions = mutableSetOf<ExternFunction>()
+    private val externFunctions = hashMapOf<String, ExternFunction>()
 
     fun createFunction(functionName: SymbolValue, returnType: TypeToken, argumentTypes: List<TypeToken>, argumentValues: List<LocalValueToken>): FunctionDataBuilderWithContext {
         val args        = resolveArgumentType(argumentTypes)
@@ -20,7 +20,7 @@ class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
 
         val data = FunctionDataBuilderWithContext.create(this, prototype, argumentValues)
         functions.add(data)
-        globals.add(prototype)
+        globals[functionName.name] = prototype
         return data
     }
 
@@ -31,7 +31,7 @@ class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
     fun createExternFunction(functionName: SymbolValue, returnType: TypeToken, arguments: List<TypeToken>): ExternFunction {
         val resolvedArguments = resolveArgumentType(arguments)
         val extern = ExternFunction(functionName.name, returnType.type(this), resolvedArguments)
-        externFunctions.add(extern)
+        externFunctions[functionName.name] = extern
         return extern
     }
 

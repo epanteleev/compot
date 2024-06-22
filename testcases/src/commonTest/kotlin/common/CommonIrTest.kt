@@ -20,7 +20,7 @@ abstract class CommonIrTest: CommonTest() {
                 listOf("-o", "$TEST_OUTPUT_DIR/$basename")
 
         val cli = CliParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
-        OptDriver(cli).run()
+        OptDriver(cli).compile()
 
         runGCC(basename, extraFiles)
     }

@@ -54,3 +54,7 @@ tasks.withType(Test::class.java).all {
         exceptionFormat = TestExceptionFormat.FULL
     }
 }
+
+tasks.named<Jar>("jvmJar") {
+    dependsOn.add(tasks.findByName("jvmTest"))
+}

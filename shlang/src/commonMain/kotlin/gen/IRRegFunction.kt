@@ -14,7 +14,7 @@ import ir.global.StringLiteralGlobal
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
-import types.AggregateType
+import types.AggregateBaseType
 
 class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                     private val typeHolder: TypeHolder, functionNode: FunctionNode) {
@@ -250,7 +250,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val structType = memberAccess.primary.resolveType(typeHolder)
         val structIRType = toIRType<StructType>(typeHolder, structType)
 
-        val baseStructType = structType.baseType() as AggregateType
+        val baseStructType = structType.baseType() as AggregateBaseType
         val member = baseStructType.fieldIndex(memberAccess.ident.str())
         val memberType = baseStructType.fields()[member].second
 
