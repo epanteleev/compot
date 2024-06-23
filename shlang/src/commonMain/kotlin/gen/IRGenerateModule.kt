@@ -31,7 +31,9 @@ class IRGen private constructor(val typeHolder: TypeHolder) {
                     val abstrType = type.functionType
                     val argTypes = abstrType.argsTypes.map { moduleBuilder.toIRType<NonTrivialType>(typeHolder, it) }
                     val returnType = moduleBuilder.toIRType<Type>(typeHolder, abstrType.retType)
-                    moduleBuilder.createExternFunction(type.name, returnType, argTypes)
+
+                    val isVararg = type.functionType.variadic
+                    moduleBuilder.createExternFunction(type.name, returnType, argTypes, isVararg)
                 }
                 else -> throw IRCodeGenError("Function or struct expected")
             }

@@ -14,8 +14,9 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
     private val externFunctions = hashMapOf<String, ExternFunction>()
 
     fun createFunction(functionName: SymbolValue, returnType: TypeToken, argumentTypes: List<TypeToken>, argumentValues: List<LocalValueToken>): FunctionDataBuilderWithContext {
-        val args        = resolveArgumentType(argumentTypes)
-        val prototype   = FunctionPrototype(functionName.name, returnType.type(this), args)
+        val args      = resolveArgumentType(argumentTypes)
+        val isVararg  = argumentTypes.lastOrNull() is Vararg
+        val prototype = FunctionPrototype(functionName.name, returnType.type(this), args, isVararg)
 
         val data = FunctionDataBuilderWithContext.create(this, prototype, argumentValues)
         functions.add(data)
@@ -29,7 +30,8 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
 
     fun createExternFunction(functionName: SymbolValue, returnType: TypeToken, arguments: List<TypeToken>): ExternFunction {
         val resolvedArguments = resolveArgumentType(arguments)
-        val extern = ExternFunction(functionName.name, returnType.type(this), resolvedArguments)
+        val isVararg          = arguments.lastOrNull() is Vararg
+        val extern            = ExternFunction(functionName.name, returnType.type(this), resolvedArguments, isVararg)
         externFunctions[functionName.name] = extern
         return extern
     }
@@ -44,7 +46,23 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
     }
 
     internal fun resolveArgumentType(tokens: List<TypeToken>): List<Type> {
-        return tokens.mapTo(arrayListOf()) { it.type(this) }
+        fun convert(typeToken: TypeToken): Type {
+            val type = typeToken.type(this)
+            if (type !is NonTrivialType) {
+                throw IllegalStateException("Expected non-trivial type, but got '$type'")
+            }
+
+            return type
+        }
+
+        if (tokens.isEmpty()) {
+            return arrayListOf()
+        }
+        return if (tokens.last() is Vararg) {
+            tokens.dropLast(1).mapTo(arrayListOf()) { convert(it) }
+        } else {
+            tokens.mapTo(arrayListOf()) { convert(it) }
+        }
     }
 
     companion object {

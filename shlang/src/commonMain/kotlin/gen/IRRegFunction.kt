@@ -337,8 +337,16 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             val convertedArg = if (type is ArrayType) {
                 ir().gep(expr, type.elementType() as PrimitiveType, Constant.of(Type.I64, 0))
             } else {
-                val cvt = function.arguments()[idx]
-                ir().convertToType(expr, cvt)
+                if (idx >= function.arguments().size) {
+                    if (!function.isVararg) {
+                        throw IRCodeGenError("Too many arguments in function call '$name'")
+                    }
+
+                    expr
+                } else {
+                    val cvt = function.arguments()[idx]
+                    ir().convertToType(expr, cvt)
+                }
             }
 
             convertedArgs.add(convertedArg)

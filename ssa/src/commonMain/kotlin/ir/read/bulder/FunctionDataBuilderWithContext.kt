@@ -367,12 +367,14 @@ class FunctionDataBuilderWithContext private constructor(
 
     fun makePrototype(functionName: SymbolValue, returnType: TypeToken, argTypes: List<TypeToken>): FunctionPrototype {
         val types = moduleBuilder.resolveArgumentType(argTypes)
-        return FunctionPrototype(functionName.name, returnType.type(moduleBuilder), types)
+        val isVararg = argTypes.lastOrNull() is Vararg
+        return FunctionPrototype(functionName.name, returnType.type(moduleBuilder), types, isVararg)
     }
 
     fun makePrototype(returnType: TypeToken, argTypes: List<TypeToken>): IndirectFunctionPrototype {
         val types = moduleBuilder.resolveArgumentType(argTypes)
-        return IndirectFunctionPrototype(returnType.type(moduleBuilder), types)
+        val isVararg = argTypes.lastOrNull() is Vararg
+        return IndirectFunctionPrototype(returnType.type(moduleBuilder), types, isVararg)
     }
 
     companion object {

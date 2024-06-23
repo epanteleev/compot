@@ -99,19 +99,4 @@ class InconsistentCFG {
         val throwable = assertFails { builder.build() }
         assertTrue { throwable is ValidateSSAErrorException }
     }
-
-    @Test
-    fun testVarArg() {
-        val builder = ModuleBuilder.create()
-        val printf = builder.createExternFunction("printf", Type.Void, arrayListOf(Type.Ptr, Type.VarArgType, Type.I32))
-        builder.createFunction("main", Type.I32, arrayListOf()).apply {
-            val cont = createLabel()
-            call(printf, arrayListOf(NullValue.NULLPTR, I32Value(12)), cont)
-            switchLabel(cont)
-            ret(I32Value(0))
-        }
-
-        val throwable = assertFails { builder.build() }
-        assertTrue { throwable is ValidateSSAErrorException }
-    }
 }

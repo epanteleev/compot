@@ -21,11 +21,8 @@ interface Callable {
     companion object {
         internal fun isAppropriateTypes(func: AnyFunctionPrototype, args: Array<Value>): Boolean {
             func.arguments().forEachWith(args) { expectedType, value ->
-                if (expectedType == Type.VarArgType) {
-                    return true
-                }
                 if (expectedType != value.type()) {
-                    return false
+                    return func.isVararg
                 }
             }
 

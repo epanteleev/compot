@@ -8,6 +8,7 @@ import ir.module.Module
 import ir.module.SSAModule
 import ir.pass.ana.VerifySSA
 import ir.module.builder.AnyModuleBuilder
+import ir.read.tokens.Vararg
 
 
 class ModuleBuilder private constructor(): AnyModuleBuilder() {
@@ -32,8 +33,8 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
         return data
     }
 
-    fun createExternFunction(name: String, returnType: Type, arguments: List<Type>): ExternFunction {
-        val extern = ExternFunction(name, returnType, arguments)
+    fun createExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {
+        val extern = ExternFunction(name, returnType, arguments, isVararg)
         externFunctions[name] = extern
         return extern
     }

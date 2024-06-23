@@ -2,11 +2,12 @@ package ir.module
 
 import ir.types.Type
 import ir.global.FunctionSymbol
+import ir.read.tokens.Vararg
 import ir.types.NonTrivialType
 
 abstract class AnyFunctionPrototype(val name: String,
                                     private val returnType: Type,
-                                    protected val arguments: List<Type>) {
+                                    protected val arguments: List<Type>, val isVararg: Boolean) {
 
     fun arguments(): List<Type> = arguments
 
@@ -35,8 +36,8 @@ abstract class AnyFunctionPrototype(val name: String,
     }
 }
 
-class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
-    AnyFunctionPrototype(name, returnType, arguments), FunctionSymbol {
+class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false):
+    AnyFunctionPrototype(name, returnType, arguments, isVararg), FunctionSymbol {
     override fun toString(): String {
         return "define ${shortName()}"
     }
@@ -46,8 +47,8 @@ class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>):
     override fun name(): String = name
 }
 
-class IndirectFunctionPrototype(returnType: Type, arguments: List<Type>):
-    AnyFunctionPrototype("<indirect>", returnType, arguments) {
+class IndirectFunctionPrototype(returnType: Type, arguments: List<Type>, isVararg: Boolean):
+    AnyFunctionPrototype("<indirect>", returnType, arguments, isVararg) {
     override fun toString(): String {
         return "define ${shortName()}"
     }
@@ -61,8 +62,8 @@ class IndirectFunctionPrototype(returnType: Type, arguments: List<Type>):
     }
 }
 
-class ExternFunction internal constructor(name: String, returnType: Type, arguments: List<Type>):
-    AnyFunctionPrototype(name, returnType, arguments), FunctionSymbol {
+class ExternFunction internal constructor(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean):
+    AnyFunctionPrototype(name, returnType, arguments, isVararg), FunctionSymbol {
     override fun toString(): String {
         return "extern ${shortName()}"
     }

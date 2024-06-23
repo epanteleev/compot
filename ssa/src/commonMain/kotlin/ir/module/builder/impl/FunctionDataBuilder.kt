@@ -7,6 +7,7 @@ import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.InstructionFabric
 import ir.module.builder.AnyFunctionDataBuilder
+import ir.read.tokens.Vararg
 import ir.types.*
 
 
@@ -190,9 +191,10 @@ class FunctionDataBuilder private constructor(
             name: String,
             returnType: Type,
             arguments: List<Type>,
-            argumentValues: List<ArgumentValue>
+            argumentValues: List<ArgumentValue>,
+            isVararg: Boolean = false
         ): FunctionDataBuilder {
-            val prototype = FunctionPrototype(name, returnType, arguments)
+            val prototype = FunctionPrototype(name, returnType, arguments, isVararg)
             val startBB = Block.empty(Label.entry.index)
             val basicBlocks = BasicBlocks.create(startBB)
 

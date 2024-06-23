@@ -23,6 +23,5 @@ interface Type {
 
         val Void = VoidType()
         val UNDEF = AnyType()
-        val VarArgType = VarArgType()
     }
 }

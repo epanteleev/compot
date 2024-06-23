@@ -126,6 +126,6 @@ data class Vararg(override val line: Int, override val pos: Int): TypeToken(line
     override fun message(): String = "'...'"
 
     override fun type(resolver: TypeResolver): Type {
-        return Type.VarArgType
+        throw TypeErrorException("vararg type is not a type")
     }
 }
