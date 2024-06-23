@@ -24,6 +24,10 @@ class Tokenizer(val data: String) {
         return globalPosition >= data.length
     }
 
+    private fun isEnd(offset: Int): Boolean {
+        return globalPosition + offset >= data.length
+    }
+
     private fun nextChar() {
         globalPosition += 1
         pos += 1
@@ -45,6 +49,13 @@ class Tokenizer(val data: String) {
             throw EOFException("$line:$pos unexpected EOF")
         }
         return data[globalPosition]
+    }
+
+    private fun getChar(offset: Int): Char {
+        if (isEnd(offset)) {
+            throw EOFException("$line:$pos unexpected EOF")
+        }
+        return data[globalPosition + offset]
     }
 
     internal fun skipWhitespace() {
@@ -270,6 +281,18 @@ class Tokenizer(val data: String) {
         return TupleTypeToken(types, line, begin)
     }
 
+    private fun readDotOrVararg(): Token {
+        val begin = pos
+        nextChar()
+        if (getChar() == '.' && getChar(1) == '.') {
+            nextChar()
+            nextChar()
+            return Vararg(line, begin)
+        } else {
+            return Dot(line, begin)
+        }
+    }
+
     internal fun nextToken(): Token {
         skipWhitespace()
         val ch = getChar()
@@ -281,7 +304,6 @@ class Tokenizer(val data: String) {
             '=' -> Equal(line, pos)
             ',' -> Comma(line, pos)
             ':' -> Colon(line, pos)
-            '.' -> Dot(line, pos)
             '[' -> OpenSquareBracket(line, pos)
             ']' -> CloseSquareBracket(line, pos)
             else -> null
@@ -295,6 +317,7 @@ class Tokenizer(val data: String) {
             '"' -> return readStringLiteral()
             '@' -> return readSymbolName()
             '|' -> return readTupleType()
+            '.' -> return readDotOrVararg()
             else -> {}
         }
 

@@ -11,7 +11,7 @@ import ir.platform.common.TargetPlatform
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val helloStr = builder.addConstant(StringLiteralGlobal("str", ArrayType(Type.I8, 11), "Hello world"))
+    val helloStr = builder.addConstant(StringLiteralGlobal("str", ArrayType(Type.I8, 10), "Hello world"))
     val printf = builder.createExternFunction("printf", Type.I32, arrayListOf(Type.Ptr, Type.VarArgType))
     builder.createFunction("main", Type.I32, arrayListOf(Type.I32, Type.VarArgType)).apply {
         val cont = createLabel()

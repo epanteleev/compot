@@ -30,7 +30,6 @@ abstract class AnyFunctionPrototype(val name: String,
 
         if (name != other.name) return false
         if (returnType != other.returnType) return false
-        if (arguments != other.arguments) return false
 
         return true
     }

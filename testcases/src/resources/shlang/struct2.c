@@ -1,6 +1,6 @@
 #include <runtime/runtime.h>
 
-extern void printf(const char* fmt, int, int, int, int);
+extern void printf(const char* fmt, ...);
 
 struct Point {
     int x;

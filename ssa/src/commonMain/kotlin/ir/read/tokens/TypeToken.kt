@@ -121,3 +121,11 @@ data class TupleTypeToken(val types: List<TypeToken>, override val line: Int, ov
         return "|${types.joinToString()}|"
     }
 }
+
+data class Vararg(override val line: Int, override val pos: Int): TypeToken(line, pos) {
+    override fun message(): String = "'...'"
+
+    override fun type(resolver: TypeResolver): Type {
+        return Type.VarArgType
+    }
+}

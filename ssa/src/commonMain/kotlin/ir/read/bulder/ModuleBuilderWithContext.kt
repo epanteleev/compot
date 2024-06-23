@@ -1,16 +1,15 @@
 package ir.read.bulder
 
 import ir.module.*
+import ir.read.tokens.*
 import ir.module.builder.AnyModuleBuilder
 import ir.types.StructType
 import ir.pass.ana.VerifySSA
-import ir.read.tokens.LocalValueToken
-import ir.read.tokens.SymbolValue
-import ir.read.tokens.TypeToken
 import ir.types.NonTrivialType
+import ir.types.Type
 
 
-class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
+class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilderWithContext>()
     private val externFunctions = hashMapOf<String, ExternFunction>()
 
@@ -44,14 +43,8 @@ class ModuleBuilderWithContext: TypeResolver, AnyModuleBuilder() {
         return VerifySSA.run(ssa)
     }
 
-    internal fun resolveArgumentType(tokens: List<TypeToken>): List<NonTrivialType> {
-        return tokens.mapTo(arrayListOf()) {
-            val resolved = it.type(this)
-            if (resolved !is NonTrivialType) {
-                throw ParseErrorException("non-trivial type", it)
-            }
-            resolved
-        }
+    internal fun resolveArgumentType(tokens: List<TypeToken>): List<Type> {
+        return tokens.mapTo(arrayListOf()) { it.type(this) }
     }
 
     companion object {

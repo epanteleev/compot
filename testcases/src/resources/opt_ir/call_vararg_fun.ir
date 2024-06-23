@@ -1,0 +1,14 @@
+
+extern void @printf(ptr, ...)
+
+@str = constant <i8 x 8> "HELLO %d"
+
+define i32 @main() {
+  %a = alloc i32
+  store ptr %a, i32 42
+  %b = load i32 %a
+  call void @printf(@str: ptr, %b: i32) br label %exit
+
+exit:
+  ret i32 0
+}

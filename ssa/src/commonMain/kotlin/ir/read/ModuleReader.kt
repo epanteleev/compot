@@ -121,13 +121,13 @@ class ModuleReader(string: String) {
             val type = tokenIterator.expect<TypeToken>("argument type")
             argumentsType.add(type)
 
-            val comma = tokenIterator.next("','")
-            if (comma is CloseParen) {
+            val tok = tokenIterator.next("','")
+            if (tok is CloseParen) {
                 break
             }
 
-            if (comma !is Comma) {
-                throw ParseErrorException("type ", comma)
+            if (tok !is Comma) {
+                throw ParseErrorException("type ", tok)
             }
         } while (true)
 

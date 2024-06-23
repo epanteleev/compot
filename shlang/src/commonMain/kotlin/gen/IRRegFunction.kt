@@ -16,6 +16,7 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
 import types.AggregateBaseType
 
+
 class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                     private val typeHolder: TypeHolder, functionNode: FunctionNode) {
     private val varStack = VarStack()

@@ -3,6 +3,7 @@ package ssa.ir
 import ir.F32Value
 import ir.module.FunctionPrototype
 import ir.I32Value
+import ir.NullValue
 import ir.U32Value
 import ir.types.Type
 import kotlin.test.Test
@@ -93,6 +94,21 @@ class InconsistentCFG {
             proj(tuple, 0)
             val proj1 = proj(tuple, 0)
             ret(proj1)
+        }
+
+        val throwable = assertFails { builder.build() }
+        assertTrue { throwable is ValidateSSAErrorException }
+    }
+
+    @Test
+    fun testVarArg() {
+        val builder = ModuleBuilder.create()
+        val printf = builder.createExternFunction("printf", Type.Void, arrayListOf(Type.Ptr, Type.VarArgType, Type.I32))
+        builder.createFunction("main", Type.I32, arrayListOf()).apply {
+            val cont = createLabel()
+            call(printf, arrayListOf(NullValue.NULLPTR, I32Value(12)), cont)
+            switchLabel(cont)
+            ret(I32Value(0))
         }
 
         val throwable = assertFails { builder.build() }

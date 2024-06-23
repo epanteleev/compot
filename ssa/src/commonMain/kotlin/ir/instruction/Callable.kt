@@ -1,5 +1,6 @@
 package ir.instruction
 
+import common.forEachWith
 import ir.Value
 import ir.types.Type
 import ir.module.AnyFunctionPrototype
@@ -19,7 +20,10 @@ interface Callable {
 
     companion object {
         internal fun isAppropriateTypes(func: AnyFunctionPrototype, args: Array<Value>): Boolean {
-            for ((expectedType, value) in func.arguments() zip args) { //TODO allocation!!!!!
+            func.arguments().forEachWith(args) { expectedType, value ->
+                if (expectedType == Type.VarArgType) {
+                    return true
+                }
                 if (expectedType != value.type()) {
                     return false
                 }
