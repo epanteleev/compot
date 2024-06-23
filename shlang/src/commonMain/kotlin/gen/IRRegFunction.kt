@@ -12,6 +12,7 @@ import gen.TypeConverter.convertToType
 import gen.TypeConverter.toIRType
 import ir.global.StringLiteralGlobal
 import ir.instruction.ArithmeticBinaryOp
+import ir.module.AnyFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
 import types.AggregateBaseType
@@ -309,13 +310,41 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val arrayType = arrayAccess.resolveType(typeHolder)
         val elementType = moduleBuilder.toIRType<PrimitiveType>(typeHolder, arrayType)
 
-        val addr = ir().gep(array, elementType, index)
+        val adr = ir().gep(array, elementType, index)
 
         return if (isRvalue) {
-            ir().load(elementType,addr)
+            ir().load(elementType,adr)
         } else {
-            addr
+            adr
         }
+    }
+
+    private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): List<Value> {
+        fun convertArg(argIdx: Int, expr: Value, type: NonTrivialType): Value {
+            if (type is ArrayType) {
+                return ir().gep(expr, type.elementType() as PrimitiveType, Constant.of(Type.I64, 0))
+            }
+            if (argIdx >= function.arguments().size) {
+                if (!function.isVararg) {
+                    throw IRCodeGenError("Too many arguments in function call '${function.shortName()}'")
+                }
+
+                return expr
+            }
+
+            val cvt = function.arguments()[argIdx]
+            return ir().convertToType(expr, cvt)
+        }
+
+        val convertedArgs = mutableListOf<Value>()
+        for ((idx, argValue) in args.withIndex()) {
+            val expr = visitExpression(argValue, true)
+            val type = moduleBuilder.toIRType<NonTrivialType>(typeHolder, argValue.resolveType(typeHolder))
+
+            val convertedArg = convertArg(idx, expr, type)
+            convertedArgs.add(convertedArg)
+        }
+        return convertedArgs
     }
 
     private fun visitCast(cast: Cast): Value {
@@ -325,32 +354,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     }
 
     private fun visitFunctionCall(functionCall: FunctionCall): Value {
-        val name = functionCall.name()
-        val function = moduleBuilder.findFunction(name)
-
-        val convertedArgs = mutableListOf<Value>()
-
-        functionCall.args.forEachIndexed { idx, argValue ->
-            val expr = visitExpression(argValue, true)
-            val type = moduleBuilder.toIRType<NonTrivialType>(typeHolder, argValue.resolveType(typeHolder))
-
-            val convertedArg = if (type is ArrayType) {
-                ir().gep(expr, type.elementType() as PrimitiveType, Constant.of(Type.I64, 0))
-            } else {
-                if (idx >= function.arguments().size) {
-                    if (!function.isVararg) {
-                        throw IRCodeGenError("Too many arguments in function call '$name'")
-                    }
-
-                    expr
-                } else {
-                    val cvt = function.arguments()[idx]
-                    ir().convertToType(expr, cvt)
-                }
-            }
-
-            convertedArgs.add(convertedArg)
-        }
+        val function = moduleBuilder.findFunction(functionCall.name())
+        val convertedArgs = convertFunctionArgs(function, functionCall.args)
 
         if (function.returnType() == Type.Void) {
             val cont = ir().createLabel()
