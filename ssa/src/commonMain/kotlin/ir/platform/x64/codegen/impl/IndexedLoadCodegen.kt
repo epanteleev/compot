@@ -20,6 +20,8 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, val asm: Assembl
     private fun handleXmm(dst: Operand, operand: Operand, index: Operand) {
         if (dst is XmmRegister && operand is GPRegister && index is GPRegister) {
             asm.movf(size, Address.from(operand, 0, index, loadedType.size()), dst)
+        } else if (dst is XmmRegister && operand is GPRegister && index is ImmInt) {
+            asm.movf(size, Address.from(operand, index.value().toInt() * loadedType.size()), dst)
         } else {
             default(dst, operand, index)
         }

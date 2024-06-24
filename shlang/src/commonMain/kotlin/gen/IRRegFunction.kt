@@ -407,6 +407,15 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         return needSwitch
     }
 
+    private fun eq(type: Type): AnyPredicateType {
+        return when (type) {
+            is IntegerType       -> IntPredicate.Eq
+            is FloatingPointType -> FloatPredicate.One
+            is PointerType       -> IntPredicate.Eq
+            else -> throw IRCodeGenError("Unknown type")
+        }
+    }
+
     private fun visitBinary(binop: BinaryOp): Value {
         return when (binop.opType) {
             BinaryOpType.ADD -> {
@@ -547,7 +556,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
 
-                val cmp = makeCondition(leftConverted, IntPredicate.Eq, rightConverted)
+                val cmp = makeCondition(leftConverted, eq(commonType), rightConverted)
 
                 ir().convertToType(cmp, Type.U1)
             }
@@ -631,8 +640,9 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             PrefixUnaryOpType.NOT -> {
                 val value = visitExpression(unaryOp.primary, true)
                 val type = unaryOp.resolveType(typeHolder)
-                val converted = ir().convertToType(value, moduleBuilder.toIRType<NonTrivialType>(typeHolder, type))
-                makeCondition(converted, IntPredicate.Eq, Constant.of(converted.type(), 0))
+                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
+                val converted = ir().convertToType(value, commonType)
+                makeCondition(converted, eq(commonType), Constant.of(converted.type(), 0))
             }
             else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.opType}")
         }

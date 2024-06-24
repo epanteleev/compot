@@ -130,6 +130,12 @@ class Punct(val data: Char, position: Position): CToken(position) {
 }
 
 class Keyword(val data: String, position: Position): CToken(position) {
+    init {
+        assertion(LexicalElements.keywords.contains(data)) {
+            "Keyword '$data' is not a keyword"
+        }
+    }
+
     override fun str(): String = data
 
     override fun hashCode(): Int {
@@ -215,5 +221,14 @@ class Eof(position: Position): CToken(position) {
 
     override fun cloneWith(pos: PreprocessedPosition): CToken {
         return Eof(pos)
+    }
+}
+
+fun String.toAnyToken(position: Position): CToken {
+    return when {
+        this.startsWith("\"") -> StringLiteral(this, position)
+        this.all { it.isDigit() } -> Numeric(this.toInt(), position)
+        LexicalElements.keywords.contains(this) -> Keyword(this, position)
+        else -> Identifier(this, position) //TODO check for spaces
     }
 }

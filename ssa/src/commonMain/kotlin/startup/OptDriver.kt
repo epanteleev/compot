@@ -64,7 +64,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
             }
             GNUAssemblerRunner.run(optimizedAsm, "${commandLineArguments.getOutputFilename()}.o")
         } finally {
-            FileSystem.SYSTEM.delete(optimizedAsm.toPath())
+            //FileSystem.SYSTEM.delete(optimizedAsm.toPath())
         }
     }
 
@@ -92,7 +92,6 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
     }
 
     fun compile() {
-        println(commandLineArguments.getFilename())
         val text = FileSystem.SYSTEM.read(commandLineArguments.getFilename().toPath()) {
             readUtf8()
         }

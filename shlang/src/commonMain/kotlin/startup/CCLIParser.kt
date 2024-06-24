@@ -3,12 +3,19 @@ package startup
 import common.commandLine.AnyCLIArguments
 
 
-class CCLIArguments : AnyCLIArguments() {
+class ShlangCLIArguments : AnyCLIArguments() {
     private val includeDirectories = mutableSetOf<String>()
+    private val defines = mutableMapOf<String, String>()
 
     fun addIncludeDirectory(directory: String) {
         includeDirectories.add(directory)
     }
+
+    fun addDefine(name: String, value: String) {
+        defines[name] = value
+    }
+
+    fun getDefines(): Map<String, String> = defines
 
     fun getIncludeDirectories(): Set<String> = includeDirectories
 
@@ -28,7 +35,7 @@ class CCLIArguments : AnyCLIArguments() {
 
 
 object CCLIParser {
-    fun parse(args: Array<String>): CCLIArguments? {
+    fun parse(args: Array<String>): ShlangCLIArguments? {
         if (args.isEmpty()) {
             printHelp()
             return null
@@ -36,7 +43,7 @@ object CCLIParser {
 
         var cursor = 0
 
-        val commandLineArguments = CCLIArguments()
+        val commandLineArguments = ShlangCLIArguments()
         while (cursor < args.size) {
             when (val arg = args[cursor]) {
                 "-c", "--compile" -> {
@@ -69,6 +76,9 @@ object CCLIParser {
                 else -> {
                     if (arg.startsWith("-I")) {
                         commandLineArguments.addIncludeDirectory(arg.substring(2))
+                    } else if (arg.startsWith("-D")) {
+                        val define = arg.substring(2)
+                        parseDefine(commandLineArguments, define)
                     } else {
                         println("Unknown argument: $arg")
                         return null
@@ -79,6 +89,26 @@ object CCLIParser {
         }
 
         return commandLineArguments
+    }
+
+    private fun parseDefine(shlangCLIArguments: ShlangCLIArguments, define: String) {
+        val parts = define.split('=')
+        if (parts.size == 1) {
+            shlangCLIArguments.addDefine(parts[0], "")
+            return
+        }
+        if (parts.size != 2) {
+            println("Invalid define: $define")
+            return
+        }
+        val macro = parts[0]
+        val value = parts[1]
+        if (value.startsWith('\'')) {
+            val unquote = value.substring(1, value.length - 1)
+            shlangCLIArguments.addDefine(macro, unquote)
+        } else {
+            shlangCLIArguments.addDefine(macro, value)
+        }
     }
 
     private fun printHelp() {

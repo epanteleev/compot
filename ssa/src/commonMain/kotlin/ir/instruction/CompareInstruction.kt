@@ -36,6 +36,7 @@ enum class IntPredicate: AnyPredicateType {
     };
 }
 
+
 abstract class CompareInstruction(id: Identity, owner: Block, first: Value, second: Value) :
     ValueInstruction(id, owner, Type.U1, arrayOf(first, second)) {
     abstract fun operandsType(): PrimitiveType

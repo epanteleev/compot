@@ -18,7 +18,10 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
             is FloatingPointType -> {
                 if (dst is GPRegister && source is XmmRegister && index is GPRegister) {
                     asm.movf(size, source, Address.from(dst, 0, index, size))
-                } else {
+                } else if (dst is GPRegister && source is XmmRegister && index is ImmInt) {
+                    asm.movf(size, source, Address.from(dst, index.value().toInt() * size))
+                }
+                else {
                     default(dst, source, index)
                 }
             }
