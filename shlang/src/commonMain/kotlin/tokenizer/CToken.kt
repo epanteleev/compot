@@ -66,7 +66,7 @@ abstract class CToken(private val position: Position): AnyToken() {
     fun position(): Position = position
 
     override fun toString(): String {
-        return "'${str()}'$position'"
+        return "'${str()}' in $position'"
     }
 
     companion object {

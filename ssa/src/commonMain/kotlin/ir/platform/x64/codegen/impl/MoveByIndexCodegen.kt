@@ -22,7 +22,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
                     default(dst, source, index)
                 }
             }
-            is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
+            is IntegerType, is PointerType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }
     }
@@ -49,7 +49,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, Address.from(dst, second.value().toInt() * size))
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {

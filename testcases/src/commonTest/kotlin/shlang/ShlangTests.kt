@@ -206,6 +206,20 @@ abstract class ShlangTests: CommonCTest() {
         assertEquals(0, result.exitCode)
     }
 
+    @Test
+    fun testList0() {
+        val result = runCTest("shlang/list/listTest0", listOf(), options() + "-Isrc/resources/shlang/list")
+        assertEquals("1\n2\n3\n4\n5\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testList1() {
+        val result = runCTest("shlang/list/listTest1", listOf(), options() + "-Isrc/resources/shlang/list")
+        assertEquals("2\n4\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
     @Ignore
     fun testGOTO() {
         val result = runCTest("shlang/goto", listOf("runtime/runtime.c"), options())

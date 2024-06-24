@@ -51,7 +51,7 @@ abstract class UncompletedType(name: String): AggregateBaseType(name) {
 
 data class StructBaseType(override val name: String): AggregateBaseType(name) { //TODO
     override fun size(): Int {
-        return fields.sumOf { it.second.baseType().size() }
+        return fields.sumOf { it.second.size() }
     }
 
     override fun toString(): String {
@@ -121,7 +121,7 @@ data class CArrayType(val type: CType, val dimension: Int) : BaseType {
 data class UncompletedStructType(override val name: String): UncompletedType(name) {
     override fun typename(): String = name
 
-    override fun size(): Int = throw Exception("Uncompleted type")
+    override fun size(): Int = throw Exception("Uncompleted type '$name'")
 
     override fun toString(): String {
         return "struct $name"

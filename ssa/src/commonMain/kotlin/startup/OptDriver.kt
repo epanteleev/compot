@@ -92,6 +92,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
     }
 
     fun compile() {
+        println(commandLineArguments.getFilename())
         val text = FileSystem.SYSTEM.read(commandLineArguments.getFilename().toPath()) {
             readUtf8()
         }

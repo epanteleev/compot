@@ -39,7 +39,7 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<L
         val newArgs = arrayListOf<ArgumentValue>()
         fd.arguments().forEachWith(fd.prototype.arguments()) { arg, type, i ->
             if (type !is NonTrivialType) {
-                TODO() /// Varargs!!?
+                throw IllegalStateException("unexpected type for argument=$arg")
             }
 
             val newArg = ArgumentValue(i, type)
@@ -50,7 +50,8 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<L
     }
 
     fun copy(): FunctionData {
-        return FunctionData.create(fd.prototype, copyBasicBlocks(), copyArguments())
+        val newArgs = copyArguments()
+        return FunctionData.create(fd.prototype, copyBasicBlocks(), newArgs)
     }
 
     private fun copyBasicBlocks(): BasicBlocks {
@@ -100,7 +101,7 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<L
     }
 
     private inline fun<reified T> mapUsage(old: Value): T {
-        if (old is ArgumentValue || old is Constant || old is GlobalSymbol) {
+        if (old is Constant || old is GlobalSymbol) {
             return old as T
         }
         val value = oldValuesToNew[old]?: throw RuntimeException("cannot find localValue=${old}")

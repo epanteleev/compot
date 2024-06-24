@@ -320,7 +320,11 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 CPointerType(primaryType)
             }
             PrefixUnaryOpType.NOT -> {
-                TODO()
+                if (primaryType is CPointerType) {
+                    CType.LONG //TODO UNSIGNED
+                } else {
+                    primaryType
+                }
             }
             PrefixUnaryOpType.NEG -> {
                 if (primaryType.baseType() is CPrimitive) {

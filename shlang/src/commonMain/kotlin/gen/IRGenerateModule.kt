@@ -12,11 +12,15 @@ data class IRCodeGenError(override val message: String) : Exception(message)
 
 class IRGen private constructor(val typeHolder: TypeHolder) {
     private val moduleBuilder = ModuleBuilder.create()
+    private var constantCounter = 0
 
     fun visit(programNode: ProgramNode) {
         for (node in programNode.nodes) {
             when (node) {
-                is FunctionNode -> IrGenFunction(moduleBuilder, typeHolder, node)
+                is FunctionNode -> {
+                    val gen = IrGenFunction(moduleBuilder, typeHolder, node, constantCounter)
+                    constantCounter = gen.counstantCounter
+                }
                 is Declaration ->  declare(node)
                 else -> throw IRCodeGenError("Function expected")
             }

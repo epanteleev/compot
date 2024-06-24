@@ -19,7 +19,7 @@ import types.AggregateBaseType
 
 
 class IrGenFunction(private val moduleBuilder: ModuleBuilder,
-                    private val typeHolder: TypeHolder, functionNode: FunctionNode) {
+                    private val typeHolder: TypeHolder, functionNode: FunctionNode, var counstantCounter: Int) {
     private val varStack = VarStack()
     private var currentFunction: FunctionDataBuilder? = null
     private var returnValueAdr: Alloc? = null
@@ -104,7 +104,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         visitInit(forStatement.init)
         ir().branch(conditionBlock)
         ir().switchLabel(conditionBlock)
-        val condition = makeCondition(forStatement.condition)
+        val condition = makeConditionFromExpression(forStatement.condition)
         ir().branchCond(condition, bodyBlock, endBlock)
         ir().switchLabel(bodyBlock)
         visitStatement(forStatement.body)
@@ -130,7 +130,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         return true
     }
 
-    private fun makeCondition(condition: Expression): Value {
+    private fun makeConditionFromExpression(condition: Expression): Value {
         val conditionExpr = visitExpression(condition, true)
         if (conditionExpr.type() == Type.U1) {
             return conditionExpr
@@ -145,6 +145,16 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
     }
 
+    private inline fun<reified T: AnyPredicateType> makeCondition(a: Value, predicate: T, b: Value): Value {
+        return when (a.type()) {
+            is SignedIntType     -> ir().icmp(a, predicate as IntPredicate, b)
+            is UnsignedIntType   -> ir().ucmp(a, predicate as IntPredicate, b)
+            is FloatingPointType -> ir().fcmp(a, predicate as FloatPredicate, b)
+            is PointerType       -> ir().pcmp(a, predicate as IntPredicate, b)
+            else -> throw IRCodeGenError("Unknown type")
+        }
+    }
+
     private fun visitDoWhile(doWhileStatement: DoWhileStatement): Boolean {
         val bodyBlock = ir().createLabel()
         val endBlock = ir().createLabel()
@@ -153,7 +163,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         ir().switchLabel(bodyBlock)
         visitStatement(doWhileStatement.body)
 
-        val condition = makeCondition(doWhileStatement.condition)
+        val condition = makeConditionFromExpression(doWhileStatement.condition)
 
         ir().branchCond(condition, bodyBlock, endBlock)
         ir().switchLabel(endBlock)
@@ -167,7 +177,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
         ir().branch(conditionBlock)
         ir().switchLabel(conditionBlock)
-        val condition = makeCondition(whileStatement.condition)
+        val condition = makeConditionFromExpression(whileStatement.condition)
 
         ir().branchCond(condition, bodyBlock, endBlock)
         ir().switchLabel(bodyBlock)
@@ -180,7 +190,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     }
 
     private fun visitIf(ifStatement: IfStatement): Boolean {
-        val condition = makeCondition(ifStatement.condition)
+        val condition = makeConditionFromExpression(ifStatement.condition)
 
         val thenBlock = ir().createLabel()
 
@@ -287,7 +297,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         when (val expr = sizeOf.expr) {
             is TypeName -> {
                 val resolved = expr.resolveType(typeHolder)
-                return Constant.of(Type.I64, resolved.size())
+                val size = resolved.size()
+                return Constant.of(Type.I64, size)
             }
             is VarNode -> {
                 val resolved = expr.resolveType(typeHolder)
@@ -298,8 +309,9 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     }
 
     private fun visitStringNode(stringNode: StringNode): Value {
-        // TODO
-        val stringLiteral = StringLiteralGlobal("str", ArrayType(Type.I8, 11), stringNode.str.unquote())
+        val string = stringNode.str.unquote()
+        val stringLiteral = StringLiteralGlobal("str$counstantCounter", ArrayType(Type.I8, 11), string)
+        counstantCounter++
         return moduleBuilder.addConstant(stringLiteral)
     }
 
@@ -452,7 +464,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val left = visitExpression(binop.left, true)
                 val leftConverted = ir().convertToType(left, commonType)
 
-                val cmp = ir().icmp(leftConverted, IntPredicate.Ne, rightConverted)
+                val cmp = makeCondition(leftConverted, IntPredicate.Ne, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
 
@@ -465,7 +477,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val left = visitExpression(binop.left, true)
                 val leftConverted = ir().convertToType(left, commonType)
 
-                val cmp = ir().icmp(leftConverted, IntPredicate.Gt, rightConverted)
+                val cmp = makeCondition(leftConverted, IntPredicate.Gt, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
             BinaryOpType.LT -> {
@@ -477,7 +489,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val left = visitExpression(binop.left, true)
                 val leftConverted = ir().convertToType(left, commonType)
 
-                val cmp = ir().icmp(leftConverted, IntPredicate.Lt, rightConverted)
+                val cmp = makeCondition(leftConverted, IntPredicate.Lt, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
 
@@ -490,7 +502,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val left = visitExpression(binop.left, true)
                 val leftConverted = ir().convertToType(left, commonType)
 
-                val cmp = ir().icmp(leftConverted, IntPredicate.Le, rightConverted)
+                val cmp = makeCondition(leftConverted, IntPredicate.Le, rightConverted)
                 ir().convertToType(cmp, Type.U1)
             }
             BinaryOpType.AND -> {
@@ -522,7 +534,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
 
-                val cmp = ir().icmp(leftConverted, IntPredicate.Ge, rightConverted)
+                val cmp = makeCondition(leftConverted, IntPredicate.Ge, rightConverted)
 
                 ir().convertToType(cmp, Type.U1)
             }
@@ -535,7 +547,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val right = visitExpression(binop.right, true)
                 val rightConverted = ir().convertToType(right, commonType)
 
-                val cmp = ir().icmp(leftConverted, IntPredicate.Eq, rightConverted)
+                val cmp = makeCondition(leftConverted, IntPredicate.Eq, rightConverted)
 
                 ir().convertToType(cmp, Type.U1)
             }
@@ -611,9 +623,16 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             PrefixUnaryOpType.NEG -> {
                 val value = visitExpression(unaryOp.primary, true)
                 val type = unaryOp.resolveType(typeHolder)
-                val converted = ir().convertToType(value, moduleBuilder.toIRType<NonTrivialType>(typeHolder, type))
+                val valueType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
+                val converted = ir().convertToType(value, valueType)
                 // TODO: handle case '-1'
-                ir().arithmeticBinary(Constant.of(moduleBuilder.toIRType<NonTrivialType>(typeHolder, type), 0), ArithmeticBinaryOp.Sub, converted)
+                ir().arithmeticBinary(Constant.of(valueType, 0), ArithmeticBinaryOp.Sub, converted)
+            }
+            PrefixUnaryOpType.NOT -> {
+                val value = visitExpression(unaryOp.primary, true)
+                val type = unaryOp.resolveType(typeHolder)
+                val converted = ir().convertToType(value, moduleBuilder.toIRType<NonTrivialType>(typeHolder, type))
+                makeCondition(converted, IntPredicate.Eq, Constant.of(converted.type(), 0))
             }
             else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.opType}")
         }

@@ -238,7 +238,7 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                 if (nameOrBracket is StringLiteral) {
                     kill()
                     val header = ctx.findHeader(nameOrBracket.unquote(), HeaderType.USER) ?:
-                        throw PreprocessorException("Cannot find header '$nameOrBracket'")
+                        throw PreprocessorException("Cannot find header $nameOrBracket")
 
                     val includeTokens = header.tokenize()
                     val preprocessor = CProgramPreprocessor(includeTokens, ctx)
@@ -310,6 +310,9 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
             "error" -> {
                 val message = takeAntTokensInLine()
                 throw PreprocessorException("#error ${TokenPrinter.print(message)}")
+            }
+            "pragma" -> {
+                TODO("Implement #pragma directive")
             }
             "endif" -> {}
             "else" -> skipBlock()

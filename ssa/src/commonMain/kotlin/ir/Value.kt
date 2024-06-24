@@ -93,6 +93,13 @@ interface Constant: Value {
                 Type.U64 -> U64Value(value.toLong())
                 Type.F32 -> F32Value(value.toFloat())
                 Type.F64 -> F64Value(value.toDouble())
+                Type.Ptr -> {
+                    if (value.toLong() == 0L) {
+                        NullValue.NULLPTR
+                    } else {
+                        throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+                    }
+                }
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
         }
@@ -118,6 +125,7 @@ interface Constant: Value {
                 is U64Value -> of(kind, value.u64)
                 is F32Value -> of(kind, value.f32)
                 is F64Value -> of(kind, value.f64)
+                is NullValue -> of(kind, 0)
                 is UndefinedValue -> Value.UNDEF
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }

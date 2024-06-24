@@ -1,5 +1,7 @@
 package types
 
+import ir.platform.x64.CallConvention.POINTER_SIZE
+
 
 data class TypeInferenceException(override val message: String) : Exception(message)
 
@@ -7,7 +9,7 @@ interface CType {
     fun baseType(): BaseType
     fun qualifiers(): List<TypeProperty>
 
-    fun size(): Int {
+    open fun size(): Int {
         return baseType().size()
     }
 
@@ -33,70 +35,80 @@ interface CType {
                 return type1
             }
 
-            when (type1.baseType()) {
-                CPrimitive.CHAR -> {
-                    when (type2.baseType()) {
-                        CPrimitive.INT -> return INT
-                        CPrimitive.LONG -> return LONG
-                        CPrimitive.SHORT -> return SHORT
-                        CPrimitive.UINT -> return UINT
-                        CPrimitive.DOUBLE -> return DOUBLE
-                        CPrimitive.FLOAT -> return FLOAT
+            when (val baseType = type1) {
+                CHAR -> {
+                    when (type2) {
+                        INT -> return INT
+                        LONG -> return LONG
+                        SHORT -> return SHORT
+                        UINT -> return UINT
+                        DOUBLE -> return DOUBLE
+                        FLOAT -> return FLOAT
                     }
                 }
 
-                CPrimitive.SHORT -> {
-                    when (type2.baseType()) {
-                        CPrimitive.INT -> return INT
-                        CPrimitive.LONG -> return LONG
-                        CPrimitive.CHAR -> return SHORT
-                        CPrimitive.UINT -> return UINT
-                        CPrimitive.DOUBLE -> return DOUBLE
-                        CPrimitive.FLOAT -> return FLOAT
+                SHORT -> {
+                    when (type2) {
+                        INT -> return INT
+                        LONG -> return LONG
+                        CHAR -> return SHORT
+                        UINT -> return UINT
+                        DOUBLE -> return DOUBLE
+                        FLOAT -> return FLOAT
                     }
                 }
 
-                CPrimitive.INT -> {
-                    when (type2.baseType()) {
-                        CPrimitive.CHAR -> return INT
-                        CPrimitive.LONG -> return LONG
-                        CPrimitive.SHORT -> return INT
-                        CPrimitive.UINT -> return UINT
-                        CPrimitive.DOUBLE -> return DOUBLE
-                        CPrimitive.FLOAT -> return FLOAT
+                INT -> {
+                    when (type2) {
+                        CHAR -> return INT
+                        LONG -> return LONG
+                        SHORT -> return INT
+                        UINT -> return UINT
+                        DOUBLE -> return DOUBLE
+                        FLOAT -> return FLOAT
                     }
                 }
 
-                CPrimitive.LONG -> {
-                    when (type2.baseType()) {
-                        CPrimitive.CHAR -> return LONG
-                        CPrimitive.INT -> return LONG
-                        CPrimitive.SHORT -> return LONG
-                        CPrimitive.UINT -> return UINT
-                        CPrimitive.DOUBLE -> return DOUBLE
-                        CPrimitive.FLOAT -> return FLOAT
+                LONG -> {
+                    when (type2) {
+                        CHAR -> return LONG
+                        INT -> return LONG
+                        SHORT -> return LONG
+                        UINT -> return UINT
+                        DOUBLE -> return DOUBLE
+                        FLOAT -> return FLOAT
                     }
                 }
 
-                CPrimitive.FLOAT -> {
-                    when (type2.baseType()) {
-                        CPrimitive.CHAR -> return FLOAT
-                        CPrimitive.INT -> return FLOAT
-                        CPrimitive.SHORT -> return FLOAT
-                        CPrimitive.UINT -> return FLOAT
-                        CPrimitive.DOUBLE -> return DOUBLE
-                        CPrimitive.LONG -> return DOUBLE
+                FLOAT -> {
+                    when (type2) {
+                        CHAR -> return FLOAT
+                        INT -> return FLOAT
+                        SHORT -> return FLOAT
+                        UINT -> return FLOAT
+                        DOUBLE -> return DOUBLE
+                        LONG -> return DOUBLE
                     }
                 }
 
-                CPrimitive.DOUBLE -> {
-                    when (type2.baseType()) {
-                        CPrimitive.CHAR -> return DOUBLE
-                        CPrimitive.INT -> return DOUBLE
-                        CPrimitive.SHORT -> return DOUBLE
-                        CPrimitive.UINT -> return DOUBLE
-                        CPrimitive.FLOAT -> return DOUBLE
-                        CPrimitive.LONG -> return DOUBLE
+                DOUBLE -> {
+                    when (type2) {
+                        CHAR -> return DOUBLE
+                        INT -> return DOUBLE
+                        SHORT -> return DOUBLE
+                        UINT -> return DOUBLE
+                        FLOAT -> return DOUBLE
+                        LONG -> return DOUBLE
+                    }
+                }
+                is CPointerType -> {
+                    when (type2) {
+                        CHAR -> return type1
+                        INT -> return type1
+                        SHORT -> return type1
+                        UINT -> return type1
+                        FLOAT -> return type1
+                        LONG -> return type1
                     }
                 }
 
@@ -110,6 +122,7 @@ interface CType {
 interface AnyCPointerType: CType
 
 data class CPointerType(val type: CType) : AnyCPointerType {
+    override fun size(): Int = POINTER_SIZE //TODO imported from x64 module
     override fun baseType(): BaseType = type.baseType()
     override fun qualifiers(): List<TypeProperty> = emptyList()
 

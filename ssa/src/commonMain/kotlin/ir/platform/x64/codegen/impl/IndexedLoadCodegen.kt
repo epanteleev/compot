@@ -12,7 +12,7 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, val asm: Assembl
     operator fun invoke(dst: Operand, operand: Operand, index: Operand) {
         when (loadedType) {
             is FloatingPointType -> handleXmm(dst, operand, index)
-            is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, operand, index, this)
+            is IntegerType, is PointerType -> GPOperandsVisitorBinaryOp.apply(dst, operand, index, this)
             else           -> default(dst, operand, index)
         }
     }
