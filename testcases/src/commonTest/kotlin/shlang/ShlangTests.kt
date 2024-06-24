@@ -209,7 +209,31 @@ abstract class ShlangTests: CommonCTest() {
     @Test
     fun testList0() {
         val result = runCTest("shlang/list/listTest0", listOf(), options() + "-Isrc/resources/shlang/list")
-        assertEquals("1\n2\n3\n4\n5\n", result.output)
+        assertEquals("1\n-2\n-3\n4\n5\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testListLong() {
+        val opt = options() + "-Isrc/resources/shlang/list" + "-DDATATYPE=long" + "-DFMT='\"%ld\\n\"'"
+        val result = runCTest("shlang/list/listTest0", listOf(), opt)
+        assertEquals("1\n-2\n-3\n4\n5\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testListChar() {
+        val opt = options() + "-Isrc/resources/shlang/list" + "-DDATATYPE=char" + "-DFMT='\"%x\\n\"'"
+        val result = runCTest("shlang/list/listTest0", listOf(), opt)
+        assertEquals("1\n-2\n-3\n4\n5\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testListShort() {
+        val opt = options() + "-Isrc/resources/shlang/list" + "-DDATATYPE=short" + "-DFMT='\"%hd\\n\"'"
+        val result = runCTest("shlang/list/listTest0", listOf(), opt)
+        assertEquals("1\n-2\n-3\n4\n5\n", result.output)
         assertEquals(0, result.exitCode)
     }
 
@@ -217,7 +241,7 @@ abstract class ShlangTests: CommonCTest() {
     fun testListDouble() {
         val opt = options() + "-Isrc/resources/shlang/list" + "-DDATATYPE=double" + "-DFMT='\"%lf\\n\"'"
         val result = runCTest("shlang/list/listTest0", listOf(), opt)
-        assertEquals("1.000000\n2.000000\n3.000000\n4.000000\n5.000000\n", result.output)
+        assertEquals("1.000000\n-2.000000\n-3.000000\n4.000000\n5.000000\n", result.output)
         assertEquals(0, result.exitCode)
     }
 
@@ -225,7 +249,7 @@ abstract class ShlangTests: CommonCTest() {
     fun testListFloat() {
         val opt = options() + "-Isrc/resources/shlang/list" + "-DDATATYPE=float" + "-DFMT='\"%f\\n\"'"
         val result = runCTest("shlang/list/listTest0", listOf(), opt)
-        assertEquals("1.000000\n2.000000\n3.000000\n4.000000\n5.000000\n", result.output)
+        assertEquals("1.000000\n-2.000000\n-3.000000\n4.000000\n5.000000\n", result.output)
         assertEquals(0, result.exitCode)
     }
 
