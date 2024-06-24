@@ -1,3 +1,5 @@
+
+
 rootProject.name = "ssa-construction"
 
 dependencyResolutionManagement {
@@ -25,12 +27,17 @@ pluginManagement {
         mavenLocal()
         mavenCentral()
     }
+
+    plugins {
+        id("org.jetbrains.dokka") version "1.9.20"
+    }
 }
+
+
 
 include("ssa")
 include("examples")
 include("shlang")
-include("testscases")
 include("testcases")
 include("ssa-driver")
 include("shlang-driver")

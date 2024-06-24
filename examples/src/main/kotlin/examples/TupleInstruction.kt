@@ -7,7 +7,7 @@ import ir.platform.common.TargetPlatform
 
 fun main() {
     val builder = ir.module.builder.impl.ModuleBuilder.create()
-    builder.createFunction("func", ir.types.Type.I32, arrayListOf(ir.types.Type.I32, ir.types.Type.VarArgType)).apply {
+    builder.createFunction("func", ir.types.Type.I32, arrayListOf(ir.types.Type.I32)).apply {
         val divRes = tupleDiv(I32Value(10), I32Value(2))
         val reminder = proj(divRes, 1)
         ret(reminder)

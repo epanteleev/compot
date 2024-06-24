@@ -8,6 +8,10 @@ plugins {
 group = "org.ssa"
 version = "1.0"
 
+subprojects {
+    apply(plugin = "org.jetbrains.dokka")
+}
+
 repositories {
     mavenLocal()
     mavenCentral()

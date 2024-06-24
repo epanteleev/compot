@@ -203,7 +203,7 @@ class FunctionDataBuilder private constructor(
             return builder
         }
 
-        fun create(name: String, returnType: Type, argumentTypes: List<Type>): FunctionDataBuilder {
+        fun create(name: String, returnType: Type, argumentTypes: List<Type>, isVararg: Boolean = false): FunctionDataBuilder {
             val argumentValues = arrayListOf<ArgumentValue>()
             for ((idx, arg) in argumentTypes.withIndex()) {
                 if (arg !is NonTrivialType) {
@@ -213,7 +213,7 @@ class FunctionDataBuilder private constructor(
                 argumentValues.add(ArgumentValue(idx, arg))
             }
 
-            return create(name, returnType, argumentTypes, argumentValues)
+            return create(name, returnType, argumentTypes, argumentValues, isVararg)
         }
     }
 }

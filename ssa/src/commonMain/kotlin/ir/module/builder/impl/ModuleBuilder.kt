@@ -21,14 +21,14 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
         return fnBuilder
     }
 
-    fun createFunction(name: String, returnType: Type, argumentTypes: List<Type>): FunctionDataBuilder {
-        val data = FunctionDataBuilder.create(name, returnType, argumentTypes)
+    fun createFunction(name: String, returnType: Type, argumentTypes: List<Type>, isVararg: Boolean = false): FunctionDataBuilder {
+        val data = FunctionDataBuilder.create(name, returnType, argumentTypes, isVararg)
         functions.add(data)
         return data
     }
 
-    fun createFunction(name: String, returnType: Type, argumentTypes: List<Type>, argumentValues: List<ArgumentValue>): FunctionDataBuilder {
-        val data = FunctionDataBuilder.create(name, returnType, argumentTypes, argumentValues)
+    fun createFunction(name: String, returnType: Type, argumentTypes: List<Type>, argumentValues: List<ArgumentValue>, isVararg: Boolean = false): FunctionDataBuilder {
+        val data = FunctionDataBuilder.create(name, returnType, argumentTypes, argumentValues, isVararg)
         functions.add(data)
         return data
     }

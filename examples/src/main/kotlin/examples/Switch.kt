@@ -10,7 +10,7 @@ import ir.platform.common.TargetPlatform
 
 fun main() {
     val builder = ModuleBuilder.create()
-    builder.createFunction("func", Type.I32, arrayListOf(Type.I32, Type.VarArgType)).apply {
+    builder.createFunction("func", Type.I32, arrayListOf(Type.I32), true).apply {
         val default = createLabel()
         val b1 = createLabel()
         val b2 = createLabel()
