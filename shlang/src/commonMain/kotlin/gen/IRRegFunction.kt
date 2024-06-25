@@ -412,7 +412,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     private fun eq(type: Type): AnyPredicateType {
         return when (type) {
             is IntegerType       -> IntPredicate.Eq
-            is FloatingPointType -> FloatPredicate.One
+            is FloatingPointType -> FloatPredicate.Oeq
             is PointerType       -> IntPredicate.Eq
             else -> throw IRCodeGenError("Unknown type")
         }
