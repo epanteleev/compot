@@ -7,6 +7,7 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
+//TODO: remove it? Use loadIndexed instead???
 class Load private constructor(id: Identity, owner: Block, loadedType: PrimitiveType, ptr: Value):
     ValueInstruction(id, owner, loadedType, arrayOf(ptr)) {
     override fun dump(): String {

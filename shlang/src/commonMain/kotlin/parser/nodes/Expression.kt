@@ -228,6 +228,8 @@ data class InitializerList(val initializers: List<Expression>) : Expression() {
 class MemberAccess(val primary: Expression, val ident: Identifier) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
+    fun memberName(): String = ident.str()
+
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val structType = primary.resolveType(typeHolder)
         if (structType !is CompoundType) {

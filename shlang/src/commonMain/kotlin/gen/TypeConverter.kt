@@ -73,13 +73,23 @@ object TypeConverter {
     }
 
     private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: UnionBaseType): Type {
-        val field = type.fields().maxBy { it.second.size() }.let { toIRType<NonTrivialType>(typeHolder, it.second) }
+        val field = type.fields().maxByOrNull { it.second.size() }.let {
+            if (it == null) {
+                null
+            } else {
+                toIRType<NonTrivialType>(typeHolder, it.second)
+            }
+        }
         val structType = findStructTypeOrNull(type.name)
         if (structType != null) {
             return structType
         }
 
-        return structType(type.name, listOf(field))
+        return if (field == null) {
+            structType(type.name, listOf())
+        } else {
+            structType(type.name, listOf(field))
+        }
     }
 
    fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {

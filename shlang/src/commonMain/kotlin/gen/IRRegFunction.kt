@@ -265,9 +265,10 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
         val baseStructType = structType.baseType() as AggregateBaseType
         val member = baseStructType.fieldIndex(arrowMemberAccess.ident.str())
-        val memberType = baseStructType.fields()[member].second
+
         val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
         return if (isRvalue) {
+            val memberType = baseStructType.fields()[member].second
             val memberIRType = moduleBuilder.toIRType<PrimitiveType>(typeHolder, memberType)
             ir().load(memberIRType, gep)
         } else {
@@ -281,11 +282,11 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         val structIRType = moduleBuilder.toIRType<StructType>(typeHolder, structType)
 
         val baseStructType = structType.baseType() as AggregateBaseType
-        val member = baseStructType.fieldIndex(memberAccess.ident.str())
-        val memberType = baseStructType.fields()[member].second
+        val member = baseStructType.fieldIndex(memberAccess.memberName())
 
         val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
         return if (isRvalue) {
+            val memberType = baseStructType.fields()[member].second
             val memberIRType = moduleBuilder.toIRType<PrimitiveType>(typeHolder, memberType)
             ir().load(memberIRType, gep)
         } else {
@@ -297,12 +298,13 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         when (val expr = sizeOf.expr) {
             is TypeName -> {
                 val resolved = expr.resolveType(typeHolder)
-                val size = resolved.size()
-                return Constant.of(Type.I64, size)
+                val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, resolved)
+                return Constant.of(Type.I64, irType.size())
             }
             is VarNode -> {
                 val resolved = expr.resolveType(typeHolder)
-                return Constant.of(Type.I64, resolved.size())
+                val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, resolved)
+                return Constant.of(Type.I64, irType.size())
             }
             else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
         }

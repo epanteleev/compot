@@ -1,7 +1,7 @@
 #include "list.h"
 
 int main() {
-  List * list = makelist();
+  List* list = makelist();
   add(1, list);
   add(-2, list);
   add(-3, list);

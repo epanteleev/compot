@@ -1,14 +1,11 @@
 package ir.platform.x64.regalloc
 
-import ir.Value
+import ir.*
 import ir.types.Type
 import asm.x64.Address
 import asm.x64.GPRegister.*
 import common.assertion
-import ir.LocalValue
-import ir.asType
-import ir.instruction.Alloc
-import ir.instruction.ValueInstruction
+import ir.instruction.Generate
 import ir.types.NonTrivialType
 
 
@@ -43,8 +40,8 @@ private class BasePointerAddressedStackFrame : StackFrame {
         return ((value + (alignment * 2 - 1)) / alignment) * alignment
     }
 
-    private fun stackSlotAlloc(value: Alloc): Address {
-        val typeSize = getTypeSize(value.allocatedType)
+    private fun stackSlotAlloc(value: Generate): Address {
+        val typeSize = getTypeSize(value.type())
 
         frameSize = withAlignment(typeSize, frameSize)
         return Address.from(rbp, -frameSize)
@@ -66,7 +63,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     override fun takeSlot(value: Value): Address {
         return when (value) {
-            is Alloc            -> stackSlotAlloc(value)
+            is Generate   -> stackSlotAlloc(value)
             is LocalValue -> valueInstructionAlloc(value)
             else -> throw StackFrameException("Cannot alloc slot for this value=$value")
         }
