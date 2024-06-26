@@ -13,6 +13,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             // Not necessary to insert copies
             return
         }
+        //TODO we don't have to isolate arguments if it isn't live-out from 'call' instruction
 
         val begin = cfg.blocks.begin()
         for (arg in cfg.arguments()) {

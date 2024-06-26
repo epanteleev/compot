@@ -343,7 +343,13 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                     throw IRCodeGenError("Too many arguments in function call '${function.shortName()}'")
                 }
 
-                return expr
+                //TODO Prove it?!?
+                return when (expr.type()) {
+                    Type.F32 -> ir().convertToType(expr, Type.F64)
+                    Type.I8  -> ir().convertToType(expr, Type.I32)
+                    Type.U8  -> ir().convertToType(expr, Type.U32)
+                    else -> expr
+                }
             }
 
             val cvt = function.arguments()[argIdx]

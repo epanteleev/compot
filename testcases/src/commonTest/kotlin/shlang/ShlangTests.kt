@@ -223,7 +223,7 @@ abstract class ShlangTests: CommonCTest() {
 
     @Test
     fun testListChar() {
-        val opt = options() + "-Isrc/resources/shlang/list" + "-DDATATYPE=char" + "-DFMT='\"%x\\n\"'"
+        val opt = options() + "-Isrc/resources/shlang/list" + "-DDATATYPE=char" + "-DFMT='\"%d\\n\"'"
         val result = runCTest("shlang/list/listTest0", listOf(), opt)
         assertEquals("1\n-2\n-3\n4\n5\n", result.output)
         assertEquals(0, result.exitCode)
@@ -250,6 +250,14 @@ abstract class ShlangTests: CommonCTest() {
         val opt = options() + "-Isrc/resources/shlang/list" + "-DDATATYPE=float" + "-DFMT='\"%f\\n\"'"
         val result = runCTest("shlang/list/listTest0", listOf(), opt)
         assertEquals("1.000000\n-2.000000\n-3.000000\n4.000000\n5.000000\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testListFloat2() {
+        val opt = options() + "-Isrc/resources/shlang/list" + "-DDATATYPE=float" + "-DFMT='\"%f\\n\"'"
+        val result = runCTest("shlang/list/listTest2", listOf(), opt)
+        assertEquals("newNode->data: 6.700000\n", result.output)
         assertEquals(0, result.exitCode)
     }
 
