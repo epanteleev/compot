@@ -446,8 +446,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val type = unaryOp.resolveType(typeHolder)
                 val valueType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
                 val converted = ir().convertToType(value, valueType)
-                // TODO: handle case '-1'
-                ir().arithmeticBinary(Constant.of(valueType, 0), ArithmeticBinaryOp.Sub, converted)
+                ir().neg(converted)
             }
             PrefixUnaryOpType.NOT -> {
                 val value = visitExpression(unaryOp.primary, true)
