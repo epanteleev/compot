@@ -3,7 +3,7 @@ package parser.nodes
 import gen.consteval.ConstEvalContext
 import gen.consteval.ConstEvalExpression
 import parser.ParserException
-import parser.ProgramMessage
+import parser.InvalidToken
 import parser.nodes.visitors.DirectDeclaratorParamVisitor
 import tokenizer.CToken
 import tokenizer.Identifier
@@ -29,12 +29,12 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
     companion object {
         val constExpressionCtx = object: ConstEvalContext {
             override fun getVariable(name: CToken): Int {
-                val error = ProgramMessage("Cannot consteval expression: found variable", name)
+                val error = InvalidToken("Cannot consteval expression: found variable", name)
                 throw ParserException(error)
             }
 
             override fun callFunction(name: CToken, args: List<Int>): Int {
-                val error = ProgramMessage("Cannot consteval expression: found function", name)
+                val error = InvalidToken("Cannot consteval expression: found function", name)
                 throw ParserException(error)
             }
         }

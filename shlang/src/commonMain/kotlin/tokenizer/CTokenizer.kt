@@ -152,7 +152,6 @@ class CTokenizer private constructor(private val filename: String, private val r
                 }
             }
         }
-        append(Eof(OriginalPosition(line, pos, filename)))
     }
 
     companion object {

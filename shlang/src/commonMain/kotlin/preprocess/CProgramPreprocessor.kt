@@ -1,8 +1,8 @@
 package preprocess
 
-import gen.consteval.ConstEvalExpression
-import parser.CProgramParser
 import tokenizer.*
+import parser.CProgramParser
+import gen.consteval.ConstEvalExpression
 
 
 class CProgramPreprocessor(original: TokenIterator, private val ctx: PreprocessorContext): AbstractCPreprocessor(original.tokens()) {
@@ -220,7 +220,6 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                     val includeTokens = header.tokenize()
                     val preprocessor = CProgramPreprocessor(includeTokens, ctx)
                     val result = preprocessor.preprocess0() //TODO refactor
-                    result.removeLast()
                     addAll(result)
                     return
 
@@ -237,7 +236,6 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                     val tokens = header.tokenize()
                     val preprocessor = CProgramPreprocessor(tokens, ctx)
                     val result = preprocessor.preprocess0() //TODO refactor
-                    result.removeLast()
                     addAll(result)
                     return
 
@@ -330,19 +328,6 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         eat()
     }
 
-    private fun trimSpacesAtEnding() {
-        var end = tokens.size - 1
-        do {
-            val last = tokens[end - 1] //TODO unsafe API
-            if (last is Indent || last is NewLine) {
-                killAt(end - 1)
-                end -= 1
-                continue
-            }
-            break
-        } while (true)
-    }
-
     private fun preprocess0(): MutableList<AnyToken> {
         while (!eof()) {
             if (check<NewLine>()) {
@@ -366,14 +351,13 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
 
     fun preprocess(): List<AnyToken> {
         preprocess0()
-        trimSpacesAtEnding()
         return tokens
     }
 
-    fun preprocessWithKilledSpaces(): MutableList<CToken> {
-        val tokens = preprocess0()
-        tokens.retainAll { it !is Indent && it !is NewLine }
-        return tokens as MutableList<CToken> //TODO
+    fun preprocessWithRemovedSpaces(): List<AnyToken> {
+        preprocess0()
+        trimSpacesAtEnding()
+        return tokens
     }
 
     companion object {

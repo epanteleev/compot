@@ -20,7 +20,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         }
         for ((name, value) in cli.getDefines()) {
             val tokens = CTokenizer.apply(value)
-            val replacement = MacroReplacement(name, tokens.tokens().dropLast(1)) //TODO
+            val replacement = MacroReplacement(name, tokens.tokens())
             ctx.define(replacement)
         }
     }
@@ -42,7 +42,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
 
         val tokens              = CTokenizer.apply(source)
         val preprocessor        = CProgramPreprocessor.create(tokens, ctx)
-        val postProcessedTokens = preprocessor.preprocessWithKilledSpaces()
+        val postProcessedTokens = preprocessor.preprocess()
 
         val parser     = CProgramParser.build(postProcessedTokens)
         val program    = parser.translation_unit()

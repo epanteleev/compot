@@ -64,7 +64,7 @@ class CTokenizerTest {
     @Test
     fun test5() {
         val tokens = CTokenizer.apply("int x = -1; // comment").toCTokenList()
-        assertEquals(7, tokens.size)
+        assertEquals(6, tokens.size)
         tokens[0].isEqual(1, 1, "int")
         tokens[1].isEqual(1, 5, "x")
         tokens[2].isEqual(1, 7, "=")

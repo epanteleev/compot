@@ -1,11 +1,11 @@
 package parser
 
 import tokenizer.*
-import common.AnyParser
 import types.TypeHolder
 
 
-abstract class AbstractCParser(iterator: MutableList<AnyToken>): AnyParser(iterator) {
+abstract class AbstractCParser(protected val tokens: List<AnyToken>) {
+    protected var current: Int = 0
     protected val typeHolder = TypeHolder.default()
 
     fun typeHolder(): TypeHolder = typeHolder
@@ -21,9 +21,6 @@ abstract class AbstractCParser(iterator: MutableList<AnyToken>): AnyParser(itera
         var pos = current
         var tokensNumber = 0
         do {
-            if (tokens[pos] is Eof) {
-                return true
-            }
             if (tokens[pos] is CToken) {
                 tokensNumber += 1
             }
@@ -44,7 +41,7 @@ abstract class AbstractCParser(iterator: MutableList<AnyToken>): AnyParser(itera
     protected fun eat() {
         skipSpaces()
         if (eof()) {
-            throw ParserException(ProgramMessage("Unexpected EOF", peak()))
+            throw ParserException(EndOfFile)
         }
         current += 1
     }
@@ -56,11 +53,11 @@ abstract class AbstractCParser(iterator: MutableList<AnyToken>): AnyParser(itera
     protected inline fun<reified T: AnyToken> peak(offset: Int): T {
         skipSpaces()
         if (eof(offset)) {
-            throw ParserException(ProgramMessage("Unexpected EOF", tokens[current]))
+            throw ParserException(EndOfFile)
         }
         val tok = tokens[current + offset]
         if (tok !is T) {
-            throw ParserException(ProgramMessage("Unexpected token $tok", tok))
+            throw ParserException(InvalidToken("Unexpected token $tok", tok))
         }
         return tok
     }

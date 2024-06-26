@@ -207,19 +207,3 @@ class Numeric(val data: Number, position: Position): CToken(position) {
         return Numeric(data, pos)
     }
 }
-
-class Eof(position: Position): CToken(position) {
-    override fun str(): String = "<eof>"
-
-    override fun hashCode(): Int {
-        return 7
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return other is Eof
-    }
-
-    override fun cloneWith(pos: PreprocessedPosition): CToken {
-        return Eof(pos)
-    }
-}

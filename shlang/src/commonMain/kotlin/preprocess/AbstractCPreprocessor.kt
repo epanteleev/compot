@@ -1,22 +1,23 @@
 package preprocess
 
-import common.AnyParser
 import tokenizer.AnyToken
 import parser.*
-import tokenizer.Eof
+import tokenizer.AnySpaceToken
 import tokenizer.Indent
 
 
 data class PreprocessorException(val info: String) : Exception(info)
 
 
-abstract class AbstractCPreprocessor(tokens: MutableList<AnyToken>): AnyParser(tokens) {
+abstract class AbstractCPreprocessor(protected val tokens: MutableList<AnyToken>) {
+    protected var current: Int = 0
+
     protected fun eof(): Boolean {
         return eof(0)
     }
 
     protected fun eof(offset: Int): Boolean {
-        return current + offset >= tokens.size || tokens[current + offset] is Eof
+        return current + offset >= tokens.size
     }
 
     protected fun eat() {
@@ -32,11 +33,11 @@ abstract class AbstractCPreprocessor(tokens: MutableList<AnyToken>): AnyParser(t
 
     protected inline fun<reified T: AnyToken> peak(offset: Int): T {
         if (eof(offset)) {
-            throw ParserException(ProgramMessage("Unexpected EOF", tokens[current]))
+            throw ParserException(InvalidToken("Unexpected EOF", tokens[current]))
         }
         val tok = tokens[current + offset]
         if (tok !is T) {
-            throw ParserException(ProgramMessage("Unexpected token $tok", tok))
+            throw ParserException(InvalidToken("Unexpected token $tok", tok))
         }
         return tok
     }
@@ -48,13 +49,6 @@ abstract class AbstractCPreprocessor(tokens: MutableList<AnyToken>): AnyParser(t
         return tokens[current].str() == s
     }
 
-    protected fun checkOffset(offset: Int, expects: String): Boolean {
-        if (eof() || eof(offset)) {
-            return false
-        }
-        return tokens[current + offset].str() == expects
-    }
-
     protected inline fun<reified T> check(): Boolean {
         if (eof()) {
             return false
@@ -64,7 +58,7 @@ abstract class AbstractCPreprocessor(tokens: MutableList<AnyToken>): AnyParser(t
 
     protected fun kill(): AnyToken = killAt(current)
 
-    protected fun killAt(index: Int): AnyToken = tokens.removeAt(index)
+    private fun killAt(index: Int): AnyToken = tokens.removeAt(index)
 
     protected fun killWithSpaces() {
         kill()
@@ -79,5 +73,14 @@ abstract class AbstractCPreprocessor(tokens: MutableList<AnyToken>): AnyParser(t
 
     protected fun add(tok: AnyToken) {
         tokens.add(current, tok)
+    }
+
+    protected fun trimSpacesAtEnding() {
+        if (tokens.isEmpty()) {
+            return
+        }
+        while (tokens.last() is AnySpaceToken) {
+            tokens.removeLast()
+        }
     }
 }

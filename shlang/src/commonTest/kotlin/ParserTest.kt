@@ -5,6 +5,8 @@ import parser.ParserException
 import parser.nodes.FunctionNode
 import parser.nodes.Node
 import tokenizer.CTokenizer
+import tokenizer.TokenIterator
+import tokenizer.TokenPrinter
 import kotlin.test.*
 
 
