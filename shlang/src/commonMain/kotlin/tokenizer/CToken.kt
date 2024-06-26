@@ -223,12 +223,3 @@ class Eof(position: Position): CToken(position) {
         return Eof(pos)
     }
 }
-
-fun String.toAnyToken(position: Position): CToken {
-    return when {
-        this.startsWith("\"") -> StringLiteral(this, position)
-        this.all { it.isDigit() } -> Numeric(this.toInt(), position)
-        LexicalElements.keywords.contains(this) -> Keyword(this, position)
-        else -> Identifier(this, position) //TODO check for spaces
-    }
-}

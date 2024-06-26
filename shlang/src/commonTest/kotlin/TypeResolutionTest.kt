@@ -324,6 +324,18 @@ class TypeResolutionTest {
         assertEquals("const char*", a.toString())
     }
 
+    @Test
+    fun testUnsignedInt() {
+        val tokens = CTokenizer.apply("unsigned int a = 10;")
+        val parser = CProgramParser.build(tokens)
+        val expr = parser.declaration() as Declaration
+        val typeResolver = parser.typeHolder()
+        expr.resolveType(typeResolver)
+
+        val a = typeResolver["a"]
+        assertEquals(CType.UINT, a)
+    }
+
     // https://port70.net/~nsz/c/c11/n1570.html#6.7.2.3p11
     @Test
     fun testTypedef1() {
