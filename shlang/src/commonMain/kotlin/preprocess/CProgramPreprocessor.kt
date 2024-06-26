@@ -1,34 +1,11 @@
 package preprocess
 
-import common.AnyParser
 import gen.consteval.ConstEvalExpression
 import parser.CProgramParser
 import tokenizer.*
 
 
-data class PreprocessorException(override val message: String): Exception(message)
-
-
-class CProgramPreprocessor(original: TokenIterator, private val ctx: PreprocessorContext): AnyParser(original.tokens()) {
-    private fun kill(): AnyToken = killAt(current)
-
-    private fun killAt(index: Int): AnyToken = tokens.removeAt(index)
-
-    private fun killWithSpaces() {
-        kill()
-        while (!eof() && check<Indent>()) {
-            kill()
-        }
-    }
-
-    private fun addAll(others: List<AnyToken>) {
-        tokens.addAll(current, others)
-    }
-
-    private fun add(tok: AnyToken) {
-        tokens.add(current, tok)
-    }
-
+class CProgramPreprocessor(original: TokenIterator, private val ctx: PreprocessorContext): AbstractCPreprocessor(original.tokens()) {
     private fun evaluateCondition(tokens: MutableList<CToken>): Int {
         val parser = CProgramParser.build(tokens)
         val constexpr = parser.constant_expression() ?:

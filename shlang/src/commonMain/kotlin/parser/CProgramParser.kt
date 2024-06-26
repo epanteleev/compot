@@ -2,8 +2,6 @@ package parser
 
 import tokenizer.*
 import parser.nodes.*
-import common.AnyParser
-import types.TypeHolder
 
 
 data class ParserException(val info: ProgramMessage) : Exception(info.message)
@@ -15,20 +13,7 @@ data class ParserException(val info: ProgramMessage) : Exception(info.message)
 // Grammar:
 // https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
 //
-class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyParser(iterator) {
-    private val typeHolder = TypeHolder.default()
-
-    fun typeHolder(): TypeHolder = typeHolder
-
-    private inline fun<reified T> rule(fn: () -> T?): T? {
-        val saved = current
-        val result = fn()
-        if (result == null) {
-            current = saved
-        }
-        return result
-    }
-
+class CProgramParser private constructor(iterator: MutableList<AnyToken>): AbstractCParser(iterator) {
     // translation_unit
     //	: external_declaration
     //	| translation_unit external_declaration
@@ -1664,7 +1649,7 @@ class CProgramParser private constructor(iterator: MutableList<AnyToken>): AnyPa
 
     companion object {
         fun build(tokens: TokenIterator): CProgramParser {
-            return CProgramParser(tokens.toCTokenList())
+            return CProgramParser(tokens.tokens())
         }
 
         fun build(tokens: MutableList<CToken>): CProgramParser {

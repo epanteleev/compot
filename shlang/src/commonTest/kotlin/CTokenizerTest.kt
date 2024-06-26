@@ -6,6 +6,17 @@ import kotlin.test.assertTrue
 
 
 class CTokenizerTest {
+    fun TokenIterator.toCTokenList(): MutableList<AnyToken> {
+        val result = mutableListOf<AnyToken>()
+        while (hasNext()) {
+            val token = next()
+            if (token is CToken) {
+                result.add(token)
+            }
+        }
+        return result
+    }
+
     fun AnyToken.isEqual(l: Int, p: Int, string: String) {
         this as CToken
         assertEquals(l, line())
