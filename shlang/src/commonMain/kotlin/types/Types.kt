@@ -9,7 +9,7 @@ interface CType {
     fun baseType(): BaseType
     fun qualifiers(): List<TypeProperty>
 
-    open fun size(): Int {
+    fun size(): Int {
         return baseType().size()
     }
 
@@ -35,7 +35,7 @@ interface CType {
                 return type1
             }
 
-            when (val baseType = type1) {
+            when (type1) {
                 CHAR -> {
                     when (type2) {
                         INT -> return INT
