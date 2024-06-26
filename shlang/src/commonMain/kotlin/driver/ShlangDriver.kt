@@ -10,8 +10,6 @@ import okio.SYSTEM
 import tokenizer.CTokenizer
 import parser.CProgramParser
 import startup.*
-import tokenizer.Position
-import tokenizer.toAnyToken
 
 
 class ShlangDriver(private val cli: ShlangCLIArguments) {
@@ -21,7 +19,8 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
             return
         }
         for ((name, value) in cli.getDefines()) {
-            val replacement = MacroReplacement(name, listOf(value.toAnyToken(Position.UNKNOWN)))
+            val tokens = CTokenizer.apply(value)
+            val replacement = MacroReplacement(name, tokens.tokens().dropLast(1)) //TODO
             ctx.define(replacement)
         }
     }

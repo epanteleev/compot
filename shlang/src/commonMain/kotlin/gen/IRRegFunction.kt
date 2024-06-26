@@ -15,11 +15,12 @@ import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
+import parser.nodes.visitors.StatementVisitor
 import types.AggregateBaseType
 
 
 class IrGenFunction(private val moduleBuilder: ModuleBuilder,
-                    private val typeHolder: TypeHolder, functionNode: FunctionNode, var counstantCounter: Int) {
+                    private val typeHolder: TypeHolder, functionNode: FunctionNode, var counstantCounter: Int): StatementVisitor<Boolean> {
     private val varStack = VarStack()
     private var currentFunction: FunctionDataBuilder? = null
     private var returnValueAdr: Alloc? = null
@@ -28,22 +29,6 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
     private fun ir(): FunctionDataBuilder {
         return currentFunction ?: throw IRCodeGenError("Function expected")
-    }
-
-    private fun visitStatement(statement: Statement): Boolean {
-        return when (statement) {
-            is CompoundStatement -> visitCompoundStatement(statement)
-            is ExprStatement     -> visitExpressionStatement(statement)
-            is ReturnStatement   -> visitReturn(statement)
-            is IfStatement       -> visitIf(statement)
-            is WhileStatement    -> visitWhile(statement)
-            is DoWhileStatement  -> visitDoWhile(statement)
-            is LabeledStatement  -> visitLabeledStatement(statement)
-            is GotoStatement     -> visitGoto(statement)
-            is ForStatement      -> visitFor(statement)
-            is EmptyStatement    -> false
-            else -> throw IRCodeGenError("Statement expected, but got $statement")
-        }
     }
 
     private fun visitDeclarator(decl: Declarator): Alloc {
@@ -79,57 +64,6 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitFor(forStatement: ForStatement): Boolean {
-        fun visitInit(init: Node) {
-            when (init) {
-                is Declaration    -> visitDeclaration(init)
-                is ExprStatement  -> visitExpression(init.expr, true)
-                is EmptyStatement -> {}
-                else -> throw IRCodeGenError("Unknown init statement, init=$init")
-            }
-        }
-
-        fun visitUpdate(update: Expression) {
-            if (update is EmptyExpression) {
-                return
-            }
-
-            visitExpression(update, true)
-        }
-
-        val conditionBlock = ir().createLabel()
-        val bodyBlock = ir().createLabel()
-        val endBlock = ir().createLabel()
-
-        visitInit(forStatement.init)
-        ir().branch(conditionBlock)
-        ir().switchLabel(conditionBlock)
-        val condition = makeConditionFromExpression(forStatement.condition)
-        ir().branchCond(condition, bodyBlock, endBlock)
-        ir().switchLabel(bodyBlock)
-        visitStatement(forStatement.body)
-        visitUpdate(forStatement.update)
-        if (ir().last() !is TerminateInstruction) {
-            ir().branch(conditionBlock)
-        }
-        ir().switchLabel(endBlock)
-        return true
-    }
-
-    private fun visitLabeledStatement(statement: LabeledStatement): Boolean {
-        val label = stringTolabel[statement.label.str()] ?: throw IRCodeGenError("Label '${statement.label.str()}' not found ")
-        ir().branch(label)
-        ir().switchLabel(label)
-        return visitStatement(statement.stmt)
-    }
-
-    private fun visitGoto(statement: GotoStatement): Boolean {
-        val label = stringTolabel[statement.id.str()] ?: throw IRCodeGenError("Label '${statement.id.str()}' not found ")
-        ir().branch(label)
-        ir().switchLabel(label)
-        return true
-    }
-
     private fun makeConditionFromExpression(condition: Expression): Value {
         val conditionExpr = visitExpression(condition, true)
         if (conditionExpr.type() == Type.U1) {
@@ -153,92 +87,6 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             is PointerType       -> ir().pcmp(a, predicate as IntPredicate, b)
             else -> throw IRCodeGenError("Unknown type")
         }
-    }
-
-    private fun visitDoWhile(doWhileStatement: DoWhileStatement): Boolean {
-        val bodyBlock = ir().createLabel()
-        val endBlock = ir().createLabel()
-
-        ir().branch(bodyBlock)
-        ir().switchLabel(bodyBlock)
-        visitStatement(doWhileStatement.body)
-
-        val condition = makeConditionFromExpression(doWhileStatement.condition)
-
-        ir().branchCond(condition, bodyBlock, endBlock)
-        ir().switchLabel(endBlock)
-        return true
-    }
-
-    private fun visitWhile(whileStatement: WhileStatement): Boolean {
-        val conditionBlock = ir().createLabel()
-        val bodyBlock = ir().createLabel()
-        val endBlock = ir().createLabel()
-
-        ir().branch(conditionBlock)
-        ir().switchLabel(conditionBlock)
-        val condition = makeConditionFromExpression(whileStatement.condition)
-
-        ir().branchCond(condition, bodyBlock, endBlock)
-        ir().switchLabel(bodyBlock)
-        val needSwitch = visitStatement(whileStatement.body)
-        if (needSwitch) {
-            ir().branch(conditionBlock)
-        }
-        ir().switchLabel(endBlock)
-        return true
-    }
-
-    private fun visitIf(ifStatement: IfStatement): Boolean {
-        val condition = makeConditionFromExpression(ifStatement.condition)
-
-        val thenBlock = ir().createLabel()
-
-
-        if (ifStatement.elseNode is EmptyStatement) {
-            val endBlock = ir().createLabel()
-            ir().branchCond(condition, thenBlock, endBlock)
-            ir().switchLabel(thenBlock)
-            val needSwitch = visitStatement(ifStatement.then)
-            if (needSwitch) {
-                ir().branch(endBlock)
-            }
-            ir().switchLabel(endBlock)
-            return true
-        } else {
-
-            val elseBlock = ir().createLabel()
-            ir().branchCond(condition, thenBlock, elseBlock)
-            // then
-            ir().switchLabel(thenBlock)
-            val needSwitch = visitStatement(ifStatement.then)
-            val endBlock = if (needSwitch) {
-                val endBlock = ir().createLabel()
-                ir().branch(endBlock)
-                endBlock
-            } else {
-                null
-            }
-
-            // else
-            ir().switchLabel(elseBlock)
-            val switch1 = visitStatement(ifStatement.elseNode)
-
-            if (switch1) {
-                val newEndBlock = endBlock ?: ir().createLabel()
-                ir().branch(newEndBlock)
-                ir().switchLabel(newEndBlock)
-            } else if (endBlock != null) {
-                ir().switchLabel(endBlock)
-            }
-
-            return true
-        }
-    }
-
-    private fun visitExpressionStatement(expr: ExprStatement): Boolean {
-        visitExpression(expr.expr, true)
-        return true
     }
 
     private fun visitExpression(expression: Expression, isRvalue: Boolean): Value {
@@ -343,7 +191,13 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                     throw IRCodeGenError("Too many arguments in function call '${function.shortName()}'")
                 }
 
-                return expr
+                //TODO Prove it?!?
+                return when (expr.type()) {
+                    Type.F32 -> ir().convertToType(expr, Type.F64)
+                    Type.I8  -> ir().convertToType(expr, Type.I32)
+                    Type.U8  -> ir().convertToType(expr, Type.U32)
+                    else -> expr
+                }
             }
 
             val cvt = function.arguments()[argIdx]
@@ -384,31 +238,6 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitCompoundStatement(compoundStatement: CompoundStatement): Boolean {
-        var needSwitch = true
-
-        for (node in compoundStatement.statements) {
-            if (node !is LabeledStatement) {
-                continue
-            }
-
-            val label = ir().createLabel()
-            stringTolabel[node.label.str()] = label
-        }
-
-        for (node in compoundStatement.statements) {
-            when (node) {
-                is Declaration -> visitDeclaration(node)
-                is GotoStatement -> return visitGoto(node)
-                is Statement -> {
-                    needSwitch = visitStatement(node)
-                }
-                else -> throw IRCodeGenError("Statement expected")
-            }
-        }
-        return needSwitch
-    }
-
     private fun eq(type: Type): AnyPredicateType {
         return when (type) {
             is IntegerType       -> IntPredicate.Eq
@@ -418,30 +247,83 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
     }
 
+    private fun ne(type: Type): AnyPredicateType {
+        return when (type) {
+            is IntegerType       -> IntPredicate.Ne
+            is FloatingPointType -> FloatPredicate.One
+            is PointerType       -> IntPredicate.Ne
+            else -> throw IRCodeGenError("Unknown type")
+        }
+    }
+
+    private fun gt(type: Type): AnyPredicateType {
+        return when (type) {
+            is IntegerType       -> IntPredicate.Gt
+            is FloatingPointType -> FloatPredicate.Ogt
+            is PointerType       -> IntPredicate.Gt
+            else -> throw IRCodeGenError("Unknown type")
+        }
+    }
+
+    private fun lt(type: Type): AnyPredicateType {
+        return when (type) {
+            is IntegerType       -> IntPredicate.Lt
+            is FloatingPointType -> FloatPredicate.Olt
+            is PointerType       -> IntPredicate.Lt
+            else -> throw IRCodeGenError("Unknown type")
+        }
+    }
+
+    private fun le(type: Type): AnyPredicateType {
+        return when (type) {
+            is IntegerType       -> IntPredicate.Le
+            is FloatingPointType -> FloatPredicate.Ole
+            is PointerType       -> IntPredicate.Le
+            else -> throw IRCodeGenError("Unknown type")
+        }
+    }
+
+    private fun ge(type: Type): AnyPredicateType {
+        return when (type) {
+            is IntegerType       -> IntPredicate.Ge
+            is FloatingPointType -> FloatPredicate.Oge
+            is PointerType       -> IntPredicate.Ge
+            else -> throw IRCodeGenError("Unknown type")
+        }
+    }
+
+    private fun makeAlgebraicBinary(binop: BinaryOp, op: ArithmeticBinaryOp): Value {
+        val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
+
+        val right = visitExpression(binop.right, true)
+        val rightConverted = ir().convertToType(right, commonType)
+
+        val left = visitExpression(binop.left, true)
+        val leftConverted = ir().convertToType(left, commonType)
+
+        return ir().arithmeticBinary(leftConverted, op, rightConverted)
+    }
+
+    private inline fun makeComparisonBinary(binop: BinaryOp, crossinline predicate: (NonTrivialType) -> AnyPredicateType): Value {
+        val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
+
+        val right = visitExpression(binop.right, true)
+        val rightConverted = ir().convertToType(right, commonType)
+
+        val left = visitExpression(binop.left, true)
+        val leftConverted = ir().convertToType(left, commonType)
+
+        return makeCondition(leftConverted, predicate(commonType), rightConverted)
+    }
+
     private fun visitBinary(binop: BinaryOp): Value {
         return when (binop.opType) {
             BinaryOpType.ADD -> {
-                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir().convertToType(right, commonType)
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir().convertToType(left, commonType)
-
-                ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Add, rightConverted)
+                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Add)
             }
 
             BinaryOpType.SUB -> {
-                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir().convertToType(right, commonType)
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir().convertToType(left, commonType)
-
-                ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Sub, rightConverted)
+                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Sub)
             }
 
             BinaryOpType.ASSIGN -> {
@@ -451,70 +333,26 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
                 val left = visitExpression(binop.left, false)
                 ir().store(left, rightConverted)
-                rightConverted //TODO
+                rightConverted //TODO test it
             }
 
             BinaryOpType.MUL -> {
-                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir().convertToType(right, commonType)
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir().convertToType(left, commonType)
-
-                ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Mul, rightConverted)
+                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Mul)
             }
 
             BinaryOpType.NE -> {
-                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir().convertToType(right, commonType)
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir().convertToType(left, commonType)
-
-                val cmp = makeCondition(leftConverted, IntPredicate.Ne, rightConverted)
-                ir().convertToType(cmp, Type.U1)
+                makeComparisonBinary(binop, ::ne)
             }
 
             BinaryOpType.GT -> {
-                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir().convertToType(right, commonType)
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir().convertToType(left, commonType)
-
-                val cmp = makeCondition(leftConverted, IntPredicate.Gt, rightConverted)
-                ir().convertToType(cmp, Type.U1)
+                makeComparisonBinary(binop, ::gt)
             }
             BinaryOpType.LT -> {
-                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir().convertToType(right, commonType)
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir().convertToType(left, commonType)
-
-                val cmp = makeCondition(leftConverted, IntPredicate.Lt, rightConverted)
-                ir().convertToType(cmp, Type.U1)
+                makeComparisonBinary(binop, ::lt)
             }
 
             BinaryOpType.LE -> {
-                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir().convertToType(right, commonType)
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir().convertToType(left, commonType)
-
-                val cmp = makeCondition(leftConverted, IntPredicate.Le, rightConverted)
-                ir().convertToType(cmp, Type.U1)
+                makeComparisonBinary(binop, ::le)
             }
             BinaryOpType.AND -> {
                 val initialBB = ir().currentLabel()
@@ -537,30 +375,10 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 ir().phi(listOf(U8Value(0), convertedRight), listOf(initialBB, bb))
             }
             BinaryOpType.GE -> {
-                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir().convertToType(left, commonType)
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir().convertToType(right, commonType)
-
-                val cmp = makeCondition(leftConverted, IntPredicate.Ge, rightConverted)
-
-                ir().convertToType(cmp, Type.U1)
+                makeComparisonBinary(binop, ::ge)
             }
             BinaryOpType.EQ -> {
-                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir().convertToType(left, commonType)
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir().convertToType(right, commonType)
-
-                val cmp = makeCondition(leftConverted, eq(commonType), rightConverted)
-
-                ir().convertToType(cmp, Type.U1)
+                makeComparisonBinary(binop, ::eq)
             }
             BinaryOpType.MOD -> {
                 val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
@@ -575,15 +393,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 ir().proj(rem, 1)
             }
             BinaryOpType.DIV -> {
-                val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir().convertToType(left, commonType)
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir().convertToType(right, commonType)
-
-                ir().arithmeticBinary(leftConverted, ArithmeticBinaryOp.Div, rightConverted)
+                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Div)
             }
             else -> throw IRCodeGenError("Unknown binary operation, op=${binop.opType}")
         }
@@ -636,8 +446,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
                 val type = unaryOp.resolveType(typeHolder)
                 val valueType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
                 val converted = ir().convertToType(value, valueType)
-                // TODO: handle case '-1'
-                ir().arithmeticBinary(Constant.of(valueType, 0), ArithmeticBinaryOp.Sub, converted)
+                ir().neg(converted)
             }
             PrefixUnaryOpType.NOT -> {
                 val value = visitExpression(unaryOp.primary, true)
@@ -665,20 +474,6 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
             in -2147483648..2147483647 -> I32Value(numNode.toLong.data.toInt())
             else -> I64Value(numNode.toLong.data.toLong())
         }
-    }
-
-    private fun visitReturn(returnStatement: ReturnStatement): Boolean {
-        when (returnStatement.expr) {
-            is EmptyExpression -> ir().branch(exitBlock)
-            else -> {
-                val value = visitExpression(returnStatement.expr, true)
-                val realType = ir().prototype().returnType()
-                val returnType = ir().convertToType(value, realType)
-                ir().store(returnValueAdr!!, returnType)
-                ir().branch(exitBlock)
-            }
-        }
-        return false
     }
 
     private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
@@ -735,5 +530,209 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
 
         varStack.pop()
+    }
+
+    private fun visitStatement(statement: Statement): Boolean {
+        return statement.accept(this)
+    }
+
+    override fun visit(emptyStatement: EmptyStatement): Boolean {
+        return false
+    }
+
+    override fun visit(exprStatement: ExprStatement): Boolean {
+        visitExpression(exprStatement.expr, true)
+        return true
+    }
+
+    override fun visit(labeledStatement: LabeledStatement): Boolean {
+        val label = stringTolabel[labeledStatement.label.str()] ?: throw IRCodeGenError("Label '${labeledStatement.label.str()}' not found ")
+        ir().branch(label)
+        ir().switchLabel(label)
+        return visitStatement(labeledStatement.stmt)
+    }
+
+    override fun visit(gotoStatement: GotoStatement): Boolean {
+        val label = stringTolabel[gotoStatement.id.str()] ?: throw IRCodeGenError("Label '${gotoStatement.id.str()}' not found ")
+        ir().branch(label)
+        ir().switchLabel(label)
+        return true
+    }
+
+    override fun visit(continueStatement: ContinueStatement): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(breakStatement: BreakStatement): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(defaultStatement: DefaultStatement): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(caseStatement: CaseStatement): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(returnStatement: ReturnStatement): Boolean {
+        when (returnStatement.expr) {
+            is EmptyExpression -> ir().branch(exitBlock)
+            else -> {
+                val value = visitExpression(returnStatement.expr, true)
+                val realType = ir().prototype().returnType()
+                val returnType = ir().convertToType(value, realType)
+                ir().store(returnValueAdr!!, returnType)
+                ir().branch(exitBlock)
+            }
+        }
+        return false
+    }
+
+    override fun visit(compoundStatement: CompoundStatement): Boolean {
+        var needSwitch = true
+
+        for (node in compoundStatement.statements) {
+            if (node !is LabeledStatement) {
+                continue
+            }
+
+            val label = ir().createLabel()
+            stringTolabel[node.label.str()] = label
+        }
+
+        for (node in compoundStatement.statements) {
+            when (node) {
+                is Declaration -> visitDeclaration(node)
+                is GotoStatement -> return node.accept(this)
+                is Statement -> {
+                    needSwitch = visitStatement(node)
+                }
+                else -> throw IRCodeGenError("Statement expected")
+            }
+        }
+        return needSwitch
+    }
+
+    override fun visit(ifStatement: IfStatement): Boolean {
+        val condition = makeConditionFromExpression(ifStatement.condition)
+
+        val thenBlock = ir().createLabel()
+
+
+        if (ifStatement.elseNode is EmptyStatement) {
+            val endBlock = ir().createLabel()
+            ir().branchCond(condition, thenBlock, endBlock)
+            ir().switchLabel(thenBlock)
+            val needSwitch = visitStatement(ifStatement.then)
+            if (needSwitch) {
+                ir().branch(endBlock)
+            }
+            ir().switchLabel(endBlock)
+            return true
+        } else {
+
+            val elseBlock = ir().createLabel()
+            ir().branchCond(condition, thenBlock, elseBlock)
+            // then
+            ir().switchLabel(thenBlock)
+            val needSwitch = visitStatement(ifStatement.then)
+            val endBlock = if (needSwitch) {
+                val endBlock = ir().createLabel()
+                ir().branch(endBlock)
+                endBlock
+            } else {
+                null
+            }
+
+            // else
+            ir().switchLabel(elseBlock)
+            val switch1 = visitStatement(ifStatement.elseNode)
+
+            if (switch1) {
+                val newEndBlock = endBlock ?: ir().createLabel()
+                ir().branch(newEndBlock)
+                ir().switchLabel(newEndBlock)
+            } else if (endBlock != null) {
+                ir().switchLabel(endBlock)
+            }
+
+            return true
+        }
+    }
+
+    override fun visit(doWhileStatement: DoWhileStatement): Boolean {
+        val bodyBlock = ir().createLabel()
+        val endBlock = ir().createLabel()
+
+        ir().branch(bodyBlock)
+        ir().switchLabel(bodyBlock)
+        visitStatement(doWhileStatement.body)
+
+        val condition = makeConditionFromExpression(doWhileStatement.condition)
+
+        ir().branchCond(condition, bodyBlock, endBlock)
+        ir().switchLabel(endBlock)
+        return true
+    }
+
+    override fun visit(whileStatement: WhileStatement): Boolean {
+        val conditionBlock = ir().createLabel()
+        val bodyBlock = ir().createLabel()
+        val endBlock = ir().createLabel()
+
+        ir().branch(conditionBlock)
+        ir().switchLabel(conditionBlock)
+        val condition = makeConditionFromExpression(whileStatement.condition)
+
+        ir().branchCond(condition, bodyBlock, endBlock)
+        ir().switchLabel(bodyBlock)
+        val needSwitch = visitStatement(whileStatement.body)
+        if (needSwitch) {
+            ir().branch(conditionBlock)
+        }
+        ir().switchLabel(endBlock)
+        return true
+    }
+
+    override fun visit(forStatement: ForStatement): Boolean {
+        fun visitInit(init: Node) {
+            when (init) {
+                is Declaration    -> visitDeclaration(init)
+                is ExprStatement  -> visitExpression(init.expr, true)
+                is EmptyStatement -> {}
+                else -> throw IRCodeGenError("Unknown init statement, init=$init")
+            }
+        }
+
+        fun visitUpdate(update: Expression) {
+            if (update is EmptyExpression) {
+                return
+            }
+
+            visitExpression(update, true)
+        }
+
+        val conditionBlock = ir().createLabel()
+        val bodyBlock = ir().createLabel()
+        val endBlock = ir().createLabel()
+
+        visitInit(forStatement.init)
+        ir().branch(conditionBlock)
+        ir().switchLabel(conditionBlock)
+        val condition = makeConditionFromExpression(forStatement.condition)
+        ir().branchCond(condition, bodyBlock, endBlock)
+        ir().switchLabel(bodyBlock)
+        visitStatement(forStatement.body)
+        visitUpdate(forStatement.update)
+        if (ir().last() !is TerminateInstruction) {
+            ir().branch(conditionBlock)
+        }
+        ir().switchLabel(endBlock)
+        return true
+    }
+
+    override fun visit(switchStatement: SwitchStatement): Boolean {
+        TODO("Not yet implemented")
     }
 }
