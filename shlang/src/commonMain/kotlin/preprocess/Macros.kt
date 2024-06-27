@@ -2,6 +2,7 @@ package preprocess
 
 import tokenizer.*
 import common.forEachWith
+import kotlin.jvm.JvmStatic
 
 data class MacroExpansionException(override val message: String): Exception(message)
 
@@ -18,6 +19,18 @@ abstract class Macros(val name: String) {
         other as Macros
 
         return name == other.name
+    }
+
+    companion object {
+        @JvmStatic
+        protected fun newTokenFrom(macrosNamePos: Position, tok: AnyToken): AnyToken {
+            if (tok !is CToken) {
+                return tok.cloneWith(macrosNamePos)
+            }
+
+            val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, tok.position() as OriginalPosition)
+            return tok.cloneWith(preprocessedPosition)
+        }
     }
 }
 
@@ -47,22 +60,10 @@ class MacroReplacement(name: String, private val value: TokenList): Macros(name)
         return value.first() as CToken
     }
 
-    private fun last(): CToken {
-        return value.last() as CToken
-    }
-
     fun cloneContentWith(macrosNamePos: Position): TokenList {
-        fun calculate(tok: AnyToken): AnyToken {
-            if (tok !is CToken) {
-                return tok.cloneWith(Position.UNKNOWN)
-            }
-            val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, tok.position() as OriginalPosition)
-            return tok.cloneWith(preprocessedPosition)
-        }
-
         val result = TokenList()
         for (tok in value) {
-            result.add(calculate(tok))
+            result.add(newTokenFrom(macrosNamePos, tok))
         }
 
         return result
@@ -72,15 +73,6 @@ class MacroReplacement(name: String, private val value: TokenList): Macros(name)
 class MacroFunction(name: String, private val argNames: CTokenList, private val value: TokenList): Macros(name) {
     fun first(): CToken {
         return value.first() as CToken
-    }
-
-    private fun calculate(macrosNamePos: Position, tok: AnyToken): AnyToken {
-        if (tok !is CToken) {
-            return tok
-        }
-
-        val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, tok.position() as OriginalPosition)
-        return tok.cloneWith(preprocessedPosition)
     }
 
     private fun seekNonSpace(idx: AnyToken?): AnyToken {
@@ -154,7 +146,7 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
 
             val value = argToValue[current]
             if (value == null) {
-                result.add(calculate(macrosNamePos, current))
+                result.add(newTokenFrom(macrosNamePos, current))
                 current = current.next()
                 continue
             }
