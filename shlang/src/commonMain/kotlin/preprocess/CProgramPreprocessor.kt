@@ -240,13 +240,12 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                     return
 
                 } else if (nameOrBracket is Identifier && ctx.findMacros(nameOrBracket.str()) != null) {
-                    val start = current //TODO unsafe
-                    add(Indent.of(1))
-                    add(directive)
+                    val start = tokens.indexOf(current) //TODO
                     add(sharp)
-                    current += 3
+                    add(directive)
+                    add(Indent.of(1))
                     handleToken(nameOrBracket)
-                    current = start
+                    current = tokens[start]
                 }  else {
                     throw PreprocessorException("Expected string literal or '<': but '${nameOrBracket}'")
                 }

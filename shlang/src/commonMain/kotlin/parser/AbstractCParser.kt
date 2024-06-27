@@ -5,7 +5,7 @@ import types.TypeHolder
 
 
 abstract class AbstractCParser(tokens: TokenList) {
-    protected var current: AnyToken? = tokens.first()
+    protected var current: AnyToken? = tokens.firstOrNull()
     protected val typeHolder = TypeHolder.default()
 
     fun typeHolder(): TypeHolder = typeHolder

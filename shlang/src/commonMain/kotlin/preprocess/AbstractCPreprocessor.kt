@@ -11,55 +11,53 @@ data class PreprocessorException(val info: String) : Exception(info)
 
 
 abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
-    protected var current: Int = 0
+    protected var current: AnyToken? = tokens.firstOrNull()
 
     protected fun eof(): Boolean {
-        return eof(0)
-    }
-
-    protected fun eof(offset: Int): Boolean {
-        return current + offset >= tokens.size
+        return current == null
     }
 
     protected fun eat() {
         if (eof()) {
-            throw PreprocessorException("Unexpected EOF at ${tokens[current]}")
+            throw PreprocessorException("Unexpected EOF")
         }
-        current += 1
+        current = current!!.next()
     }
 
     protected inline fun<reified T: AnyToken> peak(): T {
-        return peak(0)
-    }
-
-    protected inline fun<reified T: AnyToken> peak(offset: Int): T {
-        if (eof(offset)) {
-            throw ParserException(InvalidToken("Unexpected EOF", tokens[current]))
+        if (eof()) {
+            throw ParserException(EndOfFile)
         }
-        val tok = tokens[current + offset]
-        if (tok !is T) {
-            throw ParserException(InvalidToken("Unexpected token $tok", tok))
+        if (current !is T) {
+            throw ParserException(InvalidToken("Unexpected token $current", current!!))
         }
-        return tok
+        return current as T
     }
 
     protected fun check(s: String): Boolean {
         if (eof()) {
             return false
         }
-        return tokens[current].str() == s
+        return current!!.str() == s
     }
 
     protected inline fun<reified T> check(): Boolean {
         if (eof()) {
             return false
         }
-        return tokens[current] is T
+        return current is T
     }
 
-    protected fun kill(): AnyToken = killAt(current)
+    protected fun kill(): AnyToken {
+        if (eof()) {
+            throw PreprocessorException("Unexpected EOF")
+        }
+        val next = current!!.next()
+        val result = tokens.remove(current!!)
+        current = next
+        return result
+    }
 
-    private fun killAt(index: Int): AnyToken = tokens.removeAt(index)
 
     protected fun killWithSpaces() {
         kill()
@@ -69,11 +67,22 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
     }
 
     protected fun addAll(others: TokenList) {
-        tokens.addAll(current, others)
+        val first = others.firstOrNull()
+        if (current == null) {
+            tokens.addAll(others)
+        } else {
+            tokens.addAll(current!!, others)
+        }
+        current = first
     }
 
     protected fun add(tok: AnyToken) {
-        tokens.add(current, tok)
+        if (current == null) {
+            tokens.add(tok)
+            current = tok
+            return
+        }
+        tokens.addBefore(current!!, tok)
     }
 
     protected fun trimSpacesAtEnding() {

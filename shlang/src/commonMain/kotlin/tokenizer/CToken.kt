@@ -68,19 +68,6 @@ abstract class CToken(private val position: Position): AnyToken() {
     override fun toString(): String {
         return "'${str()}' in $position'"
     }
-
-    companion object {
-        fun hasNewLine(from: CToken, to: CToken): Boolean {
-            return from.position.line() != to.position.line()
-        }
-
-        fun countSpaces(from: CToken, to: CToken): Int {
-            assertion(!hasNewLine(from, to)) {
-                "Cannot count spaces between tokens on different lines: '$from' and '$to'"
-            }
-            return to.position.pos() - (from.pos() + from.str().length)
-        }
-    }
 }
 
 class Identifier(val data: String, position: Position): CToken(position) {

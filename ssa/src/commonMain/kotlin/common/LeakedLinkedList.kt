@@ -17,6 +17,15 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
         }
     }
 
+    private fun checkInvariants(other: LeakedLinkedList<T>) {
+        if (other.head!!.prev != null) {
+            throw IllegalStateException("prev should be null")
+        }
+        if (other.tail!!.next != null) {
+            throw IllegalStateException("next should be null")
+        }
+    }
+
     operator fun get(index: Int): T {
         var current: LListNode? = head
         for (i in 0 until index) {
@@ -170,6 +179,7 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
     }
 
     fun addAll(list: LeakedLinkedList<T>) {
+        checkInvariants(list)
         modificationCount++
         if (head == null) {
             head = list.first()
@@ -182,20 +192,22 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
         size += list.size
     }
 
-    fun addAll(after: LListNode, list: LeakedLinkedList<T>) {
+    fun addAll(before: LListNode, list: LeakedLinkedList<T>) {
+        checkInvariants(list)
         modificationCount++
-        if (after.next != null) {
-            after.next!!.prev = list.last()
-            list.last().next = after.next
+        if (before.prev != null) {
+            before.prev!!.next = list.first()
+            list.first().prev = before.prev
         } else {
-            tail = list.last()
+            head = list.first()
         }
-        after.next = list.first()
-        list.first().prev = after
+        before.prev = list.last()
+        list.last().next = before
         size += list.size
     }
 
     fun addAll(index: Int, list: LeakedLinkedList<T>) {
+        checkInvariants(list)
         modificationCount++
         if (index == size) {
             addAll(list)
