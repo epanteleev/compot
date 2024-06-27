@@ -179,9 +179,11 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
     }
 
     // 6.10 Preprocessing directives
-    private fun handleDirective() {
+    private fun handleDirective(sharp: AnyToken) {
         if (!check<CToken>()) {
-            throw PreprocessorException("Expected directive: '${peak<AnyToken>()}'")
+            add(sharp)
+            eat()
+            return
         }
 
         val directive = peak<CToken>()
@@ -373,8 +375,8 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 handleToken(tok)
                 continue
             }
-            kill()
-            handleDirective()
+            val sharp = kill()
+            handleDirective(sharp)
         }
         return tokens
     }

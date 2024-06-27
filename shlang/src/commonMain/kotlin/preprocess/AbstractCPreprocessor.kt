@@ -88,6 +88,9 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
         }
         while (tokens.last() is AnySpaceToken) {
             tokens.removeLast()
+            if (tokens.isEmpty()) {
+                return
+            }
         }
     }
 }

@@ -408,6 +408,40 @@ class CProgramPreprocessorTest {
     }
 
     @Test
+    fun testFalseStringify() {
+        val data = """
+            |#define x #
+            |x
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val expected = """
+            |
+            |#
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testFalseStringify1() {
+        val data = """
+            |#define x #
+            |x + 2
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val expected = """
+            |
+            |# + 2
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
     fun testIfdefined() {
         val data = """
             |#define TEST
