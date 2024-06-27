@@ -211,9 +211,8 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 ctx.undef(name.str())
             }
             "include" -> {
-                val nameOrBracket = peak<AnyToken>()
+                val nameOrBracket = includeName()
                 if (nameOrBracket is StringLiteral) {
-                    kill()
                     val header = ctx.findHeader(nameOrBracket.unquote(), HeaderType.USER) ?:
                         throw PreprocessorException("Cannot find header $nameOrBracket")
 
@@ -224,7 +223,6 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                     return
 
                 } else if (nameOrBracket.str() == "<") {
-                    kill()
                     if (!check<Identifier>()) {
                         throw PreprocessorException("Expected file name: but '${peak<AnyToken>()}'")
                     }
@@ -239,14 +237,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                     addAll(result)
                     return
 
-                } else if (nameOrBracket is Identifier && ctx.findMacros(nameOrBracket.str()) != null) {
-                    val start = tokens.indexOf(current) //TODO
-                    add(sharp)
-                    add(directive)
-                    add(Indent.of(1))
-                    handleToken(nameOrBracket)
-                    current = tokens[start]
-                }  else {
+                } else {
                     throw PreprocessorException("Expected string literal or '<': but '${nameOrBracket}'")
                 }
             }
@@ -293,6 +284,50 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
 
             else -> throw PreprocessorException("Unknown directive '${directive.str()}'")
         }
+    }
+
+    private fun includeName(): AnyToken {
+        val nameOrBracket = peak<AnyToken>()
+        if (nameOrBracket is Identifier && ctx.findMacros(nameOrBracket.str()) != null) {
+            val replacement = getMacroReplacement(nameOrBracket)
+            return replacement.first() //Ignore remains
+        } else {
+            kill()
+            return nameOrBracket
+        }
+    }
+
+    private fun getMacroReplacement(tok: CToken): TokenList { //TODO copy paste
+        val macros = ctx.findMacroReplacement(tok.str())
+        if (macros != null) {
+            kill()
+            return macros.cloneContentWith(tok.position())
+        }
+
+        val macroFunction = ctx.findMacroFunction(tok.str())
+        if (macroFunction != null) {
+            killWithSpaces()
+            if (!check("(")) {
+                add(tok)
+                eat()
+                return TokenList()
+            }
+            killWithSpaces()
+            val args = parseArguments()
+            return macroFunction.cloneContentWith(tok.position(), args)
+        }
+
+        val predefinedMacros = ctx.findPredefinedMacros(tok.str())
+        if (predefinedMacros != null) {
+            kill()
+            val tokenList = TokenList()
+            val clone = predefinedMacros.cloneContentWith(tok.position())
+            tokenList.add(clone)
+            return tokenList
+        }
+
+        eat()
+        return TokenList()
     }
 
     private fun handleToken(tok: CToken) {
