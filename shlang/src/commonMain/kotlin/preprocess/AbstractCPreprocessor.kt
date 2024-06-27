@@ -1,10 +1,7 @@
 package preprocess
 
-import tokenizer.AnyToken
 import parser.*
-import tokenizer.AnySpaceToken
-import tokenizer.Indent
-import tokenizer.TokenList
+import tokenizer.*
 
 
 data class PreprocessorException(val info: String) : Exception(info)

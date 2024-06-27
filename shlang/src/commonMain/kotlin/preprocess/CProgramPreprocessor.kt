@@ -179,7 +179,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
     }
 
     // 6.10 Preprocessing directives
-    private fun handleDirective(sharp: CToken) {
+    private fun handleDirective() {
         if (!check<CToken>()) {
             throw PreprocessorException("Expected directive: '${peak<AnyToken>()}'")
         }
@@ -364,11 +364,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
 
     private fun preprocess0(): TokenList {
         while (!eof()) {
-            if (check<NewLine>()) {
-                eat()
-                continue
-            }
-            if (check<Indent>()) {
+            if (check<AnySpaceToken>()) {
                 eat()
                 continue
             }
@@ -377,8 +373,8 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 handleToken(tok)
                 continue
             }
-            val sharp = kill() as CToken
-            handleDirective(sharp)
+            kill()
+            handleDirective()
         }
         return tokens
     }

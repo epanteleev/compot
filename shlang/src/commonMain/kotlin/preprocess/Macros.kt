@@ -1,7 +1,6 @@
 package preprocess
 
 import common.forEachWith
-import ir.read.tokens.To
 import tokenizer.*
 
 data class MacroExpansionException(override val message: String): Exception(message)
