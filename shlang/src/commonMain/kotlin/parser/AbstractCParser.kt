@@ -4,37 +4,20 @@ import tokenizer.*
 import types.TypeHolder
 
 
-abstract class AbstractCParser(protected val tokens: TokenList) {
-    protected var current: Int = 0
+abstract class AbstractCParser(tokens: TokenList) {
+    protected var current: AnyToken? = tokens.first()
     protected val typeHolder = TypeHolder.default()
 
     fun typeHolder(): TypeHolder = typeHolder
 
     protected fun eof(): Boolean {
-        return eof(0)
-    }
-
-    protected fun eof(offset: Int): Boolean {
-        if (current + offset >= tokens.size) {
-            return true
-        }
-        var pos = current
-        var tokensNumber = 0
-        do {
-            if (tokens[pos] is CToken) {
-                tokensNumber += 1
-            }
-            if (tokensNumber == offset + 1) {
-                return false
-            }
-            pos += 1
-        } while (pos < tokens.size)
-        return true
+        skipSpaces()
+        return current == null
     }
 
     protected fun skipSpaces() {
-        while (current < tokens.size && tokens[current] !is CToken) {
-            current += 1
+        while (current != null && current !is CToken) {
+            current = current!!.next()
         }
     }
 
@@ -43,23 +26,18 @@ abstract class AbstractCParser(protected val tokens: TokenList) {
         if (eof()) {
             throw ParserException(EndOfFile)
         }
-        current += 1
+        current = current!!.next()
     }
 
-    protected inline fun<reified T: AnyToken> peak(): T {
-        return peak(0)
-    }
-
-    protected inline fun<reified T: AnyToken> peak(offset: Int): T {
+    protected inline fun <reified T : AnyToken> peak(): T {
         skipSpaces()
-        if (eof(offset)) {
+        if (eof()) {
             throw ParserException(EndOfFile)
         }
-        val tok = tokens[current + offset]
-        if (tok !is T) {
-            throw ParserException(InvalidToken("Unexpected token $tok", tok))
+        if (current !is T) {
+            throw ParserException(InvalidToken("Unexpected token $current", current!!))
         }
-        return tok
+        return current as T
     }
 
     protected fun check(s: String): Boolean {
@@ -67,15 +45,24 @@ abstract class AbstractCParser(protected val tokens: TokenList) {
         if (eof()) {
             return false
         }
-        return tokens[current].str() == s
+        return current!!.str() == s
     }
 
     protected fun checkOffset(offset: Int, expects: String): Boolean {
         skipSpaces()
-        if (eof() || eof(offset)) {
-            return false
-        }
-        return tokens[current + offset].str() == expects
+        var iter = 0
+        var current = current
+        do {
+            if (eof()) {
+                return false
+            }
+            if (iter == offset) {
+                return current!!.str() == expects
+            }
+
+            current = current!!.next()
+            iter++
+        } while (true)
     }
 
     protected inline fun<reified T> check(): Boolean {
@@ -83,7 +70,7 @@ abstract class AbstractCParser(protected val tokens: TokenList) {
         if (eof()) {
             return false
         }
-        return tokens[current] is T
+        return current is T
     }
 
     protected inline fun<reified T> rule(fn: () -> T?): T? {
