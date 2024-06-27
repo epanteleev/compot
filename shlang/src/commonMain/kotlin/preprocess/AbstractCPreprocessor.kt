@@ -4,12 +4,13 @@ import tokenizer.AnyToken
 import parser.*
 import tokenizer.AnySpaceToken
 import tokenizer.Indent
+import tokenizer.TokenList
 
 
 data class PreprocessorException(val info: String) : Exception(info)
 
 
-abstract class AbstractCPreprocessor(protected val tokens: MutableList<AnyToken>) {
+abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
     protected var current: Int = 0
 
     protected fun eof(): Boolean {
@@ -67,7 +68,7 @@ abstract class AbstractCPreprocessor(protected val tokens: MutableList<AnyToken>
         }
     }
 
-    protected fun addAll(others: List<AnyToken>) {
+    protected fun addAll(others: TokenList) {
         tokens.addAll(current, others)
     }
 

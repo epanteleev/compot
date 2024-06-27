@@ -5,8 +5,8 @@ import parser.CProgramParser
 import gen.consteval.ConstEvalExpression
 
 
-class CProgramPreprocessor(original: TokenIterator, private val ctx: PreprocessorContext): AbstractCPreprocessor(original.tokens()) {
-    private fun evaluateCondition(tokens: MutableList<CToken>): Int {
+class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(original) {
+    private fun evaluateCondition(tokens: TokenList): Int {
         val parser = CProgramParser.build(tokens)
         val constexpr = parser.constant_expression() ?:
             throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(tokens)}'")
@@ -54,8 +54,8 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         throw PreprocessorException("Cannot find #endif")
     }
 
-    private fun parseArguments(): List<List<AnyToken>> {
-        val args = mutableListOf<MutableList<AnyToken>>(mutableListOf())
+    private fun parseArguments(): List<TokenList> {
+        val args = mutableListOf(TokenList())
         var depth = 1
         while (depth != 0) {
             if (check("(")) {
@@ -68,12 +68,13 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                 }
             }
             if (check(",") && depth == 1) {
-                args.add(mutableListOf())
+                args.add(TokenList())
                 killWithSpaces()
                 continue
             }
-            args.last().add(peak())
+            val arg = peak<AnyToken>()
             kill()
+            args.last().add(arg)
         }
         kill()
         return args
@@ -97,30 +98,28 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         return true
     }
 
-    private fun takeAntTokensInLine(): MutableList<AnyToken> {
-        val value = mutableListOf<AnyToken>()
+    private fun takeAntTokensInLine(): TokenList {
+        val value = TokenList()
         while (!eof() && !check<NewLine>()) {
-            value.add(peak())
-            kill()
+            value.add(kill())
         }
         return value
     }
 
-    private fun takeCTokensInLine(): MutableList<CToken> {
-        val value = mutableListOf<CToken>()
+    private fun takeCTokensInLine(): TokenList {
+        val value = TokenList()
         while (!eof() && !check<NewLine>()) {
-            val peak = peak<AnyToken>();
+            val peak = peak<AnyToken>()
+            kill()
             if (peak is CToken) {
                 value.add(peak)
             }
-
-            kill()
         }
         return value
     }
 
-    private fun parseArgumentDefinition(): List<CToken> {
-        val args = mutableListOf<CToken>()
+    private fun parseArgumentDefinition(): CTokenList {
+        val args = CTokenList()
 
         var depth = 1
         while (depth != 0) {
@@ -137,8 +136,9 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
                 killWithSpaces()
                 continue
             }
-            args.add(peak<CToken>())
+            val arg = peak<CToken>()
             killWithSpaces()
+            args.add(arg)
         }
         killWithSpaces()
         return args
@@ -328,7 +328,7 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         eat()
     }
 
-    private fun preprocess0(): MutableList<AnyToken> {
+    private fun preprocess0(): TokenList {
         while (!eof()) {
             if (check<NewLine>()) {
                 eat()
@@ -349,19 +349,19 @@ class CProgramPreprocessor(original: TokenIterator, private val ctx: Preprocesso
         return tokens
     }
 
-    fun preprocess(): List<AnyToken> {
+    fun preprocess(): TokenList {
         preprocess0()
         return tokens
     }
 
-    fun preprocessWithRemovedSpaces(): List<AnyToken> {
+    fun preprocessWithRemovedSpaces(): TokenList {
         preprocess0()
         trimSpacesAtEnding()
         return tokens
     }
 
     companion object {
-        fun create(tokens: TokenIterator, ctx: PreprocessorContext): CProgramPreprocessor {
+        fun create(tokens: TokenList, ctx: PreprocessorContext): CProgramPreprocessor {
             return CProgramPreprocessor(tokens, ctx)
         }
     }

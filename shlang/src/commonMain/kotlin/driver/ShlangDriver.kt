@@ -20,7 +20,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         }
         for ((name, value) in cli.getDefines()) {
             val tokens = CTokenizer.apply(value)
-            val replacement = MacroReplacement(name, tokens.tokens())
+            val replacement = MacroReplacement(name, tokens)
             ctx.define(replacement)
         }
     }

@@ -8,6 +8,15 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
     override var size = 0
     private var modificationCount = 0
 
+    private fun checkInvariants(newElem: T) {
+        if (newElem.prev != null) {
+            throw IllegalStateException("prev should be null")
+        }
+        if (newElem.next != null) {
+            throw IllegalStateException("next should be null")
+        }
+    }
+
     operator fun get(index: Int): T {
         var current: LListNode? = head
         for (i in 0 until index) {
@@ -31,6 +40,7 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
     }
 
     fun add(index: Int, value: T) {
+        checkInvariants(value)
         modificationCount++
         if (index == size) {
             add(value)
@@ -53,6 +63,7 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
 
     // if node is null, add to the beginning
     fun addBefore(node: T?, value: T) {
+        checkInvariants(value)
         modificationCount++
         if (node == null) {
             val oldHead = head
@@ -75,6 +86,7 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
 
     // if node is null, add to the end
     fun addAfter(node: T?, value: T) {
+        checkInvariants(value)
         modificationCount++
         if (node == null) {
             add(value)
@@ -104,6 +116,12 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
             current = current.next
         }
         return false
+    }
+
+    fun removeLast(): T {
+        val result = tail ?: throw NoSuchElementException()
+        remove(result)
+        return result
     }
 
     fun removeAt(index: Int): T {
@@ -137,6 +155,7 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
     }
 
     fun add(value: T) {
+        checkInvariants(value)
         modificationCount++
         if (head == null) {
             head = value
@@ -148,6 +167,53 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
             value.next = null
         }
         size++
+    }
+
+    fun addAll(list: LeakedLinkedList<T>) {
+        modificationCount++
+        if (head == null) {
+            head = list.first()
+            tail = list.last()
+        } else {
+            tail!!.next = list.first()
+            list.first().prev = tail
+            tail = list.last()
+        }
+        size += list.size
+    }
+
+    fun addAll(after: LListNode, list: LeakedLinkedList<T>) {
+        modificationCount++
+        if (after.next != null) {
+            after.next!!.prev = list.last()
+            list.last().next = after.next
+        } else {
+            tail = list.last()
+        }
+        after.next = list.first()
+        list.first().prev = after
+        size += list.size
+    }
+
+    fun addAll(index: Int, list: LeakedLinkedList<T>) {
+        modificationCount++
+        if (index == size) {
+            addAll(list)
+            return
+        }
+        var current: LListNode? = head
+        for (i in 0 until index) {
+            current = current!!.next
+        }
+        if (current!!.prev != null) {
+            current.prev!!.next = list.first()
+            list.first().prev = current.prev
+        } else {
+            head = list.first()
+        }
+        current.prev = list.last()
+        list.last().next = current
+        size += list.size
     }
 
     fun remove(node: T): T {
@@ -262,6 +328,10 @@ abstract class LListNode {
     internal var next: LListNode? = null
     internal var prev: LListNode? = null
 
-    abstract fun prev(): LListNode?
-    abstract fun next(): LListNode?
+    open fun prev(): LListNode? {
+        return prev
+    }
+    open fun next(): LListNode? {
+        return next
+    }
 }

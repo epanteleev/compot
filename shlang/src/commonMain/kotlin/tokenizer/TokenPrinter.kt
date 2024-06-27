@@ -1,7 +1,7 @@
 package tokenizer
 
 
-class TokenPrinter private constructor(val tokens: List<AnyToken>) {
+class TokenPrinter private constructor(val tokens: TokenList) {
     private val stringBuilder = StringBuilder()
 
     private fun construct(): String {
@@ -12,7 +12,7 @@ class TokenPrinter private constructor(val tokens: List<AnyToken>) {
     }
 
     companion object {
-        fun print(tokens: List<AnyToken>): String {
+        fun print(tokens: TokenList): String {
             return TokenPrinter(tokens).construct()
         }
     }

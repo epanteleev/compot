@@ -4,7 +4,7 @@ import tokenizer.*
 import types.TypeHolder
 
 
-abstract class AbstractCParser(protected val tokens: List<AnyToken>) {
+abstract class AbstractCParser(protected val tokens: TokenList) {
     protected var current: Int = 0
     protected val typeHolder = TypeHolder.default()
 

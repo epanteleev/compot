@@ -7,12 +7,12 @@ import tokenizer.LexicalElements.keywords
 
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
-    private val tokens: MutableList<AnyToken> = mutableListOf()
+    private val tokens = TokenList()
 
     private var pos: Int = 1
     private var line: Int = 1
 
-    fun doTokenize(): MutableList<AnyToken> {
+    fun doTokenize(): TokenList {
         doTokenizeHelper()
         return tokens
     }
@@ -155,11 +155,11 @@ class CTokenizer private constructor(private val filename: String, private val r
     }
 
     companion object {
-        fun apply(file: StringReader): TokenIterator {
-            return TokenIteratorImpl(CTokenizer("<no-name>", file).doTokenize())
+        fun apply(file: StringReader): TokenList {
+            return CTokenizer("<no-name>", file).doTokenize()
         }
 
-        fun apply(data: String): TokenIterator {
+        fun apply(data: String): TokenList {
             return apply(StringReader(data))
         }
     }

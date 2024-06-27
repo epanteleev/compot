@@ -35,6 +35,7 @@ data class PreprocessedPosition(private val line: Int, private val pos: Int, pri
     override fun filename(): String = filename
 
     companion object {
+        val UNKNOWN = PreprocessedPosition(-1, -1, "<unknown>", OriginalPosition.UNKNOWN)
         fun makeFrom(macrosPos: Position, origin: OriginalPosition): PreprocessedPosition {
             return PreprocessedPosition(macrosPos.line(), macrosPos.pos(), macrosPos.filename(), origin)
         }

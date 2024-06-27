@@ -13,7 +13,7 @@ data class ParserException(val info: ProgramMessage) : Exception(info.toString()
 // Grammar:
 // https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
 //
-class CProgramParser private constructor(iterator: List<AnyToken>): AbstractCParser(iterator) {
+class CProgramParser private constructor(iterator: TokenList): AbstractCParser(iterator) {
     // translation_unit
     //	: external_declaration
     //	| translation_unit external_declaration
@@ -1648,11 +1648,7 @@ class CProgramParser private constructor(iterator: List<AnyToken>): AbstractCPar
     }
 
     companion object {
-        fun build(tokens: TokenIterator): CProgramParser {
-            return CProgramParser(tokens.tokens())
-        }
-
-        fun build(tokens: List<AnyToken>): CProgramParser {
+        fun build(tokens: TokenList): CProgramParser {
             return CProgramParser(tokens)
         }
     }

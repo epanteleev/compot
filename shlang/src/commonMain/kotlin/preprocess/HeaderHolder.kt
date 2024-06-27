@@ -4,7 +4,7 @@ import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.SYSTEM
 import tokenizer.CTokenizer
-import tokenizer.TokenIterator
+import tokenizer.TokenList
 
 enum class HeaderType {
     SYSTEM,
@@ -13,7 +13,7 @@ enum class HeaderType {
 
 
 data class Header(val filename: String, val content: String, val includeType: HeaderType) {
-    fun tokenize(): TokenIterator {
+    fun tokenize(): TokenList {
         return CTokenizer.apply(content)
     }
 }

@@ -1,10 +1,21 @@
 package tokenizer
 
+import common.LListNode
 import common.assertion
 
 
-abstract class AnyToken {
+abstract class AnyToken: LListNode() {
     abstract fun str(): String
+
+    abstract fun cloneWith(pos: Position): AnyToken
+
+    override fun prev(): AnyToken? {
+        return super.prev() as AnyToken?
+    }
+
+    override fun next(): AnyToken? {
+        return super.next() as AnyToken?
+    }
 }
 
 abstract class AnySpaceToken: AnyToken()
@@ -14,21 +25,16 @@ class Indent private constructor(private val spaces: Int): AnySpaceToken() {
 
     override fun str(): String = data
 
-    companion object {
-        private val ONE = Indent(1)
-        private val TWO = Indent(2)
-        private val FOUR = Indent(4)
+    override fun cloneWith(pos: Position): AnyToken {
+        return of(spaces)
+    }
 
+    companion object {
         fun of(spaces: Int): Indent {
             assertion(spaces > 0) {
                 "Indent should be greater than 0, but was $spaces"
             }
 
-            when (spaces) {
-                1 -> return ONE
-                2 -> return TWO
-                4 -> return FOUR
-            }
             return Indent(spaces)
         }
     }
@@ -39,18 +45,14 @@ class NewLine private constructor(private val spaces: Int): AnySpaceToken() {
 
     override fun str(): String = data
 
-    companion object {
-        private val ONE = NewLine(1)
-        private val TWO = NewLine(2)
+    override fun cloneWith(pos: Position): AnyToken {
+        return of(spaces)
+    }
 
+    companion object {
         fun of(lines: Int): NewLine {
             assertion(lines > 0) {
                 "NewLine should be greater than 0, but was $lines"
-            }
-
-            when (lines) {
-                1 -> return ONE
-                2 -> return TWO
             }
             return NewLine(lines)
         }
@@ -58,8 +60,6 @@ class NewLine private constructor(private val spaces: Int): AnySpaceToken() {
 }
 
 abstract class CToken(private val position: Position): AnyToken() {
-    abstract fun cloneWith(pos: PreprocessedPosition): CToken
-
     fun line(): Int = position.line()
     fun pos(): Int = position.pos()
 
@@ -86,7 +86,7 @@ abstract class CToken(private val position: Position): AnyToken() {
 class Identifier(val data: String, position: Position): CToken(position) {
     override fun str(): String = data
 
-    override fun cloneWith(pos: PreprocessedPosition): CToken {
+    override fun cloneWith(pos: Position): CToken {
         return Identifier(data, pos)
     }
 
@@ -124,7 +124,7 @@ class Punct(val data: Char, position: Position): CToken(position) {
         return data == other.data
     }
 
-    override fun cloneWith(pos: PreprocessedPosition): CToken {
+    override fun cloneWith(pos: Position): CToken {
         return Punct(data, pos)
     }
 }
@@ -151,7 +151,7 @@ class Keyword(val data: String, position: Position): CToken(position) {
         return data == other.data
     }
 
-    override fun cloneWith(pos: PreprocessedPosition): CToken {
+    override fun cloneWith(pos: Position): CToken {
         return Keyword(data, pos)
     }
 }
@@ -176,7 +176,7 @@ class StringLiteral(val data: String, position: Position): CToken(position) {
         return data.substring(1, data.length - 1)
     }
 
-    override fun cloneWith(pos: PreprocessedPosition): CToken {
+    override fun cloneWith(pos: Position): CToken {
         return StringLiteral(data, pos)
     }
 
@@ -203,7 +203,7 @@ class Numeric(val data: Number, position: Position): CToken(position) {
         return data == other.data
     }
 
-    override fun cloneWith(pos: PreprocessedPosition): CToken {
+    override fun cloneWith(pos: Position): CToken {
         return Numeric(data, pos)
     }
 }
