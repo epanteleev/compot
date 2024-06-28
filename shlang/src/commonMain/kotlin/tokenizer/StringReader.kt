@@ -82,13 +82,33 @@ class StringReader(val str: String, var pos: Int = 0) {
                     read()
                 }
                 val floatString = str.substring(start, pos)
-                floatString.toDoubleOrNull()
+                return@tryRead floatString.toDoubleOrNull()
             } else if (!peek().isLetter() && peek() != '_') {
                 // Integer
                 val intString = str.substring(start, pos)
-                intString.toIntOrNull() ?: intString.toLongOrNull()
+                return@tryRead intString.toIntOrNull() ?: intString.toLongOrNull()
+            }
+
+            val suffix = peek()
+            if (suffix == 'L' || suffix == 'l') {
+                read()
+                val suffix1 = peek()
+                if (suffix1 == 'L' || suffix1 == 'l') {
+                    read()
+                    return@tryRead str.substring(start, pos - 2).toLongOrNull()
+                } else {
+                    return@tryRead str.substring(start, pos - 1).toLongOrNull()
+                }
+            } else if (peek() == 'U' || peek() == 'u') {
+                read()
+                if (peek() == 'U' || peek() == 'u') {
+                    read()
+                    return@tryRead str.substring(start, pos - 2).toLongOrNull()
+                } else {
+                    return@tryRead str.substring(start, pos - 1).toLongOrNull()
+                }
             } else {
-                return null
+                return@tryRead null
             }
         }
     }
@@ -105,7 +125,7 @@ class StringReader(val str: String, var pos: Int = 0) {
     companion object {
         private val punctuation = arrayOf(
             '!', '"', '#', '$', '%', '&', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=',
-            '>','?','@','[','\\',']','^','`','{','|','}','~'
+            '>','?','@','[','\\',']','^','`','{','|','}','~',' ','\t','\n'
         )
 
         fun tryPunct(ch: Char): Boolean {

@@ -27,7 +27,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
 
     private fun initializePreprocessorContext(): PreprocessorContext {
         val pwd = pwd()
-        val headerHolder = FileHeaderHolder(pwd, cli.getIncludeDirectories())
+        val headerHolder = FileHeaderHolder(pwd, cli.getIncludeDirectories() + SYSTEM_HEADERS_PATH)
 
         val ctx = PreprocessorContext.empty(headerHolder)
         definedMacros(ctx)
@@ -40,7 +40,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         }
         val ctx = initializePreprocessorContext()
 
-        val tokens              = CTokenizer.apply(source)
+        val tokens              = CTokenizer.apply(source, cli.getFilename())
         val preprocessor        = CProgramPreprocessor.create(tokens, ctx)
         val postProcessedTokens = preprocessor.preprocess()
 
@@ -53,5 +53,9 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
     fun run() {
         val module = compile()
         OptDriver(cli.makeOptCLIArguments()).compile(module)
+    }
+
+    companion object {
+        const val SYSTEM_HEADERS_PATH = "/usr/include"
     }
 }

@@ -63,6 +63,12 @@ class CTokenizerTest {
     }
 
     @Test
+    fun test4() {
+        val tokens = CTokenizer.apply("2L").toCTokenList()
+        tokens[0].isEqual(1, 1, "2")
+    }
+
+    @Test
     fun test5() {
         val tokens = CTokenizer.apply("int x = -1; // comment").toCTokenList()
         assertEquals(6, tokens.size)
@@ -74,9 +80,17 @@ class CTokenizerTest {
         tokens[5].isEqual(1, 11, ";")
     }
 
-    @Ignore
-    fun test4() {
-        val tokens = CTokenizer.apply("2L").toCTokenList()
-        tokens[0].isEqual(1, 1, "2")
+    @Test
+    fun test6() {
+        val input = """
+            4.7 /* comment
+            test */ 6
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is Numeric }
+        tokens[0].isEqual(1, 1, "4.7")
+
+        assertTrue { tokens[1] is Numeric }
+        tokens[1].isEqual(2, 8, "6")
     }
 }

@@ -14,7 +14,7 @@ enum class HeaderType {
 
 data class Header(val filename: String, val content: String, val includeType: HeaderType) {
     fun tokenize(): TokenList {
-        return CTokenizer.apply(content)
+        return CTokenizer.apply(content, filename)
     }
 }
 

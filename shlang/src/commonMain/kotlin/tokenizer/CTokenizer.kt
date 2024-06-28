@@ -19,7 +19,7 @@ class CTokenizer private constructor(private val filename: String, private val r
 
     private fun incrementLine() {
         line += 1
-        pos = 1
+        pos = 0
     }
 
     private fun eat(): Char {
@@ -41,7 +41,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             val v = reader.peek()
 
             if (v == '\n') {
-                reader.read()
+                eat()
                 incrementLine()
                 append(NewLine.of(1))
                 continue
@@ -94,6 +94,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                         eat()
                         continue
                     }
+                    eat()
                     incrementLine()
                 }
                 if (!reader.eof) {
@@ -148,19 +149,23 @@ class CTokenizer private constructor(private val filename: String, private val r
                     append(Numeric(number, OriginalPosition(line, pos - diff, filename)))
                 }
                 else -> when {
-                    else -> error("Unknown symbol: '$v'")
+                    else -> error("Unknown symbol: '$v' in '$filename' at $line:$pos")
                 }
             }
         }
     }
 
     companion object {
-        fun apply(file: StringReader): TokenList {
-            return CTokenizer("<no-name>", file).doTokenize()
+        fun apply(file: StringReader, filename: String): TokenList {
+            return CTokenizer(filename, file).doTokenize()
+        }
+
+        fun apply(data: String, filename: String): TokenList {
+            return apply(StringReader(data), filename)
         }
 
         fun apply(data: String): TokenList {
-            return apply(StringReader(data))
+            return apply(StringReader(data), "<no-name>")
         }
     }
 }
