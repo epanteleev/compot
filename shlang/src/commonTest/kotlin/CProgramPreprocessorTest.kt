@@ -3,6 +3,7 @@ import tokenizer.CTokenizer
 import preprocess.*
 
 import tokenizer.TokenPrinter
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -23,9 +24,17 @@ class CProgramPreprocessorTest {
         |#endif
     """.trimMargin()
 
+    private val stdlibHeaderContent = """
+        |#ifndef STDLIB_H
+        |#define STDLIB_H
+        |void exit(int code);
+        |#endif
+    """.trimMargin()
+
     private val headerHolder = PredefinedHeaderHolder(setOf())
         .addHeader(Header("test.h", testHeaderContent, HeaderType.USER))
         .addHeader(Header("stdio.h", stdioHeaderContent, HeaderType.SYSTEM))
+        .addHeader(Header("std-32lib.h", stdlibHeaderContent, HeaderType.SYSTEM))
 
     @Test
     fun testEmpty() {
@@ -121,6 +130,20 @@ class CProgramPreprocessorTest {
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
+
+    @Ignore
+    fun testInclude3() {
+        val tokens = CTokenizer.apply("#include <std-32lib.h>")
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val expected = """
+            |
+            |
+            |int exit(int code);
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
     @Test
     fun testIf() {
         val tokens = CTokenizer.apply("#define TEST\n#ifdef TEST\nint a = 9;\n#endif")
@@ -532,6 +555,50 @@ class CProgramPreprocessorTest {
     }
 
     @Test
+    fun testIfdefined5() {
+        val data = """
+            |#define TEST
+            |#if defined (TEST)
+            |int a = 9;
+            |#else
+            |int a = 10;
+            |#endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val expected = """
+            |
+            |
+            |int a = 9;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testIfdefined6() {
+        val data = """
+            |# define TEST
+            |#if defined (TEST)
+            |int a = 9;
+            |# else
+            |int a = 10;
+            |# endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val expected = """
+            |
+            |
+            |int a = 9;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
     fun testSeveralIf() {
         val data = """
             |#ifndef TEST
@@ -677,6 +744,47 @@ class CProgramPreprocessorTest {
             |
             |
             |int printf(char* format, ...);
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocessWithRemovedSpaces()))
+    }
+
+    @Test
+    fun testDefined() {
+        val data = """
+            |#define TEST
+            |#if defined TEST
+            |int a = 9;
+            |#endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |
+            |int a = 9;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocessWithRemovedSpaces()))
+    }
+
+    @Test
+    fun testDefined2() {
+        val data = """
+            |#define TEST1
+            |#if (defined TEST1	\
+            |            || defined TEST2)
+            |int a = 9;
+            |#endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |
+            |int a = 9;
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p.preprocessWithRemovedSpaces()))
     }

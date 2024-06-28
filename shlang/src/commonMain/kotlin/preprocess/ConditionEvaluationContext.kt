@@ -24,7 +24,7 @@ class ConditionEvaluationContext(private val preprocessorContext: PreprocessorCo
 
                 return args[0]
             }
-            else -> throw PreprocessorException("Unknown function '${name.str()}'")
+            else -> throw PreprocessorException("Unknown function '${name.str()}' in \"${name.position().filename()}\" at ${name.line()}:${name.pos()}")
         }
     }
 }

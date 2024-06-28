@@ -27,6 +27,14 @@ class ParserTest {
     }
 
     @Test
+    fun testAssign3() {
+        val tokens = CTokenizer.apply("t = (1 || 1 || (1 || 1 >= 56))")
+        val parser = CProgramParser.build(tokens)
+        val expr = parser.assignment_expression() as Node
+        assertEquals("t = 1 || 1 || 1 || 1 >= 56;", LineAgnosticAstPrinter.print(expr))
+    }
+
+    @Test
     fun testAssignBinary() {
         val tokens = CTokenizer.apply("t *= 5")
         val parser = CProgramParser.build(tokens)

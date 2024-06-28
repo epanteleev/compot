@@ -4,7 +4,14 @@ import parser.*
 import tokenizer.*
 
 
-data class PreprocessorException(val info: String) : Exception(info)
+data class PreprocessorException(val info: String, val position: Position? = null) : Exception(info) {
+    override fun toString(): String {
+        if (position == null) {
+            return info
+        }
+        return "PreprocessorException: $info in \"${position.filename()}\" at ${position.line()}:${position.pos()}"
+    }
+}
 
 
 abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
@@ -56,11 +63,20 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
     }
 
 
-    protected fun killWithSpaces() {
-        kill()
+    protected fun killWithSpaces(): AnyToken {
+        val tok = kill()
+        killSpaces()
+
+        return tok
+    }
+
+    protected fun killSpaces(): Int {
+        var removed = 0
         while (!eof() && check<Indent>()) {
-            kill()
+            val indent = kill()
+            removed += indent.str().length
         }
+        return removed
     }
 
     protected fun addAll(others: TokenList) {

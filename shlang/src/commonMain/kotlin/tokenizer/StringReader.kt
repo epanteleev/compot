@@ -75,7 +75,7 @@ class StringReader(val str: String, var pos: Int = 0) {
                 read()
             }
 
-            if (peek() == '.') {
+            if (peek() == '.' && (peekOffset(1).isWhitespace() || peekOffset(1).isDigit())) {
                 //Floating point value
                 read()
                 while (!eof && !isSeparator(peek())) {

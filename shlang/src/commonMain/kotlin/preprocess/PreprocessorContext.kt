@@ -68,6 +68,10 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         private val STDC_HOSTED = PredefinedMacros("__STDC_HOSTED__") { Numeric(1, it) }
         private val STDC_VERSION = PredefinedMacros("__STDC_VERSION__") { Numeric(201112L, it) }
 
+        // Implementation-defined macros
+        private val platform = PredefinedMacros("__x86_64__") { Numeric(1, it) }
+        private val lp64 = PredefinedMacros("__LP64__") { Numeric(1, it) }
+
         private val predefined = mutableMapOf(
             "__LINE__" to LINE,
             "__FILE__" to FILE,
@@ -75,7 +79,8 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
             "__TIME__" to TIME,
             "__STDC__" to STDC,
             "__STDC_HOSTED__" to STDC_HOSTED,
-            "__STDC_VERSION__" to STDC_VERSION
+            "__STDC_VERSION__" to STDC_VERSION,
+            "__x86_64__" to platform
         )
 
         fun empty(headerHolder: HeaderHolder): PreprocessorContext {

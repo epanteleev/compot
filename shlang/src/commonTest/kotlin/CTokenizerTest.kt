@@ -93,4 +93,14 @@ class CTokenizerTest {
         assertTrue { tokens[1] is Numeric }
         tokens[1].isEqual(2, 8, "6")
     }
+
+    @Ignore
+    fun test7() {
+        val input = """
+            0x88
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is Numeric }
+        tokens[0].isEqual(1, 1, "0x88")
+    }
 }

@@ -117,6 +117,10 @@ class CTokenizer private constructor(private val filename: String, private val r
                     reader.read(2)
                     pos += 1
                     append(Identifier(operator, OriginalPosition(line, pos - 2, filename)))
+                } else if (v == '\\' && reader.peekOffset(1) == '\n') {
+                    reader.read(2)
+                    pos += 1
+                    incrementLine()
                 } else {
                     append(Punct(reader.read(), OriginalPosition(line, pos - 1, filename)))
                 }

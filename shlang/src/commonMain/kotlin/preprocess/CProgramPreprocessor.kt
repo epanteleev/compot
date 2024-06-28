@@ -6,10 +6,60 @@ import gen.consteval.ConstEvalExpression
 
 
 class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(original) {
+    private fun preprocessCondition(tokens: TokenList): TokenList {
+        var token: AnyToken? = tokens.first()
+        while (token != null) {
+            if (token.str() != "defined") {
+                token = token.next()
+                continue
+            }
+            token = tokens.kill(token)
+
+            while (token is AnySpaceToken) {
+                token = token.next()
+            }
+
+            if (token !is CToken) {
+                throw PreprocessorException("Expected identifier: but '${token}'")
+            }
+            val hasParen = token.str() == "("
+            if (hasParen) {
+                token = token.next()
+            }
+            val name = token as CToken
+            val macros = ctx.findMacros(name.str())
+
+            if (macros == null) {
+                val num = Numeric(0, name.position())
+                tokens.addAfter(name, num)
+                tokens.kill(name)
+                token = num.next()
+            } else {
+                val num = Numeric(1, name.position())
+                tokens.addAfter(name, num)
+                tokens.kill(name)
+                token = num.next()
+            }
+
+            while (token is AnySpaceToken) {
+                token = token.next()
+            }
+            if (hasParen) {
+                if (token !is CToken || token.str() != ")") {
+                    throw PreprocessorException("Expected ')': but '${token}'")
+                }
+                token = token.next()
+            }
+        }
+        return create(tokens, ctx).preprocessWithRemovedSpaces()
+    }
+
     private fun evaluateCondition(tokens: TokenList): Int {
-        val parser = CProgramParser.build(tokens)
+        val preprocessed = preprocessCondition(tokens)
+
+        val parser = CProgramParser.build(preprocessed)
         val constexpr = parser.constant_expression() ?:
-            throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(tokens)}'")
+            throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(preprocessed)}'")
 
         val evaluationContext = ConditionEvaluationContext(ctx)
         return ConstEvalExpression.eval(constexpr, evaluationContext)
@@ -26,7 +76,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 kill()
                 continue
             }
-            kill()
+            killWithSpaces()
             if (check("if") || check("ifdef") || check("ifndef")) { //TODO reactor conditions
                 kill()
                 depth += 1
@@ -78,24 +128,6 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
         }
         kill()
         return args
-    }
-
-    private fun macroFunctionReplacement(name: CToken, macroFunction: MacroFunction): Boolean {
-        killWithSpaces()
-        if (!check("(")) {
-            add(name)
-            eat()
-            return false
-        }
-        killWithSpaces()
-        val args = parseArguments()
-        val replacement = macroFunction.cloneContentWith(name.position(), args)
-        addAll(replacement)
-        if (macroFunction.first().str() == name.str()) {
-            eat()
-        }
-
-        return true
     }
 
     private fun takeAntTokensInLine(): TokenList {
@@ -178,16 +210,24 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
         return tokens.joinToString("") { it.str() }
     }
 
+    private fun restoreSharp(removedSpaces: Int, sharp: AnyToken) {
+        add(sharp)
+        if (removedSpaces != 0) {
+            add(Indent.of(removedSpaces))
+        }
+    }
+
     // 6.10 Preprocessing directives
-    private fun handleDirective(sharp: AnyToken) {
+    private fun handleDirective(removedSpaces: Int, sharp: AnyToken) {
         if (!check<CToken>()) {
-            add(sharp)
+            restoreSharp(removedSpaces, sharp)
             eat()
             return
         }
 
         val directive = peak<CToken>()
-        killWithSpaces()
+        kill()
+        val spaces = killSpaces()
         when (directive.str()) {
             "define" -> {
                 val name = peak<Identifier>()
@@ -225,13 +265,14 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                     return
 
                 } else if (nameOrBracket.str() == "<") {
+                    nameOrBracket as CToken
                     if (!check<Identifier>()) {
                         throw PreprocessorException("Expected file name: but '${peak<AnyToken>()}'")
                     }
                     val name = readHeaderName()
                     kill()
                     val header = ctx.findHeader(name, HeaderType.SYSTEM) ?:
-                        throw PreprocessorException("Cannot find system header '$name'")
+                        throw PreprocessorException("Cannot find system header '$name'", nameOrBracket.position())
 
                     val tokens = header.tokenize()
                     val preprocessor = CProgramPreprocessor(tokens, ctx)
@@ -276,7 +317,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
             }
             "error" -> {
                 val message = takeAntTokensInLine()
-                throw PreprocessorException("#error ${TokenPrinter.print(message)}")
+                throw PreprocessorException("#error ${TokenPrinter.print(message)}", directive.position())
             }
             "pragma" -> {
                 TODO("Implement #pragma directive")
@@ -284,14 +325,22 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
             "endif" -> {}
             "else" -> skipBlock()
 
-            else -> throw PreprocessorException("Unknown directive '${directive.str()}'")
+            else -> {
+                restoreSharp(removedSpaces, sharp)
+                add(directive)
+                if (spaces != 0) {
+                    add(Indent.of(spaces))
+                }
+                eat()
+            }
         }
     }
 
     private fun includeName(): AnyToken {
         val nameOrBracket = peak<AnyToken>()
         if (nameOrBracket is Identifier && ctx.findMacros(nameOrBracket.str()) != null) {
-            val replacement = getMacroReplacement(nameOrBracket)
+            val (_, replacement) = getMacroReplacement(nameOrBracket)
+
             return replacement.first() //Ignore remains
         } else {
             kill()
@@ -299,11 +348,11 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
         }
     }
 
-    private fun getMacroReplacement(tok: CToken): TokenList { //TODO copy paste
+    private fun getMacroReplacement(tok: CToken): Pair<Macros?, TokenList> { //TODO copy paste
         val macros = ctx.findMacroReplacement(tok.str())
         if (macros != null) {
             kill()
-            return macros.cloneContentWith(tok.position())
+            return Pair(macros, macros.cloneContentWith(tok.position()))
         }
 
         val macroFunction = ctx.findMacroFunction(tok.str())
@@ -311,51 +360,29 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
             killWithSpaces()
             if (!check("(")) {
                 add(tok)
-                eat()
-                return TokenList()
+                return Pair(null, TokenList())
             }
             killWithSpaces()
             val args = parseArguments()
-            return macroFunction.cloneContentWith(tok.position(), args)
+            return Pair(macroFunction, macroFunction.cloneContentWith(tok.position(), args))
         }
 
         val predefinedMacros = ctx.findPredefinedMacros(tok.str())
         if (predefinedMacros != null) {
             kill()
-            val tokenList = TokenList()
             val clone = predefinedMacros.cloneContentWith(tok.position())
-            tokenList.add(clone)
-            return tokenList
+            val tokenList = tokenListOf(clone)
+            return Pair(predefinedMacros, tokenList)
         }
 
-        eat()
-        return TokenList()
+        return Pair(null, TokenList())
     }
 
     private fun handleToken(tok: CToken) {
-        val macros = ctx.findMacroReplacement(tok.str())
+        val (macros, replacement) = getMacroReplacement(tok)
         if (macros != null) {
-            kill()
-            val replacement = macros.cloneContentWith(tok.position())
             addAll(replacement)
             if (macros.first().str() == tok.str()) {
-                eat()
-            }
-            return
-        }
-
-        val macroFunction = ctx.findMacroFunction(tok.str())
-        if (macroFunction != null) {
-            macroFunctionReplacement(tok, macroFunction)
-            return
-        }
-
-        val predefinedMacros = ctx.findPredefinedMacros(tok.str())
-        if (predefinedMacros != null) {
-            kill()
-            val replacement = predefinedMacros.cloneContentWith(tok.position())
-            add(replacement)
-            if (replacement.str() == tok.str()) {
                 eat()
             }
             return
@@ -376,7 +403,8 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 continue
             }
             val sharp = kill()
-            handleDirective(sharp)
+            val spaces = killSpaces()
+            handleDirective(spaces, sharp)
         }
         return tokens
     }

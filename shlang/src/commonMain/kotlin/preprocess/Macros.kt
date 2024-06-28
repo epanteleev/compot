@@ -8,6 +8,8 @@ data class MacroExpansionException(override val message: String): Exception(mess
 
 
 abstract class Macros(val name: String) {
+    abstract fun first(): CToken
+
     override fun hashCode(): Int {
         return name.hashCode()
     }
@@ -34,9 +36,18 @@ abstract class Macros(val name: String) {
     }
 }
 
-class MacroDefinition(name: String): Macros(name)
+class MacroDefinition(name: String): Macros(name) {
+    override fun first(): CToken {
+        throw MacroExpansionException("Macro definition cannot be expanded")
+    }
+}
 
 class PredefinedMacros(name: String, private val callback: (Position) -> CToken): Macros(name) {
+    override fun first(): CToken {
+        val pos = Position.UNKNOWN
+        return callback(pos)
+    }
+
     fun cloneContentWith(macrosNamePos: Position): CToken {
         val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos,
             callback(macrosNamePos).position() as OriginalPosition)
@@ -56,7 +67,7 @@ class PredefinedMacros(name: String, private val callback: (Position) -> CToken)
 }
 
 class MacroReplacement(name: String, private val value: TokenList): Macros(name) {
-    fun first(): CToken {
+    override fun first(): CToken {
         return value.first() as CToken
     }
 
@@ -71,7 +82,7 @@ class MacroReplacement(name: String, private val value: TokenList): Macros(name)
 }
 
 class MacroFunction(name: String, private val argNames: CTokenList, private val value: TokenList): Macros(name) {
-    fun first(): CToken {
+    override fun first(): CToken {
         return value.first() as CToken
     }
 

@@ -1130,13 +1130,13 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
     //	| logical_or_expression '||' logical_and_expression
     //	;
     fun logical_or_expression(): Expression? = rule {
-        val logand = logical_and_expression()?: return@rule null
+        var logand = logical_and_expression()?: return@rule null
         while (true) {
             if (check("||")) {
                 eat()
-                val bitor =
-                    logical_and_expression() ?: throw ParserException(InvalidToken("Expected or expression", peak()))
-                return@rule BinaryOp(logand, bitor, BinaryOpType.OR)
+                val bitor = logical_and_expression()?: throw ParserException(InvalidToken("Expected or expression", peak()))
+                logand = BinaryOp(logand, bitor, BinaryOpType.OR)
+                continue
             }
             break
         }
