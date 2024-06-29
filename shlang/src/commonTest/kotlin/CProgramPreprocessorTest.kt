@@ -40,7 +40,7 @@ class CProgramPreprocessorTest {
     fun testEmpty() {
         val tokens = CTokenizer.apply("")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         assertTrue { p.isEmpty() }
     }
 
@@ -48,7 +48,7 @@ class CProgramPreprocessorTest {
     fun testSubstitution() {
         val tokens = CTokenizer.apply("#define HEAD 34\n HEAD")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
 
         val expected = """
             |
@@ -61,7 +61,7 @@ class CProgramPreprocessorTest {
     fun testSubstitution2() {
         val tokens = CTokenizer.apply("#define HEAD 34\n HEAD + HEAD")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             | 34 + 34
@@ -78,7 +78,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(input)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |if (sub3(9, 3, 2) != 90) { exit(1); };
@@ -90,11 +90,14 @@ class CProgramPreprocessorTest {
     fun testInclude() {
         val tokens = CTokenizer.apply("#include \"test.h\"")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
+            |#enter[1] test.h
             |
             |
             |int a = 9;
+            |#exit[1] test.h
+            |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -107,11 +110,13 @@ class CProgramPreprocessorTest {
         """.trimMargin()
         val tokens = CTokenizer.apply(input)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
+            |#enter[1] test.h
             |
             |
             |int a = 9;
+            |#exit[1] test.h
             |
             |int a = 9;
         """.trimMargin()
@@ -122,11 +127,18 @@ class CProgramPreprocessorTest {
     fun testInclude2() {
         val tokens = CTokenizer.apply("#include \"test.h\"\n#include \"test.h\"")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
+            |#enter[1] test.h
             |
             |
             |int a = 9;
+            |#exit[1] test.h
+            |
+            |#enter[1] test.h
+            |
+            |#exit[1] test.h
+            |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -135,11 +147,15 @@ class CProgramPreprocessorTest {
     fun testInclude3() {
         val tokens = CTokenizer.apply("#include <std-32lib.h>")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
-            |
+            |#enter[1] test.h
             |
             |int exit(int code);
+            |#exit[1] test.h
+            |#enter[1] test.h
+            |
+            |#exit[1] test.h
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -148,7 +164,7 @@ class CProgramPreprocessorTest {
     fun testIf() {
         val tokens = CTokenizer.apply("#define TEST\n#ifdef TEST\nint a = 9;\n#endif")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -161,7 +177,7 @@ class CProgramPreprocessorTest {
     fun testIf2() {
         val tokens = CTokenizer.apply("#define TEST\n#ifdef TEST\nint a = 9;\n#else\nint a = 10;\n#endif")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -174,7 +190,7 @@ class CProgramPreprocessorTest {
     fun testIf3() {
         val tokens = CTokenizer.apply("#define TEST\n#ifndef TEST\nint a = 9;\n#else\nint a = 10;\n#endif")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -189,7 +205,7 @@ class CProgramPreprocessorTest {
     fun testMacroFunction() {
         val tokens = CTokenizer.apply("#define SUM(a, b) a + b\nSUM(3, 4)")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |3 + 4
@@ -201,7 +217,7 @@ class CProgramPreprocessorTest {
     fun testMacroFunction1() {
         val tokens = CTokenizer.apply("#define SUM(a, b) a + b\nSUM ( 3, 4)")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |3 + 4
@@ -213,7 +229,7 @@ class CProgramPreprocessorTest {
     fun testMacroFunction2() {
         val tokens = CTokenizer.apply("#define SUM(a, b) a + b\nSUM ( 3, 4)")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |3 + 4
@@ -231,7 +247,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -245,7 +261,7 @@ class CProgramPreprocessorTest {
     fun testMacroFunction4() {
         val tokens = CTokenizer.apply("#define INC(a) a + 1\nINC(0)")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |0 + 1
@@ -257,7 +273,7 @@ class CProgramPreprocessorTest {
     fun testMacroFunction5() {
         val tokens = CTokenizer.apply("#define INC(a) a + 1\nINC((0))")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |(0) + 1
@@ -269,12 +285,20 @@ class CProgramPreprocessorTest {
     fun testMacroFunction6() {
         val tokens = CTokenizer.apply("#define SUM(a, b) a + b\nSUM(3 + b, 4)")
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |3 + b + 4
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testMacroFunction7() {
+        val tokens = CTokenizer.apply("#define SUM(a, b)\nSUM(3 + b, 4)")
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        assertEquals("", TokenPrinter.print(p))
     }
 
     // 6.10.3.4 Rescanning and further replacement
@@ -289,7 +313,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -320,7 +344,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -354,7 +378,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |"abc"
@@ -371,7 +395,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |"abc" + 4
@@ -388,7 +412,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |"abc" + "4"
@@ -405,7 +429,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |12
@@ -422,10 +446,27 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |124
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testStringify5() {
+        val data = """
+            |#define x(a) test_ ## a
+            |x(2)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |test_2
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }
@@ -439,7 +480,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |#
@@ -456,7 +497,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |# + 2
@@ -475,7 +516,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -497,7 +538,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -518,7 +559,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -543,7 +584,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -567,7 +608,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -589,7 +630,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -616,7 +657,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
             |
@@ -638,7 +679,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |1
         """.trimMargin()
@@ -653,7 +694,7 @@ class CProgramPreprocessorTest {
 
         val tokens = CTokenizer.apply(data)
         val ctx = PreprocessorContext.empty(headerHolder)
-        val p = CProgramPreprocessor.create(tokens, ctx).preprocessWithRemovedSpaces()
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |"<no-name>"
         """.trimMargin()
@@ -670,7 +711,7 @@ class CProgramPreprocessorTest {
         val ctx = PreprocessorContext.empty(headerHolder)
         val p = CProgramPreprocessor.create(tokens, ctx)
         try {
-            p.preprocessWithRemovedSpaces()
+            p.preprocess()
         } catch (e: PreprocessorException) {
             assertEquals("#error Error message", e.message)
         }
@@ -686,11 +727,14 @@ class CProgramPreprocessorTest {
         val ctx = PreprocessorContext.empty(headerHolder)
         val p = CProgramPreprocessor.create(tokens, ctx)
         val expected = """
+            |#enter[1] stdio.h
             |
             |
             |int printf(char* format, ...);
+            |#exit[1] stdio.h
+            |
         """.trimMargin()
-        assertEquals(expected, TokenPrinter.print(p.preprocessWithRemovedSpaces()))
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }
 
     // 6.10.2 Source file inclusion
@@ -720,13 +764,15 @@ class CProgramPreprocessorTest {
             |
             |
             |
+            |#enter[1] test.h
             |
             |
             |int a = 9;
+            |#exit[1] test.h
             |
             |int aa = 90;
         """.trimMargin()
-        assertEquals(expected, TokenPrinter.print(p.preprocessWithRemovedSpaces()))
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }
 
     @Test
@@ -741,11 +787,14 @@ class CProgramPreprocessorTest {
         val p = CProgramPreprocessor.create(tokens, ctx)
         val expected = """
             |
+            |#enter[1] stdio.h
             |
             |
             |int printf(char* format, ...);
+            |#exit[1] stdio.h
+            |
         """.trimMargin()
-        assertEquals(expected, TokenPrinter.print(p.preprocessWithRemovedSpaces()))
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }
 
     @Test
@@ -765,7 +814,7 @@ class CProgramPreprocessorTest {
             |
             |int a = 9;
         """.trimMargin()
-        assertEquals(expected, TokenPrinter.print(p.preprocessWithRemovedSpaces()))
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }
 
     @Test
@@ -786,6 +835,53 @@ class CProgramPreprocessorTest {
             |
             |int a = 9;
         """.trimMargin()
-        assertEquals(expected, TokenPrinter.print(p.preprocessWithRemovedSpaces()))
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
+
+    @Test
+    fun testDefined3() {
+        val data = """
+            |#ifdef	__cplusplus
+            |# define __BEGIN_DECLS	extern "C" {
+            |# define __END_DECLS	}
+            |#else
+            |# define __BEGIN_DECLS
+            |# define __END_DECLS
+            |#endif
+            |__BEGIN_DECLS
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = "".trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
+
+    @Test
+    fun testDefined4() {
+        val data = """
+            |#ifndef __SIZE_TYPE__
+            |#define __SIZE_TYPE__ long unsigned int
+            |#endif
+            |#if !(defined (__GNUG__) && defined (size_t))
+            |typedef __SIZE_TYPE__ size_t;
+            |#ifdef __BEOS__
+            |typedef long ssize_t;
+            |#endif /* __BEOS__ */
+            |#endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |
+            |
+            |
+            |typedef long unsigned int size_t;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }
 }

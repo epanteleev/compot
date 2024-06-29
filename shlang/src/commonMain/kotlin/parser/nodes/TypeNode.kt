@@ -115,6 +115,7 @@ data class TypeNode(private val name: CToken) : AnyTypeNode() {
             "double"  -> CPrimitive.DOUBLE
             "signed"  -> CPrimitive.INT
             "unsigned"-> CPrimitive.UINT
+            "__builtin_va_list" -> CPrimitive.LONG //TODO hack
             else      -> typeHolder.getStructType(name.str())
         }
     }

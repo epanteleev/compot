@@ -1,16 +1,16 @@
 package preprocess
 
+import okio.SYSTEM
 import okio.FileSystem
 import okio.Path.Companion.toPath
-import okio.SYSTEM
 import tokenizer.CTokenizer
 import tokenizer.TokenList
+
 
 enum class HeaderType {
     SYSTEM,
     USER
 }
-
 
 data class Header(val filename: String, val content: String, val includeType: HeaderType) {
     fun tokenize(): TokenList {
@@ -22,8 +22,6 @@ abstract class HeaderHolder(val includeDirectories: Set<String>) {
     protected val headers = hashMapOf<String, Header>()
 
     abstract fun getHeader(name: String, includeType: HeaderType): Header?
-
-    fun clear() = headers.clear()
 }
 
 class PredefinedHeaderHolder(includeDirectories: Set<String>): HeaderHolder(includeDirectories) {

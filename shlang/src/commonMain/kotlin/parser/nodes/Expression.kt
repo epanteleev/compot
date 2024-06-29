@@ -1,5 +1,10 @@
 package parser.nodes
 
+import gen.IRCodeGenError
+import gen.TypeConverter.toIRType
+import ir.Constant
+import ir.types.NonTrivialType
+import ir.types.Type
 import types.*
 import tokenizer.*
 import parser.nodes.visitors.*
@@ -373,6 +378,20 @@ data class SizeOf(val expr: Node) : Expression() {
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         return@memoize CType.INT
+    }
+
+    fun constEval(typeHolder: TypeHolder): Int {
+        when (expr) {
+            is TypeName -> {
+                val resolved = expr.resolveType(typeHolder)
+                return resolved.size()
+            }
+            is VarNode -> {
+                val resolved = expr.resolveType(typeHolder)
+                return resolved.size()
+            }
+            else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
+        }
     }
 }
 

@@ -21,8 +21,8 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyDecl
     override fun resolveType(typeHolder: TypeHolder): CType {
         val type = declspec.resolveType(typeHolder)
         return when (declarator) {
-            is Declarator -> declarator.resolveType(type, typeHolder)
-            is EmptyDeclarator -> type
+            is Declarator, is AbstractDeclarator -> declarator.resolveType(type, typeHolder)
+            is EmptyDeclarator                   -> type
             else -> throw IllegalStateException("Unknown declarator $declarator")
         }
     }

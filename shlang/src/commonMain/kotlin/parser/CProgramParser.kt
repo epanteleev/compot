@@ -29,20 +29,22 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
         return ProgramNode(nodes)
     }
 
-    // function_definition
-    //	: declaration_specifiers declarator declaration_list compound_statement
-    //	| declaration_specifiers declarator compound_statement
-    //	| declarator declaration_list compound_statement
-    //	| declarator compound_statement
-    //	;
+    //  function-definition:
+    //    : declaration-specifiers declarator declaration-list? compound-statement
+    //    ;
+    //
+    //  declaration-list:
+    //    : declaration
+    //    | declaration-list declaration
+    //    ;
     fun function_definition(): Node? = rule {
-        val declspec = declaration_specifiers()
-        if (declspec == null) {
-            val declarator = declarator()?: return@rule null
-            val body = compound_statement() ?: throw ParserException(InvalidToken("Expected compound statement", peak()))
-            return@rule FunctionNode(DeclarationSpecifier.EMPTY, declarator, body)
-        }
+        val declspec = declaration_specifiers()?: return@rule null
         val declarator = declarator()?: return@rule null
+        val declarations = mutableListOf<Declaration>() //TODO just skip it temporarily
+        while (true) {
+            val declaration = declaration()?: break
+            declarations.add(declaration)
+        }
         val body = compound_statement() ?: throw ParserException(InvalidToken("Expected compound statement", peak()))
         return@rule FunctionNode(declspec, declarator, body)
     }
@@ -480,15 +482,15 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
     //	| declaration_specifiers init_declarator_list ';'
     //	;
     fun declaration(): Declaration? = rule {
-        val declarationSecisiers = declaration_specifiers() ?: return@rule null
+        val declarationSpecifiers = declaration_specifiers() ?: return@rule null
         if (check(";")) {
             eat()
-            return@rule Declaration(declarationSecisiers, listOf())
+            return@rule Declaration(declarationSpecifiers, listOf())
         }
         val initDeclaratorList = init_declarator_list()
         if (check(";")) {
             eat()
-            return@rule Declaration(declarationSecisiers, initDeclaratorList)
+            return@rule Declaration(declarationSpecifiers, initDeclaratorList)
         }
         return@rule null
     }
@@ -794,6 +796,11 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
             eat()
             return@rule TypeNode(tok)
         }
+        if (check("__builtin_va_list") || check("__fortified_attr_access")) {
+            val tok = peak<Identifier>()
+            eat()
+            return@rule TypeNode(tok)
+        }
         val structOrEnum = struct_or_union_specifier() ?: enum_specifier()
         if (structOrEnum != null) {
             return@rule structOrEnum
@@ -913,11 +920,14 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
                         }
                         throw ParserException(InvalidToken("Expected ')'", peak()))
                     }
-                    val identifiers = identifier_list()?: throw ParserException(InvalidToken("Expected identifier list", peak()))
-                    if (check(")")) {
-                        eat()
-                        declarators.add(identifiers)
-                        continue
+                    val identifiers = identifier_list()
+                    if (identifiers != null) {
+                        if (check(")")) {
+                            eat()
+                            declarators.add(identifiers)
+                            continue
+                        }
+                        throw ParserException(InvalidToken("Expected ')'", peak()))
                     }
 
                     throw ParserException(InvalidToken("Expected ')'", peak()))

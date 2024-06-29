@@ -1,5 +1,6 @@
 package preprocess
 
+import common.assertion
 import tokenizer.*
 import common.forEachWith
 import kotlin.jvm.JvmStatic
@@ -42,22 +43,22 @@ class MacroDefinition(name: String): Macros(name) {
     }
 }
 
-class PredefinedMacros(name: String, private val callback: (Position) -> CToken): Macros(name) {
+class PredefinedMacros(name: String, private val callback: (Position) -> TokenList): Macros(name) {
     override fun first(): CToken {
-        val pos = Position.UNKNOWN
-        return callback(pos)
+        return callback(Position.UNKNOWN).first() as CToken
     }
 
-    fun cloneContentWith(macrosNamePos: Position): CToken {
-        val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos,
-            callback(macrosNamePos).position() as OriginalPosition)
+    fun cloneContentWith(macrosNamePos: Position): TokenList {
+        val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, OriginalPosition.UNKNOWN)
 
         return callback(preprocessedPosition)
     }
 
     fun constEval(): Int {
-        val pos = Position.UNKNOWN
-        val token = callback(pos)
+        val tokens = callback(Position.UNKNOWN)
+        val token = tokens.first()
+        assertion(tokens.size == 1) { "invariant"}
+
         if (token !is Numeric) {
             throw PreprocessorException("Predefined macro '$name' is not a number")
         }

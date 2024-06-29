@@ -6,6 +6,9 @@ class TokenPrinter private constructor(val tokens: TokenList) {
 
     private fun construct(): String {
         for (token in tokens) {
+            if (token is ExitIncludeGuard) {
+                stringBuilder.append('\n')
+            }
             stringBuilder.append(token.str())
         }
         return stringBuilder.toString()

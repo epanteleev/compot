@@ -2,6 +2,7 @@ package preprocess
 
 import gen.consteval.ConstEvalContext
 import tokenizer.CToken
+import types.TypeHolder
 
 
 class ConditionEvaluationContext(private val preprocessorContext: PreprocessorContext): ConstEvalContext {
@@ -16,15 +17,10 @@ class ConditionEvaluationContext(private val preprocessorContext: PreprocessorCo
     }
 
     override fun callFunction(name: CToken, args: List<Int>): Int {
-        when (name.str()) {
-            "defined" -> {
-                if (args.size != 1) {
-                    throw PreprocessorException("'defined' must have exactly one argument: '$args'")
-                }
+        throw PreprocessorException("Unknown function '${name.str()}' in \"${name.position().filename()}\" at ${name.line()}:${name.pos()}")
+    }
 
-                return args[0]
-            }
-            else -> throw PreprocessorException("Unknown function '${name.str()}' in \"${name.position().filename()}\" at ${name.line()}:${name.pos()}")
-        }
+    override fun typeHolder(): TypeHolder {
+        TODO("Not yet implemented")
     }
 }

@@ -18,6 +18,24 @@ abstract class AnyToken: LListNode() {
     }
 }
 
+abstract class PreprocessorGuard(val filename: String, val includeLevel: Int): AnyToken()
+
+class EnterIncludeGuard(filename: String, includeLevel: Int): PreprocessorGuard(filename, includeLevel) {
+    override fun str(): String = "#enter[$includeLevel] $filename\n"
+
+    override fun cloneWith(pos: Position): AnyToken {
+        return this
+    }
+}
+
+class ExitIncludeGuard(filename: String, includeLevel: Int): PreprocessorGuard(filename, includeLevel) {
+    override fun str(): String = "#exit[$includeLevel] $filename\n"
+
+    override fun cloneWith(pos: Position): AnyToken {
+        return this
+    }
+}
+
 abstract class AnySpaceToken: AnyToken()
 
 class Indent private constructor(private val spaces: Int): AnySpaceToken() {
@@ -144,6 +162,7 @@ class Keyword(val data: String, position: Position): CToken(position) {
 }
 
 class StringLiteral(val data: String, position: Position): CToken(position) {
+    private val unquoted by lazy { data.substring(1, data.length - 1) }
     override fun str(): String = data
 
     override fun hashCode(): Int {
@@ -160,7 +179,7 @@ class StringLiteral(val data: String, position: Position): CToken(position) {
     }
 
     fun unquote(): String {
-        return data.substring(1, data.length - 1)
+        return unquoted
     }
 
     override fun cloneWith(pos: Position): CToken {

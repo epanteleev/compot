@@ -75,6 +75,15 @@ class LeakedLinkedListTest {
     }
 
     @Test
+    fun testRemove0() {
+        val list = leakedLinkedListOf()
+        list.addBefore(null, IntNode(2))
+        assertEquals(2, list[0].value)
+        list.add(1, IntNode(3))
+        assertEquals(3, list[1].value)
+    }
+
+    @Test
     fun testLeakedLinkedListIterator() {
         val list = leakedLinkedListOf(1, 2, 3, 4, 5)
         val iterator = list.iterator()

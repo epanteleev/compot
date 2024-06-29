@@ -70,6 +70,16 @@ class StringReader(val str: String, var pos: Int = 0) {
     fun readNumeric(): Number? {
         return tryRead {
             val start = pos
+            if (peek() == '0' && (peekOffset(1) == 'x' || peekOffset(1) == 'X')) {
+                read()
+                read()
+                while (!eof && (peek().isDigit() || peek().lowercaseChar() in 'a'..'f')) {
+                    read()
+                }
+                val hexString = str.substring(start + 2, pos)
+                return@tryRead hexString.toLongOrNull(16)
+            }
+
             read()
             while (!eof && peek().isDigit()) {
                 read()

@@ -13,7 +13,7 @@ interface Position {
 
 data class OriginalPosition(private val line: Int, private val pos: Int, private val filename: String = "<unknown>") : Position {
     override fun toString(): String {
-        return "[$line:$pos]"
+        return "$filename in [$line:$pos]"
     }
 
     override fun line(): Int = line

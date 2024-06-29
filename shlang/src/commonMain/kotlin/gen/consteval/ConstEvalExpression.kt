@@ -83,7 +83,7 @@ class ConstEvalExpression private constructor(private val ctx: ConstEvalContext)
     }
 
     override fun visit(sizeOf: SizeOf): Int {
-        TODO("Not yet implemented")
+        return sizeOf.constEval(ctx.typeHolder())
     }
 
     override fun visit(cast: Cast): Int {

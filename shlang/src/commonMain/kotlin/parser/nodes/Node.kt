@@ -1,8 +1,9 @@
 package parser.nodes
 
-import parser.nodes.visitors.*
-import tokenizer.*
 import types.*
+import tokenizer.*
+import parser.nodes.visitors.*
+
 
 
 abstract class Node {

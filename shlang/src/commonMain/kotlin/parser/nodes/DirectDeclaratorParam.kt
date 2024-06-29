@@ -22,12 +22,12 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
             return CPointerType(baseType)
         }
 
-        val size = ConstEvalExpression.eval(constexpr, constExpressionCtx)
+        val size = ConstEvalExpression.eval(constexpr, ArraySizeEvalContext(typeHolder))
         return CompoundType(CArrayType(baseType, size))
     }
 
     companion object {
-        val constExpressionCtx = object: ConstEvalContext {
+        class ArraySizeEvalContext(val typeHolder: TypeHolder): ConstEvalContext {
             override fun getVariable(name: CToken): Int {
                 val error = InvalidToken("Cannot consteval expression: found variable", name)
                 throw ParserException(error)
@@ -36,6 +36,10 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
             override fun callFunction(name: CToken, args: List<Int>): Int {
                 val error = InvalidToken("Cannot consteval expression: found function", name)
                 throw ParserException(error)
+            }
+
+            override fun typeHolder(): TypeHolder {
+                return typeHolder
             }
         }
     }
