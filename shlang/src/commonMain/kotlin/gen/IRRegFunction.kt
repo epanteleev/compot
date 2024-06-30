@@ -472,10 +472,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    fun emitIr(functionNode: FunctionNode) = varStack.scoped {
+    override fun visit(functionNode: FunctionNode): Value = varStack.scoped {
         val name = functionNode.name()
         val parameters = functionNode.functionDeclarator().params()
-        val fnType = functionNode.resolveType(typeHolder)
+        val fnType = functionNode.resolveType(functionNode.specifier, typeHolder)
         val retType = moduleBuilder.toIRType<Type>(typeHolder, fnType.retType())
 
         currentFunction = moduleBuilder.createFunction(name, retType, fnType.args().map { moduleBuilder.toIRType(typeHolder, it) })
@@ -507,6 +507,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (ir().last() !is TerminateInstruction) {
             ir().branch(exitBlock)
         }
+        return@scoped Value.UNDEF
     }
 
     private fun visitStatement(statement: Statement): Boolean {
@@ -710,10 +711,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(switchStatement: SwitchStatement): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(abstractDeclarator: AbstractDeclarator): Alloc {
         TODO("Not yet implemented")
     }
 

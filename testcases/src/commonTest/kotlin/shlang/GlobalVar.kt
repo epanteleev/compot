@@ -8,7 +8,7 @@ abstract class GlobalVar: CommonCTest() {
     @Test
     fun testGlobalVar() {
         val result = runCTest("shlang/global_var/global_var0", listOf(), options())
-        assertEquals("100\n", result.output)
+        assertEquals("100", result.output)
         assertReturnCode(result, 0)
     }
 }

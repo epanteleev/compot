@@ -1,5 +1,6 @@
 package parser
 
+import common.assertion
 import tokenizer.*
 import parser.nodes.*
 
@@ -45,6 +46,7 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
             val declaration = declaration()?: break
             declarations.add(declaration)
         }
+        assertion(declarations.isEmpty()) { "Declaration list is not supported yet" }
         val body = compound_statement() ?: throw ParserException(InvalidToken("Expected compound statement", peak()))
         return@rule FunctionNode(declspec, declarator, body)
     }

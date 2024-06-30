@@ -61,32 +61,53 @@ data class Declaration(val declspec: DeclarationSpecifier, private val declarato
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
+data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val declarators: List<DirectDeclaratorParam>): UnclassifiedNode() {
+    override fun<T> accept(visitor: UnclassifiedNodeVisitor<T>) = visitor.visit(this)
+
+    private fun resolveAllDecl(baseType: CType, typeHolder: TypeHolder): CType {
+        var pointerType = baseType
+        for (decl in declarators) {
+            when (decl) {
+                is ArrayDeclarator -> {
+                    pointerType = decl.resolveType(pointerType, typeHolder)
+                }
+
+                is ParameterTypeList -> {
+                    val abstractType = decl.resolveType(pointerType, typeHolder)
+                    pointerType = CFunctionType(name(), abstractType)
+                }
+
+                else -> throw IllegalStateException("Unknown declarator $decl")
+            }
+        }
+        return pointerType
+    }
+
+    fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
+        when (decl) {
+            is FunctionPointerDeclarator -> {
+                val fnDecl = declarators[0] as ParameterTypeList
+                val type = fnDecl.resolveType(baseType, typeHolder)
+                return CFunPointerType(type)
+            }
+            is DirectVarDeclarator -> {
+                return resolveAllDecl(baseType, typeHolder)
+            }
+            else -> {
+                return CType.UNKNOWN
+            }
+        }
+    }
+
+    fun name(): String = decl.name()
+}
+
 data class IdentNode(private val str: Identifier) : UnclassifiedNode() {
     fun str(): String = str.str()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
 data class NodePointer(val qualifiers: List<TypeQualifier>) : UnclassifiedNode() {
-    override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
-}
-
-data class FunctionNode(val specifier: DeclarationSpecifier,
-                        val declarator: Declarator,
-                        val body: Statement) : UnclassifiedNode() {
-    fun name(): String {
-        return declarator.directDeclarator.decl.name()
-    }
-
-    fun functionDeclarator(): ParameterTypeList {
-        return declarator.directDeclarator.declarators[0] as ParameterTypeList
-    }
-
-    fun resolveType(typeHolder: TypeHolder): CFunctionType {
-        val s = declarator.resolveType(specifier, typeHolder) as CFunctionType
-        typeHolder.addFunctionType(name(), s) //TODO already added???
-        return s
-    }
-
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 

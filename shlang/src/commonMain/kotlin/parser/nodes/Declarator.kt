@@ -1,5 +1,6 @@
 package parser.nodes
 
+import common.assertion
 import types.*
 import parser.nodes.visitors.*
 
@@ -77,43 +78,28 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
     }
 }
 
-data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val declarators: List<DirectDeclaratorParam>): UnclassifiedNode() {
-    override fun<T> accept(visitor: UnclassifiedNodeVisitor<T>) = visitor.visit(this)
-
-    private fun resolveAllDecl(baseType: CType, typeHolder: TypeHolder): CType {
-        var pointerType = baseType
-        for (decl in declarators) {
-            when (decl) {
-                is ArrayDeclarator -> {
-                    pointerType = decl.resolveType(pointerType, typeHolder)
-                }
-
-                is ParameterTypeList -> {
-                    val abstractType = decl.resolveType(pointerType, typeHolder)
-                    pointerType = CFunctionType(name(), abstractType)
-                }
-
-                else -> throw IllegalStateException("Unknown declarator $decl")
-            }
-        }
-        return pointerType
+data class FunctionNode(val specifier: DeclarationSpecifier,
+                        val declarator: Declarator,
+                        val body: Statement) : AnyDeclarator() {
+    override fun name(): String {
+        return declarator.directDeclarator.decl.name()
     }
 
-    fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
-        when (decl) {
-            is FunctionPointerDeclarator -> {
-                val fnDecl = declarators[0] as ParameterTypeList
-                val type = fnDecl.resolveType(baseType, typeHolder)
-                return CFunPointerType(type)
-            }
-            is DirectVarDeclarator -> {
-                return resolveAllDecl(baseType, typeHolder)
-            }
-            else -> {
-                return CType.UNKNOWN
-            }
-        }
+    fun functionDeclarator(): ParameterTypeList {
+        return declarator.directDeclarator.declarators[0] as ParameterTypeList
     }
 
-    fun name(): String = decl.name()
+    override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CFunctionType {
+        assertion(declspec === this.specifier) { "specifier mismatch" }
+
+        val s = declarator.resolveType(declspec, typeHolder) as CFunctionType
+        typeHolder.addFunctionType(name(), s) //TODO already added???
+        return s
+    }
+
+    fun resolveType(typeHolder: TypeHolder): CFunctionType {
+        return resolveType(specifier, typeHolder)
+    }
+
+    override fun <T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)
 }
