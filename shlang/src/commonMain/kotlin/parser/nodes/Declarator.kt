@@ -5,38 +5,16 @@ import parser.nodes.visitors.*
 
 
 abstract class AnyDeclarator: Node() {
+    abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
 
     abstract fun resolveType(baseType: CType, typeHolder: TypeHolder): CType //TODO rename to 'declare'
 }
 
-data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<DirectDeclaratorParam>?) : AnyDeclarator() {   //TODO
-    override fun<T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)
-
-    override fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
-        var pointerType = baseType
-        for (pointer in pointers) {
-            pointerType = CPointerType(pointerType)
-        }
-
-        if (directAbstractDeclarator == null) {
-            return pointerType
-        }
-
-        for (decl in directAbstractDeclarator) {
-            when (decl) {
-                is ArrayDeclarator -> decl.resolveType(pointerType, typeHolder)
-                else -> throw IllegalStateException("Unknown declarator $decl")
-            }
-        }
-        return pointerType
-    }
-}
-
 data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
-    fun name(): String {
+    override fun name(): String {
         return directDeclarator.name()
     }
 
@@ -55,7 +33,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
 data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expression): AnyDeclarator() { //TODO rename
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
-    fun name(): String {
+    override fun name(): String {
         return declarator.name()
     }
 
@@ -65,6 +43,8 @@ data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expressi
 }
 
 object EmptyDeclarator : AnyDeclarator() {
+    override fun name(): String = ""
+
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
@@ -85,7 +65,7 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
         return declarator.resolveType(baseType, typeHolder)
     }
 
-    fun name(): String {
+    override fun name(): String {
         return when (declarator) {
             is Declarator -> declarator.name()
             else -> throw IllegalStateException("$declarator")
@@ -131,5 +111,5 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val declarator
         }
     }
 
-    fun name(): String = decl.name()
+    override fun name(): String = decl.name()
 }

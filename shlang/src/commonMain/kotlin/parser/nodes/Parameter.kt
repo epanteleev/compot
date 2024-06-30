@@ -10,7 +10,7 @@ abstract class AnyParameter : Node() {
     abstract fun<T> accept(visitor: ParameterVisitor<T>): T
 }
 
-data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyDeclarator) : AnyParameter() {
+data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) : AnyParameter() {
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
 
     fun name(): String {
@@ -21,8 +21,9 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyDecl
     override fun resolveType(typeHolder: TypeHolder): CType {
         val type = declspec.resolveType(typeHolder)
         return when (declarator) {
-            is Declarator, is AbstractDeclarator -> declarator.resolveType(type, typeHolder)
-            is EmptyDeclarator                   -> type
+            is Declarator         -> declarator.resolveType(type, typeHolder)
+            is AbstractDeclarator -> declarator.resolveType(type, typeHolder)
+            is EmptyDeclarator    -> type
             else -> throw IllegalStateException("Unknown declarator $declarator")
         }
     }

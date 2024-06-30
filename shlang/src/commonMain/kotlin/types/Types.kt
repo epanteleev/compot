@@ -119,6 +119,13 @@ interface CType {
     }
 }
 
+data class TypedefType(val name: String, val type: CType) : CType {
+    override fun baseType(): BaseType = type.baseType()
+    override fun qualifiers(): List<TypeProperty>  {
+        return listOf(StorageClass.TYPEDEF) + type.qualifiers()
+    }
+}
+
 interface AnyCPointerType: CType
 
 data class CPointerType(val type: CType) : AnyCPointerType {
