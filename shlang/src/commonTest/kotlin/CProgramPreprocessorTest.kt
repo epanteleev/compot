@@ -884,4 +884,67 @@ class CProgramPreprocessorTest {
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }
+
+    @Test
+    fun testVariadicMacro() {
+        val data = """
+            |#define eprintf(format, ...) fprintf(stderr, format, __VA_ARGS__)
+            |eprintf("Error: %s\n", "message")
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |fprintf(stderr, "Error: %s\n", "message")
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
+
+    // EXAMPLE 7: https://port70.net/~nsz/c/c11/n1570.html#6.10.3.5p9
+    @Test //TODO not fully correct test: it skips some spaces
+    fun testVariadicMacro2() {
+        val data = """
+            |#define debug(...)       fprintf(stderr, __VA_ARGS__)
+            |#define showlist(...)    puts(#__VA_ARGS__)
+            |#define report(test, ...) ((test)?puts(#test):\
+            |          printf(__VA_ARGS__))
+            |debug("Flag");
+            |debug("X = %d\n", x);
+            |showlist(The first, second, and third items.);
+            |report(x>y, "x is %d but y is %d", x, y);
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |
+            |
+            |fprintf(stderr, "Flag");
+            |fprintf(stderr, "X = %d\n",x);
+            |puts("The first, second, and third items.");
+            |((x>y)?puts("x>y"):          printf("x is %d but y is %d",x,y));
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
+
+    @Test
+    fun testEmptyVariadicMacro() {
+        val data = """
+            |#define debug(...)
+            |debug("Flag");
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
 }

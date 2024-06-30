@@ -83,7 +83,7 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
         if (others.isEmpty()) {
             return
         }
-        val first = others.firstOrNull()
+        val first = others.first()
         if (current == null) {
             tokens.addAll(others)
         } else {

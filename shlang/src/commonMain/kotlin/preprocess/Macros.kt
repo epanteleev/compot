@@ -72,7 +72,7 @@ class MacroReplacement(name: String, private val value: TokenList): Macros(name)
         return value.first() as CToken
     }
 
-    fun cloneContentWith(macrosNamePos: Position): TokenList {
+    fun substitute(macrosNamePos: Position): TokenList {
         val result = TokenList()
         for (tok in value) {
             result.add(newTokenFrom(macrosNamePos, tok))
@@ -87,7 +87,7 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
         return value.first() as CToken
     }
 
-    private fun seekNonSpace(idx: AnyToken?): AnyToken {
+    private fun seekNonSpace(idx: AnyToken?): CToken {
         var current: AnyToken? = idx
         do {
             if (current == null) {
@@ -118,11 +118,10 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
     }
 
     private fun stringify(result: TokenList, argToValue: Map<CToken, TokenList>, current: CToken): AnyToken? {
-        val i = seekNonSpace(current.next())
-        val value = argToValue[i] ?: throw MacroExpansionException("Invalid macro expansion: # without argument")
+        val value = argToValue[current] ?: throw MacroExpansionException("Invalid macro expansion: # without argument")
         val str = value.joinToString("") { it.str() }
-        result.add(StringLiteral("\"" + str + "\"", current.position()))
-        return i.next()
+        result.add(StringLiteral("\"$str\"", current.position()))
+        return current.next()
     }
 
     private fun evaluateSubstitution(args: List<TokenList>): Map<CToken, TokenList> {
@@ -133,7 +132,7 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
         return res
     }
 
-    fun cloneContentWith(macrosNamePos: Position, args: List<TokenList>): TokenList {
+    fun substitute(macrosNamePos: Position, args: List<TokenList>): TokenList {
         val argToValue = evaluateSubstitution(args)
 
         val result = TokenList()
@@ -148,12 +147,45 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
                 continue
             }
 
-            if (current.str() == "##") {
-                current = concatTokens(result, argToValue, current)
-                continue
-            } else if (current.str() == "#") {
-                current = stringify(result, argToValue, current)
-                continue
+            when(current.str()) {
+                 "##" -> {
+                    current = concatTokens(result, argToValue, current)
+                    continue
+                }
+                "#" -> {
+                    current = seekNonSpace(current.next())
+
+                    if (current.str() == "__VA_ARGS__") {
+                        val stringBuilder = StringBuilder()
+                        for (arg in args) {
+                            for (tok in arg) {
+                                stringBuilder.append(tok.str())
+                            }
+                            if (arg != args.last()) {
+                                stringBuilder.append(", ")
+                            }
+                        }
+                        result.add(StringLiteral("\"${stringBuilder}\"", current.position()))
+                        current = current.next()
+                        continue
+                    } else {
+                        current = stringify(result, argToValue, current)
+                    }
+                    continue
+                }
+                "__VA_ARGS__" -> {
+                    val remains = args.takeLast(args.size - argNames.size + 1)
+                    for (arg in remains) {
+                        for (tok in arg) {
+                            result.add(tok.cloneWith(PreprocessedPosition.UNKNOWN))
+                        }
+                        if (arg != remains.last()) {
+                            result.add(Punct(',', PreprocessedPosition.UNKNOWN))
+                        }
+                    }
+                    current = current.next()
+                    continue
+                }
             }
 
             val value = argToValue[current]

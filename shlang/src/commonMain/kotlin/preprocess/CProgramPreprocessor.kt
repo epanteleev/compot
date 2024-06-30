@@ -339,11 +339,11 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
         }
     }
 
-    private fun getMacroReplacement(tok: CToken): Pair<Macros?, TokenList> { //TODO copy paste
+    private fun getMacroReplacement(tok: CToken): Pair<Macros?, TokenList> {
         val macros = ctx.findMacroReplacement(tok.str())
         if (macros != null) {
             kill()
-            return Pair(macros, macros.cloneContentWith(tok.position()))
+            return Pair(macros, macros.substitute(tok.position()))
         }
 
         val macroFunction = ctx.findMacroFunction(tok.str())
@@ -355,7 +355,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
             }
             killWithSpaces()
             val args = parseMacroFunctionArguments()
-            return Pair(macroFunction, macroFunction.cloneContentWith(tok.position(), args))
+            return Pair(macroFunction, macroFunction.substitute(tok.position(), args))
         }
 
         val predefinedMacros = ctx.findPredefinedMacros(tok.str())
