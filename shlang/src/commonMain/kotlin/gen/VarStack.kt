@@ -14,6 +14,12 @@ class VarStack {
         stack.removeAt(stack.size - 1)
     }
 
+    inline fun scoped(block: () -> Unit) {
+        push()
+        block()
+        pop()
+    }
+
     operator fun set(name: String, type: LocalValue) {
         stack.last()[name] = type
     }

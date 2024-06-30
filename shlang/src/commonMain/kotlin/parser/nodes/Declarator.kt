@@ -7,7 +7,7 @@ import parser.nodes.visitors.*
 abstract class AnyDeclarator: Node() {
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
 
-    abstract fun resolveType(baseType: CType, typeHolder: TypeHolder): CType
+    abstract fun resolveType(baseType: CType, typeHolder: TypeHolder): CType //TODO rename to 'declare'
 }
 
 data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<DirectDeclaratorParam>?) : AnyDeclarator() {   //TODO

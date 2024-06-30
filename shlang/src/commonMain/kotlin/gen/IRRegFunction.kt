@@ -15,52 +15,32 @@ import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
+import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
 import types.AggregateBaseType
 
 
-class IrGenFunction(private val moduleBuilder: ModuleBuilder,
-                    private val typeHolder: TypeHolder, functionNode: FunctionNode, var counstantCounter: Int): StatementVisitor<Boolean> {
-    private val varStack = VarStack()
+class IrGenFunction(moduleBuilder: ModuleBuilder,
+                    typeHolder: TypeHolder,
+                    varStack: VarStack,
+                    var constantCounter: Int):
+    AbstractIRGenerator(moduleBuilder, typeHolder, varStack),
+    StatementVisitor<Boolean>,
+    DeclaratorVisitor<Value> {
     private var currentFunction: FunctionDataBuilder? = null
     private var returnValueAdr: Alloc? = null
-    private val exitBlock: Label
+    private var exitBlock: Label = Label.entry //TODO late initialization
     private var stringTolabel = mutableMapOf<String, Label>()
 
     private fun ir(): FunctionDataBuilder {
         return currentFunction ?: throw IRCodeGenError("Function expected")
     }
 
-    private fun visitDeclarator(decl: Declarator): Alloc {
-        val type = typeHolder[decl.name()]
-        val varName = decl.name()
-
-        val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
-        val rvalueAdr = ir().alloc(irType)
-        varStack[varName] = rvalueAdr
-        return rvalueAdr
-    }
-
-    private fun visitAssignmentDeclarator(decl: AssignmentDeclarator) {
-        val type = typeHolder[decl.name()]
-
-        val rvalue = visitExpression(decl.rvalue, true)
-        val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
-        val convertedRvalue = ir().convertToType(rvalue, commonType)
-
-        val lvalueAdr = visitDeclarator(decl.declarator)
-        ir().store(lvalueAdr, convertedRvalue)
-    }
-
     private fun visitDeclaration(declaration: Declaration) {
         declaration.resolveType(typeHolder)
 
-        for (decl in declaration.declarators) {
-            when (decl) {
-                is Declarator -> visitDeclarator(decl)
-                is AssignmentDeclarator -> visitAssignmentDeclarator(decl)
-                else -> throw IRCodeGenError("Unknown declarator, delc=$decl")
-            }
+        for (declarator in declaration.declarators) {
+            declarator.accept(this)
         }
     }
 
@@ -71,10 +51,10 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
 
         return when (val type = conditionExpr.type()) {
-            is SignedIntType -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-            is UnsignedIntType -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            is SignedIntType     -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            is UnsignedIntType   -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
             is FloatingPointType -> ir().fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
-            is PointerType -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            is PointerType       -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
             else -> throw IRCodeGenError("Unknown type")
         }
     }
@@ -160,8 +140,8 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
     private fun visitStringNode(stringNode: StringNode): Value {
         val string = stringNode.str.unquote()
-        val stringLiteral = StringLiteralGlobal("str$counstantCounter", ArrayType(Type.I8, 11), string)
-        counstantCounter++
+        val stringLiteral = StringLiteralGlobal("str$constantCounter", ArrayType(Type.I8, 11), string)
+        constantCounter++
         return moduleBuilder.addConstant(stringLiteral)
     }
 
@@ -492,7 +472,7 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         }
     }
 
-    init {
+    fun emitIr(functionNode: FunctionNode) = varStack.scoped {
         val name = functionNode.name()
         val parameters = functionNode.functionDeclarator().params()
         val fnType = functionNode.resolveType(typeHolder)
@@ -500,20 +480,19 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
 
         currentFunction = moduleBuilder.createFunction(name, retType, fnType.args().map { moduleBuilder.toIRType(typeHolder, it) })
 
-        varStack.push()
-
         for (idx in parameters.indices) {
             val param = parameters[idx]
-            val arg = ir().argument(idx)
+            val arg   = ir().argument(idx)
 
-            val rvalueAdr = ir().alloc(arg.type())
+            val rvalueAdr   = ir().alloc(arg.type())
             varStack[param] = rvalueAdr
             ir().store(rvalueAdr, arg)
         }
 
         if (retType is NonTrivialType) {
             returnValueAdr = ir().alloc(retType)
-            exitBlock = ir().createLabel()
+            exitBlock      = ir().createLabel()
+
             ir().switchLabel(exitBlock)
             val loadReturn = ir().load(retType as PrimitiveType, returnValueAdr!!)
             ir().ret(loadReturn)
@@ -528,8 +507,6 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
         if (ir().last() !is TerminateInstruction) {
             ir().branch(exitBlock)
         }
-
-        varStack.pop()
     }
 
     private fun visitStatement(statement: Statement): Boolean {
@@ -733,6 +710,48 @@ class IrGenFunction(private val moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(switchStatement: SwitchStatement): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(abstractDeclarator: AbstractDeclarator): Alloc {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(declarator: Declarator): Alloc {
+        val type    = typeHolder[declarator.name()]
+        val varName = declarator.name()
+
+        val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
+        val rvalueAdr = ir().alloc(irType)
+        varStack[varName] = rvalueAdr
+        return rvalueAdr
+    }
+
+    override fun visit(assignmentDeclarator: AssignmentDeclarator): Value {
+        val type = typeHolder[assignmentDeclarator.name()]
+
+        val rvalue = visitExpression(assignmentDeclarator.rvalue, true)
+        val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
+        val convertedRvalue = ir().convertToType(rvalue, commonType)
+
+        val lvalueAdr = assignmentDeclarator.declarator.accept(this)
+        ir().store(lvalueAdr, convertedRvalue)
+        return convertedRvalue
+    }
+
+    override fun visit(arrayDeclarator: ArrayDeclarator): Value {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(emptyDeclarator: EmptyDeclarator): Value {
+        return Value.UNDEF
+    }
+
+    override fun visit(structDeclarator: StructDeclarator): Value {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(directDeclarator: DirectDeclarator): Value {
         TODO("Not yet implemented")
     }
 }

@@ -11,6 +11,7 @@ extern void *malloc(int size);
 extern void free(void *ptr);
 #define NULL 0
 
+extern int __overflow (int *, int);
 
 typedef struct node {
   DATATYPE data;

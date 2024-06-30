@@ -1047,7 +1047,7 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
     fun declarator(): Declarator? = rule {
         val pointers = pointer()
         if (pointers != null) {
-            val directDeclarator = direct_declarator()?: throw ParserException(InvalidToken("Expected direct declarator", peak()))
+            val directDeclarator = direct_declarator()?: return@rule null
             return@rule Declarator(directDeclarator, pointers)
         }
         val directDeclarator = direct_declarator()?: return@rule null
