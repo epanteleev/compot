@@ -84,7 +84,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(declaration: Declaration) {
         declaration.declspec.accept(this)
         buffer.append(' ')
-        joinTo(declaration.declarators, ", ") {
+        joinTo(declaration.declarators(), ", ") {
             it.accept(this)
         }
 

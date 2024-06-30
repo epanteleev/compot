@@ -28,8 +28,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     }
 
     private fun declare(node: Declaration) {
-        val types = node.resolveType(typeHolder)
-        for (type in types) {
+        for (decl in node.nonTypedefDeclarators()) {
+            val type = decl.resolveType(node.declspec, typeHolder)
             when (type) {
                 is CFunctionType -> {
                     val abstrType = type.functionType
@@ -40,6 +40,12 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
 
                     val isVararg = type.functionType.variadic
                     moduleBuilder.createExternFunction(type.name, returnType, argTypes, isVararg)
+                }
+                is CPrimitiveType -> {
+                    val irType = moduleBuilder.toIRType<Type>(typeHolder, type)
+                    //val global = GlobalConstant.of("cp${constantCounter}", irType, type.name)
+                    constantCounter++
+                    //moduleBuilder.addConstant(irType, type.name, type.baseType())
                 }
                 else -> throw IRCodeGenError("Function or struct expected, but was '$type'")
             }

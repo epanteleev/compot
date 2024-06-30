@@ -26,7 +26,7 @@ data class UnionSpecifier(val name: Identifier, val fields: List<StructField>) :
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
         val structType = UnionBaseType(name())
         for (field in fields) {
-            val type = field.declspec.resolveType(typeHolder)
+            val type = field.declspec.specifyType(typeHolder)
             for (declarator in field.declarators) {
                 structType.addField(declarator.name(), type)
             }
@@ -95,7 +95,7 @@ data class StorageClassSpecifier(private val name: Keyword): AnyTypeNode() {
             "static"   -> StorageClass.STATIC
             "register" -> StorageClass.REGISTER
             "auto"     -> StorageClass.AUTO
-            else       -> StorageClass.AUTO //TODO
+            else       -> throw IllegalStateException("Unknown storage class $name")
         }
     }
 }
@@ -128,9 +128,9 @@ data class StructSpecifier(private val name: Identifier, val fields: List<Struct
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
         val structType = StructBaseType(name.str())
         for (field in fields) {
-            val type = field.declspec.resolveType(typeHolder)
+            val type = field.declspec.specifyType(typeHolder)
             for (declarator in field.declarators) {
-                val resolved = declarator.resolveType(type, typeHolder)
+                val resolved = declarator.resolveType(field.declspec, typeHolder)
                 structType.addField(declarator.name(), resolved)
             }
         }

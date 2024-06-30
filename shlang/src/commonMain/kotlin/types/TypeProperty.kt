@@ -17,6 +17,8 @@ enum class PointerQualifier: TypeProperty {
     }
 }
 
+// Storage class specifiers
+// https://port70.net/~nsz/c/c11/n1570.html#6.7.1
 enum class StorageClass: TypeProperty {
     TYPEDEF {
         override fun toString(): String = "typedef"

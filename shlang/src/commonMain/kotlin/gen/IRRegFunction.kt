@@ -39,7 +39,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitDeclaration(declaration: Declaration) {
         declaration.resolveType(typeHolder)
 
-        for (declarator in declaration.declarators) {
+        for (declarator in declaration.declarators()) {
             declarator.accept(this)
         }
     }
@@ -125,7 +125,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitSizeOf(sizeOf: SizeOf): Value {
         when (val expr = sizeOf.expr) {
             is TypeName -> {
-                val resolved = expr.resolveType(typeHolder)
+                val resolved = expr.specifyType(typeHolder)
                 val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, resolved)
                 return Constant.of(Type.I64, irType.size())
             }

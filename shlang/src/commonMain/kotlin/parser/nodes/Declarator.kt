@@ -7,8 +7,7 @@ import parser.nodes.visitors.*
 abstract class AnyDeclarator: Node() {
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
-
-    abstract fun resolveType(baseType: CType, typeHolder: TypeHolder): CType //TODO rename to 'declare'
+    abstract fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType //TODO rename to 'declare'
 }
 
 data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
@@ -18,14 +17,19 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         return directDeclarator.name()
     }
 
-    override fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
-        var pointerType = baseType
+    override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
+        var pointerType = declspec.specifyType(typeHolder)
         for (pointer in pointers) {
             pointerType = CPointerType(pointerType)
         }
 
         pointerType = directDeclarator.resolveType(pointerType, typeHolder)
-        typeHolder.addVar(name(), pointerType)
+
+        if (declspec.isTypedef) {
+            typeHolder.addStructType(name(), pointerType.baseType())
+        } else {
+            typeHolder.addVar(name(), pointerType)
+        }
         return pointerType
     }
 }
@@ -37,8 +41,8 @@ data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expressi
         return declarator.name()
     }
 
-    override fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
-        return declarator.resolveType(baseType, typeHolder)
+    override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
+        return declarator.resolveType(declspec, typeHolder)
     }
 }
 
@@ -47,7 +51,7 @@ object EmptyDeclarator : AnyDeclarator() {
 
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
+    override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
         return CType.UNKNOWN
     }
 }
@@ -57,12 +61,12 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
         return visitor.visit(this)
     }
 
-    override fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
+    override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
         require(expr is EmptyExpression) {
             "unsupported expression in struct declarator $expr"
         }
 
-        return declarator.resolveType(baseType, typeHolder)
+        return declarator.resolveType(declspec, typeHolder)
     }
 
     override fun name(): String {
@@ -73,8 +77,8 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
     }
 }
 
-data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val declarators: List<DirectDeclaratorParam>): AnyDeclarator() {
-    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
+data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val declarators: List<DirectDeclaratorParam>): UnclassifiedNode() {
+    override fun<T> accept(visitor: UnclassifiedNodeVisitor<T>) = visitor.visit(this)
 
     private fun resolveAllDecl(baseType: CType, typeHolder: TypeHolder): CType {
         var pointerType = baseType
@@ -95,7 +99,7 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val declarator
         return pointerType
     }
 
-    override fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
+    fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
         when (decl) {
             is FunctionPointerDeclarator -> {
                 val fnDecl = declarators[0] as ParameterTypeList
@@ -111,5 +115,5 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val declarator
         }
     }
 
-    override fun name(): String = decl.name()
+    fun name(): String = decl.name()
 }

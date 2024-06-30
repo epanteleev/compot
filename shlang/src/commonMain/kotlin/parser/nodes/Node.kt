@@ -39,27 +39,23 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
     }
 }
 
-data class Declaration(val declspec: DeclarationSpecifier, val declarators: List<AnyDeclarator>): UnclassifiedNode() {
-    fun resolveType(typeHolder: TypeHolder): List<CType> {
-        val type = declspec.resolveType(typeHolder)
-
-        val vars = mutableListOf<CType>()
-        for (it in declarators) when (it) {
-            is Declarator -> {
-                val resolved = it.resolveType(type, typeHolder)
-                if (declspec.isTypedef) {
-                    typeHolder.addStructType(it.name(), resolved.baseType()) //TODO BASETYPE???
-                } else {
-                    vars.add(resolved)
-                }
-            }
-            is AssignmentDeclarator -> {
-                vars.add(it.resolveType(type, typeHolder))
-            }
-            else -> TODO()
+data class Declaration(val declspec: DeclarationSpecifier, private val declarators: List<AnyDeclarator>): UnclassifiedNode() {
+    fun resolveType(typeHolder: TypeHolder) {
+        declspec.specifyType(typeHolder) // Important: define new type here
+        for (it in declarators) {
+            it.resolveType(declspec, typeHolder)
         }
+    }
 
-        return vars
+    fun nonTypedefDeclarators(): List<AnyDeclarator> {
+        if (declspec.isTypedef) {
+            return listOf()
+        }
+        return declarators
+    }
+
+    fun declarators(): List<AnyDeclarator> {
+        return declarators
     }
 
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
@@ -86,8 +82,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
-        val type = specifier.resolveType(typeHolder)
-        val s = declarator.resolveType(type, typeHolder) as CFunctionType
+        val s = declarator.resolveType(specifier, typeHolder) as CFunctionType
         typeHolder.addFunctionType(name(), s) //TODO already added???
         return s
     }

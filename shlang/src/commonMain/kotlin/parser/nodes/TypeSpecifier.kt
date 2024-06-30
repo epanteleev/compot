@@ -6,13 +6,14 @@ import types.*
 
 abstract class TypeSpecifier : Node() {
     abstract fun<T> accept(visitor: TypeSpecifierVisitor<T>): T
-    abstract fun resolveType(typeHolder: TypeHolder): CType
+    abstract fun specifyType(typeHolder: TypeHolder): CType
 }
 
 data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier() {
-    var isTypedef = false
+    internal var isTypedef = false
+    private var cachedType: CType? = null
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
+    override fun specifyType(typeHolder: TypeHolder): CType = memoizeType {
         val typeBuilder = CTypeBuilder()
         for (specifier in specifiers) {
             val property = specifier.typeResolve(typeHolder, typeBuilder)
@@ -20,21 +21,21 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
                 isTypedef = true
             }
         }
-        return typeBuilder.build(typeHolder)
+        return@memoizeType typeBuilder.build(typeHolder)
     }
 
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 
-    companion object {
-        val EMPTY = DeclarationSpecifier(emptyList())
+    private fun memoizeType(type: () -> CType): CType {
+        return cachedType ?: type().also { cachedType = it }
     }
 }
 
 data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: AbstractDeclarator?) : TypeSpecifier() {
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        val specifierType = specifiers.resolveType(typeHolder)
+    override fun specifyType(typeHolder: TypeHolder): CType {
+        val specifierType = specifiers.specifyType(typeHolder)
         if (abstractDecl == null) {
             return specifierType
         }

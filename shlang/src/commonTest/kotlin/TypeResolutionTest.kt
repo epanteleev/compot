@@ -41,7 +41,7 @@ class TypeResolutionTest {
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
         val typeResolver = TypeHolder.default()
-        assertEquals("volatile restrict int", expr.resolveType(typeResolver).toString())
+        assertEquals("volatile restrict int", expr.specifyType(typeResolver).toString())
     }
 
     @Test
@@ -51,7 +51,7 @@ class TypeResolutionTest {
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
         val typeResolver = TypeHolder.default()
-        assertEquals("volatile restrict float", expr.resolveType(typeResolver).toString())
+        assertEquals("volatile restrict float", expr.specifyType(typeResolver).toString())
     }
 
     @Test
@@ -61,7 +61,7 @@ class TypeResolutionTest {
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
         val typeResolver = parser.typeHolder()
-        assertEquals("volatile struct point", expr.resolveType(typeResolver).toString())
+        assertEquals("volatile struct point", expr.specifyType(typeResolver).toString())
     }
 
     @Test
