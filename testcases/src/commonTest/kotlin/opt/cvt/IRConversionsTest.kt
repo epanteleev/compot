@@ -53,6 +53,36 @@ abstract class IRConversionsTest: CommonIrTest() {
         val result = runTest("opt_ir/cvt/i64_to_ptr", listOf("runtime/runtime.c"), options())
         assertEquals("7\n", result.output)
     }
+
+    @Test
+    fun testI32toI64() {
+        val result = runTest("opt_ir/cvt/i32_to_i64", listOf("runtime/runtime.c"), options())
+        assertEquals("-1\n", result.output)
+    }
+
+    @Test
+    fun testI64toI32() {
+        val result = runTest("opt_ir/cvt/i64_to_i32", listOf("runtime/runtime.c"), options())
+        assertEquals("-1\n", result.output)
+    }
+
+    @Test
+    fun testF64toF32() {
+        val result = runTest("opt_ir/cvt/f64_to_f32", listOf("runtime/runtime.c"), options())
+        assertEquals("-1.000000\n", result.output)
+    }
+
+    @Test
+    fun testF32toF64() {
+        val result = runTest("opt_ir/cvt/f32_to_f64", listOf("runtime/runtime.c"), options())
+        assertEquals("-1.000000\n", result.output)
+    }
+
+    @Test
+    fun testU32toU64() {
+        val result = runTest("opt_ir/cvt/u32_to_u64", listOf("runtime/runtime.c"), options())
+        assertEquals("1\n", result.output)
+    }
 }
 
 class BaseIrConversionTest: IRConversionsTest() {

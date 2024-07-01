@@ -1,0 +1,4 @@
+package opt
+
+class AlgoTest {
+}
