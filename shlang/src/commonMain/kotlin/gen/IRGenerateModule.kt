@@ -5,11 +5,10 @@ import ir.types.*
 import parser.nodes.*
 import ir.module.Module
 import gen.TypeConverter.toIRType
-import gen.consteval.ConstEvalContext
-import gen.consteval.ConstEvalExpression
-import ir.global.GlobalConstant
+import gen.consteval.*
+import ir.*
+import ir.global.*
 import ir.module.builder.impl.ModuleBuilder
-import tokenizer.CToken
 
 
 data class IRCodeGenError(override val message: String) : Exception(message)
@@ -58,20 +57,54 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             when (decl) {
                 is Declarator -> declareDeclarator(node.declspec, decl)
                 is AssignmentDeclarator -> {
-                    val type = decl.resolveType(node.declspec, typeHolder)
-                    val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
-
-                    val constEvalResult = ConstEvalExpression.eval(decl.rvalue, GlobalVariableConstEvalContext)
-
-                    val global = GlobalConstant.of(decl.name(), irType, constEvalResult)
-                    moduleBuilder.addConstant(global)
-                    varStack[decl.name()] = global
+                    val result = constEval(decl.rvalue)?: stringLiteralInitializer(decl.rvalue)
+                    if (result == null) {
+                        throw IRCodeGenError("Unsupported declarator '$decl'")
+                    }
+                
+                    constantCounter++
+                    moduleBuilder.addConstant(result)
+                    varStack[decl.name()] = result
                 }
                 else -> throw IRCodeGenError("Unsupported declarator $decl")
             }
         }
     }
 
+    private fun constEval(expr: Expression): GlobalConstant? {
+        val type = expr.resolveType(typeHolder)
+
+        return when (type) {
+            CType.INT, CType.SHORT, CType.CHAR, CType.UINT, CType.USHORT, CType.UCHAR -> {
+                val ctx = CommonConstEvalContext<Int>(typeHolder)
+                val result = ConstEvalExpression.eval(expr, ConstEvalExpressionInt(ctx))
+                return I32GlobalValue("v${constantCounter++}", result)
+            }
+            CType.LONG, CType.ULONG -> {
+                val ctx = CommonConstEvalContext<Long>(typeHolder)
+                val result = ConstEvalExpression.eval(expr, ConstEvalExpressionLong(ctx))
+                return I64GlobalValue("v${constantCounter++}", result)
+            }
+            CType.FLOAT -> {
+                val ctx = CommonConstEvalContext<Float>(typeHolder)
+                val result = ConstEvalExpression.eval(expr, ConstEvalExpressionFloat(ctx))
+                return F32GlobalValue("v${constantCounter++}", result)
+            }
+            CType.DOUBLE -> {
+                val ctx = CommonConstEvalContext<Double>(typeHolder)
+                val result = ConstEvalExpression.eval(expr, ConstEvalExpressionDouble(ctx))
+                return F64GlobalValue("v${constantCounter++}", result)
+            }
+            else -> null
+        }
+    }
+
+    private fun stringLiteralInitializer(expr: Expression): GlobalConstant? {
+        if (expr !is StringNode) {
+            return null
+        }
+        return StringLiteralGlobal("str${constantCounter++}", ArrayType(Type.U8, expr.str.str().length), expr.str.str())
+    }
     companion object {
         fun apply(typeHolder: TypeHolder, node: ProgramNode): Module {
             //println(node)
@@ -79,20 +112,6 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             irGen.visit(node)
             val module = irGen.moduleBuilder.build()
             return module
-        }
-
-        object GlobalVariableConstEvalContext: ConstEvalContext {
-            override fun getVariable(name: CToken): Int {
-                throw IRCodeGenError("Variable access is not allowed in consteval context")
-            }
-
-            override fun callFunction(name: CToken, args: List<Int>): Int {
-                throw IRCodeGenError("Function call is not allowed in consteval context")
-            }
-
-            override fun typeHolder(): TypeHolder {
-                throw IRCodeGenError("TypeHolder is not available in consteval context")
-            }
         }
     }
 }

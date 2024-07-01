@@ -5,7 +5,7 @@ import tokenizer.CToken
 import types.TypeHolder
 
 
-class ConditionEvaluationContext(private val preprocessorContext: PreprocessorContext): ConstEvalContext {
+class ConditionEvaluationContext(private val preprocessorContext: PreprocessorContext): ConstEvalContext<Int> {
     override fun getVariable(name: CToken): Int {
         val predefined = preprocessorContext.findPredefinedMacros(name.str())
         if (predefined != null) {

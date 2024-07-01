@@ -13,19 +13,19 @@ abstract class AnyModuleBuilder {
     protected val structs = hashMapOf<String, StructType>()
 
     fun addConstant(global: GlobalConstant): GlobalConstant {
-        if (globals.containsKey(global.name())) {
+        val has = globals.put(global.name(), global)
+        if (has != null) {
             throw IllegalArgumentException("global with name='${global.name()}' already exists")
         }
-        globals[global.name()] = global
         return global
     }
 
     fun structType(name: String, fields: List<NonTrivialType>): StructType {
-        if (structs.containsKey(name)) {
+        val structType = StructType(name, fields)
+        val has = structs.put(name, structType)
+        if (has != null) {
             throw IllegalArgumentException("struct with name='$name' already exists")
         }
-        val structType = StructType(name, fields)
-        structs[structType.name] = structType
         return structType
     }
 

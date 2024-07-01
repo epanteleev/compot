@@ -11,6 +11,34 @@ abstract class GlobalVar: CommonCTest() {
         assertEquals("100", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testGlobalVar1() {
+        val result = runCTest("shlang/global_var/global_var1", listOf(), options())
+        assertEquals("89", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testGlobalVar2() {
+        val result = runCTest("shlang/global_var/global_var2", listOf(), options())
+        assertEquals("100", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testGlobalVar3() {
+        val result = runCTest("shlang/global_var/global_var3", listOf(), options())
+        assertEquals("Hello World!\n", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testGlobalVar4() {
+        val result = runCTest("shlang/global_var/global_var4", listOf(), options())
+        assertEquals("Hello World!\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class GlobalVarO0: GlobalVar() {

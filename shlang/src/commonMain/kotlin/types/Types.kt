@@ -24,6 +24,9 @@ interface CType {
         val LONG = CPrimitiveType(CPrimitive.LONG)
         val SHORT = CPrimitiveType(CPrimitive.SHORT)
         val UINT = CPrimitiveType(CPrimitive.UINT)
+        val USHORT = CPrimitiveType(CPrimitive.USHORT)
+        val UCHAR = CPrimitiveType(CPrimitive.UCHAR)
+        val ULONG = CPrimitiveType(CPrimitive.ULONG)
 
         fun interfereTypes(type1: CType, type2: CType): CType {
             if (type1 == type2) return type1

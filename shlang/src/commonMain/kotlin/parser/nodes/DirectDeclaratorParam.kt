@@ -1,7 +1,9 @@
 package parser.nodes
 
+import gen.consteval.CommonConstEvalContext
 import gen.consteval.ConstEvalContext
 import gen.consteval.ConstEvalExpression
+import gen.consteval.ConstEvalExpressionInt
 import parser.ParserException
 import parser.InvalidToken
 import parser.nodes.visitors.DirectDeclaratorParamVisitor
@@ -22,26 +24,9 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
             return CPointerType(baseType)
         }
 
-        val size = ConstEvalExpression.eval(constexpr, ArraySizeEvalContext(typeHolder))
+        val ctx = CommonConstEvalContext<Int>(typeHolder)
+        val size = ConstEvalExpression.eval<Int>(constexpr, ConstEvalExpressionInt(ctx))
         return CompoundType(CArrayType(baseType, size))
-    }
-
-    companion object {
-        class ArraySizeEvalContext(val typeHolder: TypeHolder): ConstEvalContext {
-            override fun getVariable(name: CToken): Int {
-                val error = InvalidToken("Cannot consteval expression: found variable", name)
-                throw ParserException(error)
-            }
-
-            override fun callFunction(name: CToken, args: List<Int>): Int {
-                val error = InvalidToken("Cannot consteval expression: found function", name)
-                throw ParserException(error)
-            }
-
-            override fun typeHolder(): TypeHolder {
-                return typeHolder
-            }
-        }
     }
 }
 

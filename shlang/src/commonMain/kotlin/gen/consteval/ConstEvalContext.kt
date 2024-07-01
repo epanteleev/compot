@@ -3,8 +3,8 @@ package gen.consteval
 import tokenizer.CToken
 import types.TypeHolder
 
-interface ConstEvalContext {
-    fun getVariable(name: CToken): Int
-    fun callFunction(name: CToken, args: List<Int>): Int
+interface ConstEvalContext<T: Number> {
+    fun getVariable(name: CToken): T
+    fun callFunction(name: CToken, args: List<T>): T
     fun typeHolder(): TypeHolder
 }

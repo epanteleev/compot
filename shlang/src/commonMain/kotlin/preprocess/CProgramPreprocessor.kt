@@ -3,6 +3,7 @@ package preprocess
 import tokenizer.*
 import parser.CProgramParser
 import gen.consteval.ConstEvalExpression
+import gen.consteval.ConstEvalExpressionInt
 
 
 class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(original) {
@@ -55,7 +56,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
             throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(preprocessed)}'")
 
         val evaluationContext = ConditionEvaluationContext(ctx)
-        return ConstEvalExpression.eval(constexpr, evaluationContext)
+        return ConstEvalExpression.eval(constexpr, ConstEvalExpressionInt(evaluationContext))
     }
 
     private fun skipBlock() {
