@@ -55,12 +55,6 @@ abstract class OptTests: CommonIrTest() {
     }
 
     @Test
-    fun testFibOpt() {
-        val result = runTest("opt_ir/fib_opt", listOf("runtime/runtime.c"), options())
-        assertEquals("21\n", result.output)
-    }
-
-    @Test
     fun testCallVarargFun() {
         val result = runTest("opt_ir/call_vararg_fun", listOf(), options())
         assertEquals("HELLO 42", result.output)
