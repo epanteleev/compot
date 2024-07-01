@@ -6,7 +6,6 @@ import parser.nodes.*
 import ir.module.Module
 import gen.TypeConverter.toIRType
 import gen.consteval.*
-import ir.*
 import ir.global.*
 import ir.module.builder.impl.ModuleBuilder
 
@@ -61,7 +60,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                     if (result == null) {
                         throw IRCodeGenError("Unsupported declarator '$decl'")
                     }
-                
+
                     constantCounter++
                     moduleBuilder.addConstant(result)
                     varStack[decl.name()] = result
@@ -103,8 +102,10 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         if (expr !is StringNode) {
             return null
         }
-        return StringLiteralGlobal("str${constantCounter++}", ArrayType(Type.U8, expr.str.str().length), expr.str.str())
+        val content = expr.str.unquote()
+        return StringLiteralGlobal("str${constantCounter++}", ArrayType(Type.U8, content.length), content)
     }
+
     companion object {
         fun apply(typeHolder: TypeHolder, node: ProgramNode): Module {
             //println(node)
