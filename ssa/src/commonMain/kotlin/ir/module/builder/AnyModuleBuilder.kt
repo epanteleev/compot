@@ -9,11 +9,20 @@ import ir.types.StructType
 
 
 abstract class AnyModuleBuilder {
-    protected val globals = hashMapOf<String, GlobalSymbol>()
+    protected val constantPool = hashMapOf<String, GlobalConstant>()
+    protected val globals = hashMapOf<String, GlobalValue>()
     protected val structs = hashMapOf<String, StructType>()
 
+    fun addGlobal(name: String, data: GlobalConstant): GlobalValue {
+        val has = globals.put(name, GlobalValue(name, data))
+        if (has != null) {
+            throw IllegalArgumentException("global with name='$name' already exists")
+        }
+        return globals[name]!!
+    }
+
     fun addConstant(global: GlobalConstant): GlobalConstant {
-        val has = globals.put(global.name(), global)
+        val has = constantPool.put(global.name(), global)
         if (has != null) {
             throw IllegalArgumentException("global with name='${global.name()}' already exists")
         }
@@ -29,8 +38,12 @@ abstract class AnyModuleBuilder {
         return structType
     }
 
-    fun findGlobal(name: String): GlobalSymbol {
-        return globals[name] ?: throw NoSuchElementException("not found name=$name")
+    fun findConstantOrNull(name: String): GlobalSymbol? {
+        return constantPool[name]
+    }
+
+    fun findGlobalOrNull(name: String): GlobalValue? {
+        return globals[name]
     }
 
     fun findStructType(name: String): StructType {

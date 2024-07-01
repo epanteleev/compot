@@ -9,8 +9,7 @@ entry:
   %unused = call i32 @printf(@str: ptr) br label %load
 
 load:
-  %v = load i32 @integer
-  call void @printInt(%v: i32) br label %ret
+  call void @printInt(@integer: i32) br label %ret
 
 ret:
   ret i32 0

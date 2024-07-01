@@ -62,51 +62,62 @@ class ModuleReader(string: String) {
         moduleBuilder.structType(struct.name, resolvedFieldTypes)
     }
 
-    private fun parseGlobals(name: SymbolValue) {
-        tokenIterator.expect<Equal>("'='")
-        val keyword = tokenIterator.next("'constant' or 'global'")
-        if (keyword !is GlobalKeyword && keyword !is ConstantKeyword) {
-            throw ParseErrorException("'constant' or 'global'", keyword)
-        }
-        val type = tokenIterator.expect<TypeToken>("constant type")
-
+    private fun makeConstant(type: TypeToken, name: String): GlobalConstant {
         val global = when (val data = tokenIterator.next()) {
             is IntValue -> {
                 if (type !is IntegerTypeToken) {
                     throw throw ParseErrorException("expect integer type, but: type=${type}")
                 }
                 when (val tp = type.type()) {
-                    Type.I8 -> I8GlobalValue(name.name, data.int.toByte())
-                    Type.U8 -> U8GlobalValue(name.name, data.int.toUByte())
-                    Type.I16 -> I16GlobalValue(name.name, data.int.toShort())
-                    Type.U16 -> U16GlobalValue(name.name, data.int.toUShort())
-                    Type.I32 -> I32GlobalValue(name.name, data.int.toInt())
-                    Type.U32 -> U32GlobalValue(name.name, data.int.toUInt())
-                    Type.I64 -> I64GlobalValue(name.name, data.int)
-                    Type.U64 -> U64GlobalValue(name.name, data.int.toULong())
+                    Type.I8 -> I8GlobalValue(name, data.int.toByte())
+                    Type.U8 -> U8GlobalValue(name, data.int.toUByte())
+                    Type.I16 -> I16GlobalValue(name, data.int.toShort())
+                    Type.U16 -> U16GlobalValue(name, data.int.toUShort())
+                    Type.I32 -> I32GlobalValue(name, data.int.toInt())
+                    Type.U32 -> U32GlobalValue(name, data.int.toUInt())
+                    Type.I64 -> I64GlobalValue(name, data.int)
+                    Type.U64 -> U64GlobalValue(name, data.int.toULong())
                     else -> throw ParseErrorException("unsupported: type=$tp, data=${data.int}")
                 }
             }
+
             is FloatValue -> {
                 if (type !is FloatTypeToken) {
                     throw throw ParseErrorException("expect float type, but: type=${type}")
                 }
                 when (val tp = type.type()) {
-                    Type.F32 -> F32GlobalValue(name.name, data.fp.toFloat())
-                    Type.F64 -> F64GlobalValue(name.name, data.fp)
+                    Type.F32 -> F32GlobalValue(name, data.fp.toFloat())
+                    Type.F64 -> F64GlobalValue(name, data.fp)
                     else -> throw ParseErrorException("unsupported: type=$tp, data=${data.fp}")
                 }
             }
+
             is StringLiteralToken -> {
                 if (type !is ArrayTypeToken) {
                     throw throw ParseErrorException("expect float type, but: type=${type}")
                 }
 
-                StringLiteralGlobal(name.name, type.type(moduleBuilder), data.string)
+                StringLiteralGlobal(name, type.type(moduleBuilder), data.string)
             }
+
             else -> throw ParseErrorException("unsupported: data=$data")
         }
-        moduleBuilder.addConstant(global)
+        return moduleBuilder.addConstant(global)
+    }
+
+    private fun parseGlobals(name: SymbolValue) {
+        tokenIterator.expect<Equal>("'='")
+        val keyword = tokenIterator.next("'constant' or 'global'")
+        val type = tokenIterator.expect<TypeToken>("constant type")
+
+        when (keyword) {
+            is ConstantKeyword -> makeConstant(type, name.name)
+            is GlobalKeyword -> {
+                val constant = makeConstant(type, "CP_${name.name}")
+                moduleBuilder.addGlobal(name.name, constant)
+            }
+            else -> throw ParseErrorException("constant or global", keyword)
+        }
     }
 
     private fun parseExtern() {

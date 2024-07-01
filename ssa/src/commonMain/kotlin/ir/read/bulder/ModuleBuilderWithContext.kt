@@ -20,7 +20,6 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
 
         val data = FunctionDataBuilderWithContext.create(this, prototype, argumentValues)
         functions.add(data)
-        globals[functionName.name] = prototype
         return data
     }
 
@@ -41,7 +40,7 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
             it.build()
         }
 
-        val ssa = SSAModule(fns, externFunctions, globals, structs)
+        val ssa = SSAModule(fns, externFunctions, constantPool, globals, structs)
         return VerifySSA.run(ssa)
     }
 

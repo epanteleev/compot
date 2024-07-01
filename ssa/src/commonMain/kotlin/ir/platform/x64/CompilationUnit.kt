@@ -20,6 +20,10 @@ class CompilationUnit: CompiledModule() {
         symbols.add(ObjSymbol(globalValue.name(), globalValue.data(), convertToSymbolType(globalValue)))
     }
 
+    fun makeGlobal(globalValue: GlobalValue) {
+        symbols.add(ObjSymbol(globalValue.name(), globalValue.data(), convertToSymbolType(globalValue)))
+    }
+
     private fun convertToSymbolType(globalValue: GlobalSymbol): SymbolType {
         return when (globalValue) {
             is StringLiteralGlobal -> SymbolType.StringLiteral
@@ -33,7 +37,7 @@ class CompilationUnit: CompiledModule() {
             is U8GlobalValue -> SymbolType.Byte
             is F32GlobalValue -> SymbolType.Long
             is F64GlobalValue -> SymbolType.Quad
-            else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue")
+            else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue:${globalValue.type()}")
         }
     }
 

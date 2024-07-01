@@ -4,6 +4,7 @@ import common.CommonCTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+
 abstract class GlobalVar: CommonCTest() {
     @Test
     fun testGlobalVar() {

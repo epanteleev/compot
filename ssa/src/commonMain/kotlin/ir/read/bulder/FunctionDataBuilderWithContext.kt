@@ -43,7 +43,11 @@ class FunctionDataBuilderWithContext private constructor(
                 operand
             }
 
-            is SymbolValue -> moduleBuilder.findGlobal(token.name)
+            is SymbolValue -> {
+                moduleBuilder.findConstantOrNull(token.name) ?:
+                    moduleBuilder.findGlobalOrNull(token.name) ?:
+                        throw ParseErrorException("constant or global value", token)
+            }
             else -> throw ParseErrorException("constant or value", token)
         }
     }

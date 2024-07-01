@@ -1,5 +1,6 @@
 package ir.dominance
 
+import common.intMapOf
 import ir.module.BasicBlocks
 import ir.module.block.Label
 import ir.module.block.AnyBlock
@@ -45,11 +46,13 @@ class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
     }
 
     fun frontiers(): Map<AnyBlock, List<AnyBlock>> {
-        val dominanceFrontiers = hashMapOf<AnyBlock, MutableList<AnyBlock>>()
+        val dominanceFrontiers = intMapOf<AnyBlock, MutableList<AnyBlock>>(idomMap.keys) {
+            it: Label -> it.index
+        }
+
         for (bb in idomMap.keys) {
             dominanceFrontiers[bb] = arrayListOf()
         }
-
 
         idomMap.forEach { (bb, idom) ->
             val predecessors = bb.predecessors()

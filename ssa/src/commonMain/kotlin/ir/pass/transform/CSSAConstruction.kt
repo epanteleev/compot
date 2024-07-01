@@ -13,7 +13,7 @@ class CSSAConstruction internal constructor(module: Module): TransformPass(modul
 
     override fun run(): Module {
         val transformed = CopyInsertion.run(SplitCriticalEdge.run(module))
-        return SSAModule(transformed.functions, transformed.externFunctions, transformed.globals, transformed.types)
+        return SSAModule(transformed.functions, transformed.externFunctions, transformed.constantPool, transformed.globals, transformed.types)
     }
 }
 

@@ -8,7 +8,6 @@ import ir.module.Module
 import ir.module.SSAModule
 import ir.pass.ana.VerifySSA
 import ir.module.builder.AnyModuleBuilder
-import ir.read.tokens.Vararg
 
 
 class ModuleBuilder private constructor(): AnyModuleBuilder() {
@@ -44,7 +43,7 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
             it.build()
         }
 
-        return VerifySSA.run(SSAModule(fns, externFunctions, globals, structs))
+        return VerifySSA.run(SSAModule(fns, externFunctions, constantPool, globals, structs))
     }
 
     companion object {

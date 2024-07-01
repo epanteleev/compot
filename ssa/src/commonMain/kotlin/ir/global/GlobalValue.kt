@@ -9,10 +9,12 @@ class GlobalValue(val name: String, val data: GlobalConstant): GlobalSymbol {
     }
 
     override fun dump(): String {
-        return "@$name = global ${data.contentType()} ${data}"
+        return "@$name = global ${data.contentType()} @${data.name()}"
     }
 
-    override fun type(): NonTrivialType = data.type()
+    override fun type(): NonTrivialType = Type.Ptr
+
+    fun dataType(): Type = data.type()
 
     override fun toString(): String {
         return "@$name"

@@ -28,10 +28,7 @@ data class CopyCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsV
     }
 
     override fun ra(dst: GPRegister, src: Address) {
-        when (src) {
-            is AddressLiteral -> asm.lea(size, src, dst)
-            else              -> asm.mov(size, src, dst)
-        }
+        asm.mov(size, src, dst)
     }
 
     override fun ar(dst: Address, src: GPRegister) {

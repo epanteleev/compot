@@ -6,12 +6,10 @@ extern void @printDouble(f64)
 
 define i32 @main() {
 entry:
-  %v = load f32 @float
-  call void @printFloat(%v: f32) br label %next
+  call void @printFloat(@float: f32) br label %next
 
 next:
-  %d = load f64 @double
-  call void @printDouble(%d: f64) br label %ret
+  call void @printDouble(@double: f64) br label %ret
 
 ret:
   ret i32 0

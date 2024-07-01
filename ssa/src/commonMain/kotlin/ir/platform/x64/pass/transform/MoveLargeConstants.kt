@@ -6,17 +6,15 @@ import asm.x64.ImmInt
 import asm.x64.ImmInt.Companion.canBeImm32
 import ir.global.GlobalConstant
 import ir.global.GlobalSymbol
-import ir.instruction.Instruction
 import ir.module.Module
 import ir.module.block.Block
-import ir.types.PrimitiveType
 import ir.module.FunctionData
 import ir.module.SSAModule
 import ir.platform.x64.CallConvention
 
 
 // Move large constant to constant pool
-class MoveLargeConstants private constructor(val functions: List<FunctionData>, private val constants: MutableMap<String, GlobalSymbol>) {
+class MoveLargeConstants private constructor(val functions: List<FunctionData>, private val constants: MutableMap<String, GlobalConstant>) {
     private var constantIndex = 0
 
     private fun run() {
@@ -55,7 +53,6 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
 
     private fun handleBlock(bb: Block) {
         bb.transform { inst ->
-            var lastInserted: Instruction? = null
             for ((opIdx, operand) in inst.operands().withIndex()) {
                 if (operand !is Constant) {
                     continue
@@ -63,14 +60,9 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
 
                 val constant = makeConstantOrNull(operand) ?: continue
                 constants[constant.name()] = constant
-
-                val loadedConstant = bb.insertBefore(inst) {
-                    it.load(operand.asType<PrimitiveType>(), constant)
-                }
-                lastInserted = loadedConstant
-                inst.update(opIdx, loadedConstant)
+                inst.update(opIdx, constant)
             }
-            lastInserted?: inst
+            inst
         }
     }
 
@@ -79,13 +71,13 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
 
         fun run(module: Module): Module {
             val functions = module.functions.map { it }
-            val constants = hashMapOf<String, GlobalSymbol>()
-            for ((name, global) in module.globals) {
+            val constants = hashMapOf<String, GlobalConstant>()
+            for ((name, global) in module.constantPool) {
                 constants[name] = global
             }
             MoveLargeConstants(functions, constants).run()
 
-            return SSAModule(functions, module.externFunctions, constants, module.types)
+            return SSAModule(functions, module.externFunctions, constants, module.globals, module.types)
         }
     }
 }

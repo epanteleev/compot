@@ -1,7 +1,6 @@
 package ir.pass.transform.auxiliary
 
 import common.assertion
-import ir.LocalValue
 import ir.instruction.*
 import ir.module.Module
 import ir.module.SSAModule
@@ -40,7 +39,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
     companion object {
         fun run(module: Module): Module {
             module.functions.forEach { CopyInsertion(it).pass() }
-            return SSAModule(module.functions, module.externFunctions, module.globals, module.types)
+            return SSAModule(module.functions, module.externFunctions, module.constantPool, module.globals, module.types)
         }
     }
 }

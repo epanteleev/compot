@@ -1,7 +1,7 @@
 package ir.platform.x64
 
 import common.assertion
-import ir.global.GlobalSymbol
+import ir.global.*
 import ir.module.*
 import ir.types.StructType
 import ir.module.auxiliary.*
@@ -11,10 +11,11 @@ import ir.liveness.LiveIntervals
 
 
 class LModule(functions: List<FunctionData>,
-                   externFunctions: Map<String, ExternFunction>,
-                   globals: Map<String, GlobalSymbol>,
-                   types: Map<String, StructType>):
-    Module(functions, externFunctions, globals, types) {
+              externFunctions: Map<String, ExternFunction>,
+              constantPool: Map<String, GlobalConstant>,
+              globals: Map<String, GlobalValue>,
+              types: Map<String, StructType>):
+    Module(functions, externFunctions, constantPool, globals, types) {
     private val liveIntervals: Map<FunctionData, LiveIntervals>
     private val registerAllocation: Map<FunctionData, RegisterAllocation>
 
@@ -49,7 +50,7 @@ class LModule(functions: List<FunctionData>,
     }
 
     override fun copy(): Module {
-        return LModule(functions.map { CopyCFG.copy(it) }, externFunctions, globals, types)
+        return LModule(functions.map { CopyCFG.copy(it) }, externFunctions, constantPool, globals, types) //TODO deep copy???
     }
 
     override fun toString(): String {

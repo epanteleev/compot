@@ -14,7 +14,7 @@ class SSADestruction(module: Module): TransformPass(module) {
         val transformed = ConstantLoading.run(
             MoveLargeConstants.run(Lowering.run(ReplaceFloatNeg.run(FunctionsIsolation.run(module))))
         )
-        return LModule(transformed.functions, transformed.externFunctions, transformed.globals, transformed.types)
+        return LModule(transformed.functions, transformed.externFunctions, transformed.constantPool, transformed.globals, transformed.types)
     }
 }
 

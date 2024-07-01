@@ -60,7 +60,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     companion object {
         fun run(module: Module): Module {
             module.functions.forEach { FunctionsIsolation(it).pass() }
-            return SSAModule(module.functions, module.externFunctions, module.globals, module.types)
+            return SSAModule(module.functions, module.externFunctions, module.constantPool, module.globals, module.types)
         }
     }
 }

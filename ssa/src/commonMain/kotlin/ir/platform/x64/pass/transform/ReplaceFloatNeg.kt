@@ -55,7 +55,7 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
             val functions = module.functions.map { it }
             ReplaceFloatNeg(functions).run()
 
-            return SSAModule(functions, module.externFunctions, module.globals, module.types)
+            return SSAModule(functions, module.externFunctions, module.constantPool, module.globals, module.types)
         }
     }
 }
