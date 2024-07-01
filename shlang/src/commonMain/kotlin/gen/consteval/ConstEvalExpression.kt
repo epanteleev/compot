@@ -67,7 +67,9 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
     }
 
     override fun visit(functionCall: FunctionCall): Int {
-        val evaluated = functionCall.args.map { it.accept(this) }
+        val evaluated = functionCall.args.map {
+            it.accept(this)
+        }
         return ctx.callFunction(functionCall.nameIdentifier(), evaluated)
     }
 

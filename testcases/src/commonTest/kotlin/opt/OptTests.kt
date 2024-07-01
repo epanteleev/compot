@@ -59,6 +59,66 @@ abstract class OptTests: CommonIrTest() {
         val result = runTest("opt_ir/call_vararg_fun", listOf(), options())
         assertEquals("HELLO 42", result.output)
     }
+
+    @Test
+    fun testStructAccess() {
+        val result = runTest("opt_ir/struct_access", listOf("runtime/runtime.c"), options())
+        assertEquals("14\n", result.output)
+    }
+
+    @Test
+    fun testStructAccess1() {
+        val result = runTest("opt_ir/struct_access1", listOf("runtime/runtime.c"), options())
+        assertEquals("16\n", result.output)
+    }
+
+    @Test
+    fun testManyArguments() {
+        val result = runTest("opt_ir/manyArguments", listOf("runtime/runtime.c"), options())
+        assertEquals("36\n", result.output)
+    }
+
+    @Test
+    fun testManyArguments1() {
+        val result = runTest("opt_ir/manyArguments1", listOf("runtime/runtime.c"), options())
+        assertEquals("36.000000\n", result.output)
+    }
+
+    @Test
+    fun testSelect() {
+        val result = runTest("opt_ir/select", listOf("runtime/runtime.c"), options())
+        assertEquals("0\n1\n", result.output)
+    }
+
+    @Test
+    fun testManyBranched() {
+        val result = runTest("opt_ir/manyBranches", listOf("runtime/runtime.c"), options())
+        assertEquals("7\n0\n", result.output)
+    }
+
+    @Test
+    fun testGetAddress() {
+        val result = runTest("opt_ir/getAddress", listOf("runtime/runtime.c"), options())
+        assertEquals("90\n", result.output)
+    }
+
+    @Test
+    fun testGetAddress1() {
+        val result = runTest("opt_ir/getAddress1", listOf("runtime/runtime.c"), options())
+        assertEquals("90\n", result.output)
+    }
+
+    @Test
+    fun testHelloWorld() {
+        val result = runTest("opt_ir/hello_world", listOf("runtime/runtime.c"), options())
+        assertEquals("Hello world", result.output)
+    }
+
+    @Test
+    fun testHelloWorld1() {
+        val result = runTest("opt_ir/hello_world1", listOf("runtime/runtime.c"), options())
+        assertEquals("Hello world", result.output)
+    }
 }
 
 class OptO1Tests: OptTests() {
