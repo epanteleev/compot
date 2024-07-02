@@ -69,14 +69,14 @@ class ModuleReader(string: String) {
                     throw throw ParseErrorException("expect integer type, but: type=${type}")
                 }
                 when (val tp = type.type()) {
-                    Type.I8 -> I8GlobalValue(name, data.int.toByte())
-                    Type.U8 -> U8GlobalValue(name, data.int.toUByte())
-                    Type.I16 -> I16GlobalValue(name, data.int.toShort())
-                    Type.U16 -> U16GlobalValue(name, data.int.toUShort())
-                    Type.I32 -> I32GlobalValue(name, data.int.toInt())
-                    Type.U32 -> U32GlobalValue(name, data.int.toUInt())
-                    Type.I64 -> I64GlobalValue(name, data.int)
-                    Type.U64 -> U64GlobalValue(name, data.int.toULong())
+                    Type.I8 -> I8ConstantValue(name, data.int.toByte())
+                    Type.U8 -> U8ConstantValue(name, data.int.toUByte())
+                    Type.I16 -> I16ConstantValue(name, data.int.toShort())
+                    Type.U16 -> U16ConstantValue(name, data.int.toUShort())
+                    Type.I32 -> I32ConstantValue(name, data.int.toInt())
+                    Type.U32 -> U32ConstantValue(name, data.int.toUInt())
+                    Type.I64 -> I64ConstantValue(name, data.int)
+                    Type.U64 -> U64ConstantValue(name, data.int.toULong())
                     else -> throw ParseErrorException("unsupported: type=$tp, data=${data.int}")
                 }
             }
@@ -86,8 +86,8 @@ class ModuleReader(string: String) {
                     throw throw ParseErrorException("expect float type, but: type=${type}")
                 }
                 when (val tp = type.type()) {
-                    Type.F32 -> F32GlobalValue(name, data.fp.toFloat())
-                    Type.F64 -> F64GlobalValue(name, data.fp)
+                    Type.F32 -> F32ConstantValue(name, data.fp.toFloat())
+                    Type.F64 -> F64ConstantValue(name, data.fp)
                     else -> throw ParseErrorException("unsupported: type=$tp, data=${data.fp}")
                 }
             }
@@ -97,7 +97,7 @@ class ModuleReader(string: String) {
                     throw throw ParseErrorException("expect float type, but: type=${type}")
                 }
 
-                StringLiteralGlobal(name, type.type(moduleBuilder), data.string)
+                StringLiteralConstant(name, type.type(moduleBuilder), data.string)
             }
 
             else -> throw ParseErrorException("unsupported: data=$data")

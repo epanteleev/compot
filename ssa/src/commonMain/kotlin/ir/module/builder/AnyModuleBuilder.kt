@@ -3,21 +3,23 @@ package ir.module.builder
 import ir.global.GlobalConstant
 import ir.global.GlobalSymbol
 import ir.global.GlobalValue
+import ir.module.ExternFunction
 import ir.module.Module
-import ir.types.NonTrivialType
-import ir.types.StructType
+import ir.types.*
 
 
 abstract class AnyModuleBuilder {
     protected val constantPool = hashMapOf<String, GlobalConstant>()
     protected val globals = hashMapOf<String, GlobalValue>()
     protected val structs = hashMapOf<String, StructType>()
+    protected val externFunctions = hashMapOf<String, ExternFunction>()
 
     fun addGlobal(name: String, data: GlobalConstant): GlobalValue {
         val has = globals.put(name, GlobalValue(name, data))
         if (has != null) {
             throw IllegalArgumentException("global with name='$name' already exists")
         }
+
         return globals[name]!!
     }
 
@@ -26,6 +28,7 @@ abstract class AnyModuleBuilder {
         if (has != null) {
             throw IllegalArgumentException("global with name='${global.name()}' already exists")
         }
+
         return global
     }
 
@@ -35,7 +38,18 @@ abstract class AnyModuleBuilder {
         if (has != null) {
             throw IllegalArgumentException("struct with name='$name' already exists")
         }
+
         return structType
+    }
+
+    fun createExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {
+        val extern = ExternFunction(name, returnType, arguments, isVararg)
+        val has = externFunctions.put(name, extern)
+        if (has != null) {
+            throw IllegalArgumentException("extern function with name='$name' already exists")
+        }
+
+        return extern
     }
 
     fun findConstantOrNull(name: String): GlobalSymbol? {

@@ -77,22 +77,22 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             CType.INT, CType.SHORT, CType.CHAR, CType.UINT, CType.USHORT, CType.UCHAR -> {
                 val ctx = CommonConstEvalContext<Int>(typeHolder)
                 val result = ConstEvalExpression.eval(expr, ConstEvalExpressionInt(ctx))
-                return I32GlobalValue("v${constantCounter++}", result)
+                return I32ConstantValue("v${constantCounter++}", result)
             }
             CType.LONG, CType.ULONG -> {
                 val ctx = CommonConstEvalContext<Long>(typeHolder)
                 val result = ConstEvalExpression.eval(expr, ConstEvalExpressionLong(ctx))
-                return I64GlobalValue("v${constantCounter++}", result)
+                return I64ConstantValue("v${constantCounter++}", result)
             }
             CType.FLOAT -> {
                 val ctx = CommonConstEvalContext<Float>(typeHolder)
                 val result = ConstEvalExpression.eval(expr, ConstEvalExpressionFloat(ctx))
-                return F32GlobalValue("v${constantCounter++}", result)
+                return F32ConstantValue("v${constantCounter++}", result)
             }
             CType.DOUBLE -> {
                 val ctx = CommonConstEvalContext<Double>(typeHolder)
                 val result = ConstEvalExpression.eval(expr, ConstEvalExpressionDouble(ctx))
-                return F64GlobalValue("v${constantCounter++}", result)
+                return F64ConstantValue("v${constantCounter++}", result)
             }
             else -> null
         }
@@ -103,7 +103,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             return null
         }
         val content = expr.str.unquote()
-        return StringLiteralGlobal("str${constantCounter++}", ArrayType(Type.U8, content.length), content)
+        return StringLiteralConstant("str${constantCounter++}", ArrayType(Type.U8, content.length), content)
     }
 
     companion object {

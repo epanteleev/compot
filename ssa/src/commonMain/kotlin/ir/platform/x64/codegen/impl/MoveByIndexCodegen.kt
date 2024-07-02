@@ -6,6 +6,7 @@ import ir.instruction.lir.Move
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
+import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
@@ -20,8 +21,10 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
                     asm.movf(size, source, Address.from(dst, 0, index, size))
                 } else if (dst is GPRegister && source is XmmRegister && index is ImmInt) {
                     asm.movf(size, source, Address.from(dst, index.value().toInt() * size))
-                }
-                else {
+                } else if (dst is GPRegister && source is Address && index is ImmInt) {
+                    asm.movf(size, source, xmmTemp1)
+                    asm.movf(size, xmmTemp1, Address.from(dst, index.value().toInt() * size))
+                } else {
                     default(dst, source, index)
                 }
             }

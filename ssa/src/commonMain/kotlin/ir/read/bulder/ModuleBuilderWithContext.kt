@@ -11,7 +11,6 @@ import ir.types.Type
 
 class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilderWithContext>()
-    private val externFunctions = hashMapOf<String, ExternFunction>()
 
     fun createFunction(functionName: SymbolValue, returnType: TypeToken, argumentTypes: List<TypeToken>, argumentValues: List<LocalValueToken>): FunctionDataBuilderWithContext {
         val args      = resolveArgumentType(argumentTypes)

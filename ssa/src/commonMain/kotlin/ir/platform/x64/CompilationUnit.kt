@@ -21,22 +21,26 @@ class CompilationUnit: CompiledModule() {
     }
 
     fun makeGlobal(globalValue: GlobalValue) {
-        symbols.add(ObjSymbol(globalValue.name(), globalValue.data(), convertToSymbolType(globalValue)))
+        symbols.add(ObjSymbol(globalValue.name(), globalValue.data(), convertGlobalValueToSymbolType(globalValue)))
     }
 
-    private fun convertToSymbolType(globalValue: GlobalSymbol): SymbolType {
+    private fun convertGlobalValueToSymbolType(globalValue: GlobalValue): SymbolType {
+        return convertToSymbolType(globalValue.data)
+    }
+
+    private fun convertToSymbolType(globalValue: GlobalConstant): SymbolType {
         return when (globalValue) {
-            is StringLiteralGlobal -> SymbolType.StringLiteral
-            is I64GlobalValue -> SymbolType.Quad
-            is U64GlobalValue -> SymbolType.Quad
-            is I32GlobalValue -> SymbolType.Long
-            is U32GlobalValue -> SymbolType.Long
-            is I16GlobalValue -> SymbolType.Short
-            is U16GlobalValue -> SymbolType.Short
-            is I8GlobalValue -> SymbolType.Byte
-            is U8GlobalValue -> SymbolType.Byte
-            is F32GlobalValue -> SymbolType.Long
-            is F64GlobalValue -> SymbolType.Quad
+            is StringLiteralConstant -> SymbolType.StringLiteral
+            is I64ConstantValue -> SymbolType.Quad
+            is U64ConstantValue -> SymbolType.Quad
+            is I32ConstantValue -> SymbolType.Long
+            is U32ConstantValue -> SymbolType.Long
+            is I16ConstantValue -> SymbolType.Short
+            is U16ConstantValue -> SymbolType.Short
+            is I8ConstantValue  -> SymbolType.Byte
+            is U8ConstantValue  -> SymbolType.Byte
+            is F32ConstantValue -> SymbolType.Long
+            is F64ConstantValue -> SymbolType.Quad
             else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue:${globalValue.type()}")
         }
     }

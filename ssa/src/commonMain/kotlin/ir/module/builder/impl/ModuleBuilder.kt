@@ -12,7 +12,6 @@ import ir.module.builder.AnyModuleBuilder
 
 class ModuleBuilder private constructor(): AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilder>()
-    private val externFunctions = hashMapOf<String, ExternFunction>()
 
     fun findFunction(name: String): AnyFunctionPrototype {
         val fnBuilder: AnyFunctionPrototype = functions.find { it.prototype().name() == name }?.prototype()
@@ -30,12 +29,6 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
         val data = FunctionDataBuilder.create(name, returnType, argumentTypes, argumentValues, isVararg)
         functions.add(data)
         return data
-    }
-
-    fun createExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {
-        val extern = ExternFunction(name, returnType, arguments, isVararg)
-        externFunctions[name] = extern
-        return extern
     }
 
     override fun build(): Module {

@@ -46,9 +46,7 @@ class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
     }
 
     fun frontiers(): Map<AnyBlock, List<AnyBlock>> {
-        val dominanceFrontiers = intMapOf<AnyBlock, MutableList<AnyBlock>>(idomMap.keys) {
-            it: Label -> it.index
-        }
+        val dominanceFrontiers = hashMapOf<AnyBlock, MutableList<AnyBlock>>()
 
         for (bb in idomMap.keys) {
             dominanceFrontiers[bb] = arrayListOf()

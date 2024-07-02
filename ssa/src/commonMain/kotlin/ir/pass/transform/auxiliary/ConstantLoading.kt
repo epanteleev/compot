@@ -1,9 +1,6 @@
 package ir.pass.transform.auxiliary
 
-import ir.global.FunctionSymbol
-import ir.global.GlobalConstant
-import ir.global.GlobalValue
-import ir.global.StringLiteralGlobal
+import ir.global.StringLiteralConstant
 import ir.instruction.Instruction
 import ir.module.BasicBlocks
 import ir.module.Module
@@ -15,7 +12,7 @@ internal class ConstantLoading private constructor(private val cfg: BasicBlocks)
         fun closure(bb: Block, inst: Instruction): Instruction {
             var inserted: Instruction? = null
             for ((i, use) in inst.operands().withIndex()) {
-                if (use !is StringLiteralGlobal) {
+                if (use !is StringLiteralConstant) {
                     continue
                 }
 

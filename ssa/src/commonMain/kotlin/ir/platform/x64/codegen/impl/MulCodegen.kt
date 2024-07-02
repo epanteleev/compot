@@ -38,7 +38,7 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         if (dst == second) {
-            asm.add(size, first, second)
+            asm.mul(size, first, second)
         } else {
             asm.mov(size, first, dst)
             asm.mul(size, second, dst)
@@ -145,7 +145,12 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
-        TODO("Not yet implemented")
+        if (dst == second) {
+            asm.mulf(size, first, second)
+        } else {
+            asm.movf(size, first, dst)
+            asm.mulf(size, second, dst)
+        }
     }
 
 

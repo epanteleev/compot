@@ -29,22 +29,8 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
         val global = when {
             operand is U64Value && !canBeImm32(operand.u64) -> GlobalConstant.of("$prefix${constantIndex}", Type.U64, operand.u64)
             operand is I64Value && !canBeImm32(operand.i64) -> GlobalConstant.of("$prefix${constantIndex}", Type.I64, operand.i64)
-            operand is F32Value ->  {
-                val bits = operand.f32.toBits().toLong()
-                if (bits == ImmInt.minusZeroFloat) { //TODO DANGER!!!!
-                    GlobalConstant.of(CallConvention.FLOAT_SUB_ZERO_SYMBOL, Type.U64, bits)
-                } else {
-                    GlobalConstant.of("$prefix${constantIndex}", Type.I64, operand.f32.toBits())
-                }
-            }
-            operand is F64Value -> {
-                val bits = operand.f64.toBits()
-                if (bits == ImmInt.minusZeroDouble) { //TODO DANGER!!!!
-                    GlobalConstant.of(CallConvention.DOUBLE_SUB_ZERO_SYMBOL, Type.U64, bits)
-                } else {
-                    GlobalConstant.of("$prefix${constantIndex}", Type.I64, operand.f64.toBits())
-                }
-            }
+            operand is F32Value -> GlobalConstant.of("$prefix${constantIndex}", Type.F32, operand.f32)
+            operand is F64Value -> GlobalConstant.of("$prefix${constantIndex}", Type.F64, operand.f64)
             else -> null
         }
         constantIndex += 1

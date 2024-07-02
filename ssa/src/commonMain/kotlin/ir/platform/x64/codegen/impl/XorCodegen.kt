@@ -122,8 +122,7 @@ data class XorCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
 
     override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
         if (second == dst) {
-            asm.movf(size, first, xmmTemp1)
-            asm.xorpf(size, xmmTemp1, dst)
+            asm.xorpf(size, first, dst)
         } else {
             asm.movf(size, first, dst)
             asm.xorpf(size, second, dst)
@@ -131,11 +130,18 @@ data class XorCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
+        if (first == dst) {
+            asm.xorpf(size, second, dst)
+        } else {
+            asm.movf(size, second, dst)
+            asm.xorpf(size, first, dst)
+        }
     }
 
     override fun raaF(dst: XmmRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, xmmTemp1)
+        asm.xorpf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun araF(dst: Address, first: XmmRegister, second: Address) {

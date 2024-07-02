@@ -3,6 +3,8 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.PrimitiveType
 import ir.instruction.lir.StoreOnStack
+import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.types.FloatingPointType
 import ir.types.IntegerType
@@ -30,6 +32,15 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
                                 asm.movf(size, source, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
                             }
                             else -> default(dst, source, indexImm)
+                        }
+                    }
+                    dst is Address && source is Address && index is Imm -> {
+                        val indexImm = index as ImmInt
+                        if (dst is Address2) {
+                            asm.movf(size, source, xmmTemp1)
+                            asm.movf(size, xmmTemp1, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
+                        } else {
+                            default(dst, source, indexImm)
                         }
                     }
                     else -> {
@@ -114,7 +125,11 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        if (dst !is Address2) {
+            throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
+        }
+        asm.mov(size, first, temp1)
+        asm.mov(size, temp1, Address.from(dst.base, dst.offset + second.value().toInt() * size))
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

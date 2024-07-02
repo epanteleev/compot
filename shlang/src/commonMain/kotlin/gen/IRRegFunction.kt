@@ -10,7 +10,7 @@ import ir.instruction.Alloc
 import ir.module.block.Label
 import gen.TypeConverter.convertToType
 import gen.TypeConverter.toIRType
-import ir.global.StringLiteralGlobal
+import ir.global.StringLiteralConstant
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
@@ -140,7 +140,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitStringNode(stringNode: StringNode): Value {
         val string = stringNode.str.unquote()
-        val stringLiteral = StringLiteralGlobal("str$constantCounter", ArrayType(Type.I8, 11), string)
+        val stringLiteral = StringLiteralConstant("str$constantCounter", ArrayType(Type.I8, 11), string)
         constantCounter++
         return moduleBuilder.addConstant(stringLiteral)
     }
