@@ -114,7 +114,7 @@ class FunctionDataBuilder private constructor(
         return bb.retVoid()
     }
 
-    override fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr {
+    override fun gep(source: Value, elementType: NonTrivialType, index: Value): GetElementPtr {
         return bb.gep(source, elementType, index)
     }
 

@@ -285,7 +285,7 @@ class Block(override val index: Int):
         return addTerminate{ ReturnVoid.make(it, this) }
     }
 
-    override fun gep(source: Value, elementType: PrimitiveType, index: Value): GetElementPtr {
+    override fun gep(source: Value, elementType: NonTrivialType, index: Value): GetElementPtr {
         return withOutput { GetElementPtr.make(it, this, elementType, source, index) }
     }
 

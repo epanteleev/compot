@@ -82,8 +82,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is SizeOf       -> visitSizeOf(expression)
             is MemberAccess -> visitMemberAccess(expression, isRvalue)
             is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
+            is InitializerList -> visitInitializerList(expression)
             else -> throw IRCodeGenError("Unknown expression: $expression")
         }
+    }
+
+    private fun visitInitializerList(initializerList: InitializerList): Value {
+        TODO()
     }
 
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
@@ -95,8 +100,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val member = baseStructType.fieldIndex(arrowMemberAccess.ident.str())
 
         val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
-        return if (isRvalue) {
-            val memberType = baseStructType.fields()[member].second
+        if (!isRvalue) {
+            return gep
+        }
+
+        val memberType = baseStructType.fields()[member].second
+        return if (memberType !is CompoundType) {
             val memberIRType = moduleBuilder.toIRType<PrimitiveType>(typeHolder, memberType)
             ir().load(memberIRType, gep)
         } else {
@@ -105,7 +114,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitMemberAccess(memberAccess: MemberAccess, isRvalue: Boolean): Value {
-        val struct = visitExpression(memberAccess.primary, false) //TODO isRvalue???
+        val struct = visitExpression(memberAccess.primary, true) //TODO isRvalue???
         val structType = memberAccess.primary.resolveType(typeHolder)
         val structIRType = moduleBuilder.toIRType<StructType>(typeHolder, structType)
 
@@ -113,8 +122,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val member = baseStructType.fieldIndex(memberAccess.memberName())
 
         val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
-        return if (isRvalue) {
-            val memberType = baseStructType.fields()[member].second
+        if (!isRvalue) {
+            return gep
+        }
+        val memberType = baseStructType.fields()[member].second
+        return if (memberType !is CompoundType) {
             val memberIRType = moduleBuilder.toIRType<PrimitiveType>(typeHolder, memberType)
             ir().load(memberIRType, gep)
         } else {
@@ -150,14 +162,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val array = visitExpression(arrayAccess.primary, true)
 
         val arrayType = arrayAccess.resolveType(typeHolder)
-        val elementType = moduleBuilder.toIRType<PrimitiveType>(typeHolder, arrayType)
+        val elementType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, arrayType)
 
         val adr = ir().gep(array, elementType, index)
+        if (!isRvalue) {
+            return adr
+        }
 
-        return if (isRvalue) {
-            ir().load(elementType,adr)
-        } else {
+        return if (arrayType is CompoundType) {
             adr
+        } else {
+            ir().load(elementType as PrimitiveType, adr)
         }
     }
 
@@ -464,9 +479,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (type.baseType() is CArrayType) {
             return rvalueAttr
         }
-
-        return if (isRvalue) {
-            ir().load(moduleBuilder.toIRType<PrimitiveType>(typeHolder, type), rvalueAttr)
+        val converted = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
+        if (!isRvalue) {
+            return rvalueAttr
+        }
+        return if (type !is CompoundType) {
+            ir().load(converted as PrimitiveType, rvalueAttr)
         } else {
             rvalueAttr
         }

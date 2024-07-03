@@ -10,7 +10,7 @@ import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: PrimitiveType, val asm: Assembler) :
+class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: NonTrivialType, val asm: Assembler) :
     GPOperandsVisitorBinaryOp {
     private val size: Int = basicType.size()
 

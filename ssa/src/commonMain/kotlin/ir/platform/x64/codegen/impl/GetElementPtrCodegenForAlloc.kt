@@ -8,7 +8,7 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-data class GetElementPtrCodegenForAlloc (val type: PointerType, val basicType: PrimitiveType, val asm: Assembler):
+data class GetElementPtrCodegenForAlloc (val type: PointerType, val basicType: NonTrivialType, val asm: Assembler):
     GPOperandsVisitorBinaryOp {
     private val size: Int = basicType.size()
 

@@ -51,7 +51,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
             when {
                 gep(generate(), nop()) (inst) -> {
                     inst as GetElementPtr
-                    return bb.update(inst) { it.leaStack(inst.source(), inst.basicType, inst.index()) }
+                    return bb.update(inst) { it.leaStack(inst.source(), inst.basicType as PrimitiveType, inst.index()) }
                 }
                 gfp(generate(), nop()) (inst) -> {
                     inst as GetFieldPtr

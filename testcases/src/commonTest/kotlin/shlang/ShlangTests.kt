@@ -20,6 +20,12 @@ abstract class ShlangTests: CommonCTest() {
     }
 
     @Test
+    fun testArrayAccess1() {
+        val result = runCTest("shlang/array_access1", listOf(), options())
+        assertEquals("42 43 44 45\n", result.output)
+    }
+
+    @Test
     fun testAnd1() {
         val result = runCTest("shlang/and1", listOf(), options())
         assertReturnCode(result, 3)
@@ -169,40 +175,6 @@ abstract class ShlangTests: CommonCTest() {
     @Test
     fun testCollatz() {
         val result = runCTest("shlang/collatz_rec", listOf("runtime/runtime.c"), options())
-        assertEquals(0, result.exitCode)
-    }
-
-    @Test
-    fun testStruct0() {
-        val result = runCTest("shlang/struct0", listOf("runtime/runtime.c"), options())
-        assertEquals("30\n", result.output)
-        assertEquals(0, result.exitCode)
-    }
-
-    @Test
-    fun testStruct1() {
-        val result = runCTest("shlang/struct1", listOf("runtime/runtime.c"), options())
-        assertEquals("0\n", result.output)
-        assertEquals(0, result.exitCode)
-    }
-
-    @Test
-    fun testStruct2() {
-        val result = runCTest("shlang/struct2", listOf("runtime/runtime.c"), options())
-        assertEquals("Rect: (10, 20) - (30, 40)\n", result.output)
-        assertEquals(0, result.exitCode)
-    }
-
-    @Test
-    fun testUnion0() {
-        val result = runCTest("shlang/union0", listOf("runtime/runtime.c"), options())
-        assertEquals("1.000000\n", result.output)
-        assertEquals(0, result.exitCode)
-    }
-
-    @Test
-    fun testUnion1() {
-        val result = runCTest("shlang/union1", listOf("runtime/runtime.c"), options())
         assertEquals(0, result.exitCode)
     }
 

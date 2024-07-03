@@ -7,7 +7,7 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class GetElementPtr private constructor(id: Identity, owner: Block, val basicType: PrimitiveType, source: Value, index: Value):
+class GetElementPtr private constructor(id: Identity, owner: Block, val basicType: NonTrivialType, source: Value, index: Value):
     ValueInstruction(id, owner, Type.Ptr, arrayOf(source, index)) {
     override fun dump(): String {
         return "%${name()} = $NAME $basicType, ptr ${source()}, ${index().type()} ${index()}"
@@ -40,7 +40,7 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
     companion object {
         const val NAME = "gep"
 
-        fun make(id: Identity, owner: Block, elementType: PrimitiveType, source: Value, index: Value): GetElementPtr {
+        fun make(id: Identity, owner: Block, elementType: NonTrivialType, source: Value, index: Value): GetElementPtr {
             val sourceType = source.type()
             val indexType  = index.type()
             require(isAppropriateType(sourceType, indexType)) {

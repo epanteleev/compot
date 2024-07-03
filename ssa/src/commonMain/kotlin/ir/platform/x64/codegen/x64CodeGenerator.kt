@@ -576,7 +576,7 @@ private class CodeEmitter(private val data: FunctionData,
         val dest          = valueToRegister.operand(gep)
 
         if (source is Alloc) {
-            GetElementPtrCodegenForAlloc(gep.type(), gep.basicType, asm)(dest, sourceOperand, index)
+            GetElementPtrCodegenForAlloc(gep.type(), gep.basicType, asm)(dest, sourceOperand, index) //TODO Remove it!!!!!!!!!!!!!!!!!!
         } else {
             GetElementPtrCodegen(gep.type(), gep.index().asType<NonTrivialType>().size(), gep.basicType, asm)(dest, sourceOperand, index)
         }

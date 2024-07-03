@@ -8,7 +8,7 @@ import ir.module.block.Block
 class Alloc private constructor(id: Identity, owner: Block, val allocatedType: NonTrivialType):
     ValueInstruction(id, owner, Type.Ptr, arrayOf()) {
     override fun dump(): String {
-        return "${name()} = $NAME $allocatedType"
+        return "%${name()} = $NAME $allocatedType"
     }
 
     override fun type(): PointerType {

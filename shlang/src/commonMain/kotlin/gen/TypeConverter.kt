@@ -9,7 +9,12 @@ import ir.module.builder.impl.ModuleBuilder
 
 object TypeConverter {
     inline fun<reified T: Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: CType): T {
-        return toIRTypeUnchecked(typeHolder, type) as T
+        val converted = toIRTypeUnchecked(typeHolder, type)
+        if (converted !is T) {
+            throw IRCodeGenError("Cannot convert $type to ${T::class}")
+        }
+
+        return converted
     }
 
     fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type {
