@@ -1,0 +1,4 @@
+package shlang
+
+class InitializerListTest {
+}
