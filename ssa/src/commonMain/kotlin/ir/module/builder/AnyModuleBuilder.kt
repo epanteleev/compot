@@ -15,12 +15,13 @@ abstract class AnyModuleBuilder {
     protected val externFunctions = hashMapOf<String, ExternFunction>()
 
     fun addGlobal(name: String, data: GlobalConstant): GlobalValue {
-        val has = globals.put(name, GlobalValue(name, data))
+        val global = GlobalValue(name, data)
+        val has = globals.put(name, global)
         if (has != null) {
             throw IllegalArgumentException("global with name='$name' already exists")
         }
 
-        return globals[name]!!
+        return global
     }
 
     fun addConstant(global: GlobalConstant): GlobalConstant {

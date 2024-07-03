@@ -62,8 +62,9 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                     }
 
                     constantCounter++
-                    moduleBuilder.addConstant(result)
-                    varStack[decl.name()] = result
+                    val constant = moduleBuilder.addConstant(result)
+                    val global = moduleBuilder.addGlobal(".v${constantCounter++}", constant)
+                    varStack[decl.name()] = global
                 }
                 else -> throw IRCodeGenError("Unsupported declarator $decl")
             }
@@ -77,22 +78,22 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             CType.INT, CType.SHORT, CType.CHAR, CType.UINT, CType.USHORT, CType.UCHAR -> {
                 val ctx = CommonConstEvalContext<Int>(typeHolder)
                 val result = ConstEvalExpression.eval(expr, ConstEvalExpressionInt(ctx))
-                return I32ConstantValue("v${constantCounter++}", result)
+                return I32ConstantValue(".v${constantCounter++}", result)
             }
             CType.LONG, CType.ULONG -> {
                 val ctx = CommonConstEvalContext<Long>(typeHolder)
                 val result = ConstEvalExpression.eval(expr, ConstEvalExpressionLong(ctx))
-                return I64ConstantValue("v${constantCounter++}", result)
+                return I64ConstantValue(".v${constantCounter++}", result)
             }
             CType.FLOAT -> {
                 val ctx = CommonConstEvalContext<Float>(typeHolder)
                 val result = ConstEvalExpression.eval(expr, ConstEvalExpressionFloat(ctx))
-                return F32ConstantValue("v${constantCounter++}", result)
+                return F32ConstantValue(".v${constantCounter++}", result)
             }
             CType.DOUBLE -> {
                 val ctx = CommonConstEvalContext<Double>(typeHolder)
                 val result = ConstEvalExpression.eval(expr, ConstEvalExpressionDouble(ctx))
-                return F64ConstantValue("v${constantCounter++}", result)
+                return F64ConstantValue(".v${constantCounter++}", result)
             }
             else -> null
         }

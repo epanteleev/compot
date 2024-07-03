@@ -16,6 +16,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
         dumpExternFunctions()
         dumpTypes()
         dumpConstants()
+        dumpGlobals()
         for (fn in module.functions()) {
             dumpFunctionData(fn)
         }
@@ -32,6 +33,14 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
     private fun dumpConstants() {
         for (c in module.constantPool.values) {
             builder.append(c.dump())
+            builder.append('\n')
+        }
+        builder.append('\n')
+    }
+
+    private fun dumpGlobals() {
+        for (global in module.globals.values) {
+            builder.append(global.dump())
             builder.append('\n')
         }
         builder.append('\n')
@@ -91,7 +100,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
         fun dump(module: Module): String {
             val dump = when (module) {
                 is SSAModule  -> DumpSSAlModule(module)
-                is LModule -> DumpCSSAModule(module)
+                is LModule -> DumpLModule(module)
                 else -> throw RuntimeException("undefined")
             }
 
@@ -102,7 +111,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
 
 private class DumpSSAlModule(module: SSAModule) : DumpModule<SSAModule>(module)
 
-private class DumpCSSAModule(module: LModule) : DumpModule<LModule>(module) {
+private class DumpLModule(module: LModule) : DumpModule<LModule>(module) {
     private var regAlloc: RegisterAllocation? = null
     private var liveness: LiveIntervals? = null
     private var currentBlock: Block? = null

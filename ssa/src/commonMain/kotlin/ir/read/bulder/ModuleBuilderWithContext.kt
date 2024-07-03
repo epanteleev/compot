@@ -1,5 +1,6 @@
 package ir.read.bulder
 
+import ir.global.GlobalSymbol
 import ir.module.*
 import ir.read.tokens.*
 import ir.module.builder.AnyModuleBuilder
@@ -61,6 +62,19 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
         } else {
             tokens.mapTo(arrayListOf()) { convert(it) }
         }
+    }
+
+    fun findFunctionOrNull(name: String): GlobalSymbol? {
+        val externFunction = externFunctions[name]
+        if (externFunction != null) {
+            return externFunction
+        }
+
+        val function = functions.find { it.prototype().name() == name }
+        if (function != null) {
+            return function.prototype()
+        }
+        return null
     }
 
     companion object {

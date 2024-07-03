@@ -21,11 +21,16 @@ class CompilationUnit: CompiledModule() {
     }
 
     fun makeGlobal(globalValue: GlobalValue) {
-        symbols.add(ObjSymbol(globalValue.name(), globalValue.data(), convertGlobalValueToSymbolType(globalValue)))
+        symbols.add(convertGlobalValueToSymbolType(globalValue))
     }
 
-    private fun convertGlobalValueToSymbolType(globalValue: GlobalValue): SymbolType {
-        return convertToSymbolType(globalValue.data)
+    private fun convertGlobalValueToSymbolType(globalValue: GlobalValue): ObjSymbol {
+        val symbolType = convertToSymbolType(globalValue.data)
+        return if (symbolType == SymbolType.StringLiteral) {
+            ObjSymbol(globalValue.name(), globalValue.data.name(), SymbolType.Quad)
+        } else {
+            ObjSymbol(globalValue.name(), globalValue.data(), symbolType)
+        }
     }
 
     private fun convertToSymbolType(globalValue: GlobalConstant): SymbolType {
