@@ -9,7 +9,7 @@ import ir.module.block.Block
 
 typealias Identity = Int
 
-abstract class Instruction(val id: Identity, val owner: Block, protected val operands: Array<Value>): LListNode() {
+abstract class Instruction(protected val id: Identity, protected val owner: Block, protected val operands: Array<Value>): LListNode() {
     override fun next(): Instruction? = next as Instruction?
     override fun prev(): Instruction? = prev as Instruction?
 

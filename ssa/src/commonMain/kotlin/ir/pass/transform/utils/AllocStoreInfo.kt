@@ -8,11 +8,11 @@ import ir.module.block.AnyBlock
 
 
 class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
-    private val allocated: Set<Alloc> by lazy { allocatedVariablesInternal() }
+    private val allocated: List<Alloc> by lazy { allocatedVariablesInternal() }
     private val stores: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal(allocated) }
 
-    private fun allocatedVariablesInternal(): Set<Alloc> {
-        val stores = hashSetOf<Alloc>()
+    private fun allocatedVariablesInternal(): List<Alloc> {
+        val stores = arrayListOf<Alloc>()
         fun allocatedInGivenBlock(bb: AnyBlock) {
             for (inst in bb) {
                 if (inst !is Alloc) {
@@ -34,34 +34,22 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
         return stores
     }
 
-    private fun allStoresInternal(variables: Set<Alloc>): Map<Alloc, Set<AnyBlock>> {
+    private fun allStoresInternal(variables: List<Alloc>): Map<Alloc, Set<AnyBlock>> {
         val stores = hashMapOf<Alloc, MutableSet<AnyBlock>>()
         for (v in variables) {
             stores[v] = mutableSetOf()
-        }
-
-        for (bb in blocks) {
-            for (inst in bb) {
-                if (inst !is Store) {
+            for (user in v.usedIn()) {
+                if (user !is Store) {
                     continue
                 }
-                if (!inst.isLocalVariable()) {
+                if (!user.isLocalVariable()) {
                     continue
                 }
-                if (!variables.contains(inst.pointer())) {
-                    continue
-                }
-
-                stores[inst.pointer()]!!.add(bb)
+                stores[v]!!.add(user.owner())
             }
         }
 
         return stores
-    }
-
-    /** Returns set of variables which produced by 'stackalloc' instruction. */
-    fun allocatedVariables(): Set<Alloc> {
-        return allocated
     }
 
     /** Find all bd where are stores of given local variable. */
