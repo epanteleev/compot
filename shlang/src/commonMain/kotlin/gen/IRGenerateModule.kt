@@ -56,12 +56,11 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             when (decl) {
                 is Declarator -> declareDeclarator(node.declspec, decl)
                 is AssignmentDeclarator -> {
-                    val result = constEval(decl.rvalue)?: stringLiteralInitializer(decl.rvalue)
-                    if (result == null) {
-                        throw IRCodeGenError("Unsupported declarator '$decl'")
-                    }
+                    val cType = decl.resolveType(node.declspec, typeHolder)
+                    val lValueType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, cType)
 
-                    constantCounter++
+                    val result = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
+
                     val constant = moduleBuilder.addConstant(result)
                     val global = moduleBuilder.addGlobal(".v${constantCounter++}", constant)
                     varStack[decl.name()] = global
@@ -71,29 +70,33 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         }
     }
 
-    private fun constEval(expr: Expression): GlobalConstant? {
+    private fun constEvalExpression(lValueType: Type, expr: Expression): GlobalConstant? {
+        val result = constEvalExpression0(expr)
+        if (result != null) {
+            return GlobalConstant.of(".v${constantCounter++}", lValueType, result)
+        }
+        return stringLiteralInitializer(expr)
+    }
+
+    private fun constEvalExpression0(expr: Expression): Number? {
         val type = expr.resolveType(typeHolder)
 
         return when (type) {
             CType.INT, CType.SHORT, CType.CHAR, CType.UINT, CType.USHORT, CType.UCHAR -> {
                 val ctx = CommonConstEvalContext<Int>(typeHolder)
-                val result = ConstEvalExpression.eval(expr, ConstEvalExpressionInt(ctx))
-                return I32ConstantValue(".v${constantCounter++}", result)
+                ConstEvalExpression.eval(expr, ConstEvalExpressionInt(ctx))
             }
             CType.LONG, CType.ULONG -> {
                 val ctx = CommonConstEvalContext<Long>(typeHolder)
-                val result = ConstEvalExpression.eval(expr, ConstEvalExpressionLong(ctx))
-                return I64ConstantValue(".v${constantCounter++}", result)
+                ConstEvalExpression.eval(expr, ConstEvalExpressionLong(ctx))
             }
             CType.FLOAT -> {
                 val ctx = CommonConstEvalContext<Float>(typeHolder)
-                val result = ConstEvalExpression.eval(expr, ConstEvalExpressionFloat(ctx))
-                return F32ConstantValue(".v${constantCounter++}", result)
+                ConstEvalExpression.eval(expr, ConstEvalExpressionFloat(ctx))
             }
             CType.DOUBLE -> {
                 val ctx = CommonConstEvalContext<Double>(typeHolder)
-                val result = ConstEvalExpression.eval(expr, ConstEvalExpressionDouble(ctx))
-                return F64ConstantValue(".v${constantCounter++}", result)
+                ConstEvalExpression.eval(expr, ConstEvalExpressionDouble(ctx))
             }
             else -> null
         }
