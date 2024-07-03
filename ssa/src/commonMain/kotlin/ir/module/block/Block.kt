@@ -118,6 +118,18 @@ class Block(override val index: Int):
         return builder(this)
     }
 
+    inline fun<reified T: Instruction> update(instruction: Instruction, crossinline builder: (AnyInstructionFabric) -> T): T {
+        val newInstruction = insertBefore(instruction) { builder(it) }
+        if (instruction is LocalValue) {
+            assertion(newInstruction is LocalValue) {
+                "should be local value, but newInstruction=$newInstruction"
+            }
+            instruction.replaceUsages(newInstruction as LocalValue)
+        }
+        kill(instruction)
+        return newInstruction
+    }
+
     override fun contains(instruction: Instruction): Boolean {
         return instructions.contains(instruction)
     }

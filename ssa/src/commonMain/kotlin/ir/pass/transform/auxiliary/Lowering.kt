@@ -18,24 +18,15 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
     }
 
     private fun replaceAlloc(bb: Block, inst: Alloc): Instruction {
-        val gen = bb.insertBefore(inst) { it.gen(inst.allocatedType) }
-        inst.replaceUsages(gen)
-        bb.kill(inst)
-        return gen
+        return bb.update(inst) { it.gen(inst.allocatedType) }
     }
 
     private fun replaceLoad(bb: Block, inst: Load): Instruction {
-        val copy = bb.insertBefore(inst) { it.copy(inst.operand()) }
-        inst.replaceUsages(copy)
-        bb.kill(inst)
-        return copy
+        return bb.update(inst) { it.copy(inst.operand()) }
     }
 
     private fun replaceCopy(bb: Block, inst: Copy): Instruction {
-        val lea = bb.insertBefore(inst) { it.lea(inst.origin() as Generate) }
-        inst.replaceUsages(lea)
-        bb.kill(inst)
-        return lea
+        return bb.update(inst) { it.lea(inst.origin() as Generate) }
     }
 
     private fun replaceAllocLoadStores() {
@@ -60,30 +51,17 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
             when {
                 gep(generate(), nop()) (inst) -> {
                     inst as GetElementPtr
-                    val lea = bb.insertBefore(inst) { it.leaStack(inst.source(), inst.basicType, inst.index()) }
-                    inst.replaceUsages(lea)
-                    bb.kill(inst)
-                    return lea
+                    return bb.update(inst) { it.leaStack(inst.source(), inst.basicType, inst.index()) }
                 }
                 gfp(generate(), nop()) (inst) -> {
                     inst as GetFieldPtr
 
                     when (val base = inst.basicType) {
                         is ArrayType -> {
-                            val lea = bb.insertBefore(inst) {
-                                it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index())
-                            }
-                            inst.replaceUsages(lea)
-                            bb.kill(inst)
-                            return lea
+                            return bb.update(inst) { it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index()) }
                         }
                         is StructType -> {
-                            val lea = bb.insertBefore(inst) {
-                                it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index().toInt())))
-                            }
-                            inst.replaceUsages(lea)
-                            bb.kill(inst)
-                            return lea
+                            return bb.update(inst) { it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index().toInt()))) }
                         }
                     }
                 }
