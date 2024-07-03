@@ -23,11 +23,6 @@ enum class ArithmeticBinaryOp {
             return "mul"
         }
     },
-    Mod {
-        override fun toString(): String {
-            return "mod"
-        }
-    },
     Div {
         override fun toString(): String {
             return "div"

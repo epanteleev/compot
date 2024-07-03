@@ -1,0 +1,18 @@
+extern void @printFloat(f32)
+
+define f32 @div(%a: f32, %b: f32) {
+entry:
+	%0x0 = div f32, f32 %a, f32 %b
+	ret f32 %0x0
+}
+
+define f32 @main() {
+entry:
+    %0x0 = call f32 @div(10: f32, 5: f32) br label %next
+
+next:
+    call void @printFloat(%0x0: f32) br label %exit
+
+exit:
+    ret f32 %0x0
+}

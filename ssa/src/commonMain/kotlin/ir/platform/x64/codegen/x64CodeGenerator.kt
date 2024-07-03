@@ -96,13 +96,24 @@ private class CodeEmitter(private val data: FunctionData,
                     "can't generate code for byte div: type=${binary.type()}"
                 }
 
-                asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+
                 when (binary.type()) {
-                    is UnsignedIntType -> UIntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
-                    is SignedIntType -> IntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
+                    is UnsignedIntType -> {
+                        asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+                        UIntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
+                        asm.pop(POINTER_SIZE, rdx)
+                    }
+                    is SignedIntType -> {
+                        asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+                        IntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
+                        asm.pop(POINTER_SIZE, rdx)
+                    }
+                    is FloatingPointType -> {
+                        FloatDivCodegen(binary.type(), asm)(dst, first, second)
+                    }
                     else -> TODO()
                 }
-                asm.pop(POINTER_SIZE, rdx)
+
             }
             else -> println("Unimplemented: ${binary.op}")
         }

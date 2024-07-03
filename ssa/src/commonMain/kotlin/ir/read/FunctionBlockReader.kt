@@ -42,10 +42,17 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                 builder.tupleDiv(resultName, resultType, first, second, secondType)
             }
             else -> {
-                val first      = parseOperand("first operand")
+                iterator.expect<Comma>("','")
+                val firstType = iterator.expect<PrimitiveTypeToken>("first operand type")
+                val first = parseOperand("first operand")
                 iterator.expect<Comma>("','")
 
+                val secondType = iterator.expect<PrimitiveTypeToken>("second operand type")
                 val second = parseOperand("second operand")
+
+                if (firstType.type() != secondType.type()) {
+                    throw ParseErrorException("should be the same integer type: first=${firstType.type()}, second=${secondType.type()}")
+                }
                 if (resultType !is ArithmeticTypeToken) {
                     throw ParseErrorException("should be arithmetic type, but '${resultType}'")
                 }
@@ -452,7 +459,6 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "sub"        -> parseBinary(currentTok, ArithmeticBinaryOp.Sub)
                     "mul"        -> parseBinary(currentTok, ArithmeticBinaryOp.Mul)
                     "div"        -> parseDiv(currentTok)
-                    "mod"        -> parseBinary(currentTok, ArithmeticBinaryOp.Mod)
                     "shr"        -> parseBinary(currentTok, ArithmeticBinaryOp.Shr)
                     "shl"        -> parseBinary(currentTok, ArithmeticBinaryOp.Shl)
                     "and"        -> parseBinary(currentTok, ArithmeticBinaryOp.And)
