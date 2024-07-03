@@ -45,7 +45,6 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         val preprocessor        = CProgramPreprocessor.create(tokens, ctx)
         val postProcessedTokens = preprocessor.preprocess()
 
-        println(TokenPrinter.print(postProcessedTokens))
         val parser     = CProgramParser.build(postProcessedTokens)
         val program    = parser.translation_unit()
         val typeHolder = parser.typeHolder()
