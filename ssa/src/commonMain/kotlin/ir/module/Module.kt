@@ -27,8 +27,8 @@ abstract class Module(internal val functions: List<FunctionData>,
 
     abstract fun copy(): Module
 
-    fun functions(): Iterator<FunctionData> {
-        return functions.iterator()
+    fun functions(): List<FunctionData> {
+        return functions
     }
 }
 

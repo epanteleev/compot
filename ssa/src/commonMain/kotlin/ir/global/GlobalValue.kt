@@ -4,17 +4,19 @@ import ir.types.*
 
 
 class GlobalValue(val name: String, val data: GlobalConstant): GlobalSymbol {
-    override fun name(): String {
-        return name
+    init {
+        require(data.type() is PrimitiveType) {
+            "GlobalValue data must be a PrimitiveType, but was '${data.type()}'"
+        }
     }
+
+    override fun name(): String = name
 
     override fun dump(): String {
         return "@$name = global ${data.contentType()} @${data.name()}"
     }
 
-    override fun type(): NonTrivialType = Type.Ptr
-
-    fun dataType(): Type = data.type()
+    override fun type(): PointerType = Type.Ptr
 
     override fun toString(): String {
         return "@$name"
@@ -33,11 +35,7 @@ class GlobalValue(val name: String, val data: GlobalConstant): GlobalSymbol {
         return name == other.name
     }
 
-    fun content(): String = data()
-
     fun data(): String {
         return data.data()
     }
-
-    fun contentType(): Type = data.contentType()
 }

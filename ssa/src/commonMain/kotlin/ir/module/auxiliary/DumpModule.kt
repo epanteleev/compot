@@ -17,17 +17,23 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
         dumpTypes()
         dumpConstants()
         dumpGlobals()
-        for (fn in module.functions()) {
+        for ((i, fn) in module.functions().withIndex()) {
             dumpFunctionData(fn)
+            if (i != module.functions().size - 1) {
+                builder.append('\n')
+            }
         }
     }
 
     private fun dumpExternFunctions() {
-        for (fn in module.externFunctions) {
+        for (fn in module.externFunctions.values) {
             builder.append(fn)
             builder.append('\n')
         }
-        builder.append('\n')
+        if (module.externFunctions.isNotEmpty()) {
+            builder.append('\n')
+        }
+
     }
 
     private fun dumpConstants() {
@@ -35,7 +41,9 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
             builder.append(c.dump())
             builder.append('\n')
         }
-        builder.append('\n')
+        if (module.constantPool.isNotEmpty()) {
+            builder.append('\n')
+        }
     }
 
     private fun dumpGlobals() {
@@ -43,7 +51,9 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
             builder.append(global.dump())
             builder.append('\n')
         }
-        builder.append('\n')
+        if (module.globals.isNotEmpty()) {
+            builder.append('\n')
+        }
     }
 
     private fun dumpTypes() {
@@ -51,7 +61,9 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
             builder.append(structType.dump())
             builder.append('\n')
         }
-        builder.append('\n')
+        if (module.types.isNotEmpty()) {
+            builder.append('\n')
+        }
     }
 
     protected open fun dumpFunctionData(functionData: FunctionData) {

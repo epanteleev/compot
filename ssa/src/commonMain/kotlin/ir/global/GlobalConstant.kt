@@ -181,7 +181,7 @@ class StringLiteralConstant(override val name: String, val tp: ArrayType, val st
         return "\"$string\""
     }
 
-    override fun type(): NonTrivialType = Type.Ptr
+    override fun type(): NonTrivialType = Type.Ptr //TODO return tp
 
     override fun content(): String = data()
 
