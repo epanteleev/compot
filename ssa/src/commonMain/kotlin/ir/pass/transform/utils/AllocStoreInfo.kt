@@ -7,13 +7,11 @@ import ir.pass.isLocalVariable
 import ir.module.block.AnyBlock
 
 
-class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
-    private val allocated: List<Alloc> by lazy { allocatedVariablesInternal() }
-    private val stores: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal(allocated) }
+internal class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
+    private val stores: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal() }
 
-    private fun allocatedVariablesInternal(): List<Alloc> {
-        val stores = arrayListOf<Alloc>()
-        fun allocatedInGivenBlock(bb: AnyBlock) {
+    private inline fun forEachAlloc(closure: (Alloc) -> Unit) {
+        for (bb in blocks) {
             for (inst in bb) {
                 if (inst !is Alloc) {
                     continue
@@ -23,33 +21,28 @@ class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
                     continue
                 }
 
-                stores.add(inst)
+                closure(inst)
             }
         }
-
-        for (bb in blocks) {
-            allocatedInGivenBlock(bb)
-        }
-
-        return stores
     }
 
-    private fun allStoresInternal(variables: List<Alloc>): Map<Alloc, Set<AnyBlock>> {
-        val stores = hashMapOf<Alloc, MutableSet<AnyBlock>>()
-        for (v in variables) {
-            stores[v] = mutableSetOf()
-            for (user in v.usedIn()) {
+    private fun allStoresInternal(): Map<Alloc, Set<AnyBlock>> {
+        val allStores = hashMapOf<Alloc, MutableSet<AnyBlock>>()
+        forEachAlloc { alloc ->
+            val stores = mutableSetOf<AnyBlock>()
+            for (user in alloc.usedIn()) {
                 if (user !is Store) {
                     continue
                 }
                 if (!user.isLocalVariable()) {
-                    continue
+                    break
                 }
-                stores[v]!!.add(user.owner())
+                stores.add(user.owner())
             }
+            allStores[alloc] = stores
         }
 
-        return stores
+        return allStores
     }
 
     /** Find all bd where are stores of given local variable. */
