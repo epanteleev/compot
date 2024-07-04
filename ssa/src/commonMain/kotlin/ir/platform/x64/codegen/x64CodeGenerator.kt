@@ -575,11 +575,8 @@ private class CodeEmitter(private val data: FunctionData,
         val index         = valueToRegister.operand(gep.index())
         val dest          = valueToRegister.operand(gep)
 
-        if (source is Alloc) {
-            GetElementPtrCodegenForAlloc(gep.type(), gep.basicType, asm)(dest, sourceOperand, index) //TODO Remove it!!!!!!!!!!!!!!!!!!
-        } else {
-            GetElementPtrCodegen(gep.type(), gep.index().asType<NonTrivialType>().size(), gep.basicType, asm)(dest, sourceOperand, index)
-        }
+        val elementSize = gep.index().asType<NonTrivialType>().size()
+        GetElementPtrCodegen(gep.type(), elementSize, gep.basicType, asm)(dest, sourceOperand, index)
     }
 
     override fun visit(gfp: GetFieldPtr) {
@@ -588,11 +585,7 @@ private class CodeEmitter(private val data: FunctionData,
         val index         = valueToRegister.operand(gfp.index())
         val dest          = valueToRegister.operand(gfp)
 
-        if (source is Alloc) {
-            GetFieldPtrCodegenForAlloc(gfp.type(), gfp.basicType, asm)(dest, sourceOperand, index)
-        } else {
-            GetFieldPtrCodegen(gfp.type(), gfp.basicType, asm)(dest, sourceOperand, index)
-        }
+        GetFieldPtrCodegen(gfp.type(), gfp.basicType, asm)(dest, sourceOperand, index)
     }
 
     override fun visit(bitcast: Bitcast) {
@@ -651,7 +644,11 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(phi: Phi) { /* nothing to do */ }
-    override fun visit(alloc: Alloc) { /* nothing to do */ }
+
+    override fun visit(alloc: Alloc) {
+        throw CodegenException("${Alloc.NAME} should be handled before code generation")
+    }
+
     override fun visit(generate: Generate) { /* nothing to do */ }
 
     override fun visit(lea: Lea) {

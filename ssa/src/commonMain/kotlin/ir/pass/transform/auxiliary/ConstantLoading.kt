@@ -1,5 +1,6 @@
 package ir.pass.transform.auxiliary
 
+import ir.global.AggregateConstant
 import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
 import ir.global.StringLiteralConstant
@@ -14,7 +15,7 @@ internal class ConstantLoading private constructor(private val cfg: BasicBlocks)
         fun closure(bb: Block, inst: Instruction): Instruction {
             var inserted: Instruction? = null
             for ((i, use) in inst.operands().withIndex()) {
-                if (use is StringLiteralConstant || use is FunctionSymbol) {
+                if (use is AggregateConstant || use is FunctionSymbol) {
                     val lea = bb.insertBefore(inst) { it.lea(use) }
                     inst.update(i, lea)
                     inserted = lea

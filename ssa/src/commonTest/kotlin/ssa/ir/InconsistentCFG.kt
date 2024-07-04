@@ -3,14 +3,12 @@ package ssa.ir
 import ir.F32Value
 import ir.module.FunctionPrototype
 import ir.I32Value
-import ir.NullValue
 import ir.U32Value
+import ir.global.ArrayGlobalConstant
 import ir.types.Type
 import kotlin.test.Test
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.ValidateSSAErrorException
-import ir.pass.ana.VerifySSA
-import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
 

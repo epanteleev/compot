@@ -28,10 +28,7 @@ class FunctionDataBuilderWithContext private constructor(
 
     private fun getValue(token: AnyValueToken, ty: Type): Value {
         return when (token) {
-            is IntValue        -> Constant.of(ty, token.int)
-            is FloatValue      -> Constant.of(ty, token.fp)
-            is BoolValueToken  -> BoolValue.of(token.bool)
-            is NULLValueToken  -> NullValue.NULLPTR
+            is LiteralValueToken -> token.toConstant(ty)
             is LocalValueToken -> {
                 val operand = nameMap[token.name]
                     ?: throw ParseErrorException("in ${token.position()} undefined value '${token.value()}'")

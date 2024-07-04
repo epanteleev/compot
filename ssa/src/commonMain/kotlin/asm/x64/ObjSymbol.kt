@@ -1,5 +1,7 @@
 package asm.x64
 
+import common.forEachWith
+
 enum class SymbolType {
     StringLiteral {
         override fun toString(): String {
@@ -28,8 +30,13 @@ enum class SymbolType {
     }
 }
 
-data class ObjSymbol(val name: String, val data: String, val type: SymbolType) {
+data class ObjSymbol(val name: String, val data: List<String>, val type: List<SymbolType>) {
     override fun toString(): String {
-        return "$name:\n\t$type $data"
+        val stringBuilder = StringBuilder()
+        stringBuilder.append("$name:\n")
+        data.forEachWith(type) { d, t ->
+            stringBuilder.append("\t$t $d\n")
+        }
+        return stringBuilder.toString()
     }
 }

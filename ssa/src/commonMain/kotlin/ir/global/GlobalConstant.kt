@@ -1,13 +1,17 @@
 package ir.global
 
+import common.forEachWith
+import ir.Constant
+import ir.U8Value
 import ir.types.ArrayType
 import ir.types.NonTrivialType
+import ir.types.StructType
 import ir.types.Type
 
 
 abstract class GlobalConstant(protected open val name: String): GlobalSymbol {
     override fun dump(): String {
-        return "@$name = constant ${type()} ${data()}"
+        return "@$name = constant ${contentType()} ${data()}"
     }
 
     override fun toString(): String = "@$name"
@@ -176,14 +180,72 @@ class F64ConstantValue(override val name: String, val f64: Double): GlobalConsta
     override fun contentType(): NonTrivialType = Type.F64
 }
 
-class StringLiteralConstant(override val name: String, val tp: ArrayType, val string: String?): GlobalConstant(name) {
+abstract class AggregateConstant(override val name: String): GlobalConstant(name) {
+    abstract fun elements(): List<Constant>
+    override fun type(): NonTrivialType = Type.Ptr //TODO return tp
+}
+
+class StringLiteralConstant(override val name: String, val tp: ArrayType, val string: String?): AggregateConstant(name) {
     override fun data(): String {
         return "\"$string\""
     }
 
-    override fun type(): NonTrivialType = Type.Ptr //TODO return tp
+    override fun elements(): List<Constant> {
+        if (string == null) return emptyList()
+        return string.map { U8Value(it.code.toByte()) }
+    }
 
     override fun content(): String = data()
 
     override fun contentType(): NonTrivialType = Type.Ptr
+}
+
+class ArrayGlobalConstant(override val name: String, val tp: ArrayType, private val elements: List<Constant>): AggregateConstant(name) {
+    init {
+        require(tp.size() == elements.size) {
+            "Array size mismatch: ${tp.size()} != ${elements.size}"
+        }
+        elements.forEach {
+            require(it.type() == tp.elementType()) {
+                "Element type mismatch: ${it.type()} != ${tp.elementType()}"
+            }
+        }
+    }
+
+    override fun data(): String {
+        return elements.joinToString(", ", prefix = "{", postfix = "}" ) { "$it: ${it.type()}" }
+    }
+
+    override fun elements(): List<Constant> {
+        return elements
+    }
+
+    override fun content(): String = data()
+
+    override fun contentType(): NonTrivialType = tp
+}
+
+class StructGlobalConstant(override val name: String, val tp: StructType, private val elements: List<Constant>): AggregateConstant(name) {
+    init {
+        require(tp.fields.size == elements.size) {
+            "Struct size mismatch: ${tp.size()} != ${elements.size}"
+        }
+        elements.forEachWith(tp.fields) { elem, field ->
+            require(elem.type() == field) {
+                "Element type mismatch: ${elem.type()} != $field"
+            }
+        }
+    }
+
+    override fun data(): String {
+        return elements.joinToString(", ", prefix = "{", postfix = "}" ) { "$it: ${it.type()}" }
+    }
+
+    override fun elements(): List<Constant> {
+        return elements
+    }
+
+    override fun content(): String = data()
+
+    override fun contentType(): NonTrivialType = tp
 }

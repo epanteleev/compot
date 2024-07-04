@@ -11,11 +11,13 @@ data class StructType internal constructor(val name: String, val fields: List<No
     }
 
     override fun size(): Int {
-        var current = 0
-        for (f in fields) {
-            current = withAlignment(f.size(), current)
+        var offset = 0
+        var alignment = 1
+        for (field in fields) {
+            alignment = maxOf(alignment, field.size())
+            offset = alignTo(offset, alignment) + field.size()
         }
-        return current
+        return alignTo(offset, 8)
     }
 
     override fun toString(): String = "$$name"
@@ -25,6 +27,10 @@ data class StructType internal constructor(val name: String, val fields: List<No
     }
 
     companion object {
+        private fun alignTo(value: Int, alignment: Int): Int {
+            return ((value + alignment - 1) / alignment) * alignment
+        }
+
         private fun withAlignment(alignment: Int, value: Int): Int {
             return ((value + (alignment * 2 - 1)) / alignment) * alignment
         }

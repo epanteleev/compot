@@ -127,7 +127,9 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 load(gfpOrGep(generate(), nop())) (inst) -> {
                     inst as Load
                     val pointer = inst.operand() as ValueInstruction
-                    val copy = bb.insertBefore(inst) { it.loadFromStack(getSource(pointer), inst.type(), getIndex(pointer)) }
+                    val copy = bb.insertBefore(inst) {
+                        it.loadFromStack(getSource(pointer), inst.type(), getIndex(pointer))
+                    }
                     inst.replaceUsages(copy)
                     bb.kill(inst)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE

@@ -15,7 +15,13 @@ abstract class MemcpyTests: CommonIrTest() {
     @Test
     fun testMemcpy1() {
         val result = runTest("opt_ir/memcpy/memcpy1", listOf("runtime/runtime.c"), options())
-        assertEquals("4 5 6 7 \n", result.output)
+        assertEquals("4 3 2 1 \n", result.output)
+    }
+
+    @Test
+    fun testMemcpy2() {
+        val result = runTest("opt_ir/memcpy/memcpy2", listOf("runtime/runtime.c"), options())
+        assertEquals("4\n3\n", result.output)
     }
 
     @Test

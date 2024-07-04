@@ -1,0 +1,27 @@
+extern void @printByte(i8)
+extern void @printInt(i32)
+
+
+
+$Point = type {i32, i8}
+@str = constant $Point {4 : i32, 3 : i8 }
+
+extern void @printInt(i32)
+
+define i32 @main() {
+entry:
+  %adr = alloc $Point
+  %first = gfp $Point, ptr %adr, i32 0
+  memcpy ptr %first, ptr @str, u32 8
+
+  %x1 = gfp $Point, ptr %adr, i32 0
+  %x1v = load i32 %x1
+  call void @printInt(%x1v: i32) br label %next
+
+next:
+  %y1 = gfp $Point, ptr %adr, i32 1
+  %y1v = load i8 %y1
+  call void @printByte(%y1v: i8) br label %exit
+exit:
+  ret i32 0
+}

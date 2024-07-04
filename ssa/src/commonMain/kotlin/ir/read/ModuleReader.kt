@@ -1,5 +1,6 @@
 package ir.read
 
+import ir.Constant
 import ir.global.*
 import ir.types.*
 import ir.module.Module
@@ -80,7 +81,6 @@ class ModuleReader(string: String) {
                     else -> throw ParseErrorException("unsupported: type=$tp, data=${data.int}")
                 }
             }
-
             is FloatValue -> {
                 if (type !is FloatTypeToken) {
                     throw throw ParseErrorException("expect float type, but: type=${type}")
@@ -91,7 +91,6 @@ class ModuleReader(string: String) {
                     else -> throw ParseErrorException("unsupported: type=$tp, data=${data.fp}")
                 }
             }
-
             is StringLiteralToken -> {
                 if (type !is ArrayTypeToken) {
                     throw throw ParseErrorException("expect float type, but: type=${type}")
@@ -99,10 +98,53 @@ class ModuleReader(string: String) {
 
                 StringLiteralConstant(name, type.type(moduleBuilder), data.string)
             }
+            is OpenBrace -> {
+                if (type !is AggregateTypeToken) {
+                    throw ParseErrorException("expect aggregate type, but: type=${type}")
+                }
+                parseAggregateInitializer(name, type)
+            }
 
             else -> throw ParseErrorException("unsupported: data=$data")
         }
         return moduleBuilder.addConstant(global)
+    }
+
+    private fun parseAggregateInitializer(name: String, type: AggregateTypeToken): GlobalConstant {
+        val fields = arrayListOf<Constant>()
+        do {
+            val field = tokenIterator.next("field")
+            if (field is CloseBrace) {
+                break
+            }
+
+            if (field !is LiteralValueToken) {
+                throw ParseErrorException("constant field", field)
+            }
+
+            val fieldInitializer = tokenIterator.next("field initializer")
+            if (fieldInitializer !is Colon) {
+                throw ParseErrorException("':'", fieldInitializer)
+            }
+            val constType = tokenIterator.expect<TypeToken>("field type") //TODO check correct type with declared type
+
+            fields.add(field.toConstant(constType.type(moduleBuilder)))
+
+            val next = tokenIterator.next("comma or '}'")
+            if (next is CloseBrace) {
+                break
+            }
+
+            if (next !is Comma) {
+                throw ParseErrorException("','", next)
+            }
+        } while (true)
+
+        return when (type) {
+            is StructDefinition -> StructGlobalConstant(name, type.type(moduleBuilder), fields)
+            is ArrayTypeToken -> ArrayGlobalConstant(name, type.type(moduleBuilder), fields)
+            else -> throw ParseErrorException("struct or array", type)
+        }
     }
 
     private fun parseGlobals(name: SymbolValue) {

@@ -1,21 +1,38 @@
 package ir.read.tokens
 
+import ir.BoolValue
+import ir.Constant
+import ir.NullValue
+import ir.types.Type
+
 
 abstract class AnyValueToken(override val line: Int, override val pos: Int): Token(line, pos)
 
-data class IntValue(val int: Long, override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
+abstract class LiteralValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
+    fun toConstant(ty: Type): Constant {
+        return when (this) {
+            is IntValue       -> Constant.of(ty, int)
+            is FloatValue     -> Constant.of(ty, fp)
+            is BoolValueToken -> BoolValue.of( bool)
+            is NULLValueToken -> NullValue.NULLPTR
+            else -> throw RuntimeException("unexpected literal value: $this")
+        }
+    }
+}
+
+data class IntValue(val int: Long, override val line: Int, override val pos: Int): LiteralValueToken(line, pos) {
     override fun message(): String = "int value '$int'"
 }
 
-data class FloatValue(val fp: Double, override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
+data class FloatValue(val fp: Double, override val line: Int, override val pos: Int): LiteralValueToken(line, pos) {
     override fun message(): String = "float value '$fp'"
 }
 
-data class BoolValueToken(val bool: Boolean, override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
+data class BoolValueToken(val bool: Boolean, override val line: Int, override val pos: Int): LiteralValueToken(line, pos) {
     override fun message(): String = "bool value '$bool'"
 }
 
-data class NULLValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
+data class NULLValueToken(override val line: Int, override val pos: Int): LiteralValueToken(line, pos) {
     override fun message(): String = "null"
 }
 

@@ -1,6 +1,7 @@
 package ir.platform.x64
 
 import asm.x64.*
+import ir.*
 import ir.global.*
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.MacroAssembler
@@ -17,7 +18,18 @@ class CompilationUnit: CompiledModule() {
     }
 
     fun mkConstant(globalValue: GlobalConstant) {
-        symbols.add(ObjSymbol(globalValue.name(), globalValue.data(), convertToSymbolType(globalValue)))
+        when (globalValue) {
+            is StringLiteralConstant -> {
+                symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(SymbolType.StringLiteral)))
+            }
+            is AggregateConstant -> {
+                val types = globalValue.elements().map { convertToSymbolType(it) }
+                symbols.add(ObjSymbol(globalValue.name(), globalValue.elements().map { it.toString() }, types))
+            }
+            else -> {
+                symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(convertToSymbolType(globalValue))))
+            }
+        }
     }
 
     fun makeGlobal(globalValue: GlobalValue) {
@@ -27,9 +39,9 @@ class CompilationUnit: CompiledModule() {
     private fun convertGlobalValueToSymbolType(globalValue: GlobalValue): ObjSymbol {
         val symbolType = convertToSymbolType(globalValue.data)
         return if (symbolType == SymbolType.StringLiteral) {
-            ObjSymbol(globalValue.name(), globalValue.data.name(), SymbolType.Quad)
+            ObjSymbol(globalValue.name(), listOf(globalValue.data.name()), listOf(SymbolType.Quad))
         } else {
-            ObjSymbol(globalValue.name(), globalValue.data(), symbolType)
+            ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(symbolType))
         }
     }
 
@@ -46,6 +58,22 @@ class CompilationUnit: CompiledModule() {
             is U8ConstantValue  -> SymbolType.Byte
             is F32ConstantValue -> SymbolType.Long
             is F64ConstantValue -> SymbolType.Quad
+            else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue:${globalValue.type()}")
+        }
+    }
+
+    private fun convertToSymbolType(globalValue: Constant): SymbolType {
+        return when (globalValue) {
+            is I64Value -> SymbolType.Quad
+            is U64Value -> SymbolType.Quad
+            is I32Value -> SymbolType.Long
+            is U32Value -> SymbolType.Long
+            is I16Value -> SymbolType.Short
+            is U16Value -> SymbolType.Short
+            is I8Value -> SymbolType.Byte
+            is U8Value -> SymbolType.Byte
+            is F32Value -> SymbolType.Long
+            is F64Value -> SymbolType.Quad
             else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue:${globalValue.type()}")
         }
     }
