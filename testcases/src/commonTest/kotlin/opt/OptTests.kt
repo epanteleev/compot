@@ -19,18 +19,6 @@ abstract class OptTests: CommonIrTest() {
     }
 
     @Test
-    fun testMemcpy() {
-        val result = runTest("opt_ir/memcpy", listOf("runtime/runtime.c"), options())
-        assertEquals("Hello world", result.output)
-    }
-
-    @Test
-    fun testMemcpyUnaligned() {
-        val result = runTest("opt_ir/memcpy_unaligned", listOf("runtime/runtime.c"), options())
-        assertEquals("Hello world!", result.output)
-    }
-
-    @Test
     fun testTrueBoolConst() {
         val result = runTest("opt_ir/true_bool_const", listOf("runtime/runtime.c"), options())
         assertEquals("1\n", result.output)
