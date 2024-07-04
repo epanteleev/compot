@@ -421,6 +421,30 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
+    private fun visitIncOrDec(unaryOp: UnaryOp, op: ArithmeticBinaryOp): Value {
+        assertion(unaryOp.opType == PostfixUnaryOpType.INC || unaryOp.opType == PostfixUnaryOpType.DEC) {
+            "Unknown operation, op=${unaryOp.opType}"
+        }
+        assertion(op == ArithmeticBinaryOp.Add || op == ArithmeticBinaryOp.Sub) {
+            "Unknown operation, op=${op}"
+        }
+
+        val ctype = unaryOp.resolveType(typeHolder)
+
+        val addr = visitExpression(unaryOp.primary, false)
+        val type = moduleBuilder.toIRType<PrimitiveType>(typeHolder, ctype)
+        val loaded = ir().load(type, addr)
+        if (ctype is CPointerType) {
+            val converted = ir().convertToType(loaded, Type.I64)
+            val inc = ir().arithmeticBinary(converted, op, Constant.of(Type.I64, ctype.baseType().size()))
+            ir().store(addr, ir().convertToType(inc, type))
+        } else {
+            val inc = ir().arithmeticBinary(loaded, op, Constant.of(loaded.type(), 1))
+            ir().store(addr, ir().convertToType(inc, type))
+        }
+        return loaded
+    }
+
     private fun visitUnary(unaryOp: UnaryOp, isRvalue: Boolean): Value {
         return when (unaryOp.opType) {
             PrefixUnaryOpType.ADDRESS -> visitExpression(unaryOp.primary, false)
@@ -436,33 +460,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     addr
                 }
             }
-            PostfixUnaryOpType.INC -> {
-                val addr = visitExpression(unaryOp.primary, false)
-                val type = moduleBuilder.toIRType<PrimitiveType>(typeHolder, unaryOp.resolveType(typeHolder))
-                val loaded = ir().load(type, addr)
-                val converted = if (loaded.type() == Type.Ptr) {
-                    ir().convertToType(loaded, Type.I64)
-                } else {
-                    loaded
-                }
-                val inc = ir().arithmeticBinary(converted, ArithmeticBinaryOp.Add, Constant.of(converted.type(), 1))
-                ir().store(addr, ir().convertToType(inc, type))
-                loaded
-            }
-            PostfixUnaryOpType.DEC -> {
-                val addr = visitExpression(unaryOp.primary, false)
-                val type = moduleBuilder.toIRType<PrimitiveType>(typeHolder, unaryOp.resolveType(typeHolder))
-                val loaded = ir().load(type, addr)
-                val converted = if (loaded.type() == Type.Ptr) {
-                    ir().convertToType(loaded, Type.I64)
-                } else {
-                    loaded
-                }
-
-                val dec = ir().arithmeticBinary(converted, ArithmeticBinaryOp.Sub, Constant.of(converted.type(), 1))
-                ir().store(addr, ir().convertToType(dec, type))
-                loaded
-            }
+            PostfixUnaryOpType.INC -> visitIncOrDec(unaryOp, ArithmeticBinaryOp.Add)
+            PostfixUnaryOpType.DEC -> visitIncOrDec(unaryOp, ArithmeticBinaryOp.Sub)
             PrefixUnaryOpType.NEG -> {
                 val value = visitExpression(unaryOp.primary, true)
                 val type = unaryOp.resolveType(typeHolder)

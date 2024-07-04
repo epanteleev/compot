@@ -28,7 +28,7 @@ abstract class ShlangTests: CommonCTest() {
     @Test
     fun testArrayAccess2() {
         val result = runCTest("shlang/array_access2", listOf(), options())
-        assertEquals("42 43 44 45\n", result.output)
+        assertEquals("42 43 44 45 ", result.output)
     }
 
     @Test

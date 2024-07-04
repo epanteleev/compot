@@ -18,6 +18,6 @@ int main () {
         printf("%d ", *(orig + i));
     }
 
-    free(p);
+    free(orig);
     return 0;
 }
