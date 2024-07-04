@@ -270,7 +270,10 @@ object TypeConverter {
                     Type.U1  -> flag2int(value, toType)
                     Type.I8  -> trunc(value, toType)
                     Type.I16 -> trunc(value, toType)
-                    Type.I32 -> trunc(value, toType)
+                    Type.I32 -> {
+                        val tmp = sext(value, Type.I64)
+                        bitcast(tmp, toType)
+                    }
                     Type.I64 -> bitcast(value, toType)
                     Type.U8  -> trunc(value, toType)
                     Type.U16 -> trunc(value, toType)

@@ -152,8 +152,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitStringNode(stringNode: StringNode): Value {
         val string = stringNode.str.unquote()
-        val stringLiteral = StringLiteralConstant("str$constantCounter", ArrayType(Type.I8, 11), string)
-        constantCounter++
+        val stringLiteral = StringLiteralConstant("str${constantCounter++}", ArrayType(Type.I8, 11), string)
         return moduleBuilder.addConstant(stringLiteral)
     }
 
@@ -290,13 +289,41 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun makeAlgebraicBinary(binop: BinaryOp, op: ArithmeticBinaryOp): Value {
         val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
 
-        val right = visitExpression(binop.right, true)
-        val rightConverted = ir().convertToType(right, commonType)
+        if (commonType is PointerType) {
+            val rvalue     = visitExpression(binop.right, true)
+            val rValueType = binop.right.resolveType(typeHolder)
+            if (rValueType !is CPrimitiveType) {
+                throw IRCodeGenError("Primitive type expected")
+            }
+            val convertedRValue = ir().convertToType(rvalue, Type.U64)
 
-        val left = visitExpression(binop.left, true)
-        val leftConverted = ir().convertToType(left, commonType)
+            val lvalue     = visitExpression(binop.left, true)
+            val lValueType = binop.left.resolveType(typeHolder)
+            if (lValueType !is CPointerType) {
+                throw IRCodeGenError("Pointer type expected")
+            }
+            val convertedLValue = ir().convertToType(lvalue, Type.U64)
 
-        return ir().arithmeticBinary(leftConverted, op, rightConverted)
+            val size = lValueType.baseType().size()
+            val sizeValue = Constant.of(Type.U64, size)
+            val mul = ir().arithmeticBinary(convertedRValue, ArithmeticBinaryOp.Mul, sizeValue)
+
+            val result = when (op) {
+                ArithmeticBinaryOp.Add -> ir().arithmeticBinary(convertedLValue, ArithmeticBinaryOp.Add, mul)
+                ArithmeticBinaryOp.Sub -> ir().arithmeticBinary(convertedLValue, ArithmeticBinaryOp.Sub, mul)
+                else -> throw IRCodeGenError("Unsupported operation for pointers: '$op'")
+            }
+            return ir().convertToType(result, commonType)
+
+        } else {
+            val right = visitExpression(binop.right, true)
+            val rightConverted = ir().convertToType(right, commonType)
+
+            val left = visitExpression(binop.left, true)
+            val leftConverted = ir().convertToType(left, commonType)
+
+            return ir().arithmeticBinary(leftConverted, op, rightConverted)
+        }
     }
 
     private inline fun makeComparisonBinary(binop: BinaryOp, crossinline predicate: (NonTrivialType) -> AnyPredicateType): Value {
