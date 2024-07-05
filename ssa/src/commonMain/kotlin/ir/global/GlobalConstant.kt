@@ -53,6 +53,13 @@ abstract class GlobalConstant(protected open val name: String): GlobalSymbol {
                 Type.U64 -> U64ConstantValue(name, value.toLong().toULong())
                 Type.F32 -> F32ConstantValue(name, value.toFloat())
                 Type.F64 -> F64ConstantValue(name, value.toDouble())
+                Type.Ptr -> {
+                    if (value == 0) {
+                        PointerConstant(name, value.toLong())
+                    } else {
+                        throw RuntimeException("Cannot create pointer constant: value=$value")
+                    }
+                }
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
         }
@@ -178,6 +185,18 @@ class F64ConstantValue(override val name: String, val f64: Double): GlobalConsta
     override fun content(): String = f64.toString()
 
     override fun contentType(): NonTrivialType = Type.F64
+}
+
+class PointerConstant(override val name: String, val value: Long): GlobalConstant(name) {
+    override fun data(): String {
+        return value.toString()
+    }
+
+    override fun type(): NonTrivialType = Type.Ptr
+
+    override fun content(): String = data()
+
+    override fun contentType(): NonTrivialType = Type.Ptr
 }
 
 abstract class AggregateConstant(override val name: String): GlobalConstant(name) {

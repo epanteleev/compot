@@ -53,6 +53,10 @@ abstract class AnyModuleBuilder {
         return extern
     }
 
+    fun findExternFunctionOrNull(name: String): ExternFunction? {
+        return externFunctions[name]
+    }
+
     fun findConstantOrNull(name: String): GlobalSymbol? {
         return constantPool[name]
     }

@@ -16,7 +16,7 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
 
     fun findFunction(name: String): AnyFunctionPrototype {
         val fnBuilder: AnyFunctionPrototype = functions.find { it.prototype().name() == name }?.prototype()
-            ?: externFunctions[name] ?: throw RuntimeException("not found name=$name") //TODO O(n)
+            ?: findExternFunctionOrNull(name) ?: throw RuntimeException("not found name=$name") //TODO O(n)
         return fnBuilder
     }
 

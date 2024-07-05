@@ -67,6 +67,16 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
 
     private fun resolveParams(typeHolder: TypeHolder): List<CType> {
         val paramTypes = mutableListOf<CType>()
+        if (params.size == 1) {
+            val type = params[0].resolveType(typeHolder)
+            // Special case for void
+            // Pattern: 'void f(void)' can be found in the C program.
+            return if (type == CType.VOID) {
+                emptyList()
+            } else {
+                listOf(type)
+            }
+        }
         for (param in params) {
             when (param) {
                 is Parameter -> {

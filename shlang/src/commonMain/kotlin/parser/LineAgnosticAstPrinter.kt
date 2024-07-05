@@ -384,7 +384,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(directDeclarator: DirectDeclarator) {
         directDeclarator.decl.accept(this)
-        joinTo(directDeclarator.declarators, "") {
+        joinTo(directDeclarator.directDeclaratorParams, "") {
             it.accept(this)
         }
     }

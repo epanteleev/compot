@@ -86,7 +86,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
     }
 
     fun functionDeclarator(): ParameterTypeList {
-        return declarator.directDeclarator.declarators[0] as ParameterTypeList
+        return declarator.directDeclarator.directDeclaratorParams[0] as ParameterTypeList
     }
 
     override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CFunctionType {

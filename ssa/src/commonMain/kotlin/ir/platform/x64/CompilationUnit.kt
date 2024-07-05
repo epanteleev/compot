@@ -59,6 +59,7 @@ class CompilationUnit: CompiledModule() {
             is U8ConstantValue  -> SymbolType.Byte
             is F32ConstantValue -> SymbolType.Long
             is F64ConstantValue -> SymbolType.Quad
+            is PointerConstant -> SymbolType.Quad
             else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue:${globalValue.type()}")
         }
     }

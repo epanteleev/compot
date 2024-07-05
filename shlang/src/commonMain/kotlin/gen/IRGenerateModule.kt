@@ -7,6 +7,7 @@ import ir.module.Module
 import gen.TypeConverter.toIRType
 import gen.consteval.*
 import ir.global.*
+import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
 
 
@@ -29,6 +30,16 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         }
     }
 
+    private fun getExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {
+        val externFunction = moduleBuilder.findExternFunctionOrNull(name)
+        if (externFunction != null) {
+            println("Warning: extern function $name already exists") //TODO implement warning mechanism
+            return externFunction
+        }
+
+        return moduleBuilder.createExternFunction(name, returnType, arguments, isVararg)
+    }
+
     private fun declareDeclarator(declarationSpecifier: DeclarationSpecifier, decl: Declarator) {
         when (val type = decl.resolveType(declarationSpecifier, typeHolder)) {
             is CFunctionType -> {
@@ -39,9 +50,15 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 val returnType = moduleBuilder.toIRType<Type>(typeHolder, abstrType.retType)
 
                 val isVararg = type.functionType.variadic
-                moduleBuilder.createExternFunction(decl.name(), returnType, argTypes, isVararg)
+                getExternFunction(decl.name(), returnType, argTypes, isVararg)
             }
             is CPrimitiveType -> {
+                val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
+                val global = GlobalConstant.of(decl.name(), irType, 0)
+                moduleBuilder.addConstant(global)
+                varStack[decl.name()] = global
+            }
+            is CPointerType -> {
                 val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
                 val global = GlobalConstant.of(decl.name(), irType, 0)
                 moduleBuilder.addConstant(global)

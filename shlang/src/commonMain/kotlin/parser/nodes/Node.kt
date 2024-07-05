@@ -61,12 +61,12 @@ data class Declaration(val declspec: DeclarationSpecifier, private val declarato
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val declarators: List<DirectDeclaratorParam>): UnclassifiedNode() {
+data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDeclaratorParams: List<DirectDeclaratorParam>): UnclassifiedNode() {
     override fun<T> accept(visitor: UnclassifiedNodeVisitor<T>) = visitor.visit(this)
 
     private fun resolveAllDecl(baseType: CType, typeHolder: TypeHolder): CType {
         var pointerType = baseType
-        for (decl in declarators) {
+        for (decl in directDeclaratorParams) {
             when (decl) {
                 is ArrayDeclarator -> {
                     pointerType = decl.resolveType(pointerType, typeHolder)
@@ -86,7 +86,7 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val declarator
     fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
         when (decl) {
             is FunctionPointerDeclarator -> {
-                val fnDecl = declarators[0] as ParameterTypeList
+                val fnDecl = directDeclaratorParams[0] as ParameterTypeList
                 val type = fnDecl.resolveType(baseType, typeHolder)
                 return CFunPointerType(type)
             }

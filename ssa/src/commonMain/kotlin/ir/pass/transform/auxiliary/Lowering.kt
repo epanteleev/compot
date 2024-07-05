@@ -10,11 +10,9 @@ import ir.instruction.matching.*
 
 class Lowering private constructor(private val cfg: BasicBlocks) {
     private fun replaceStore(bb: Block, inst: Store): Instruction {
-        val toValue   = inst.pointer() as Generate
+        val toValue   = inst.pointer().asValue<Generate>()
         val fromValue = inst.value()
-        val move = bb.insertBefore(inst) { it.move(toValue, fromValue) }
-        bb.kill(inst)
-        return move
+        return bb.update(inst) { it.move(toValue, fromValue) }
     }
 
     private fun replaceAlloc(bb: Block, inst: Alloc): Instruction {
