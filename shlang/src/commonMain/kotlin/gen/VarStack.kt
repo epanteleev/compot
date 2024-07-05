@@ -1,6 +1,6 @@
 package gen
 
-import ir.Value
+import ir.value.Value
 
 
 class VarStack {

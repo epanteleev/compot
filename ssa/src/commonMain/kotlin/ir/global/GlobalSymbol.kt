@@ -1,6 +1,6 @@
 package ir.global
 
-import ir.Value
+import ir.value.Value
 import ir.types.NonTrivialType
 
 

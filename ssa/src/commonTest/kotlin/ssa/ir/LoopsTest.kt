@@ -29,21 +29,30 @@ class LoopsTest {
 
         builder.branch(b1)
         builder.switchLabel(b1)
-        val cmp1 = builder.icmp(I32Value(12), IntPredicate.Ne, I32Value(43))
+        val cmp1 = builder.icmp(
+            _root_ide_package_.ir.value.I32Value(12), IntPredicate.Ne,
+            _root_ide_package_.ir.value.I32Value(43)
+        )
         builder.branchCond(cmp1, b3, b2)
 
         builder.switchLabel(b3)
         builder.branch(b1)
 
         builder.switchLabel(b2)
-        val cmp2 = builder.icmp(I32Value(12), IntPredicate.Ne, I32Value(43))
+        val cmp2 = builder.icmp(
+            _root_ide_package_.ir.value.I32Value(12), IntPredicate.Ne,
+            _root_ide_package_.ir.value.I32Value(43)
+        )
         builder.branchCond(cmp2, b5, b4)
 
         builder.switchLabel(b5)
-        builder.ret(I64Value(0))
+        builder.ret(_root_ide_package_.ir.value.I64Value(0))
 
         builder.switchLabel(b4)
-        val cmp3 = builder.icmp(I32Value(12), IntPredicate.Ne, I32Value(43))
+        val cmp3 = builder.icmp(
+            _root_ide_package_.ir.value.I32Value(12), IntPredicate.Ne,
+            _root_ide_package_.ir.value.I32Value(43)
+        )
         builder.branchCond(cmp3, b7, b6)
 
         builder.switchLabel(b6)

@@ -4,6 +4,8 @@ import ir.*
 import ir.module.block.Block
 import ir.types.TrivialType
 import ir.types.TupleType
+import ir.value.LocalValue
+import ir.value.Value
 
 
 abstract class TupleInstruction(id: Identity,

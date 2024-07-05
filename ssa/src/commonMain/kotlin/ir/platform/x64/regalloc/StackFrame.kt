@@ -1,6 +1,6 @@
 package ir.platform.x64.regalloc
 
-import ir.*
+import ir.value.*
 import ir.types.Type
 import asm.x64.Address
 import asm.x64.GPRegister.*

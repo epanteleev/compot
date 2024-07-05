@@ -1,8 +1,8 @@
 package ssa.ir.dominance
 
 import ir.module.FunctionPrototype
-import ir.I32Value
-import ir.U16Value
+import ir.value.I32Value
+import ir.value.U16Value
 import ir.instruction.IntPredicate
 import ir.module.Module
 import ir.module.block.BlockViewer
@@ -25,7 +25,10 @@ class DominatorTreeTest {
 
         val b2 = builder.createLabel()
         val b3 = builder.createLabel()
-        val cmp1 = builder.icmp(I32Value(12), IntPredicate.Ne, I32Value(43))
+        val cmp1 = builder.icmp(
+            _root_ide_package_.ir.value.I32Value(12), IntPredicate.Ne,
+            _root_ide_package_.ir.value.I32Value(43)
+        )
         builder.branchCond(cmp1, b2, b3)
 
         builder.switchLabel(b3)
@@ -37,7 +40,10 @@ class DominatorTreeTest {
 
         builder.branch(b4)
         builder.switchLabel(b4)
-        val cmp4 = builder.icmp(I32Value(152), IntPredicate.Ne, I32Value(443))
+        val cmp4 = builder.icmp(
+            _root_ide_package_.ir.value.I32Value(152), IntPredicate.Ne,
+            _root_ide_package_.ir.value.I32Value(443)
+        )
         builder.branchCond(cmp4, b6, b5)
 
         builder.switchLabel(b6)
@@ -50,7 +56,7 @@ class DominatorTreeTest {
         builder.branch(exit)
 
         builder.switchLabel(exit)
-        builder.ret(U16Value(0))
+        builder.ret(_root_ide_package_.ir.value.U16Value(0))
 
         return moduleBuilder.build()
     }

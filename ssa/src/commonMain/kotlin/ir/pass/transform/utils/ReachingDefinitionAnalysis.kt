@@ -8,6 +8,9 @@ import ir.module.BasicBlocks
 import ir.pass.isLocalVariable
 import ir.dominance.DominatorTree
 import ir.pass.transform.Mem2RegException
+import ir.value.Constant
+import ir.value.LocalValue
+import ir.value.Value
 
 
 //TODO Add test for uninitialized values

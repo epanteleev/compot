@@ -1,7 +1,7 @@
 package ir.pass.ana
 
 import common.forEachWith
-import ir.LocalValue
+import ir.value.LocalValue
 import ir.types.Type
 import ir.module.Module
 import ir.instruction.*

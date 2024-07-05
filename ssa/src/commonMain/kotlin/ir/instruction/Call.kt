@@ -1,7 +1,7 @@
 package ir.instruction
 
 import common.assertion
-import ir.Value
+import ir.value.Value
 import ir.types.Type
 import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor

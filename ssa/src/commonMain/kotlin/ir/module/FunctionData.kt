@@ -1,6 +1,6 @@
 package ir.module
 
-import ir.ArgumentValue
+import ir.value.ArgumentValue
 import ir.module.auxiliary.CopyCFG
 import ir.liveness.LiveIntervals
 import ir.liveness.LiveIntervalsBuilder

@@ -1,7 +1,7 @@
 package examples
 
 import ir.module.FunctionPrototype
-import ir.I32Value
+import ir.value.I32Value
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2RegFabric

@@ -2,7 +2,7 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.instruction.Memcpy
-import ir.UnsignedIntegerConstant
+import ir.value.UnsignedIntegerConstant
 import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.WORD_SIZE
 import ir.platform.x64.CallConvention.temp1

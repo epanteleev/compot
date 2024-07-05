@@ -10,10 +10,10 @@ import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.assertion
-import ir.BoolValue
-import ir.LocalValue
-import ir.UndefinedValue
-import ir.asType
+import ir.value.BoolValue
+import ir.value.LocalValue
+import ir.value.UndefinedValue
+import ir.value.asType
 import ir.global.GlobalConstant
 import ir.instruction.lir.*
 import ir.instruction.lir.Lea

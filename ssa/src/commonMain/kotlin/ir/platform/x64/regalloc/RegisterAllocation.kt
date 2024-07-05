@@ -9,6 +9,7 @@ import ir.liveness.LiveIntervals
 import ir.platform.x64.CallConvention.gpCalleeSaveRegs
 import ir.platform.x64.CallConvention.gpCallerSaveRegs
 import ir.platform.x64.CallConvention.xmmCallerSaveRegs
+import ir.value.*
 
 
 class RegisterAllocation(private val spilledLocalsStackSize: Int,
@@ -77,18 +78,18 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
                 }
                 operand as Operand
             }
-            is U8Value     -> Imm32.of(value.u8.toLong())
-            is I8Value     -> Imm32.of(value.i8.toLong())
-            is U16Value    -> Imm32.of(value.u16.toLong())
-            is I16Value    -> Imm32.of(value.i16.toLong())
-            is U32Value    -> Imm32.of(value.u32.toLong())
-            is I32Value    -> Imm32.of(value.i32.toLong())
-            is I64Value    -> Imm64.of(value.i64)
-            is U64Value    -> Imm64.of(value.u64)
-            is F32Value    -> ImmFp32(value.f32)
-            is F64Value    -> ImmFp64(value.f64)
+            is U8Value -> Imm32.of(value.u8.toLong())
+            is I8Value -> Imm32.of(value.i8.toLong())
+            is U16Value -> Imm32.of(value.u16.toLong())
+            is I16Value -> Imm32.of(value.i16.toLong())
+            is U32Value -> Imm32.of(value.u32.toLong())
+            is I32Value -> Imm32.of(value.i32.toLong())
+            is I64Value -> Imm64.of(value.i64)
+            is U64Value -> Imm64.of(value.u64)
+            is F32Value -> ImmFp32(value.f32)
+            is F64Value -> ImmFp64(value.f64)
             is GlobalSymbol -> Address.from(value.name())
-            is NullValue   -> Imm64.of(0)
+            is NullValue -> Imm64.of(0)
             else -> throw RuntimeException("found '$value': '${value.type()}'")
         }
     }

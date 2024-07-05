@@ -1,7 +1,7 @@
 package ir.pass.transform.auxiliary
 
-import ir.*
 import ir.types.*
+import ir.value.*
 import ir.module.*
 import ir.instruction.*
 import ir.module.block.Block
@@ -95,7 +95,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
             when {
                 store(gfpOrGep(generate().not(), nop()), nop()) (inst) -> {
                     inst as Store
-                    val pointer = inst.pointer() as ValueInstruction
+                    val pointer = inst.pointer().asValue<ValueInstruction>()
                     val move = bb.insertBefore(inst) { it.move(getSource(pointer), inst.value(), getIndex(pointer)) }
                     bb.kill(inst)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
@@ -105,9 +105,8 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 }
                 store(gfpOrGep(generate(), nop()), nop()) (inst) -> {
                     inst as Store
-                    val pointer = inst.pointer() as ValueInstruction
-                    val st = bb.insertBefore(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
-                    bb.kill(inst)
+                    val pointer = inst.pointer().asValue<ValueInstruction>()
+                    val st = bb.update(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer
                     }
@@ -115,10 +114,8 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 }
                 load(gfpOrGep(generate().not(), nop())) (inst) -> {
                     inst as Load
-                    val pointer = inst.operand() as ValueInstruction
-                    val copy = bb.insertBefore(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
-                    inst.replaceUsages(copy)
-                    bb.kill(inst)
+                    val pointer = inst.operand().asValue<ValueInstruction>()
+                    val copy = bb.update(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer
                     }
@@ -126,12 +123,10 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 }
                 load(gfpOrGep(generate(), nop())) (inst) -> {
                     inst as Load
-                    val pointer = inst.operand() as ValueInstruction
-                    val copy = bb.insertBefore(inst) {
+                    val pointer = inst.operand().asValue<ValueInstruction>()
+                    val copy = bb.update(inst) {
                         it.loadFromStack(getSource(pointer), inst.type(), getIndex(pointer))
                     }
-                    inst.replaceUsages(copy)
-                    bb.kill(inst)
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer
                     }

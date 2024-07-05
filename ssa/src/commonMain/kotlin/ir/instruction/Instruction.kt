@@ -1,9 +1,9 @@
 package ir.instruction
 
-import ir.Value
+import ir.value.Value
 import common.LListNode
 import common.assertion
-import ir.LocalValue
+import ir.value.LocalValue
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 

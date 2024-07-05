@@ -1,7 +1,7 @@
 package ir.instruction
 
 import common.assertion
-import ir.Value
+import ir.value.Value
 import ir.types.Type
 import ir.module.block.Block
 import ir.module.AnyFunctionPrototype

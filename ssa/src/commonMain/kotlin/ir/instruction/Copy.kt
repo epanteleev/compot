@@ -1,9 +1,9 @@
 package ir.instruction
 
 import common.assertion
-import ir.UndefinedValue
-import ir.Value
-import ir.asType
+import ir.value.UndefinedValue
+import ir.value.Value
+import ir.value.asType
 import ir.types.Type
 import ir.types.PrimitiveType
 import ir.instruction.utils.IRInstructionVisitor

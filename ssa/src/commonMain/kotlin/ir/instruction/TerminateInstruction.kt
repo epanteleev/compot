@@ -1,6 +1,6 @@
 package ir.instruction
 
-import ir.Value
+import ir.value.Value
 import ir.module.block.Block
 
 

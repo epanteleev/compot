@@ -1,8 +1,8 @@
 package ir.instruction
 
 import common.assertion
-import ir.Value
-import ir.UnsignedIntegerConstant
+import ir.value.Value
+import ir.value.UnsignedIntegerConstant
 import ir.types.Type
 import ir.types.PointerType
 import ir.instruction.utils.IRInstructionVisitor

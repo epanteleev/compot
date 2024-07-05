@@ -1,7 +1,7 @@
 package ir.instruction.lir
 
 import common.assertion
-import ir.Value
+import ir.value.Value
 import ir.types.*
 import ir.module.block.Block
 import ir.instruction.Identity

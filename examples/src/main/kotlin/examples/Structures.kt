@@ -6,6 +6,7 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
+import ir.value.I32Value
 
 
 fun main() {

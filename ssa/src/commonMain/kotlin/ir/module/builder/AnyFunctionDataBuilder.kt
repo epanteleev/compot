@@ -1,6 +1,6 @@
 package ir.module.builder
 
-import ir.ArgumentValue
+import ir.value.ArgumentValue
 import ir.module.FunctionPrototype
 import ir.instruction.Return
 import ir.module.BasicBlocks

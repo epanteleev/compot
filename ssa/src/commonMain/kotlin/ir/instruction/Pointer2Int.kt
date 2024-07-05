@@ -1,7 +1,7 @@
 package ir.instruction
 
 import common.assertion
-import ir.Value
+import ir.value.Value
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.types.IntegerType

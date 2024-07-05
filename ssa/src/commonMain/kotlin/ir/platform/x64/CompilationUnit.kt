@@ -5,6 +5,7 @@ import ir.*
 import ir.global.*
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.MacroAssembler
+import ir.value.*
 
 
 class CompilationUnit: CompiledModule() {

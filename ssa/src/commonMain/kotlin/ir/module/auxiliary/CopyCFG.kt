@@ -12,6 +12,7 @@ import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.types.NonTrivialType
+import ir.value.*
 
 
 class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<LocalValue?> {

@@ -1,83 +1,7 @@
-package ir
+package ir.value
 
 import ir.types.*
-import ir.instruction.Instruction
 
-
-interface Value {
-    fun type(): Type
-
-    companion object {
-        val UNDEF: UndefinedValue = UndefinedValue()
-    }
-}
-
-inline fun<reified T> Value.asType(): T {
-    val t = type()
-    if (t !is T) {
-        throw RuntimeException("Cannot cast $t to ${T::class}")
-    }
-    return t
-}
-
-interface LocalValue: Value {
-    var usedIn: MutableList<Instruction>
-
-    fun addUser(instruction: Instruction) {
-        usedIn.add(instruction)
-    }
-    fun killUser(instruction: Instruction) {
-        usedIn.remove(instruction)
-    }
-
-    fun release(): List<Instruction> {
-        val result = usedIn
-        usedIn = arrayListOf()
-        return result
-    }
-
-    fun usedIn(): List<Instruction> {
-        return usedIn
-    }
-
-    fun name(): String
-
-    fun replaceUsages(toValue: Value) {
-        val usedIn = release()
-        for (user in usedIn) {
-            for ((idxUse, use) in user.operands().withIndex()) {
-                if (use !== this) {
-                    continue
-                }
-                // New value can use the old value
-                if (user == toValue) {
-                    continue
-                }
-
-                user.update(idxUse, toValue)
-            }
-        }
-    }
-}
-
-data class ArgumentValue(private val index: Int, private val tp: NonTrivialType): LocalValue {
-    override var usedIn: MutableList<Instruction> = arrayListOf()
-    override fun name(): String {
-        return "arg$index"
-    }
-
-    override fun type(): NonTrivialType { //TODO is this primitive type???
-        return tp
-    }
-
-    fun position(): Int {
-        return index
-    }
-
-    override fun toString(): String {
-        return "%$index"
-    }
-}
 
 interface Constant: Value {
     companion object {
@@ -115,8 +39,8 @@ interface Constant: Value {
 
         fun from(kind: Type, value: Constant): Constant {
             return when (value) {
-                is I8Value  -> of(kind, value.i8)
-                is U8Value  -> of(kind, value.u8)
+                is I8Value -> of(kind, value.i8)
+                is U8Value -> of(kind, value.u8)
                 is I16Value -> of(kind, value.i16)
                 is U16Value -> of(kind, value.u16)
                 is I32Value -> of(kind, value.i32)
@@ -170,7 +94,7 @@ interface IntegerConstant: Constant {
     fun toInt(): Int {
         return when (val c = this) {
             is UnsignedIntegerConstant -> c.value().toInt()
-            is SignedIntegerConstant   -> c.value().toInt()
+            is SignedIntegerConstant -> c.value().toInt()
             else                        -> error("Unexpected index type")
         }
     }
@@ -185,7 +109,6 @@ interface UnsignedIntegerConstant: IntegerConstant {
 }
 
 interface FloatingPointConstant: Constant
-
 
 data class U8Value(val u8: Byte): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType {

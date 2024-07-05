@@ -7,6 +7,8 @@ import ir.module.block.Block
 import ir.liveness.LiveIntervals
 import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.LModule
+import ir.value.LocalValue
+import ir.value.Value
 
 
 abstract class DumpModule<T: Module> protected constructor(protected val module: T) {

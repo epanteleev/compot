@@ -3,6 +3,8 @@ package ir.instruction
 import ir.*
 import ir.module.block.Block
 import ir.types.NonTrivialType
+import ir.value.LocalValue
+import ir.value.Value
 
 abstract class ValueInstruction(id: Identity,
                                 owner: Block,

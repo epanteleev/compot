@@ -5,6 +5,7 @@ import ir.*
 import ir.types.*
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
+import ir.value.Value
 
 
 class Projection private constructor(id: Identity, owner: Block, type: NonTrivialType, tuple: TupleInstruction, private val index: Int):

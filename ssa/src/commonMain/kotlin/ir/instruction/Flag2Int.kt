@@ -1,6 +1,6 @@
 package ir.instruction
 
-import ir.Value
+import ir.value.Value
 import ir.types.*
 import common.assertion
 import ir.module.block.Block

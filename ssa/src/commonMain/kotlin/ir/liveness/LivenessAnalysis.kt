@@ -1,6 +1,6 @@
 package ir.liveness
 
-import ir.LocalValue
+import ir.value.LocalValue
 import common.intMapOf
 import ir.instruction.Phi
 import ir.module.FunctionData

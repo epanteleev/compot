@@ -1,7 +1,7 @@
 package ir.instruction.lir
 
 import common.assertion
-import ir.Value
+import ir.value.Value
 import ir.instruction.Generate
 import ir.instruction.Identity
 import ir.instruction.Instruction

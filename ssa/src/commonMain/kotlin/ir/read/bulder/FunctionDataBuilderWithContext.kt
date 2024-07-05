@@ -7,8 +7,8 @@ import ir.instruction.*
 import ir.module.block.*
 import ir.module.builder.*
 import common.forEachWith
-import ir.BoolValue
 import ir.read.tokens.*
+import ir.value.*
 
 
 class ParseErrorException(message: String): Exception(message) {
@@ -19,14 +19,14 @@ class ParseErrorException(message: String): Exception(message) {
 class FunctionDataBuilderWithContext private constructor(
     private val moduleBuilder: ModuleBuilderWithContext,
     prototype: FunctionPrototype,
-    argumentValues: List<ArgumentValue>,
+    argumentValues: List<_root_ide_package_.ir.value.ArgumentValue>,
     blocks: BasicBlocks,
-    private val nameMap: MutableMap<String, LocalValue>
+    private val nameMap: MutableMap<String, _root_ide_package_.ir.value.LocalValue>
 ): AnyFunctionDataBuilder(prototype, argumentValues, blocks) {
     private val nameToLabel = hashMapOf("entry" to bb)
     private val incompletePhis = arrayListOf<PhiContext>()
 
-    private fun getValue(token: AnyValueToken, ty: Type): Value {
+    private fun getValue(token: AnyValueToken, ty: Type): _root_ide_package_.ir.value.Value {
         return when (token) {
             is LiteralValueToken -> token.toConstant(ty)
             is LocalValueToken -> {
@@ -49,18 +49,18 @@ class FunctionDataBuilderWithContext private constructor(
         }
     }
 
-    private fun getConstant(token: AnyValueToken, ty: Type): Value {
+    private fun getConstant(token: AnyValueToken, ty: Type): _root_ide_package_.ir.value.Value {
         return token.let {
             when (it) {
-                is IntValue        -> Constant.of(ty, it.int)
-                is FloatValue      -> Constant.of(ty, it.fp)
-                is LocalValueToken -> Value.UNDEF
+                is IntValue        -> _root_ide_package_.ir.value.Constant.of(ty, it.int)
+                is FloatValue      -> _root_ide_package_.ir.value.Constant.of(ty, it.fp)
+                is LocalValueToken -> _root_ide_package_.ir.value.Value.UNDEF
                 else -> throw ParseErrorException("constant or value", it)
             }
         }
     }
 
-    private inline fun<reified T: LocalValue> memorize(name: LocalValueToken, value: T): T {
+    private inline fun<reified T: _root_ide_package_.ir.value.LocalValue> memorize(name: LocalValueToken, value: T): T {
         val existed = nameMap[name.name]
         if (existed != null) {
             throw ParseErrorException("already has value with the same name=$existed in ${name.position()}")
@@ -184,15 +184,15 @@ class FunctionDataBuilderWithContext private constructor(
         bb.store(pointer, value)
     }
 
-    private fun convertToValues(types: List<Type>, args: List<AnyValueToken>): List<Value> {
-        val argumentValues = arrayListOf<Value>()
+    private fun convertToValues(types: List<Type>, args: List<AnyValueToken>): List<_root_ide_package_.ir.value.Value> {
+        val argumentValues = arrayListOf<_root_ide_package_.ir.value.Value>()
         args.forEachWith(types) { arg, ty ->
             argumentValues.add(getValue(arg, ty))
         }
         return argumentValues
     }
 
-    fun call(name: LocalValueToken, func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): Value {
+    fun call(name: LocalValueToken, func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): _root_ide_package_.ir.value.Value {
         require(func.returnType() !is VoidType)
         val argumentValues = convertToValues(func.arguments(), args)
         val block          = getBlockOrCreate(labelUsage.labelName)
@@ -207,7 +207,7 @@ class FunctionDataBuilderWithContext private constructor(
         bb.vcall(func, argumentValues, block)
     }
 
-    fun icall(name: LocalValueToken, pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): Value {
+    fun icall(name: LocalValueToken, pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): _root_ide_package_.ir.value.Value {
         require(func.returnType() !is VoidType)
         val argumentValues = convertToValues(func.arguments(), args)
         val pointer        = getValue(pointerToken, Type.Ptr)
@@ -267,7 +267,7 @@ class FunctionDataBuilderWithContext private constructor(
 
     fun gfp(name: LocalValueToken, type: AggregateTypeToken, sourceName: AnyValueToken, sourceType: PointerTypeToken, indexName: IntValue, indexType: IntegerTypeToken): GetFieldPtr {
         val source = getValue(sourceName, sourceType.type())
-        val index  = getValue(indexName, indexType.type()) as IntegerConstant
+        val index  = getValue(indexName, indexType.type()) as _root_ide_package_.ir.value.IntegerConstant
         return memorize(name, bb.gfp(source, type.type(moduleBuilder), index))
     }
 
@@ -306,7 +306,7 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.fp2Int(value, resultType.type()))
     }
 
-    fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: PrimitiveTypeToken): Value {
+    fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: PrimitiveTypeToken): _root_ide_package_.ir.value.Value {
         val cond    = getValue(condTok, Type.U1)
         val onTrue  = getValue(onTrueTok, selectType.type())
         val onFalse = getValue(onFalseTok, selectType.type())
@@ -329,7 +329,7 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.ptr2int(value, intType.type()))
     }
 
-    fun memcpy(dstTok: AnyValueToken, dstTypeTok: PointerTypeToken, srcTok: AnyValueToken, srcTyeToken: PointerTypeToken, lengthTok: UnsignedIntegerConstant) {
+    fun memcpy(dstTok: AnyValueToken, dstTypeTok: PointerTypeToken, srcTok: AnyValueToken, srcTyeToken: PointerTypeToken, lengthTok: _root_ide_package_.ir.value.UnsignedIntegerConstant) {
         val dst = getValue(dstTok, dstTypeTok.type())
         val src = getValue(srcTok, srcTyeToken.type())
         bb.memcpy(dst, src, lengthTok)
@@ -340,14 +340,14 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.int2ptr(value))
     }
 
-    fun phi(name: LocalValueToken, incomingTok: ArrayList<AnyValueToken>, labelsTok: ArrayList<Identifier>, expectedType: PrimitiveTypeToken): Value {
+    fun phi(name: LocalValueToken, incomingTok: ArrayList<AnyValueToken>, labelsTok: ArrayList<Identifier>, expectedType: PrimitiveTypeToken): _root_ide_package_.ir.value.Value {
         val blocks = arrayListOf<Block>()
         for (tok in labelsTok) {
             blocks.add(getBlockOrCreate(tok.string))
         }
 
         val type = expectedType.asType<PrimitiveType>()
-        val values = arrayListOf<Value>()
+        val values = arrayListOf<_root_ide_package_.ir.value.Value>()
         for (tok in incomingTok) {
             values.add(getConstant(tok, type))
         }
@@ -381,21 +381,21 @@ class FunctionDataBuilderWithContext private constructor(
     companion object {
         fun create(moduleBuilder: ModuleBuilderWithContext, prototype: FunctionPrototype,
                    argumentValueTokens: List<LocalValueToken>): FunctionDataBuilderWithContext {
-            fun handleArguments(argumentTypeTokens: List<Type>): List<ArgumentValue> {
-                val argumentValues = arrayListOf<ArgumentValue>()
+            fun handleArguments(argumentTypeTokens: List<Type>): List<_root_ide_package_.ir.value.ArgumentValue> {
+                val argumentValues = arrayListOf<_root_ide_package_.ir.value.ArgumentValue>()
                 for ((idx, arg) in argumentTypeTokens.withIndex()) {
                     if (arg !is NonTrivialType) {
                         continue
                     }
 
-                    argumentValues.add(ArgumentValue(idx, arg))
+                    argumentValues.add(_root_ide_package_.ir.value.ArgumentValue(idx, arg))
                 }
 
                 return argumentValues
             }
 
-            fun setupNameMap(argument: List<ArgumentValue>, tokens: List<LocalValueToken>): MutableMap<String, LocalValue> {
-                val nameToValue = hashMapOf<String, LocalValue>()
+            fun setupNameMap(argument: List<_root_ide_package_.ir.value.ArgumentValue>, tokens: List<LocalValueToken>): MutableMap<String, _root_ide_package_.ir.value.LocalValue> {
+                val nameToValue = hashMapOf<String, _root_ide_package_.ir.value.LocalValue>()
                 argument.forEachWith(tokens) { arg, tok ->
                     nameToValue[tok.name] = arg
                 }
@@ -415,7 +415,7 @@ class FunctionDataBuilderWithContext private constructor(
 }
 
 private data class PhiContext(val phi: Phi, val valueTokens: List<AnyValueToken>, val expectedType: PrimitiveType) {
-    fun completePhi(valueMap: Map<String, LocalValue>) {
+    fun completePhi(valueMap: Map<String, _root_ide_package_.ir.value.LocalValue>) {
         val values = phi.operands()
         for ((idx, tok) in valueTokens.withIndex()) {
             if (tok !is LocalValueToken) {

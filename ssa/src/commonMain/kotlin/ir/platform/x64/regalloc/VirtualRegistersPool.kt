@@ -6,6 +6,9 @@ import ir.types.*
 import ir.instruction.*
 import asm.x64.GPRegister.*
 import ir.platform.x64.CallConvention
+import ir.value.ArgumentValue
+import ir.value.LocalValue
+import ir.value.Value
 
 
 class VirtualRegistersPool private constructor(private val argumentSlots: List<Operand>) {

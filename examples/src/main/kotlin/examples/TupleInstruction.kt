@@ -1,6 +1,6 @@
 package examples
 
-import ir.I32Value
+import ir.value.I32Value
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
 

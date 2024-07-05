@@ -1,6 +1,6 @@
 package ir.liveness
 
-import ir.LocalValue
+import ir.value.LocalValue
 import ir.module.FunctionData
 import ir.utils.OrderedLocation
 import ir.instruction.Instruction

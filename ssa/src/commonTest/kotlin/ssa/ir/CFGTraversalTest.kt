@@ -1,8 +1,8 @@
 package ssa.ir
 
 import ir.module.FunctionPrototype
-import ir.I64Value
-import ir.U16Value
+import ir.value.I64Value
+import ir.value.U16Value
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate
 import ir.module.BasicBlocks
@@ -25,7 +25,7 @@ class CFGTraversalTest {
         val arg3 = builder.argument(2)
         val v1 = builder.load(Type.I16, arg1)
         val ttt  = builder.sext(v1, Type.I64)
-        val res  = builder.icmp(I64Value(32), IntPredicate.Gt, ttt)
+        val res  = builder.icmp(_root_ide_package_.ir.value.I64Value(32), IntPredicate.Gt, ttt)
 
         val trueLabel = builder.createLabel()
         val falseLabel = builder.createLabel()
@@ -33,15 +33,18 @@ class CFGTraversalTest {
         builder.branchCond(res, trueLabel, falseLabel)
 
         builder.switchLabel(trueLabel)
-        builder.store(arg3, I64Value(12))
+        builder.store(arg3, _root_ide_package_.ir.value.I64Value(12))
         builder.branch(mergeLabel)
 
         builder.switchLabel(falseLabel)
-        builder.store(arg2, I64Value(19))
+        builder.store(arg2, _root_ide_package_.ir.value.I64Value(19))
         builder.branch(mergeLabel)
 
         builder.switchLabel(mergeLabel)
-        val arithm = builder.arithmeticBinary(U16Value(1337), ArithmeticBinaryOp.Sub, U16Value(64))
+        val arithm = builder.arithmeticBinary(
+            _root_ide_package_.ir.value.U16Value(1337), ArithmeticBinaryOp.Sub,
+            _root_ide_package_.ir.value.U16Value(64)
+        )
         builder.ret(arithm)
 
         val module = moduleBuilder.build()

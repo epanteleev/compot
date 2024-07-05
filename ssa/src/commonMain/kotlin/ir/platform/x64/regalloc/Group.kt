@@ -1,6 +1,6 @@
 package ir.platform.x64.regalloc
 
-import ir.LocalValue
+import ir.value.LocalValue
 import asm.x64.Operand
 import common.assertion
 import ir.instruction.Generate

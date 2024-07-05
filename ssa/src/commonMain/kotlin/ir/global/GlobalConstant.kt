@@ -1,8 +1,8 @@
 package ir.global
 
 import common.forEachWith
-import ir.Constant
-import ir.U8Value
+import ir.value.Constant
+import ir.value.U8Value
 import ir.types.ArrayType
 import ir.types.NonTrivialType
 import ir.types.StructType

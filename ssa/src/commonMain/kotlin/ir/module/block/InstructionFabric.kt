@@ -6,6 +6,9 @@ import ir.instruction.*
 import ir.instruction.lir.*
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
+import ir.value.IntegerConstant
+import ir.value.UnsignedIntegerConstant
+import ir.value.Value
 
 
 interface InstructionFabric {

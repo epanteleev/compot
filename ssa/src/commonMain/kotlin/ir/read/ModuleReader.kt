@@ -1,6 +1,6 @@
 package ir.read
 
-import ir.Constant
+import ir.value.Constant
 import ir.global.*
 import ir.types.*
 import ir.module.Module

@@ -5,6 +5,8 @@ import types.*
 import ir.types.*
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
+import ir.value.Constant
+import ir.value.Value
 
 
 object TypeConverter {

@@ -9,6 +9,10 @@ import ir.module.block.InstructionFabric
 import ir.module.builder.AnyFunctionDataBuilder
 import ir.read.tokens.Vararg
 import ir.types.*
+import ir.value.ArgumentValue
+import ir.value.IntegerConstant
+import ir.value.UnsignedIntegerConstant
+import ir.value.Value
 
 
 class FunctionDataBuilder private constructor(

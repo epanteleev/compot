@@ -1,7 +1,7 @@
 package ir.liveness
 
 import common.assertion
-import ir.LocalValue
+import ir.value.LocalValue
 import ir.module.block.Label
 import ir.platform.x64.regalloc.Group
 

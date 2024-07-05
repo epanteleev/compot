@@ -1,9 +1,9 @@
 package ir.platform.x64.regalloc
 
-import ir.LocalValue
+import ir.value.LocalValue
 import asm.x64.Operand
 import common.forEachWith
-import ir.asType
+import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
 import ir.instruction.TupleInstruction

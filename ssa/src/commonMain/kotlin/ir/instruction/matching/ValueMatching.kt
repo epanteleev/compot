@@ -1,7 +1,7 @@
 package ir.instruction.matching
 
-import ir.Constant
-import ir.Value
+import ir.value.Constant
+import ir.value.Value
 import ir.instruction.*
 import ir.types.PrimitiveType
 import ir.types.Type
