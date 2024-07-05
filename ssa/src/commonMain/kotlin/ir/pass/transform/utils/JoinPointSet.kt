@@ -30,15 +30,15 @@ class JoinPointSet internal constructor(private val joinSet: Map<AnyBlock, Mutab
 private class JoinPointSetEvaluate(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
     private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(blocks.size()) { bb: Label -> bb.index }
 
-    private fun hasDef(bb: AnyBlock, variable: Alloc): Boolean {
-        if (bb.contains(variable)) {
+    private fun hasUserInBlock(bb: AnyBlock, variable: Alloc): Boolean {
+        if (bb === variable.owner()) {
             return true
         }
         for (users in variable.usedIn()) {
             if (users !is Store) {
                 continue
             }
-            if (bb.contains(users)) {
+            if (bb === users.owner()) {
                 return true
             }
         }
@@ -56,17 +56,17 @@ private class JoinPointSetEvaluate(private val blocks: BasicBlocks, private val 
                 continue
             }
 
-            for (y in frontiers[x]!!) {
-                if (phiPlaces.contains(y)) {
+            for (frontier in frontiers[x]!!) {
+                if (phiPlaces.contains(frontier)) {
                     continue
                 }
-                val values = joinSet.getOrPut(y) { mutableSetOf() }
+                val values = joinSet.getOrPut(frontier) { mutableSetOf() }
 
                 values.add(v)
-                phiPlaces.add(y)
+                phiPlaces.add(frontier)
 
-                if (!hasDef(y, v)) {
-                    stores.add(y)
+                if (!hasUserInBlock(frontier, v)) {
+                    stores.add(frontier)
                 }
             }
         }

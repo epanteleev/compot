@@ -86,8 +86,12 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
         fun getIndex(inst: Instruction): Value {
             return when (inst) {
                 is GetElementPtr -> inst.index()
-                is GetFieldPtr   -> inst.index()
-                else             -> throw IllegalArgumentException("Expected GEP or GFP")
+                is GetFieldPtr -> {
+                    val index = inst.index().toInt()
+                    val field = inst.basicType.field(index)
+                    U64Value(inst.basicType.offset(index).toLong() / field.size())
+                }
+                else -> throw IllegalArgumentException("Expected GEP or GFP")
             }
         }
 
@@ -114,12 +118,6 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 load(gfpOrGep(generate().not(), nop())) (inst) -> {
                     inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
-                    //val index = when (pointer) {
-                    //    is GetElementPtr -> pointer.index()
-                    //    is GetFieldPtr   -> U64Value(pointer.basicType.offset(pointer.index().toInt()).toLong() / inst.type().size())
-                    //    else             -> throw IllegalArgumentException("Expected GEP or GFP")
-                    //}
-
                     val copy = bb.update(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer
@@ -129,11 +127,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 load(gfpOrGep(generate(), nop())) (inst) -> {
                     inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
-                    val index = when (pointer) {
-                        is GetElementPtr -> pointer.index()
-                        is GetFieldPtr   -> U64Value(pointer.basicType.offset(pointer.index().toInt()).toLong() / inst.type().size())
-                        else             -> throw IllegalArgumentException("Expected GEP or GFP")
-                    }
+                    val index = getIndex(pointer)
                     val copy = bb.update(inst) {
                         it.loadFromStack(getSource(pointer), inst.type(), index)
                     }

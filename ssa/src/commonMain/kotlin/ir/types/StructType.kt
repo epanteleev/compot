@@ -5,9 +5,9 @@ data class StructType internal constructor(val name: String, val fields: List<No
     override fun offset(index: Int): Int {
         var current = 0
         for (i in 0 until index) {
-            current = withAlignment(fields[i].size(), current)
+            current = alignTo(current, fields[i].size()) + fields[i].size()
         }
-        return current
+        return alignTo(current, fields[index].size())
     }
 
     override fun field(index: Int): NonTrivialType {
@@ -15,6 +15,9 @@ data class StructType internal constructor(val name: String, val fields: List<No
     }
 
     override fun size(): Int {
+        if (fields.isEmpty()) {
+            return 0
+        }
         var offset = 0
         var alignment = 1
         for (field in fields) {
