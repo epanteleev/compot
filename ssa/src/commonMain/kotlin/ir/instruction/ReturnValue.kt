@@ -7,7 +7,7 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.types.NonTrivialType
 import ir.types.Type
-import ir.types.AnyType
+import ir.types.BottomType
 import ir.types.VoidType
 
 
@@ -43,7 +43,7 @@ class ReturnValue private constructor(id: Identity, owner: Block, value: Value):
         }
 
         private fun isAppropriateType(retType: Type): Boolean {
-            return retType !is VoidType && retType !is AnyType
+            return retType !is VoidType && retType !is BottomType
         }
 
         fun typeCheck(retValue: ReturnValue): Boolean {

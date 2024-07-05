@@ -17,22 +17,12 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
         when (type) {
             is FloatingPointType -> {
                 when {
-                    dst is Address && source is XmmRegister && index is GPRegister -> {
-                        when (dst) {
-                            is Address2 -> {
-                                asm.movf(size, source, Address.from(dst.base, dst.offset, index, size))
-                            }
-                            else -> default(dst, source, index)
-                        }
+                    dst is Address2 && source is XmmRegister && index is GPRegister -> {
+                        asm.movf(size, source, Address.from(dst.base, dst.offset, index, size))
                     }
-                    dst is Address && source is XmmRegister && index is Imm -> {
+                    dst is Address2 && source is XmmRegister && index is Imm -> {
                         val indexImm = index as ImmInt
-                        when (dst) {
-                            is Address2 -> {
-                                asm.movf(size, source, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
-                            }
-                            else -> default(dst, source, indexImm)
-                        }
+                        asm.movf(size, source, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
                     }
                     dst is Address && source is Address && index is Imm -> {
                         val indexImm = index as ImmInt

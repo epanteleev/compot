@@ -1,6 +1,6 @@
 package ir.types
 
-class AnyType : TrivialType, NonTrivialType, PrimitiveType {
+class BottomType : TrivialType, NonTrivialType, PrimitiveType {
     override fun size(): Int {
         TODO("Not yet implemented")
     }

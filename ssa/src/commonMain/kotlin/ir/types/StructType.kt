@@ -10,6 +10,10 @@ data class StructType internal constructor(val name: String, val fields: List<No
         return current
     }
 
+    override fun field(index: Int): NonTrivialType {
+        return fields[index]
+    }
+
     override fun size(): Int {
         var offset = 0
         var alignment = 1

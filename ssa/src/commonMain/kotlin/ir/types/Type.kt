@@ -22,6 +22,6 @@ interface Type {
         val Ptr = PointerType()
 
         val Void = VoidType()
-        val UNDEF = AnyType()
+        val UNDEF = BottomType()
     }
 }

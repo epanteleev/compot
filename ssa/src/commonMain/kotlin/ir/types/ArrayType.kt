@@ -12,6 +12,10 @@ data class ArrayType(private val type: NonTrivialType, val size: Int) : Aggregat
         return index * type.size()
     }
 
+    override fun field(index: Int): NonTrivialType {
+        return type
+    }
+
     override fun toString(): String {
         return "<$type x $size>"
     }

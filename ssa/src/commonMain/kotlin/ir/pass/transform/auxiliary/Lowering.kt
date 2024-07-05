@@ -96,8 +96,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 store(gfpOrGep(generate().not(), nop()), nop()) (inst) -> {
                     inst as Store
                     val pointer = inst.pointer().asValue<ValueInstruction>()
-                    val move = bb.insertBefore(inst) { it.move(getSource(pointer), inst.value(), getIndex(pointer)) }
-                    bb.kill(inst)
+                    val move = bb.update(inst) { it.move(getSource(pointer), inst.value(), getIndex(pointer)) }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer
                     }
@@ -115,6 +114,12 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 load(gfpOrGep(generate().not(), nop())) (inst) -> {
                     inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
+                    //val index = when (pointer) {
+                    //    is GetElementPtr -> pointer.index()
+                    //    is GetFieldPtr   -> U64Value(pointer.basicType.offset(pointer.index().toInt()).toLong() / inst.type().size())
+                    //    else             -> throw IllegalArgumentException("Expected GEP or GFP")
+                    //}
+
                     val copy = bb.update(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer
@@ -124,8 +129,13 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 load(gfpOrGep(generate(), nop())) (inst) -> {
                     inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
+                    val index = when (pointer) {
+                        is GetElementPtr -> pointer.index()
+                        is GetFieldPtr   -> U64Value(pointer.basicType.offset(pointer.index().toInt()).toLong() / inst.type().size())
+                        else             -> throw IllegalArgumentException("Expected GEP or GFP")
+                    }
                     val copy = bb.update(inst) {
-                        it.loadFromStack(getSource(pointer), inst.type(), getIndex(pointer))
+                        it.loadFromStack(getSource(pointer), inst.type(), index)
                     }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer

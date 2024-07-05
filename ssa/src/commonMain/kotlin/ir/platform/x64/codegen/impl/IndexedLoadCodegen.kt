@@ -19,16 +19,16 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, val asm: Assembl
 
     private fun handleXmm(dst: Operand, operand: Operand, index: Operand) {
         if (dst is XmmRegister && operand is GPRegister && index is GPRegister) {
-            asm.movf(size, Address.from(operand, 0, index, loadedType.size()), dst)
+            asm.movf(size, Address.from(operand, 0, index, size), dst)
         } else if (dst is XmmRegister && operand is GPRegister && index is ImmInt) {
-            asm.movf(size, Address.from(operand, index.value().toInt() * loadedType.size()), dst)
+            asm.movf(size, Address.from(operand, index.value().toInt() * size), dst)
         } else {
             default(dst, operand, index)
         }
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        asm.mov(size, Address.from(first, 0, second, loadedType.size()), dst)
+        asm.mov(size, Address.from(first, 0, second, size), dst)
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
@@ -48,7 +48,7 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, val asm: Assembl
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        asm.mov(size, Address.from(first, second.value().toInt() * loadedType.size()), dst)
+        asm.mov(size, Address.from(first, second.value().toInt() * size), dst)
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {

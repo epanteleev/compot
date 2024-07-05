@@ -200,11 +200,11 @@ private class CodeEmitter(private val data: FunctionData,
         MemcpyCodegen(memcpy.length(), asm)(dst, src)
     }
 
-    override fun visit(copy: IndexedLoad) {
-        val dst = valueToRegister.operand(copy)
-        val first = valueToRegister.operand(copy.origin())
-        val second = valueToRegister.operand(copy.index())
-        IndexedLoadCodegen(copy.type(), asm)(dst, first, second)
+    override fun visit(indexedLoad: IndexedLoad) {
+        val dst = valueToRegister.operand(indexedLoad)
+        val first = valueToRegister.operand(indexedLoad.origin())
+        val second = valueToRegister.operand(indexedLoad.index())
+        IndexedLoadCodegen(indexedLoad.type(), asm)(dst, first, second)
     }
 
     override fun visit(store: StoreOnStack) {

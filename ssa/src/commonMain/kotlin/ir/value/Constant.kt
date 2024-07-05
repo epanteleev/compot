@@ -247,7 +247,7 @@ class UndefinedValue: Constant {
         return toString()
     }
 
-    override fun type(): AnyType {
+    override fun type(): BottomType {
         return Type.UNDEF
     }
 

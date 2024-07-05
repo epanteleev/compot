@@ -1,7 +1,6 @@
 package ir.value
 
 import ir.types.*
-import ir.instruction.Instruction
 
 
 interface Value {

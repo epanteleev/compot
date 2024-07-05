@@ -9,12 +9,12 @@ import ir.types.Type
 abstract class AnyValueToken(override val line: Int, override val pos: Int): Token(line, pos)
 
 abstract class LiteralValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
-    fun toConstant(ty: Type): _root_ide_package_.ir.value.Constant {
+    fun toConstant(ty: Type): Constant {
         return when (this) {
-            is IntValue       -> _root_ide_package_.ir.value.Constant.of(ty, int)
-            is FloatValue     -> _root_ide_package_.ir.value.Constant.of(ty, fp)
-            is BoolValueToken -> _root_ide_package_.ir.value.BoolValue.of( bool)
-            is NULLValueToken -> _root_ide_package_.ir.value.NullValue.NULLPTR
+            is IntValue       -> Constant.of(ty, int)
+            is FloatValue     -> Constant.of(ty, fp)
+            is BoolValueToken -> BoolValue.of( bool)
+            is NULLValueToken -> NullValue.NULLPTR
             else -> throw RuntimeException("unexpected literal value: $this")
         }
     }

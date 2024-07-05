@@ -1,12 +1,13 @@
 package ssa.ir
 
-import ir.*
 import ir.instruction.*
 import ir.module.FunctionPrototype
 import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.Type
+import ir.value.I32Value
+import ir.value.I64Value
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -30,8 +31,8 @@ class LoopsTest {
         builder.branch(b1)
         builder.switchLabel(b1)
         val cmp1 = builder.icmp(
-            _root_ide_package_.ir.value.I32Value(12), IntPredicate.Ne,
-            _root_ide_package_.ir.value.I32Value(43)
+            I32Value(12), IntPredicate.Ne,
+            I32Value(43)
         )
         builder.branchCond(cmp1, b3, b2)
 
@@ -40,18 +41,18 @@ class LoopsTest {
 
         builder.switchLabel(b2)
         val cmp2 = builder.icmp(
-            _root_ide_package_.ir.value.I32Value(12), IntPredicate.Ne,
-            _root_ide_package_.ir.value.I32Value(43)
+            I32Value(12), IntPredicate.Ne,
+            I32Value(43)
         )
         builder.branchCond(cmp2, b5, b4)
 
         builder.switchLabel(b5)
-        builder.ret(_root_ide_package_.ir.value.I64Value(0))
+        builder.ret(I64Value(0))
 
         builder.switchLabel(b4)
         val cmp3 = builder.icmp(
-            _root_ide_package_.ir.value.I32Value(12), IntPredicate.Ne,
-            _root_ide_package_.ir.value.I32Value(43)
+            I32Value(12), IntPredicate.Ne,
+            I32Value(43)
         )
         builder.branchCond(cmp3, b7, b6)
 

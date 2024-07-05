@@ -10,6 +10,8 @@ class StructTypeTest {
     fun test1() {
         val structType = StructType("Point", arrayListOf(Type.I32, Type.I32))
         assertEquals(8, structType.size())
+        assertEquals(0, structType.offset(0))
+        assertEquals(4, structType.offset(1))
     }
 
     @Test
