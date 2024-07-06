@@ -47,20 +47,18 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 return inst
             }
             when {
-                gep(generate(), nop()) (inst) -> {
-                    inst as GetElementPtr
+                gep(generate(), nop()) (inst) -> { inst as GetElementPtr
                     return bb.update(inst) { it.leaStack(inst.source(), inst.basicType as PrimitiveType, inst.index()) }
                 }
-                gfp(generate(), nop()) (inst) -> {
-                    inst as GetFieldPtr
-
-                    when (val base = inst.basicType) {
+                gfp(generate(), nop()) (inst) -> { inst as GetFieldPtr
+                    return when (val base = inst.basicType) {
                         is ArrayType -> {
-                            return bb.update(inst) { it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index()) }
+                            bb.update(inst) { it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index()) }
                         }
                         is StructType -> {
-                            return bb.update(inst) { it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index().toInt()))) }
+                            bb.update(inst) { it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index().toInt()))) }
                         }
+                        else -> inst
                     }
                 }
             }
@@ -95,8 +93,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
 
         fun closure(bb: Block, inst: Instruction): Instruction {
             when {
-                store(gfpOrGep(generate().not(), nop()), nop()) (inst) -> {
-                    inst as Store
+                store(gfpOrGep(generate().not(), nop()), nop()) (inst) -> { inst as Store
                     val pointer = inst.pointer().asValue<ValueInstruction>()
                     val move = bb.update(inst) { it.move(getSource(pointer), inst.value(), getIndex(pointer)) }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
@@ -104,8 +101,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     }
                     return move
                 }
-                store(gfpOrGep(generate(), nop()), nop()) (inst) -> {
-                    inst as Store
+                store(gfpOrGep(generate(), nop()), nop()) (inst) -> { inst as Store
                     val pointer = inst.pointer().asValue<ValueInstruction>()
                     val st = bb.update(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
@@ -113,8 +109,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     }
                     return st
                 }
-                load(gfpOrGep(generate().not(), nop())) (inst) -> {
-                    inst as Load
+                load(gfpOrGep(generate().not(), nop())) (inst) -> { inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
                     val copy = bb.update(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
@@ -122,8 +117,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     }
                     return copy
                 }
-                load(gfpOrGep(generate(), nop())) (inst) -> {
-                    inst as Load
+                load(gfpOrGep(generate(), nop())) (inst) -> { inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
                     val index = getIndex(pointer)
                     val copy = bb.update(inst) {
@@ -160,7 +154,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
 
         fun closure(bb: Block, inst: Instruction): Instruction {
             when {
-                binary(ArithmeticBinaryOp.Div, value(i8()), value(i8())) (inst) -> {
+                binary(ArithmeticBinaryOp.Div, value(i8()), value(i8())) (inst) -> { inst as ArithmeticBinary
                     // Before:
                     //  %res = div i8 %a, %b
                     //
@@ -170,35 +164,28 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     //  %resI16 = div i16, %extFirst, %extSecond
                     //  %res = trunc i16 %resI16 to i8
 
-                    inst as ArithmeticBinary
                     val extFirst  = extend(bb, inst, inst.first())
                     val extSecond = extend(bb, inst, inst.second())
 
                     val newDiv   = bb.insertBefore(inst) { it.arithmeticBinary(extFirst, ArithmeticBinaryOp.Div, extSecond) }
-                    val truncate = bb.insertBefore(inst) { it.trunc(newDiv, Type.I8) }
-                    inst.replaceUsages(truncate)
-                    killOnDemand(bb, inst)
+                    bb.update(inst) { it.trunc(newDiv, Type.I8) }
                     return newDiv
                 }
-                binary(ArithmeticBinaryOp.Div, constant().not(), constant()) (inst) -> {
+                binary(ArithmeticBinaryOp.Div, constant().not(), constant()) (inst) -> { inst as ArithmeticBinary
                     // TODO temporal
-                    inst as ArithmeticBinary
                     val second = inst.second()
                     val copy = bb.insertBefore(inst) { it.copy(second) }
                     inst.update(1, copy )
                     return inst
                 }
-                tupleDiv(constant().not(), constant()) (inst) -> {
+                tupleDiv(constant().not(), constant()) (inst) -> { inst as TupleDiv
                     // TODO temporal
-                    inst as TupleDiv
                     val second = inst.second()
                     val copy = bb.insertBefore(inst) { it.copy(second) }
                     inst.update(1, copy )
                     return inst
                 }
-                tupleDiv(value(i8()), value(i8())) (inst) -> {
-                    inst as TupleDiv
-
+                tupleDiv(value(i8()), value(i8())) (inst) -> { inst as TupleDiv
                     val extFirst  = extend(bb, inst, inst.first())
                     val extSecond = extend(bb, inst,  inst.second())
                     val newDiv = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
@@ -247,8 +234,8 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     inst.update(1, lea)
                     return inst
                 }
-                copy(generate()) (inst) -> {
-                    return replaceCopy(bb, inst as Copy)
+                copy(generate()) (inst) -> { inst as Copy
+                    return replaceCopy(bb, inst)
                 }
                 ptr2int(generate()) (inst) -> { inst as Pointer2Int
                     val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
