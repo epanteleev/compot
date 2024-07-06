@@ -95,6 +95,12 @@ abstract class ShlangTests: CommonCTest() {
     }
 
     @Test
+    fun testQuickSort() {
+        val result = runCTest("shlang/quickSort", listOf("runtime/runtime.c"), options())
+        assert(result, "Original array: 19 17 15 12 16 18 4 11 13 \nSorted array: 4 11 12 13 15 16 17 18 19 ")
+    }
+
+    @Test
     fun testFibonacci() {
         val result = runCTest("shlang/fibonacci1", listOf("runtime/runtime.c"), options())
         assert(result, "55\n")

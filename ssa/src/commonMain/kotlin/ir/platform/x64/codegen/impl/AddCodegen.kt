@@ -114,7 +114,13 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.add(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.add(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

@@ -204,7 +204,7 @@ private class CodeEmitter(private val data: FunctionData,
         val dst = valueToRegister.operand(indexedLoad)
         val first = valueToRegister.operand(indexedLoad.origin())
         val second = valueToRegister.operand(indexedLoad.index())
-        IndexedLoadCodegen(indexedLoad.type(), asm)(dst, first, second)
+        IndexedLoadCodegen(indexedLoad.type(), indexedLoad.index().asType<PrimitiveType>(), asm)(dst, first, second)
     }
 
     override fun visit(store: StoreOnStack) {

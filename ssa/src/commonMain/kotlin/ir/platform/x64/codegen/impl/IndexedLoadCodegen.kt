@@ -8,7 +8,7 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.*
 
 
-class IndexedLoadCodegen(private val loadedType: PrimitiveType, val asm: Assembler): GPOperandsVisitorBinaryOp {
+class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val indexType: PrimitiveType, val asm: Assembler): GPOperandsVisitorBinaryOp {
     private val size: Int = loadedType.sizeof()
 
     operator fun invoke(dst: Operand, operand: Operand, index: Operand) {
@@ -69,7 +69,9 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, val asm: Assembl
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(indexType.sizeof(), second, temp1)
+        asm.mov(size, Address.from(first, 0, temp1, size), temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {

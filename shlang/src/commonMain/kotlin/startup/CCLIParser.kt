@@ -6,6 +6,13 @@ import common.commandLine.AnyCLIArguments
 class ShlangCLIArguments : AnyCLIArguments() {
     private val includeDirectories = mutableSetOf<String>()
     private val defines = mutableMapOf<String, String>()
+    private var preprocessOnly = false
+
+    fun setPreprocessOnly(preprocessOnly: Boolean) {
+        this.preprocessOnly = preprocessOnly
+    }
+
+    fun isPreprocessOnly(): Boolean = preprocessOnly
 
     fun addIncludeDirectory(directory: String) {
         includeDirectories.add(directory)
@@ -46,6 +53,10 @@ object CCLIParser {
         val commandLineArguments = ShlangCLIArguments()
         while (cursor < args.size) {
             when (val arg = args[cursor]) {
+                "-h", "--help" -> {
+                    printHelp()
+                    return null
+                }
                 "-c", "--compile" -> {
                     if (cursor + 1 >= args.size) {
                         println("Expected input filename after -o")
@@ -73,6 +84,9 @@ object CCLIParser {
                     commandLineArguments.setOutputFilename(args[cursor])
                 }
 
+                "-E" -> {
+                    commandLineArguments.setPreprocessOnly(true)
+                }
                 else -> {
                     if (arg.startsWith("-I")) {
                         commandLineArguments.addIncludeDirectory(arg.substring(2))
@@ -120,5 +134,8 @@ object CCLIParser {
         println("  --dump-ir                 Dump IR to files")
         println("  -o <filename>             Specify output filename")
         println("  -I <directory>            Add include directory")
+        println("  -D <macro>                Define macro")
+        println("  -h, --help                Print this help message")
+        println("  -E                        Preprocess only; do not compile, assemble or link")
     }
 }

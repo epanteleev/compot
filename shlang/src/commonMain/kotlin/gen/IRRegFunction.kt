@@ -147,7 +147,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, resolved)
                 return Constant.of(Type.I64, irType.sizeof())
             }
-            is VarNode -> {
+            is Expression -> {
                 val resolved = expr.resolveType(typeHolder)
                 val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, resolved)
                 return Constant.of(Type.I64, irType.sizeof())
