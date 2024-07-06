@@ -5,24 +5,24 @@ data class StructType internal constructor(val name: String, val fields: List<No
     override fun offset(index: Int): Int {
         var current = 0
         for (i in 0 until index) {
-            current = alignTo(current, fields[i].size()) + fields[i].size()
+            current = alignTo(current, fields[i].sizeof()) + fields[i].sizeof()
         }
-        return alignTo(current, fields[index].size())
+        return alignTo(current, fields[index].sizeof())
     }
 
     override fun field(index: Int): NonTrivialType {
         return fields[index]
     }
 
-    override fun size(): Int {
+    override fun sizeof(): Int {
         if (fields.isEmpty()) {
             return 0
         }
         var offset = 0
         var alignment = 1
         for (field in fields) {
-            alignment = maxOf(alignment, field.size())
-            offset = alignTo(offset, alignment) + field.size()
+            alignment = maxOf(alignment, field.sizeof())
+            offset = alignTo(offset, alignment) + field.sizeof()
         }
         return alignTo(offset, 8)
     }

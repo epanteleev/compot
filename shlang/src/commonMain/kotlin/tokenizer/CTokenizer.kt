@@ -8,7 +8,6 @@ import tokenizer.LexicalElements.keywords
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
     private val tokens = TokenList()
-
     private var pos: Int = 1
     private var line: Int = 1
 
@@ -39,6 +38,11 @@ class CTokenizer private constructor(private val filename: String, private val r
     private fun doTokenizeHelper() {
         while (!reader.eof) {
             val v = reader.peek()
+            if (v == '\\' && reader.peekOffset(1) == '\n') {
+                eat(2)
+                incrementLine()
+                continue
+            }
 
             if (v == '\n') {
                 eat()
@@ -152,24 +156,18 @@ class CTokenizer private constructor(private val filename: String, private val r
                     pos += diff
                     append(Numeric(number, OriginalPosition(line, pos - diff, filename)))
                 }
-                else -> when {
-                    else -> error("Unknown symbol: '$v' in '$filename' at $line:$pos")
-                }
+                else -> error("Unknown symbol: '$v' in '$filename' at $line:$pos")
             }
         }
     }
 
     companion object {
-        fun apply(file: StringReader, filename: String): TokenList {
-            return CTokenizer(filename, file).doTokenize()
-        }
-
         fun apply(data: String, filename: String): TokenList {
-            return apply(StringReader(data), filename)
+            return CTokenizer(filename, StringReader(data)).doTokenize()
         }
 
         fun apply(data: String): TokenList {
-            return apply(StringReader(data), "<no-name>")
+            return CTokenizer("<no-name>", StringReader(data)).doTokenize()
         }
     }
 }

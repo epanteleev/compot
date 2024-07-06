@@ -46,7 +46,7 @@ class ZeroExtend private constructor(id: Identity, owner: Block, toType: Unsigne
                 return false
             }
 
-            return toType.size() > valueType.size()
+            return toType.sizeof() > valueType.sizeof()
         }
 
         fun typeCheck(zext: ZeroExtend): Boolean {

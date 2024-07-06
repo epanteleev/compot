@@ -11,7 +11,7 @@ import ir.types.IntegerType
 
 
 class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
-    private val size = type.size()
+    private val size = type.sizeof()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {

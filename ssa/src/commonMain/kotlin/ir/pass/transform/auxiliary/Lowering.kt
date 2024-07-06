@@ -87,7 +87,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 is GetFieldPtr -> {
                     val index = inst.index().toInt()
                     val field = inst.basicType.field(index)
-                    U64Value(inst.basicType.offset(index).toLong() / field.size())
+                    U64Value(inst.basicType.offset(index).toLong() / field.sizeof())
                 }
                 else -> throw IllegalArgumentException("Expected GEP or GFP")
             }

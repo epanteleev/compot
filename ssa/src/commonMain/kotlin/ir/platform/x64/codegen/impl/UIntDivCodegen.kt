@@ -12,7 +12,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroAssembler):
     GPOperandsVisitorBinaryOp {
-    private val size: Int = type.size()
+    private val size: Int = type.sizeof()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)

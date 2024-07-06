@@ -9,6 +9,7 @@ import gen.consteval.*
 import ir.global.*
 import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
+import ir.value.Constant
 
 
 data class IRCodeGenError(override val message: String) : Exception(message)
@@ -71,7 +72,9 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     private fun declare(node: Declaration) {
         for (decl in node.nonTypedefDeclarators()) {
             when (decl) {
-                is Declarator -> declareDeclarator(node.declspec, decl)
+                is Declarator -> {
+                    declareDeclarator(node.declspec, decl)
+                }
                 is AssignmentDeclarator -> {
                     val cType = decl.resolveType(node.declspec, typeHolder)
                     val lValueType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, cType)
@@ -120,11 +123,27 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     }
 
     private fun stringLiteralInitializer(expr: Expression): GlobalConstant? {
-        if (expr !is StringNode) {
+        if (expr is StringNode) {
+            val content = expr.str.unquote()
+            return StringLiteralConstant("str${constantCounter++}", ArrayType(Type.U8, content.length), content)
+        } else if (expr is InitializerList) {
+            val type = expr.resolveType(typeHolder)
+
+            if (type is CompoundType) {
+                val typeExpr = moduleBuilder.toIRType<AggregateType>(typeHolder, type)
+
+                val elements = expr.initializers.map { constEvalExpression0(it) }
+                val convertedElements = elements.mapIndexed { it, num ->
+                    Constant.of(typeExpr.field(it), num as Number)
+                }
+
+                return ArrayGlobalConstant("str${constantCounter++}", typeExpr as ArrayType, convertedElements)
+            } else {
+                throw IRCodeGenError("Unsupported type $type")
+            }
+        } else {
             return null
         }
-        val content = expr.str.unquote()
-        return StringLiteralConstant("str${constantCounter++}", ArrayType(Type.U8, content.length), content)
     }
 
     companion object {

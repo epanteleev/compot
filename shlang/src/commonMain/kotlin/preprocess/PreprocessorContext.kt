@@ -70,9 +70,7 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
     }
 
     fun undef(name: String) {
-        macroReplacements.remove(name)
-        macroDefinitions.remove(name)
-        macroFunctions.remove(name)
+        macroReplacements.remove(name) ?: macroDefinitions.remove(name) ?: macroFunctions.remove(name)
     }
 
     fun findHeader(name: String, includeType: HeaderType): Header? {

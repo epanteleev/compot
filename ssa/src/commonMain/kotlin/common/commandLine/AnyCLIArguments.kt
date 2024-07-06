@@ -32,7 +32,6 @@ abstract class AnyCLIArguments {
 
     fun getFilename(): String = inputFilename
     fun getBasename(): String = getName(inputFilename)
-    fun getLogDir(): String = getBasename()
 
     fun setFilename(name: String) {
         inputFilename = name

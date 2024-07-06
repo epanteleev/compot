@@ -3,11 +3,13 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.lir.IndexedLoad
+import ir.platform.x64.CallConvention.POINTER_SIZE
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.*
 
 
 class IndexedLoadCodegen(private val loadedType: PrimitiveType, val asm: Assembler): GPOperandsVisitorBinaryOp {
-    private val size: Int = loadedType.size()
+    private val size: Int = loadedType.sizeof()
 
     operator fun invoke(dst: Operand, operand: Operand, index: Operand) {
         when (loadedType) {
@@ -62,7 +64,8 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, val asm: Assembl
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.lea(POINTER_SIZE, first, temp1)
+        asm.mov(size, Address.from(temp1, second.value().toInt() * size), dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {

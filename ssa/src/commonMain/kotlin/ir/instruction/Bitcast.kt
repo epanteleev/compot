@@ -44,7 +44,7 @@ class Bitcast private constructor(id: Identity, owner: Block, toType: NonTrivial
         private fun isAppropriateType(toType: Type, valueType: Type): Boolean {
             return toType is NonTrivialType &&
                     valueType is NonTrivialType &&
-                    valueType.size() == toType.size() &&
+                    valueType.sizeof() == toType.sizeof() &&
                     toType !is FloatingPointType
         }
 

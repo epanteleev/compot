@@ -27,9 +27,7 @@ class CompilationUnit: CompiledModule() {
                 val types = globalValue.elements().map { convertToSymbolType(it) }
                 symbols.add(ObjSymbol(globalValue.name(), globalValue.elements().map { it.toString() }, types))
             }
-            else -> {
-                symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(convertToSymbolType(globalValue))))
-            }
+            else -> symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue)))
         }
     }
 
@@ -39,15 +37,22 @@ class CompilationUnit: CompiledModule() {
 
     private fun convertGlobalValueToSymbolType(globalValue: GlobalValue): ObjSymbol {
         val symbolType = convertToSymbolType(globalValue.data)
-        return if (symbolType == SymbolType.StringLiteral) {
+        return if (symbolType[0] == SymbolType.StringLiteral) {
             ObjSymbol(globalValue.name(), listOf(globalValue.data.name()), listOf(SymbolType.Quad))
         } else {
-            ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(symbolType))
+            val constant = globalValue.data
+            if (constant is StructGlobalConstant || constant is ArrayGlobalConstant) {
+                constant as AggregateConstant
+                val data = constant.elements().map { it.toString() }
+                ObjSymbol(globalValue.name(), data, symbolType)
+            } else {
+                ObjSymbol(globalValue.name(), listOf(globalValue.data()), symbolType)
+            }
         }
     }
 
-    private fun convertToSymbolType(globalValue: GlobalConstant): SymbolType {
-        return when (globalValue) {
+    private fun convertToSymbolType(globalValue: GlobalConstant): List<SymbolType> {
+        val symType = when (globalValue) {
             is StringLiteralConstant -> SymbolType.StringLiteral
             is I64ConstantValue -> SymbolType.Quad
             is U64ConstantValue -> SymbolType.Quad
@@ -59,9 +64,14 @@ class CompilationUnit: CompiledModule() {
             is U8ConstantValue  -> SymbolType.Byte
             is F32ConstantValue -> SymbolType.Long
             is F64ConstantValue -> SymbolType.Quad
-            is PointerConstant -> SymbolType.Quad
-            else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue:${globalValue.type()}")
+            is PointerConstant  -> SymbolType.Quad
+            else -> null
         }
+        if (symType != null) {
+            return listOf(symType)
+        }
+        globalValue as AggregateConstant
+        return globalValue.elements().map { convertToSymbolType(it) }
     }
 
     private fun convertToSymbolType(globalValue: Constant): SymbolType {
@@ -72,8 +82,8 @@ class CompilationUnit: CompiledModule() {
             is U32Value -> SymbolType.Long
             is I16Value -> SymbolType.Short
             is U16Value -> SymbolType.Short
-            is I8Value -> SymbolType.Byte
-            is U8Value -> SymbolType.Byte
+            is I8Value  -> SymbolType.Byte
+            is U8Value  -> SymbolType.Byte
             is F32Value -> SymbolType.Long
             is F64Value -> SymbolType.Quad
             else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue:${globalValue.type()}")

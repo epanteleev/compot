@@ -668,7 +668,7 @@ class CProgramPreprocessorTest {
     fun testSeveralIf() {
         val data = """
             |#ifndef TEST
-            |#define TEST
+            |#define TEST 1
             |#endif
             |
             |#if !defined(TEST)
@@ -889,7 +889,8 @@ class CProgramPreprocessorTest {
             |#ifndef __SIZE_TYPE__
             |#define __SIZE_TYPE__ long unsigned int
             |#endif
-            |#if !(defined (__GNUG__) && defined (size_t))
+            |#if !(defined (__GNUG__) \
+            |   && defined (size_t))
             |typedef __SIZE_TYPE__ size_t;
             |#ifdef __BEOS__
             |typedef long ssize_t;

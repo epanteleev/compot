@@ -7,7 +7,7 @@ import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
 class FloatDivCodegen(val type: ArithmeticType, val asm: Assembler): XmmOperandsVisitorBinaryOp {
-    private val size: Int = type.size()
+    private val size: Int = type.sizeof()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)

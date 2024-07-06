@@ -8,7 +8,13 @@ abstract class InitializerListTest: CommonCTest() {
     @Test
     fun test1() {
         val result = runCTest("shlang/initializerList/initializerList", listOf(), options())
-        assertEquals("123\n", result.output)
+        assertEquals("123", result.output)
+    }
+
+    @Test
+    fun test2() {
+        val result = runCTest("shlang/initializerList/initializerList1", listOf(), options())
+        assertEquals("point.x = 1, point.y = 2.000", result.output)
     }
 }
 

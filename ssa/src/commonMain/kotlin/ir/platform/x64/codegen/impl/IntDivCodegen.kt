@@ -9,7 +9,7 @@ import ir.platform.x64.codegen.MacroAssembler
 
 
 data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroAssembler): GPOperandsVisitorBinaryOp {
-    private val size: Int = type.size()
+    private val size: Int = type.sizeof()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {

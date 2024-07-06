@@ -14,7 +14,6 @@ import tokenizer.TokenPrinter
 
 
 class ShlangDriver(private val cli: ShlangCLIArguments) {
-
     private fun definedMacros(ctx: PreprocessorContext) {
         if (cli.getDefines().isEmpty()) {
             return
@@ -46,6 +45,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         val postProcessedTokens = preprocessor.preprocess()
 
         val parser     = CProgramParser.build(postProcessedTokens)
+        println(TokenPrinter.print(postProcessedTokens))
         val program    = parser.translation_unit()
         val typeHolder = parser.typeHolder()
         return IRGen.apply(typeHolder, program)
@@ -57,8 +57,8 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
     }
 
     companion object {
-        const val SYSTEM_HEADERS_PATH = "/usr/include"
+        const val SYSTEM_HEADERS_PATH       = "/usr/include"
         const val SYSTEM_LINUX_HEADERS_PATH = "/usr/include/linux"
-        const val C_HEADERS_PATH = "/usr/lib/musl/include/" //TODO hardcoded for manjaro
+        const val C_HEADERS_PATH            = "/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/include/" //TODO hardcoded for manjaro
     }
 }

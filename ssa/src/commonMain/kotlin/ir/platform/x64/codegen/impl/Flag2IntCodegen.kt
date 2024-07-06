@@ -44,6 +44,6 @@ class Flag2IntCodegen(private val toSize: Int, private val asm: Assembler): GPOp
     }
 
     companion object {
-        private val fromSize = Type.U8.size()
+        private val fromSize = Type.U8.sizeof()
     }
 }

@@ -10,7 +10,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 
 data class MoveCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
     XmmOperandsVisitorUnaryOp {
-    private val size = type.size()
+    private val size = type.sizeof()
 
     operator fun invoke(dst: Operand, value: Operand) {
         when (type) {

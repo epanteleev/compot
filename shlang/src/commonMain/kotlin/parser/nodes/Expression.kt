@@ -221,8 +221,23 @@ data class InitializerList(val initializers: List<Expression>) : Expression() {
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val types      = initializers.map { it.resolveType(typeHolder) }
-        val commonType = types.reduce { acc, type -> CType.interfereTypes(acc, type) }
-        return@memoize commonType
+        val commonType = types.reduce { acc, type ->
+            CType.interfereTypes(acc, type)
+        }
+        if (isSameType(types)) {
+            return@memoize CompoundType(CArrayType(commonType, types.size), emptyList())
+        } else {
+            val struct = StructBaseType("initializer")
+            for (i in initializers.indices) {
+                struct.addField("field$i", types[i])
+            }
+            return@memoize CompoundType(struct, emptyList())
+        }
+    }
+
+    private fun isSameType(types: List<CType>): Boolean {
+        val first = types.first()
+        return types.all { it == first }
     }
 }
 

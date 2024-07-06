@@ -11,8 +11,8 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
 class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
-    private val size = type.size()
-    private val indexSize = indexType.size()
+    private val size = type.sizeof()
+    private val indexSize = indexType.sizeof()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {

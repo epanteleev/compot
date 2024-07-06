@@ -10,7 +10,7 @@ import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 data class XorCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
-    private val size: Int = type.size()
+    private val size: Int = type.sizeof()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {

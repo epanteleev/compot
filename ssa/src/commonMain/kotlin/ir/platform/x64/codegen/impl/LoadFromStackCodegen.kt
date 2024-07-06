@@ -7,7 +7,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
 class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
-    private val size = type.size()
+    private val size = type.sizeof()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {
@@ -34,7 +34,11 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        if (first is Address2) {
+            asm.mov(size, Address.from(first.base, first.offset, second, size), dst)
+        } else {
+            throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
+        }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {

@@ -11,7 +11,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 
 data class FpExtendCodegen(val toType: FloatingPointType, val asm: Assembler):
     XmmOperandsVisitorUnaryOp {
-    private val toSize = toType.size()
+    private val toSize = toType.sizeof()
 
     init {
         assertion(toType == Type.F64) {

@@ -9,7 +9,7 @@ import ir.types.IntegerType
 
 class FloatToSignedCodegen(val toType: IntegerType, fromType: FloatingPointType, val asm: Assembler): XmmToGPOperandsVisitor {
     private val toSize = run {
-        val size = toType.size()
+        val size = toType.sizeof()
         if (size >= 4) {
             size
         } else {
@@ -17,7 +17,7 @@ class FloatToSignedCodegen(val toType: IntegerType, fromType: FloatingPointType,
         }
     }
 
-    private val fromSize = fromType.size()
+    private val fromSize = fromType.sizeof()
 
     operator fun invoke(dst: Operand, src: Operand) {
         XmmToGPOperandsVisitor.apply(dst, src, this)

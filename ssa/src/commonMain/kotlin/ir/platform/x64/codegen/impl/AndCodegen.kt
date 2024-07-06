@@ -9,7 +9,7 @@ import ir.platform.x64.CallConvention.temp1
 
 class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
-    private val size: Int = type.size()
+    private val size: Int = type.sizeof()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {

@@ -8,7 +8,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
 data class NotCodegen(val type: IntegerType, val asm: Assembler): GPOperandsVisitorUnaryOp {
-    private val size = type.size()
+    private val size = type.sizeof()
 
     operator fun invoke(dst: Operand, src: Operand) {
         GPOperandsVisitorUnaryOp.apply(dst, src, this)

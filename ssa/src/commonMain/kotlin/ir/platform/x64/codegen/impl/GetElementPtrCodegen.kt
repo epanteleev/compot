@@ -12,7 +12,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: NonTrivialType, val asm: Assembler) :
     GPOperandsVisitorBinaryOp {
-    private val size: Int = basicType.size()
+    private val size: Int = basicType.sizeof()
 
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {

@@ -1,7 +1,6 @@
 package gen
 
 import common.assertion
-import ir.*
 import types.*
 import ir.types.*
 import parser.nodes.*
@@ -83,13 +82,19 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is SizeOf       -> visitSizeOf(expression)
             is MemberAccess -> visitMemberAccess(expression, isRvalue)
             is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
-            is InitializerList -> visitInitializerList(expression)
             else -> throw IRCodeGenError("Unknown expression: $expression")
         }
     }
 
-    private fun visitInitializerList(initializerList: InitializerList): Value {
-        TODO()
+    private fun visitInitializerList(ptr: Value, type: AggregateType, initializerList: InitializerList): Value {
+        for ((idx, init) in initializerList.initializers.withIndex()) {
+            val fieldPtr = ir().gfp(ptr, type, Constant.valueOf(Type.I64, idx))
+            val value = visitExpression(init, true)
+
+            val converted = ir().convertToType(value, type.field(idx))
+            ir().store(fieldPtr, converted)
+        }
+        return ptr
     }
 
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
@@ -140,12 +145,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is TypeName -> {
                 val resolved = expr.specifyType(typeHolder)
                 val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, resolved)
-                return Constant.of(Type.I64, irType.size())
+                return Constant.of(Type.I64, irType.sizeof())
             }
             is VarNode -> {
                 val resolved = expr.resolveType(typeHolder)
                 val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, resolved)
-                return Constant.of(Type.I64, irType.size())
+                return Constant.of(Type.I64, irType.sizeof())
             }
             else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
         }
@@ -780,15 +785,24 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(assignmentDeclarator: AssignmentDeclarator): Value {
         val type = typeHolder[assignmentDeclarator.name()]
-
-        val rvalue = visitExpression(assignmentDeclarator.rvalue, true)
-        val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
         if (type is CompoundType) {
             val lvalueAdr = assignmentDeclarator.declarator.accept(this)
-
-            ir().memcpy(lvalueAdr, rvalue, U64Value(commonType.size().toLong()))
-            return lvalueAdr
+            when (assignmentDeclarator.rvalue) {
+                is InitializerList -> {
+                    val typeIr = moduleBuilder.toIRType<AggregateType>(typeHolder, type)
+                    visitInitializerList(lvalueAdr, typeIr, assignmentDeclarator.rvalue)
+                    return lvalueAdr
+                }
+                else -> {
+                    val rvalue = visitExpression(assignmentDeclarator.rvalue, true)
+                    val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
+                    ir().memcpy(lvalueAdr, rvalue, U64Value(commonType.sizeof().toLong()))
+                    return lvalueAdr
+                }
+            }
         } else {
+            val rvalue = visitExpression(assignmentDeclarator.rvalue, true)
+            val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
             val convertedRvalue = ir().convertToType(rvalue, commonType)
 
             val lvalueAdr = assignmentDeclarator.declarator.accept(this)

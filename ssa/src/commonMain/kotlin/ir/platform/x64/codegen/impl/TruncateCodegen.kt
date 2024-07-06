@@ -8,8 +8,8 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: Assembler):
     GPOperandsVisitorUnaryOp {
-    private val toSize = toType.size()
-    private val fromSize = fromType.size()
+    private val toSize = toType.sizeof()
+    private val fromSize = fromType.sizeof()
 
     operator fun invoke(dst: Operand, src: Operand) {
         GPOperandsVisitorUnaryOp.apply(dst, src, this)
