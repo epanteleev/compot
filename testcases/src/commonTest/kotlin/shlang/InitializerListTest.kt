@@ -4,6 +4,7 @@ import common.CommonCTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+
 abstract class InitializerListTest: CommonCTest() {
     @Test
     fun test1() {
@@ -14,6 +15,12 @@ abstract class InitializerListTest: CommonCTest() {
     @Test
     fun test2() {
         val result = runCTest("shlang/initializerList/initializerList1", listOf(), options())
+        assertEquals("point.x = 1, point.y = 2.000", result.output)
+    }
+
+    @Test
+    fun test3() {
+        val result = runCTest("shlang/initializerList/initializerList2", listOf(), options())
         assertEquals("point.x = 1, point.y = 2.000", result.output)
     }
 }

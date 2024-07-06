@@ -259,12 +259,12 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 memcpy(nop(), generate(), nop()) (inst) -> { inst as Memcpy
                     val src = bb.insertBefore(inst) { it.lea(inst.source().asValue<Generate>()) }
                     inst.update(1, src)
-                    return inst
+                    return inst.prev() as Instruction //TODO refactor
                 }
                 memcpy(generate(), nop(), nop()) (inst) -> { inst as Memcpy
                     val dst = bb.insertBefore(inst) { it.lea(inst.destination().asValue<Generate>()) }
                     inst.update(0, dst)
-                    return inst
+                    return inst.prev() as Instruction //TODO refactor
                 }
             }
             return inst
