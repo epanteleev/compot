@@ -132,6 +132,12 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
         return result
     }
 
+    fun removeFirst(): T {
+        val result = head ?: throw NoSuchElementException()
+        remove(result)
+        return result
+    }
+
     fun removeAt(index: Int): T {
         var current: LListNode? = head
         for (i in 0 until index) {

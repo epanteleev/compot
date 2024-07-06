@@ -5,6 +5,7 @@ import ir.value.Value
 import ir.instruction.*
 import ir.types.PrimitiveType
 import ir.types.Type
+import ir.value.UnsignedIntegerConstant
 
 typealias ValueMatcher = (Value) -> Boolean
 typealias InstructionMatcher = (Instruction) -> Boolean
@@ -33,6 +34,10 @@ inline fun tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher): I
 
 inline fun ptr2int(crossinline origin: ValueMatcher): InstructionMatcher = {
     it is Pointer2Int && origin(it.value())
+}
+
+inline fun memcpy(crossinline dst: ValueMatcher, crossinline src: ValueMatcher, crossinline length: ValueMatcher): InstructionMatcher = {
+    it is Memcpy && dst(it.destination()) && src(it.source()) && length(it.length())
 }
 
 inline fun gep(crossinline src: ValueMatcher, crossinline idx: ValueMatcher): ValueMatcher = {

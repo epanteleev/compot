@@ -322,6 +322,31 @@ class CProgramPreprocessorTest {
         assertEquals(expected, TokenPrinter.print(p))
     }
 
+    @Test
+    fun testRecursiveExpansion1() {
+        val data = """
+            |#define f(a) a*g
+            |#define g(a) f(a)
+            |
+            |#undef f
+            |#define f 23
+            |f(2)(9)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |
+            |
+            |
+            |
+            |23(2)(9)
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
     // 6.10.3.5 Scope of macro definitions
     // EXAMPLE 3
     @Test //TODO not fully correct test

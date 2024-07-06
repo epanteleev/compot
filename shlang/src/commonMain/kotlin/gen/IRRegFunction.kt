@@ -352,11 +352,20 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             BinaryOpType.ASSIGN -> {
                 val right = visitExpression(binop.right, true)
                 val rightType = binop.left.resolveType(typeHolder)
-                val rightConverted = ir().convertToType(right, moduleBuilder.toIRType<NonTrivialType>(typeHolder, rightType))
 
-                val left = visitExpression(binop.left, false)
-                ir().store(left, rightConverted)
-                rightConverted //TODO test it
+                if (rightType is CompoundType) {
+                    val left = visitExpression(binop.left, false)
+                    ir().memcpy(left, right, U64Value(rightType.size().toLong()))
+
+                    right
+                } else {
+                    val rightIrType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, rightType)
+                    val rightConverted = ir().convertToType(right, rightIrType)
+
+                    val left = visitExpression(binop.left, false)
+                    ir().store(left, rightConverted)
+                    rightConverted //TODO test it
+                }
             }
 
             BinaryOpType.MUL -> {
@@ -774,11 +783,18 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val rvalue = visitExpression(assignmentDeclarator.rvalue, true)
         val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
-        val convertedRvalue = ir().convertToType(rvalue, commonType)
+        if (type is CompoundType) {
+            val lvalueAdr = assignmentDeclarator.declarator.accept(this)
 
-        val lvalueAdr = assignmentDeclarator.declarator.accept(this)
-        ir().store(lvalueAdr, convertedRvalue)
-        return convertedRvalue
+            ir().memcpy(lvalueAdr, rvalue, U64Value(commonType.size().toLong()))
+            return lvalueAdr
+        } else {
+            val convertedRvalue = ir().convertToType(rvalue, commonType)
+
+            val lvalueAdr = assignmentDeclarator.declarator.accept(this)
+            ir().store(lvalueAdr, convertedRvalue)
+            return convertedRvalue
+        }
     }
 
     override fun visit(arrayDeclarator: ArrayDeclarator): Value {

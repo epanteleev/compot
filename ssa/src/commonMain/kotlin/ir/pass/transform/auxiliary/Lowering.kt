@@ -242,8 +242,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 inst is Alloc && alloc() (inst) -> {
                     return replaceAlloc(bb, inst)
                 }
-                store(nop(), generate()) (inst) -> {
-                    inst as Store
+                store(nop(), generate()) (inst) -> { inst as Store
                     val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
                     inst.update(1, lea)
                     return inst
@@ -251,10 +250,20 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 copy(generate()) (inst) -> {
                     return replaceCopy(bb, inst as Copy)
                 }
-                ptr2int(generate()) (inst) -> {
-                    inst as Pointer2Int
+                ptr2int(generate()) (inst) -> { inst as Pointer2Int
                     val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
                     inst.update(0, lea)
+                    return inst
+                }
+                // TODO memcpy can be replaced with moves in some cases
+                memcpy(nop(), generate(), nop()) (inst) -> { inst as Memcpy
+                    val src = bb.insertBefore(inst) { it.lea(inst.source().asValue<Generate>()) }
+                    inst.update(1, src)
+                    return inst
+                }
+                memcpy(generate(), nop(), nop()) (inst) -> { inst as Memcpy
+                    val dst = bb.insertBefore(inst) { it.lea(inst.destination().asValue<Generate>()) }
+                    inst.update(0, dst)
                     return inst
                 }
             }
