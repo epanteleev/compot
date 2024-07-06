@@ -119,7 +119,7 @@ class MacroAssembler(name: String): Assembler(name) {
             is FloatCompare -> {
                 when (convType) {
                     FloatPredicate.Oeq -> CondType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
-                    FloatPredicate.Ogt -> TODO()
+                    FloatPredicate.Ogt -> CondType.JA
                     FloatPredicate.Oge -> CondType.JAE
                     FloatPredicate.Olt -> TODO()
                     FloatPredicate.Ole -> CondType.JBE

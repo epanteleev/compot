@@ -1,21 +1,30 @@
 //COPY paste from some other source
 
+#ifndef DATATYPE
+#define DATATYPE int
+#endif
+
+#ifndef FMT
+#define FMT "%d "
+#endif
+
+
 extern void printf(char format[], ...);
 
 // Function to swap two elements
-void swap(int* a, int* b)
+void swap(DATATYPE* a, DATATYPE* b)
 {
-    int temp = *a;
+    DATATYPE temp = *a;
     *a = *b;
     *b = temp;
 }
 
 // Partition function
-int partition(int arr[], int low, int high)
+int partition(DATATYPE arr[], int low, int high)
 {
 
     // initialize pivot to be the first element
-    int pivot = arr[low];
+    DATATYPE pivot = arr[low];
     int i = low;
     int j = high;
 
@@ -41,7 +50,7 @@ int partition(int arr[], int low, int high)
 }
 
 // QuickSort function
-void quickSort(int arr[], int low, int high)
+void quickSort(DATATYPE arr[], int low, int high)
 {
     if (low < high) {
 
@@ -58,13 +67,13 @@ void quickSort(int arr[], int low, int high)
 // driver code
 int main()
 {
-    int arr[9] = { 19, 17, 15, 12, 16, 18, 4, 11, 13 };
+    DATATYPE arr[9] = { 19, 17, 15, 12, 16, 18, 4, 11, 13 };
     int n = sizeof(arr) / sizeof(arr[0]);
 
     // printing the original array
     printf("Original array: ");
     for (int i = 0; i < n; i++) {
-        printf("%d ", arr[i]);
+        printf(FMT, arr[i]);
     }
 
     // calling quickSort() to sort the given array
@@ -73,7 +82,7 @@ int main()
     // printing the sorted array
     printf("\nSorted array: ");
     for (int i = 0; i < n; i++) {
-        printf("%d ", arr[i]);
+        printf(FMT, arr[i]);
     }
 
     return 0;

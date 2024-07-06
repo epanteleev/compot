@@ -20,8 +20,7 @@ class AsmTest {
         fn.mov(8, rbp, rsp)
         fn.ret()
 
-        val expected =
-        """
+        val expected = """
         .global main
         
         .text
