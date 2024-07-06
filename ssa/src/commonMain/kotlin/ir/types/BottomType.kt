@@ -1,7 +1,7 @@
 package ir.types
 
 class BottomType : TrivialType, NonTrivialType, PrimitiveType {
-    override fun sizeof(): Int {
+    override fun sizeOf(): Int {
         TODO("Not yet implemented")
     }
 

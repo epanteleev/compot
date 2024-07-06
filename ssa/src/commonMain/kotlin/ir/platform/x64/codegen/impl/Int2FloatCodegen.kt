@@ -10,8 +10,8 @@ import ir.platform.x64.codegen.visitors.GPOperandToXmmVisitor
 
 
 class Int2FloatCodegen(toType: FloatingPointType, private val fromType: IntegerType, val asm: Assembler) : GPOperandToXmmVisitor {
-    private val toSize = toType.sizeof()
-    private val fromSize = fromType.sizeof()
+    private val toSize = toType.sizeOf()
+    private val fromSize = fromType.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {
         GPOperandToXmmVisitor.apply(dst, src, this)
@@ -64,7 +64,7 @@ class Int2FloatCodegen(toType: FloatingPointType, private val fromType: IntegerT
     private fun convertOnDemand(src: GPRegister): GPRegister? {
         when (fromType) {
             is SignedIntType -> {
-                if (fromSize == Type.I32.sizeof() || fromSize == Type.I64.sizeof()) {
+                if (fromSize == Type.I32.sizeOf() || fromSize == Type.I64.sizeOf()) {
                     return null
                 }
 
@@ -73,7 +73,7 @@ class Int2FloatCodegen(toType: FloatingPointType, private val fromType: IntegerT
             }
 
             is UnsignedIntType -> {
-                if (fromSize == Type.U32.sizeof() || fromSize == Type.U64.sizeof()) {
+                if (fromSize == Type.U32.sizeOf() || fromSize == Type.U64.sizeOf()) {
                     return null
                 }
 
@@ -91,7 +91,7 @@ class Int2FloatCodegen(toType: FloatingPointType, private val fromType: IntegerT
     private fun convertOnDemand(src: Address): GPRegister? { //todo code duplication
         when (fromType) {
             is SignedIntType -> {
-                if (fromSize == Type.I32.sizeof() || fromSize == Type.I64.sizeof()) {
+                if (fromSize == Type.I32.sizeOf() || fromSize == Type.I64.sizeOf()) {
                     return null
                 }
 
@@ -100,7 +100,7 @@ class Int2FloatCodegen(toType: FloatingPointType, private val fromType: IntegerT
             }
 
             is UnsignedIntType -> {
-                if (fromSize == Type.U32.sizeof() || fromSize == Type.U64.sizeof()) {
+                if (fromSize == Type.U32.sizeOf() || fromSize == Type.U64.sizeOf()) {
                     return null
                 }
 
@@ -116,6 +116,6 @@ class Int2FloatCodegen(toType: FloatingPointType, private val fromType: IntegerT
     }
 
     companion object {
-        private val TEMP_SIZE = Type.I32.sizeof()
+        private val TEMP_SIZE = Type.I32.sizeOf()
     }
 }

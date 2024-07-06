@@ -1,7 +1,7 @@
 package ir.types
 
 data class FloatingPointType(private val size: Int) : ArithmeticType {
-    override fun sizeof(): Int {
+    override fun sizeOf(): Int {
         return size
     }
 

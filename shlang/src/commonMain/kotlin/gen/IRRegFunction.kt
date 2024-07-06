@@ -145,12 +145,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is TypeName -> {
                 val resolved = expr.specifyType(typeHolder)
                 val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, resolved)
-                return Constant.of(Type.I64, irType.sizeof())
+                return Constant.of(Type.I64, irType.sizeOf())
             }
             is Expression -> {
                 val resolved = expr.resolveType(typeHolder)
                 val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, resolved)
-                return Constant.of(Type.I64, irType.sizeof())
+                return Constant.of(Type.I64, irType.sizeOf())
             }
             else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
         }
@@ -796,7 +796,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 else -> {
                     val rvalue = visitExpression(assignmentDeclarator.rvalue, true)
                     val commonType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
-                    ir().memcpy(lvalueAdr, rvalue, U64Value(commonType.sizeof().toLong()))
+                    ir().memcpy(lvalueAdr, rvalue, U64Value(commonType.sizeOf().toLong()))
                     return lvalueAdr
                 }
             }

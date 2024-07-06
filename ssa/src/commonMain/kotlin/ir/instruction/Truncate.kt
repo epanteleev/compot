@@ -46,7 +46,7 @@ class Truncate private constructor(id: Identity, owner: Block, toType: IntegerTy
                 return false
             }
 
-            return toType.sizeof() < valueType.sizeof()
+            return toType.sizeOf() < valueType.sizeOf()
         }
 
         fun typeCheck(trunc: Truncate): Boolean {

@@ -75,7 +75,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
 
             active.entries.retainAll {
                 if (liveRangesGroup[it.key].end() <= range.begin()) {
-                    val size = it.key.first().asType<NonTrivialType>().sizeof()
+                    val size = it.key.first().asType<NonTrivialType>().sizeOf()
                     pool.free(it.value, size)
                     return@retainAll false
                 } else {

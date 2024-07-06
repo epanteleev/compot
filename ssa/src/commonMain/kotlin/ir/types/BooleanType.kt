@@ -2,7 +2,7 @@ package ir.types
 
 class BooleanType : PrimitiveType {
     override fun toString(): String = "u1"
-    override fun sizeof(): Int = 1
+    override fun sizeOf(): Int = 1
 
     override fun hashCode(): Int {
         return this::class.hashCode()

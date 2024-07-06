@@ -4,12 +4,12 @@ package ir.types
 data class ArrayType(private val type: NonTrivialType, val size: Int) : AggregateType {
     fun elementType(): NonTrivialType = type
 
-    override fun sizeof(): Int {
-        return size * type.sizeof()
+    override fun sizeOf(): Int {
+        return size * type.sizeOf()
     }
 
     override fun offset(index: Int): Int {
-        return index * type.sizeof()
+        return index * type.sizeOf()
     }
 
     override fun field(index: Int): NonTrivialType {

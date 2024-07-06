@@ -7,7 +7,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
 data class ZeroExtendCodegen(val fromType: IntegerType, val asm: Assembler): GPOperandsVisitorUnaryOp {
-    private val typeSize = fromType.sizeof()
+    private val typeSize = fromType.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {
         GPOperandsVisitorUnaryOp.apply(dst, src, this)

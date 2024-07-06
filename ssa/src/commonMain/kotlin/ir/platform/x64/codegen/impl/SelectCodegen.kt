@@ -9,7 +9,7 @@ import ir.platform.x64.codegen.visitors.*
 
 class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, val asm: Assembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
-    private val size: Int = type.sizeof()
+    private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {

@@ -222,7 +222,7 @@ class StringLiteralConstant(override val name: String, val tp: ArrayType, val st
 class ArrayGlobalConstant(override val name: String, val tp: ArrayType, private val elements: List<Constant>): AggregateConstant(name) {
     init {
         require(tp.size == elements.size) {
-            "Array size mismatch: ${tp.sizeof()} != ${elements.size}"
+            "Array size mismatch: ${tp.sizeOf()} != ${elements.size}"
         }
         elements.forEach {
             require(it.type() == tp.elementType()) {
@@ -247,7 +247,7 @@ class ArrayGlobalConstant(override val name: String, val tp: ArrayType, private 
 class StructGlobalConstant(override val name: String, val tp: StructType, private val elements: List<Constant>): AggregateConstant(name) {
     init {
         require(tp.fields.size == elements.size) {
-            "Struct size mismatch: ${tp.sizeof()} != ${elements.size}"
+            "Struct size mismatch: ${tp.sizeOf()} != ${elements.size}"
         }
         elements.forEachWith(tp.fields) { elem, field ->
             require(elem.type() == field) {

@@ -9,8 +9,8 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 data class SignExtendCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: Assembler):
     GPOperandsVisitorUnaryOp {
-    private val toSize   = toType.sizeof()
-    private val fromSize = fromType.sizeof()
+    private val toSize   = toType.sizeOf()
+    private val fromSize = fromType.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {
         GPOperandsVisitorUnaryOp.apply(dst, src, this)

@@ -9,7 +9,7 @@ import ir.platform.x64.codegen.visitors.*
 
 
 class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val indexType: PrimitiveType, val asm: Assembler): GPOperandsVisitorBinaryOp {
-    private val size: Int = loadedType.sizeof()
+    private val size: Int = loadedType.sizeOf()
 
     operator fun invoke(dst: Operand, operand: Operand, index: Operand) {
         when (loadedType) {
@@ -69,7 +69,7 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        asm.mov(indexType.sizeof(), second, temp1)
+        asm.mov(indexType.sizeOf(), second, temp1)
         asm.mov(size, Address.from(first, 0, temp1, size), temp1)
         asm.mov(size, temp1, dst)
     }

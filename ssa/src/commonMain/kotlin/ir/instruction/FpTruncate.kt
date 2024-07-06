@@ -46,7 +46,7 @@ class FpTruncate private constructor(id: Identity, owner: Block, toType: Floatin
                 return false
             }
 
-            return toType.sizeof() < valueType.sizeof()
+            return toType.sizeOf() < valueType.sizeOf()
         }
 
         fun typeCheck(trunc: FpTruncate): Boolean {

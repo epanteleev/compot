@@ -9,7 +9,7 @@ import ir.platform.x64.CallConvention.temp1
 
 class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
-    private val size: Int = type.sizeof()
+    private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {

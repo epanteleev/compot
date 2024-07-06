@@ -7,7 +7,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
 class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
-    private val size = type.sizeof()
+    private val size = type.sizeOf()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {

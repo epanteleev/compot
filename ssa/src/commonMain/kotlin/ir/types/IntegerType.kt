@@ -3,7 +3,7 @@ package ir.types
 interface IntegerType: ArithmeticType
 
 data class SignedIntType(val size: Int) : IntegerType {
-    override fun sizeof(): Int {
+    override fun sizeOf(): Int {
         return size
     }
 
@@ -19,7 +19,7 @@ data class SignedIntType(val size: Int) : IntegerType {
 }
 
 data class UnsignedIntType(val size: Int) : IntegerType {
-    override fun sizeof(): Int {
+    override fun sizeOf(): Int {
         return size
     }
 

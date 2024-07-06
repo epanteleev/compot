@@ -46,7 +46,7 @@ class SignExtend private constructor(id: Identity, owner: Block, toType: SignedI
                 return false
             }
 
-            return toType.sizeof() > valueType.sizeof()
+            return toType.sizeOf() > valueType.sizeOf()
         }
 
         fun typeCheck(sext: SignExtend): Boolean {

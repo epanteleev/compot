@@ -46,7 +46,7 @@ class FpExtend private constructor(id: Identity, owner: Block, toType: FloatingP
                 return false
             }
 
-            return toType.sizeof() > valueType.sizeof()
+            return toType.sizeOf() > valueType.sizeOf()
         }
 
         fun typeCheck(fpext: FpExtend): Boolean {

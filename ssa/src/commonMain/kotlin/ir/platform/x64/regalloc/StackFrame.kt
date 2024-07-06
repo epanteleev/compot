@@ -30,7 +30,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     private fun getTypeSize(ty: NonTrivialType): Int {
         return if (ty != Type.U1) {
-            ty.sizeof()
+            ty.sizeOf()
         } else {
             1
         }

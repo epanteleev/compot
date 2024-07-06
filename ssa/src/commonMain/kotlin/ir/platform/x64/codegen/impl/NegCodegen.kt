@@ -7,7 +7,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
 data class NegCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp {
-    private val size: Int = type.sizeof()
+    private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {
         when (type) {

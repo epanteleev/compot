@@ -11,7 +11,7 @@ import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
-    private val size: Int = type.sizeof()
+    private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         when (type) {
@@ -119,9 +119,13 @@ data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        asm.mov(size, first, temp1)
-        asm.sub(size, second, temp1)
-        asm.mov(size, temp1, dst)
+        if (dst == first) {
+            asm.sub(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.sub(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
