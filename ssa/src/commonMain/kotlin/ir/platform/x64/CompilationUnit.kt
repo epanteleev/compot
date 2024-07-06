@@ -1,11 +1,10 @@
 package ir.platform.x64
 
 import asm.x64.*
-import ir.*
+import ir.value.*
 import ir.global.*
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.MacroAssembler
-import ir.value.*
 
 
 class CompilationUnit: CompiledModule() {
@@ -25,7 +24,8 @@ class CompilationUnit: CompiledModule() {
             }
             is AggregateConstant -> {
                 val types = globalValue.elements().map { convertToSymbolType(it) }
-                symbols.add(ObjSymbol(globalValue.name(), globalValue.elements().map { it.toString() }, types))
+                val data  = globalValue.elements().map { it.toString() }
+                symbols.add(ObjSymbol(globalValue.name(), data, types))
             }
             else -> symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue)))
         }
@@ -36,18 +36,18 @@ class CompilationUnit: CompiledModule() {
     }
 
     private fun convertGlobalValueToSymbolType(globalValue: GlobalValue): ObjSymbol {
+        if (globalValue.data is StringLiteralConstant) {
+            return ObjSymbol(globalValue.name(), listOf(globalValue.data.name()), listOf(SymbolType.Quad))
+        }
+
         val symbolType = convertToSymbolType(globalValue.data)
-        return if (symbolType[0] == SymbolType.StringLiteral) {
-            ObjSymbol(globalValue.name(), listOf(globalValue.data.name()), listOf(SymbolType.Quad))
+        val constant = globalValue.data
+        if (constant is StructGlobalConstant || constant is ArrayGlobalConstant) {
+            constant as AggregateConstant
+            val data = constant.elements().map { it.toString() }
+            return ObjSymbol(globalValue.name(), data, symbolType)
         } else {
-            val constant = globalValue.data
-            if (constant is StructGlobalConstant || constant is ArrayGlobalConstant) {
-                constant as AggregateConstant
-                val data = constant.elements().map { it.toString() }
-                ObjSymbol(globalValue.name(), data, symbolType)
-            } else {
-                ObjSymbol(globalValue.name(), listOf(globalValue.data()), symbolType)
-            }
+            return ObjSymbol(globalValue.name(), listOf(globalValue.data()), symbolType)
         }
     }
 
