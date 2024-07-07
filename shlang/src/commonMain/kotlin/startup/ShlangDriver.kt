@@ -1,4 +1,4 @@
-package driver
+package startup
 
 import common.pwd
 import gen.IRGen
@@ -9,7 +9,6 @@ import okio.Path.Companion.toPath
 import okio.SYSTEM
 import tokenizer.CTokenizer
 import parser.CProgramParser
-import startup.*
 import tokenizer.TokenList
 import tokenizer.TokenPrinter
 
@@ -47,7 +46,18 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         val preprocessor        = CProgramPreprocessor.create(tokens, ctx)
         val postProcessedTokens = preprocessor.preprocess()
 
-        if (cli.isPreprocessOnly()) {
+        if (cli.isPreprocessOnly() && cli.isDumpDefines()) {
+            for (token in ctx.macroReplacements()) {
+                println(token.value.tokenString())
+            }
+            for (token in ctx.macroDefinitions()) {
+                println(token.value.tokenString())
+            }
+            for (token in ctx.macroFunctions()) {
+                println(token.value.tokenString())
+            }
+            return null
+        } else if (cli.isPreprocessOnly()) {
             println(TokenPrinter.print(postProcessedTokens))
             return null
         } else {

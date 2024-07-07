@@ -7,12 +7,18 @@ class ShlangCLIArguments : AnyCLIArguments() {
     private val includeDirectories = mutableSetOf<String>()
     private val defines = mutableMapOf<String, String>()
     private var preprocessOnly = false
+    private var dumpDefines = false
+
+    fun setDumpDefines(dumpDefines: Boolean) {
+        this.dumpDefines = dumpDefines
+    }
 
     fun setPreprocessOnly(preprocessOnly: Boolean) {
         this.preprocessOnly = preprocessOnly
     }
 
     fun isPreprocessOnly(): Boolean = preprocessOnly
+    fun isDumpDefines(): Boolean = dumpDefines
 
     fun addIncludeDirectory(directory: String) {
         includeDirectories.add(directory)
@@ -93,6 +99,8 @@ object CCLIParser {
                     } else if (arg.startsWith("-D")) {
                         val define = arg.substring(2)
                         parseDefine(commandLineArguments, define)
+                    } else if (arg.startsWith("-dM")) {
+                        commandLineArguments.setDumpDefines(true)
                     } else {
                         println("Unknown argument: $arg")
                         return null

@@ -5,11 +5,13 @@ import tokenizer.*
 import common.forEachWith
 import kotlin.jvm.JvmStatic
 
-data class MacroExpansionException(override val message: String): Exception(message)
 
+data class MacroExpansionException(override val message: String): Exception(message)
 
 abstract class Macros(val name: String) {
     abstract fun first(): CToken
+
+    abstract fun tokenString(): String
 
     override fun hashCode(): Int {
         return name.hashCode()
@@ -41,11 +43,19 @@ class MacroDefinition(name: String): Macros(name) {
     override fun first(): CToken {
         throw MacroExpansionException("Macro definition cannot be expanded")
     }
+
+    override fun tokenString(): String {
+        return "#define $name"
+    }
 }
 
 class PredefinedMacros(name: String, private val callback: (Position) -> TokenList): Macros(name) {
     override fun first(): CToken {
         return callback(Position.UNKNOWN).first() as CToken
+    }
+
+    override fun tokenString(): String {
+        return "#define $name ${callback(Position.UNKNOWN).joinToString("") { it.str() }}"
     }
 
     fun cloneContentWith(macrosNamePos: Position): TokenList {
@@ -67,9 +77,13 @@ class PredefinedMacros(name: String, private val callback: (Position) -> TokenLi
     }
 }
 
-class MacroReplacement(name: String, private val value: TokenList): Macros(name) {
+class MacroReplacement(name: String, val value: TokenList): Macros(name) {
     override fun first(): CToken {
         return value.first() as CToken
+    }
+
+    override fun tokenString(): String {
+        return "#define $name ${value.joinToString("") { it.str() }}"
     }
 
     fun substitute(macrosNamePos: Position): TokenList {
@@ -85,6 +99,10 @@ class MacroReplacement(name: String, private val value: TokenList): Macros(name)
 class MacroFunction(name: String, private val argNames: CTokenList, private val value: TokenList): Macros(name) {
     override fun first(): CToken {
         return value.first() as CToken
+    }
+
+    override fun tokenString(): String {
+        return "#define $name(${argNames.joinToString(", ") { it.str() }}) ${value.joinToString(" ") { it.str() }}"
     }
 
     private fun seekNonSpace(idx: AnyToken?): CToken {

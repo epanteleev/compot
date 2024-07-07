@@ -62,7 +62,6 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
         return result
     }
 
-
     protected fun killWithSpaces(): AnyToken {
         val tok = kill()
         killSpaces()

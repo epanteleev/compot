@@ -18,6 +18,10 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         includeLevel -= 1
     }
 
+    fun macroReplacements(): Map<String, MacroReplacement> = macroReplacements
+    fun macroDefinitions(): Map<String, MacroDefinition> = macroDefinitions
+    fun macroFunctions(): Map<String, MacroFunction> = macroFunctions
+
     fun define(macros: MacroReplacement) {
         macroReplacements[macros.name] = macros
     }
