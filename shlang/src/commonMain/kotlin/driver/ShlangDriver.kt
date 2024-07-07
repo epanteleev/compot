@@ -48,7 +48,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         val postProcessedTokens = preprocessor.preprocess()
 
         if (cli.isPreprocessOnly()) {
-            TokenPrinter.print(postProcessedTokens)
+            println(TokenPrinter.print(postProcessedTokens))
             return null
         } else {
             return postProcessedTokens

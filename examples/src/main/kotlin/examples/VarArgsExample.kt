@@ -1,6 +1,5 @@
 package examples
 
-import ir.*
 import ir.global.StringLiteralConstant
 import ir.types.*
 import ir.module.builder.impl.ModuleBuilder

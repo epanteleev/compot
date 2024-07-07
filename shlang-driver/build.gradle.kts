@@ -11,12 +11,18 @@ repositories {
     mavenCentral()
 }
 
+application {
+    mainClass.set("ShlangStartupKt")
+}
+
 kotlin {
-    jvm()
+    jvm {
+        withJava()
+    }
     linuxX64 {
         binaries {
             executable {
-                baseName = "ShlangDriver"
+                baseName = "ShlangStartup"
             }
         }
     }
@@ -29,4 +35,11 @@ kotlin {
             }
         }
     }
+}
+
+tasks.named<Jar>("jar") {
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+        subprojects.flatMap { it.configurations.getByName("runtimeClasspath").files }
+    })
 }

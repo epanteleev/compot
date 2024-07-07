@@ -1,6 +1,5 @@
 package examples
 
-import ir.*
 import ir.types.Type
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder

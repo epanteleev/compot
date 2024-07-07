@@ -1,12 +1,14 @@
 package examples
 
+import ir.types.*
 import ir.module.FunctionPrototype
 import ir.value.I32Value
+import ir.value.U64Value
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
 import ir.pass.transform.Mem2RegFabric
-import ir.types.ArrayType
-import ir.types.Type
+
+
 
 fun main() {
     val builder = ModuleBuilder.create()
@@ -33,7 +35,7 @@ fun main() {
         val cont = createLabel()
         vcall(proto, arrayListOf(arrPtr, I32Value(5)), cont)
         switchLabel(cont)
-        ret(I32Value(0))
+        ret(U64Value(0))
     }
 
     val module = builder.build()
