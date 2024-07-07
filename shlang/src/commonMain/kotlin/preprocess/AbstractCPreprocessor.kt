@@ -111,4 +111,8 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
             }
         }
     }
+
+    protected fun warning(message: String) {
+        println("Warning: $message")
+    }
 }

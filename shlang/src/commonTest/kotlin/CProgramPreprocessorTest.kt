@@ -822,6 +822,42 @@ class CProgramPreprocessorTest {
         assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }
 
+    @Ignore
+    fun testSysInclude4() {
+        val data = """
+            |#if VERSION == 1
+            |#define INCFILE            "vers1.h"
+            |#elif VERSION == 2
+            |#define INCFILE            "vers2.h"
+            |#else
+            |#define INCFILE           <stdio.h>
+            |#endif
+            |#include INCFILE
+            |int aa = 90;
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |
+            |
+            |
+            |
+            |
+            |
+            |#enter[1] test.h
+            |
+            |
+            |int a = 9;
+            |#exit[1] test.h
+            |
+            |int aa = 90;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
+
     @Test
     fun testDefined() {
         val data = """

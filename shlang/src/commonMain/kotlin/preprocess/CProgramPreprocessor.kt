@@ -232,20 +232,26 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                     return
                 }
 
-                val value = takeTokensInLine()
-                if (value.isEmpty()) {
-                    ctx.define(MacroDefinition(name.str()))
+                val macros = takeTokensInLine()
+                if (macros.isEmpty()) {
+                    val old = ctx.define(MacroDefinition(name.str()))
+                    if (old != null) {
+                        warning("macro $name already defined")
+                    }
                 } else {
-                    ctx.define(MacroReplacement(name.str(), value))
+                    val old = ctx.define(MacroReplacement(name.str(), macros))
+                    if (old != null) {
+                        warning("macro $name already defined")
+                    }
                 }
             }
             "undef" -> {
                 if (!check<Identifier>()) {
                     throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
                 }
-                val name = peak<Identifier>()
+                val macrosName = peak<Identifier>()
                 killWithSpaces()
-                ctx.undef(name.str())
+                ctx.undef(macrosName.str())
             }
             "include" -> {
                 ctx.enterInclude()
@@ -254,24 +260,24 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                     val header = ctx.findHeader(nameOrBracket.unquote(), HeaderType.USER) ?:
                         throw PreprocessorException("Cannot find header $nameOrBracket")
 
-                    val result = create(header.tokenize(), ctx).preprocess()
-                    result.addBefore(null, EnterIncludeGuard(nameOrBracket.unquote(), ctx.includeLevel()))
-                    result.addAfter(null, ExitIncludeGuard(nameOrBracket.unquote(), ctx.includeLevel()))
-                    addAll(result)
+                    val includeTokens = create(header.tokenize(), ctx).preprocess()
+                    includeTokens.addBefore(null, EnterIncludeGuard(nameOrBracket.unquote(), ctx.includeLevel()))
+                    includeTokens.addAfter(null, ExitIncludeGuard(nameOrBracket.unquote(), ctx.includeLevel()))
+                    addAll(includeTokens)
 
                 } else if (nameOrBracket.str() == "<") {
                     nameOrBracket as CToken
                     if (!check<Identifier>()) {
                         throw PreprocessorException("Expected file name: but '${peak<AnyToken>()}'")
                     }
-                    val name = readHeaderName()
-                    val header = ctx.findHeader(name, HeaderType.SYSTEM) ?:
-                        throw PreprocessorException("Cannot find system header '$name'", nameOrBracket.position())
+                    val headerName = readHeaderName()
+                    val header = ctx.findHeader(headerName, HeaderType.SYSTEM) ?:
+                        throw PreprocessorException("Cannot find system header '$headerName'", nameOrBracket.position())
 
-                    val result = create(header.tokenize(), ctx).preprocess()
-                    result.addBefore(null, EnterIncludeGuard(name, ctx.includeLevel()))
-                    result.addAfter(null, ExitIncludeGuard(name, ctx.includeLevel()))
-                    addAll(result)
+                    val includeTokens = create(header.tokenize(), ctx).preprocess()
+                    includeTokens.addBefore(null, EnterIncludeGuard(headerName, ctx.includeLevel()))
+                    includeTokens.addAfter(null, ExitIncludeGuard(headerName, ctx.includeLevel()))
+                    addAll(includeTokens)
                 } else {
                     throw PreprocessorException("Expected string literal or '<': but '${nameOrBracket}'")
                 }
@@ -291,8 +297,8 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 skipBlock()
             }
             "if" -> {
-                val expr = takeCTokensInLine()
-                val result = evaluateCondition(expr)
+                val constExpression = takeCTokensInLine()
+                val result = evaluateCondition(constExpression)
                 if (result == 0) {
                     skipBlock()
                 }
@@ -302,10 +308,10 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 if (!check<Identifier>()) {
                     throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
                 }
-                val name = peak<Identifier>()
+                val macros = peak<Identifier>()
                 kill()
                 checkNewLine()
-                ctx.findMacros(name.str()) ?: return
+                ctx.findMacros(macros.str()) ?: return
                 skipBlock()
             }
             "error" -> {
@@ -341,10 +347,10 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
     }
 
     private fun getMacroReplacement(tok: CToken): Pair<Macros?, TokenList> {
-        val macros = ctx.findMacroReplacement(tok.str())
-        if (macros != null) {
+        val macroReplacement = ctx.findMacroReplacement(tok.str())
+        if (macroReplacement != null) {
             kill()
-            return Pair(macros, macros.substitute(tok.position()))
+            return Pair(macroReplacement, macroReplacement.substitute(tok.position()))
         }
 
         val macroFunction = ctx.findMacroFunction(tok.str())

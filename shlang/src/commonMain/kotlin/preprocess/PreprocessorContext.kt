@@ -22,16 +22,16 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
     fun macroDefinitions(): Map<String, MacroDefinition> = macroDefinitions
     fun macroFunctions(): Map<String, MacroFunction> = macroFunctions
 
-    fun define(macros: MacroReplacement) {
-        macroReplacements[macros.name] = macros
+    fun define(macros: MacroReplacement): MacroReplacement? {
+        return macroReplacements.put(macros.name, macros)
     }
 
-    fun define(macros: MacroDefinition) {
-        macroDefinitions[macros.name] = macros
+    fun define(macros: MacroDefinition): MacroDefinition? {
+        return macroDefinitions.put(macros.name, macros)
     }
 
-    fun define(macros: MacroFunction) {
-        macroFunctions[macros.name] = macros
+    fun define(macros: MacroFunction): MacroFunction? {
+        return macroFunctions.put(macros.name, macros)
     }
 
     fun findMacroReplacement(name: String): MacroReplacement? {
