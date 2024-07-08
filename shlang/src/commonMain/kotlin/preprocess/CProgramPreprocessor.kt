@@ -76,25 +76,25 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
     }
 
     private fun skipBlock2() {
-        var depth = 1
+        var depth = 0
         while (!eof()) {
             if (check<NewLine>()) {
                 eat()
                 continue
             }
-            if (check("#") && (checkNext("if") || checkNext("ifdef") || checkNext("ifndef"))) {
+            if (check("#") && (checkNextMacro("if") || checkNextMacro("ifdef") || checkNextMacro("ifndef"))) {
                 killWithSpaces()
                 kill()
                 depth += 1
                 continue
             }
-            if (check("#") && checkNext("endif")) {
+            if (check("#") && checkNextMacro("endif")) {
                 depth -= 1
+                killWithSpaces()
+                kill()
                 if (depth == 0) {
                     return
                 }
-                killWithSpaces()
-                kill()
             }
             killWithSpaces()
         }
@@ -107,11 +107,11 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 eat()
                 continue
             }
-            if (check("#") && (checkNext("if") || checkNext("ifdef") || checkNext("ifndef"))) {
+            if (check("#") && (checkNextMacro("if") || checkNextMacro("ifdef") || checkNextMacro("ifndef"))) {
                 skipBlock2()
                 continue
             }
-            if (check("#") && (checkNext("endif") || checkNext("else") || checkNext("elif"))) {
+            if (check("#") && (checkNextMacro("endif") || checkNextMacro("else") || checkNextMacro("elif"))) {
                 return
             }
             killWithSpaces()
@@ -162,7 +162,6 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 value.add(peak)
             }
         }
-        killSpaces()
         checkNewLine()
         return value
     }
@@ -258,7 +257,6 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                     parseMacroFunction(name)
                     return
                 }
-
                 val macros = takeTokensInLine()
                 if (macros.isEmpty()) {
                     val macroDefinition = MacroDefinition(name.str())
@@ -316,7 +314,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                     throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
                 }
                 val name = peak<Identifier>()
-                kill()
+                killWithSpaces()
                 checkNewLine()
                 val macros = ctx.findMacros(name.str())
                 enterCondition(ConditionType.IF, macros != null)
@@ -340,6 +338,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 if (last.type == ConditionType.ELSE) {
                     throw PreprocessorException("Unexpected #elif after #else")
                 }
+                last.type = ConditionType.ELIF
                 if (last.isIncluded) {
                     skipBlock()
                 } else {

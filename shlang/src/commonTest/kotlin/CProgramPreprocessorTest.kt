@@ -692,6 +692,30 @@ class CProgramPreprocessorTest {
         assertEquals(expected, TokenPrinter.print(p))
     }
 
+    // Taken from sys/cdefs.h
+    @Test
+    fun testIfdefined8() {
+        val data = """
+            |#if defined __GNUC__ || defined __clang__
+            |int a = 9;
+            |#else	/* Not GCC or clang.  */
+            |int a = 10;
+            |# define __THROW 1
+            |#endif	/* GCC || clang.  */
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |
+            |
+            |
+            |int a = 10;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
+
     @Test
     fun testSeveralIf() {
         val data = """

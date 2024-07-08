@@ -45,12 +45,12 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
         return current!!.str() == s
     }
 
-    protected fun checkNext(s: String): Boolean {
+    protected fun checkNextMacro(s: String): Boolean {
         if (eof()) {
             return false
         }
         var next = current!!.next()
-        while (next is AnySpaceToken) {
+        while (next is Indent) {
             next = next.next()
         }
 
