@@ -1,5 +1,8 @@
 //COPY paste from some other source
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifndef DATATYPE
 #define DATATYPE int
 #endif
@@ -8,8 +11,6 @@
 #define FMT "%d "
 #endif
 
-
-extern void printf(char format[], ...);
 
 // Function to swap two elements
 void swap(DATATYPE* a, DATATYPE* b)
