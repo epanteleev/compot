@@ -64,7 +64,7 @@ class PredefinedMacros(name: String, private val callback: (Position) -> TokenLi
         return callback(preprocessedPosition)
     }
 
-    fun constEval(): Int {
+    fun constEval(): Long {
         val tokens = callback(Position.UNKNOWN)
         val token = tokens.first()
         assertion(tokens.size == 1) { "invariant"}
@@ -73,7 +73,7 @@ class PredefinedMacros(name: String, private val callback: (Position) -> TokenLi
             throw PreprocessorException("Predefined macro '$name' is not a number")
         }
 
-        return token.data.toInt()
+        return token.toNumberOrNull() as Long
     }
 }
 
@@ -92,6 +92,24 @@ class MacroReplacement(name: String, val value: TokenList): Macros(name) {
             result.add(newTokenFrom(macrosNamePos, tok))
         }
 
+        return result
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as MacroReplacement
+
+        if (name != other.name) return false
+        if (value != other.value) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + value.hashCode()
         return result
     }
 }

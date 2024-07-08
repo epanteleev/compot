@@ -665,6 +665,34 @@ class CProgramPreprocessorTest {
     }
 
     @Test
+    fun testIfdefined7() {
+        val data = """
+            |#define TEST
+            |#if !defined(TEST)
+            |int a = 9;
+            |#elif defined(TEST)
+            |int a = 6;
+            |#elif !defined(TEST)
+            |afadss
+            |#else
+            |int a = 10;
+            |#endif
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |
+            |
+            |
+            |int a = 6;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
     fun testSeveralIf() {
         val data = """
             |#ifndef TEST

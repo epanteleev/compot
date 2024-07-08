@@ -94,7 +94,11 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
     }
 
     override fun visit(numNode: NumNode): Int {
-        return numNode.toLong.data.toInt()
+        val number = numNode.number.toNumberOrNull() ?: throw ConstEvalException("Cannot evaluate number ${numNode.number}")
+        if (number !is Number) {
+            throw ConstEvalException("Cannot evaluate number ${numNode.number}")
+        }
+        return number.toInt()
     }
 
     override fun visit(varNode: VarNode): Int {
@@ -192,7 +196,12 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
     }
 
     override fun visit(numNode: NumNode): Long {
-        return numNode.toLong.data.toLong()
+        val num = numNode.number.toNumberOrNull() ?: throw ConstEvalException("Cannot evaluate number ${numNode.number}")
+        if (num !is Number) {
+            throw ConstEvalException("Cannot evaluate number ${numNode.number}")
+        }
+
+        return num.toLong()
     }
 
     override fun visit(varNode: VarNode): Long {
@@ -283,7 +292,7 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
     }
 
     override fun visit(numNode: NumNode): Float {
-        return numNode.toLong.data.toFloat()
+        return numNode.number.toNumberOrNull() as Float
     }
 
     override fun visit(varNode: VarNode): Float {
@@ -389,7 +398,7 @@ class ConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): Cons
     }
 
     override fun visit(numNode: NumNode): Double {
-        return numNode.toLong.data.toDouble()
+        return numNode.number.toNumberOrNull() as Double
     }
 
     override fun visit(varNode: VarNode): Double {

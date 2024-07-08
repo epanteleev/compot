@@ -225,7 +225,7 @@ data class InitializerList(val initializers: List<Expression>) : Expression() {
             CType.interfereTypes(acc, type)
         }
         if (isSameType(types)) {
-            return@memoize CompoundType(CArrayType(commonType, types.size), emptyList())
+            return@memoize CompoundType(CArrayType(commonType, types.size.toLong()), emptyList())
         } else {
             val struct = StructBaseType("initializer")
             for (i in initializers.indices) {
@@ -306,12 +306,14 @@ data class StringNode(val str: StringLiteral) : Expression() {
     }
 }
 
-data class NumNode(val toLong: Numeric) : Expression() {
+data class NumNode(val number: Numeric) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize when (toLong.data) {
-            is Int    -> CType.INT
+        val num = number.toNumberOrNull()
+
+        return@memoize when (num) {
+            is Int, is Byte -> CType.INT
             is Long   -> CType.LONG
             is Float  -> CType.FLOAT
             is Double -> CType.DOUBLE

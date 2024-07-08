@@ -1,15 +1,10 @@
 package parser.nodes
 
-import gen.consteval.CommonConstEvalContext
-import gen.consteval.ConstEvalContext
-import gen.consteval.ConstEvalExpression
-import gen.consteval.ConstEvalExpressionInt
-import parser.ParserException
-import parser.InvalidToken
-import parser.nodes.visitors.DirectDeclaratorParamVisitor
-import tokenizer.CToken
-import tokenizer.Identifier
 import types.*
+import gen.consteval.*
+import tokenizer.Identifier
+import parser.nodes.visitors.DirectDeclaratorParamVisitor
+
 
 abstract class DirectDeclaratorParam: Node() {
     abstract fun resolveType(baseType: CType, typeHolder: TypeHolder): CType
@@ -24,8 +19,8 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
             return CPointerType(baseType)
         }
 
-        val ctx = CommonConstEvalContext<Int>(typeHolder)
-        val size = ConstEvalExpression.eval<Int>(constexpr, ConstEvalExpressionInt(ctx))
+        val ctx = CommonConstEvalContext<Long>(typeHolder)
+        val size = ConstEvalExpression.eval<Long>(constexpr, ConstEvalExpressionLong(ctx))
         return CompoundType(CArrayType(baseType, size))
     }
 }

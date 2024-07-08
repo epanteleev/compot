@@ -101,13 +101,13 @@ data class EnumBaseType(val name: String): BaseType {
 }
 
 
-data class CArrayType(val type: CType, val dimension: Int) : BaseType {
+data class CArrayType(val type: CType, val dimension: Long) : BaseType {
     override fun typename(): String {
         return toString()
     }
 
     override fun size(): Int {
-        return type.baseType().size() * dimension
+        return type.baseType().size() * dimension.toInt() //TODO
     }
 
     override fun toString(): String {

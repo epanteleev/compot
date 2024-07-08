@@ -496,19 +496,15 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitNumNode(numNode: NumNode): Constant {
-        when (numNode.toLong.data) {
-            is Double -> return F64Value(numNode.toLong.data)
-            is Float -> return F32Value(numNode.toLong.data)
-            else -> {}
-        }
-        return when (numNode.toLong.data) {
-            in 0..255 -> U8Value(numNode.toLong.data.toByte())
-            in 0..65535 -> U16Value(numNode.toLong.data.toShort())
-            in 0..4294967295 -> U32Value(numNode.toLong.data.toInt())
-            in -128..127 -> I8Value(numNode.toLong.data.toByte())
-            in -32768..32767 -> I16Value(numNode.toLong.data.toShort())
-            in -2147483648..2147483647 -> I32Value(numNode.toLong.data.toInt())
-            else -> I64Value(numNode.toLong.data.toLong())
+        val num = numNode.number.toNumberOrNull()
+        return when (num) {
+            is Byte -> Constant.of(Type.I8, num as Number)
+            is Int -> Constant.of(Type.I32, num as Number)
+            is Long -> Constant.of(Type.I64, num as Number)
+            is ULong -> Constant.of(Type.U64, num as Number)
+            is Float -> Constant.of(Type.F32, num as Number)
+            is Double -> Constant.of(Type.F64, num)
+            else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}")
         }
     }
 

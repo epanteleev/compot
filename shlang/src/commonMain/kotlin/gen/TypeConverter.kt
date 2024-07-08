@@ -32,7 +32,7 @@ object TypeConverter {
         if (type is CompoundType) {
             val baseType = type.baseType()
             if (baseType is CArrayType) {
-                return ArrayType(toIRType<NonTrivialType>(typeHolder, baseType.type), baseType.dimension)
+                return ArrayType(toIRType<NonTrivialType>(typeHolder, baseType.type), baseType.dimension.toInt())
             }
         }
 

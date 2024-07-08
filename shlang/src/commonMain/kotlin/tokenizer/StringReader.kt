@@ -67,7 +67,7 @@ class StringReader(val str: String, var pos: Int = 0) {
         return str.substring(startPos, pos)
     }
 
-    fun readNumeric(): Number? {
+    fun readNumeric(): String? {
         return tryRead {
             val start = pos
             if (peek() == '0' && (peekOffset(1) == 'x' || peekOffset(1) == 'X')) {
@@ -77,7 +77,7 @@ class StringReader(val str: String, var pos: Int = 0) {
                     read()
                 }
                 val hexString = str.substring(start + 2, pos)
-                return@tryRead hexString.toLongOrNull(16)
+                return@tryRead hexString.toLong(16).toString() //TODO
             }
 
             read()
@@ -91,12 +91,10 @@ class StringReader(val str: String, var pos: Int = 0) {
                 while (!eof && !isSeparator(peek())) {
                     read()
                 }
-                val floatString = str.substring(start, pos)
-                return@tryRead floatString.toDoubleOrNull()
+                return@tryRead str.substring(start, pos)
             } else if (!peek().isLetter() && peek() != '_') {
                 // Integer
-                val intString = str.substring(start, pos)
-                return@tryRead intString.toIntOrNull() ?: intString.toLongOrNull()
+                return@tryRead str.substring(start, pos)
             }
 
             val suffix = peek()
@@ -105,17 +103,17 @@ class StringReader(val str: String, var pos: Int = 0) {
                 val suffix1 = peek()
                 if (suffix1 == 'L' || suffix1 == 'l') {
                     read()
-                    return@tryRead str.substring(start, pos - 2).toLongOrNull()
+                    return@tryRead str.substring(start, pos - 2)
                 } else {
-                    return@tryRead str.substring(start, pos - 1).toLongOrNull()
+                    return@tryRead str.substring(start, pos - 1)
                 }
             } else if (peek() == 'U' || peek() == 'u') {
                 read()
                 if (peek() == 'U' || peek() == 'u') {
                     read()
-                    return@tryRead str.substring(start, pos - 2).toLongOrNull()
+                    return@tryRead str.substring(start, pos - 2)
                 } else {
-                    return@tryRead str.substring(start, pos - 1).toLongOrNull()
+                    return@tryRead str.substring(start, pos - 1)
                 }
             } else {
                 return@tryRead null

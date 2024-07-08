@@ -338,6 +338,34 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
         }
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as LeakedLinkedList<*>
+
+        if (size != other.size) return false
+        var current = head
+        var otherCurrent = other.head
+        while (current != null) {
+            if (current != otherCurrent) {
+                return false
+            }
+            @Suppress("UNCHECKED_CAST")
+            current = current.next as T?
+            @Suppress("UNCHECKED_CAST")
+            otherCurrent = otherCurrent!!.next as T?
+        }
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = head?.hashCode() ?: 0
+        result = 31 * result + (tail?.hashCode() ?: 0)
+        result = 31 * result + size
+        return result
+    }
+
     fun first(): T = head!!
 
     fun firstOrNull(): T? = head

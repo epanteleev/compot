@@ -62,7 +62,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(numNode: NumNode) {
-        buffer.append(numNode.toLong.str())
+        buffer.append(numNode.number.str())
     }
 
     override fun visit(switchStatement: SwitchStatement) {

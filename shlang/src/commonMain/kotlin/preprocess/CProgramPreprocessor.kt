@@ -4,6 +4,7 @@ import tokenizer.*
 import parser.CProgramParser
 import gen.consteval.ConstEvalExpression
 import gen.consteval.ConstEvalExpressionInt
+import gen.consteval.ConstEvalExpressionLong
 
 
 class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(original) {
@@ -27,12 +28,12 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
             val macros = ctx.findMacros(name.str())
 
             if (macros == null) {
-                val num = Numeric(0, name.position())
+                val num = Numeric("0", name.position())
                 tokens.addAfter(name, num)
                 tokens.kill(name)
                 token = num.next()
             } else {
-                val num = Numeric(1, name.position())
+                val num = Numeric("1", name.position())
                 tokens.addAfter(name, num)
                 tokens.kill(name)
                 token = num.next()
@@ -48,7 +49,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
         return create(tokens, ctx).preprocess()
     }
 
-    private fun evaluateCondition(tokens: TokenList): Int {
+    private fun evaluateCondition(tokens: TokenList): Long {
         val preprocessed = preprocessCondition(tokens)
 
         val parser = CProgramParser.build(preprocessed)
@@ -56,7 +57,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
             throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(preprocessed)}'")
 
         val evaluationContext = ConditionEvaluationContext(ctx)
-        return ConstEvalExpression.eval(constexpr, ConstEvalExpressionInt(evaluationContext))
+        return ConstEvalExpression.eval(constexpr, ConstEvalExpressionLong(evaluationContext))
     }
 
     private fun skipBlock() {
@@ -89,7 +90,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 }
                 val expr = takeCTokensInLine()
                 val result = evaluateCondition(expr)
-                if (result == 1) {
+                if (result == 1L) {
                     return
                 }
             }
@@ -234,13 +235,12 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
 
                 val macros = takeTokensInLine()
                 if (macros.isEmpty()) {
-                    val old = ctx.define(MacroDefinition(name.str()))
-                    if (old != null) {
-                        warning("macro $name already defined")
-                    }
+                    val macroDefinition = MacroDefinition(name.str())
+                    ctx.define(macroDefinition)
                 } else {
-                    val old = ctx.define(MacroReplacement(name.str(), macros))
-                    if (old != null) {
+                    val macroReplacement = MacroReplacement(name.str(), macros)
+                    val old = ctx.define(macroReplacement)
+                    if (old != null && old != macroReplacement) {
                         warning("macro $name already defined")
                     }
                 }
@@ -299,7 +299,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
             "if" -> {
                 val constExpression = takeCTokensInLine()
                 val result = evaluateCondition(constExpression)
-                if (result == 0) {
+                if (result == 0L) {
                     skipBlock()
                 }
             }

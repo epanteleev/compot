@@ -101,4 +101,12 @@ class CTokenizerTest {
         assertTrue { tokens[0] is Numeric }
         tokens[0].isEqual(1, 1, "136") //TODO print hex??
     }
+
+    @Ignore
+    fun test8() {
+        val input = "# define UINT_LEAST64_MAX\t(__UINT64_C(18446744073709551615))"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is Numeric }
+        tokens[0].isEqual(1, 1, "136") //TODO print hex??
+    }
 }

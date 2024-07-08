@@ -11,7 +11,6 @@ import kotlin.test.assertTrue
 
 
 class TypeResolutionTest {
-
     @Test
     fun testInt1() {
         val tokens = CTokenizer.apply("2 + 3")
@@ -31,7 +30,7 @@ class TypeResolutionTest {
         val expr = parser.assignment_expression() as Expression
         val typeResolver = TypeHolder.default()
         val type = expr.resolveType(typeResolver)
-        assertEquals(CType.DOUBLE, type)
+        assertEquals(CType.FLOAT, type)
     }
 
     @Test
