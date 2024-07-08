@@ -37,7 +37,8 @@ class PredefinedHeaderHolder(includeDirectories: Set<String>): HeaderHolder(incl
 
 class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>): HeaderHolder(includeDirectories) {
     private fun getUserHeader(name: String): Header? {
-        val filePath = "$pwd/$name".toPath()
+        val fileName = "$pwd/$name"
+        val filePath = fileName.toPath()
         if (!FileSystem.SYSTEM.exists(filePath)) {
             return null
         }
@@ -45,12 +46,13 @@ class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>)
         val content = FileSystem.SYSTEM.read(filePath) {
             readUtf8()
         }
-        return Header(name, content, HeaderType.USER)
+        return Header(fileName, content, HeaderType.USER)
     }
 
     private fun getSystemHeader(name: String): Header? {
         for (includeDirectory in includeDirectories) {
-            val filePath = "$includeDirectory/$name".toPath()
+            val fileName = "$includeDirectory/$name"
+            val filePath = fileName.toPath()
             if (!FileSystem.SYSTEM.exists(filePath)) {
                 continue
             }
@@ -58,7 +60,7 @@ class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>)
             val content = FileSystem.SYSTEM.read(filePath) {
                 readUtf8()
             }
-            return Header(name, content, HeaderType.SYSTEM)
+            return Header(fileName, content, HeaderType.SYSTEM)
         }
         return null
     }

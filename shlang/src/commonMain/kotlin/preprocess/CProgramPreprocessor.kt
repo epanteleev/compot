@@ -162,6 +162,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 value.add(peak)
             }
         }
+        killSpaces()
         checkNewLine()
         return value
     }
@@ -265,8 +266,10 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 } else {
                     val macroReplacement = MacroReplacement(name.str(), macros)
                     val old = ctx.define(macroReplacement)
-                    if (old != null && old != macroReplacement) {
-                        warning("macro $name already defined")
+                    if (old != null) {
+                        if (old != macroReplacement) {
+                            warning("macro $name already defined")
+                        }
                     }
                 }
             }
@@ -286,8 +289,8 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                         throw PreprocessorException("Cannot find header $nameOrBracket")
 
                     val includeTokens = create(header.tokenize(), ctx).preprocess()
-                    includeTokens.addBefore(null, EnterIncludeGuard(nameOrBracket.unquote(), ctx.includeLevel()))
-                    includeTokens.addAfter(null, ExitIncludeGuard(nameOrBracket.unquote(), ctx.includeLevel()))
+                    includeTokens.addBefore(null, EnterIncludeGuard(header.filename, ctx.includeLevel()))
+                    includeTokens.addAfter(null, ExitIncludeGuard(header.filename, ctx.includeLevel()))
                     addAll(includeTokens)
 
                 } else if (nameOrBracket.str() == "<") {
@@ -300,8 +303,8 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                         throw PreprocessorException("Cannot find system header '$headerName'", nameOrBracket.position())
 
                     val includeTokens = create(header.tokenize(), ctx).preprocess()
-                    includeTokens.addBefore(null, EnterIncludeGuard(headerName, ctx.includeLevel()))
-                    includeTokens.addAfter(null, ExitIncludeGuard(headerName, ctx.includeLevel()))
+                    includeTokens.addBefore(null, EnterIncludeGuard(header.filename, ctx.includeLevel()))
+                    includeTokens.addAfter(null, ExitIncludeGuard(header.filename, ctx.includeLevel()))
                     addAll(includeTokens)
                 } else {
                     throw PreprocessorException("Expected string literal or '<': but '${nameOrBracket}'")
@@ -353,7 +356,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                     throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
                 }
                 val macros = peak<Identifier>()
-                kill()
+                killWithSpaces()
                 checkNewLine()
                 val hasDef = ctx.findMacros(macros.str()) != null
                 enterCondition(ConditionType.IF, !hasDef)

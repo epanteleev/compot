@@ -174,7 +174,7 @@ abstract class ShlangTests: CommonCTest() {
 
     @Test
     fun testHelloWorld1() {
-        val result = runCTest("shlang/hello_world", listOf(), options())
+        val result = runCTest("shlang/hello_world", listOf(), options() +  "-E" + "-dM")
         assertEquals("Hello, World!\n", result.output)
         assertEquals(0, result.exitCode)
     }
