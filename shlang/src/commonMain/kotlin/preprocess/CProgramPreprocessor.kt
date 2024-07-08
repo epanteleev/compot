@@ -3,11 +3,26 @@ package preprocess
 import tokenizer.*
 import parser.CProgramParser
 import gen.consteval.ConstEvalExpression
-import gen.consteval.ConstEvalExpressionInt
 import gen.consteval.ConstEvalExpressionLong
+
+enum class ConditionType {
+    IF, ELIF, ELSE
+}
+
+private class ConditionState(var type: ConditionType, var isIncluded: Boolean)
 
 
 class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(original) {
+    private val conditions = mutableListOf<ConditionState>()
+
+    private fun enterCondition(type: ConditionType, condResult: Boolean) {
+        conditions.add(ConditionState(type, condResult))
+    }
+
+    private fun exitCondition() {
+        conditions.removeLast()
+    }
+
     private fun preprocessCondition(tokens: TokenList): TokenList {
         var token: AnyToken? = tokens.first()
         while (token != null) {
@@ -60,40 +75,46 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
         return ConstEvalExpression.eval(constexpr, ConstEvalExpressionLong(evaluationContext))
     }
 
-    private fun skipBlock() {
+    private fun skipBlock2() {
         var depth = 1
         while (!eof()) {
             if (check<NewLine>()) {
                 eat()
                 continue
             }
-            if (!check("#")) {
-                kill()
-                continue
-            }
-            killWithSpaces()
-            if (check("if") || check("ifdef") || check("ifndef")) { //TODO reactor conditions
+            if (check("#") && (checkNext("if") || checkNext("ifdef") || checkNext("ifndef"))) {
+                killWithSpaces()
                 kill()
                 depth += 1
+                continue
             }
-            if (check("endif") || check("else")) {
-                kill()
+            if (check("#") && checkNext("endif")) {
                 depth -= 1
                 if (depth == 0) {
                     return
                 }
-            }
-            if (check("elif")) {
+                killWithSpaces()
                 kill()
-                if (depth != 1) {
-                    continue
-                }
-                val expr = takeCTokensInLine()
-                val result = evaluateCondition(expr)
-                if (result == 1L) {
-                    return
-                }
             }
+            killWithSpaces()
+        }
+        throw PreprocessorException("Cannot find #endif")
+    }
+
+    private fun skipBlock() {
+        while (!eof()) {
+            if (check<NewLine>()) {
+                eat()
+                continue
+            }
+            if (check("#") && (checkNext("if") || checkNext("ifdef") || checkNext("ifndef"))) {
+                skipBlock2()
+                continue
+            }
+            if (check("#") && (checkNext("endif") || checkNext("else") || checkNext("elif"))) {
+                return
+            }
+            killWithSpaces()
         }
         throw PreprocessorException("Cannot find #endif")
     }
@@ -175,7 +196,11 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
         killWithSpaces()
         val args = parseArgumentDefinition()
         val value = takeTokensInLine()
-        ctx.define(MacroFunction(name.str(), args, value))
+        val macroFunction = MacroFunction(name.str(), args, value)
+        val old = ctx.define(macroFunction)
+        if (old != null && old != macroFunction) {
+            warning("macro $name already defined")
+        }
     }
 
     private fun checkNewLine() {
@@ -291,19 +316,38 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 kill()
                 checkNewLine()
                 val macros = ctx.findMacros(name.str())
-                if (macros != null) {
-                    return
+                enterCondition(ConditionType.IF, macros != null)
+                if (macros == null) {
+                    skipBlock()
                 }
-                skipBlock()
             }
             "if" -> {
                 val constExpression = takeCTokensInLine()
                 val result = evaluateCondition(constExpression)
+                enterCondition(ConditionType.IF, result != 0L)
                 if (result == 0L) {
                     skipBlock()
                 }
             }
-            "elif" -> skipBlock()
+            "elif" -> {
+                if (conditions.isEmpty()) {
+                    throw PreprocessorException("Unexpected #elif")
+                }
+                val last = conditions.last()
+                if (last.type == ConditionType.ELSE) {
+                    throw PreprocessorException("Unexpected #elif after #else")
+                }
+                if (last.isIncluded) {
+                    skipBlock()
+                } else {
+                    val constExpression = takeCTokensInLine()
+                    val result = evaluateCondition(constExpression)
+                    last.isIncluded = result != 0L
+                    if (result == 0L) {
+                        skipBlock()
+                    }
+                }
+            }
             "ifndef" -> {
                 if (!check<Identifier>()) {
                     throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
@@ -311,8 +355,11 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 val macros = peak<Identifier>()
                 kill()
                 checkNewLine()
-                ctx.findMacros(macros.str()) ?: return
-                skipBlock()
+                val hasDef = ctx.findMacros(macros.str()) != null
+                enterCondition(ConditionType.IF, !hasDef)
+                if (hasDef) {
+                    skipBlock()
+                }
             }
             "error" -> {
                 val message = takeTokensInLine()
@@ -321,8 +368,25 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
             "pragma" -> {
                 TODO("Implement #pragma directive")
             }
-            "endif" -> {}
-            "else" -> skipBlock()
+            "endif" -> {
+                if (conditions.isEmpty()) {
+                    throw PreprocessorException("Unexpected #endif")
+                }
+                exitCondition()
+            }
+            "else" -> {
+                if (conditions.isEmpty()) {
+                    throw PreprocessorException("Unexpected #else")
+                }
+                val last = conditions.last()
+                if (last.type == ConditionType.ELSE) {
+                    throw PreprocessorException("Unexpected #else after #else")
+                }
+                last.type = ConditionType.ELSE
+                if (last.isIncluded) {
+                    skipBlock()
+                }
+            }
 
             else -> {
                 restoreSharp(removedSpaces, sharp)

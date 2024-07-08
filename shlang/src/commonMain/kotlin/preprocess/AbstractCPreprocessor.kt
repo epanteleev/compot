@@ -45,6 +45,18 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
         return current!!.str() == s
     }
 
+    protected fun checkNext(s: String): Boolean {
+        if (eof()) {
+            return false
+        }
+        var next = current!!.next()
+        while (next is AnySpaceToken) {
+            next = next.next()
+        }
+
+        return next!!.str() == s
+    }
+
     protected inline fun<reified T> check(): Boolean {
         if (eof()) {
             return false
