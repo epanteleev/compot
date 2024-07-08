@@ -9,11 +9,19 @@ class StringReader(val str: String, var pos: Int = 0) {
     private val available get() = size - pos
 
     fun peek(): Char {
-        return if (pos >= 0 && pos < str.length){
+        return if (!eof) {
             str[pos]
         } else {
             '\u0000'
         }
+    }
+
+    fun check(char: Char): Boolean {
+        return !eof && peek() == char
+    }
+
+    fun check(expect: String): Boolean {
+        return !eof && str.startsWith(expect, pos)
     }
 
     fun inRange(offset: Int): Boolean = pos + offset < size
@@ -49,7 +57,7 @@ class StringReader(val str: String, var pos: Int = 0) {
     }
 
     fun read(count: Int) {
-        peek(count).also { pos += it.length }
+        pos += count
     }
 
     fun tryPeek(str: String): Boolean {
@@ -97,27 +105,14 @@ class StringReader(val str: String, var pos: Int = 0) {
                 return@tryRead str.substring(start, pos)
             }
 
-            val suffix = peek()
-            if (suffix == 'L' || suffix == 'l') {
+            if (check("ll") || check("LL")) {
+                read(2)
+                return@tryRead str.substring(start, pos)
+            } else if (check("l") || check("L")) {
                 read()
-                val suffix1 = peek()
-                if (suffix1 == 'L' || suffix1 == 'l') {
-                    read()
-                    return@tryRead str.substring(start, pos - 2)
-                } else {
-                    return@tryRead str.substring(start, pos - 1)
-                }
-            } else if (peek() == 'U' || peek() == 'u') {
-                read()
-                if (peek() == 'U' || peek() == 'u') {
-                    read()
-                    return@tryRead str.substring(start, pos - 2)
-                } else {
-                    return@tryRead str.substring(start, pos - 1)
-                }
-            } else {
-                return@tryRead null
+                return@tryRead str.substring(start, pos)
             }
+            return null
         }
     }
 

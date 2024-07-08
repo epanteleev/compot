@@ -1,14 +1,13 @@
 package ir.read.bulder
 
-import ir.*
+import ir.value.*
 import ir.types.*
 import ir.module.*
 import ir.instruction.*
+import ir.read.tokens.*
 import ir.module.block.*
 import ir.module.builder.*
 import common.forEachWith
-import ir.read.tokens.*
-import ir.value.*
 
 
 class ParseErrorException(message: String): Exception(message) {
@@ -42,7 +41,8 @@ class FunctionDataBuilderWithContext private constructor(
 
             is SymbolValue -> {
                 moduleBuilder.findConstantOrNull(token.name) ?:
-                    moduleBuilder.findGlobalOrNull(token.name) ?: moduleBuilder.findFunctionOrNull(token.name) ?:
+                    moduleBuilder.findGlobalOrNull(token.name) ?:
+                        moduleBuilder.findFunctionOrNull(token.name) ?:
                         throw ParseErrorException("constant or global value", token)
             }
             else -> throw ParseErrorException("constant or value", token)

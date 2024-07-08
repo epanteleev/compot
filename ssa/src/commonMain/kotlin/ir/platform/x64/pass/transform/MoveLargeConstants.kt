@@ -1,11 +1,8 @@
 package ir.platform.x64.pass.transform
 
-import ir.*
 import ir.types.Type
-import asm.x64.ImmInt
 import asm.x64.ImmInt.Companion.canBeImm32
 import ir.global.GlobalConstant
-import ir.global.GlobalSymbol
 import ir.module.Module
 import ir.module.block.Block
 import ir.module.FunctionData

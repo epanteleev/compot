@@ -37,9 +37,5 @@ data class StructType internal constructor(val name: String, val fields: List<No
         private fun alignTo(value: Int, alignment: Int): Int {
             return ((value + alignment - 1) / alignment) * alignment
         }
-
-        private fun withAlignment(alignment: Int, value: Int): Int {
-            return ((value + (alignment * 2 - 1)) / alignment) * alignment
-        }
     }
 }

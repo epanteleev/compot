@@ -1,7 +1,7 @@
 package ir.types
 
-class PointerType internal constructor() : PrimitiveType {
 
+object PointerType: PrimitiveType {
     override fun sizeOf(): Int {
         return 8
     }

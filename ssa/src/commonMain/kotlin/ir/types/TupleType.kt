@@ -1,5 +1,6 @@
 package ir.types
 
+
 class TupleType(val tuple: Array<NonTrivialType>): TrivialType {
     override fun toString(): String {
         return "|${tuple.joinToString()}|"

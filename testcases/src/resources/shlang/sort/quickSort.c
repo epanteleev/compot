@@ -1,7 +1,6 @@
 //COPY paste from some other source
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #ifndef DATATYPE
 #define DATATYPE int

@@ -9,11 +9,12 @@ interface LocalValue: Value {
     fun addUser(instruction: Instruction) {
         usedIn.add(instruction)
     }
+
     fun killUser(instruction: Instruction) {
         usedIn.remove(instruction)
     }
 
-    fun release(): List<Instruction> {
+    private fun release(): List<Instruction> {
         val result = usedIn
         usedIn = arrayListOf()
         return result

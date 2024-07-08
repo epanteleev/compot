@@ -65,7 +65,7 @@ class CTokenizerTest {
     @Test
     fun test4() {
         val tokens = CTokenizer.apply("2L").toCTokenList()
-        tokens[0].isEqual(1, 1, "2")
+        tokens[0].isEqual(1, 1, "2L")
     }
 
     @Test

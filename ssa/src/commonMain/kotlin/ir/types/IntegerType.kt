@@ -1,8 +1,9 @@
 package ir.types
 
+
 interface IntegerType: ArithmeticType
 
-data class SignedIntType(val size: Int) : IntegerType {
+data class SignedIntType internal constructor(val size: Int) : IntegerType {
     override fun sizeOf(): Int {
         return size
     }
@@ -18,7 +19,7 @@ data class SignedIntType(val size: Int) : IntegerType {
     }
 }
 
-data class UnsignedIntType(val size: Int) : IntegerType {
+data class UnsignedIntType internal constructor(val size: Int) : IntegerType {
     override fun sizeOf(): Int {
         return size
     }

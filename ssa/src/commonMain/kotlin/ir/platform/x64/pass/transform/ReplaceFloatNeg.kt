@@ -1,6 +1,5 @@
 package ir.platform.x64.pass.transform
 
-import ir.*
 import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module

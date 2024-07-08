@@ -1,6 +1,7 @@
 package ir.types
 
-class BooleanType : PrimitiveType {
+
+object BooleanType : PrimitiveType {
     override fun toString(): String = "u1"
     override fun sizeOf(): Int = 1
 

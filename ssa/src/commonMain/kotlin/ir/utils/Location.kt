@@ -2,6 +2,7 @@ package ir.utils
 
 import ir.module.block.Block
 
+
 interface AbstractLocation {
     val index: Int
     val block: Block

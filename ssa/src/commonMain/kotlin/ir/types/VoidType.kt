@@ -1,6 +1,7 @@
 package ir.types
 
-class VoidType : TrivialType {
+
+object VoidType : TrivialType {
     override fun toString(): String {
         return "void"
     }

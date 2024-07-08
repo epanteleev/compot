@@ -798,7 +798,7 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
             eat()
             return@rule TypeNode(tok)
         }
-        if (check("__builtin_va_list") || check("__fortified_attr_access")) {
+        if (check("__builtin_va_list")) {
             val tok = peak<Identifier>()
             eat()
             return@rule TypeNode(tok)
