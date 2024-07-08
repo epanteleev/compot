@@ -67,7 +67,7 @@ class StringReader(val str: String, var pos: Int = 0) {
         return str.substring(startPos, pos)
     }
 
-    fun readNumeric(): String? {
+    fun readCNumber(): String? {
         return tryRead {
             val start = pos
             if (peek() == '0' && (peekOffset(1) == 'x' || peekOffset(1) == 'X')) {

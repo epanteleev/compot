@@ -148,7 +148,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
 
             val saved = reader.pos
-            val number = reader.readNumeric()
+            val number = reader.readCNumber()
 
             when {
                 number != null -> {

@@ -64,7 +64,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
             }
             GNUAssemblerRunner.run(optimizedAsm, "${commandLineArguments.getOutputFilename()}.o")
         } finally {
-            //FileSystem.SYSTEM.delete(optimizedAsm.toPath())
+            FileSystem.SYSTEM.delete(optimizedAsm.toPath())
         }
     }
 

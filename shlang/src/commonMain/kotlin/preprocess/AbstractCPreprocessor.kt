@@ -45,7 +45,7 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
         return current!!.str() == s
     }
 
-    protected fun checkNextMacro(s: String): Boolean {
+    protected fun checkNextMacro(vararg expected: String): Boolean {
         if (eof()) {
             return false
         }
@@ -54,7 +54,12 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
             next = next.next()
         }
 
-        return next!!.str() == s
+        for (s in expected) {
+            if (next != null && next.str() == s) {
+                return true
+            }
+        }
+        return false
     }
 
     protected inline fun<reified T> check(): Boolean {
