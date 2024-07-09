@@ -9,11 +9,10 @@ class StringReader(val str: String, var pos: Int = 0) {
     private val available get() = size - pos
 
     fun peek(): Char {
-        return if (!eof) {
-            str[pos]
-        } else {
-            '\u0000'
+        if (eof) {
+            throw IllegalStateException("EOF")
         }
+        return str[pos]
     }
 
     fun check(char: Char): Boolean {
@@ -30,7 +29,7 @@ class StringReader(val str: String, var pos: Int = 0) {
         return if (pos + offset >= 0 && pos + offset < str.length) {
             str[pos + offset]
         } else {
-            '\u0000'
+            throw IllegalStateException("EOF")
         }
     }
 
@@ -39,17 +38,8 @@ class StringReader(val str: String, var pos: Int = 0) {
         return if (p >= 0 && p < str.length) {
             str[p]
         } else {
-            '\u0000'
+            throw IllegalStateException("EOF")
         }
-    }
-
-    fun readWhile(cond: (char: Char) -> Boolean): String {
-        val start = pos
-        while (!eof && cond(peek())) {
-            read()
-        }
-        val end = pos
-        return str.substring(start, end)
     }
 
     fun peek(count: Int): String {
@@ -60,13 +50,10 @@ class StringReader(val str: String, var pos: Int = 0) {
         pos += count
     }
 
-    fun tryPeek(str: String): Boolean {
-        for (n in str.indices) {
-            if (peekOffset(n) != str[n]) {
-                return false
-            }
+    inline fun readIdentifier(): String = readBlock {
+        while (!eof && (peek().isLetter() || peek().isDigit() || check('_'))) {
+            read()
         }
-        return true
     }
 
     inline fun readBlock(callback: () -> Unit): String {
@@ -123,6 +110,9 @@ class StringReader(val str: String, var pos: Int = 0) {
             read()
             while (!eof && peek().isDigit()) {
                 read()
+            }
+            if (eof) {
+                return@tryRead Pair(str.substring(start, pos), 10)
             }
 
             if (peek() == '.' && (peekOffset(1).isWhitespace() || peekOffset(1).isDigit())) {
