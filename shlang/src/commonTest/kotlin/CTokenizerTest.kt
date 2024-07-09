@@ -117,4 +117,14 @@ class CTokenizerTest {
         assertTrue { tokens[0] is Numeric }
         tokens[0].isEqual(1, 1, "88ull")
     }
+
+    @Test
+    fun test10() {
+        val input = "0xff"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is Numeric }
+        tokens[0].isEqual(1, 1, "ff")
+        val tok = tokens[0] as Numeric
+        assertEquals(255, tok.toNumberOrNull())
+    }
 }

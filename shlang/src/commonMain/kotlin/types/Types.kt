@@ -98,6 +98,29 @@ interface CType {
                         LONG -> return DOUBLE
                     }
                 }
+
+                USHORT -> {
+                    when (type2) {
+                        INT -> return INT
+                        LONG -> return LONG
+                        CHAR -> return USHORT
+                        UINT -> return UINT
+                        DOUBLE -> return DOUBLE
+                        FLOAT -> return FLOAT
+                    }
+                }
+
+                UINT -> {
+                    when (type2) {
+                        CHAR -> return UINT
+                        LONG -> return LONG
+                        SHORT -> return UINT
+                        INT -> return UINT
+                        DOUBLE -> return DOUBLE
+                        FLOAT -> return FLOAT
+                    }
+                }
+
                 is CPointerType -> {
                     when (type2) {
                         CHAR -> return type1

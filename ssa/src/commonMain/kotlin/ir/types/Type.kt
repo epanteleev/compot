@@ -3,7 +3,7 @@ package ir.types
 
 data class TypeErrorException(override val message: String) : Exception(message)
 
-interface Type {
+sealed interface Type {
     companion object {
         val U1  = BooleanType
 

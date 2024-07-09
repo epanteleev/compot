@@ -59,6 +59,7 @@ object TypeConverter {
             is CUnionType -> {
                 convertUnionType(typeHolder, type)
             }
+            is CFunPointerType -> Type.Ptr
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
         return ret
@@ -152,7 +153,7 @@ object TypeConverter {
                     }
                     Type.U16 -> {
                         val tmp = zext(value, Type.U32)
-                        trunc(tmp, toType)
+                        bitcast(tmp, toType)
                     }
                     Type.U32 -> bitcast(value, toType)
                     Type.U64 -> trunc(value, toType)
@@ -246,8 +247,8 @@ object TypeConverter {
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> bitcast(value, toType)
                     Type.I64 -> trunc(value, toType)
-                    Type.U8  -> trunc(value, toType)
-                    Type.U16 -> trunc(value, toType)
+                    Type.U8  -> zext(value, toType)
+                    Type.U16 -> zext(value, toType)
                     Type.U64 -> trunc(value, toType)
                     Type.F32 -> {
                         val tmp = fp2Int(value, Type.I32)

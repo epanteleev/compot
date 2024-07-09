@@ -419,6 +419,15 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             BinaryOpType.EQ -> {
                 makeComparisonBinary(binop, ::eq)
             }
+            BinaryOpType.SHL -> {
+                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Shl)
+            }
+            BinaryOpType.SHR -> {
+                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Shr)
+            }
+            BinaryOpType.BIT_AND -> {
+                makeAlgebraicBinary(binop, ArithmeticBinaryOp.And)
+            }
             BinaryOpType.MOD -> {
                 val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
 
@@ -500,10 +509,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitNumNode(numNode: NumNode): Constant {
         val num = numNode.number.toNumberOrNull()
         return when (num) {
-            is Byte -> Constant.of(Type.I8, num as Number)
+            is Byte  -> Constant.of(Type.I8, num as Number)
+            is UByte -> Constant.of(Type.U8, num.toLong())
             is Int -> Constant.of(Type.I32, num as Number)
+            is UInt -> Constant.of(Type.U32, num.toLong())
             is Long -> Constant.of(Type.I64, num as Number)
-            is ULong -> Constant.of(Type.U64, num as Number)
+            is ULong -> Constant.of(Type.U64, num.toLong())
             is Float -> Constant.of(Type.F32, num as Number)
             is Double -> Constant.of(Type.F64, num)
             else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}")

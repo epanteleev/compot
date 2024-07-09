@@ -54,7 +54,12 @@ class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.and(size, second, dst)
+        } else {
+            asm.mov(size, first, dst)
+            asm.and(size, second, dst)
+        }
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
@@ -102,7 +107,14 @@ class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        if (first == dst) {
+            asm.and(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.and(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {

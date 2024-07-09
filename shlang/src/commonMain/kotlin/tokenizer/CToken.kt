@@ -208,8 +208,6 @@ class Numeric(private val data: String, val radix: Int, position: Position): CTo
         }
         cachedNumber = when {
             data.endsWith("L") -> data.substring(0, data.length - 1).toLongOrNull(radix)
-            data.endsWith("F") -> data.substring(0, data.length - 1).toFloatOrNull()
-            data.endsWith("f") -> data.substring(0, data.length - 1).toFloatOrNull()
             data.endsWith("U") -> data.substring(0, data.length - 1).toUIntOrNull(radix)
             data.endsWith("u") -> data.substring(0, data.length - 1).toUIntOrNull(radix)
             data.endsWith("UL") -> data.substring(0, data.length - 2).toULongOrNull(radix)
@@ -220,11 +218,17 @@ class Numeric(private val data: String, val radix: Int, position: Position): CTo
             data.endsWith("ll") -> data.substring(0, data.length - 2).toLongOrNull(radix)
             data.endsWith("LL") -> data.substring(0, data.length - 2).toLongOrNull(radix)
             data.endsWith("ll") -> data.substring(0, data.length - 2).toLongOrNull(radix)
+            else -> data.toByteOrNull(radix) ?: data.toIntOrNull(radix) ?: data.toLongOrNull(radix) ?: data.toULongOrNull(radix) ?: data.toFloatOrNull() ?: data.toDoubleOrNull()
+        }
+        if (cachedNumber != null) {
+            return cachedNumber
+        }
+        cachedNumber = when {
             data.endsWith("F") -> data.substring(0, data.length - 1).toFloatOrNull()
             data.endsWith("f") -> data.substring(0, data.length - 1).toFloatOrNull()
             data.endsWith("D") -> data.substring(0, data.length - 1).toDoubleOrNull()
             data.endsWith("d") -> data.substring(0, data.length - 1).toDoubleOrNull()
-            else -> data.toByteOrNull() ?: data.toIntOrNull() ?: data.toLongOrNull() ?: data.toULongOrNull() ?: data.toFloatOrNull() ?: data.toDoubleOrNull()
+            else -> null
         }
         return cachedNumber
     }
