@@ -360,6 +360,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(';')
     }
 
+    override fun visit(functionSpecifierNode: FunctionSpecifierNode) {
+        buffer.append(functionSpecifierNode.name())
+    }
+
     override fun visit(enumerator: Enumerator) {
         buffer.append(enumerator.ident.str())
         if (enumerator.constExpr !is EmptyExpression) {

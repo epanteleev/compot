@@ -174,3 +174,21 @@ data class EnumDeclaration(private val name: Identifier) : AnyTypeNode() {
 
     override fun name(): String = name.str()
 }
+
+// 6.7.4 Function specifiers
+// https://port70.net/~nsz/c/c11/n1570.html#6.7.4
+data class FunctionSpecifierNode(private val name: Keyword) : AnyTypeNode() {
+    override fun name(): String = name.str()
+
+    override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+
+    override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder): TypeProperty {
+        return when (name.str()) {
+            "inline"   -> FunctionSpecifier.INLINE
+            "noreturn" -> FunctionSpecifier.NORETURN
+            else -> throw IllegalStateException("Unknown function specifier $name")
+        }
+    }
+}

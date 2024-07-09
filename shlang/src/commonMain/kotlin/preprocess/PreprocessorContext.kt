@@ -83,19 +83,19 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
 
     companion object {
         // 6.10.8.1 Mandatory macros
-        private val LINE = PredefinedMacros("__LINE__") { tokenListOf(Numeric("${it.line()}", it)) }
+        private val LINE = PredefinedMacros("__LINE__") { tokenListOf(Numeric("${it.line()}", 10, it)) }
         private val FILE = PredefinedMacros("__FILE__") { tokenListOf(StringLiteral.quote(it.filename(), it)) }
         private val DATE = PredefinedMacros("__DATE__") { tokenListOf(StringLiteral.quote("June  6 666", it)) }
         private val TIME = PredefinedMacros("__TIME__") { tokenListOf(StringLiteral.quote("66:66:66", it)) }
-        private val STDC = PredefinedMacros("__STDC__") { tokenListOf(Numeric("1", it)) }
-        private val STDC_HOSTED  = MacroReplacement("__STDC_HOSTED__", tokenListOf(Numeric("1", OriginalPosition.UNKNOWN)))
-        private val STDC_VERSION = MacroReplacement("__STDC_VERSION__", tokenListOf(Numeric("201112L", OriginalPosition.UNKNOWN)))
+        private val STDC = PredefinedMacros("__STDC__") { tokenListOf(Numeric("1", 10, it)) }
+        private val STDC_HOSTED  = MacroReplacement("__STDC_HOSTED__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
+        private val STDC_VERSION = MacroReplacement("__STDC_VERSION__", tokenListOf(Numeric("201112L", 10, OriginalPosition.UNKNOWN)))
 
         // Implementation-defined macros
-        private val PLATFORM = MacroReplacement("__x86_64__", tokenListOf(Numeric("1", OriginalPosition.UNKNOWN)))
-        private val LP64     = MacroReplacement("__LP64__", tokenListOf(Numeric("1", OriginalPosition.UNKNOWN)))
-        private val LINUX    = MacroReplacement("__linux__", tokenListOf(Numeric("1", OriginalPosition.UNKNOWN)))
-        private val UNIX     = MacroReplacement("__unix__", tokenListOf(Numeric("1", OriginalPosition.UNKNOWN)))
+        private val PLATFORM = MacroReplacement("__x86_64__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
+        private val LP64     = MacroReplacement("__LP64__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
+        private val LINUX    = MacroReplacement("__linux__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
+        private val UNIX     = MacroReplacement("__unix__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
 
         // TODO attributes to ignore
         private val __fortified_attr_access = MacroFunction("__fortified_attr_access", cTokenListOf(), tokenListOf())

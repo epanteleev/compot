@@ -75,7 +75,35 @@ class StringReader(val str: String, var pos: Int = 0) {
         return str.substring(startPos, pos)
     }
 
-    fun readCNumber(): String? {
+    private fun checkPostfix(start: Int): String? {
+        if (check("ll") || check("LL")) {
+            read(2)
+            return str.substring(start, pos)
+        } else if (check("LLU") || check("llu")) {
+            read(3)
+            return str.substring(start, pos)
+        } else if (check("ULL") || check("ull")) {
+            read(3)
+            return str.substring(start, pos)
+        }
+        else if (check("LU") || check("lu")) {
+            read(2)
+            return str.substring(start, pos)
+        } else if (check("UL") || check("ul")) {
+            read(2)
+            return str.substring(start, pos)
+        }
+        else if (check("U") || check("u")) {
+            read()
+            return str.substring(start, pos)
+        } else if (check("L") || check("l")) {
+            read()
+            return str.substring(start, pos)
+        }
+        return null
+    }
+
+    fun readCNumber(): Pair<String, Int>? {
         return tryRead {
             val start = pos
             if (peek() == '0' && (peekOffset(1) == 'x' || peekOffset(1) == 'X')) {
@@ -84,8 +112,12 @@ class StringReader(val str: String, var pos: Int = 0) {
                 while (!eof && (peek().isDigit() || peek().lowercaseChar() in 'a'..'f')) {
                     read()
                 }
+                val withPostfix = checkPostfix(start + 2)
+                if (withPostfix != null) {
+                    return@tryRead Pair(withPostfix, 16)
+                }
                 val hexString = str.substring(start + 2, pos)
-                return@tryRead hexString.toLong(16).toString() //TODO
+                return@tryRead Pair(hexString, 16)
             }
 
             read()
@@ -99,20 +131,17 @@ class StringReader(val str: String, var pos: Int = 0) {
                 while (!eof && !isSeparator(peek())) {
                     read()
                 }
-                return@tryRead str.substring(start, pos)
+                return@tryRead Pair(str.substring(start, pos), 10)
             } else if (!peek().isLetter() && peek() != '_') {
                 // Integer
-                return@tryRead str.substring(start, pos)
+                return@tryRead Pair(str.substring(start, pos), 10)
             }
 
-            if (check("ll") || check("LL")) {
-                read(2)
-                return@tryRead str.substring(start, pos)
-            } else if (check("l") || check("L")) {
-                read()
-                return@tryRead str.substring(start, pos)
+            val postfix = checkPostfix(start)
+            if (postfix != null) {
+                return@tryRead Pair(postfix, 10)
             }
-            return null
+            return@tryRead null
         }
     }
 

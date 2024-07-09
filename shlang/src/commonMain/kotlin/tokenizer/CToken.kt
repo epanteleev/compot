@@ -193,7 +193,7 @@ class StringLiteral(val data: String, position: Position): CToken(position) {
     }
 }
 
-class Numeric(private val data: String, position: Position): CToken(position) {
+class Numeric(private val data: String, val radix: Int, position: Position): CToken(position) {
     private var cachedNumber: Any? = toNumberOrNull()
 
     override fun str(): String = data
@@ -207,19 +207,19 @@ class Numeric(private val data: String, position: Position): CToken(position) {
             return cachedNumber
         }
         cachedNumber = when {
-            data.endsWith("L") -> data.substring(0, data.length - 1).toLongOrNull()
+            data.endsWith("L") -> data.substring(0, data.length - 1).toLongOrNull(radix)
             data.endsWith("F") -> data.substring(0, data.length - 1).toFloatOrNull()
             data.endsWith("f") -> data.substring(0, data.length - 1).toFloatOrNull()
-            data.endsWith("U") -> data.substring(0, data.length - 1).toUIntOrNull()
-            data.endsWith("u") -> data.substring(0, data.length - 1).toUIntOrNull()
-            data.endsWith("UL") -> data.substring(0, data.length - 2).toULongOrNull()
-            data.endsWith("ul") -> data.substring(0, data.length - 2).toULongOrNull()
-            data.endsWith("ULL") -> data.substring(0, data.length - 3).toULongOrNull()
-            data.endsWith("ull") -> data.substring(0, data.length - 3).toULongOrNull()
-            data.endsWith("LL") -> data.substring(0, data.length - 2).toLongOrNull()
-            data.endsWith("ll") -> data.substring(0, data.length - 2).toLongOrNull()
-            data.endsWith("LL") -> data.substring(0, data.length - 2).toLongOrNull()
-            data.endsWith("ll") -> data.substring(0, data.length - 2).toLongOrNull()
+            data.endsWith("U") -> data.substring(0, data.length - 1).toUIntOrNull(radix)
+            data.endsWith("u") -> data.substring(0, data.length - 1).toUIntOrNull(radix)
+            data.endsWith("UL") -> data.substring(0, data.length - 2).toULongOrNull(radix)
+            data.endsWith("ul") -> data.substring(0, data.length - 2).toULongOrNull(radix)
+            data.endsWith("ULL") -> data.substring(0, data.length - 3).toULongOrNull(radix)
+            data.endsWith("ull") -> data.substring(0, data.length - 3).toULongOrNull(radix)
+            data.endsWith("LL") -> data.substring(0, data.length - 2).toLongOrNull(radix)
+            data.endsWith("ll") -> data.substring(0, data.length - 2).toLongOrNull(radix)
+            data.endsWith("LL") -> data.substring(0, data.length - 2).toLongOrNull(radix)
+            data.endsWith("ll") -> data.substring(0, data.length - 2).toLongOrNull(radix)
             data.endsWith("F") -> data.substring(0, data.length - 1).toFloatOrNull()
             data.endsWith("f") -> data.substring(0, data.length - 1).toFloatOrNull()
             data.endsWith("D") -> data.substring(0, data.length - 1).toDoubleOrNull()
@@ -239,6 +239,6 @@ class Numeric(private val data: String, position: Position): CToken(position) {
     }
 
     override fun cloneWith(pos: Position): CToken {
-        return Numeric(data, pos)
+        return Numeric(data, radix, pos)
     }
 }

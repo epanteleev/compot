@@ -14,4 +14,5 @@ interface TypeNodeVisitor<T> {
     fun visit(structDeclaration: StructDeclaration): T
     fun visit(unionDeclaration: UnionDeclaration): T
     fun visit(enumDeclaration: EnumDeclaration): T
+    fun visit(functionSpecifierNode: FunctionSpecifierNode): T
 }

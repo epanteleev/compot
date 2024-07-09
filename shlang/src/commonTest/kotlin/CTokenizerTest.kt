@@ -99,7 +99,7 @@ class CTokenizerTest {
         val input = "0x88"
         val tokens = CTokenizer.apply(input).toCTokenList()
         assertTrue { tokens[0] is Numeric }
-        tokens[0].isEqual(1, 1, "136") //TODO print hex??
+        tokens[0].isEqual(1, 1, "88") //TODO print hex??
     }
 
     @Ignore
@@ -108,5 +108,13 @@ class CTokenizerTest {
         val tokens = CTokenizer.apply(input).toCTokenList()
         assertTrue { tokens[0] is Numeric }
         tokens[0].isEqual(1, 1, "136") //TODO print hex??
+    }
+
+    @Test
+    fun test9() {
+        val input = "0x88ull"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is Numeric }
+        tokens[0].isEqual(1, 1, "88ull")
     }
 }

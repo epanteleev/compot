@@ -301,6 +301,28 @@ class CProgramPreprocessorTest {
         assertEquals("", TokenPrinter.print(p))
     }
 
+    @Test
+    fun testMacroExpansion() {
+        val input = """
+            #define _SIGSET_NWORDS (1024 / (8 * sizeof (unsigned long int)))
+            typedef struct
+            {
+              unsigned long int __val[_SIGSET_NWORDS];
+            } __sigset_t;
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |typedef struct
+            |{
+            |  unsigned long int __val[(1024 / (8 * sizeof (unsigned long int)))];
+            |} __sigset_t;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
     // 6.10.3.4 Rescanning and further replacement
     // EXAMPLE
     @Test

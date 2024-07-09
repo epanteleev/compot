@@ -43,12 +43,12 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
             val macros = ctx.findMacros(name.str())
 
             if (macros == null) {
-                val num = Numeric("0", name.position())
+                val num = Numeric("0", 10, name.position())
                 tokens.addAfter(name, num)
                 tokens.kill(name)
                 token = num.next()
             } else {
-                val num = Numeric("1", name.position())
+                val num = Numeric("1", 10, name.position())
                 tokens.addAfter(name, num)
                 tokens.kill(name)
                 token = num.next()
@@ -147,6 +147,7 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
 
     private fun takeTokensInLine(): TokenList {
         val value = TokenList()
+        killSpaces()
         while (!eof() && !check<NewLine>()) {
             value.add(kill())
         }
@@ -252,8 +253,9 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
         when (directive.str()) {
             "define" -> {
                 val name = peak<Identifier>()
-                killWithSpaces()
+                kill()
                 if (check("(")) {
+                    killSpaces()
                     parseMacroFunction(name)
                     return
                 }

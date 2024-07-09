@@ -148,13 +148,13 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
 
             val saved = reader.pos
-            val number = reader.readCNumber()
+            val pair = reader.readCNumber()
 
             when {
-                number != null -> {
+                pair != null -> {
                     val diff = reader.pos - saved
                     pos += diff
-                    append(Numeric(number, OriginalPosition(line, pos - diff, filename)))
+                    append(Numeric(pair.first,pair.second, OriginalPosition(line, pos - diff, filename)))
                 }
                 else -> error("Unknown symbol: '$v' in '$filename' at $line:$pos")
             }

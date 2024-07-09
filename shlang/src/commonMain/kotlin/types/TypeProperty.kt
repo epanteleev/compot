@@ -36,3 +36,12 @@ enum class StorageClass: TypeProperty {
         override fun toString(): String = "auto"
     }
 }
+
+enum class FunctionSpecifier: TypeProperty {
+    INLINE {
+        override fun toString(): String = "inline"
+    },
+    NORETURN {
+        override fun toString(): String = "_Noreturn"
+    }
+}

@@ -478,7 +478,6 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
         throw ParserException(InvalidToken("Expected ';'", peak()))
     }
 
-
     // declaration
     //	: declaration_specifiers ';'
     //	| declaration_specifiers init_declarator_list ';'
@@ -842,6 +841,27 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
         return@rule null
     }
 
+    // 6.7.4 Function specifiers
+    // https://port70.net/~nsz/c/c11/n1570.html#6.7.4
+    //
+    // function_specifier:
+    //  : inline
+    //  | _Noreturn
+    //  ;
+    fun function_specifier(): FunctionSpecifierNode? = rule {
+        if (check("inline")) {
+            val tok = peak<Keyword>()
+            eat()
+            return@rule FunctionSpecifierNode(tok)
+        }
+        if (check("_Noreturn")) {
+            val tok = peak<Keyword>()
+            eat()
+            return@rule FunctionSpecifierNode(tok)
+        }
+        return@rule null
+    }
+
     // declaration_specifiers
     //	: storage_class_specifier
     //	| storage_class_specifier declaration_specifiers
@@ -849,6 +869,8 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
     //	| type_specifier declaration_specifiers
     //	| type_qualifier
     //	| type_qualifier declaration_specifiers
+    //  | function-specifier
+    //  | function-specifier declaration_specifiers
     //	;
     fun declaration_specifiers(): DeclarationSpecifier? = rule {
         val specifiers = mutableListOf<AnyTypeNode>()
@@ -866,6 +888,11 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
             val typeQualifier = type_qualifier()
             if (typeQualifier != null) {
                 specifiers.add(typeQualifier)
+                continue
+            }
+            val functionSpecifier = function_specifier()
+            if (functionSpecifier != null) {
+                specifiers.add(functionSpecifier)
                 continue
             }
             break

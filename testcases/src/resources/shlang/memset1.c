@@ -1,5 +1,5 @@
 
-void memset(void *dest, char val, int n) {
+static inline void memset(void *dest, char val, int n) {
     char *d = dest;
     while (n--) {
         *d++ = val;

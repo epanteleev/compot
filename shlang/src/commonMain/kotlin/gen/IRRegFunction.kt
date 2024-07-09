@@ -356,21 +356,25 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             BinaryOpType.ASSIGN -> {
                 val right = visitExpression(binop.right, true)
-                val rightType = binop.left.resolveType(typeHolder)
+                val leftType = binop.left.resolveType(typeHolder)
 
-                if (rightType is CompoundType) {
+                if (leftType is CompoundType) {
                     val left = visitExpression(binop.left, false)
-                    ir().memcpy(left, right, U64Value(rightType.size().toLong()))
+                    ir().memcpy(left, right, U64Value(leftType.size().toLong()))
 
                     right
                 } else {
-                    val rightIrType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, rightType)
-                    val rightConverted = ir().convertToType(right, rightIrType)
+                    val leftIrType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, leftType)
+                    val leftConverted = ir().convertToType(right, leftIrType)
 
                     val left = visitExpression(binop.left, false)
-                    ir().store(left, rightConverted)
-                    rightConverted //TODO test it
+                    ir().store(left, leftConverted)
+                    leftConverted //TODO test it
                 }
+            }
+
+            BinaryOpType.BIT_OR -> {
+                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Or)
             }
 
             BinaryOpType.MUL -> {
@@ -432,7 +436,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             BinaryOpType.DIV -> {
                 makeAlgebraicBinary(binop, ArithmeticBinaryOp.Div)
             }
-            else -> throw IRCodeGenError("Unknown binary operation, op=${binop.opType}")
+            else -> throw IRCodeGenError("Unknown binary operation, op='${binop.opType}'")
         }
     }
 

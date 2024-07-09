@@ -2,6 +2,7 @@ package gen.consteval
 
 import parser.nodes.*
 import parser.nodes.visitors.ExpressionVisitor
+import types.CType
 
 
 data class ConstEvalException(override val message: String): Exception(message)
@@ -192,7 +193,16 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
     }
 
     override fun visit(cast: Cast): Long {
-        TODO("Not yet implemented")
+        val expression = cast.cast.accept(this)
+        val type = cast.typeName.specifyType(ctx.typeHolder())
+        val converted = when (type) {
+            CType.INT -> expression.toInt()
+            CType.LONG -> expression
+            CType.SHORT -> expression.toShort()
+            else -> throw ConstEvalException("Cannot cast to type $type")
+        }
+
+        return converted.toLong()
     }
 
     override fun visit(numNode: NumNode): Long {
