@@ -54,24 +54,24 @@ abstract class Assembler(private val name: String) {
     fun lea(size: Int, src: Address, dst: GPRegister) = add(Lea(size, src, dst))
 
     fun add(size: Int, first: GPRegister, destination: GPRegister) = add(Add(size, first, destination))
-    fun add(size: Int, first: Imm32, destination: GPRegister) = add(Add(size, first, destination))
-    fun add(size: Int, first: GPRegister, destination: Address) = add(Add(size, first, destination))
-    fun add(size: Int, first: Address, destination: GPRegister) = add(Add(size, first, destination))
-    fun add(size: Int, first: Imm32, destination: Address) = add(Add(size, first, destination))
+    fun add(size: Int, first: Imm32, destination: GPRegister)      = add(Add(size, first, destination))
+    fun add(size: Int, first: GPRegister, destination: Address)    = add(Add(size, first, destination))
+    fun add(size: Int, first: Address, destination: GPRegister)    = add(Add(size, first, destination))
+    fun add(size: Int, first: Imm32, destination: Address)         = add(Add(size, first, destination)) //TODO Use THIS
 
     fun sub(size: Int, first: GPRegister, destination: GPRegister) = add(Sub(size, first, destination))
-    fun sub(size: Int, first: Imm32, destination: GPRegister) = add(Sub(size, first, destination))
-    fun sub(size: Int, first: GPRegister, destination: Address) = add(Sub(size, first, destination))
-    fun sub(size: Int, first: Address, destination: GPRegister) = add(Sub(size, first, destination))
-    fun sub(size: Int, first: Imm32, destination: Address) = add(Sub(size, first, destination))
+    fun sub(size: Int, first: Imm32, destination: GPRegister)      = add(Sub(size, first, destination))
+    fun sub(size: Int, first: GPRegister, destination: Address)    = add(Sub(size, first, destination))
+    fun sub(size: Int, first: Address, destination: GPRegister)    = add(Sub(size, first, destination))
+    fun sub(size: Int, first: Imm32, destination: Address)         = add(Sub(size, first, destination))
 
-    fun mul(size: Int, src: GPRegister, dst: GPRegister) = add(iMull(size, null, src, dst))
-    fun mul(size: Int, src: Imm32, dst: GPRegister) = add(iMull(size, null, src, dst))
-    fun mul(size: Int, src: GPRegister, dst: Address) = add(iMull(size, null, src, dst))
-    fun mul(size: Int, src: Address, dst: GPRegister) = add(iMull(size, null, src, dst))
-    fun mul(size: Int, src: Imm32, dst: Address) = add(iMull(size, null, src, dst))
+    fun mul(size: Int, src: GPRegister, dst: GPRegister)              = add(iMull(size, null, src, dst))
+    fun mul(size: Int, src: Imm32, dst: GPRegister)                   = add(iMull(size, null, src, dst))
+    fun mul(size: Int, src: GPRegister, dst: Address)                 = add(iMull(size, null, src, dst))
+    fun mul(size: Int, src: Address, dst: GPRegister)                 = add(iMull(size, null, src, dst))
+    fun mul(size: Int, src: Imm32, dst: Address)                      = add(iMull(size, null, src, dst)) //TODO Use THIS
     fun mul(size: Int, src1: Imm32, src: GPRegister, dst: GPRegister) = add(iMull(size, src1, src, dst))
-    fun mul(size: Int, src1: Imm32, src: Address, dst: GPRegister) = add(iMull(size, src1, src, dst))
+    fun mul(size: Int, src1: Imm32, src: Address, dst: GPRegister)    = add(iMull(size, src1, src, dst))
 
     fun xor(size: Int, src: Address, dst: GPRegister)    = add(Xor(size, src, dst))
     fun xor(size: Int, imm32: Imm32, dst: Address)       = add(Xor(size, imm32, dst))
@@ -94,18 +94,18 @@ abstract class Assembler(private val name: String) {
     fun or(size: Int, src: GPRegister, dst: Address)    = add(Or(size, src, dst))
 
     fun neg(size: Int, dst: GPRegister) = add(Neg(size, dst))
-    fun neg(size: Int, dst: Address) = add(Neg(size, dst))
+    fun neg(size: Int, dst: Address)    = add(Neg(size, dst))
 
     fun not(size: Int, dst: GPRegister) = add(Not(size, dst))
-    fun not(size: Int, dst: Address) = add(Not(size, dst))
+    fun not(size: Int, dst: Address)    = add(Not(size, dst))
 
     // Unsigned Divide
     fun div(size: Int, divider: GPRegister) = add(Div(size, divider))
-    fun div(size: Int, divider: Address) = add(Div(size, divider))
+    fun div(size: Int, divider: Address)    = add(Div(size, divider))
 
     // Signed Divide
     fun idiv(size: Int, divider: GPRegister) = add(Idiv(size, divider))
-    fun idiv(size: Int, divider: Address) = add(Idiv(size, divider))
+    fun idiv(size: Int, divider: Address)    = add(Idiv(size, divider))
 
     // Convert Word to Doubleword/Convert Doubleword to Quadword
     fun cdq(size: Int) = when (size) {
@@ -144,19 +144,16 @@ abstract class Assembler(private val name: String) {
     }
 
     fun mov(size: Int, src: GPRegister, dst: GPRegister) = add(Mov(size, src, dst))
-    fun mov(size: Int, src: Address, dst: GPRegister) = add(Mov(size, src, dst))
-    fun mov(size: Int, src: GPRegister, dst: Address) = add(Mov(size, src, dst))
-    fun mov(size: Int, imm32: Imm32, dst: Address) {
-        add(Mov(size, imm32, dst))
-    }
-
-    fun mov(size: Int, imm32: Imm32, dst: GPRegister) = add(Mov(size, imm32, dst))
+    fun mov(size: Int, src: Address, dst: GPRegister)    = add(Mov(size, src, dst))
+    fun mov(size: Int, src: GPRegister, dst: Address)    = add(Mov(size, src, dst))
+    fun mov(size: Int, imm32: Imm32, dst: Address)       = add(Mov(size, imm32, dst))
+    fun mov(size: Int, imm32: Imm32, dst: GPRegister)    = add(Mov(size, imm32, dst))
 
     // Move With Sign-Extension
-    private fun movsx(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = add(Movsx(fromSize, toSize, src, dst))
-    private fun movsx(fromSize: Int, toSize: Int, src: Address, dst: GPRegister) = add(Movsx(fromSize, toSize, src, dst))
+    private fun movsx(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister)  = add(Movsx(fromSize, toSize, src, dst))
+    private fun movsx(fromSize: Int, toSize: Int, src: Address, dst: GPRegister)     = add(Movsx(fromSize, toSize, src, dst))
     private fun movsxd(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = add(Movsxd(fromSize, toSize, src, dst))
-    private fun movsxd(fromSize: Int, toSize: Int, src: Address, dst: GPRegister) = add(Movsxd(fromSize, toSize, src, dst))
+    private fun movsxd(fromSize: Int, toSize: Int, src: Address, dst: GPRegister)    = add(Movsxd(fromSize, toSize, src, dst))
 
     fun movsext(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = when (fromSize) {
         8, 4 -> movsxd(fromSize, toSize, src, dst)
@@ -172,7 +169,7 @@ abstract class Assembler(private val name: String) {
 
     // Move With Zero-Extend
     private fun movzx(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = add(Movzx(fromSize, toSize, src, dst))
-    private fun movzx(fromSize: Int, toSize: Int, src: Address, dst: GPRegister) = add(Movzx(fromSize, toSize, src, dst))
+    private fun movzx(fromSize: Int, toSize: Int, src: Address, dst: GPRegister)    = add(Movzx(fromSize, toSize, src, dst))
 
     fun movzext(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister) = when (fromSize) {
         8, 4, 2, 1 -> movzx(fromSize, toSize, src, dst)
@@ -196,9 +193,9 @@ abstract class Assembler(private val name: String) {
     }
 
     // Call Procedure
-    fun call(name: String) = add(Call(name))
+    fun call(name: String)    = add(Call(name))
     fun call(reg: GPRegister) = add(Call(reg))
-    fun call(reg: Address) = add(Call(reg))
+    fun call(reg: Address)    = add(Call(reg))
 
     fun cmp(size: Int, first: Operand, second: Operand) = add(Cmp(size, first, second))
 
