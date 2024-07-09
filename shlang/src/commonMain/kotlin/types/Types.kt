@@ -165,46 +165,6 @@ data class NoType(val message: String) : CType {
     }
 }
 
-class CTypeBuilder {
-    private val properties = mutableListOf<TypeProperty>()
-
-    fun add(property: TypeProperty) {
-        properties.add(property)
-    }
-
-    fun build(typeHolder: TypeHolder): CType {
-        val typeNodes = properties.filterIsInstance<BaseType>()
-        val baseType = if (typeNodes[0] is TypeDef) {
-            return (typeNodes[0] as TypeDef).baseType().copyWith(properties.filterNot { it is BaseType })
-        } else {
-            typeNodes[0]
-        }
-
-        if (baseType !is AggregateBaseType) {
-            return CPrimitiveType(baseType, properties.filterNot { it is BaseType })
-        }
-        val properties = properties.filterNot { it is BaseType }
-        val struct = when (baseType) {
-            is StructBaseType            -> CStructType(baseType, properties)
-            is UnionBaseType             -> CUnionType(baseType, properties)
-            is UncompletedStructBaseType -> CUncompletedStructType(baseType, properties)
-            is UncompletedUnionBaseType  -> CUncompletedUnionType(baseType, properties)
-            is CArrayBaseType            -> CArrayType(baseType, properties)
-            else -> throw RuntimeException("Unknown type $baseType")
-        }
-
-        when (baseType) {
-            is StructBaseType, is UnionBaseType -> {
-                typeHolder.addTypedef(baseType.name, struct)
-                return struct
-            }
-            else -> {
-                return struct
-            }
-        }
-    }
-}
-
 class CPrimitiveType(val baseType: BaseType, val properties: List<TypeProperty> = emptyList()) : CType {
     override fun size(): Int = baseType.size()
     override fun qualifiers(): List<TypeProperty> = properties
