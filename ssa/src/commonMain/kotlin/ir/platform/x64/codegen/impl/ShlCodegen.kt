@@ -3,6 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.ArithmeticBinaryOp
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
@@ -19,7 +20,20 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
+        when (dst) {
+            first -> {
+                asm.mov(size, second, temp1)
+                asm.shl(size, temp1, dst)
+            }
+            second -> {
+                asm.mov(size, first, temp1)
+                asm.shl(size, temp1, dst)
+            }
+            else -> {
+                asm.mov(size, first, dst)
+                asm.shl(size, second, dst)
+            }
+        }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
@@ -39,7 +53,12 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.shl(size, second, dst)
+        } else {
+            asm.mov(size, first, dst)
+            asm.shl(size, second, dst)
+        }
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {

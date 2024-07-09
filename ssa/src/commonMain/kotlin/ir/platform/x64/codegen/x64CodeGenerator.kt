@@ -91,8 +91,27 @@ private class CodeEmitter(private val data: FunctionData,
             ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.And -> AndCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Or  -> OrCodegen(binary.type(),  asm)(dst, first, second)
-            ArithmeticBinaryOp.Shl -> ShlCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Shr -> ShrCodegen(binary.type(), asm)(dst, first, second)
+            ArithmeticBinaryOp.Shl -> {
+                assertion(binary.type() !is FloatingPointType) {
+                    "can't generate code for byte shl: type=${binary.type()}"
+                }
+                when (binary.type()) {
+                    is UnsignedIntType -> ShlCodegen(binary.type(), asm)(dst, first, second)
+                    is SignedIntType   -> SalCodegen(binary.type(), asm)(dst, first, second)
+                    else -> throw CodegenException("unknown type=$binary.type()")
+                }
+            }
+            ArithmeticBinaryOp.Shr -> {
+                assertion(binary.type() !is FloatingPointType) {
+                    "can't generate code for byte shr: type=${binary.type()}"
+                }
+                when (binary.type()) {
+                    is UnsignedIntType -> ShrCodegen(binary.type(), asm)(dst, first, second)
+                    is SignedIntType   -> SarCodegen(binary.type(), asm)(dst, first, second)
+                    else -> throw CodegenException("unknown type=$binary.type()")
+                }
+                ShrCodegen(binary.type(), asm)(dst, first, second)
+            }
             ArithmeticBinaryOp.Div -> {
                 assertion(binary.type() != Type.I8) {
                     "can't generate code for byte div: type=${binary.type()}"

@@ -93,6 +93,34 @@ abstract class Assembler(private val name: String) {
     fun or(size: Int, imm32: Imm32, dst: GPRegister)    = add(Or(size, imm32, dst))
     fun or(size: Int, src: GPRegister, dst: Address)    = add(Or(size, src, dst))
 
+    // Unsigned logical Shift Right
+    fun shr(size: Int, src: GPRegister, dst: GPRegister) = add(Shr(size, src, dst))
+    fun shr(size: Int, src: Imm32, dst: GPRegister)      = add(Shr(size, src, dst))
+    fun shr(size: Int, src: GPRegister, dst: Address)    = add(Shr(size, src, dst))
+    fun shr(size: Int, src: Address, dst: GPRegister)    = add(Shr(size, src, dst))
+    fun shr(size: Int, src: Imm32, dst: Address)         = add(Shr(size, src, dst))
+
+    // Signed logical Shift Left
+    fun sar(size: Int, src: GPRegister, dst: GPRegister) = add(Sar(size, src, dst))
+    fun sar(size: Int, src: Imm32, dst: GPRegister)      = add(Sar(size, src, dst))
+    fun sar(size: Int, src: GPRegister, dst: Address)    = add(Sar(size, src, dst))
+    fun sar(size: Int, src: Address, dst: GPRegister)    = add(Sar(size, src, dst))
+    fun sar(size: Int, src: Imm32, dst: Address)         = add(Sar(size, src, dst))
+
+    // Unsigned logical Shift Left
+    fun shl(size: Int, src: GPRegister, dst: GPRegister) = add(Shl(size, src, dst))
+    fun shl(size: Int, src: Imm32, dst: GPRegister)      = add(Shl(size, src, dst))
+    fun shl(size: Int, src: GPRegister, dst: Address)    = add(Shl(size, src, dst))
+    fun shl(size: Int, src: Address, dst: GPRegister)    = add(Shl(size, src, dst))
+    fun shl(size: Int, src: Imm32, dst: Address)         = add(Shl(size, src, dst))
+
+    // Signed logical Shift Right
+    fun sal(size: Int, src: GPRegister, dst: GPRegister) = add(Sal(size, src, dst))
+    fun sal(size: Int, src: Imm32, dst: GPRegister)      = add(Sal(size, src, dst))
+    fun sal(size: Int, src: GPRegister, dst: Address)    = add(Sal(size, src, dst))
+    fun sal(size: Int, src: Address, dst: GPRegister)    = add(Sal(size, src, dst))
+    fun sal(size: Int, src: Imm32, dst: Address)         = add(Sal(size, src, dst))
+
     fun neg(size: Int, dst: GPRegister) = add(Neg(size, dst))
     fun neg(size: Int, dst: Address)    = add(Neg(size, dst))
 

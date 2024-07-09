@@ -8,7 +8,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-class ShrCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp, XmmOperandsVisitorBinaryOp {
+class SarCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp, XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
@@ -20,7 +20,20 @@ class ShrCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
+        when (dst) {
+            first -> {
+                asm.mov(size, second, temp1)
+                asm.sar(size, temp1, dst)
+            }
+            second -> {
+                asm.mov(size, first, temp1)
+                asm.sar(size, temp1, dst)
+            }
+            else -> {
+                asm.mov(size, first, dst)
+                asm.sar(size, second, dst)
+            }
+        }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
@@ -41,10 +54,10 @@ class ShrCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
         if (dst == first) {
-            asm.shr(size, second, dst)
+            asm.sar(size, second, dst)
         } else {
             asm.mov(size, first, dst)
-            asm.shr(size, second, dst)
+            asm.sar(size, second, dst)
         }
     }
 
@@ -81,19 +94,11 @@ class ShrCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        asm.mov(size, first, temp1)
-        asm.shr(size, second, temp1)
-        asm.mov(size, temp1, dst)
+        TODO("Not yet implemented")
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        if (dst == first) {
-            asm.shr(size, second, dst)
-        } else {
-            asm.mov(size, first, temp1)
-            asm.shr(size, second, temp1)
-            asm.mov(size, temp1, dst)
-        }
+        TODO("Not yet implemented")
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
