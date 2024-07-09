@@ -206,18 +206,6 @@ data class CPrimitiveType(val baseType: BaseType, val properties: List<TypePrope
     }
 }
 
-data class CompoundType(val baseType: BaseType, val properties: List<TypeProperty> = emptyList()) : CType { //TODO
-    override fun toString(): String {
-        return buildString {
-            properties.forEach { append("$it ") }
-            append(baseType)
-        }
-    }
-
-    override fun baseType(): BaseType = baseType
-    override fun qualifiers(): List<TypeProperty> = properties
-}
-
 data class AbstractCFunctionType(val retType: CType, val argsTypes: List<CType>, var variadic: Boolean): CType {
     override fun baseType(): BaseType = retType.baseType()
     override fun qualifiers(): List<TypeProperty> = retType.qualifiers()
@@ -255,4 +243,16 @@ data class CFunctionType(val name: String, val functionType: AbstractCFunctionTy
             append(")")
         }
     }
+}
+
+data class CompoundType(val baseType: AggregateBaseType, val properties: List<TypeProperty> = emptyList()) : CType { //TODO
+    override fun toString(): String {
+        return buildString {
+            properties.forEach { append("$it ") }
+            append(baseType)
+        }
+    }
+
+    override fun baseType(): AggregateBaseType = baseType
+    override fun qualifiers(): List<TypeProperty> = properties
 }

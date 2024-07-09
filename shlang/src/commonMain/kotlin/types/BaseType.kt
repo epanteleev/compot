@@ -27,7 +27,9 @@ enum class CPrimitive(val size: Int, val id: String): BaseType {
     override fun size(): Int = size
 }
 
-abstract class AggregateBaseType(open val name: String): BaseType {
+abstract class AggregateBaseType: BaseType
+
+abstract class AnyStructType(open val name: String): AggregateBaseType() {
     protected val fields = arrayListOf<Pair<String, CType>>()
     override fun typename(): String = name
 
@@ -45,11 +47,12 @@ abstract class AggregateBaseType(open val name: String): BaseType {
     }
 }
 
-abstract class UncompletedType(name: String): AggregateBaseType(name) {
+
+abstract class UncompletedType(name: String): AnyStructType(name) {
     override fun size(): Int = throw Exception("Uncompleted type")
 }
 
-data class StructBaseType(override val name: String): AggregateBaseType(name) { //TODO
+data class StructBaseType(override val name: String): AnyStructType(name) { //TODO
     override fun size(): Int {
         return fields.sumOf { it.second.size() }
     }
@@ -67,7 +70,7 @@ data class StructBaseType(override val name: String): AggregateBaseType(name) { 
     }
 }
 
-data class UnionBaseType(override val name: String): AggregateBaseType(name) {
+data class UnionBaseType(override val name: String): AnyStructType(name) {
     override fun size(): Int {
         if (fields.isEmpty()) {
             return 0
@@ -101,7 +104,7 @@ data class EnumBaseType(val name: String): BaseType {
 }
 
 
-data class CArrayType(val type: CType, val dimension: Long) : BaseType {
+data class CArrayType(val type: CType, val dimension: Long) : AggregateBaseType() {
     override fun typename(): String {
         return toString()
     }

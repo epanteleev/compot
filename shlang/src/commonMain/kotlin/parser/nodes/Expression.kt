@@ -252,7 +252,7 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
             return@memoize CType.UNKNOWN
         }
         val aggregate = structType.baseType()
-        if (aggregate !is AggregateBaseType) {
+        if (aggregate !is AnyStructType) {
             return@memoize CType.UNKNOWN
         }
         val field = aggregate.fieldIndex(ident.str())
@@ -276,7 +276,7 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
             return@memoize CType.UNKNOWN
         }
         val aggregate = structType.baseType()
-        if (aggregate !is AggregateBaseType) {
+        if (aggregate !is AnyStructType) {
             return@memoize CType.UNKNOWN
         }
         val field = aggregate.fieldIndex(ident.str())
@@ -347,7 +347,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 }
             }
             PrefixUnaryOpType.NEG -> {
-                if (primaryType.baseType() is CPrimitive) {
+                if (primaryType is CPrimitiveType) {
                     primaryType
                 } else {
                     CType.UNKNOWN

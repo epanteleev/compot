@@ -17,7 +17,6 @@ import ir.module.builder.impl.FunctionDataBuilder
 import ir.value.*
 import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
-import types.AggregateBaseType
 
 
 class IrGenFunction(moduleBuilder: ModuleBuilder,
@@ -102,7 +101,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val structType   = arrowMemberAccess.primary.resolveType(typeHolder) as CPointerType
         val structIRType = mb.toIRType<StructType>(typeHolder, structType.dereference())
 
-        val baseStructType = structType.baseType() as AggregateBaseType
+        val baseStructType = structType.baseType() as AnyStructType
         val member = baseStructType.fieldIndex(arrowMemberAccess.ident.str())
 
         val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
@@ -124,7 +123,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val structType = memberAccess.primary.resolveType(typeHolder)
         val structIRType = mb.toIRType<StructType>(typeHolder, structType)
 
-        val baseStructType = structType.baseType() as AggregateBaseType
+        val baseStructType = structType.baseType() as AnyStructType
         val member = baseStructType.fieldIndex(memberAccess.memberName())
 
         val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
@@ -310,7 +309,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             val convertedLValue = ir().convertToType(lvalue, Type.U64)
 
-            val size = lValueType.baseType().size()
+            val size = lValueType.dereference().size()
             val sizeValue = Constant.of(Type.U64, size)
             val mul = ir().arithmeticBinary(convertedRValue, ArithmeticBinaryOp.Mul, sizeValue)
 
