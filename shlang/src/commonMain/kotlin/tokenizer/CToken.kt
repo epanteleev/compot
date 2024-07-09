@@ -194,7 +194,7 @@ class StringLiteral(val data: String, position: Position): CToken(position) {
 }
 
 class Numeric(private val data: String, val radix: Int, position: Position): CToken(position) {
-    private var cachedNumber: Any? = toNumberOrNull()
+    private var cachedNumber: Any? = null
 
     override fun str(): String = data
 

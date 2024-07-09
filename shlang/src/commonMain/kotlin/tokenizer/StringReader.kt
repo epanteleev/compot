@@ -16,11 +16,11 @@ class StringReader(val str: String, var pos: Int = 0) {
     }
 
     fun check(char: Char): Boolean {
-        return !eof && peek() == char
+        return !eof && str[pos] == char
     }
 
     fun check(expect: String): Boolean {
-        return !eof && str.startsWith(expect, pos)
+        return str.startsWith(expect, pos)
     }
 
     fun inRange(offset: Int): Boolean = pos + offset < size

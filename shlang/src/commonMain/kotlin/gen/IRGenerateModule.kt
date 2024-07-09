@@ -21,7 +21,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         for (node in programNode.nodes) {
             when (node) {
                 is FunctionNode -> {
-                    val gen = IrGenFunction(moduleBuilder, typeHolder, varStack, constantCounter)
+                    val gen = IrGenFunction(mb, typeHolder, varStack, constantCounter)
                     gen.visit(node)
                     constantCounter = gen.constantCounter
                 }
@@ -32,37 +32,37 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     }
 
     private fun getExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {
-        val externFunction = moduleBuilder.findExternFunctionOrNull(name)
+        val externFunction = mb.findExternFunctionOrNull(name)
         if (externFunction != null) {
             println("Warning: extern function $name already exists") //TODO implement warning mechanism
             return externFunction
         }
 
-        return moduleBuilder.createExternFunction(name, returnType, arguments, isVararg)
+        return mb.createExternFunction(name, returnType, arguments, isVararg)
     }
 
     private fun declareDeclarator(declarationSpecifier: DeclarationSpecifier, decl: Declarator) {
         when (val type = decl.resolveType(declarationSpecifier, typeHolder)) {
             is CFunctionType -> {
                 val abstrType = type.functionType
-                val argTypes = abstrType.argsTypes.map {
-                    moduleBuilder.toIRType<NonTrivialType>(typeHolder, it)
+                val argTypes  = abstrType.argsTypes.map {
+                    mb.toIRType<NonTrivialType>(typeHolder, it)
                 }
-                val returnType = moduleBuilder.toIRType<Type>(typeHolder, abstrType.retType)
+                val returnType = mb.toIRType<Type>(typeHolder, abstrType.retType)
 
                 val isVararg = type.functionType.variadic
                 getExternFunction(decl.name(), returnType, argTypes, isVararg)
             }
             is CPrimitiveType -> {
-                val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
+                val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
                 val global = GlobalConstant.of(decl.name(), irType, 0)
-                moduleBuilder.addConstant(global)
+                mb.addConstant(global)
                 varStack[decl.name()] = global
             }
             is CPointerType -> {
-                val irType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, type)
+                val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
                 val global = GlobalConstant.of(decl.name(), irType, 0)
-                moduleBuilder.addConstant(global)
+                mb.addConstant(global)
                 varStack[decl.name()] = global
             }
             else -> throw IRCodeGenError("Function or struct expected, but was '$type'")
@@ -77,12 +77,12 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 }
                 is AssignmentDeclarator -> {
                     val cType = decl.resolveType(node.declspec, typeHolder)
-                    val lValueType = moduleBuilder.toIRType<NonTrivialType>(typeHolder, cType)
+                    val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType)
 
                     val result = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
 
-                    val constant = moduleBuilder.addConstant(result)
-                    val global = moduleBuilder.addGlobal(".v${constantCounter++}", constant)
+                    val constant = mb.addConstant(result)
+                    val global = mb.addGlobal(".v${constantCounter++}", constant)
                     varStack[decl.name()] = global
                 }
                 else -> throw IRCodeGenError("Unsupported declarator $decl")
@@ -130,7 +130,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             val type = expr.resolveType(typeHolder)
 
             if (type is CompoundType) {
-                val typeExpr = moduleBuilder.toIRType<AggregateType>(typeHolder, type)
+                val typeExpr = mb.toIRType<AggregateType>(typeHolder, type)
 
                 val elements = expr.initializers.map { constEvalExpression0(it) }
                 val convertedElements = elements.mapIndexed { it, num ->
@@ -151,7 +151,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             //println(node)
             val irGen = IRGen(typeHolder)
             irGen.visit(node)
-            val module = irGen.moduleBuilder.build()
+            val module = irGen.mb.build()
             return module
         }
     }

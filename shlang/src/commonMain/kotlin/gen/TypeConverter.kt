@@ -1,6 +1,5 @@
 package gen
 
-import ir.*
 import types.*
 import ir.types.*
 import ir.module.builder.impl.FunctionDataBuilder
