@@ -212,7 +212,8 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
             return@memoize CType.UNKNOWN
         }
 
-        return@memoize typeHolder.getFunctionType(name())
+        val functionType = typeHolder.getFunctionType(name()) as CFunctionType
+        return@memoize functionType.functionType.retType
     }
 }
 
@@ -248,16 +249,12 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val structType = primary.resolveType(typeHolder)
-        if (structType !is CompoundType) {
+        if (structType !is CBaseStructType) {
             return@memoize CType.UNKNOWN
         }
-        val aggregate = structType.baseType()
-        if (aggregate !is AnyStructType) {
-            return@memoize CType.UNKNOWN
-        }
-        val field = aggregate.fieldIndex(ident.str())
+        val field = structType.fieldIndex(ident.str())
         if (field != -1) {
-            return@memoize aggregate.fields()[field].second
+            return@memoize structType.fields()[field].second
         }
         return@memoize CType.UNKNOWN
     }
@@ -272,16 +269,12 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
             return@memoize CType.UNKNOWN
         }
         val baseType = structType.dereference()
-        if (baseType !is CompoundType) {
+        if (baseType !is CBaseStructType) {
             return@memoize CType.UNKNOWN
         }
-        val aggregate = structType.baseType()
-        if (aggregate !is AnyStructType) {
-            return@memoize CType.UNKNOWN
-        }
-        val field = aggregate.fieldIndex(ident.str())
+        val field = baseType.fieldIndex(ident.str())
         if (field != -1) {
-            return@memoize aggregate.fields()[field].second
+            return@memoize baseType.fields()[field].second
         }
         return@memoize CType.UNKNOWN
     }
@@ -302,7 +295,7 @@ data class StringNode(val str: StringLiteral) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize CPointerType(CType.CHAR)
+        return@memoize CPointerType(CType.CHAR, listOf()) //ToDO restrict?????
     }
 }
 
@@ -337,7 +330,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 primaryType.dereference()
             }
             PrefixUnaryOpType.ADDRESS -> {
-                CPointerType(primaryType)
+                CPointerType(primaryType, listOf())
             }
             PrefixUnaryOpType.NOT -> {
                 if (primaryType is CPointerType) {

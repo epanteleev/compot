@@ -101,7 +101,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val structType   = arrowMemberAccess.primary.resolveType(typeHolder) as CPointerType
         val structIRType = mb.toIRType<StructType>(typeHolder, structType.dereference())
 
-        val baseStructType = structType.baseType() as AnyStructType
+        val baseStructType = structType.dereference() as CBaseStructType
         val member = baseStructType.fieldIndex(arrowMemberAccess.ident.str())
 
         val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
@@ -120,17 +120,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitMemberAccess(memberAccess: MemberAccess, isRvalue: Boolean): Value {
         val struct = visitExpression(memberAccess.primary, true) //TODO isRvalue???
-        val structType = memberAccess.primary.resolveType(typeHolder)
+        val structType = memberAccess.primary.resolveType(typeHolder) as CBaseStructType
         val structIRType = mb.toIRType<StructType>(typeHolder, structType)
 
-        val baseStructType = structType.baseType() as AnyStructType
-        val member = baseStructType.fieldIndex(memberAccess.memberName())
+        val member = structType.fieldIndex(memberAccess.memberName())
 
         val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
         if (!isRvalue) {
             return gep
         }
-        val memberType = baseStructType.fields()[member].second
+        val memberType = structType.fields()[member].second
         return if (memberType !is CompoundType) {
             val memberIRType = mb.toIRType<PrimitiveType>(typeHolder, memberType)
             ir().load(memberIRType, gep)
@@ -454,7 +453,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val loaded = ir().load(type, addr)
         if (ctype is CPointerType) {
             val converted = ir().convertToType(loaded, Type.I64)
-            val inc = ir().arithmeticBinary(converted, op, Constant.of(Type.I64, ctype.baseType().size()))
+            val inc = ir().arithmeticBinary(converted, op, Constant.of(Type.I64, ctype.dereference().size()))
             ir().store(addr, ir().convertToType(inc, type))
         } else {
             val inc = ir().arithmeticBinary(loaded, op, Constant.of(loaded.type(), 1))
@@ -516,7 +515,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable $name not found")
         val type = typeHolder[name]
 
-        if (type.baseType() is CArrayBaseType) {
+        if (type is CArrayType) {
             return rvalueAttr
         }
         val converted = mb.toIRType<NonTrivialType>(typeHolder, type)

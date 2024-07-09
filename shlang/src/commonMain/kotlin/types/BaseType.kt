@@ -27,6 +27,13 @@ enum class CPrimitive(val size: Int, val id: String): BaseType {
     override fun size(): Int = size
 }
 
+class TypeDef(val name: String, private val baseType: CType): BaseType {
+    fun baseType(): CType = baseType
+    override fun typename(): String = name
+    override fun size(): Int = baseType.size()
+    override fun toString(): String = baseType.toString()
+}
+
 abstract class AggregateBaseType: BaseType
 
 abstract class AnyStructType(open val name: String): AggregateBaseType() {
@@ -75,7 +82,7 @@ data class UnionBaseType(override val name: String): AnyStructType(name) {
         if (fields.isEmpty()) {
             return 0
         }
-        return fields.maxOf { it.second.baseType().size() }
+        return fields.maxOf { it.second.size() }
     }
 
     override fun toString(): String {
@@ -110,7 +117,7 @@ data class CArrayBaseType(val type: CType, val dimension: Long) : AggregateBaseT
     }
 
     override fun size(): Int {
-        return type.baseType().size() * dimension.toInt() //TODO
+        return type.size() * dimension.toInt() //TODO
     }
 
     override fun toString(): String {

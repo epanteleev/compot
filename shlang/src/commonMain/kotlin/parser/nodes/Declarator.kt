@@ -21,13 +21,14 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
     override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
         var pointerType = declspec.specifyType(typeHolder)
         for (pointer in pointers) {
-            pointerType = CPointerType(pointerType)
+            pointerType = CPointerType(pointerType, pointer.property())
         }
 
         pointerType = directDeclarator.resolveType(pointerType, typeHolder)
 
         if (declspec.isTypedef) {
-            typeHolder.addStructType(name(), pointerType.baseType())
+            typeHolder.addStructType(name(), TypeDef(name(), pointerType))
+            typeHolder.addTypedef(name(), pointerType)
         } else {
             typeHolder.addVar(name(), pointerType)
         }

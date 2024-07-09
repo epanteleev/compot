@@ -28,57 +28,53 @@ object TypeConverter {
             return Type.Ptr
         }
 
-        if (type is CompoundType) {
-            val baseType = type.baseType()
-            if (baseType is CArrayBaseType) {
-                return ArrayType(toIRType<NonTrivialType>(typeHolder, baseType.type), baseType.dimension.toInt())
-            }
+        if (type is CArrayType) {
+            val elementType = toIRType<NonTrivialType>(typeHolder, type.element())
+            return ArrayType(elementType, type.dimension().toInt())
         }
-
-        val ret = when (val baseType = type.baseType()) {
-            CPrimitive.CHAR   -> Type.I8
-            CPrimitive.UCHAR  -> Type.U8
-            CPrimitive.SHORT  -> Type.I16
-            CPrimitive.USHORT -> Type.U16
-            CPrimitive.INT    -> Type.I32
-            CPrimitive.UINT   -> Type.U32
-            CPrimitive.LONG   -> Type.I64
-            CPrimitive.ULONG  -> Type.U64
-            CPrimitive.FLOAT  -> Type.F32
-            CPrimitive.DOUBLE -> Type.F64
-            CPrimitive.VOID   -> Type.Void
-            is StructBaseType -> {
-                val structType = type.baseType() as StructBaseType
+        
+        val ret = when (type) {
+            CType.CHAR   -> Type.I8
+            CType.UCHAR  -> Type.U8
+            CType.SHORT  -> Type.I16
+            CType.USHORT -> Type.U16
+            CType.INT    -> Type.I32
+            CType.UINT   -> Type.U32
+            CType.LONG   -> Type.I64
+            CType.ULONG  -> Type.U64
+            CType.FLOAT  -> Type.F32
+            CType.DOUBLE -> Type.F64
+            CType.VOID   -> Type.Void
+            is CStructType -> {
+                convertStructType(typeHolder, type)
+            }
+            is CUncompletedStructType -> {
+                val structType = typeHolder.getTypedef(type.name()) as CStructType //TODO
                 convertStructType(typeHolder, structType)
             }
-            is UncompletedStructBaseType -> {
-                val structType = typeHolder.getStructType(baseType.name)
-                convertStructType(typeHolder, structType as StructBaseType)
+            is CUncompletedUnionType -> {
+                val unionType = typeHolder.getTypedef(type.name()) as CUnionType //TODO
+                convertStructType(typeHolder, unionType)
             }
-            is UncompletedUnionBaseType -> {
-                val unionType = typeHolder.getUnionType(baseType.name)
-                convertStructType(typeHolder, unionType as StructBaseType)
-            }
-            is UnionBaseType -> {
-                val unionType = type.baseType() as UnionBaseType
-                convertUnionType(typeHolder, unionType)
+            is CUnionType -> {
+                convertUnionType(typeHolder, type)
             }
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
         return ret
     }
 
-    private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: StructBaseType): Type {
+    private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: CBaseStructType): Type {
         val fields = type.fields().map { toIRType<NonTrivialType>(typeHolder, it.second) }
-        val structType = findStructTypeOrNull(type.name)
+        val structType = findStructTypeOrNull(type.name())
         if (structType != null) {
             return structType
         }
 
-        return structType(type.name, fields)
+        return structType(type.name(), fields)
     }
 
-    private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: UnionBaseType): Type {
+    private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: CUnionType): Type {
         val field = type.fields().maxByOrNull { it.second.size() }.let {
             if (it == null) {
                 null
@@ -86,15 +82,15 @@ object TypeConverter {
                 toIRType<NonTrivialType>(typeHolder, it.second)
             }
         }
-        val structType = findStructTypeOrNull(type.name)
+        val structType = findStructTypeOrNull(type.name())
         if (structType != null) {
             return structType
         }
 
         return if (field == null) {
-            structType(type.name, listOf())
+            structType(type.name(), listOf())
         } else {
-            structType(type.name, listOf(field))
+            structType(type.name(), listOf(field))
         }
     }
 

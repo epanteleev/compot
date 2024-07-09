@@ -158,7 +158,6 @@ data class EnumSpecifier(private val name: Identifier, val enumerators: List<Enu
             enumBaseType.addEnumeration(field.name())
         }
 
-        typeHolder.addStructType(name.str(), enumBaseType)
         return@addToBuilder enumBaseType
     }
 
@@ -169,7 +168,7 @@ data class EnumDeclaration(private val name: Identifier) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addStructType(name.str(), UncompletedEnumType(name.str()))
+        typeHolder.getTypeOrNull(name.str()) ?: UncompletedEnumType(name.str())
     }
 
     override fun name(): String = name.str()

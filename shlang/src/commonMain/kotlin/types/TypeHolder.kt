@@ -34,8 +34,9 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
         return getTypedefOrNull(name) ?: throw Exception("Type for typedef $name not found")
     }
 
-    fun addTypedef(name: String, type: CType) {
+    fun addTypedef(name: String, type: CType): CType {
         typedefs.last()[name] = type
+        return type
     }
 
     fun addVar(name: String, type: CType) {

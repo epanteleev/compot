@@ -1,17 +1,15 @@
 package types
 
 import ir.platform.x64.CallConvention.POINTER_SIZE
+import parser.nodes.TypeQualifier
 
 
 data class TypeInferenceException(override val message: String) : Exception(message)
 
 interface CType {
-    fun baseType(): BaseType
     fun qualifiers(): List<TypeProperty>
-
-    fun size(): Int {
-        return baseType().size()
-    }
+    fun size(): Int
+    fun copyWith(extraProperties: List<TypeProperty>): CType
 
     companion object {
         val UNRESOlVED: CType = NoType("<unresolved>")
@@ -34,9 +32,6 @@ interface CType {
             if (type2 == UNRESOlVED) return UNRESOlVED
             if (type1 == UNKNOWN) return type2
             if (type2 == UNKNOWN) return type1
-            if (type1.baseType() == type2.baseType()) {
-                return type1
-            }
 
             when (type1) {
                 CHAR -> {
@@ -122,19 +117,12 @@ interface CType {
     }
 }
 
-data class TypedefType(val name: String, val type: CType) : CType {
-    override fun baseType(): BaseType = type.baseType()
-    override fun qualifiers(): List<TypeProperty>  {
-        return listOf(StorageClass.TYPEDEF) + type.qualifiers()
-    }
+interface AnyCPointerType: CType {
+    override fun size(): Int = POINTER_SIZE //TODO must be imported from x64 module
 }
 
-interface AnyCPointerType: CType
-
-data class CPointerType(val type: CType) : AnyCPointerType {
-    override fun size(): Int = POINTER_SIZE //TODO imported from x64 module
-    override fun baseType(): BaseType = type.baseType()
-    override fun qualifiers(): List<TypeProperty> = emptyList()
+data class CPointerType(val type: CType, val properties: List<TypeProperty> = listOf()) : AnyCPointerType {
+    override fun qualifiers(): List<TypeProperty> = properties
 
     fun dereference(): CType = type
 
@@ -144,10 +132,13 @@ data class CPointerType(val type: CType) : AnyCPointerType {
             append("*")
         }
     }
+
+    override fun copyWith(extraProperties: List<TypeProperty>): CPointerType {
+        return CPointerType(type, properties + extraProperties)
+    }
 }
 
 data class CFunPointerType(val cFunctionType: AbstractCFunctionType) : AnyCPointerType {
-    override fun baseType(): BaseType = CPrimitive.UNKNOWN
     override fun qualifiers(): List<TypeProperty> = emptyList()
 
     override fun toString(): String {
@@ -161,11 +152,18 @@ data class CFunPointerType(val cFunctionType: AbstractCFunctionType) : AnyCPoint
             append(")")
         }
     }
+
+    override fun copyWith(extraProperties: List<TypeProperty>): CFunPointerType {
+        return CFunPointerType(cFunctionType.copyWith(extraProperties))
+    }
 }
 
 data class NoType(val message: String) : CType {
-    override fun baseType(): BaseType = CPrimitive.UNKNOWN
+    override fun size(): Int = CPrimitive.UNKNOWN.size()
     override fun qualifiers(): List<TypeProperty> = emptyList()
+    override fun copyWith(extraProperties: List<TypeProperty>): CType {
+        TODO("Not yet implemented")
+    }
 }
 
 class CTypeBuilder {
@@ -177,23 +175,28 @@ class CTypeBuilder {
 
     fun build(typeHolder: TypeHolder): CType {
         val typeNodes = properties.filterIsInstance<BaseType>()
-        val baseType = typeNodes[0]
+        val baseType = if (typeNodes[0] is TypeDef) {
+            return (typeNodes[0] as TypeDef).baseType().copyWith(properties.filterNot { it is BaseType })
+        } else {
+            typeNodes[0]
+        }
+
         if (baseType !is AggregateBaseType) {
             return CPrimitiveType(baseType, properties.filterNot { it is BaseType })
         }
         val properties = properties.filterNot { it is BaseType }
         val struct = when (baseType) {
-            is StructBaseType -> CStructType(baseType, properties)
-            is UnionBaseType -> CUnionType(baseType, properties)
+            is StructBaseType            -> CStructType(baseType, properties)
+            is UnionBaseType             -> CUnionType(baseType, properties)
             is UncompletedStructBaseType -> CUncompletedStructType(baseType, properties)
-            is UncompletedUnionBaseType -> CUncompletedUnionType(baseType, properties)
-            is CArrayBaseType -> CArrayType(baseType, properties)
+            is UncompletedUnionBaseType  -> CUncompletedUnionType(baseType, properties)
+            is CArrayBaseType            -> CArrayType(baseType, properties)
             else -> throw RuntimeException("Unknown type $baseType")
         }
 
         when (baseType) {
             is StructBaseType, is UnionBaseType -> {
-                typeHolder.addStructType(baseType.name, baseType)
+                typeHolder.addTypedef(baseType.name, struct)
                 return struct
             }
             else -> {
@@ -203,8 +206,8 @@ class CTypeBuilder {
     }
 }
 
-data class CPrimitiveType(val baseType: BaseType, val properties: List<TypeProperty> = emptyList()) : CType {
-    override fun baseType(): BaseType = baseType
+class CPrimitiveType(val baseType: BaseType, val properties: List<TypeProperty> = emptyList()) : CType {
+    override fun size(): Int = baseType.size()
     override fun qualifiers(): List<TypeProperty> = properties
 
     override fun toString(): String {
@@ -213,10 +216,29 @@ data class CPrimitiveType(val baseType: BaseType, val properties: List<TypePrope
             append(baseType)
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CPrimitiveType) return false
+
+        if (baseType != other.baseType) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = baseType.hashCode()
+        result = 31 * result + properties.hashCode()
+        return result
+    }
+
+    override fun copyWith(extraProperties: List<TypeProperty>): CPrimitiveType {
+        return CPrimitiveType(baseType, properties + extraProperties)
+    }
 }
 
 data class AbstractCFunctionType(val retType: CType, val argsTypes: List<CType>, var variadic: Boolean): CType {
-    override fun baseType(): BaseType = retType.baseType()
+    override fun size(): Int = throw RuntimeException("Function type has no size")
     override fun qualifiers(): List<TypeProperty> = retType.qualifiers()
 
     override fun toString(): String {
@@ -231,10 +253,14 @@ data class AbstractCFunctionType(val retType: CType, val argsTypes: List<CType>,
             append(")")
         }
     }
+
+    override fun copyWith(extraProperties: List<TypeProperty>): AbstractCFunctionType {
+        return AbstractCFunctionType(retType.copyWith(extraProperties), argsTypes.map { it.copyWith(extraProperties) }, variadic)
+    }
 }
 
-data class CFunctionType(val name: String, val functionType: AbstractCFunctionType) : CType {
-    override fun baseType(): BaseType = functionType.baseType()
+class CFunctionType(val name: String, val functionType: AbstractCFunctionType) : CType {
+    override fun size(): Int = throw RuntimeException("Function type has no size")
     override fun qualifiers(): List<TypeProperty> = functionType.qualifiers()
 
     fun retType() = functionType.retType
@@ -252,28 +278,49 @@ data class CFunctionType(val name: String, val functionType: AbstractCFunctionTy
             append(")")
         }
     }
+
+    override fun copyWith(extraProperties: List<TypeProperty>): CFunctionType {
+        return CFunctionType(name, functionType.copyWith(extraProperties))
+    }
 }
 
 abstract class CompoundType(protected open val properties: List<TypeProperty>) : CType { //TODO
     override fun qualifiers(): List<TypeProperty> = properties
 }
 
-data class CArrayType(val type: CArrayBaseType, override val properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
-    override fun baseType(): BaseType = type
-
-    fun element(): CType = type.type
-
+class CArrayType(val elementType: CArrayBaseType, override val properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
     override fun size(): Int {
-        return type.size()
+        return elementType.size()
     }
+
+    fun element(): CType = elementType.type
+
+    fun dimension(): Long = elementType.dimension
 
     override fun qualifiers(): List<TypeProperty> = properties
 
     override fun toString(): String {
         return buildString {
             properties.forEach { append("$it ") }
-            append(type)
+            append(elementType)
         }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CArrayType) return false
+
+        if (elementType != other.elementType) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return elementType.hashCode()
+    }
+
+    override fun copyWith(extraProperties: List<TypeProperty>): CType {
+        return CArrayType(elementType, properties + extraProperties)
     }
 }
 
@@ -285,21 +332,56 @@ abstract class CBaseStructType(protected open val baseType: AnyStructType, overr
         }
     }
 
-    override fun baseType(): AnyStructType = baseType
+    fun fieldIndex(name: String): Int {
+        return baseType.fieldIndex(name)
+    }
+
+    fun fields(): List<Pair<String, CType>> {
+        return baseType.fields()
+    }
+
+    fun name(): String {
+        return baseType.name
+    }
+
+    override fun size(): Int {
+        return baseType.size()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CBaseStructType) return false
+
+        if (baseType != other.baseType) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return baseType.hashCode()
+    }
 }
 
 class CStructType(baseType: StructBaseType, properties: List<TypeProperty> = emptyList()) : CBaseStructType(baseType, properties) {
-    override fun baseType(): StructBaseType = baseType as StructBaseType
+    override fun copyWith(extraProperties: List<TypeProperty>): CStructType {
+        return CStructType(baseType as StructBaseType, properties + extraProperties)
+    }
 }
 
 class CUnionType(baseType: UnionBaseType, properties: List<TypeProperty> = emptyList()) : CBaseStructType(baseType, properties) {
-    override fun baseType(): UnionBaseType = baseType as UnionBaseType
+    override fun copyWith(extraProperties: List<TypeProperty>): CType {
+        return CUnionType(baseType as UnionBaseType, properties + extraProperties)
+    }
 }
 
 class CUncompletedStructType(baseType: UncompletedStructBaseType, properties: List<TypeProperty> = emptyList()) : CBaseStructType(baseType, properties) {
-    override fun baseType(): UncompletedType = baseType as UncompletedType
+    override fun copyWith(extraProperties: List<TypeProperty>): CType {
+        return CUncompletedStructType(baseType as UncompletedStructBaseType, properties + extraProperties)
+    }
 }
 
 class CUncompletedUnionType(baseType: UncompletedUnionBaseType, properties: List<TypeProperty> = emptyList()) : CBaseStructType(baseType, properties) {
-    override fun baseType(): UncompletedType = baseType as UncompletedType
+    override fun copyWith(extraProperties: List<TypeProperty>): CType {
+        return CUncompletedUnionType(baseType as UncompletedUnionBaseType, properties + extraProperties)
+    }
 }

@@ -22,7 +22,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
     fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
         var pointerType = baseType
         for (pointer in pointers) {
-            pointerType = CPointerType(pointerType)
+            pointerType = CPointerType(pointerType, pointer.property()) //TODO copy paste
         }
 
         if (directAbstractDeclarator == null) {
@@ -109,6 +109,10 @@ data class IdentNode(private val str: Identifier) : UnclassifiedNode() {
 
 data class NodePointer(val qualifiers: List<TypeQualifier>) : UnclassifiedNode() {
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
+
+    fun property(): List<PointerQualifier> {
+        return qualifiers.map { it.qualifier() }
+    }
 }
 
 data class ProgramNode(val nodes: MutableList<Node>) : UnclassifiedNode() {
