@@ -225,13 +225,13 @@ data class InitializerList(val initializers: List<Expression>) : Expression() {
             CType.interfereTypes(acc, type)
         }
         if (isSameType(types)) {
-            return@memoize CompoundType(CArrayType(commonType, types.size.toLong()), emptyList())
+            return@memoize CArrayType(CArrayBaseType(commonType, types.size.toLong()), emptyList())
         } else {
             val struct = StructBaseType("initializer")
             for (i in initializers.indices) {
                 struct.addField("field$i", types[i])
             }
-            return@memoize CompoundType(struct, emptyList())
+            return@memoize CStructType(struct, emptyList())
         }
     }
 
@@ -370,15 +370,8 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val primaryType = primary.resolveType(typeHolder)
-        if (primaryType is CompoundType) {
-            when (primaryType.baseType) {
-                is CArrayType -> {
-                    return@memoize primaryType.baseType.type
-                }
-                else -> {
-                    return@memoize CType.UNKNOWN
-                }
-            }
+        if (primaryType is CArrayType) {
+            return@memoize primaryType.element()
         } else if (primaryType is CPointerType) {
             return@memoize primaryType.dereference()
         }

@@ -181,7 +181,16 @@ class CTypeBuilder {
         if (baseType !is AggregateBaseType) {
             return CPrimitiveType(baseType, properties.filterNot { it is BaseType })
         }
-        val struct = CompoundType(baseType, properties.filterNot { it is BaseType })
+        val properties = properties.filterNot { it is BaseType }
+        val struct = when (baseType) {
+            is StructBaseType -> CStructType(baseType, properties)
+            is UnionBaseType -> CUnionType(baseType, properties)
+            is UncompletedStructBaseType -> CUncompletedStructType(baseType, properties)
+            is UncompletedUnionBaseType -> CUncompletedUnionType(baseType, properties)
+            is CArrayBaseType -> CArrayType(baseType, properties)
+            else -> throw RuntimeException("Unknown type $baseType")
+        }
+
         when (baseType) {
             is StructBaseType, is UnionBaseType -> {
                 typeHolder.addStructType(baseType.name, baseType)
@@ -245,7 +254,30 @@ data class CFunctionType(val name: String, val functionType: AbstractCFunctionTy
     }
 }
 
-data class CompoundType(val baseType: AggregateBaseType, val properties: List<TypeProperty> = emptyList()) : CType { //TODO
+abstract class CompoundType(protected open val properties: List<TypeProperty>) : CType { //TODO
+    override fun qualifiers(): List<TypeProperty> = properties
+}
+
+data class CArrayType(val type: CArrayBaseType, override val properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
+    override fun baseType(): BaseType = type
+
+    fun element(): CType = type.type
+
+    override fun size(): Int {
+        return type.size()
+    }
+
+    override fun qualifiers(): List<TypeProperty> = properties
+
+    override fun toString(): String {
+        return buildString {
+            properties.forEach { append("$it ") }
+            append(type)
+        }
+    }
+}
+
+abstract class CBaseStructType(protected open val baseType: AnyStructType, override val properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
     override fun toString(): String {
         return buildString {
             properties.forEach { append("$it ") }
@@ -253,6 +285,21 @@ data class CompoundType(val baseType: AggregateBaseType, val properties: List<Ty
         }
     }
 
-    override fun baseType(): AggregateBaseType = baseType
-    override fun qualifiers(): List<TypeProperty> = properties
+    override fun baseType(): AnyStructType = baseType
+}
+
+class CStructType(baseType: StructBaseType, properties: List<TypeProperty> = emptyList()) : CBaseStructType(baseType, properties) {
+    override fun baseType(): StructBaseType = baseType as StructBaseType
+}
+
+class CUnionType(baseType: UnionBaseType, properties: List<TypeProperty> = emptyList()) : CBaseStructType(baseType, properties) {
+    override fun baseType(): UnionBaseType = baseType as UnionBaseType
+}
+
+class CUncompletedStructType(baseType: UncompletedStructBaseType, properties: List<TypeProperty> = emptyList()) : CBaseStructType(baseType, properties) {
+    override fun baseType(): UncompletedType = baseType as UncompletedType
+}
+
+class CUncompletedUnionType(baseType: UncompletedUnionBaseType, properties: List<TypeProperty> = emptyList()) : CBaseStructType(baseType, properties) {
+    override fun baseType(): UncompletedType = baseType as UncompletedType
 }

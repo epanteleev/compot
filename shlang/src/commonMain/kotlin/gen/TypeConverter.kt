@@ -30,7 +30,7 @@ object TypeConverter {
 
         if (type is CompoundType) {
             val baseType = type.baseType()
-            if (baseType is CArrayType) {
+            if (baseType is CArrayBaseType) {
                 return ArrayType(toIRType<NonTrivialType>(typeHolder, baseType.type), baseType.dimension.toInt())
             }
         }
@@ -51,11 +51,11 @@ object TypeConverter {
                 val structType = type.baseType() as StructBaseType
                 convertStructType(typeHolder, structType)
             }
-            is UncompletedStructType -> {
+            is UncompletedStructBaseType -> {
                 val structType = typeHolder.getStructType(baseType.name)
                 convertStructType(typeHolder, structType as StructBaseType)
             }
-            is UncompletedUnionType -> {
+            is UncompletedUnionBaseType -> {
                 val unionType = typeHolder.getUnionType(baseType.name)
                 convertStructType(typeHolder, unionType as StructBaseType)
             }

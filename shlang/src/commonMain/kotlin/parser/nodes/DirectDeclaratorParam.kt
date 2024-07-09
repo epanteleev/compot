@@ -21,7 +21,7 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
 
         val ctx = CommonConstEvalContext<Long>(typeHolder)
         val size = ConstEvalExpression.eval<Long>(constexpr, ConstEvalExpressionLong(ctx))
-        return CompoundType(CArrayType(baseType, size))
+        return CArrayType(CArrayBaseType(baseType, size))
     }
 }
 

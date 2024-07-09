@@ -516,7 +516,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable $name not found")
         val type = typeHolder[name]
 
-        if (type.baseType() is CArrayType) {
+        if (type.baseType() is CArrayBaseType) {
             return rvalueAttr
         }
         val converted = mb.toIRType<NonTrivialType>(typeHolder, type)

@@ -104,7 +104,7 @@ data class EnumBaseType(val name: String): BaseType {
 }
 
 
-data class CArrayType(val type: CType, val dimension: Long) : AggregateBaseType() {
+data class CArrayBaseType(val type: CType, val dimension: Long) : AggregateBaseType() {
     override fun typename(): String {
         return toString()
     }
@@ -121,7 +121,7 @@ data class CArrayType(val type: CType, val dimension: Long) : AggregateBaseType(
     }
 }
 
-data class UncompletedStructType(override val name: String): UncompletedType(name) {
+data class UncompletedStructBaseType(override val name: String): UncompletedType(name) {
     override fun typename(): String = name
 
     override fun size(): Int = throw Exception("Uncompleted type '$name'")
@@ -131,7 +131,7 @@ data class UncompletedStructType(override val name: String): UncompletedType(nam
     }
 }
 
-data class UncompletedUnionType(override val name: String): UncompletedType(name) {
+data class UncompletedUnionBaseType(override val name: String): UncompletedType(name) {
     override fun typename(): String = name
 
     override fun size(): Int = throw Exception("Uncompleted type")

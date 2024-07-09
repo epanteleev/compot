@@ -45,7 +45,7 @@ data class UnionDeclaration(val name: Identifier) : AnyTypeNode() { //TODO separ
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addStructType(name.str(), UncompletedUnionType(name.str()))
+        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addStructType(name.str(), UncompletedUnionBaseType(name.str()))
     }
 
     override fun name(): String = name.str()
@@ -145,7 +145,7 @@ data class StructDeclaration(private val name: Identifier) : AnyTypeNode() {
     override fun name(): String = name.str()
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addStructType(name.str(), UncompletedStructType(name.str()))
+        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addStructType(name.str(), UncompletedStructBaseType(name.str()))
     }
 }
 
