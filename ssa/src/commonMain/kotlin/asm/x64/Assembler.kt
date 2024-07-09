@@ -73,30 +73,25 @@ abstract class Assembler(private val name: String) {
     fun mul(size: Int, src1: Imm32, src: GPRegister, dst: GPRegister) = add(iMull(size, src1, src, dst))
     fun mul(size: Int, src1: Imm32, src: Address, dst: GPRegister) = add(iMull(size, src1, src, dst))
 
-    fun xor(size: Int, src: Address, dst: GPRegister) = add(Xor(size, src, dst))
-    fun xor(size: Int, imm32: Imm32, dst: Address) = add(Xor(size, imm32, dst))
+    fun xor(size: Int, src: Address, dst: GPRegister)    = add(Xor(size, src, dst))
+    fun xor(size: Int, imm32: Imm32, dst: Address)       = add(Xor(size, imm32, dst))
     fun xor(size: Int, src: GPRegister, dst: GPRegister) = add(Xor(size, src, dst))
-    fun xor(size: Int, imm32: Imm32, dst: GPRegister) = add(Xor(size, imm32, dst))
-    fun xor(size: Int, src: GPRegister, dst: Address) = add(Xor(size, src, dst))
+    fun xor(size: Int, imm32: Imm32, dst: GPRegister)    = add(Xor(size, imm32, dst))
+    fun xor(size: Int, src: GPRegister, dst: Address)    = add(Xor(size, src, dst))
 
     // Logical AND
-    fun and(size: Int, src: Address, dst: GPRegister) = add(And(size, src, dst))
-    fun and(size: Int, imm32: Imm32, dst: Address) = add(And(size, imm32, dst))
+    fun and(size: Int, src: Address, dst: GPRegister)    = add(And(size, src, dst))
+    fun and(size: Int, imm32: Imm32, dst: Address)       = add(And(size, imm32, dst))
     fun and(size: Int, src: GPRegister, dst: GPRegister) = add(And(size, src, dst))
-    fun and(size: Int, imm32: Imm32, dst: GPRegister) = add(And(size, imm32, dst))
-    fun and(size: Int, src: GPRegister, dst: Address) = add(And(size, src, dst))
+    fun and(size: Int, imm32: Imm32, dst: GPRegister)    = add(And(size, imm32, dst))
+    fun and(size: Int, src: GPRegister, dst: Address)    = add(And(size, src, dst))
 
     // Logical OR
-    fun or(size: Int, src: Address, dst: GPRegister) = add(And(size, src, dst))
-    fun or(size: Int, imm32: Imm32, dst: Address) = add(And(size, imm32, dst))
-    fun or(size: Int, src: GPRegister, dst: GPRegister) = add(And(size, src, dst))
-    fun or(size: Int, imm32: Imm32, dst: GPRegister) = add(And(size, imm32, dst))
-    fun or(size: Int, src: GPRegister, dst: Address) = add(And(size, src, dst))
-
-    fun movd(size: Int, src: GPRegister, dst: XmmRegister) = add(Movd(size, src, dst))
-    fun movd(size: Int, src: XmmRegister, dst: GPRegister) = add(Movd(size, src, dst))
-    fun movd(size: Int, src: Address, dst: XmmRegister) = add(Movd(size, src, dst))
-    fun movd(size: Int, src: XmmRegister, dst: Address) = add(Movd(size, src, dst))
+    fun or(size: Int, src: Address, dst: GPRegister)    = add(Or(size, src, dst))
+    fun or(size: Int, imm32: Imm32, dst: Address)       = add(Or(size, imm32, dst))
+    fun or(size: Int, src: GPRegister, dst: GPRegister) = add(Or(size, src, dst))
+    fun or(size: Int, imm32: Imm32, dst: GPRegister)    = add(Or(size, imm32, dst))
+    fun or(size: Int, src: GPRegister, dst: Address)    = add(Or(size, src, dst))
 
     fun neg(size: Int, dst: GPRegister) = add(Neg(size, dst))
     fun neg(size: Int, dst: Address) = add(Neg(size, dst))

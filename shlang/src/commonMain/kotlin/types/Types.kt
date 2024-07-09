@@ -121,6 +121,17 @@ interface CType {
                     }
                 }
 
+                ULONG -> {
+                    when (type2) {
+                        CHAR -> return ULONG
+                        INT -> return ULONG
+                        SHORT -> return ULONG
+                        UINT -> return ULONG
+                        DOUBLE -> return DOUBLE
+                        FLOAT -> return FLOAT
+                    }
+                }
+
                 is CPointerType -> {
                     when (type2) {
                         CHAR -> return type1
