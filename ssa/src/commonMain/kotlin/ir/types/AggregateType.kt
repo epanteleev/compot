@@ -1,6 +1,6 @@
 package ir.types
 
-interface AggregateType : NonTrivialType {
+sealed interface AggregateType : NonTrivialType {
     fun offset(index: Int): Int
     fun field(index: Int): NonTrivialType
 }

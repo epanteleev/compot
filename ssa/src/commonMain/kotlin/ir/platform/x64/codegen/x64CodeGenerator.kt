@@ -96,7 +96,6 @@ private class CodeEmitter(private val data: FunctionData,
                     "can't generate code for byte div: type=${binary.type()}"
                 }
 
-
                 when (binary.type()) {
                     is UnsignedIntType -> {
                         asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
@@ -113,7 +112,6 @@ private class CodeEmitter(private val data: FunctionData,
                     }
                     else -> TODO()
                 }
-
             }
             else -> println("Unimplemented: ${binary.op}")
         }

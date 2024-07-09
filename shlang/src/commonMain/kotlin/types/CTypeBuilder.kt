@@ -26,11 +26,11 @@ class CTypeBuilder {
             check(baseTypes, CPrimitive.UINT,  CPrimitive.LONG, CPrimitive.LONG, CPrimitive.INT) -> return CPrimitive.ULONG
             check(baseTypes, CPrimitive.LONG,  CPrimitive.UINT,  CPrimitive.INT) -> return CPrimitive.ULONG
             check(baseTypes, CPrimitive.UINT,  CPrimitive.SHORT, CPrimitive.INT) -> return CPrimitive.USHORT
-            check(baseTypes, CPrimitive.UINT,  CPrimitive.LONG,  CPrimitive.INT) -> return CPrimitive.LONG
+            check(baseTypes, CPrimitive.UINT,  CPrimitive.LONG,  CPrimitive.INT) -> return CPrimitive.ULONG
             check(baseTypes, CPrimitive.INT,   CPrimitive.SHORT, CPrimitive.INT) -> return CPrimitive.INT
             check(baseTypes, CPrimitive.INT,   CPrimitive.LONG,  CPrimitive.INT) -> return CPrimitive.LONG
             check(baseTypes, CPrimitive.LONG,  CPrimitive.LONG,  CPrimitive.INT) -> return CPrimitive.LONG
-            check(baseTypes, CPrimitive.INT,   CPrimitive.INT) -> return CPrimitive.UINT
+            check(baseTypes, CPrimitive.INT,   CPrimitive.INT) -> return CPrimitive.INT
             check(baseTypes, CPrimitive.UINT,  CPrimitive.CHAR) -> return CPrimitive.UCHAR
             check(baseTypes, CPrimitive.UINT,  CPrimitive.SHORT) -> return CPrimitive.USHORT
             check(baseTypes, CPrimitive.UINT,  CPrimitive.INT) -> return CPrimitive.UINT
