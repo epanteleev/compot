@@ -90,8 +90,9 @@ private class CodeEmitter(private val data: FunctionData,
             ArithmeticBinaryOp.Sub -> SubCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.And -> AndCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Or  -> OrCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Shl -> SHLCodegen(binary.type(), asm)(dst, first, second)
+            ArithmeticBinaryOp.Or  -> OrCodegen(binary.type(),  asm)(dst, first, second)
+            ArithmeticBinaryOp.Shl -> ShlCodegen(binary.type(), asm)(dst, first, second)
+            ArithmeticBinaryOp.Shr -> ShrCodegen(binary.type(), asm)(dst, first, second)
             ArithmeticBinaryOp.Div -> {
                 assertion(binary.type() != Type.I8) {
                     "can't generate code for byte div: type=${binary.type()}"
@@ -114,7 +115,6 @@ private class CodeEmitter(private val data: FunctionData,
                     else -> TODO()
                 }
             }
-            else -> println("Unimplemented: ${binary.op}")
         }
     }
 

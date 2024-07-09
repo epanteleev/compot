@@ -26,7 +26,7 @@ abstract class Assembler(private val name: String) {
         val label = Label(name)
         val instructions = InstructionList()
 
-        this.codeBlocks = linkedMapOf(Pair(label, instructions))
+        codeBlocks = linkedMapOf(Pair(label, instructions))
         activeContext = BuilderContext(label, instructions)
     }
 

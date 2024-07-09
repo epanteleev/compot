@@ -7,7 +7,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-class SHLCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp, XmmOperandsVisitorBinaryOp {
+class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp, XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
