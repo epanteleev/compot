@@ -1,7 +1,6 @@
 package types
 
 import ir.platform.x64.CallConvention.POINTER_SIZE
-import parser.nodes.TypeQualifier
 
 
 data class TypeInferenceException(override val message: String) : Exception(message)

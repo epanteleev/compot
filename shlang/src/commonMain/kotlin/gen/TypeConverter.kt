@@ -20,7 +20,7 @@ object TypeConverter {
 
     fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type {
         for (p in type.qualifiers()) {
-            if (p is PointerQualifier) {
+            if (p is TypeQualifier) {
                 return Type.Ptr
             }
         }

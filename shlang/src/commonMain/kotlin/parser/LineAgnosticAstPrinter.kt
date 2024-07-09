@@ -405,7 +405,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     }
 
-    override fun visit(typeQualifier: TypeQualifier) {
+    override fun visit(typeQualifier: TypeQualifierNode) {
         buffer.append(typeQualifier.name())
     }
 

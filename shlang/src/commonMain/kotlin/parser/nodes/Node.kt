@@ -5,7 +5,6 @@ import tokenizer.*
 import parser.nodes.visitors.*
 
 
-
 abstract class Node {
     fun<T> accept(visitor: NodeVisitor<T>): T {
         return visitor.visit(this)
@@ -22,7 +21,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
     fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
         var pointerType = baseType
         for (pointer in pointers) {
-            pointerType = CPointerType(pointerType, pointer.property()) //TODO copy paste
+            pointerType = CPointerType(pointerType, pointer.property())
         }
 
         if (directAbstractDeclarator == null) {
@@ -107,10 +106,10 @@ data class IdentNode(private val str: Identifier) : UnclassifiedNode() {
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class NodePointer(val qualifiers: List<TypeQualifier>) : UnclassifiedNode() {
+data class NodePointer(val qualifiers: List<TypeQualifierNode>) : UnclassifiedNode() {
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 
-    fun property(): List<PointerQualifier> {
+    fun property(): List<TypeQualifier> {
         return qualifiers.map { it.qualifier() }
     }
 }

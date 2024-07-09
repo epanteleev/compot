@@ -822,21 +822,21 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
     //	| VOLATILE
     //  | RESTRICT
     //	;
-    fun type_qualifier(): TypeQualifier? = rule {
+    fun type_qualifier(): TypeQualifierNode? = rule {
         if (check("const")) {
             val tok = peak<Keyword>()
             eat()
-            return@rule TypeQualifier(tok)
+            return@rule TypeQualifierNode(tok)
         }
         if (check("volatile")) {
             val tok = peak<Keyword>()
             eat()
-            return@rule TypeQualifier(tok)
+            return@rule TypeQualifierNode(tok)
         }
         if (check("restrict")) {
             val tok = peak<Keyword>()
             eat()
-            return@rule TypeQualifier(tok)
+            return@rule TypeQualifierNode(tok)
         }
         return@rule null
     }
@@ -1060,8 +1060,8 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
     //	: type_qualifier
     //	| type_qualifier_list type_qualifier
     //	;
-    fun type_qualifier_list(): List<TypeQualifier> {
-        val qualifiers = mutableListOf<TypeQualifier>()
+    fun type_qualifier_list(): List<TypeQualifierNode> {
+        val qualifiers = mutableListOf<TypeQualifierNode>()
         while (true) {
             val qualifier = type_qualifier()?: break
             qualifiers.add(qualifier)

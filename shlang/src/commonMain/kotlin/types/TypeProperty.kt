@@ -2,7 +2,10 @@ package types
 
 interface TypeProperty
 
-enum class PointerQualifier: TypeProperty {
+
+// 6.7.3 Type qualifiers
+// https://port70.net/~nsz/c/c11/n1570.html#6.7.3
+enum class TypeQualifier: TypeProperty {
     CONST {
         override fun toString() = "const"
     },
@@ -37,6 +40,8 @@ enum class StorageClass: TypeProperty {
     }
 }
 
+// 6.7.4 Function specifiers
+// https://port70.net/~nsz/c/c11/n1570.html#6.7.4
 enum class FunctionSpecifier: TypeProperty {
     INLINE {
         override fun toString(): String = "inline"

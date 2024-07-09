@@ -51,7 +51,7 @@ data class UnionDeclaration(val name: Identifier) : AnyTypeNode() { //TODO separ
     override fun name(): String = name.str()
 }
 
-data class TypeQualifier(private val name: Keyword): AnyTypeNode() {
+data class TypeQualifierNode(private val name: Keyword): AnyTypeNode() {
     override fun name(): String = name.str()
 
     override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
@@ -62,12 +62,12 @@ data class TypeQualifier(private val name: Keyword): AnyTypeNode() {
         qualifier()
     }
 
-    fun qualifier(): PointerQualifier {
+    fun qualifier(): TypeQualifier {
         return when (name.str()) {
-            "const"    -> PointerQualifier.CONST
-            "volatile" -> PointerQualifier.VOLATILE
-            "restrict" -> PointerQualifier.RESTRICT
-            else       -> PointerQualifier.EMPTY
+            "const"    -> TypeQualifier.CONST
+            "volatile" -> TypeQualifier.VOLATILE
+            "restrict" -> TypeQualifier.RESTRICT
+            else       -> TypeQualifier.EMPTY
         }
     }
 }
