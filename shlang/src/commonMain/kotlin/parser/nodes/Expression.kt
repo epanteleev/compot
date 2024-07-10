@@ -302,6 +302,18 @@ data class StringNode(val str: StringLiteral) : Expression() {
     }
 }
 
+data class CharNode(val char: CharLiteral) : Expression() {
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        return@memoize CType.CHAR
+    }
+
+    fun toInt(): Int {
+        return char.data.toInt()
+    }
+}
+
 data class NumNode(val number: Numeric) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 

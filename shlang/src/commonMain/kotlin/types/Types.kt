@@ -124,6 +124,7 @@ interface CType {
                 UINT -> {
                     when (type2) {
                         CHAR -> return UINT
+                        UCHAR -> return UINT
                         LONG -> return LONG
                         SHORT -> return UINT
                         INT -> return UINT

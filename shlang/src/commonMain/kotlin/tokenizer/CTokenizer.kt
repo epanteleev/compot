@@ -84,7 +84,13 @@ class CTokenizer private constructor(private val filename: String, private val r
                 append(Indent.of(spaces))
                 continue
             }
-            if (v == '"' || v == '\'') {
+            if (reader.check('\'')) {
+                reader.read()
+                val literal = reader.readCharLiteral()
+                append(CharLiteral(literal, OriginalPosition(line, position - 1, filename)))
+                continue
+            }
+            if (reader.check('"')) {
                 val literal = rearLiteral(v)
                 append(StringLiteral(literal, OriginalPosition(line, position - literal.length, filename)))
                 continue

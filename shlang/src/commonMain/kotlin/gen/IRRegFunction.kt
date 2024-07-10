@@ -83,8 +83,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is MemberAccess -> visitMemberAccess(expression, isRvalue)
             is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
             is Conditional -> visitConditional(expression)
+            is CharNode -> visitCharNode(expression)
             else -> throw IRCodeGenError("Unknown expression: $expression")
         }
+    }
+
+    private fun visitCharNode(charNode: CharNode): Value {
+        val char = charNode.toInt()
+        val charType = charNode.resolveType(typeHolder)
+        val charValue = Constant.of(Type.I8, char)
+        return ir().convertToType(charValue, mb.toIRType<PrimitiveType>(typeHolder, charType))
     }
 
     private fun visitConditional(conditional: Conditional): Value {
@@ -464,6 +472,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             BinaryOpType.BIT_AND -> {
                 makeAlgebraicBinary(binop, ArithmeticBinaryOp.And)
+            }
+            BinaryOpType.BIT_XOR -> {
+                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Xor)
             }
             BinaryOpType.MOD -> {
                 val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))

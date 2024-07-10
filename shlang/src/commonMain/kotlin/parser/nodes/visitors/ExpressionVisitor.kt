@@ -1,6 +1,7 @@
 package parser.nodes.visitors
 
 import parser.nodes.*
+import tokenizer.CharLiteral
 
 interface ExpressionVisitor<T> {
     fun visit(identNode: IdentNode): T
@@ -10,6 +11,7 @@ interface ExpressionVisitor<T> {
     fun visit(functionCall: FunctionCall): T
     fun visit(arrayAccess: ArrayAccess): T
     fun visit(stringNode: StringNode): T
+    fun visit(assignment: CharNode): T
     fun visit(initializerList: InitializerList): T
     fun visit(sizeOf: SizeOf): T
     fun visit(cast: Cast): T

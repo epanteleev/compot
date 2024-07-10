@@ -3,6 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.ArithmeticBinaryOp
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
@@ -102,7 +103,9 @@ data class XorCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, temp1)
+        asm.xor(size, second, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {

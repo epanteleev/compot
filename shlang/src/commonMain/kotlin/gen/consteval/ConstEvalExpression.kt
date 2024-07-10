@@ -2,6 +2,7 @@ package gen.consteval
 
 import parser.nodes.*
 import parser.nodes.visitors.ExpressionVisitor
+import tokenizer.CharLiteral
 import types.CType
 
 
@@ -79,6 +80,10 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
     }
 
     override fun visit(stringNode: StringNode): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(assignment: CharNode): Int {
         TODO("Not yet implemented")
     }
 
@@ -181,6 +186,10 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
     }
 
     override fun visit(stringNode: StringNode): Long {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(assignment: CharNode): Long {
         TODO("Not yet implemented")
     }
 
@@ -289,6 +298,10 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
         TODO("Not yet implemented")
     }
 
+    override fun visit(assignment: CharNode): Float {
+        TODO("Not yet implemented")
+    }
+
     override fun visit(initializerList: InitializerList): Float {
         TODO("Not yet implemented")
     }
@@ -392,6 +405,10 @@ class ConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): Cons
     }
 
     override fun visit(stringNode: StringNode): Double {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(assignment: CharNode): Double {
         TODO("Not yet implemented")
     }
 

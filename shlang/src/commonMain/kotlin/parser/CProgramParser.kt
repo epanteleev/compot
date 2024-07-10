@@ -1664,6 +1664,11 @@ class CProgramParser private constructor(iterator: TokenList): AbstractCParser(i
             eat()
             return@rule StringNode(str)
         }
+        if (check<CharLiteral>()) {
+            val char = peak<CharLiteral>()
+            eat()
+            return@rule CharNode(char)
+        }
         if (check<Numeric>()) {
             val num = peak<Numeric>()
             eat()

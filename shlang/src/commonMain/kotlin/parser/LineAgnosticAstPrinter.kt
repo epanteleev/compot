@@ -2,6 +2,7 @@ package parser
 
 import parser.nodes.*
 import parser.nodes.visitors.NodeVisitor
+import tokenizer.CharLiteral
 import tokenizer.Identifier
 
 
@@ -59,6 +60,12 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(stringNode: StringNode) {
         buffer.append(stringNode.str.str())
+    }
+
+    override fun visit(assignment: CharNode) {
+        buffer.append('\'')
+        buffer.append(assignment.char.str())
+        buffer.append('\'')
     }
 
     override fun visit(numNode: NumNode) {

@@ -50,6 +50,34 @@ class StringReader(val str: String, var pos: Int = 0) {
         pos += count
     }
 
+    inline fun readCharLiteral(): Char {
+        if (peek() == '\\') {
+            read()
+            val ch = when (peek()) {
+                'n' -> '\n'
+                't' -> '\t'
+                'r' -> '\r'
+                '0' -> '\u0000'
+                '\'' -> '\''
+                '\\' -> '\\'
+                else -> throw IllegalStateException("Unknown escape character")
+            }
+            read()
+            if (peek() != '\'') {
+                throw IllegalStateException("Expected closing quote")
+            }
+            read()
+            return ch
+        } else {
+            val ch = read()
+            if (peek() != '\'') {
+                throw IllegalStateException("Expected closing quote")
+            }
+            read()
+            return ch
+        }
+    }
+
     inline fun readIdentifier(): String = readBlock {
         while (!eof && (peek().isLetter() || peek().isDigit() || check('_'))) {
             read()

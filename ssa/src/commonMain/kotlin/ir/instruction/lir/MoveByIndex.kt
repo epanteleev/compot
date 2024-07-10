@@ -36,7 +36,7 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
         if (other == null || this::class != other::class) return false
 
         other as Move
-        return index() == other.source() && destination() == other.destination()
+        return operands.contentEquals(other.operands())
     }
 
     override fun hashCode(): Int {
