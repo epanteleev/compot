@@ -2,6 +2,7 @@ package shlang
 
 import common.CommonCTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 
 abstract class SortTest: CommonCTest() {
@@ -77,6 +78,13 @@ abstract class SortTest: CommonCTest() {
         val options = options() + "-DDATATYPE='unsigned char'" + "-DFMT=\"%hhu \""
         val result = runCTest("shlang/sort/quickSort", listOf(), options)
         assert(result, "Original array: 19 17 15 12 16 18 4 11 13 \nSorted array: 4 11 12 13 15 16 17 18 19 ")
+    }
+
+    @Test
+    fun testHeapSort() {
+        val result = runCTest("shlang/sort/heap_sort", listOf(), options())
+        assertEquals("sdf", result.output)
+        assertEquals(0, result.exitCode)
     }
 }
 

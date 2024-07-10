@@ -36,7 +36,7 @@ class CTypeBuilder {
             check(baseTypes, CPrimitive.UINT,  CPrimitive.INT)                   -> return CPrimitive.UINT
             check(baseTypes, CPrimitive.UINT,  CPrimitive.LONG)                  -> return CPrimitive.ULONG
             check(baseTypes, CPrimitive.LONG,  CPrimitive.LONG)                  -> return CPrimitive.LONG
-            check(baseTypes, CPrimitive.INT,   CPrimitive.CHAR)                  -> return CPrimitive.INT
+            check(baseTypes, CPrimitive.INT,   CPrimitive.CHAR)                  -> return CPrimitive.CHAR
             check(baseTypes, CPrimitive.LONG,  CPrimitive.INT)                   -> return CPrimitive.LONG
             check(baseTypes, CPrimitive.USHORT,CPrimitive.INT)                   -> return CPrimitive.USHORT
             check(baseTypes, CPrimitive.LONG,  CPrimitive.DOUBLE)                -> return CPrimitive.DOUBLE

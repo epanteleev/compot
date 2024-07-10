@@ -19,11 +19,6 @@ object TypeConverter {
     }
 
     fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type {
-        for (p in type.qualifiers()) {
-            if (p is TypeQualifier) {
-                return Type.Ptr
-            }
-        }
         if (type is CPointerType) {
             return Type.Ptr
         }
@@ -44,7 +39,7 @@ object TypeConverter {
             CType.ULONG  -> Type.U64
             CType.FLOAT  -> Type.F32
             CType.DOUBLE -> Type.F64
-            CType.VOID   -> Type.Void
+            CType.VOID   -> Type.Void // TODO handle case '(void) 0'
             is CStructType -> {
                 convertStructType(typeHolder, type)
             }
@@ -273,9 +268,9 @@ object TypeConverter {
                         bitcast(tmp, toType)
                     }
                     Type.I64 -> bitcast(value, toType)
-                    Type.U8  -> trunc(value, toType)
+                    Type.U8  -> zext(value, toType)
                     Type.U16 -> trunc(value, toType)
-                    Type.U32 -> trunc(value, toType)
+                    Type.U32 -> zext(value, toType)
                     Type.F32 -> {
                         val tmp = fp2Int(value, Type.I32)
                         trunc(tmp, toType)

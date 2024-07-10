@@ -79,7 +79,9 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
     }
 
     fun getFunctionType(name: String): CType {
-        return functions[name] ?: throw Exception("Type for function $name not found")
+        return functions[name] ?: let {
+            throw Exception("Type for function '$name' not found")
+        }
     }
 
     fun addFunctionType(name: String, type: CFunctionType) {

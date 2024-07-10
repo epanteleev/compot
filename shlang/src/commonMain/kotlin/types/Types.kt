@@ -44,6 +44,16 @@ interface CType {
                     }
                 }
 
+                UCHAR -> {
+                    when (type2) {
+                        INT -> return INT
+                        LONG -> return LONG
+                        CHAR -> return UCHAR
+                        UINT -> return UINT
+                        DOUBLE -> return DOUBLE
+                        FLOAT -> return FLOAT
+                    }
+                }
                 SHORT -> {
                     when (type2) {
                         INT -> return INT
@@ -58,6 +68,7 @@ interface CType {
                 INT -> {
                     when (type2) {
                         CHAR -> return INT
+                        UCHAR -> return INT
                         LONG -> return LONG
                         SHORT -> return INT
                         UINT -> return UINT

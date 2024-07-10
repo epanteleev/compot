@@ -91,11 +91,21 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         private val STDC_HOSTED  = MacroReplacement("__STDC_HOSTED__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
         private val STDC_VERSION = MacroReplacement("__STDC_VERSION__", tokenListOf(Numeric("201112L", 10, OriginalPosition.UNKNOWN)))
 
+        // Size of types
+      //  private val __SIZEOF_POINTER__ = PredefinedMacros("__SIZEOF_POINTER__") { tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)) }
+        ///private val __SIZEOF_LONG__    = PredefinedMacros("__SIZEOF_LONG__") { tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)) }
+      //  private val __SIZEOF_INT__     = MacroReplacement("__SIZEOF_INT__") { tokenListOf(Numeric("4", 10, OriginalPosition.UNKNOWN)) }
+      //  private val __SIZEOF_SHORT__   = MacroReplacement("__SIZEOF_SHORT__", tokenListOf(Numeric("2", 10, OriginalPosition.UNKNOWN)))
+      ///  private val __SIZEOF_FLOAT__   = MacroReplacement("__SIZEOF_FLOAT__", tokenListOf(Numeric("4", 10, OriginalPosition.UNKNOWN)))
+       // private val __SIZEOF_DOUBLE__  = MacroReplacement("__SIZEOF_DOUBLE__", tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)))
+
+
         // Implementation-defined macros
         private val PLATFORM = MacroReplacement("__x86_64__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
         private val LP64     = MacroReplacement("__LP64__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
         private val LINUX    = MacroReplacement("__linux__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
         private val UNIX     = MacroReplacement("__unix__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
+        private val __func__ = MacroReplacement("__func__", tokenListOf(StringLiteral.quote("in function", OriginalPosition.UNKNOWN)))
 
         // TODO attributes to ignore
         private val __fortified_attr_access = MacroFunction("__fortified_attr_access", cTokenListOf(), tokenListOf())
@@ -116,7 +126,8 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
                 "__x86_64__" to PLATFORM,
                 "__LP64__" to LP64,
                 "__linux__" to LINUX,
-                "__unix__" to UNIX
+                "__unix__" to UNIX,
+                "__func__" to __func__
             )
 
             val macroFunctions = hashMapOf(

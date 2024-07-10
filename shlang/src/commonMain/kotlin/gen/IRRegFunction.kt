@@ -81,8 +81,19 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is SizeOf       -> visitSizeOf(expression)
             is MemberAccess -> visitMemberAccess(expression, isRvalue)
             is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
+            is Conditional -> visitConditional(expression)
             else -> throw IRCodeGenError("Unknown expression: $expression")
         }
+    }
+
+    private fun visitConditional(conditional: Conditional): Value {
+        val onTrue    = visitExpression(conditional.eTrue, true)
+        val onFalse   = visitExpression(conditional.eFalse, true)
+        val condition = makeConditionFromExpression(conditional.cond)
+        val commonType = mb.toIRType<PrimitiveType>(typeHolder, conditional.resolveType(typeHolder))
+        val select = ir().select(condition, commonType, onTrue, onFalse)
+
+        return select
     }
 
     private fun visitInitializerList(ptr: Value, type: AggregateType, initializerList: InitializerList): Value {
@@ -215,7 +226,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitCast(cast: Cast): Value {
         val value = visitExpression(cast.cast, true)
-        val toType = mb.toIRType<NonTrivialType>(typeHolder, cast.resolveType(typeHolder))
+        val toType = mb.toIRType<Type>(typeHolder, cast.resolveType(typeHolder))
+        if (toType == Type.Void) {
+            return value
+        }
+
+        assertion(toType is NonTrivialType) { "invariant" }
         return ir().convertToType(value, toType)
     }
 
@@ -471,6 +487,31 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return loaded
     }
 
+    private fun visitPrefixIncOrDec(unaryOp: UnaryOp, op: ArithmeticBinaryOp): Value {
+        assertion(unaryOp.opType == PrefixUnaryOpType.INC || unaryOp.opType == PrefixUnaryOpType.DEC) {
+            "Unknown operation, op=${unaryOp.opType}"
+        }
+        assertion(op == ArithmeticBinaryOp.Add || op == ArithmeticBinaryOp.Sub) {
+            "Unknown operation, op=${op}"
+        }
+
+        val ctype = unaryOp.resolveType(typeHolder)
+
+        val addr = visitExpression(unaryOp.primary, false)
+        val type = mb.toIRType<PrimitiveType>(typeHolder, ctype)
+        val loaded = ir().load(type, addr)
+        if (ctype is CPointerType) {
+            val converted = ir().convertToType(loaded, Type.I64)
+            val inc = ir().arithmeticBinary(converted, op, Constant.of(Type.I64, ctype.dereference().size()))
+            ir().store(addr, ir().convertToType(inc, type))
+            return inc
+        } else {
+            val inc = ir().arithmeticBinary(loaded, op, Constant.of(loaded.type(), 1))
+            ir().store(addr, ir().convertToType(inc, type))
+            return inc
+        }
+    }
+
     private fun visitUnary(unaryOp: UnaryOp, isRvalue: Boolean): Value {
         return when (unaryOp.opType) {
             PrefixUnaryOpType.ADDRESS -> visitExpression(unaryOp.primary, false)
@@ -488,7 +529,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             PostfixUnaryOpType.INC -> visitIncOrDec(unaryOp, ArithmeticBinaryOp.Add)
             PostfixUnaryOpType.DEC -> visitIncOrDec(unaryOp, ArithmeticBinaryOp.Sub)
-            PrefixUnaryOpType.NEG -> {
+            PrefixUnaryOpType.INC  -> visitPrefixIncOrDec(unaryOp, ArithmeticBinaryOp.Add)
+            PrefixUnaryOpType.DEC  -> visitPrefixIncOrDec(unaryOp, ArithmeticBinaryOp.Sub)
+            PrefixUnaryOpType.NEG  -> {
                 val value = visitExpression(unaryOp.primary, true)
                 val type = unaryOp.resolveType(typeHolder)
                 val valueType = mb.toIRType<NonTrivialType>(typeHolder, type)

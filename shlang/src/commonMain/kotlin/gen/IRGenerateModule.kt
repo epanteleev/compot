@@ -65,6 +65,14 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 mb.addConstant(global)
                 varStack[decl.name()] = global
             }
+            is CArrayType -> {
+                val irType = mb.toIRType<ArrayType>(typeHolder, type)
+                val zero = Constant.of(irType.elementType(), 0 )
+                val elements = generateSequence { zero }.take(irType.size).toList()
+                val global = ArrayGlobalConstant(decl.name(), irType, elements)
+                mb.addConstant(global)
+                varStack[decl.name()] = global
+            }
             else -> throw IRCodeGenError("Function or struct expected, but was '$type'")
         }
     }

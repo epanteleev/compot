@@ -58,7 +58,9 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, second, dst)
+        asm.mov(size, first, temp1)
+        asm.cmovcc(size, matchIntCondition(), temp1, dst)
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
@@ -75,6 +77,7 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
         if (first == second) {
+            asm.mov(size, first, dst)
             return
         }
         asm.mov(size, second, dst)

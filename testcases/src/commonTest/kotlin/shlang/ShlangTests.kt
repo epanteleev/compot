@@ -179,6 +179,12 @@ abstract class ShlangTests: CommonCTest() {
         assertEquals(0, result.exitCode)
     }
 
+    @Test
+    fun testSizeofTypes() {
+        val result = runCTest("shlang/sizeof_types", listOf("runtime/runtime.c"), options())
+        assertEquals(0, result.exitCode)
+    }
+
     @Ignore
     fun testGOTO() {
         val result = runCTest("shlang/goto", listOf("runtime/runtime.c"), options())

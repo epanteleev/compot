@@ -31,6 +31,9 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
             typeHolder.addTypedef(name(), pointerType)
         } else {
             typeHolder.addVar(name(), pointerType)
+            if (pointerType is CFunctionType) {
+                typeHolder.addFunctionType(name(), pointerType)
+            }
         }
         return pointerType
     }

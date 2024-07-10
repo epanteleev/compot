@@ -24,7 +24,13 @@ class CompilationUnit: CompiledModule() {
             }
             is AggregateConstant -> {
                 val types = globalValue.elements().map { convertToSymbolType(it) }
-                val data  = globalValue.elements().map { it.toString() }
+                val data  = globalValue.elements().map {
+                    if (it is NullValue) {
+                        return@map "0"
+                    } else {
+                        return@map it.toString()
+                    }
+                }
                 symbols.add(ObjSymbol(globalValue.name(), data, types))
             }
             else -> symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue)))
@@ -86,6 +92,7 @@ class CompilationUnit: CompiledModule() {
             is U8Value  -> SymbolType.Byte
             is F32Value -> SymbolType.Long
             is F64Value -> SymbolType.Quad
+            is NullValue -> SymbolType.Quad
             else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue:${globalValue.type()}")
         }
     }
