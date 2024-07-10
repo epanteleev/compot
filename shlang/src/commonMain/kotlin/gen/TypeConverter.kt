@@ -1,11 +1,13 @@
 package gen
 
+import ir.Definitions.WORD_SIZE
 import types.*
 import ir.types.*
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
 import ir.value.Constant
 import ir.value.Value
+import ir.value.asType
 
 
 object TypeConverter {
@@ -90,6 +92,13 @@ object TypeConverter {
         }
     }
 
+    fun FunctionDataBuilder.toIndexType(value: Value): Value {
+        if (value.asType<NonTrivialType>().sizeOf() >= WORD_SIZE) {
+            return value
+        }
+        return convertToType(value, Type.I64)
+    }
+
    fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {
         if (value.type() == toType) {
             return value
@@ -167,8 +176,8 @@ object TypeConverter {
                     Type.I16 -> sext(value, toType)
                     Type.I32 -> sext(value, toType)
                     Type.U8  -> {
-                        val tmp = sext(value, Type.I64)
-                        trunc(tmp, toType)
+                        val tmp = zext(value, Type.U64)
+                        bitcast(tmp, toType)
                     }
                     Type.U16 -> {
                         val tmp = zext(value, Type.U64)

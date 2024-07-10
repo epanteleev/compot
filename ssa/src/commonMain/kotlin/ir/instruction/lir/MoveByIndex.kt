@@ -1,6 +1,7 @@
 package ir.instruction.lir
 
 import common.assertion
+import ir.Definitions.WORD_SIZE
 import ir.types.*
 import ir.value.Value
 import ir.instruction.Identity
@@ -16,29 +17,19 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
         return "$NAME ${source().type()} ${destination()}: ${source()}, ${index()}"
     }
 
-    fun index(): Value {
+    private inline fun getOperand(idx: Int): Value {
         assertion(operands.size == 3) {
             "size should be 2 in $this instruction"
         }
 
-        return operands[1]
+        return operands[idx]
     }
 
-    fun destination(): Value {
-        assertion(operands.size == 3) {
-            "size should be 2 in $this instruction"
-        }
+    fun index(): Value = getOperand(1)
 
-        return operands[0]
-    }
+    fun destination(): Value = getOperand(0)
 
-    fun source(): Value {
-        assertion(operands.size == 3) {
-            "size should be 2 in $this instruction"
-        }
-
-        return operands[2]
-    }
+    fun source(): Value = getOperand(2)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -82,7 +73,7 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
             if (type !is IntegerType) {
                 return false
             }
-            return true
+            return type.sizeOf() >= WORD_SIZE
         }
     }
 }

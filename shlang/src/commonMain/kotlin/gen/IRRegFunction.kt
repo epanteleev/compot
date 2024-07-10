@@ -9,6 +9,7 @@ import ir.instruction.Alloc
 import ir.module.block.Label
 import gen.TypeConverter.convertToType
 import gen.TypeConverter.toIRType
+import gen.TypeConverter.toIndexType
 import ir.global.StringLiteralConstant
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
@@ -197,7 +198,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val arrayType = arrayAccess.resolveType(typeHolder)
         val elementType = mb.toIRType<NonTrivialType>(typeHolder, arrayType)
 
-        val adr = ir().gep(array, elementType, index)
+        val convertedIndex = ir().toIndexType(index)
+        val adr = ir().gep(array, elementType, convertedIndex)
         if (!isRvalue) {
             return adr
         }
