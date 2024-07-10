@@ -44,7 +44,16 @@ class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: Ass
     }
 
     override fun aa(dst: Address, src: Address) {
-        TODO("Not yet implemented")
+        if (fromTypeSize == 4 && toTypeSize == 8) {
+            if (dst == src) {
+                return
+            }
+            asm.mov(fromTypeSize, src, temp1)
+            asm.mov(toTypeSize, temp1, dst)
+        } else {
+            asm.movzext(fromTypeSize, toTypeSize, src, temp1)
+            asm.mov(toTypeSize, temp1, dst)
+        }
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
@@ -52,7 +61,7 @@ class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: Ass
     }
 
     override fun ai(dst: Address, src: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(toTypeSize, src, dst)
     }
 
     override fun default(dst: Operand, src: Operand) {
