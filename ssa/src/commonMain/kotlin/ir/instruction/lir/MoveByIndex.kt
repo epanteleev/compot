@@ -1,22 +1,27 @@
 package ir.instruction.lir
 
 import common.assertion
+import ir.Definitions.WORD_SIZE
 import ir.value.Value
 import ir.instruction.Identity
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
+import ir.types.IntegerType
+import ir.types.NonTrivialType
+import ir.types.PointerType
+import ir.types.PrimitiveType
 
 
-class MoveByIndex private constructor(id: Identity, owner: Block, destination: Value, source: Value, index: Value):
-    Instruction(id, owner, arrayOf(destination, source, index)) {
+class MoveByIndex private constructor(id: Identity, owner: Block, destination: Value, index: Value, source: Value):
+    Instruction(id, owner, arrayOf(destination, index, source)) {
 
     override fun dump(): String {
-        val fromValue = source()
-        return "$NAME ${fromValue.type()} ${destination()}:${index()} $fromValue"
+        val fromValue = index()
+        return "$NAME ${fromValue.type()} ${destination()}:${source()} $fromValue"
     }
 
-    fun source(): Value {
+    fun index(): Value {
         assertion(operands.size == 3) {
             "size should be 2 in $this instruction"
         }
@@ -32,7 +37,7 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
         return operands[0]
     }
 
-    fun index(): Value {
+    fun source(): Value {
         assertion(operands.size == 3) {
             "size should be 2 in $this instruction"
         }
@@ -45,11 +50,11 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
         if (other == null || this::class != other::class) return false
 
         other as Move
-        return source() == other.source() && destination() == other.destination()
+        return index() == other.source() && destination() == other.destination()
     }
 
     override fun hashCode(): Int {
-        return source().type().hashCode() xor destination().type().hashCode()
+        return index().type().hashCode() xor destination().type().hashCode()
     }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
@@ -59,20 +64,30 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
     companion object {
         const val NAME = "move"
 
-        fun make(id: Identity, owner: Block, dst: Value, src: Value, index: Value): MoveByIndex {
-            require(isAppropriateType(dst, src)) {
-                "inconsistent types: toValue=$dst:${dst.type()}, base=$src:${src.type()}"
+        fun make(id: Identity, owner: Block, dst: Value, index: Value, src: Value): MoveByIndex {
+            require(isAppropriateType(dst, index, src)) {
+                "inconsistent types: dst=$dst:${dst.type()}, index=$index:${index.type()}, src=$src:${src.type()}"
             }
 
-            return registerUser(MoveByIndex(id, owner, dst, src, index), dst, src, index)
+            return registerUser(MoveByIndex(id, owner, dst, index, src), dst, index, src)
         }
 
         fun typeCheck(copy: MoveByIndex): Boolean {
-            return isAppropriateType(copy.destination(), copy.source())
+            return isAppropriateType(copy.destination(), copy.index(), copy.source())
         }
 
-        private fun isAppropriateType(toValue: Value, fromValue: Value): Boolean {
-            return true //TODO
+        private fun isAppropriateType(toValue: Value, index: Value, src: Value): Boolean {
+            if (toValue.type() !is PointerType) {
+                return false
+            }
+            if (src.type() !is PrimitiveType) {
+                return false
+            }
+            val type = index.type()
+            if (type !is IntegerType) {
+                return false
+            }
+            return true
         }
     }
 }

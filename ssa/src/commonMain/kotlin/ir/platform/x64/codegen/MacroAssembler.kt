@@ -3,8 +3,8 @@ package ir.platform.x64.codegen
 import asm.x64.*
 import asm.x64.GPRegister.rdx
 import common.assertion
+import ir.Definitions.QWORD_SIZE
 import ir.instruction.*
-import ir.platform.x64.CallConvention.QWORD_SIZE
 
 
 data class MacroAssemblerException(override val message: String): Exception(message)

@@ -10,6 +10,7 @@ import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.assertion
+import ir.Definitions.POINTER_SIZE
 import ir.value.BoolValue
 import ir.value.LocalValue
 import ir.value.UndefinedValue
@@ -25,7 +26,6 @@ import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
 import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.retReg
@@ -525,11 +525,11 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(move: MoveByIndex) {
-        val source      = valueToRegister.operand(move.source())
+        val source      = valueToRegister.operand(move.index())
         val destination = valueToRegister.operand(move.destination())
 
-        val type = move.source().type() as PrimitiveType
-        val movIdx = move.index()
+        val type = move.index().type() as PrimitiveType
+        val movIdx = move.source()
         val index = valueToRegister.operand(movIdx)
         MoveByIndexCodegen(type, movIdx.asType(), asm)(destination, source, index)
     }

@@ -2,7 +2,6 @@ package ir.module.auxiliary
 
 import common.forEachWith
 import common.intMapOf
-import ir.*
 import ir.global.GlobalSymbol
 import ir.instruction.*
 import ir.instruction.Copy
@@ -412,9 +411,9 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<L
     }
 
     override fun visit(move: MoveByIndex): ValueInstruction? {
-        val fromValue = mapUsage<Value>(move.source())
+        val fromValue = mapUsage<Value>(move.index())
         val toValue   = mapUsage<Value>(move.destination())
-        val index     = mapUsage<Value>(move.index())
+        val index     = mapUsage<Value>(move.source())
 
         bb().move(toValue, fromValue, index)
         return null

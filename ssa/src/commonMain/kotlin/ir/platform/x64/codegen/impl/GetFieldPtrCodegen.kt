@@ -2,8 +2,8 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.types.*
+import ir.Definitions.POINTER_SIZE
 import ir.instruction.GetElementPtr
-import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 

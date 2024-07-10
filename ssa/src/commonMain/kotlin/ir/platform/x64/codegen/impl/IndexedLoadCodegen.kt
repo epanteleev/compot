@@ -1,9 +1,9 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
+import ir.Definitions.POINTER_SIZE
 import ir.types.*
 import ir.instruction.lir.IndexedLoad
-import ir.platform.x64.CallConvention.POINTER_SIZE
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.*
 

@@ -4,8 +4,8 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.ArithmeticBinaryOp
 import asm.x64.GPRegister.*
-import ir.platform.x64.CallConvention.POINTER_SIZE
-import ir.platform.x64.CallConvention.WORD_SIZE
+import ir.Definitions.POINTER_SIZE
+import ir.Definitions.WORD_SIZE
 import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
