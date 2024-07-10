@@ -3,6 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.IntegerType
 import ir.instruction.Truncate
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
@@ -32,7 +33,8 @@ data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, v
     }
 
     override fun aa(dst: Address, src: Address) {
-        TODO("Not yet implemented")
+        asm.mov(fromSize, src, temp1)
+        asm.mov(toSize, temp1, dst)
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {

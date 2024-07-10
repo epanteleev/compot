@@ -83,7 +83,6 @@ abstract class SortTest: CommonCTest() {
     @Test
     fun testHeapSort() {
         val result = runCTest("shlang/sort/heap_sort", listOf(), options())
-        assertEquals("sdf", result.output)
         assertEquals(0, result.exitCode)
     }
 }

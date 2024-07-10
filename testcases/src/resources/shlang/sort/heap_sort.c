@@ -22,16 +22,16 @@
 #include <stdio.h>    /// for IO operations
 #include <stdlib.h>   /// for dynamic memory allocation
 #include <time.h>     /// for random numbers generation
-#include <inttypes.h> /// for unsigned int, int
+#include <inttypes.h> /// for uint8_t, int8_t
 
 /**
  * @brief Swapped two numbers using pointer
  * @param first pointer of first number
  * @param second pointer of second number
  */
-void swap(int *first, int *second)
+void swap(int8_t *first, int8_t *second)
 {
-    int temp = *first;
+    int8_t temp = *first;
     *first = *second;
     *second = temp;
 }
@@ -45,13 +45,13 @@ void swap(int *first, int *second)
  * @param size size of array
  * @return void
 */
-void heapifyDown(int *arr, const unsigned int size)
+void heapifyDown(int8_t *arr, const uint8_t size)
 {
-    unsigned int i = 0;
+    uint8_t i = 0;
 
     while (2 * i + 1 < size)
     {
-        unsigned int maxChild = 2 * i + 1;
+        uint8_t maxChild = 2 * i + 1;
 
         if (2 * i + 2 < size && arr[2 * i + 2] > arr[maxChild])
         {
@@ -79,7 +79,7 @@ void heapifyDown(int *arr, const unsigned int size)
  * @param i index of the pushed element
  * @return void
 */
-void heapifyUp(int *arr, unsigned int i)
+void heapifyUp(int8_t *arr, uint8_t i)
 {
     while (i > 0 && arr[(i - 1) / 2] < arr[i])
     {
@@ -94,14 +94,14 @@ void heapifyUp(int *arr, unsigned int i)
  * @param size size of the array
  * @returns void
  */
-void heapSort(int *arr, const unsigned int size)
+void heapSort(int8_t *arr, const uint8_t size)
 {
     if (size <= 1)
     {
         return;
     }
 
-    for (unsigned int i = 0; i < size; i++)
+    for (uint8_t i = 0; i < size; i++)
     {
         // Pushing `arr[i]` to the heap
 
@@ -109,7 +109,7 @@ void heapSort(int *arr, const unsigned int size)
         heapifyUp(arr, i);
     }
 
-    for (unsigned int i = size - 1; i >= 1; i--)
+    for (uint8_t i = size - 1; i >= 1; i--)
     {
         // Moving current root to the end
         swap(&arr[0], &arr[i]);
@@ -126,17 +126,16 @@ void heapSort(int *arr, const unsigned int size)
  */
 static void test()
 {
-    const unsigned int size = 10;
-    int *arr = (int *)calloc(size, sizeof(int));
+    const uint8_t size = 10;
+    int8_t *arr = (int8_t *)calloc(size, sizeof(int8_t));
 
     /* generate size random numbers from 0 to 100 */
-    for (unsigned int i = 0; i < size; i++)
+    for (uint8_t i = 0; i < size; i++)
     {
-        arr[i] = rand() & (64 - 1);
-        printf("%d ", arr[i]);
+        arr[i] = rand() & 63;
     }
     heapSort(arr, size);
-    for (unsigned int i = 0; i < size - 1; ++i)
+    for (uint8_t i = 0; i < size - 1; ++i)
     {
         assert(arr[i] <= arr[i + 1]);
     }
@@ -149,7 +148,6 @@ static void test()
  */
 int main()
 {
-    printf("Enter the size of the array\n");
     // Intializes random number generator
     srand(333);
 

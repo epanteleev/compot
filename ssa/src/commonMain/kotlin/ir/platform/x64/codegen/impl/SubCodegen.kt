@@ -64,7 +64,8 @@ data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
         if (dst == first) {
             asm.sub(size, second, dst)
         } else {
-            asm.lea(size, Address.from(first, -second.value().toInt()), dst)
+            asm.mov(size, first, dst)
+            asm.sub(size, second, dst)
         }
     }
 

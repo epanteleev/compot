@@ -5,6 +5,7 @@
 
 int main() {
     assert(sizeof(int8_t) == 1);
+    assert(sizeof(uint8_t) == 1);
 
     return 0;
 }

@@ -6,22 +6,31 @@ import ir.instruction.ZeroExtend
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class ZeroExtendCodegen(val fromType: IntegerType, val asm: Assembler): GPOperandsVisitorUnaryOp {
-    private val typeSize = fromType.sizeOf()
+class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: Assembler): GPOperandsVisitorUnaryOp {
+    private val fromTypeSize = fromType.sizeOf()
+    private val toTypeSize = toType.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {
         GPOperandsVisitorUnaryOp.apply(dst, src, this)
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {
-        if (dst == src) {
-            return
+        if (fromTypeSize == 4 && toTypeSize == 8) {
+            if (dst == src) {
+                return
+            }
+            asm.mov(fromTypeSize, src, dst)
+        } else {
+            asm.movzext(fromTypeSize, toTypeSize, src, dst)
         }
-        asm.mov(typeSize, src, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {
-        asm.mov(typeSize, src, dst)
+        if (fromTypeSize == 4 && toTypeSize == 8) {
+            asm.mov(fromTypeSize, src, dst)
+        } else {
+            asm.movzext(fromTypeSize, toTypeSize, src, dst)
+        }
     }
 
     override fun ar(dst: Address, src: GPRegister) {
@@ -33,7 +42,7 @@ data class ZeroExtendCodegen(val fromType: IntegerType, val asm: Assembler): GPO
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(toTypeSize, src, dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {

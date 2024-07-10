@@ -178,6 +178,9 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val typeTrue   = eTrue.resolveType(typeHolder)
         val typeFalse  = eFalse.resolveType(typeHolder)
+        if (typeTrue == typeFalse && typeTrue == CType.VOID) {
+            return@memoize CType.VOID
+        }
         val commonType = CType.interfereTypes(typeTrue, typeFalse)
         return@memoize commonType
     }

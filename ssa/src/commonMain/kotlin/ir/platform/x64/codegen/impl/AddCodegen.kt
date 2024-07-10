@@ -40,9 +40,8 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
         if (dst == second) {
             asm.add(size, first, second)
         } else {
-            asm.mov(size, first, temp1)
-            asm.add(size, second, temp1)
-            asm.mov(size, temp1, dst)
+            asm.mov(size, first, dst)
+            asm.add(size, second, dst)
         }
     }
 
@@ -63,7 +62,8 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
         if (dst == first) {
             asm.add(size, second, dst)
         } else {
-            asm.lea(size, Address.from(first, second.value().toInt()), dst)
+            asm.mov(size, first, dst)
+            asm.add(size, second, dst)
         }
     }
 

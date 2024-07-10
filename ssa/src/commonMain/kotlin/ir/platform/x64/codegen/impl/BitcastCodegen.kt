@@ -3,6 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Bitcast
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
@@ -29,19 +30,20 @@ data class BitcastCodegen (val type: PrimitiveType, val asm: Assembler): GPOpera
     }
 
     override fun ar(dst: Address, src: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, src, dst)
     }
 
     override fun aa(dst: Address, src: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, src, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, src, dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, src, dst)
     }
 
     override fun default(dst: Operand, src: Operand) {

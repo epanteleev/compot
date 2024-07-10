@@ -87,13 +87,32 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitConditional(conditional: Conditional): Value {
-        val onTrue    = visitExpression(conditional.eTrue, true)
-        val onFalse   = visitExpression(conditional.eFalse, true)
-        val condition = makeConditionFromExpression(conditional.cond)
-        val commonType = mb.toIRType<PrimitiveType>(typeHolder, conditional.resolveType(typeHolder))
-        val select = ir().select(condition, commonType, onTrue, onFalse)
+        val commonType = mb.toIRType<Type>(typeHolder, conditional.resolveType(typeHolder))
+        if (commonType == Type.Void) {
+            val condition = makeConditionFromExpression(conditional.cond)
+            val thenBlock = ir().createLabel()
+            val elseBlock = ir().createLabel()
+            val exitBlock = ir().createLabel()
 
-        return select
+            ir().branchCond(condition, thenBlock, elseBlock)
+            ir().switchLabel(thenBlock)
+            visitExpression(conditional.eTrue, true)
+            ir().branch(exitBlock)
+
+            ir().switchLabel(elseBlock)
+            visitExpression(conditional.eFalse, true)
+            ir().branch(exitBlock)
+
+            ir().switchLabel(exitBlock)
+            return Value.UNDEF
+
+        } else {
+            val onTrue    = visitExpression(conditional.eTrue, true)
+            val onFalse   = visitExpression(conditional.eFalse, true)
+            val condition = makeConditionFromExpression(conditional.cond)
+            commonType as PrimitiveType
+            return ir().select(condition, commonType, onTrue, onFalse)
+        }
     }
 
     private fun visitInitializerList(ptr: Value, type: AggregateType, initializerList: InitializerList): Value {

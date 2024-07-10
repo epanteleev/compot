@@ -621,7 +621,9 @@ private class CodeEmitter(private val data: FunctionData,
     override fun visit(zext: ZeroExtend) {
         val dst = valueToRegister.operand(zext)
         val src = valueToRegister.operand(zext.value())
-        ZeroExtendCodegen(zext.value().asType<IntegerType>(), asm)(dst, src)
+        val toType   = zext.asType<IntegerType>()
+        val fromType = zext.value().asType<IntegerType>()
+        ZeroExtendCodegen(fromType, toType, asm)(dst, src)
     }
 
     override fun visit(sext: SignExtend) {
