@@ -411,11 +411,11 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<L
     }
 
     override fun visit(move: MoveByIndex): ValueInstruction? {
-        val fromValue = mapUsage<Value>(move.index())
-        val toValue   = mapUsage<Value>(move.destination())
-        val index     = mapUsage<Value>(move.source())
+        val index   = mapUsage<Value>(move.index())
+        val toValue = mapUsage<Value>(move.destination())
+        val source  = mapUsage<Value>(move.source())
 
-        bb().move(toValue, fromValue, index)
+        bb().move(toValue, index, source)
         return null
     }
 

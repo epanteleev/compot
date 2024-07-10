@@ -1,6 +1,5 @@
 package ir.module.block
 
-import ir.*
 import ir.value.Value
 import ir.types.*
 import ir.instruction.*
@@ -395,8 +394,8 @@ class Block(override val index: Int):
         return withOutput { Move.make(it, this, dst, fromValue) }
     }
 
-    override fun move(dst: Value, base: Value, index: Value): MoveByIndex {
-        return withOutput { MoveByIndex.make(it, this, dst, base, index) }
+    override fun move(dst: Value, index: Value, src: Value): MoveByIndex {
+        return withOutput { MoveByIndex.make(it, this, dst, index, src) }
     }
 
     override fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad {

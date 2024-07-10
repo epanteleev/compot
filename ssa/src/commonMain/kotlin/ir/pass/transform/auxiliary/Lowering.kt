@@ -95,7 +95,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
             when {
                 store(gfpOrGep(generate().not(), nop()), nop()) (inst) -> { inst as Store
                     val pointer = inst.pointer().asValue<ValueInstruction>()
-                    val move = bb.update(inst) { it.move(getSource(pointer), inst.value(), getIndex(pointer)) }
+                    val move = bb.update(inst) { it.move(getSource(pointer), getIndex(pointer), inst.value()) }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer
                     }

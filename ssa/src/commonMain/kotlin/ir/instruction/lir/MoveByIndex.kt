@@ -1,24 +1,19 @@
 package ir.instruction.lir
 
 import common.assertion
-import ir.Definitions.WORD_SIZE
+import ir.types.*
 import ir.value.Value
 import ir.instruction.Identity
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
-import ir.types.IntegerType
-import ir.types.NonTrivialType
-import ir.types.PointerType
-import ir.types.PrimitiveType
 
 
 class MoveByIndex private constructor(id: Identity, owner: Block, destination: Value, index: Value, source: Value):
     Instruction(id, owner, arrayOf(destination, index, source)) {
 
     override fun dump(): String {
-        val fromValue = index()
-        return "$NAME ${fromValue.type()} ${destination()}:${source()} $fromValue"
+        return "$NAME ${source().type()} ${destination()}: ${source()}, ${index()}"
     }
 
     fun index(): Value {

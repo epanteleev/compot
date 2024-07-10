@@ -57,7 +57,7 @@ interface InternalInstructionFabric {
     fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi
     fun copy(value: Value): Copy
     fun move(dst: Generate, fromValue: Value): Move
-    fun move(dst: Value, base: Value, index: Value): MoveByIndex
+    fun move(dst: Value, index: Value, src: Value): MoveByIndex
     fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad
     fun storeOnStack(destination: Value, index: Value, source: Value): StoreOnStack
     fun loadFromStack(origin: Value, loadedType: PrimitiveType, index: Value): LoadFromStack

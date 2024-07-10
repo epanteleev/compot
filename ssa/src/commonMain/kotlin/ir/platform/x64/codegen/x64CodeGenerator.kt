@@ -520,21 +520,21 @@ private class CodeEmitter(private val data: FunctionData,
         val source      = valueToRegister.operand(move.source())
         val destination = valueToRegister.operand(move.destination())
 
-        val type = move.source().type() as PrimitiveType
+        val type = move.source().asType<PrimitiveType>()
         MoveCodegen(type, asm)(destination, source)
     }
 
     override fun visit(move: MoveByIndex) {
-        val source      = valueToRegister.operand(move.index())
+        val index       = valueToRegister.operand(move.index())
         val destination = valueToRegister.operand(move.destination())
 
-        val type = move.index().type() as PrimitiveType
-        val movIdx = move.source()
-        val index = valueToRegister.operand(movIdx)
-        MoveByIndexCodegen(type, movIdx.asType(), asm)(destination, source, index)
+        val indexType  = move.index().asType<PrimitiveType>()
+        val sourceType = move.source().asType<PrimitiveType>()
+        val srcOperand = valueToRegister.operand(move.source())
+        MoveByIndexCodegen(sourceType, indexType, asm)(destination, srcOperand, index)
     }
 
-    fun getState(call: Callable): SavedContext {
+    private fun getState(call: Callable): SavedContext {
         // Any callable instruction is TerminateInstruction
         // so that we can easily get the caller save registers
         // from the live-out of the block

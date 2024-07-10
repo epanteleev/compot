@@ -1,15 +1,12 @@
 package ir.platform.x64.pass.transform
 
+import ir.value.*
+import ir.types.*
 import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
-import ir.types.FloatingPointType
-import ir.types.Type
-import ir.value.Constant
-import ir.value.F32Value
-import ir.value.F64Value
 
 
 class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
@@ -40,13 +37,7 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
                 return inst
             }
 
-            val xor = bb.insertBefore(inst) {
-                it.arithmeticBinary(inst.operand(), ArithmeticBinaryOp.Xor, minusZero(type))
-            }
-
-            inst.replaceUsages(xor)
-            bb.kill(inst)
-            return xor
+            return bb.update(inst) { it.arithmeticBinary(inst.operand(), ArithmeticBinaryOp.Xor, minusZero(type)) }
         }
 
         bb.transform { inst -> closure(bb, inst) }
