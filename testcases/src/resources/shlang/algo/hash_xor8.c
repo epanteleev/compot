@@ -34,7 +34,8 @@ uint8_t xor8(const char* s)
  */
 void test_xor8()
 {
-    assert(xor8("Hello World") == 228);
+    uint8_t res = xor8("Hello World");
+    assert(res == 228);
     assert(xor8("Hello World!") == 195);
     assert(xor8("Hello world") == 196);
     assert(xor8("Hello world!") == 163);

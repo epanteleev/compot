@@ -9,17 +9,19 @@ import ir.module.block.Block
 
 class Truncate private constructor(id: Identity, owner: Block, toType: IntegerType, value: Value):
     ValueInstruction(id, owner, toType, arrayOf(value)) {
-    override fun dump(): String {
-        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
-    }
-
-    fun value(): Value {
+    private fun checkedGet(index: Int): Value {
         assertion(operands.size == 1) {
             "size should be 1 in $this instruction"
         }
 
-        return operands[0]
+        return operands[index]
     }
+
+    override fun dump(): String {
+        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
+    }
+
+    fun value(): Value = checkedGet(0)
 
     override fun type(): IntegerType {
         return tp as IntegerType
@@ -42,10 +44,13 @@ class Truncate private constructor(id: Identity, owner: Block, toType: IntegerTy
         }
 
         private fun isAppropriateType(toType: IntegerType, valueType: Type): Boolean {
-            if (valueType !is IntegerType) {
+            val isSameSign = (toType is SignedIntType && valueType is SignedIntType) ||
+                    (toType is UnsignedIntType && valueType is UnsignedIntType)
+            if (!isSameSign) {
                 return false
             }
 
+            valueType as IntegerType
             return toType.sizeOf() < valueType.sizeOf()
         }
 

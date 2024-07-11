@@ -152,8 +152,8 @@ object TypeConverter {
                     Type.I16 -> sext(value, toType)
                     Type.I64 -> trunc(value, toType)
                     Type.U8  -> {
-                        val bitcast = bitcast(value, Type.I8)
-                        sext(bitcast, Type.I32)
+                        val bitcast = zext(value, Type.U32)
+                        bitcast(bitcast, Type.I32)
                     }
                     Type.U16 -> {
                         val tmp = zext(value, Type.U32)
@@ -201,7 +201,10 @@ object TypeConverter {
                     Type.U1 -> flag2int(value, toType)
                     Type.I8  -> bitcast(value, toType)
                     Type.I16 -> trunc(value, toType)
-                    Type.I32 -> trunc(value, toType)
+                    Type.I32 -> {
+                        val bitcast = trunc(value, Type.I8)
+                        bitcast(bitcast, Type.U8)
+                    }
                     Type.I64 -> trunc(value, toType)
                     Type.U16 -> trunc(value, toType)
                     Type.U32 -> trunc(value, toType)
@@ -225,7 +228,10 @@ object TypeConverter {
                     Type.U1 -> flag2int(value, toType)
                     Type.I8  -> trunc(value, toType)
                     Type.I16 -> bitcast(value, toType)
-                    Type.I32 -> trunc(value, toType)
+                    Type.I32 -> {
+                        val bitcast = bitcast(value, Type.U32)
+                        trunc(bitcast, toType)
+                    }
                     Type.I64 -> trunc(value, toType)
                     Type.U8  -> trunc(value, toType)
                     Type.U32 -> trunc(value, toType)
@@ -250,7 +256,10 @@ object TypeConverter {
                     Type.I8  -> trunc(value, toType)
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> bitcast(value, toType)
-                    Type.I64 -> trunc(value, toType)
+                    Type.I64 -> {
+                        val bitcast = bitcast(value, Type.U64)
+                        trunc(bitcast, Type.U32)
+                    }
                     Type.U8  -> zext(value, toType)
                     Type.U16 -> zext(value, toType)
                     Type.U64 -> trunc(value, toType)

@@ -1,16 +1,25 @@
 package ir.instruction.lir
 
-import common.assertion
-import ir.value.Value
 import ir.types.*
+import ir.value.Value
+import common.assertion
 import ir.instruction.Identity
+import ir.Definitions.WORD_SIZE
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
+import ir.value.asType
 
 
 class IndexedLoad private constructor(id: Identity, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value):
     ValueInstruction(id, owner, loadedType, arrayOf(origin, index)) {
+    private inline fun checkedGet(index: Int): Value {
+        assertion(operands.size == 2) {
+            "size should be 1 in $this instruction"
+        }
+
+        return operands[index]
+    }
 
     override fun type(): PrimitiveType {
         return tp as PrimitiveType
@@ -20,21 +29,9 @@ class IndexedLoad private constructor(id: Identity, owner: Block, loadedType: Pr
         return "%${name()} = $NAME $tp ${origin()}, ${index().type()} ${index()}"
     }
 
-    fun origin(): Value {
-        assertion(operands.size == 2) {
-            "size should be 1 in $this instruction"
-        }
+    fun origin(): Value = checkedGet(0)
 
-        return operands[0]
-    }
-
-    fun index(): Value {
-        assertion(operands.size == 2) {
-            "size should be 2 in $this instruction"
-        }
-
-        return operands[1]
-    }
+    fun index(): Value = checkedGet(1)
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -45,7 +42,7 @@ class IndexedLoad private constructor(id: Identity, owner: Block, loadedType: Pr
 
         fun make(id: Identity, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value): IndexedLoad {
             val originType = origin.type()
-            require(isAppropriateType(originType, index.type())) {
+            require(isAppropriateType(loadedType, origin, index)) {
                 "should not be $originType, but origin=$origin:$originType"
             }
 
@@ -53,11 +50,21 @@ class IndexedLoad private constructor(id: Identity, owner: Block, loadedType: Pr
         }
 
         fun typeCheck(copy: IndexedLoad): Boolean {
-            return isAppropriateType(copy.origin().type(), copy.index().type())
+            return isAppropriateType(copy.type(), copy.origin(), copy.index())
         }
 
-        private fun isAppropriateType(originType: Type, index: Type): Boolean {
-            return originType is PointerType && index is ArithmeticType
+        private fun isAppropriateType(loadedType: Type, origin: Value, index: Value): Boolean {
+            if (origin.type() !is PointerType) {
+                return false
+            }
+            if (loadedType !is PrimitiveType) {
+                return false
+            }
+            if (index.type() !is ArithmeticType) {
+                return false
+            }
+
+            return index.asType<NonTrivialType>().sizeOf() >= WORD_SIZE
         }
     }
 }

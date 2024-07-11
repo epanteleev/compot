@@ -34,6 +34,9 @@ data class BitcastCodegen (val type: PrimitiveType, val asm: Assembler): GPOpera
     }
 
     override fun aa(dst: Address, src: Address) {
+        if (dst == src) {
+            return
+        }
         asm.mov(size, src, temp1)
         asm.mov(size, temp1, dst)
     }
