@@ -267,8 +267,8 @@ class FunctionDataBuilderWithContext private constructor(
 
     fun gfp(name: LocalValueToken, type: AggregateTypeToken, sourceName: AnyValueToken, sourceType: PointerTypeToken, indexName: IntValue, indexType: IntegerTypeToken): GetFieldPtr {
         val source = getValue(sourceName, sourceType.type())
-        val index  = getValue(indexName, indexType.type()) as IntegerConstant
-        return memorize(name, bb.gfp(source, type.type(moduleBuilder), index))
+        val index  = getValue(indexName, indexType.type()) as IntegerConstant //TODO
+        return memorize(name, bb.gfp(source, type.type(moduleBuilder), arrayOf(index)))
     }
 
     fun bitcast(name: LocalValueToken, operandToken: AnyValueToken, operandType: PrimitiveTypeToken, resultType: PrimitiveTypeToken): Bitcast {

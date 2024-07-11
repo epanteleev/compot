@@ -32,7 +32,7 @@ interface InstructionFabric {
     fun ret(value: Value): Return
     fun retVoid(): ReturnVoid
     fun gep(source: Value, elementType: NonTrivialType, index: Value): GetElementPtr
-    fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr
+    fun gfp(source: Value, ty: AggregateType, indexes: Array<IntegerConstant>): GetFieldPtr
     fun flag2int(value: Value, ty: IntegerType): Flag2Int
     fun int2fp(value: Value, ty: FloatingPointType): Int2Float
     fun bitcast(value: Value, ty: PrimitiveType): Bitcast

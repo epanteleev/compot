@@ -50,15 +50,10 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 gep(generate(), nop()) (inst) -> { inst as GetElementPtr
                     return bb.update(inst) { it.leaStack(inst.source(), inst.basicType as PrimitiveType, inst.index()) }
                 }
-                gfp(generate(), nop()) (inst) -> { inst as GetFieldPtr
+                gfp(generate()) (inst) -> { inst as GetFieldPtr
                     return when (val base = inst.basicType) {
-                        is ArrayType -> {
-                            bb.update(inst) { it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index()) }
-                        }
-                        is StructType -> {
-                            bb.update(inst) { it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index().toInt()))) }
-                        }
-                        else -> inst
+                        is ArrayType -> bb.update(inst) { it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index(0)) }
+                        is StructType -> bb.update(inst) { it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index(0).toInt()))) }
                     }
                 }
             }
@@ -83,7 +78,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
             return when (inst) {
                 is GetElementPtr -> inst.index()
                 is GetFieldPtr -> {
-                    val index = inst.index().toInt()
+                    val index = inst.index(0).toInt()
                     val field = inst.basicType.field(index)
                     U64Value(inst.basicType.offset(index).toLong() / field.sizeOf())
                 }
@@ -120,9 +115,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 load(gfpOrGep(generate(), nop())) (inst) -> { inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
                     val index = getIndex(pointer)
-                    val copy = bb.update(inst) {
-                        it.loadFromStack(getSource(pointer), inst.type(), index)
-                    }
+                    val copy = bb.update(inst) { it.loadFromStack(getSource(pointer), inst.type(), index) }
                     if (pointer.usedIn().isEmpty()) { //TODO Need DCE
                         bb.kill(pointer) // TODO bb may not contain pointer
                     }

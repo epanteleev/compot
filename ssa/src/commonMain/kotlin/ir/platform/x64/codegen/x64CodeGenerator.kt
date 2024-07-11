@@ -599,7 +599,7 @@ private class CodeEmitter(private val data: FunctionData,
     override fun visit(gfp: GetFieldPtr) {
         val source = gfp.source()
         val sourceOperand = valueToRegister.operand(source)
-        val index         = valueToRegister.operand(gfp.index())
+        val index         = valueToRegister.operand(gfp.index(0))
         val dest          = valueToRegister.operand(gfp)
 
         GetFieldPtrCodegen(gfp.type(), gfp.basicType, asm)(dest, sourceOperand, index)

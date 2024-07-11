@@ -92,9 +92,7 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
             is DirectVarDeclarator -> {
                 return resolveAllDecl(baseType, typeHolder)
             }
-            else -> {
-                return CType.UNKNOWN
-            }
+            else -> return CType.UNKNOWN
         }
     }
 

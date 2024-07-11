@@ -122,8 +122,8 @@ class FunctionDataBuilder private constructor(
         return bb.gep(source, elementType, index)
     }
 
-    override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr {
-        return bb.gfp(source, ty, index)
+    override fun gfp(source: Value, ty: AggregateType, indexes: Array<IntegerConstant>): GetFieldPtr {
+        return bb.gfp(source, ty, indexes)
     }
 
     override fun flag2int(value: Value, ty: IntegerType): Flag2Int {

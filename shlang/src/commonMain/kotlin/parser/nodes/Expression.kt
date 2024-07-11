@@ -229,19 +229,30 @@ data class InitializerList(val initializers: List<Expression>) : Expression() {
             CType.interfereTypes(acc, type)
         }
         if (isSameType(types)) {
-            return@memoize CArrayType(CArrayBaseType(commonType, types.size.toLong()), emptyList())
-        } else {
-            val struct = StructBaseType("initializer")
-            for (i in initializers.indices) {
-                struct.addField("field$i", types[i])
-            }
-            return@memoize CStructType(struct, emptyList())
+            val base = CArrayBaseType(commonType, types.size.toLong())
+            return@memoize CArrayType(base, emptyList())
         }
+        val struct = StructBaseType("initializer")
+        for (i in initializers.indices) {
+            struct.addField("field$i", types[i])
+        }
+        return@memoize CStructType(struct, emptyList())
+    }
+
+    fun flatten(): List<Expression> {
+        val result = mutableListOf<Expression>()
+        for (init in initializers) {
+            if (init is InitializerList) {
+                result.addAll(init.flatten())
+            } else {
+                result.add(init)
+            }
+        }
+        return result
     }
 
     private fun isSameType(types: List<CType>): Boolean {
-        val first = types.first()
-        return types.all { it == first }
+        return types.all { it == types.first() }
     }
 }
 

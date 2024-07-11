@@ -372,7 +372,7 @@ class TypeResolutionTest {
         assertEquals("int[2][3]", parser.typeHolder().getTypeOrNull("A").toString())
     }
 
-    @Ignore
+    @Test
     fun testTypedef3() {
         val input = """
           typedef struct s1 { int x; } t1, *tp1;
@@ -387,6 +387,6 @@ class TypeResolutionTest {
         assertEquals("struct s1 {int x;}", typeHolder.getStructType("s1").toString())
         assertEquals("struct s2 {int x;}", typeHolder.getStructType("s2").toString())
         assertEquals("struct s1 {int x;}", typeHolder.getStructType("t1").toString())
-       // assertTrue { typeHolder.getStructType("tp1") is CPointerType } TODO
+        assertTrue { typeHolder.getTypedef("tp1") is CPointerType }
     }
 }

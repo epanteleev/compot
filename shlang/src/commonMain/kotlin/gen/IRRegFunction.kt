@@ -124,17 +124,31 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitInitializerList(ptr: Value, type: AggregateType, initializerList: InitializerList): Value {
-        for ((idx, init) in initializerList.initializers.withIndex()) {
-            val fieldPtr = ir().gfp(ptr, type, Constant.valueOf(Type.I64, idx))
-            val value = if (init is InitializerList) {
-                visitInitializerList(fieldPtr, type.field(idx) as AggregateType, init)
-            } else {
-                visitExpression(init, true)
-            }
+    private fun indexArray(type: ArrayType, idx: Int): Array<IntegerConstant> {
+        val indexes = mutableListOf<IntegerConstant>()
+        TODO()
+    }
 
-            val converted = ir().convertToType(value, type.field(idx))
-            ir().store(fieldPtr, converted)
+    private fun visitInitializerList(ptr: Value, type: AggregateType, initializerList: InitializerList): Value {
+        for ((idx, init) in initializerList.flatten().withIndex()) {
+            val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, idx))
+            val fieldPtr = ir().gfp(ptr, type, indexes)
+            val value = visitExpression(init, true)
+
+            when (val field = type.field(idx)) {
+                is PrimitiveType -> {
+                    val converted = ir().convertToType(value, field)
+                    ir().store(fieldPtr, converted)
+                }
+                is CompoundType -> {
+                    TODO()
+                }
+                is ArrayType -> {
+                    val converted = ir().convertToType(value, field.elementType() as PrimitiveType)
+                    ir().store(fieldPtr, converted)
+                }
+                else -> throw IRCodeGenError("Unknown field type, field=${field}")
+            }
         }
         return ptr
     }
@@ -147,7 +161,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val baseStructType = structType.dereference() as CBaseStructType
         val member = baseStructType.fieldIndex(arrowMemberAccess.ident.str())
 
-        val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
+        val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, member))
+        val gep = ir().gfp(struct, structIRType, indexes)
         if (!isRvalue) {
             return gep
         }
@@ -168,7 +183,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val member = structType.fieldIndex(memberAccess.memberName())
 
-        val gep = ir().gfp(struct, structIRType, Constant.valueOf(Type.I64, member))
+        val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, member))
+        val gep = ir().gfp(struct, structIRType, indexes)
         if (!isRvalue) {
             return gep
         }
@@ -586,15 +602,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitNumNode(numNode: NumNode): Constant {
-        val num = numNode.number.toNumberOrNull()
-        return when (num) {
-            is Byte  -> Constant.of(Type.I8, num as Number)
-            is UByte -> Constant.of(Type.U8, num.toLong())
-            is Int -> Constant.of(Type.I32, num as Number)
-            is UInt -> Constant.of(Type.U32, num.toLong())
-            is Long -> Constant.of(Type.I64, num as Number)
-            is ULong -> Constant.of(Type.U64, num.toLong())
-            is Float -> Constant.of(Type.F32, num as Number)
+        return when (val num = numNode.number.toNumberOrNull()) {
+            is Byte   -> Constant.of(Type.I8, num as Number)
+            is UByte  -> Constant.of(Type.U8, num.toLong())
+            is Int    -> Constant.of(Type.I32, num as Number)
+            is UInt   -> Constant.of(Type.U32, num.toLong())
+            is Long   -> Constant.of(Type.I64, num as Number)
+            is ULong  -> Constant.of(Type.U64, num.toLong())
+            is Float  -> Constant.of(Type.F32, num as Number)
             is Double -> Constant.of(Type.F64, num)
             else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}")
         }
@@ -865,8 +880,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val type    = typeHolder[declarator.name()]
         val varName = declarator.name()
 
-        val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
-        val rvalueAdr = ir().alloc(irType)
+        val irType        = mb.toIRType<NonTrivialType>(typeHolder, type)
+        val rvalueAdr     = ir().alloc(irType)
         varStack[varName] = rvalueAdr
         return rvalueAdr
     }

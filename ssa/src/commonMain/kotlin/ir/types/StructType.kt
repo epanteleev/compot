@@ -14,6 +14,8 @@ data class StructType internal constructor(val name: String, val fields: List<No
         return fields[index]
     }
 
+    override fun fields(): List<NonTrivialType> = fields
+
     override fun sizeOf(): Int {
         if (fields.isEmpty()) {
             return 0

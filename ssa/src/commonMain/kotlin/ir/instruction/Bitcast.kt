@@ -42,10 +42,13 @@ class Bitcast private constructor(id: Identity, owner: Block, toType: NonTrivial
         }
 
         private fun isAppropriateType(toType: Type, valueType: Type): Boolean {
-            return toType is NonTrivialType &&
-                    valueType is NonTrivialType &&
-                    valueType.sizeOf() == toType.sizeOf() &&
-                    toType !is FloatingPointType
+            if (toType !is IntegerType) {
+                return false
+            }
+            if (valueType !is IntegerType) {
+                return false
+            }
+            return valueType.sizeOf() == toType.sizeOf()
         }
 
         fun typeCheck(bitcast: Bitcast): Boolean {

@@ -291,8 +291,8 @@ class Block(override val index: Int):
         return withOutput { GetElementPtr.make(it, this, elementType, source, index) }
     }
 
-    override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr {
-        return withOutput { GetFieldPtr.make(it, this, ty, source, index) }
+    override fun gfp(source: Value, ty: AggregateType, indexes: Array<IntegerConstant>): GetFieldPtr {
+        return withOutput { GetFieldPtr.make(it, this, ty, source, indexes) }
     }
 
     override fun flag2int(value: Value, ty: IntegerType): Flag2Int {
