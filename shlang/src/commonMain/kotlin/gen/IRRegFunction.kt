@@ -127,7 +127,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitInitializerList(ptr: Value, type: AggregateType, initializerList: InitializerList): Value {
         for ((idx, init) in initializerList.initializers.withIndex()) {
             val fieldPtr = ir().gfp(ptr, type, Constant.valueOf(Type.I64, idx))
-            val value = visitExpression(init, true)
+            val value = if (init is InitializerList) {
+                visitInitializerList(fieldPtr, type.field(idx) as AggregateType, init)
+            } else {
+                visitExpression(init, true)
+            }
 
             val converted = ir().convertToType(value, type.field(idx))
             ir().store(fieldPtr, converted)

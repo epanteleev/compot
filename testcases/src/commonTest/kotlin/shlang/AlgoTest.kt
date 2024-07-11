@@ -26,6 +26,13 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("Tests passed\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testMatrixMultiplication() {
+        val result = runCTest("shlang/algo/matrix_multiplication", listOf(), options())
+        assertEquals("Tests passed\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {

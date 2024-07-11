@@ -132,7 +132,7 @@ static void test()
     /* generate size random numbers from 0 to 100 */
     for (uint8_t i = 0; i < size; i++)
     {
-        arr[i] = rand() & 63;
+        arr[i] = rand() % 100;
     }
     heapSort(arr, size);
     for (uint8_t i = 0; i < size - 1; ++i)
