@@ -132,7 +132,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
 
     private fun stringLiteralInitializer(expr: Expression): GlobalConstant? {
         if (expr is StringNode) {
-            val content = expr.str.unquote()
+            val content = expr.str.data()
             return StringLiteralConstant("str${constantCounter++}", ArrayType(Type.U8, content.length), content)
         } else if (expr is InitializerList) {
             val type = expr.resolveType(typeHolder)

@@ -161,7 +161,7 @@ class Keyword(val data: String, position: Position): CToken(position) {
     }
 }
 
-class StringLiteral(val data: String, position: Position): CToken(position) {
+class StringLiteral(private val data: String, position: Position): CToken(position) {
     private val unquoted by lazy { data.substring(1, data.length - 1) }
     override fun str(): String = data
 
@@ -180,6 +180,19 @@ class StringLiteral(val data: String, position: Position): CToken(position) {
 
     fun unquote(): String {
         return unquoted
+    }
+
+    fun data(): String {
+        val stringBuilder = StringBuilder()
+        for (i in 1 until data.length - 1) {
+            val c = data[i]
+            if (c == '"') {
+                stringBuilder.append("\\\"")
+            } else {
+                stringBuilder.append(c)
+            }
+        }
+        return stringBuilder.toString()
     }
 
     override fun cloneWith(pos: Position): CToken {

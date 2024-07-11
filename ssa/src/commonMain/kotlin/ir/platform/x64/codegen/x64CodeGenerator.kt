@@ -110,7 +110,6 @@ private class CodeEmitter(private val data: FunctionData,
                     is SignedIntType   -> SarCodegen(binary.type(), asm)(dst, first, second)
                     else -> throw CodegenException("unknown type=$binary.type()")
                 }
-                ShrCodegen(binary.type(), asm)(dst, first, second)
             }
             ArithmeticBinaryOp.Div -> {
                 assertion(binary.type() != Type.I8) {

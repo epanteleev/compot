@@ -194,8 +194,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitStringNode(stringNode: StringNode): Value {
-        val string = stringNode.str.unquote()
-        val stringLiteral = StringLiteralConstant("str${constantCounter++}", ArrayType(Type.I8, 11), string)
+        val string = stringNode.str.data()
+        val stringLiteral = StringLiteralConstant("str${constantCounter++}", ArrayType(Type.I8, string.length), string)
         return mb.addConstant(stringLiteral)
     }
 
