@@ -242,7 +242,7 @@ class Numeric(private val data: String, val radix: Int, position: Position): CTo
         }
         cachedNumber = when {
             data.endsWith("L") -> data.substring(0, data.length - 1).toLongOrNull(radix)
-            data.endsWith("U") -> data.substring(0, data.length - 1).toUIntOrNull(radix)
+            data.endsWith("U") -> data.substring(0, data.length - 1).toULongOrNull(radix)
             data.endsWith("u") -> data.substring(0, data.length - 1).toUIntOrNull(radix)
             data.endsWith("UL") -> data.substring(0, data.length - 2).toULongOrNull(radix)
             data.endsWith("ul") -> data.substring(0, data.length - 2).toULongOrNull(radix)

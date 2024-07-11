@@ -152,12 +152,12 @@ object TypeConverter {
                     Type.I16 -> sext(value, toType)
                     Type.I64 -> trunc(value, toType)
                     Type.U8  -> {
-                        val bitcast = zext(value, Type.U32)
-                        bitcast(bitcast, Type.I32)
+                        val zext = zext(value, Type.U32)
+                        bitcast(zext, Type.I32)
                     }
                     Type.U16 -> {
-                        val tmp = zext(value, Type.U32)
-                        bitcast(tmp, toType)
+                        val zext = zext(value, Type.U32)
+                        bitcast(zext, toType)
                     }
                     Type.U32 -> bitcast(value, toType)
                     Type.U64 -> trunc(value, toType)
@@ -176,8 +176,8 @@ object TypeConverter {
                     Type.I16 -> sext(value, toType)
                     Type.I32 -> sext(value, toType)
                     Type.U8  -> {
-                        val tmp = zext(value, Type.U64)
-                        bitcast(tmp, toType)
+                        val zext = zext(value, Type.U64)
+                        bitcast(zext, toType)
                     }
                     Type.U16 -> {
                         val tmp = zext(value, Type.U64)
@@ -202,8 +202,8 @@ object TypeConverter {
                     Type.I8  -> bitcast(value, toType)
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> {
-                        val bitcast = trunc(value, Type.I8)
-                        bitcast(bitcast, Type.U8)
+                        val trunc = trunc(value, Type.I8)
+                        bitcast(trunc, Type.U8)
                     }
                     Type.I64 -> trunc(value, toType)
                     Type.U16 -> trunc(value, toType)
@@ -279,7 +279,10 @@ object TypeConverter {
                 toType as UnsignedIntType
                 when (value.type()) {
                     Type.U1  -> flag2int(value, toType)
-                    Type.I8  -> trunc(value, toType)
+                    Type.I8  -> {
+                        val sext = sext(value, Type.I64)
+                        bitcast(sext, toType)
+                    }
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> {
                         val tmp = sext(value, Type.I64)

@@ -19,6 +19,13 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("Tests passed\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testHashSDBM() {
+        val result = runCTest("shlang/algo/hash_sdbm", listOf(), options())
+        assertEquals("Tests passed\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {

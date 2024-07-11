@@ -37,6 +37,7 @@ interface CType {
                     when (type2) {
                         INT -> return INT
                         LONG -> return LONG
+                        ULONG -> return ULONG
                         SHORT -> return SHORT
                         UINT -> return UINT
                         DOUBLE -> return DOUBLE
@@ -137,6 +138,7 @@ interface CType {
                     when (type2) {
                         CHAR -> return ULONG
                         INT -> return ULONG
+                        LONG -> return ULONG
                         SHORT -> return ULONG
                         UINT -> return ULONG
                         DOUBLE -> return DOUBLE
