@@ -44,7 +44,6 @@ uint32_t crc32(const char* s)
 void test_crc32()
 {
     uint32_t res = crc32("Hello World");
-    printf("CRC32 is: %u", res);
     assert(res == 1243066710);
     assert(crc32("Hello World!") == 472456355);
     assert(crc32("Hello world") == 2346098258);
