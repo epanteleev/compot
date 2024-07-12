@@ -21,14 +21,8 @@ class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitor
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         when (dst) {
-            first -> {
-                asm.mov(size, second, temp1)
-                asm.or(size, temp1, dst)
-            }
-            second -> {
-                asm.mov(size, first, temp1)
-                asm.or(size, temp1, dst)
-            }
+            first  -> asm.or(size, second, dst)
+            second -> asm.or(size, first, dst)
             else -> {
                 asm.mov(size, first, temp1)
                 asm.or(size, second, temp1)
@@ -105,8 +99,7 @@ class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitor
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
         if (dst == first) {
-            asm.mov(size, second, temp1)
-            asm.or(size, temp1, dst)
+            asm.or(size, second, dst)
         } else {
             asm.mov(size, first, temp1)
             asm.or(size, second, temp1)

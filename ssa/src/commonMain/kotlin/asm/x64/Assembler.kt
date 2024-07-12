@@ -67,9 +67,7 @@ abstract class Assembler(private val name: String) {
 
     fun mul(size: Int, src: GPRegister, dst: GPRegister)              = add(iMull(size, null, src, dst))
     fun mul(size: Int, src: Imm32, dst: GPRegister)                   = add(iMull(size, null, src, dst))
-    fun mul(size: Int, src: GPRegister, dst: Address)                 = add(iMull(size, null, src, dst))
     fun mul(size: Int, src: Address, dst: GPRegister)                 = add(iMull(size, null, src, dst))
-    fun mul(size: Int, src: Imm32, dst: Address)                      = add(iMull(size, null, src, dst)) //TODO Use THIS
     fun mul(size: Int, src1: Imm32, src: GPRegister, dst: GPRegister) = add(iMull(size, src1, src, dst))
     fun mul(size: Int, src1: Imm32, src: Address, dst: GPRegister)    = add(iMull(size, src1, src, dst))
 

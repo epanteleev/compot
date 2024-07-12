@@ -48,11 +48,36 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
             }
             when {
                 gep(generate(), nop()) (inst) -> { inst as GetElementPtr
-                    return bb.update(inst) { it.leaStack(inst.source(), inst.basicType as PrimitiveType, inst.index()) }
+                    when (val baseType = inst.basicType) {
+                        is AggregateType -> {
+                            val index = inst.index().asValue<ValueInstruction>()
+                            val offset = bb.insertBefore(inst) {
+                                it.arithmeticBinary(index, ArithmeticBinaryOp.Mul, Constant.of(index.type(), baseType.sizeOf()))
+                            }
+                            return bb.update(inst) { it.leaStack(inst.source(), Type.I8, offset) }
+                        }
+                        else -> {
+                            baseType as PrimitiveType
+                            return bb.update(inst) { it.leaStack(inst.source(), baseType, inst.index()) }
+                        }
+                    }
+
                 }
                 gfp(generate()) (inst) -> { inst as GetFieldPtr
                     return when (val base = inst.basicType) {
-                        is ArrayType -> bb.update(inst) { it.leaStack(inst.source(), base.elementType() as PrimitiveType, inst.index(0)) }
+                        is ArrayType -> {
+                            when (val tp = base.elementType()) {
+                                is AggregateType -> {
+                                    val index = inst.index(0).toInt()
+                                    val offset = tp.offset(index)
+                                    bb.update(inst) { it.leaStack(inst.source(), Type.I8, Constant.of(Type.U32, offset)) }
+                                }
+                                else -> {
+                                    tp as PrimitiveType
+                                    bb.update(inst) { it.leaStack(inst.source(), tp, inst.index(0)) }
+                                }
+                            }
+                        }
                         is StructType -> bb.update(inst) { it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index(0).toInt()))) }
                     }
                 }

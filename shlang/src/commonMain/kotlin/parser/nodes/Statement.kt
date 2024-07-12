@@ -48,7 +48,6 @@ data class ExprStatement(val expr: Expression): Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-
 data class IfStatement(val condition: Expression, val then: Statement, val elseNode: Statement): Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }

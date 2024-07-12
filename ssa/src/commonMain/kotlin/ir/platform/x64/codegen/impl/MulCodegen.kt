@@ -32,8 +32,9 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        asm.mov(size, first, dst)
-        asm.mul(size, second, dst)
+        asm.mov(size, first, temp1)
+        asm.mul(size, second, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
@@ -118,17 +119,9 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        if (first == dst) {
-            asm.mov(size, second, temp1)
-            asm.mul(size, temp1, dst)
-        } else if (second == dst) {
-            asm.mov(size, first, temp1)
-            asm.mul(size, temp1, dst)
-        } else {
-            asm.mov(size, first, temp1)
-            asm.mul(size, second, temp1)
-            asm.mov(size, temp1, dst)
-        }
+        asm.mov(size, first, temp1)
+        asm.mul(size, second, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {

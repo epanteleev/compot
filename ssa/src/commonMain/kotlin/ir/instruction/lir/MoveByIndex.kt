@@ -14,7 +14,7 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
     Instruction(id, owner, arrayOf(destination, index, source)) {
 
     override fun dump(): String {
-        return "$NAME ${source().type()} ${destination()}: ${source()}, ${index()}"
+        return "$NAME ${source().type()} ${destination()}: ${index()}, ${source()}"
     }
 
     private inline fun getOperand(idx: Int): Value {

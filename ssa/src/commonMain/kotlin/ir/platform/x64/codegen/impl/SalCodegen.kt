@@ -22,12 +22,10 @@ class SalCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         when (dst) {
             first -> {
-                asm.mov(size, second, temp1)
-                asm.sal(size, temp1, dst)
+                asm.sal(size, second, dst)
             }
             second -> {
-                asm.mov(size, first, temp1)
-                asm.sal(size, temp1, dst)
+                TODO()
             }
             else -> {
                 asm.mov(size, first, dst)

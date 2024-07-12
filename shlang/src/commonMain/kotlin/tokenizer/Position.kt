@@ -10,7 +10,6 @@ interface Position {
     }
 }
 
-
 data class OriginalPosition(private val line: Int, private val pos: Int, private val filename: String = "<unknown>") : Position {
     override fun toString(): String {
         return "$filename in [$line:$pos]"

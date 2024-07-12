@@ -227,7 +227,7 @@ class CharLiteral(val data: Char, position: Position): CToken(position) {
     }
 }
 
-class Numeric(private val data: String, val radix: Int, position: Position): CToken(position) {
+class Numeric(private val data: String, private val radix: Int, position: Position): CToken(position) {
     private var cachedNumber: Any? = null
 
     override fun str(): String = data

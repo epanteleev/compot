@@ -124,16 +124,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun indexArray(type: ArrayType, idx: Int): Array<IntegerConstant> {
-        val indexes = mutableListOf<IntegerConstant>()
-        TODO()
-    }
-
     private fun visitInitializerList(ptr: Value, type: AggregateType, initializerList: InitializerList): Value {
-        for ((idx, init) in initializerList.flatten().withIndex()) {
+        for ((idx, init) in initializerList.initializers.withIndex()) {
             val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, idx))
             val fieldPtr = ir().gfp(ptr, type, indexes)
-            val value = visitExpression(init, true)
+            val value = when (init) {
+                is InitializerList -> visitInitializerList(fieldPtr, type.field(idx) as AggregateType, init)
+                else -> visitExpression(init, true)
+            }
 
             when (val field = type.field(idx)) {
                 is PrimitiveType -> {
