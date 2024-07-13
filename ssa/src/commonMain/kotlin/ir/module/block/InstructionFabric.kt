@@ -17,8 +17,6 @@ interface InstructionFabric {
     fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary
     fun tupleDiv(a: Value, b: Value): TupleDiv
     fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare
-    fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare
-    fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare
     fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare
     fun load(loadedType: PrimitiveType, ptr: Value): Load
     fun store(ptr: Value, value: Value): Store

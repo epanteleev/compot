@@ -10,7 +10,7 @@ extern i32 @printInt(i32)
 define i32 @test(%a: ptr) {
 entry:
   %ret = alloc i32
-  %is_null = pcmp ne ptr %a, null
+  %is_null =icmp ne ptr %a, null
   br u1 %is_null label %if, label %else
 if:
   %0 = load i32 %a

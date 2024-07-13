@@ -245,32 +245,12 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseIcmp(resultName: LocalValueToken) {
         val compareTypeToken = iterator.expect<Identifier>("compare type")
-        val operandsTypes    = iterator.expect<SignedIntegerTypeToken>("signed integer operands type")
+        val operandsTypes    = iterator.expect<PrimitiveTypeToken>("signed integer operands type")
         val first            = iterator.expect<AnyValueToken>("first compare operand")
         iterator.expect<Comma>("','")
         val second           = iterator.expect<AnyValueToken>("second compare operand")
 
         builder.icmp(resultName, first, compareTypeToken, second, operandsTypes)
-    }
-
-    private fun parseUcmp(resultName: LocalValueToken) {
-        val compareTypeToken = iterator.expect<Identifier>("compare type")
-        val operandsTypes       = iterator.expect<UnsignedIntegerTypeToken>("unsigned integer operands type")
-        val first            = iterator.expect<AnyValueToken>("first compare operand")
-        iterator.expect<Comma>("','")
-        val second           = iterator.expect<AnyValueToken>("second compare operand")
-
-        builder.ucmp(resultName, first, compareTypeToken, second, operandsTypes)
-    }
-
-    private fun parsePcmp(resultName: LocalValueToken) {
-        val compareTypeToken = iterator.expect<Identifier>("compare type")
-        val operandsTypes    = iterator.expect<PointerTypeToken>("type ${Type.Ptr}")
-        val first            = iterator.expect<AnyValueToken>("first compare operand")
-        iterator.expect<Comma>("','")
-        val second           = iterator.expect<AnyValueToken>("second compare operand")
-
-        builder.pcmp(resultName, first, compareTypeToken, second, operandsTypes)
     }
 
     private fun parseFcmp(resultTypeToken: LocalValueToken) {
@@ -468,7 +448,6 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "call"       -> parseCall(currentTok)
                     "sext"       -> parseSext(currentTok)
                     "zext"       -> parseZext(currentTok)
-                    "pcmp"       -> parsePcmp(currentTok)
                     "trunc"      -> parseTrunc(currentTok)
                     "flag2int"   -> parseFlag2Int(currentTok)
                     "int2fp"     -> parseInt2Float(currentTok)
@@ -484,7 +463,6 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "neg"        -> parseNeg(currentTok)
                     "not"        -> parseNot(currentTok)
                     "icmp"       -> parseIcmp(currentTok)
-                    "ucmp"       -> parseUcmp(currentTok)
                     "fcmp"       -> parseFcmp(currentTok)
                     "gfp"        -> parseGfp(currentTok)
                     "select"     -> parseSelect(currentTok)

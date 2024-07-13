@@ -23,7 +23,7 @@ entry:
   store ptr %3, u32 0
   store ptr %4, u32 1
   %7 = load u32 %2
-  %8 = ucmp eq u32 %7, 0
+  %8 = icmp eq u32 %7, 0
   br u1 %8 label %L1, label %L2 
 L1:	; pred=entry
   %9 = load u32 %3
@@ -35,7 +35,7 @@ L2:	; pred=entry
 L3:	; pred=L2, L5
   %10 = load u32 %6
   %11 = load u32 %2
-  %12 = ucmp le u32 %10, %11
+  %12 = icmp le u32 %10, %11
   br u1 %12 label %L4, label %L6 
 L4:	; pred=L3
   %13 = load u32 %3

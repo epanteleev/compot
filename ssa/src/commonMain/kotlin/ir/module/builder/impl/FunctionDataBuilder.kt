@@ -54,14 +54,6 @@ class FunctionDataBuilder private constructor(
         return bb.icmp(a, predicate, b)
     }
 
-    override fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare {
-        return bb.ucmp(a, predicate, b)
-    }
-
-    override fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare {
-        return bb.pcmp(a, predicate, b)
-    }
-
     override fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
         return bb.fcmp(a, predicate, b)
     }

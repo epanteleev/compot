@@ -19,7 +19,6 @@ interface IRInstructionVisitor<T> {
     fun visit(itofp: Int2Float): T
     fun visit(zext: ZeroExtend): T
     fun visit(sext: SignExtend): T
-    fun visit(pcmp: PointerCompare): T
     fun visit(trunc: Truncate): T
     fun visit(fptruncate: FpTruncate): T
     fun visit(fpext: FpExtend): T
@@ -31,7 +30,6 @@ interface IRInstructionVisitor<T> {
     fun visit(gep: GetElementPtr): T
     fun visit(gfp: GetFieldPtr): T
     fun visit(icmp: SignedIntCompare): T
-    fun visit(ucmp: UnsignedIntCompare): T
     fun visit(fcmp: FloatCompare): T
     fun visit(load: Load): T
     fun visit(phi: Phi): T

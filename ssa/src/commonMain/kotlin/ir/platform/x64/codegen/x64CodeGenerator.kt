@@ -395,44 +395,6 @@ private class CodeEmitter(private val data: FunctionData,
         return users.size > 1 || users.first() != cmp.next()
     }
 
-    override fun visit(pcmp: PointerCompare) { //TODO
-        var first  = valueToRegister.operand(pcmp.first())
-        val second = valueToRegister.operand(pcmp.second())
-        val dst    = valueToRegister.operand(pcmp)
-        val size = pcmp.first().asType<NonTrivialType>().sizeOf()
-
-        first = if (first is Address2) {
-            asm.movOld(size, first, temp1)
-        } else {
-            first
-        }
-
-        asm.cmp(size, second, first as GPRegister)
-        if (needSetcc(pcmp)) {
-            asm.setcc(pcmp.predicate(), dst)
-        }
-    }
-
-    override fun visit(ucmp: UnsignedIntCompare) { //TODO
-        var first  = valueToRegister.operand(ucmp.first())
-        val second = valueToRegister.operand(ucmp.second())
-        val dst    = valueToRegister.operand(ucmp)
-        val size = ucmp.first().asType<NonTrivialType>().sizeOf()
-
-        first = if (first is Address2) {
-            asm.movOld(size, first, temp1)
-        } else if (first is ImmInt) {
-            asm.movOld(size, first, temp1)
-        } else {
-            first
-        }
-
-        asm.cmp(size, second, first as GPRegister)
-        if (needSetcc(ucmp)) {
-            asm.setcc(ucmp.predicate(), dst)
-        }
-    }
-
     override fun visit(fcmp: FloatCompare) {
         val first  = valueToRegister.operand(fcmp.first())
         val second = valueToRegister.operand(fcmp.second())
@@ -498,7 +460,7 @@ private class CodeEmitter(private val data: FunctionData,
                 }
             }
             is CompareInstruction -> {
-                val jmpType = asm.condType(cond)
+                val jmpType = asm.condType(cond, cond.operandsType())
                 asm.jcc(jmpType, makeLabel(branchCond.onFalse()))
             }
             else -> throw CodegenException("unknown condition type, cond=${cond}")

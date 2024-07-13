@@ -27,7 +27,7 @@ cont0:
 while.cond:
   %4 = load ptr %start
   %5 = load ptr %end
-  %cmp = pcmp lt ptr %4, %5
+  %cmp = icmp lt ptr %4, %5
   br u1 %cmp label %while.body, label %while.end
 
 while.body:

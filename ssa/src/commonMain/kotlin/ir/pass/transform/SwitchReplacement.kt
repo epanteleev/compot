@@ -41,7 +41,8 @@ private class SwitchReplacementImpl(val cfg: BasicBlocks) {
         val default = switch.default()
 
         switch.table().forEachWith(switch.targets()) { value, target ->
-           // val newBB = cfg.create()
+            val newBB = cfg.createBlock()
+            //val cmp = newBB.icmp(selector, value)
         }
     }
 

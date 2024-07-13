@@ -20,8 +20,8 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     private fun matchIntCondition(): CMoveFlag {
-        return when (condition) {
-            is SignedIntCompare -> {
+        return when (condition.operandsType()) {
+            is SignedIntType -> {
                 when (condition.predicate()) {
                     IntPredicate.Eq -> CMoveFlag.CMOVE
                     IntPredicate.Ne -> CMoveFlag.CMOVNE
@@ -29,9 +29,10 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
                     IntPredicate.Ge -> CMoveFlag.CMOVGE
                     IntPredicate.Lt -> CMoveFlag.CMOVL
                     IntPredicate.Le -> CMoveFlag.CMOVLE
+                    else -> throw RuntimeException("unexpected condition type: condition=$condition")
                 }
             }
-            is UnsignedIntCompare -> {
+            is UnsignedIntType, PointerType -> {
                 when (condition.predicate()) {
                     IntPredicate.Eq -> CMoveFlag.CMOVE
                     IntPredicate.Ne -> CMoveFlag.CMOVNE
@@ -39,6 +40,7 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
                     IntPredicate.Ge -> CMoveFlag.CMOVAE
                     IntPredicate.Lt -> CMoveFlag.CMOVB
                     IntPredicate.Le -> CMoveFlag.CMOVBE
+                    else -> throw RuntimeException("unexpected condition type: condition=$condition")
                 }
             }
             else -> throw RuntimeException("unexpected condition type: condition=$condition")

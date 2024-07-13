@@ -218,12 +218,6 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
-    override fun visit(pcmp: PointerCompare) {
-        assert(PointerCompare.typeCheck(pcmp)) {
-            "Instruction '${pcmp.dump()}' has inconsistent types."
-        }
-    }
-
     override fun visit(trunc: Truncate) {
         assert(Truncate.typeCheck(trunc)) {
             "Instruction '${trunc.dump()}' has inconsistent types."
@@ -279,12 +273,6 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     override fun visit(icmp: SignedIntCompare) {
         assert(SignedIntCompare.typeCheck(icmp)) {
             "Instruction '${icmp.dump()}' requires all operands to be of the same type: a=${icmp.first().type()}, b=${icmp.second().type()}"
-        }
-    }
-
-    override fun visit(ucmp: UnsignedIntCompare) {
-        assert(UnsignedIntCompare.typeCheck(ucmp)) {
-            "Instruction '${ucmp.dump()}' requires all operands to be of the same type: a=${ucmp.first().type()}, b=${ucmp.second().type()}"
         }
     }
 

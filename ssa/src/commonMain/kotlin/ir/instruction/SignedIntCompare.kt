@@ -15,13 +15,13 @@ class SignedIntCompare private constructor(id: Identity, owner: Block, a: Value,
 
     override fun predicate(): IntPredicate = predicate
 
-    override fun operandsType(): SignedIntType {
+    override fun operandsType(): PrimitiveType {
         val opType = first().type()
-        assertion(opType is SignedIntType) {
+        assertion(opType is IntegerType || opType is PointerType) {
             "should be, but opType=$opType"
         }
 
-        return opType as SignedIntType
+        return opType as PrimitiveType
     }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
@@ -42,7 +42,7 @@ class SignedIntCompare private constructor(id: Identity, owner: Block, a: Value,
         }
 
         private fun isAppropriateType(aType: Type, bType: Type): Boolean {
-            return aType == bType && aType is IntegerType
+            return aType == bType && (aType is IntegerType || aType is PointerType)
         }
 
         fun typeCheck(icmp: SignedIntCompare): Boolean {

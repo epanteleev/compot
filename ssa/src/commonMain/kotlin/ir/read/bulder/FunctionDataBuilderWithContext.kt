@@ -125,28 +125,12 @@ class FunctionDataBuilderWithContext private constructor(
         }
     }
 
-    fun icmp(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: SignedIntegerTypeToken): SignedIntCompare {
+    fun icmp(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: PrimitiveTypeToken): SignedIntCompare {
         val compareType = matchCompareType(predicate)
 
         val first  = getValue(a, operandsTypes.type())
         val second = getValue(b, operandsTypes.type())
         return memorize(name, bb.icmp(first, compareType, second))
-    }
-
-    fun ucmp(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: UnsignedIntegerTypeToken): UnsignedIntCompare {
-        val compareType = matchCompareType(predicate)
-
-        val first  = getValue(a, operandsTypes.type())
-        val second = getValue(b, operandsTypes.type())
-        return memorize(name, bb.ucmp(first, compareType, second))
-    }
-
-    fun pcmp(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: PointerTypeToken): PointerCompare {
-        val compareType = matchCompareType(predicate)
-
-        val first  = getValue(a, operandsTypes.type())
-        val second = getValue(b, operandsTypes.type())
-        return memorize(name, bb.pcmp(first, compareType, second))
     }
 
     fun floatCompare(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: FloatTypeToken): FloatCompare {

@@ -227,14 +227,6 @@ class Block(override val index: Int):
         return withOutput { SignedIntCompare.make(it, this, a, predicate, b) }
     }
 
-    override fun ucmp(a: Value, predicate: IntPredicate, b: Value): UnsignedIntCompare {
-        return withOutput { UnsignedIntCompare.make(it, this, a, predicate, b) }
-    }
-
-    override fun pcmp(a: Value, predicate: IntPredicate, b: Value): PointerCompare {
-        return withOutput { PointerCompare.make(it, this, a, predicate, b) }
-    }
-
     override fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
         return withOutput { FloatCompare.make(it, this, a, predicate, b) }
     }

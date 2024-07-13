@@ -5,6 +5,7 @@ import asm.x64.GPRegister.rdx
 import common.assertion
 import ir.Definitions.QWORD_SIZE
 import ir.instruction.*
+import ir.types.*
 
 
 data class MacroAssemblerException(override val message: String): Exception(message)
@@ -91,10 +92,10 @@ class MacroAssembler(name: String): Assembler(name) {
         }
     }
 
-    fun condType(cond: CompareInstruction): CondType {
+    fun condType(cond: CompareInstruction, type: PrimitiveType): CondType {
         val convType = cond.predicate().invert()
-        return when (cond) {
-            is SignedIntCompare -> {
+        return when (type) {
+            is SignedIntType -> {
                 when (convType) {
                     IntPredicate.Eq -> CondType.JE
                     IntPredicate.Ne -> CondType.JNE
@@ -105,7 +106,7 @@ class MacroAssembler(name: String): Assembler(name) {
                     else -> throw CodegenException("unknown conversion type: convType=$convType")
                 }
             }
-            is UnsignedIntCompare, is PointerCompare -> {
+            is UnsignedIntType, PointerType -> {
                 when (convType) {
                     IntPredicate.Eq -> CondType.JE
                     IntPredicate.Ne -> CondType.JNE
@@ -116,7 +117,7 @@ class MacroAssembler(name: String): Assembler(name) {
                     else -> throw CodegenException("unknown conversion type: convType=$convType")
                 }
             }
-            is FloatCompare -> {
+            is FloatingPointType -> {
                 when (convType) {
                     FloatPredicate.Oeq -> CondType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
                     FloatPredicate.Ogt -> CondType.JA
@@ -135,7 +136,7 @@ class MacroAssembler(name: String): Assembler(name) {
                     else -> throw CodegenException("unknown conversion type: convType=$convType")
                 }
             }
-            else -> throw CodegenException("unknown type instruction=$cond")
+            else -> throw CodegenException("unknown type instruction=$cond, type=$type")
         }
     }
 }

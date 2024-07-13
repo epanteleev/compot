@@ -51,20 +51,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         return when (val type = conditionExpr.type()) {
-            is SignedIntType     -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-            is UnsignedIntType   -> ir().ucmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            is IntegerType, PointerType -> ir().icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
             is FloatingPointType -> ir().fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
-            is PointerType       -> ir().pcmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
             else -> throw IRCodeGenError("Unknown type")
         }
     }
 
     private inline fun<reified T: AnyPredicateType> makeCondition(a: Value, predicate: T, b: Value): Value {
         return when (a.type()) {
-            is SignedIntType     -> ir().icmp(a, predicate as IntPredicate, b)
-            is UnsignedIntType   -> ir().ucmp(a, predicate as IntPredicate, b)
+            is IntegerType, PointerType -> ir().icmp(a, predicate as IntPredicate, b)
             is FloatingPointType -> ir().fcmp(a, predicate as FloatPredicate, b)
-            is PointerType       -> ir().pcmp(a, predicate as IntPredicate, b)
             else -> throw IRCodeGenError("Unknown type")
         }
     }

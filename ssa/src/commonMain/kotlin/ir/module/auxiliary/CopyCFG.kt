@@ -17,7 +17,6 @@ import ir.value.*
 
 class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<LocalValue?> {
     private val oldBasicBlocks: BasicBlocks = fd.blocks
-
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
     private val newCFG = BasicBlocks.create()
     private val oldToNewBlock = setupNewBasicBlock()
@@ -57,17 +56,16 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
 
     fun copy(): FunctionData {
         val newArgs = copyArguments()
-        return FunctionData.create(fd.prototype, copyBasicBlocks(), newArgs)
+        copyBasicBlocks()
+        return FunctionData.create(fd.prototype, newCFG, newArgs)
     }
 
-    private fun copyBasicBlocks(): BasicBlocks {
+    private fun copyBasicBlocks() {
         for (bb in oldBasicBlocks.preorder()) {
             copyBasicBlocks(bb)
         }
 
-        updatePhis(newCFG)
-
-        return newCFG
+        updatePhis()
     }
 
     private fun copyBasicBlocks(thisBlock: Block) {
@@ -86,8 +84,8 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return newInstruction
     }
 
-    private fun updatePhis(arrayBlocks: BasicBlocks) {
-        for (bb in arrayBlocks) {
+    private fun updatePhis() {
+        for (bb in newCFG) {
             for (inst in bb) {
                 if (inst !is Phi) {
                     continue
@@ -195,13 +193,6 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return bb().sext(operand, sext.type())
     }
 
-    override fun visit(pcmp: PointerCompare): ValueInstruction {
-        val first  = mapUsage<Value>(pcmp.first())
-        val second = mapUsage<Value>(pcmp.second())
-
-        return bb().pcmp(first, pcmp.predicate(), second)
-    }
-
     override fun visit(trunc: Truncate): ValueInstruction {
         val operand = mapUsage<Value>(trunc.value())
         return bb().trunc(operand, trunc.type())
@@ -256,13 +247,6 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         val second = mapUsage<Value>(icmp.second())
 
         return bb().icmp(first, icmp.predicate(), second)
-    }
-
-    override fun visit(ucmp: UnsignedIntCompare): ValueInstruction {
-        val first  = mapUsage<Value>(ucmp.first())
-        val second = mapUsage<Value>(ucmp.second())
-
-        return bb().ucmp(first, ucmp.predicate(), second)
     }
 
     override fun visit(fcmp: FloatCompare): ValueInstruction {
