@@ -100,18 +100,22 @@ class StringReader(val str: String, var pos: Int = 0) {
         } else if (check("ULL") || check("ull")) {
             read(3)
             return str.substring(start, pos)
-        }
-        else if (check("LU") || check("lu")) {
+        } else if (check("LU") || check("lu")) {
             read(2)
             return str.substring(start, pos)
         } else if (check("UL") || check("ul")) {
             read(2)
             return str.substring(start, pos)
-        }
-        else if (check("U") || check("u")) {
+        } else if (check("U") || check("u")) {
             read()
             return str.substring(start, pos)
         } else if (check("L") || check("l")) {
+            read()
+            return str.substring(start, pos)
+        } else if (check("F") || check("f")) {
+            read()
+            return str.substring(start, pos)
+        } else if (check("D") || check("d")) {
             read()
             return str.substring(start, pos)
         }
@@ -136,7 +140,7 @@ class StringReader(val str: String, var pos: Int = 0) {
             }
 
             read()
-            while (!eof && peek().isDigit()) {
+            while (!eof && (peek().isDigit() || peek() == 'e' || peek() == 'E' || peek() == 'p' || peek() == 'P')) {
                 read()
             }
             if (eof) {

@@ -48,6 +48,20 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("All tests have successfully passed!\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testCartesianToPolar() {
+        val result = runCTest("shlang/algo/cartesian_to_polar", listOf(), options())
+        assertEquals("Tests passed\n", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testHammingDistance() {
+        val result = runCTest("shlang/algo/hamming_distance", listOf(), options())
+        assertEquals("All tests have successfully passed!\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {
