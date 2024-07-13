@@ -433,6 +433,23 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     leftConverted //TODO test it
                 }
             }
+            BinaryOpType.ADD_ASSIGN -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<NonTrivialType>(typeHolder, leftType)
+                val rightConverted = ir().convertToType(right, leftIrType)
+
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = if (leftType is CPrimitiveType) {
+                    ir().load(leftIrType as PrimitiveType, left)
+                } else {
+                    throw IRCodeGenError("Primitive type expected")
+                }
+
+                val sum = ir().arithmeticBinary(loadedLeft, ArithmeticBinaryOp.Add, rightConverted)
+                ir().store(left, sum)
+                sum // TODO unchecked !!!
+            }
 
             BinaryOpType.BIT_OR -> {
                 makeAlgebraicBinary(binop, ArithmeticBinaryOp.Or)
@@ -475,6 +492,26 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir().branch(end)
                 ir().switchLabel(end)
                 ir().phi(listOf(U8Value(0), convertedRight), listOf(initialBB, bb))
+            }
+            BinaryOpType.OR -> {
+                val initialBB = ir().currentLabel()
+
+                val left = visitExpression(binop.left, true)
+                assertion(left.type() == Type.U1) { "expects"}
+
+                val bb = ir().createLabel()
+
+                val end = ir().createLabel()
+                ir().branchCond(left, end, bb)
+                ir().switchLabel(bb)
+
+                val right = visitExpression(binop.right, true)
+                val convertedRight = ir().convertToType(right, Type.U8)
+                assertion(right.type() == Type.U1) { "expects"}
+
+                ir().branch(end)
+                ir().switchLabel(end)
+                ir().phi(listOf(U8Value(1), convertedRight), listOf(initialBB, bb))
             }
             BinaryOpType.GE -> {
                 makeComparisonBinary(binop, ::ge)

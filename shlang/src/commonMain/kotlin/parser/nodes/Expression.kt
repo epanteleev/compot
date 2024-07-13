@@ -1,6 +1,7 @@
 package parser.nodes
 
 import gen.IRCodeGenError
+import ir.value.IntegerConstant
 import types.*
 import tokenizer.*
 import parser.nodes.visitors.*

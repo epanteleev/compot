@@ -47,6 +47,15 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
     }
 
     fun params(): List<String> {
+        if (params.isEmpty()) {
+            return emptyList()
+        }
+        if (params.size == 1 && params[0] is Parameter) {
+            val param = params[0] as Parameter
+            if (param.declarator is EmptyDeclarator) {
+                return emptyList()
+            }
+        }
         return params.map {
             when (it) {
                 is Parameter -> it.name()

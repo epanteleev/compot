@@ -33,6 +33,21 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("Tests passed\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testBinarySearch() {
+        val result = runCTest("shlang/algo/binary_search", listOf(), options())
+        assertEquals("Test 1.... passed recursive... passed iterative...\n" +
+                "Test 2.... passed recursive... passed iterative...\n", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testExponentialSearch() {
+        val result = runCTest("shlang/algo/exponential_search", listOf(), options())
+        assertEquals("All tests have successfully passed!\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {

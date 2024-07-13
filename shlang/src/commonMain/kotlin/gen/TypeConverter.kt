@@ -181,7 +181,7 @@ object TypeConverter {
                     }
                     Type.U16 -> {
                         val tmp = zext(value, Type.U64)
-                        trunc(tmp, toType)
+                        bitcast(tmp, toType)
                     }
                     Type.U32 -> {
                         val tmp = zext(value, Type.U64)

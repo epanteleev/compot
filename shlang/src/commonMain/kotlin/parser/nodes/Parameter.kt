@@ -14,8 +14,11 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) :
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
 
     fun name(): String {
-        val varNode = declarator as Declarator
-        return varNode.directDeclarator.decl.name()
+        if (declarator !is Declarator) {
+            throw IllegalStateException("Expected declarator, but got $declarator")
+        }
+
+        return declarator.directDeclarator.decl.name()
     }
 
     override fun resolveType(typeHolder: TypeHolder): CType {

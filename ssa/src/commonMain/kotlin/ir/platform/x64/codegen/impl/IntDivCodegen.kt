@@ -99,7 +99,11 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, rax)
+        asm.cdq(size)
+        asm.idiv(size, second)
+        asm.mov(size, rax, dst)
+        asm.moveRem(size, rem)
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

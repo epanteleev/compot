@@ -128,9 +128,11 @@ interface CType {
                         UCHAR -> return UINT
                         LONG -> return LONG
                         SHORT -> return UINT
+                        USHORT -> return UINT
                         INT -> return UINT
                         DOUBLE -> return DOUBLE
                         FLOAT -> return FLOAT
+                        else -> throw RuntimeException("Unknown type $type1, $type2")
                     }
                 }
 
@@ -154,6 +156,11 @@ interface CType {
                         UINT -> return type1
                         FLOAT -> return type1
                         LONG -> return type1
+                        is CPointerType -> {
+                            if (type1.type == type2.type) return type1
+                            if (type1.type == VOID) return type1
+                            if (type2.type == VOID) return type2
+                        }
                     }
                 }
 
@@ -213,7 +220,7 @@ data class NoType(val message: String) : CType {
     }
 }
 
-class CPrimitiveType(val baseType: BaseType, val properties: List<TypeProperty> = emptyList()) : CType {
+class CPrimitiveType(val baseType: BaseType, private val properties: List<TypeProperty> = emptyList()) : CType {
     override fun size(): Int = baseType.size()
     override fun qualifiers(): List<TypeProperty> = properties
 
@@ -234,9 +241,7 @@ class CPrimitiveType(val baseType: BaseType, val properties: List<TypeProperty> 
     }
 
     override fun hashCode(): Int {
-        var result = baseType.hashCode()
-        result = 31 * result + properties.hashCode()
-        return result
+        return baseType.hashCode()
     }
 
     override fun copyWith(extraProperties: List<TypeProperty>): CPrimitiveType {
