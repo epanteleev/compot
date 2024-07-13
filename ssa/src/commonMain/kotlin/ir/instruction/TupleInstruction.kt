@@ -34,17 +34,4 @@ abstract class TupleInstruction(id: Identity,
     }
 
     abstract override fun type(): TupleType
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as TupleInstruction
-
-        return id == other.id && owner.index == other.owner.index
-    }
-
-    override fun hashCode(): Int {
-        return id + owner.index
-    }
 }

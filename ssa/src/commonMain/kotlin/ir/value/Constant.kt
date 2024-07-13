@@ -242,7 +242,7 @@ data class F64Value(val f64: Double): FloatingPointConstant {
     }
 }
 
-class UndefinedValue: Constant {
+object UndefinedValue: Constant {
     fun name(): String {
         return toString()
     }

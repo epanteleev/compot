@@ -32,7 +32,7 @@ data class UnionSpecifier(val name: Identifier, val fields: List<StructField>) :
             }
         }
 
-        name.let { typeHolder.addStructType(it.str(), structType) }
+        name.let { typeHolder.addNewType(it.str(), structType) }
         return@addToBuilder structType
     }
 
@@ -45,7 +45,7 @@ data class UnionDeclaration(val name: Identifier) : AnyTypeNode() { //TODO separ
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addStructType(name.str(), UncompletedUnionBaseType(name.str()))
+        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addNewType(name.str(), UncompletedUnionBaseType(name.str()))
     }
 
     override fun name(): String = name.str()
@@ -135,7 +135,7 @@ data class StructSpecifier(private val name: Identifier, val fields: List<Struct
             }
         }
 
-        typeHolder.addStructType(name.str(), structType)
+        typeHolder.addNewType(name.str(), structType)
         return@addToBuilder structType
     }
 }
@@ -145,7 +145,7 @@ data class StructDeclaration(private val name: Identifier) : AnyTypeNode() {
     override fun name(): String = name.str()
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addStructType(name.str(), UncompletedStructBaseType(name.str()))
+        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addNewType(name.str(), UncompletedStructBaseType(name.str()))
     }
 }
 

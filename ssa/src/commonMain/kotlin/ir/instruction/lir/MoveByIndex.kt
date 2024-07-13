@@ -31,18 +31,6 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
 
     fun source(): Value = getOperand(2)
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as Move
-        return operands.contentEquals(other.operands())
-    }
-
-    override fun hashCode(): Int {
-        return index().type().hashCode() xor destination().type().hashCode()
-    }
-
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }

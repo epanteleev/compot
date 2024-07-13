@@ -9,22 +9,9 @@ abstract class TerminateInstruction(id: Identity, owner: Block, usages: Array<Va
     Instruction(id, owner, usages) {
     fun targets(): Array<Block> = targets
 
-    override fun hashCode(): Int {
-        return targets.hashCode()
-    }
-
     fun updateTargets(newTargets: Collection<Block>) {
         for ((i, v) in newTargets.withIndex()) {
             targets[i] = v
         }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as TerminateInstruction
-
-        return targets.contentEquals(other.targets)
     }
 }

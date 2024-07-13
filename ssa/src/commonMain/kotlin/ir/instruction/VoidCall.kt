@@ -30,18 +30,6 @@ class VoidCall private constructor(id: Identity, owner: Block, private val func:
         return targets[0]
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as VoidCall
-        return func == other.func
-    }
-
-    override fun hashCode(): Int {
-        return func.hashCode()
-    }
-
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("call ${Type.Void} @${func.name}(")

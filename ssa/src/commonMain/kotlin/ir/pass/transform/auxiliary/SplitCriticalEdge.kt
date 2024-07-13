@@ -6,7 +6,6 @@ import ir.module.block.Block
 
 
 internal class SplitCriticalEdge private constructor(private val cfg: BasicBlocks) {
-    private var maxIndex = cfg.maxBlockIndex()
     private val predecessorMap = hashMapOf<Block, Block>()
 
     fun pass() {
@@ -50,8 +49,7 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
     }
 
     private fun insertBasicBlock(bb: Block, p: Block) {
-        maxIndex += 1
-        val newBlock = Block.empty(maxIndex).apply {
+        val newBlock = cfg.createBlock().apply {
             branch(bb)
         }
 
@@ -68,8 +66,6 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
 
         predecessorMap[p] = newBlock
         Block.insertBlock(bb, newBlock, p)
-
-        cfg.putBlock(newBlock)
     }
 
     companion object {

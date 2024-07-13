@@ -24,17 +24,4 @@ abstract class TerminateValueInstruction(id: Identity, owner: Block,
     }
 
     override fun type(): NonTrivialType = tp
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as TerminateValueInstruction
-
-        return id == other.id && owner.index == other.owner.index
-    }
-
-    override fun hashCode(): Int {
-        return id + owner.index
-    }
 }

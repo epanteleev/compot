@@ -10,14 +10,16 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
+import ir.module.block.Label
 import ir.types.NonTrivialType
 import ir.value.*
 
 
-class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<LocalValue?> {
+class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<LocalValue?> {
     private val oldBasicBlocks: BasicBlocks = fd.blocks
 
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
+    private val newCFG = BasicBlocks.create()
     private val oldToNewBlock = setupNewBasicBlock()
     private var currentBB: Block? = null
 
@@ -29,7 +31,11 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<L
         val oldToNew = intMapOf<Block, Block>(oldBasicBlocks.size()) { it.index }
 
         for (old in oldBasicBlocks.blocks()) {
-            oldToNew[old] = Block.empty(old.index)
+            if (old.index == 0) { //TODO
+                oldToNew[old] = newCFG.begin()
+                continue
+            }
+            oldToNew[old] = newCFG.createBlock()
         }
 
         return oldToNew
@@ -55,16 +61,13 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<L
     }
 
     private fun copyBasicBlocks(): BasicBlocks {
-        val arrayBlocks = arrayListOf<Block>()
         for (bb in oldBasicBlocks.preorder()) {
-            arrayBlocks.add(oldToNewBlock[bb]!!)
             copyBasicBlocks(bb)
         }
 
-        val newBB = BasicBlocks.create(arrayBlocks)
-        updatePhis(newBB)
+        updatePhis(newCFG)
 
-        return newBB
+        return newCFG
     }
 
     private fun copyBasicBlocks(thisBlock: Block) {
@@ -121,7 +124,7 @@ class CopyCFG private constructor(val fd: FunctionData) : IRInstructionVisitor<L
     }
 
     override fun visit(generate: Generate): ValueInstruction {
-        return  bb().gen(generate.type())
+        return bb().gen(generate.type())
     }
 
     override fun visit(lea: Lea): ValueInstruction {

@@ -199,11 +199,10 @@ class FunctionDataBuilder private constructor(
             isVararg: Boolean = false
         ): FunctionDataBuilder {
             val prototype = FunctionPrototype(name, returnType, arguments, isVararg)
-            val startBB = Block.empty(Label.entry.index)
-            val basicBlocks = BasicBlocks.create(startBB)
+            val basicBlocks = BasicBlocks.create()
 
             val builder = FunctionDataBuilder(prototype, argumentValues, basicBlocks)
-            builder.switchLabel(startBB)
+            builder.switchLabel(basicBlocks.begin())
             return builder
         }
 

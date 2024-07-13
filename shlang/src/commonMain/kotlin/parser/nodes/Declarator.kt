@@ -26,7 +26,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
 
         pointerType = directDeclarator.resolveType(pointerType, typeHolder)
         if (declspec.isTypedef) {
-            typeHolder.addStructType(name(), TypeDef(name(), pointerType))
+            typeHolder.addNewType(name(), TypeDef(name(), pointerType))
             typeHolder.addTypedef(name(), pointerType)
             return pointerType
         }

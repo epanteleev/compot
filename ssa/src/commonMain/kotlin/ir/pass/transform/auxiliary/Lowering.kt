@@ -12,7 +12,8 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
     private fun replaceStore(bb: Block, inst: Store): Instruction {
         val toValue   = inst.pointer().asValue<Generate>()
         val fromValue = inst.value()
-        return bb.update(inst) { it.move(toValue, fromValue) }
+        val mv = bb.update(inst) { it.move(toValue, fromValue) }
+        return mv
     }
 
     private fun replaceAlloc(bb: Block, inst: Alloc): Instruction {

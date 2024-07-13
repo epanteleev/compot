@@ -7,7 +7,7 @@ interface Value {
     fun type(): Type
 
     companion object {
-        val UNDEF: UndefinedValue = UndefinedValue()
+        val UNDEF: UndefinedValue = UndefinedValue
     }
 }
 

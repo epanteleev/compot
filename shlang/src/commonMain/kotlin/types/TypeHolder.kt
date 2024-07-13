@@ -20,7 +20,7 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
         return null
     }
 
-    fun getTypedefOrNull(name: String): CType? {
+    private fun getTypedefOrNull(name: String): CType? {
         for (i in typedefs.size - 1 downTo 0) {
             val type = typedefs[i][name]
             if (type != null) {
@@ -51,37 +51,13 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
         return getTypeOrNull(name) ?: throw Exception("Type for struct $name not found")
     }
 
-    fun <T : BaseType> addStructType(name: String, type: T): T {
+    fun <T : BaseType> addNewType(name: String, type: T): T {
         typeMap.last()[name] = type
         return type
-    }
-
-    fun getEnumType(name: String): BaseType {
-        return getTypeOrNull(name) ?: throw Exception("Type for enum $name not found")
-    }
-
-    fun addEnumType(name: String, type: EnumBaseType): EnumBaseType {
-        typeMap.last()[name] = type
-        return type
-    }
-
-    fun addEnumType(name: String, type: UncompletedEnumType): UncompletedEnumType {
-        typeMap.last()[name] = type
-        return type
-    }
-
-    fun getUnionType(name: String): BaseType {
-        return getTypeOrNull(name) ?: throw Exception("Type for union $name not found")
-    }
-
-    fun addUnionType(name: String, type: BaseType) {
-        typeMap.last()[name] = type
     }
 
     fun getFunctionType(name: String): CType {
-        return functions[name] ?: let {
-            throw Exception("Type for function '$name' not found")
-        }
+        return functions[name] ?: throw Exception("Type for function '$name' not found")
     }
 
     fun addFunctionType(name: String, type: CFunctionType) {

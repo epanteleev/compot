@@ -14,8 +14,8 @@ import ir.pass.ana.LoopDetection
 import ir.pass.ana.LoopInfo
 
 
-class BasicBlocks(private val basicBlocks: MutableList<Block>): LabelResolver {
-    fun blocks(): MutableList<Block> = basicBlocks
+class BasicBlocks private constructor(private var maxBBIndex: Int, private val basicBlocks: MutableList<Block>): LabelResolver {
+    fun blocks(): List<Block> = basicBlocks
 
     fun size(): Int = basicBlocks.size
 
@@ -28,11 +28,10 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>): LabelResolver {
             ?: throw IllegalArgumentException("Cannot find correspond block: $label")
     }
 
-    fun maxBlockIndex(): Int {
-        return basicBlocks.maxBy { it.index }.index
-    }
-
     fun begin(): Block {
+        assertion(basicBlocks.isNotEmpty() && basicBlocks.first().index == Label.entry.index) {
+            "First block should be entry block, but got '${basicBlocks.first()}'"
+        }
         return basicBlocks[0]
     }
 
@@ -83,8 +82,12 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>): LabelResolver {
         return PostDominatorTree.evaluate(this)
     }
 
-    fun putBlock(block: Block) {
+    fun createBlock(): Block {
+        val index = maxBBIndex
+        maxBBIndex += 1
+        val block = Block.empty(index)
         basicBlocks.add(block)
+        return block
     }
 
     operator fun iterator(): Iterator<Block> {
@@ -92,12 +95,9 @@ class BasicBlocks(private val basicBlocks: MutableList<Block>): LabelResolver {
     }
 
     companion object {
-        fun create(startBB: Block): BasicBlocks {
-            return BasicBlocks(arrayListOf(startBB))
-        }
-
-        fun create(blocks: MutableList<Block>): BasicBlocks {
-            return BasicBlocks(blocks)
+        fun create(): BasicBlocks {
+            val startBB = Block.empty(Label.entry.index)
+            return BasicBlocks(1, arrayListOf(startBB))
         }
     }
 }

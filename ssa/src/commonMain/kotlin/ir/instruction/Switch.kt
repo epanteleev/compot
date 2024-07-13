@@ -37,7 +37,7 @@ class Switch private constructor(id: Identity, owner: Block,
 
     fun value() = value
     fun default(): Block = default
-    fun table() = table
+    fun table(): Array<Value> = table
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

@@ -42,19 +42,6 @@ class IndirectionVoidCall private constructor(id: Identity, owner: Block, pointe
 
     override fun type(): Type = Type.Void
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as IndirectionVoidCall
-
-        return func != other.func
-    }
-
-    override fun hashCode(): Int {
-        return func.hashCode()
-    }
-
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }

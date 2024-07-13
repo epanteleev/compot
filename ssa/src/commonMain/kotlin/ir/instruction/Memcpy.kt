@@ -15,19 +15,6 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
         return visitor.visit(this)
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as Memcpy
-
-        return operands.contentEquals(other.operands())
-    }
-
-    override fun hashCode(): Int {
-        return operands[0].hashCode() + operands[1].hashCode() + operands[2].hashCode()
-    }
-
     override fun dump(): String {
         return "$NAME ${destination().type()} ${destination()}, ${destination().type()} ${source()}, ${length().type()} ${length()}"
     }

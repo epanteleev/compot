@@ -403,8 +403,7 @@ class FunctionDataBuilderWithContext private constructor(
                 return nameToValue
             }
 
-            val startBB     = Block.empty(Label.entry.index)
-            val basicBlocks = BasicBlocks.create(startBB)
+            val basicBlocks = BasicBlocks.create()
 
             val arguments = handleArguments(prototype.arguments())
             val nameMap   = setupNameMap(arguments, argumentValueTokens)

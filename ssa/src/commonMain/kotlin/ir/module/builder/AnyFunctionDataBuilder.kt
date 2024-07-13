@@ -13,13 +13,10 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
                                       protected val argumentValues: List<ArgumentValue>,
                                       protected val blocks: BasicBlocks) {
     protected var bb: Block = blocks.begin()
-    private var allocatedLabel: Int = 0
+
 
     protected fun allocateBlock(): Block {
-        allocatedLabel += 1
-        val bb = Block.empty(allocatedLabel)
-        blocks.putBlock(bb)
-        return bb
+        return blocks.createBlock()
     }
 
     fun currentLabel(): Label = bb

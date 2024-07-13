@@ -36,18 +36,6 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
         return visitor.visit(this)
     }
 
-    override fun hashCode(): Int {
-        return valueType.hashCode()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as Store
-        return pointer() == other.pointer() && value() == other.value() // TODO Unsafe
-    }
-
     companion object {
         const val NAME = "store"
 

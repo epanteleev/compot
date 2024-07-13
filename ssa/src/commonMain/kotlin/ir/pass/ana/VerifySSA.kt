@@ -27,7 +27,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
     private fun pass() {
         validateArguments()
-        for (bb in functionData.blocks) {
+        for (bb in functionData.blocks.preorder()) {
             validateBlock(bb)
         }
         validateExitBlock()

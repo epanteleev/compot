@@ -21,17 +21,4 @@ abstract class ValueInstruction(id: Identity,
     }
 
     override fun type(): NonTrivialType = tp
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as ValueInstruction
-
-        return id == other.id && owner.index == other.owner.index
-    }
-
-    override fun hashCode(): Int {
-        return id + owner.index
-    }
 }

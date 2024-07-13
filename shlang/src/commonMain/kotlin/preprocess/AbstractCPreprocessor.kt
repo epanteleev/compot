@@ -13,7 +13,6 @@ data class PreprocessorException(val info: String, val position: Position? = nul
     }
 }
 
-
 abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
     protected var current: AnyToken? = tokens.firstOrNull()
 
@@ -73,9 +72,8 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
         if (eof()) {
             throw PreprocessorException("Unexpected EOF")
         }
-        val next = current!!.next()
-        val result = tokens.remove(current!!)
-        current = next
+        val result = current!!
+        current = tokens.kill(current!!)
         return result
     }
 
@@ -109,12 +107,13 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
     }
 
     protected fun add(tok: AnyToken) {
-        if (current == null) {
-            tokens.add(tok)
-            current = tok
+        if (current != null) {
+            tokens.addBefore(current!!, tok)
             return
         }
-        tokens.addBefore(current!!, tok)
+
+        tokens.add(tok)
+        current = tok
     }
 
     protected fun trimSpacesAtEnding() {
