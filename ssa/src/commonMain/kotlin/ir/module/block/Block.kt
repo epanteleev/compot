@@ -348,7 +348,7 @@ class Block(override val index: Int):
         return withOutput { Projection.make(it, this, tuple, index) }
     }
 
-    override fun switch(value: Value, default: Label, table: List<Value>, targets: List<Label>): Switch {
+    override fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch {
         val resolved = arrayFrom(targets) { it as Block }
         return addTerminate { Switch.make(it, this, value, default as Block, table.toTypedArray(), resolved) }
     }
@@ -409,6 +409,11 @@ class Block(override val index: Int):
     private fun makeEdge(to: Block) {
         addSuccessor(to)
         to.addPredecessor(this)
+    }
+
+    internal fun removeEdge(to: Block) {
+        successors.remove(to)
+        to.predecessors.remove(this)
     }
 
     private inline fun<reified T: TerminateInstruction> addTerminate(f: (Int) -> T): T {

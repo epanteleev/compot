@@ -178,7 +178,7 @@ class FunctionDataBuilder private constructor(
         return bb.proj(tuple, index)
     }
 
-    override fun switch(value: Value, default: Label, table: List<Value>, targets: List<Label>): Switch {
+    override fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch {
         return bb.switch(value, default, table, targets)
     }
 

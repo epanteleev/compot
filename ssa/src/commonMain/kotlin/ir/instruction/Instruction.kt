@@ -56,6 +56,12 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
             }
         }
 
+        if (this is TerminateInstruction) {
+            for (target in targets()) {
+                target.removeEdge(owner())
+            }
+        }
+
         for (idx in operands.indices) {
             val op = operands[idx]
             if (op is LocalValue) {

@@ -380,8 +380,8 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     override fun visit(switch: Switch): LocalValue? {
         val newValue   = mapUsage<Value>(switch.value())
         val newDefault = mapBlock(switch.default())
-        val newTargets = switch.targets().map { mapBlock(it) }
-        val newTable   = switch.table().map { mapUsage<Value>(it) }
+        val newTargets = switch.targets().mapTo(arrayListOf()) { mapBlock(it) }
+        val newTable   = switch.table().mapTo(arrayListOf()) { it }
 
         bb().switch(newValue, newDefault, newTable, newTargets)
         return null

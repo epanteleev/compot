@@ -3,6 +3,7 @@ package examples
 import ir.types.*
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
+import ir.pass.transform.SwitchReplacementFabric
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
 import ir.value.I32Value
@@ -46,9 +47,10 @@ fun main() {
 
     val module = builder.build()
     println(module.toString())
+
     val asm = CodeGenerationFactory()
         .setTarget(TargetPlatform.X64)
-        .build(SSADestructionFabric.create(module).run())
+        .build(SSADestructionFabric.create(SwitchReplacementFabric.create(module).run()).run())
 
     println(asm.toString())
 }

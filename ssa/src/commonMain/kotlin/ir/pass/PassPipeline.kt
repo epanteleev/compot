@@ -5,6 +5,7 @@ import ir.pass.ana.VerifySSA
 import ir.pass.transform.CSSAConstructionFabric
 import ir.pass.transform.Mem2RegFabric
 import ir.pass.transform.SSADestructionFabric
+import ir.pass.transform.SwitchReplacementFabric
 
 
 class PassPipeline private constructor(private val passFabrics: List<PassFabric>, private val ctx: CompileContext) {
@@ -27,8 +28,8 @@ class PassPipeline private constructor(private val passFabrics: List<PassFabric>
     }
 
     companion object {
-        fun base(ctx: CompileContext): PassPipeline = create(arrayListOf(CSSAConstructionFabric, SSADestructionFabric), ctx)
-        fun opt(ctx: CompileContext): PassPipeline = create(arrayListOf(Mem2RegFabric, CSSAConstructionFabric, SSADestructionFabric), ctx)
+        fun base(ctx: CompileContext): PassPipeline = create(arrayListOf(SwitchReplacementFabric, CSSAConstructionFabric, SSADestructionFabric), ctx)
+        fun opt(ctx: CompileContext): PassPipeline = create(arrayListOf(Mem2RegFabric, SwitchReplacementFabric, CSSAConstructionFabric, SSADestructionFabric), ctx)
 
         fun create(passFabrics: List<PassFabric>, ctx: CompileContext): PassPipeline {
             return PassPipeline(passFabrics, ctx)

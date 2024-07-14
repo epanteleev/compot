@@ -1,10 +1,10 @@
 package ir.types
 
+import ir.Definitions.POINTER_SIZE
+
 
 object PointerType: PrimitiveType {
-    override fun sizeOf(): Int {
-        return 8
-    }
+    override fun sizeOf(): Int = POINTER_SIZE
 
     override fun toString(): String {
         return "ptr"

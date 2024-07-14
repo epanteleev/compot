@@ -1,20 +1,19 @@
 package ir.instruction
 
-import common.assertion
 import common.forEachWith
 import ir.value.Value
-import ir.instruction.Bitcast.Companion
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.types.IntegerType
+import ir.value.IntegerConstant
 
 
 class Switch private constructor(id: Identity, owner: Block,
                                  private val value: Value,
                                  private val default: Block,
-                                 private val table: Array<Value>,
+                                 private val table: Array<IntegerConstant>,
                                  targets: Array<Block>):
-    TerminateInstruction(id, owner, arrayOf(value) + table, arrayOf(default) + targets) {
+    TerminateInstruction(id, owner, arrayOf(value), targets + arrayOf(default)) {
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("switch ")
@@ -26,6 +25,10 @@ class Switch private constructor(id: Identity, owner: Block,
 
         builder.append(" [")
         table.forEachWith(targets) { value, bb, i ->
+            if (bb == default) {
+                return@forEachWith
+            }
+
             builder.append("$value: $bb")
             if (i < table.size - 1) {
                 builder.append(", ")
@@ -35,35 +38,25 @@ class Switch private constructor(id: Identity, owner: Block,
         return builder.toString()
     }
 
-    fun value() = value
+    fun value(): Value = value
     fun default(): Block = default
-    fun table(): Array<Value> = table
+    fun table(): Array<IntegerConstant> = table
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, value: Value, default: Block, table: Array<Value>, targets: Array<Block>): Switch {
-            require(isAppropriateType(value, table)) {
+        fun make(id: Identity, owner: Block, value: Value, default: Block, table: Array<IntegerConstant>, targets: Array<Block>): Switch {
+            require(isAppropriateType(value)) {
                 "inconsistent types in '$id': value='${value}:${value.type()}', table='${table.joinToString { it.type().toString() }}'"
             }
 
-            return Switch(id, owner, value, default, table, targets)
+            return registerUser(Switch(id, owner, value, default, table, targets), value)
         }
 
-        private fun isAppropriateType(value: Value, table: Array<Value>): Boolean {
-            if (value.type() !is IntegerType) {
-                return false
-            }
-
-            for (v in table) {
-                if (v.type() !is IntegerType) {
-                    return false
-                }
-            }
-
-            return true
+        private fun isAppropriateType(value: Value): Boolean {
+            return value.type() is IntegerType
         }
 
         fun typeCheck(switch: Switch): Boolean {
