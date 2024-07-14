@@ -3,6 +3,7 @@ package preprocess
 import common.assertion
 import tokenizer.*
 import common.forEachWith
+import preprocess.Macros.Companion.newTokenFrom
 import kotlin.jvm.JvmStatic
 
 
@@ -27,8 +28,7 @@ abstract class Macros(val name: String) {
     }
 
     companion object {
-        @JvmStatic
-        protected fun newTokenFrom(macrosNamePos: Position, tok: AnyToken): AnyToken {
+        fun newTokenFrom(macrosNamePos: Position, tok: AnyToken): AnyToken {
             if (tok !is CToken) {
                 return tok.cloneWith(macrosNamePos)
             }
@@ -114,7 +114,7 @@ class MacroReplacement(name: String, val value: TokenList): Macros(name) {
     }
 }
 
-class MacroFunction(name: String, private val argNames: CTokenList, private val value: TokenList): Macros(name) {
+class MacroFunction(name: String, internal val argNames: CTokenList, internal val value: TokenList): Macros(name) {
     override fun first(): CToken {
         return value.first() as CToken
     }
@@ -122,7 +122,9 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
     override fun tokenString(): String {
         return "#define $name(${argNames.joinToString(", ") { it.str() }}) ${value.joinToString(" ") { it.str() }}"
     }
+}
 
+class SubstituteFunction(private val macros: MacroFunction) {
     private fun seekNonSpace(idx: AnyToken?): CToken {
         var current: AnyToken? = idx
         do {
@@ -139,17 +141,21 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
 
     private fun concatTokens(result: TokenList, argToValue: Map<CToken, TokenList>, current: CToken): AnyToken? {
         val i = seekNonSpace(current.next())
-        val value = argToValue[i] ?: throw MacroExpansionException("Invalid macro expansion: ## without argument")
+        val value = argToValue[i] ?: tokenListOf(i.cloneWith(current.position()))
 
-        val arg1 = result.findLast { it is CToken } as CToken
+        val arg1 = result.findLast { it is CToken }
+        if (arg1 == null) {
+            return i
+        }
 
         val str = value.joinToString("") { it.str() }
         val str1 = arg1.str()
         result.remove(arg1)
-        if (result.last() is Indent) {
+        if (result.lastOrNull() is Indent) {
             result.removeLast()
         }
-        result.add(Identifier(str1 + str, current.position())) //TODO identifier not everytime
+        val tokens = CTokenizer.apply(str1 + str)
+        result.addAll(tokens)
         return i.next()
     }
 
@@ -162,7 +168,7 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
 
     private fun evaluateSubstitution(args: List<TokenList>): Map<CToken, TokenList> {
         val res = mutableMapOf<CToken, TokenList>()
-        this.argNames.forEachWith(args) { arg, value ->
+        macros.argNames.forEachWith(args) { arg, value ->
             res[arg] = value
         }
         return res
@@ -172,7 +178,7 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
         val argToValue = evaluateSubstitution(args)
 
         val result = TokenList()
-        var current = value.firstOrNull()
+        var current = macros.value.firstOrNull()
         do {
             if (current == null) {
                 break
@@ -184,7 +190,7 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
             }
 
             when(current.str()) {
-                 "##" -> {
+                "##" -> {
                     current = concatTokens(result, argToValue, current)
                     continue
                 }
@@ -210,7 +216,7 @@ class MacroFunction(name: String, private val argNames: CTokenList, private val 
                     continue
                 }
                 "__VA_ARGS__" -> {
-                    val remains = args.takeLast(args.size - argNames.size + 1)
+                    val remains = args.takeLast(args.size - macros.argNames.size + 1)
                     for (arg in remains) {
                         for (tok in arg) {
                             result.add(tok.cloneWith(PreprocessedPosition.UNKNOWN))

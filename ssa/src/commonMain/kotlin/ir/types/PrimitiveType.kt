@@ -1,4 +1,4 @@
 package ir.types
 
 
-interface PrimitiveType : NonTrivialType
+sealed interface PrimitiveType : NonTrivialType

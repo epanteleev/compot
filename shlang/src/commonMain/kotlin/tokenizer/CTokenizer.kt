@@ -57,7 +57,7 @@ class CTokenizer private constructor(private val filename: String, private val r
 
     private fun readSpaces(): Int {
         var spaces = 0
-        while (!reader.eof && reader.peek().isWhitespace()) {
+        while (!reader.eof && reader.isSpace()) {
             eat()
             spaces += 1
         }
@@ -79,7 +79,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 append(NewLine.of(1))
                 continue
             }
-            if (v.isWhitespace() || reader.check('\r')) {
+            if (reader.isSpace()) {
                 val spaces = readSpaces()
                 append(Indent.of(spaces))
                 continue

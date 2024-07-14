@@ -51,7 +51,7 @@ abstract class AlgoTests: CommonCTest() {
 
     @Test
     fun testCartesianToPolar() {
-        val result = runCTest("shlang/algo/cartesian_to_polar", listOf(), options())
+        val result = runCTest("shlang/algo/cartesian_to_polar", listOf(), options() + "-E")
         assertEquals("Tests passed\n", result.output)
         assertReturnCode(result, 0)
     }

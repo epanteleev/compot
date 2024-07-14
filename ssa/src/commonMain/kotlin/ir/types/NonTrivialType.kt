@@ -1,5 +1,5 @@
 package ir.types
 
-interface NonTrivialType: Type {
+sealed interface NonTrivialType: Type {
     fun sizeOf(): Int
 }

@@ -1,7 +1,7 @@
 package ir.types
 
 
-interface IntegerType: ArithmeticType
+sealed interface IntegerType: ArithmeticType
 
 data class SignedIntType internal constructor(val size: Int) : IntegerType {
     override fun sizeOf(): Int {

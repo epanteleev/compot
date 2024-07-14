@@ -418,14 +418,22 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
 
         val macroFunction = ctx.findMacroFunction(tok.str())
         if (macroFunction != null) {
-            killWithSpaces()
+            kill()
+            val spaces = killSpaces()
             if (!check("(")) {
                 add(tok)
+                if (spaces != 0) {
+                    add(Indent.of(spaces))
+                }
                 return null
             }
             killWithSpaces()
             val args = parseMacroFunctionArguments()
-            return handler(macroFunction, macroFunction.substitute(tok.position(), args))
+
+            val substitution = SubstituteFunction(macroFunction)
+                .substitute(tok.position(), args)
+
+            return handler(macroFunction, substitution)
         }
 
         val predefinedMacros = ctx.findPredefinedMacros(tok.str())

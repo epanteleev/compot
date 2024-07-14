@@ -256,7 +256,6 @@ class CProgramPreprocessorTest {
         assertEquals(expected, TokenPrinter.print(p))
     }
 
-
     @Test
     fun testMacroFunction4() {
         val tokens = CTokenizer.apply("#define INC(a) a + 1\nINC(0)")
@@ -299,6 +298,42 @@ class CProgramPreprocessorTest {
         val ctx = PreprocessorContext.empty(headerHolder)
         val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         assertEquals("", TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testMacroFunction8() {
+        val tokens = CTokenizer.apply("#define SUM(a, b) a + b\nSUM(3 + b,)")
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |3 + b +
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testMacroFunction9() {
+        val tokens = CTokenizer.apply("#define SUM(a, b, c) a + b + c\nSUM(3,,(4))")
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |3 +  + (4)
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testMacroFunction10() {
+        val tokens = CTokenizer.apply("#define SUM(a, b, c) a + b + c\nSUM(,3,4)")
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            | + 3 + 4
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
     }
 
     @Test
@@ -514,6 +549,75 @@ class CProgramPreprocessorTest {
         val expected = """
             |
             |test_2
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testStringify6() {
+        val data = """
+            |#define x(a, b) a ## b 
+            |x(2,)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |2
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testStringify7() {
+        val data = """
+            |#define x(a, b) b ## a
+            |x(,2)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |2
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    // Taken from /usr/include/math.h
+    @Test
+    fun testStringify8() {
+        val data = """
+            |# define __MATH_PRECNAME(name,r) name##f##r
+            |__MATH_PRECNAME(1,2)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |1f2
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testStringify9() {
+        val data = """
+            |# define __MATH_PRECNAME(name,r) name##f##r
+            |__MATH_PRECNAME(,2)
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |f2
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }

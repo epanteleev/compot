@@ -15,6 +15,10 @@ class StringReader(val str: String, var pos: Int = 0) {
         return str[pos]
     }
 
+    fun isSpace(): Boolean {
+        return peek() == ' ' || peek() == '\t' || peek() == '\r'
+    }
+
     fun check(char: Char): Boolean {
         return !eof && str[pos] == char
     }
