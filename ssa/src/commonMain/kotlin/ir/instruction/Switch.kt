@@ -16,7 +16,7 @@ class Switch private constructor(id: Identity, owner: Block,
     TerminateInstruction(id, owner, arrayOf(value), targets + arrayOf(default)) {
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("switch ")
+        builder.append("$NAME ")
             .append(value.type().toString())
             .append(' ')
             .append(value.toString())

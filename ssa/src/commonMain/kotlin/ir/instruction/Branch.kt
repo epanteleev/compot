@@ -8,7 +8,7 @@ import ir.instruction.utils.IRInstructionVisitor
 class Branch private constructor(id: Identity, owner: Block, target: Block):
     TerminateInstruction(id, owner, arrayOf(), arrayOf(target)) {
     override fun dump(): String {
-        return "br label %${target()}"
+        return "$NAME label %${target()}"
     }
 
     fun target(): Block {
@@ -24,6 +24,8 @@ class Branch private constructor(id: Identity, owner: Block, target: Block):
     }
 
     companion object {
+        const val NAME = "br"
+
         fun make(id: Identity, owner: Block, target: Block): Branch {
             return Branch(id, owner, target)
         }

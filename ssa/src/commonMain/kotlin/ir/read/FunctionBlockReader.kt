@@ -473,10 +473,10 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
             is LabelDefinition -> builder.switchLabel(currentTok)
             is Identifier -> {
                 when (currentTok.string) {
-                    "ret"       -> parseRet()
-                    "call"      -> parseVCall()
-                    "store"     -> parseStore()
-                    "br"        -> parseBranch()
+                    Return.NAME -> parseRet()
+                    Call.NAME   -> parseVCall()
+                    Store.NAME  -> parseStore()
+                    Branch.NAME -> parseBranch()
                     Switch.NAME -> parseSwitch()
                     Memcpy.NAME -> parseMemcpy()
                     else        -> throw ParseErrorException("instruction", currentTok)
@@ -538,11 +538,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
     }
 
     companion object {
-        fun parse(
-            tokenIterator: TokenIterator,
-            moduleBuilder: ModuleBuilderWithContext,
-            builder: FunctionDataBuilderWithContext
-        ) {
+        fun parse(tokenIterator: TokenIterator, moduleBuilder: ModuleBuilderWithContext, builder: FunctionDataBuilderWithContext) {
             FunctionBlockReader(tokenIterator, moduleBuilder, builder).parseInstructions()
         }
     }

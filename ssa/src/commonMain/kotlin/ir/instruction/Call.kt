@@ -43,6 +43,8 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
     }
 
     companion object {
+        const val NAME = "call"
+
         fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>, target: Block): Call {
             assertion(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
 
