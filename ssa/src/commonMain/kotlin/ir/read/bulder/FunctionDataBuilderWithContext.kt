@@ -324,6 +324,16 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.int2ptr(value))
     }
 
+    fun switch(valueTok: AnyValueToken, defaultLabel: LabelUsage, integerType: IntegerTypeToken, table: List<IntValue>, targets: List<LabelUsage>) {
+        val value = getValue(valueTok, integerType.type())
+
+        val targetBlocks         = targets.map { getBlockOrCreate(it.labelName) }
+        val tableConstant        = table.map { Constant.valueOf<IntegerConstant>(integerType.type(), it.int) }
+        val defaultLabelResolved = getBlockOrCreate(defaultLabel.labelName)
+
+        bb.switch(value, defaultLabelResolved, tableConstant, targetBlocks)
+    }
+
     fun phi(name: LocalValueToken, incomingTok: ArrayList<AnyValueToken>, labelsTok: ArrayList<Identifier>, expectedType: PrimitiveTypeToken): Value {
         val blocks = arrayListOf<Block>()
         for (tok in labelsTok) {

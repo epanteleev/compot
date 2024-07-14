@@ -42,9 +42,9 @@ private class SwitchReplacementImpl(val cfg: BasicBlocks) {
 
     private fun replaceSwitch(switch: Switch) {
         val selector = switch.value()
-        val default = switch.default()
-        val targets = switch.targets().mapTo(arrayListOf()) { it }
-        val table = switch.table().mapTo(arrayListOf()) { it }
+        val default  = switch.default()
+        val targets  = switch.targets().mapTo(arrayListOf()) { it }
+        val table    = switch.table().mapTo(arrayListOf()) { it }
 
         var current = switch.owner()
         table.forEachWith(targets) { value, target ->
@@ -54,8 +54,12 @@ private class SwitchReplacementImpl(val cfg: BasicBlocks) {
 
             val newBB = cfg.createBlock()
             if (switch.owner() == current) {
-                val inst = current.insertBefore(current.last()) { it.icmp(selector, IntPredicate.Eq, value) }
-                current.update(current.last()) { it.branchCond(inst, target, newBB) }
+                val inst = current.insertBefore(current.last()) {
+                    it.icmp(selector, IntPredicate.Eq, value)
+                }
+                current.update(current.last()) {
+                    it.branchCond(inst, target, newBB)
+                }
             } else {
                 val inst = current.icmp(selector, IntPredicate.Eq, value)
                 current.branchCond(inst, target, newBB)

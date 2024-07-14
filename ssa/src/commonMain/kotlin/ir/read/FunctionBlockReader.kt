@@ -457,7 +457,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     FloatToInt.NAME  -> parseFloat2Int(currentTok)
                     Int2Pointer.NAME -> parseInt2Pointer(currentTok)
                     Pointer2Int.NAME -> parsePointer2Int(currentTok)
-                    "alloc"      -> parseStackAlloc(currentTok)
+                    Alloc.NAME       -> parseStackAlloc(currentTok)
                     "phi"        -> parsePhi(currentTok)
                     "gep"        -> parseGep(currentTok)
                     "neg"        -> parseNeg(currentTok)
@@ -477,6 +477,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                     "call"      -> parseVCall()
                     "store"     -> parseStore()
                     "br"        -> parseBranch()
+                    Switch.NAME -> parseSwitch()
                     Memcpy.NAME -> parseMemcpy()
                     else        -> throw ParseErrorException("instruction", currentTok)
                 }
@@ -484,6 +485,37 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
             else -> throw ParseErrorException("instruction", currentTok)
         }
+    }
+
+    private fun parseSwitch() {
+        // switch {int_type} {value}, label {default}, [ {value} : {label}, ... ]
+        val intType    = iterator.expect<IntegerTypeToken>("integer type")
+        val labelUsage = iterator.expect<LocalValueToken>("value")
+
+        iterator.expect<LabelUsage>("'label' keyword")
+        val default = iterator.expect<LabelUsage>("default label")
+
+        iterator.expect<OpenSquareBracket>("'['")
+        val table = arrayListOf<IntValue>()
+        val targets = arrayListOf<LabelUsage>()
+        do {
+            val value = iterator.expect<IntValue>("value")
+            iterator.expect<Colon>("':'")
+            val label = iterator.expect<LabelUsage>("label")
+            table.add(value)
+            targets.add(label)
+
+            val comma = iterator.next("',' or ']'")
+            if (comma is CloseSquareBracket) {
+                break
+            }
+
+            if (comma !is Comma) {
+                throw ParseErrorException("','", comma)
+            }
+        } while (true)
+
+        builder.switch(labelUsage, default, intType, table, targets)
     }
 
     private fun parseInt2Pointer(currentTok: LocalValueToken) {
