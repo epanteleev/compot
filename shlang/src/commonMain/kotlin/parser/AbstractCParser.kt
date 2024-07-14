@@ -4,7 +4,7 @@ import tokenizer.*
 import types.TypeHolder
 
 
-abstract class AbstractCParser(tokens: TokenList) {
+abstract class AbstractCParser(val filename: String, tokens: TokenList) {
     protected var current: AnyToken? = tokens.firstOrNull()
     protected val typeHolder = TypeHolder.default()
 
@@ -24,7 +24,7 @@ abstract class AbstractCParser(tokens: TokenList) {
     protected fun eat() {
         skipSpaces()
         if (eof()) {
-            throw ParserException(EndOfFile)
+            throw ParserException(EndOfFile(filename))
         }
         current = current!!.next()
     }
@@ -32,7 +32,7 @@ abstract class AbstractCParser(tokens: TokenList) {
     protected inline fun <reified T : AnyToken> peak(): T {
         skipSpaces()
         if (eof()) {
-            throw ParserException(EndOfFile)
+            throw ParserException(EndOfFile(filename))
         }
         if (current !is T) {
             throw ParserException(InvalidToken("Unexpected token $current", current!!))

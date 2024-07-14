@@ -43,7 +43,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         val ctx = initializePreprocessorContext()
 
         val tokens              = CTokenizer.apply(source, filename)
-        val preprocessor        = CProgramPreprocessor.create(tokens, ctx)
+        val preprocessor        = CProgramPreprocessor.create(filename, tokens, ctx)
         val postProcessedTokens = preprocessor.preprocess()
 
         if (cli.isPreprocessOnly() && cli.isDumpDefines()) {
@@ -68,7 +68,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
     private fun compile(): Module? {
         val postProcessedTokens = preprocess()?: return null
 
-        val parser     = CProgramParser.build(postProcessedTokens)
+        val parser     = CProgramParser.build(cli.getFilename(), postProcessedTokens)
         val program    = parser.translation_unit()
         val typeHolder = parser.typeHolder()
         return IRGen.apply(typeHolder, program)

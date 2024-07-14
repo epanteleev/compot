@@ -13,7 +13,7 @@ data class PreprocessorException(val info: String, val position: Position? = nul
     }
 }
 
-abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
+abstract class AbstractCPreprocessor(val filename: String, protected val tokens: TokenList) {
     protected var current: AnyToken? = tokens.firstOrNull()
 
     protected fun eof(): Boolean {
@@ -29,7 +29,7 @@ abstract class AbstractCPreprocessor(protected val tokens: TokenList) {
 
     protected inline fun<reified T: AnyToken> peak(): T {
         if (eof()) {
-            throw ParserException(EndOfFile)
+            throw ParserException(EndOfFile(filename))
         }
         if (current !is T) {
             throw ParserException(InvalidToken("Unexpected token $current", current!!))

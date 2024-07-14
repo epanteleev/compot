@@ -12,7 +12,7 @@ private enum class ConditionType {
 
 private class ConditionState(var type: ConditionType, var isIncluded: Boolean)
 
-class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(original) {
+class CProgramPreprocessor(filename: String, original: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(filename, original) {
     private val conditions = mutableListOf<ConditionState>()
 
     private fun enterCondition(type: ConditionType, condResult: Boolean) {
@@ -61,13 +61,13 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
                 token = token.next()
             }
         }
-        return create(tokens, ctx).preprocess()
+        return create(filename, tokens, ctx).preprocess()
     }
 
     private fun evaluateCondition(tokens: TokenList): Long {
         val preprocessed = preprocessCondition(tokens)
 
-        val parser = CProgramParser.build(preprocessed)
+        val parser = CProgramParser.build(filename, preprocessed)
         val constexpr = parser.constant_expression() ?:
             throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(preprocessed)}'")
 
@@ -483,12 +483,16 @@ class CProgramPreprocessor(original: TokenList, private val ctx: PreprocessorCon
     }
 
     companion object {
+        fun create(filename: String, tokens: TokenList, ctx: PreprocessorContext): CProgramPreprocessor {
+            return CProgramPreprocessor(filename, tokens, ctx)
+        }
+
         fun create(tokens: TokenList, ctx: PreprocessorContext): CProgramPreprocessor {
-            return CProgramPreprocessor(tokens, ctx)
+            return CProgramPreprocessor("no-name", tokens, ctx)
         }
 
         private fun preprocessHeader(header: Header, ctx: PreprocessorContext): TokenList {
-            val includeTokens = create(header.tokenize(), ctx).preprocess()
+            val includeTokens = create(header.filename, header.tokenize(), ctx).preprocess()
             includeTokens.addBefore(null, EnterIncludeGuard(header.filename, ctx.includeLevel()))
             includeTokens.addAfter(null, ExitIncludeGuard(header.filename, ctx.includeLevel()))
             return includeTokens

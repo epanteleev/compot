@@ -14,8 +14,8 @@ data class InvalidToken(val message: String, val token: AnyToken): ProgramMessag
     }
 }
 
-object EndOfFile: ProgramMessage() {
+class EndOfFile(val filename: String): ProgramMessage() {
     override fun toString(): String {
-        return "Error: Unexpected EOF"
+        return "Error: Unexpected EOF in '$filename'"
     }
 }

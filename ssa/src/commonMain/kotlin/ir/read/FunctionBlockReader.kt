@@ -156,8 +156,8 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         val functionReturnType = iterator.expect<TypeToken>("function type") //TODO code duplication!!!
         val funcNameOrValue    = iterator.next("function name or value")
 
-        val argumentsTypes      = arrayListOf<TypeToken>()
-        val argumentValues      = arrayListOf<AnyValueToken>()
+        val argumentsTypes = arrayListOf<TypeToken>()
+        val argumentValues = arrayListOf<AnyValueToken>()
         tryParseArgumentBlock(argumentsTypes, argumentValues)
 
         val br = iterator.expect<Identifier>("'br' keyword")
