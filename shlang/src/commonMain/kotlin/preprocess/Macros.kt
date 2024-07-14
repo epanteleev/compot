@@ -124,7 +124,7 @@ class MacroFunction(name: String, internal val argNames: CTokenList, internal va
     }
 }
 
-class SubstituteFunction(private val macros: MacroFunction) {
+class SubstituteFunction(private val macros: MacroFunction, private val ctx: PreprocessorContext) {
     private fun seekNonSpace(idx: AnyToken?): CToken {
         var current: AnyToken? = idx
         do {
@@ -143,12 +143,14 @@ class SubstituteFunction(private val macros: MacroFunction) {
         val i = seekNonSpace(current.next())
         val value = argToValue[i] ?: tokenListOf(i.cloneWith(current.position()))
 
+        val preprocessed = CProgramPreprocessor.create(value, ctx).preprocess()
+
         val arg1 = result.findLast { it is CToken }
         if (arg1 == null) {
             return i
         }
 
-        val str = value.joinToString("") { it.str() }
+        val str = preprocessed.joinToString("") { it.str() }
         val str1 = arg1.str()
         result.remove(arg1)
         if (result.lastOrNull() is Indent) {

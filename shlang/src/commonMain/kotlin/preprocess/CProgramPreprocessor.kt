@@ -430,7 +430,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             killWithSpaces()
             val args = parseMacroFunctionArguments()
 
-            val substitution = SubstituteFunction(macroFunction)
+            val substitution = SubstituteFunction(macroFunction, ctx)
                 .substitute(tok.position(), args)
 
             return handler(macroFunction, substitution)
