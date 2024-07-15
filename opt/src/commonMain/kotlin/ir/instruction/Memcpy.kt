@@ -48,7 +48,7 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
 
         fun make(id: Identity, owner: Block, dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy {
             require(isAppropriateTypes(dst.type(), src.type())) {
-                "inconsistent types: dst=$dst, src=$src"
+                "inconsistent types: dst=$dst:${dst.type()}, src=$src:${src.type()}"
             }
 
             return registerUser(Memcpy(id, owner, dst, src, length), dst, src)
