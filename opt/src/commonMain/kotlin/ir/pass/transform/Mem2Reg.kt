@@ -50,14 +50,13 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
     }
 
     private fun completePhis(bbToMapValues: ReachingDefinition, insertedPhis: Set<Phi>) {
-        fun renameValues(newUsages: MutableList<Value>, block: Block, v: Value, expectedType: Type) {
-            val newValue = bbToMapValues.tryRename(block, v, expectedType)?: Value.UNDEF
-            newUsages.add(newValue)
+        fun renameValues(block: Block, v: Value, expectedType: Type): Value {
+            return bbToMapValues.tryRename(block, v, expectedType)?: Value.UNDEF
         }
 
         for (phi in insertedPhis) {
             val newUsages = arrayListOf<Value>()
-            phi.zip { l, v -> renameValues(newUsages, l, v, phi.type()) }
+            phi.updateDataFlow { l, v -> renameValues(l, v, phi.type()) }
             phi.update(newUsages)
         }
     }

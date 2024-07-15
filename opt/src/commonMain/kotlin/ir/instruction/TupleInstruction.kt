@@ -1,6 +1,5 @@
 package ir.instruction
 
-import ir.*
 import ir.module.block.Block
 import ir.types.TrivialType
 import ir.types.TupleType

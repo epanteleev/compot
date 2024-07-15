@@ -29,21 +29,19 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
         for (bb in basicBlocks) {
             bb.phis { phi ->
                 var changed = false
-                val validIncoming = phi.incoming().map {
-                    val p = predecessorMap[it]
+                phi.updateControlFlow { oldBB, _ ->
+                    val p = predecessorMap[oldBB]
                     if (p != null) {
                         changed = true
                         p
                     } else {
-                        it
+                        oldBB
                     }
                 }
 
                 if (!changed) {
                     return@phis
                 }
-
-                phi.update(phi.operands().toList(), validIncoming)
             }
         }
     }
@@ -54,15 +52,13 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
         }
 
         val inst = p.last()
-        val targets = inst.targets()
-        val newTargets = targets.mapTo(arrayListOf()) {
+        inst.updateTargets {
             if (it == bb) {
                 newBlock
             } else {
                 it
             }
         }
-        inst.updateTargets(newTargets)
 
         predecessorMap[p] = newBlock
         Block.insertBlock(bb, newBlock, p)

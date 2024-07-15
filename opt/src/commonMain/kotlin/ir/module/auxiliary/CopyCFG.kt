@@ -15,7 +15,7 @@ import ir.types.NonTrivialType
 import ir.value.*
 
 
-class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<LocalValue?> {
+class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<LocalValue?>() {
     private val oldBasicBlocks: BasicBlocks = fd.blocks
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
     private val newCFG = BasicBlocks.create()
@@ -86,19 +86,10 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
 
     private fun updatePhis() {
         for (bb in newCFG) {
-            for (inst in bb) {
-                if (inst !is Phi) {
-                    continue
-                }
-
-                val usages = newUsages(inst)
-                inst.update(usages, inst.incoming())
+            bb.phis { phi ->
+                phi.updateDataFlow { _, value -> mapUsage(value) }
             }
         }
-    }
-
-    private fun newUsages(inst: Phi): List<Value> {
-        return inst.operands().mapTo(arrayListOf()) { mapUsage<Value>(it)}
     }
 
     private inline fun<reified T> mapUsage(old: Value): T {

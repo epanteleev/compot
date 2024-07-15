@@ -12,11 +12,12 @@ abstract class ValueInstruction(id: Identity,
     Instruction(id, owner, operands),
     LocalValue {
     override var usedIn: MutableList<Instruction> = arrayListOf()
-    override fun name(): String {
+
+    final override fun name(): String {
         return "${owner.index}x${id}"
     }
 
-    override fun toString(): String {
+    final override fun toString(): String {
         return "%${name()}"
     }
 

@@ -9,9 +9,9 @@ abstract class TerminateInstruction(id: Identity, owner: Block, usages: Array<Va
     Instruction(id, owner, usages) {
     fun targets(): Array<Block> = targets
 
-    fun updateTargets(newTargets: Collection<Block>) {
-        for ((i, v) in newTargets.withIndex()) {
-            targets[i] = v
+    fun updateTargets(transform: (Block) -> Block) {
+        for ((i, v) in targets.withIndex()) {
+            targets[i] = transform(v)
         }
     }
 }

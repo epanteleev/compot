@@ -1,6 +1,5 @@
 package ir.instruction
 
-import common.assertion
 import ir.value.Value
 import ir.types.*
 import ir.module.block.Block
@@ -8,7 +7,7 @@ import common.forEachWith
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, private var incoming: List<Block>, incomingValue: Array<Value>):
+class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, private var incoming: MutableList<Block>, incomingValue: Array<Value>):
     ValueInstruction(id, owner, ty, incomingValue) {
 
     override fun dump(): String {
@@ -46,13 +45,16 @@ class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, pri
         return visitor.visit(this)
     }
 
-    fun update(newUsages: List<Value>, newIncoming: List<Block>): Phi {
-        assertion(newUsages.size == newIncoming.size) {
-            "inconsistent size: usages=${newUsages.size}, incoming=${newIncoming.size}"
+    fun updateDataFlow(closure: (Block, Value) -> Value) {
+        incoming().forEachWith(operands().asIterable()) { bb, value, idx ->
+            update(idx, closure(bb, value))
         }
-        update(newUsages)
-        incoming = newIncoming
-        return this
+    }
+
+    fun updateControlFlow(closure: (Block, Value) -> Block) {
+        incoming().forEachWith(operands().asIterable()) { bb, value, idx ->
+            incoming[idx] = closure(bb, value)
+        }
     }
 
     companion object {
@@ -60,11 +62,11 @@ class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, pri
             return Phi(id, owner, ty, arrayListOf(), arrayOf())
         }
 
-        fun make(id: Identity, owner: Block, ty: PrimitiveType, incoming: List<Block>, incomingValue: Array<Value>): Phi {
+        fun make(id: Identity, owner: Block, ty: PrimitiveType, incoming: MutableList<Block>, incomingValue: Array<Value>): Phi {
             return registerUser(Phi(id, owner, ty, incoming, incomingValue), incomingValue.iterator())
         }
 
-        fun makeUncompleted(id: Identity, owner: Block, type: PrimitiveType, incoming: Value, predecessors: List<Block>): Phi {
+        fun makeUncompleted(id: Identity, owner: Block, type: PrimitiveType, incoming: Value, predecessors: MutableList<Block>): Phi {
             val incomingType = incoming.type()
             require(incomingType is PointerType) {
                 "should be pointer type in '$id', type=$type, but incoming=$incoming:$incomingType"

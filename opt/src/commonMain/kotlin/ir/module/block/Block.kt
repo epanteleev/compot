@@ -161,14 +161,12 @@ class Block(override val index: Int):
         return instructions.iterator()
     }
 
-    fun phis(fn: (Phi) -> Unit) {
-        instructions.forEach {
-            if (it !is Phi) {
-                return@forEach // Assume that phi functions are in the beginning of bb.
-            }
-
-            fn(it)
+    fun phis(fn: (Phi) -> Unit) = instructions.forEach {
+        if (it !is Phi) {
+            return@forEach // Assume that phi functions are in the beginning of bb.
         }
+
+        fn(it)
     }
 
     fun removeIf(filter: (Instruction) -> Boolean): Boolean {
@@ -325,7 +323,7 @@ class Block(override val index: Int):
     }
 
     override fun phi(incoming: List<Value>, labels: List<Label>): Phi {
-        val bbs = labels.map { it as Block }
+        val bbs = labels.mapTo(arrayListOf()) { it as Block }
         return withOutput { Phi.make(it, this, incoming[0].type() as PrimitiveType, bbs, incoming.toTypedArray()) }
     }
 
@@ -359,7 +357,7 @@ class Block(override val index: Int):
     }
 
     override fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi {
-        val blocks = predecessors()
+        val blocks = predecessors().mapTo(arrayListOf()) { it }
         return withOutput { Phi.makeUncompleted(it, this, ty, incoming, blocks) }
     }
 
@@ -372,7 +370,8 @@ class Block(override val index: Int):
     }
 
     fun uncompletedPhi(incomingType: PrimitiveType, incoming: List<Value>, labels: List<Block>): Phi {
-        return withOutput { Phi.make(it, this, incomingType, labels, incoming.toTypedArray()) }
+        val blocks = labels.mapTo(arrayListOf()) { it }
+        return withOutput { Phi.make(it, this, incomingType, blocks, incoming.toTypedArray()) }
     }
 
     override fun copy(value: Value): Copy {

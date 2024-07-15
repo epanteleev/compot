@@ -18,7 +18,7 @@ data class ValidateSSAErrorException(override val message: String): Exception(me
 
 
 class VerifySSA private constructor(private val functionData: FunctionData,
-                                    private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit> {
+                                    private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit>() {
     private val dominatorTree by lazy { functionData.blocks.dominatorTree() }
     private val creation by lazy { CreationInfo.create(functionData) }
     private var bb = functionData.blocks.begin()

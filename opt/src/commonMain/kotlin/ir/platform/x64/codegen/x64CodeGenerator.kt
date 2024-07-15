@@ -45,7 +45,7 @@ private class CodeEmitter(private val data: FunctionData,
                           private val functionCounter: Int,
                           private val unit: CompilationUnit,
                           private val valueToRegister: RegisterAllocation,
-): IRInstructionVisitor<Unit> {
+): IRInstructionVisitor<Unit>() {
     private val asm = unit.mkFunction(data.prototype.name)
     private var previous: Block? = null
     private var next: Block? = null
