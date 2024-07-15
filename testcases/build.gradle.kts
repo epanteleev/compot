@@ -26,7 +26,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(project(":shlang"))
-                implementation(project(":ssa"))
+                implementation(project(":opt"))
                 implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
             }
         }

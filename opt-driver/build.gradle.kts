@@ -30,7 +30,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":ssa"))
+                implementation(project(":opt"))
             }
         }
     }

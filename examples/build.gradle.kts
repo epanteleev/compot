@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":ssa"))
+    implementation(project(":opt"))
 }
 
 application {

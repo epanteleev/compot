@@ -5,8 +5,12 @@ plugins {
     distribution
 }
 
-group = "org.shlang"
-version = "1.0-SNAPSHOT"
+group = "org.opt"
+version = "1.0"
+
+subprojects {
+    apply(plugin = "org.jetbrains.dokka")
+}
 
 repositories {
     mavenLocal()
@@ -18,7 +22,7 @@ kotlin {
     linuxX64 {
         binaries {
             sharedLib {
-                baseName = "ShlangDriver"
+                baseName = "opt"
             }
         }
     }
@@ -26,7 +30,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":opt"))
                 implementation("org.jetbrains.kotlin:kotlin-test-common")
                 implementation("org.jetbrains.kotlin:kotlin-test-annotations-common")
                 implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
