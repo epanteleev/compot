@@ -1,7 +1,7 @@
 package ir.module.block
 
-import ir.value.Value
 import ir.types.*
+import ir.value.*
 import ir.instruction.*
 import ir.instruction.lir.*
 import common.LeakedLinkedList
@@ -9,9 +9,6 @@ import common.arrayFrom
 import common.assertion
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
-import ir.value.IntegerConstant
-import ir.value.LocalValue
-import ir.value.UnsignedIntegerConstant
 
 
 class Block(override val index: Int):

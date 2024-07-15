@@ -62,6 +62,13 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("All tests have successfully passed!\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testHashAdler32() {
+        val result = runCTest("shlang/algo/hash_adler32", listOf(), options())
+        assertEquals("Tests passed\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {

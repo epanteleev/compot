@@ -27,6 +27,15 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
         }
     }
 
+    private fun prepareAddress(reg: Address) {
+        if (size != 1) {
+            asm.xor(POINTER_SIZE, rdx, rdx)
+            asm.mov(size, reg, rax)
+        } else {
+            asm.movzext(size, WORD_SIZE, reg, rax)
+        }
+    }
+
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         prepareRegs(first)
         asm.div(size, second)
@@ -55,7 +64,10 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        prepareAddress(first)
+        asm.div(size, second)
+        asm.mov(size, rax, dst)
+        asm.moveRem(size, rem)
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {

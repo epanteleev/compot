@@ -253,7 +253,10 @@ object TypeConverter {
                 toType as UnsignedIntType
                 when (value.type()) {
                     Type.U1  -> flag2int(value, toType)
-                    Type.I8  -> trunc(value, toType)
+                    Type.I8  -> {
+                        val sext = sext(value, Type.I32)
+                        bitcast(sext, toType)
+                    }
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> bitcast(value, toType)
                     Type.I64 -> {
