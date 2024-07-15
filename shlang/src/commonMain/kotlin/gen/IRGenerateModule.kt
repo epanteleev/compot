@@ -42,7 +42,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     }
 
     private fun declareDeclarator(declarationSpecifier: DeclarationSpecifier, decl: Declarator) {
-        when (val type = decl.resolveType(declarationSpecifier, typeHolder)) {
+        when (val type = decl.declareType(declarationSpecifier, typeHolder)) {
             is CFunctionType -> {
                 val abstrType = type.functionType
                 val argTypes  = abstrType.argsTypes.map {
@@ -84,7 +84,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                     declareDeclarator(node.declspec, decl)
                 }
                 is AssignmentDeclarator -> {
-                    val cType = decl.resolveType(node.declspec, typeHolder)
+                    val cType = decl.declareType(node.declspec, typeHolder)
                     val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType)
 
                     val result = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")

@@ -668,7 +668,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     override fun visit(functionNode: FunctionNode): Value = varStack.scoped {
         val name = functionNode.name()
         val parameters = functionNode.functionDeclarator().params()
-        val fnType = functionNode.resolveType(functionNode.specifier, typeHolder)
+        val fnType = functionNode.declareType(functionNode.specifier, typeHolder)
         val retType = mb.toIRType<Type>(typeHolder, fnType.retType())
 
         currentFunction = mb.createFunction(name, retType, fnType.args().map { mb.toIRType(typeHolder, it) })

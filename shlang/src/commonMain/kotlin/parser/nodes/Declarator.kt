@@ -8,7 +8,7 @@ import parser.nodes.visitors.*
 abstract class AnyDeclarator: Node() {
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
-    abstract fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType //TODO rename to 'declare'
+    abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType
 }
 
 data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
@@ -18,7 +18,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         return directDeclarator.name()
     }
 
-    override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
         var pointerType = declspec.specifyType(typeHolder)
         for (pointer in pointers) {
             pointerType = CPointerType(pointerType, pointer.property())
@@ -47,7 +47,7 @@ data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expressi
         return declarator.name()
     }
 
-    override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
         var pointerType = declspec.specifyType(typeHolder)
         for (pointer in declarator.pointers) {
             pointerType = CPointerType(pointerType, pointer.property())
@@ -75,7 +75,7 @@ object EmptyDeclarator : AnyDeclarator() {
 
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
         return CType.UNKNOWN
     }
 }
@@ -85,12 +85,12 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
         return visitor.visit(this)
     }
 
-    override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
         require(expr is EmptyExpression) {
             "unsupported expression in struct declarator $expr"
         }
 
-        return declarator.resolveType(declspec, typeHolder)
+        return declarator.declareType(declspec, typeHolder)
     }
 
     override fun name(): String {
@@ -112,16 +112,16 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
         return declarator.directDeclarator.directDeclaratorParams[0] as ParameterTypeList
     }
 
-    override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CFunctionType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CFunctionType {
         assertion(declspec === this.specifier) { "specifier mismatch" }
 
-        val s = declarator.resolveType(declspec, typeHolder) as CFunctionType
+        val s = declarator.declareType(declspec, typeHolder) as CFunctionType
         typeHolder.addFunctionType(name(), s) //TODO already added???
         return s
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
-        return resolveType(specifier, typeHolder)
+        return declareType(specifier, typeHolder)
     }
 
     override fun <T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)

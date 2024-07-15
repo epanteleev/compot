@@ -130,7 +130,7 @@ data class StructSpecifier(private val name: Identifier, val fields: List<Struct
         for (field in fields) {
             val type = field.declspec.specifyType(typeHolder)
             for (declarator in field.declarators) {
-                val resolved = declarator.resolveType(field.declspec, typeHolder)
+                val resolved = declarator.declareType(field.declspec, typeHolder)
                 structType.addField(declarator.name(), resolved)
             }
         }

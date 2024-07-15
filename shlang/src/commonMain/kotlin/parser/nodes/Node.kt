@@ -42,7 +42,7 @@ data class Declaration(val declspec: DeclarationSpecifier, private val declarato
     fun resolveType(typeHolder: TypeHolder) {
         declspec.specifyType(typeHolder) // Important: define new type here
         for (it in declarators) {
-            it.resolveType(declspec, typeHolder)
+            it.declareType(declspec, typeHolder)
         }
     }
 

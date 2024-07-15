@@ -69,6 +69,20 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("Tests passed\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testRot13() {
+        val result = runCTest("shlang/algo/rot13", listOf(), options())
+        assertEquals("All tests have successfully passed!\n", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testAffineCipher() {
+        val result = runCTest("shlang/algo/affine", listOf(), options())
+        assertEquals("All tests have successfully passed!\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {
