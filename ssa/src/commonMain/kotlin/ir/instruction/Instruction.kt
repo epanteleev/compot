@@ -73,13 +73,14 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
     }
 
     abstract fun<T> visit(visitor: IRInstructionVisitor<T>): T
+
     final override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
 
         other as Instruction
 
-        return id == other.id && owner.index == other.owner.index
+        return id == other.id && owner.index == other.owner.index && other.owner() === owner()
     }
 
     final override fun hashCode(): Int {

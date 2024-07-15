@@ -1,6 +1,5 @@
 package ir.pass.transform
 
-import ir.*
 import ir.dominance.DominatorTree
 import ir.instruction.*
 import ir.module.BasicBlocks
@@ -38,26 +37,25 @@ object Mem2RegFabric: PassFabric {
 }
 
 private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: JoinPointSet) {
-    private fun insertPhis(): Int {
-        var insertedPhis = 0
-        for ((bb, vSet) in joinSet) {
-            bb as Block
+    private fun insertPhis(): Set<Phi> {
+        val insertedPhis = hashSetOf<Phi>()
+        for ((bb, vSet) in joinSet) { bb as Block
             for (v in vSet) {
-                insertedPhis++
-                bb.prepend { it.uncompletedPhi(v.allocatedType as PrimitiveType, v) }
+                val phi = bb.prepend { it.uncompletedPhi(v.allocatedType as PrimitiveType, v) }
+                insertedPhis.add(phi)
             }
         }
 
         return insertedPhis
     }
 
-    private fun completePhis(bbToMapValues: ReachingDefinition, bb: Block) {
+    private fun completePhis(bbToMapValues: ReachingDefinition, insertedPhis: Set<Phi>) {
         fun renameValues(newUsages: MutableList<Value>, block: Block, v: Value, expectedType: Type) {
             val newValue = bbToMapValues.tryRename(block, v, expectedType)?: Value.UNDEF
             newUsages.add(newValue)
         }
 
-        bb.phis { phi ->
+        for (phi in insertedPhis) {
             val newUsages = arrayListOf<Value>()
             phi.zip { l, v -> renameValues(newUsages, l, v, phi.type()) }
             phi.update(newUsages)
@@ -86,13 +84,12 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
         val insertedPhis = insertPhis()
         val bbToMapValues = ReachingDefinitionAnalysis.run(cfg, dominatorTree)
 
-        if (insertedPhis == 0) {
+        if (insertedPhis.isEmpty()) {
             // No phis were inserted, so no need to make steps further
             return
         }
-        for (bb in cfg) {
-            completePhis(bbToMapValues, bb)
-        }
+
+        completePhis(bbToMapValues, insertedPhis)
 
         val deadPool = hashSetOf<Instruction>()
         for (bb in cfg.postorder()) {

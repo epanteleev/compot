@@ -20,7 +20,6 @@ class PassPipeline private constructor(private val passFabrics: List<PassFabric>
                 ctx.log(pass.name()) { current.toString() }
             } catch (ex: Throwable) {
                 println(current.toString())
-                ex.printStackTrace()
                 throw ex
             }
         }

@@ -1,5 +1,6 @@
 package ir.instruction
 
+import common.assertion
 import ir.value.Value
 import ir.types.*
 import ir.module.block.Block
@@ -46,6 +47,9 @@ class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, pri
     }
 
     fun update(newUsages: List<Value>, newIncoming: List<Block>): Phi {
+        assertion(newUsages.size == newIncoming.size) {
+            "inconsistent size: usages=${newUsages.size}, incoming=${newIncoming.size}"
+        }
         update(newUsages)
         incoming = newIncoming
         return this

@@ -217,7 +217,8 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
     override fun visit(numNode: NumNode): Long {
         val num = numNode.number.toNumberOrNull() ?: throw ConstEvalException("Cannot evaluate number ${numNode.number}")
         if (num !is Number) {
-            throw ConstEvalException("Cannot evaluate number ${numNode.number}")
+            println("warning num=${num}")
+            return (num as ULong).toLong()
         }
 
         return num.toLong()

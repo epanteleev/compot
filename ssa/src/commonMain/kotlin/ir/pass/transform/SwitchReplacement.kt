@@ -9,7 +9,7 @@ import ir.pass.PassFabric
 import ir.pass.TransformPass
 
 
-class SwitchReplacement(module: Module) : TransformPass(module) {
+class SwitchReplacement internal constructor(module: Module) : TransformPass(module) {
     override fun name(): String = "switch-replacement"
     override fun run(): Module {
         for (func in module.functions) {

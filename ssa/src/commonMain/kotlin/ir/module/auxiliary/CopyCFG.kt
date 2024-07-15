@@ -97,7 +97,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         }
     }
 
-    private fun newUsages(inst: Instruction): List<Value> {
+    private fun newUsages(inst: Phi): List<Value> {
         return inst.operands().mapTo(arrayListOf()) { mapUsage<Value>(it)}
     }
 
@@ -263,7 +263,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
 
     override fun visit(phi: Phi): ValueInstruction {
         val newUsages   = phi.operands().toList()
-        val newIncoming = phi.incoming().map { mapBlock(it) } //TODO
+        val newIncoming = phi.incoming().mapTo(arrayListOf()) { mapBlock(it) } //TODO
 
         return bb().uncompletedPhi(phi.type(), newUsages, newIncoming) //TODO
     }
