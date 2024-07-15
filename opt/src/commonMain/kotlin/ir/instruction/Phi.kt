@@ -1,5 +1,6 @@
 package ir.instruction
 
+import common.arrayWith
 import ir.value.Value
 import ir.types.*
 import ir.module.block.Block
@@ -9,7 +10,6 @@ import ir.instruction.utils.IRInstructionVisitor
 
 class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, private var incoming: MutableList<Block>, incomingValue: Array<Value>):
     ValueInstruction(id, owner, ty, incomingValue) {
-
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("%${name()} = phi $tp [")
@@ -30,13 +30,13 @@ class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, pri
     fun incoming(): List<Block> = incoming
 
     fun zip(closure: (Block, Value) -> Unit) {
-        incoming().forEachWith(operands().asIterable()) { bb, value ->
+        incoming().forEachWith(operands()) { bb, value ->
             closure(bb, value)
         }
     }
 
     fun zipWithIndex(closure: (Block, Value, Int) -> Unit) {
-        incoming().forEachWith(operands().asIterable()) { bb, value, i ->
+        incoming().forEachWith(operands()) { bb, value, i ->
             closure(bb, value, i)
         }
     }
@@ -46,13 +46,13 @@ class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, pri
     }
 
     fun updateDataFlow(closure: (Block, Value) -> Value) {
-        incoming().forEachWith(operands().asIterable()) { bb, value, idx ->
+        incoming().forEachWith(operands()) { bb, value, idx ->
             update(idx, closure(bb, value))
         }
     }
 
     fun updateControlFlow(closure: (Block, Value) -> Block) {
-        incoming().forEachWith(operands().asIterable()) { bb, value, idx ->
+        incoming().forEachWith(operands()) { bb, value, idx ->
             incoming[idx] = closure(bb, value)
         }
     }
@@ -72,7 +72,7 @@ class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, pri
                 "should be pointer type in '$id', type=$type, but incoming=$incoming:$incomingType"
             }
 
-            val values = predecessors.mapTo(arrayListOf()) { incoming }.toTypedArray() //Todo
+            val values = arrayWith(predecessors.size) { incoming }
             return Phi(id, owner, type, predecessors, values)
         }
 
