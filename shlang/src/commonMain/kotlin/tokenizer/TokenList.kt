@@ -8,6 +8,14 @@ class TokenList: LeakedLinkedList<AnyToken>() {
         remove(token)
         return next
     }
+
+    fun lastNotSpace(): AnyToken? {
+        var last = lastOrNull()
+        while (last is AnySpaceToken) {
+            last = last.prev()
+        }
+        return last
+    }
 }
 
 fun tokenListOf(vararg tokens: AnyToken): TokenList {

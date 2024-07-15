@@ -40,8 +40,8 @@ class CTokenizer private constructor(private val filename: String, private val r
     }
 
     private fun rearLiteral(quote: Char): String {
-        return reader.readBlock {
-            eat()
+        eat()
+        val literal = reader.readBlock {
             while (!reader.check(quote)) {
                 eat()
                 if (isBackSlash()) {
@@ -49,10 +49,11 @@ class CTokenizer private constructor(private val filename: String, private val r
                     incrementLine()
                 }
             }
-            if (!reader.eof) {
-                eat()
-            }
         }
+        if (!reader.eof) {
+            eat()
+        }
+        return literal
     }
 
     private fun readSpaces(): Int {
@@ -92,7 +93,14 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
             if (reader.check('"')) {
                 val literal = rearLiteral(v)
-                append(StringLiteral(literal, OriginalPosition(line, position - literal.length, filename)))
+                val last = tokens.lastNotSpace()
+                if (last is StringLiteral) {
+                    tokens.remove(last)
+                    append(StringLiteral(last.unquote() + literal, OriginalPosition(last.line(), last.pos(), filename)))
+                } else {
+                    append(StringLiteral(literal, OriginalPosition(line, position - (literal.length + 2), filename)))
+                }
+
                 continue
             }
 

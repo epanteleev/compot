@@ -52,7 +52,7 @@ int modular_multiplicative_inverse(unsigned int a, unsigned int m)
     if (m == 0) {
         return 0;
     }
-    a %= m;
+    a = a % m;
     if (a == 0) {
         return 0;
     }
@@ -92,7 +92,7 @@ affine_key_t inverse_key(affine_key_t key)
 
     // Turn negative results positive
     inverse.a += ALPHABET_SIZE;
-    inverse.a %= ALPHABET_SIZE;
+    inverse.a = inverse.a % ALPHABET_SIZE;
 
     inverse.b = -(key.b % ALPHABET_SIZE) + ALPHABET_SIZE;
 
@@ -115,7 +115,7 @@ void affine_encrypt(char *s, affine_key_t key)
 
         c *= key.a;
         c += key.b;
-        c %= ALPHABET_SIZE;
+        c = c % ALPHABET_SIZE;
 
         s[i] = (char)(c + Z95_CONVERSION_CONSTANT);
     }

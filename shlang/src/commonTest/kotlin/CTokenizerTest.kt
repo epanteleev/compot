@@ -39,10 +39,7 @@ class CTokenizerTest {
         val tokens = CTokenizer.apply("\"sdfsdf\" \"   \"").toCTokenList()
 
         assertTrue { tokens[0] is StringLiteral }
-        assertEquals("\"sdfsdf\"", tokens[0].str())
-
-        assertTrue { tokens[1] is StringLiteral }
-        assertEquals("\"   \"", tokens[1].str())
+        assertEquals("\"sdfsdf   \"", tokens[0].str())
     }
 
     @Test
@@ -126,5 +123,13 @@ class CTokenizerTest {
         tokens[0].isEqual(1, 1, "ff")
         val tok = tokens[0] as Numeric
         assertEquals(255, tok.toNumberOrNull())
+    }
+
+    @Test
+    fun testStringConcatenation() {
+        val input = "\"Hello\" \"World\""
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is StringLiteral }
+        tokens[0].isEqual(1, 1, "\"HelloWorld\"")
     }
 }

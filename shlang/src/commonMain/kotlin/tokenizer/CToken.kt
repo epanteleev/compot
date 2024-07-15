@@ -162,8 +162,7 @@ class Keyword(val data: String, position: Position): CToken(position) {
 }
 
 class StringLiteral(private val data: String, position: Position): CToken(position) {
-    private val unquoted by lazy { data.substring(1, data.length - 1) }
-    override fun str(): String = data
+    override fun str(): String = "\"$data\""
 
     override fun hashCode(): Int {
         return data.hashCode()
@@ -179,17 +178,16 @@ class StringLiteral(private val data: String, position: Position): CToken(positi
     }
 
     fun unquote(): String {
-        return unquoted
+        return data()
     }
 
     fun data(): String {
         val stringBuilder = StringBuilder()
-        for (i in 1 until data.length - 1) {
-            val c = data[i]
-            if (c == '"') {
+        for (element in data) {
+            if (element == '"') {
                 stringBuilder.append("\\\"")
             } else {
-                stringBuilder.append(c)
+                stringBuilder.append(element)
             }
         }
         return stringBuilder.toString()
@@ -197,12 +195,6 @@ class StringLiteral(private val data: String, position: Position): CToken(positi
 
     override fun cloneWith(pos: Position): CToken {
         return StringLiteral(data, pos)
-    }
-
-    companion object {
-        fun quote(data: String, position: Position): StringLiteral {
-            return StringLiteral("\"$data\"", position)
-        }
     }
 }
 

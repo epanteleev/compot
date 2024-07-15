@@ -164,7 +164,7 @@ class SubstituteFunction(private val macros: MacroFunction, private val ctx: Pre
     private fun stringify(result: TokenList, argToValue: Map<CToken, TokenList>, current: CToken): AnyToken? {
         val value = argToValue[current] ?: throw MacroExpansionException("Invalid macro expansion: # without argument")
         val str = value.joinToString("") { it.str() }
-        result.add(StringLiteral("\"$str\"", current.position()))
+        result.add(StringLiteral(str, current.position()))
         return current.next()
     }
 
@@ -209,7 +209,7 @@ class SubstituteFunction(private val macros: MacroFunction, private val ctx: Pre
                                 stringBuilder.append(", ")
                             }
                         }
-                        result.add(StringLiteral("\"${stringBuilder}\"", current.position()))
+                        result.add(StringLiteral(stringBuilder.toString(), current.position()))
                         current = current.next()
                         continue
                     } else {
