@@ -8,6 +8,9 @@ plugins {
 group = "org.example"
 version = "unspecified"
 
+subprojects {
+    apply(plugin = "org.jetbrains.dokka")
+}
 
 repositories {
     mavenLocal()

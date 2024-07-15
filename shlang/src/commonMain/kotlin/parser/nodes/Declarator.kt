@@ -48,7 +48,25 @@ data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expressi
     }
 
     override fun resolveType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
-        return declarator.resolveType(declspec, typeHolder)
+        var pointerType = declspec.specifyType(typeHolder)
+        for (pointer in declarator.pointers) {
+            pointerType = CPointerType(pointerType, pointer.property())
+        }
+
+        pointerType = declarator.directDeclarator.resolveType(pointerType, typeHolder)
+        assertion (!declspec.isTypedef) { "typedef is not supported here" }
+
+        if (pointerType is CPointerType && rvalue is InitializerList) {
+            // Special case for array initialization without exact size like:
+            // int a[] = {1, 2};
+            // 'a' is array of 2 elements, not pointer to int
+
+            val rvalueType = rvalue.resolveType(typeHolder)
+            typeHolder.addVar(name(), rvalueType)
+            return rvalueType
+        }
+        typeHolder.addVar(name(), pointerType)
+        return pointerType
     }
 }
 

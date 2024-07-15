@@ -6,6 +6,10 @@ plugins {
 group = "org.shlang"
 version = "1.0-SNAPSHOT"
 
+subprojects {
+    apply(plugin = "org.jetbrains.dokka")
+}
+
 repositories {
     mavenLocal()
     mavenCentral()

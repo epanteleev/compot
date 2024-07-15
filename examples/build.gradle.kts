@@ -6,6 +6,10 @@ plugins {
 group = "org.example"
 version = "1.0"
 
+subprojects {
+    apply(plugin = "org.jetbrains.dokka")
+}
+
 repositories {
     mavenCentral()
 }

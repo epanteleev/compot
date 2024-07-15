@@ -23,6 +23,12 @@ abstract class InitializerListTest: CommonCTest() {
         val result = runCTest("shlang/initializerList/initializerList2", listOf(), options())
         assertEquals("point.x = 1, point.y = 2.000", result.output)
     }
+
+    @Test
+    fun test4() {
+        val result = runCTest("shlang/initializerList/initializerList3", listOf(), options())
+        assertEquals("123", result.output)
+    }
 }
 
 class InitializerListTestsO0: InitializerListTest() {
