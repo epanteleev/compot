@@ -43,7 +43,7 @@ class CTokenizer private constructor(private val filename: String, private val r
         return reader.readBlock {
             eat()
             while (!reader.check(quote)) {
-                val c = eat()
+                eat()
                 if (isBackSlash()) {
                     eat(2)
                     incrementLine()
