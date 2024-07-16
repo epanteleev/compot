@@ -3,7 +3,7 @@ extern void @printInt(i32);
 define i32 @func(%0:i32) {
 entry:
     %ptr = alloc i32
-	switch u8 2, label %L1 [1: %L2, 2: %L3, 3: %L4]
+	switch i32 %0, label %L1 [1: %L2, 2: %L3, 3: %L4]
 L2:	; pred=entry
     store ptr %ptr, i32 10
 	br label %L5
@@ -17,7 +17,8 @@ L1:	; pred=entry
     store ptr %ptr, i32 40
 	br label %L5
 L5:	; pred=L1, L2, L3, L4
-	ret i32 0
+    %ret = load i32 %ptr
+	ret i32 %ret
 }
 
 define i32 @main() {
@@ -40,7 +41,7 @@ next5:
     call void @printInt(%2: i32) br label %next6
 
 next6:
-    %3 = call i32 @func(4: i32) br label %next7
+    %3 = call i32 @func(7: i32) br label %next7
 
 next7:
     call void @printInt(%3: i32) br label %next8

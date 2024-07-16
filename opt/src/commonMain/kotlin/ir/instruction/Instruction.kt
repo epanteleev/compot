@@ -59,7 +59,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
 
         if (this is TerminateInstruction) {
             for (target in targets()) {
-                target.removeEdge(owner())
+                owner.removeEdge(target)
             }
         }
 
