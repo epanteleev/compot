@@ -18,6 +18,10 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
     }
 
     fun returnValue(index: Int): Value {
+        if (index >= operands().size && index < 0) {
+            throw IndexOutOfBoundsException("index=$index, operands=${operands().joinToString { it.toString() }}")
+        }
+
         return operands[index]
     }
 
