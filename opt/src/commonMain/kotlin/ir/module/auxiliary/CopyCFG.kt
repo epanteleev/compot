@@ -159,12 +159,11 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return bb.call(call.prototype(), newUsages, target)
     }
 
-    override fun visit(tupleCall: TupleCall): LocalValue? {
+    override fun visit(tupleCall: TupleCall): LocalValue {
         val newUsages = tupleCall.operands().map { mapUsage<Value>(it) }
         val target    = mapBlock(tupleCall.target())
 
-        bb.tupleCall(tupleCall.prototype(), newUsages, target)
-        return null
+        return bb.tupleCall(tupleCall.prototype(), newUsages, target)
     }
 
     override fun visit(bitcast: Bitcast): ValueInstruction {

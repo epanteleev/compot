@@ -14,15 +14,5 @@ abstract class TerminateTupleInstruction(id: Identity,
                                          targets: Array<Block>):
     TerminateValueInstruction(id, owner, tp, operands, targets), LocalValue {
 
-    fun proj(index: Int): Projection? {
-        for (user in usedIn()) {
-            user as Projection
-            if (user.index() == index) {
-                return user
-            }
-        }
-        return null
-    }
-
     abstract override fun type(): TupleType
 }

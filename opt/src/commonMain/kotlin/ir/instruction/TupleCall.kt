@@ -6,10 +6,11 @@ import common.assertion
 import ir.module.block.Block
 import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
+import ir.value.TupleValue
 
 
 class TupleCall private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>, target: Block):
-    TerminateTupleInstruction(id, owner, func.returnType() as TupleType, args, arrayOf(target)),
+    TerminateTupleInstruction(id, owner, func.returnType() as TupleType, args, arrayOf(target)), TupleValue,
     Callable {
 
     override fun arguments(): Array<Value> {

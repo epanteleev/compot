@@ -1,5 +1,5 @@
 
-extern i32 @printInt(i32)
+extern void @printInt(i32)
 
 define |i32, i32| @test() {
 entry:
@@ -16,10 +16,10 @@ entry:
 next:
   %proj1 = proj |i32, i32|, i32 %call, 0
   %proj2 = proj |i32, i32|, i32 %call, 1
-  %call1 = call i32 @printInt(%proj1: i32) br label %next1
+  call void @printInt(%proj1: i32) br label %next1
 
 next1:
-  %call2 = call i32 @printInt(%proj2: i32) br label %end
+  call void @printInt(%proj2: i32) br label %end
 
 end:
   ret i32 0

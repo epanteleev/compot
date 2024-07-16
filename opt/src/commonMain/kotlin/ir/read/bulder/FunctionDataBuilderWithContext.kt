@@ -177,6 +177,12 @@ class FunctionDataBuilderWithContext private constructor(
         return argumentValues
     }
 
+    fun tupleCall(name: LocalValueToken, func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage): TupleCall {
+        val argumentValues = convertToValues(func.arguments(), args)
+        val block          = getBlockOrCreate(target.labelName)
+        return memorize(name, bb.tupleCall(func, argumentValues, block))
+    }
+
     fun call(name: LocalValueToken, func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): Value {
         require(func.returnType() !is VoidType)
         val argumentValues = convertToValues(func.arguments(), args)
@@ -367,16 +373,16 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.proj(value, index.int.toInt()))
     }
 
-    fun makePrototype(functionName: SymbolValue, returnType: TypeToken, argTypes: List<TypeToken>): FunctionPrototype {
+    fun makePrototype(functionName: SymbolValue, returnType: Type, argTypes: List<TypeToken>): FunctionPrototype {
         val types = moduleBuilder.resolveArgumentType(argTypes)
         val isVararg = argTypes.lastOrNull() is Vararg
-        return FunctionPrototype(functionName.name, returnType.type(moduleBuilder), types, isVararg)
+        return FunctionPrototype(functionName.name, returnType, types, isVararg)
     }
 
-    fun makePrototype(returnType: TypeToken, argTypes: List<TypeToken>): IndirectFunctionPrototype {
+    fun makePrototype(returnType: Type, argTypes: List<TypeToken>): IndirectFunctionPrototype {
         val types = moduleBuilder.resolveArgumentType(argTypes)
         val isVararg = argTypes.lastOrNull() is Vararg
-        return IndirectFunctionPrototype(returnType.type(moduleBuilder), types, isVararg)
+        return IndirectFunctionPrototype(returnType, types, isVararg)
     }
 
     companion object {

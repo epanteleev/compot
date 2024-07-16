@@ -127,7 +127,6 @@ private class CodeEmitter(private val data: FunctionData,
                     is FloatingPointType -> {
                         FloatDivCodegen(binary.type(), asm)(dst, first, second)
                     }
-                    else -> TODO()
                 }
             }
         }
@@ -148,32 +147,31 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(returnValue: ReturnValue) {
-        val retInstType = returnValue.type()
-        when (retInstType) {
+        when (val returnType = returnValue.type()) {
             is IntegerType -> {
                 val value = valueToRegister.operand(returnValue.operands()[0])
-                emitRetValue(retInstType, value, retReg)
+                emitRetValue(returnType, value, retReg)
 
                 emitEpilogue()
                 asm.ret()
             }
             is PointerType -> {
                 val value = valueToRegister.operand(returnValue.operands()[0])
-                emitRetValue(retInstType, value, retReg)
+                emitRetValue(returnType, value, retReg)
 
                 emitEpilogue()
                 asm.ret()
             }
             is FloatingPointType -> {
                 val value = valueToRegister.operand(returnValue.operands()[0])
-                emitRetValue(retInstType, value, fpRet)
+                emitRetValue(returnType, value, fpRet)
 
                 emitEpilogue()
                 asm.ret()
             }
             is TupleType -> {
-                val first  = retInstType.asInnerType<PrimitiveType>(0)
-                val second = retInstType.asInnerType<PrimitiveType>(1)
+                val first  = returnType.asInnerType<PrimitiveType>(0)
+                val second = returnType.asInnerType<PrimitiveType>(1)
 
 
                 val value = valueToRegister.operand(returnValue.operands()[0])
@@ -197,7 +195,7 @@ private class CodeEmitter(private val data: FunctionData,
             }
 
             else -> {
-                throw CodegenException("unknown type=$retInstType")
+                throw CodegenException("unknown type=$returnType")
             }
         }
     }
@@ -247,10 +245,22 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(tupleCall: TupleCall) {
         asm.call(tupleCall.prototype().name)
-
         val retType = tupleCall.type()
 
-        TODO()
+        val first  = retType.asInnerType<PrimitiveType>(0)
+        val second = retType.asInnerType<PrimitiveType>(1)
+
+        val value = valueToRegister.operand(tupleCall.proj(0)!!)
+        if (first is IntegerType || first is PointerType) {
+            asm.movOld(first.sizeOf(), retReg, value)
+        } else if (first is FloatingPointType) {
+            TODO()
+        }
+
+        val value1 = valueToRegister.operand(tupleCall.proj(1)!!)
+        if (second is IntegerType || second is PointerType) {
+            asm.movOld(second.sizeOf(), rdx, value1)
+        }
     }
 
     override fun visit(int2ptr: Int2Pointer) {
@@ -381,24 +391,6 @@ private class CodeEmitter(private val data: FunctionData,
                     is Address     -> asm.movf(size, fpRet, op)
                     is XmmRegister -> asm.movf(size, fpRet, op)
                     else -> throw CodegenException("unknown value type=$op")
-                }
-            }
-
-            is TupleType -> {
-                call as Call
-                val first  = retType.asInnerType<PrimitiveType>(0)
-                val second = retType.asInnerType<PrimitiveType>(1)
-
-                val value = valueToRegister.operand(call.proj(0)!!)
-                if (first is IntegerType || first is PointerType) {
-                    asm.movOld(first.sizeOf(), retReg, value)
-                } else if (first is FloatingPointType) {
-                    TODO()
-                }
-
-                val value1 = valueToRegister.operand(call.proj(1)!!)
-                if (second is IntegerType || second is PointerType) {
-                    asm.movOld(second.sizeOf(), rdx, value1)
                 }
             }
             else -> {

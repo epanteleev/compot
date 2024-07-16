@@ -161,14 +161,27 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
         val target = iterator.expect<LabelUsage>("label name")
 
+        val returnType = functionReturnType.type(moduleBuilder)
         when (funcNameOrValue) {
-            is SymbolValue -> {
-                val prototype = builder.makePrototype(funcNameOrValue, functionReturnType, argumentsTypes)
-                builder.call(currentTok, prototype, argumentValues, target)
+            is SymbolValue -> when (returnType) {
+                is TupleType -> {
+                    val prototype = builder.makePrototype(funcNameOrValue, returnType, argumentsTypes)
+                    builder.tupleCall(currentTok, prototype, argumentValues, target)
+                }
+                else -> {
+                    val prototype = builder.makePrototype(funcNameOrValue, returnType, argumentsTypes)
+                    builder.call(currentTok, prototype, argumentValues, target)
+                }
             }
-            is LocalValueToken -> {
-                val prototype = builder.makePrototype(functionReturnType, argumentsTypes)
-                builder.icall(currentTok, funcNameOrValue, prototype, argumentValues, target)
+
+            is LocalValueToken -> when (returnType) {
+                is TupleType -> {
+                    TODO()
+                }
+                else -> {
+                    val prototype = builder.makePrototype(returnType, argumentsTypes)
+                    builder.icall(currentTok, funcNameOrValue, prototype, argumentValues, target)
+                }
             }
             else -> throw ParseErrorException("function name or value", funcNameOrValue)
         }
@@ -189,13 +202,14 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
         val target = iterator.expect<LabelUsage>("label name")
 
+        val returnType = functionReturnType.type(moduleBuilder)
         when (funcNameOrValue) {
             is SymbolValue -> {
-                val prototype = builder.makePrototype(funcNameOrValue, functionReturnType, argumentsTypes)
+                val prototype = builder.makePrototype(funcNameOrValue, returnType, argumentsTypes)
                 builder.vcall(prototype, argumentValues, target)
             }
             is LocalValueToken -> {
-                val prototype = builder.makePrototype(functionReturnType, argumentsTypes)
+                val prototype = builder.makePrototype(returnType, argumentsTypes)
                 builder.ivcall(funcNameOrValue, prototype, argumentValues, target)
             }
             else -> throw ParseErrorException("function name or value", funcNameOrValue)

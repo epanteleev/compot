@@ -6,7 +6,6 @@ import common.forEachWith
 import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
-import ir.instruction.TupleInstruction
 import ir.liveness.GroupedLiveIntervals
 import ir.liveness.LiveIntervals
 import ir.types.NonTrivialType

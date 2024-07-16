@@ -7,10 +7,11 @@ import ir.module.block.Block
 import ir.types.ArithmeticType
 import ir.types.TupleType
 import ir.types.Type
+import ir.value.TupleValue
 
 
 class TupleDiv private constructor(id: Identity, owner: Block, tp: TupleType, a: Value, b: Value) :
-    TupleInstruction(id, owner, tp, arrayOf(a, b)) {
+    ValueInstruction(id, owner, tp, arrayOf(a, b)), TupleValue {
     override fun dump(): String {
         return "%${name()} = $NAME $tp, ${first().type()} ${first()}, ${second().type()} ${second()}"
     }

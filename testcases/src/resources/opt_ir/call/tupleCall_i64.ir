@@ -1,0 +1,26 @@
+
+extern void @printLong(i64)
+
+define |i64, i64| @test() {
+entry:
+  ret |i64, i64| { 3, 4 }
+}
+
+; int main() {
+;     printInt(test());
+; }
+define i32 @main() {
+entry:
+  %call = call |i64, i64| @test() br label %next
+
+next:
+  %proj1 = proj |i64, i64|, i64 %call, 0
+  %proj2 = proj |i64, i64|, i64 %call, 1
+  call void @printLong(%proj1: i64) br label %next1
+
+next1:
+  call void @printLong(%proj2: i64) br label %end
+
+end:
+  ret i32 0
+}

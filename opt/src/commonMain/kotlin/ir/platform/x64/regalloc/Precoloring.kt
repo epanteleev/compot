@@ -8,6 +8,7 @@ import ir.liveness.GroupedLiveIntervals
 import ir.liveness.LiveRange
 import ir.liveness.LiveIntervals
 import ir.types.TupleType
+import ir.value.TupleValue
 import ir.value.Value
 
 //TODO
@@ -46,7 +47,7 @@ class Precoloring private constructor(private val intervals: LiveIntervals, priv
         groups[Group(group, null)] = liveRange
     }
 
-    private fun handleTuple(value: LocalValue, range: LiveRange) {
+    private fun handleTuple(value: TupleValue, range: LiveRange) {
         visited.add(value)
 
         value.usedIn().forEach { proj ->
@@ -65,10 +66,9 @@ class Precoloring private constructor(private val intervals: LiveIntervals, priv
 
     private fun mergePhiOperands() {
         for ((value, range) in intervals) {
-            if (value is Phi) {
-                handlePhiOperands(value, range)
-            } else if (value.type() is TupleType) {
-                handleTuple(value, range)
+            when (value) {
+                is Phi        -> handlePhiOperands(value, range)
+                is TupleValue -> handleTuple(value, range)
             }
         }
     }

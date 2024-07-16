@@ -436,12 +436,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         val projSet = hashSetOf<Int>()
         for (proj in binary.usedIn()) {
             assert(proj is Projection) {
-                "Operand '${proj}' must be a '${Projection.NAME}'"
+                "Operand '$proj' must be a '${Projection.NAME}'"
             }
             proj as Projection
             val unchanged = projSet.add(proj.index())
             assert(unchanged) {
-                "Projection '${proj}' is duplicated in '${binary.dump()}'"
+                "Projection '$proj' is duplicated in '${binary.dump()}'"
             }
         }
     }

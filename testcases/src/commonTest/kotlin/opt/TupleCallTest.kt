@@ -11,6 +11,12 @@ abstract class TupleCallTest: CommonIrTest() {
         val result = runTest("opt_ir/call/tupleCall", listOf("runtime/runtime.c"), options())
         assertEquals("3\n4\n", result.output)
     }
+
+    @Test
+    fun testTupleCall2() {
+        val result = runTest("opt_ir/call/tupleCall_i64", listOf("runtime/runtime.c"), options())
+        assertEquals("3\n4\n", result.output)
+    }
 }
 
 class TupleCallO1Tests: TupleCallTest() {
