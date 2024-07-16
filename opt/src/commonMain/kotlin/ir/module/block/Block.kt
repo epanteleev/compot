@@ -344,12 +344,12 @@ class Block(override val index: Int):
         withOutput { Memcpy.make(it, this, dst, src, length) }
     }
 
-    override fun proj(tuple: TupleInstruction, index: Int): Projection {
+    override fun proj(tuple: Value, index: Int): Projection {
         return withOutput { Projection.make(it, this, tuple, index) }
     }
 
     override fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch {
-        val resolved = arrayFrom(targets) { it as Block }
+        val resolved = arrayFrom(targets) { bb -> bb as Block }
         return addTerminate { Switch.make(it, this, value, default as Block, table.toTypedArray(), resolved) }
     }
 

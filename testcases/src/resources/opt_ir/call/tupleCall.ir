@@ -1,0 +1,26 @@
+
+extern i32 @printInt(i32)
+
+define |i32, i32| @test() {
+entry:
+  ret |i32, i32| { 3, 4 }
+}
+
+; int main() {
+;     printInt(test());
+; }
+define i32 @main() {
+entry:
+  %call = call |i32, i32| @test() br label %next
+
+next:
+  %proj1 = proj |i32, i32|, i32 %call, 0
+  %proj2 = proj |i32, i32|, i32 %call, 1
+  %call1 = call i32 @printInt(%proj1: i32) br label %next1
+
+next1:
+  %call2 = call i32 @printInt(%proj2: i32) br label %end
+
+end:
+  ret i32 0
+}

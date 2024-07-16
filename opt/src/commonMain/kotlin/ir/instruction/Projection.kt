@@ -6,9 +6,10 @@ import ir.types.*
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 import ir.value.Value
+import ir.value.asType
 
 
-class Projection private constructor(id: Identity, owner: Block, type: NonTrivialType, tuple: TupleInstruction, private val index: Int):
+class Projection private constructor(id: Identity, owner: Block, type: NonTrivialType, tuple: Value, private val index: Int):
     ValueInstruction(id, owner, type, arrayOf(tuple)) {
 
     override fun type(): PrimitiveType {
@@ -36,8 +37,8 @@ class Projection private constructor(id: Identity, owner: Block, type: NonTrivia
     companion object {
         const val NAME = "proj"
 
-        fun make(id: Identity, owner: Block, tuple: TupleInstruction, index: Int): Projection {
-            val tupleType = tuple.type()
+        fun make(id: Identity, owner: Block, tuple: Value, index: Int): Projection {
+            val tupleType = tuple.asType<TupleType>()
             val retType = tupleType.innerType(index)
             return registerUser(Projection(id, owner, retType, tuple, index), tuple) // TODO
         }

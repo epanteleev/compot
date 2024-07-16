@@ -7,6 +7,9 @@ class TupleType(val tuple: Array<NonTrivialType>): TrivialType {
     }
 
     fun innerType(index: Int): NonTrivialType {
+        if (index < 0 || index >= tuple.size) {
+            throw RuntimeException("index out of bounds: $index, type='${tuple.joinToString { it.toString() }}'")
+        }
         return tuple[index]
     }
 

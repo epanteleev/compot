@@ -1,13 +1,11 @@
 package ir.module.builder.impl
 
-import ir.*
 import ir.instruction.*
 import ir.module.*
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.InstructionFabric
 import ir.module.builder.AnyFunctionDataBuilder
-import ir.read.tokens.Vararg
 import ir.types.*
 import ir.value.ArgumentValue
 import ir.value.IntegerConstant
@@ -178,7 +176,7 @@ class FunctionDataBuilder private constructor(
         bb.memcpy(dst, src, length)
     }
 
-    override fun proj(tuple: TupleInstruction, index: Int): Projection {
+    override fun proj(tuple: Value, index: Int): Projection {
         return bb.proj(tuple, index)
     }
 

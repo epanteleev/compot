@@ -671,7 +671,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val fnType = functionNode.declareType(functionNode.specifier, typeHolder)
         val retType = mb.toIRType<Type>(typeHolder, fnType.retType())
 
-        currentFunction = mb.createFunction(name, retType, fnType.args().map { mb.toIRType(typeHolder, it) })
+        val argTypes = fnType.args().map { mb.toIRType<Type>(typeHolder, it) }
+        currentFunction = mb.createFunction(name, retType, argTypes)
 
         for (idx in parameters.indices) {
             val param = parameters[idx]

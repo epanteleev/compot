@@ -7,6 +7,7 @@ import ir.module.block.Block
 import ir.liveness.LiveIntervals
 import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.LModule
+import ir.types.TupleType
 import ir.value.LocalValue
 import ir.value.Value
 
@@ -146,7 +147,7 @@ private class DumpLModule(module: LModule) : DumpModule<LModule>(module) {
     }
 
     override fun dumpInstruction(instruction: Instruction, idx: Int) {
-        if (instruction is LocalValue && instruction !is TupleInstruction) {
+        if (instruction is LocalValue && instruction.type() !is TupleType) {
             val operand = regAlloc!!.operand(instruction)
             builder.append("[$operand]")
         }

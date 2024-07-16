@@ -1,5 +1,6 @@
 package ir.read.bulder
 
+import common.arrayFrom
 import ir.value.*
 import ir.types.*
 import ir.module.*
@@ -236,10 +237,13 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.alloc(ty))
     }
 
-    fun ret(retValue: AnyValueToken, expectedType: TypeToken) {
+    fun ret(retValues: List<AnyValueToken>, expectedType: TypeToken) {
         val type  = expectedType.type(moduleBuilder)
-        val value = getValue(retValue, type)
-        bb.ret(type, arrayOf(value))
+        when (type) {
+            is PrimitiveType -> bb.ret(type, arrayFrom(retValues) { v -> getValue(v, type) })
+            is TupleType     -> bb.ret(type, arrayFrom(retValues) { idx, v -> getValue(v, type.innerType(idx)) })
+            else -> throw ParseErrorException("primitive or tuple type", retValues[0])
+        }
     }
 
     fun retVoid() = bb.retVoid()
@@ -356,9 +360,9 @@ class FunctionDataBuilderWithContext private constructor(
 
     fun proj(name: LocalValueToken, typeToken: TupleTypeToken, valueTok: AnyValueToken, expectedType: PrimitiveTypeToken, index: IntValue): Projection {
         val value = getValue(valueTok, typeToken.type(moduleBuilder))
-        if (value !is TupleInstruction) {
-            throw ParseErrorException("tuple type", valueTok)
-        }
+        //if (value !is TupleInstruction) {
+        //    throw ParseErrorException("tuple type", valueTok)
+        //}
 
         return memorize(name, bb.proj(value, index.int.toInt()))
     }

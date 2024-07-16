@@ -3,13 +3,12 @@ package ir.platform.x64.regalloc
 import ir.value.LocalValue
 import asm.x64.Operand
 import common.assertion
-import ir.instruction.Copy
-import ir.instruction.Phi
-import ir.instruction.Projection
-import ir.instruction.TupleInstruction
+import ir.instruction.*
 import ir.liveness.GroupedLiveIntervals
 import ir.liveness.LiveRange
 import ir.liveness.LiveIntervals
+import ir.types.TupleType
+import ir.value.Value
 
 //TODO
 class Precoloring private constructor(private val intervals: LiveIntervals, private val precolored: Map<LocalValue, Operand>) {
@@ -47,7 +46,7 @@ class Precoloring private constructor(private val intervals: LiveIntervals, priv
         groups[Group(group, null)] = liveRange
     }
 
-    private fun handleTuple(value: TupleInstruction, range: LiveRange) {
+    private fun handleTuple(value: LocalValue, range: LiveRange) {
         visited.add(value)
 
         value.usedIn().forEach { proj ->
@@ -66,9 +65,10 @@ class Precoloring private constructor(private val intervals: LiveIntervals, priv
 
     private fun mergePhiOperands() {
         for ((value, range) in intervals) {
-            when (value) {
-                is Phi              -> handlePhiOperands(value, range)
-                is TupleInstruction -> handleTuple(value, range)
+            if (value is Phi) {
+                handlePhiOperands(value, range)
+            } else if (value.type() is TupleType) {
+                handleTuple(value, range)
             }
         }
     }

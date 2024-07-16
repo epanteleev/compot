@@ -10,6 +10,7 @@ import ir.instruction.TupleInstruction
 import ir.liveness.GroupedLiveIntervals
 import ir.liveness.LiveIntervals
 import ir.types.NonTrivialType
+import ir.types.TupleType
 
 
 class LinearScan private constructor(private val data: FunctionData, private val liveRanges: LiveIntervals) {
@@ -67,7 +68,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
             if (arg != null || group.stackAllocGroup) {
                 continue
             }
-            if (group.first() is TupleInstruction) {
+            if (group.first().type() is TupleType) {
                 // Skip tuple instructions
                 // Register allocation for tuple instructions will be done for their projections
                 continue

@@ -372,7 +372,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     override fun visit(proj: Projection): LocalValue {
-        val origin = mapUsage<TupleInstruction>(proj.tuple())
+        val origin = mapUsage<Value>(proj.tuple())
         return bb.proj(origin, proj.index())
     }
 

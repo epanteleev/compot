@@ -7,11 +7,12 @@ import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.types.NonTrivialType
+import ir.types.TupleType
 import kotlin.jvm.JvmInline
 
 
 class Call private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>, target: Block):
-    TerminateValueInstruction(id, owner, func.returnType() as NonTrivialType, args, arrayOf(target)),
+    TerminateValueInstruction(id, owner, func.returnType(), args, arrayOf(target)),
     Callable {
 
     override fun arguments(): Array<Value> {
@@ -40,6 +41,19 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
         }
 
         return targets[0]
+    }
+
+    fun proj(index: Int): Projection? {
+        if (tp !is TupleType) {
+            throw IllegalStateException("type must be TupleType, but $tp found")
+        }
+        for (user in usedIn()) {
+            user as Projection
+            if (user.index() == index) {
+                return user
+            }
+        }
+        return null
     }
 
     companion object {

@@ -95,8 +95,30 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
             return
         }
 
-        val returnValue = parseOperand("value or literal")
-        builder.ret(returnValue, retType)
+        val next = iterator.next("value or '{'")
+        if (next is AnyValueToken) {
+            builder.ret(arrayListOf(next), retType)
+            return
+        }
+
+        if (next !is OpenBrace) {
+            throw ParseErrorException("value or '{'", next)
+        }
+        val returnValues = arrayListOf<AnyValueToken>()
+        do {
+            val value = iterator.expect<AnyValueToken>("value")
+            returnValues.add(value)
+
+            val comma = iterator.next("',' or '}'")
+            if (comma is CloseBrace) {
+                break
+            }
+
+            if (comma !is Comma) {
+                throw ParseErrorException("','", comma)
+            }
+        } while (true)
+        builder.ret(returnValues, retType)
     }
 
     private fun tryParseArgumentBlock(argumentsTypes: MutableList<TypeToken>, argumentValues: MutableList<AnyValueToken>) {
