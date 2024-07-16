@@ -17,6 +17,10 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
         return stringBuilder.toString()
     }
 
+    fun returnValue(index: Int): Value {
+        return operands[index]
+    }
+
     fun type(): Type = returnType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {

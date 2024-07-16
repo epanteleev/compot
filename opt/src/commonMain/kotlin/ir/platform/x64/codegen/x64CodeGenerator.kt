@@ -149,21 +149,21 @@ private class CodeEmitter(private val data: FunctionData,
     override fun visit(returnValue: ReturnValue) {
         when (val returnType = returnValue.type()) {
             is IntegerType -> {
-                val value = valueToRegister.operand(returnValue.operands()[0])
+                val value = valueToRegister.operand(returnValue.returnValue(0))
                 emitRetValue(returnType, value, retReg)
 
                 emitEpilogue()
                 asm.ret()
             }
             is PointerType -> {
-                val value = valueToRegister.operand(returnValue.operands()[0])
+                val value = valueToRegister.operand(returnValue.returnValue(0))
                 emitRetValue(returnType, value, retReg)
 
                 emitEpilogue()
                 asm.ret()
             }
             is FloatingPointType -> {
-                val value = valueToRegister.operand(returnValue.operands()[0])
+                val value = valueToRegister.operand(returnValue.returnValue(0))
                 emitRetValue(returnType, value, fpRet)
 
                 emitEpilogue()
@@ -174,7 +174,7 @@ private class CodeEmitter(private val data: FunctionData,
                 val second = returnType.asInnerType<PrimitiveType>(1)
 
 
-                val value = valueToRegister.operand(returnValue.operands()[0])
+                val value = valueToRegister.operand(returnValue.returnValue(0))
                 if (first is IntegerType || first is PointerType) {
                     asm.movOld(first.sizeOf(), value, retReg)
                 } else if (first is FloatingPointType) {
@@ -185,7 +185,7 @@ private class CodeEmitter(private val data: FunctionData,
                     }
                 }
 
-                val value1 = valueToRegister.operand(returnValue.operands()[1])
+                val value1 = valueToRegister.operand(returnValue.returnValue(1))
                 if (second is IntegerType || second is PointerType) {
                     asm.movOld(second.sizeOf(), value1, rdx)
                 }
