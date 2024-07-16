@@ -12,7 +12,7 @@ import common.forEachWith
 
 class ParseErrorException(message: String): Exception(message) {
     constructor(expect: String, token: Token):
-            this( "${token.position()} found: ${token.message()}, but expect $expect")
+            this( "${token.position()} found ${token.message()}, but expect $expect")
 }
 
 class FunctionDataBuilderWithContext private constructor(

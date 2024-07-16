@@ -161,8 +161,8 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         assert(BranchCond.typeCheck(branchCond)) {
             "Inconsistent branch condition: '${branchCond.dump()}'"
         }
-        assert(bb.successors().size == 2) {
-            "Block '$bb' has not 2 successors exactly: ${bb.successors()}"
+        assert(bb.successors().size == bb.last().targets().size) {
+            "Block '$bb' has other count of successors: successors=$successors, terminate='${bb.last()}'"
         }
         assert(onTrue == successors[0]) {
             "Block '$bb' has inconsistent successors: branch='${branchCond.dump()}', successors='${successors}'"

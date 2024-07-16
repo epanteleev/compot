@@ -489,11 +489,11 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseSwitch() {
         // switch {int_type} {value}, label {default}, [ {value} : {label}, ... ]
-        val intType    = iterator.expect<IntegerTypeToken>("integer type")
-        val labelUsage = iterator.expect<LocalValueToken>("value")
+        val intType  = iterator.expect<IntegerTypeToken>("integer type")
+        val selector = iterator.expect<AnyValueToken>("value")
 
-        iterator.expect<LabelUsage>("'label' keyword")
-        val default = iterator.expect<LabelUsage>("default label")
+        iterator.expect<Comma>("','")
+        val default = iterator.expect<LabelUsage>("'label' keyword")
 
         iterator.expect<OpenSquareBracket>("'['")
         val table = arrayListOf<IntValue>()
@@ -501,9 +501,9 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         do {
             val value = iterator.expect<IntValue>("value")
             iterator.expect<Colon>("':'")
-            val label = iterator.expect<LabelUsage>("label")
+            val label = iterator.expect<LocalValueToken>("label")
             table.add(value)
-            targets.add(label)
+            targets.add(LabelUsage(label.name, label.line, label.pos))
 
             val comma = iterator.next("',' or ']'")
             if (comma is CloseSquareBracket) {
@@ -515,7 +515,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
             }
         } while (true)
 
-        builder.switch(labelUsage, default, intType, table, targets)
+        builder.switch(selector, default, intType, table, targets)
     }
 
     private fun parseInt2Pointer(currentTok: LocalValueToken) {

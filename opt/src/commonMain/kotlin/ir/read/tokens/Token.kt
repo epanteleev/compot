@@ -5,7 +5,7 @@ interface AnyToken {
     fun message(): String
 }
 
-sealed class Token(protected open val line: Int, protected open val pos: Int): AnyToken {
+sealed class Token(open val line: Int, open val pos: Int): AnyToken {
     fun position(): String {
         return "$line:$pos"
     }
