@@ -47,7 +47,7 @@ class LoopsTest {
         builder.branchCond(cmp2, b5, b4)
 
         builder.switchLabel(b5)
-        builder.ret(I64Value(0))
+        builder.ret(Type.I64, arrayOf(I64Value(0)))
 
         builder.switchLabel(b4)
         val cmp3 = builder.icmp(

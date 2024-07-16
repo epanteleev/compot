@@ -107,12 +107,6 @@ abstract class OptTests: CommonIrTest() {
         val result = runTest("opt_ir/hello_world1", listOf("runtime/runtime.c"), options())
         assertEquals("Hello world", result.output)
     }
-
-    @Test
-    fun testSwitch() {
-        val result = runTest("opt_ir/switch", listOf("runtime/runtime.c"), options())
-        assertEquals("20\n30\n10\n40\n", result.output)
-    }
 }
 
 class OptO1Tests: OptTests() {

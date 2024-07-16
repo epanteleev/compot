@@ -38,7 +38,7 @@ class CodegenTest {
         builder.store(retValue, add)
 
         val ret = builder.load(Type.U64, retValue)
-        builder.ret(ret)
+        builder.ret(Type.U64, arrayOf(ret))
 
          val module = moduleBuilder.build()
 

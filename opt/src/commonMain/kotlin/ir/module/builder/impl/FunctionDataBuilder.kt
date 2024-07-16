@@ -106,8 +106,8 @@ class FunctionDataBuilder private constructor(
         return bb.alloc(ty)
     }
 
-    override fun ret(value: Value): Return {
-        return bb.ret(value)
+    override fun ret(returnType: Type, values: Array<Value>): Return {
+        return bb.ret(returnType, values)
     }
 
     override fun retVoid(): ReturnVoid {

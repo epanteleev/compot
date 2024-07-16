@@ -1,5 +1,6 @@
 package ir.module.auxiliary
 
+import common.arrayFrom
 import common.forEachWith
 import common.intMapOf
 import ir.global.GlobalSymbol
@@ -267,8 +268,8 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     override fun visit(returnValue: ReturnValue): ValueInstruction? {
-        val value = mapUsage<Value>(returnValue.value())
-        bb.ret(value)
+        val value = arrayFrom(returnValue.operands()) { mapUsage<Value>(it) }
+        bb.ret(returnValue.type(), value)
         return null
     }
 

@@ -45,7 +45,7 @@ class CFGTraversalTest {
             U16Value(1337), ArithmeticBinaryOp.Sub,
             U16Value(64)
         )
-        builder.ret(arithm)
+        builder.ret(Type.U16, arrayOf(arithm))
 
         val module = moduleBuilder.build()
         VerifySSA.run(module)

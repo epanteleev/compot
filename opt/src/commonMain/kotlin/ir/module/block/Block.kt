@@ -271,8 +271,8 @@ class Block(override val index: Int):
         return withOutput { it: Int -> Alloc.make(it, this, ty) }
     }
 
-    override fun ret(value: Value): Return {
-        return addTerminate { ReturnValue.make(it, this, value) }
+    override fun ret(returnType: Type, values: Array<Value>): Return {
+        return addTerminate { ReturnValue.make(it, this, returnType, values) }
     }
 
     override fun retVoid(): ReturnVoid {

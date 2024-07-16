@@ -18,7 +18,7 @@ class InconsistentCFG {
     fun testInconsistentReturn() {
         val builder = ModuleBuilder.create()
         builder.createFunction("main", Type.I64, arrayListOf()).apply {
-            ret(I32Value(0))
+            ret(Type.I32, arrayOf(I32Value(0)))
         }
 
         val throwable = assertFails { builder.build() }
@@ -46,7 +46,7 @@ class InconsistentCFG {
             val cont = createLabel()
             call(invalidPrototype, arrayListOf(F32Value(0.0F)), cont)
             switchLabel(cont)
-            ret(I32Value(0))
+            ret(Type.I32, arrayOf(I32Value(0)))
         }
 
         val throwable = assertFails { builder.build() }
@@ -68,7 +68,7 @@ class InconsistentCFG {
                 switchLabel(header)
                 val label = createLabel()
                 branch(label)
-                ret(I32Value(0))
+                ret(Type.I32, arrayOf(I32Value(0)))
                 label
             }
 
@@ -91,7 +91,7 @@ class InconsistentCFG {
 
             proj(tuple, 0)
             val proj1 = proj(tuple, 0)
-            ret(proj1)
+            ret(Type.U32, arrayOf(proj1))
         }
 
         val throwable = assertFails { builder.build() }

@@ -28,7 +28,7 @@ interface InstructionFabric {
     fun branch(target: Block): Branch
     fun branchCond(value: Value, onTrue: Block, onFalse: Block): BranchCond //TODO Labels
     fun alloc(ty: NonTrivialType): Alloc
-    fun ret(value: Value): Return
+    fun ret(returnType: Type, values: Array<Value>): Return
     fun retVoid(): ReturnVoid
     fun gep(source: Value, elementType: NonTrivialType, index: Value): GetElementPtr
     fun gfp(source: Value, ty: AggregateType, indexes: Array<IntegerConstant>): GetFieldPtr

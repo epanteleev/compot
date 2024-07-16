@@ -56,7 +56,7 @@ class DominatorTreeTest {
         builder.branch(exit)
 
         builder.switchLabel(exit)
-        builder.ret(U16Value(0))
+        builder.ret(Type.U16, arrayOf(U16Value(0)))
 
         return moduleBuilder.build()
     }

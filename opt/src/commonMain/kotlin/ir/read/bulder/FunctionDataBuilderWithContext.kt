@@ -237,8 +237,9 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun ret(retValue: AnyValueToken, expectedType: TypeToken) {
-        val value = getValue(retValue, expectedType.type(moduleBuilder))
-        bb.ret(value)
+        val type  = expectedType.type(moduleBuilder)
+        val value = getValue(retValue, type)
+        bb.ret(type, arrayOf(value))
     }
 
     fun retVoid() = bb.retVoid()
@@ -324,13 +325,15 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.int2ptr(value))
     }
 
-    fun switch(valueTok: AnyValueToken, defaultLabel: LabelUsage, integerType: IntegerTypeToken, table: List<IntValue>, targets: List<LabelUsage>) {
+    fun switch(valueTok: AnyValueToken, defaultLabel: LabelUsage, integerType: IntegerTypeToken, table: List<IntValue>, targets: List<LocalValueToken>) {
         val value = getValue(valueTok, integerType.type())
 
-        val targetBlocks         = targets.map { getBlockOrCreate(it.labelName) }
-        val tableConstant        = table.map { Constant.valueOf<IntegerConstant>(integerType.type(), it.int) }
-        val defaultLabelResolved = getBlockOrCreate(defaultLabel.labelName)
+        val targetBlocks  = targets.mapTo(arrayListOf()) { getBlockOrCreate(it.name) }
+        val tableConstant = table.mapTo(arrayListOf()) {
+            Constant.valueOf<IntegerConstant>(integerType.type(), it.int)
+        }
 
+        val defaultLabelResolved = getBlockOrCreate(defaultLabel.labelName)
         bb.switch(value, defaultLabelResolved, tableConstant, targetBlocks)
     }
 

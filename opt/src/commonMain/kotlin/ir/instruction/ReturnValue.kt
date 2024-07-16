@@ -1,53 +1,53 @@
 package ir.instruction
 
-import common.assertion
-import ir.value.Value
-import ir.value.asType
-import ir.instruction.utils.IRInstructionVisitor
+import ir.types.*
+import ir.value.*
+import common.arrayFrom
 import ir.module.block.Block
-import ir.types.NonTrivialType
-import ir.types.Type
-import ir.types.BottomType
-import ir.types.VoidType
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class ReturnValue private constructor(id: Identity, owner: Block, value: Value): Return(id, owner, arrayOf(value)) {
+class ReturnValue private constructor(id: Identity, owner: Block, val returnType: Type, values: Array<Value>): Return(id, owner, values) {
     override fun dump(): String {
-        return "ret ${value().type()} ${value()}"
-    }
-
-    fun type(): NonTrivialType {
-        return value().asType()
-    }
-
-    fun value(): Value {
-        assertion(operands.size == 1) {
-            "size should be 1 in $this instruction"
+        val stringBuilder = StringBuilder("ret ${type()}")
+        for (value in operands()) {
+            stringBuilder.append(" ")
+            stringBuilder.append(value)
         }
-
-        return operands[0]
+        return stringBuilder.toString()
     }
+
+    fun type(): Type = returnType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, value: Value): Return {
-            val retType = value.type()
-            require(isAppropriateType(retType)) {
-                "cannot be $retType, but value=$value:${retType}"
+        fun make(id: Identity, owner: Block, returnType: Type, values: Array<Value>): Return {
+            require(isAppropriateType(returnType, values)) {
+                "cannot be $returnType, but values=$values"
             }
 
-            return registerUser(ReturnValue(id, owner, value), value)
+            return registerUser(ReturnValue(id, owner, returnType, values), values.iterator())
         }
 
-        private fun isAppropriateType(retType: Type): Boolean {
-            return retType !is VoidType && retType !is BottomType
+        private fun isAppropriateType(retType: Type, values: Array<Value>): Boolean {
+            if (retType is VoidType) {
+                return false
+            }
+            if (retType is BottomType) {
+                return false
+            }
+            if (retType is TupleType) {
+                val array = arrayFrom(values) { it.asType<NonTrivialType>() }
+                return retType == TupleType(array)
+            }
+            return true
         }
 
         fun typeCheck(retValue: ReturnValue): Boolean {
-            return isAppropriateType(retValue.value().type())
+            return isAppropriateType(retValue.type(), retValue.operands())
         }
     }
 }

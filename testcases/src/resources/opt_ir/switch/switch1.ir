@@ -1,0 +1,45 @@
+extern void @printInt(i32);
+
+define i32 @func(%0:i32) {
+entry:
+    %ptr = alloc i32
+	switch i32 %0, label %L1 [1: %L2]
+L2:	; pred=entry
+    store ptr %ptr, i32 10
+	br label %L5
+L1:	; pred=entry
+    store ptr %ptr, i32 40
+	br label %L5
+L5:	; pred=L1, L2, L3, L4
+    %ret = load i32 %ptr
+	ret i32 %ret
+}
+
+define i32 @main() {
+entry:
+    %0 = call i32 @func(2: i32) br label %next1
+
+next1:
+    call void @printInt(%0: i32) br label %next2
+
+next2:
+    %1 = call i32 @func(3: i32) br label %next3
+
+next3:
+    call void @printInt(%1: i32) br label %next4
+
+next4:
+    %2 = call i32 @func(1: i32) br label %next5
+
+next5:
+    call void @printInt(%2: i32) br label %next6
+
+next6:
+    %3 = call i32 @func(7: i32) br label %next7
+
+next7:
+    call void @printInt(%3: i32) br label %next8
+
+next8:
+    ret i32 0
+}

@@ -688,7 +688,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             ir().switchLabel(exitBlock)
             val loadReturn = ir().load(retType as PrimitiveType, returnValueAdr!!)
-            ir().ret(loadReturn)
+            ir().ret(retType, arrayOf(loadReturn))
         } else {
             exitBlock = ir().createLabel()
             ir().switchLabel(exitBlock)

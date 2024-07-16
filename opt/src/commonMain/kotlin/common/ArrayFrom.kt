@@ -24,6 +24,16 @@ inline fun<reified T, reified U> arrayFrom(values: Collection<T>, initializer: (
     return array as Array<U>
 }
 
+inline fun<reified T, reified U> arrayFrom(values: Array<T>, initializer: (T) -> U): Array<U> {
+    val array = arrayOfNulls<U>(values.size)
+    for ((idx, v) in values.withIndex()) {
+        array[idx] = initializer(v)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    return array as Array<U>
+}
+
 inline fun<reified T> arrayWith(size: Int, initializer: (Int) -> T): Array<T> {
     val array = arrayOfNulls<T>(size)
     for (idx in 0 until size) {

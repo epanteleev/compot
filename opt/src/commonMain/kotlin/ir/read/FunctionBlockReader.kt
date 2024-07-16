@@ -497,13 +497,13 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
         iterator.expect<OpenSquareBracket>("'['")
         val table = arrayListOf<IntValue>()
-        val targets = arrayListOf<LabelUsage>()
+        val targets = arrayListOf<LocalValueToken>()
         do {
             val value = iterator.expect<IntValue>("value")
             iterator.expect<Colon>("':'")
             val label = iterator.expect<LocalValueToken>("label")
             table.add(value)
-            targets.add(LabelUsage(label.name, label.line, label.pos))
+            targets.add(label)
 
             val comma = iterator.next("',' or ']'")
             if (comma is CloseSquareBracket) {

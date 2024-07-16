@@ -138,10 +138,10 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(returnValue: ReturnValue) {
         val returnType = data.prototype.returnType()
-        val retInstType = returnValue.type()
+        val retInstType = returnValue.type() as NonTrivialType
         val size = retInstType.sizeOf()
 
-        val value = valueToRegister.operand(returnValue.value())
+        val value = valueToRegister.operand(returnValue.operands()[0])
         if (returnType is IntegerType || returnType is PointerType) {
             asm.movOld(size, value, retReg)
         } else if (returnType is FloatingPointType) {

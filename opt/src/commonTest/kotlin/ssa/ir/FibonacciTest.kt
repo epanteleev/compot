@@ -92,7 +92,7 @@ class FibonacciTest {
 
         builder.switchLabel(ret)
         val v10 = builder.load(Type.I32, retVal)
-        builder.ret(v10)
+        builder.ret(Type.I32, arrayOf(v10))
 
         val module = moduleBuilder.build()
         VerifySSA.run(module)
