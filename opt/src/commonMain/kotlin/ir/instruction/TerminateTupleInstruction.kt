@@ -7,11 +7,12 @@ import ir.value.LocalValue
 import ir.value.Value
 
 
-abstract class TupleInstruction(id: Identity,
-                                owner: Block,
-                                tp: TrivialType,
-                                operands: Array<Value>):
-    ValueInstruction(id, owner, tp, operands), LocalValue {
+abstract class TerminateTupleInstruction(id: Identity,
+                                         owner: Block,
+                                         tp: TrivialType,
+                                         operands: Array<Value>,
+                                         targets: Array<Block>):
+    TerminateValueInstruction(id, owner, tp, operands, targets), LocalValue {
 
     fun proj(index: Int): Projection? {
         for (user in usedIn()) {

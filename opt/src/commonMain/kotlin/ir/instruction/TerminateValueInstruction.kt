@@ -1,14 +1,12 @@
 package ir.instruction
 
-import ir.*
+import ir.value.*
+import ir.types.*
 import ir.module.block.Block
-import ir.types.NonTrivialType
-import ir.value.LocalValue
-import ir.value.Value
 
 
 abstract class TerminateValueInstruction(id: Identity, owner: Block,
-                                         protected val tp: NonTrivialType,
+                                         protected val tp: Type,
                                          usages: Array<Value>,
                                          targets: Array<Block>):
     TerminateInstruction(id, owner, usages, targets),
@@ -23,5 +21,5 @@ abstract class TerminateValueInstruction(id: Identity, owner: Block,
         return "%${name()}"
     }
 
-    override fun type(): NonTrivialType = tp
+    override fun type(): Type = tp
 }

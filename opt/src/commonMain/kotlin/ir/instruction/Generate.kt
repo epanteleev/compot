@@ -12,7 +12,7 @@ class Generate private constructor(id: Identity, owner: Block, allocatedType: No
     }
 
     override fun type(): NonTrivialType {
-        return tp
+        return tp as NonTrivialType
     }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {

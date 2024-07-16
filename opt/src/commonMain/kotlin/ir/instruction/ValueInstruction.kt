@@ -2,12 +2,12 @@ package ir.instruction
 
 import ir.value.*
 import ir.module.block.Block
-import ir.types.NonTrivialType
+import ir.types.Type
 
 
 abstract class ValueInstruction(id: Identity,
                                 owner: Block,
-                                protected val tp: NonTrivialType,
+                                protected val tp: Type,
                                 operands: Array<Value>):
     Instruction(id, owner, operands),
     LocalValue {
@@ -21,5 +21,5 @@ abstract class ValueInstruction(id: Identity,
         return "%${name()}"
     }
 
-    override fun type(): NonTrivialType = tp
+    override fun type(): Type = tp
 }

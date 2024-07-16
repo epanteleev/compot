@@ -14,6 +14,7 @@ abstract class IRInstructionVisitor<T> {
     abstract fun visit(branch: Branch): T
     abstract fun visit(branchCond: BranchCond): T
     abstract fun visit(call: Call): T
+    abstract fun visit(tupleCall: TupleCall): T
     abstract fun visit(flag2Int: Flag2Int): T
     abstract fun visit(bitcast: Bitcast): T
     abstract fun visit(itofp: Int2Float): T

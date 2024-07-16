@@ -199,6 +199,14 @@ private class CodeEmitter(private val data: FunctionData,
         emitCall(voidCall)
     }
 
+    override fun visit(tupleCall: TupleCall) {
+        asm.call(tupleCall.prototype().name)
+
+        val retType = tupleCall.type()
+
+        TODO()
+    }
+
     override fun visit(int2ptr: Int2Pointer) {
         val dst = valueToRegister.operand(int2ptr)
         val src = valueToRegister.operand(int2ptr.value())
