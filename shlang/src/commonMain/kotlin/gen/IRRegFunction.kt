@@ -282,16 +282,24 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val function = mb.findFunction(functionCall.name())
         val convertedArgs = convertFunctionArgs(function, functionCall.args)
 
-        if (function.returnType() == Type.Void) {
-            val cont = ir().createLabel()
-            ir().vcall(function, convertedArgs, cont)
-            ir().switchLabel(cont)
-            return Value.UNDEF
-        } else {
-            val cont = ir().createLabel()
-            val ret = ir().call(function, convertedArgs, cont)
-            ir().switchLabel(cont)
-            return ret
+        val returnType = function.returnType()
+        when (returnType) {
+            Type.Void -> {
+                val cont = ir().createLabel()
+                ir().vcall(function, convertedArgs, cont)
+                ir().switchLabel(cont)
+                return Value.UNDEF
+            }
+            is PrimitiveType -> {
+                val cont = ir().createLabel()
+                val ret = ir().call(function, convertedArgs, cont)
+                ir().switchLabel(cont)
+                return ret
+            }
+
+            else -> {
+                TODO()
+            }
         }
     }
 

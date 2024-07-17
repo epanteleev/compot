@@ -61,6 +61,34 @@ abstract class StructTests: CommonCTest() {
         val result = runCTest("shlang/struct/union1", listOf("runtime/runtime.c"), options())
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testReturnStruct() {
+        val result = runCTest("shlang/struct/return_struct", listOf("runtime/runtime.c"), options())
+        assertEquals("x: 1, y: 2\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testReturnStruct1() {
+        val result = runCTest("shlang/struct/return_struct1", listOf("runtime/runtime.c"), options())
+        assertEquals("x: 1, y: 2, z: 3\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testArgumentStruct() {
+        val result = runCTest("shlang/struct/argument_struct", listOf("runtime/runtime.c"), options())
+        assertEquals("x: 1, y: 2\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testArgumentStruct1() {
+        val result = runCTest("shlang/struct/argument_struct1", listOf("runtime/runtime.c"), options())
+        assertEquals("x: 1, y: 2, z: 3\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StructTestsO0: StructTests() {

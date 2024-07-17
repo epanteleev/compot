@@ -203,7 +203,7 @@ class FunctionDataBuilder private constructor(
         fun create(name: String, returnType: Type, argumentTypes: List<Type>, isVararg: Boolean = false): FunctionDataBuilder {
             val argumentValues = arrayListOf<ArgumentValue>()
             for ((idx, arg) in argumentTypes.withIndex()) {
-                if (arg !is NonTrivialType) {
+                if (arg !is PrimitiveType) { //TODO not coeer
                     continue
                 }
 

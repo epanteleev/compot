@@ -13,6 +13,7 @@ import ir.module.FunctionData
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.types.NonTrivialType
+import ir.types.PrimitiveType
 import ir.value.*
 
 
@@ -43,7 +44,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     private fun copyArguments(): List<ArgumentValue> {
         val newArgs = arrayListOf<ArgumentValue>()
         fd.arguments().forEachWith(fd.prototype.arguments()) { arg, type, i ->
-            if (type !is NonTrivialType) {
+            if (type !is PrimitiveType) {
                 throw IllegalStateException("unexpected type for argument=$arg")
             }
 

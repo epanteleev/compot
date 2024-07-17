@@ -1,14 +1,12 @@
 package ir.module.builder.impl
 
-import ir.*
-import ir.module.AnyFunctionPrototype
-import ir.module.ExternFunction
 import ir.types.Type
 import ir.module.Module
 import ir.module.SSAModule
 import ir.pass.ana.VerifySSA
-import ir.module.builder.AnyModuleBuilder
 import ir.value.ArgumentValue
+import ir.module.AnyFunctionPrototype
+import ir.module.builder.AnyModuleBuilder
 
 
 class ModuleBuilder private constructor(): AnyModuleBuilder() {

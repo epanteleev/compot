@@ -4,7 +4,7 @@ import ir.types.*
 import ir.instruction.Instruction
 
 
-data class ArgumentValue(private val index: Int, private val tp: NonTrivialType): LocalValue {
+data class ArgumentValue(private val index: Int, private val tp: PrimitiveType): LocalValue {
     override var usedIn: MutableList<Instruction> = arrayListOf()
     override fun name(): String {
         return "arg$index"
