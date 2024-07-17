@@ -254,12 +254,22 @@ private class CodeEmitter(private val data: FunctionData,
         if (first is IntegerType || first is PointerType) {
             asm.movOld(first.sizeOf(), retReg, value)
         } else if (first is FloatingPointType) {
-            TODO()
+            when (value) {
+                is Address     -> asm.movf(first.sizeOf(), value, fpRet)
+                is XmmRegister -> asm.movf(first.sizeOf(), value, fpRet)
+                else -> throw CodegenException("unknown value=$value")
+            }
         }
 
         val value1 = valueToRegister.operand(tupleCall.proj(1)!!)
         if (second is IntegerType || second is PointerType) {
             asm.movOld(second.sizeOf(), rdx, value1)
+        } else if (second is FloatingPointType) {
+            when (value1) {
+                is Address     -> asm.movf(second.sizeOf(), value1, XmmRegister.xmm1)
+                is XmmRegister -> asm.movf(second.sizeOf(), value1, XmmRegister.xmm1)
+                else -> throw CodegenException("unknown value=$value1")
+            }
         }
     }
 
