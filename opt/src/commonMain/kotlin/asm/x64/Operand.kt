@@ -1,9 +1,9 @@
 package asm.x64
 
-interface Operand {
+sealed interface Operand {
     fun toString(size: Int): String
 }
 
-interface Register : Operand {
+sealed interface Register : Operand {
     fun encoding(): Int
 }

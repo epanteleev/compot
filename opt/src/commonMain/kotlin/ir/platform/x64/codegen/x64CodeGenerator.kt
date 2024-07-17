@@ -11,6 +11,7 @@ import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.assertion
 import ir.Definitions.POINTER_SIZE
+import ir.Definitions.QWORD_SIZE
 import ir.global.GlobalConstant
 import ir.instruction.lir.*
 import ir.instruction.lir.Lea
@@ -56,21 +57,21 @@ private class CodeEmitter(private val data: FunctionData,
         val stackSize = valueToRegister.spilledLocalsSize()
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
 
-        asm.push(POINTER_SIZE, rbp)
-        asm.mov(POINTER_SIZE, rsp, rbp)
+        asm.push(QWORD_SIZE, rbp)
+        asm.mov(QWORD_SIZE, rsp, rbp)
 
         if (stackSize != 0) {
-            asm.sub(POINTER_SIZE, Imm32.of(stackSize.toLong()), rsp)
+            asm.sub(QWORD_SIZE, Imm32.of(stackSize.toLong()), rsp)
         }
         for (reg in calleeSaveRegisters) {
-            asm.push(POINTER_SIZE, reg)
+            asm.push(QWORD_SIZE, reg)
         }
     }
 
     private fun emitEpilogue() {
         val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
         for (reg in calleeSaveRegisters.reversed()) { //TODO created new ds
-            asm.pop(POINTER_SIZE, reg)
+            asm.pop(QWORD_SIZE, reg)
         }
 
         asm.leave()
@@ -132,78 +133,54 @@ private class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    private fun emitRetValue(retInstType: NonTrivialType, returnOperand: Operand, returnRegister: Register) {
-        val size = retInstType.sizeOf()
-
-        if (retInstType is IntegerType || retInstType is PointerType) {
-            asm.movOld(size, returnOperand, returnRegister)
-        } else if (retInstType is FloatingPointType) {
-            when (returnOperand) {
-                is Address     -> asm.movf(size, returnOperand, returnRegister as XmmRegister)
-                is XmmRegister -> asm.movf(size, returnOperand, returnRegister as XmmRegister)
-                else -> throw CodegenException("unknown value=$returnOperand")
-            }
+    private fun emitRetValue(retInstType: PrimitiveType, returnOperand: Operand, returnRegister: Register) = when (retInstType) {
+        is IntegerType, is PointerType -> {
+            ReturnIntCodegen(retInstType, asm)(returnRegister as GPRegister, returnOperand)
         }
+        is FloatingPointType -> {
+            ReturnFloatCodegen(retInstType, asm)(returnRegister as XmmRegister, returnOperand)
+        }
+        else -> throw CodegenException("unknown type=$retInstType")
     }
 
     override fun visit(returnValue: ReturnValue) {
         when (val returnType = returnValue.type()) {
-            is IntegerType -> {
+            is IntegerType, is PointerType -> { returnType as PrimitiveType
                 val value = valueToRegister.operand(returnValue.returnValue(0))
                 emitRetValue(returnType, value, retReg)
-
-                emitEpilogue()
-                asm.ret()
-            }
-            is PointerType -> {
-                val value = valueToRegister.operand(returnValue.returnValue(0))
-                emitRetValue(returnType, value, retReg)
-
-                emitEpilogue()
-                asm.ret()
             }
             is FloatingPointType -> {
                 val value = valueToRegister.operand(returnValue.returnValue(0))
                 emitRetValue(returnType, value, fpRet)
-
-                emitEpilogue()
-                asm.ret()
             }
             is TupleType -> {
-                val first  = returnType.asInnerType<PrimitiveType>(0)
-                val second = returnType.asInnerType<PrimitiveType>(1)
-
-
                 val value = valueToRegister.operand(returnValue.returnValue(0))
-                if (first is IntegerType || first is PointerType) {
-                    asm.movOld(first.sizeOf(), value, retReg)
-                } else if (first is FloatingPointType) {
-                    when (value) {
-                        is Address     -> asm.movf(first.sizeOf(), value, fpRet)
-                        is XmmRegister -> asm.movf(first.sizeOf(), value, fpRet)
-                        else -> throw CodegenException("unknown value=$value")
+                when (val first  = returnType.asInnerType<PrimitiveType>(0)) {
+                    is IntegerType, is PointerType -> {
+                        ReturnIntCodegen(first, asm)(retReg, value)
                     }
+                    is FloatingPointType -> {
+                        ReturnFloatCodegen(first, asm)(fpRet, value)
+                    }
+                    else -> throw CodegenException("unknown type=$first")
                 }
 
                 val value1 = valueToRegister.operand(returnValue.returnValue(1))
-                if (second is IntegerType || second is PointerType) {
-                    asm.movOld(second.sizeOf(), value1, rdx)
-                } else if (second is FloatingPointType) {
-                    when (value1) {
-                        is Address     -> asm.movf(second.sizeOf(), value1, XmmRegister.xmm1)
-                        is XmmRegister -> asm.movf(second.sizeOf(), value1, XmmRegister.xmm1)
-                        else -> throw CodegenException("unknown value=$value1")
+                when (val second = returnType.asInnerType<PrimitiveType>(1)) {
+                    is IntegerType, is PointerType -> {
+                        ReturnIntCodegen(second, asm)(rdx, value1)
                     }
+                    is FloatingPointType -> {
+                        ReturnFloatCodegen(second, asm)(XmmRegister.xmm1, value1)
+                    }
+                    else -> throw CodegenException("unknown type=$second")
                 }
-
-                emitEpilogue()
-                asm.ret()
             }
 
-            else -> {
-                throw CodegenException("unknown type=$returnType")
-            }
+            else -> throw CodegenException("unknown type=$returnType")
         }
+        emitEpilogue()
+        asm.ret()
     }
 
     override fun visit(returnVoid: ReturnVoid) {
@@ -238,7 +215,7 @@ private class CodeEmitter(private val data: FunctionData,
         }
     }
 
-    override fun visit(tupleCall: TupleCall) {
+    override fun visit(tupleCall: TupleCall) { //TODO not compatible with linux C calling convention
         asm.call(tupleCall.prototype().name)
         val retType = tupleCall.type()
 
@@ -454,32 +431,29 @@ private class CodeEmitter(private val data: FunctionData,
         val size = fcmp.first().asType<NonTrivialType>().sizeOf()
 
         when (first) {
-            is XmmRegister -> {
-                when (second) {
-                    is XmmRegister -> {
-                        asm.cmpf(size, second, first)
-                    }
-                    is Address -> {
-                        asm.movf(size, second, xmmTemp1)
-                        asm.cmpf(size, xmmTemp1, first)
-                    }
+            is XmmRegister -> when (second) {
+                is XmmRegister -> {
+                    asm.cmpf(size, second, first)
                 }
-            }
-            is Address -> {
-                when (second) {
-                    is XmmRegister -> {
-                        asm.movf(size, first, xmmTemp1)
-                        asm.cmpf(size, second, xmmTemp1)
-                    }
-                    is Address -> {
-                        asm.movf(size, first, xmmTemp1)
-                        asm.cmpf(size, second, xmmTemp1)
-                    }
+                is Address -> {
+                    asm.movf(size, second, xmmTemp1)
+                    asm.cmpf(size, xmmTemp1, first)
                 }
+                else -> throw CodegenException("unknown value=$second")
             }
-            is ImmInt -> {
-                TODO()
+            is Address -> when (second) {
+                is XmmRegister -> {
+                    asm.movf(size, first, xmmTemp1)
+                    asm.cmpf(size, second, xmmTemp1)
+                }
+                is Address -> {
+                    asm.movf(size, first, xmmTemp1)
+                    asm.cmpf(size, second, xmmTemp1)
+                }
+                else -> throw CodegenException("unknown value=$second")
             }
+            is ImmInt -> TODO()
+            else -> throw CodegenException("unknown value=$second")
         }
         if (needSetcc(fcmp)) {
             asm.setcc(fcmp.predicate(), dst)

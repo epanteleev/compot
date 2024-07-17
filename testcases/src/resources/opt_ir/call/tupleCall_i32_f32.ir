@@ -1,0 +1,31 @@
+
+extern void @printFloat(f32)
+extern void @printInt(i32)
+
+
+define |i32, f32| @test() {
+entry:
+  %0 = alloc i32
+  store ptr %0, i32 3
+  %ret = load i32 %0
+  ret |i32, f32| {%ret, 4 }
+}
+
+; int main() {
+;     printInt(test());
+; }
+define i32 @main() {
+entry:
+  %call = call |i32, f32| @test() br label %next
+
+next:
+  %proj1 = proj |i32, f32|, i32 %call, 0
+  %proj2 = proj |i32, f32|, f32 %call, 1
+  call void @printInt(%proj1: i32) br label %next1
+
+next1:
+  call void @printFloat(%proj2: f32) br label %end
+
+end:
+  ret i32 0
+}

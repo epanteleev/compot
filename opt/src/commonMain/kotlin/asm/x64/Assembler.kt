@@ -172,8 +172,8 @@ abstract class Assembler(private val name: String) {
     fun mov(size: Int, src: GPRegister, dst: GPRegister) = add(Mov(size, src, dst))
     fun mov(size: Int, src: Address, dst: GPRegister)    = add(Mov(size, src, dst))
     fun mov(size: Int, src: GPRegister, dst: Address)    = add(Mov(size, src, dst))
-    fun mov(size: Int, imm32: Imm32, dst: Address)       = add(Mov(size, imm32, dst))
-    fun mov(size: Int, imm32: Imm32, dst: GPRegister)    = add(Mov(size, imm32, dst))
+    fun mov(size: Int, imm: ImmInt, dst: Address)        = add(Mov(size, imm, dst))
+    fun mov(size: Int, imm: ImmInt, dst: GPRegister)     = add(Mov(size, imm, dst))
 
     // Move With Sign-Extension
     private fun movsx(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister)  = add(Movsx(fromSize, toSize, src, dst))

@@ -23,6 +23,24 @@ abstract class TupleCallTest: CommonIrTest() {
         val result = runTest("opt_ir/call/tupleCall_f64", listOf("runtime/runtime.c"), options())
         assertEquals("3.000000\n4.000000\n", result.output)
     }
+
+    @Test
+    fun testTupleCallf32() {
+        val result = runTest("opt_ir/call/tupleCall_f32", listOf("runtime/runtime.c"), options())
+        assertEquals("3.000000\n4.000000\n", result.output)
+    }
+
+    @Test
+    fun testTupleCallf32i32() {
+        val result = runTest("opt_ir/call/tupleCall_f32_i32", listOf("runtime/runtime.c"), options())
+        assertEquals("3.000000\n4\n", result.output)
+    }
+
+    @Test
+    fun testTupleCalli32f32() {
+        val result = runTest("opt_ir/call/tupleCall_i32_f32", listOf("runtime/runtime.c"), options())
+        assertEquals("3\n4.000000\n", result.output)
+    }
 }
 
 class TupleCallO1Tests: TupleCallTest() {

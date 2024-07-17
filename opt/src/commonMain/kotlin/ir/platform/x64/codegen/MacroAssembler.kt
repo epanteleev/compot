@@ -28,58 +28,46 @@ class MacroAssembler(name: String): Assembler(name) {
         }
     }
 
-    private fun setccFloat(jmpType: FloatPredicate, dst: Operand) {
-        when (jmpType) {
-            FloatPredicate.Ult -> {
-                when (dst) {
-                    is Address    -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
-                    is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
-                    else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
-                }
-            }
-            //TODO not fully implemented
+    private fun setccFloat(jmpType: FloatPredicate, dst: Operand) = when (jmpType) {
+        FloatPredicate.Ult -> when (dst) {
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
             else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
         }
+        //TODO not fully implemented
+        else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
     }
 
-    private fun setccInt(jmpType: IntPredicate, dst: Operand) {
-        when (jmpType) {
-            IntPredicate.Eq -> {
-                when (dst) {
-                    is Address    -> setcc(QWORD_SIZE, SetCCType.SETE, dst)
-                    is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETE, dst)
-                }
-            }
-            IntPredicate.Ne -> {
-                when (dst) {
-                    is Address    -> setcc(QWORD_SIZE, SetCCType.SETNE, dst)
-                    is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETNE, dst)
-                }
-            }
-            IntPredicate.Gt -> {
-                when (dst) {
-                    is Address    -> setcc(QWORD_SIZE, SetCCType.SETG, dst)
-                    is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETG, dst)
-                }
-            }
-            IntPredicate.Ge -> {
-                when (dst) {
-                    is Address    -> setcc(QWORD_SIZE, SetCCType.SETGE, dst)
-                    is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETGE, dst)
-                }
-            }
-            IntPredicate.Lt -> {
-                when (dst) {
-                    is Address    -> setcc(QWORD_SIZE, SetCCType.SETL, dst)
-                    is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETL, dst)
-                }
-            }
-            IntPredicate.Le -> {
-                when (dst) {
-                    is Address    -> setcc(QWORD_SIZE, SetCCType.SETLE, dst)
-                    is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETLE, dst)
-                }
-            }
+    private fun setccInt(jmpType: IntPredicate, dst: Operand) = when (jmpType) {
+        IntPredicate.Eq -> when (dst) {
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETE, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETE, dst)
+            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
+        }
+        IntPredicate.Ne -> when (dst) {
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETNE, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETNE, dst)
+            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
+        }
+        IntPredicate.Gt -> when (dst) {
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETG, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETG, dst)
+            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
+        }
+        IntPredicate.Ge -> when (dst) {
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETGE, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETGE, dst)
+            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
+        }
+        IntPredicate.Lt -> when (dst) {
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETL, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETL, dst)
+            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
+        }
+        IntPredicate.Le -> when (dst) {
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETLE, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETLE, dst)
+            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
         }
     }
 
@@ -88,7 +76,6 @@ class MacroAssembler(name: String): Assembler(name) {
         when (jmpType) {
             is IntPredicate   -> setccInt(jmpType, dst)
             is FloatPredicate -> setccFloat(jmpType, dst)
-            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
         }
     }
 
@@ -136,7 +123,8 @@ class MacroAssembler(name: String): Assembler(name) {
                     else -> throw CodegenException("unknown conversion type: convType=$convType")
                 }
             }
-            else -> throw CodegenException("unknown type instruction=$cond, type=$type")
+            BooleanType -> TODO()
+            BottomType -> TODO()
         }
     }
 

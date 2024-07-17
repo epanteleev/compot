@@ -1,0 +1,26 @@
+
+extern void @printFloat(f32)
+
+define |f32, f32| @test() {
+entry:
+  ret |f32, f32| { 3, 4 }
+}
+
+; int main() {
+;     printInt(test());
+; }
+define i32 @main() {
+entry:
+  %call = call |f32, f32| @test() br label %next
+
+next:
+  %proj1 = proj |f32, f32|, f32 %call, 0
+  %proj2 = proj |f32, f32|, f32 %call, 1
+  call void @printFloat(%proj1: f32) br label %next1
+
+next1:
+  call void @printFloat(%proj2: f32) br label %end
+
+end:
+  ret i32 0
+}

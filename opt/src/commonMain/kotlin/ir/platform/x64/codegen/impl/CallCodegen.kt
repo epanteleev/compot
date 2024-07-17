@@ -15,6 +15,9 @@ class CallIntCodegen(val type: PrimitiveType, val asm: Assembler) : CallGPOperan
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {
+        if (dst == src) {
+            return
+        }
         asm.mov(size, src, dst)
     }
 
@@ -35,6 +38,9 @@ class CallFloatCodegen(val type: PrimitiveType, val asm: Assembler) : CallXmmOpe
     }
 
     override fun rr(dst: XmmRegister, src: XmmRegister) {
+        if (dst == src) {
+            return
+        }
         asm.movf(size, src, dst)
     }
 

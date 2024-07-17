@@ -5,7 +5,7 @@ import ir.value.Value
 import ir.module.block.Block
 import ir.types.*
 
-interface AnyPredicateType {
+sealed interface AnyPredicateType {
     fun invert(): AnyPredicateType
 }
 

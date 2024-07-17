@@ -1,7 +1,7 @@
 package asm.x64
 
 
-interface Address : Operand {
+sealed interface Address : Operand {
     companion object {
         fun from(base: GPRegister, offset: Int): Address {
             return Address2(base, offset)

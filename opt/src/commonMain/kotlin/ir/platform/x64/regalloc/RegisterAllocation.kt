@@ -63,6 +63,7 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
 
                     xmmRegisters.add(reg)
                 }
+                else -> {}
             }
         }
 
