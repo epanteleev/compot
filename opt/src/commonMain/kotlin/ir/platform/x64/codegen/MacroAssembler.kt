@@ -139,4 +139,10 @@ class MacroAssembler(name: String): Assembler(name) {
             else -> throw CodegenException("unknown type instruction=$cond, type=$type")
         }
     }
+
+    fun indirectCall(pointer: Operand) = when (pointer) {
+        is GPRegister -> call(pointer)
+        is Address    -> call(pointer)
+        else -> throw CodegenException("invalid operand: pointer=$pointer")
+    }
 }

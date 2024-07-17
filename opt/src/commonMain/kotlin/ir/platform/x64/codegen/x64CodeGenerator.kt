@@ -188,6 +188,12 @@ private class CodeEmitter(private val data: FunctionData,
                 val value1 = valueToRegister.operand(returnValue.returnValue(1))
                 if (second is IntegerType || second is PointerType) {
                     asm.movOld(second.sizeOf(), value1, rdx)
+                } else if (second is FloatingPointType) {
+                    when (value1) {
+                        is Address     -> asm.movf(second.sizeOf(), value1, XmmRegister.xmm1)
+                        is XmmRegister -> asm.movf(second.sizeOf(), value1, XmmRegister.xmm1)
+                        else -> throw CodegenException("unknown value=$value1")
+                    }
                 }
 
                 emitEpilogue()
@@ -223,24 +229,13 @@ private class CodeEmitter(private val data: FunctionData,
         NotCodegen(not.type(), asm)(result, operand)
     }
 
-    private fun emitCall(call: Callable) {
-        call as TerminateInstruction
-        asm.call(call.prototype().name)
-
-        val retType = call.type()
-        if (retType == Type.Void) {
-            return
-        }
-
-        emitCallValue(call)
-        assertion(call.target() === next()) {
-            // This is a bug in the compiler if this assertion fails
-            "expected invariant failed: call.target=${call.target()}, next=${next()}"
-        }
-    }
-
     override fun visit(voidCall: VoidCall) {
-        emitCall(voidCall)
+        asm.call(voidCall.prototype().name)
+
+        assertion(voidCall.target() === next()) {
+            // This is a bug in the compiler if this assertion fails
+            "expected invariant failed: call.target=${voidCall.target()}, next=${next()}"
+        }
     }
 
     override fun visit(tupleCall: TupleCall) {
@@ -252,24 +247,20 @@ private class CodeEmitter(private val data: FunctionData,
 
         val value = valueToRegister.operand(tupleCall.proj(0)!!)
         if (first is IntegerType || first is PointerType) {
-            asm.movOld(first.sizeOf(), retReg, value)
+            CallIntCodegen(first, asm)(value, retReg)
         } else if (first is FloatingPointType) {
-            when (value) {
-                is Address     -> asm.movf(first.sizeOf(), value, fpRet)
-                is XmmRegister -> asm.movf(first.sizeOf(), value, fpRet)
-                else -> throw CodegenException("unknown value=$value")
-            }
+            CallFloatCodegen(first, asm)(value, fpRet)
+        } else {
+            throw CodegenException("unknown type=$first")
         }
 
         val value1 = valueToRegister.operand(tupleCall.proj(1)!!)
         if (second is IntegerType || second is PointerType) {
-            asm.movOld(second.sizeOf(), rdx, value1)
+            CallIntCodegen(second, asm)(value1, rdx)
         } else if (second is FloatingPointType) {
-            when (value1) {
-                is Address     -> asm.movf(second.sizeOf(), value1, XmmRegister.xmm1)
-                is XmmRegister -> asm.movf(second.sizeOf(), value1, XmmRegister.xmm1)
-                else -> throw CodegenException("unknown value=$value1")
-            }
+            CallFloatCodegen(second, asm)(value1, XmmRegister.xmm1)
+        } else {
+            throw CodegenException("unknown type=$second")
         }
     }
 
@@ -365,7 +356,23 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(call: Call) {
-        emitCall(call)
+        asm.call(call.prototype().name)
+
+        when (val retType = call.type()) {
+            is IntegerType, is PointerType, is BooleanType -> { retType as PrimitiveType
+                CallIntCodegen(retType, asm)(valueToRegister.operand(call), retReg)
+            }
+
+            is FloatingPointType -> {
+                CallFloatCodegen(retType, asm)(valueToRegister.operand(call), fpRet)
+            }
+            else -> throw RuntimeException("unknown value type=$retType")
+        }
+
+        assertion(call.target() === next()) {
+            // This is a bug in the compiler if this assertion fails
+            "expected invariant failed: call.target=${call.target()}, next=${next()}"
+        }
     }
 
     override fun visit(flag2Int: Flag2Int) {
@@ -380,52 +387,24 @@ private class CodeEmitter(private val data: FunctionData,
         Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, src)
     }
 
-    private fun emitCallValue(call: Callable) {
-        val retType = call.type()
-        if (retType == Type.Void) {
-            return
-        }
-
-        call as TerminateValueInstruction
-        when (retType) {
-            is IntegerType, is PointerType, is BooleanType -> {
-                retType as NonTrivialType
-                val size = retType.sizeOf()
-
-                asm.movOld(size, retReg, valueToRegister.operand(call))
-            }
-
-            is FloatingPointType -> {
-                val size = retType.sizeOf()
-                when (val op = valueToRegister.operand(call)) {
-                    is Address     -> asm.movf(size, fpRet, op)
-                    is XmmRegister -> asm.movf(size, fpRet, op)
-                    else -> throw CodegenException("unknown value type=$op")
-                }
-            }
-            else -> {
-                throw RuntimeException("unknown value type=$retType")
-            }
-        }
-    }
-
-    private fun indirectCall(pointer: Operand) {
-        when (pointer) {
-            is GPRegister -> asm.call(pointer)
-            is Address    -> asm.call(pointer)
-            else -> throw CodegenException("invalid operand: pointer=$pointer")
-        }
-    }
-
     override fun visit(indirectionCall: IndirectionCall) {
         val pointer = valueToRegister.operand(indirectionCall.pointer())
-        indirectCall(pointer)
-        emitCallValue(indirectionCall)
+        asm.indirectCall(pointer)
+
+        when (val retType = indirectionCall.type()) {
+            is IntegerType, is PointerType, is BooleanType -> { retType as PrimitiveType
+                CallIntCodegen(retType, asm)(valueToRegister.operand(indirectionCall), retReg)
+            }
+            is FloatingPointType -> {
+                CallFloatCodegen(retType, asm)(valueToRegister.operand(indirectionCall), fpRet)
+            }
+            else -> throw RuntimeException("unknown value type=$retType")
+        }
     }
 
     override fun visit(indirectionVoidCall: IndirectionVoidCall) {
         val pointer = valueToRegister.operand(indirectionVoidCall.pointer())
-        indirectCall(pointer)
+        asm.indirectCall(pointer)
     }
 
     override fun visit(store: Store) {
