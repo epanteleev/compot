@@ -391,7 +391,7 @@ class FunctionDataBuilderWithContext private constructor(
             fun handleArguments(argumentTypeTokens: List<Type>): List<ArgumentValue> {
                 val argumentValues = arrayListOf<ArgumentValue>()
                 for ((idx, arg) in argumentTypeTokens.withIndex()) {
-                    if (arg !is NonTrivialType) {
+                    if (arg !is PrimitiveType) { //TODO vararg
                         continue
                     }
 

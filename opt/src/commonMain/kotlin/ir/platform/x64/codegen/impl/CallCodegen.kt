@@ -4,7 +4,6 @@ import asm.x64.*
 import ir.types.PrimitiveType
 import ir.platform.x64.codegen.visitors.CallGPOperandValueVisitor
 import ir.platform.x64.codegen.visitors.CallXmmOperandValueVisitor
-import ir.types.TupleType
 
 
 class CallIntCodegen(val type: PrimitiveType, val asm: Assembler) : CallGPOperandValueVisitor {
