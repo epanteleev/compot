@@ -238,7 +238,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): List<Value> {
-        fun convertArg(argIdx: Int, expr: Value, type: NonTrivialType): Value {
+        fun convertArg(argIdx: Int, expr: Value): Value {
             if (argIdx >= function.arguments().size) {
                 if (!function.isVararg) {
                     throw IRCodeGenError("Too many arguments in function call '${function.shortName()}'")
@@ -273,16 +273,68 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     convertedArgs.add(convertedArg)
                 }
                 is CStructType -> {
-                    if (argCType.size() <= QWORD_SIZE * 2) {
-                        val structType = mb.toIRType<StructType>(typeHolder, argCType)
-                        for ((fieldIdx, _) in argCType.fields().withIndex()) {
-                            val fieldConverted = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, fieldIdx)))
-                            val load = ir.load(structType.field(fieldIdx) as PrimitiveType, fieldConverted)
+                    val structType = mb.toIRType<StructType>(typeHolder, argCType)
+                    when (val size = argCType.size()) {
+                        BYTE_SIZE -> {
+                            val fieldConverted = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 0)))
+                            val load = ir.load(Type.I8, fieldConverted)
                             convertedArgs.add(load)
                         }
-                    } else {
-                        val convertedArg = ir.convertToType(expr, Type.Ptr)
-                        convertedArgs.add(convertedArg)
+                        HWORD_SIZE -> {
+                            val fieldConverted = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 0)))
+                            val load = ir.load(Type.I16, fieldConverted)
+                            convertedArgs.add(load)
+                        }
+                        WORD_SIZE -> {
+                            val fieldConverted = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 0)))
+                            val load = ir.load(Type.I32, fieldConverted)
+                            convertedArgs.add(load)
+                        }
+                        QWORD_SIZE -> {
+                            val fieldConverted = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 0)))
+                            val load = ir.load(Type.I64, fieldConverted)
+                            convertedArgs.add(load)
+                        }
+                        QWORD_SIZE + BYTE_SIZE -> {
+                            val fieldConverted = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 0)))
+                            val load = ir.load(Type.I64, fieldConverted)
+                            convertedArgs.add(load)
+
+                            val fieldConverted1 = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 1)))
+                            val load1 = ir.load(Type.I8, fieldConverted1)
+                            convertedArgs.add(load1)
+                        }
+                        QWORD_SIZE + HWORD_SIZE -> {
+                            val fieldConverted = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 0)))
+                            val load = ir.load(Type.I64, fieldConverted)
+                            convertedArgs.add(load)
+
+                            val fieldConverted1 = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 1)))
+                            val load1 = ir.load(Type.I16, fieldConverted1)
+                            convertedArgs.add(load1)
+                        }
+                        QWORD_SIZE + WORD_SIZE -> {
+                            val fieldConverted = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 0)))
+                            val load = ir.load(Type.I64, fieldConverted)
+                            convertedArgs.add(load)
+
+                            val fieldConverted1 = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 1)))
+                            val load1 = ir.load(Type.I32, fieldConverted1)
+                            convertedArgs.add(load1)
+                        }
+                        QWORD_SIZE * 2 -> {
+                            val fieldConverted = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 0)))
+                            val load = ir.load(Type.I64, fieldConverted)
+                            convertedArgs.add(load)
+
+                            val fieldConverted1 = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 1)))
+                            val load1 = ir.load(Type.I64, fieldConverted1)
+                            convertedArgs.add(load1)
+                        }
+                        else -> {
+                            val convertedArg = ir.convertToType(expr, Type.Ptr)
+                            convertedArgs.add(convertedArg)
+                        }
                     }
                 }
                 else -> throw IRCodeGenError("Unknown type, type=${argCType} in function call")
@@ -696,34 +748,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun coerceArguments(cType: CStructType): List<Type> {
-        when (cType.size()) {
-            BYTE_SIZE -> {
-                return arrayListOf(Type.I8)
-            }
-            HWORD_SIZE -> {
-                return arrayListOf(Type.I16)
-            }
-            WORD_SIZE -> {
-                return arrayListOf(Type.I32)
-            }
-            QWORD_SIZE -> {
-                return arrayListOf(Type.I64)
-            }
-            QWORD_SIZE + BYTE_SIZE -> {
-                return arrayListOf(Type.I64, Type.I8)
-            }
-            QWORD_SIZE + HWORD_SIZE -> {
-                return arrayListOf(Type.I64, Type.I16)
-            }
-            QWORD_SIZE + WORD_SIZE -> {
-                return arrayListOf(Type.I64, Type.I32)
-            }
-            QWORD_SIZE * 2 -> {
-                return arrayListOf(Type.I64, Type.I64)
-            }
-            else -> return arrayListOf(Type.Ptr)
-        }
+    private fun coerceArguments(cType: CStructType) = when (cType.size()) {
+        BYTE_SIZE  -> arrayListOf(Type.I8)
+        HWORD_SIZE -> arrayListOf(Type.I16)
+        WORD_SIZE  -> arrayListOf(Type.I32)
+        QWORD_SIZE -> arrayListOf(Type.I64)
+        QWORD_SIZE + BYTE_SIZE  -> arrayListOf(Type.I64, Type.I8)
+        QWORD_SIZE + HWORD_SIZE -> arrayListOf(Type.I64, Type.I16)
+        QWORD_SIZE + WORD_SIZE  -> arrayListOf(Type.I64, Type.I32)
+        QWORD_SIZE * 2          -> arrayListOf(Type.I64, Type.I64)
+        else -> arrayListOf(Type.Ptr)
     }
 
     private fun argumentTypes(ctypes: List<CType>): List<Type> {
