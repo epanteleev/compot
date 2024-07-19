@@ -262,9 +262,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
                 is CPrimitiveType, is CPointerType -> {
-                    val type = mb.toIRType<NonTrivialType>(typeHolder, argCType)
-
-                    val convertedArg = convertArg(idx, expr, type)
+                    val convertedArg = convertArg(idx, expr)
                     convertedArgs.add(convertedArg)
                 }
                 is CArrayType -> {
@@ -773,19 +771,19 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(functionNode: FunctionNode): Value = varStack.scoped {
-        val name = functionNode.name()
         val parameters = functionNode.functionDeclarator().params()
         val fnType = functionNode.declareType(functionNode.specifier, typeHolder)
         val retType = mb.toIRType<Type>(typeHolder, fnType.retType())
 
         val argTypes = argumentTypes(fnType.args())
-        currentFunction = mb.createFunction(name, retType, argTypes)
+        currentFunction = mb.createFunction(functionNode.name(), retType, argTypes)
 
         for (idx in parameters.indices) {
             val param = parameters[idx]
             val arg   = ir.argument(idx)
-
-            val rvalueAdr   = ir.alloc(arg.type())
+            val type  = fnType.args()[idx]
+            val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
+            val rvalueAdr   = ir.alloc(irType)
             varStack[param] = rvalueAdr
             ir.store(rvalueAdr, arg)
         }
@@ -855,16 +853,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(returnStatement: ReturnStatement): Boolean {
-        when (returnStatement.expr) {
-            is EmptyExpression -> ir.branch(exitBlock)
-            else -> {
-                val value = visitExpression(returnStatement.expr, true)
-                val realType = ir.prototype().returnType()
-                val returnType = ir.convertToType(value, realType)
-                ir.store(returnValueAdr!!, returnType)
-                ir.branch(exitBlock)
-            }
+        val expr = returnStatement.expr
+        if (expr is EmptyExpression) {
+            ir.branch(exitBlock)
+            return false
         }
+        val value = visitExpression(expr, true)
+        val realType   = ir.prototype().returnType()
+        val returnType = ir.convertToType(value, realType)
+        ir.store(returnValueAdr!!, returnType)
+        ir.branch(exitBlock)
         return false
     }
 
@@ -895,9 +893,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(ifStatement: IfStatement): Boolean = varStack.scoped {
         val condition = makeConditionFromExpression(ifStatement.condition)
-
         val thenBlock = ir.createLabel()
-
 
         if (ifStatement.elseNode is EmptyStatement) {
             val endBlock = ir.createLabel()
