@@ -3,10 +3,10 @@ package ir.instruction
 import ir.types.*
 import ir.value.Value
 import common.assertion
+import ir.value.TupleValue
 import ir.module.block.Block
 import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
-import ir.value.TupleValue
 
 
 class TupleCall private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>, target: Block):

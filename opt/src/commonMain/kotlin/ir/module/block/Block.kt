@@ -239,9 +239,11 @@ class Block(override val index: Int):
         return addTerminate { Call.make(it, this, func, args, target as Block) }
     }
 
-    override fun tupleCall(func: AnyFunctionPrototype, args: List<Value>, target: Block): TupleCall {
-        require(func.returnType() is TupleType)
-        return addTerminate { TupleCall.make(it, this, func, args, target) }
+    override fun tupleCall(func: AnyFunctionPrototype, args: List<Value>, target: Label): TupleCall {
+        require(func.returnType() is TupleType) {
+            "should be tuple type, but ty=${func.returnType()}"
+        }
+        return addTerminate { TupleCall.make(it, this, func, args, target as Block) }
     }
 
     override fun vcall(func: AnyFunctionPrototype, args: List<Value>, target: Label): VoidCall {

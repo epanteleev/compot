@@ -1,17 +1,21 @@
 package gen
 
-import ir.Definitions.WORD_SIZE
+import gen.TypeConverter.convertToType
+import ir.Definitions.BYTE_SIZE
+import ir.Definitions.HWORD_SIZE
+import ir.Definitions.QWORD_SIZE
 import types.*
 import ir.types.*
+import ir.value.*
+import ir.Definitions.WORD_SIZE
+import ir.instruction.Alloc
+import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
-import ir.value.Constant
-import ir.value.Value
-import ir.value.asType
 
 
 object TypeConverter {
-    inline fun<reified T: Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: CType): T {
+    inline fun <reified T : Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: CType): T {
         val converted = toIRTypeUnchecked(typeHolder, type)
         if (converted !is T) {
             throw IRCodeGenError("Cannot convert '$type' to ${T::class}")
@@ -29,33 +33,37 @@ object TypeConverter {
             val elementType = toIRType<NonTrivialType>(typeHolder, type.element())
             return ArrayType(elementType, type.dimension().toInt())
         }
-        
+
         val ret = when (type) {
-            CType.CHAR   -> Type.I8
-            CType.UCHAR  -> Type.U8
-            CType.SHORT  -> Type.I16
+            CType.CHAR -> Type.I8
+            CType.UCHAR -> Type.U8
+            CType.SHORT -> Type.I16
             CType.USHORT -> Type.U16
-            CType.INT    -> Type.I32
-            CType.UINT   -> Type.U32
-            CType.LONG   -> Type.I64
-            CType.ULONG  -> Type.U64
-            CType.FLOAT  -> Type.F32
+            CType.INT -> Type.I32
+            CType.UINT -> Type.U32
+            CType.LONG -> Type.I64
+            CType.ULONG -> Type.U64
+            CType.FLOAT -> Type.F32
             CType.DOUBLE -> Type.F64
-            CType.VOID   -> Type.Void // TODO handle case '(void) 0'
+            CType.VOID -> Type.Void // TODO handle case '(void) 0'
             is CStructType -> {
                 convertStructType(typeHolder, type)
             }
+
             is CUncompletedStructType -> {
                 val structType = typeHolder.getTypedef(type.name()) as CStructType //TODO
                 convertStructType(typeHolder, structType)
             }
+
             is CUncompletedUnionType -> {
                 val unionType = typeHolder.getTypedef(type.name()) as CUnionType //TODO
                 convertStructType(typeHolder, unionType)
             }
+
             is CUnionType -> {
                 convertUnionType(typeHolder, type)
             }
+
             is CFunPointerType -> Type.Ptr
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
@@ -99,7 +107,7 @@ object TypeConverter {
         return convertToType(value, Type.I64)
     }
 
-   fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {
+    fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {
         if (value.type() == toType) {
             return value
         }
@@ -111,11 +119,11 @@ object TypeConverter {
             Type.I8 -> {
                 toType as SignedIntType
                 when (value.type()) {
-                    Type.U1  -> flag2int(value, toType)
+                    Type.U1 -> flag2int(value, toType)
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> trunc(value, toType)
                     Type.I64 -> trunc(value, toType)
-                    Type.U8  -> trunc(value, toType)
+                    Type.U8 -> trunc(value, toType)
                     Type.U16 -> trunc(value, toType)
                     Type.U32 -> trunc(value, toType)
                     Type.U64 -> trunc(value, toType)
@@ -130,10 +138,10 @@ object TypeConverter {
                 toType as SignedIntType
                 when (value.type()) {
                     Type.U1 -> flag2int(value, toType)
-                    Type.I8  -> sext(value, toType)
+                    Type.I8 -> sext(value, toType)
                     Type.I32 -> trunc(value, toType)
                     Type.I64 -> trunc(value, toType)
-                    Type.U8  -> sext(value, toType)
+                    Type.U8 -> sext(value, toType)
                     Type.U16 -> bitcast(value, toType)
                     Type.U32 -> trunc(value, toType)
                     Type.U64 -> trunc(value, toType)
@@ -151,14 +159,16 @@ object TypeConverter {
                     Type.I8 -> sext(value, toType)
                     Type.I16 -> sext(value, toType)
                     Type.I64 -> trunc(value, toType)
-                    Type.U8  -> {
+                    Type.U8 -> {
                         val zext = zext(value, Type.U32)
                         bitcast(zext, Type.I32)
                     }
+
                     Type.U16 -> {
                         val zext = zext(value, Type.U32)
                         bitcast(zext, toType)
                     }
+
                     Type.U32 -> bitcast(value, toType)
                     Type.U64 -> trunc(value, toType)
                     Type.F32 -> fp2Int(value, toType)
@@ -175,18 +185,21 @@ object TypeConverter {
                     Type.I8 -> sext(value, toType)
                     Type.I16 -> sext(value, toType)
                     Type.I32 -> sext(value, toType)
-                    Type.U8  -> {
+                    Type.U8 -> {
                         val zext = zext(value, Type.U64)
                         bitcast(zext, toType)
                     }
+
                     Type.U16 -> {
                         val tmp = zext(value, Type.U64)
                         bitcast(tmp, toType)
                     }
+
                     Type.U32 -> {
                         val tmp = zext(value, Type.U64)
                         bitcast(tmp, toType)
                     }
+
                     Type.U64 -> bitcast(value, toType)
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
@@ -199,12 +212,13 @@ object TypeConverter {
                 toType as UnsignedIntType
                 when (value.type()) {
                     Type.U1 -> flag2int(value, toType)
-                    Type.I8  -> bitcast(value, toType)
+                    Type.I8 -> bitcast(value, toType)
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> {
                         val trunc = trunc(value, Type.I8)
                         bitcast(trunc, Type.U8)
                     }
+
                     Type.I64 -> trunc(value, toType)
                     Type.U16 -> trunc(value, toType)
                     Type.U32 -> trunc(value, toType)
@@ -213,10 +227,12 @@ object TypeConverter {
                         val tmp = fp2Int(value, Type.I32)
                         trunc(tmp, toType)
                     }
+
                     Type.F64 -> {
                         val tmp = fp2Int(value, Type.I64)
                         trunc(tmp, toType)
                     }
+
                     Type.Ptr -> ptr2int(value, toType)
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
@@ -226,24 +242,27 @@ object TypeConverter {
                 toType as UnsignedIntType
                 when (value.type()) {
                     Type.U1 -> flag2int(value, toType)
-                    Type.I8  -> trunc(value, toType)
+                    Type.I8 -> trunc(value, toType)
                     Type.I16 -> bitcast(value, toType)
                     Type.I32 -> {
                         val bitcast = bitcast(value, Type.U32)
                         trunc(bitcast, toType)
                     }
+
                     Type.I64 -> trunc(value, toType)
-                    Type.U8  -> trunc(value, toType)
+                    Type.U8 -> trunc(value, toType)
                     Type.U32 -> trunc(value, toType)
                     Type.U64 -> trunc(value, toType)
                     Type.F32 -> {
                         val tmp = fp2Int(value, Type.I32)
                         trunc(tmp, toType)
                     }
+
                     Type.F64 -> {
                         val tmp = fp2Int(value, Type.I64)
                         trunc(tmp, toType)
                     }
+
                     Type.Ptr -> ptr2int(value, toType)
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
@@ -252,18 +271,20 @@ object TypeConverter {
             Type.U32 -> {
                 toType as UnsignedIntType
                 when (value.type()) {
-                    Type.U1  -> flag2int(value, toType)
-                    Type.I8  -> {
+                    Type.U1 -> flag2int(value, toType)
+                    Type.I8 -> {
                         val sext = sext(value, Type.I32)
                         bitcast(sext, toType)
                     }
+
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> bitcast(value, toType)
                     Type.I64 -> {
                         val bitcast = bitcast(value, Type.U64)
                         trunc(bitcast, Type.U32)
                     }
-                    Type.U8  -> zext(value, toType)
+
+                    Type.U8 -> zext(value, toType)
                     Type.U16 -> zext(value, toType)
                     Type.U64 -> trunc(value, toType)
                     Type.F32 -> fp2Int(value, Type.U32)
@@ -272,21 +293,24 @@ object TypeConverter {
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
+
             Type.U64 -> {
                 toType as UnsignedIntType
                 when (value.type()) {
-                    Type.U1  -> flag2int(value, toType)
-                    Type.I8  -> {
+                    Type.U1 -> flag2int(value, toType)
+                    Type.I8 -> {
                         val sext = sext(value, Type.I64)
                         bitcast(sext, toType)
                     }
+
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> {
                         val tmp = sext(value, Type.I64)
                         bitcast(tmp, toType)
                     }
+
                     Type.I64 -> bitcast(value, toType)
-                    Type.U8  -> zext(value, toType)
+                    Type.U8 -> zext(value, toType)
                     Type.U16 -> trunc(value, toType)
                     Type.U32 -> zext(value, toType)
                     Type.F32 -> fp2Int(value, Type.U64)
@@ -295,15 +319,16 @@ object TypeConverter {
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
+
             Type.F32 -> {
                 toType as FloatingPointType
                 when (value.type()) {
-                    Type.U1  -> int2fp(value, toType)
-                    Type.I8  -> int2fp(value, toType)
+                    Type.U1 -> int2fp(value, toType)
+                    Type.I8 -> int2fp(value, toType)
                     Type.I16 -> int2fp(value, toType)
                     Type.I32 -> int2fp(value, toType)
                     Type.I64 -> int2fp(value, toType)
-                    Type.U8  -> int2fp(value, toType)
+                    Type.U8 -> int2fp(value, toType)
                     Type.U16 -> int2fp(value, toType)
                     Type.U32 -> int2fp(value, toType)
                     Type.U64 -> int2fp(value, toType)
@@ -311,15 +336,16 @@ object TypeConverter {
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
+
             Type.F64 -> {
                 toType as FloatingPointType
                 when (value.type()) {
-                    Type.U1  -> int2fp(value, toType)
-                    Type.I8  -> int2fp(value, toType)
+                    Type.U1 -> int2fp(value, toType)
+                    Type.I8 -> int2fp(value, toType)
                     Type.I16 -> int2fp(value, toType)
                     Type.I32 -> int2fp(value, toType)
                     Type.I64 -> int2fp(value, toType)
-                    Type.U8  -> int2fp(value, toType)
+                    Type.U8 -> int2fp(value, toType)
                     Type.U16 -> int2fp(value, toType)
                     Type.U32 -> int2fp(value, toType)
                     Type.U64 -> int2fp(value, toType)
@@ -327,6 +353,7 @@ object TypeConverter {
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
+
             Type.Ptr -> {
                 toType as PointerType
                 val valueType = value.type()
@@ -336,7 +363,74 @@ object TypeConverter {
                     throw IRCodeGenError("Cannot convert $value to $toType")
                 }
             }
+
             else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $toType")
+        }
+    }
+
+    fun FunctionDataBuilder.coerceArguments(argCType: NonTrivialType, expr: Value): List<Value> { //TODO Float and Double?????
+        return when (argCType.sizeOf()) {
+            BYTE_SIZE -> {
+                val fieldConverted = gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
+                val load           = load(Type.I8, fieldConverted)
+                arrayListOf(load)
+            }
+            HWORD_SIZE -> {
+                val fieldConverted = gep(expr, Type.I16, Constant.valueOf(Type.I64, 0))
+                val load           = load(Type.I16, fieldConverted)
+                arrayListOf(load)
+            }
+            WORD_SIZE -> {
+                val fieldConverted = gep(expr, Type.I32, Constant.valueOf(Type.I64, 0))
+                val load           = load(Type.I32, fieldConverted)
+                arrayListOf(load)
+            }
+            QWORD_SIZE -> {
+                val fieldConverted = gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
+                val load           = load(Type.I64, fieldConverted)
+                arrayListOf(load)
+            }
+            QWORD_SIZE + BYTE_SIZE -> {
+                val fieldConverted = gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
+                val load           = load(Type.I64, fieldConverted)
+                val values = arrayListOf(load)
+
+                val fieldConverted1 = gep(expr, Type.I8, Constant.valueOf(Type.I64, QWORD_SIZE))
+                val load1           = load(Type.I8, fieldConverted1)
+                values.add(load1)
+                values
+            }
+            QWORD_SIZE + HWORD_SIZE -> {
+                val fieldConverted = gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
+                val load           = load(Type.I64, fieldConverted)
+                val values = arrayListOf(load)
+
+                val fieldConverted1 = gep(expr, Type.I16, Constant.valueOf(Type.I64, QWORD_SIZE / Type.I16.sizeOf()))
+                val load1           = load(Type.I16, fieldConverted1)
+                values.add(load1)
+                values
+            }
+            QWORD_SIZE + WORD_SIZE -> {
+                val fieldConverted = gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
+                val load           = load(Type.I64, fieldConverted)
+                val values = arrayListOf(load)
+
+                val fieldConverted1 = gep(expr, Type.I32, Constant.valueOf(Type.I64, QWORD_SIZE / Type.I32.sizeOf()))
+                val load1           = load(Type.I32, fieldConverted1)
+                values.add(load1)
+                values
+            }
+            QWORD_SIZE * 2 -> {
+                val fieldConverted = gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
+                val load           = load(Type.I64, fieldConverted)
+                val values = arrayListOf(load)
+
+                val fieldConverted1 = gep(expr, Type.I64, Constant.valueOf(Type.I64, 1))
+                val load1           = load(Type.I64, fieldConverted1)
+                values.add(load1)
+                values
+            }
+            else -> arrayListOf(convertToType(expr, Type.Ptr))
         }
     }
 

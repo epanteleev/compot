@@ -68,7 +68,7 @@ class FunctionDataBuilder private constructor(
         return bb.call(func, args, target as Block)
     }
 
-    override fun tupleCall(func: AnyFunctionPrototype, args: List<Value>, target: Block): TupleCall {
+    override fun tupleCall(func: AnyFunctionPrototype, args: List<Value>, target: Label): TupleCall {
         return bb.tupleCall(func, args, target)
     }
 

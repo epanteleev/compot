@@ -96,6 +96,34 @@ abstract class StructTests: CommonCTest() {
         assertEquals("x: 1, y: 2, z: 3\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testArgumentStructFloat() {
+        val result = runCTest("shlang/struct/argument_struct_fp32", listOf(), options())
+        assertEquals("x: 1.000000, y: 2.000000\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testArgumentStructFloat1() {
+        val result = runCTest("shlang/struct/argument_struct1_fp32", listOf(), options())
+        assertEquals("x: 1.000000, y: 2.000000, z: 3.000000\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testArgumentStructDouble() {
+        val result = runCTest("shlang/struct/argument_struct_fp64", listOf(), options())
+        assertEquals("x: 1.000000, y: 2.000000\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testArgumentStructDouble1() {
+        val result = runCTest("shlang/struct/argument_struct1_fp64", listOf(), options())
+        assertEquals("x: 1.000000, y: 2.000000, z: 3.000000\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StructTestsO0: StructTests() {
