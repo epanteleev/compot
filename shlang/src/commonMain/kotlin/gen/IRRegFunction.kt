@@ -1,9 +1,10 @@
 package gen
 
-import common.assertion
+
 import types.*
 import ir.types.*
 import parser.nodes.*
+import common.assertion
 import ir.instruction.*
 import ir.instruction.Alloc
 import ir.module.block.Label
@@ -27,8 +28,8 @@ import parser.nodes.visitors.StatementVisitor
 class IrGenFunction(moduleBuilder: ModuleBuilder,
                     typeHolder: TypeHolder,
                     varStack: VarStack,
-                    var constantCounter: Int):
-    AbstractIRGenerator(moduleBuilder, typeHolder, varStack),
+                    constantCounter: Int):
+    AbstractIRGenerator(moduleBuilder, typeHolder, varStack, constantCounter),
     StatementVisitor<Boolean>,
     DeclaratorVisitor<Value> {
     private var currentFunction: FunctionDataBuilder? = null
@@ -213,7 +214,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitStringNode(stringNode: StringNode): Value {
         val string = stringNode.str.data()
-        val stringLiteral = StringLiteralConstant("str${constantCounter++}", ArrayType(Type.I8, string.length), string)
+        val stringLiteral = StringLiteralConstant(createStringLiteralName(), ArrayType(Type.I8, string.length), string)
         return mb.addConstant(stringLiteral)
     }
 
@@ -237,34 +238,32 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): List<Value> {
-        fun convertArg(argIdx: Int, expr: Value, type: NonTrivialType): Value {
-            if (argIdx >= function.arguments().size) {
-                if (!function.isVararg) {
-                    throw IRCodeGenError("Too many arguments in function call '${function.shortName()}'")
-                }
-
-                //TODO Prove it?!?
-                return when (expr.type()) {
-                    Type.F32 -> ir.convertToType(expr, Type.F64)
-                    Type.I8  -> ir.convertToType(expr, Type.I32)
-                    Type.U8  -> ir.convertToType(expr, Type.U32)
-                    else -> expr
-                }
+    fun convertArg(function: AnyFunctionPrototype, argIdx: Int, expr: Value): Value {
+        if (argIdx >= function.arguments().size) {
+            if (!function.isVararg) {
+                throw IRCodeGenError("Too many arguments in function call '${function.shortName()}'")
             }
 
-            val cvt = function.arguments()[argIdx]
-            return ir.convertToType(expr, cvt)
+            //TODO Prove it?!?
+            return when (expr.type()) {
+                Type.F32 -> ir.convertToType(expr, Type.F64)
+                Type.I8  -> ir.convertToType(expr, Type.I32)
+                Type.U8  -> ir.convertToType(expr, Type.U32)
+                else -> expr
+            }
         }
 
+        val cvt = function.arguments()[argIdx]
+        return ir.convertToType(expr, cvt)
+    }
+
+    private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): List<Value> {
         val convertedArgs = mutableListOf<Value>()
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
                 is CPrimitiveType, is CPointerType -> {
-                    val type = mb.toIRType<NonTrivialType>(typeHolder, argCType)
-
-                    val convertedArg = convertArg(idx, expr, type)
+                    val convertedArg = convertArg(function, idx, expr)
                     convertedArgs.add(convertedArg)
                 }
                 is CArrayType -> {
@@ -940,24 +939,24 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return true
     }
 
+    private fun visitInit(init: Node) {
+        when (init) {
+            is Declaration    -> visitDeclaration(init)
+            is ExprStatement  -> visitExpression(init.expr, true)
+            is EmptyStatement -> {}
+            else -> throw IRCodeGenError("Unknown init statement, init=$init")
+        }
+    }
+
+    private fun visitUpdate(update: Expression) {
+        if (update is EmptyExpression) {
+            return
+        }
+
+        visitExpression(update, true)
+    }
+
     override fun visit(forStatement: ForStatement): Boolean = varStack.scoped {
-        fun visitInit(init: Node) {
-            when (init) {
-                is Declaration    -> visitDeclaration(init)
-                is ExprStatement  -> visitExpression(init.expr, true)
-                is EmptyStatement -> {}
-                else -> throw IRCodeGenError("Unknown init statement, init=$init")
-            }
-        }
-
-        fun visitUpdate(update: Expression) {
-            if (update is EmptyExpression) {
-                return
-            }
-
-            visitExpression(update, true)
-        }
-
         val conditionBlock = ir.createLabel()
         val bodyBlock = ir.createLabel()
         val endBlock = ir.createLabel()

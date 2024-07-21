@@ -5,7 +5,6 @@ import ir.types.*
 import parser.nodes.*
 import ir.module.Module
 import gen.TypeConverter.toIRType
-import gen.consteval.*
 import ir.global.*
 import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
@@ -14,21 +13,21 @@ import ir.value.Constant
 
 data class IRCodeGenError(override val message: String) : Exception(message)
 
-class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack()) {
-    private var constantCounter = 0
-
+class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack(), 0) {
     fun visit(programNode: ProgramNode) = varStack.scoped {
         for (node in programNode.nodes) {
             when (node) {
-                is FunctionNode -> {
-                    val gen = IrGenFunction(mb, typeHolder, varStack, constantCounter)
-                    gen.visit(node)
-                    constantCounter = gen.constantCounter
-                }
-                is Declaration -> declare(node)
+                is FunctionNode -> generateFunction(node)
+                is Declaration  -> generateDeclaration(node)
                 else -> throw IRCodeGenError("Function expected")
             }
         }
+    }
+
+    private fun generateFunction(node: FunctionNode) {
+        val gen = IrGenFunction(mb, typeHolder, varStack, constantCounter)
+        gen.visit(node)
+        constantCounter = gen.constantCounter
     }
 
     private fun getExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {
@@ -41,7 +40,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         return mb.createExternFunction(name, returnType, arguments, isVararg)
     }
 
-    private fun declareDeclarator(declarationSpecifier: DeclarationSpecifier, decl: Declarator) {
+    private fun generateDeclarator(declarationSpecifier: DeclarationSpecifier, decl: Declarator) {
         when (val type = decl.declareType(declarationSpecifier, typeHolder)) {
             is CFunctionType -> {
                 val abstrType = type.functionType
@@ -77,80 +76,24 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         }
     }
 
-    private fun declare(node: Declaration) {
-        for (decl in node.nonTypedefDeclarators()) {
-            when (decl) {
-                is Declarator -> {
-                    declareDeclarator(node.declspec, decl)
-                }
-                is AssignmentDeclarator -> {
-                    val cType = decl.declareType(node.declspec, typeHolder)
-                    val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType)
+    private fun generateAssignmentDeclarator(declarationSpecifier: DeclarationSpecifier, decl: AssignmentDeclarator) {
+        val cType = decl.declareType(declarationSpecifier, typeHolder)
+        val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType)
 
-                    val result = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
+        val result = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
 
-                    val constant = mb.addConstant(result)
-                    val global = mb.addGlobal(".v${constantCounter++}", constant)
-                    varStack[decl.name()] = global
-                }
-                else -> throw IRCodeGenError("Unsupported declarator $decl")
-            }
-        }
+        val constant = mb.addConstant(result)
+        val global   = mb.addGlobal(".v${constantCounter++}", constant)
+        varStack[decl.name()] = global
     }
 
-    private fun constEvalExpression(lValueType: Type, expr: Expression): GlobalConstant? {
-        val result = constEvalExpression0(expr)
-        if (result != null) {
-            return GlobalConstant.of(".v${constantCounter++}", lValueType, result)
-        }
-        return stringLiteralInitializer(expr)
-    }
-
-    private fun constEvalExpression0(expr: Expression): Number? {
-        val type = expr.resolveType(typeHolder)
-
-        return when (type) {
-            CType.INT, CType.SHORT, CType.CHAR, CType.UINT, CType.USHORT, CType.UCHAR -> {
-                val ctx = CommonConstEvalContext<Int>(typeHolder)
-                ConstEvalExpression.eval(expr, ConstEvalExpressionInt(ctx))
+    private fun generateDeclaration(node: Declaration) {
+        for (declarator in node.nonTypedefDeclarators()) {
+            when (declarator) {
+                is Declarator           -> generateDeclarator(node.declspec, declarator)
+                is AssignmentDeclarator -> generateAssignmentDeclarator(node.declspec, declarator)
+                else -> throw IRCodeGenError("Unsupported declarator $declarator")
             }
-            CType.LONG, CType.ULONG -> {
-                val ctx = CommonConstEvalContext<Long>(typeHolder)
-                ConstEvalExpression.eval(expr, ConstEvalExpressionLong(ctx))
-            }
-            CType.FLOAT -> {
-                val ctx = CommonConstEvalContext<Float>(typeHolder)
-                ConstEvalExpression.eval(expr, ConstEvalExpressionFloat(ctx))
-            }
-            CType.DOUBLE -> {
-                val ctx = CommonConstEvalContext<Double>(typeHolder)
-                ConstEvalExpression.eval(expr, ConstEvalExpressionDouble(ctx))
-            }
-            else -> null
-        }
-    }
-
-    private fun stringLiteralInitializer(expr: Expression): GlobalConstant? {
-        if (expr is StringNode) {
-            val content = expr.str.data()
-            return StringLiteralConstant("str${constantCounter++}", ArrayType(Type.U8, content.length), content)
-        } else if (expr is InitializerList) {
-            val type = expr.resolveType(typeHolder)
-
-            if (type is CompoundType) {
-                val typeExpr = mb.toIRType<AggregateType>(typeHolder, type)
-
-                val elements = expr.initializers.map { constEvalExpression0(it) }
-                val convertedElements = elements.mapIndexed { it, num ->
-                    Constant.of(typeExpr.field(it), num as Number)
-                }
-
-                return ArrayGlobalConstant("str${constantCounter++}", typeExpr as ArrayType, convertedElements)
-            } else {
-                throw IRCodeGenError("Unsupported type $type")
-            }
-        } else {
-            return null
         }
     }
 
