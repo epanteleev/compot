@@ -1,5 +1,12 @@
 package ir.types
 
+import ir.Definitions.BYTE_SIZE
+import ir.Definitions.WORD_SIZE
+import ir.Definitions.FLOAT_SIZE
+import ir.Definitions.HWORD_SIZE
+import ir.Definitions.QWORD_SIZE
+import ir.Definitions.DOUBLE_SIZE
+
 
 data class TypeErrorException(override val message: String) : Exception(message)
 
@@ -7,18 +14,18 @@ sealed interface Type {
     companion object {
         val U1  = BooleanType
 
-        val U8  = UnsignedIntType(1)
-        val U16 = UnsignedIntType(2)
-        val U32 = UnsignedIntType(4)
-        val U64 = UnsignedIntType(8)
+        val U8  = UnsignedIntType(BYTE_SIZE)
+        val U16 = UnsignedIntType(HWORD_SIZE)
+        val U32 = UnsignedIntType(WORD_SIZE)
+        val U64 = UnsignedIntType(QWORD_SIZE)
 
-        val I8  = SignedIntType(1)
-        val I16 = SignedIntType(2)
-        val I32 = SignedIntType(4)
-        val I64 = SignedIntType(8)
+        val I8  = SignedIntType(BYTE_SIZE)
+        val I16 = SignedIntType(HWORD_SIZE)
+        val I32 = SignedIntType(WORD_SIZE)
+        val I64 = SignedIntType(QWORD_SIZE)
 
-        val F32 = FloatingPointType(4)
-        val F64 = FloatingPointType(8)
+        val F32 = FloatingPointType(FLOAT_SIZE)
+        val F64 = FloatingPointType(DOUBLE_SIZE)
 
         val Ptr = PointerType
 

@@ -272,7 +272,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     convertedArgs.add(convertedArg)
                 }
                 is CStructType -> {
-                    val structType = mb.toIRType<StructType>(typeHolder, argCType)
                     when (argCType.size()) {
                         BYTE_SIZE -> {
                             val fieldConverted = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
@@ -280,22 +279,22 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                             convertedArgs.add(load)
                         }
                         HWORD_SIZE -> {
-                            val fieldConverted = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
+                            val fieldConverted = ir.gep(expr, Type.I16, Constant.valueOf(Type.I64, 0))
                             val load = ir.load(Type.I16, fieldConverted)
                             convertedArgs.add(load)
                         }
                         WORD_SIZE -> {
-                            val fieldConverted = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
+                            val fieldConverted = ir.gep(expr, Type.I32, Constant.valueOf(Type.I64, 0))
                             val load = ir.load(Type.I32, fieldConverted)
                             convertedArgs.add(load)
                         }
                         QWORD_SIZE -> {
-                            val fieldConverted = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
+                            val fieldConverted = ir.gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
                             val load = ir.load(Type.I64, fieldConverted)
                             convertedArgs.add(load)
                         }
                         QWORD_SIZE + BYTE_SIZE -> {
-                            val fieldConverted = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
+                            val fieldConverted = ir.gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
                             val load = ir.load(Type.I64, fieldConverted)
                             convertedArgs.add(load)
 
@@ -304,29 +303,29 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                             convertedArgs.add(load1)
                         }
                         QWORD_SIZE + HWORD_SIZE -> {
-                            val fieldConverted = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
+                            val fieldConverted = ir.gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
                             val load = ir.load(Type.I64, fieldConverted)
                             convertedArgs.add(load)
 
-                            val fieldConverted1 = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, QWORD_SIZE))
+                            val fieldConverted1 = ir.gep(expr, Type.I16, Constant.valueOf(Type.I64, QWORD_SIZE / Type.I16.sizeOf()))
                             val load1 = ir.load(Type.I16, fieldConverted1)
                             convertedArgs.add(load1)
                         }
                         QWORD_SIZE + WORD_SIZE -> {
-                            val fieldConverted = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
+                            val fieldConverted = ir.gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
                             val load = ir.load(Type.I64, fieldConverted)
                             convertedArgs.add(load)
 
-                            val fieldConverted1 = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, QWORD_SIZE))
+                            val fieldConverted1 = ir.gep(expr, Type.I32, Constant.valueOf(Type.I64, QWORD_SIZE / Type.I32.sizeOf()))
                             val load1 = ir.load(Type.I32, fieldConverted1)
                             convertedArgs.add(load1)
                         }
                         QWORD_SIZE * 2 -> {
-                            val fieldConverted = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
+                            val fieldConverted = ir.gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
                             val load = ir.load(Type.I64, fieldConverted)
                             convertedArgs.add(load)
 
-                            val fieldConverted1 = ir.gep(expr, Type.I8, Constant.valueOf(Type.I64, QWORD_SIZE))
+                            val fieldConverted1 = ir.gep(expr, Type.I64, Constant.valueOf(Type.I64, 1))
                             val load1 = ir.load(Type.I64, fieldConverted1)
                             convertedArgs.add(load1)
                         }
@@ -811,7 +810,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 is CStructType -> {
                     for ((idx, arg) in args.withIndex()) {
-                        val fieldPtr = ir.gep(rvalueAdr, Type.I8, Constant.valueOf(Type.I64, idx * arg.type().sizeOf()))
+                        val argSize = arg.type().sizeOf()
+                        val offset = (idx * QWORD_SIZE) / argSize
+                        val fieldPtr = ir.gep(rvalueAdr, arg.type(), Constant.valueOf(Type.I64, offset))
                         ir.store(fieldPtr, arg)
                     }
                 }

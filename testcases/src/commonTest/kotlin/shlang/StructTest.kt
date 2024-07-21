@@ -83,9 +83,9 @@ abstract class StructTests: CommonCTest() {
         assertEquals(0, result.exitCode)
     }
 
-    @Ignore
+    @Test
     fun testArgumentStruct1() {
-        val result = runCTest("shlang/struct/argument_struct1", listOf("runtime/runtime.c"), options())
+        val result = runCTest("shlang/struct/argument_struct1", listOf(), options())
         assertEquals("x: 1, y: 2, z: 3\n", result.output)
         assertEquals(0, result.exitCode)
     }

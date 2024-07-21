@@ -3,7 +3,7 @@ package ir.types
 
 sealed interface IntegerType: ArithmeticType
 
-data class SignedIntType internal constructor(val size: Int) : IntegerType {
+data class SignedIntType internal constructor(private val size: Int) : IntegerType {
     override fun sizeOf(): Int {
         return size
     }
@@ -19,7 +19,7 @@ data class SignedIntType internal constructor(val size: Int) : IntegerType {
     }
 }
 
-data class UnsignedIntType internal constructor(val size: Int) : IntegerType {
+data class UnsignedIntType internal constructor(private val size: Int) : IntegerType {
     override fun sizeOf(): Int {
         return size
     }

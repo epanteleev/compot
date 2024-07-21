@@ -117,34 +117,26 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 store(gfpOrGep(generate().not(), nop()), nop()) (inst) -> { inst as Store
                     val pointer = inst.pointer().asValue<ValueInstruction>()
                     val move = bb.update(inst) { it.move(getSource(pointer), getIndex(pointer), inst.value()) }
-                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.kill(pointer) // TODO bb may not contain pointer
-                    }
+                    killOnDemand(bb, pointer)
                     return move
                 }
                 store(gfpOrGep(generate(), nop()), nop()) (inst) -> { inst as Store
                     val pointer = inst.pointer().asValue<ValueInstruction>()
                     val st = bb.update(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
-                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.kill(pointer) // TODO bb may not contain pointer
-                    }
+                    killOnDemand(bb, pointer)
                     return st
                 }
                 load(gfpOrGep(generate().not(), nop())) (inst) -> { inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
                     val copy = bb.update(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
-                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.kill(pointer) // TODO bb may not contain pointer
-                    }
+                    killOnDemand(bb, pointer)
                     return copy
                 }
                 load(gfpOrGep(generate(), nop())) (inst) -> { inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
                     val index = getIndex(pointer)
                     val copy = bb.update(inst) { it.loadFromStack(getSource(pointer), inst.type(), index) }
-                    if (pointer.usedIn().isEmpty()) { //TODO Need DCE
-                        bb.kill(pointer) // TODO bb may not contain pointer
-                    }
+                    killOnDemand(bb, pointer)
                     return copy
                 }
             }
