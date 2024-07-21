@@ -770,7 +770,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return types
     }
 
-    private fun visitParameters(parameters: List<String>, cTypes: List<CType>, arguments: List<ArgumentValue>, closure: (String, CType, List<ArgumentValue>) -> Unit) {
+    private fun visitParameters(parameters: List<String>,
+                                cTypes: List<CType>,
+                                arguments: List<ArgumentValue>,
+                                closure: (String, CType, List<ArgumentValue>) -> Unit) {
         var currentArg = 0
         while (currentArg < arguments.size) {
             when (val cType = cTypes[currentArg]) {
@@ -792,6 +795,32 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
+    private fun visitParameter(param: String, cType: CType, args: List<ArgumentValue>) = when (cType) {
+        is CPrimitiveType, is CPointerType -> {
+            val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
+            val rvalueAdr = ir.alloc(irType)
+            assertion(args.size == 1) { "invariant" }
+            ir.store(rvalueAdr, ir.convertToType(args[0], irType))
+            varStack[param] = rvalueAdr
+        }
+        is CStructType -> {
+            if (cType.size() <= QWORD_SIZE * 2) {
+                val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
+                val rvalueAdr = ir.alloc(irType)
+                args.forEachIndexed { idx, arg ->
+                    val offset   = (idx * QWORD_SIZE) / arg.type().sizeOf()
+                    val fieldPtr = ir.gep(rvalueAdr, arg.type(), Constant.valueOf(Type.I64, offset))
+                    ir.store(fieldPtr, arg)
+                }
+                varStack[param] = rvalueAdr
+            } else {
+                assertion(args.size == 1) { "invariant" }
+                varStack[param] = args[0]
+            }
+        }
+        else -> throw IRCodeGenError("Unknown type, type=$cType")
+    }
+
     override fun visit(functionNode: FunctionNode): Value = varStack.scoped {
         val parameters = functionNode.functionDeclarator().params()
         val fnType = functionNode.declareType(functionNode.specifier, typeHolder)
@@ -801,23 +830,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         currentFunction = mb.createFunction(functionNode.name(), retType, argTypes)
 
         visitParameters(parameters, fnType.args(), ir.arguments()) { param, cType, args ->
-            val irType      = mb.toIRType<NonTrivialType>(typeHolder, cType)
-            val rvalueAdr   = ir.alloc(irType)
-            varStack[param] = rvalueAdr
-            when (cType) {
-                is CPrimitiveType, is CPointerType -> {
-                    ir.store(rvalueAdr, ir.convertToType(args[0], irType))
-                }
-                is CStructType -> {
-                    for ((idx, arg) in args.withIndex()) {
-                        val argSize = arg.type().sizeOf()
-                        val offset = (idx * QWORD_SIZE) / argSize
-                        val fieldPtr = ir.gep(rvalueAdr, arg.type(), Constant.valueOf(Type.I64, offset))
-                        ir.store(fieldPtr, arg)
-                    }
-                }
-                else -> throw IRCodeGenError("Unknown type, type=$cType")
-            }
+            visitParameter(param, cType, args)
         }
 
         if (retType is NonTrivialType) {
