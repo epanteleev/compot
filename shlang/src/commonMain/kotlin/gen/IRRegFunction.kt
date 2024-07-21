@@ -238,7 +238,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    fun convertArg(function: AnyFunctionPrototype, argIdx: Int, expr: Value): Value {
+    private fun convertArg(function: AnyFunctionPrototype, argIdx: Int, expr: Value): Value {
         if (argIdx >= function.arguments().size) {
             if (!function.isVararg) {
                 throw IRCodeGenError("Too many arguments in function call '${function.shortName()}'")
@@ -273,7 +273,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 is CStructType -> {
                     val structType = mb.toIRType<StructType>(typeHolder, argCType)
-                    when (val size = argCType.size()) {
+                    when (argCType.size()) {
                         BYTE_SIZE -> {
                             val fieldConverted = ir.gfp(expr, structType, arrayOf(Constant.valueOf(Type.I64, 0)))
                             val load = ir.load(Type.I8, fieldConverted)
@@ -747,7 +747,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun coerceArguments(cType: CStructType) = when (cType.size()) {
+    private fun coerceArgumentTypes(cType: CStructType) = when (cType.size()) {
         BYTE_SIZE  -> arrayListOf(Type.I8)
         HWORD_SIZE -> arrayListOf(Type.I16)
         WORD_SIZE  -> arrayListOf(Type.I32)
@@ -761,14 +761,23 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun argumentTypes(ctypes: List<CType>): List<Type> {
         val types = arrayListOf<Type>()
-        for (ctype in ctypes) {
-            when (ctype) {
-                is CPrimitiveType,is CPointerType -> types.add(mb.toIRType<PrimitiveType>(typeHolder, ctype))
-                is CStructType -> types.addAll(coerceArguments(ctype))
-                else -> throw IRCodeGenError("Unknown type, type=${ctype}")
+        for (type in ctypes) {
+            when (type) {
+                is CPrimitiveType,is CPointerType -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type))
+                is CStructType -> types.addAll(coerceArgumentTypes(type))
+                else -> throw IRCodeGenError("Unknown type, type=$type")
             }
         }
         return types
+    }
+
+    private fun visitParameters(parameters: List<String>, cTypes: List<CType>, arguments: List<ArgumentValue>, closure: (String, CType, ArgumentValue) -> Unit) {
+        for (idx in parameters.indices) {
+            val param = parameters[idx]
+            val cType = cTypes[idx]
+            val arg = arguments[idx]
+            closure(param, cType, arg)
+        }
     }
 
     override fun visit(functionNode: FunctionNode): Value = varStack.scoped {
@@ -779,11 +788,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val argTypes = argumentTypes(fnType.args())
         currentFunction = mb.createFunction(functionNode.name(), retType, argTypes)
 
-        for (idx in parameters.indices) {
-            val param = parameters[idx]
-            val arg   = ir.argument(idx)
-            val type  = fnType.args()[idx]
-            val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
+        visitParameters(parameters, fnType.args(), ir.arguments()) { param, cType, arg ->
+            val irType      = mb.toIRType<NonTrivialType>(typeHolder, cType)
             val rvalueAdr   = ir.alloc(irType)
             varStack[param] = rvalueAdr
             ir.store(rvalueAdr, arg)
