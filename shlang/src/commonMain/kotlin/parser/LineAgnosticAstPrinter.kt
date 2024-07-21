@@ -2,7 +2,6 @@ package parser
 
 import parser.nodes.*
 import parser.nodes.visitors.NodeVisitor
-import tokenizer.CharLiteral
 import tokenizer.Identifier
 
 
@@ -211,10 +210,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         parameter.declarator.accept(this)
     }
 
-    override fun visit(assignmentDeclarator: AssignmentDeclarator) {
-        assignmentDeclarator.declarator.accept(this)
+    override fun visit(initDeclarator: InitDeclarator) {
+        initDeclarator.declarator.accept(this)
         buffer.append(" = ")
-        assignmentDeclarator.rvalue.accept(this)
+        initDeclarator.rvalue.accept(this)
     }
 
     override fun visit(parameters: ParameterTypeList) {

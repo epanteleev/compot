@@ -218,6 +218,19 @@ class TypeResolutionTest {
         assertEquals("int*", typeResolver["v"].toString())
     }
 
+    @Ignore
+    fun testFunctionDeclarator() {
+        val tokens = CTokenizer.apply("int b(int b), n(float f);")
+        val parser = CProgramParser.build(tokens)
+        val expr = parser.function_definition() as FunctionNode
+        val typeResolver = TypeHolder.default()
+        val fnType = expr.resolveType(typeResolver)
+
+        assertEquals("int add(int, int)", fnType.toString())
+        assertEquals(CType.INT, typeResolver["a"])
+        assertEquals(CType.INT, typeResolver["b"])
+    }
+
     @Test
     fun testStructDeclaration() {
         val tokens = CTokenizer.apply("struct point { int x; int y; };")

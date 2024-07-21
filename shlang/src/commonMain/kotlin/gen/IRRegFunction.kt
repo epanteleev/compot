@@ -1030,29 +1030,29 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return rvalueAdr
     }
 
-    override fun visit(assignmentDeclarator: AssignmentDeclarator): Value {
-        val type = typeHolder[assignmentDeclarator.name()]
+    override fun visit(initDeclarator: InitDeclarator): Value {
+        val type = typeHolder[initDeclarator.name()]
         if (type is CompoundType) {
-            val lvalueAdr = assignmentDeclarator.declarator.accept(this)
-            when (assignmentDeclarator.rvalue) {
+            val lvalueAdr = initDeclarator.declarator.accept(this)
+            when (initDeclarator.rvalue) {
                 is InitializerList -> {
                     val typeIr = mb.toIRType<AggregateType>(typeHolder, type)
-                    visitInitializerList(lvalueAdr, typeIr, assignmentDeclarator.rvalue)
+                    visitInitializerList(lvalueAdr, typeIr, initDeclarator.rvalue)
                     return lvalueAdr
                 }
                 else -> {
-                    val rvalue = visitExpression(assignmentDeclarator.rvalue, true)
+                    val rvalue = visitExpression(initDeclarator.rvalue, true)
                     val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
                     ir.memcpy(lvalueAdr, rvalue, U64Value(commonType.sizeOf().toLong()))
                     return lvalueAdr
                 }
             }
         } else {
-            val rvalue = visitExpression(assignmentDeclarator.rvalue, true)
+            val rvalue = visitExpression(initDeclarator.rvalue, true)
             val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
             val convertedRvalue = ir.convertToType(rvalue, commonType)
 
-            val lvalueAdr = assignmentDeclarator.declarator.accept(this)
+            val lvalueAdr = initDeclarator.declarator.accept(this)
             ir.store(lvalueAdr, convertedRvalue)
             return convertedRvalue
         }

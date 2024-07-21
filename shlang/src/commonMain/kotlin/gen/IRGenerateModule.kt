@@ -76,7 +76,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         }
     }
 
-    private fun generateAssignmentDeclarator(declarationSpecifier: DeclarationSpecifier, decl: AssignmentDeclarator) {
+    private fun generateAssignmentDeclarator(declarationSpecifier: DeclarationSpecifier, decl: InitDeclarator) {
         val cType = decl.declareType(declarationSpecifier, typeHolder)
         val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType)
 
@@ -91,7 +91,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         for (declarator in node.nonTypedefDeclarators()) {
             when (declarator) {
                 is Declarator           -> generateDeclarator(node.declspec, declarator)
-                is AssignmentDeclarator -> generateAssignmentDeclarator(node.declspec, declarator)
+                is InitDeclarator -> generateAssignmentDeclarator(node.declspec, declarator)
                 else -> throw IRCodeGenError("Unsupported declarator $declarator")
             }
         }

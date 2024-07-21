@@ -64,22 +64,22 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
     override fun<T> accept(visitor: UnclassifiedNodeVisitor<T>) = visitor.visit(this)
 
     private fun resolveAllDecl(baseType: CType, typeHolder: TypeHolder): CType {
-        var pointerType = baseType
+        var currentType = baseType
         for (decl in directDeclaratorParams) {
             when (decl) {
                 is ArrayDeclarator -> {
-                    pointerType = decl.resolveType(pointerType, typeHolder)
+                    currentType = decl.resolveType(currentType, typeHolder)
                 }
 
                 is ParameterTypeList -> {
-                    val abstractType = decl.resolveType(pointerType, typeHolder)
-                    pointerType = CFunctionType(name(), abstractType)
+                    val abstractType = decl.resolveType(currentType, typeHolder)
+                    currentType = CFunctionType(name(), abstractType)
                 }
 
                 else -> throw IllegalStateException("Unknown declarator $decl")
             }
         }
-        return pointerType
+        return currentType
     }
 
     fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {

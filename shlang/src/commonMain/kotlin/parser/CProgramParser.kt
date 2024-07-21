@@ -455,7 +455,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (check("=")) {
             eat()
             val initializer = initializer()?: throw ParserException(InvalidToken("Expected initializer", peak()))
-            return@rule AssignmentDeclarator(declarator, initializer) //TODO
+            return@rule InitDeclarator(declarator, initializer) //TODO
         }
         return@rule declarator
     }

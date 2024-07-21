@@ -1,7 +1,7 @@
 package parser.nodes
 
-import common.assertion
 import types.*
+import common.assertion
 import parser.nodes.visitors.*
 
 
@@ -31,16 +31,17 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
             return pointerType
         }
 
-        typeHolder.addVar(name(), pointerType)
         if (pointerType is CFunctionType) {
+            // declare extern function or function without body
             typeHolder.addFunctionType(name(), pointerType)
+        } else {
+            typeHolder.addVar(name(), pointerType)
         }
-
         return pointerType
     }
 }
 
-data class AssignmentDeclarator(val declarator: Declarator, val rvalue: Expression): AnyDeclarator() { //TODO rename
+data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): AnyDeclarator() { //TODO rename
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun name(): String {
@@ -115,9 +116,17 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CFunctionType {
         assertion(declspec === this.specifier) { "specifier mismatch" }
 
-        val s = declarator.declareType(declspec, typeHolder) as CFunctionType
-        typeHolder.addFunctionType(name(), s) //TODO already added???
-        return s
+        var pointerType = declspec.specifyType(typeHolder)
+        for (pointer in declarator.pointers) {
+            pointerType = CPointerType(pointerType, pointer.property())
+        }
+
+        pointerType = declarator.directDeclarator.resolveType(pointerType, typeHolder)
+        assertion(!declspec.isTypedef) { "typedef is not supported here" }
+
+        assertion(pointerType is CFunctionType) { "function type expected" }
+        typeHolder.addFunctionType(name(), pointerType as CFunctionType)
+        return pointerType
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
