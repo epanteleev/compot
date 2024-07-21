@@ -294,27 +294,18 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val function      = mb.findFunction(functionCall.name())
         val convertedArgs = convertFunctionArgs(function, functionCall.args)
 
-        when (val returnType = function.returnType()) {
+        val cont = ir.createLabel()
+        val ret = when (val returnType = function.returnType()) {
             Type.Void -> {
-                val cont = ir.createLabel()
                 ir.vcall(function, convertedArgs, cont)
-                ir.switchLabel(cont)
-                return Value.UNDEF
+                Value.UNDEF
             }
-            is PrimitiveType -> {
-                val cont = ir.createLabel()
-                val ret = ir.call(function, convertedArgs, cont)
-                ir.switchLabel(cont)
-                return ret
-            }
-            is StructType, is TupleType -> {
-                val cont = ir.createLabel()
-                val ret = ir.tupleCall(function, convertedArgs, cont)
-                ir.switchLabel(cont)
-                return ret
-            }
+            is PrimitiveType -> ir.call(function, convertedArgs, cont)
+            is StructType, is TupleType -> ir.tupleCall(function, convertedArgs, cont)
             else -> TODO("$returnType")
         }
+        ir.switchLabel(cont)
+        return ret
     }
 
     private fun eq(type: Type): AnyPredicateType {
