@@ -12,6 +12,9 @@ import ir.module.block.Label
 import gen.TypeConverter.convertToType
 import gen.TypeConverter.toIRType
 import gen.TypeConverter.toIndexType
+import gen.consteval.CommonConstEvalContext
+import gen.consteval.ConstEvalExpression
+import gen.consteval.ConstEvalExpressionInt
 import ir.Definitions.QWORD_SIZE
 import ir.global.StringLiteralConstant
 import ir.instruction.ArithmeticBinaryOp
@@ -1043,7 +1046,44 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(switchStatement: SwitchStatement): Boolean {
-        TODO("Not yet implemented")
+        val condition = visitExpression(switchStatement.condition, true)
+        val conditionBlock = ir.currentLabel()
+        val endBlock = ir.createLabel()
+        val defaultBlock = ir.createLabel()
+        stmtStack.push(SwitchStmtInfo(endBlock))
+
+        val table = arrayListOf<IntegerConstant>()
+        switchStatement.cases { node ->
+            val ctx = CommonConstEvalContext<Int>(typeHolder)
+            val constEval = ConstEvalExpression.eval(node.constExpression, ConstEvalExpressionInt(ctx))
+            table.add(Constant.valueOf(Type.I32, constEval))
+        }
+
+        val jumps = arrayListOf<Label>()
+        switchStatement.cases { node ->
+            val caseBlock = ir.createLabel()
+            jumps.add(caseBlock)
+
+            ir.branch(caseBlock)
+            val needBranch = visitStatement(node.stmt)
+            if (needBranch) {
+                ir.branch(defaultBlock)
+            }
+        }
+
+        switchStatement.default { default ->
+            ir.switchLabel(defaultBlock)
+            val needBranch = visitStatement(default.stmt)
+            if (needBranch) {
+                ir.branch(endBlock)
+            }
+        }
+        ir.switchLabel(conditionBlock)
+        ir.switch(condition, defaultBlock, table, jumps)
+
+        ir.switchLabel(endBlock)
+        stmtStack.pop()
+        return false
     }
 
     override fun visit(declarator: Declarator): Alloc {

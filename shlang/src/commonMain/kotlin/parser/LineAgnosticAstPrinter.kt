@@ -156,7 +156,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(caseStatement: CaseStatement) {
         buffer.append("case ")
-        caseStatement.expr.accept(this)
+        caseStatement.constExpression.accept(this)
         buffer.append(": ")
         caseStatement.stmt.accept(this)
     }
