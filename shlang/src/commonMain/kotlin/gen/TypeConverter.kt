@@ -170,7 +170,10 @@ object TypeConverter {
                     }
 
                     Type.U32 -> bitcast(value, toType)
-                    Type.U64 -> trunc(value, toType)
+                    Type.U64 -> {
+                        val bitcast = bitcast(value, Type.I64)
+                        trunc(bitcast, toType)
+                    }
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
                     Type.Ptr -> ptr2int(value, toType)

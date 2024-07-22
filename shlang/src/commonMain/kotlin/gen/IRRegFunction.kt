@@ -685,7 +685,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val types = arrayListOf<Type>()
         for (type in ctypes) {
             when (type) {
-                is CPrimitiveType,is CPointerType -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type))
+                is CPrimitiveType, is CPointerType -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type))
                 is CStructType -> {
                     val irType = mb.toIRType<StructType>(typeHolder, type)
                     val parameters = CallConvention.coerceArgumentTypes(irType)
