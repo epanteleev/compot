@@ -45,6 +45,14 @@ abstract class ManyArgumentsTest: CommonCTest() {
         assertEquals("13.000", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testManyArguments6() {
+        val options = options() + "-DVALUE_TYPE=double" + "-DVALUE_FMT=\"%.3lf\""
+        val result = runCTest("shlang/manyArguments", listOf(), options)
+        assertEquals("13.000", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class ManyArgumentsTestO0: ManyArgumentsTest() {
