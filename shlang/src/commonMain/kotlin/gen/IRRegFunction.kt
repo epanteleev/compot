@@ -1,8 +1,8 @@
 package gen
 
-
 import types.*
 import ir.types.*
+import ir.value.*
 import parser.nodes.*
 import common.assertion
 import gen.TypeConverter.coerceArguments
@@ -18,7 +18,6 @@ import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
-import ir.value.*
 import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
 
@@ -34,6 +33,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private var returnValueAdr: Alloc? = null
     private var exitBlock: Label = Label.entry //TODO late initialization
     private var stringTolabel = mutableMapOf<String, Label>()
+    private val stmtStack = StmtStack()
 
     private val ir: FunctionDataBuilder
         get() = currentFunction ?: throw IRCodeGenError("Function expected")
@@ -848,11 +848,15 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(continueStatement: ContinueStatement): Boolean {
-        TODO("Not yet implemented")
+        val loopInfo = stmtStack.topLoop() ?: throw IRCodeGenError("Continue statement outside of loop")
+        ir.branch(loopInfo.continueBB)
+        return false
     }
 
     override fun visit(breakStatement: BreakStatement): Boolean {
-        TODO("Not yet implemented")
+        val loopInfo = stmtStack.top()
+        ir.branch(loopInfo.exitBB)
+        return false
     }
 
     override fun visit(defaultStatement: DefaultStatement): Boolean {
@@ -959,15 +963,22 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     override fun visit(doWhileStatement: DoWhileStatement): Boolean = varStack.scoped {
         val bodyBlock = ir.createLabel()
         val endBlock = ir.createLabel()
+        val conditionBlock = ir.createLabel()
+        stmtStack.push(LoopStmtInfo(conditionBlock, endBlock))
 
         ir.branch(bodyBlock)
         ir.switchLabel(bodyBlock)
-        visitStatement(doWhileStatement.body)
+
+        val needSwitch = visitStatement(doWhileStatement.body)
+        if (needSwitch) {
+            ir.branch(conditionBlock)
+        }
+        ir.switchLabel(conditionBlock)
 
         val condition = makeConditionFromExpression(doWhileStatement.condition)
-
         ir.branchCond(condition, bodyBlock, endBlock)
         ir.switchLabel(endBlock)
+        stmtStack.pop()
         return true
     }
 
@@ -975,6 +986,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val conditionBlock = ir.createLabel()
         val bodyBlock = ir.createLabel()
         val endBlock = ir.createLabel()
+        stmtStack.push(LoopStmtInfo(conditionBlock, endBlock))
 
         ir.branch(conditionBlock)
         ir.switchLabel(conditionBlock)
@@ -987,6 +999,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.branch(conditionBlock)
         }
         ir.switchLabel(endBlock)
+        stmtStack.pop()
         return true
     }
 
@@ -1011,6 +1024,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val conditionBlock = ir.createLabel()
         val bodyBlock = ir.createLabel()
         val endBlock = ir.createLabel()
+        stmtStack.push(LoopStmtInfo(conditionBlock, endBlock))
 
         visitInit(forStatement.init)
         ir.branch(conditionBlock)
@@ -1024,6 +1038,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.branch(conditionBlock)
         }
         ir.switchLabel(endBlock)
+        stmtStack.pop()
         return true
     }
 
