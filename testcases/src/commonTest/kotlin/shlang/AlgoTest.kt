@@ -123,6 +123,26 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals(output, result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testRabinKarpSearch() {
+        val result = runCTest("shlang/algo/rabin_karp_search", listOf(), options())
+        val output = """
+            String test: AABCAB12AFAABCABFFEGABCAB
+            Test1: search pattern ABCAB
+            --Pattern is found at: 1
+            --Pattern is found at: 11
+            --Pattern is found at: 20
+            Test2: search pattern FFF
+            Test3: search pattern CAB
+            --Pattern is found at: 3
+            --Pattern is found at: 13
+            --Pattern is found at: 22
+            
+        """.trimIndent()
+        assertEquals(output, result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {

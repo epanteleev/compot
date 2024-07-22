@@ -31,7 +31,11 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, rax)
+        asm.cdq(size)
+        asm.idiv(size, second)
+        asm.mov(size, rax, dst)
+        asm.moveRem(size, rem)
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
