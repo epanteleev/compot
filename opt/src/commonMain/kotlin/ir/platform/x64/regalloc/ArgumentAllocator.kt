@@ -47,7 +47,7 @@ class CalleeArgumentAllocator(private val arguments: List<Value>) {
             when (val pos = emit(arg.type())) {
                 is RealGPRegister -> allocation.add(gpRegisters[pos.registerIndex])
                 is RealFpRegister -> allocation.add(fpRegisters[pos.registerIndex])
-                is Memory -> allocation.add(Address.from(rsp, -(pos.slotSize * pos.index) + 8))
+                is Memory -> allocation.add(Address.from(rsp, pos.slotSize * pos.index))
             }
         }
 

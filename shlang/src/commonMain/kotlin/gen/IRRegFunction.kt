@@ -212,7 +212,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitStringNode(stringNode: StringNode): Value {
         val string = stringNode.str.data()
-        val stringLiteral = StringLiteralConstant("str${constantCounter++}", ArrayType(Type.I8, string.length), string)
+        val stringLiteral = StringLiteralConstant(createStringLiteralName(), ArrayType(Type.I8, string.length), string)
         return mb.addConstant(stringLiteral)
     }
 
@@ -913,9 +913,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(ifStatement: IfStatement): Boolean = varStack.scoped {
         val condition = makeConditionFromExpression(ifStatement.condition)
-
         val thenBlock = ir.createLabel()
-
 
         if (ifStatement.elseNode is EmptyStatement) {
             val endBlock = ir.createLabel()
