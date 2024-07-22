@@ -2,13 +2,47 @@ package shlang
 
 import common.CommonCTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
+
 
 abstract class ManyArgumentsTest: CommonCTest() {
     @Test
-    fun testGlobalVar2Short() {
+    fun testManyArguments1() {
         val options = options()
         val result = runCTest("shlang/manyArguments", listOf(), options)
-        //assertEquals("100", result.output)
+        assertEquals("13", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testManyArguments2() {
+        val options = options() + "-DVALUE_TYPE=short" + "-DVALUE_FMT=\"%hd\""
+        val result = runCTest("shlang/manyArguments", listOf(), options)
+        assertEquals("13", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testManyArguments3() {
+        val options = options() + "-DVALUE_TYPE=char" + "-DVALUE_FMT=\"%hhd\""
+        val result = runCTest("shlang/manyArguments", listOf(), options)
+        assertEquals("13", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testManyArguments4() {
+        val options = options() + "-DVALUE_TYPE=long" + "-DVALUE_FMT=\"%ld\""
+        val result = runCTest("shlang/manyArguments", listOf(), options)
+        assertEquals("13", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testManyArguments5() {
+        val options = options() + "-DVALUE_TYPE=float" + "-DVALUE_FMT=\"%.3f\""
+        val result = runCTest("shlang/manyArguments", listOf(), options)
+        assertEquals("13.000", result.output)
         assertReturnCode(result, 0)
     }
 }

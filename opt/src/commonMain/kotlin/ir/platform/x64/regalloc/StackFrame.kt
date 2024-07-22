@@ -5,6 +5,7 @@ import ir.types.Type
 import asm.x64.Address
 import asm.x64.GPRegister.*
 import common.assertion
+import ir.Definitions.QWORD_SIZE
 import ir.instruction.Generate
 import ir.types.NonTrivialType
 
@@ -14,6 +15,7 @@ data class StackFrameException(override val message: String): Exception(message)
 interface StackFrame {
     fun takeSlot(value: Value): Address
     fun returnSlot(slot: Address, size: Int)
+    fun takeArgument(index: Int, arg: Value): Address
     fun size(): Int
 
     companion object {
@@ -42,7 +44,6 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     private fun stackSlotAlloc(value: Generate): Address {
         val typeSize = getTypeSize(value.type())
-
         frameSize = withAlignment(typeSize, frameSize)
         return Address.from(rbp, -frameSize)
     }
@@ -75,5 +76,10 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     override fun size(): Int {
         return frameSize
+    }
+
+    override fun takeArgument(index: Int, arg: Value): Address {
+        frameSize = withAlignment(QWORD_SIZE, frameSize)
+        return Address.from(rsp, index * QWORD_SIZE)
     }
 }

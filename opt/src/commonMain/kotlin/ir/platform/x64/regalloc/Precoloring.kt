@@ -7,9 +7,8 @@ import ir.instruction.*
 import ir.liveness.GroupedLiveIntervals
 import ir.liveness.LiveRange
 import ir.liveness.LiveIntervals
-import ir.types.TupleType
 import ir.value.TupleValue
-import ir.value.Value
+
 
 //TODO
 class Precoloring private constructor(private val intervals: LiveIntervals, private val precolored: Map<LocalValue, Operand>) {

@@ -44,7 +44,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
            if (inst !is Callable) {
                continue
            }
-           val allocation = CalleeArgumentAllocator.alloc(inst.arguments().toList()) //TODO allocation
+           val allocation = pool.calleeArgumentAllocate(inst.arguments())
            allocation.forEachWith(inst.arguments()) { operand, arg ->
                registerMap[arg as LocalValue] = operand
            }

@@ -1,10 +1,17 @@
 #include <assert.h>
+#include <stdio.h>
 
-int f(int a0, int a1, int a2, int a3, int a4,int a5, int a6, int a7, int a8, int a9, int a10,int a11, int a12) {
+#ifndef VALUE_TYPE
+#define VALUE_TYPE int
+#define VALUE_FMT "%d"
+#endif
+
+int f(VALUE_TYPE a0, VALUE_TYPE a1, VALUE_TYPE a2, VALUE_TYPE a3, VALUE_TYPE a4,VALUE_TYPE a5, VALUE_TYPE a6, VALUE_TYPE a7, VALUE_TYPE a8, VALUE_TYPE a9, VALUE_TYPE a10, VALUE_TYPE a11, VALUE_TYPE a12) {
   return a0+a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12;
 }
 
 int main() {
-  assert(f(1,1,1,1,1,1,1,1,1,1,1,1,1) == 13);
+  VALUE_TYPE res = f(1,1,1,1,1,1,1,1,1,1,1,1,1);
+  printf(VALUE_FMT, res);
   return 0;
 }
