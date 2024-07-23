@@ -4,10 +4,18 @@ import ir.value.ArgumentValue
 import ir.module.auxiliary.CopyCFG
 import ir.liveness.LiveIntervals
 import ir.liveness.LiveIntervalsBuilder
+import ir.types.Type
 
 
-class FunctionData private constructor(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {
-    fun arguments(): List<ArgumentValue> {
+class FunctionData private constructor(name: String,
+                                       returnType: Type,
+                                       arguments: List<Type>,
+                                       isVararg: Boolean,
+                                       private var argumentValues: List<ArgumentValue>,
+                                       val blocks: BasicBlocks):
+    AnyFunctionPrototype(name, returnType, arguments, isVararg) {
+
+    fun argumentValues(): List<ArgumentValue> {
         return argumentValues
     }
 
@@ -20,24 +28,15 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
     }
 
     fun name(): String {
-        return prototype.name
-    }
-
-    override fun hashCode(): Int {
-        return prototype.hashCode()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as FunctionData
-        return prototype == other.prototype
+        return name
     }
 
     companion object {
-        fun create(prototype: FunctionPrototype, basicBlocks: BasicBlocks, argumentValues: List<ArgumentValue>): FunctionData {
-            return FunctionData(prototype, argumentValues, basicBlocks)
+        fun create(name: String,
+                   returnType: Type,
+                   arguments: List<Type>,
+                   isVararg: Boolean, basicBlocks: BasicBlocks, argumentValues: List<ArgumentValue>): FunctionData {
+            return FunctionData(name, returnType, arguments, isVararg, argumentValues, basicBlocks)
         }
     }
 }

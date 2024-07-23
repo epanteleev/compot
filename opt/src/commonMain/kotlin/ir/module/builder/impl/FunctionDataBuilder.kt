@@ -20,7 +20,7 @@ class FunctionDataBuilder private constructor(
 ): AnyFunctionDataBuilder(prototype, argumentValues, blocks), InstructionFabric {
     override fun build(): FunctionData {
         normalizeBlocks()
-        return FunctionData.create(prototype, blocks, argumentValues)
+        return FunctionData.create(prototype.name, prototype.returnType(), prototype.arguments(), prototype.isVararg, blocks, argumentValues)
     }
 
     fun switchLabel(label: Label) {

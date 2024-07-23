@@ -67,7 +67,7 @@ fun main() {
     builder.switchLabel(cont)
     builder.store(regValue, add7)
     val ret = builder.load(Type.U64, regValue)
-    builder.ret(ret)
+    builder.ret(Type.U64, arrayOf(ret))
 
     moduleBuilder.build()
 }

@@ -16,7 +16,7 @@ fun main() {
         val first = alloc(pointStruct)
         val firstField = gep(first, Type.I32, I32Value(0))
         store(firstField, I32Value(4))
-        ret(I32Value(0))
+        ret(Type.I32, arrayOf(I32Value(0)))
     }
 
     val module = builder.build()

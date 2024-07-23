@@ -41,7 +41,7 @@ fun main() {
         }
 
         switchLabel(exit).let {
-            ret(I32Value(0))
+            ret(Type.I32, arrayOf(I32Value(0)))
         }
     }
 

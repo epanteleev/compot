@@ -35,7 +35,7 @@ fun main() {
         val cont = createLabel()
         vcall(proto, arrayListOf(arrPtr, I32Value(5)), cont)
         switchLabel(cont)
-        ret(U64Value(0))
+        ret(Type.U64, arrayOf(U64Value(0)))
     }
 
     val module = builder.build()
