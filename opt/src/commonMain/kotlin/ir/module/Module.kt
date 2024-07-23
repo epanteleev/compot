@@ -13,12 +13,12 @@ abstract class Module(internal val functions: List<FunctionData>,
                       internal val globals: Map<String, GlobalValue>,
                       internal val types: Map<String, StructType>) {
     val prototypes: List<AnyFunctionPrototype> by lazy {
-        externFunctions.values + functions
+        externFunctions.values + functions.map { it.prototype }
     }
 
-    fun findFunction(name: String): FunctionData {
-        return functions.find { it.name() == name }
-            ?: throw NoSuchElementException("Cannot find function: $name")
+    fun findFunction(prototype: FunctionPrototype): FunctionData {
+        return functions.find { it.prototype == prototype }
+            ?: throw NoSuchElementException("Cannot find function: $prototype")
     }
 
     fun findConstant(name: String): GlobalConstant {

@@ -19,7 +19,7 @@ class LiveIntervalsBuilder private constructor(val data: FunctionData) {
     }
 
     private fun setupArguments() {
-        val arguments = data.argumentValues()
+        val arguments = data.arguments()
         for ((index, arg) in arguments.withIndex()) {
             val begin = OrderedLocation(data.blocks.begin(), -1, -(arguments.size - index))
             intervals[arg] = LiveRangeImpl(begin, begin)

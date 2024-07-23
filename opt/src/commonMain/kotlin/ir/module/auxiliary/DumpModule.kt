@@ -71,7 +71,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
     }
 
     protected open fun dumpFunctionData(functionData: FunctionData) {
-        dumpPrototype(functionData, functionData.argumentValues())
+        dumpPrototype(functionData.prototype, functionData.arguments())
         builder.append("{\n")
 
         for (bb in functionData.blocks.preorder()) {
@@ -96,7 +96,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
         }
     }
 
-    protected open fun dumpPrototype(prototype: AnyFunctionPrototype, argumentValues: List<Value>) {
+    protected open fun dumpPrototype(prototype: FunctionPrototype, argumentValues: List<Value>) {
         builder.append("define ${prototype.returnType()} @${prototype.name}(")
         argumentValues.joinTo(builder) { argumentValue -> "$argumentValue:${argumentValue.type()}" }
         builder.append(") ")
