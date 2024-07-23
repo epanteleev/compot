@@ -2,6 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
     kotlin("multiplatform") version "2.0.0"
+    id("org.jetbrains.dokka") version "1.9.20"
     distribution
 }
 

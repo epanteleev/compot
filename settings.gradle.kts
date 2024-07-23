@@ -29,6 +29,7 @@ pluginManagement {
     }
 
     plugins {
+        kotlin("multiplatform") version "2.0.0"
         id("org.jetbrains.dokka") version "1.9.20"
     }
 }
