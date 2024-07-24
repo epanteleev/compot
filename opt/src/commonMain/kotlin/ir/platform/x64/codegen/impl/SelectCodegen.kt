@@ -48,7 +48,8 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, second, dst)
+        asm.cmovcc(size, matchIntCondition(), first, dst)
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {

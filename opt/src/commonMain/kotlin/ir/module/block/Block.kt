@@ -32,6 +32,9 @@ class Block(override val index: Int):
 
     inner class InsertAfter(private val after: Instruction?) : InsertionStrategy() {
         override fun insert(instruction: Instruction) {
+            if (after is TerminateInstruction) {
+                throw IllegalStateException("Last instruction is not terminate: bb=${after.owner()}, last='${instructions.lastOrNull()?.dump()}'")
+            }
             instructions.addAfter(after, instruction)
         }
     }

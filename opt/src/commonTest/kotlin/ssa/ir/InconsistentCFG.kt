@@ -57,29 +57,30 @@ class InconsistentCFG {
     fun testMultiplyTerminateInstructions() {
         val builder = ModuleBuilder.create()
 
-        builder.createFunction("main", Type.I32, arrayListOf()).apply {
-            val header = currentLabel().let {
-                val header = createLabel()
-                branch(header)
-                header
-            }
+        val throwable = assertFails {
+            builder.createFunction("main", Type.I32, arrayListOf()).apply {
+                val header = currentLabel().let {
+                    val header = createLabel()
+                    branch(header)
+                    header
+                }
 
-            val label = header.let {
-                switchLabel(header)
-                val label = createLabel()
-                branch(label)
-                ret(Type.I32, arrayOf(I32Value(0)))
-                label
-            }
+                val label = header.let {
+                    switchLabel(header)
+                    val label = createLabel()
+                    branch(label)
+                    ret(Type.I32, arrayOf(I32Value(0)))
+                    label
+                }
 
-            label.apply {
-                switchLabel(label)
-                branch(header)
+                label.apply {
+                    switchLabel(label)
+                    branch(header)
+                }
             }
+            builder.build()
         }
-
-        val throwable = assertFails { builder.build() }
-        assertTrue { throwable is ValidateSSAErrorException }
+        assertTrue { throwable is IllegalStateException }
     }
 
     @Test

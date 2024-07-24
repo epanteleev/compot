@@ -122,7 +122,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             val onFalse   = visitExpression(conditional.eFalse, true)
             val condition = makeConditionFromExpression(conditional.cond)
             commonType as PrimitiveType
-            return ir.select(condition, commonType, onTrue, onFalse)
+            val onTrueConverted = ir.convertToType(onTrue, commonType)
+            val onFalseConverted = ir.convertToType(onFalse, commonType)
+            return ir.select(condition, commonType, onTrueConverted, onFalseConverted)
         }
     }
 
@@ -695,6 +697,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                         types.add(Type.Ptr)
                     }
                 }
+                is CArrayType -> {
+                    types.add(Type.Ptr)
+                }
                 else -> throw IRCodeGenError("Unknown type, type=$type")
             }
         }
@@ -720,6 +725,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     }
                     closure(parameters[currentArg], cType, args)
                     currentArg += types.size
+                }
+                is CArrayType -> {
+                    closure(parameters[currentArg], cType, listOf(arguments[currentArg]))
+                    currentArg++
                 }
                 else -> throw IRCodeGenError("Unknown type, type=$cType")
             }
@@ -749,6 +758,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 assertion(args.size == 1) { "invariant" }
                 varStack[param] = args[0]
             }
+        }
+        is CArrayType -> {
+            assertion(args.size == 1) { "invariant" }
+            varStack[param] = args[0]
         }
         else -> throw IRCodeGenError("Unknown type, type=$cType")
     }
@@ -912,14 +925,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         for (node in compoundStatement.statements) {
             when (node) {
                 is Declaration -> visitDeclaration(node)
-                is GotoStatement -> return node.accept(this)
+                is GotoStatement -> return@scoped node.accept(this)
                 is Statement -> {
                     needSwitch = visitStatement(node)
                 }
                 else -> throw IRCodeGenError("Statement expected")
             }
         }
-        return needSwitch
+        return@scoped needSwitch
     }
 
     override fun visit(ifStatement: IfStatement): Boolean = varStack.scoped {
@@ -935,7 +948,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.branch(endBlock)
             }
             ir.switchLabel(endBlock)
-            return true
+            return@scoped true
         } else {
 
             val elseBlock = ir.createLabel()
@@ -963,7 +976,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.switchLabel(endBlock)
             }
 
-            return true
+            return@scoped true
         }
     }
 
@@ -986,7 +999,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branchCond(condition, bodyBlock, endBlock)
         ir.switchLabel(endBlock)
         stmtStack.pop()
-        return true
+        return@scoped true
     }
 
     override fun visit(whileStatement: WhileStatement): Boolean = varStack.scoped {
@@ -1007,7 +1020,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         ir.switchLabel(endBlock)
         stmtStack.pop()
-        return true
+        return@scoped true
     }
 
     private fun visitInit(init: Node) {
@@ -1046,7 +1059,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         ir.switchLabel(endBlock)
         stmtStack.pop()
-        return true
+        return@scoped true
     }
 
     override fun visit(switchStatement: SwitchStatement): Boolean {

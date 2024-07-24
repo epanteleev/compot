@@ -8,6 +8,8 @@ import gen.TypeConverter.toIRType
 import ir.global.*
 import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.ana.ValidateSSAErrorException
+import ir.pass.ana.VerifySSA
 import ir.value.Constant
 
 
@@ -99,11 +101,15 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
 
     companion object {
         fun apply(typeHolder: TypeHolder, node: ProgramNode): Module {
-            //println(node)
             val irGen = IRGen(typeHolder)
             irGen.visit(node)
-            val module = irGen.mb.build()
-            return module
+            try {
+                return irGen.mb.build()
+            } catch (e: ValidateSSAErrorException) {
+                println("Error: ${e.message}")
+                println("Module:\n${e.module}")
+                throw e
+            }
         }
     }
 }

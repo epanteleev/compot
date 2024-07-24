@@ -154,7 +154,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (expr == null) {
             if (check(";")) {
                 eat()
-                return@rule EmptyStatement()
+                return@rule EmptyStatement
             }
             return@rule null
         }
@@ -182,7 +182,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val then = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
             if (!check("else")) {
-                return@rule IfStatement(expr, then, EmptyStatement())
+                return@rule IfStatement(expr, then, EmptyStatement)
             }
             eat()
             val els = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
@@ -323,12 +323,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         eat()
         if (check("}")) {
             eat()
-            return@rule EmptyStatement()
+            return@rule EmptyStatement
         }
         val statements = mutableListOf<Node>()
         while (!check("}")) {
             statements.add(declaration()?: statement()?:
-            throw ParserException(InvalidToken("Expected declaration or statement", peak())))
+                throw ParserException(InvalidToken("Expected declaration or statement", peak())))
         }
         eat()
         return@rule CompoundStatement(statements)

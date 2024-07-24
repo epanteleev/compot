@@ -14,7 +14,7 @@ class VarStack {
         stack.removeAt(stack.size - 1)
     }
 
-    inline fun<T> scoped(block: () -> T): T {
+    fun<T> scoped(block: () -> T): T {
         push()
         val ret = block()
         pop()

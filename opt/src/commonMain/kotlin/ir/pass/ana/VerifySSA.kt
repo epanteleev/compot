@@ -14,10 +14,13 @@ import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 
 
-data class ValidateSSAErrorException(override val message: String): Exception(message)
+class ValidateSSAErrorException(val module: Module, override val message: String): Exception(message) {
+    override fun toString(): String {
+        return "ValidateSSAErrorException: $message"
+    }
+}
 
-
-class VerifySSA private constructor(private val functionData: FunctionData,
+class VerifySSA private constructor(private val module: Module, private val functionData: FunctionData,
                                     private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit>() {
     private val dominatorTree by lazy { functionData.blocks.dominatorTree() }
     private val creation by lazy { CreationInfo.create(functionData) }
@@ -468,20 +471,20 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    private fun assert(condition: Boolean, message: () -> String) {
+        if (!condition) {
+            throw ValidateSSAErrorException(module, message())
+        }
+    }
+
     companion object {
         fun run(module: Module): Module {
             val prototypes = module.prototypes
             module.functions.forEach { data ->
-                VerifySSA(data, prototypes).pass()
+                VerifySSA(module, data, prototypes).pass()
             }
 
             return module
-        }
-
-        private fun assert(condition: Boolean, message: () -> String) {
-            if (!condition) {
-                throw ValidateSSAErrorException(message())
-            }
         }
     }
 }
