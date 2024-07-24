@@ -26,6 +26,7 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
                         asm.movf(size, source, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
                     }
                     dst is Address && source is Address && index is Imm -> {
+                        TODO("untested")
                         val indexImm = index as ImmInt
                         if (dst is Address2) {
                             asm.movf(size, source, xmmTemp1)
@@ -117,11 +118,12 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
+        TODO("untested")
         if (dst !is Address2) {
             throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
-        asm.mov(size, first, temp1)
-        asm.mov(size, temp1, Address.from(dst.base, dst.offset + second.value().toInt() * size))
+       // asm.mov(size, first, temp1)
+       // asm.mov(size, temp1, Address.from(dst.base, dst.offset + second.value().toInt() * size))
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

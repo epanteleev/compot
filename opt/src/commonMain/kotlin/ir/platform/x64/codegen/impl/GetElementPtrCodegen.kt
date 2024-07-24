@@ -24,11 +24,13 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
+        TODO("untested")
         asm.lea(POINTER_SIZE, Address.from(first, 0, second, size), temp1)
         asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
+        TODO("untested")
         asm.mov(POINTER_SIZE, first, temp1)
         asm.lea(POINTER_SIZE, Address.from(temp1, 0, second, size), dst)
     }
@@ -38,6 +40,7 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
+        TODO("untested")
         asm.mov(secondOpSize, second, temp1)
         asm.lea(POINTER_SIZE, Address.from(first, 0, temp1, size), temp1)
         asm.mov(POINTER_SIZE, temp1, dst)
@@ -53,6 +56,7 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
+        TODO("untested")
         asm.mov(secondOpSize, second, temp1)
         asm.mov(POINTER_SIZE, first, dst)
         asm.lea(POINTER_SIZE, Address.from(dst, 0, temp1, size), dst)
@@ -67,6 +71,7 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
+        TODO("untested")
         val disp = second.value() * size
         asm.mov(POINTER_SIZE, first, dst)
         asm.lea(POINTER_SIZE, Address.from(dst, disp.toInt()), dst)
@@ -91,12 +96,14 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
+        TODO("untested")
         val disp = second.value() * size
         asm.lea(POINTER_SIZE, Address.from(first, disp.toInt()), temp1)
         asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
+        TODO("untested")
         val disp = second.value() * size
         asm.mov(POINTER_SIZE, first, temp1)
         asm.lea(POINTER_SIZE, Address.from(temp1, disp.toInt()), temp1)

@@ -15,6 +15,7 @@ data class NotCodegen(val type: IntegerType, val asm: Assembler): GPOperandsVisi
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {
+        TODO("untested")
         if (dst == src) {
             asm.not(size, dst)
         } else {
@@ -24,16 +25,19 @@ data class NotCodegen(val type: IntegerType, val asm: Assembler): GPOperandsVisi
     }
 
     override fun ra(dst: GPRegister, src: Address) {
+        TODO("untested")
         asm.mov(size, src, dst)
         asm.not(size, dst)
     }
 
     override fun ar(dst: Address, src: GPRegister) {
+        TODO("untested")
         asm.mov(size, src, dst)
         asm.not(size, dst)
     }
 
     override fun aa(dst: Address, src: Address) {
+        TODO("untested")
         if (dst == src) {
             asm.not(size, dst)
         } else {
@@ -44,10 +48,12 @@ data class NotCodegen(val type: IntegerType, val asm: Assembler): GPOperandsVisi
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
+        TODO("untested")
         asm.mov(size, Imm32.of(src.value().inv()), dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {
+        TODO("untested")
         asm.mov(size, Imm32.of(src.value().inv()), dst)
     }
 

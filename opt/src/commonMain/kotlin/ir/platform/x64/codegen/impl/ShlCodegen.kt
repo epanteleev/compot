@@ -20,6 +20,7 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
+        TODO("untested")
         when (dst) {
             first -> {
                 asm.mov(size, second, temp1)

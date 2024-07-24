@@ -15,7 +15,6 @@ class ShrCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
         when (type) {
             is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
             is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
-            else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }
 

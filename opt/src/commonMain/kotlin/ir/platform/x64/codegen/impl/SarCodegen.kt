@@ -15,11 +15,11 @@ class SarCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
         when (type) {
             is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
             is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
-            else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
+        TODO("untested")
         when (dst) {
             first -> {
                 asm.mov(size, second, temp1)

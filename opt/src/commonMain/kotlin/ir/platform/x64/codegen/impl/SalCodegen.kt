@@ -20,6 +20,7 @@ class SalCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
+        TODO("untested")
         when (dst) {
             first -> {
                 asm.sal(size, second, dst)

@@ -36,14 +36,10 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperands
     }
 
     override fun aa(dst: Address, src: Address) {
-        if (dst == src) {
-            asm.mov(POINTER_SIZE, dst, temp1)
-            asm.mov(size, temp1, Address.from(temp1, 0))
-        } else {
-            asm.mov(POINTER_SIZE, dst, temp1)
-            asm.mov(size, src, temp2)
-            asm.mov(size, temp2, Address.from(temp1, 0))
-        }
+        TODO("untested")
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.mov(size, src, temp2)
+        asm.mov(size, temp2, Address.from(temp1, 0))
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {

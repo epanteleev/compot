@@ -15,7 +15,6 @@ class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitor
         when (type) {
             is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
             is IntegerType       -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
-            else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
     }
 
@@ -24,9 +23,8 @@ class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitor
             first  -> asm.or(size, second, dst)
             second -> asm.or(size, first, dst)
             else -> {
-                asm.mov(size, first, temp1)
-                asm.or(size, second, temp1)
-                asm.mov(size, temp1, dst)
+                asm.mov(size, first, dst)
+                asm.or(size, second, dst)
             }
         }
     }

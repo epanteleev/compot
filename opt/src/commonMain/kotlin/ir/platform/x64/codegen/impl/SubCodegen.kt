@@ -38,24 +38,21 @@ data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        asm.mov(size, first, temp1)
-        asm.sub(size, second, temp1)
-        asm.mov(size, temp1, dst)
+        asm.mov(size, first, dst)
+        asm.sub(size, second, dst)
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        asm.mov(size, first, temp1)
-        asm.sub(size, second, temp1)
-        asm.mov(size, temp1, dst)
+        asm.mov(size, first, dst)
+        asm.sub(size, second, dst)
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
         when {
             (first == dst) -> asm.sub(size, second, dst)
             else -> {
-                asm.mov(size, first, temp1)
-                asm.sub(size, second, temp1)
-                asm.mov(size, temp1, dst)
+                asm.mov(size, first, dst)
+                asm.sub(size, second, dst)
             }
         }
     }

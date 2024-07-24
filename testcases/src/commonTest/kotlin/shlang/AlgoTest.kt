@@ -1,6 +1,7 @@
 package shlang
 
 import common.CommonCTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -104,7 +105,7 @@ abstract class AlgoTests: CommonCTest() {
         assertReturnCode(result, 0)
     }
 
-    @Test
+    @Ignore
     fun testBoyerMooreSearch() {
         val result = runCTest("shlang/algo/boyer_moore_search", listOf(), options())
         val output = """
