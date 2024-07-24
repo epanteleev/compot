@@ -857,8 +857,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(breakStatement: BreakStatement): Boolean {
-        val loopInfo = stmtStack.top()
-        ir.branch(loopInfo.exitBB)
+        val loopInfo = stmtStack.topSwitchOrLoop() ?: throw IRCodeGenError("Break statement outside of loop or switch")
+        when (loopInfo) {
+            is SwitchStmtInfo -> ir.branch(loopInfo.exitBB)
+            is LoopStmtInfo   -> ir.branch(loopInfo.exitBB)
+            else -> throw IRCodeGenError("Unknown loop info, loopInfo=${loopInfo}")
+        }
         return false
     }
 
