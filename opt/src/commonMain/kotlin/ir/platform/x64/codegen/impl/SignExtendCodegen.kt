@@ -35,7 +35,7 @@ data class SignExtendCodegen(val fromType: IntegerType, val toType: IntegerType,
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(toSize, src, dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {

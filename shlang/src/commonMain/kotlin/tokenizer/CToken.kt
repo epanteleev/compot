@@ -199,7 +199,7 @@ class StringLiteral(private val data: String, position: Position): CToken(positi
 }
 
 class CharLiteral(val data: Char, position: Position): CToken(position) {
-    override fun str(): String = data.toString()
+    override fun str(): String = "\'$data\'"
 
     override fun hashCode(): Int {
         return data.hashCode()

@@ -465,6 +465,24 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 sum // TODO unchecked !!!
             }
 
+            BinaryOpType.DIV_ASSIGN -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<NonTrivialType>(typeHolder, leftType)
+                val rightConverted = ir.convertToType(right, leftIrType)
+
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = if (leftType is CPrimitiveType) {
+                    ir.load(leftIrType as PrimitiveType, left)
+                } else {
+                    throw IRCodeGenError("Primitive type expected")
+                }
+
+                val div = ir.arithmeticBinary(loadedLeft, ArithmeticBinaryOp.Div, rightConverted)
+                ir.store(left, div)
+                div // TODO unchecked !!!
+            }
+
             BinaryOpType.BIT_OR -> {
                 makeAlgebraicBinary(binop, ArithmeticBinaryOp.Or)
             }
@@ -491,12 +509,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val initialBB = ir.currentLabel()
 
                 val left = visitExpression(binop.left, true)
-                assertion(left.type() == Type.U1) { "expects"}
+                val convertedLeft = ir.convertToType(left, Type.U1)
 
                 val bb = ir.createLabel()
 
                 val end = ir.createLabel()
-                ir.branchCond(left, bb, end)
+                ir.branchCond(convertedLeft, bb, end)
                 ir.switchLabel(bb)
 
                 val right = visitExpression(binop.right, true)
@@ -511,12 +529,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val initialBB = ir.currentLabel()
 
                 val left = visitExpression(binop.left, true)
-                assertion(left.type() == Type.U1) { "expects"}
+                val convertedLeft = ir.convertToType(left, Type.U1)
 
                 val bb = ir.createLabel()
 
                 val end = ir.createLabel()
-                ir.branchCond(left, end, bb)
+                ir.branchCond(convertedLeft, end, bb)
                 ir.switchLabel(bb)
 
                 val right = visitExpression(binop.right, true)

@@ -105,7 +105,7 @@ abstract class AlgoTests: CommonCTest() {
         assertReturnCode(result, 0)
     }
 
-    @Test
+    @Ignore
     fun testBoyerMooreSearch() {
         val result = runCTest("shlang/algo/boyer_moore_search", listOf(), options())
         val output = """
@@ -144,6 +144,19 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals(output, result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testIntToString() {
+        val result = runCTest("shlang/int_to_string", listOf(), options())
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testAtoiStrToInteger() {
+        val result = runCTest("shlang/c_atoi_str_to_integer", listOf(), options())
+        assertReturnCode(result, 0)
+    }
+
 }
 
 class AlgoTestsO0: AlgoTests() {

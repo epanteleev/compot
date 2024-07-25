@@ -3,6 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import asm.x64.GPRegister.*
+import common.assertion
 import ir.platform.x64.codegen.visitors.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.codegen.MacroAssembler
@@ -12,10 +13,8 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
-        when (type) {
-            is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
-            else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
-        }
+        assertion(second != rdx) { "Second operand cannot be rdx" }
+        GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
@@ -56,7 +55,7 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
         val imm = first.value() / second.value()
         asm.mov(size, Imm32.of(imm), dst)
         val remImm = first.value() % second.value()
-        if (rem == rdx) {
+        if (rem == rdx) { // todo COPY-PASTE
             return
         }
         when (rem) {

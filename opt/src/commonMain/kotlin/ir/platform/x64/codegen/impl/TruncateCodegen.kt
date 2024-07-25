@@ -43,7 +43,7 @@ data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, v
     }
 
     override fun ai(dst: Address, src: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(toSize, src, dst)
     }
 
     override fun default(dst: Operand, src: Operand) {

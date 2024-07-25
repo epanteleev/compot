@@ -46,7 +46,6 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        TODO("untested")
         asm.mov(size, first, temp1)
         asm.mov(size, temp1, Address.from(dst, 0, second, size))
     }

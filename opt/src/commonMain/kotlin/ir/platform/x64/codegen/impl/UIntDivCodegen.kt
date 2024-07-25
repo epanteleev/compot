@@ -4,6 +4,7 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.ArithmeticBinaryOp
 import asm.x64.GPRegister.*
+import common.assertion
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.WORD_SIZE
 import ir.platform.x64.codegen.MacroAssembler
@@ -15,6 +16,7 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
+        assertion(second != rdx) { "Second operand cannot be rdx" }
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 

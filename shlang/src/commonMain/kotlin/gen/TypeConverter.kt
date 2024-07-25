@@ -10,6 +10,7 @@ import ir.value.*
 import ir.Definitions.WORD_SIZE
 import ir.instruction.Alloc
 import ir.instruction.ArithmeticBinaryOp
+import ir.instruction.IntPredicate
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
 
@@ -367,6 +368,19 @@ object TypeConverter {
                 }
             }
 
+            Type.U1 -> {
+                when (value.type()) {
+                    Type.I8  -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I8, 0))
+                    Type.I16 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I16, 0))
+                    Type.I32 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I32, 0))
+                    Type.I64 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I64, 0))
+                    Type.U8  -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U8, 0))
+                    Type.U16 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U16, 0))
+                    Type.U32 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U32, 0))
+                    Type.U64 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U64, 0))
+                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                }
+            }
             else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $toType")
         }
     }

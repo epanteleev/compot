@@ -178,7 +178,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     val extFirst  = extend(bb, inst, inst.first())
                     val extSecond = extend(bb, inst, inst.second())
 
-                    val newDiv   = bb.insertBefore(inst) { it.arithmeticBinary(extFirst, ArithmeticBinaryOp.Div, extSecond) }
+                    val newDiv = bb.insertBefore(inst) { it.arithmeticBinary(extFirst, ArithmeticBinaryOp.Div, extSecond) }
                     bb.update(inst) { it.trunc(newDiv, Type.I8) }
                     return newDiv
                 }

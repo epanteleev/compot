@@ -1511,7 +1511,9 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         if (check("-")) {
             eat()
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            val unary = unary_expression()?: let {
+                throw ParserException(InvalidToken("Expected unary expression", peak()))
+            }
             return@rule UnaryOp(unary, PrefixUnaryOpType.NEG)
         }
         if (check("~")) {
