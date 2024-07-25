@@ -877,9 +877,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val switchInfo = stmtStack.top() as SwitchStmtInfo
         ir.switchLabel(switchInfo.default)
         visitStatement(defaultStatement.stmt)
-        if (ir.last() !is TerminateInstruction) {
-            ir.branch(switchInfo.exitBB)
-        }
     }
 
     override fun visit(caseStatement: CaseStatement) {
@@ -890,6 +887,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val caseValueConverted = I32Value(constant)
         val caseBlock = ir.createLabel()
+        if (switchInfo.table.isNotEmpty() && ir.last() !is TerminateInstruction) {
+            ir.branch(caseBlock)
+        }
 
         switchInfo.table.add(caseBlock)
         switchInfo.values.add(caseValueConverted)
@@ -936,7 +936,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         for (node in compoundStatement.statements) {
             when (node) {
                 is Declaration -> visitDeclaration(node)
-                is GotoStatement -> return@scoped node.accept(this)
+                is GotoStatement -> node.accept(this)
                 is Statement -> visitStatement(node)
                 else -> throw IRCodeGenError("Statement expected")
             }
@@ -1073,6 +1073,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val info = stmtStack.push(SwitchStmtInfo(endBlock, condition, defaultBlock, arrayListOf(), arrayListOf()))
 
         visitStatement(switchStatement.body)
+        if (ir.last() !is TerminateInstruction) {
+            ir.branch(endBlock)
+        }
 
         ir.switchLabel(conditionBlock)
         ir.switch(condition, defaultBlock, info.values, info.table)
