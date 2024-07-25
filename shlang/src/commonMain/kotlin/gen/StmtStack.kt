@@ -1,12 +1,14 @@
 package gen
 
 import ir.module.block.Label
+import ir.value.IntegerConstant
+import ir.value.Value
 
 
 class StmtStack {
     private val stack = mutableListOf<StmtInfo>()
 
-    fun push(stmtInfo: StmtInfo): StmtInfo {
+    fun<T: StmtInfo> push(stmtInfo: T): T {
         stack.add(stmtInfo)
         return stmtInfo
     }
@@ -30,7 +32,7 @@ class StmtStack {
 
 abstract class StmtInfo
 
-class SwitchStmtInfo(val exitBB: Label) : StmtInfo()
+class SwitchStmtInfo(val exitBB: Label, val switchValue: Value, val default: Label, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo()
 
 class LoopStmtInfo(val continueBB: Label, val exitBB: Label) : StmtInfo()
 

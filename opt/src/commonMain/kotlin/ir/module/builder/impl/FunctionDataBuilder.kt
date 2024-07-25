@@ -92,12 +92,8 @@ class FunctionDataBuilder private constructor(
         return bb.branch(target)
     }
 
-    override fun branchCond(value: Value, onTrue: Block, onFalse: Block): BranchCond {
+    override fun branchCond(value: Value, onTrue: Label, onFalse: Label): BranchCond {
         return bb.branchCond(value, onTrue, onFalse)
-    }
-
-    fun branchCond(value: Value, onTrue: Label, onFalse: Label) {
-        branchCond(value, blocks.findBlock(onTrue), blocks.findBlock(onFalse))
     }
 
     override fun alloc(ty: NonTrivialType): Alloc {

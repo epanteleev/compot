@@ -874,11 +874,28 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(defaultStatement: DefaultStatement) {
-        TODO("Not yet implemented")
+        val switchInfo = stmtStack.top() as SwitchStmtInfo
+        ir.switchLabel(switchInfo.default)
+        visitStatement(defaultStatement.stmt)
+        if (ir.last() !is TerminateInstruction) {
+            ir.branch(switchInfo.exitBB)
+        }
     }
 
     override fun visit(caseStatement: CaseStatement) {
-        TODO("Not yet implemented")
+        val switchInfo = stmtStack.top() as SwitchStmtInfo
+
+        val ctx = CommonConstEvalContext<Int>(typeHolder)
+        val constant = ConstEvalExpression.eval(caseStatement.constExpression, ConstEvalExpressionInt(ctx))
+
+        val caseValueConverted = I32Value(constant)
+        val caseBlock = ir.createLabel()
+
+        switchInfo.table.add(caseBlock)
+        switchInfo.values.add(caseValueConverted)
+
+        ir.switchLabel(caseBlock)
+        visitStatement(caseStatement.stmt)
     }
 
     override fun visit(returnStatement: ReturnStatement) {
@@ -1053,36 +1070,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val conditionBlock = ir.currentLabel()
         val endBlock = ir.createLabel()
         val defaultBlock = ir.createLabel()
-        stmtStack.push(SwitchStmtInfo(endBlock))
+        val info = stmtStack.push(SwitchStmtInfo(endBlock, condition, defaultBlock, arrayListOf(), arrayListOf()))
 
-        val table = arrayListOf<IntegerConstant>()
-        switchStatement.cases { node ->
-            val ctx = CommonConstEvalContext<Int>(typeHolder)
-            val constEval = ConstEvalExpression.eval(node.constExpression, ConstEvalExpressionInt(ctx))
-            table.add(Constant.valueOf(Type.I32, constEval))
-        }
+        visitStatement(switchStatement.body)
 
-        val jumps = arrayListOf<Label>()
-        switchStatement.cases { node ->
-            val caseBlock = ir.createLabel()
-            jumps.add(caseBlock)
-
-            ir.branch(caseBlock)
-            visitStatement(node.stmt)
-            if (ir.last() !is TerminateInstruction) {
-                ir.branch(defaultBlock)
-            }
-        }
-
-        switchStatement.default { default ->
-            ir.switchLabel(defaultBlock)
-            visitStatement(default.stmt)
-            if (ir.last() !is TerminateInstruction) {
-                ir.branch(endBlock)
-            }
-        }
         ir.switchLabel(conditionBlock)
-        ir.switch(condition, defaultBlock, table, jumps)
+        ir.switch(condition, defaultBlock, info.values, info.table)
 
         ir.switchLabel(endBlock)
         stmtStack.pop()

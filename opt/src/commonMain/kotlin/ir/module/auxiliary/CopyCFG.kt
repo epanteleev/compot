@@ -97,7 +97,9 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         if (old is Constant || old is GlobalSymbol) {
             return old as T
         }
-        val value = oldValuesToNew[old]?: throw RuntimeException("cannot find localValue=${old}")
+        val value = oldValuesToNew[old]?: let {
+            throw RuntimeException("cannot find localValue=${old}")
+        }
         if (value !is T) {
             throw RuntimeException("unexpected type for value=$value")
         }

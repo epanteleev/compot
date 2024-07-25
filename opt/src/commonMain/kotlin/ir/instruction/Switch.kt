@@ -1,5 +1,6 @@
 package ir.instruction
 
+import common.assertion
 import common.forEachWith
 import ir.value.Value
 import ir.instruction.utils.IRInstructionVisitor
@@ -9,7 +10,7 @@ import ir.value.IntegerConstant
 
 
 class Switch private constructor(id: Identity, owner: Block,
-                                 private val value: Value,
+                                 value: Value,
                                  private val default: Block,
                                  private val table: Array<IntegerConstant>,
                                  targets: Array<Block>):
@@ -17,9 +18,9 @@ class Switch private constructor(id: Identity, owner: Block,
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("$NAME ")
-            .append(value.type().toString())
+            .append(value().type().toString())
             .append(' ')
-            .append(value.toString())
+            .append(value().toString())
             .append(", label ")
             .append(default)
 
@@ -38,7 +39,14 @@ class Switch private constructor(id: Identity, owner: Block,
         return builder.toString()
     }
 
-    fun value(): Value = value
+    fun value(): Value {
+        assertion(operands.size == 1) {
+            "inconsistent operands in '$id': ${operands.joinToString()}"
+        }
+
+        return operands[0]
+    }
+
     fun default(): Block = default
     fun table(): Array<IntegerConstant> = table
 

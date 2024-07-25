@@ -33,7 +33,7 @@ class Block(override val index: Int):
     inner class InsertAfter(private val after: Instruction?) : InsertionStrategy() {
         override fun insert(instruction: Instruction) {
             if (after is TerminateInstruction) {
-                throw IllegalStateException("Last instruction is not terminate: bb=${after.owner()}, last='${instructions.lastOrNull()?.dump()}'")
+                throw IllegalStateException("Trying to insert instruction after terminate: bb=${after.owner()}, last='${instructions.lastOrNull()?.dump()}'")
             }
             instructions.addAfter(after, instruction)
         }
@@ -268,8 +268,8 @@ class Block(override val index: Int):
         return addTerminate { Branch.make(it, this, target) }
     }
 
-    override fun branchCond(value: Value, onTrue: Block, onFalse: Block): BranchCond {
-        return addTerminate { BranchCond.make(it, this, value, onTrue, onFalse) }
+    override fun branchCond(value: Value, onTrue: Label, onFalse: Label): BranchCond {
+        return addTerminate { BranchCond.make(it, this, value, onTrue as Block, onFalse as Block) }
     }
 
     override fun alloc(ty: NonTrivialType): Alloc {
