@@ -30,7 +30,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     varStack: VarStack,
                     constantCounter: Int):
     AbstractIRGenerator(moduleBuilder, typeHolder, varStack, constantCounter),
-    StatementVisitor<Boolean>,
+    StatementVisitor<Unit>,
     DeclaratorVisitor<Value> {
     private var currentFunction: FunctionDataBuilder? = null
     private var returnValueAdr: Alloc? = null
@@ -836,62 +836,59 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return@scoped Value.UNDEF
     }
 
-    private fun visitStatement(statement: Statement): Boolean {
-        return statement.accept(this)
+    private fun visitStatement(statement: Statement) {
+        statement.accept(this)
     }
 
-    override fun visit(emptyStatement: EmptyStatement): Boolean {
-        return false
-    }
+    override fun visit(emptyStatement: EmptyStatement) {}
 
-    override fun visit(exprStatement: ExprStatement): Boolean {
+    override fun visit(exprStatement: ExprStatement) {
         visitExpression(exprStatement.expr, true)
-        return true
     }
 
-    override fun visit(labeledStatement: LabeledStatement): Boolean {
+    override fun visit(labeledStatement: LabeledStatement) {
         val label = stringTolabel[labeledStatement.label.str()] ?: throw IRCodeGenError("Label '${labeledStatement.label.str()}' not found ")
         ir.branch(label)
         ir.switchLabel(label)
-        return visitStatement(labeledStatement.stmt)
+        visitStatement(labeledStatement.stmt)
     }
 
-    override fun visit(gotoStatement: GotoStatement): Boolean {
+    override fun visit(gotoStatement: GotoStatement) {
         val label = stringTolabel[gotoStatement.id.str()] ?: throw IRCodeGenError("Label '${gotoStatement.id.str()}' not found ")
         ir.branch(label)
         ir.switchLabel(label)
-        return true
     }
 
-    override fun visit(continueStatement: ContinueStatement): Boolean {
+    override fun visit(continueStatement: ContinueStatement) {
         val loopInfo = stmtStack.topLoop() ?: throw IRCodeGenError("Continue statement outside of loop")
         ir.branch(loopInfo.continueBB)
-        return false
     }
 
-    override fun visit(breakStatement: BreakStatement): Boolean {
+    override fun visit(breakStatement: BreakStatement) {
         val loopInfo = stmtStack.topSwitchOrLoop() ?: throw IRCodeGenError("Break statement outside of loop or switch")
         when (loopInfo) {
             is SwitchStmtInfo -> ir.branch(loopInfo.exitBB)
             is LoopStmtInfo   -> ir.branch(loopInfo.exitBB)
             else -> throw IRCodeGenError("Unknown loop info, loopInfo=${loopInfo}")
         }
-        return false
     }
 
-    override fun visit(defaultStatement: DefaultStatement): Boolean {
+    override fun visit(defaultStatement: DefaultStatement) {
         TODO("Not yet implemented")
     }
 
-    override fun visit(caseStatement: CaseStatement): Boolean {
+    override fun visit(caseStatement: CaseStatement) {
         TODO("Not yet implemented")
     }
 
-    override fun visit(returnStatement: ReturnStatement): Boolean {
+    override fun visit(returnStatement: ReturnStatement) {
+        if (ir.last() is TerminateInstruction) {
+            return
+        }
         val expr = returnStatement.expr
         if (expr is EmptyExpression) {
             ir.branch(exitBlock)
-            return false
+            return
         }
         val value = visitExpression(expr, true)
         val realType = ir.prototype().returnType()
@@ -907,12 +904,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         ir.branch(exitBlock)
-        return false
     }
 
-    override fun visit(compoundStatement: CompoundStatement): Boolean = varStack.scoped {
-        var needSwitch = true
-
+    override fun visit(compoundStatement: CompoundStatement) = varStack.scoped {
         for (node in compoundStatement.statements) {
             if (node !is LabeledStatement) {
                 continue
@@ -926,16 +920,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             when (node) {
                 is Declaration -> visitDeclaration(node)
                 is GotoStatement -> return@scoped node.accept(this)
-                is Statement -> {
-                    needSwitch = visitStatement(node)
-                }
+                is Statement -> visitStatement(node)
                 else -> throw IRCodeGenError("Statement expected")
             }
         }
-        return@scoped needSwitch
     }
 
-    override fun visit(ifStatement: IfStatement): Boolean = varStack.scoped {
+    override fun visit(ifStatement: IfStatement) = varStack.scoped {
         val condition = makeConditionFromExpression(ifStatement.condition)
         val thenBlock = ir.createLabel()
 
@@ -943,20 +934,19 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             val endBlock = ir.createLabel()
             ir.branchCond(condition, thenBlock, endBlock)
             ir.switchLabel(thenBlock)
-            val needSwitch = visitStatement(ifStatement.then)
-            if (needSwitch) {
+            visitStatement(ifStatement.then)
+            if (ir.last() !is TerminateInstruction) {
                 ir.branch(endBlock)
             }
             ir.switchLabel(endBlock)
-            return@scoped true
         } else {
 
             val elseBlock = ir.createLabel()
             ir.branchCond(condition, thenBlock, elseBlock)
             // then
             ir.switchLabel(thenBlock)
-            val needSwitch = visitStatement(ifStatement.then)
-            val endBlock = if (needSwitch) {
+            visitStatement(ifStatement.then)
+            val endBlock = if (ir.last() !is TerminateInstruction) {
                 val endBlock = ir.createLabel()
                 ir.branch(endBlock)
                 endBlock
@@ -966,21 +956,19 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             // else
             ir.switchLabel(elseBlock)
-            val switch1 = visitStatement(ifStatement.elseNode)
+            visitStatement(ifStatement.elseNode)
 
-            if (switch1) {
+            if (ir.last() !is TerminateInstruction) {
                 val newEndBlock = endBlock ?: ir.createLabel()
                 ir.branch(newEndBlock)
                 ir.switchLabel(newEndBlock)
             } else if (endBlock != null) {
                 ir.switchLabel(endBlock)
             }
-
-            return@scoped true
         }
     }
 
-    override fun visit(doWhileStatement: DoWhileStatement): Boolean = varStack.scoped {
+    override fun visit(doWhileStatement: DoWhileStatement) = varStack.scoped {
         val bodyBlock = ir.createLabel()
         val endBlock = ir.createLabel()
         val conditionBlock = ir.createLabel()
@@ -989,8 +977,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branch(bodyBlock)
         ir.switchLabel(bodyBlock)
 
-        val needSwitch = visitStatement(doWhileStatement.body)
-        if (needSwitch) {
+        visitStatement(doWhileStatement.body)
+        if (ir.last() !is TerminateInstruction) {
             ir.branch(conditionBlock)
         }
         ir.switchLabel(conditionBlock)
@@ -999,10 +987,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branchCond(condition, bodyBlock, endBlock)
         ir.switchLabel(endBlock)
         stmtStack.pop()
-        return@scoped true
     }
 
-    override fun visit(whileStatement: WhileStatement): Boolean = varStack.scoped {
+    override fun visit(whileStatement: WhileStatement) = varStack.scoped {
         val conditionBlock = ir.createLabel()
         val bodyBlock = ir.createLabel()
         val endBlock = ir.createLabel()
@@ -1014,13 +1001,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         ir.branchCond(condition, bodyBlock, endBlock)
         ir.switchLabel(bodyBlock)
-        val needSwitch = visitStatement(whileStatement.body)
-        if (needSwitch) {
+        visitStatement(whileStatement.body)
+        if (ir.last() !is TerminateInstruction) {
             ir.branch(conditionBlock)
         }
         ir.switchLabel(endBlock)
         stmtStack.pop()
-        return@scoped true
     }
 
     private fun visitInit(init: Node) {
@@ -1040,7 +1026,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         visitExpression(update, true)
     }
 
-    override fun visit(forStatement: ForStatement): Boolean = varStack.scoped {
+    override fun visit(forStatement: ForStatement) = varStack.scoped {
         val conditionBlock = ir.createLabel()
         val bodyBlock = ir.createLabel()
         val endBlock = ir.createLabel()
@@ -1053,16 +1039,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branchCond(condition, bodyBlock, endBlock)
         ir.switchLabel(bodyBlock)
         visitStatement(forStatement.body)
+        // TODO update block
         visitUpdate(forStatement.update)
         if (ir.last() !is TerminateInstruction) {
             ir.branch(conditionBlock)
         }
         ir.switchLabel(endBlock)
         stmtStack.pop()
-        return@scoped true
     }
 
-    override fun visit(switchStatement: SwitchStatement): Boolean {
+    override fun visit(switchStatement: SwitchStatement) {
         val condition = visitExpression(switchStatement.condition, true)
         val conditionBlock = ir.currentLabel()
         val endBlock = ir.createLabel()
@@ -1082,16 +1068,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             jumps.add(caseBlock)
 
             ir.branch(caseBlock)
-            val needBranch = visitStatement(node.stmt)
-            if (needBranch) {
+            visitStatement(node.stmt)
+            if (ir.last() !is TerminateInstruction) {
                 ir.branch(defaultBlock)
             }
         }
 
         switchStatement.default { default ->
             ir.switchLabel(defaultBlock)
-            val needBranch = visitStatement(default.stmt)
-            if (needBranch) {
+            visitStatement(default.stmt)
+            if (ir.last() !is TerminateInstruction) {
                 ir.branch(endBlock)
             }
         }
@@ -1100,7 +1086,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         ir.switchLabel(endBlock)
         stmtStack.pop()
-        return false
     }
 
     override fun visit(declarator: Declarator): Alloc {
