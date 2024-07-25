@@ -11,8 +11,6 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
-import ir.module.block.Label
-import ir.types.NonTrivialType
 import ir.types.PrimitiveType
 import ir.value.*
 
@@ -243,7 +241,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return bb.gfp(source, gfp.basicType, gfp.indexes().copyOf())
     }
 
-    override fun visit(icmp: SignedIntCompare): ValueInstruction {
+    override fun visit(icmp: IntCompare): ValueInstruction {
         val first  = mapUsage<Value>(icmp.first())
         val second = mapUsage<Value>(icmp.second())
 

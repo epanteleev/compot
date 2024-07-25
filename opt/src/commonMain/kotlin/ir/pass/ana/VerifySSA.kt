@@ -283,8 +283,8 @@ class VerifySSA private constructor(private val module: Module, private val func
         }
     }
 
-    override fun visit(icmp: SignedIntCompare) {
-        assert(SignedIntCompare.typeCheck(icmp)) {
+    override fun visit(icmp: IntCompare) {
+        assert(IntCompare.typeCheck(icmp)) {
             "Instruction '${icmp.dump()}' requires all operands to be of the same type: a=${icmp.first().type()}, b=${icmp.second().type()}"
         }
     }

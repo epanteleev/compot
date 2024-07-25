@@ -30,7 +30,7 @@ abstract class IRInstructionVisitor<T> {
     abstract fun visit(downStackFrame: DownStackFrame): T
     abstract fun visit(gep: GetElementPtr): T
     abstract fun visit(gfp: GetFieldPtr): T
-    abstract fun visit(icmp: SignedIntCompare): T
+    abstract fun visit(icmp: IntCompare): T
     abstract fun visit(fcmp: FloatCompare): T
     abstract fun visit(load: Load): T
     abstract fun visit(phi: Phi): T

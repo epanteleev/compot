@@ -126,7 +126,7 @@ class FunctionDataBuilderWithContext private constructor(
         }
     }
 
-    fun icmp(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: PrimitiveTypeToken): SignedIntCompare {
+    fun icmp(name: LocalValueToken, a: AnyValueToken, predicate: Identifier, b: AnyValueToken, operandsTypes: PrimitiveTypeToken): IntCompare {
         val compareType = matchCompareType(predicate)
 
         val first  = getValue(a, operandsTypes.type())

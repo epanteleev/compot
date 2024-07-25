@@ -105,7 +105,7 @@ abstract class AlgoTests: CommonCTest() {
         assertReturnCode(result, 0)
     }
 
-    @Ignore
+    @Test
     fun testBoyerMooreSearch() {
         val result = runCTest("shlang/algo/boyer_moore_search", listOf(), options())
         val output = """

@@ -888,6 +888,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val caseValueConverted = I32Value(constant)
         val caseBlock = ir.createLabel()
         if (switchInfo.table.isNotEmpty() && ir.last() !is TerminateInstruction) {
+            // fall through
             ir.branch(caseBlock)
         }
 

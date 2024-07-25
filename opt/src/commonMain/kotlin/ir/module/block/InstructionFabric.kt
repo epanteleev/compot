@@ -1,6 +1,5 @@
 package ir.module.block
 
-import ir.*
 import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.*
@@ -16,7 +15,7 @@ interface InstructionFabric {
     fun not(value: Value): Not
     fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary
     fun tupleDiv(a: Value, b: Value): TupleDiv
-    fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare
+    fun icmp(a: Value, predicate: IntPredicate, b: Value): IntCompare
     fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare
     fun load(loadedType: PrimitiveType, ptr: Value): Load
     fun store(ptr: Value, value: Value): Store

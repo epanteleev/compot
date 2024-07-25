@@ -401,7 +401,7 @@ private class CodeEmitter(private val data: FunctionData,
         LoadCodegen(load.type(), asm)( value, pointer)
     }
 
-    override fun visit(icmp: SignedIntCompare) { //TODO
+    override fun visit(icmp: IntCompare) { //TODO
         var first  = valueToRegister.operand(icmp.first())
         val second = valueToRegister.operand(icmp.second())
         val dst    = valueToRegister.operand(icmp)

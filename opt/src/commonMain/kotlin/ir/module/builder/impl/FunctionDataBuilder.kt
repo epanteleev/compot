@@ -48,7 +48,7 @@ class FunctionDataBuilder private constructor(
         return bb.tupleDiv(a, b)
     }
 
-    override fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
+    override fun icmp(a: Value, predicate: IntPredicate, b: Value): IntCompare {
         return bb.icmp(a, predicate, b)
     }
 

@@ -221,8 +221,8 @@ class Block(override val index: Int):
         return withOutput { TupleDiv.make(it, this, ty, a, b) }
     }
 
-    override fun icmp(a: Value, predicate: IntPredicate, b: Value): SignedIntCompare {
-        return withOutput { SignedIntCompare.make(it, this, a, predicate, b) }
+    override fun icmp(a: Value, predicate: IntPredicate, b: Value): IntCompare {
+        return withOutput { IntCompare.make(it, this, a, predicate, b) }
     }
 
     override fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
