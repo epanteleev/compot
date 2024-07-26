@@ -40,7 +40,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private val ir: FunctionDataBuilder
         get() = currentFunction ?: throw IRCodeGenError("Function expected")
-    
+
+    private fun seekOrAddLabel(name: String): Label {
+        return stringTolabel[name] ?: let {
+            val newLabel = ir.createLabel()
+            stringTolabel[name] = newLabel
+            newLabel
+        }
+    }
 
     private fun visitDeclaration(declaration: Declaration) {
         declaration.resolveType(typeHolder)
@@ -868,8 +875,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(labeledStatement: LabeledStatement) {
-        val label = stringTolabel[labeledStatement.label.str()] ?: throw IRCodeGenError("Label '${labeledStatement.label.str()}' not found ")
-        ir.branch(label)
+        if (ir.last() is TerminateInstruction && labeledStatement.gotos().isEmpty()) {
+            return
+        }
+        val label = seekOrAddLabel(labeledStatement.name())
+        if (ir.last() !is TerminateInstruction) {
+            ir.branch(label)
+        }
         ir.switchLabel(label)
         visitStatement(labeledStatement.stmt)
     }
@@ -878,10 +890,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (ir.last() is TerminateInstruction) {
             return
         }
-        
-        val label = stringTolabel[gotoStatement.id.str()] ?: throw IRCodeGenError("Label '${gotoStatement.id.str()}' not found ")
+        if (gotoStatement.label() == null) {
+            throw IRCodeGenError("Goto statement outside of labeled statement")
+        }
+
+        val label = seekOrAddLabel(gotoStatement.id.str())
         ir.branch(label)
-        ir.switchLabel(label)
     }
 
     override fun visit(continueStatement: ContinueStatement) {
@@ -955,18 +969,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(compoundStatement: CompoundStatement) = varStack.scoped {
         for (node in compoundStatement.statements) {
-            if (node !is LabeledStatement) {
-                continue
-            }
-
-            val label = ir.createLabel()
-            stringTolabel[node.label.str()] = label
-        }
-
-        for (node in compoundStatement.statements) {
             when (node) {
                 is Declaration -> visitDeclaration(node)
-                is GotoStatement -> node.accept(this)
                 is Statement -> visitStatement(node)
                 else -> throw IRCodeGenError("Statement expected")
             }

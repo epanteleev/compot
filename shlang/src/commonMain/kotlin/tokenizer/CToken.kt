@@ -88,7 +88,7 @@ abstract class CToken(private val position: Position): AnyToken() {
     }
 }
 
-class Identifier(val data: String, position: Position): CToken(position) {
+class Identifier(private val data: String, position: Position): CToken(position) {
     override fun str(): String = data
 
     override fun cloneWith(pos: Position): CToken {

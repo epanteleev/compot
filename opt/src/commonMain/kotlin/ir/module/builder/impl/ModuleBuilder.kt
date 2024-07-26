@@ -36,7 +36,6 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
         }
 
         val module = SSAModule(fns, externFunctions, constantPool, globals, structs)
-        println(module)
         return VerifySSA.run(module)
     }
 

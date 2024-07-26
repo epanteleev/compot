@@ -7,6 +7,7 @@ import types.TypeHolder
 abstract class AbstractCParser(val filename: String, tokens: TokenList) {
     protected var current: AnyToken? = tokens.firstOrNull()
     protected val typeHolder = TypeHolder.default()
+    protected var labelResolver = LabelResolver.default()
 
     fun typeHolder(): TypeHolder = typeHolder
 
@@ -79,6 +80,13 @@ abstract class AbstractCParser(val filename: String, tokens: TokenList) {
         if (result == null) {
             current = saved
         }
+        return result
+    }
+
+    protected inline fun<reified T> funcRule(fn: () -> T?): T? {
+        labelResolver = LabelResolver.default()
+        val result = rule(fn)
+        labelResolver.resolveAll()
         return result
     }
 }

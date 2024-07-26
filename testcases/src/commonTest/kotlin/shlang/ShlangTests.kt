@@ -185,9 +185,10 @@ abstract class ShlangTests: CommonCTest() {
         assertEquals(0, result.exitCode)
     }
 
-    @Ignore
+    @Test
     fun testGOTO() {
         val result = runCTest("shlang/goto", listOf("runtime/runtime.c"), options())
+        assertEquals(220, result.exitCode)
     }
 }
 

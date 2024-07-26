@@ -38,9 +38,9 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //    : declaration
     //    | declaration-list declaration
     //    ;
-    fun function_definition(): Node? = rule {
-        val declspec = declaration_specifiers()?: return@rule null
-        val declarator = declarator()?: return@rule null
+    fun function_definition(): FunctionNode? = funcRule {
+        val declspec = declaration_specifiers()?: return@funcRule null
+        val declarator = declarator()?: return@funcRule null
         val declarations = mutableListOf<Declaration>() //TODO just skip it temporarily
         while (true) {
             val declaration = declaration()?: break
@@ -48,7 +48,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         assertion(declarations.isEmpty()) { "Declaration list is not supported yet" }
         val body = compound_statement() ?: throw ParserException(InvalidToken("Expected compound statement", peak()))
-        return@rule FunctionNode(declspec, declarator, body)
+        return@funcRule FunctionNode(declspec, declarator, body)
     }
 
     // 6.8 Statements and blocks
@@ -79,7 +79,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             if (check(";")) {
                 eat()
-                return@rule GotoStatement(ident)
+                return@rule labelResolver.addGoto(GotoStatement(ident))
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -122,7 +122,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule LabeledStatement(ident, stmt)
+            return@rule labelResolver.addLabel(LabeledStatement(ident, stmt))
         }
         if (check("case")) {
             eat()

@@ -1,22 +1,38 @@
 package parser.nodes
 
+import parser.LabelResolver
 import parser.nodes.visitors.StatementVisitor
 import tokenizer.Identifier
 
 
-abstract class Statement: Node() {
+sealed class Statement: Node() {
     abstract fun<T> accept(visitor: StatementVisitor<T>): T
 }
 
-object EmptyStatement : Statement() {
+data object EmptyStatement : Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
 data class LabeledStatement(val label: Identifier, val stmt: Statement) : Statement() {
+    private var gotos = hashSetOf<GotoStatement>()
+
+    fun name(): String = label.str()
+
+    fun gotos(): MutableSet<GotoStatement> = gotos
+
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
 data class GotoStatement(val id: Identifier) : Statement() {
+    private var label: LabeledStatement? = null
+
+    fun label(): LabeledStatement? = label
+
+    internal fun resolve(resolver: LabelResolver): LabeledStatement? {
+        label = resolver.resolve(id)
+        return label
+    }
+
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
