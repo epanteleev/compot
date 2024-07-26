@@ -8,12 +8,18 @@ import ir.value.IntegerConstant
 class StmtStack {
     private val stack = mutableListOf<StmtInfo>()
 
-    fun<T: StmtInfo> push(stmtInfo: T): T {
+    private inline fun<T: StmtInfo> push(stmtInfo: T): T {
         stack.add(stmtInfo)
         return stmtInfo
     }
 
-    fun pop() {
+    fun<T: StmtInfo> scoped(stmtInfo: T, closure: (T) -> Unit) {
+        push(stmtInfo)
+        closure(stmtInfo)
+        pop()
+    }
+
+    private fun pop() {
         stack.removeAt(stack.size - 1)
     }
 

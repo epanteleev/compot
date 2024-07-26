@@ -875,12 +875,20 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(gotoStatement: GotoStatement) {
+        if (ir.last() is TerminateInstruction) {
+            return
+        }
+        
         val label = stringTolabel[gotoStatement.id.str()] ?: throw IRCodeGenError("Label '${gotoStatement.id.str()}' not found ")
         ir.branch(label)
         ir.switchLabel(label)
     }
 
     override fun visit(continueStatement: ContinueStatement) {
+        if (ir.last() is TerminateInstruction) {
+            return
+        }
+
         val loopInfo = stmtStack.topLoop() ?: throw IRCodeGenError("Continue statement outside of loop")
         ir.branch(loopInfo.resolveCondition(ir))
     }
@@ -894,13 +902,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branch(loopInfo.resolveExit(ir))
     }
 
-    override fun visit(defaultStatement: DefaultStatement) {
+    override fun visit(defaultStatement: DefaultStatement) = varStack.scoped {
         val switchInfo = stmtStack.top() as SwitchStmtInfo
         ir.switchLabel(switchInfo.default)
         visitStatement(defaultStatement.stmt)
     }
 
-    override fun visit(caseStatement: CaseStatement) {
+    override fun visit(caseStatement: CaseStatement) = varStack.scoped {
         val switchInfo = stmtStack.top() as SwitchStmtInfo
 
         val ctx = CommonConstEvalContext<Int>(typeHolder)
@@ -918,7 +926,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         ir.switchLabel(caseBlock)
         visitStatement(caseStatement.stmt)
-
     }
 
     override fun visit(returnStatement: ReturnStatement) {
@@ -1010,48 +1017,45 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(doWhileStatement: DoWhileStatement) = varStack.scoped {
         val bodyBlock = ir.createLabel()
+        stmtStack.scoped(LoopStmtInfo()) { loopStmt ->
+            ir.branch(bodyBlock)
+            ir.switchLabel(bodyBlock)
 
-        val loopStmt = stmtStack.push(LoopStmtInfo())
+            visitStatement(doWhileStatement.body)
 
-        ir.branch(bodyBlock)
-        ir.switchLabel(bodyBlock)
-
-        visitStatement(doWhileStatement.body)
-
-        if (ir.last() !is TerminateInstruction) {
-            val conditionBlock = loopStmt.resolveCondition(ir)
-            ir.branch(conditionBlock)
-            ir.switchLabel(conditionBlock)
-            val condition = makeConditionFromExpression(doWhileStatement.condition)
-            val endBlock = loopStmt.resolveExit(ir)
-            ir.branchCond(condition, bodyBlock, endBlock)
-            ir.switchLabel(endBlock)
+            if (ir.last() !is TerminateInstruction) {
+                val conditionBlock = loopStmt.resolveCondition(ir)
+                ir.branch(conditionBlock)
+                ir.switchLabel(conditionBlock)
+                val condition = makeConditionFromExpression(doWhileStatement.condition)
+                val endBlock = loopStmt.resolveExit(ir)
+                ir.branchCond(condition, bodyBlock, endBlock)
+                ir.switchLabel(endBlock)
+            }
+            if (loopStmt.exit() != null) {
+                val exitBlock = loopStmt.resolveExit(ir)
+                ir.switchLabel(exitBlock)
+            }
         }
-        if (loopStmt.exit() != null) {
-            val exitBlock = loopStmt.resolveExit(ir)
-            ir.switchLabel(exitBlock)
-        }
-        stmtStack.pop()
     }
 
     override fun visit(whileStatement: WhileStatement) = varStack.scoped {
         val bodyBlock = ir.createLabel()
-
-        val loopStmtInfo = stmtStack.push(LoopStmtInfo())
-        val conditionBlock = loopStmtInfo.resolveCondition(ir)
-        ir.branch(conditionBlock)
-        ir.switchLabel(conditionBlock)
-        val condition = makeConditionFromExpression(whileStatement.condition)
-
-        val endBlock = loopStmtInfo.resolveExit(ir)
-        ir.branchCond(condition, bodyBlock, endBlock)
-        ir.switchLabel(bodyBlock)
-        visitStatement(whileStatement.body)
-        if (ir.last() !is TerminateInstruction) {
+        stmtStack.scoped(LoopStmtInfo()) { loopStmtInfo ->
+            val conditionBlock = loopStmtInfo.resolveCondition(ir)
             ir.branch(conditionBlock)
+            ir.switchLabel(conditionBlock)
+            val condition = makeConditionFromExpression(whileStatement.condition)
+
+            val endBlock = loopStmtInfo.resolveExit(ir)
+            ir.branchCond(condition, bodyBlock, endBlock)
+            ir.switchLabel(bodyBlock)
+            visitStatement(whileStatement.body)
+            if (ir.last() !is TerminateInstruction) {
+                ir.branch(conditionBlock)
+            }
+            ir.switchLabel(endBlock)
         }
-        ir.switchLabel(endBlock)
-        stmtStack.pop()
     }
 
     private fun visitInit(init: Node) {
@@ -1073,54 +1077,52 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(forStatement: ForStatement) = varStack.scoped {
         val bodyBlock = ir.createLabel()
-        val loopStmtInfo = stmtStack.push(LoopStmtInfo())
+        stmtStack.scoped(LoopStmtInfo()) { loopStmtInfo ->
+            visitInit(forStatement.init)
 
-        visitInit(forStatement.init)
-
-        val conditionBlock = ir.createLabel()
-        ir.branch(conditionBlock)
-        ir.switchLabel(conditionBlock)
-        val condition = makeConditionFromExpression(forStatement.condition)
-        val endBlock = loopStmtInfo.resolveExit(ir)
-        ir.branchCond(condition, bodyBlock, endBlock)
-        ir.switchLabel(bodyBlock)
-        visitStatement(forStatement.body)
-        if (ir.last() !is TerminateInstruction) {
-            val updateBlock = ir.createLabel()
-            ir.branch(updateBlock)
-            ir.switchLabel(updateBlock)
-            visitUpdate(forStatement.update)
+            val conditionBlock = ir.createLabel()
+            ir.branch(conditionBlock)
+            ir.switchLabel(conditionBlock)
+            val condition = makeConditionFromExpression(forStatement.condition)
+            val endBlock = loopStmtInfo.resolveExit(ir)
+            ir.branchCond(condition, bodyBlock, endBlock)
+            ir.switchLabel(bodyBlock)
+            visitStatement(forStatement.body)
             if (ir.last() !is TerminateInstruction) {
-                ir.branch(conditionBlock)
+                val updateBlock = ir.createLabel()
+                ir.branch(updateBlock)
+                ir.switchLabel(updateBlock)
+                visitUpdate(forStatement.update)
+                if (ir.last() !is TerminateInstruction) {
+                    ir.branch(conditionBlock)
+                }
             }
+            ir.switchLabel(endBlock)
         }
-        ir.switchLabel(endBlock)
-        stmtStack.pop()
     }
 
-    override fun visit(switchStatement: SwitchStatement) {
+    override fun visit(switchStatement: SwitchStatement) = varStack.scoped {
         val condition = visitExpression(switchStatement.condition, true)
         val conditionBlock = ir.currentLabel()
 
         val defaultBlock = ir.createLabel()
-        val info = stmtStack.push(SwitchStmtInfo(defaultBlock, arrayListOf(), arrayListOf()))
+        stmtStack.scoped(SwitchStmtInfo(defaultBlock, arrayListOf(), arrayListOf())) { info ->
+            visitStatement(switchStatement.body)
+            if (info.exit() != null) {
+                val endBlock = info.resolveExit(ir)
+                if (ir.last() !is TerminateInstruction) {
+                    ir.branch(endBlock)
+                }
+            }
 
-        visitStatement(switchStatement.body)
-        if (info.exit() != null) {
-            val endBlock = info.resolveExit(ir)
-            if (ir.last() !is TerminateInstruction) {
-                ir.branch(endBlock)
+            ir.switchLabel(conditionBlock)
+            ir.switch(condition, defaultBlock, info.values, info.table)
+
+            if (info.exit() != null) {
+                val endBlock = info.resolveExit(ir)
+                ir.switchLabel(endBlock)
             }
         }
-
-        ir.switchLabel(conditionBlock)
-        ir.switch(condition, defaultBlock, info.values, info.table)
-
-        if (info.exit() != null) {
-            val endBlock = info.resolveExit(ir)
-            ir.switchLabel(endBlock)
-        }
-        stmtStack.pop()
     }
 
     override fun visit(declarator: Declarator): Alloc {
