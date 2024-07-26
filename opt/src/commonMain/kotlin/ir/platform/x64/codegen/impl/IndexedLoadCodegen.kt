@@ -69,7 +69,7 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        asm.lea(POINTER_SIZE, first, temp1)
+        asm.lea(POINTER_SIZE, first, temp1) //TODO suspicious
         asm.mov(size, Address.from(temp1, second.value().toInt() * size), dst)
     }
 

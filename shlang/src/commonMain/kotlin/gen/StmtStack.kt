@@ -1,8 +1,8 @@
 package gen
 
 import ir.module.block.Label
+import ir.module.builder.impl.FunctionDataBuilder
 import ir.value.IntegerConstant
-import ir.value.Value
 
 
 class StmtStack {
@@ -30,10 +30,36 @@ class StmtStack {
     }
 }
 
-abstract class StmtInfo
+sealed class StmtInfo {
+    private var exitBB: Label? = null
 
-class SwitchStmtInfo(val exitBB: Label, val switchValue: Value, val default: Label, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo()
+    fun exit(): Label? {
+        return exitBB
+    }
 
-class LoopStmtInfo(val continueBB: Label, val exitBB: Label) : StmtInfo()
+    fun resolveExit(ir: FunctionDataBuilder): Label {
+        if (exitBB == null) {
+            exitBB = ir.createLabel()
+        }
 
-class IfStmtInfo(val elseBB: Label, val exitBB: Label) : StmtInfo()
+        return exitBB as Label
+    }
+}
+
+class SwitchStmtInfo(val default: Label, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo()
+
+class LoopStmtInfo : StmtInfo() {
+    private var conditionBB: Label? = null
+
+    fun condition(): Label? {
+        return conditionBB
+    }
+
+    fun resolveCondition(ir: FunctionDataBuilder): Label {
+        if (conditionBB == null) {
+            conditionBB = ir.createLabel()
+        }
+
+        return conditionBB as Label
+    }
+}
