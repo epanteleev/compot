@@ -35,6 +35,11 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
     }
 
     override fun visit(binop: BinaryOp): Int {
+        when (binop.opType) {
+            BinaryOpType.AND -> return if (binop.left.accept(this) != 0 && binop.right.accept(this) != 0) 1 else 0
+            BinaryOpType.OR  -> return if (binop.left.accept(this) != 0 || binop.right.accept(this) != 0) 1 else 0
+            else -> {}
+        }
         val left = binop.left.accept(this)
         val right = binop.right.accept(this)
         return when (binop.opType) {
@@ -49,8 +54,7 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
             BinaryOpType.GE      -> if (left >= right) 1 else 0
             BinaryOpType.EQ       -> if (left == right) 1 else 0
             BinaryOpType.NE      -> if (left != right) 1 else 0
-            BinaryOpType.AND      -> if (left != 0 && right != 0) 1 else 0
-            BinaryOpType.OR       -> if (left != 0 || right != 0) 1 else 0
+
             BinaryOpType.BIT_AND  -> left and right
             BinaryOpType.BIT_OR   -> left or right
             BinaryOpType.BIT_XOR  -> left xor right
@@ -143,6 +147,11 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
     }
 
     override fun visit(binop: BinaryOp): Long {
+        when (binop.opType) {
+            BinaryOpType.AND -> return if (binop.left.accept(this) != 0L && binop.right.accept(this) != 0L) 1 else 0
+            BinaryOpType.OR  -> return if (binop.left.accept(this) != 0L || binop.right.accept(this) != 0L) 1 else 0
+            else -> {}
+        }
         val left = binop.left.accept(this)
         val right = binop.right.accept(this)
         return when (binop.opType) {
@@ -157,8 +166,6 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
             BinaryOpType.GE -> if (left >= right) 1 else 0
             BinaryOpType.EQ -> if (left == right) 1 else 0
             BinaryOpType.NE -> if (left != right) 1 else 0
-            BinaryOpType.AND -> if (left != 0L && right != 0L) 1 else 0
-            BinaryOpType.OR -> if (left != 0L || right != 0L) 1 else 0
             BinaryOpType.BIT_AND -> left and right
             BinaryOpType.BIT_OR -> left or right
             BinaryOpType.BIT_XOR -> left xor right

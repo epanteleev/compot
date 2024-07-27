@@ -490,6 +490,24 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 div // TODO unchecked !!!
             }
 
+            BinaryOpType.MUL_ASSIGN -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<NonTrivialType>(typeHolder, leftType)
+                val rightConverted = ir.convertToType(right, leftIrType)
+
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = if (leftType is CPrimitiveType) {
+                    ir.load(leftIrType as PrimitiveType, left)
+                } else {
+                    throw IRCodeGenError("Primitive type expected")
+                }
+
+                val mul = ir.arithmeticBinary(loadedLeft, ArithmeticBinaryOp.Mul, rightConverted)
+                ir.store(left, mul)
+                mul // TODO unchecked !!!
+            }
+
             BinaryOpType.BIT_OR -> {
                 makeAlgebraicBinary(binop, ArithmeticBinaryOp.Or)
             }

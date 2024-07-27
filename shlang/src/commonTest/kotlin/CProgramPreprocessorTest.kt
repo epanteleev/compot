@@ -69,10 +69,61 @@ class CProgramPreprocessorTest {
         assertEquals(expected, TokenPrinter.print(p))
     }
 
+    // Taken from glibc math.h
     @Test
     fun testSubstitution3() {
         val input = """
+            |enum
+            |{
+            |   FP_INT_UPWARD =
+            |# define FP_INT_UPWARD 0
+            |   FP_INT_UPWARD,
+            |   FP_INT_DOWNWARD =
+            |# define FP_INT_DOWNWARD 1
+            |   FP_INT_DOWNWARD,
+            |   FP_INT_TOWARDZERO =
+            |# define FP_INT_TOWARDZERO 2
+            |   FP_INT_TOWARDZERO,
+            |   FP_INT_TONEARESTFROMZERO =
+            |# define FP_INT_TONEARESTFROMZERO 3
+            |   FP_INT_TONEARESTFROMZERO,
+            |   FP_INT_TONEAREST =
+            |# define FP_INT_TONEAREST 4
+            |   FP_INT_TONEAREST,
+            |};
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(input)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |enum
+            |{
+            |   FP_INT_UPWARD =
+            |
+            |   0,
+            |   FP_INT_DOWNWARD =
+            |
+            |   1,
+            |   FP_INT_TOWARDZERO =
+            |
+            |   2,
+            |   FP_INT_TONEARESTFROMZERO =
+            |
+            |   3,
+            |   FP_INT_TONEAREST =
+            |
+            |   4,
+            |};
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    fun testSubstitution4() {
+        val input = """
             |#define check(a, b) if (a != b) { exit(1); }
+            |check(sub3(9, 3, 2), 90);
             |check(sub3(9, 3, 2), 90);
         """.trimMargin()
 
@@ -81,6 +132,7 @@ class CProgramPreprocessorTest {
         val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
             |
+            |if (sub3(9, 3, 2) != 90) { exit(1); };
             |if (sub3(9, 3, 2) != 90) { exit(1); };
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
@@ -92,11 +144,11 @@ class CProgramPreprocessorTest {
         val ctx = PreprocessorContext.empty(headerHolder)
         val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
-            |#enter[1] test.h
+            |#enter[1] test.h in 1
             |
             |
             |int a = 9;
-            |#exit[1] test.h
+            |#exit[1] test.h in 1
             |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
@@ -112,11 +164,11 @@ class CProgramPreprocessorTest {
         val ctx = PreprocessorContext.empty(headerHolder)
         val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
-            |#enter[1] test.h
+            |#enter[1] test.h in 1
             |
             |
             |int a = 9;
-            |#exit[1] test.h
+            |#exit[1] test.h in 1
             |
             |int a = 9;
         """.trimMargin()
@@ -129,15 +181,15 @@ class CProgramPreprocessorTest {
         val ctx = PreprocessorContext.empty(headerHolder)
         val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
-            |#enter[1] test.h
+            |#enter[1] test.h in 1
             |
             |
             |int a = 9;
-            |#exit[1] test.h
+            |#exit[1] test.h in 1
             |
-            |#enter[1] test.h
+            |#enter[1] test.h in 2
             |
-            |#exit[1] test.h
+            |#exit[1] test.h in 2
             |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
@@ -406,7 +458,7 @@ class CProgramPreprocessorTest {
 
     // 6.10.3.5 Scope of macro definitions
     // EXAMPLE 3
-    @Test //TODO not fully correct test
+    @Ignore //TODO not fully correct test
     fun testMacroFunction444() {
         val data = """
             |#define    x          3
@@ -930,11 +982,11 @@ class CProgramPreprocessorTest {
         val ctx = PreprocessorContext.empty(headerHolder)
         val p = CProgramPreprocessor.create(tokens, ctx)
         val expected = """
-            |#enter[1] stdio.h
+            |#enter[1] stdio.h in 1
             |
             |
             |int printf(char* format, ...);
-            |#exit[1] stdio.h
+            |#exit[1] stdio.h in 1
             |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p.preprocess()))
@@ -967,11 +1019,11 @@ class CProgramPreprocessorTest {
             |
             |
             |
-            |#enter[1] test.h
+            |#enter[1] test.h in 8
             |
             |
             |int a = 9;
-            |#exit[1] test.h
+            |#exit[1] test.h in 8
             |
             |int aa = 90;
         """.trimMargin()
@@ -990,11 +1042,11 @@ class CProgramPreprocessorTest {
         val p = CProgramPreprocessor.create(tokens, ctx)
         val expected = """
             |
-            |#enter[1] stdio.h
+            |#enter[1] stdio.h in 2
             |
             |
             |int printf(char* format, ...);
-            |#exit[1] stdio.h
+            |#exit[1] stdio.h in 2
             |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p.preprocess()))

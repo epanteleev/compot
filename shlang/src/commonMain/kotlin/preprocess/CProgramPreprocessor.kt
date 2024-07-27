@@ -285,7 +285,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                     val header = ctx.findHeader(nameOrBracket.unquote(), HeaderType.USER) ?:
                         throw PreprocessorException("Cannot find header $nameOrBracket")
 
-                    val includeTokens = preprocessHeader(header, ctx)
+                    val includeTokens = preprocessHeader(header, nameOrBracket.line(), ctx)
                     addAll(includeTokens)
 
                 } else if (nameOrBracket.str() == "<") {
@@ -297,7 +297,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                     val header = ctx.findHeader(headerName, HeaderType.SYSTEM) ?:
                         throw PreprocessorException("Cannot find system header '$headerName'", nameOrBracket.position())
 
-                    val includeTokens = preprocessHeader(header, ctx)
+                    val includeTokens = preprocessHeader(header, nameOrBracket.line(), ctx)
                     addAll(includeTokens)
 
                 } else {
@@ -410,6 +410,12 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
     }
 
     private fun<T> getMacroReplacement(tok: CToken, handler: (Macros, TokenList) -> T): T? {
+        if (tok.str() == "__MATH_TG") {
+           println("tok.str() == __MATH_TG")
+        }
+        if (tok.str() == "isinf") {
+              println("tok.str() == isinf")
+        }
         val macroReplacement = ctx.findMacroReplacement(tok.str())
         if (macroReplacement != null) {
             kill()
@@ -499,10 +505,10 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             return CProgramPreprocessor("no-name", tokens, ctx)
         }
 
-        private fun preprocessHeader(header: Header, ctx: PreprocessorContext): TokenList {
+        private fun preprocessHeader(header: Header, line: Int, ctx: PreprocessorContext): TokenList {
             val includeTokens = create(header.filename, header.tokenize(), ctx).preprocess()
-            includeTokens.addBefore(null, EnterIncludeGuard(header.filename, ctx.includeLevel()))
-            includeTokens.addAfter(null, ExitIncludeGuard(header.filename, ctx.includeLevel()))
+            includeTokens.addBefore(null, EnterIncludeGuard(header.filename, ctx.includeLevel(), line))
+            includeTokens.addAfter(null, ExitIncludeGuard(header.filename, ctx.includeLevel(), line))
             return includeTokens
         }
     }

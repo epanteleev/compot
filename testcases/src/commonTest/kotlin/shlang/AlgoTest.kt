@@ -155,6 +155,13 @@ abstract class AlgoTests: CommonCTest() {
         val result = runCTest("shlang/c_atoi_str_to_integer", listOf(), options())
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testBinaryToDecimal() {
+        val result = runCTest("shlang/algo/binary_to_decimal", listOf(), options() + "-E")
+        assertEquals("All tests have successfully passed!\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {

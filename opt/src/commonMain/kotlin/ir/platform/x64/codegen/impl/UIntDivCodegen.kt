@@ -58,7 +58,10 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+        prepareRegs(first)
+        asm.div(size, second)
+        asm.mov(size, rax, dst)
+        asm.moveRem(size, rem)
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
