@@ -4,9 +4,16 @@ import kotlin.math.*
 
 
 class StringReader(val str: String, var pos: Int = 0) {
-    private val size get() = str.length
-    val eof get() = pos >= size
-    private val available get() = size - pos
+    private val size
+        get() = str.length
+    val eof
+        get() = pos >= size
+    private val available
+        get() = size - pos
+
+    fun eof(offset: Int): Boolean {
+        return pos + offset >= size
+    }
 
     fun peek(): Char {
         if (eof) {
@@ -15,7 +22,7 @@ class StringReader(val str: String, var pos: Int = 0) {
         return str[pos]
     }
 
-    fun isSpace(): Boolean {
+    inline fun isSpace(): Boolean {
         return peek() == ' ' || peek() == '\t' || peek() == '\r'
     }
 
@@ -94,7 +101,7 @@ class StringReader(val str: String, var pos: Int = 0) {
         return str.substring(startPos, pos)
     }
 
-    private fun checkPostfix(start: Int): String? {
+    private fun tryGetSuffix(start: Int): String? {
         if (check("ll") || check("LL")) {
             read(2)
             return str.substring(start, pos)
@@ -135,7 +142,7 @@ class StringReader(val str: String, var pos: Int = 0) {
                 while (!eof && (peek().isDigit() || peek().lowercaseChar() in 'a'..'f')) {
                     read()
                 }
-                val withPostfix = checkPostfix(start + 2)
+                val withPostfix = tryGetSuffix(start + 2)
                 if (withPostfix != null) {
                     return@tryRead Pair(withPostfix, 16)
                 }
@@ -151,19 +158,25 @@ class StringReader(val str: String, var pos: Int = 0) {
                 return@tryRead Pair(str.substring(start, pos), 10)
             }
 
-            if (peek() == '.' && (peekOffset(1).isWhitespace() || peekOffset(1).isDigit())) {
+            if (check('.') && (eof(1) ||
+                        peekOffset(1).isWhitespace() ||
+                        peekOffset(1).isDigit() ||
+                        peekOffset(1) == 'f' ||
+                        peekOffset(1) == 'F')) {
                 //Floating point value
                 read()
                 while (!eof && !isSeparator(peek())) {
                     read()
                 }
-                return@tryRead Pair(str.substring(start, pos), 10)
+                val result = tryGetSuffix(start) ?: str.substring(start, pos)
+                return@tryRead Pair(result, 10)
             } else if (!peek().isLetter() && peek() != '_') {
                 // Integer
-                return@tryRead Pair(str.substring(start, pos), 10)
+                val result = tryGetSuffix(start) ?: str.substring(start, pos)
+                return@tryRead Pair(result, 10)
             }
 
-            val postfix = checkPostfix(start)
+            val postfix = tryGetSuffix(start)
             if (postfix != null) {
                 return@tryRead Pair(postfix, 10)
             }

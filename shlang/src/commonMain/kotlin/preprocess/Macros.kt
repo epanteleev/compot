@@ -178,11 +178,6 @@ class SubstituteFunction(private val macros: MacroFunction, private val ctx: Pre
     }
 
     fun substitute(macrosNamePos: Position, args: List<TokenList>): TokenList {
-        if (macros.name == "__MATH_PRECNAME") {
-            if (args.size >= 2 && args[0].find { it.str() == "lgamma" } != null && args[1].find { it.str() == "_r" } != null) {
-                println()
-            }
-        }
         val argToValue = evaluateSubstitution(args)
 
         val result = TokenList()

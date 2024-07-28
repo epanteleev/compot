@@ -286,9 +286,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                         throw PreprocessorException("Cannot find header $nameOrBracket")
 
                     val includeTokens = preprocessHeader(header, nameOrBracket.line(), ctx)
-                    val last = includeTokens.last()
-                    addAll(includeTokens)
-                    current = last
+                    addInclude(includeTokens)
 
                 } else if (nameOrBracket.str() == "<") {
                     nameOrBracket as CToken
@@ -300,9 +298,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                         throw PreprocessorException("Cannot find system header '$headerName'", nameOrBracket.position())
 
                     val includeTokens = preprocessHeader(header, nameOrBracket.line(), ctx)
-                    val last = includeTokens.last()
-                    addAll(includeTokens)
-                    current = last
+                    addInclude(includeTokens)
 
                 } else {
                     throw PreprocessorException("Expected string literal or '<': but '${nameOrBracket}'")

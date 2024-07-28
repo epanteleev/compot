@@ -132,4 +132,21 @@ class CTokenizerTest {
         assertTrue { tokens[0] is StringLiteral }
         tokens[0].isEqual(1, 1, "\"HelloWorld\"")
     }
+
+    @Test
+    fun testZeroFloatLiteral0() {
+        val input = "0."
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is Numeric }
+        tokens[0].isEqual(1, 1, "0.")
+    }
+
+    @Test
+    fun testZeroFloatLiteral1() {
+        val input = "0.f"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is Numeric }
+        assertEquals(1, tokens.size)
+        tokens[0].isEqual(1, 1, "0.f")
+    }
 }

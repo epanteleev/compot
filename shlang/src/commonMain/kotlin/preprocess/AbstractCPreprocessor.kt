@@ -106,6 +106,19 @@ abstract class AbstractCPreprocessor(val filename: String, protected val tokens:
         current = first
     }
 
+    protected fun addInclude(tokens: TokenList) {
+        if (tokens.isEmpty()) {
+            return
+        }
+        val last = tokens.last()
+        if (current == null) {
+            this.tokens.addAll(tokens)
+        } else {
+            this.tokens.addAll(current!!, tokens)
+        }
+        current = last
+    }
+
     protected fun add(tok: AnyToken) {
         if (current != null) {
             tokens.addBefore(current!!, tok)

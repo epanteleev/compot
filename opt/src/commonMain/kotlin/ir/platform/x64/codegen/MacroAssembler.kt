@@ -34,6 +34,21 @@ class MacroAssembler(name: String): Assembler(name) {
             is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
             else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
         }
+        FloatPredicate.Ogt -> when (dst) {
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETA, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETA, dst)
+            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
+        }
+        FloatPredicate.Olt -> when (dst) {
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETA, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETA, dst)
+            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
+        }
+        FloatPredicate.Oeq -> when (dst) {
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETE, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETE, dst)
+            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
+        }
         //TODO not fully implemented
         else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
     }

@@ -187,7 +187,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitMemberAccess(memberAccess: MemberAccess, isRvalue: Boolean): Value {
         val struct = visitExpression(memberAccess.primary, true) //TODO isRvalue???
-        val structType = memberAccess.primary.resolveType(typeHolder) as CBaseStructType
+        val structType = memberAccess.primary.resolveType(typeHolder)
+        if (structType !is CBaseStructType) {
+            throw IRCodeGenError("Struct type expected")
+        }
         val structIRType = mb.toIRType<StructType>(typeHolder, structType)
 
         val member = structType.fieldIndex(memberAccess.memberName())
