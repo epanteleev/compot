@@ -989,6 +989,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(compoundStatement: CompoundStatement) = varStack.scoped {
+        if (ir.last() is TerminateInstruction) {
+            return@scoped
+        }
         for (node in compoundStatement.statements) {
             when (node) {
                 is Declaration -> visitDeclaration(node)
@@ -999,6 +1002,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(ifStatement: IfStatement) = varStack.scoped {
+        if (ir.last() is TerminateInstruction) {
+            return@scoped
+        }
         val condition = makeConditionFromExpression(ifStatement.condition)
         val thenBlock = ir.createLabel()
 
@@ -1041,6 +1047,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(doWhileStatement: DoWhileStatement) = varStack.scoped {
+        if (ir.last() is TerminateInstruction) {
+            return@scoped
+        }
         val bodyBlock = ir.createLabel()
         stmtStack.scoped(LoopStmtInfo()) { loopStmt ->
             ir.branch(bodyBlock)
@@ -1065,6 +1074,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(whileStatement: WhileStatement) = varStack.scoped {
+        if (ir.last() is TerminateInstruction) {
+            return@scoped
+        }
         val bodyBlock = ir.createLabel()
         stmtStack.scoped(LoopStmtInfo()) { loopStmtInfo ->
             val conditionBlock = loopStmtInfo.resolveCondition(ir)
@@ -1101,6 +1113,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(forStatement: ForStatement) = varStack.scoped {
+        if (ir.last() is TerminateInstruction) {
+            return@scoped
+        }
         val bodyBlock = ir.createLabel()
         stmtStack.scoped(LoopStmtInfo()) { loopStmtInfo ->
             visitInit(forStatement.init)
@@ -1127,6 +1142,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(switchStatement: SwitchStatement) = varStack.scoped {
+        if (ir.last() is TerminateInstruction) {
+            return@scoped
+        }
         val condition = visitExpression(switchStatement.condition, true)
         val conditionBlock = ir.currentLabel()
 
