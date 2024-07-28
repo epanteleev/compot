@@ -40,8 +40,8 @@ class MacroAssembler(name: String): Assembler(name) {
             else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
         }
         FloatPredicate.Olt -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETA, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETA, dst)
+            is Address    -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
+            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
             else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
         }
         FloatPredicate.Oeq -> when (dst) {

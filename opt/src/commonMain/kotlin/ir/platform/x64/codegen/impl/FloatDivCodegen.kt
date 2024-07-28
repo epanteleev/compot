@@ -3,6 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.ArithmeticType
 import ir.instruction.ArithmeticBinaryOp
+import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
@@ -17,8 +18,9 @@ class FloatDivCodegen(val type: ArithmeticType, val asm: Assembler): XmmOperands
         if (first == dst) {
             asm.divf(size, second, dst)
         } else {
-            asm.movf(size, first, dst)
-            asm.divf(size, second, dst)
+            asm.movf(size, first, xmmTemp1)
+            asm.divf(size, second, xmmTemp1)
+            asm.movf(size, xmmTemp1, dst)
         }
     }
 
