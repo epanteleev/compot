@@ -158,7 +158,7 @@ abstract class AlgoTests: CommonCTest() {
 
     @Test
     fun testBinaryToDecimal() {
-        val result = runCTest("shlang/algo/binary_to_decimal", listOf(), options() + "-E")
+        val result = runCTest("shlang/algo/binary_to_decimal", listOf(), options())
         assertEquals("All tests have successfully passed!\n", result.output)
         assertReturnCode(result, 0)
     }

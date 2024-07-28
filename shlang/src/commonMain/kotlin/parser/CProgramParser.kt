@@ -47,7 +47,9 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             declarations.add(declaration)
         }
         assertion(declarations.isEmpty()) { "Declaration list is not supported yet" }
-        val body = compound_statement() ?: throw ParserException(InvalidToken("Expected compound statement", peak()))
+        val body = compound_statement() ?: let {
+            throw ParserException(InvalidToken("Expected compound statement", peak()))
+        }
         return@funcRule FunctionNode(declspec, declarator, body)
     }
 

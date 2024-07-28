@@ -220,31 +220,6 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
         size += list.size
     }
 
-    fun addAll(index: Int, list: LeakedLinkedList<T>) {
-        if (list.isEmpty()) {
-            return
-        }
-        checkInvariants(list)
-        modificationCount++
-        if (index == size) {
-            addAll(list)
-            return
-        }
-        var current: LListNode? = head
-        for (i in 0 until index) {
-            current = current!!.next
-        }
-        if (current!!.prev != null) {
-            current.prev!!.next = list.first()
-            list.first().prev = current.prev
-        } else {
-            head = list.first()
-        }
-        current.prev = list.last()
-        list.last().next = current
-        size += list.size
-    }
-
     fun remove(node: T): T {
         modificationCount++
         if (node.prev != null) {

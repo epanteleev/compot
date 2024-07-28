@@ -286,7 +286,9 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                         throw PreprocessorException("Cannot find header $nameOrBracket")
 
                     val includeTokens = preprocessHeader(header, nameOrBracket.line(), ctx)
+                    val last = includeTokens.last()
                     addAll(includeTokens)
+                    current = last
 
                 } else if (nameOrBracket.str() == "<") {
                     nameOrBracket as CToken
@@ -298,7 +300,9 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                         throw PreprocessorException("Cannot find system header '$headerName'", nameOrBracket.position())
 
                     val includeTokens = preprocessHeader(header, nameOrBracket.line(), ctx)
+                    val last = includeTokens.last()
                     addAll(includeTokens)
+                    current = last
 
                 } else {
                     throw PreprocessorException("Expected string literal or '<': but '${nameOrBracket}'")
@@ -410,12 +414,6 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
     }
 
     private fun<T> getMacroReplacement(tok: CToken, handler: (Macros, TokenList) -> T): T? {
-        if (tok.str() == "__MATH_TG") {
-           println("tok.str() == __MATH_TG")
-        }
-        if (tok.str() == "isinf") {
-              println("tok.str() == isinf")
-        }
         val macroReplacement = ctx.findMacroReplacement(tok.str())
         if (macroReplacement != null) {
             kill()
@@ -435,9 +433,10 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             }
             killWithSpaces()
             val args = parseMacroFunctionArguments()
+            val preprocessedArgs = args.map { create(filename, it, ctx).preprocess() }
 
             val substitution = SubstituteFunction(macroFunction, ctx)
-                .substitute(tok.position(), args)
+                .substitute(tok.position(), preprocessedArgs)
 
             return handler(macroFunction, substitution)
         }

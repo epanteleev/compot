@@ -153,6 +153,7 @@ class SubstituteFunction(private val macros: MacroFunction, private val ctx: Pre
         val str = preprocessed.joinToString("") { it.str() }
         val str1 = arg1.str()
         result.remove(arg1)
+
         if (result.lastOrNull() is Indent) {
             result.removeLast()
         }
@@ -177,6 +178,11 @@ class SubstituteFunction(private val macros: MacroFunction, private val ctx: Pre
     }
 
     fun substitute(macrosNamePos: Position, args: List<TokenList>): TokenList {
+        if (macros.name == "__MATH_PRECNAME") {
+            if (args.size >= 2 && args[0].find { it.str() == "lgamma" } != null && args[1].find { it.str() == "_r" } != null) {
+                println()
+            }
+        }
         val argToValue = evaluateSubstitution(args)
 
         val result = TokenList()

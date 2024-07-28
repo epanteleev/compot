@@ -16,11 +16,8 @@
 */
 
 #include <stdio.h>      /// for IO operations
-
 #include <assert.h>     /// for assert
-
 #include <math.h>       /// for pow
-
 #include <inttypes.h>   /// for uint64_t
 
 /**
