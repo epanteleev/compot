@@ -37,6 +37,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private var exitBlock: Label = Label.entry //TODO late initialization
     private var stringTolabel = mutableMapOf<String, Label>()
     private val stmtStack = StmtStack()
+    private val initializerContext = InitializerContext()
 
     private val ir: FunctionDataBuilder
         get() = currentFunction ?: throw IRCodeGenError("Function expected")
@@ -99,7 +100,37 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitSingleInitializer(singleInitializer: SingleInitializer): Value {
-        return visitExpression(singleInitializer.expr, true)
+        val lvalueAdr = initializerContext.peekValue()
+        val idx = initializerContext.peekIndex()
+        when (val expr = singleInitializer.expr) {
+            is InitializerList -> {
+                val type = expr.resolveType(typeHolder)
+                val irType = mb.toIRType<AggregateType>(typeHolder, type)
+                val fieldPtr = ir.gep(lvalueAdr, irType, Constant.valueOf(Type.I64, idx))
+                initializerContext.scope(fieldPtr, type) { visitInitializerList(expr) }
+            }
+            else -> {
+                val rvalue = visitExpression(expr, true)
+                when (val type = initializerContext.peekType()) {
+                    is CPointerType -> {
+                        val actualType = expr.resolveType(typeHolder)
+                        val irType = mb.toIRType<PrimitiveType>(typeHolder, actualType)
+                        val converted = ir.convertToType(rvalue, irType)
+                        val fieldPtr = ir.gep(lvalueAdr, irType, Constant.valueOf(Type.I64, idx))
+                        ir.store(fieldPtr, converted)
+                    }
+                    is CompoundType -> {
+                        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+                        val fieldType = irType.field(idx)
+                        val converted = ir.convertToType(rvalue, fieldType)
+                        val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(Constant.valueOf(Type.I64, idx)))
+                        ir.store(fieldPtr, converted)
+                    }
+                    else -> throw IRCodeGenError("Unknown type, type=$type")
+                }
+            }
+        }
+        return Value.UNDEF
     }
 
     private fun visitCharNode(charNode: CharNode): Value {
@@ -1171,14 +1202,25 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return rvalueAdr
     }
 
+    private fun visitInitializerList(initializerList: InitializerList) {
+        for ((idx, init) in initializerList.initializers.withIndex()) {
+            when (init) {
+                is SingleInitializer -> initializerContext.withIndex(idx) { visitSingleInitializer(init) }
+                else -> TODO()
+            }
+        }
+    }
+
     override fun visit(initDeclarator: InitDeclarator): Value {
         val type = typeHolder[initDeclarator.name()]
         if (type is CompoundType) {
             val lvalueAdr = initDeclarator.declarator.accept(this)
             when (initDeclarator.rvalue) {
                 is InitializerList -> {
-                    val typeIr = mb.toIRType<AggregateType>(typeHolder, type)
-                    visitInitializerList(lvalueAdr, typeIr, initDeclarator.rvalue)
+                    val initType = initDeclarator.ctype()
+                    initializerContext.scope(lvalueAdr, initType) {
+                        visitInitializerList(initDeclarator.rvalue)
+                    }
                     return lvalueAdr
                 }
                 is FunctionCall -> {

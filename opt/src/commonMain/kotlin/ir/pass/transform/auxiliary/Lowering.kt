@@ -51,7 +51,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 gep(generate(), nop()) (inst) -> { inst as GetElementPtr
                     when (val baseType = inst.basicType) {
                         is AggregateType -> {
-                            val index = inst.index().asValue<ValueInstruction>()
+                            val index = inst.index()
                             val offset = bb.insertBefore(inst) {
                                 it.arithmeticBinary(index, ArithmeticBinaryOp.Mul, Constant.of(index.type(), baseType.sizeOf()))
                             }
