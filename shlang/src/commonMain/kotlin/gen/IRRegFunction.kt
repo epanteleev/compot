@@ -93,8 +93,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
             is Conditional -> visitConditional(expression)
             is CharNode -> visitCharNode(expression)
+            is SingleInitializer -> visitSingleInitializer(expression)
             else -> throw IRCodeGenError("Unknown expression: $expression")
         }
+    }
+
+    private fun visitSingleInitializer(singleInitializer: SingleInitializer): Value {
+        return visitExpression(singleInitializer.expr, true)
     }
 
     private fun visitCharNode(charNode: CharNode): Value {
@@ -140,7 +145,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, idx))
             val fieldPtr = ir.gfp(ptr, type, indexes)
             val value = when (init) {
-                is InitializerList -> visitInitializerList(fieldPtr, type.field(idx) as AggregateType, init)
+                //is InitializerList -> visitInitializerList(fieldPtr, type.field(idx) as AggregateType, init) //TODO
                 else -> visitExpression(init, true)
             }
 
@@ -1193,7 +1198,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                             }
 
                             if (list.size == 1) {
-                                val gep = ir.gep(lvalueAdr, mb.toIRType<StructType>(typeHolder, rType), Constant.of(Type.I64, 0))
+                                val gep = ir.gep(lvalueAdr, structType, Constant.of(Type.I64, 0))
                                 ir.store(gep, rvalue)
                             } else {
                                 list.forEachIndexed { idx, arg ->

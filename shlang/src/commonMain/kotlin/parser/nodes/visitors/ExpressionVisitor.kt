@@ -1,7 +1,7 @@
 package parser.nodes.visitors
 
 import parser.nodes.*
-import tokenizer.CharLiteral
+
 
 interface ExpressionVisitor<T> {
     fun visit(identNode: IdentNode): T
@@ -20,4 +20,6 @@ interface ExpressionVisitor<T> {
     fun visit(arrowMemberAccess: ArrowMemberAccess): T
     fun visit(memberAccess: MemberAccess): T
     fun visit(emptyExpression: EmptyExpression): T
+    fun visit(designationInitializer: DesignationInitializer): T
+    fun visit(singleInitializer: SingleInitializer): T
 }
