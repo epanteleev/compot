@@ -75,7 +75,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
         pointerType = declarator.directDeclarator.resolveType(pointerType, typeHolder)
         assertion (!declspec.isTypedef) { "typedef is not supported here" }
 
-        if (pointerType is CPointerType && rvalue is InitializerList) {
+        if (pointerType is CommonCArrayType && pointerType.hasUncompleted()) {
             // Special case for array initialization without exact size like:
             // int a[] = {1, 2};
             // 'a' is array of 2 elements, not pointer to int

@@ -112,13 +112,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             else -> {
                 val rvalue = visitExpression(expr, true)
                 when (val type = initializerContext.peekType()) {
-                    is CPointerType -> {
-                        val actualType = expr.resolveType(typeHolder)
-                        val irType = mb.toIRType<PrimitiveType>(typeHolder, actualType)
-                        val converted = ir.convertToType(rvalue, irType)
-                        val fieldPtr = ir.gep(lvalueAdr, irType, Constant.valueOf(Type.I64, idx))
-                        ir.store(fieldPtr, converted)
-                    }
                     is CompoundType -> {
                         val irType = mb.toIRType<AggregateType>(typeHolder, type)
                         val fieldType = irType.field(idx)
@@ -311,7 +304,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
-                is CPrimitiveType, is CPointerType -> {
+                is CPrimitiveType, is CPointerType, is UncompletedArrayType -> {
                     val convertedArg = convertArg(function, idx, expr)
                     convertedArgs.add(convertedArg)
                 }
@@ -757,7 +750,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val types = arrayListOf<Type>()
         for (type in ctypes) {
             when (type) {
-                is CPrimitiveType, is CPointerType -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type))
+                is CPrimitiveType, is CPointerType -> {
+                    types.add(mb.toIRType<PrimitiveType>(typeHolder, type))
+                }
                 is CStructType -> {
                     val irType = mb.toIRType<StructType>(typeHolder, type)
                     val parameters = CallConvention.coerceArgumentTypes(irType)
@@ -767,7 +762,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                         types.add(Type.Ptr)
                     }
                 }
-                is CArrayType -> {
+                is CommonCArrayType -> {
                     types.add(Type.Ptr)
                 }
                 else -> throw IRCodeGenError("Unknown type, type=$type")
@@ -796,7 +791,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     closure(parameters[currentArg], cType, args)
                     currentArg += types.size
                 }
-                is CArrayType -> {
+                is CommonCArrayType -> {
                     closure(parameters[currentArg], cType, listOf(arguments[currentArg]))
                     currentArg++
                 }
@@ -829,7 +824,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 varStack[param] = args[0]
             }
         }
-        is CArrayType -> {
+        is CommonCArrayType -> {
             assertion(args.size == 1) { "invariant" }
             varStack[param] = args[0]
         }

@@ -5,6 +5,8 @@ import ir.Definitions.POINTER_SIZE
 
 data class TypeInferenceException(override val message: String) : Exception(message)
 
+data class TypeResolutionException(override val message: String) : Exception(message)
+
 interface CType {
     fun qualifiers(): List<TypeProperty>
     fun size(): Int
@@ -300,12 +302,31 @@ abstract class CompoundType(protected open val properties: List<TypeProperty>) :
     override fun qualifiers(): List<TypeProperty> = properties
 }
 
-class CArrayType(val elementType: CArrayBaseType, override val properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
+abstract class CommonCArrayType(properties: List<TypeProperty>): CompoundType(properties) {
+    abstract fun element(): CType
+
+    abstract fun hasUncompleted(): Boolean
+}
+
+
+class CArrayType(private val elementType: CArrayBaseType, override val properties: List<TypeProperty> = emptyList()) : CommonCArrayType(properties) {
     override fun size(): Int {
         return elementType.size()
     }
 
-    fun element(): CType = elementType.type
+    override fun hasUncompleted(): Boolean {
+        var currentType: CType = elementType.type
+        while (currentType is CommonCArrayType) {
+            if (currentType is UncompletedArrayType) {
+                return true
+            }
+            currentType = currentType.element()
+        }
+
+        return false
+    }
+
+    override fun element(): CType = elementType.type
 
     fun dimension(): Long = elementType.dimension
 
@@ -333,6 +354,43 @@ class CArrayType(val elementType: CArrayBaseType, override val properties: List<
 
     override fun copyWith(extraProperties: List<TypeProperty>): CType {
         return CArrayType(elementType, properties + extraProperties)
+    }
+}
+
+class UncompletedArrayType(private val elementType: CType, override val properties: List<TypeProperty> = emptyList()) : CommonCArrayType(properties) {
+    override fun size(): Int {
+        return POINTER_SIZE
+    }
+
+    override fun hasUncompleted(): Boolean = true
+
+    override fun element(): CType = elementType
+
+    override fun qualifiers(): List<TypeProperty> = properties
+
+    override fun toString(): String {
+        return buildString {
+            properties.forEach { append("$it ") }
+            append(elementType)
+            append("[]")
+        }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is UncompletedArrayType) return false
+
+        if (elementType != other.elementType) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return elementType.hashCode()
+    }
+
+    override fun copyWith(extraProperties: List<TypeProperty>): CType {
+        return UncompletedArrayType(elementType, properties + extraProperties)
     }
 }
 

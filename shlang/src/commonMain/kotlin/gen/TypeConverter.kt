@@ -1,15 +1,12 @@
 package gen
 
-import gen.TypeConverter.convertToType
-import ir.Definitions.BYTE_SIZE
-import ir.Definitions.HWORD_SIZE
-import ir.Definitions.QWORD_SIZE
 import types.*
 import ir.types.*
 import ir.value.*
 import ir.Definitions.WORD_SIZE
-import ir.instruction.Alloc
-import ir.instruction.ArithmeticBinaryOp
+import ir.Definitions.BYTE_SIZE
+import ir.Definitions.HWORD_SIZE
+import ir.Definitions.QWORD_SIZE
 import ir.instruction.IntPredicate
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
@@ -65,7 +62,7 @@ object TypeConverter {
                 convertUnionType(typeHolder, type)
             }
 
-            is CFunPointerType -> Type.Ptr
+            is CFunPointerType, is UncompletedArrayType -> Type.Ptr
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
         return ret
