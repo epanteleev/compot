@@ -3,7 +3,7 @@ package ir.types
 
 data class ArrayType(private val type: NonTrivialType, val size: Int) : AggregateType {
     init {
-        require(size > 0) { "Array size must be greater than 0, but: size=$size" }
+        require(size >= 0) { "Array size must be greater than 0, but: size=$size" }
     }
 
     fun elementType(): NonTrivialType = type

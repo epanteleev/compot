@@ -24,6 +24,7 @@ interface Constant: Value {
                         throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
                     }
                 }
+                Type.U1  -> BoolValue.of(value.toInt() != 0)
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
         }

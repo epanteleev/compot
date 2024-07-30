@@ -740,15 +740,16 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     }
 
     // type_specifier
-    //	: VOID
-    //	| CHAR
-    //	| SHORT
-    //	| INT
-    //	| LONG
-    //	| FLOAT
-    //	| DOUBLE
-    //	| SIGNED
-    //	| UNSIGNED
+    //	: void
+    //	| char
+    //	| short
+    //	| int
+    //	| long
+    //	| float
+    //	| double
+    //	| signed
+    //	| unsigned
+    //  | _Bool
     //	| struct_or_union_specifier
     //	| enum_specifier
     //	| TYPE_NAME
@@ -799,7 +800,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             return@rule TypeNode(tok)
         }
-        if (check("__builtin_va_list")) {
+        if (check("_Bool")) {
+            val tok = peak<Keyword>()
+            eat()
+            return@rule TypeNode(tok)
+        }
+        if (check("__builtin_va_list")) { //TODO hack
             val tok = peak<Identifier>()
             eat()
             return@rule TypeNode(tok)
@@ -1729,7 +1735,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (check<StringLiteral>()) {
             val str = peak<StringLiteral>()
             eat()
-            return@rule StringNode(str)
+            val allLiterals = mutableListOf(str)
+            while (check<StringLiteral>()) {
+                allLiterals.add(peak())
+                eat()
+            }
+            return@rule StringNode(allLiterals)
         }
         if (check<CharLiteral>()) {
             val char = peak<CharLiteral>()

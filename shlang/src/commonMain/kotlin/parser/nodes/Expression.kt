@@ -1,7 +1,6 @@
 package parser.nodes
 
 import gen.IRCodeGenError
-import ir.value.IntegerConstant
 import types.*
 import tokenizer.*
 import parser.nodes.visitors.*
@@ -304,6 +303,7 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
 data class VarNode(private val str: Identifier) : Expression() {
     fun name(): String = str.str()
     fun nameIdent(): Identifier = str
+    fun position(): Position = str.position()
 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -312,11 +312,15 @@ data class VarNode(private val str: Identifier) : Expression() {
     }
 }
 
-data class StringNode(val str: StringLiteral) : Expression() {
+data class StringNode(val literals: List<StringLiteral>) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         return@memoize CPointerType(CType.CHAR, listOf()) //ToDO restrict?????
+    }
+
+    fun data(): String {
+        return literals.joinToString("") { it.unquote() }
     }
 }
 

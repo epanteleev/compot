@@ -58,7 +58,9 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(stringNode: StringNode) {
-        buffer.append(stringNode.str.str())
+        for (literal in stringNode.literals) {
+            buffer.append(literal.str())
+        }
     }
 
     override fun visit(assignment: CharNode) {

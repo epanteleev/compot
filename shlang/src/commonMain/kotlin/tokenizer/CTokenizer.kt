@@ -93,14 +93,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
             if (reader.check('"')) {
                 val literal = rearLiteral(v)
-                val last = tokens.lastNotSpace()
-                if (last is StringLiteral) {
-                    tokens.remove(last)
-                    append(StringLiteral(last.unquote() + literal, OriginalPosition(last.line(), last.pos(), filename)))
-                } else {
-                    append(StringLiteral(literal, OriginalPosition(line, position - (literal.length + 2), filename)))
-                }
-
+                append(StringLiteral(literal, OriginalPosition(line, position - (literal.length + 2), filename)))
                 continue
             }
 

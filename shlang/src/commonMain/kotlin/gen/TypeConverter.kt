@@ -33,6 +33,7 @@ object TypeConverter {
         }
 
         val ret = when (type) {
+            CType.BOOL -> Type.I8 //TODO one bit
             CType.CHAR -> Type.I8
             CType.UCHAR -> Type.U8
             CType.SHORT -> Type.I16

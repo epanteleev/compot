@@ -255,7 +255,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitStringNode(stringNode: StringNode): Value {
-        val string = stringNode.str.data()
+        val string = stringNode.data()
         val stringLiteral = StringLiteralConstant(createStringLiteralName(), ArrayType(Type.I8, string.length), string)
         return mb.addConstant(stringLiteral)
     }
@@ -729,7 +729,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
         val name = varNode.name()
-        val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable $name not found")
+        val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable $name not found at ${varNode.position()}")
         val type = typeHolder[name]
 
         if (type is CArrayType) {
