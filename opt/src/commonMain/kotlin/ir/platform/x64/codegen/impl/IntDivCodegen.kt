@@ -13,7 +13,6 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
-        assertion(second != rdx) { "Second operand cannot be rdx" }
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 

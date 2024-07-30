@@ -62,7 +62,8 @@ int c_atoi(const char *str)
 void test_c_atoi()
 {
     printf("<<<< TEST FUNCTION >>>>\n");
-    assert(c_atoi("123") == atoi("123"));
+    int result = c_atoi("123");
+    assert(result == atoi("123"));
     assert(c_atoi("-123") == atoi("-123"));
     //assert(c_atoi("") == atoi(""));
     assert(c_atoi("-h23") == atoi("-h23"));

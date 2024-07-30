@@ -81,7 +81,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
 
         other as Instruction
 
-        return id == other.id && owner.index == other.owner.index && other.owner() === owner()
+        return id == other.id && owner.index == other.owner.index
     }
 
     final override fun hashCode(): Int {
