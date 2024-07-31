@@ -43,11 +43,9 @@ private class SwitchReplacementImpl(val cfg: BasicBlocks) {
     private fun replaceSwitch(switch: Switch) {
         val selector = switch.value()
         val default  = switch.default()
-        val targets  = switch.targets().mapTo(arrayListOf()) { it }
-        val table    = switch.table().mapTo(arrayListOf()) { it }
 
         var current = switch.owner()
-        table.forEachWith(targets) { value, target ->
+        switch.table().forEachWith(switch.targets()) { value, target ->
             if (target == default) {
                 return@forEachWith
             }
@@ -71,10 +69,6 @@ private class SwitchReplacementImpl(val cfg: BasicBlocks) {
     }
 
     fun run() {
-        val switches = allSwitches()
-        for (switch in switches) {
-            replaceSwitch(switch)
-        }
+        allSwitches().forEach { replaceSwitch(it) }
     }
 }
-
