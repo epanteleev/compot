@@ -218,7 +218,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val struct = visitExpression(memberAccess.primary, true) //TODO isRvalue???
         val structType = memberAccess.primary.resolveType(typeHolder)
         if (structType !is CBaseStructType) {
-            throw IRCodeGenError("Struct type expected")
+            throw IRCodeGenError("Struct type expected, but got $structType")
         }
         val structIRType = mb.toIRType<StructType>(typeHolder, structType)
 

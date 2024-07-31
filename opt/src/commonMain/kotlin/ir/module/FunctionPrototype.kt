@@ -2,8 +2,8 @@ package ir.module
 
 import ir.types.Type
 import ir.global.FunctionSymbol
-import ir.read.tokens.Vararg
 import ir.types.NonTrivialType
+
 
 abstract class AnyFunctionPrototype(val name: String,
                                     private val returnType: Type,
