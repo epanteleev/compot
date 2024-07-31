@@ -6,11 +6,11 @@ import ir.value.Value
 class VarStack {
     private val stack = mutableListOf<MutableMap<String, Value>>()
 
-    fun push() {
+    private fun push() {
         stack.add(mutableMapOf())
     }
 
-    fun pop() {
+    private fun pop() {
         stack.removeAt(stack.size - 1)
     }
 

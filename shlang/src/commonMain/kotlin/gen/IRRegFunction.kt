@@ -51,7 +51,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitDeclaration(declaration: Declaration) {
-        declaration.resolveType(typeHolder)
+        declaration.specifyType(typeHolder)
 
         for (declarator in declaration.declarators()) {
             declarator.accept(this)
@@ -127,9 +127,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitCharNode(charNode: CharNode): Value {
-        val char = charNode.toInt()
-        val charType = charNode.resolveType(typeHolder)
-        val charValue = Constant.of(Type.I8, char)
+        val charType  = charNode.resolveType(typeHolder)
+        val charValue = Constant.of(Type.I8, charNode.toInt())
         return ir.convertToType(charValue, mb.toIRType<PrimitiveType>(typeHolder, charType))
     }
 
@@ -154,6 +153,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return Value.UNDEF
 
         } else {
+            //TODO 'if else' pattern????
             val onTrue    = visitExpression(conditional.eTrue, true)
             val onFalse   = visitExpression(conditional.eFalse, true)
             val condition = makeConditionFromExpression(conditional.cond)
@@ -162,33 +162,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             val onFalseConverted = ir.convertToType(onFalse, commonType)
             return ir.select(condition, commonType, onTrueConverted, onFalseConverted)
         }
-    }
-
-    private fun visitInitializerList(ptr: Value, type: AggregateType, initializerList: InitializerList): Value {
-        for ((idx, init) in initializerList.initializers.withIndex()) {
-            val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, idx))
-            val fieldPtr = ir.gfp(ptr, type, indexes)
-            val value = when (init) {
-                //is InitializerList -> visitInitializerList(fieldPtr, type.field(idx) as AggregateType, init) //TODO
-                else -> visitExpression(init, true)
-            }
-
-            when (val field = type.field(idx)) {
-                is PrimitiveType -> {
-                    val converted = ir.convertToType(value, field)
-                    ir.store(fieldPtr, converted)
-                }
-                is CompoundType -> {
-                    TODO()
-                }
-                is ArrayType -> {
-                    val converted = ir.convertToType(value, field.elementType() as PrimitiveType)
-                    ir.store(fieldPtr, converted)
-                }
-                else -> throw IRCodeGenError("Unknown field type, field=${field}")
-            }
-        }
-        return ptr
     }
 
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
@@ -238,20 +211,18 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitSizeOf(sizeOf: SizeOf): Value {
-        when (val expr = sizeOf.expr) {
-            is TypeName -> {
-                val resolved = expr.specifyType(typeHolder)
-                val irType = mb.toIRType<NonTrivialType>(typeHolder, resolved)
-                return Constant.of(Type.I64, irType.sizeOf())
-            }
-            is Expression -> {
-                val resolved = expr.resolveType(typeHolder)
-                val irType = mb.toIRType<NonTrivialType>(typeHolder, resolved)
-                return Constant.of(Type.I64, irType.sizeOf())
-            }
-            else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
+    private fun visitSizeOf(sizeOf: SizeOf): Value = when (val expr = sizeOf.expr) {
+        is TypeName -> {
+            val resolved = expr.specifyType(typeHolder)
+            val irType = mb.toIRType<NonTrivialType>(typeHolder, resolved)
+            Constant.of(Type.I64, irType.sizeOf())
         }
+        is Expression -> {
+            val resolved = expr.resolveType(typeHolder)
+            val irType = mb.toIRType<NonTrivialType>(typeHolder, resolved)
+            Constant.of(Type.I64, irType.sizeOf())
+        }
+        else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
     }
 
     private fun visitStringNode(stringNode: StringNode): Value {
@@ -713,18 +684,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitNumNode(numNode: NumNode): Constant {
-        return when (val num = numNode.number.toNumberOrNull()) {
-            is Byte   -> Constant.of(Type.I8, num as Number)
-            is UByte  -> Constant.of(Type.U8, num.toLong())
-            is Int    -> Constant.of(Type.I32, num as Number)
-            is UInt   -> Constant.of(Type.U32, num.toLong())
-            is Long   -> Constant.of(Type.I64, num as Number)
-            is ULong  -> Constant.of(Type.U64, num.toLong())
-            is Float  -> Constant.of(Type.F32, num as Number)
-            is Double -> Constant.of(Type.F64, num)
-            else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}")
-        }
+    private fun visitNumNode(numNode: NumNode): Constant = when (val num = numNode.number.toNumberOrNull()) {
+        is Byte   -> Constant.of(Type.I8, num as Number)
+        is UByte  -> Constant.of(Type.U8, num.toLong())
+        is Int    -> Constant.of(Type.I32, num as Number)
+        is UInt   -> Constant.of(Type.U32, num.toLong())
+        is Long   -> Constant.of(Type.I64, num as Number)
+        is ULong  -> Constant.of(Type.U64, num.toLong())
+        is Float  -> Constant.of(Type.F32, num as Number)
+        is Double -> Constant.of(Type.F64, num)
+        else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}")
     }
 
     private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
@@ -1114,13 +1083,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitInit(init: Node) {
-        when (init) {
-            is Declaration    -> visitDeclaration(init)
-            is ExprStatement  -> visit(init)
-            is EmptyStatement -> {}
-            else -> throw IRCodeGenError("Unknown init statement, init=$init")
-        }
+    private fun visitInit(init: Node) = when (init) {
+        is Declaration    -> visitDeclaration(init)
+        is ExprStatement  -> visit(init)
+        is EmptyStatement -> {}
+        else -> throw IRCodeGenError("Unknown init statement, init=$init")
     }
 
     private fun visitUpdate(update: Expression) {
@@ -1212,7 +1179,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             val lvalueAdr = initDeclarator.declarator.accept(this)
             when (initDeclarator.rvalue) {
                 is InitializerList -> {
-                    val initType = initDeclarator.ctype()
+                    val initType = initDeclarator.cType()
                     initializerContext.scope(lvalueAdr, initType) {
                         visitInitializerList(initDeclarator.rvalue)
                     }

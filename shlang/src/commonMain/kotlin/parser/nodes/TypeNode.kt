@@ -1,13 +1,13 @@
 package parser.nodes
 
 import types.*
-import tokenizer.Identifier
-import parser.nodes.visitors.TypeNodeVisitor
 import tokenizer.CToken
 import tokenizer.Keyword
+import tokenizer.Identifier
+import parser.nodes.visitors.TypeNodeVisitor
 
 
-abstract class AnyTypeNode : Node() {
+sealed class AnyTypeNode : Node() {
     abstract fun name(): String
     abstract fun<T> accept(visitor: TypeNodeVisitor<T>): T
 

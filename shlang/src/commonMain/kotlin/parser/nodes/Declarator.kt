@@ -5,14 +5,14 @@ import common.assertion
 import parser.nodes.visitors.*
 
 
-abstract class AnyDeclarator: Node() {
+sealed class AnyDeclarator: Node() {
     protected var cachedType: CType = CType.UNRESOlVED
 
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
-    abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType
+    internal abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType
 
-    fun ctype(): CType {
+    fun cType(): CType {
         if (cachedType == CType.UNRESOlVED) {
             throw IllegalStateException("type is not resolved")
         }
@@ -89,13 +89,13 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
     }
 }
 
-object EmptyDeclarator : AnyDeclarator() {
+data object EmptyDeclarator : AnyDeclarator() {
     override fun name(): String = ""
 
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
-        return CType.UNKNOWN
+        throw TypeResolutionException("Empty declarator is not supported")
     }
 }
 
@@ -112,12 +112,7 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
         return@memoizeType declarator.declareType(declspec, typeHolder)
     }
 
-    override fun name(): String {
-        return when (declarator) {
-            is Declarator -> declarator.name()
-            else -> throw IllegalStateException("$declarator")
-        }
-    }
+    override fun name(): String = declarator.name()
 }
 
 data class FunctionNode(val specifier: DeclarationSpecifier,
@@ -132,7 +127,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
     }
 
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CFunctionType = memoizeType {
-        assertion(declspec === this.specifier) { "specifier mismatch" }
+        assertion(specifier === declspec) { "specifier should be the same" }
 
         var pointerType = declspec.specifyType(typeHolder)
         for (pointer in declarator.pointers) {

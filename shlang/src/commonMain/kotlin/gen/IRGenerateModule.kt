@@ -9,7 +9,6 @@ import ir.global.*
 import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.ValidateSSAErrorException
-import ir.pass.ana.VerifySSA
 import ir.value.Constant
 
 
@@ -42,8 +41,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         return mb.createExternFunction(name, returnType, arguments, isVararg)
     }
 
-    private fun generateDeclarator(declarationSpecifier: DeclarationSpecifier, decl: Declarator) {
-        when (val type = decl.declareType(declarationSpecifier, typeHolder)) {
+    private fun generateDeclarator(decl: Declarator) {
+        when (val type = decl.cType()) {
             is CFunctionType -> {
                 val abstrType = type.functionType
                 val argTypes  = abstrType.argsTypes.map {
@@ -78,8 +77,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         }
     }
 
-    private fun generateAssignmentDeclarator(declarationSpecifier: DeclarationSpecifier, decl: InitDeclarator) {
-        val cType = decl.declareType(declarationSpecifier, typeHolder)
+    private fun generateAssignmentDeclarator(decl: InitDeclarator) {
+        val cType = decl.cType()
         val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType)
 
         val result = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
@@ -92,8 +91,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     private fun generateDeclaration(node: Declaration) {
         for (declarator in node.nonTypedefDeclarators()) {
             when (declarator) {
-                is Declarator           -> generateDeclarator(node.declspec, declarator)
-                is InitDeclarator -> generateAssignmentDeclarator(node.declspec, declarator)
+                is Declarator     -> generateDeclarator(declarator)
+                is InitDeclarator -> generateAssignmentDeclarator(declarator)
                 else -> throw IRCodeGenError("Unsupported declarator $declarator")
             }
         }

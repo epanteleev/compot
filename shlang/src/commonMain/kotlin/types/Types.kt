@@ -14,7 +14,6 @@ interface CType {
 
     companion object {
         val UNRESOlVED: CType = NoType("<unresolved>")
-        val UNKNOWN: CType = NoType("<unknown>")
         val INT = CPrimitiveType(CPrimitive.INT)
         val CHAR = CPrimitiveType(CPrimitive.CHAR)
         val VOID = CPrimitiveType(CPrimitive.VOID)
@@ -32,8 +31,6 @@ interface CType {
             if (type1 == type2) return type1
             if (type1 == UNRESOlVED) return UNRESOlVED
             if (type2 == UNRESOlVED) return UNRESOlVED
-            if (type1 == UNKNOWN) return type2
-            if (type2 == UNKNOWN) return type1
 
             when (type1) {
                 CHAR -> {
@@ -130,6 +127,7 @@ interface CType {
                         CHAR -> return UINT
                         UCHAR -> return UINT
                         LONG -> return LONG
+                        ULONG -> return ULONG
                         SHORT -> return UINT
                         USHORT -> return UINT
                         INT -> return UINT
