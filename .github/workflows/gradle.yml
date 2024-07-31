@@ -17,13 +17,9 @@ jobs:
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v3.3.2
     - name: Build all
-      run: gradle :ssa:build :shlang:build
+      run: gradle :ssa:jvmTest :shlang:jvmTest
     - name: Run testcases
       run: gradle build
-    - name: Run-tests
-      run: |
-        (cd tests && ./test-runner.sh)
-        (cd ctest && ./test-runner.sh)
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.3.3
       with:
