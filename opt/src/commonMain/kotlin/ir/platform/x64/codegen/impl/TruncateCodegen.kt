@@ -30,7 +30,8 @@ data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, v
     }
 
     override fun ar(dst: Address, src: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(fromSize, src, temp1)
+        asm.mov(toSize, temp1, dst)
     }
 
     override fun aa(dst: Address, src: Address) {
