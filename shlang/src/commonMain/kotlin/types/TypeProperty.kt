@@ -1,6 +1,6 @@
 package types
 
-interface TypeProperty
+sealed interface TypeProperty
 
 
 // 6.7.3 Type qualifiers
