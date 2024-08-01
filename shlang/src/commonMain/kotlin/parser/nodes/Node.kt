@@ -65,7 +65,7 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
 
     private fun resolveAllDecl(baseType: CType, typeHolder: TypeHolder): CType {
         var currentType = baseType
-        for (decl in directDeclaratorParams) {
+        for (decl in directDeclaratorParams.reversed()) {
             when (decl) {
                 is ArrayDeclarator -> {
                     currentType = decl.resolveType(currentType, typeHolder)

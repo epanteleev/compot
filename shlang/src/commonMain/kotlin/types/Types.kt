@@ -313,26 +313,12 @@ sealed class CompoundType(protected open val properties: List<TypeProperty>) : C
 
 sealed class CommonCArrayType(properties: List<TypeProperty>): CompoundType(properties) {
     abstract fun element(): CType
-
-    abstract fun hasUncompleted(): Boolean
 }
 
 
 class CArrayType(private val elementType: CArrayBaseType, override val properties: List<TypeProperty> = emptyList()) : CommonCArrayType(properties) {
     override fun size(): Int {
         return elementType.size()
-    }
-
-    override fun hasUncompleted(): Boolean {
-        var currentType: CType = elementType.type
-        while (currentType is CommonCArrayType) {
-            if (currentType is UncompletedArrayType) {
-                return true
-            }
-            currentType = currentType.element()
-        }
-
-        return false
     }
 
     override fun element(): CType = elementType.type
@@ -371,8 +357,6 @@ class UncompletedArrayType(private val elementType: CType, override val properti
         return POINTER_SIZE
     }
 
-    override fun hasUncompleted(): Boolean = true
-
     override fun element(): CType = elementType
 
     override fun qualifiers(): List<TypeProperty> = properties
@@ -380,8 +364,8 @@ class UncompletedArrayType(private val elementType: CType, override val properti
     override fun toString(): String {
         return buildString {
             properties.forEach { append("$it ") }
-            append(elementType)
             append("[]")
+            append(elementType)
         }
     }
 

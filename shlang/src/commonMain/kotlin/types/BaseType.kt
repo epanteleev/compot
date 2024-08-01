@@ -123,8 +123,8 @@ data class CArrayBaseType(val type: CType, val dimension: Long) : AggregateBaseT
 
     override fun toString(): String {
         return buildString {
-            append(type)
             append("[$dimension]")
+            append(type)
         }
     }
 }
