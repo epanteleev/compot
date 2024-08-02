@@ -1,5 +1,7 @@
 package ir.types
 
+import ir.Definitions.QWORD_SIZE
+
 
 data class StructType internal constructor(val name: String, val fields: List<NonTrivialType>): AggregateType {
     override fun offset(index: Int): Int {
@@ -23,10 +25,14 @@ data class StructType internal constructor(val name: String, val fields: List<No
         var offset = 0
         var alignment = 1
         for (field in fields) {
-            alignment = maxOf(alignment, field.sizeOf())
+            alignment = if (field.sizeOf() <= QWORD_SIZE) {
+                maxOf(alignment, field.sizeOf())
+            } else {
+                QWORD_SIZE
+            }
             offset = alignTo(offset, alignment) + field.sizeOf()
         }
-        return alignTo(offset, 8)
+        return alignTo(offset, alignment)
     }
 
     override fun toString(): String = "$$name"

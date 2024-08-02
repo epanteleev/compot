@@ -28,7 +28,7 @@ class StructTypeTest {
         val structType3 = StructType("Rect", arrayListOf(Type.I64, pointType))
         assertEquals(32, structType1.sizeOf())
         assertEquals(24, structType2.sizeOf())
-        assertEquals( 32, structType3.sizeOf())
+        assertEquals( 24, structType3.sizeOf())
     }
 
     @Test
@@ -56,5 +56,14 @@ class StructTypeTest {
         assertEquals(16, structType.sizeOf())
         assertEquals(0, structType.offset(0))
         assertEquals(8, structType.offset(1))
+    }
+
+    @Test
+    fun test8() {
+        val structType = StructType("Vect", arrayListOf(Type.F32, Type.F32, Type.F32))
+        assertEquals(12, structType.sizeOf())
+        assertEquals(0, structType.offset(0))
+        assertEquals(4, structType.offset(1))
+        assertEquals(8, structType.offset(2))
     }
 }

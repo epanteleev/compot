@@ -34,7 +34,7 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
     companion object {
         fun make(id: Identity, owner: Block, returnType: Type, values: Array<Value>): Return {
             require(isAppropriateType(returnType, values)) {
-                "cannot be $returnType, but values=$values"
+                "cannot be $returnType, but values=${values.joinToString { it.toString() }}"
             }
 
             return registerUser(ReturnValue(id, owner, returnType, values), values.iterator())
