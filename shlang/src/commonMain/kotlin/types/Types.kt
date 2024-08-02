@@ -399,6 +399,10 @@ sealed class CBaseStructType(protected open val baseType: AnyStructType, overrid
         return baseType.fieldIndex(name)
     }
 
+    fun fieldType(idx: Int): CType {
+        return baseType.fieldIndex(idx)
+    }
+
     fun fields(): List<Pair<String, CType>> {
         return baseType.fields()
     }
