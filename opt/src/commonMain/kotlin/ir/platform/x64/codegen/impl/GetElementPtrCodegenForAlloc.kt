@@ -43,7 +43,6 @@ data class GetElementPtrCodegenForAlloc (val type: PointerType, val basicType: N
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("untested")
         val address = when (first) {
             is Address2 -> Address.from(first.base, first.offset + (second.value() * size).toInt()) //TODO int overflow leads to error
             else -> TODO()

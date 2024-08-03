@@ -4,6 +4,7 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.*
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.visitors.*
 
 
@@ -103,7 +104,14 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
+        if (first == second) {
+            asm.mov(size, first, dst)
+            return
+        }
+        asm.mov(size, second, dst)
+        asm.mov(size, first, temp1)
+        asm.cmovcc(size, matchIntCondition(), temp1, temp2)
+        asm.mov(size, temp2, dst)
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
