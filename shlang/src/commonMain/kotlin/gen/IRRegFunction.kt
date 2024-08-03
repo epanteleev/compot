@@ -1194,13 +1194,20 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         for (designator in designationInitializer.designation.designators) {
             when (designator) {
                 is ArrayDesignator -> {
-                    TODO()
+                    val arrayType = type as CArrayType
+                    val elementType = arrayType.element()
+                    val converted = mb.toIRType<NonTrivialType>(typeHolder, elementType)
+                    val expression = visitExpression(designationInitializer.initializer, true)
+                    val index = designator.constEval(typeHolder)
+                    val convertedRvalue = ir.convertToType(expression, converted)
+                    val elementAdr = ir.gep(value, converted, Constant.valueOf(Type.I64, index))
+                    ir.store(elementAdr, convertedRvalue)
                 }
                 is MemberDesignator -> {
-                    val structType = type as CStructType
-                    val fieldType = mb.toIRType<StructType>(typeHolder, structType)
+                    type as CStructType
+                    val fieldType = mb.toIRType<StructType>(typeHolder, type)
                     val expression = visitExpression(designationInitializer.initializer, true)
-                    val index = structType.fieldIndex(designator.name())
+                    val index = type.fieldIndex(designator.name())
                     val converted = ir.convertToType(expression, fieldType.field(index))
                     val fieldAdr = ir.gfp(value, fieldType, arrayOf(Constant.valueOf(Type.I64, index)))
                     ir.store(fieldAdr, converted)
