@@ -37,6 +37,9 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
     }
 
     companion object {
+        const val DESTINATION = 0
+        const val VALUE = 1
+
         const val NAME = "store"
 
         fun make(id: Identity, owner: Block, pointer: Value, value: Value): Store {

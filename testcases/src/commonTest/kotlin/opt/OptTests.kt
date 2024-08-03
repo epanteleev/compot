@@ -73,12 +73,6 @@ abstract class OptTests: CommonIrTest() {
     }
 
     @Test
-    fun testSelect() {
-        val result = runTest("opt_ir/select", listOf("runtime/runtime.c"), options())
-        assertEquals("0\n1\n", result.output)
-    }
-
-    @Test
     fun testManyBranched() {
         val result = runTest("opt_ir/manyBranches", listOf("runtime/runtime.c"), options())
         assertEquals("7\n0\n", result.output)

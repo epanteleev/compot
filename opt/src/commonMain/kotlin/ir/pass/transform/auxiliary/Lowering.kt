@@ -4,6 +4,7 @@ import ir.types.*
 import ir.value.*
 import ir.module.*
 import ir.instruction.*
+import ir.instruction.Store.Companion.VALUE
 import ir.module.block.Block
 import ir.instruction.matching.*
 
@@ -11,9 +12,7 @@ import ir.instruction.matching.*
 class Lowering private constructor(private val cfg: BasicBlocks) {
     private fun replaceStore(bb: Block, inst: Store): Instruction {
         val toValue   = inst.pointer().asValue<Generate>()
-        val fromValue = inst.value()
-        val mv = bb.update(inst) { it.move(toValue, fromValue) }
-        return mv
+        return bb.update(inst) { it.move(toValue, inst.value()) }
     }
 
     private fun replaceAlloc(bb: Block, inst: Alloc): Instruction {
@@ -156,13 +155,6 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
     }
 
     private fun replaceByteDiv() {
-        fun extend(bb: Block, inst: Instruction, value: Value): LocalValue {
-            return when (val type = value.type()) {
-                Type.I8 -> bb.insertBefore(inst) { it.sext(value, Type.I16) }
-                else -> throw RuntimeException("type $type")
-            }
-        }
-
         fun closure(bb: Block, inst: Instruction): Instruction {
             when {
                 binary(ArithmeticBinaryOp.Div, value(i8()), value(i8())) (inst) -> { inst as ArithmeticBinary
@@ -175,9 +167,8 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     //  %resI16 = div i16, %extFirst, %extSecond
                     //  %res = trunc i16 %resI16 to i8
 
-                    val extFirst  = extend(bb, inst, inst.first())
-                    val extSecond = extend(bb, inst, inst.second())
-
+                    val extFirst  = bb.insertBefore(inst) { it.sext(inst.first(), Type.I16) }
+                    val extSecond = bb.insertBefore(inst) { it.sext(inst.second(), Type.I16) }
                     val newDiv = bb.insertBefore(inst) { it.arithmeticBinary(extFirst, ArithmeticBinaryOp.Div, extSecond) }
                     bb.update(inst) { it.trunc(newDiv, Type.I8) }
                     return newDiv
@@ -197,9 +188,21 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     return inst
                 }
                 tupleDiv(value(i8()), value(i8())) (inst) -> { inst as TupleDiv
-                    val extFirst  = extend(bb, inst, inst.first())
-                    val extSecond = extend(bb, inst,  inst.second())
-                    val newDiv = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
+                    // Before:
+                    //  %resANDrem = div i8 %a, %b
+                    //
+                    // After:
+                    //  %extFirst  = sext %a to i16
+                    //  %extSecond = sext %b to i16
+                    //  %newDiv = div i16 %extFirst, %extSecond
+                    //  %projDiv = proj %newDiv, 0
+                    //  %projRem = proj %newDiv, 1
+                    //  %res = trunc %projDiv to i8
+                    //  %rem = trunc %projRem to i8
+
+                    val extFirst  = bb.insertBefore(inst) { it.sext(inst.first(), Type.I16) }
+                    val extSecond = bb.insertBefore(inst) { it.sext(inst.second(), Type.I16) }
+                    val newDiv    = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
                     var last: Instruction = newDiv
 
                     val divProj = inst.proj(0)
@@ -225,6 +228,38 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     killOnDemand(bb, inst)
                     return last
                 }
+                select(nop(), value(i8()), value(i8())) (inst) -> { inst as Select
+                    // Before:
+                    //  %res = select i1 %cond, i8 %onTrue, i8 %onFalse
+                    //
+                    // After:
+                    //  %extOnTrue  = sext %onTrue to i16
+                    //  %extOnFalse = sext %onFalse to i16
+                    //  %newSelect = select i1 %cond, i16 %extOnTrue, i16 %extOnFalse
+                    //  %res = trunc %newSelect to i8
+
+                    val extOnTrue  = bb.insertBefore(inst) { it.sext(inst.onTrue(), Type.I16) }
+                    val extOnFalse = bb.insertBefore(inst) { it.sext(inst.onFalse(), Type.I16) }
+                    val newSelect  = bb.insertBefore(inst) { it.select(inst.condition(), Type.I16, extOnTrue, extOnFalse) }
+                    bb.update(inst) { it.trunc(newSelect, Type.I8) }
+                    return newSelect
+                }
+                select(nop(), value(u8()), value(u8())) (inst) -> { inst as Select
+                    // Before:
+                    //  %res = select i1 %cond, i8 %onTrue, i8 %onFalse
+                    //
+                    // After:
+                    //  %extOnTrue  = zext %onTrue to i16
+                    //  %extOnFalse = zext %onFalse to i16
+                    //  %newSelect = select i1 %cond, i16 %extOnTrue, i16 %extOnFalse
+                    //  %res = trunc %newSelect to i8
+
+                    val extOnTrue  = bb.insertBefore(inst) { it.zext(inst.onTrue(), Type.U16) }
+                    val extOnFalse = bb.insertBefore(inst) { it.zext(inst.onFalse(), Type.U16) }
+                    val newSelect  = bb.insertBefore(inst) { it.select(inst.condition(), Type.U16, extOnTrue, extOnFalse) }
+                    bb.update(inst) { it.trunc(newSelect, Type.U8) }
+                    return newSelect
+                }
             }
             return inst
         }
@@ -242,7 +277,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                 }
                 store(nop(), generate()) (inst) -> { inst as Store
                     val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
-                    inst.update(1, lea)
+                    inst.update(VALUE, lea)
                     return inst
                 }
                 copy(generate()) (inst) -> { inst as Copy

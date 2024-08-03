@@ -7,11 +7,9 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Select private constructor(id: Identity, owner: Block, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value) :
+class Select private constructor(id: Identity, owner: Block, ty: IntegerType, cond: Value, onTrue: Value, onFalse: Value) :
     ValueInstruction(id, owner, ty, arrayOf(cond, onTrue, onFalse)) {
-    override fun type(): PrimitiveType {
-        return tp as PrimitiveType
-    }
+    override fun type(): IntegerType = tp as IntegerType
 
     override fun dump(): String {
         return "%${name()} = $NAME ${Type.U1} ${condition()}, ${onTrue().type()} ${onTrue()}, ${onFalse().type()} ${onFalse()}"
@@ -48,7 +46,7 @@ class Select private constructor(id: Identity, owner: Block, ty: PrimitiveType, 
     companion object {
         const val NAME = "select"
 
-        fun make(id: Identity, owner: Block, ty: PrimitiveType, cond: Value, onTrue: Value, onFalse: Value): Select {
+        fun make(id: Identity, owner: Block, ty: IntegerType, cond: Value, onTrue: Value, onFalse: Value): Select {
             val onTrueType = onTrue.type()
             val onFalseType = onFalse.type()
             val condType = cond.type()
@@ -59,7 +57,7 @@ class Select private constructor(id: Identity, owner: Block, ty: PrimitiveType, 
             return registerUser(Select(id, owner, ty, cond, onTrue, onFalse), cond, onTrue, onFalse)
         }
 
-        private fun isAppropriateType(ty: PrimitiveType, condType: Type, onTrueType: Type, onFalseType: Type): Boolean {
+        private fun isAppropriateType(ty: IntegerType, condType: Type, onTrueType: Type, onFalseType: Type): Boolean {
             if (condType !is BooleanType) {
                 return false
             }

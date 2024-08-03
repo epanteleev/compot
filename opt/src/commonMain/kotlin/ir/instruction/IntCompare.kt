@@ -35,7 +35,7 @@ class IntCompare private constructor(id: Identity, owner: Block, a: Value, priva
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateType(aType, bType)) {
-                "should be the same types in '$id', but a=$a:$aType, b=$b:$bType"
+                "should be the same integer or pointer types in '$id', but a=$a:$aType, b=$b:$bType"
             }
 
             return registerUser(IntCompare(id, owner, a, predicate, b), a, b)

@@ -130,8 +130,4 @@ object CallConvention {
     const val DOUBLE_SUB_ZERO_SYMBOL = ".LCP_DBLTSZ"
 
     const val STACK_ALIGNMENT = 16L
-
-    fun isIntRange(value: Long): Boolean {
-        return (Int.MIN_VALUE..Int.MAX_VALUE).contains(value)
-    }
 }

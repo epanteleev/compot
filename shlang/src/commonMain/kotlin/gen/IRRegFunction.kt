@@ -162,7 +162,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             val onTrue    = visitExpression(conditional.eTrue, true)
             val onFalse   = visitExpression(conditional.eFalse, true)
             val condition = makeConditionFromExpression(conditional.cond)
-            commonType as PrimitiveType
+            commonType as IntegerType //TODO
             val onTrueConverted = ir.convertToType(onTrue, commonType)
             val onFalseConverted = ir.convertToType(onFalse, commonType)
             return ir.select(condition, commonType, onTrueConverted, onFalseConverted)

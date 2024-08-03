@@ -140,7 +140,7 @@ class FunctionDataBuilder private constructor(
         return bb.trunc(value, toType)
     }
 
-    override fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select {
+    override fun select(cond: Value, type: IntegerType, onTrue: Value, onFalse: Value): Select {
         return bb.select(cond, type, onTrue, onFalse)
     }
 

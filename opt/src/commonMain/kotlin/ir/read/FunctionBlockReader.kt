@@ -396,11 +396,11 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         val v0 = iterator.expect<AnyValueToken>("condition value")
         iterator.expect<Comma>("','")
 
-        val t1 = iterator.expect<PrimitiveTypeToken>("primitive type")
+        val t1 = iterator.expect<IntegerTypeToken>("primitive type")
         val v1 = iterator.expect<AnyValueToken>("first operand")
         iterator.expect<Comma>("','")
 
-        val t2 = iterator.expect<PrimitiveTypeToken>("primitive type")
+        val t2 = iterator.expect<IntegerTypeToken>("primitive type")
         val v2 = iterator.expect<AnyValueToken>("second operand")
 
         if (t1.type() != t2.type()) {

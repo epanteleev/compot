@@ -325,7 +325,7 @@ class Block(override val index: Int):
         return withOutput { FloatToInt.make(it,  this, toType, value) }
     }
 
-    override fun select(cond: Value, type: PrimitiveType, onTrue: Value, onFalse: Value): Select {
+    override fun select(cond: Value, type: IntegerType, onTrue: Value, onFalse: Value): Select {
         return withOutput { Select.make(it, this, type, cond, onTrue, onFalse) }
     }
 
