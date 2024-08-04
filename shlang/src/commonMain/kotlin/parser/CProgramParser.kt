@@ -1427,7 +1427,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             throw ParserException(InvalidToken("Expected ')'", peak()))
         }
 
-        return@rule cast?: unary_expression()
+        return@rule cast ?: unary_expression()
     }
 
     // type_name
@@ -1504,34 +1504,34 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         if (check("&")) {
             eat()
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            val unary = cast_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
             return@rule UnaryOp(unary, PrefixUnaryOpType.ADDRESS)
         }
         if (check("*")) {
             eat()
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            val unary = cast_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
             return@rule UnaryOp(unary, PrefixUnaryOpType.DEREF)
         }
         if (check("+")) {
             eat()
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            val unary = cast_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
             return@rule UnaryOp(unary, PrefixUnaryOpType.PLUS)
         }
         if (check("-")) {
             eat()
-            val unary = unary_expression()?: let {
+            val unary = cast_expression()?: let {
                 throw ParserException(InvalidToken("Expected unary expression", peak()))
             }
             return@rule UnaryOp(unary, PrefixUnaryOpType.NEG)
         }
         if (check("~")) {
             eat()
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            val unary = cast_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
             return@rule UnaryOp(unary, PrefixUnaryOpType.BIT_NOT)
         }
         if (check("!")) {
             eat()
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            val unary = cast_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
             return@rule UnaryOp(unary, PrefixUnaryOpType.NOT)
         }
         return@rule postfix_expression()

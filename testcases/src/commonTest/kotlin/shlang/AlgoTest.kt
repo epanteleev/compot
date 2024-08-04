@@ -173,6 +173,13 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("All tests have successfully passed!\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testSegmentTree() {
+        val result = runCTest("shlang/algo/segment_tree", listOf(), options())
+        assertEquals("All tests have successfully passed!\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {
