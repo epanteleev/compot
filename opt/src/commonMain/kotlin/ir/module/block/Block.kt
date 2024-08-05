@@ -101,7 +101,7 @@ class Block(override val index: Int):
         instructions.forEach(fn)
     }
 
-    fun transform(fn: (Instruction) -> Instruction) {
+    fun transform(fn: (Instruction) -> Instruction?) {
         instructions.transform { fn(it) }
     }
 
@@ -173,9 +173,15 @@ class Block(override val index: Int):
         return instructions.removeIf { filter(it) }
     }
 
-    fun kill(instruction: Instruction) {
+    fun kill(instruction: Instruction): Instruction? {
+        assertion(instruction.owner() === this) {
+            "instruction=$instruction is not in bb=$this"
+        }
+
+        val next = instruction.prev()
         val removed = remove(instruction)
         removed.destroy()
+        return next
     }
 
     fun remove(instruction: Instruction): Instruction {

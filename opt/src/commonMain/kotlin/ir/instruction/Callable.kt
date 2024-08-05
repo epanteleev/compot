@@ -9,6 +9,7 @@ import ir.module.block.Block
 
 interface Callable {
     fun arguments(): Array<Value>
+    fun argument(index: Int): Value = arguments()[index]
     fun prototype(): AnyFunctionPrototype
     fun shortName(): String {
         return prototype().shortName()

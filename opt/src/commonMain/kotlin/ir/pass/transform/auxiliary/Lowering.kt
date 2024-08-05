@@ -10,30 +10,17 @@ import ir.instruction.matching.*
 
 
 class Lowering private constructor(private val cfg: BasicBlocks) {
-    private fun replaceStore(bb: Block, inst: Store): Instruction {
-        val toValue   = inst.pointer().asValue<Generate>()
-        return bb.update(inst) { it.move(toValue, inst.value()) }
-    }
-
-    private fun replaceAlloc(bb: Block, inst: Alloc): Instruction {
-        return bb.update(inst) { it.gen(inst.allocatedType) }
-    }
-
-    private fun replaceLoad(bb: Block, inst: Load): Instruction {
-        return bb.update(inst) { it.copy(inst.operand()) }
-    }
-
-    private fun replaceCopy(bb: Block, inst: Copy): Instruction {
-        return bb.update(inst) { it.lea(inst.origin() as Generate) }
-    }
-
     private fun replaceAllocLoadStores() {
-        fun closure(bb: Block, inst: Instruction): Instruction {
-            when {
-                store(generate(), nop()) (inst) -> return replaceStore(bb, inst as Store)
-                load(generate()) (inst)         -> return replaceLoad(bb, inst as Load)
+        fun closure(bb: Block, inst: Instruction): Instruction? = when {
+            store(generate(), nop()) (inst) -> { inst as Store
+                val toValue = inst.pointer().asValue<Generate>()
+                bb.update(inst) { it.move(toValue, inst.value()) }
             }
-            return inst
+            load(generate()) (inst) -> { inst as Load
+                val fromValue = inst.operand().asValue<Generate>()
+                bb.update(inst) { it.copy(fromValue) }
+            }
+            else -> inst
         }
 
         for (bb in cfg) {
@@ -272,8 +259,8 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
     private fun replaceEscaped() {
         fun closure(bb: Block, inst: Instruction): Instruction {
             when {
-                inst is Alloc && alloc() (inst) -> {
-                    return replaceAlloc(bb, inst)
+                alloc() (inst) -> { inst as Alloc
+                    return bb.update(inst) { it.gen(inst.allocatedType) }
                 }
                 store(nop(), generate()) (inst) -> { inst as Store
                     val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
@@ -281,7 +268,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
                     return inst
                 }
                 copy(generate()) (inst) -> { inst as Copy
-                    return replaceCopy(bb, inst)
+                    return bb.update(inst) { it.lea(inst.origin() as Generate) }
                 }
                 ptr2int(generate()) (inst) -> { inst as Pointer2Int
                     val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
