@@ -8,6 +8,7 @@ import ir.module.BasicBlocks
 import ir.pass.isLocalVariable
 import ir.dominance.DominatorTree
 import ir.pass.transform.Mem2RegException
+import ir.types.PrimitiveType
 
 
 //TODO this is not a Reaching Definition Analysis
@@ -84,7 +85,7 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, dominator
                 continue
             }
 
-            if (instruction is Alloc && instruction.isLocalVariable()) {
+            if (instruction is Alloc && instruction.allocatedType is PrimitiveType && instruction.isLocalVariable()) {
                 valueMap[instruction] = Value.UNDEF
                 continue
             }
