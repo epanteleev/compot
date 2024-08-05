@@ -69,7 +69,7 @@ class LoopsTest {
     fun testLoopDetection() {
         val module = makeLoop()
         val df = module.findFunction(prototype)
-        val loopInfo = df.blocks.loopInfo()
+        val loopInfo = df.loopInfo()
         assertEquals(3, loopInfo.size)
         assertTrue { loopInfo[BlockViewer(1)] != null }
         assertTrue { loopInfo[BlockViewer(4)] != null }
@@ -79,7 +79,7 @@ class LoopsTest {
     fun testLinearScanOrdering() {
         val module = makeLoop()
         val df = module.findFunction(prototype)
-        val linearScanOrder = df.blocks.linearScanOrder(df.blocks.loopInfo()).order()
+        val linearScanOrder = df.linearScanOrder(df.loopInfo()).order()
         assertEquals(8, linearScanOrder.size)
         assertEquals(0, linearScanOrder[0].index)
         assertEquals(1, linearScanOrder[1].index)

@@ -73,7 +73,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
         dumpPrototype(functionData.prototype, functionData.arguments())
         builder.append("{\n")
 
-        for (bb in functionData.blocks.preorder()) {
+        for (bb in functionData.preorder()) {
             dumpBlock(bb)
         }
 
@@ -176,7 +176,7 @@ private class DumpLModule(module: LModule) : DumpModule<LModule>(module) {
     private fun killedInBlock(bb: Block) {
         val killedInBlock = arrayListOf<LocalValue>()
 
-        for (current in currentFunctionData!!.blocks) {
+        for (current in currentFunctionData!!) {
             for (inst in current) {
                 if (inst !is LocalValue) {
                     continue

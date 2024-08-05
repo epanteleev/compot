@@ -17,10 +17,10 @@ class CreationInfo private constructor(private val creationInfo: Map<LocalValue,
             val creationInfo = hashMapOf<LocalValue, Location>()
 
             for (arg in fd.arguments()) {
-                creationInfo[arg] = Location(fd.blocks.begin(), -1)
+                creationInfo[arg] = Location(fd.begin(), -1)
             }
 
-            for (bb in fd.blocks) {
+            for (bb in fd) {
                 for ((idx, instruction) in bb.iterator().withIndex()) {
                     if (instruction !is LocalValue) {
                         continue

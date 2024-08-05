@@ -76,7 +76,7 @@ class EscapeAnalysis private constructor(private val functionData: FunctionData)
     }
 
     private fun run(): Map<Value, EscapeState> {
-        for (block in functionData.blocks.preorder()) {
+        for (block in functionData.preorder()) {
             for (instruction in block) {
                 when (instruction) {
                     is Alloc -> visitAlloc(instruction)

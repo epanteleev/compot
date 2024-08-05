@@ -7,7 +7,7 @@ import ir.pass.isLocalVariable
 import ir.types.PrimitiveType
 
 
-class RemoveDeadMemoryInstructions private constructor(private val cfg: BasicBlocks) {
+class RemoveDeadMemoryInstructions private constructor(private val cfg: FunctionData) {
     private fun removeMemoryInstructions(bb: Block) {
         fun filter(instruction: Instruction): Boolean {
             return when (instruction) {
@@ -30,8 +30,7 @@ class RemoveDeadMemoryInstructions private constructor(private val cfg: BasicBlo
     companion object {
         fun run(module: Module): Module {
             module.functions.forEach { fnData ->
-                val cfg = fnData.blocks
-                RemoveDeadMemoryInstructions(cfg).pass()
+                RemoveDeadMemoryInstructions(fnData).pass()
             }
 
             return module

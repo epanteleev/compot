@@ -16,7 +16,7 @@ import ir.value.*
 
 
 class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<LocalValue?>() {
-    private val oldBasicBlocks: BasicBlocks = fd.blocks
+    private val oldBasicBlocks: FunctionData = fd
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
     private val newCFG = BasicBlocks.create()
     private val oldToNewBlock = setupNewBasicBlock()
@@ -28,7 +28,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     private fun setupNewBasicBlock(): Map<Block, Block> {
         val oldToNew = intMapOf<Block, Block>(oldBasicBlocks.size()) { it.index }
 
-        for (old in oldBasicBlocks.blocks()) {
+        for (old in oldBasicBlocks) {
             if (old.index == 0) { //TODO
                 oldToNew[old] = newCFG.begin()
                 continue

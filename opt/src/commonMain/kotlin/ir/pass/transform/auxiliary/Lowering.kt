@@ -9,7 +9,7 @@ import ir.module.block.Block
 import ir.instruction.matching.*
 
 
-class Lowering private constructor(private val cfg: BasicBlocks) {
+class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceAllocLoadStores() {
         fun closure(bb: Block, inst: Instruction): Instruction? = when {
             store(generate(), nop()) (inst) -> { inst as Store
@@ -306,7 +306,7 @@ class Lowering private constructor(private val cfg: BasicBlocks) {
     companion object {
         fun run(module: Module): Module {
             for (fn in module.functions) {
-                Lowering(fn.blocks).pass()
+                Lowering(fn).pass()
             }
             return module
         }

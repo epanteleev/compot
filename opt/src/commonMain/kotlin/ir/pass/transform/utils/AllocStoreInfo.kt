@@ -2,12 +2,12 @@ package ir.pass.transform.utils
 
 import ir.instruction.Alloc
 import ir.instruction.Store
-import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.pass.isLocalVariable
 import ir.module.block.AnyBlock
 
 
-internal class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
+internal class AllocStoreInfo private constructor(val blocks: FunctionData) {
     private val stores: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal() }
 
     private inline fun forEachAlloc(closure: (Alloc) -> Unit) {
@@ -51,7 +51,7 @@ internal class AllocStoreInfo private constructor(val blocks: BasicBlocks) {
     }
 
     companion object {
-        fun create(blocks: BasicBlocks): AllocStoreInfo {
+        fun create(blocks: FunctionData): AllocStoreInfo {
             return AllocStoreInfo(blocks)
         }
     }

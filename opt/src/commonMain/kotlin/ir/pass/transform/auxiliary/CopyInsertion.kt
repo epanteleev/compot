@@ -31,7 +31,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
     }
 
     fun pass() {
-        for (bb in cfg.blocks) {
+        for (bb in cfg) {
             bb.transform { phi -> isolatePhis(bb, phi) }
         }
     }

@@ -676,7 +676,7 @@ private class CodeEmitter(private val data: FunctionData,
 
     private fun emit() {
         emitPrologue()
-        val order = data.blocks.preorder().order()
+        val order = data.preorder().order()
 
         for (idx in order.indices) {
             val bb = order[idx]

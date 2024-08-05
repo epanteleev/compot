@@ -7,6 +7,7 @@ import ir.module.BasicBlocks
 import ir.module.block.Label
 import ir.module.block.AnyBlock
 import ir.dominance.DominatorTree
+import ir.module.FunctionData
 
 
 class JoinPointSet internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>) {
@@ -15,19 +16,19 @@ class JoinPointSet internal constructor(private val joinSet: Map<AnyBlock, Mutab
     }
 
     companion object {
-        fun evaluate(blocks: BasicBlocks, dominatorTree: DominatorTree): JoinPointSet {
+        fun evaluate(blocks: FunctionData, dominatorTree: DominatorTree): JoinPointSet {
             val df = dominatorTree.frontiers()
             return JoinPointSetEvaluate(blocks, df).calculate()
         }
 
-        fun evaluate(blocks: BasicBlocks): JoinPointSet {
+        fun evaluate(blocks: FunctionData): JoinPointSet {
             val df = blocks.dominatorTree().frontiers()
             return JoinPointSetEvaluate(blocks, df).calculate()
         }
     }
 }
 
-private class JoinPointSetEvaluate(private val blocks: BasicBlocks, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
+private class JoinPointSetEvaluate(private val blocks: FunctionData, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
     private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(blocks.size()) { bb: Label -> bb.index }
 
     private fun hasUserInBlock(bb: AnyBlock, variable: Alloc): Boolean {
