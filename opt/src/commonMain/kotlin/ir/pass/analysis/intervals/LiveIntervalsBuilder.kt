@@ -1,16 +1,20 @@
-package ir.liveness
+package ir.pass.analysis.intervals
 
 import ir.value.LocalValue
 import ir.module.FunctionData
 import ir.utils.OrderedLocation
 import ir.instruction.Instruction
+import ir.pass.FunctionAnalysisPass
+import ir.pass.FunctionAnalysisPassFabric
+import ir.pass.analysis.LoopDetectionPassFabric
+import ir.pass.analysis.LivenessAnalysisPassFabric
 
 
-class LiveIntervalsBuilder private constructor(val data: FunctionData) {
+class LiveIntervalsBuilder internal constructor(val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
     private val intervals = linkedMapOf<LocalValue, LiveRangeImpl>()
-    private val loopInfo = data.loopInfo()
+    private val loopInfo = data.analysis(LoopDetectionPassFabric)
     private val linearScanOrder = data.linearScanOrder(loopInfo).order()
-    private val liveness = LivenessAnalysis.evaluate(data, linearScanOrder)
+    private val liveness = data.analysis(LivenessAnalysisPassFabric)
 
     init {
         setupArguments()
@@ -87,9 +91,17 @@ class LiveIntervalsBuilder private constructor(val data: FunctionData) {
         return LiveIntervals(sortedByCreation(), liveness)
     }
 
-    companion object {
-        fun evaluate(data: FunctionData): LiveIntervals {
-            return LiveIntervalsBuilder(data).doAnalysis()
-        }
+    override fun name(): String {
+        return "LiveIntervals"
+    }
+
+    override fun run(): LiveIntervals {
+        return doAnalysis()
+    }
+}
+
+object LiveIntervalsFabric: FunctionAnalysisPassFabric<LiveIntervals>() {
+    override fun create(functionData: FunctionData): FunctionAnalysisPass<LiveIntervals> {
+        return LiveIntervalsBuilder(functionData)
     }
 }

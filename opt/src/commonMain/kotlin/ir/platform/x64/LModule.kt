@@ -7,7 +7,9 @@ import ir.types.StructType
 import ir.module.auxiliary.*
 import ir.platform.x64.regalloc.LinearScan
 import ir.platform.x64.regalloc.RegisterAllocation
-import ir.liveness.LiveIntervals
+import ir.pass.analysis.intervals.LiveIntervals
+import ir.pass.analysis.intervals.LiveIntervalsBuilder
+import ir.pass.analysis.intervals.LiveIntervalsFabric
 
 
 class LModule(functions: List<FunctionData>,
@@ -22,7 +24,7 @@ class LModule(functions: List<FunctionData>,
     init {
         liveIntervals = hashMapOf()
         for (fn in functions) {
-            liveIntervals[fn] = fn.liveness()
+            liveIntervals[fn] = fn.analysis(LiveIntervalsFabric)
         }
 
         registerAllocation = hashMapOf()

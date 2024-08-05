@@ -17,7 +17,7 @@ class CSSAConstruction internal constructor(module: Module): TransformPass(modul
     }
 }
 
-object CSSAConstructionFabric: TransformPassFabric {
+object CSSAConstructionFabric: TransformPassFabric() {
     override fun create(module: Module): TransformPass {
         return CSSAConstruction(module.copy())
     }

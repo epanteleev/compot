@@ -18,7 +18,7 @@ class SSADestruction(module: Module): TransformPass(module) {
     }
 }
 
-object SSADestructionFabric: TransformPassFabric {
+object SSADestructionFabric: TransformPassFabric() {
     override fun create(module: Module): TransformPass {
         return SSADestruction(module.copy())
     }

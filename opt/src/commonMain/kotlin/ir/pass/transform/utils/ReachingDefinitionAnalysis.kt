@@ -9,6 +9,7 @@ import ir.pass.isLocalVariable
 import ir.dominance.DominatorTree
 import ir.module.FunctionData
 import ir.pass.analysis.EscapeAnalysis
+import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.pass.analysis.EscapeState
 import ir.pass.transform.Mem2RegException
 import ir.types.PrimitiveType
@@ -50,7 +51,7 @@ abstract class AbstractReachingDefinitionAnalysis(protected val dominatorTree: D
 }
 
 class ReachingDefinitionAnalysis private constructor(cfg: FunctionData, dominatorTree: DominatorTree): AbstractReachingDefinitionAnalysis(dominatorTree) {
-    private val escapeState = EscapeAnalysis.run(cfg)
+    private val escapeState = cfg.analysis(EscapeAnalysisPassFabric)
     private val bbToMapValues = run {
         val bbToMapValues = hashMapOf<Block, MutableMap<Value, Value>>()
         for (bb in cfg) {

@@ -3,7 +3,7 @@ package ir.pass
 
 abstract class AnalysisResult
 
-abstract class FunctionAnalysisPass {
+abstract class FunctionAnalysisPass<T: AnalysisResult> {
     abstract fun name(): String
-    abstract fun run(): AnalysisResult
+    abstract fun run(): T
 }

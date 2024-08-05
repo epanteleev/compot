@@ -1,11 +1,12 @@
-package ir.liveness
+package ir.pass.analysis
 
 import ir.value.LocalValue
-import common.intMapOf
 import ir.instruction.Phi
 import ir.module.FunctionData
-import ir.module.block.Block
 import ir.module.block.Label
+import ir.pass.AnalysisResult
+import ir.pass.FunctionAnalysisPass
+import ir.pass.FunctionAnalysisPassFabric
 
 
 data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal var liveOut: MutableSet<LocalValue>) {
@@ -13,10 +14,19 @@ data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal var li
     fun liveOut(): Set<LocalValue> = liveOut
 }
 
+class LivenessAnalysisInfo(private val liveness: Map<Label, LiveInfo>): AnalysisResult() {
+    operator fun get(bb: Label): LiveInfo {
+        return liveness[bb]!!
+    }
+
+    val size: Int
+        get() = liveness.size
+}
+
 private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue>)
 
 // TODO Inefficient implementation, should be optimized
-class LivenessAnalysis private constructor(val data: FunctionData, private val linearScanOrder: List<Block>) {
+class LivenessAnalysis internal constructor(val data: FunctionData, private val linearScanOrder: LinearScanOrder): FunctionAnalysisPass<LivenessAnalysisInfo>() {
     private val liveness = run {
         val mapOf = mutableMapOf<Label, LiveInfo>()
         for (bb in data) {
@@ -99,16 +109,19 @@ class LivenessAnalysis private constructor(val data: FunctionData, private val l
         }
     }
 
-    companion object {
-        fun evaluate(data: FunctionData, blockOrder: List<Block>): Map<Label, LiveInfo> {
-            val analysis = LivenessAnalysis(data, blockOrder)
-            analysis.computeGlobalLiveSets()
-            return analysis.liveness
-        }
+    override fun name(): String {
+        return "LivenessAnalysis"
+    }
 
-        fun evaluate(data: FunctionData): Map<Label, LiveInfo> {
-            val loopInfo = data.loopInfo()
-            return evaluate(data, data.linearScanOrder(loopInfo).order())
-        }
+    override fun run(): LivenessAnalysisInfo {
+        computeGlobalLiveSets()
+        return LivenessAnalysisInfo(liveness)
+    }
+}
+
+object LivenessAnalysisPassFabric: FunctionAnalysisPassFabric<LivenessAnalysisInfo>() {
+    override fun create(functionData: FunctionData): LivenessAnalysis {
+        val linearScanOrder = functionData.analysis(LinearScanOrderFabric)
+        return LivenessAnalysis(functionData, linearScanOrder)
     }
 }

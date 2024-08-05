@@ -1,4 +1,4 @@
-package ir.liveness
+package ir.pass.analysis.intervals
 
 import ir.utils.OrderedLocation
 

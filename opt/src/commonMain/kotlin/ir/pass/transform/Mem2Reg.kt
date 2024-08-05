@@ -28,7 +28,7 @@ class Mem2Reg internal constructor(module: Module): TransformPass(module) {
     }
 }
 
-object Mem2RegFabric: TransformPassFabric {
+object Mem2RegFabric: TransformPassFabric() {
     override fun create(module: Module): TransformPass {
         return Mem2Reg(module.copy())
     }
