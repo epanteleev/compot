@@ -5,7 +5,7 @@ import ir.module.block.AnyBlock
 import ir.pass.AnalysisResult
 
 
-class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>): AnalysisResult() {
+class DominatorTree internal constructor(private val idomMap: Map<AnyBlock, AnyBlock>): AnalysisResult() {
     private val cachedDominators = hashMapOf<Label, List<Label>>()
 
     private fun calculateDominators(target: Label): List<Label> {

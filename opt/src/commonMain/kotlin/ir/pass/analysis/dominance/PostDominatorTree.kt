@@ -5,7 +5,7 @@ import ir.module.block.AnyBlock
 import ir.pass.AnalysisResult
 
 
-class PostDominatorTree(private val ipdomMap: Map<AnyBlock, AnyBlock>): AnalysisResult() {
+class PostDominatorTree internal constructor(private val ipdomMap: Map<AnyBlock, AnyBlock>): AnalysisResult() {
     private val cachedPostDominators = hashMapOf<Label, List<Label>>()
 
     private fun calculatePostDominators(target: Label): List<Label> {
