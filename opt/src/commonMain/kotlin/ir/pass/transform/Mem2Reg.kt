@@ -7,6 +7,7 @@ import ir.module.Module
 import ir.module.block.Block
 import ir.pass.TransformPassFabric
 import ir.pass.TransformPass
+import ir.pass.analysis.JoinPointSetPassFabric
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
@@ -22,8 +23,7 @@ class Mem2Reg internal constructor(module: Module): TransformPass(module) {
     override fun run(): Module {
         module.functions.forEach { fnData ->
             val dominatorTree = fnData.analysis(DominatorTreeFabric)
-            val joinSet = JoinPointSet.evaluate(fnData, dominatorTree)
-            Mem2RegImpl(fnData, joinSet).pass(dominatorTree)
+            Mem2RegImpl(fnData).pass(dominatorTree)
         }
         return PhiFunctionPruning.run(RemoveDeadMemoryInstructions.run(module))
     }
@@ -35,7 +35,9 @@ object Mem2RegFabric: TransformPassFabric() {
     }
 }
 
-private class Mem2RegImpl(private val cfg: FunctionData, private val joinSet: JoinPointSet) {
+private class Mem2RegImpl(private val cfg: FunctionData) {
+    private val joinSet = cfg.analysis(JoinPointSetPassFabric)
+
     private fun insertPhis(): Set<Phi> {
         val insertedPhis = hashSetOf<Phi>()
         for ((bb, vSet) in joinSet) { bb as Block
@@ -48,7 +50,7 @@ private class Mem2RegImpl(private val cfg: FunctionData, private val joinSet: Jo
         return insertedPhis
     }
 
-    private fun completePhis(bbToMapValues: ReachingDefinition, insertedPhis: Set<Phi>) {
+    private fun completePhis(bbToMapValues: RewritePrimitives, insertedPhis: Set<Phi>) {
         fun renameValues(block: Block, v: Value, expectedType: Type): Value {
             return bbToMapValues.tryRename(block, v, expectedType)?: Value.UNDEF
         }
@@ -80,7 +82,7 @@ private class Mem2RegImpl(private val cfg: FunctionData, private val joinSet: Jo
 
     fun pass(dominatorTree: DominatorTree) {
         val insertedPhis = insertPhis()
-        val bbToMapValues = ReachingDefinitionAnalysis.run(cfg, dominatorTree)
+        val bbToMapValues = RewritePrimitivesUtil.run(cfg, dominatorTree)
 
         if (insertedPhis.isEmpty()) {
             // No phis were inserted, so no need to make steps further

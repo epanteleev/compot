@@ -1,17 +1,27 @@
-package ir.pass.transform.utils
+package ir.pass.analysis
 
 import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.FunctionData
-import ir.pass.isLocalVariable
 import ir.module.block.AnyBlock
+import ir.pass.AnalysisResult
+import ir.pass.FunctionAnalysisPass
+import ir.pass.FunctionAnalysisPassFabric
+import ir.pass.isLocalVariable
 
+class AllocStoreAnalysisResult(val storeInfo: Map<Alloc, Set<AnyBlock>>): AnalysisResult(), Iterable<Map.Entry<Alloc, Set<AnyBlock>>> {
+    override fun iterator(): Iterator<Map.Entry<Alloc, Set<AnyBlock>>> {
+        return storeInfo.iterator()
+    }
+}
 
-internal class AllocStoreInfo private constructor(val blocks: FunctionData) {
+class AllocStoreAnalysis internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<AllocStoreAnalysisResult>() {
     private val stores: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal() }
 
+    override fun name(): String = "AllocStoreAnalysis"
+
     private inline fun forEachAlloc(closure: (Alloc) -> Unit) {
-        for (bb in blocks) {
+        for (bb in functionData) {
             for (inst in bb) {
                 if (inst !is Alloc) {
                     continue
@@ -45,14 +55,13 @@ internal class AllocStoreInfo private constructor(val blocks: FunctionData) {
         return allStores
     }
 
-    /** Find all bd where are stores of given local variable. */
-    fun allStores(): Map<Alloc, Set<AnyBlock>> {
-        return stores
+    override fun run(): AllocStoreAnalysisResult {
+        return AllocStoreAnalysisResult(stores)
     }
+}
 
-    companion object {
-        fun create(blocks: FunctionData): AllocStoreInfo {
-            return AllocStoreInfo(blocks)
-        }
+object AllocStoreAnalysisFabric: FunctionAnalysisPassFabric<AllocStoreAnalysisResult>() {
+    override fun create(functionData: FunctionData): FunctionAnalysisPass<AllocStoreAnalysisResult> {
+        return AllocStoreAnalysis(functionData)
     }
 }

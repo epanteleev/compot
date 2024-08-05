@@ -1,7 +1,6 @@
 package ir.pass
 
 import ir.instruction.*
-import ir.types.PrimitiveType
 
 
 fun Alloc.isLocalVariable(): Boolean {
