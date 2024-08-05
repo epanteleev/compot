@@ -1,5 +1,6 @@
 package ir.pass.transform.utils
 
+import common.assertion
 import ir.value.*
 import ir.types.Type
 import ir.instruction.*
@@ -7,6 +8,9 @@ import ir.module.block.*
 import ir.module.BasicBlocks
 import ir.pass.isLocalVariable
 import ir.dominance.DominatorTree
+import ir.module.FunctionData
+import ir.pass.ana.EscapeAnalysis
+import ir.pass.ana.EscapeState
 import ir.pass.transform.Mem2RegException
 import ir.types.PrimitiveType
 
@@ -46,10 +50,11 @@ abstract class AbstractReachingDefinitionAnalysis(protected val dominatorTree: D
     abstract fun valueMap(): Map<Block, Map<Value, Value>>
 }
 
-class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, dominatorTree: DominatorTree): AbstractReachingDefinitionAnalysis(dominatorTree) {
+class ReachingDefinitionAnalysis private constructor(cfg: FunctionData, dominatorTree: DominatorTree): AbstractReachingDefinitionAnalysis(dominatorTree) {
+    private val escapeState = EscapeAnalysis.run(cfg)
     private val bbToMapValues = run {
         val bbToMapValues = hashMapOf<Block, MutableMap<Value, Value>>()
-        for (bb in cfg) {
+        for (bb in cfg.blocks) {
             bbToMapValues[bb] = hashMapOf()
         }
 
@@ -57,7 +62,7 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, dominator
     }
 
     init {
-        for (bb in cfg.preorder()) {
+        for (bb in cfg.blocks.preorder()) {
             rewriteValuesSetup(bb)
         }
     }
@@ -74,6 +79,10 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, dominator
             }
 
             if (instruction is Store && instruction.isLocalVariable()) {
+                assertion(escapeState.getEscapeState(instruction.pointer()) == EscapeState.Local) {
+                    "Store to global variable is not supported"
+                }
+
                 val actual = findActualValueOrNull(bb, instruction.value())
                 val pointer = instruction.pointer()
                 if (actual != null) {
@@ -84,16 +93,40 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, dominator
 
                 continue
             }
+            if (instruction is Store) {
+                val state = escapeState.getEscapeState(instruction.pointer())
+                assertion(state != EscapeState.Local) {
+                    "state=$state, instruction=${instruction.dump()}"
+                }
+            }
 
             if (instruction is Alloc && instruction.allocatedType is PrimitiveType && instruction.isLocalVariable()) {
+                assertion(escapeState.getEscapeState(instruction) == EscapeState.Local) {
+                    "Alloc to global variable is not supported"
+                }
                 valueMap[instruction] = Value.UNDEF
                 continue
             }
+            if (instruction is Alloc) {
+                val state = escapeState.getEscapeState(instruction)
+                assertion(state != EscapeState.Local) {
+                    "state=$state, instruction=${instruction.dump()}"
+                }
+            }
 
             if (instruction is Load && instruction.isLocalVariable()) {
+                assertion(escapeState.getEscapeState(instruction.operand()) == EscapeState.Local) {
+                    "Load from global variable is not supported"
+                }
                 val actual = findActualValue(bb, instruction.operand())
                 valueMap[instruction] = actual
                 continue
+            }
+            if (instruction is Load) {
+                val state = escapeState.getEscapeState(instruction.operand())
+                assertion(state != EscapeState.Local) {
+                    "state=$state, instruction=${instruction.dump()}"
+                }
             }
 
             if (instruction is Phi) {
@@ -116,7 +149,7 @@ class ReachingDefinitionAnalysis private constructor(cfg: BasicBlocks, dominator
             return Constant.from(type, value)
         }
 
-        fun run(cfg: BasicBlocks, dominatorTree: DominatorTree): ReachingDefinition {
+        fun run(cfg: FunctionData, dominatorTree: DominatorTree): ReachingDefinition {
             val ana = ReachingDefinitionAnalysis(cfg, dominatorTree)
             return ReachingDefinition(ana.bbToMapValues, dominatorTree)
         }
