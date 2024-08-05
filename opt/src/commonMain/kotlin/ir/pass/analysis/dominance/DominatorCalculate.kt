@@ -1,13 +1,14 @@
-package ir.dominance
+package ir.pass.analysis.dominance
 
 import common.intMapOf
-import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.AnyBlock
 import ir.module.block.Label
+import ir.pass.AnalysisResult
+import ir.pass.FunctionAnalysisPass
 
 
-interface DominatorCalculate {
+abstract class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
     private fun initializeDominator(length: Int): MutableMap<Int, Int> {
         val dominators = intMapOf<Int, Int>(length) { it }
 
@@ -68,9 +69,9 @@ interface DominatorCalculate {
         return dominatorTree
     }
 
-    fun calculateIncoming(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> //TODO not necessary to evaluate it
+    abstract fun calculateIncoming(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> //TODO not necessary to evaluate it
 
-    fun blockOrdering(basicBlocks: FunctionData): List<AnyBlock>
+    abstract fun blockOrdering(basicBlocks: FunctionData): List<AnyBlock>
 
     fun evalIndexToBlock(blockToIndex: Map<AnyBlock, Int>): Map<Int, AnyBlock> {
         val indexToBlock = intMapOf<Int, AnyBlock>(blockToIndex.size) { it }

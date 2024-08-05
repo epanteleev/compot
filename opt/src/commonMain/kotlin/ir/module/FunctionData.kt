@@ -1,7 +1,7 @@
 package ir.module
 
-import ir.dominance.DominatorTree
-import ir.dominance.PostDominatorTree
+import ir.pass.analysis.dominance.DominatorTree
+import ir.pass.analysis.dominance.PostDominatorTree
 import ir.value.ArgumentValue
 import ir.module.auxiliary.CopyCFG
 import ir.pass.analysis.intervals.LiveIntervals
@@ -42,18 +42,6 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
 
     fun bfsTraversal(): BasicBlocksIterator {
         return BfsTraversalIterator(begin(), size())
-    }
-
-    fun linearScanOrder(loopInfo: LoopInfo): BasicBlocksIterator {
-        return LinearScanOrderIterator(begin(), size(), loopInfo)
-    }
-
-    fun dominatorTree(): DominatorTree {
-        return DominatorTree.evaluate(this)
-    }
-
-    fun postDominatorTree(): PostDominatorTree {
-        return PostDominatorTree.evaluate(this)
     }
 
     inline fun <reified T: AnalysisResult, reified U: FunctionAnalysisPassFabric<T>> analysis(analysisType: U): T {

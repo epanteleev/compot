@@ -1,11 +1,11 @@
-package ir.dominance
+package ir.pass.analysis.dominance
 
-import ir.module.FunctionData
 import ir.module.block.Label
 import ir.module.block.AnyBlock
+import ir.pass.AnalysisResult
 
 
-class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
+class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>): AnalysisResult() {
     private val cachedDominators = hashMapOf<Label, List<Label>>()
 
     private fun calculateDominators(target: Label): List<Label> {
@@ -72,11 +72,5 @@ class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
 
     operator fun iterator(): Iterator<Map.Entry<AnyBlock, AnyBlock>> {
         return idomMap.iterator()
-    }
-
-    companion object {
-        fun evaluate(basicBlocks: FunctionData): DominatorTree {
-            return DominatorTreeCalculate.evaluate(basicBlocks)
-        }
     }
 }

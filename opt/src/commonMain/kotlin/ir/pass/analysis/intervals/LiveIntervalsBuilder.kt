@@ -6,15 +6,14 @@ import ir.utils.OrderedLocation
 import ir.instruction.Instruction
 import ir.pass.FunctionAnalysisPass
 import ir.pass.FunctionAnalysisPassFabric
-import ir.pass.analysis.LoopDetectionPassFabric
+import ir.pass.analysis.LinearScanOrderFabric
 import ir.pass.analysis.LivenessAnalysisPassFabric
 
 
 class LiveIntervalsBuilder internal constructor(val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
-    private val intervals = linkedMapOf<LocalValue, LiveRangeImpl>()
-    private val loopInfo = data.analysis(LoopDetectionPassFabric)
-    private val linearScanOrder = data.linearScanOrder(loopInfo).order()
-    private val liveness = data.analysis(LivenessAnalysisPassFabric)
+    private val intervals       = linkedMapOf<LocalValue, LiveRangeImpl>()
+    private val linearScanOrder = data.analysis(LinearScanOrderFabric)
+    private val liveness        = data.analysis(LivenessAnalysisPassFabric)
 
     init {
         setupArguments()
@@ -61,7 +60,7 @@ class LiveIntervalsBuilder internal constructor(val data: FunctionData): Functio
         var ordering = -1
         for (bb in linearScanOrder) {
             // TODO Improvement: skip this step if CFG doesn't have any loops.
-            for (op in liveness[bb]!!.liveOut()) {
+            for (op in liveness[bb].liveOut()) {
                 val liveRange = intervals[op] ?: throw LiveIntervalsException("cannot find $op")
 
                 val index = bb.size + 1

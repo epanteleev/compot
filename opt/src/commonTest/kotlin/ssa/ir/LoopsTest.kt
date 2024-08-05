@@ -5,6 +5,8 @@ import ir.module.FunctionPrototype
 import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.analysis.LinearScanOrder
+import ir.pass.analysis.LinearScanOrderFabric
 import ir.pass.analysis.LoopDetectionPassFabric
 import ir.types.Type
 import ir.value.I32Value
@@ -80,7 +82,7 @@ class LoopsTest {
     fun testLinearScanOrdering() {
         val module = makeLoop()
         val df = module.findFunction(prototype)
-        val linearScanOrder = df.linearScanOrder(df.analysis(LoopDetectionPassFabric)).order()
+        val linearScanOrder = df.analysis(LinearScanOrderFabric)
         assertEquals(8, linearScanOrder.size)
         assertEquals(0, linearScanOrder[0].index)
         assertEquals(1, linearScanOrder[1].index)

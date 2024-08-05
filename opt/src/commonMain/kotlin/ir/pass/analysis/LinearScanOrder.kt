@@ -16,6 +16,10 @@ class LinearScanOrder(private val order: List<Block>): AnalysisResult(), Collect
     override val size: Int
         get() = order.size
 
+    operator fun get(index: Int): Block {
+        return order[index]
+    }
+
     override fun isEmpty(): Boolean {
         return order.isEmpty()
     }

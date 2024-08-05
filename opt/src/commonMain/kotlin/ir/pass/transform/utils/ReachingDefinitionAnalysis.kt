@@ -6,7 +6,7 @@ import ir.types.Type
 import ir.instruction.*
 import ir.module.block.*
 import ir.pass.isLocalVariable
-import ir.dominance.DominatorTree
+import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
 import ir.pass.analysis.EscapeAnalysis
 import ir.pass.analysis.EscapeAnalysisPassFabric

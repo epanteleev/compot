@@ -8,6 +8,7 @@ import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.VerifySSA
+import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.transform.Mem2RegFabric
 import ir.types.Type
 import kotlin.test.Test
@@ -65,7 +66,7 @@ class DominatorTreeTest {
     fun testDominator() {
         val module = withBasicBlocks()
         val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.Ptr))
-        val domTree = module.findFunction(prototype).dominatorTree()
+        val domTree = module.findFunction(prototype).analysis(DominatorTreeFabric)
 
         assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(1)))
         assertTrue(domTree.dominates(BlockViewer(1), BlockViewer(2)))

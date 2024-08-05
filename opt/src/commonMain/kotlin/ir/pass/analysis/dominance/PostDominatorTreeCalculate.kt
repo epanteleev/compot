@@ -1,10 +1,12 @@
-package ir.dominance
+package ir.pass.analysis.dominance
 
 import ir.module.FunctionData
 import ir.module.block.AnyBlock
+import ir.pass.FunctionAnalysisPass
+import ir.pass.FunctionAnalysisPassFabric
 
 
-internal object PostDominatorTreeCalculate : DominatorCalculate {
+internal class PostDominatorTreeCalculate internal constructor(private val basicBlocks: FunctionData) : DominatorCalculate<PostDominatorTree>() {
     override fun calculateIncoming(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> {
         val successors = hashMapOf<Int, List<Int>>()
 
@@ -24,7 +26,17 @@ internal object PostDominatorTreeCalculate : DominatorCalculate {
         return basicBlocks.backwardPostorder().order()
     }
 
-    fun evaluate(basicBlocks: FunctionData): PostDominatorTree {
+    override fun name(): String {
+        return "PostDominatorTree"
+    }
+
+    override fun run(): PostDominatorTree {
         return PostDominatorTree(calculate(basicBlocks))
+    }
+}
+
+object PostDominatorTreeFabric: FunctionAnalysisPassFabric<PostDominatorTree>() {
+    override fun create(functionData: FunctionData): FunctionAnalysisPass<PostDominatorTree> {
+        return PostDominatorTreeCalculate(functionData)
     }
 }

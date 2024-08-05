@@ -1,12 +1,13 @@
 package ir.pass.transform
 
-import ir.dominance.DominatorTree
+import ir.pass.analysis.dominance.DominatorTree
 import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
 import ir.pass.TransformPassFabric
 import ir.pass.TransformPass
+import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
 import ir.types.PrimitiveType
@@ -20,7 +21,7 @@ class Mem2Reg internal constructor(module: Module): TransformPass(module) {
     override fun name(): String = "mem2reg"
     override fun run(): Module {
         module.functions.forEach { fnData ->
-            val dominatorTree = fnData.dominatorTree()
+            val dominatorTree = fnData.analysis(DominatorTreeFabric)
             val joinSet = JoinPointSet.evaluate(fnData, dominatorTree)
             Mem2RegImpl(fnData, joinSet).pass(dominatorTree)
         }
