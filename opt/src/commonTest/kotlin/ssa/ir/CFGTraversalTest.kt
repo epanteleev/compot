@@ -5,11 +5,10 @@ import ir.value.I64Value
 import ir.value.U16Value
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate
-import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
-import ir.pass.ana.VerifySSA
+import ir.pass.analysis.VerifySSA
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals

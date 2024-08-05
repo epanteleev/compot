@@ -3,7 +3,7 @@ package ir.module.builder.impl
 import ir.types.Type
 import ir.module.Module
 import ir.module.SSAModule
-import ir.pass.ana.VerifySSA
+import ir.pass.analysis.VerifySSA
 import ir.value.ArgumentValue
 import ir.module.AnyFunctionPrototype
 import ir.module.builder.AnyModuleBuilder

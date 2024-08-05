@@ -7,7 +7,7 @@ import ir.instruction.IntPredicate
 import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
-import ir.pass.ana.VerifySSA
+import ir.pass.analysis.VerifySSA
 import ir.pass.transform.Mem2RegFabric
 import ir.types.Type
 import kotlin.test.Test

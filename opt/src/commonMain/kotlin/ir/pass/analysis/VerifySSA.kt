@@ -1,4 +1,4 @@
-package ir.pass.ana
+package ir.pass.analysis
 
 import common.forEachWith
 import ir.value.LocalValue

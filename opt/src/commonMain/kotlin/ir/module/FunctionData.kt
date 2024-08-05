@@ -8,8 +8,10 @@ import ir.liveness.LiveIntervals
 import ir.liveness.LiveIntervalsBuilder
 import ir.module.block.Block
 import ir.module.block.iterator.*
-import ir.pass.ana.LoopDetection
-import ir.pass.ana.LoopInfo
+import ir.pass.AnalysisResult
+import ir.pass.FunctionAnalysisPassFabric
+import ir.pass.analysis.LoopDetection
+import ir.pass.analysis.LoopInfo
 
 
 class FunctionData private constructor(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {

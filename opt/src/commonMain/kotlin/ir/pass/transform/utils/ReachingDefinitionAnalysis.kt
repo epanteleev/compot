@@ -5,12 +5,11 @@ import ir.value.*
 import ir.types.Type
 import ir.instruction.*
 import ir.module.block.*
-import ir.module.BasicBlocks
 import ir.pass.isLocalVariable
 import ir.dominance.DominatorTree
 import ir.module.FunctionData
-import ir.pass.ana.EscapeAnalysis
-import ir.pass.ana.EscapeState
+import ir.pass.analysis.EscapeAnalysis
+import ir.pass.analysis.EscapeState
 import ir.pass.transform.Mem2RegException
 import ir.types.PrimitiveType
 

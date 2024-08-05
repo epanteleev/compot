@@ -1,7 +1,7 @@
 package ir.pass.transform
 
 import ir.module.Module
-import ir.pass.PassFabric
+import ir.pass.TransformPassFabric
 import ir.pass.TransformPass
 import ir.platform.x64.LModule
 import ir.pass.transform.auxiliary.*
@@ -18,7 +18,7 @@ class SSADestruction(module: Module): TransformPass(module) {
     }
 }
 
-object SSADestructionFabric: PassFabric {
+object SSADestructionFabric: TransformPassFabric {
     override fun create(module: Module): TransformPass {
         return SSADestruction(module.copy())
     }

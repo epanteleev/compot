@@ -1,4 +1,4 @@
-package ir.pass.ana
+package ir.pass.analysis
 
 import ir.value.*
 import ir.instruction.*
