@@ -36,12 +36,12 @@ data class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>): A
     fun headers(): Set<Block> = loopHeaders.keys
 }
 
-class LoopDetection internal constructor(val blocks: FunctionData): FunctionAnalysisPass<LoopInfo>() {
-    private val dominatorTree: DominatorTree = blocks.analysis(DominatorTreeFabric)
+class LoopDetection internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<LoopInfo>() {
+    private val dominatorTree: DominatorTree = functionData.analysis(DominatorTreeFabric)
 
     private fun evaluate(): LoopInfo {
         val loopHeaders = hashMapOf<Block, List<LoopBlockData>>()
-        for (bb in blocks.postorder()) {
+        for (bb in functionData.postorder()) {
             for (p in bb.predecessors()) {
                 if (!dominatorTree.dominates(bb, p)) {
                     continue

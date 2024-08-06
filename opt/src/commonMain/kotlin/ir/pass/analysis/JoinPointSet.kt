@@ -18,9 +18,9 @@ class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock,
     }
 }
 
-class JoinPointSetEvaluate internal constructor(private val blocks: FunctionData): FunctionAnalysisPass<JoinPointSetResult>() {
-    private val frontiers = blocks.analysis(DominatorTreeFabric).frontiers()
-    private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(blocks.size()) { bb: Label -> bb.index }
+class JoinPointSetEvaluate internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<JoinPointSetResult>() {
+    private val frontiers = functionData.analysis(DominatorTreeFabric).frontiers()
+    private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(functionData.size()) { bb: Label -> bb.index }
 
     private fun hasUserInBlock(bb: AnyBlock, variable: Alloc): Boolean {
         if (bb === variable.owner()) {
@@ -65,7 +65,7 @@ class JoinPointSetEvaluate internal constructor(private val blocks: FunctionData
     }
 
     private fun calculate(): JoinPointSetResult {
-        val allocInfo = blocks.analysis(AllocStoreAnalysisFabric)
+        val allocInfo = functionData.analysis(AllocStoreAnalysisFabric)
 
         for ((v, vStores) in allocInfo) {
             calculateForVariable(v, vStores as MutableSet<AnyBlock>)
