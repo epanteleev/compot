@@ -1,21 +1,10 @@
 package ir.platform.x64.regalloc
 
 import ir.value.LocalValue
-import asm.x64.Operand
-import common.assertion
-import ir.instruction.Generate
 
 
-class Group(val values: List<LocalValue>, val precolored: Operand? = null) {
-    val stackAllocGroup: Boolean = values[0] is Generate
-
-    init {
-        if (stackAllocGroup) {
-            assertion( values.find { it !is Generate } == null) {
-                "must have only stackalloc values values=$values"
-            }
-        }
-    }
+class Group(val values: List<LocalValue>) {
+    fun contains(value: LocalValue): Boolean = values.contains(value)
 
     override fun hashCode(): Int = values.hashCode()
 
@@ -34,8 +23,6 @@ class Group(val values: List<LocalValue>, val precolored: Operand? = null) {
         other as Group
 
         if (values != other.values) return false
-        if (precolored != other.precolored) return false
-        if (stackAllocGroup != other.stackAllocGroup) return false
 
         return true
     }

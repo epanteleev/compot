@@ -71,6 +71,10 @@ private class BasePointerAddressedStackFrame : StackFrame {
     }
 
     override fun returnSlot(slot: Address, size: Int) {
+        if (freeStackSlots.containsKey(size)) {
+            return
+        }
+
         freeStackSlots[size] = slot
     }
 

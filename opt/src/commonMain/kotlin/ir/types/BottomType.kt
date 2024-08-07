@@ -2,7 +2,7 @@ package ir.types
 
 object BottomType : TrivialType, NonTrivialType, PrimitiveType {
     override fun sizeOf(): Int {
-        throw IllegalStateException("Cannot get size of bottom type")
+        return 0
     }
 
     override fun toString(): String = "undef"
