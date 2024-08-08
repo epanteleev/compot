@@ -50,6 +50,8 @@ class TupleDiv private constructor(id: Identity, owner: Block, tp: TupleType, a:
 
     companion object {
         const val NAME = "div"
+        const val FIRST = 0
+        const val SECOND = 1
 
         fun make(id: Identity, owner: Block, type: ArithmeticType, a: Value, b: Value): TupleDiv {
             val aType = a.type()

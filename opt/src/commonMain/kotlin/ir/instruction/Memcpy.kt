@@ -24,7 +24,7 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
             "size should be 2 in $this instruction"
         }
 
-        return operands[0]
+        return operands[DESTINATION]
     }
 
     fun source(): Value {
@@ -32,7 +32,7 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
             "size should be 2 in $this instruction"
         }
 
-        return operands[1]
+        return operands[SOURCE]
     }
 
     fun length(): UnsignedIntegerConstant {
@@ -40,11 +40,14 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
             "size should be 2 in $this instruction"
         }
 
-        return operands[2] as UnsignedIntegerConstant
+        return operands[LENGTH] as UnsignedIntegerConstant
     }
 
     companion object {
         const val NAME = "memcpy"
+        const val DESTINATION = 0
+        const val SOURCE = 1
+        const val LENGTH = 2
 
         fun make(id: Identity, owner: Block, dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy {
             require(isAppropriateTypes(dst.type(), src.type())) {

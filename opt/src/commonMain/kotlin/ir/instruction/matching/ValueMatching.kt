@@ -73,7 +73,7 @@ fun generate(): ValueMatcher = {
     it is Generate
 }
 
-inline fun alloc(crossinline type: TypeMatcher): ValueMatcher = {
+inline fun alloc(crossinline type: TypeMatcher): InstructionMatcher = {
     it is Alloc && type(it.allocatedType)
 }
 

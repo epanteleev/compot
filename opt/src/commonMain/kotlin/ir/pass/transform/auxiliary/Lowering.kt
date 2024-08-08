@@ -14,11 +14,11 @@ class Lowering private constructor(private val cfg: FunctionData) {
         fun closure(bb: Block, inst: Instruction): Instruction? = when {
             store(generate(), nop()) (inst) -> { inst as Store
                 val toValue = inst.pointer().asValue<Generate>()
-                bb.update(inst) { it.move(toValue, inst.value()) }
+                bb.replace(inst) { it.move(toValue, inst.value()) }
             }
             load(generate()) (inst) -> { inst as Load
                 val fromValue = inst.operand().asValue<Generate>()
-                bb.update(inst) { it.copy(fromValue) }
+                bb.replace(inst) { it.copy(fromValue) }
             }
             else -> inst
         }
@@ -41,11 +41,11 @@ class Lowering private constructor(private val cfg: FunctionData) {
                             val offset = bb.insertBefore(inst) {
                                 it.arithmeticBinary(index, ArithmeticBinaryOp.Mul, Constant.of(index.type(), baseType.sizeOf()))
                             }
-                            return bb.update(inst) { it.leaStack(inst.source(), Type.I8, offset) }
+                            return bb.replace(inst) { it.leaStack(inst.source(), Type.I8, offset) }
                         }
                         else -> {
                             baseType as PrimitiveType
-                            return bb.update(inst) { it.leaStack(inst.source(), baseType, inst.index()) }
+                            return bb.replace(inst) { it.leaStack(inst.source(), baseType, inst.index()) }
                         }
                     }
 
@@ -57,15 +57,15 @@ class Lowering private constructor(private val cfg: FunctionData) {
                                 is AggregateType -> {
                                     val index = inst.index(0).toInt()
                                     val offset = tp.offset(index)
-                                    bb.update(inst) { it.leaStack(inst.source(), Type.I8, Constant.of(Type.U32, offset)) }
+                                    bb.replace(inst) { it.leaStack(inst.source(), Type.I8, Constant.of(Type.U32, offset)) }
                                 }
                                 else -> {
                                     tp as PrimitiveType
-                                    bb.update(inst) { it.leaStack(inst.source(), tp, inst.index(0)) }
+                                    bb.replace(inst) { it.leaStack(inst.source(), tp, inst.index(0)) }
                                 }
                             }
                         }
-                        is StructType -> bb.update(inst) { it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index(0).toInt()))) }
+                        is StructType -> bb.replace(inst) { it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index(0).toInt()))) }
                     }
                 }
             }
@@ -102,26 +102,26 @@ class Lowering private constructor(private val cfg: FunctionData) {
             when {
                 store(gfpOrGep(generate().not(), nop()), nop()) (inst) -> { inst as Store
                     val pointer = inst.pointer().asValue<ValueInstruction>()
-                    val move = bb.update(inst) { it.move(getSource(pointer), getIndex(pointer), inst.value()) }
+                    val move = bb.replace(inst) { it.move(getSource(pointer), getIndex(pointer), inst.value()) }
                     killOnDemand(bb, pointer)
                     return move
                 }
                 store(gfpOrGep(generate(), nop()), nop()) (inst) -> { inst as Store
                     val pointer = inst.pointer().asValue<ValueInstruction>()
-                    val st = bb.update(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
+                    val st = bb.replace(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
                     killOnDemand(bb, pointer)
                     return st
                 }
                 load(gfpOrGep(generate().not(), nop())) (inst) -> { inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
-                    val copy = bb.update(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
+                    val copy = bb.replace(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
                     killOnDemand(bb, pointer)
                     return copy
                 }
                 load(gfpOrGep(generate(), nop())) (inst) -> { inst as Load
                     val pointer = inst.operand().asValue<ValueInstruction>()
                     val index = getIndex(pointer)
-                    val copy = bb.update(inst) { it.loadFromStack(getSource(pointer), inst.type(), index) }
+                    val copy = bb.replace(inst) { it.loadFromStack(getSource(pointer), inst.type(), index) }
                     killOnDemand(bb, pointer)
                     return copy
                 }
@@ -157,21 +157,21 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     val extFirst  = bb.insertBefore(inst) { it.sext(inst.first(), Type.I16) }
                     val extSecond = bb.insertBefore(inst) { it.sext(inst.second(), Type.I16) }
                     val newDiv = bb.insertBefore(inst) { it.arithmeticBinary(extFirst, ArithmeticBinaryOp.Div, extSecond) }
-                    bb.update(inst) { it.trunc(newDiv, Type.I8) }
+                    bb.replace(inst) { it.trunc(newDiv, Type.I8) }
                     return newDiv
                 }
                 binary(ArithmeticBinaryOp.Div, constant().not(), constant()) (inst) -> { inst as ArithmeticBinary
                     // TODO temporal
                     val second = inst.second()
                     val copy = bb.insertBefore(inst) { it.copy(second) }
-                    inst.update(1, copy )
+                    bb.updateDF(inst, ArithmeticBinary.SECOND, copy)
                     return inst
                 }
                 tupleDiv(constant().not(), constant()) (inst) -> { inst as TupleDiv
                     // TODO temporal
                     val second = inst.second()
                     val copy = bb.insertBefore(inst) { it.copy(second) }
-                    inst.update(1, copy )
+                    bb.updateDF(inst, TupleDiv.SECOND, copy)
                     return inst
                 }
                 tupleDiv(value(i8()), value(i8())) (inst) -> { inst as TupleDiv
@@ -195,9 +195,9 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     val divProj = inst.proj(0)
                     if (divProj != null) {
                         val proj     = bb.insertBefore(inst) { it.proj(newDiv, 0) }
-                        val truncate = bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
-
-                        divProj.replaceUsages(truncate)
+                        val truncate = bb.updateOf(divProj) {
+                            bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
+                        }
                         killOnDemand(bb, divProj)
                         last = truncate
                     }
@@ -205,9 +205,9 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     val remProj = inst.proj(1)
                     if (remProj != null) {
                         val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
-                        val truncate = bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
-
-                        remProj.replaceUsages(truncate)
+                        val truncate = bb.updateOf(remProj) {
+                            bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
+                        }
                         killOnDemand(bb, remProj)
                         last = truncate
                     }
@@ -228,7 +228,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     val extOnTrue  = bb.insertBefore(inst) { it.sext(inst.onTrue(), Type.I16) }
                     val extOnFalse = bb.insertBefore(inst) { it.sext(inst.onFalse(), Type.I16) }
                     val newSelect  = bb.insertBefore(inst) { it.select(inst.condition(), Type.I16, extOnTrue, extOnFalse) }
-                    bb.update(inst) { it.trunc(newSelect, Type.I8) }
+                    bb.replace(inst) { it.trunc(newSelect, Type.I8) }
                     return newSelect
                 }
                 select(nop(), value(u8()), value(u8())) (inst) -> { inst as Select
@@ -244,7 +244,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     val extOnTrue  = bb.insertBefore(inst) { it.zext(inst.onTrue(), Type.U16) }
                     val extOnFalse = bb.insertBefore(inst) { it.zext(inst.onFalse(), Type.U16) }
                     val newSelect  = bb.insertBefore(inst) { it.select(inst.condition(), Type.U16, extOnTrue, extOnFalse) }
-                    bb.update(inst) { it.trunc(newSelect, Type.U8) }
+                    bb.replace(inst) { it.trunc(newSelect, Type.U8) }
                     return newSelect
                 }
             }
@@ -260,30 +260,30 @@ class Lowering private constructor(private val cfg: FunctionData) {
         fun closure(bb: Block, inst: Instruction): Instruction {
             when {
                 alloc() (inst) -> { inst as Alloc
-                    return bb.update(inst) { it.gen(inst.allocatedType) }
+                    return bb.replace(inst) { it.gen(inst.allocatedType) }
                 }
                 store(nop(), generate()) (inst) -> { inst as Store
                     val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
-                    inst.update(VALUE, lea)
+                    bb.updateDF(inst, VALUE, lea)
                     return inst
                 }
                 copy(generate()) (inst) -> { inst as Copy
-                    return bb.update(inst) { it.lea(inst.origin() as Generate) }
+                    return bb.replace(inst) { it.lea(inst.origin() as Generate) }
                 }
                 ptr2int(generate()) (inst) -> { inst as Pointer2Int
                     val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
-                    inst.update(0, lea)
+                    bb.updateDF(inst, Pointer2Int.SOURCE, lea)
                     return inst
                 }
                 // TODO memcpy can be replaced with moves in some cases
                 memcpy(nop(), generate(), nop()) (inst) -> { inst as Memcpy
                     val src = bb.insertBefore(inst) { it.lea(inst.source().asValue<Generate>()) }
-                    inst.update(1, src)
+                    bb.updateDF(inst, Memcpy.SOURCE, src)
                     return inst.prev() as Instruction //TODO refactor
                 }
                 memcpy(generate(), nop(), nop()) (inst) -> { inst as Memcpy
                     val dst = bb.insertBefore(inst) { it.lea(inst.destination().asValue<Generate>()) }
-                    inst.update(0, dst)
+                    bb.updateDF(inst, Memcpy.DESTINATION, dst)
                     return inst.prev() as Instruction //TODO refactor
                 }
             }

@@ -46,13 +46,13 @@ class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, pri
     }
 
     fun updateDataFlow(closure: (Block, Value) -> Value) {
-        incoming().forEachWith(operands()) { bb, value, idx ->
+        zipWithIndex { bb, value, idx ->
             update(idx, closure(bb, value))
         }
     }
 
     fun updateControlFlow(closure: (Block, Value) -> Block) {
-        incoming().forEachWith(operands()) { bb, value, idx ->
+        zipWithIndex { bb, value, idx ->
             incoming[idx] = closure(bb, value)
         }
     }

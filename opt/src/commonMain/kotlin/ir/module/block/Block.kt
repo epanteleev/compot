@@ -11,7 +11,8 @@ import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 
 
-class Block private constructor(override val index: Int): AnyInstructionFabric, AnyBlock, Iterable<Instruction> {
+class Block private constructor(override val index: Int):
+    AnyInstructionFabric, AnyBlock, Iterable<Instruction> {
     private val instructions = InstructionList()
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
@@ -111,25 +112,80 @@ class Block private constructor(override val index: Int): AnyInstructionFabric, 
     }
 
     fun<T> insertAfter(after: Instruction, builder: (AnyInstructionFabric) -> T): T {
+        assertion(after.owner() === this) {
+            "after=$after is not in bb=$this"
+        }
+
         insertionStrategy = InsertAfter(after)
         return builder(this)
     }
 
     fun<T> insertBefore(before: Instruction, builder: (AnyInstructionFabric) -> T): T {
+        assertion(before.owner() === this) {
+            "before=$before is not in bb=$this"
+        }
+
         insertionStrategy = InsertBefore(before)
         return builder(this)
     }
 
-    inline fun<reified T: Instruction> update(instruction: Instruction, crossinline builder: (AnyInstructionFabric) -> T): T {
+    inline fun<reified T: Instruction> replace(instruction: Instruction, crossinline builder: (AnyInstructionFabric) -> T): T {
+        assertion(instruction.owner() === this) {
+            "instruction=$instruction is not in bb=$this"
+        }
+
         val newInstruction = insertBefore(instruction) { builder(it) }
         if (instruction is LocalValue) {
             assertion(newInstruction is LocalValue) {
                 "should be local value, but newInstruction=$newInstruction"
             }
-            instruction.replaceUsages(newInstruction as LocalValue)
+            updateOf(instruction) { newInstruction as LocalValue }
         }
         kill(instruction, Value.UNDEF)
         return newInstruction
+    }
+
+    fun<V: Value> updateOf(localValue: LocalValue, replacement: () -> V): V {
+        val valueToReplace = replacement()
+        val usedIn = localValue.release()
+        for (user in usedIn) {
+            for ((idxUse, use) in user.operands().withIndex()) {
+                if (use !== localValue) {
+                    continue
+                }
+                // New value can use the old value
+                if (user == valueToReplace) {
+                    continue
+                }
+
+                user.update(idxUse, valueToReplace)
+            }
+        }
+        return valueToReplace
+    }
+
+    fun updateDF(instruction: Instruction, closure: (Value) -> Value) {
+        assertion(instruction.owner() === this) {
+            "instruction=$instruction is not in bb=$this"
+        }
+
+        instruction.update { value -> closure(value) }
+    }
+
+    fun updateDF(instruction: Instruction, index: Int, value: Value) {
+        assertion(instruction.owner() === this) {
+            "instruction=$instruction is not in bb=$this"
+        }
+
+        instruction.update(index, value)
+    }
+
+    fun updateCF(instruction: TerminateInstruction, closure: (Block) -> Block) {
+        assertion(instruction.owner() === this) {
+            "instruction=$instruction is not in bb=$this"
+        }
+
+        instruction.updateTargets { closure(it) }
     }
 
     override fun contains(instruction: Instruction): Boolean {
@@ -180,7 +236,7 @@ class Block private constructor(override val index: Int): AnyInstructionFabric, 
 
         val next = instruction.prev()
         if (instruction is LocalValue) {
-            instruction.replaceUsages(replacement)
+            updateOf(instruction) { replacement }
         }
         val removed = remove(instruction)
         removed.destroy()

@@ -21,7 +21,7 @@ class Pointer2Int private constructor(id: Identity, owner: Block, toType: Intege
             "size should be 1 in $this instruction"
         }
 
-        return operands[0]
+        return operands[SOURCE]
     }
 
     override fun type(): IntegerType {
@@ -34,6 +34,7 @@ class Pointer2Int private constructor(id: Identity, owner: Block, toType: Intege
 
     companion object {
         const val NAME = "ptr2int"
+        const val SOURCE = 0
 
         fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Pointer2Int {
             val valueType = value.type()

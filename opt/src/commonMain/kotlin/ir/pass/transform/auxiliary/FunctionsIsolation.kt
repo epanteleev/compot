@@ -17,8 +17,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
 
         val begin = cfg.begin()
         for (arg in cfg.arguments()) {
-            val copy = begin.prepend { it.copy(arg) }
-            arg.replaceUsages(copy)
+            begin.updateOf(arg) { begin.prepend { it.copy(arg) } }
         }
     }
 

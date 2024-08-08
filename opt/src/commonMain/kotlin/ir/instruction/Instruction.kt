@@ -21,13 +21,8 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
         return operands
     }
 
-    fun update(newUsages: Collection<Value>) { //TODO must be removed
-        for ((i, v) in newUsages.withIndex()) {
-            update(i, v)
-        }
-    }
-
-    fun update(closure: (Value) -> Value) {
+    // DO NOT USE THIS METHOD DIRECTLY
+    internal fun update(closure: (Value) -> Value) {
         for ((i, v) in operands.withIndex()) {
             val newValue = closure(v)
             update(i, newValue)
@@ -51,7 +46,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
         }
     }
 
-    fun destroy() {
+    internal fun destroy() {
         if (this is LocalValue) {
             assertion(usedIn().isEmpty()) {
                 "removed useful instruction: removed=$this, users=${usedIn()}"

@@ -56,9 +56,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
         }
 
         for (phi in insertedPhis) {
-            val newUsages = arrayListOf<Value>()
             phi.updateDataFlow { l, v -> renameValues(l, v, phi.type()) }
-            phi.update(newUsages)
         }
     }
 

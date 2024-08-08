@@ -9,7 +9,7 @@ import ir.pass.FunctionAnalysisPassFabric
 
 
 enum class EscapeState {
-    Local,    // Local means the value is local to the function
+    NoEscape, // NoEscape means the value does not escape the function
     Field,    // Field means the value is a field of a local value
     Argument, // Argument means the value is passed as an argument
     Constant, // Constant means the value is a constant
@@ -23,10 +23,10 @@ enum class EscapeState {
             return this
         }
         return when {
-            this == Argument || other == Local -> Argument
-            this == Local || other == Argument -> Argument
-            this == Field || other == Local -> Field
-            this == Local || other == Field -> Field
+            this == Argument || other == NoEscape -> Argument
+            this == NoEscape || other == Argument -> Argument
+            this == Field || other == NoEscape -> Field
+            this == NoEscape || other == Field -> Field
             else -> throw IllegalStateException("Cannot union $this and $other")
         }
     }
@@ -50,11 +50,11 @@ class EscapeAnalysis internal constructor(private val functionData: FunctionData
     }
 
     private fun visitAlloc(alloc: Alloc) {
-        escapeState[alloc] = EscapeState.Local
+        escapeState[alloc] = EscapeState.NoEscape
     }
 
     private fun visitStore(store: Store) {
-        escapeState[store.pointer().asValue()] = union(store.pointer(), EscapeState.Local)
+        escapeState[store.pointer().asValue()] = union(store.pointer(), EscapeState.NoEscape)
         when (val value = store.value()) {
             is Constant   -> escapeState[value] = EscapeState.Constant
             is LocalValue -> escapeState[value] = union(value, EscapeState.Field)
