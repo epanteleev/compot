@@ -8,25 +8,37 @@ import ir.pass.analysis.intervals.LiveIntervalsFabric
 import ir.value.LocalValue
 
 
-class InterferenceGraph(private val graph: Map<LocalValue, Set<LocalValue>>): AnalysisResult() {
+class InterferenceGraph(private val graph: MutableMap<LocalValue, MutableSet<LocalValue>>): AnalysisResult() {
+    internal fun addEdge(from: LocalValue, to: LocalValue) {
+        graph[from]!!.add(to)
+        graph[to]!!.add(from)
+    }
 }
 
-
-class InterferenceGraphBuilder(private val functionData: FunctionData): FunctionAnalysisPass<InterferenceGraph>() {
+class InterferenceGraphBuilder(functionData: FunctionData): FunctionAnalysisPass<InterferenceGraph>() {
     private val liveIntervals = functionData.analysis(LiveIntervalsFabric)
+    private val interferenceGraph = InterferenceGraph(mutableMapOf())
 
-    private fun build(): InterferenceGraph {
-        val graph = mutableMapOf<LocalValue, MutableSet<LocalValue>>()
-        TODO()
+    override fun run(): InterferenceGraph {
+        //TODO Absolutely inefficient!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+        // O(n^2) complexity
+        for ((v1, interval1) in liveIntervals) {
+            for ((v2, interval2) in liveIntervals) {
+                if (interval1 == interval2) {
+                    continue
+                }
+
+                if (interval1.intersect(interval2)) {
+                    interferenceGraph.addEdge(v1,v2)
+                }
+            }
+        }
+
+        return interferenceGraph
     }
 
     override fun name(): String {
         return "InterferenceGraphBuilder"
-    }
-
-    override fun run(): InterferenceGraph {
-        //return build()
-        TODO()
     }
 }
 
