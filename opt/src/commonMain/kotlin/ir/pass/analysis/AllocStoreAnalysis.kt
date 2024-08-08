@@ -9,13 +9,13 @@ import ir.pass.FunctionAnalysisPass
 import ir.pass.FunctionAnalysisPassFabric
 import ir.pass.isLocalVariable
 
-class AllocStoreAnalysisResult(private val storeInfo: Map<Alloc, Set<AnyBlock>>): AnalysisResult(), Iterable<Map.Entry<Alloc, Set<AnyBlock>>> {
+class AllocAnalysisResult(private val storeInfo: Map<Alloc, Set<AnyBlock>>): AnalysisResult(), Iterable<Map.Entry<Alloc, Set<AnyBlock>>> {
     override fun iterator(): Iterator<Map.Entry<Alloc, Set<AnyBlock>>> {
         return storeInfo.iterator()
     }
 }
 
-class AllocStoreAnalysis internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<AllocStoreAnalysisResult>() {
+class AllocStoreAnalysis internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<AllocAnalysisResult>() {
     private val stores: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal() }
 
     override fun name(): String = "AllocStoreAnalysis"
@@ -55,13 +55,13 @@ class AllocStoreAnalysis internal constructor(private val functionData: Function
         return allStores
     }
 
-    override fun run(): AllocStoreAnalysisResult {
-        return AllocStoreAnalysisResult(stores)
+    override fun run(): AllocAnalysisResult {
+        return AllocAnalysisResult(stores)
     }
 }
 
-object AllocStoreAnalysisFabric: FunctionAnalysisPassFabric<AllocStoreAnalysisResult>() {
-    override fun create(functionData: FunctionData): FunctionAnalysisPass<AllocStoreAnalysisResult> {
+object AllocStoreAnalysisFabric: FunctionAnalysisPassFabric<AllocAnalysisResult>() {
+    override fun create(functionData: FunctionData): FunctionAnalysisPass<AllocAnalysisResult> {
         return AllocStoreAnalysis(functionData)
     }
 }

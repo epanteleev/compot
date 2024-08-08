@@ -9,15 +9,14 @@ import ir.platform.x64.regalloc.Group
 data class LiveIntervalsException(override val message: String): Exception(message)
 
 class GroupedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
-    private val valueToGroup: Map<LocalValue, Group>
-
-    init {
-        valueToGroup = hashMapOf()
+    private val valueToGroup = run {
+        val map = hashMapOf<LocalValue, Group>()
         for (group in liveness.keys) {
             for (value in group) {
-                valueToGroup[value] = group
+                map[value] = group
             }
         }
+        map
     }
 
     override fun toString(): String {
