@@ -20,9 +20,8 @@ class FunctionDataBuilderWithContext private constructor(
     private val moduleBuilder: ModuleBuilderWithContext,
     prototype: FunctionPrototype,
     argumentValues: List<ArgumentValue>,
-    blocks: BasicBlocks,
     private val nameMap: MutableMap<String, LocalValue>
-): AnyFunctionDataBuilder(prototype, argumentValues, blocks) {
+): AnyFunctionDataBuilder(prototype, argumentValues) {
     private val nameToLabel = hashMapOf("entry" to bb)
     private val incompletePhis = arrayListOf<PhiContext>()
 
@@ -77,12 +76,12 @@ class FunctionDataBuilderWithContext private constructor(
         }
 
         normalizeBlocks()
-        return FunctionData.create(prototype, blocks, argumentValues)
+        return fd
     }
 
     fun switchLabel(labelTok: LabelDefinition) {
         val label = getBlockOrCreate(labelTok.name)
-        bb = blocks.findBlock(label)
+        switchLabel(label)
     }
 
     fun neg(name: LocalValueToken, valueTok: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticUnary {
@@ -410,12 +409,10 @@ class FunctionDataBuilderWithContext private constructor(
                 return nameToValue
             }
 
-            val basicBlocks = BasicBlocks.create()
-
             val arguments = handleArguments(prototype.arguments())
             val nameMap   = setupNameMap(arguments, argumentValueTokens)
 
-            return FunctionDataBuilderWithContext(moduleBuilder, prototype, arguments, basicBlocks, nameMap)
+            return FunctionDataBuilderWithContext(moduleBuilder, prototype, arguments, nameMap)
         }
     }
 }

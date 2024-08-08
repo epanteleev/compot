@@ -30,19 +30,18 @@ class Precoloring private constructor(private val intervals: LiveIntervals) {
     private fun handlePhiOperands(value: Phi, range: LiveRange) {
         val group = arrayListOf<LocalValue>(value)
         visited.add(value)
-        var liveRange = range
         value.operands { used ->
             if (used !is LocalValue) {
                 return@operands
             }
             assertion(used is Copy) { "expect this invariant: used=$used" }
 
-            liveRange = liveRange.merge(intervals[used])
+            range.merge(intervals[used])
             group.add(used)
             visited.add(used)
         }
 
-        groups[Group(group)] = liveRange
+        groups[Group(group)] = range
     }
 
     private fun handleTuple(value: TupleValue, range: LiveRange) {
@@ -54,9 +53,9 @@ class Precoloring private constructor(private val intervals: LiveIntervals) {
                 return@forEach
             }
 
-            val liveRange = range.merge(intervals[proj])
+            range.merge(intervals[proj])
             val group = Group(arrayListOf<LocalValue>(proj))
-            groups[group] = liveRange
+            groups[group] = range
 
             visited.add(proj)
         }

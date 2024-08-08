@@ -8,7 +8,6 @@ import ir.instruction.*
 import ir.instruction.Copy
 import ir.instruction.lir.*
 import ir.instruction.utils.IRInstructionVisitor
-import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.types.PrimitiveType
@@ -16,24 +15,23 @@ import ir.value.*
 
 
 class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<LocalValue?>() {
-    private val oldBasicBlocks: FunctionData = fd
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
-    private val newCFG = BasicBlocks.create()
-    private val oldToNewBlock = setupNewBasicBlock()
+    private val newCFG         = FunctionData.create(fd.prototype, copyArguments())
+    private val oldToNewBlock  = setupNewBasicBlock()
     private var currentBB: Block? = null
 
     private val bb: Block
         get() = currentBB?: throw RuntimeException("currentBB is null")
 
     private fun setupNewBasicBlock(): Map<Block, Block> {
-        val oldToNew = intMapOf<Block, Block>(oldBasicBlocks.size()) { it.index }
+        val oldToNew = intMapOf<Block, Block>(fd.size()) { it.index }
 
-        for (old in oldBasicBlocks) {
+        for (old in fd) {
             if (old.index == 0) { //TODO
                 oldToNew[old] = newCFG.begin()
                 continue
             }
-            oldToNew[old] = newCFG.createBlock()
+            oldToNew[old] = newCFG.blocks.createBlock()
         }
 
         return oldToNew
@@ -54,13 +52,12 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     fun copy(): FunctionData {
-        val newArgs = copyArguments()
         copyBasicBlocks()
-        return FunctionData.create(fd.prototype, newCFG, newArgs)
+        return newCFG
     }
 
     private fun copyBasicBlocks() {
-        for (bb in oldBasicBlocks.preorder()) {
+        for (bb in fd.preorder()) {
             copyBasicBlocks(bb)
         }
 

@@ -11,18 +11,16 @@ import ir.module.block.InstructionFabric
 import ir.module.builder.AnyFunctionDataBuilder
 
 
-class FunctionDataBuilder private constructor(
-    prototype: FunctionPrototype,
-    argumentValues: List<ArgumentValue>,
-    blocks: BasicBlocks
-): AnyFunctionDataBuilder(prototype, argumentValues, blocks), InstructionFabric {
-    override fun build(): FunctionData {
-        normalizeBlocks()
-        return FunctionData.create(prototype, blocks, argumentValues)
+class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argumentValues: List<ArgumentValue>):
+    AnyFunctionDataBuilder(prototype, argumentValues), InstructionFabric {
+
+    init {
+        switchLabel(fd.blocks.begin())
     }
 
-    fun switchLabel(label: Label) {
-        bb = blocks.findBlock(label)
+    override fun build(): FunctionData {
+        normalizeBlocks()
+        return fd
     }
 
     //TODO bad design???
@@ -83,7 +81,7 @@ class FunctionDataBuilder private constructor(
     }
 
     fun branch(target: Label) {
-        branch(blocks.findBlock(target))
+        branch(fd.blocks.findBlock(target))
     }
 
     override fun branch(target: Block): Branch {
@@ -187,10 +185,8 @@ class FunctionDataBuilder private constructor(
             isVararg: Boolean = false
         ): FunctionDataBuilder {
             val prototype = FunctionPrototype(name, returnType, arguments, isVararg)
-            val basicBlocks = BasicBlocks.create()
 
-            val builder = FunctionDataBuilder(prototype, argumentValues, basicBlocks)
-            builder.switchLabel(basicBlocks.begin())
+            val builder = FunctionDataBuilder(prototype, argumentValues)
             return builder
         }
 

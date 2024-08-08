@@ -75,7 +75,8 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
     }
 
     companion object {
-        fun create(prototype: FunctionPrototype, basicBlocks: BasicBlocks, argumentValues: List<ArgumentValue>): FunctionData {
+        fun create(prototype: FunctionPrototype, argumentValues: List<ArgumentValue>): FunctionData {
+            val basicBlocks = BasicBlocks.create()
             return FunctionData(prototype, argumentValues, basicBlocks)
         }
     }
