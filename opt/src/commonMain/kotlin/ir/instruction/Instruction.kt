@@ -17,9 +17,29 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
     fun owner(): Block = owner
     fun identity(): Identity = id
 
-    fun operands(): Array<Value> {
-        return operands
+    fun operand(index: Int): Value {
+        assertion(0 <= index && index < operands.size) {
+            "out of range in $this"
+        }
+
+        return operands[index]
     }
+
+    fun operands(visitor: (Value) -> Unit) {
+        operands.forEach(visitor)
+    }
+
+    fun operandsWithIndex(visitor: (Int, Value) -> Unit) {
+        operands.forEachIndexed(visitor)
+    }
+
+    fun containsOperand(value: Value): Boolean {
+        return operands.contains(value)
+    }
+
+    fun countOperands(): Int = operands.size
+
+    fun emptyOperands(): Boolean = operands.isEmpty()
 
     // DO NOT USE THIS METHOD DIRECTLY
     internal fun update(closure: (Value) -> Value) {
@@ -29,7 +49,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
         }
     }
 
-    fun update(index: Int, new: Value) { // TODO inline class for 'index'?
+    internal fun update(index: Int, new: Value) { // TODO inline class for 'index'?
         assertion(0 <= index && index < operands.size) {
             "out of range in $this"
         }

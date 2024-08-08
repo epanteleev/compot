@@ -86,7 +86,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     private fun updatePhis() {
         for (bb in newCFG) {
             bb.phis { phi ->
-                phi.updateDataFlow { _, value -> mapUsage(value) }
+                bb.updateDF(phi) { _, value -> mapUsage(value) }
             }
         }
     }
@@ -103,6 +103,15 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         }
 
         return value
+    }
+
+    private inline fun mapOperands(old: Instruction): List<Value> {
+        val newUsages = arrayListOf<Value>()
+        old.operands {
+            newUsages.add(mapUsage<Value>(it))
+        }
+
+        return newUsages
     }
 
     private fun mapBlock(old: Block): Block {
@@ -154,14 +163,14 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     override fun visit(call: Call): LocalValue {
-        val newUsages = call.operands().map { mapUsage<Value>(it) }
+        val newUsages = mapOperands(call)
         val target    = mapBlock(call.target())
 
         return bb.call(call.prototype(), newUsages, target)
     }
 
     override fun visit(tupleCall: TupleCall): LocalValue {
-        val newUsages = tupleCall.operands().map { mapUsage<Value>(it) }
+        val newUsages = mapOperands(tupleCall)
         val target    = mapBlock(tupleCall.target())
 
         return bb.tupleCall(tupleCall.prototype(), newUsages, target)
@@ -261,14 +270,17 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     override fun visit(phi: Phi): ValueInstruction {
-        val newUsages   = phi.operands().toList()
+        val newUsages = arrayListOf<Value>()
+        phi.operands {
+            newUsages.add(it)
+        }
         val newIncoming = phi.incoming().mapTo(arrayListOf()) { mapBlock(it) } //TODO
 
         return bb.uncompletedPhi(phi.type(), newUsages, newIncoming) //TODO
     }
 
     override fun visit(returnValue: ReturnValue): ValueInstruction? {
-        val value = arrayFrom(returnValue.operands()) { mapUsage<Value>(it) }
+        val value = arrayFrom(mapOperands(returnValue))
         bb.ret(returnValue.type(), value)
         return null
     }
@@ -279,7 +291,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     override fun visit(indirectionCall: IndirectionCall): LocalValue {
-        val newUsages = indirectionCall.operands().map { mapUsage<Value>(it) }
+        val newUsages = mapOperands(indirectionCall)
         val pointer   = mapUsage<Value>(indirectionCall.pointer())
 
         val target    = mapBlock(indirectionCall.target())
@@ -288,7 +300,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     override fun visit(indirectionVoidCall: IndirectionVoidCall): ValueInstruction? {
-        val newUsages = indirectionVoidCall.operands().map { mapUsage<Value>(it) }
+        val newUsages = mapOperands(indirectionVoidCall)
         val pointer   = mapUsage<Value>(indirectionVoidCall.pointer())
         val target    = mapBlock(indirectionVoidCall.target())
 
@@ -318,7 +330,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     override fun visit(voidCall: VoidCall): ValueInstruction? {
-        val newUsages = voidCall.operands().map { mapUsage<Value>(it) }
+        val newUsages = mapOperands(voidCall)
         val target    = mapBlock(voidCall.target())
         bb.vcall(voidCall.prototype(), newUsages, target)
         return null

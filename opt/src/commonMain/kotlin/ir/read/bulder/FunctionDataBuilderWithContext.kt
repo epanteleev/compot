@@ -422,7 +422,6 @@ class FunctionDataBuilderWithContext private constructor(
 
 private data class PhiContext(val phi: Phi, val valueTokens: List<AnyValueToken>, val expectedType: PrimitiveType) {
     fun completePhi(valueMap: Map<String, LocalValue>) {
-        val values = phi.operands()
         for ((idx, tok) in valueTokens.withIndex()) {
             if (tok !is LocalValueToken) {
                 continue
@@ -434,7 +433,7 @@ private data class PhiContext(val phi: Phi, val valueTokens: List<AnyValueToken>
             if (local.type() != expectedType) {
                 throw ParseErrorException("mismatch type ${local.type()} in ${tok.position()}")
             }
-            values[idx] = local
+            phi.owner().updateDF(phi, idx, local)
         }
     }
 }

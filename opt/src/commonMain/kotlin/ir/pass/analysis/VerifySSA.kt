@@ -40,7 +40,7 @@ class VerifySSA private constructor(private val module: Module, private val func
     private fun validateArguments() {
         for (arg in functionData.arguments()) {
             for (user in arg.usedIn()) {
-                assert(user.operands().contains(arg)) {
+                assert(user.containsOperand(arg)) {
                     "should be inst='${arg}', user='${user.dump()}', usedIn='${arg.usedIn()}'"
                 }
             }
@@ -76,9 +76,9 @@ class VerifySSA private constructor(private val module: Module, private val func
 
     /** Check whether definition dominates to usage. */
     private fun validateDefUse(instruction: Instruction, block: Block) {
-        for (use in instruction.operands()) {
+        instruction.operands { use ->
             if (use !is LocalValue) {
-                continue
+                return@operands
             }
 
             val definedIn = creation[use].block
@@ -95,7 +95,7 @@ class VerifySSA private constructor(private val module: Module, private val func
 
             if (instruction is LocalValue) {
                 for (user in instruction.usedIn()) {
-                    assert(user.operands().contains(instruction)) {
+                    assert(user.containsOperand(instruction)) {
                         "should be inst='${instruction.dump()}', user='${user.dump()}', usedIn='${instruction.usedIn()}'"
                     }
                 }
@@ -304,13 +304,18 @@ class VerifySSA private constructor(private val module: Module, private val func
 
     override fun visit(phi: Phi) {
         assert(Phi.typeCheck(phi)) {
-            "Inconsistent phi instruction '${phi.dump()}': different types ${phi.operands().map { it.type() }.joinToString()}"
+            val operands = buildString {
+                phi.operands {
+                    append(it.type())
+                    append(" ")
+                }
+            }
+            "Inconsistent phi instruction '${phi.dump()}': different types $operands"
         }
 
-        val blocks = phi.incoming()
-        blocks.forEachWith(phi.operands()) { incoming, use ->
+        phi.zip { incoming, use ->
             if (use !is LocalValue) {
-                return@forEachWith
+                return@zip
             }
             val actual = creation[use].block
             assert(dominatorTree.dominates(actual, incoming)) {

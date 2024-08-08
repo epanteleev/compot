@@ -29,32 +29,25 @@ class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, pri
 
     fun incoming(): List<Block> = incoming
 
+    // DO NOT USE THIS METHOD DIRECTLY
+    internal fun updateIncoming(block: Block, idx: Int) {
+        incoming[idx] = block
+    }
+
     fun zip(closure: (Block, Value) -> Unit) {
-        incoming().forEachWith(operands()) { bb, value ->
+        incoming().forEachWith(operands) { bb, value ->
             closure(bb, value)
         }
     }
 
     fun zipWithIndex(closure: (Block, Value, Int) -> Unit) {
-        incoming().forEachWith(operands()) { bb, value, i ->
+        incoming().forEachWith(operands) { bb, value, i ->
             closure(bb, value, i)
         }
     }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
-    }
-
-    fun updateDataFlow(closure: (Block, Value) -> Value) {
-        zipWithIndex { bb, value, idx ->
-            update(idx, closure(bb, value))
-        }
-    }
-
-    fun updateControlFlow(closure: (Block, Value) -> Block) {
-        zipWithIndex { bb, value, idx ->
-            incoming[idx] = closure(bb, value)
-        }
     }
 
     companion object {
@@ -87,7 +80,7 @@ class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, pri
         }
 
         fun typeCheck(phi: Phi): Boolean {
-            return isAppropriateTypes(phi.type(), phi.operands())
+            return isAppropriateTypes(phi.type(), phi.operands)
         }
     }
 }

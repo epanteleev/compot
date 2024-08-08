@@ -45,13 +45,13 @@ class LivenessAnalysis internal constructor(private val functionData: FunctionDa
             for (inst in bb) {
                 // Handle input operands
                 if (inst !is Phi) {
-                    for (usage in inst.operands()) {
+                    inst.operands { usage ->
                         if (usage !is LocalValue) {
-                            continue
+                            return@operands
                         }
 
                         if (kill.contains(usage)) {
-                            continue
+                            return@operands
                         }
 
                         gen.add(usage)

@@ -10,7 +10,7 @@ import ir.instruction.utils.IRInstructionVisitor
 class ReturnValue private constructor(id: Identity, owner: Block, val returnType: Type, values: Array<Value>): Return(id, owner, values) {
     override fun dump(): String {
         val stringBuilder = StringBuilder("ret ${type()}")
-        for (value in operands()) {
+        for (value in operands) {
             stringBuilder.append(" ")
             stringBuilder.append(value)
         }
@@ -18,8 +18,8 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
     }
 
     fun returnValue(index: Int): Value {
-        if (index >= operands().size && index < 0) {
-            throw IndexOutOfBoundsException("index=$index, operands=${operands().joinToString { it.toString() }}")
+        if (index >= operands.size && index < 0) {
+            throw IndexOutOfBoundsException("index=$index, operands=${operands.joinToString { it.toString() }}")
         }
 
         return operands[index]
@@ -55,7 +55,7 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
         }
 
         fun typeCheck(retValue: ReturnValue): Boolean {
-            return isAppropriateType(retValue.type(), retValue.operands())
+            return isAppropriateType(retValue.type(), retValue.operands)
         }
     }
 }

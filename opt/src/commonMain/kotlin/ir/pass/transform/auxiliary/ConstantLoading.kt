@@ -15,14 +15,14 @@ internal class ConstantLoading private constructor(private val cfg: FunctionData
     private fun pass() {
         fun closure(bb: Block, inst: Instruction): Instruction {
             var inserted: Instruction? = null
-            for ((i, use) in inst.operands().withIndex()) {
+            inst.operandsWithIndex { i, use ->
                 if (use is AggregateConstant || use is FunctionSymbol) {
                     val lea = bb.insertBefore(inst) { it.lea(use) }
-                    inst.update(i, lea)
+                    bb.updateDF(inst, i, lea)
                     inserted = lea
                 } else if (use is GlobalConstant) {
                     val lea = bb.insertBefore(inst) { it.copy(use) }
-                    inst.update(i, lea)
+                    bb.updateDF(inst, i, lea)
                     inserted = lea
                 }
             }
