@@ -1,5 +1,6 @@
 package ir.pass.analysis.intervals
 
+import common.assertion
 import ir.value.LocalValue
 import ir.module.FunctionData
 import ir.utils.OrderedLocation
@@ -78,7 +79,22 @@ class LiveIntervalsBuilder internal constructor(private val data: FunctionData):
         setupArguments()
         setupLiveRanges()
         evaluateUsages()
+
+        checkConsistency()
         return LiveIntervals(intervals)
+    }
+
+    /**
+     * Check that all live ranges are in order by their start.
+     */
+    private fun checkConsistency() {
+        var current: Int = Int.MIN_VALUE
+        for ((_, range) in intervals) {
+            assertion(range.begin().order >= current) {
+                "current=${range.begin().order} expected=${current}"
+            }
+            current = range.begin().order
+        }
     }
 }
 

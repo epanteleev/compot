@@ -10,8 +10,23 @@ import ir.value.LocalValue
 
 class InterferenceGraph(private val graph: MutableMap<LocalValue, MutableSet<LocalValue>>): AnalysisResult() {
     internal fun addEdge(from: LocalValue, to: LocalValue) {
-        graph[from]!!.add(to)
-        graph[to]!!.add(from)
+        val fromEdge = graph[from]
+        if (fromEdge == null) {
+            graph[from] = mutableSetOf(to)
+        } else {
+            fromEdge.add(to)
+        }
+
+        val toEdge = graph[to]
+        if (toEdge == null) {
+            graph[to] = mutableSetOf(from)
+        } else {
+            toEdge.add(from)
+        }
+    }
+
+    fun neighbors(value: LocalValue): Set<LocalValue> {
+        return graph[value]!!
     }
 }
 

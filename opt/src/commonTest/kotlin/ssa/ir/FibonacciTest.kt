@@ -8,7 +8,6 @@ import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.block.Label
 import ir.module.builder.impl.ModuleBuilder
-import ir.pass.analysis.LoopDetection
 import ir.pass.analysis.VerifySSA
 import ir.pass.transform.Mem2RegFabric
 import ir.pass.CompileContextBuilder
@@ -21,6 +20,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+
 
 class FibonacciTest {
     private fun withBasicBlocks(): Module {

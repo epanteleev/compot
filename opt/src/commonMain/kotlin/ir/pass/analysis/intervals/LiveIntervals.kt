@@ -28,20 +28,24 @@ class GroupedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
         return builder.toString()
     }
 
-    operator fun get(v: LocalValue): LiveRange {
-        return liveness[valueToGroup[v]]!!
+    operator fun get(v: LocalValue): LiveRange? {
+        return liveness[valueToGroup[v]]
     }
 
-    operator fun get(v: Group): LiveRange {
-        return liveness[v]!!
+    operator fun get(v: Group): LiveRange? {
+        return liveness[v]
     }
 
     operator fun iterator(): Iterator<Map.Entry<Group, LiveRange>> {
         return liveness.iterator()
     }
+
+    fun getGroup(value: LocalValue): Group? {
+        return valueToGroup[value]
+    }
 }
 
-class LiveIntervals(private val liveIntervals: Map<LocalValue, LiveRange>): AnalysisResult() {
+class LiveIntervals(private val liveIntervals: MutableMap<LocalValue, LiveRangeImpl>): AnalysisResult() {
     override fun toString(): String {
         val builder = StringBuilder()
         for ((v, ranges) in liveIntervals) {
@@ -58,6 +62,10 @@ class LiveIntervals(private val liveIntervals: Map<LocalValue, LiveRange>): Anal
         }
 
         return range as LiveRange
+    }
+
+    operator fun set(v: LocalValue, other: LiveRange) {
+        liveIntervals[v] = other as LiveRangeImpl
     }
 
     operator fun iterator(): Iterator<Map.Entry<LocalValue, LiveRange>> {
