@@ -8,7 +8,7 @@ import ir.platform.x64.regalloc.Group
 
 data class LiveIntervalsException(override val message: String): Exception(message)
 
-class GroupedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
+class MergedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
     private val valueToGroup = run {
         val map = hashMapOf<LocalValue, Group>()
         for (group in liveness.keys) {
