@@ -528,7 +528,7 @@ private class CodeEmitter(private val data: FunctionData,
         // so that we can easily get the caller save registers
         // from the live-out of the block
         call as Instruction
-        val liveOut = liveness[call.owner()].liveOut()
+        val liveOut = liveness.liveOut(call.owner())
         val exclude = if (call is LocalValue) {
             // Exclude call from liveOut
             // because this is value haven't been existed when the call is executed

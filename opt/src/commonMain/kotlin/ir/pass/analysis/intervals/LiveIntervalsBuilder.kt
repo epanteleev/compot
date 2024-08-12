@@ -55,7 +55,7 @@ class LiveIntervalsBuilder internal constructor(private val data: FunctionData):
         var ordering = -1
         for (bb in linearScanOrder) {
             // TODO Improvement: skip this step if CFG doesn't have any loops.
-            for (op in liveness[bb].liveOut()) {
+            for (op in liveness.liveOut(bb)) {
                 val liveRange = intervals[op] ?: throw LiveIntervalsException("cannot find $op")
 
                 val index = bb.size + 1

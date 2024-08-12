@@ -158,9 +158,9 @@ class FibonacciTest {
         val liveInfo = cfg.analysis(LivenessAnalysisPassFabric)
 
         assertEquals(8, liveInfo.size)
-        val entry = liveInfo[BlockViewer(0)]
-        assertTrue { entry.liveIn().containsAll(cfg.arguments()) }
-        assertEquals(1, entry.liveIn().size)
+        val entryLiveIn = liveInfo.liveIn(BlockViewer(0))
+        assertTrue { entryLiveIn.containsAll(cfg.arguments()) }
+        assertEquals(1, entryLiveIn.size)
     }
 
     @Test
@@ -176,8 +176,8 @@ class FibonacciTest {
         val liveInfo = cfg.analysis(LivenessAnalysisPassFabric)
 
         assertEquals(8, liveInfo.size)
-        val entry = liveInfo[BlockViewer(0)]
-        assertTrue { entry.liveIn().containsAll(cfg.arguments()) }
-        assertEquals(1, entry.liveIn().size)
+        val entryLiveIn = liveInfo.liveIn(BlockViewer(0))
+        assertTrue { entryLiveIn.containsAll(cfg.arguments()) }
+        assertEquals(1, entryLiveIn.size)
     }
 }

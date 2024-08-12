@@ -5,18 +5,53 @@ import ir.module.FunctionData
 import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
+import ir.pass.analysis.LivenessAnalysisPassFabric
+import ir.value.ArgumentValue
+import ir.value.Constant
+import ir.value.Value
 
 
 internal class FunctionsIsolation private constructor(private val cfg: FunctionData) {
+    private val liveness = cfg.analysis(LivenessAnalysisPassFabric)
+    private val allCalls = run { //TODO separate analysis pass
+        val calls = arrayListOf<Instruction>()
+        for (bb in cfg) {
+            for (inst in bb) {
+                if (inst is Callable) {
+                    calls.add(inst)
+                }
+            }
+        }
+        calls
+    }
+
+    private fun mustBeIsolated(arg: ArgumentValue): Boolean {
+        for (call in allCalls) {
+            call as Callable
+            if (liveness.liveOut(call).contains(arg)) {
+                // Argument is live out of the call
+                return true
+            }
+            if (call.arguments().contains(arg)) {
+                // Argument is used in the call
+                return true
+            }
+        }
+
+        return false
+    }
+
     private fun isolateArgumentValues() {
-        if (isLeafCall()) {
+        if (allCalls.isEmpty()) {
             // Not necessary to insert copies
             return
         }
-        //TODO we don't have to isolate arguments if it isn't live-out from 'call' instruction
-
         val begin = cfg.begin()
         for (arg in cfg.arguments()) {
+            if (!mustBeIsolated(arg)) {
+                continue
+            }
+
             begin.updateUsages(arg) { begin.prepend { it.copy(arg) } }
         }
     }
@@ -32,6 +67,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                 val copy = bb.insertBefore(call) { it.copy(arg) }
                 bb.updateDF(call, i, copy)
             }
+
             call.target().prepend { it.upStackFrame(call) }
             return call
         }
@@ -39,16 +75,6 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         for (bb in cfg) {
             bb.transform { inst -> insertCopies(bb, inst) }
         }
-    }
-
-    private fun isLeafCall(): Boolean {
-        for (bb in cfg) {
-            if (bb.last() is Callable) {
-                return false
-            }
-        }
-
-        return true
     }
 
     fun pass() {

@@ -1,5 +1,6 @@
 package ir.pass.analysis
 
+import ir.instruction.Instruction
 import ir.value.LocalValue
 import ir.instruction.Phi
 import ir.module.FunctionData
@@ -15,8 +16,20 @@ data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal var li
 }
 
 class LivenessAnalysisInfo(private val liveness: Map<Label, LiveInfo>): AnalysisResult() {
-    operator fun get(bb: Label): LiveInfo {
-        return liveness[bb]!!
+    fun liveOut(instruction: Instruction): Set<LocalValue> {
+        return liveOut(instruction.owner())
+    }
+
+    fun liveOut(label: Label): Set<LocalValue> {
+        return liveness[label]!!.liveOut()
+    }
+
+    fun liveIn(instruction: Instruction): Set<LocalValue> {
+        return liveIn(instruction.owner())
+    }
+
+    fun liveIn(label: Label): Set<LocalValue> {
+        return liveness[label]!!.liveIn()
     }
 
     val size: Int
