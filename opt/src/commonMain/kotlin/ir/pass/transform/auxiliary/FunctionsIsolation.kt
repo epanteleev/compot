@@ -7,8 +7,6 @@ import ir.module.SSAModule
 import ir.module.block.Block
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.value.ArgumentValue
-import ir.value.Constant
-import ir.value.Value
 
 
 internal class FunctionsIsolation private constructor(private val cfg: FunctionData) {

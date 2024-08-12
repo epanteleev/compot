@@ -160,20 +160,6 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     bb.replace(inst) { it.trunc(newDiv, Type.I8) }
                     return newDiv
                 }
-                binary(ArithmeticBinaryOp.Div, constant().not(), constant()) (inst) -> { inst as ArithmeticBinary
-                    // TODO temporal
-                    val second = inst.second()
-                    val copy = bb.insertBefore(inst) { it.copy(second) }
-                    bb.updateDF(inst, ArithmeticBinary.SECOND, copy)
-                    return inst
-                }
-                tupleDiv(constant().not(), constant()) (inst) -> { inst as TupleDiv
-                    // TODO temporal
-                    val second = inst.second()
-                    val copy = bb.insertBefore(inst) { it.copy(second) }
-                    bb.updateDF(inst, TupleDiv.SECOND, copy)
-                    return inst
-                }
                 tupleDiv(value(i8()), value(i8())) (inst) -> { inst as TupleDiv
                     // Before:
                     //  %resANDrem = div i8 %a, %b
@@ -214,6 +200,20 @@ class Lowering private constructor(private val cfg: FunctionData) {
 
                     killOnDemand(bb, inst)
                     return last
+                }
+                binary(ArithmeticBinaryOp.Div, constant().not(), nop()) (inst) -> { inst as ArithmeticBinary
+                    // TODO temporal
+                    val second = inst.second()
+                    val copy = bb.insertBefore(inst) { it.copy(second) }
+                    bb.updateDF(inst, ArithmeticBinary.SECOND, copy)
+                    return inst
+                }
+                tupleDiv(constant().not(), nop()) (inst) -> { inst as TupleDiv
+                    // TODO temporal
+                    val second = inst.second()
+                    val copy = bb.insertBefore(inst) { it.copy(second) }
+                    bb.updateDF(inst, TupleDiv.SECOND, copy)
+                    return inst
                 }
                 select(nop(), value(i8()), value(i8())) (inst) -> { inst as Select
                     // Before:

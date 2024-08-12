@@ -47,7 +47,11 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) = default(dst, first, second)
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, rax)
+        asm.cdq(size)
+        asm.idiv(size, second)
+        asm.mov(size, rax, dst)
+        asm.moveRem(size, rem)
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
