@@ -7,7 +7,11 @@ import ir.module.block.Label
 import ir.module.block.LabelResolver
 
 
-class BasicBlocks private constructor(private var maxBBIndex: Int, private val basicBlocks: MutableList<Block>): LabelResolver, Iterable<Block> {
+class BasicBlocks private constructor(): LabelResolver, Iterable<Block> {
+    private val modificationCounter = ModificationCounter()
+    private val basicBlocks = arrayListOf(Block.empty(modificationCounter, Label.entry.index))
+    private var maxBBIndex: Int = 1
+
     fun blocks(): List<Block> = basicBlocks
 
     fun size(): Int = basicBlocks.size
@@ -46,7 +50,7 @@ class BasicBlocks private constructor(private var maxBBIndex: Int, private val b
     fun createBlock(): Block {
         val index = maxBBIndex
         maxBBIndex += 1
-        val block = Block.empty(index)
+        val block = Block.empty(modificationCounter, index)
         basicBlocks.add(block)
         return block
     }
@@ -57,8 +61,7 @@ class BasicBlocks private constructor(private var maxBBIndex: Int, private val b
 
     companion object {
         fun create(): BasicBlocks {
-            val startBB = Block.empty(Label.entry.index)
-            return BasicBlocks(1, arrayListOf(startBB))
+            return BasicBlocks()
         }
     }
 }

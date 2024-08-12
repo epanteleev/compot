@@ -19,4 +19,14 @@ class ModificationCounter {
     fun incrementValueModifications() {
         valueModificationCounter++
     }
+
+    inline fun cf(closure: () -> Unit) {
+        closure()
+        incrementControlFlowModifications()
+    }
+
+    inline fun df(closure: () -> Unit) {
+        closure()
+        incrementValueModifications()
+    }
 }
