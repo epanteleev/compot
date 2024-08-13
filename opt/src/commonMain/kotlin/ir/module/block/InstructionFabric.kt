@@ -44,7 +44,7 @@ interface InstructionFabric {
     fun phi(incoming: List<Value>, labels: List<Label>): Phi
     fun int2ptr(value: Value): Int2Pointer
     fun ptr2int(value: Value, toType: IntegerType): Pointer2Int
-    fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant)
+    fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy
     fun proj(tuple: Value, index: Int): Projection
     fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch
 }
