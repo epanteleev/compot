@@ -4,10 +4,13 @@ import ir.instruction.Instruction
 import ir.value.LocalValue
 import ir.instruction.Phi
 import ir.module.FunctionData
+import ir.module.MutationMarker
+import ir.module.Sensitivity
 import ir.module.block.Label
-import ir.pass.AnalysisResult
-import ir.pass.FunctionAnalysisPass
-import ir.pass.FunctionAnalysisPassFabric
+import ir.pass.common.AnalysisResult
+import ir.pass.common.AnalysisType
+import ir.pass.common.FunctionAnalysisPass
+import ir.pass.common.FunctionAnalysisPassFabric
 
 
 data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal var liveOut: MutableSet<LocalValue>) {
@@ -15,7 +18,7 @@ data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal var li
     fun liveOut(): Set<LocalValue> = liveOut
 }
 
-class LivenessAnalysisInfo(private val liveness: Map<Label, LiveInfo>): AnalysisResult() {
+class LivenessAnalysisInfo(private val liveness: Map<Label, LiveInfo>, marker: MutationMarker): AnalysisResult(marker) {
     fun liveOut(instruction: Instruction): Set<LocalValue> {
         return liveOut(instruction.owner())
     }
@@ -129,12 +132,20 @@ class LivenessAnalysis internal constructor(private val functionData: FunctionDa
 
     override fun run(): LivenessAnalysisInfo {
         computeGlobalLiveSets()
-        return LivenessAnalysisInfo(liveness)
+        return LivenessAnalysisInfo(liveness, functionData.marker())
     }
 }
 
 object LivenessAnalysisPassFabric: FunctionAnalysisPassFabric<LivenessAnalysisInfo>() {
-    override fun create(functionData: FunctionData): LivenessAnalysis {
-        return LivenessAnalysis(functionData)
+    override fun type(): AnalysisType {
+        return AnalysisType.LIVENESS
+    }
+
+    override fun sensitivity(): Sensitivity {
+        return Sensitivity.CONTROL_AND_DATA_FLOW
+    }
+
+    override fun create(functionData: FunctionData): LivenessAnalysisInfo {
+        return LivenessAnalysis(functionData).run()
     }
 }

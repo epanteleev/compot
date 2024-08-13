@@ -1,14 +1,17 @@
 package ir.pass.analysis
 
 import ir.module.FunctionData
-import ir.pass.AnalysisResult
-import ir.pass.FunctionAnalysisPass
-import ir.pass.FunctionAnalysisPassFabric
+import ir.module.MutationMarker
+import ir.module.Sensitivity
+import ir.pass.common.AnalysisResult
+import ir.pass.common.FunctionAnalysisPass
+import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.intervals.LiveIntervalsFabric
+import ir.pass.common.AnalysisType
 import ir.value.LocalValue
 
 
-class InterferenceGraph(private val graph: MutableMap<LocalValue, MutableSet<LocalValue>>): AnalysisResult() {
+class InterferenceGraph(private val graph: MutableMap<LocalValue, MutableSet<LocalValue>>, marker: MutationMarker): AnalysisResult(marker) {
     internal fun addEdge(from: LocalValue, to: LocalValue) {
         val fromEdge = graph[from]
         if (fromEdge == null) {
@@ -32,7 +35,7 @@ class InterferenceGraph(private val graph: MutableMap<LocalValue, MutableSet<Loc
 
 class InterferenceGraphBuilder(functionData: FunctionData): FunctionAnalysisPass<InterferenceGraph>() {
     private val liveIntervals = functionData.analysis(LiveIntervalsFabric)
-    private val interferenceGraph = InterferenceGraph(mutableMapOf())
+    private val interferenceGraph = InterferenceGraph(mutableMapOf(), functionData.marker())
 
     override fun run(): InterferenceGraph {
         //TODO Absolutely inefficient!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
@@ -58,7 +61,15 @@ class InterferenceGraphBuilder(functionData: FunctionData): FunctionAnalysisPass
 }
 
 object InterferenceGraphFabric : FunctionAnalysisPassFabric<InterferenceGraph>() {
-    override fun create(functionData: FunctionData): InterferenceGraphBuilder {
-        return InterferenceGraphBuilder(functionData)
+    override fun type(): AnalysisType {
+        return AnalysisType.INTERFERENCE_GRAPH
+    }
+
+    override fun sensitivity(): Sensitivity {
+        return Sensitivity.CONTROL_AND_DATA_FLOW
+    }
+
+    override fun create(functionData: FunctionData): InterferenceGraph {
+        return InterferenceGraphBuilder(functionData).run()
     }
 }

@@ -1,11 +1,12 @@
 package ir.pass.analysis.dominance
 
+import ir.module.MutationMarker
 import ir.module.block.Label
 import ir.module.block.AnyBlock
-import ir.pass.AnalysisResult
+import ir.pass.common.AnalysisResult
 
 
-class DominatorTree internal constructor(private val idomMap: Map<AnyBlock, AnyBlock>): AnalysisResult() {
+class DominatorTree internal constructor(private val idomMap: Map<AnyBlock, AnyBlock>, marker: MutationMarker): AnalysisResult(marker) {
     private val cachedDominators = hashMapOf<Label, List<Label>>()
 
     private fun calculateDominators(target: Label): List<Label> {

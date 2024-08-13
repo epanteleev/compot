@@ -2,6 +2,7 @@ package ir.pass
 
 import ir.module.Module
 import ir.pass.analysis.VerifySSA
+import ir.pass.common.TransformPassFabric
 import ir.pass.transform.CSSAConstructionFabric
 import ir.pass.transform.Mem2RegFabric
 import ir.pass.transform.SSADestructionFabric

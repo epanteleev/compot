@@ -1,4 +1,4 @@
-package ir.pass
+package ir.pass.common
 
 import ir.module.Module
 

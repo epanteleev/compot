@@ -5,14 +5,17 @@ import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.block.Label
 import ir.module.FunctionData
+import ir.module.MutationMarker
+import ir.module.Sensitivity
 import ir.module.block.AnyBlock
-import ir.pass.AnalysisResult
-import ir.pass.FunctionAnalysisPass
-import ir.pass.FunctionAnalysisPassFabric
+import ir.pass.common.AnalysisResult
+import ir.pass.common.FunctionAnalysisPass
+import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.dominance.DominatorTreeFabric
+import ir.pass.common.AnalysisType
 
 
-class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>): AnalysisResult() {
+class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>, marker: MutationMarker): AnalysisResult(marker) {
     operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<Alloc>>> {
         return joinSet.iterator()
     }
@@ -71,7 +74,7 @@ class JoinPointSetEvaluate internal constructor(private val functionData: Functi
             calculateForVariable(v, vStores as MutableSet<AnyBlock>)
         }
 
-        return JoinPointSetResult(joinSet)
+        return JoinPointSetResult(joinSet, functionData.marker())
     }
 
     override fun name(): String {
@@ -84,7 +87,15 @@ class JoinPointSetEvaluate internal constructor(private val functionData: Functi
 }
 
 object JoinPointSetPassFabric: FunctionAnalysisPassFabric<JoinPointSetResult>() {
-    override fun create(functionData: FunctionData): JoinPointSetEvaluate {
-        return JoinPointSetEvaluate(functionData)
+    override fun type(): AnalysisType {
+        return AnalysisType.JOIN_POINT_SET
+    }
+
+    override fun sensitivity(): Sensitivity {
+        return Sensitivity.CONTROL_AND_DATA_FLOW
+    }
+
+    override fun create(functionData: FunctionData): JoinPointSetResult {
+        return JoinPointSetEvaluate(functionData).run()
     }
 }

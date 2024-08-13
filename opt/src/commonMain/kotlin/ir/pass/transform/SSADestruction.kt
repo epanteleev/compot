@@ -1,8 +1,8 @@
 package ir.pass.transform
 
 import ir.module.Module
-import ir.pass.TransformPassFabric
-import ir.pass.TransformPass
+import ir.pass.common.TransformPassFabric
+import ir.pass.common.TransformPass
 import ir.platform.x64.LModule
 import ir.pass.transform.auxiliary.*
 import ir.platform.x64.pass.transform.*

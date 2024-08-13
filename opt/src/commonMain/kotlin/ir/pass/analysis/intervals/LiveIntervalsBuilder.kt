@@ -5,10 +5,12 @@ import ir.value.LocalValue
 import ir.module.FunctionData
 import ir.utils.OrderedLocation
 import ir.instruction.Instruction
-import ir.pass.FunctionAnalysisPass
-import ir.pass.FunctionAnalysisPassFabric
+import ir.module.Sensitivity
+import ir.pass.common.FunctionAnalysisPass
+import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.LinearScanOrderFabric
 import ir.pass.analysis.LivenessAnalysisPassFabric
+import ir.pass.common.AnalysisType
 
 
 class LiveIntervalsBuilder internal constructor(private val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
@@ -81,7 +83,7 @@ class LiveIntervalsBuilder internal constructor(private val data: FunctionData):
         evaluateUsages()
 
         checkConsistency()
-        return LiveIntervals(intervals)
+        return LiveIntervals(intervals, data.marker())
     }
 
     /**
@@ -99,7 +101,15 @@ class LiveIntervalsBuilder internal constructor(private val data: FunctionData):
 }
 
 object LiveIntervalsFabric: FunctionAnalysisPassFabric<LiveIntervals>() {
-    override fun create(functionData: FunctionData): FunctionAnalysisPass<LiveIntervals> {
-        return LiveIntervalsBuilder(functionData)
+    override fun type(): AnalysisType {
+        return AnalysisType.LIVE_INTERVALS
+    }
+
+    override fun sensitivity(): Sensitivity {
+        return Sensitivity.CONTROL_AND_DATA_FLOW
+    }
+
+    override fun create(functionData: FunctionData): LiveIntervals {
+        return LiveIntervalsBuilder(functionData).run()
     }
 }

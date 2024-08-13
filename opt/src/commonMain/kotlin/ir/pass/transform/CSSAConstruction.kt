@@ -2,8 +2,8 @@ package ir.pass.transform
 
 import ir.module.Module
 import ir.module.SSAModule
-import ir.pass.TransformPassFabric
-import ir.pass.TransformPass
+import ir.pass.common.TransformPassFabric
+import ir.pass.common.TransformPass
 import ir.pass.transform.auxiliary.CopyInsertion
 import ir.pass.transform.auxiliary.SplitCriticalEdge
 

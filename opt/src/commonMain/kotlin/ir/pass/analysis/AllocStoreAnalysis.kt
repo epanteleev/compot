@@ -3,14 +3,18 @@ package ir.pass.analysis
 import ir.instruction.Alloc
 import ir.instruction.Store
 import ir.module.FunctionData
+import ir.module.MutationMarker
+import ir.module.Sensitivity
 import ir.module.block.AnyBlock
-import ir.pass.AnalysisResult
-import ir.pass.FunctionAnalysisPass
-import ir.pass.FunctionAnalysisPassFabric
+import ir.pass.common.AnalysisResult
+import ir.pass.common.AnalysisType
+import ir.pass.common.FunctionAnalysisPass
+import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.isLocalVariable
 
 
-class AllocAnalysisResult(private val storeInfo: Map<Alloc, Set<AnyBlock>>): AnalysisResult(), Iterable<Map.Entry<Alloc, Set<AnyBlock>>> {
+class AllocAnalysisResult(private val storeInfo: Map<Alloc, Set<AnyBlock>>, marker: MutationMarker): AnalysisResult(marker),
+    Iterable<Map.Entry<Alloc, Set<AnyBlock>>> {
     override fun iterator(): Iterator<Map.Entry<Alloc, Set<AnyBlock>>> {
         return storeInfo.iterator()
     }
@@ -57,12 +61,20 @@ class AllocStoreAnalysis internal constructor(private val functionData: Function
     }
 
     override fun run(): AllocAnalysisResult {
-        return AllocAnalysisResult(stores)
+        return AllocAnalysisResult(stores, functionData.marker())
     }
 }
 
 object AllocStoreAnalysisFabric: FunctionAnalysisPassFabric<AllocAnalysisResult>() {
-    override fun create(functionData: FunctionData): FunctionAnalysisPass<AllocAnalysisResult> {
-        return AllocStoreAnalysis(functionData)
+    override fun type(): AnalysisType {
+        return AnalysisType.ALLOC_STORE_INFO
+    }
+
+    override fun sensitivity(): Sensitivity {
+        return Sensitivity.DATA_FLOW
+    }
+
+    override fun create(functionData: FunctionData): AllocAnalysisResult {
+        return AllocStoreAnalysis(functionData).run()
     }
 }

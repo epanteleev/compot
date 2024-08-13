@@ -92,6 +92,9 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
         val builder = StringBuilder()
         builder.append("{")
         valuesArray.forEachIndexed { idx, v ->
+            if (v == null) {
+                return@forEachIndexed
+            }
             builder.append(keysArray[idx]).append("=").append(v).append(", ")
         }
         builder.append("}")

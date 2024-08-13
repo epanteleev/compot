@@ -5,8 +5,8 @@ import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
-import ir.pass.TransformPassFabric
-import ir.pass.TransformPass
+import ir.pass.common.TransformPassFabric
+import ir.pass.common.TransformPass
 import ir.pass.analysis.JoinPointSetPassFabric
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.transform.utils.*
