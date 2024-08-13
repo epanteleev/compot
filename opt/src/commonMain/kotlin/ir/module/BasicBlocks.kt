@@ -12,7 +12,9 @@ class BasicBlocks private constructor(): LabelResolver, Iterable<Block> {
     private val basicBlocks = arrayListOf(Block.empty(modificationCounter, Label.entry.index))
     private var maxBBIndex: Int = 1
 
-    fun blocks(): List<Block> = basicBlocks
+    internal fun marker(): MutationMarker = modificationCounter.mutations()
+
+    internal fun blocks(): List<Block> = basicBlocks
 
     fun size(): Int = basicBlocks.size
 
@@ -25,14 +27,14 @@ class BasicBlocks private constructor(): LabelResolver, Iterable<Block> {
             ?: throw IllegalArgumentException("Cannot find correspond block: $label")
     }
 
-    fun begin(): Block {
+    internal fun begin(): Block {
         assertion(basicBlocks.isNotEmpty() && basicBlocks.first().index == Label.entry.index) {
             "First block should be entry block, but got '${basicBlocks.first()}'"
         }
         return basicBlocks[0]
     }
 
-    fun end(): Block {
+    internal fun end(): Block {
         val endBlock = basicBlocks.last()
         assertion(endBlock.lastOrNull() is Return) {
             "Last instruction should be return, but got '${endBlock.last()}'"

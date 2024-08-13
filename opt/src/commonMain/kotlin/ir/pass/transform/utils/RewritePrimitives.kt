@@ -135,7 +135,7 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
                 continue
             }
 
-            instruction.update { v -> rename(bb, v) }
+            bb.updateDF(instruction) { v -> rename(bb, v) }
         }
     }
 

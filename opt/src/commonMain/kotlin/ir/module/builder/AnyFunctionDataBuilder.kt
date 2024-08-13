@@ -22,7 +22,7 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
 
     fun currentLabel(): Label = bb
 
-    fun begin(): Label = fd.blocks.begin()
+    fun begin(): Label = fd.begin()
 
     fun createLabel(): Label = allocateBlock()
 
