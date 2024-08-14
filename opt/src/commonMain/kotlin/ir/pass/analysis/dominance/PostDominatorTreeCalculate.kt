@@ -3,12 +3,16 @@ package ir.pass.analysis.dominance
 import ir.module.FunctionData
 import ir.module.Sensitivity
 import ir.module.block.AnyBlock
+import ir.pass.analysis.traverse.BackwardPostOrderFabric
+import ir.pass.analysis.traverse.BlockOrder
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
 internal class PostDominatorTreeCalculate internal constructor(private val basicBlocks: FunctionData) : DominatorCalculate<PostDominatorTree>() {
-    override fun calculateIncoming(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> {
+    private val backwardPostorder = basicBlocks.analysis(BackwardPostOrderFabric)
+
+    override fun calculateIncoming(postorder: BlockOrder, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> {
         val successors = hashMapOf<Int, List<Int>>()
 
         for (bb in postorder) {
@@ -23,8 +27,8 @@ internal class PostDominatorTreeCalculate internal constructor(private val basic
         return successors
     }
 
-    override fun blockOrdering(basicBlocks: FunctionData): List<AnyBlock> {
-        return basicBlocks.backwardPostorder().order()
+    override fun blockOrdering(basicBlocks: FunctionData): BlockOrder {
+        return backwardPostorder
     }
 
     override fun name(): String {

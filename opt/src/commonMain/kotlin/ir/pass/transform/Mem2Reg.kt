@@ -9,6 +9,7 @@ import ir.pass.common.TransformPassFabric
 import ir.pass.common.TransformPass
 import ir.pass.analysis.JoinPointSetPassFabric
 import ir.pass.analysis.dominance.DominatorTreeFabric
+import ir.pass.analysis.traverse.PostOrderFabric
 import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
 import ir.types.PrimitiveType
@@ -90,7 +91,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
         completePhis(bbToMapValues, insertedPhis)
 
         val deadPool = hashSetOf<Instruction>()
-        for (bb in cfg.postorder()) {
+        for (bb in cfg.analysis(PostOrderFabric)) {
             removeRedundantPhis(deadPool, bb)
         }
     }

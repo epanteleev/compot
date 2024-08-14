@@ -5,6 +5,7 @@ import ir.instruction.*
 import ir.module.FunctionData
 import ir.module.MutationMarker
 import ir.module.Sensitivity
+import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.common.AnalysisResult
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
@@ -45,6 +46,7 @@ enum class EscapeState {
 // - If a value is a constant, it is a constant
 // - Otherwise, the value is unknown
 class EscapeAnalysis internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<EscapeAnalysisResult>() {
+    private val preorder = functionData.analysis(PreOrderFabric)
     private val escapeState = hashMapOf<Value, EscapeState>()
 
     private fun union(operand: Value, newState: EscapeState): EscapeState {
@@ -86,7 +88,7 @@ class EscapeAnalysis internal constructor(private val functionData: FunctionData
     }
 
     override fun run(): EscapeAnalysisResult {
-        for (block in functionData.preorder()) {
+        for (block in preorder) {
             for (instruction in block) {
                 when (instruction) {
                     is Alloc -> visitAlloc(instruction)

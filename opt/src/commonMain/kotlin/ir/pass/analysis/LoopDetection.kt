@@ -2,7 +2,6 @@ package ir.pass.analysis
 
 import ir.module.block.Block
 import ir.module.block.Label
-import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
 import ir.module.MutationMarker
 import ir.module.Sensitivity
@@ -10,6 +9,7 @@ import ir.pass.common.AnalysisResult
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.dominance.DominatorTreeFabric
+import ir.pass.analysis.traverse.PostOrderFabric
 import ir.pass.common.AnalysisType
 
 
@@ -40,11 +40,12 @@ class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>, marker:
 }
 
 class LoopDetection internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<LoopInfo>() {
-    private val dominatorTree: DominatorTree = functionData.analysis(DominatorTreeFabric)
+    private val dominatorTree = functionData.analysis(DominatorTreeFabric)
+    private val postOrder     = functionData.analysis(PostOrderFabric)
 
     private fun evaluate(): LoopInfo {
         val loopHeaders = hashMapOf<Block, List<LoopBlockData>>()
-        for (bb in functionData.postorder()) {
+        for (bb in postOrder) {
             for (p in bb.predecessors()) {
                 if (!dominatorTree.dominates(bb, p)) {
                     continue

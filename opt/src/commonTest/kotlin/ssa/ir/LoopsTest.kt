@@ -5,8 +5,7 @@ import ir.module.FunctionPrototype
 import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
-import ir.pass.analysis.LinearScanOrder
-import ir.pass.analysis.LinearScanOrderFabric
+import ir.pass.analysis.traverse.LinearScanOrderFabric
 import ir.pass.analysis.LoopDetectionPassFabric
 import ir.types.Type
 import ir.value.I32Value

@@ -19,6 +19,7 @@ import ir.module.block.Label
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.pass.analysis.LivenessAnalysisPassFabric
+import ir.pass.analysis.traverse.PreOrderFabric
 import ir.platform.common.AnyCodeGenerator
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
@@ -678,7 +679,7 @@ private class CodeEmitter(private val data: FunctionData,
 
     private fun emit() {
         emitPrologue()
-        val order = data.preorder().order()
+        val order = data.analysis(PreOrderFabric)
 
         for (idx in order.indices) {
             val bb = order[idx]

@@ -10,6 +10,8 @@ import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.VerifySSA
 import ir.pass.analysis.dominance.DominatorTreeFabric
+import ir.pass.analysis.traverse.PostOrderFabric
+import ir.pass.analysis.traverse.PreOrderFabric
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -57,7 +59,7 @@ class CFGTraversalTest {
     fun testTraversePreorder() {
         val expected = listOf(0, 1, 2, 3)
 
-        for ((idx, bb) in withBasicBlocks().preorder().withIndex()) {
+        for ((idx, bb) in withBasicBlocks().analysis(PreOrderFabric).withIndex()) {
             assertEquals(expected[idx], bb.index)
         }
     }
@@ -66,7 +68,7 @@ class CFGTraversalTest {
     fun testTraversePostorder() {
         val expected = listOf(3, 2, 1, 0)
 
-        for ((idx, bb) in withBasicBlocks().postorder().withIndex()) {
+        for ((idx, bb) in withBasicBlocks().analysis(PostOrderFabric).withIndex()) {
             assertEquals(expected[idx], bb.index)
         }
     }

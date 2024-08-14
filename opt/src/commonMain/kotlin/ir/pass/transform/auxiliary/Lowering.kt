@@ -7,6 +7,7 @@ import ir.instruction.*
 import ir.instruction.Store.Companion.VALUE
 import ir.module.block.Block
 import ir.instruction.matching.*
+import ir.pass.analysis.traverse.BfsOrderOrderFabric
 
 
 class Lowering private constructor(private val cfg: FunctionData) {
@@ -251,7 +252,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
             return inst
         }
 
-        for (bb in cfg.bfsTraversal()) {
+        for (bb in cfg.analysis(BfsOrderOrderFabric)) {
             bb.transform { inst -> closure(bb, inst) }
         }
     }
@@ -290,7 +291,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
             return inst
         }
 
-        for (bb in cfg.bfsTraversal()) {
+        for (bb in cfg.analysis(BfsOrderOrderFabric)) {
             bb.transform { inst -> closure(bb, inst) }
         }
     }

@@ -8,7 +8,7 @@ import ir.instruction.Instruction
 import ir.module.Sensitivity
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
-import ir.pass.analysis.LinearScanOrderFabric
+import ir.pass.analysis.traverse.LinearScanOrderFabric
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.common.AnalysisType
 

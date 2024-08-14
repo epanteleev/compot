@@ -25,7 +25,11 @@ enum class AnalysisType {
     INTERFERENCE_GRAPH,
     JOIN_POINT_SET,
     LINEAR_SCAN_ORDER,
-    LIVE_INTERVALS;
+    LIVE_INTERVALS,
+    POST_ORDER,
+    PRE_ORDER,
+    BACKWARD_POST_ORDER,
+    BFS_ORDER;
 
     companion object {
         fun size(): Int {
