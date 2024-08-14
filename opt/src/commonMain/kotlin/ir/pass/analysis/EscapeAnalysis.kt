@@ -45,7 +45,7 @@ enum class EscapeState {
 // - If a value is passed as an argument, it is an argument
 // - If a value is a constant, it is a constant
 // - Otherwise, the value is unknown
-class EscapeAnalysis internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<EscapeAnalysisResult>() {
+private class EscapeAnalysis(private val functionData: FunctionData): FunctionAnalysisPass<EscapeAnalysisResult>() {
     private val preorder = functionData.analysis(PreOrderFabric)
     private val escapeState = hashMapOf<Value, EscapeState>()
 
@@ -81,10 +81,6 @@ class EscapeAnalysis internal constructor(private val functionData: FunctionData
         for (argument in call.arguments()) {
             escapeState[argument] = union(argument, EscapeState.Argument)
         }
-    }
-
-    override fun name(): String {
-        return "EscapeAnalysis"
     }
 
     override fun run(): EscapeAnalysisResult {

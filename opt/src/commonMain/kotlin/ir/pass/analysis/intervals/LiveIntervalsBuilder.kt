@@ -13,7 +13,7 @@ import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.common.AnalysisType
 
 
-class LiveIntervalsBuilder internal constructor(private val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
+private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
     private val intervals       = linkedMapOf<LocalValue, LiveRangeImpl>()
     private val linearScanOrder = data.analysis(LinearScanOrderFabric)
     private val liveness        = data.analysis(LivenessAnalysisPassFabric)
@@ -71,10 +71,6 @@ class LiveIntervalsBuilder internal constructor(private val data: FunctionData):
                 updateLiveRange(inst, location)
             }
         }
-    }
-
-    override fun name(): String {
-        return "LiveIntervals"
     }
 
     override fun run(): LiveIntervals {

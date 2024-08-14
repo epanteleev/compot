@@ -7,11 +7,8 @@ import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 
-class PostOrderPass internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<BlockOrder>() {
-    override fun name(): String {
-        return "PostOrder"
-    }
 
+private class PostOrderPass(private val functionData: FunctionData): FunctionAnalysisPass<BlockOrder>() {
     override fun run(): BlockOrder {
         val order = PostorderIterator(functionData.begin(), functionData.size()).order()
         return BlockOrder(order, functionData.marker())

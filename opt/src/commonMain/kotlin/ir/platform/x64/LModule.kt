@@ -8,7 +8,6 @@ import ir.module.auxiliary.*
 import ir.platform.x64.regalloc.LinearScan
 import ir.platform.x64.regalloc.RegisterAllocation
 import ir.pass.analysis.intervals.LiveIntervals
-import ir.pass.analysis.intervals.LiveIntervalsBuilder
 import ir.pass.analysis.intervals.LiveIntervalsFabric
 
 

@@ -15,13 +15,15 @@ import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.common.AnalysisType
 
 
-class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>, marker: MutationMarker): AnalysisResult(marker) {
+class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>, marker: MutationMarker) :
+    AnalysisResult(marker) {
     operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<Alloc>>> {
         return joinSet.iterator()
     }
 }
 
-class JoinPointSetEvaluate internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<JoinPointSetResult>() {
+private class JoinPointSetEvaluate(private val functionData: FunctionData) :
+    FunctionAnalysisPass<JoinPointSetResult>() {
     private val frontiers = functionData.analysis(DominatorTreeFabric).frontiers()
     private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(functionData.size()) { bb: Label -> bb.index }
 
@@ -77,16 +79,12 @@ class JoinPointSetEvaluate internal constructor(private val functionData: Functi
         return JoinPointSetResult(joinSet, functionData.marker())
     }
 
-    override fun name(): String {
-        return "JoinPointSet"
-    }
-
     override fun run(): JoinPointSetResult {
         return calculate()
     }
 }
 
-object JoinPointSetPassFabric: FunctionAnalysisPassFabric<JoinPointSetResult>() {
+object JoinPointSetPassFabric : FunctionAnalysisPassFabric<JoinPointSetResult>() {
     override fun type(): AnalysisType {
         return AnalysisType.JOIN_POINT_SET
     }
