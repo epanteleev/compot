@@ -62,21 +62,22 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
     }
 
     // Remove unused phis
-    private fun removeRedundantPhis(deadPool: MutableSet<Instruction>, bb: Block) {
-        fun filter(instruction: Instruction): Boolean {
+    private fun removeRedundantPhis(bb: Block) {
+        val deadPool = hashSetOf<Instruction>()
+        fun filter(bb: Block, instruction: Instruction): Instruction? {
             if (instruction !is Phi) {
-                return false
+                return instruction
             }
 
             if (instruction.usedIn().isEmpty() || deadPool.containsAll(instruction.usedIn())) {
                 deadPool.add(instruction)
-                return true
+                return bb.kill(instruction, Value.UNDEF)
             }
 
-            return false
+            return instruction
         }
 
-        bb.removeIf { filter(it) }
+        bb.transform { filter(bb, it) }
     }
 
     fun pass(dominatorTree: DominatorTree) {
@@ -90,9 +91,8 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
 
         completePhis(bbToMapValues, insertedPhis)
 
-        val deadPool = hashSetOf<Instruction>()
         for (bb in cfg.analysis(PostOrderFabric)) {
-            removeRedundantPhis(deadPool, bb)
+            removeRedundantPhis(bb)
         }
     }
 }
