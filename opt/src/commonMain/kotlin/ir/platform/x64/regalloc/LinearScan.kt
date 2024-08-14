@@ -16,7 +16,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
     private val registerMap = hashMapOf<LocalValue, Operand>()
     private val active      = hashMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
-    private val liveRangesGroup = MergeIntervals.evaluate(liveRanges)
+    private val liveRangesGroup = MergeIntervals.evaluate(data)
 
     init {
         allocRegistersForArgumentValues()
