@@ -99,15 +99,14 @@ class FibonacciTest {
         val module = moduleBuilder.build()
         VerifySSA.run(module)
 
-        module.findFunction(FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32)));
+        module.findFunction("fib")
         return module
     }
 
     @Test
     fun testDominator() {
         val module = withBasicBlocks()
-        val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
-        val cfg = module.findFunction(prototype)
+        val cfg = module.findFunction("fib")
         val domTree = cfg.analysis(DominatorTreeFabric)
 
         assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(7)))
@@ -122,8 +121,7 @@ class FibonacciTest {
     fun testLoopDetection() {
         val module = withBasicBlocks()
         println(module)
-        val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
-        val cfg = module.findFunction(prototype)
+        val cfg = module.findFunction("fib")
         val loopInfo = cfg.analysis(LoopDetectionPassFabric)
 
         assertEquals(1, loopInfo.headers().size)
@@ -153,8 +151,7 @@ class FibonacciTest {
     @Test
     fun testLiveness() {
         val module = withBasicBlocks()
-        val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
-        val cfg = module.findFunction(prototype)
+        val cfg = module.findFunction("fib")
         val liveInfo = cfg.analysis(LivenessAnalysisPassFabric)
 
         assertEquals(8, liveInfo.size)
@@ -166,13 +163,12 @@ class FibonacciTest {
     @Test
     fun testLiveness2() {
         val module = withBasicBlocks()
-        val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
         val builder = CompileContextBuilder("fib")
             .setSuffix(".base")
 
         val optimized = PassPipeline.opt(builder.construct()).run(module)
 
-        val cfg = optimized.findFunction(prototype)
+        val cfg = optimized.findFunction("fib")
         val liveInfo = cfg.analysis(LivenessAnalysisPassFabric)
 
         assertEquals(8, liveInfo.size)

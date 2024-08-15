@@ -58,7 +58,7 @@ internal class SplitCriticalEdge private constructor(private val functionData: F
 
     companion object {
         fun run(module: Module): Module {
-            module.functions.forEach { fnData ->
+            module.functions().forEach { fnData ->
                 SplitCriticalEdge(fnData).pass()
             }
 

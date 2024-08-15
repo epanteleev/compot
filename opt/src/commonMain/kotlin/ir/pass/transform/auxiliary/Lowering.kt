@@ -306,7 +306,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
 
     companion object {
         fun run(module: Module): Module {
-            for (fn in module.functions) {
+            for (fn in module.functions()) {
                 Lowering(fn).pass()
             }
             return module

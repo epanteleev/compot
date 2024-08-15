@@ -22,9 +22,10 @@ data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private va
             if (exit == s) {
                 continue
             }
-
-            enter = s
-            break
+            if (loopBody.contains(s)) {
+                enter = s
+                break
+            }
         }
         return enter as Block
     }
@@ -44,7 +45,7 @@ class LoopDetection internal constructor(private val functionData: FunctionData)
     private val postOrder     = functionData.analysis(PostOrderFabric)
 
     private fun evaluate(): LoopInfo {
-        val loopHeaders = hashMapOf<Block, List<LoopBlockData>>()
+        val loopHeaders = hashMapOf<Block, MutableList<LoopBlockData>>()
         for (bb in postOrder) {
             for (p in bb.predecessors()) {
                 if (!dominatorTree.dominates(bb, p)) {
@@ -54,7 +55,7 @@ class LoopDetection internal constructor(private val functionData: FunctionData)
                 val loopBody = getLoopBody(bb, p)
                 val exit     = getExitBlock(bb, loopBody)
 
-                loopHeaders[bb] = loopHeaders.getOrElse(bb) { emptyList() } + LoopBlockData(bb, loopBody, exit)
+                loopHeaders.getOrPut(bb) { arrayListOf() }.add(LoopBlockData(bb, loopBody, exit))
             }
         }
 

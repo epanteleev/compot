@@ -22,7 +22,7 @@ data class Mem2RegException(override val message: String): Exception(message)
 class Mem2Reg internal constructor(module: Module): TransformPass(module) {
     override fun name(): String = "mem2reg"
     override fun run(): Module {
-        module.functions.forEach { fnData ->
+        module.functions.values.forEach { fnData ->
             val dominatorTree = fnData.analysis(DominatorTreeFabric)
             Mem2RegImpl(fnData).pass(dominatorTree)
         }

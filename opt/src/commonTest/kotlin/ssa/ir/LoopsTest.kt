@@ -16,8 +16,6 @@ import kotlin.test.assertTrue
 
 
 class LoopsTest {
-    private  val prototype = FunctionPrototype("test", Type.I64, arrayListOf())
-
     private fun makeLoop(): Module {
         val moduleBuilder = ModuleBuilder.create()
         val builder = moduleBuilder.createFunction("test", Type.I64, arrayListOf())
@@ -70,7 +68,7 @@ class LoopsTest {
     @Test
     fun testLoopDetection() {
         val module = makeLoop()
-        val df = module.findFunction(prototype)
+        val df = module.findFunction("test")
         val loopInfo = df.analysis(LoopDetectionPassFabric)
         assertEquals(3, loopInfo.size)
         assertTrue { loopInfo[BlockViewer(1)] != null }
@@ -80,7 +78,7 @@ class LoopsTest {
     @Test
     fun testLinearScanOrdering() {
         val module = makeLoop()
-        val df = module.findFunction(prototype)
+        val df = module.findFunction("test")
         val linearScanOrder = df.analysis(LinearScanOrderFabric)
         assertEquals(8, linearScanOrder.size)
         assertEquals(0, linearScanOrder[0].index)

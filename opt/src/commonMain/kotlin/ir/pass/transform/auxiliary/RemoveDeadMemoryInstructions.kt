@@ -55,7 +55,7 @@ class RemoveDeadMemoryInstructions private constructor(private val cfg: Function
 
     companion object {
         fun run(module: Module): Module {
-            module.functions.forEach { fnData ->
+            module.functions().forEach { fnData ->
                 RemoveDeadMemoryInstructions(fnData).pass()
             }
             return module

@@ -12,7 +12,7 @@ import ir.pass.common.TransformPass
 class SwitchReplacement internal constructor(module: Module) : TransformPass(module) {
     override fun name(): String = "switch-replacement"
     override fun run(): Module {
-        for (func in module.functions) {
+        for (func in module.functions()) {
             SwitchReplacementImpl(func.blocks).run()
         }
 

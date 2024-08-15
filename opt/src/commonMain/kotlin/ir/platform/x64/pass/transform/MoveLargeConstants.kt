@@ -12,11 +12,11 @@ import ir.value.*
 
 
 // Move large constant to constant pool
-class MoveLargeConstants private constructor(val functions: List<FunctionData>, private val constants: MutableMap<String, GlobalConstant>) {
+class MoveLargeConstants private constructor(val functions: Map<String, FunctionData>, private val constants: MutableMap<String, GlobalConstant>) {
     private var constantIndex = 0
 
     private fun run() {
-        for (data in functions) {
+        for (data in functions.values) {
             data.blocks.forEach {
                 handleBlock(it)
             }
@@ -54,7 +54,7 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
         private const val prefix = CallConvention.CONSTANT_POOL_PREFIX
 
         fun run(module: Module): Module {
-            val functions = module.functions.map { it }
+            val functions = module.functions.toMutableMap()
             val constants = hashMapOf<String, GlobalConstant>()
             for ((name, global) in module.constantPool) {
                 constants[name] = global

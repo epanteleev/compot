@@ -12,7 +12,7 @@ import ir.pass.analysis.intervals.LiveIntervalsBuilder
 import ir.pass.analysis.intervals.LiveIntervalsFabric
 
 
-class LModule(functions: List<FunctionData>,
+class LModule(functions: Map<String, FunctionData>,
               externFunctions: Map<String, ExternFunction>,
               constantPool: Map<String, GlobalConstant>,
               globals: Map<String, GlobalValue>,
@@ -23,7 +23,7 @@ class LModule(functions: List<FunctionData>,
 
     init {
         liveIntervals = hashMapOf()
-        for (fn in functions) {
+        for (fn in functions.values) {
             liveIntervals[fn] = fn.analysis(LiveIntervalsFabric)
         }
 
@@ -52,7 +52,11 @@ class LModule(functions: List<FunctionData>,
     }
 
     override fun copy(): Module {
-        return LModule(functions.map { CopyCFG.copy(it) }, externFunctions, constantPool, globals, types) //TODO deep copy???
+        val newMap = hashMapOf<String, FunctionData>()
+        for ((name, function) in functions) {
+            newMap[name] = function.copy()
+        }
+        return LModule(newMap, externFunctions, constantPool, globals, types) //TODO deep copy???
     }
 
     override fun toString(): String {
