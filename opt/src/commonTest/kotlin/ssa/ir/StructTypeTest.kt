@@ -3,6 +3,8 @@ package ssa.ir
 import ir.types.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 
 class StructTypeTest {
@@ -12,6 +14,8 @@ class StructTypeTest {
         assertEquals(8, structType.sizeOf())
         assertEquals(0, structType.offset(0))
         assertEquals(4, structType.offset(1))
+        assertFalse { structType.hasFloatOnly(0, 4) }
+        assertFalse { structType.hasFloatOnly(4, 8) }
     }
 
     @Test
@@ -65,5 +69,29 @@ class StructTypeTest {
         assertEquals(0, structType.offset(0))
         assertEquals(4, structType.offset(1))
         assertEquals(8, structType.offset(2))
+        assertTrue { structType.hasFloatOnly(0, 4) }
+        assertTrue { structType.hasFloatOnly(0, 8) }
+    }
+
+    @Test
+    fun test9() {
+        val structType = StructType("Point", arrayListOf(Type.I32, Type.F32))
+        assertEquals(8, structType.sizeOf())
+        assertEquals(0, structType.offset(0))
+        assertEquals(4, structType.offset(1))
+        assertFalse { structType.hasFloatOnly(0, 4) }
+        assertTrue { structType.hasFloatOnly(4, 8) }
+        assertFalse { structType.hasFloatOnly(0, 8) }
+    }
+
+    @Test
+    fun test10() {
+        val pointType = StructType("Point", arrayListOf(Type.I32, Type.F64))
+        val structType1 = StructType("Rect", arrayListOf(pointType, pointType))
+
+        assertEquals(32, structType1.sizeOf())
+        assertFalse { structType1.hasFloatOnly(0, 4) }
+        assertFalse { structType1.hasFloatOnly(0, 8) }
+        assertTrue { structType1.hasFloatOnly(8, 16) }
     }
 }

@@ -290,7 +290,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     convertedArgs.add(convertedArg)
                 }
                 is CStructType -> {
-                    val type = mb.toIRType<NonTrivialType>(typeHolder, argCType)
+                    val type = mb.toIRType<StructType>(typeHolder, argCType)
                     convertedArgs.addAll(ir.coerceArguments(type, expr))
                 }
                 else -> throw IRCodeGenError("Unknown type, type=${argCType} in function call")
