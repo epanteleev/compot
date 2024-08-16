@@ -210,7 +210,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(voidCall: VoidCall) {
-        asm.call(voidCall.prototype().name)
+        asm.callFunction(voidCall)
 
         assertion(voidCall.target() === next()) {
             // This is a bug in the compiler if this assertion fails
@@ -219,7 +219,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(tupleCall: TupleCall) { //TODO not compatible with linux C calling convention
-        asm.call(tupleCall.prototype().name)
+        asm.callFunction(tupleCall)
         val retType = tupleCall.type()
 
         val first  = retType.asInnerType<PrimitiveType>(0)
@@ -336,7 +336,7 @@ private class CodeEmitter(private val data: FunctionData,
     }
 
     override fun visit(call: Call) {
-        asm.call(call.prototype().name)
+        asm.callFunction(call)
 
         when (val retType = call.type()) {
             is IntegerType, is PointerType, is BooleanType -> { retType as PrimitiveType
@@ -369,7 +369,7 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(indirectionCall: IndirectionCall) {
         val pointer = valueToRegister.operand(indirectionCall.pointer())
-        asm.indirectCall(pointer)
+        asm.indirectCall(indirectionCall, pointer)
 
         when (val retType = indirectionCall.type()) {
             is IntegerType, is PointerType, is BooleanType -> { retType as PrimitiveType
@@ -384,7 +384,7 @@ private class CodeEmitter(private val data: FunctionData,
 
     override fun visit(indirectionVoidCall: IndirectionVoidCall) {
         val pointer = valueToRegister.operand(indirectionVoidCall.pointer())
-        asm.indirectCall(pointer)
+        asm.indirectCall(indirectionVoidCall, pointer)
     }
 
     override fun visit(store: Store) {

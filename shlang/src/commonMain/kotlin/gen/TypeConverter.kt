@@ -383,7 +383,7 @@ object TypeConverter {
         }
     }
 
-    fun FunctionDataBuilder.coerceArguments(argCType: StructType, expr: Value): List<Value> { //TODO Float and Double?????
+    fun FunctionDataBuilder.coerceArguments(argCType: StructType, expr: Value): List<Value> {
         return when (argCType.sizeOf()) {
             BYTE_SIZE -> {
                 val fieldConverted = gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
@@ -396,18 +396,23 @@ object TypeConverter {
                 arrayListOf(load)
             }
             WORD_SIZE -> {
-                val fieldConverted = gep(expr, Type.I32, Constant.valueOf(Type.I64, 0))
-                val load           = load(Type.I32, fieldConverted)
+                val loadedType = if (argCType.hasFloatOnly(0, WORD_SIZE)) Type.F32 else Type.I32
+                val fieldConverted = gep(expr, loadedType, Constant.valueOf(Type.I64, 0))
+                val load           = load(loadedType, fieldConverted)
                 arrayListOf(load)
             }
             QWORD_SIZE -> {
-                val fieldConverted = gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
-                val load           = load(Type.I64, fieldConverted)
+                val loadedType = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+
+                val fieldConverted = gep(expr, loadedType, Constant.valueOf(Type.I64, 0))
+                val load           = load(loadedType, fieldConverted)
                 arrayListOf(load)
             }
             QWORD_SIZE + BYTE_SIZE -> {
-                val fieldConverted = gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
-                val load           = load(Type.I64, fieldConverted)
+                val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+
+                val fieldConverted = gep(expr, loadedType1, Constant.valueOf(Type.I64, 0))
+                val load           = load(loadedType1, fieldConverted)
                 val values = arrayListOf(load)
 
                 val fieldConverted1 = gep(expr, Type.I8, Constant.valueOf(Type.I64, QWORD_SIZE))
@@ -416,8 +421,10 @@ object TypeConverter {
                 values
             }
             QWORD_SIZE + HWORD_SIZE -> {
-                val fieldConverted = gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
-                val load           = load(Type.I64, fieldConverted)
+                val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+
+                val fieldConverted = gep(expr, loadedType1, Constant.valueOf(Type.I64, 0))
+                val load           = load(loadedType1, fieldConverted)
                 val values = arrayListOf(load)
 
                 val fieldConverted1 = gep(expr, Type.I16, Constant.valueOf(Type.I64, QWORD_SIZE / Type.I16.sizeOf()))
@@ -426,13 +433,13 @@ object TypeConverter {
                 values
             }
             QWORD_SIZE + WORD_SIZE -> {
-                val loadedType1 = if (argCType.hasFloatOnly(0, 8)) Type.F64 else Type.I64
+                val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
 
                 val fieldConverted = gep(expr, loadedType1, Constant.valueOf(Type.I64, 0))
                 val load           = load(loadedType1, fieldConverted)
                 val values = arrayListOf(load)
 
-                val loadedType2 = if (argCType.hasFloatOnly(8, 12)) Type.F32 else Type.I32
+                val loadedType2 = if (argCType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE + WORD_SIZE)) Type.F32 else Type.I32
 
                 val fieldConverted1 = gep(expr, loadedType2, Constant.valueOf(Type.I64, QWORD_SIZE / Type.I32.sizeOf()))
                 val load1           = load(loadedType2, fieldConverted1)
@@ -440,12 +447,14 @@ object TypeConverter {
                 values
             }
             QWORD_SIZE * 2 -> {
-                val fieldConverted = gep(expr, Type.I64, Constant.valueOf(Type.I64, 0))
-                val load           = load(Type.I64, fieldConverted)
+                val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                val fieldConverted = gep(expr, loadedType1, Constant.valueOf(Type.I64, 0))
+                val load           = load(loadedType1, fieldConverted)
                 val values = arrayListOf(load)
 
-                val fieldConverted1 = gep(expr, Type.I64, Constant.valueOf(Type.I64, 1))
-                val load1           = load(Type.I64, fieldConverted1)
+                val loadedType2 = if (argCType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE * 2)) Type.F64 else Type.I64
+                val fieldConverted1 = gep(expr, loadedType2, Constant.valueOf(Type.I64, 1))
+                val load1           = load(loadedType2, fieldConverted1)
                 values.add(load1)
                 values
             }

@@ -3,7 +3,9 @@ package ir.platform.x64.codegen
 import asm.x64.*
 import asm.x64.GPRegister.rdx
 import common.assertion
+import ir.Definitions.BYTE_SIZE
 import ir.Definitions.QWORD_SIZE
+import ir.Definitions.WORD_SIZE
 import ir.instruction.*
 import ir.types.*
 
@@ -143,9 +145,28 @@ class MacroAssembler(name: String): Assembler(name) {
         }
     }
 
-    fun indirectCall(pointer: Operand) = when (pointer) {
-        is GPRegister -> call(pointer)
-        is Address    -> call(pointer)
-        else -> throw CodegenException("invalid operand: pointer=$pointer")
+    fun indirectCall(call: Callable, pointer: Operand) {
+        emitFPVarargsCount(call)
+        when (pointer) {
+            is GPRegister -> call(pointer)
+            is Address    -> call(pointer)
+            else -> throw CodegenException("invalid operand: pointer=$pointer")
+        }
+    }
+
+    fun callFunction(call: Callable) {
+        emitFPVarargsCount(call)
+        call(call.prototype().name)
+    }
+
+    private fun emitFPVarargsCount(call: Callable) {
+        if (!call.prototype().isVararg) {
+            return
+        }
+
+        val numberOfFp = call.arguments().count { it.type() is FloatingPointType }
+        assertion(numberOfFp < 255) { "numberOfFp=$numberOfFp" }
+
+        mov(BYTE_SIZE, Imm32.of(numberOfFp.toLong()), GPRegister.rax)
     }
 }
