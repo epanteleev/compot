@@ -119,14 +119,22 @@ private class CodeEmitter(private val data: FunctionData,
 
                 when (binary.type()) {
                     is UnsignedIntType -> {
-                        asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+                        if (dst != rdx) {
+                            asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+                        }
                         UIntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
-                        asm.pop(POINTER_SIZE, rdx)
+                        if (dst != rdx) {
+                            asm.pop(POINTER_SIZE, rdx)
+                        }
                     }
                     is SignedIntType -> {
-                        asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+                        if (dst != rdx) {
+                            asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+                        }
                         IntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
-                        asm.pop(POINTER_SIZE, rdx)
+                        if (dst != rdx) {
+                            asm.pop(POINTER_SIZE, rdx)
+                        }
                     }
                     is FloatingPointType -> {
                         FloatDivCodegen(binary.type(), asm)(dst, first, second)
@@ -317,14 +325,17 @@ private class CodeEmitter(private val data: FunctionData,
             }
         }
 
-        asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+        if (quotientOperand != rdx && remainderOperand != rdx) {
+            asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
+        }
         when (val type = divType.asInnerType<ArithmeticType>(1)) {
             is SignedIntType   -> IntDivCodegen(type, remainderOperand, asm)(quotientOperand, first, second)
             is UnsignedIntType -> UIntDivCodegen(type, remainderOperand, asm)(quotientOperand, first, second)
             else -> throw RuntimeException("type=$type")
         }
-
-        asm.pop(POINTER_SIZE, rdx)
+        if (quotientOperand != rdx && remainderOperand != rdx) {
+            asm.pop(POINTER_SIZE, rdx)
+        }
     }
 
     override fun visit(proj: Projection) {
@@ -363,8 +374,11 @@ private class CodeEmitter(private val data: FunctionData,
         val isNeighbour = flag2Int.prev() != null && flag2Int.prev() == flag2Int.value()
         if (isNeighbour) {
             asm.setcc(compare.predicate(), dst)
+            Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, dst)
+        } else {
+            Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, src)
         }
-        Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, src)
+
     }
 
     override fun visit(indirectionCall: IndirectionCall) {
