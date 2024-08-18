@@ -18,9 +18,8 @@ class FloatDivCodegen(val type: ArithmeticType, val asm: Assembler): XmmOperands
         if (first == dst) {
             asm.divf(size, second, dst)
         } else {
-            asm.movf(size, first, xmmTemp1)
-            asm.divf(size, second, xmmTemp1)
-            asm.movf(size, xmmTemp1, dst)
+            asm.movf(size, first, dst)
+            asm.divf(size, second, dst)
         }
     }
 

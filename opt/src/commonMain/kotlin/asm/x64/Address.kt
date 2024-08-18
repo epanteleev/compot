@@ -1,5 +1,7 @@
 package asm.x64
 
+import ir.read.tokens.Extern
+
 
 sealed interface Address : Operand {
     companion object {
@@ -11,8 +13,12 @@ sealed interface Address : Operand {
             return Address4(base, offset, index, scale)
         }
 
-        fun from(label: String): Address {
-            return AddressLiteral(label)
+        fun internal(label: String): Address {
+            return InternalAddressLiteral(label)
+        }
+
+        fun external(label: String): Address {
+            return ExternalAddressLiteral(label)
         }
     }
 
@@ -101,7 +107,9 @@ class ArgumentSlot(private val base: GPRegister, private val offset: Int) : Addr
     }
 }
 
-data class AddressLiteral internal constructor(val label: String) : Address {
+abstract class AddressLiteral internal constructor(val label: String) : Address
+
+class InternalAddressLiteral internal constructor(label: String) : AddressLiteral(label) {
     override fun withOffset(disp: Int): Address = throw RuntimeException("impossible to calculate")
     override fun toString(): String {
         return "$label(%rip)"
@@ -109,5 +117,46 @@ data class AddressLiteral internal constructor(val label: String) : Address {
 
     override fun toString(size: Int): String {
         return toString()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as InternalAddressLiteral
+
+        if (label != other.label) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return label.hashCode()
+    }
+}
+
+class ExternalAddressLiteral internal constructor(label: String) : AddressLiteral(label) {
+    override fun withOffset(disp: Int): Address = throw RuntimeException("impossible to calculate")
+    override fun toString(): String {
+        return "$label@GOTPCREL(%rip)"
+    }
+
+    override fun toString(size: Int): String {
+        return toString()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as ExternalAddressLiteral
+
+        if (label != other.label) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return label.hashCode()
     }
 }
