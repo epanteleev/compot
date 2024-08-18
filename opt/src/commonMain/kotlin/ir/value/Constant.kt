@@ -4,6 +4,14 @@ import ir.types.*
 
 
 interface Constant: Value {
+    fun data(): String {
+        return if (this is NullValue) {
+            "0"
+        } else {
+            toString()
+        }
+    }
+
     companion object {
         fun of(kind: Type, value: Number): Constant {
             return when (kind) {

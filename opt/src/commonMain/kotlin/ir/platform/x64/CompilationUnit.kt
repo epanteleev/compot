@@ -50,7 +50,7 @@ class CompilationUnit: CompiledModule() {
         val constant = globalValue.data
         if (constant is StructGlobalConstant || constant is ArrayGlobalConstant) {
             constant as AggregateConstant
-            val data = constant.elements().map { it.toString() }
+            val data = constant.elements().map { it.data() }
             return ObjSymbol(globalValue.name(), data, symbolType)
         } else {
             return ObjSymbol(globalValue.name(), listOf(globalValue.data()), symbolType)

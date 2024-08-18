@@ -1,9 +1,10 @@
 package ir.global
 
+import ir.attributes.GlobalValueAttribute
 import ir.types.*
 
 
-class GlobalValue(val name: String, val data: GlobalConstant): GlobalSymbol {
+class GlobalValue(val name: String, val data: GlobalConstant, val attribute: List<GlobalValueAttribute>): GlobalSymbol {
     init {
         require(data.type() is PrimitiveType) {
             "GlobalValue data must be a PrimitiveType, but was '${data.type()}'"
@@ -13,7 +14,12 @@ class GlobalValue(val name: String, val data: GlobalConstant): GlobalSymbol {
     override fun name(): String = name
 
     override fun dump(): String {
-        return "@$name = global ${data.contentType()} @${data.name()}"
+        return buildString {
+            append("@$name = global ${data.contentType()} ${data.data()}")
+            for (attr in attribute) {
+                append(" !$attr")
+            }
+        }
     }
 
     override fun type(): PointerType = Type.Ptr

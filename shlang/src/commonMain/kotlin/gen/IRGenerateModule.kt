@@ -1,10 +1,12 @@
 package gen
 
+import gen.TypeConverter.toIRAttributes
 import types.*
 import ir.types.*
 import parser.nodes.*
 import ir.module.Module
 import gen.TypeConverter.toIRType
+import ir.attributes.GlobalValueAttribute
 import ir.global.*
 import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
@@ -42,6 +44,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     }
 
     private fun generateDeclarator(decl: Declarator) {
+        val name = decl.name()
         when (val type = decl.cType()) {
             is CFunctionType -> {
                 val abstrType = type.functionType
@@ -51,27 +54,27 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 val returnType = mb.toIRType<Type>(typeHolder, abstrType.retType)
 
                 val isVararg = type.functionType.variadic
-                getExternFunction(decl.name(), returnType, argTypes, isVararg)
+                getExternFunction(name, returnType, argTypes, isVararg)
             }
             is CPrimitiveType -> {
                 val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
-                val global = GlobalConstant.of(decl.name(), irType, 0)
-                mb.addConstant(global)
-                varStack[decl.name()] = global
+                val attributes = toIRAttributes<GlobalValueAttribute>(type.qualifiers())
+                val constant = GlobalConstant.of(createGlobalConstantName(), irType, 0)
+                varStack[name] = mb.addGlobal(name, constant, attributes)
             }
             is CPointerType -> {
-                val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
-                val global = GlobalConstant.of(decl.name(), irType, 0)
-                mb.addConstant(global)
-                varStack[decl.name()] = global
+                val irType     = mb.toIRType<NonTrivialType>(typeHolder, type)
+                val attributes = toIRAttributes<GlobalValueAttribute>(type.dereference().qualifiers()) //TODO don't dereference
+                val constant = GlobalConstant.of(createGlobalConstantName(), irType, 0)
+                varStack[name] = mb.addGlobal(name, constant, attributes)
             }
             is CArrayType -> {
                 val irType = mb.toIRType<ArrayType>(typeHolder, type)
                 val zero = Constant.of(irType.elementType(), 0 )
                 val elements = generateSequence { zero }.take(irType.size).toList()
-                val global = ArrayGlobalConstant(decl.name(), irType, elements)
-                mb.addConstant(global)
-                varStack[decl.name()] = global
+                val constant = ArrayGlobalConstant(createGlobalConstantName(), irType, elements)
+                val attributes = toIRAttributes<GlobalValueAttribute>(type.qualifiers())
+                varStack[name] = mb.addGlobal(name, constant, attributes)
             }
             else -> throw IRCodeGenError("Function or struct expected, but was '$type'")
         }
@@ -84,7 +87,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         val result = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
 
         val constant = mb.addConstant(result)
-        val global   = mb.addGlobal(".v${constantCounter++}", constant)
+        val attributes = toIRAttributes<GlobalValueAttribute>(cType.qualifiers())
+        val global   = mb.addGlobal(createGlobalConstantName(), constant, attributes)
         varStack[decl.name()] = global
     }
 
