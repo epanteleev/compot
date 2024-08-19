@@ -1,17 +1,15 @@
 package ir.global
 
+import ir.value.*
+import ir.types.*
 import common.forEachWith
-import ir.value.Constant
-import ir.value.U8Value
-import ir.types.ArrayType
-import ir.types.NonTrivialType
-import ir.types.StructType
-import ir.types.Type
 
 
-abstract class GlobalConstant(protected open val name: String): GlobalSymbol {
-    override fun dump(): String {
-        return "@$name = constant ${contentType()} ${data()}"
+sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
+    override fun dump(): String = if (this is AggregateConstant) {
+        "@$name = constant ${contentType()} ${content()}"
+    } else {
+        "@$name = constant ${type()} ${data()}"
     }
 
     override fun toString(): String = "@$name"
@@ -32,8 +30,6 @@ abstract class GlobalConstant(protected open val name: String): GlobalSymbol {
 
         return name == other.name
     }
-
-    abstract fun contentType(): NonTrivialType
 
     /*** Returns the internal representation of data. */
     abstract fun data(): String
@@ -71,11 +67,9 @@ class U8ConstantValue(override val name: String, val u8: UByte): GlobalConstant(
     override fun data(): String {
         return u8.toString()
     }
+
     override fun type(): NonTrivialType = Type.U8
-
     override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = Type.U8
 }
 
 class I8ConstantValue(override val name: String, val i8: Byte): GlobalConstant(name) {
@@ -84,10 +78,7 @@ class I8ConstantValue(override val name: String, val i8: Byte): GlobalConstant(n
     }
 
     override fun type(): NonTrivialType = Type.I8
-
     override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = Type.I8
 }
 
 class U16ConstantValue(override val name: String, val u16: UShort): GlobalConstant(name) {
@@ -96,10 +87,7 @@ class U16ConstantValue(override val name: String, val u16: UShort): GlobalConsta
     }
 
     override fun type(): NonTrivialType = Type.U16
-
     override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = Type.U16
 }
 
 class I16ConstantValue(override val name: String, val i16: Short): GlobalConstant(name) {
@@ -109,10 +97,7 @@ class I16ConstantValue(override val name: String, val i16: Short): GlobalConstan
     }
 
     override fun type(): NonTrivialType = Type.I16
-
     override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = Type.I16
 }
 
 class U32ConstantValue(override val name: String, val u32: UInt): GlobalConstant(name) {
@@ -121,10 +106,7 @@ class U32ConstantValue(override val name: String, val u32: UInt): GlobalConstant
     }
 
     override fun type(): NonTrivialType = Type.U32
-
     override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = Type.U32
 }
 
 class I32ConstantValue(override val name: String, val i32: Int): GlobalConstant(name) {
@@ -133,10 +115,7 @@ class I32ConstantValue(override val name: String, val i32: Int): GlobalConstant(
     }
 
     override fun type(): NonTrivialType = Type.I32
-
     override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = Type.I32
 }
 
 class U64ConstantValue(override val name: String, val u64: ULong): GlobalConstant(name) {
@@ -145,10 +124,7 @@ class U64ConstantValue(override val name: String, val u64: ULong): GlobalConstan
     }
 
     override fun type(): NonTrivialType = Type.U64
-
     override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = Type.U64
 }
 
 class I64ConstantValue(override val name: String, val i64: Long): GlobalConstant(name) {
@@ -157,10 +133,7 @@ class I64ConstantValue(override val name: String, val i64: Long): GlobalConstant
     }
 
     override fun type(): NonTrivialType = Type.I64
-
     override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = Type.I64
 }
 
 class F32ConstantValue(override val name: String, val f32: Float): GlobalConstant(name) {
@@ -169,10 +142,7 @@ class F32ConstantValue(override val name: String, val f32: Float): GlobalConstan
     }
 
     override fun type(): NonTrivialType = Type.F32
-
     override fun content(): String = f32.toString()
-
-    override fun contentType(): NonTrivialType = Type.F32
 }
 
 class F64ConstantValue(override val name: String, val f64: Double): GlobalConstant(name) {
@@ -181,10 +151,7 @@ class F64ConstantValue(override val name: String, val f64: Double): GlobalConsta
     }
 
     override fun type(): NonTrivialType = Type.F64
-
     override fun content(): String = f64.toString()
-
-    override fun contentType(): NonTrivialType = Type.F64
 }
 
 class PointerConstant(override val name: String, val value: Long): GlobalConstant(name) {
@@ -193,15 +160,13 @@ class PointerConstant(override val name: String, val value: Long): GlobalConstan
     }
 
     override fun type(): NonTrivialType = Type.Ptr
-
     override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = Type.Ptr
 }
 
-abstract class AggregateConstant(override val name: String): GlobalConstant(name) {
+sealed class AggregateConstant(override val name: String): GlobalConstant(name) {
     abstract fun elements(): List<Constant>
-    override fun type(): NonTrivialType = Type.Ptr //TODO return tp
+    abstract fun contentType(): NonTrivialType
+    override fun type(): NonTrivialType = Type.Ptr
 }
 
 class StringLiteralConstant(override val name: String, val tp: ArrayType, val string: String?): AggregateConstant(name) {
@@ -215,11 +180,10 @@ class StringLiteralConstant(override val name: String, val tp: ArrayType, val st
     }
 
     override fun content(): String = data()
-
     override fun contentType(): NonTrivialType = Type.Ptr
 }
 
-abstract class AggregateGlobalConstant(override val name: String, val tp: NonTrivialType, protected val elements: List<Constant>): AggregateConstant(name) {
+sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivialType, protected val elements: List<Constant>): AggregateConstant(name) {
     final override fun elements(): List<Constant> {
         return elements
     }
@@ -227,7 +191,6 @@ abstract class AggregateGlobalConstant(override val name: String, val tp: NonTri
     final override fun data(): String {
         return elements.joinToString(", ", prefix = "{", postfix = "}" ) { "$it: ${it.type()}" }
     }
-
     final override fun content(): String = data()
 }
 

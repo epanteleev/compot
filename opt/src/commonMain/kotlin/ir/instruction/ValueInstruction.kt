@@ -20,6 +20,4 @@ abstract class ValueInstruction(id: Identity,
     final override fun toString(): String {
         return "%${name()}"
     }
-
-    override fun type(): Type = tp
 }
