@@ -1,6 +1,7 @@
 package ir.platform.x64
 
 import asm.x64.*
+import ir.attributes.GlobalValueAttribute
 import ir.value.*
 import ir.global.*
 import ir.platform.common.CompiledModule
@@ -38,18 +39,24 @@ class CompilationUnit: CompiledModule() {
     }
 
     fun makeGlobal(globalValue: GlobalValue) {
-        symbols.add(convertGlobalValueToSymbolType(globalValue))
+        val symbol = convertGlobalValueToSymbolType(globalValue)
+        if (symbol != null) {
+            symbols.add(symbol)
+        }
     }
 
-    private fun convertGlobalValueToSymbolType(globalValue: GlobalValue): ObjSymbol {
-        if (globalValue.data is StringLiteralConstant) {
-            return ObjSymbol(globalValue.name(), listOf(globalValue.data.name()), listOf(SymbolType.Quad))
+    private fun convertGlobalValueToSymbolType(globalValue: GlobalValue): ObjSymbol? {
+        if (globalValue.attribute.contains(GlobalValueAttribute.EXTERNAL)) {
+            return null
         }
 
-        val symbolType = convertToSymbolType(globalValue.data)
         val constant = globalValue.data
-        if (constant is StructGlobalConstant || constant is ArrayGlobalConstant) {
-            constant as AggregateConstant
+        if (constant is StringLiteralConstant) {
+            return ObjSymbol(globalValue.name(), listOf(constant.name()), listOf(SymbolType.Quad))
+        }
+
+        val symbolType = convertToSymbolType(constant)
+        if (constant is AggregateGlobalConstant) {
             val data = constant.elements().map { it.data() }
             return ObjSymbol(globalValue.name(), data, symbolType)
         } else {

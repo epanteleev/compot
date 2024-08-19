@@ -1,14 +1,13 @@
 package ir.pass.transform.auxiliary
 
-import ir.global.AggregateConstant
-import ir.global.FunctionSymbol
-import ir.global.GlobalConstant
-import ir.global.StringLiteralConstant
+import ir.attributes.GlobalValueAttribute
+import ir.global.*
 import ir.instruction.Instruction
 import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
+import ir.types.Type
 
 
 internal class ConstantLoading private constructor(private val cfg: FunctionData) {
@@ -22,6 +21,10 @@ internal class ConstantLoading private constructor(private val cfg: FunctionData
                     inserted = lea
                 } else if (use is GlobalConstant) {
                     val lea = bb.insertBefore(inst) { it.copy(use) }
+                    bb.updateDF(inst, i, lea)
+                    inserted = lea
+                } else if (use is GlobalValue && use.attribute.contains(GlobalValueAttribute.EXTERNAL)) {
+                    val lea = bb.insertBefore(inst) { it.load(Type.Ptr, use) }
                     bb.updateDF(inst, i, lea)
                     inserted = lea
                 }

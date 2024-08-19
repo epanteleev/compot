@@ -219,7 +219,19 @@ class StringLiteralConstant(override val name: String, val tp: ArrayType, val st
     override fun contentType(): NonTrivialType = Type.Ptr
 }
 
-class ArrayGlobalConstant(override val name: String, val tp: ArrayType, private val elements: List<Constant>): AggregateConstant(name) {
+abstract class AggregateGlobalConstant(override val name: String, val tp: NonTrivialType, protected val elements: List<Constant>): AggregateConstant(name) {
+    final override fun elements(): List<Constant> {
+        return elements
+    }
+
+    final override fun data(): String {
+        return elements.joinToString(", ", prefix = "{", postfix = "}" ) { "$it: ${it.type()}" }
+    }
+
+    final override fun content(): String = data()
+}
+
+class ArrayGlobalConstant(name: String, tp: ArrayType, elements: List<Constant>): AggregateGlobalConstant(name, tp, elements) {
     init {
         require(tp.size == elements.size) {
             "Array size mismatch: ${tp.sizeOf()} != ${elements.size}"
@@ -231,20 +243,10 @@ class ArrayGlobalConstant(override val name: String, val tp: ArrayType, private 
         }
     }
 
-    override fun data(): String {
-        return elements.joinToString(", ", prefix = "{", postfix = "}" ) { "$it: ${it.type()}" }
-    }
-
-    override fun elements(): List<Constant> {
-        return elements
-    }
-
-    override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = tp
+    override fun contentType(): ArrayType = tp as ArrayType
 }
 
-class StructGlobalConstant(override val name: String, val tp: StructType, private val elements: List<Constant>): AggregateConstant(name) {
+class StructGlobalConstant(name: String, tp: StructType, elements: List<Constant>): AggregateGlobalConstant(name, tp, elements) {
     init {
         require(tp.fields.size == elements.size) {
             "Struct size mismatch: ${tp.sizeOf()} != ${elements.size}"
@@ -256,15 +258,5 @@ class StructGlobalConstant(override val name: String, val tp: StructType, privat
         }
     }
 
-    override fun data(): String {
-        return elements.joinToString(", ", prefix = "{", postfix = "}" ) { "$it: ${it.type()}" }
-    }
-
-    override fun elements(): List<Constant> {
-        return elements
-    }
-
-    override fun content(): String = data()
-
-    override fun contentType(): NonTrivialType = tp
+    override fun contentType(): StructType = tp as StructType
 }
