@@ -92,8 +92,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is SizeOf       -> visitSizeOf(expression)
             is MemberAccess -> visitMemberAccess(expression, isRvalue)
             is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
-            is Conditional -> visitConditional(expression)
-            is CharNode -> visitCharNode(expression)
+            is FuncPointerCall   -> visitFunPointerCall(expression)
+            is Conditional       -> visitConditional(expression)
+            is CharNode          -> visitCharNode(expression)
             is SingleInitializer -> visitSingleInitializer(expression)
             else -> throw IRCodeGenError("Unknown expression: $expression")
         }
@@ -308,6 +309,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         assertion(toType is NonTrivialType) { "invariant" }
         return ir.convertToType(value, toType)
+    }
+
+    private fun visitFunPointerCall(funcPointerCall: FuncPointerCall): Value {
+        val functionType = funcPointerCall.resolveType(typeHolder)
+        val function = varStack[funcPointerCall.name()]
+
+        TODO()
     }
 
     private fun visitFunctionCall(functionCall: FunctionCall): Value {
@@ -713,7 +721,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
         val name = varNode.name()
-        val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable $name not found at ${varNode.position()}")
+        val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable '$name' not found at '${varNode.position()}'")
         val type = typeHolder[name]
 
         if (type is CArrayType) {
@@ -890,7 +898,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (ir.last() !is TerminateInstruction) {
             ir.branch(exitBlock)
         }
-        return@scoped Value.UNDEF
+        return@scoped currentFunction!!.prototype()
     }
 
     private fun visitStatement(statement: Statement) {

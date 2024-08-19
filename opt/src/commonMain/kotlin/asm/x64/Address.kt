@@ -1,7 +1,5 @@
 package asm.x64
 
-import ir.read.tokens.Extern
-
 
 sealed interface Address : Operand {
     companion object {
@@ -14,7 +12,7 @@ sealed interface Address : Operand {
         }
 
         fun internal(label: String): Address {
-            return InternalAddressLiteral(label)
+            return InternalAddressLiteral(0, label)
         }
 
         fun external(label: String): Address {
@@ -109,10 +107,12 @@ class ArgumentSlot(private val base: GPRegister, private val offset: Int) : Addr
 
 abstract class AddressLiteral internal constructor(val label: String) : Address
 
-class InternalAddressLiteral internal constructor(label: String) : AddressLiteral(label) {
-    override fun withOffset(disp: Int): Address = throw RuntimeException("impossible to calculate")
-    override fun toString(): String {
-        return "$label(%rip)"
+class InternalAddressLiteral internal constructor(private val offset: Int, label: String) : AddressLiteral(label) {
+    override fun withOffset(disp: Int): Address = InternalAddressLiteral(offset + disp, label)
+    override fun toString(): String = if (offset != 0) {
+        "$label+$offset(%rip)"
+    } else {
+        "$label(%rip)"
     }
 
     override fun toString(size: Int): String {

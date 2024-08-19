@@ -1566,7 +1566,13 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 val args = argument_expression_list()
                 if (check(")")) {
                     eat()
-                    primary = FunctionCall(primary, args)
+                    primary = if (primary is VarNode) {
+                        FunctionCall(primary, args)
+                    } else if (primary is UnaryOp && primary.opType == PrefixUnaryOpType.DEREF) {
+                        FuncPointerCall(primary, args)
+                    } else {
+                        throw ParserException(InvalidToken("Expected function or pointer", peak()))
+                    }
                 } else {
                     throw ParserException(InvalidToken("Expected ')'", peak()))
                 }
