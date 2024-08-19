@@ -28,6 +28,9 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
         } else if (dst is XmmRegister && operand is GPRegister && index is Address) {
             asm.mov(indexType.sizeOf(), index, temp1)
             asm.movf(size, Address.from(operand, 0, temp1, size), dst)
+        } else if (dst is XmmRegister && operand is Address && index is ImmInt) {
+            asm.lea(POINTER_SIZE, operand, temp1) //TODO suspicious
+            asm.movf(size, Address.from(temp1, index.value().toInt() * size), dst)
         } else {
             default(dst, operand, index)
         }

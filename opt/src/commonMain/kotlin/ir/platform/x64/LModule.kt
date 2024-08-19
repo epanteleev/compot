@@ -27,8 +27,8 @@ class LModule(functions: Map<String, FunctionData>,
         }
 
         registerAllocation = hashMapOf()
-        for ((fn, liveIntervals) in liveIntervals) {
-            registerAllocation[fn] = LinearScan.alloc(fn, liveIntervals)
+        for (fn in functions.values) {
+            registerAllocation[fn] = LinearScan.alloc(fn)
         }
     }
 

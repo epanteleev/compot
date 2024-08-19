@@ -28,8 +28,8 @@ import parser.nodes.visitors.StatementVisitor
 class IrGenFunction(moduleBuilder: ModuleBuilder,
                     typeHolder: TypeHolder,
                     varStack: VarStack,
-                    constantCounter: Int):
-    AbstractIRGenerator(moduleBuilder, typeHolder, varStack, constantCounter),
+                    nameGenerator: NameGenerator):
+    AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator),
     StatementVisitor<Unit>,
     DeclaratorVisitor<Value> {
     private var currentFunction: FunctionDataBuilder? = null
@@ -851,21 +851,29 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
+    private fun irReturnType(retType: CType): Type {
+        when (retType) {
+            is CPrimitiveType, is CPointerType -> {
+                return mb.toIRType<Type>(typeHolder, retType)
+            }
+            is CStructType -> {
+                val structType = mb.toIRType<StructType>(typeHolder, retType)
+                val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
+                return if (list.size == 1) {
+                    list[0]
+                } else {
+                    TupleType(list.toTypedArray())
+                }
+            }
+            else -> throw IRCodeGenError("Unknown return type, type=$retType")
+        }
+    }
+
     override fun visit(functionNode: FunctionNode): Value = varStack.scoped {
         val parameters = functionNode.functionDeclarator().params()
         val fnType  = functionNode.declareType(functionNode.specifier, typeHolder)
         val retType = fnType.retType()
-        val irRetType = if (retType is CStructType && retType.size() <= QWORD_SIZE * 2) {
-            val structType = mb.toIRType<StructType>(typeHolder, retType)
-            val list = CallConvention.coerceArgumentTypes(structType) ?: listOf(Type.Ptr)
-            if (list.size == 1) {
-                list[0]
-            } else {
-                TupleType(list.toTypedArray())
-            }
-        } else {
-            mb.toIRType<Type>(typeHolder, retType)
-        }
+        val irRetType = irReturnType(retType)
 
         val argTypes = argumentTypes(fnType.args())
         currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes)
@@ -1228,30 +1236,30 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return convertedRvalue
         }
         val lvalueAdr = initDeclarator.declarator.accept(this)
-        when (initDeclarator.rvalue) {
+        when (val rvalue = initDeclarator.rvalue) {
             is InitializerList -> {
-                initializerContext.scope(lvalueAdr, initDeclarator.cType()) { visitInitializerList(initDeclarator.rvalue) }
+                initializerContext.scope(lvalueAdr, initDeclarator.cType()) { visitInitializerList(rvalue) }
                 return lvalueAdr
             }
             is FunctionCall -> {
-                val rvalue = visitExpression(initDeclarator.rvalue, true)
-                when (val rType = initDeclarator.rvalue.resolveType(typeHolder)) {
+                val call = visitExpression(rvalue, true)
+                when (val rType = rvalue.resolveType(typeHolder)) {
                     is CStructType -> {
                         val structType = mb.toIRType<StructType>(typeHolder, rType)
                         val list = CallConvention.coerceArgumentTypes(structType)
                         if (list == null) {
-                            ir.memcpy(lvalueAdr, rvalue, U64Value(rType.size().toLong()))
+                            ir.memcpy(lvalueAdr, call, U64Value(rType.size().toLong()))
                             return lvalueAdr
                         }
 
                         if (list.size == 1) {
                             val gep = ir.gep(lvalueAdr, structType, Constant.of(Type.I64, 0))
-                            ir.store(gep, rvalue)
+                            ir.store(gep, call)
                         } else {
                             list.forEachIndexed { idx, arg ->
                                 val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
                                 val fieldPtr = ir.gep(lvalueAdr, arg, Constant.valueOf(Type.I64, offset))
-                                val proj = ir.proj(rvalue, idx)
+                                val proj = ir.proj(call, idx)
                                 ir.store(fieldPtr, proj)
                             }
                         }

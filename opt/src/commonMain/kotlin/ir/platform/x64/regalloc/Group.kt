@@ -8,8 +8,6 @@ class Group(val values: List<LocalValue>) {
 
     override fun hashCode(): Int = values.hashCode()
 
-    fun first(): LocalValue = values[0]
-
     operator fun iterator(): Iterator<LocalValue> = values.iterator()
 
     override fun toString(): String {

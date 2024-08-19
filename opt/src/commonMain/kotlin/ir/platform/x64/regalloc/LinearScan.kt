@@ -3,42 +3,41 @@ package ir.platform.x64.regalloc
 import ir.value.LocalValue
 import asm.x64.Operand
 import asm.x64.Register
+import common.assertion
 import common.forEachWith
 import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
-import ir.instruction.Generate
 import ir.pass.analysis.InterferenceGraphFabric
-import ir.pass.analysis.intervals.LiveIntervals
+import ir.pass.analysis.intervals.LiveIntervalsFabric
 import ir.types.NonTrivialType
 import ir.types.TupleType
 
 
-class LinearScan private constructor(private val data: FunctionData, private val liveRanges: LiveIntervals) {
+class LinearScan private constructor(private val data: FunctionData) {
+    private val liveRanges = data.analysis(LiveIntervalsFabric)
+    private val interferenceGraph = data.analysis(InterferenceGraphFabric)
+
     private val registerMap = hashMapOf<LocalValue, Operand>()
     private val fixedValues = arrayListOf<LocalValue>()
-
     private val active      = hashMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
     private val liveRangesGroup = MergeIntervals.evaluate(data)
-    private val interferenceGraph = data.analysis(InterferenceGraphFabric)
 
     init {
         allocRegistersForArgumentValues()
         handleCallArguments()
-        handleStackAlloc()
         allocRegistersForLocalVariables()
     }
 
     private fun build(): RegisterAllocation {
-        return RegisterAllocation(pool.stackSize(), registerMap, liveRanges)
+        return RegisterAllocation(pool.stackSize(), registerMap)
     }
 
     private fun allocRegistersForArgumentValues() {
         for (arg in data.arguments()) {
-            val reg = pool.takeArgument(arg)
             fixedValues.add(arg)
-            registerMap[arg] = reg
+            registerMap[arg] = pool.takeArgument(arg)
         }
     }
 
@@ -56,21 +55,13 @@ class LinearScan private constructor(private val data: FunctionData, private val
        }
     }
 
-    private fun handleStackAlloc() {
-        for ((value , _) in liveRanges) {
-            if (value !is Generate) {
-                continue
-            }
-
-            val operand = pool.allocSlot(value) { false }
-            registerMap[value] = operand
-            active[value] = operand
-        }
-    }
-
     private fun allocRegistersForLocalVariables() {
         for ((value, range) in liveRanges) {
             if (registerMap[value] != null) {
+                assertion(fixedValues.contains(value)
+                        || liveRangesGroup.getGroup(value) != null) {
+                    "value=$value is already allocated"
+                }
                 continue
             }
 
@@ -103,14 +94,12 @@ class LinearScan private constructor(private val data: FunctionData, private val
     private fun pickOperandGroup(value: LocalValue) {
         val group = liveRangesGroup.getGroup(value)
         val neighbors = interferenceGraph.neighbors(value)
+        val operand = pool.allocSlot(value) { reg -> excludeIf(neighbors, reg) }
         if (group == null) {
-            val operand = pool.allocSlot(value) { reg -> excludeIf(neighbors, reg) }
             registerMap[value] = operand
             active[value] = operand
             return
         }
-
-        val operand = pool.allocSlot(group.first()) { reg -> excludeIf(neighbors, reg) }
         for (v in group) {
             registerMap[v] = operand
             active[v] = operand
@@ -133,8 +122,8 @@ class LinearScan private constructor(private val data: FunctionData, private val
     }
 
     companion object {
-        fun alloc(data: FunctionData, liveRanges: LiveIntervals): RegisterAllocation {
-            val linearScan = LinearScan(data, liveRanges)
+        fun alloc(data: FunctionData): RegisterAllocation {
+            val linearScan = LinearScan(data)
             return linearScan.build()
         }
     }
