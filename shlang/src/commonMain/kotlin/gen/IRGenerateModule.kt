@@ -76,6 +76,17 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 val attributes = toIRAttributes<GlobalValueAttribute>(type.qualifiers())
                 varStack[name] = mb.addGlobal(name, constant, attributes)
             }
+            is CStructType -> {
+                val irType = mb.toIRType<StructType>(typeHolder, type)
+                val elements = arrayListOf<Constant>()
+                for (field in type.fields()) {
+                    val zero = Constant.of(mb.toIRType<NonTrivialType>(typeHolder, field.second), 0)
+                    elements.add(zero)
+                }
+                val constant = StructGlobalConstant(createGlobalConstantName(), irType, elements)
+                val attributes = toIRAttributes<GlobalValueAttribute>(type.qualifiers())
+                varStack[name] = mb.addGlobal(name, constant, attributes)
+            }
             else -> throw IRCodeGenError("Function or struct expected, but was '$type'")
         }
     }
