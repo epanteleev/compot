@@ -2,6 +2,7 @@ package ir.instruction
 
 import ir.value.Value
 import common.LListNode
+import common.arrayWrapperOf
 import common.assertion
 import ir.value.LocalValue
 import ir.instruction.utils.IRInstructionVisitor
@@ -28,6 +29,8 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
     fun operands(visitor: (Value) -> Unit) {
         operands.forEach(visitor)
     }
+
+    fun operands(): List<Value> = arrayWrapperOf(operands)
 
     fun operandsWithIndex(visitor: (Int, Value) -> Unit) {
         operands.forEachIndexed(visitor)

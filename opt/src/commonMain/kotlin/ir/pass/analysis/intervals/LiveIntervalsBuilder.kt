@@ -51,7 +51,9 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
                 return@operands
             }
 
-            val liveRange = intervals[usage] ?: throw LiveIntervalsException("in $usage")
+            val liveRange = intervals[usage] ?: let {
+                throw LiveIntervalsException("in $usage")
+            }
             liveRange.registerUsage(instructionLocation)
         }
     }

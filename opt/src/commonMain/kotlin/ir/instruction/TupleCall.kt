@@ -1,5 +1,6 @@
 package ir.instruction
 
+import common.arrayWrapperOf
 import ir.types.*
 import ir.value.Value
 import common.assertion
@@ -13,8 +14,8 @@ class TupleCall private constructor(id: Identity, owner: Block, private val func
     TerminateTupleInstruction(id, owner, func.returnType() as TupleType, args, arrayOf(target)), TupleValue,
     Callable {
 
-    override fun arguments(): Array<Value> {
-        return operands
+    override fun arguments(): List<Value> {
+        return arrayWrapperOf(operands)
     }
 
     override fun prototype(): AnyFunctionPrototype {
@@ -51,12 +52,12 @@ class TupleCall private constructor(id: Identity, owner: Block, private val func
         fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>, target: Block): TupleCall {
             assertion(func.returnType() is TupleType) { "Must be non ${Type.Void}" }
 
-            val argsArray = args.toTypedArray()
-            require(Callable.isAppropriateTypes(func, argsArray)) {
+
+            require(Callable.isAppropriateTypes(func, args)) {
                 args.joinToString(prefix = "inconsistent types in '$id', prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
-
+            val argsArray = args.toTypedArray()
             return registerUser(TupleCall(id, owner, func, argsArray, target), args.iterator())
         }
     }

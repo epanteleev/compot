@@ -1,5 +1,6 @@
 package ir.instruction
 
+import common.arrayWrapperOf
 import common.assertion
 import ir.value.Value
 import ir.types.Type
@@ -15,8 +16,8 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
     TerminateValueInstruction(id, owner, func.returnType(), args, arrayOf(target)),
     Callable {
 
-    override fun arguments(): Array<Value> {
-        return operands
+    override fun arguments(): List<Value> {
+        return arrayWrapperOf(operands)
     }
 
     override fun prototype(): AnyFunctionPrototype {
@@ -62,13 +63,13 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
         fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>, target: Block): Call {
             assertion(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
 
-            val argsArray = args.toTypedArray()
-            require(Callable.isAppropriateTypes(func, argsArray)) {
+
+            require(Callable.isAppropriateTypes(func, args)) {
                 args.joinToString(prefix = "inconsistent types in '$id', prototype='${func.shortName()}', ")
                     { "$it: ${it.type()}" }
             }
 
-            return registerUser(Call(id, owner, func, argsArray, target), args.iterator())
+            return registerUser(Call(id, owner, func, args.toTypedArray(), target), args.iterator())
         }
     }
 }

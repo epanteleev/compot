@@ -314,7 +314,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitFunPointerCall(funcPointerCall: FuncPointerCall): Value {
         val functionType = funcPointerCall.resolveFunctionType(typeHolder)
-        val function = varStack[funcPointerCall.name()] ?: throw IRCodeGenError("Function '${funcPointerCall.name()}' not found")
+        val functionPtr = varStack[funcPointerCall.name()] ?: throw IRCodeGenError("Function '${funcPointerCall.name()}' not found")
+        val loadedFunctionPtr = ir.load(Type.Ptr, functionPtr)
 
         val irRetType = mb.toIRType<Type>(typeHolder, functionType.retType())
         val argTypes = functionType.args().map { mb.toIRType<NonTrivialType>(typeHolder, it) }
@@ -324,14 +325,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val cont = ir.createLabel()
         val ret = when (functionType.retType()) {
             CType.VOID -> {
-                ir.ivcall(function, prototype, convertedArgs, cont)
+                ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 Value.UNDEF
             }
-            is CPrimitiveType, is CPointerType -> ir.icall(function, prototype, convertedArgs, cont)
+            is CPrimitiveType, is CPointerType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
             is CStructType -> when (prototype.returnType()) {
-                is PrimitiveType -> ir.icall(function, prototype, convertedArgs, cont)
+                is PrimitiveType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 //is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
-                is StructType    -> ir.icall(function, prototype, convertedArgs, cont)
+                is StructType    -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 else -> throw IRCodeGenError("Unknown type ${functionType.retType()}")
             }
             else -> throw IRCodeGenError("Unknown type ${functionType.retType()}")
