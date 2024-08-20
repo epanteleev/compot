@@ -339,9 +339,9 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@dfANDcf addTerminate { IndirectionCall.make(it, this, pointer, func, args, target as Block) }
     }
 
-    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Block): IndirectionVoidCall = mc.dfANDcf {
+    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionVoidCall = mc.dfANDcf {
         require(func.returnType() == Type.Void)
-        return@dfANDcf addTerminate { IndirectionVoidCall.make(it, this, pointer, func, args, target) }
+        return@dfANDcf addTerminate { IndirectionVoidCall.make(it, this, pointer, func, args, target as Block) }
     }
 
     override fun branch(target: Block): Branch = mc.cf {

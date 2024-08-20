@@ -219,6 +219,10 @@ data class CFunPointerType(val cFunctionType: AbstractCFunctionType) : AnyCPoint
         }
     }
 
+    fun retType() = cFunctionType.retType
+    fun args() = cFunctionType.argsTypes
+    fun isVariadic() = cFunctionType.variadic
+
     override fun copyWith(extraProperties: List<TypeProperty>): CFunPointerType {
         return CFunPointerType(cFunctionType.copyWith(extraProperties))
     }

@@ -19,6 +19,7 @@ import ir.Definitions.QWORD_SIZE
 import ir.global.StringLiteralConstant
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
+import ir.module.IndirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
 import parser.nodes.visitors.DeclaratorVisitor
@@ -312,10 +313,31 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitFunPointerCall(funcPointerCall: FuncPointerCall): Value {
-        val functionType = funcPointerCall.resolveType(typeHolder)
-        val function = varStack[funcPointerCall.name()]
+        val functionType = funcPointerCall.resolveFunctionType(typeHolder)
+        val function = varStack[funcPointerCall.name()] ?: throw IRCodeGenError("Function '${funcPointerCall.name()}' not found")
 
-        TODO()
+        val irRetType = mb.toIRType<Type>(typeHolder, functionType.retType())
+        val argTypes = functionType.args().map { mb.toIRType<NonTrivialType>(typeHolder, it) }
+        val prototype = IndirectFunctionPrototype(irRetType, argTypes, functionType.isVariadic())
+        val convertedArgs = convertFunctionArgs(prototype, funcPointerCall.args)
+
+        val cont = ir.createLabel()
+        val ret = when (functionType.retType()) {
+            CType.VOID -> {
+                ir.ivcall(function, prototype, convertedArgs, cont)
+                Value.UNDEF
+            }
+            is CPrimitiveType, is CPointerType -> ir.icall(function, prototype, convertedArgs, cont)
+            is CStructType -> when (prototype.returnType()) {
+                is PrimitiveType -> ir.icall(function, prototype, convertedArgs, cont)
+                //is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
+                is StructType    -> ir.icall(function, prototype, convertedArgs, cont)
+                else -> throw IRCodeGenError("Unknown type ${functionType.retType()}")
+            }
+            else -> throw IRCodeGenError("Unknown type ${functionType.retType()}")
+        }
+        ir.switchLabel(cont)
+        return ret
     }
 
     private fun visitFunctionCall(functionCall: FunctionCall): Value {
