@@ -185,12 +185,14 @@ sealed interface CType {
 
 sealed interface AnyCPointerType: CType {
     override fun size(): Int = POINTER_SIZE //TODO must be imported from x64 module
+
+    fun dereference(): CType
 }
 
 data class CPointerType(val type: CType, val properties: List<TypeProperty> = listOf()) : AnyCPointerType {
     override fun qualifiers(): List<TypeProperty> = properties
 
-    fun dereference(): CType = type
+    override fun dereference(): CType = type
 
     override fun toString(): String {
         return buildString {
@@ -222,6 +224,8 @@ data class CFunPointerType(val cFunctionType: AbstractCFunctionType) : AnyCPoint
     fun retType() = cFunctionType.retType
     fun args() = cFunctionType.argsTypes
     fun isVariadic() = cFunctionType.variadic
+
+    override fun dereference(): CType = cFunctionType
 
     override fun copyWith(extraProperties: List<TypeProperty>): CFunPointerType {
         return CFunPointerType(cFunctionType.copyWith(extraProperties))

@@ -3,15 +3,16 @@ package ir.instruction
 import common.arrayWith
 import common.arrayWrapperOf
 import common.assertion
+import common.toTypedArray
 import ir.value.Value
 import ir.types.Type
 import ir.module.IndirectFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
-class IndirectionVoidCall private constructor(id: Identity, owner: Block, pointer: Value,
-                                              private val func: IndirectFunctionPrototype, args: List<Value>, target: Block):
-    TerminateInstruction(id, owner, (args + pointer).toTypedArray(), arrayOf(target)), //TODO
+class IndirectionVoidCall private constructor(id: Identity, owner: Block,
+                                              private val func: IndirectFunctionPrototype, usages: Array<Value>, target: Block):
+    TerminateInstruction(id, owner, usages, arrayOf(target)),
     Callable {
     init {
         assertion(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
@@ -30,11 +31,11 @@ class IndirectionVoidCall private constructor(id: Identity, owner: Block, pointe
             "size should be at least 1 operand in $this instruction"
         }
 
-        return operands[0]
+        return operands.last()
     }
 
     override fun arguments(): List<Value> {
-        return arrayWrapperOf(arrayWith(operands.size - 1) { operands[it + 1] })
+        return arrayWrapperOf(arrayWith(operands.size - 1) { operands[it] })
     }
 
     override fun prototype(): IndirectFunctionPrototype {
@@ -65,8 +66,8 @@ class IndirectionVoidCall private constructor(id: Identity, owner: Block, pointe
                 { "$it: ${it.type()}" }
             }
 
-            val l = listOf(pointer) + args
-            return registerUser(IndirectionVoidCall(id, owner, pointer, func, args, block), l.iterator())
+            val operands = args.toTypedArray(pointer)
+            return registerUser(IndirectionVoidCall(id, owner, func, operands, block), operands.iterator())
         }
     }
 }

@@ -16,6 +16,10 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
     TerminateValueInstruction(id, owner, func.returnType(), args, arrayOf(target)),
     Callable {
 
+    init {
+        assertion(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
+    }
+
     override fun arguments(): List<Value> {
         return arrayWrapperOf(operands)
     }

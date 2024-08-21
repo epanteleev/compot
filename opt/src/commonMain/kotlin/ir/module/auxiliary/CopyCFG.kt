@@ -303,7 +303,6 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     override fun visit(indirectionCall: IndirectionCall): LocalValue {
         val newUsages = mapArguments(indirectionCall)
         val pointer   = mapUsage<Value>(indirectionCall.pointer())
-
         val target    = mapBlock(indirectionCall.target())
 
         return bb.icall(pointer, indirectionCall.prototype(), newUsages, target)
