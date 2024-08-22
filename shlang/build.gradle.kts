@@ -33,6 +33,7 @@ kotlin {
                 implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
                 implementation("com.squareup.okio:okio:3.9.0")
             }
+            resources.srcDirs("src/commonMain/resources")
         }
         jvmMain {
             dependencies {
@@ -58,4 +59,8 @@ tasks.withType(Test::class.java).all {
 
 tasks.named<Jar>("jvmJar") {
     dependsOn.add(tasks.findByName("jvmTest"))
+}
+
+tasks.withType(ProcessResources::class.java).all {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

@@ -1,5 +1,6 @@
 package preprocess
 
+import common.getInclude
 import okio.SYSTEM
 import okio.FileSystem
 import okio.Path.Companion.toPath
@@ -50,6 +51,11 @@ class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>)
     }
 
     private fun getSystemHeader(name: String): Header? {
+        val predefined = getInclude(name)
+        if (predefined != null) {
+            return Header(name, predefined, HeaderType.SYSTEM)
+        }
+
         for (includeDirectory in includeDirectories) {
             val fileName = "$includeDirectory/$name"
             val filePath = fileName.toPath()
