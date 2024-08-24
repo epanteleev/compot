@@ -28,7 +28,9 @@ sealed interface ImmInt: Imm {
 @JvmInline
 value class Imm32 private constructor(private val value: Long) : ImmInt {
     init {
-        require(Int.MIN_VALUE < value && value < Int.MAX_VALUE) //TODO
+        require(Int.MIN_VALUE <= value && value <= Int.MAX_VALUE) {
+            "value=$value is not in range of Int"
+        }
     }
 
     override fun toString(): String {

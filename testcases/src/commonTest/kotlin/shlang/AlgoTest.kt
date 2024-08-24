@@ -177,7 +177,7 @@ abstract class AlgoTests: CommonCTest() {
     @Test
     fun testSegmentTree() {
         val result = runCTest("shlang/algo/segment_tree", listOf(), options())
-        assertEquals("All tests have successfully passed!\n", result.output)
+        assertEquals("All tests passed\n", result.output)
         assertReturnCode(result, 0)
     }
 }

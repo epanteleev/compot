@@ -6,16 +6,15 @@ import ir.module.SSAModule
 import ir.pass.analysis.VerifySSA
 import ir.value.ArgumentValue
 import ir.module.AnyFunctionPrototype
+import ir.module.DirectFunctionPrototype
 import ir.module.builder.AnyModuleBuilder
 
 
 class ModuleBuilder private constructor(): AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilder>()
 
-    fun findFunction(name: String): AnyFunctionPrototype {
-        val fnBuilder: AnyFunctionPrototype = functions.find { it.prototype().name() == name }?.prototype()
-            ?: findExternFunctionOrNull(name) ?: throw RuntimeException("not found name=$name") //TODO O(n)
-        return fnBuilder
+    fun findFunction(name: String): DirectFunctionPrototype? {
+        return functions.find { it.prototype().name() == name }?.prototype() ?: findExternFunctionOrNull(name)
     }
 
     fun createFunction(name: String, returnType: Type, argumentTypes: List<Type>, isVararg: Boolean = false): FunctionDataBuilder {

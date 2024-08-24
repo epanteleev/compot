@@ -85,7 +85,7 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mul(size, second, first, dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
@@ -114,7 +114,8 @@ data class MulCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mul(size, second, first, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
