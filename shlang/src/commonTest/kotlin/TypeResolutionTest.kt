@@ -513,4 +513,43 @@ class TypeResolutionTest {
         assertEquals(1, qualifier.size)
         assertTrue { qualifier.contains(StorageClass.EXTERN) }
     }
+
+    @Test
+    fun testExternStorageClass2() {
+        val input = """
+            extern int a = 10, b = 20;
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        val qualifier = typeHolder["a"].qualifiers()
+        assertEquals(1, qualifier.size)
+        assertTrue { qualifier.contains(StorageClass.EXTERN) }
+
+        val qualifier1 = typeHolder["b"].qualifiers()
+        assertEquals(1, qualifier1.size)
+        assertTrue { qualifier1.contains(StorageClass.EXTERN) }
+    }
+
+    @Test
+    fun testStaticStorageClass1() {
+        val input = """
+            static int a = 10, *b;
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        val qualifier = typeHolder["a"].qualifiers()
+        assertEquals(1, qualifier.size)
+        assertTrue { qualifier.contains(StorageClass.STATIC) }
+
+        val qualifier1 = typeHolder["b"].qualifiers()
+        assertEquals(1, qualifier1.size)
+        assertTrue { qualifier1.contains(StorageClass.STATIC) }
+        assertTrue { typeHolder["b"] is CPointerType }
+    }
 }

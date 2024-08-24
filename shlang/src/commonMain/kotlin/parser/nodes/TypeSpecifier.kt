@@ -42,7 +42,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
 
     override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): CType {
         val type = specifyType1(typeHolder, pointers)
-        val storageClass = storageClass()
+
         if (pointers.isEmpty()) {
             return type
         }
@@ -53,6 +53,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
             pointerType = CPointerType(pointerType, pointer.property())
         }
 
+        val storageClass = storageClass()
         return if (storageClass != null) {
             CPointerType(pointerType, pointers.last().property() + storageClass)
         } else {
