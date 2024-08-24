@@ -37,11 +37,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
     }
 
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType = memoizeType {
-        var pointerType = declspec.specifyType(typeHolder)
-        for (pointer in pointers) {
-            pointerType = CPointerType(pointerType, pointer.property())
-        }
-
+        var pointerType = declspec.specifyType(typeHolder, pointers)
         pointerType = directDeclarator.resolveType(pointerType, typeHolder)
         if (declspec.isTypedef) {
             typeHolder.addNewType(name(), TypeDef(name(), pointerType))
@@ -67,10 +63,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
     }
 
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType = memoizeType {
-        var pointerType = declspec.specifyType(typeHolder)
-        for (pointer in declarator.pointers) {
-            pointerType = CPointerType(pointerType, pointer.property())
-        }
+        var pointerType = declspec.specifyType(typeHolder, declarator.pointers)
 
         pointerType = declarator.directDeclarator.resolveType(pointerType, typeHolder)
         assertion (!declspec.isTypedef) { "typedef is not supported here" }
@@ -142,10 +135,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CFunctionType = memoizeType {
         assertion(specifier === declspec) { "specifier should be the same" }
 
-        var pointerType = declspec.specifyType(typeHolder)
-        for (pointer in declarator.pointers) {
-            pointerType = CPointerType(pointerType, pointer.property())
-        }
+        var pointerType = declspec.specifyType(typeHolder, declarator.pointers)
 
         pointerType = declarator.directDeclarator.resolveType(pointerType, typeHolder)
         assertion(!declspec.isTypedef) { "typedef is not supported here" }

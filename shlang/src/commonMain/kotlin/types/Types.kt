@@ -208,7 +208,7 @@ data class CPointerType(val type: CType, val properties: List<TypeProperty> = li
     }
 }
 
-data class CFunPointerType(val cFunctionType: AbstractCFunctionType) : AnyCPointerType {
+data class CFunPointerType(val cFunctionType: AbstractCFunctionType, private val properties: List<TypeProperty> = emptyList()) : AnyCPointerType {
     override fun qualifiers(): List<TypeProperty> = emptyList()
 
     override fun toString(): String {

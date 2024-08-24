@@ -37,7 +37,7 @@ enum class StorageClass: TypeProperty {
     },
     AUTO {
         override fun toString(): String = "auto"
-    }
+    },
 }
 
 // 6.7.4 Function specifiers

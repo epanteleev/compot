@@ -96,12 +96,7 @@ class LinearScan private constructor(private val data: FunctionData) {
     private fun pickOperandGroup(value: LocalValue) {
         val group = liveRangesGroup.getGroup(value)
         val neighbors = interferenceGraph.neighbors(value)
-        val operand = pool.allocSlot(value) { reg ->
-            if (value is ValueInstruction && value.owner().index == 2 && value.identity() == 32) {
-                println("here")
-            }
-            excludeIf(neighbors, reg)
-        }
+        val operand = pool.allocSlot(value) { reg -> excludeIf(neighbors, reg) }
         if (group == null) {
             registerMap[value] = operand
             active[value] = operand
