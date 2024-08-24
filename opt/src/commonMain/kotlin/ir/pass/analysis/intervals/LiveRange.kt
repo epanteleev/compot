@@ -9,18 +9,7 @@ abstract class LiveRange internal constructor(protected var creation: OrderedLoc
     fun end(): OrderedLocation = locations.maxBy { it.value.order }.value //TODO cached
 
     fun intersect(other: LiveRange): Boolean {
-        if (creation > other.end() || other.creation > end()) {
-            return false
-        }
-
-        for ((block, location) in other.locations) {
-            val loc = locations[block]
-            if (loc != null && loc < location) {
-                return true
-            }
-        }
-
-        return false
+        return !(creation > other.end() || other.creation > end()) //TODo not worried about holes
     }
 
     operator fun compareTo(other: LiveRange): Int {
@@ -32,7 +21,7 @@ abstract class LiveRange internal constructor(protected var creation: OrderedLoc
     }
 }
 
-class LiveRangeImpl internal constructor(creation: OrderedLocation, end: OrderedLocation): LiveRange(creation, hashMapOf(Pair(creation.block, end))) {
+class LiveRangeImpl internal constructor(creation: OrderedLocation): LiveRange(creation, hashMapOf(Pair(creation.block, creation))) {
     fun merge(other: LiveRangeImpl) {
         if (creation > other.creation) {
             creation = other.creation
