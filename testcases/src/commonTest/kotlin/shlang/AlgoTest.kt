@@ -180,6 +180,13 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("All tests passed\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testPrim() {
+        val result = runCTest("shlang/algo/prim", listOf(), options())
+        assertEquals("All tests passed\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {
