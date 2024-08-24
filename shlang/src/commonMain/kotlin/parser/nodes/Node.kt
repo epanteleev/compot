@@ -1,5 +1,6 @@
 package parser.nodes
 
+import common.assertion
 import types.*
 import tokenizer.*
 import parser.nodes.visitors.*
@@ -30,7 +31,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
 
         for (decl in directAbstractDeclarator) {
             when (decl) {
-                is ArrayDeclarator -> decl.resolveType(pointerType, typeHolder)
+                is ArrayDeclarator -> decl.resolveType(pointerType, null, typeHolder)
                 else -> throw IllegalStateException("Unknown declarator $decl")
             }
         }
@@ -40,7 +41,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
 
 data class Declaration(val declspec: DeclarationSpecifier, private val declarators: List<AnyDeclarator>): UnclassifiedNode() {
     fun specifyType(typeHolder: TypeHolder) {
-        declspec.specifyType(typeHolder) // Important: define new type here
+        declspec.specifyType(typeHolder, listOf()) // Important: define new type here
         for (it in declarators) {
             it.declareType(declspec, typeHolder)
         }
@@ -63,17 +64,21 @@ data class Declaration(val declspec: DeclarationSpecifier, private val declarato
 data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDeclaratorParams: List<DirectDeclaratorParam>): UnclassifiedNode() {
     override fun<T> accept(visitor: UnclassifiedNodeVisitor<T>) = visitor.visit(this)
 
-    private fun resolveAllDecl(baseType: CType, typeHolder: TypeHolder): CType {
+    private fun resolveAllDecl(baseType: CType, storageClass: StorageClass?, typeHolder: TypeHolder): CType {
         var currentType = baseType
         for (decl in directDeclaratorParams.reversed()) {
             when (decl) {
                 is ArrayDeclarator -> {
-                    currentType = decl.resolveType(currentType, typeHolder)
+                    currentType = decl.resolveType(currentType, storageClass, typeHolder)
                 }
 
                 is ParameterTypeList -> {
-                    val abstractType = decl.resolveType(currentType, typeHolder)
-                    currentType = CFunctionType(name(), abstractType)
+                    val abstractType = decl.resolveType(currentType, null, typeHolder)
+                    currentType = if (storageClass != null) {
+                        CFunctionType(name(), abstractType, arrayListOf(storageClass))
+                    } else {
+                        CFunctionType(name(), abstractType)
+                    }
                 }
 
                 else -> throw IllegalStateException("Unknown declarator $decl")
@@ -82,15 +87,17 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
         return currentType
     }
 
-    fun resolveType(baseType: CType, typeHolder: TypeHolder): CType = when (decl) {
+    fun resolveType(baseType: CType, storageClass: StorageClass?, typeHolder: TypeHolder): CType = when (decl) {
         is FunctionPointerDeclarator -> {
             val fnDecl = directDeclaratorParams[0] as ParameterTypeList
-            val type = fnDecl.resolveType(baseType, typeHolder)
-            CFunPointerType(type)
+            val type = fnDecl.resolveType(baseType, null, typeHolder)
+            if (storageClass != null) {
+                CFunPointerType(type, arrayListOf(storageClass))
+            } else {
+                CFunPointerType(type, arrayListOf())
+            }
         }
-        is DirectVarDeclarator -> {
-            resolveAllDecl(baseType, typeHolder)
-        }
+        is DirectVarDeclarator -> resolveAllDecl(baseType, storageClass, typeHolder)
     }
 
     fun name(): String = decl.name()

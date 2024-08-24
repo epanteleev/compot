@@ -9,7 +9,7 @@ sealed class TypeSpecifier : Node() {
     private var cachedStorage: StorageClass? = null
 
     abstract fun<T> accept(visitor: TypeSpecifierVisitor<T>): T
-    abstract fun specifyType(typeHolder: TypeHolder): CType
+    abstract fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): CType
 
     fun storageClass(): StorageClass? {
         return cachedStorage
@@ -29,7 +29,7 @@ sealed class TypeSpecifier : Node() {
 data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier() {
     internal var isTypedef = false
 
-    override fun specifyType(typeHolder: TypeHolder) = memoizeType {
+    private fun specifyType1(typeHolder: TypeHolder, pointers: List<NodePointer>) = memoizeType {
         val typeBuilder = CTypeBuilder()
         for (specifier in specifiers) {
             val property = specifier.typeResolve(typeHolder, typeBuilder)
@@ -37,11 +37,12 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
                 isTypedef = true
             }
         }
-        return@memoizeType typeBuilder.build(typeHolder)
+        return@memoizeType typeBuilder.build(typeHolder, pointers.isEmpty())
     }
 
-    fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): CType {
-        val type = specifyType(typeHolder)
+    override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): CType {
+        val type = specifyType1(typeHolder, pointers)
+        val storageClass = storageClass()
         if (pointers.isEmpty()) {
             return type
         }
@@ -51,7 +52,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
             val pointer = pointers[idx]
             pointerType = CPointerType(pointerType, pointer.property())
         }
-        val storageClass = storageClass()
+
         return if (storageClass != null) {
             CPointerType(pointerType, pointers.last().property() + storageClass)
         } else {
@@ -65,8 +66,8 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
 data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: AbstractDeclarator?) : TypeSpecifier() {
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 
-    override fun specifyType(typeHolder: TypeHolder): CType {
-        val specifierType = specifiers.specifyType(typeHolder)
+    override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): CType {
+        val specifierType = specifiers.specifyType(typeHolder, pointers)
         if (abstractDecl == null) {
             return specifierType
         }

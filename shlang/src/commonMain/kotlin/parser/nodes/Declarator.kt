@@ -38,7 +38,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
 
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType = memoizeType {
         var pointerType = declspec.specifyType(typeHolder, pointers)
-        pointerType = directDeclarator.resolveType(pointerType, typeHolder)
+        pointerType = directDeclarator.resolveType(pointerType, declspec.storageClass(), typeHolder)
         if (declspec.isTypedef) {
             typeHolder.addNewType(name(), TypeDef(name(), pointerType))
             typeHolder.addTypedef(name(), pointerType)
@@ -65,7 +65,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType = memoizeType {
         var pointerType = declspec.specifyType(typeHolder, declarator.pointers)
 
-        pointerType = declarator.directDeclarator.resolveType(pointerType, typeHolder)
+        pointerType = declarator.directDeclarator.resolveType(pointerType, declspec.storageClass(), typeHolder)
         assertion (!declspec.isTypedef) { "typedef is not supported here" }
 
         if (pointerType !is UncompletedArrayType) {
@@ -137,7 +137,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
 
         var pointerType = declspec.specifyType(typeHolder, declarator.pointers)
 
-        pointerType = declarator.directDeclarator.resolveType(pointerType, typeHolder)
+        pointerType = declarator.directDeclarator.resolveType(pointerType, declspec.storageClass(), typeHolder)
         assertion(!declspec.isTypedef) { "typedef is not supported here" }
 
         assertion(pointerType is CFunctionType) { "function type expected" }

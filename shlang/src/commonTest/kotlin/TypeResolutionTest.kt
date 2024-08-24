@@ -4,7 +4,6 @@ import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.nodes.*
 import tokenizer.CTokenizer
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -40,7 +39,7 @@ class TypeResolutionTest {
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
         val typeResolver = TypeHolder.default()
-        assertEquals("volatile restrict int", expr.specifyType(typeResolver).toString())
+        assertEquals("volatile restrict int", expr.specifyType(typeResolver, listOf()).toString())
     }
 
     @Test
@@ -50,7 +49,7 @@ class TypeResolutionTest {
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
         val typeResolver = TypeHolder.default()
-        assertEquals("volatile restrict float", expr.specifyType(typeResolver).toString())
+        assertEquals("volatile restrict float", expr.specifyType(typeResolver, listOf()).toString())
     }
 
     @Test
@@ -60,7 +59,7 @@ class TypeResolutionTest {
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
         val typeResolver = parser.typeHolder()
-        assertEquals("volatile struct point", expr.specifyType(typeResolver).toString())
+        assertEquals("volatile struct point", expr.specifyType(typeResolver, listOf()).toString())
     }
 
     @Test
@@ -485,7 +484,7 @@ class TypeResolutionTest {
         assertEquals("struct Array_ {int len;[]int arr;}", typeHolder["arr"].toString())
     }
 
-    @Ignore
+    @Test
     fun testStaticStorageClass() {
         val input = """
             static int a = 10;
@@ -498,5 +497,20 @@ class TypeResolutionTest {
         val qualifier = typeHolder["a"].qualifiers()
         assertEquals(1, qualifier.size)
         assertTrue { qualifier.contains(StorageClass.STATIC) }
+    }
+
+    @Test
+    fun testExternStorageClass1() {
+        val input = """
+            extern int a;
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        val qualifier = typeHolder["a"].qualifiers()
+        assertEquals(1, qualifier.size)
+        assertTrue { qualifier.contains(StorageClass.EXTERN) }
     }
 }

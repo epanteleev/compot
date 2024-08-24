@@ -22,7 +22,7 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) :
     }
 
     override fun resolveType(typeHolder: TypeHolder): CType {
-        val type = declspec.specifyType(typeHolder)
+        val type = declspec.specifyType(typeHolder, listOf())
         return when (declarator) {
             is Declarator         -> declarator.declareType(declspec, typeHolder)
             is AbstractDeclarator -> declarator.resolveType(type, typeHolder)

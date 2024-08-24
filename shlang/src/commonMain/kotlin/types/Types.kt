@@ -293,7 +293,7 @@ data class AbstractCFunctionType(val retType: CType, val argsTypes: List<CType>,
     }
 }
 
-class CFunctionType(val name: String, val functionType: AbstractCFunctionType) : CType {
+class CFunctionType(val name: String, val functionType: AbstractCFunctionType, val properties: List<TypeProperty> = arrayListOf()) : CType {
     override fun size(): Int = throw RuntimeException("Function type has no size")
     override fun qualifiers(): List<TypeProperty> = functionType.qualifiers()
 
