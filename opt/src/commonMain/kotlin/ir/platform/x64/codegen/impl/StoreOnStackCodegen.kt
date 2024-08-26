@@ -19,7 +19,7 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
             is FloatingPointType -> {
                 when {
                     dst is Address2 && source is XmmRegister && index is GPRegister -> {
-                        asm.movf(size, source, Address.from(dst.base, dst.offset, index, size))
+                        asm.movf(size, source, Address.from(dst.base, dst.offset, index, ScaleFactor.from(size)))
                     }
                     dst is Address2 && source is XmmRegister && index is Imm -> {
                         val indexImm = index as ImmInt
@@ -53,7 +53,7 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
         when (dst) {
             is Address2 -> {
-                asm.mov(size, first, Address.from(dst.base, dst.offset, second, size))
+                asm.mov(size, first, Address.from(dst.base, dst.offset, second, ScaleFactor.from(size)))
             }
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }
@@ -107,7 +107,7 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
     override fun aia(dst: Address, first: Imm32, second: Address) = when (dst) {
         is Address2 -> {
             asm.mov(size, second, temp1)
-            asm.mov(size, first, Address.from(dst.base, dst.offset, temp1, size))
+            asm.mov(size, first, Address.from(dst.base, dst.offset, temp1, ScaleFactor.from(size)))
         }
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }

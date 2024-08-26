@@ -18,7 +18,7 @@ data class LeaStackCodegen (val type: PointerType, val basicType: NonTrivialType
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         val address = when (first) {
-            is Address2 -> Address.from(first.base, first.offset, second, size)
+            is Address2 -> Address.from(first.base, first.offset, second, ScaleFactor.from(size))
             else -> TODO()
         }
         asm.lea(POINTER_SIZE, address, dst)
@@ -28,7 +28,7 @@ data class LeaStackCodegen (val type: PointerType, val basicType: NonTrivialType
         TODO("untested")
         asm.mov(POINTER_SIZE, second, dst)
         val address = when (first) {
-            is Address2 -> Address.from(first.base, first.offset, dst, size)
+            is Address2 -> Address.from(first.base, first.offset, dst, ScaleFactor.from(size))
             else -> TODO()
         }
         asm.lea(POINTER_SIZE, address, dst)
