@@ -1,9 +1,7 @@
 package ir.module.builder
 
 import ir.attributes.GlobalValueAttribute
-import ir.global.GlobalConstant
-import ir.global.GlobalSymbol
-import ir.global.GlobalValue
+import ir.global.*
 import ir.module.ExternFunction
 import ir.module.Module
 import ir.types.*
@@ -11,7 +9,7 @@ import ir.types.*
 
 abstract class AnyModuleBuilder {
     protected val constantPool = hashMapOf<String, GlobalConstant>()
-    protected val globals = hashMapOf<String, GlobalValue>()
+    protected val globals = hashMapOf<String, AnyGlobalValue>()
     protected val structs = hashMapOf<String, StructType>()
     protected val externFunctions = hashMapOf<String, ExternFunction>()
 
@@ -27,6 +25,16 @@ abstract class AnyModuleBuilder {
 
     fun addGlobal(name: String, data: GlobalConstant): GlobalValue {
         return addGlobal(name, data, emptyList())
+    }
+
+    fun addExternValue(name: String, type: NonTrivialType): ExternValue {
+        val global = ExternValue(name, type)
+        val has = globals.put(name, global)
+        if (has != null) {
+            throw IllegalArgumentException("global with name='$name' already exists")
+        }
+
+        return global
     }
 
     fun addConstant(global: GlobalConstant): GlobalConstant {
@@ -66,7 +74,7 @@ abstract class AnyModuleBuilder {
         return constantPool[name]
     }
 
-    fun findGlobalOrNull(name: String): GlobalValue? {
+    fun findGlobalOrNull(name: String): AnyGlobalValue? {
         return globals[name]
     }
 

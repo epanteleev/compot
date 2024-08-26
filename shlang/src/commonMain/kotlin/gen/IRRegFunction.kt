@@ -269,8 +269,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             //TODO Prove it?!?
             return when (expr.type()) {
                 Type.F32 -> ir.convertToType(expr, Type.F64)
-                Type.I8  -> ir.convertToType(expr, Type.I32)
-                Type.U8  -> ir.convertToType(expr, Type.U32)
+                Type.I8, Type.I16 -> ir.convertToType(expr, Type.I32)
+                Type.U8, Type.U16 -> ir.convertToType(expr, Type.U32)
                 else -> expr
             }
         }

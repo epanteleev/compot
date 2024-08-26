@@ -14,7 +14,7 @@ import ir.pass.analysis.intervals.LiveIntervalsFabric
 class LModule(functions: Map<String, FunctionData>,
               externFunctions: Map<String, ExternFunction>,
               constantPool: Map<String, GlobalConstant>,
-              globals: Map<String, GlobalValue>,
+              globals: Map<String, AnyGlobalValue>,
               types: Map<String, StructType>):
     Module(functions, externFunctions, constantPool, globals, types) {
     private val liveIntervals: Map<FunctionData, LiveIntervals>

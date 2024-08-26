@@ -1,6 +1,5 @@
 package gen
 
-import gen.TypeConverter.toIRAttributes
 import types.*
 import ir.types.*
 import parser.nodes.*
@@ -43,6 +42,17 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         return mb.createExternFunction(name, returnType, arguments, isVararg)
     }
 
+    private fun makeGlobalValue(name: String, type: CType) {
+        val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
+        val value = if (type.storageClass() == StorageClass.EXTERN) {
+            mb.addExternValue(name, irType)
+        } else {
+            val constant = GlobalConstant.of(createGlobalConstantName(), irType, 0)
+            mb.addGlobal(name, constant)
+        }
+        varStack[name] = value
+    }
+
     private fun generateDeclarator(decl: Declarator) {
         val name = decl.name()
         when (val type = decl.cType()) {
@@ -56,36 +66,33 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 val isVararg = type.functionType.variadic
                 varStack[name] = getExternFunction(name, returnType, argTypes, isVararg)
             }
-            is CPrimitiveType -> {
-                val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
-                val attributes = toIRAttributes<GlobalValueAttribute>(type.qualifiers())
-                val constant = GlobalConstant.of(createGlobalConstantName(), irType, 0)
-                varStack[name] = mb.addGlobal(name, constant, attributes)
-            }
-            is CPointerType -> {
-                val irType     = mb.toIRType<NonTrivialType>(typeHolder, type)
-                val attributes = toIRAttributes<GlobalValueAttribute>(type.qualifiers())
-                val constant = GlobalConstant.of(createGlobalConstantName(), irType, 0)
-                varStack[name] = mb.addGlobal(name, constant, attributes)
+            is CPrimitiveType, is CPointerType -> {
+                makeGlobalValue(name, type)
             }
             is CArrayType -> {
                 val irType = mb.toIRType<ArrayType>(typeHolder, type)
+                if (type.storageClass() == StorageClass.EXTERN) {
+                    varStack[name] = mb.addExternValue(name, irType)
+                    return
+                }
                 val zero = Constant.of(irType.elementType(), 0 )
                 val elements = generateSequence { zero }.take(irType.size).toList()
                 val constant = ArrayGlobalConstant(createGlobalConstantName(), irType, elements)
-                val attributes = toIRAttributes<GlobalValueAttribute>(type.qualifiers())
-                varStack[name] = mb.addGlobal(name, constant, attributes)
+                varStack[name] = mb.addGlobal(name, constant)
             }
             is CStructType -> {
                 val irType = mb.toIRType<StructType>(typeHolder, type)
+                if (type.storageClass() == StorageClass.EXTERN) {
+                    varStack[name] = mb.addExternValue(name, irType)
+                    return
+                }
                 val elements = arrayListOf<Constant>()
                 for (field in type.fields()) {
                     val zero = Constant.of(mb.toIRType<NonTrivialType>(typeHolder, field.second), 0)
                     elements.add(zero)
                 }
                 val constant = StructGlobalConstant(createGlobalConstantName(), irType, elements)
-                val attributes = toIRAttributes<GlobalValueAttribute>(type.qualifiers())
-                varStack[name] = mb.addGlobal(name, constant, attributes)
+                varStack[name] = mb.addGlobal(name, constant)
             }
             else -> throw IRCodeGenError("Function or struct expected, but was '$type'")
         }
@@ -95,11 +102,14 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         val cType = decl.cType()
         val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType)
 
+        if (cType.storageClass() == StorageClass.EXTERN) {
+            val extern = mb.addExternValue(decl.name(), lValueType)
+            varStack[decl.name()] = extern
+            return
+        }
         val result = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
-
         val constant = mb.addConstant(result)
-        val attributes = toIRAttributes<GlobalValueAttribute>(cType.qualifiers())
-        val global   = mb.addGlobal(createGlobalConstantName(), constant, attributes)
+        val global   = mb.addGlobal(createGlobalConstantName(), constant)
         varStack[decl.name()] = global
     }
 

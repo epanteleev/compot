@@ -1,5 +1,6 @@
 package types
 
+import common.assertion
 import ir.Definitions.POINTER_SIZE
 
 
@@ -9,6 +10,13 @@ data class TypeResolutionException(override val message: String) : Exception(mes
 
 sealed interface CType {
     fun qualifiers(): List<TypeProperty>
+    fun storageClass(): StorageClass? {
+        assertion(qualifiers().filterIsInstance<StorageClass>().size <= 1) {
+            "Multiple storage classes in type $this"
+        }
+        return qualifiers().firstOrNull { it is StorageClass } as StorageClass?
+    }
+
     fun size(): Int
     fun copyWith(extraProperties: List<TypeProperty>): CType
 
