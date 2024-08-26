@@ -31,7 +31,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         gen.visit(node)
     }
 
-    private fun getExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {
+    private fun getExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false): ExternFunction {
         val externFunction = mb.findExternFunctionOrNull(name)
         if (externFunction != null) {
             println("Warning: extern function $name already exists") //TODO implement warning mechanism

@@ -56,7 +56,7 @@ abstract class AnyModuleBuilder {
         return structType
     }
 
-    fun createExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {
+    fun createExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false): ExternFunction {
         val extern = ExternFunction(name, returnType, arguments, isVararg)
         val has = externFunctions.put(name, extern)
         if (has != null) {

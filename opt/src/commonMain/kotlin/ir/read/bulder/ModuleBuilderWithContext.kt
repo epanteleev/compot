@@ -42,8 +42,8 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
         return VerifySSA.run(ssa)
     }
 
-    internal fun resolveArgumentType(tokens: List<TypeToken>): List<Type> {
-        fun convert(typeToken: TypeToken): Type {
+    internal fun resolveArgumentType(tokens: List<TypeToken>): List<NonTrivialType> {
+        fun convert(typeToken: TypeToken): NonTrivialType {
             val type = typeToken.type(this)
             if (type !is NonTrivialType) {
                 throw IllegalStateException("Expected non-trivial type, but got '$type'")

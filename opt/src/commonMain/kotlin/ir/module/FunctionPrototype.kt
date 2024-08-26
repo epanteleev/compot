@@ -7,9 +7,9 @@ import ir.types.NonTrivialType
 
 abstract class AnyFunctionPrototype(val name: String,
                                     private val returnType: Type,
-                                    protected val arguments: List<Type>, val isVararg: Boolean) {
+                                    protected val arguments: List<NonTrivialType>, val isVararg: Boolean) {
 
-    fun arguments(): List<Type> = arguments
+    fun arguments(): List<NonTrivialType> = arguments
 
     fun returnType(): Type = returnType
 
@@ -36,21 +36,21 @@ abstract class AnyFunctionPrototype(val name: String,
     }
 }
 
-abstract class DirectFunctionPrototype(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false):
+abstract class DirectFunctionPrototype(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false):
     AnyFunctionPrototype(name, returnType, arguments, isVararg), FunctionSymbol {
     final override fun dump(): String = toString()
     final override fun type(): NonTrivialType = Type.Ptr
     final override fun name(): String = name
 }
 
-class FunctionPrototype(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false):
+class FunctionPrototype(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false):
    DirectFunctionPrototype(name, returnType, arguments, isVararg), FunctionSymbol {
     override fun toString(): String {
         return "define ${shortName()}"
     }
 }
 
-class IndirectFunctionPrototype(returnType: Type, arguments: List<Type>, isVararg: Boolean):
+class IndirectFunctionPrototype(returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean):
     AnyFunctionPrototype("<indirect>", returnType, arguments, isVararg) {
     override fun toString(): String {
         return "define ${shortName()}"
@@ -65,7 +65,7 @@ class IndirectFunctionPrototype(returnType: Type, arguments: List<Type>, isVarar
     }
 }
 
-class ExternFunction internal constructor(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean):
+class ExternFunction internal constructor(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean):
     DirectFunctionPrototype(name, returnType, arguments, isVararg), FunctionSymbol {
     override fun toString(): String {
         return "extern ${shortName()}"

@@ -6,7 +6,7 @@ import common.forEachWith
 
 
 sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
-    override fun dump(): String = if (this is AggregateConstant) {
+    override fun dump(): String = if (this is AnyAggregateGlobalConstant) {
         "@$name = constant ${contentType()} ${content()}"
     } else {
         "@$name = constant ${type()} ${data()}"
@@ -178,13 +178,13 @@ class PointerConstant(override val name: String, val value: Long): GlobalConstan
     override fun content(): String = data()
 }
 
-sealed class AggregateConstant(override val name: String): GlobalConstant(name) {
+sealed class AnyAggregateGlobalConstant(override val name: String): GlobalConstant(name) {
     abstract fun elements(): List<Constant>
     abstract fun contentType(): NonTrivialType
     override fun type(): NonTrivialType = Type.Ptr
 }
 
-class StringLiteralConstant(override val name: String, val tp: ArrayType, val string: String?): AggregateConstant(name) {
+class StringLiteralConstant(override val name: String, val tp: ArrayType, val string: String?): AnyAggregateGlobalConstant(name) {
     override fun data(): String {
         return "\"$string\""
     }
@@ -198,7 +198,7 @@ class StringLiteralConstant(override val name: String, val tp: ArrayType, val st
     override fun contentType(): NonTrivialType = Type.Ptr
 }
 
-sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivialType, protected val elements: List<Constant>): AggregateConstant(name) {
+sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivialType, protected val elements: List<Constant>): AnyAggregateGlobalConstant(name) {
     final override fun elements(): List<Constant> {
         return elements
     }

@@ -1,5 +1,6 @@
 package ir.read.tokens
 
+import ir.types.NonTrivialType
 import ir.value.BoolValue
 import ir.value.Constant
 import ir.value.NullValue
@@ -9,7 +10,7 @@ import ir.types.Type
 abstract class AnyValueToken(override val line: Int, override val pos: Int): Token(line, pos)
 
 abstract class LiteralValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
-    fun toConstant(ty: Type): Constant {
+    fun toConstant(ty: NonTrivialType): Constant {
         return when (this) {
             is IntValue       -> Constant.of(ty, int)
             is FloatValue     -> Constant.of(ty, fp)

@@ -1,7 +1,6 @@
 package ir.platform.x64
 
 import asm.x64.*
-import ir.attributes.GlobalValueAttribute
 import ir.value.*
 import ir.global.*
 import ir.platform.common.CompiledModule
@@ -23,7 +22,7 @@ class CompilationUnit: CompiledModule() {
             is StringLiteralConstant -> {
                 symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(SymbolType.StringLiteral)))
             }
-            is AggregateConstant -> {
+            is AnyAggregateGlobalConstant -> {
                 val types = globalValue.elements().map { convertToSymbolType(it) }
                 val data  = globalValue.elements().map { it.data() }
                 symbols.add(ObjSymbol(globalValue.name(), data, types))
@@ -78,7 +77,7 @@ class CompilationUnit: CompiledModule() {
         if (symType != null) {
             return listOf(symType)
         }
-        globalValue as AggregateConstant
+        globalValue as AnyAggregateGlobalConstant
         return globalValue.elements().map { convertToSymbolType(it) }
     }
 

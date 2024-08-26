@@ -110,7 +110,7 @@ object TypeConverter {
         return convertToType(value, Type.I64)
     }
 
-    fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {
+    fun FunctionDataBuilder.convertToType(value: Value, toType: NonTrivialType): Value {
         if (value.type() == toType) {
             return value
         }
@@ -471,7 +471,7 @@ object TypeConverter {
         }
     }
 
-    private fun convertConstant(value: Constant, type: Type): Value {
+    private fun convertConstant(value: Constant, type: NonTrivialType): Value {
         return Constant.from(type, value)
     }
 }

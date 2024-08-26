@@ -180,7 +180,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         fun create(
             name: String,
             returnType: Type,
-            arguments: List<Type>,
+            arguments: List<NonTrivialType>,
             argumentValues: List<ArgumentValue>,
             isVararg: Boolean = false
         ): FunctionDataBuilder {
@@ -190,7 +190,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
             return builder
         }
 
-        fun create(name: String, returnType: Type, argumentTypes: List<Type>, isVararg: Boolean = false): FunctionDataBuilder {
+        fun create(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, isVararg: Boolean = false): FunctionDataBuilder {
             val argumentValues = arrayListOf<ArgumentValue>()
             for ((idx, arg) in argumentTypes.withIndex()) {
                 if (arg !is PrimitiveType) { //TODO not coeer

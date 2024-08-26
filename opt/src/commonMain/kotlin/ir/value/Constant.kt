@@ -3,7 +3,7 @@ package ir.value
 import ir.types.*
 
 
-interface Constant: Value {
+sealed interface Constant: Value {
     fun data(): String = when (this) {
         is NullValue -> "0"
         is F32Value -> f32.toBits().toString()
@@ -14,7 +14,7 @@ interface Constant: Value {
     override fun type(): NonTrivialType
 
     companion object {
-        fun of(kind: Type, value: Number): Constant {
+        fun of(kind: NonTrivialType, value: Number): Constant {
             return when (kind) {
                 Type.I8  -> I8Value(value.toByte())
                 Type.U8  -> U8Value(value.toByte())
@@ -38,7 +38,7 @@ interface Constant: Value {
             }
         }
 
-        inline fun<reified U: Constant> valueOf(kind: Type, value: Number): U {
+        inline fun<reified U: Constant> valueOf(kind: NonTrivialType, value: Number): U {
             val result = of(kind, value)
             if (result !is U) {
                 throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
@@ -47,22 +47,24 @@ interface Constant: Value {
             return result
         }
 
-        fun from(kind: Type, value: Constant): Constant {
-            return when (value) {
-                is I8Value -> of(kind, value.i8)
-                is U8Value -> of(kind, value.u8)
-                is I16Value -> of(kind, value.i16)
-                is U16Value -> of(kind, value.u16)
-                is I32Value -> of(kind, value.i32)
-                is U32Value -> of(kind, value.u32)
-                is I64Value -> of(kind, value.i64)
-                is U64Value -> of(kind, value.u64)
-                is F32Value -> of(kind, value.f32)
-                is F64Value -> of(kind, value.f64)
-                is NullValue -> of(kind, 0)
-                is UndefinedValue -> Value.UNDEF
-                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
-            }
+        fun from(kind: NonTrivialType, value: Constant): Constant = when (value) {
+            is I8Value -> of(kind, value.i8)
+            is U8Value -> of(kind, value.u8)
+            is I16Value -> of(kind, value.i16)
+            is U16Value -> of(kind, value.u16)
+            is I32Value -> of(kind, value.i32)
+            is U32Value -> of(kind, value.u32)
+            is I64Value -> of(kind, value.i64)
+            is U64Value -> of(kind, value.u64)
+            is F32Value -> of(kind, value.f32)
+            is F64Value -> of(kind, value.f64)
+            is NullValue -> of(kind, 0)
+            is UndefinedValue -> Value.UNDEF
+            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+        }
+
+        fun from(type: AggregateType, elements: List<Constant>): Constant {
+            return InitializerListValue(type, elements)
         }
     }
 }
@@ -110,15 +112,15 @@ interface IntegerConstant: Constant {
     }
 }
 
-interface SignedIntegerConstant: IntegerConstant {
+sealed interface SignedIntegerConstant: IntegerConstant {
     fun value(): Long
 }
 
-interface UnsignedIntegerConstant: IntegerConstant {
+sealed interface UnsignedIntegerConstant: IntegerConstant {
     fun value(): ULong
 }
 
-interface FloatingPointConstant: Constant
+sealed interface FloatingPointConstant: Constant
 
 data class U8Value(val u8: Byte): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType {
@@ -273,5 +275,15 @@ object UndefinedValue: Constant {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
         return true
+    }
+}
+
+class InitializerListValue(val type: AggregateType, val elements: List<Constant>): Constant {
+    override fun type(): NonTrivialType {
+        return type
+    }
+
+    override fun toString(): String {
+        return elements.joinToString(", ", "{", "}")
     }
 }
