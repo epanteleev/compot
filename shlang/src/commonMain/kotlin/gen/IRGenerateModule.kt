@@ -5,7 +5,6 @@ import ir.types.*
 import parser.nodes.*
 import ir.module.Module
 import gen.TypeConverter.toIRType
-import ir.attributes.GlobalValueAttribute
 import ir.global.*
 import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
@@ -76,7 +75,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                     return
                 }
                 val zero = Constant.of(irType.elementType(), 0 )
-                val elements = generateSequence { zero }.take(irType.size).toList()
+                val elements = generateSequence { zero }.take(irType.length).toList()
                 val constant = ArrayGlobalConstant(createGlobalConstantName(), irType, elements)
                 varStack[name] = mb.addGlobal(name, constant)
             }
@@ -103,8 +102,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType)
 
         if (cType.storageClass() == StorageClass.EXTERN) {
-            val extern = mb.addExternValue(decl.name(), lValueType)
-            varStack[decl.name()] = extern
+            varStack[decl.name()] = mb.addExternValue(decl.name(), lValueType)
             return
         }
         val result = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")

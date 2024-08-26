@@ -16,6 +16,8 @@ import gen.consteval.CommonConstEvalContext
 import gen.consteval.ConstEvalExpression
 import gen.consteval.ConstEvalExpressionInt
 import ir.Definitions.QWORD_SIZE
+import ir.attributes.GlobalValueAttribute
+import ir.global.GlobalConstant
 import ir.global.StringLiteralConstant
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
@@ -1223,11 +1225,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    override fun visit(declarator: Declarator): Alloc {
+    override fun visit(declarator: Declarator): Value {
         val type    = typeHolder[declarator.name()]
         val varName = declarator.name()
 
-        val irType        = mb.toIRType<NonTrivialType>(typeHolder, type)
+        val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
+        if (type.storageClass() == StorageClass.STATIC) {
+            val constant = GlobalConstant.of(varName, irType, 0)
+            val global = mb.addGlobal(varName, constant, GlobalValueAttribute.INTERNAL)
+            varStack[varName] = global
+            return global
+        }
         val rvalueAdr     = ir.alloc(irType)
         varStack[varName] = rvalueAdr
         return rvalueAdr
@@ -1272,12 +1280,20 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(initDeclarator: InitDeclarator): Value {
         val type = typeHolder[initDeclarator.name()]
+        if (type.storageClass() == StorageClass.STATIC) {
+            val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
+            val constant = constEvalExpression(irType, initDeclarator.rvalue) ?: throw IRCodeGenError("Unknown constant")
+            val varName = initDeclarator.name()
+            val global = mb.addGlobal(varName, constant, GlobalValueAttribute.INTERNAL)
+            varStack[varName] = global
+            return global
+        }
         if (type !is CompoundType) {
             val rvalue = visitExpression(initDeclarator.rvalue, true)
             val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
             val convertedRvalue = ir.convertToType(rvalue, commonType)
 
-            val lvalueAdr = initDeclarator.declarator.accept(this)
+            val lvalueAdr = visit(initDeclarator.declarator)
             ir.store(lvalueAdr, convertedRvalue)
             return convertedRvalue
         }

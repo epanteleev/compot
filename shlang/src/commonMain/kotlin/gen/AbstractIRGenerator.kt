@@ -7,6 +7,7 @@ import ir.global.StringLiteralConstant
 import ir.global.StructGlobalConstant
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.ArrayType
+import ir.types.NonTrivialType
 import ir.types.StructType
 import ir.types.Type
 import ir.value.Constant
@@ -20,7 +21,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val typeHolder: TypeHolder,
                                    protected val varStack: VarStack,
                                    protected val nameGenerator: NameGenerator) {
-    protected fun constEvalExpression(lValueType: Type, expr: Expression): GlobalConstant? {
+    protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): GlobalConstant? {
         val result = constEvalExpression0(expr)
         if (result != null) {
             return GlobalConstant.of(createGlobalConstantName(), lValueType, result)
@@ -65,31 +66,27 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
             val content = expr.data()
             StringLiteralConstant(createStringLiteralName(), ArrayType(Type.U8, content.length), content)
         }
-
-        is InitializerList -> {
-            when (lValueType) {
-                is ArrayType -> {
-                    val elements = expr.initializers.map { constEvalExpression0(it) }
-                    val convertedElements = elements.mapIndexed { it, num ->
-                        Constant.of(lValueType.field(it), num as Number)
-                    }
-
-                    ArrayGlobalConstant(createStringLiteralName(), lValueType, convertedElements)
+        is InitializerList -> when (lValueType) {
+            is ArrayType -> {
+                val elements = expr.initializers.map { constEvalExpression0(it) }
+                val convertedElements = elements.mapIndexed { it, num ->
+                    Constant.of(lValueType.field(it), num as Number)
                 }
 
-                is StructType -> {
-                    val elements = expr.initializers.map { constEvalExpression0(it) }
-                    val convertedElements = elements.mapIndexed { it, num ->
-                        Constant.of(lValueType.field(it), num as Number)
-                    }
-
-                    StructGlobalConstant(createStringLiteralName(), lValueType, convertedElements)
-                }
-
-                else -> throw IRCodeGenError("Unsupported type $lValueType")
+                ArrayGlobalConstant(createStringLiteralName(), lValueType, convertedElements)
             }
-        }
 
+            is StructType -> {
+                val elements = expr.initializers.map { constEvalExpression0(it) }
+                val convertedElements = elements.mapIndexed { it, num ->
+                    Constant.of(lValueType.field(it), num as Number)
+                }
+
+                StructGlobalConstant(createStringLiteralName(), lValueType, convertedElements)
+            }
+
+            else -> throw IRCodeGenError("Unsupported type $lValueType")
+        }
         else -> null
     }
 }

@@ -13,7 +13,7 @@ abstract class AnyModuleBuilder {
     protected val structs = hashMapOf<String, StructType>()
     protected val externFunctions = hashMapOf<String, ExternFunction>()
 
-    fun addGlobal(name: String, data: GlobalConstant, attributes: List<GlobalValueAttribute>): GlobalValue {
+    fun addGlobal(name: String, data: GlobalConstant, attributes: GlobalValueAttribute): GlobalValue {
         val global = GlobalValue(name, data, attributes)
         val has = globals.put(name, global)
         if (has != null) {
@@ -24,7 +24,7 @@ abstract class AnyModuleBuilder {
     }
 
     fun addGlobal(name: String, data: GlobalConstant): GlobalValue {
-        return addGlobal(name, data, emptyList())
+        return addGlobal(name, data, GlobalValueAttribute.DEFAULT)
     }
 
     fun addExternValue(name: String, type: NonTrivialType): ExternValue {

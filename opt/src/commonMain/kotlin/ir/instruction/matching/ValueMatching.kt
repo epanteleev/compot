@@ -1,5 +1,6 @@
 package ir.instruction.matching
 
+import ir.global.GlobalValue
 import ir.value.Constant
 import ir.value.Value
 import ir.instruction.*
@@ -86,6 +87,10 @@ inline fun nop(): ValueMatcher = { true }
 inline fun constant(): ValueMatcher = { it is Constant }
 
 inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()) }
+
+inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
+    it is GlobalValue && type(it.type())
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // Type matchers

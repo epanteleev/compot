@@ -51,7 +51,7 @@ data class StructType internal constructor(val name: String, val fields: List<No
             return true
 
         } else if (ty is ArrayType) {
-            for (i in 0 until ty.size) {
+            for (i in 0 until ty.length) {
                 if (!hasFloat(ty.elementType(), lo, hi, offset + i * ty.elementType().sizeOf())) {
                     return false
                 }

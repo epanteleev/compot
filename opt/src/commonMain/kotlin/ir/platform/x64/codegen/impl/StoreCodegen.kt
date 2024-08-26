@@ -47,13 +47,8 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperands
     }
 
     override fun ai(dst: Address, src: Imm32) {
-        when (dst) {
-            is AddressLiteral -> asm.mov(size, src, dst)
-            else -> {
-                asm.mov(POINTER_SIZE, dst, temp1)
-                asm.mov(size, src, Address.from(temp1, 0))
-            }
-        }
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.mov(size, src, Address.from(temp1, 0))
     }
 
     override fun rrF(dst: XmmRegister, src: XmmRegister) {

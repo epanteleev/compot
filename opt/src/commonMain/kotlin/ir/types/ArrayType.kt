@@ -1,15 +1,15 @@
 package ir.types
 
 
-data class ArrayType(private val type: NonTrivialType, val size: Int) : AggregateType {
+data class ArrayType(private val type: NonTrivialType, val length: Int) : AggregateType {
     init {
-        require(size >= 0) { "Array size must be greater than 0, but: size=$size" }
+        require(length >= 0) { "Array size must be greater than 0, but: size=$length" }
     }
 
     fun elementType(): NonTrivialType = type
 
     override fun sizeOf(): Int {
-        return size * type.sizeOf()
+        return length * type.sizeOf()
     }
 
     override fun offset(index: Int): Int {
@@ -21,10 +21,10 @@ data class ArrayType(private val type: NonTrivialType, val size: Int) : Aggregat
     }
 
     override fun fields(): List<NonTrivialType> {
-        return generateSequence { type }.take(size).toList()
+        return generateSequence { type }.take(length).toList()
     }
 
     override fun toString(): String {
-        return "<$type x $size>"
+        return "<$type x $length>"
     }
 }
