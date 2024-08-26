@@ -78,7 +78,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        asm.lea(size, dst, temp1)
+        asm.lea(POINTER_SIZE, dst, temp1)
         asm.mov(size, second, temp2)
         asm.mov(size, first, Address.from(temp1, 0, temp2, ScaleFactor.from(size)))
     }
@@ -88,11 +88,13 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.lea(POINTER_SIZE, dst, temp1)
+        asm.mov(size, second, temp2)
+        asm.mov(size, first, Address.from(temp1, 0, temp2, ScaleFactor.from(size)))
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {
-        asm.lea(size, dst, temp1)
+        asm.lea(POINTER_SIZE, dst, temp1)
         asm.mov(size, second, temp2)
         asm.mov(size, first, Address.from(temp1, 0, temp2, ScaleFactor.from(size)))
     }

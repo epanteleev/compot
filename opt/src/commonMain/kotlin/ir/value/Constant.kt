@@ -286,4 +286,14 @@ class InitializerListValue(val type: AggregateType, val elements: List<Constant>
     override fun toString(): String {
         return elements.joinToString(", ", "{", "}")
     }
+
+    companion object {
+        fun zero(type: AggregateType): InitializerListValue {
+            fun makeConstantForField(fieldType: NonTrivialType): Constant = when (fieldType) {
+                is AggregateType -> zero(fieldType)
+                else -> Constant.of(fieldType, 0)
+            }
+            return InitializerListValue(type, type.fields().map { makeConstantForField(it) })
+        }
+    }
 }
