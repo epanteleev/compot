@@ -885,6 +885,17 @@ class ParserTest {
     }
 
     @Test
+    fun funtionDecl4() {
+        val input = "static void print(int G[][3]);"
+
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("static void print(int G[][3]);", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Test
     fun functionDeclVararg() {
         val input = "int printf(char* fmt, ...); "
 

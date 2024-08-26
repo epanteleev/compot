@@ -17,7 +17,12 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        asm.lea(POINTER_SIZE, Address.from(first, 0, second, size), dst)
+        if (Assembler.isScaleFactor(size)) {
+            asm.lea(POINTER_SIZE, Address.from(first, 0, second, size), dst)
+        } else {
+            asm.mul(POINTER_SIZE, Imm32.of(size), second, dst)
+            asm.lea(POINTER_SIZE, Address.from(first, 0, dst, 1), dst)
+        }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
