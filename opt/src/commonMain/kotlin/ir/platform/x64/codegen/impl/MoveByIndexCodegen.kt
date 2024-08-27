@@ -100,11 +100,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("untested")
-        val disp = second.value() * size
-
-        asm.mov(size, Address.from(first, disp.toInt()), temp1)
-        asm.mov(size, temp1, dst)
+        asm.mov(size, first, dst.withOffset(second.value().toInt() * size))
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {

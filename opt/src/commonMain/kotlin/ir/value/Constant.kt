@@ -278,9 +278,15 @@ object UndefinedValue: Constant {
     }
 }
 
-class InitializerListValue(val type: AggregateType, val elements: List<Constant>): Constant {
+class InitializerListValue(val type: AggregateType, val elements: List<Constant>): Constant, Iterable<Constant> {
     override fun type(): NonTrivialType {
         return type
+    }
+
+    fun size(): Int = elements.size
+
+    override fun iterator(): Iterator<Constant> {
+        return elements.iterator()
     }
 
     override fun toString(): String {

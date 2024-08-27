@@ -1236,7 +1236,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
         if (type.storageClass() == StorageClass.STATIC) {
-            val constant = GlobalConstant.of(varName, irType, 0)
+            val constant = GlobalConstant.zero(varName, irType)
             val global = mb.addGlobal(varName, constant, GlobalValueAttribute.INTERNAL)
             varStack[varName] = global
             return global
