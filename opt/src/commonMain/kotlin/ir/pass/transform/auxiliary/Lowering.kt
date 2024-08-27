@@ -270,14 +270,28 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     return inst
                 }
                 store(gValue(primitive()), nop()) (inst) -> { inst as Store
+                    // Before:
+                    //  %res = store i8 @global, %ptr
+                    //
+                    // After:
+                    //  %lea = lea @global
+                    //  %res = store i8 %val, %lea
+
                     val lea = bb.insertBefore(inst) { it.lea(inst.pointer().asValue()) } //TODO inefficient lowering
                     bb.updateDF(inst, Store.DESTINATION, lea)
-                    return inst
+                    return lea
                 }
                 inst is Value && gfp(gValue(anytype())) (inst) -> { inst as GetFieldPtr
+                    // Before:
+                    //  %res = gfp @global, %idx
+                    //
+                    // after:
+                    //  %lea = lea @global
+                    //  %res = gfp %lea, %idx
+
                     val lea = bb.insertBefore(inst) { it.lea(inst.source().asValue()) }
                     bb.updateDF(inst, GetFieldPtr.SOURCE, lea)
-                    return inst
+                    return lea
                 }
                 copy(generate()) (inst) -> { inst as Copy
                     return bb.replace(inst) { it.lea(inst.origin().asValue()) }

@@ -278,7 +278,29 @@ object UndefinedValue: Constant {
     }
 }
 
-class InitializerListValue(val type: AggregateType, val elements: List<Constant>): Constant, Iterable<Constant> {
+interface AggregateConstant: Constant {
+    fun linearize(): List<Constant>
+}
+
+class StringLiteralConstant(val name: String): AggregateConstant {
+    override fun type(): PointerType {
+        return Type.Ptr
+    }
+
+    override fun data(): String {
+        return name
+    }
+
+    override fun toString(): String {
+        return "\"$name\""
+    }
+
+    override fun linearize(): List<Constant> {
+        return name.map { U8Value(it.code.toByte()) }
+    }
+}
+
+class InitializerListValue(val type: AggregateType, val elements: List<Constant>): AggregateConstant, Iterable<Constant> {
     override fun type(): NonTrivialType {
         return type
     }
@@ -293,7 +315,7 @@ class InitializerListValue(val type: AggregateType, val elements: List<Constant>
         return elements.joinToString(", ", "{", "}")
     }
 
-    fun linearize(): List<Constant> {
+    override fun linearize(): List<Constant> {
         val result = mutableListOf<Constant>()
         for (element in elements) {
             if (element is InitializerListValue) {

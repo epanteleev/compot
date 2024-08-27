@@ -1,7 +1,7 @@
 package examples
 
 import ir.types.*
-import ir.global.StringLiteralConstant
+import ir.global.StringLiteralGlobalConstant
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
@@ -11,7 +11,7 @@ import ir.value.I32Value
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val helloStr = builder.addConstant(StringLiteralConstant("str", ArrayType(Type.I8, 11),"Hello world"))
+    val helloStr = builder.addConstant(StringLiteralGlobalConstant("str", ArrayType(Type.I8, 11),"Hello world"))
     val printf = builder.createExternFunction("printf", Type.I32, arrayListOf(Type.Ptr))
     builder.createFunction("main", Type.I32, arrayListOf()).apply {
         val cont = createLabel()

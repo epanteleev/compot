@@ -18,7 +18,7 @@ import gen.consteval.ConstEvalExpressionInt
 import ir.Definitions.QWORD_SIZE
 import ir.attributes.GlobalValueAttribute
 import ir.global.GlobalConstant
-import ir.global.StringLiteralConstant
+import ir.global.StringLiteralGlobalConstant
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
@@ -239,7 +239,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitStringNode(stringNode: StringNode): Value {
         val string = stringNode.data()
-        val stringLiteral = StringLiteralConstant(createStringLiteralName(), ArrayType(Type.I8, string.length), string)
+        val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.I8, string.length), string)
         return mb.addConstant(stringLiteral)
     }
 
