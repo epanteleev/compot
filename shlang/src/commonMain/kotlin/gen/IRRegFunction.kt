@@ -21,8 +21,6 @@ import ir.global.GlobalConstant
 import ir.global.StringLiteralConstant
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
-import ir.module.ExternFunction
-import ir.module.FunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
@@ -1287,7 +1285,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val type = typeHolder[initDeclarator.name()]
         if (type.storageClass() == StorageClass.STATIC) {
             val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
-            val constant = constEvalExpression(irType, initDeclarator.rvalue) ?: throw IRCodeGenError("Unknown constant")
+            val constant = tryMakeGlobalConstant(irType, initDeclarator.rvalue) ?: throw IRCodeGenError("Unknown constant")
             val varName = initDeclarator.name()
             val global = mb.addGlobal(varName, constant, GlobalValueAttribute.INTERNAL)
             varStack[varName] = global

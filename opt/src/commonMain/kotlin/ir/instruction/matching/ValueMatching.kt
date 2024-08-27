@@ -4,6 +4,7 @@ import ir.global.GlobalValue
 import ir.value.Constant
 import ir.value.Value
 import ir.instruction.*
+import ir.types.AggregateType
 import ir.types.PrimitiveType
 import ir.types.Type
 import ir.value.UnsignedIntegerConstant
@@ -89,7 +90,7 @@ inline fun constant(): ValueMatcher = { it is Constant }
 inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()) }
 
 inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
-    it is GlobalValue && type(it.type())
+    it is GlobalValue && type(it.type()) //TODO bug in type() method
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +99,8 @@ inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
 fun anytype(): TypeMatcher = { true }
 
 fun primitive(): TypeMatcher = { it is PrimitiveType }
+
+fun aggregate(): TypeMatcher = { it is AggregateType }
 
 fun i8(): TypeMatcher = { it == Type.I8 }
 

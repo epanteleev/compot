@@ -293,6 +293,18 @@ class InitializerListValue(val type: AggregateType, val elements: List<Constant>
         return elements.joinToString(", ", "{", "}")
     }
 
+    fun linearize(): List<Constant> {
+        val result = mutableListOf<Constant>()
+        for (element in elements) {
+            if (element is InitializerListValue) {
+                result.addAll(element.linearize())
+            } else {
+                result.add(element)
+            }
+        }
+        return result
+    }
+
     companion object {
         fun zero(type: AggregateType): InitializerListValue {
             fun makeConstantForField(fieldType: NonTrivialType): Constant = when (fieldType) {

@@ -23,8 +23,8 @@ class CompilationUnit: CompiledModule() {
                 symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(SymbolType.StringLiteral)))
             }
             is AnyAggregateGlobalConstant -> {
-                val types = globalValue.elements().map { convertToSymbolType(it) }
-                val data  = globalValue.elements().map { it.data() }
+                val types = globalValue.elements().linearize().map { convertToSymbolType(it) }
+                val data  = globalValue.elements().linearize().map { it.data() }
                 symbols.add(ObjSymbol(globalValue.name(), data, types))
             }
             else -> symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue)))
@@ -51,7 +51,7 @@ class CompilationUnit: CompiledModule() {
 
         val symbolType = convertToSymbolType(constant)
         if (constant is AggregateGlobalConstant) {
-            val data = constant.elements().map { it.data() }
+            val data = constant.elements().linearize().map { it.data() }
             return ObjSymbol(globalValue.name(), data, symbolType)
         } else {
             return ObjSymbol(globalValue.name(), listOf(globalValue.data()), symbolType)
@@ -78,7 +78,7 @@ class CompilationUnit: CompiledModule() {
             return listOf(symType)
         }
         globalValue as AnyAggregateGlobalConstant
-        return globalValue.elements().map { convertToSymbolType(it) }
+        return globalValue.elements().linearize().map { convertToSymbolType(it) }
     }
 
     private fun convertToSymbolType(globalValue: Constant): SymbolType {

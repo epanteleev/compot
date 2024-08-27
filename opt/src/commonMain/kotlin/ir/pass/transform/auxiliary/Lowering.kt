@@ -274,6 +274,11 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     bb.updateDF(inst, Store.DESTINATION, lea)
                     return inst
                 }
+                inst is Value && gfp(gValue(anytype())) (inst) -> { inst as GetFieldPtr
+                    val lea = bb.insertBefore(inst) { it.lea(inst.source().asValue()) }
+                    bb.updateDF(inst, GetFieldPtr.SOURCE, lea)
+                    return inst
+                }
                 copy(generate()) (inst) -> { inst as Copy
                     return bb.replace(inst) { it.lea(inst.origin().asValue()) }
                 }

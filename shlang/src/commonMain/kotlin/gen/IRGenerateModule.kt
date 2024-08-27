@@ -105,7 +105,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             varStack[decl.name()] = mb.addExternValue(decl.name(), lValueType)
             return
         }
-        val result = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
+        val result = tryMakeGlobalConstant(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
         val constant = mb.addConstant(result)
         val global   = mb.addGlobal(createGlobalConstantName(), constant)
         varStack[decl.name()] = global
