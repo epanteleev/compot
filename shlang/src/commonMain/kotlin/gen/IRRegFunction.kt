@@ -323,58 +323,46 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return ret
     }
 
-    private fun eq(type: Type): AnyPredicateType {
-        return when (type) {
-            is IntegerType       -> IntPredicate.Eq
-            is FloatingPointType -> FloatPredicate.Oeq
-            is PointerType       -> IntPredicate.Eq
-            else -> throw IRCodeGenError("Unknown type")
-        }
+    private fun eq(type: Type): AnyPredicateType = when (type) {
+        is IntegerType       -> IntPredicate.Eq
+        is FloatingPointType -> FloatPredicate.Oeq
+        is PointerType       -> IntPredicate.Eq
+        else -> throw IRCodeGenError("Unknown type")
     }
 
-    private fun ne(type: Type): AnyPredicateType {
-        return when (type) {
-            is IntegerType       -> IntPredicate.Ne
-            is FloatingPointType -> FloatPredicate.One
-            is PointerType       -> IntPredicate.Ne
-            else -> throw IRCodeGenError("Unknown type")
-        }
+    private fun ne(type: Type): AnyPredicateType = when (type) {
+        is IntegerType       -> IntPredicate.Ne
+        is FloatingPointType -> FloatPredicate.One
+        is PointerType       -> IntPredicate.Ne
+        else -> throw IRCodeGenError("Unknown type")
     }
 
-    private fun gt(type: Type): AnyPredicateType {
-        return when (type) {
-            is IntegerType       -> IntPredicate.Gt
-            is FloatingPointType -> FloatPredicate.Ogt
-            is PointerType       -> IntPredicate.Gt
-            else -> throw IRCodeGenError("Unknown type")
-        }
+    private fun gt(type: Type): AnyPredicateType = when (type) {
+        is IntegerType       -> IntPredicate.Gt
+        is FloatingPointType -> FloatPredicate.Ogt
+        is PointerType       -> IntPredicate.Gt
+        else -> throw IRCodeGenError("Unknown type")
     }
 
-    private fun lt(type: Type): AnyPredicateType {
-        return when (type) {
-            is IntegerType       -> IntPredicate.Lt
-            is FloatingPointType -> FloatPredicate.Olt
-            is PointerType       -> IntPredicate.Lt
-            else -> throw IRCodeGenError("Unknown type")
-        }
+    private fun lt(type: Type): AnyPredicateType = when (type) {
+        is IntegerType       -> IntPredicate.Lt
+        is FloatingPointType -> FloatPredicate.Olt
+        is PointerType       -> IntPredicate.Lt
+        else -> throw IRCodeGenError("Unknown type")
     }
 
-    private fun le(type: Type): AnyPredicateType {
-        return when (type) {
-            is IntegerType       -> IntPredicate.Le
-            is FloatingPointType -> FloatPredicate.Ole
-            is PointerType       -> IntPredicate.Le
-            else -> throw IRCodeGenError("Unknown type")
-        }
+    private fun le(type: Type): AnyPredicateType = when (type) {
+        is IntegerType       -> IntPredicate.Le
+        is FloatingPointType -> FloatPredicate.Ole
+        is PointerType       -> IntPredicate.Le
+        else -> throw IRCodeGenError("Unknown type")
     }
 
-    private fun ge(type: Type): AnyPredicateType {
-        return when (type) {
-            is IntegerType       -> IntPredicate.Ge
-            is FloatingPointType -> FloatPredicate.Oge
-            is PointerType       -> IntPredicate.Ge
-            else -> throw IRCodeGenError("Unknown type")
-        }
+    private fun ge(type: Type): AnyPredicateType = when (type) {
+        is IntegerType       -> IntPredicate.Ge
+        is FloatingPointType -> FloatPredicate.Oge
+        is PointerType       -> IntPredicate.Ge
+        else -> throw IRCodeGenError("Unknown type")
     }
 
     private fun makeAlgebraicBinary(binop: BinaryOp, op: ArithmeticBinaryOp): Value {
@@ -995,7 +983,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         for (node in compoundStatement.statements) {
             when (node) {
                 is Declaration -> visitDeclaration(node)
-                is Statement -> visitStatement(node)
+                is Statement   -> visitStatement(node)
                 else -> throw IRCodeGenError("Statement expected")
             }
         }
