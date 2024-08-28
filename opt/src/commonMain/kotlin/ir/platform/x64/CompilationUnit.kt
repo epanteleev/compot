@@ -32,17 +32,18 @@ class CompilationUnit: CompiledModule() {
         }
     }
 
-    fun makeGlobal(globalValue: GlobalValue) {
+    fun makeGlobal(globalValue: AnyGlobalValue) {
         val symbol = convertGlobalValueToSymbolType(globalValue)
         if (symbol != null) {
             symbols.add(symbol)
         }
     }
 
-    private fun convertGlobalValueToSymbolType(globalValue: GlobalValue): ObjSymbol? {
-        if (globalValue.attribute.contains(GlobalValueAttribute.EXTERNAL)) {
+    private fun convertGlobalValueToSymbolType(globalValue: AnyGlobalValue): ObjSymbol? {
+        if (globalValue is ExternValue) {
             return null
         }
+        globalValue as GlobalValue
 
         val constant = globalValue.data
         if (constant is StringLiteralConstant) {

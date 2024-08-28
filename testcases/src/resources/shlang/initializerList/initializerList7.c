@@ -3,8 +3,10 @@
 
 static void print(uint16_t G[][3]) {
     for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 3; j++)
-            printf("%d", G[i][j]);
+        for (int j = 0; j < 3; j++) {
+            printf("%u ", G[i][j]);
+        }
+        printf("\n");
     }
 }
 

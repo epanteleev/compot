@@ -4,7 +4,7 @@ import ir.attributes.GlobalValueAttribute
 import ir.types.*
 
 
-class GlobalValue(val name: String, val data: GlobalConstant, val attribute: List<GlobalValueAttribute>): GlobalSymbol {
+class GlobalValue(val name: String, val data: GlobalConstant, val attribute: List<GlobalValueAttribute>): AnyGlobalValue {
     init {
         require(data.type() is PrimitiveType) {
             "GlobalValue data must be a PrimitiveType, but was '${data.type()}'"

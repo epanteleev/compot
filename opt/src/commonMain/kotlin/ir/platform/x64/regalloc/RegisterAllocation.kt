@@ -3,6 +3,7 @@ package ir.platform.x64.regalloc
 import asm.x64.*
 import common.assertion
 import ir.attributes.GlobalValueAttribute
+import ir.global.ExternValue
 import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
 import ir.global.GlobalValue
@@ -90,13 +91,8 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
             is F64Value -> ImmFp64(value.f64)
             is GlobalConstant -> Address.internal(value.name())
             is FunctionSymbol -> Address.internal(value.name())
-            is GlobalValue -> {
-                if (value.attribute.contains(GlobalValueAttribute.EXTERNAL)) {
-                    Address.external(value.name())
-                } else {
-                    Address.internal(value.name())
-                }
-            }
+            is ExternValue -> Address.external(value.name())
+            is GlobalValue -> Address.internal(value.name())
             is NullValue -> Imm64.of(0)
             else -> throw RuntimeException("found '$value': '${value.type()}'")
         }

@@ -474,17 +474,4 @@ object TypeConverter {
     private fun convertConstant(value: Constant, type: Type): Value {
         return Constant.from(type, value)
     }
-
-    inline fun<reified T: AnyAttribute> toIRAttributes(qualifier: List<TypeProperty>): List<T> {
-        val attributes = arrayListOf<T>()
-        for (q in qualifier) {
-            when (q) {
-                StorageClass.EXTERN -> attributes.add(GlobalValueAttribute.EXTERNAL as T)
-                StorageClass.STATIC -> attributes.add(GlobalValueAttribute.INTERNAL as T)
-                else -> {}
-            }
-        }
-
-        return attributes
-    }
 }
