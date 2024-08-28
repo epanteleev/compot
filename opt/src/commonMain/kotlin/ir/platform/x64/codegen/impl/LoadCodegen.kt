@@ -33,7 +33,6 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsV
     }
 
     override fun aa(dst: Address, src: Address) {
-        TODO("untested")
         asm.mov(POINTER_SIZE, src, temp1)
         asm.mov(size, Address.from(temp1, 0), temp1)
         asm.mov(size, temp1, dst)

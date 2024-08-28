@@ -61,7 +61,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return nameGenerator.createGlobalConstantName()
     }
 
-    private fun aggregateInitializer(lValueType: Type, expr: Expression): GlobalConstant? = when (expr) {
+    private fun aggregateInitializer(lValueType: NonTrivialType, expr: Expression): GlobalConstant? = when (expr) {
         is StringNode -> {
             val content = expr.data()
             StringLiteralConstant(createStringLiteralName(), ArrayType(Type.U8, content.length), content)
