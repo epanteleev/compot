@@ -28,6 +28,10 @@ inline fun binary(op: ArithmeticBinaryOp, crossinline a: ValueMatcher, crossinli
     it is ArithmeticBinary && it.op == op && a(it.first()) && b(it.second())
 }
 
+inline fun select(crossinline cond: ValueMatcher, crossinline onTrue: ValueMatcher, crossinline onFalse: ValueMatcher): InstructionMatcher = {
+    it is Select && cond(it.condition()) && onTrue(it.onTrue()) && onFalse(it.onFalse())
+}
+
 inline fun tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
     it is TupleDiv && a(it.first()) && b(it.second())
 }
@@ -91,3 +95,5 @@ fun anytype(): TypeMatcher = { true }
 fun primitive(): TypeMatcher = { it is PrimitiveType }
 
 fun i8(): TypeMatcher = { it == Type.I8 }
+
+fun u8(): TypeMatcher = { it == Type.U8 }

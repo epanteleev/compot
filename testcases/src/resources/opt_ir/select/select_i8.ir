@@ -1,0 +1,26 @@
+extern void @printByte(i8)
+
+define i8 @select(%v: i8) {
+entry:
+  %less = icmp lt i8 %v, 5
+  %v.select = select u1 %less, i8 0, i8 1
+  ret i8 %v.select
+}
+
+define u64 @main() {
+entry:
+  %v1 = call i8 @select(4: i8) br label %cont0
+
+cont0:
+  call void @printByte(%v1: i8) br label %cont
+
+cont:
+  %v2 = call i8 @select(5: i8) br label %cont1
+
+cont1:
+  call void @printByte(%v2: i8) br label %cont2
+
+cont2:
+  ret u64 0
+}
+

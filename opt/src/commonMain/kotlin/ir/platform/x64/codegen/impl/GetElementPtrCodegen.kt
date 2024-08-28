@@ -1,19 +1,16 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
-import common.assertion
 import ir.Definitions.POINTER_SIZE
 import ir.types.*
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.CallConvention.isIntRange
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
 class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: NonTrivialType, val asm: Assembler) :
     GPOperandsVisitorBinaryOp {
     private val size: Int = basicType.sizeOf()
-
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
@@ -48,10 +45,6 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
         val disp = second.value() * size
-        assertion(isIntRange(disp)) {
-            "should be, but disp=$disp"
-        }
-
         asm.lea(POINTER_SIZE, Address.from(first, disp.toInt()), dst)
     }
 

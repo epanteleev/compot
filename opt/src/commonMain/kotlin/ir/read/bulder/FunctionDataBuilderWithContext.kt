@@ -301,7 +301,7 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.fp2Int(value, resultType.type()))
     }
 
-    fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: PrimitiveTypeToken): Value {
+    fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: IntegerTypeToken): Value {
         val cond    = getValue(condTok, Type.U1)
         val onTrue  = getValue(onTrueTok, selectType.type())
         val onFalse = getValue(onFalseTok, selectType.type())
