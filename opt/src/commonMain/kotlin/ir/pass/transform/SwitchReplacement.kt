@@ -55,7 +55,7 @@ private class SwitchReplacementImpl(val cfg: BasicBlocks) {
                 val inst = current.insertBefore(current.last()) {
                     it.icmp(selector, IntPredicate.Eq, value)
                 }
-                current.update(current.last()) {
+                current.replace(current.last()) {
                     it.branchCond(inst, target, newBB)
                 }
             } else {

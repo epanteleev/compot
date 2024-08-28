@@ -19,15 +19,11 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
                 "Flow graph has critical edge from $incoming to $bb"
             }
 
-            val copy = incoming.insertBefore(incoming.last()) {
-                it.copy(operand)
-            }
-            phi.update(idx, copy)
+            val copy = incoming.insertBefore(incoming.last()) { it.copy(operand) }
+            bb.updateDF(phi, idx, copy)
         }
 
-        val copy = bb.insertAfter(phi) { it.copy(phi) }
-        phi.replaceUsages(copy)
-        return copy
+        return bb.updateOf(phi) { bb.insertAfter(phi) { it.copy(phi) } }
     }
 
     fun pass() {

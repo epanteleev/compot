@@ -78,7 +78,7 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
             }
 
             if (instruction is Store && instruction.isLocalVariable()) {
-                assertion(escapeState.getEscapeState(instruction.pointer()) == EscapeState.Local) {
+                assertion(escapeState.getEscapeState(instruction.pointer()) == EscapeState.NoEscape) {
                     "Store to global variable is not supported"
                 }
 
@@ -94,13 +94,13 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
             }
             if (instruction is Store) {
                 val state = escapeState.getEscapeState(instruction.pointer())
-                assertion(state != EscapeState.Local) {
+                assertion(state != EscapeState.NoEscape) {
                     "state=$state, instruction=${instruction.dump()}"
                 }
             }
 
             if (instruction is Alloc && instruction.allocatedType is PrimitiveType && instruction.isLocalVariable()) {
-                assertion(escapeState.getEscapeState(instruction) == EscapeState.Local) {
+                assertion(escapeState.getEscapeState(instruction) == EscapeState.NoEscape) {
                     "Alloc to global variable is not supported"
                 }
                 valueMap[instruction] = Value.UNDEF
@@ -108,13 +108,13 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
             }
             if (instruction is Alloc) {
                 val state = escapeState.getEscapeState(instruction)
-                assertion(state != EscapeState.Local) {
+                assertion(state != EscapeState.NoEscape) {
                     "state=$state, instruction=${instruction.dump()}"
                 }
             }
 
             if (instruction is Load && instruction.isLocalVariable()) {
-                assertion(escapeState.getEscapeState(instruction.operand()) == EscapeState.Local) {
+                assertion(escapeState.getEscapeState(instruction.operand()) == EscapeState.NoEscape) {
                     "Load from global variable is not supported"
                 }
                 val actual = findActualValue(bb, instruction.operand())
@@ -123,7 +123,7 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
             }
             if (instruction is Load) {
                 val state = escapeState.getEscapeState(instruction.operand())
-                assertion(state != EscapeState.Local) {
+                assertion(state != EscapeState.NoEscape) {
                     "state=$state, instruction=${instruction.dump()}"
                 }
             }

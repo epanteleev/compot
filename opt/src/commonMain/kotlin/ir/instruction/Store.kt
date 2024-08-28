@@ -19,7 +19,7 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
             "size should be 2 in $this instruction"
         }
 
-        return operands[0]
+        return operands[DESTINATION]
     }
 
     fun value(): Value {
@@ -27,7 +27,7 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
             "size should be 2 in $this instruction"
         }
 
-        return operands[1]
+        return operands[VALUE]
     }
 
     fun valueType(): NonTrivialType = valueType

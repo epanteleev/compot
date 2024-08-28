@@ -7,6 +7,7 @@ import ir.module.block.Block
 import ir.types.ArithmeticType
 import ir.types.Type
 
+
 enum class ArithmeticBinaryOp {
     Add {
         override fun toString(): String {
@@ -70,7 +71,7 @@ class ArithmeticBinary private constructor(id: Identity, owner: Block, tp: Arith
             "size should be 2 in $this instruction"
         }
 
-        return operands[0]
+        return operands[FIRST]
     }
 
     fun second(): Value {
@@ -78,7 +79,7 @@ class ArithmeticBinary private constructor(id: Identity, owner: Block, tp: Arith
             "size should be 2 in $this instruction"
         }
 
-        return operands[1]
+        return operands[SECOND]
     }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
@@ -86,6 +87,9 @@ class ArithmeticBinary private constructor(id: Identity, owner: Block, tp: Arith
     }
 
     companion object {
+        const val FIRST = 0
+        const val SECOND = 1
+
         fun make(id: Identity, owner: Block, type: ArithmeticType, a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
             val aType = a.type()
             val bType = b.type()
