@@ -16,7 +16,8 @@ import ir.value.Constant
 
 data class IRCodeGenError(override val message: String) : Exception(message)
 
-class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack(), 0) {
+class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack(), NameGenerator()) {
+
     fun visit(programNode: ProgramNode) = varStack.scoped {
         for (node in programNode.nodes) {
             when (node) {
@@ -28,9 +29,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     }
 
     private fun generateFunction(node: FunctionNode) {
-        val gen = IrGenFunction(mb, typeHolder, varStack, constantCounter)
+        val gen = IrGenFunction(mb, typeHolder, varStack, nameGenerator)
         gen.visit(node)
-        constantCounter = gen.constantCounter
     }
 
     private fun getExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {

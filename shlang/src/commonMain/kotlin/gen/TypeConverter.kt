@@ -1,5 +1,6 @@
 package gen
 
+import common.assertion
 import types.*
 import ir.types.*
 import ir.value.*
@@ -9,6 +10,7 @@ import ir.Definitions.HWORD_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.attributes.AnyAttribute
 import ir.attributes.GlobalValueAttribute
+import ir.instruction.Alloc
 import ir.instruction.IntPredicate
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
@@ -460,7 +462,12 @@ object TypeConverter {
                 values.add(load1)
                 values
             }
-            else -> arrayListOf(convertToType(expr, Type.Ptr))
+            else -> {
+                assertion(expr is Alloc) {
+                    "Expected Alloc, but got $expr"
+                }
+                arrayListOf(expr)
+            }
         }
     }
 
@@ -470,8 +477,8 @@ object TypeConverter {
 
     inline fun<reified T: AnyAttribute> toIRAttributes(qualifier: List<TypeProperty>): List<T> {
         val attributes = arrayListOf<T>()
-        for (qual in qualifier) {
-            when (qual) {
+        for (q in qualifier) {
+            when (q) {
                 StorageClass.EXTERN -> attributes.add(GlobalValueAttribute.EXTERNAL as T)
                 StorageClass.STATIC -> attributes.add(GlobalValueAttribute.INTERNAL as T)
                 else -> {}

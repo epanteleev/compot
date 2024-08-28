@@ -4,12 +4,11 @@ import ir.types.*
 
 
 interface Constant: Value {
-    fun data(): String {
-        return if (this is NullValue) {
-            "0"
-        } else {
-            toString()
-        }
+    fun data(): String = when (this) {
+        is NullValue -> "0"
+        is F32Value -> f32.toBits().toString()
+        is F64Value -> f64.toBits().toString()
+        else -> toString()
     }
 
     companion object {

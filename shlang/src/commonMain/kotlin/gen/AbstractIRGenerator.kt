@@ -5,29 +5,29 @@ import gen.consteval.*
 import ir.global.ArrayGlobalConstant
 import ir.global.GlobalConstant
 import ir.global.StringLiteralConstant
-import types.TypeHolder
+import ir.global.StructGlobalConstant
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.AggregateType
 import ir.types.ArrayType
+import ir.types.StructType
 import ir.types.Type
 import ir.value.Constant
 import parser.nodes.Expression
 import parser.nodes.InitializerList
 import parser.nodes.StringNode
-import types.CType
-import types.CompoundType
+import types.*
 
 
 abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val typeHolder: TypeHolder,
                                    protected val varStack: VarStack,
-                                   var constantCounter: Int) {
+                                   protected val nameGenerator: NameGenerator) {
     protected fun constEvalExpression(lValueType: Type, expr: Expression): GlobalConstant? {
         val result = constEvalExpression0(expr)
         if (result != null) {
             return GlobalConstant.of(createGlobalConstantName(), lValueType, result)
         }
-        return stringLiteralInitializer(expr)
+        return aggregateInitializer(lValueType, expr)
     }
 
     private fun constEvalExpression0(expr: Expression): Number? {
@@ -55,34 +55,43 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     protected fun createStringLiteralName(): String {
-        return ".str${constantCounter++}"
+        return nameGenerator.createStringLiteralName()
     }
 
     protected fun createGlobalConstantName(): String {
-        return ".v${constantCounter++}"
+        return nameGenerator.createGlobalConstantName()
     }
 
-    private fun stringLiteralInitializer(expr: Expression): GlobalConstant? {
-        if (expr is StringNode) {
+    private fun aggregateInitializer(lValueType: Type, expr: Expression): GlobalConstant? = when (expr) {
+        is StringNode -> {
             val content = expr.data()
-            return StringLiteralConstant(createStringLiteralName(), ArrayType(Type.U8, content.length), content)
-        } else if (expr is InitializerList) {
-            val type = expr.resolveType(typeHolder)
+            StringLiteralConstant(createStringLiteralName(), ArrayType(Type.U8, content.length), content)
+        }
 
-            if (type is CompoundType) {
-                val typeExpr = mb.toIRType<AggregateType>(typeHolder, type)
+        is InitializerList -> {
+            when (lValueType) {
+                is ArrayType -> {
+                    val elements = expr.initializers.map { constEvalExpression0(it) }
+                    val convertedElements = elements.mapIndexed { it, num ->
+                        Constant.of(lValueType.field(it), num as Number)
+                    }
 
-                val elements = expr.initializers.map { constEvalExpression0(it) }
-                val convertedElements = elements.mapIndexed { it, num ->
-                    Constant.of(typeExpr.field(it), num as Number)
+                    ArrayGlobalConstant(createStringLiteralName(), lValueType, convertedElements)
                 }
 
-                return ArrayGlobalConstant(createStringLiteralName(), typeExpr as ArrayType, convertedElements)
-            } else {
-                throw IRCodeGenError("Unsupported type $type")
+                is StructType -> {
+                    val elements = expr.initializers.map { constEvalExpression0(it) }
+                    val convertedElements = elements.mapIndexed { it, num ->
+                        Constant.of(lValueType.field(it), num as Number)
+                    }
+
+                    StructGlobalConstant(createStringLiteralName(), lValueType, convertedElements)
+                }
+
+                else -> throw IRCodeGenError("Unsupported type $lValueType")
             }
-        } else {
-            return null
         }
+
+        else -> null
     }
 }

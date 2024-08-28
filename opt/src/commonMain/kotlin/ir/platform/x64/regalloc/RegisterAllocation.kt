@@ -5,10 +5,8 @@ import common.assertion
 import ir.attributes.GlobalValueAttribute
 import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
-import ir.global.GlobalSymbol
 import ir.global.GlobalValue
 import ir.platform.x64.CallConvention
-import ir.pass.analysis.intervals.LiveIntervals
 import ir.platform.x64.CallConvention.gpCalleeSaveRegs
 import ir.platform.x64.CallConvention.gpCallerSaveRegs
 import ir.platform.x64.CallConvention.xmmCallerSaveRegs
@@ -16,9 +14,7 @@ import ir.value.*
 
 
 class RegisterAllocation(private val spilledLocalsStackSize: Int,
-                         private val registerMap: Map<LocalValue, Operand>,
-                         val liveness: LiveIntervals
-) {
+                         private val registerMap: Map<LocalValue, Operand>) {
     /** Count of callee save registers in given function. */
     val calleeSaveRegisters: Set<GPRegister> by lazy { //TODO get this from *RegisterList
         val registers = linkedSetOf<GPRegister>()
