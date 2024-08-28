@@ -101,26 +101,26 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitSingleInitializer(singleInitializer: SingleInitializer): Value {
         val lvalueAdr = initializerContext.peekValue()
+        val type = initializerContext.peekType() as CompoundType
         val idx = initializerContext.peekIndex()
         when (val expr = singleInitializer.expr) {
             is InitializerList -> {
-                val type = expr.resolveType(typeHolder)
+                val t = when (type) {
+                    is CArrayType -> type.element()
+                   // is CStructType -> type.fieldIndex()
+                    else -> throw IRCodeGenError("Unknown type")
+                }
                 val irType = mb.toIRType<AggregateType>(typeHolder, type)
                 val fieldPtr = ir.gep(lvalueAdr, irType, Constant.valueOf(Type.I64, idx))
-                initializerContext.scope(fieldPtr, type) { visitInitializerList(expr) }
+                initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
             }
             else -> {
                 val rvalue = visitExpression(expr, true)
-                when (val type = initializerContext.peekType()) {
-                    is CompoundType -> {
-                        val irType = mb.toIRType<AggregateType>(typeHolder, type)
-                        val fieldType = irType.field(idx)
-                        val converted = ir.convertToType(rvalue, fieldType)
-                        val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(Constant.valueOf(Type.I64, idx)))
-                        ir.store(fieldPtr, converted)
-                    }
-                    else -> throw IRCodeGenError("Unknown type, type=$type")
-                }
+                val irType = mb.toIRType<AggregateType>(typeHolder, type)
+                val fieldType = irType.field(idx)
+                val converted = ir.convertToType(rvalue, fieldType)
+                val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(Constant.valueOf(Type.I64, idx)))
+                ir.store(fieldPtr, converted)
             }
         }
         return Value.UNDEF
