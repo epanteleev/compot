@@ -31,9 +31,7 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
     }
 
     override fun build(): Module {
-        val fns = functions.mapTo(arrayListOf()) {
-            it.build()
-        }
+        val fns = functions.map { it.build() }.associateBy { it.name() }
 
         val module = SSAModule(fns, externFunctions, constantPool, globals, structs)
         return VerifySSA.run(module)

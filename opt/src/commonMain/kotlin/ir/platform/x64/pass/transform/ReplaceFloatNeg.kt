@@ -9,7 +9,7 @@ import ir.module.SSAModule
 import ir.module.block.Block
 
 
-class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
+class ReplaceFloatNeg private constructor(val functions: Map<String, FunctionData>) {
     private fun minusZero(tp: FloatingPointType): Constant {
         return when (tp) {
             Type.F32 -> F32Value(-0.0f)
@@ -19,7 +19,7 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
     }
 
     private fun run() {
-        for (data in functions) {
+        for (data in functions.values) {
             data.blocks.forEach {
                 handleBlock(it)
             }
@@ -45,7 +45,7 @@ class ReplaceFloatNeg private constructor(val functions: List<FunctionData>) {
 
     companion object {
         fun run(module: Module): Module {
-            val functions = module.functions.map { it }
+            val functions = module.functions.toMutableMap()
             ReplaceFloatNeg(functions).run()
 
             return SSAModule(functions, module.externFunctions, module.constantPool, module.globals, module.types)

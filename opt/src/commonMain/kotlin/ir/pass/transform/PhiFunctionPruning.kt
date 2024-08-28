@@ -90,7 +90,7 @@ class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
 
     companion object {
         fun run(module: Module): Module {
-            for (f in module.functions) {
+            for (f in module.functions()) {
                 PhiFunctionPruning(f).run()
             }
 

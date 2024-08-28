@@ -12,8 +12,6 @@ import ir.pass.common.FunctionAnalysisPassFabric
  */
 class AnalysisPassCache {
     private val cache by lazy { intMapOf<FunctionAnalysisPassFabric<AnalysisResult>, AnalysisResult>(AnalysisType.size()) { it.type().ordinal } }
-    private var cfMutationMarker = 0
-    private var dfMutationCount = 0
 
     fun getResult(type: FunctionAnalysisPassFabric<AnalysisResult>, mutationMarker: MutationMarker): AnalysisResult? {
         val result = cache[type] ?: return null

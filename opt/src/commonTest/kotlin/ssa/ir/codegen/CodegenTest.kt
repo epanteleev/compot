@@ -52,7 +52,8 @@ class CodegenTest {
         //println(CodeEmitter.codegen(module))
 
         //asserts
-        val pool = VirtualRegistersPool.create(module.functions[0].arguments())
+        val fn = module.findFunction("sum")
+        val pool = VirtualRegistersPool.create(fn.arguments())
         assertEquals(pool.arguments()[0], rdi)
         assertEquals(pool.arguments()[1], rsi)
     }

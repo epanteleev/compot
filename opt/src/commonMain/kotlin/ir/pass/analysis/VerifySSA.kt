@@ -487,7 +487,7 @@ class VerifySSA private constructor(private val module: Module, private val func
     companion object {
         fun run(module: Module): Module {
             val prototypes = module.prototypes
-            module.functions.forEach { data ->
+            module.functions.values.forEach { data ->
                 VerifySSA(module, data, prototypes).pass()
             }
 

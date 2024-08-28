@@ -65,8 +65,7 @@ class DominatorTreeTest {
     @Test
     fun testDominator() {
         val module = withBasicBlocks()
-        val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.Ptr))
-        val domTree = module.findFunction(prototype).analysis(DominatorTreeFabric)
+        val domTree = module.findFunction("hello").analysis(DominatorTreeFabric)
 
         assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(1)))
         assertTrue(domTree.dominates(BlockViewer(1), BlockViewer(2)))

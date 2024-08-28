@@ -65,8 +65,7 @@ class PostDominatorTreeTest {
     @Test
     fun testPostDominator() {
         val module = withBasicBlocks()
-        val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.Ptr))
-        val domTree = module.findFunction(prototype).analysis(PostDominatorTreeFabric)
+        val domTree = module.findFunction("hello").analysis(PostDominatorTreeFabric)
 
         assertTrue(domTree.postDominates(BlockViewer(1), BlockViewer(0)))
         assertTrue(domTree.postDominates(BlockViewer(7), BlockViewer(0)))
