@@ -9,9 +9,10 @@ import ir.instruction.lir.*
 import common.LeakedLinkedList
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
+import ir.module.ModificationCounter
 
 
-class Block private constructor(override val index: Int):
+class Block private constructor(private val mc: ModificationCounter, override val index: Int):
     AnyInstructionFabric, AnyBlock, Iterable<Instruction> {
     private val instructions = InstructionList()
     private val predecessors = arrayListOf<Block>()
@@ -76,15 +77,7 @@ class Block private constructor(override val index: Int):
     val size
         get(): Int = instructions.size
 
-    private fun addPredecessor(bb: Block) {
-        predecessors.add(bb)
-    }
-
-    private fun addSuccessor(bb: Block) {
-        successors.add(bb)
-    }
-
-    private fun updateSuccessor(old: Block, new: Block) {
+    private fun updateSuccessor(old: Block, new: Block): Int {
         val index = successors.indexOf(old)
         if (index == -1) {
             throw RuntimeException("Out of index: old=$old")
@@ -92,9 +85,14 @@ class Block private constructor(override val index: Int):
 
         new.predecessors.add(this)
         successors[index] = new
+        return index
     }
 
     private fun removePredecessors(old: Block) {
+        assertion(predecessors.contains(old)) {
+            "old=$old is not in bb=$this"
+        }
+
         predecessors.remove(old)
     }
 
@@ -191,12 +189,12 @@ class Block private constructor(override val index: Int):
         }
     }
 
-    fun updateCF(instruction: TerminateInstruction, fn: (Block) -> Block) {
-        assertion(instruction.owner() === this) {
-            "instruction=$instruction is not in bb=$this"
-        }
+    fun updateCF(currentSuccessor: Block, newSuccessor: Block) {
+        val index = updateSuccessor(currentSuccessor, newSuccessor)
+        currentSuccessor.removePredecessors(this)
 
-        instruction.updateTargets(fn)
+        val terminateInstruction = last()
+        terminateInstruction.updateTarget(newSuccessor, index)
     }
 
     override fun contains(instruction: Instruction): Boolean {
@@ -485,12 +483,12 @@ class Block private constructor(override val index: Int):
         return withOutput { LeaStack.make(it, this, loadedType, origin, index) }
     }
 
-    private fun makeEdge(to: Block) {
-        addSuccessor(to)
-        to.addPredecessor(this)
+    private fun makeEdge(to: Block) = mc.cf {
+        successors.add(to)
+        to.predecessors.add(this)
     }
 
-    internal fun removeEdge(to: Block) {
+    internal fun removeEdge(to: Block) = mc.cf {
         successors.remove(to)
         to.predecessors.remove(this)
     }
@@ -532,13 +530,8 @@ class Block private constructor(override val index: Int):
     }
 
     companion object {
-        fun insertBlock(block: Block, newBlock: Block, predecessor: Block) {
-            predecessor.updateSuccessor(block, newBlock)
-            block.removePredecessors(predecessor)
-        }
-
-        fun empty(blockIndex: Int): Block {
-            return Block(blockIndex)
+        fun empty(mc: ModificationCounter, blockIndex: Int): Block {
+            return Block(mc, blockIndex)
         }
     }
 }

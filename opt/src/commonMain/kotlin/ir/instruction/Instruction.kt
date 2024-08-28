@@ -107,7 +107,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
     abstract fun dump(): String
 
     companion object {
-        internal fun<T: Instruction> registerUser(user: T, vararg operands: Value): T {
+        internal inline fun<T: Instruction> registerUser(user: T, vararg operands: Value): T {
             for (i in operands) {
                 if (i !is LocalValue) {
                     continue
@@ -119,7 +119,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
             return user
         }
 
-        internal fun<T: Instruction> registerUser(user: T, operands: Iterator<Value>): T {
+        internal inline fun<T: Instruction> registerUser(user: T, operands: Iterator<Value>): T {
             for (i in operands) {
                 if (i !is LocalValue) {
                     continue

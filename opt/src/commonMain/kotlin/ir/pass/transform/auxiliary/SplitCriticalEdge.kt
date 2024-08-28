@@ -52,17 +52,8 @@ internal class SplitCriticalEdge private constructor(private val functionData: F
         val newBlock = functionData.blocks.createBlock().apply {
             branch(bb)
         }
-
-        p.updateCF(p.last()) {
-            if (it == bb) {
-                newBlock
-            } else {
-                it
-            }
-        }
-
+        p.updateCF(bb, newBlock)
         predecessorMap[p] = newBlock
-        Block.insertBlock(bb, newBlock, p)
     }
 
     companion object {
