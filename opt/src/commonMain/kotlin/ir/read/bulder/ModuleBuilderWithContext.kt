@@ -5,7 +5,7 @@ import ir.module.*
 import ir.read.tokens.*
 import ir.module.builder.AnyModuleBuilder
 import ir.types.StructType
-import ir.pass.ana.VerifySSA
+import ir.pass.analysis.VerifySSA
 import ir.types.NonTrivialType
 import ir.types.Type
 

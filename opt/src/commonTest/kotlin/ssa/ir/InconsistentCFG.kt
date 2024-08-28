@@ -4,11 +4,10 @@ import ir.value.F32Value
 import ir.module.FunctionPrototype
 import ir.value.I32Value
 import ir.value.U32Value
-import ir.global.ArrayGlobalConstant
 import ir.types.Type
 import kotlin.test.Test
 import ir.module.builder.impl.ModuleBuilder
-import ir.pass.ana.ValidateSSAErrorException
+import ir.pass.analysis.ValidateSSAErrorException
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
 

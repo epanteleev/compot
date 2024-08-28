@@ -5,7 +5,7 @@ import ir.instruction.IntPredicate
 import ir.instruction.Switch
 import ir.module.BasicBlocks
 import ir.module.Module
-import ir.pass.PassFabric
+import ir.pass.TransformPassFabric
 import ir.pass.TransformPass
 
 
@@ -20,7 +20,7 @@ class SwitchReplacement internal constructor(module: Module) : TransformPass(mod
     }
 }
 
-object SwitchReplacementFabric : PassFabric {
+object SwitchReplacementFabric : TransformPassFabric {
     override fun create(module: Module): TransformPass {
         return SwitchReplacement(module.copy())
     }

@@ -8,7 +8,7 @@ import gen.TypeConverter.toIRType
 import ir.global.*
 import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
-import ir.pass.ana.ValidateSSAErrorException
+import ir.pass.analysis.ValidateSSAErrorException
 import ir.value.Constant
 
 

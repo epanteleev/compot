@@ -1,10 +1,12 @@
-package ir.pass.ana
+package ir.pass.analysis
 
-import ir.module.BasicBlocks
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.dominance.DominatorTree
 import ir.module.FunctionData
+import ir.pass.AnalysisResult
+import ir.pass.FunctionAnalysisPass
+import ir.pass.FunctionAnalysisPassFabric
 
 
 data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private val exit: Block) {
@@ -24,7 +26,7 @@ data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private va
     }
 }
 
-data class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>) {
+data class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>): AnalysisResult() {
     val size: Int by lazy {
         loopHeaders.values.fold(0) { acc, list -> acc + list.size }
     }
@@ -33,7 +35,7 @@ data class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>) {
     fun headers(): Set<Block> = loopHeaders.keys
 }
 
-class LoopDetection private constructor(val blocks: FunctionData, val dominatorTree: DominatorTree) {
+class LoopDetection internal constructor(val blocks: FunctionData, val dominatorTree: DominatorTree): FunctionAnalysisPass() {
     private fun evaluate(): LoopInfo {
         val loopHeaders = hashMapOf<Block, List<LoopBlockData>>()
         for (bb in blocks.postorder()) {
@@ -94,5 +96,19 @@ class LoopDetection private constructor(val blocks: FunctionData, val dominatorT
         fun evaluate(blocks: FunctionData): LoopInfo {
             return LoopDetection(blocks, blocks.dominatorTree()).evaluate()
         }
+    }
+
+    override fun name(): String {
+        return "LoopDetection"
+    }
+
+    override fun run(): LoopInfo {
+        return evaluate()
+    }
+}
+
+object LoopDetectionPassFabric: FunctionAnalysisPassFabric {
+    override fun create(functionData: FunctionData): LoopDetection {
+        return LoopDetection(functionData, functionData.dominatorTree())
     }
 }

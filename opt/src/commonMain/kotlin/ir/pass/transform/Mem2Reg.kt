@@ -2,11 +2,10 @@ package ir.pass.transform
 
 import ir.dominance.DominatorTree
 import ir.instruction.*
-import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
-import ir.pass.PassFabric
+import ir.pass.TransformPassFabric
 import ir.pass.TransformPass
 import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
@@ -29,7 +28,7 @@ class Mem2Reg internal constructor(module: Module): TransformPass(module) {
     }
 }
 
-object Mem2RegFabric: PassFabric {
+object Mem2RegFabric: TransformPassFabric {
     override fun create(module: Module): TransformPass {
         return Mem2Reg(module.copy())
     }
