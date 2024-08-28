@@ -197,6 +197,13 @@ abstract class ShlangTests: CommonCTest() {
         val result = runCTest("shlang/goto", listOf("runtime/runtime.c"), options())
         assertEquals(220, result.exitCode)
     }
+
+    @Test
+    fun testHelloWorld3() {
+        val result = runCTest("shlang/hello_world2", listOf(), options())
+        assertEquals("Hello, World!\n", result.error)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class ShlangTestsO0: ShlangTests() {
