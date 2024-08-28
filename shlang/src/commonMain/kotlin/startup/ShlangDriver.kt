@@ -81,6 +81,6 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
 
     companion object {
         const val SYSTEM_HEADERS_PATH = "/usr/include"
-        const val C_HEADERS_PATH      = "/usr/lib/gcc/x86_64-pc-linux-gnu/14.1.1/include/" //TODO hardcoded for manjaro
+        const val C_HEADERS_PATH      = "/usr/lib/gcc/x86_64-pc-linux-gnu/14.2.1/include/" //TODO hardcoded for manjaro
     }
 }
