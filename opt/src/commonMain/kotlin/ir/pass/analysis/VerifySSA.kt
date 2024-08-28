@@ -12,6 +12,7 @@ import ir.module.block.Label
 import ir.module.FunctionData
 import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
+import ir.pass.analysis.dominance.DominatorTreeFabric
 
 
 class ValidateSSAErrorException(val module: Module, override val message: String): Exception(message) {
@@ -22,7 +23,7 @@ class ValidateSSAErrorException(val module: Module, override val message: String
 
 class VerifySSA private constructor(private val module: Module, private val functionData: FunctionData,
                                     private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit>() {
-    private val dominatorTree by lazy { functionData.dominatorTree() }
+    private val dominatorTree by lazy { functionData.analysis(DominatorTreeFabric) }
     private val creation by lazy { CreationInfo.create(functionData) }
     private var bb = functionData.begin()
     private var exitBlocks = 0

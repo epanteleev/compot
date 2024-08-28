@@ -6,13 +6,13 @@ import ir.instruction.IntPredicate
 import ir.module.FunctionPrototype
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.analysis.dominance.PostDominatorTreeFabric
 import ir.value.I32Value
 import ir.value.U16Value
 
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-
 
 
 class PostDominatorTreeTest {
@@ -66,7 +66,7 @@ class PostDominatorTreeTest {
     fun testPostDominator() {
         val module = withBasicBlocks()
         val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.Ptr))
-        val domTree = module.findFunction(prototype).postDominatorTree()
+        val domTree = module.findFunction(prototype).analysis(PostDominatorTreeFabric)
 
         assertTrue(domTree.postDominates(BlockViewer(1), BlockViewer(0)))
         assertTrue(domTree.postDominates(BlockViewer(7), BlockViewer(0)))

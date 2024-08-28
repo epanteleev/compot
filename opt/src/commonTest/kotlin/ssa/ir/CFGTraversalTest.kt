@@ -9,6 +9,7 @@ import ir.module.FunctionData
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.VerifySSA
+import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -72,7 +73,7 @@ class CFGTraversalTest {
 
     @Test
     fun testDominator() {
-        val domTree = withBasicBlocks().dominatorTree()
+        val domTree = withBasicBlocks().analysis(DominatorTreeFabric)
 
         assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(1)))
         assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(2)))

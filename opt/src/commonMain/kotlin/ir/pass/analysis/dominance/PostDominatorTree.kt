@@ -1,12 +1,11 @@
-package ir.dominance
+package ir.pass.analysis.dominance
 
-import ir.module.BasicBlocks
-import ir.module.FunctionData
 import ir.module.block.Label
 import ir.module.block.AnyBlock
+import ir.pass.AnalysisResult
 
 
-class PostDominatorTree(private val ipdomMap: Map<AnyBlock, AnyBlock>) {
+class PostDominatorTree(private val ipdomMap: Map<AnyBlock, AnyBlock>): AnalysisResult() {
     private val cachedPostDominators = hashMapOf<Label, List<Label>>()
 
     private fun calculatePostDominators(target: Label): List<Label> {
@@ -48,11 +47,5 @@ class PostDominatorTree(private val ipdomMap: Map<AnyBlock, AnyBlock>) {
 
     operator fun iterator(): Iterator<Map.Entry<AnyBlock, AnyBlock>> {
         return ipdomMap.iterator()
-    }
-
-    companion object {
-        fun evaluate(basicBlocks: FunctionData): PostDominatorTree {
-            return PostDominatorTreeCalculate.evaluate(basicBlocks)
-        }
     }
 }

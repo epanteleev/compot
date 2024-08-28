@@ -14,6 +14,8 @@ import ir.pass.transform.Mem2RegFabric
 import ir.pass.CompileContextBuilder
 import ir.pass.PassPipeline
 import ir.pass.analysis.LivenessAnalysisPassFabric
+import ir.pass.analysis.LoopDetectionPassFabric
+import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -106,7 +108,7 @@ class FibonacciTest {
         val module = withBasicBlocks()
         val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
         val cfg = module.findFunction(prototype)
-        val domTree = cfg.dominatorTree()
+        val domTree = cfg.analysis(DominatorTreeFabric)
 
         assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(7)))
         assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(1)))
@@ -122,7 +124,7 @@ class FibonacciTest {
         println(module)
         val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
         val cfg = module.findFunction(prototype)
-        val loopInfo = LoopDetection.evaluate(cfg)
+        val loopInfo = cfg.analysis(LoopDetectionPassFabric)
 
         assertEquals(1, loopInfo.headers().size)
 
