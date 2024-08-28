@@ -25,6 +25,9 @@ class GPRegistersList(argumentValue: List<GPRegister>) {
         if (CallConvention.gpArgumentRegisters.contains(reg)) {
             return
         }
+        if (freeRegisters.contains(reg)) {
+            return
+        }
 
         freeRegisters.add(reg)
     }

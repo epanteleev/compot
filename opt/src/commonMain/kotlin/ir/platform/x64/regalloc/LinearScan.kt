@@ -6,7 +6,7 @@ import common.forEachWith
 import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
-import ir.pass.analysis.intervals.GroupedLiveIntervals
+import ir.instruction.Generate
 import ir.pass.analysis.intervals.LiveIntervals
 import ir.types.NonTrivialType
 import ir.types.TupleType
@@ -14,18 +14,15 @@ import ir.types.TupleType
 
 class LinearScan private constructor(private val data: FunctionData, private val liveRanges: LiveIntervals) {
     private val registerMap = hashMapOf<LocalValue, Operand>()
-    private val active      = hashMapOf<Group, Operand>()
+    private val active      = hashMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
-    private val liveRangesGroup: GroupedLiveIntervals
+    private val liveRangesGroup = Precoloring.evaluate(liveRanges)
 
     init {
         allocRegistersForArgumentValues()
         handleCallArguments()
-
-        liveRangesGroup = Precoloring.evaluate(liveRanges, registerMap)
-
-        handleStackAlloc(liveRangesGroup)
-        allocRegistersForLocalVariables(liveRangesGroup)
+        handleStackAlloc()
+        allocRegistersForLocalVariables()
     }
 
     private fun build(): RegisterAllocation {
@@ -51,20 +48,21 @@ class LinearScan private constructor(private val data: FunctionData, private val
        }
     }
 
-    private fun handleStackAlloc(liveRangesGroup: GroupedLiveIntervals) {
-        for ((group, _) in liveRangesGroup) {
-            if (!group.stackAllocGroup) {
+    private fun handleStackAlloc() {
+        for ((value , _) in liveRanges) {
+            if (value !is Generate) {
                 continue
             }
 
-            pickOperandGroup(group)
+            val operand = pool.allocSlot(value)
+            registerMap[value] = operand
+            active[value] = operand
         }
     }
 
-    private fun allocRegistersForLocalVariables(liveRangesGroup: GroupedLiveIntervals) {
+    private fun allocRegistersForLocalVariables() {
         for ((group, range) in liveRangesGroup) {
-            val arg = group.precolored
-            if (arg != null || group.stackAllocGroup) {
+            if (registerMap[group.first()] != null) {
                 continue
             }
             if (group.first().type() is TupleType) {
@@ -75,7 +73,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
 
             active.entries.retainAll {
                 if (liveRangesGroup[it.key].end() <= range.begin()) {
-                    val size = it.key.first().asType<NonTrivialType>().sizeOf()
+                    val size = it.key.asType<NonTrivialType>().sizeOf()
                     pool.free(it.value, size)
                     return@retainAll false
                 } else {
@@ -88,9 +86,9 @@ class LinearScan private constructor(private val data: FunctionData, private val
 
     private fun pickOperandGroup(group: Group) {
         val operand = pool.allocSlot(group.first())
-        active[group] = operand
         for (value in group) {
             registerMap[value] = operand
+            active[value] = operand
         }
     }
 

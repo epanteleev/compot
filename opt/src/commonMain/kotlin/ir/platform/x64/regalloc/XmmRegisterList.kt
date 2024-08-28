@@ -25,6 +25,9 @@ class XmmRegisterList(arguments: List<XmmRegister>) {
         if (CallConvention.xmmArgumentRegister.contains(reg)) {
             return
         }
+        if (freeRegisters.contains(reg)) {
+            return
+        }
 
         freeRegisters.add(reg)
     }

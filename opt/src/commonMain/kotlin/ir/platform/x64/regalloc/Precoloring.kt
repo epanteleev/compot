@@ -1,17 +1,16 @@
 package ir.platform.x64.regalloc
 
-import ir.value.LocalValue
-import asm.x64.Operand
 import common.assertion
 import ir.instruction.*
-import ir.pass.analysis.intervals.GroupedLiveIntervals
+import ir.value.TupleValue
+import ir.value.LocalValue
 import ir.pass.analysis.intervals.LiveRange
 import ir.pass.analysis.intervals.LiveIntervals
-import ir.value.TupleValue
+import ir.pass.analysis.intervals.GroupedLiveIntervals
 
 
 //TODO
-class Precoloring private constructor(private val intervals: LiveIntervals, private val precolored: Map<LocalValue, Operand>) {
+class Precoloring private constructor(private val intervals: LiveIntervals) {
     private val visited = hashSetOf<LocalValue>()
     private val groups = hashMapOf<Group, LiveRange>()
 
@@ -43,7 +42,7 @@ class Precoloring private constructor(private val intervals: LiveIntervals, priv
             visited.add(used)
         }
 
-        groups[Group(group, null)] = liveRange
+        groups[Group(group)] = liveRange
     }
 
     private fun handleTuple(value: TupleValue, range: LiveRange) {
@@ -56,7 +55,7 @@ class Precoloring private constructor(private val intervals: LiveIntervals, priv
             }
 
             val liveRange = range.merge(intervals[proj])
-            val group = Group(arrayListOf<LocalValue>(proj), null)
+            val group = Group(arrayListOf<LocalValue>(proj))
             groups[group] = liveRange
 
             visited.add(proj)
@@ -81,15 +80,14 @@ class Precoloring private constructor(private val intervals: LiveIntervals, priv
                 continue
             }
 
-            val op = precolored[value]
-            groups[Group(arrayListOf(value), op)] = range
+            groups[Group(arrayListOf(value))] = range
             visited.add(value)
         }
     }
 
     companion object {
-        fun evaluate(liveIntervals: LiveIntervals, registerMap: Map<LocalValue, Operand>): GroupedLiveIntervals {
-            return Precoloring(liveIntervals, registerMap).build()
+        fun evaluate(liveIntervals: LiveIntervals): GroupedLiveIntervals {
+            return Precoloring(liveIntervals).build()
         }
     }
 }
