@@ -106,9 +106,16 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
 }
 
 inline fun <reified K, reified T> intMapOf(values: Collection<K>, noinline closure: (K) -> Int): MutableMap<K, T> {
-    return IntMap(arrayOfNulls<T>(values.size), values.toTypedArray(), closure)
+    // todo fix int map
+    val hashMap = hashMapOf<K, T>()
+    for (v in values) {
+        hashMap[v] = closure(v) as T
+    }
+    return hashMap
 }
 
 inline fun <reified K, reified T> intMapOf(size: Int, noinline closure: (K) -> Int): MutableMap<K, T> {
-    return IntMap(arrayOfNulls<T>(size), arrayOfNulls<K>(size), closure)
+    // todo fix int map
+    //return IntMap(arrayOfNulls<T>(size), arrayOfNulls<K>(size), closure)
+    return hashMapOf()
 }

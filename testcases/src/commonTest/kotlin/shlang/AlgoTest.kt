@@ -127,7 +127,8 @@ abstract class AlgoTests: CommonCTest() {
         assertReturnCode(result, 0)
     }
 
-    open fun testRabinKarpSearch() {
+    @Test
+    fun testRabinKarpSearch() {
         val result = runCTest("shlang/algo/rabin_karp_search", listOf(), options())
         val output = """
             String test: AABCAB12AFAABCABFFEGABCAB
@@ -180,9 +181,4 @@ class AlgoTestsO0: AlgoTests() {
 
 class AgoTestsO1: AlgoTests() {
     override fun options(): List<String> = listOf("-O1")
-
-    @Ignore
-    override fun testRabinKarpSearch() {
-        super.testRabinKarpSearch()
-    }
 }

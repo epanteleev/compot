@@ -15,6 +15,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
     override fun prev(): Instruction? = prev as Instruction?
 
     fun owner(): Block = owner
+    fun identity(): Identity = id
 
     fun operands(): Array<Value> {
         return operands
