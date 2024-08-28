@@ -3,20 +3,19 @@ package ir.instruction
 import common.arrayWith
 import common.arrayWrapperOf
 import common.assertion
+import common.toTypedArray
 import ir.value.Value
 import ir.types.Type
-import ir.types.NonTrivialType
 import ir.module.IndirectFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
 class IndirectionCall private constructor(id: Identity, owner: Block,
-                                          pointer: Value,
                                           private val func: IndirectFunctionPrototype,
-                                          args: List<Value>,
+                                          operands: Array<Value>,
                                           target: Block):
-    TerminateValueInstruction(id, owner, func.returnType() as NonTrivialType, (args + pointer).toTypedArray(), arrayOf(target)),
+    TerminateValueInstruction(id, owner, func.returnType(), operands, arrayOf(target)),
     Callable {
     init {
         assertion(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
@@ -35,11 +34,11 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
             "size should be at least 1 operand in $this instruction, but '${operands.joinToString { it.toString() }}' found"
         }
 
-        return operands[0]
+        return operands.last()
     }
 
     override fun arguments(): List<Value> {
-        return arrayWrapperOf(arrayWith(operands.size - 1) { operands[it + 1] })
+        return arrayWrapperOf(arrayWith(operands.size - 1) { operands[it] })
     }
 
     override fun prototype(): IndirectFunctionPrototype {
@@ -53,10 +52,7 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("%${name()} = call $tp ${pointer()}(")
-        operands.joinTo(builder) {
-            if (it == pointer()) {
-                return@joinTo ""
-            }
+        arguments().joinTo(builder) {
             "$it:${it.type()}"
         }
         builder.append(")")
@@ -70,8 +66,8 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
                 { "$it: ${it.type()}" }
             }
 
-            val l = listOf(pointer) + args //TODO
-            return registerUser(IndirectionCall(id, owner, pointer, func, args, target), l.iterator())
+            val operands = args.toTypedArray(pointer)
+            return registerUser(IndirectionCall(id, owner, func, operands, target), operands.iterator())
         }
     }
 }

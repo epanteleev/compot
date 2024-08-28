@@ -208,19 +208,19 @@ sealed class AnyFunctionCall(val args: List<Expression>) : Expression() {
     }
 }
 
-class FuncPointerCall(val primary: UnaryOp, args: List<Expression>) : AnyFunctionCall(args) {
+class FuncPointerCall(val primary: Expression, args: List<Expression>) : AnyFunctionCall(args) {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun name(): String {
         return nameIdentifier().str()
     }
 
-    private fun nameIdentifier(): Identifier {
-        val primary = primary.primary
-        if (primary !is VarNode) {
-            throw IllegalStateException("Function call primary is not a VarNode, but got ${primary::class.simpleName}")
-        }
-        return primary.nameIdent()
+    private fun nameIdentifier(): Identifier = when (primary) {
+        is UnaryOp -> (primary.primary as VarNode).nameIdent()
+        is VarNode -> primary.nameIdent()
+        is MemberAccess -> primary.ident
+        is ArrowMemberAccess -> primary.ident
+        else -> throw TypeResolutionException("Function call of '${primary}' with non-function type")
     }
 
     fun resolveFunctionType(typeHolder: TypeHolder): CFunPointerType = memoize {
@@ -412,7 +412,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
 
         val resolvedType = when (opType) {
             PrefixUnaryOpType.DEREF -> {
-                primaryType as CPointerType
+                primaryType as AnyCPointerType
                 primaryType.dereference()
             }
             PrefixUnaryOpType.ADDRESS -> {

@@ -314,8 +314,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitFunPointerCall(funcPointerCall: FuncPointerCall): Value {
         val functionType = funcPointerCall.resolveFunctionType(typeHolder)
-        val functionPtr = varStack[funcPointerCall.name()] ?: throw IRCodeGenError("Function '${funcPointerCall.name()}' not found")
-        val loadedFunctionPtr = ir.load(Type.Ptr, functionPtr)
+        val loadedFunctionPtr = visitExpression(funcPointerCall.primary, false) //TODO bug
 
         val irRetType = mb.toIRType<Type>(typeHolder, functionType.retType())
         val argTypes = functionType.args().map { mb.toIRType<NonTrivialType>(typeHolder, it) }
@@ -354,13 +353,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
 
             is CPrimitiveType, is CPointerType -> ir.call(function, convertedArgs, cont)
-            is CStructType -> {
-                when (function.returnType()) {
-                    is PrimitiveType -> ir.call(function, convertedArgs, cont)
-                    is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
-                    is StructType    -> ir.call(function, convertedArgs, cont)
-                    else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
-                }
+            is CStructType -> when (function.returnType()) {
+                is PrimitiveType -> ir.call(function, convertedArgs, cont)
+                is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
+                is StructType    -> ir.call(function, convertedArgs, cont)
+                else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
             }
 
             else -> TODO("$functionType")

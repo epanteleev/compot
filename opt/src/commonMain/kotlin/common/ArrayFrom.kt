@@ -53,3 +53,15 @@ inline fun<reified T> arrayWith(size: Int, initializer: (Int) -> T): Array<T> {
     @Suppress("UNCHECKED_CAST")
     return array as Array<T>
 }
+
+
+inline fun <reified T> Collection<T>.toTypedArray(appended: T): Array<T> {
+    val result = arrayOfNulls<T>(size + 1)
+    var index = 0
+    for (element in this) {
+        result[index++] = element
+    }
+    result[index] = appended
+    @Suppress("UNCHECKED_CAST")
+    return result as Array<T>
+}

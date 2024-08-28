@@ -1568,10 +1568,8 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                     eat()
                     primary = if (primary is VarNode) {
                         FunctionCall(primary, args)
-                    } else if (primary is UnaryOp && primary.opType == PrefixUnaryOpType.DEREF) {
-                        FuncPointerCall(primary, args)
                     } else {
-                        throw ParserException(InvalidToken("Expected function or pointer", peak()))
+                        FuncPointerCall(primary, args)
                     }
                 } else {
                     throw ParserException(InvalidToken("Expected ')'", peak()))
