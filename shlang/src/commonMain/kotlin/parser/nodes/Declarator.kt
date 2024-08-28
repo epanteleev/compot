@@ -6,9 +6,27 @@ import parser.nodes.visitors.*
 
 
 abstract class AnyDeclarator: Node() {
+    protected var cachedType: CType = CType.UNRESOlVED
+
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
     abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType
+
+    fun ctype(): CType {
+        if (cachedType == CType.UNRESOlVED) {
+            throw IllegalStateException("type is not resolved")
+        }
+
+        return cachedType
+    }
+
+    protected inline fun<reified T: CType> memoizeType(type: () -> T): T {
+        if (cachedType == CType.UNRESOlVED) {
+            cachedType = type()
+        }
+
+        return cachedType as T
+    }
 }
 
 data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
@@ -18,7 +36,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         return directDeclarator.name()
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType = memoizeType {
         var pointerType = declspec.specifyType(typeHolder)
         for (pointer in pointers) {
             pointerType = CPointerType(pointerType, pointer.property())
@@ -28,7 +46,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         if (declspec.isTypedef) {
             typeHolder.addNewType(name(), TypeDef(name(), pointerType))
             typeHolder.addTypedef(name(), pointerType)
-            return pointerType
+            return@memoizeType pointerType
         }
 
         if (pointerType is CFunctionType) {
@@ -37,7 +55,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         } else {
             typeHolder.addVar(name(), pointerType)
         }
-        return pointerType
+        return@memoizeType pointerType
     }
 }
 
@@ -48,7 +66,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
         return declarator.name()
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType = memoizeType {
         var pointerType = declspec.specifyType(typeHolder)
         for (pointer in declarator.pointers) {
             pointerType = CPointerType(pointerType, pointer.property())
@@ -64,10 +82,10 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
 
             val rvalueType = rvalue.resolveType(typeHolder)
             typeHolder.addVar(name(), rvalueType)
-            return rvalueType
+            return@memoizeType rvalueType
         }
         typeHolder.addVar(name(), pointerType)
-        return pointerType
+        return@memoizeType pointerType
     }
 }
 
@@ -86,12 +104,12 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
         return visitor.visit(this)
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType = memoizeType {
         require(expr is EmptyExpression) {
             "unsupported expression in struct declarator $expr"
         }
 
-        return declarator.declareType(declspec, typeHolder)
+        return@memoizeType declarator.declareType(declspec, typeHolder)
     }
 
     override fun name(): String {
@@ -113,7 +131,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
         return declarator.directDeclarator.directDeclaratorParams[0] as ParameterTypeList
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CFunctionType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CFunctionType = memoizeType {
         assertion(declspec === this.specifier) { "specifier mismatch" }
 
         var pointerType = declspec.specifyType(typeHolder)
@@ -126,7 +144,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
 
         assertion(pointerType is CFunctionType) { "function type expected" }
         typeHolder.addFunctionType(name(), pointerType as CFunctionType)
-        return pointerType
+        return@memoizeType pointerType
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
