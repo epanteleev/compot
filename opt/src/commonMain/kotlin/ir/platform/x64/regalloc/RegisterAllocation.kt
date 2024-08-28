@@ -2,7 +2,11 @@ package ir.platform.x64.regalloc
 
 import asm.x64.*
 import common.assertion
+import ir.attributes.GlobalValueAttribute
+import ir.global.FunctionSymbol
+import ir.global.GlobalConstant
 import ir.global.GlobalSymbol
+import ir.global.GlobalValue
 import ir.platform.x64.CallConvention
 import ir.pass.analysis.intervals.LiveIntervals
 import ir.platform.x64.CallConvention.gpCalleeSaveRegs
@@ -88,7 +92,15 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
             is U64Value -> Imm64.of(value.u64)
             is F32Value -> ImmFp32(value.f32)
             is F64Value -> ImmFp64(value.f64)
-            is GlobalSymbol -> Address.internal(value.name())
+            is GlobalConstant -> Address.internal(value.name())
+            is FunctionSymbol -> Address.internal(value.name())
+            is GlobalValue -> {
+                if (value.attribute.contains(GlobalValueAttribute.EXTERNAL)) {
+                    Address.external(value.name())
+                } else {
+                    Address.internal(value.name())
+                }
+            }
             is NullValue -> Imm64.of(0)
             else -> throw RuntimeException("found '$value': '${value.type()}'")
         }

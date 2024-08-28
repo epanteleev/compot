@@ -7,6 +7,8 @@ import ir.Definitions.WORD_SIZE
 import ir.Definitions.BYTE_SIZE
 import ir.Definitions.HWORD_SIZE
 import ir.Definitions.QWORD_SIZE
+import ir.attributes.AnyAttribute
+import ir.attributes.GlobalValueAttribute
 import ir.instruction.IntPredicate
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
@@ -464,5 +466,18 @@ object TypeConverter {
 
     private fun convertConstant(value: Constant, type: Type): Value {
         return Constant.from(type, value)
+    }
+
+    inline fun<reified T: AnyAttribute> toIRAttributes(qualifier: List<TypeProperty>): List<T> {
+        val attributes = arrayListOf<T>()
+        for (qual in qualifier) {
+            when (qual) {
+                StorageClass.EXTERN -> attributes.add(GlobalValueAttribute.EXTERNAL as T)
+                StorageClass.STATIC -> attributes.add(GlobalValueAttribute.INTERNAL as T)
+                else -> {}
+            }
+        }
+
+        return attributes
     }
 }

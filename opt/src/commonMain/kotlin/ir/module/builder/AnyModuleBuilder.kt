@@ -1,5 +1,6 @@
 package ir.module.builder
 
+import ir.attributes.GlobalValueAttribute
 import ir.global.GlobalConstant
 import ir.global.GlobalSymbol
 import ir.global.GlobalValue
@@ -14,14 +15,18 @@ abstract class AnyModuleBuilder {
     protected val structs = hashMapOf<String, StructType>()
     protected val externFunctions = hashMapOf<String, ExternFunction>()
 
-    fun addGlobal(name: String, data: GlobalConstant): GlobalValue {
-        val global = GlobalValue(name, data)
+    fun addGlobal(name: String, data: GlobalConstant, attributes: List<GlobalValueAttribute>): GlobalValue {
+        val global = GlobalValue(name, data, attributes)
         val has = globals.put(name, global)
         if (has != null) {
             throw IllegalArgumentException("global with name='$name' already exists")
         }
 
         return global
+    }
+
+    fun addGlobal(name: String, data: GlobalConstant): GlobalValue {
+        return addGlobal(name, data, emptyList())
     }
 
     fun addConstant(global: GlobalConstant): GlobalConstant {

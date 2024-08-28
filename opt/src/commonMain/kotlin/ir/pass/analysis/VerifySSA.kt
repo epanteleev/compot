@@ -1,5 +1,6 @@
 package ir.pass.analysis
 
+import ir.global.GlobalValue
 import ir.value.LocalValue
 import ir.types.Type
 import ir.module.Module
@@ -77,6 +78,12 @@ class VerifySSA private constructor(private val module: Module, private val func
     /** Check whether definition dominates to usage. */
     private fun validateDefUse(instruction: Instruction, block: Block) {
         instruction.operands { use ->
+            if (use is GlobalValue) {
+                assert(use.attribute.size <= 1) {
+                    "GlobalValue '${use.dump()}' has inconsistent attributes."
+                }
+                return@operands
+            }
             if (use !is LocalValue) {
                 return@operands
             }
