@@ -1,8 +1,8 @@
 package parser.nodes
 
-import gen.IRCodeGenError
 import types.*
 import tokenizer.*
+import gen.IRCodeGenError
 import parser.nodes.visitors.*
 
 
@@ -100,7 +100,7 @@ enum class BinaryOpType {
 }
 
 
-interface UnaryOpType
+sealed interface UnaryOpType
 
 enum class PrefixUnaryOpType: UnaryOpType {
     NEG {
@@ -139,7 +139,7 @@ enum class PostfixUnaryOpType: UnaryOpType {
 }
 
 
-abstract class Expression : Node() {
+sealed class Expression : Node() {
     private var type: CType = CType.UNRESOlVED
 
     abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
@@ -166,10 +166,12 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     }
 }
 
-object EmptyExpression : Expression() {
+data object EmptyExpression : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize { CType.UNKNOWN }
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        throw IllegalStateException("Empty expression type is not resolved")
+    }
 }
 
 class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expression) : Expression() {
@@ -203,7 +205,7 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val params = args.map { it.resolveType(typeHolder) }
         if (params.size != args.size) {
-            return@memoize CType.UNKNOWN
+            throw TypeResolutionException("Function call of '${name()}' with unresolved types")
         }
 
         for (i in args.indices) {
@@ -212,7 +214,7 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
                 continue
             }
 
-            return@memoize CType.UNKNOWN
+            throw TypeResolutionException("Function call of '${name()}' with wrong argument types")
         }
 
         val functionType = typeHolder.getFunctionType(name()) as CFunctionType
@@ -220,7 +222,7 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
     }
 }
 
-abstract class Initializer : Expression()
+sealed class Initializer : Expression()
 
 class SingleInitializer(val expr: Expression) : Initializer() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
@@ -270,13 +272,13 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val structType = primary.resolveType(typeHolder)
         if (structType !is CBaseStructType) {
-            return@memoize CType.UNKNOWN
+            throw TypeResolutionException("Member access on non-struct type, but got $structType")
         }
         val field = structType.fieldIndex(ident.str())
         if (field != -1) {
             return@memoize structType.fields()[field].second
         }
-        return@memoize CType.UNKNOWN
+        throw TypeResolutionException("Field $ident not found in struct $structType")
     }
 }
 
@@ -286,17 +288,17 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val structType = primary.resolveType(typeHolder)
         if (structType !is CPointerType) {
-            return@memoize CType.UNKNOWN
+            throw TypeResolutionException("Arrow member access on non-pointer type, but got $structType")
         }
         val baseType = structType.dereference()
         if (baseType !is CBaseStructType) {
-            return@memoize CType.UNKNOWN
+            throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType")
         }
         val field = baseType.fieldIndex(ident.str())
         if (field != -1) {
             return@memoize baseType.fields()[field].second
         }
-        return@memoize CType.UNKNOWN
+        throw TypeResolutionException("Field $ident not found in struct $baseType")
     }
 }
 
@@ -345,9 +347,10 @@ data class NumNode(val number: Numeric) : Expression() {
         return@memoize when (num) {
             is Int, is Byte -> CType.INT
             is Long   -> CType.LONG
+            is ULong  -> CType.ULONG
             is Float  -> CType.FLOAT
             is Double -> CType.DOUBLE
-            else      -> CType.UNKNOWN //TODO more types
+            else      -> throw TypeResolutionException("Unknown number type, but got $num")
         }
     }
 }
@@ -371,7 +374,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
             }
             PrefixUnaryOpType.NOT -> {
                 if (primaryType is CPointerType) {
-                    CType.LONG //TODO UNSIGNED
+                    CType.LONG //TODO UNSIGNED???
                 } else {
                     primaryType
                 }
@@ -380,7 +383,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 if (primaryType is CPrimitiveType) {
                     primaryType
                 } else {
-                    CType.UNKNOWN
+                    throw TypeResolutionException("Negation on non-primitive type: $primaryType")
                 }
             }
             PrefixUnaryOpType.INC,

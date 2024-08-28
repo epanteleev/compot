@@ -10,7 +10,7 @@ class Designation(val designators: List<Designator>): UnclassifiedNode() {
     }
 }
 
-abstract class Designator: UnclassifiedNode()
+sealed class Designator: UnclassifiedNode()
 
 class ArrayDesignator(val constExpression: Expression): Designator() {
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T {

@@ -57,10 +57,6 @@ class SwitchStmtInfo(val default: Label, val table: MutableList<Label>, val valu
 class LoopStmtInfo : StmtInfo() {
     private var conditionBB: Label? = null
 
-    fun condition(): Label? {
-        return conditionBB
-    }
-
     fun resolveCondition(ir: FunctionDataBuilder): Label {
         if (conditionBB == null) {
             conditionBB = ir.createLabel()

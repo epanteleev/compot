@@ -35,6 +35,6 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) :
 class ParameterVarArg: AnyParameter() {
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): CType {
-        return CType.UNKNOWN //TODO
+        throw IllegalStateException("VarArg type is not resolved")
     }
 }

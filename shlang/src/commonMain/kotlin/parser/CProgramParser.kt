@@ -89,7 +89,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             if (check(";")) {
                 eat()
-                return@rule ContinueStatement()
+                return@rule ContinueStatement
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -97,7 +97,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             if (check(";")) {
                 eat()
-                return@rule BreakStatement()
+                return@rule BreakStatement
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -1763,7 +1763,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val declaration = declaration()
         if (declaration != null) {
             // Early resolve type.
-            declaration.resolveType(typeHolder)
+            declaration.specifyType(typeHolder)
             return@rule declaration
         }
         return@rule function_definition()

@@ -5,13 +5,13 @@ import tokenizer.*
 import parser.nodes.visitors.*
 
 
-abstract class Node {
+sealed class Node {
     fun<T> accept(visitor: NodeVisitor<T>): T {
         return visitor.visit(this)
     }
 }
 
-abstract class UnclassifiedNode : Node() {
+sealed class UnclassifiedNode : Node() {
     abstract fun<T> accept(visitor: UnclassifiedNodeVisitor<T>): T
 }
 
@@ -39,7 +39,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
 }
 
 data class Declaration(val declspec: DeclarationSpecifier, private val declarators: List<AnyDeclarator>): UnclassifiedNode() {
-    fun resolveType(typeHolder: TypeHolder) {
+    fun specifyType(typeHolder: TypeHolder) {
         declspec.specifyType(typeHolder) // Important: define new type here
         for (it in declarators) {
             it.declareType(declspec, typeHolder)
@@ -82,17 +82,14 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
         return currentType
     }
 
-    fun resolveType(baseType: CType, typeHolder: TypeHolder): CType {
-        when (decl) {
-            is FunctionPointerDeclarator -> {
-                val fnDecl = directDeclaratorParams[0] as ParameterTypeList
-                val type = fnDecl.resolveType(baseType, typeHolder)
-                return CFunPointerType(type)
-            }
-            is DirectVarDeclarator -> {
-                return resolveAllDecl(baseType, typeHolder)
-            }
-            else -> return CType.UNKNOWN
+    fun resolveType(baseType: CType, typeHolder: TypeHolder): CType = when (decl) {
+        is FunctionPointerDeclarator -> {
+            val fnDecl = directDeclaratorParams[0] as ParameterTypeList
+            val type = fnDecl.resolveType(baseType, typeHolder)
+            CFunPointerType(type)
+        }
+        is DirectVarDeclarator -> {
+            resolveAllDecl(baseType, typeHolder)
         }
     }
 
@@ -125,6 +122,6 @@ class Enumerator(val ident: Identifier, val constExpr: Expression) : Unclassifie
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-object DummyNode : UnclassifiedNode() {
+data object DummyNode : UnclassifiedNode() {
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }

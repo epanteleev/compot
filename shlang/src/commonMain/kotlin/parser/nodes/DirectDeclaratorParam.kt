@@ -36,11 +36,6 @@ data class IndentifierList(val list: List<IdentNode>): DirectDeclaratorParam() {
 data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorParam() {
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
 
-    fun resolveType(typeHolder: TypeHolder): CType {
-        params.forEach { it.resolveType(typeHolder) }
-        return CType.UNKNOWN
-    }
-
     override fun resolveType(baseType: CType, typeHolder: TypeHolder): AbstractCFunctionType {
         val params = resolveParams(typeHolder)
         return AbstractCFunctionType(baseType, params, isVarArg())
@@ -97,7 +92,7 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
 }
 
 // Special case for first parameter of DirectDeclarator
-abstract class DirectDeclaratorFirstParam : DirectDeclaratorParam() {
+sealed class DirectDeclaratorFirstParam : DirectDeclaratorParam() {
     abstract fun name(): String
 }
 

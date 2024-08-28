@@ -36,12 +36,12 @@ data class GotoStatement(val id: Identifier) : Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-class ContinueStatement : Statement() {
-    override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
+data object ContinueStatement : Statement() {
+    override fun <T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-class BreakStatement : Statement() {
-    override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
+data object BreakStatement : Statement() {
+    override fun <T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
 class DefaultStatement(val stmt: Statement) : Statement() {

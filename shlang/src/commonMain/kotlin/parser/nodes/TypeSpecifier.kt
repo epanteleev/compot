@@ -1,10 +1,10 @@
 package parser.nodes
 
-import parser.nodes.visitors.TypeSpecifierVisitor
 import types.*
+import parser.nodes.visitors.TypeSpecifierVisitor
 
 
-abstract class TypeSpecifier : Node() {
+sealed class TypeSpecifier : Node() {
     abstract fun<T> accept(visitor: TypeSpecifierVisitor<T>): T
     abstract fun specifyType(typeHolder: TypeHolder): CType
 }
