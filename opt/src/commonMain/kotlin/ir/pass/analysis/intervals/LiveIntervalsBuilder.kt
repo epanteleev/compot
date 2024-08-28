@@ -1,20 +1,23 @@
 package ir.pass.analysis.intervals
 
 import common.assertion
+import ir.instruction.Copy
 import ir.value.LocalValue
 import ir.module.FunctionData
 import ir.utils.OrderedLocation
 import ir.instruction.Instruction
+import ir.instruction.Phi
 import ir.module.Sensitivity
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.traverse.LinearScanOrderFabric
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.common.AnalysisType
+import ir.value.TupleValue
 
 
 private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
-    private val intervals       = linkedMapOf<LocalValue, LiveRangeImpl>()
+    private val intervals       = hashMapOf<LocalValue, LiveRangeImpl>()
     private val linearScanOrder = data.analysis(LinearScanOrderFabric)
     private val liveness        = data.analysis(LivenessAnalysisPassFabric)
 
@@ -73,26 +76,51 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
         }
     }
 
+    private fun handlePhiOperands(value: Phi, range: LiveRangeImpl) {
+        value.operands { used ->
+            if (used !is LocalValue) {
+                return@operands
+            }
+            assertion(used is Copy) { "expect this invariant: used=$used" }
+
+            range.merge(intervals[used]!!)
+            intervals[used] = range
+        }
+    }
+
+    private fun handleTuple(value: TupleValue, range: LiveRangeImpl) {
+        value.proj { proj ->
+            range.merge(intervals[proj]!!)
+            intervals[proj] = range
+        }
+    }
+
+    private fun mergeInstructionIntervals() {
+        for ((value, range) in intervals) {
+            when (value) {
+                is Phi -> handlePhiOperands(value, range)
+                is TupleValue -> handleTuple(value, range)
+            }
+        }
+    }
+
     override fun run(): LiveIntervals {
         setupArguments()
         setupLiveRanges()
         evaluateUsages()
+        mergeInstructionIntervals()
 
-        checkConsistency()
-        return LiveIntervals(intervals, data.marker())
+        return LiveIntervals(sortIntervals(), data.marker())
     }
 
-    /**
-     * Check that all live ranges are in order by their start.
-     */
-    private fun checkConsistency() {
-        var current: Int = Int.MIN_VALUE
-        for ((_, range) in intervals) {
-            assertion(range.begin().order >= current) {
-                "current=${range.begin().order} expected=${current}"
-            }
-            current = range.begin().order
+    private fun sortIntervals(): Map<LocalValue, LiveRange> {
+        val sorted = intervals.toList().sortedBy { it.second.begin().order }
+        val linkedMap = linkedMapOf<LocalValue, LiveRange>()
+        for ((v, r) in sorted) {
+            linkedMap[v] = r
         }
+
+        return linkedMap
     }
 }
 

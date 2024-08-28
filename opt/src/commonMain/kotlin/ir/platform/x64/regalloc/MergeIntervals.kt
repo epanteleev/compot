@@ -2,68 +2,60 @@ package ir.platform.x64.regalloc
 
 import common.assertion
 import ir.instruction.*
+import ir.module.FunctionData
 import ir.value.TupleValue
 import ir.value.LocalValue
-import ir.pass.analysis.intervals.LiveRange
-import ir.pass.analysis.intervals.LiveIntervals
 import ir.pass.analysis.intervals.MergedLiveIntervals
 
 
-class MergeIntervals private constructor(private val intervals: LiveIntervals) {
-    private val visited = hashSetOf<LocalValue>()
-    private val groups = hashMapOf<Group, LiveRange>()
+class MergeIntervals private constructor(private val fd: FunctionData) {
+    private val groups = hashMapOf<LocalValue, Group>()
 
     private fun build(): MergedLiveIntervals {
         coalescingInstructionIntervals()
         return MergedLiveIntervals(groups)
     }
 
-    private fun handlePhiOperands(value: Phi, range: LiveRange) {
-        val group = arrayListOf<LocalValue>(value)
-        visited.add(value)
-        value.operands { used ->
+    private fun handlePhiOperands(phi: Phi) {
+        val groupList = arrayListOf<LocalValue>(phi)
+        phi.operands { used ->
             if (used !is LocalValue) {
                 return@operands
             }
             assertion(used is Copy) { "expect this invariant: used=$used" }
-
-            range.merge(intervals[used])
-            group.add(used)
-            intervals[used] = range
-            visited.add(used)
+            groupList.add(used)
         }
-        groups[Group(group)] = range
+
+        val group = Group(groupList)
+        phi.operands { used ->
+            if (used !is LocalValue) {
+                return@operands
+            }
+            groups[used] = group
+        }
+        groups[phi] = group
     }
 
-    private fun handleTuple(value: TupleValue, range: LiveRange) {
-        visited.add(value)
-
+    private fun handleTuple(value: TupleValue) {
         value.proj { proj ->
-            if (visited.contains(proj)) {
-                return@proj
-            }
-
-            range.merge(intervals[proj])
-            val group = Group(arrayListOf<LocalValue>(proj))
-            groups[group] = range
-            intervals[proj] = range
-
-            visited.add(proj)
+            groups[proj] = Group(arrayListOf<LocalValue>(proj))
         }
     }
 
     private fun coalescingInstructionIntervals() {
-        for ((value, range) in intervals) {
-            when (value) {
-                is Phi        -> handlePhiOperands(value, range)
-                is TupleValue -> handleTuple(value, range)
+        for (bb in fd) {
+            for (value in bb) {
+                when (value) {
+                    is Phi        -> handlePhiOperands(value)
+                    is TupleValue -> handleTuple(value)
+                }
             }
         }
     }
 
     companion object {
-        fun evaluate(liveIntervals: LiveIntervals): MergedLiveIntervals {
-            return MergeIntervals(liveIntervals).build()
+        fun evaluate(fd: FunctionData): MergedLiveIntervals {
+            return MergeIntervals(fd).build()
         }
     }
 }
