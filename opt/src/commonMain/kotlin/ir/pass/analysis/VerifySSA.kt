@@ -1,6 +1,5 @@
 package ir.pass.analysis
 
-import common.forEachWith
 import ir.value.LocalValue
 import ir.types.Type
 import ir.module.Module

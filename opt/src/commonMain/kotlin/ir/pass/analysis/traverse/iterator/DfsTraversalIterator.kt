@@ -5,6 +5,7 @@ import ir.module.block.Block
 import ir.module.block.Label
 import ir.pass.analysis.LoopInfo
 
+
 abstract class DfsTraversalIterator(countOfBlocks: Int) : BasicBlocksIterator(countOfBlocks) {
     protected abstract var iterator: MutableIterator<Block>
 
