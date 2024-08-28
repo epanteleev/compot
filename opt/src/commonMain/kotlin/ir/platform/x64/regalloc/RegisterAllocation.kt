@@ -1,11 +1,10 @@
 package ir.platform.x64.regalloc
 
-import ir.*
 import asm.x64.*
 import common.assertion
 import ir.global.GlobalSymbol
 import ir.platform.x64.CallConvention
-import ir.liveness.LiveIntervals
+import ir.pass.analysis.intervals.LiveIntervals
 import ir.platform.x64.CallConvention.gpCalleeSaveRegs
 import ir.platform.x64.CallConvention.gpCallerSaveRegs
 import ir.platform.x64.CallConvention.xmmCallerSaveRegs

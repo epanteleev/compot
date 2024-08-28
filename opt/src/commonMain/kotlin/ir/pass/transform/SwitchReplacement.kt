@@ -20,7 +20,7 @@ class SwitchReplacement internal constructor(module: Module) : TransformPass(mod
     }
 }
 
-object SwitchReplacementFabric : TransformPassFabric {
+object SwitchReplacementFabric : TransformPassFabric() {
     override fun create(module: Module): TransformPass {
         return SwitchReplacement(module.copy())
     }

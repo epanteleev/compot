@@ -4,9 +4,9 @@ import ir.value.LocalValue
 import asm.x64.Operand
 import common.assertion
 import ir.instruction.*
-import ir.liveness.GroupedLiveIntervals
-import ir.liveness.LiveRange
-import ir.liveness.LiveIntervals
+import ir.pass.analysis.intervals.GroupedLiveIntervals
+import ir.pass.analysis.intervals.LiveRange
+import ir.pass.analysis.intervals.LiveIntervals
 import ir.value.TupleValue
 
 

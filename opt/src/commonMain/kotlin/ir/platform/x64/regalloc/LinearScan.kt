@@ -6,8 +6,8 @@ import common.forEachWith
 import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
-import ir.liveness.GroupedLiveIntervals
-import ir.liveness.LiveIntervals
+import ir.pass.analysis.intervals.GroupedLiveIntervals
+import ir.pass.analysis.intervals.LiveIntervals
 import ir.types.NonTrivialType
 import ir.types.TupleType
 

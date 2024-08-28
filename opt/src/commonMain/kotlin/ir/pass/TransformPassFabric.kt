@@ -4,10 +4,10 @@ import ir.module.FunctionData
 import ir.module.Module
 
 
-interface TransformPassFabric {
-    fun create(module: Module): TransformPass
+abstract class TransformPassFabric {
+    abstract fun create(module: Module): TransformPass
 }
 
-interface FunctionAnalysisPassFabric {
-    fun create(functionData: FunctionData): FunctionAnalysisPass
+abstract class FunctionAnalysisPassFabric<T: AnalysisResult> {
+    abstract fun create(functionData: FunctionData): FunctionAnalysisPass<T>
 }

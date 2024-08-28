@@ -3,6 +3,9 @@ package ir.pass.analysis
 import ir.value.*
 import ir.instruction.*
 import ir.module.FunctionData
+import ir.pass.AnalysisResult
+import ir.pass.FunctionAnalysisPass
+import ir.pass.FunctionAnalysisPassFabric
 
 
 enum class EscapeState {
@@ -38,7 +41,7 @@ enum class EscapeState {
 // - If a value is passed as an argument, it is an argument
 // - If a value is a constant, it is a constant
 // - Otherwise, the value is unknown
-class EscapeAnalysis private constructor(private val functionData: FunctionData) {
+class EscapeAnalysis internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<EscapeAnalysisResult>() {
     private val escapeState = hashMapOf<Value, EscapeState>()
 
     private fun union(operand: Value, newState: EscapeState): EscapeState {
@@ -75,7 +78,11 @@ class EscapeAnalysis private constructor(private val functionData: FunctionData)
         }
     }
 
-    private fun run(): Map<Value, EscapeState> {
+    override fun name(): String {
+        return "EscapeAnalysis"
+    }
+
+    override fun run(): EscapeAnalysisResult {
         for (block in functionData.preorder()) {
             for (instruction in block) {
                 when (instruction) {
@@ -87,22 +94,22 @@ class EscapeAnalysis private constructor(private val functionData: FunctionData)
                 }
             }
         }
-        return escapeState
-    }
-
-    companion object {
-        fun run(module: FunctionData): EscapeAnalysisResult {
-            val escapeState = EscapeAnalysis(module).run()
-            return EscapeAnalysisResult(escapeState)
-        }
+        return EscapeAnalysisResult(escapeState)
     }
 }
 
-class EscapeAnalysisResult(private val escapeState: Map<Value, EscapeState>) {
+class EscapeAnalysisResult(private val escapeState: Map<Value, EscapeState>): AnalysisResult() {
     fun getEscapeState(value: Value): EscapeState {
         if (value is Constant) {
             return EscapeState.Constant
         }
+
         return escapeState[value] ?: EscapeState.Unknown
+    }
+}
+
+object EscapeAnalysisPassFabric: FunctionAnalysisPassFabric<EscapeAnalysisResult>() {
+    override fun create(functionData: FunctionData): EscapeAnalysis {
+        return EscapeAnalysis(functionData)
     }
 }

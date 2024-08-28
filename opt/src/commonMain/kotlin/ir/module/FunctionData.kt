@@ -4,13 +4,12 @@ import ir.dominance.DominatorTree
 import ir.dominance.PostDominatorTree
 import ir.value.ArgumentValue
 import ir.module.auxiliary.CopyCFG
-import ir.liveness.LiveIntervals
-import ir.liveness.LiveIntervalsBuilder
+import ir.pass.analysis.intervals.LiveIntervals
+import ir.pass.analysis.intervals.LiveIntervalsBuilder
 import ir.module.block.Block
 import ir.module.block.iterator.*
 import ir.pass.AnalysisResult
 import ir.pass.FunctionAnalysisPassFabric
-import ir.pass.analysis.LoopDetection
 import ir.pass.analysis.LoopInfo
 
 
@@ -28,10 +27,6 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
     }
 
     // Analysis
-
-    fun liveness(): LiveIntervals {
-        return LiveIntervalsBuilder.evaluate(this)
-    }
 
     fun preorder(): BasicBlocksIterator {
         return PreorderIterator(begin(), size())
@@ -53,10 +48,6 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
         return LinearScanOrderIterator(begin(), size(), loopInfo)
     }
 
-    fun loopInfo(): LoopInfo {
-        return LoopDetection.evaluate(this)
-    }
-
     fun dominatorTree(): DominatorTree {
         return DominatorTree.evaluate(this)
     }
@@ -65,6 +56,9 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
         return PostDominatorTree.evaluate(this)
     }
 
+    inline fun <reified T: AnalysisResult, reified U: FunctionAnalysisPassFabric<T>> analysis(analysisType: U): T {
+        return analysisType.create(this).run()
+    }
     //
 
     operator fun iterator(): Iterator<Block> {

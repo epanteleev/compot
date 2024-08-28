@@ -1,8 +1,10 @@
-package ir.liveness
+package ir.pass.analysis.intervals
 
 import common.assertion
 import ir.value.LocalValue
 import ir.module.block.Label
+import ir.pass.AnalysisResult
+import ir.pass.analysis.LivenessAnalysisInfo
 import ir.platform.x64.regalloc.Group
 
 data class LiveIntervalsException(override val message: String): Exception(message)
@@ -41,7 +43,7 @@ class GroupedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
     }
 }
 
-class LiveIntervals(private val liveIntervals: Map<LocalValue, LiveRange>, private val liveness: Map<Label, LiveInfo>) {
+class LiveIntervals(private val liveIntervals: Map<LocalValue, LiveRange>, private val liveness: LivenessAnalysisInfo): AnalysisResult() {
     override fun toString(): String {
         val builder = StringBuilder()
         for ((v, ranges) in liveIntervals) {
