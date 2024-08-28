@@ -77,23 +77,13 @@ class CTypeBuilder {
             return Pair(cType, storageClass)
         }
 
-        val struct = when (baseType) {
-            is StructBaseType            -> CStructType(baseType, properties)
-            is UnionBaseType             -> CUnionType(baseType, properties)
+        val structType = when (baseType) {
+            is StructBaseType            -> typeHolder.addTypedef(baseType.name, CStructType(baseType, properties))
+            is UnionBaseType             -> typeHolder.addTypedef(baseType.name, CUnionType(baseType, properties))
             is UncompletedStructBaseType -> CUncompletedStructType(baseType, properties)
             is UncompletedUnionBaseType  -> CUncompletedUnionType(baseType, properties)
             is CArrayBaseType            -> CArrayType(baseType, properties)
             else -> throw RuntimeException("Unknown type $baseType")
-        }
-
-        val structType = when (baseType) {
-            is StructBaseType -> {
-                typeHolder.addTypedef(baseType.name, struct)
-            }
-            is UnionBaseType -> {
-                typeHolder.addTypedef(baseType.name, struct)
-            }
-            else -> struct
         }
 
         return Pair(structType, storageClass)

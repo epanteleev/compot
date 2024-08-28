@@ -1020,7 +1020,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	: IDENTIFIER
     //	| identifier_list ',' IDENTIFIER
     //	;
-    fun identifier_list(): IndentifierList? = rule<IndentifierList> {
+    fun identifier_list(): IndentifierList? = rule {
         val identifiers = mutableListOf<IdentNode>()
         while (true) {
             if (!check<Identifier>()) {
