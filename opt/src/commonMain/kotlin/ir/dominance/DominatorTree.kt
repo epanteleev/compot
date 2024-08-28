@@ -1,6 +1,6 @@
 package ir.dominance
 
-import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.module.block.Label
 import ir.module.block.AnyBlock
 
@@ -75,7 +75,7 @@ class DominatorTree(private val idomMap: Map<AnyBlock, AnyBlock>) {
     }
 
     companion object {
-        fun evaluate(basicBlocks: BasicBlocks): DominatorTree {
+        fun evaluate(basicBlocks: FunctionData): DominatorTree {
             return DominatorTreeCalculate.evaluate(basicBlocks)
         }
     }

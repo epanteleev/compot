@@ -6,7 +6,7 @@ import ir.instruction.Phi
 import ir.module.block.Block
 
 
-class PhiFunctionPruning private constructor(private val cfg: BasicBlocks) {
+class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
     private val usefull = UsefulnessMap()
     private val worklist = arrayListOf<Phi>()
     private val phiPlacesInfo = setupPhiPlacesInfo()
@@ -88,7 +88,7 @@ class PhiFunctionPruning private constructor(private val cfg: BasicBlocks) {
     companion object {
         fun run(module: Module): Module {
             for (f in module.functions) {
-                PhiFunctionPruning(f.blocks).run()
+                PhiFunctionPruning(f).run()
             }
 
             return module

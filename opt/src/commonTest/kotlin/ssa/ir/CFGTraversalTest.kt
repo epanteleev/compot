@@ -6,6 +6,7 @@ import ir.value.U16Value
 import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate
 import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.ana.VerifySSA
@@ -16,7 +17,7 @@ import kotlin.test.assertTrue
 
 class CFGTraversalTest {
 
-    private fun withBasicBlocks(): BasicBlocks {
+    private fun withBasicBlocks(): FunctionData {
         val moduleBuilder = ModuleBuilder.create()
         val prototype = FunctionPrototype("hello", Type.U16, arrayListOf(Type.Ptr, Type.Ptr, Type.Ptr))
         val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(Type.Ptr, Type.Ptr, Type.Ptr))
@@ -49,7 +50,7 @@ class CFGTraversalTest {
 
         val module = moduleBuilder.build()
         VerifySSA.run(module)
-        return module.findFunction(prototype).blocks
+        return module.findFunction(prototype)
     }
 
     @Test

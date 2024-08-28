@@ -19,7 +19,7 @@ private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue
 class LivenessAnalysis private constructor(val data: FunctionData, private val linearScanOrder: List<Block>) {
     private val liveness = run {
         val mapOf = mutableMapOf<Label, LiveInfo>()
-        for (bb in data.blocks) {
+        for (bb in data) {
             mapOf[bb] = LiveInfo(mutableSetOf(), mutableSetOf())
         }
 
@@ -107,8 +107,8 @@ class LivenessAnalysis private constructor(val data: FunctionData, private val l
         }
 
         fun evaluate(data: FunctionData): Map<Label, LiveInfo> {
-            val loopInfo = data.blocks.loopInfo()
-            return evaluate(data, data.blocks.linearScanOrder(loopInfo).order())
+            val loopInfo = data.loopInfo()
+            return evaluate(data, data.linearScanOrder(loopInfo).order())
         }
     }
 }

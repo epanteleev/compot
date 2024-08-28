@@ -8,8 +8,8 @@ import ir.instruction.Instruction
 
 class LiveIntervalsBuilder private constructor(val data: FunctionData) {
     private val intervals = linkedMapOf<LocalValue, LiveRangeImpl>()
-    private val loopInfo = data.blocks.loopInfo()
-    private val linearScanOrder = data.blocks.linearScanOrder(loopInfo).order()
+    private val loopInfo = data.loopInfo()
+    private val linearScanOrder = data.linearScanOrder(loopInfo).order()
     private val liveness = LivenessAnalysis.evaluate(data, linearScanOrder)
 
     init {
@@ -21,7 +21,7 @@ class LiveIntervalsBuilder private constructor(val data: FunctionData) {
     private fun setupArguments() {
         val arguments = data.arguments()
         for ((index, arg) in arguments.withIndex()) {
-            val begin = OrderedLocation(data.blocks.begin(), -1, -(arguments.size - index))
+            val begin = OrderedLocation(data.begin(), -1, -(arguments.size - index))
             intervals[arg] = LiveRangeImpl(begin, begin)
         }
     }

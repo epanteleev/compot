@@ -54,7 +54,7 @@ class ReachingDefinitionAnalysis private constructor(cfg: FunctionData, dominato
     private val escapeState = EscapeAnalysis.run(cfg)
     private val bbToMapValues = run {
         val bbToMapValues = hashMapOf<Block, MutableMap<Value, Value>>()
-        for (bb in cfg.blocks) {
+        for (bb in cfg) {
             bbToMapValues[bb] = hashMapOf()
         }
 
@@ -62,7 +62,7 @@ class ReachingDefinitionAnalysis private constructor(cfg: FunctionData, dominato
     }
 
     init {
-        for (bb in cfg.blocks.preorder()) {
+        for (bb in cfg.preorder()) {
             rewriteValuesSetup(bb)
         }
     }

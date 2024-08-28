@@ -105,7 +105,7 @@ class FibonacciTest {
     fun testDominator() {
         val module = withBasicBlocks()
         val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
-        val cfg = module.findFunction(prototype).blocks
+        val cfg = module.findFunction(prototype)
         val domTree = cfg.dominatorTree()
 
         assertTrue(domTree.dominates(BlockViewer(0), BlockViewer(7)))
@@ -122,7 +122,7 @@ class FibonacciTest {
         println(module)
         val prototype = FunctionPrototype("fib", Type.I32, arrayListOf(Type.I32))
         val cfg = module.findFunction(prototype)
-        val loopInfo = LoopDetection.evaluate(cfg.blocks)
+        val loopInfo = LoopDetection.evaluate(cfg)
 
         assertEquals(1, loopInfo.headers().size)
 

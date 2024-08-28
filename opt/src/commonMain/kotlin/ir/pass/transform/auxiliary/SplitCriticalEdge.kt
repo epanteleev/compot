@@ -2,16 +2,17 @@ package ir.pass.transform.auxiliary
 
 import ir.module.Module
 import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.module.block.Block
 
 
-internal class SplitCriticalEdge private constructor(private val cfg: BasicBlocks) {
+internal class SplitCriticalEdge private constructor(private val cfg: FunctionData) {
     private val predecessorMap = hashMapOf<Block, Block>()
 
     fun pass() {
-        val basicBlocks = cfg.blocks()
+        val basicBlocks = cfg
 
-        for (bbIdx in 0 until basicBlocks.size) {
+        for (bbIdx in 0 until basicBlocks.size()) {
             val predecessors = basicBlocks[bbIdx].predecessors()
             for (index in predecessors.indices) {
                 if (!basicBlocks[bbIdx].hasCriticalEdgeFrom(predecessors[index])) {
@@ -25,7 +26,7 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
         updatePhi(cfg)
     }
 
-    private fun updatePhi(basicBlocks: BasicBlocks) {
+    private fun updatePhi(basicBlocks: FunctionData) {
         for (bb in basicBlocks) {
             bb.phis { phi ->
                 var changed = false
@@ -47,7 +48,7 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
     }
 
     private fun insertBasicBlock(bb: Block, p: Block) {
-        val newBlock = cfg.createBlock().apply {
+        val newBlock = cfg.blocks.createBlock().apply {
             branch(bb)
         }
 
@@ -67,8 +68,7 @@ internal class SplitCriticalEdge private constructor(private val cfg: BasicBlock
     companion object {
         fun run(module: Module): Module {
             module.functions.forEach { fnData ->
-                val cfg = fnData.blocks
-                SplitCriticalEdge(cfg).pass()
+                SplitCriticalEdge(fnData).pass()
             }
 
             return module

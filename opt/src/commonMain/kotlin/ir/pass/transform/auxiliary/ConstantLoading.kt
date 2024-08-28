@@ -6,11 +6,12 @@ import ir.global.GlobalConstant
 import ir.global.StringLiteralConstant
 import ir.instruction.Instruction
 import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
 
 
-internal class ConstantLoading private constructor(private val cfg: BasicBlocks) {
+internal class ConstantLoading private constructor(private val cfg: FunctionData) {
     private fun pass() {
         fun closure(bb: Block, inst: Instruction): Instruction {
             var inserted: Instruction? = null
@@ -36,7 +37,7 @@ internal class ConstantLoading private constructor(private val cfg: BasicBlocks)
     companion object {
         fun run(module: Module): Module {
             for (fn in module.functions) {
-                ConstantLoading(fn.blocks).pass()
+                ConstantLoading(fn).pass()
             }
             return module
         }

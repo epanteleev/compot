@@ -2,6 +2,7 @@ package ir.dominance
 
 import common.assertion
 import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.module.block.AnyBlock
 
 
@@ -27,11 +28,11 @@ internal object DominatorTreeCalculate : DominatorCalculate {
         return predecessors
     }
 
-    override fun blockOrdering(basicBlocks: BasicBlocks): List<AnyBlock> {
+    override fun blockOrdering(basicBlocks: FunctionData): List<AnyBlock> {
         return basicBlocks.postorder().order()
     }
 
-    fun evaluate(basicBlocks: BasicBlocks): DominatorTree {
+    fun evaluate(basicBlocks: FunctionData): DominatorTree {
         return DominatorTree(calculate(basicBlocks))
     }
 }

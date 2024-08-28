@@ -4,6 +4,7 @@ import ir.module.BasicBlocks
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.dominance.DominatorTree
+import ir.module.FunctionData
 
 
 data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private val exit: Block) {
@@ -32,7 +33,7 @@ data class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>) {
     fun headers(): Set<Block> = loopHeaders.keys
 }
 
-class LoopDetection private constructor(val blocks: BasicBlocks, val dominatorTree: DominatorTree) {
+class LoopDetection private constructor(val blocks: FunctionData, val dominatorTree: DominatorTree) {
     private fun evaluate(): LoopInfo {
         val loopHeaders = hashMapOf<Block, List<LoopBlockData>>()
         for (bb in blocks.postorder()) {
@@ -90,7 +91,7 @@ class LoopDetection private constructor(val blocks: BasicBlocks, val dominatorTr
     }
 
     companion object {
-        fun evaluate(blocks: BasicBlocks): LoopInfo {
+        fun evaluate(blocks: FunctionData): LoopInfo {
             return LoopDetection(blocks, blocks.dominatorTree()).evaluate()
         }
     }

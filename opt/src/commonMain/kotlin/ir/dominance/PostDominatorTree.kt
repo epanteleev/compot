@@ -1,6 +1,7 @@
 package ir.dominance
 
 import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.module.block.Label
 import ir.module.block.AnyBlock
 
@@ -50,7 +51,7 @@ class PostDominatorTree(private val ipdomMap: Map<AnyBlock, AnyBlock>) {
     }
 
     companion object {
-        fun evaluate(basicBlocks: BasicBlocks): PostDominatorTree {
+        fun evaluate(basicBlocks: FunctionData): PostDominatorTree {
             return PostDominatorTreeCalculate.evaluate(basicBlocks)
         }
     }

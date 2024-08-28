@@ -17,7 +17,7 @@ class MoveLargeConstants private constructor(val functions: List<FunctionData>, 
 
     private fun run() {
         for (data in functions) {
-            data.blocks.blocks().forEach {
+            data.blocks.forEach {
                 handleBlock(it)
             }
         }

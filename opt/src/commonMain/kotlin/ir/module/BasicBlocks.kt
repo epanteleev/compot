@@ -1,18 +1,13 @@
 package ir.module
 
 import common.assertion
-import ir.dominance.DominatorTree
-import ir.dominance.PostDominatorTree
 import ir.instruction.Return
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.LabelResolver
-import ir.module.block.iterator.*
-import ir.pass.ana.LoopDetection
-import ir.pass.ana.LoopInfo
 
 
-class BasicBlocks private constructor(private var maxBBIndex: Int, private val basicBlocks: MutableList<Block>): LabelResolver {
+class BasicBlocks private constructor(private var maxBBIndex: Int, private val basicBlocks: MutableList<Block>): LabelResolver, Iterable<Block> {
     fun blocks(): List<Block> = basicBlocks
 
     fun size(): Int = basicBlocks.size
@@ -48,38 +43,6 @@ class BasicBlocks private constructor(private var maxBBIndex: Int, private val b
         basicBlocks[bIndex] = a
     }
 
-    fun preorder(): BasicBlocksIterator {
-        return PreorderIterator(begin(), size())
-    }
-
-    fun postorder(): BasicBlocksIterator {
-        return PostorderIterator(begin(), size())
-    }
-
-    fun backwardPostorder(): BasicBlocksIterator {
-        return BackwardPostorderIterator(end(), size())
-    }
-
-    fun bfsTraversal(): BasicBlocksIterator {
-        return BfsTraversalIterator(begin(), size())
-    }
-
-    fun linearScanOrder(loopInfo: LoopInfo): BasicBlocksIterator {
-        return LinearScanOrderIterator(begin(), size(), loopInfo)
-    }
-
-    fun loopInfo(): LoopInfo {
-        return LoopDetection.evaluate(this)
-    }
-
-    fun dominatorTree(): DominatorTree {
-        return DominatorTree.evaluate(this)
-    }
-
-    fun postDominatorTree(): PostDominatorTree {
-        return PostDominatorTree.evaluate(this)
-    }
-
     fun createBlock(): Block {
         val index = maxBBIndex
         maxBBIndex += 1
@@ -88,7 +51,7 @@ class BasicBlocks private constructor(private var maxBBIndex: Int, private val b
         return block
     }
 
-    operator fun iterator(): Iterator<Block> {
+    override operator fun iterator(): Iterator<Block> {
         return basicBlocks.iterator()
     }
 

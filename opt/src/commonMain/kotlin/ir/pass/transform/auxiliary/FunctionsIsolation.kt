@@ -15,7 +15,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         }
         //TODO we don't have to isolate arguments if it isn't live-out from 'call' instruction
 
-        val begin = cfg.blocks.begin()
+        val begin = cfg.begin()
         for (arg in cfg.arguments()) {
             val copy = begin.prepend { it.copy(arg) }
             arg.replaceUsages(copy)
@@ -37,13 +37,13 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             return call
         }
 
-        for (bb in cfg.blocks) {
+        for (bb in cfg) {
             bb.transform { inst -> insertCopies(bb, inst) }
         }
     }
 
     private fun isLeafCall(): Boolean {
-        for (bb in cfg.blocks) {
+        for (bb in cfg) {
             if (bb.last() is Callable) {
                 return false
             }

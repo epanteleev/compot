@@ -1,6 +1,6 @@
 package ir.dominance
 
-import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.module.block.AnyBlock
 
 
@@ -20,11 +20,11 @@ internal object PostDominatorTreeCalculate : DominatorCalculate {
         return successors
     }
 
-    override fun blockOrdering(basicBlocks: BasicBlocks): List<AnyBlock> {
+    override fun blockOrdering(basicBlocks: FunctionData): List<AnyBlock> {
         return basicBlocks.backwardPostorder().order()
     }
 
-    fun evaluate(basicBlocks: BasicBlocks): PostDominatorTree {
+    fun evaluate(basicBlocks: FunctionData): PostDominatorTree {
         return PostDominatorTree(calculate(basicBlocks))
     }
 }

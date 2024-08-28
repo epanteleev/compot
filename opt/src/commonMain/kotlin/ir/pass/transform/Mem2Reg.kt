@@ -21,10 +21,8 @@ class Mem2Reg internal constructor(module: Module): TransformPass(module) {
     override fun name(): String = "mem2reg"
     override fun run(): Module {
         module.functions.forEach { fnData ->
-            val cfg = fnData.blocks
-
-            val dominatorTree = cfg.dominatorTree()
-            val joinSet = JoinPointSet.evaluate(cfg, dominatorTree)
+            val dominatorTree = fnData.dominatorTree()
+            val joinSet = JoinPointSet.evaluate(fnData, dominatorTree)
             Mem2RegImpl(fnData, joinSet).pass(dominatorTree)
         }
         return PhiFunctionPruning.run(RemoveDeadMemoryInstructions.run(module))
@@ -92,7 +90,7 @@ private class Mem2RegImpl(private val cfg: FunctionData, private val joinSet: Jo
         completePhis(bbToMapValues, insertedPhis)
 
         val deadPool = hashSetOf<Instruction>()
-        for (bb in cfg.blocks.postorder()) {
+        for (bb in cfg.postorder()) {
             removeRedundantPhis(deadPool, bb)
         }
     }

@@ -22,15 +22,15 @@ class ValidateSSAErrorException(val module: Module, override val message: String
 
 class VerifySSA private constructor(private val module: Module, private val functionData: FunctionData,
                                     private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit>() {
-    private val dominatorTree by lazy { functionData.blocks.dominatorTree() }
+    private val dominatorTree by lazy { functionData.dominatorTree() }
     private val creation by lazy { CreationInfo.create(functionData) }
-    private var bb = functionData.blocks.begin()
+    private var bb = functionData.begin()
     private var exitBlocks = 0
     private val adjustStackFrame = arrayListOf<AdjustStackFrame>()
 
     private fun pass() {
         validateArguments()
-        for (bb in functionData.blocks.preorder()) {
+        for (bb in functionData.preorder()) {
             validateBlock(bb)
         }
         validateExitBlock()

@@ -2,6 +2,7 @@ package ir.dominance
 
 import common.intMapOf
 import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.module.block.AnyBlock
 import ir.module.block.Label
 
@@ -69,7 +70,7 @@ interface DominatorCalculate {
 
     fun calculateIncoming(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> //TODO not necessary to evaluate it
 
-    fun blockOrdering(basicBlocks: BasicBlocks): List<AnyBlock>
+    fun blockOrdering(basicBlocks: FunctionData): List<AnyBlock>
 
     fun evalIndexToBlock(blockToIndex: Map<AnyBlock, Int>): Map<Int, AnyBlock> {
         val indexToBlock = intMapOf<Int, AnyBlock>(blockToIndex.size) { it }
@@ -80,7 +81,7 @@ interface DominatorCalculate {
         return indexToBlock
     }
 
-    fun calculate(basicBlocks: BasicBlocks): Map<AnyBlock, AnyBlock> {
+    fun calculate(basicBlocks: FunctionData): Map<AnyBlock, AnyBlock> {
         val blocksOrder = blockOrdering(basicBlocks)
         val blockToIndex = indexBlocks(blocksOrder)
 
