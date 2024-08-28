@@ -5,6 +5,7 @@ import ir.Definitions.POINTER_SIZE
 import ir.types.*
 import ir.instruction.lir.IndexedLoad
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.visitors.*
 
 
@@ -92,7 +93,6 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("untested")
         asm.mov(size, Address.from(first, second.value().toInt() * size), temp1)
         asm.mov(size, temp1, dst)
     }
@@ -112,7 +112,10 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(indexType.sizeOf(), second, temp1)
+        asm.mov(POINTER_SIZE, first, temp2)
+        asm.mov(size, Address.from(temp2, 0, temp1, size), temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

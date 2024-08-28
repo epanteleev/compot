@@ -20,7 +20,7 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
                     default(dst, source, index)
                 }
             }
-            is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
+            is IntegerType, is PointerType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }
     }
