@@ -8,7 +8,6 @@ import ir.module.block.*
 import ir.pass.isLocalVariable
 import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
-import ir.pass.analysis.EscapeAnalysis
 import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.pass.analysis.EscapeState
 import ir.pass.transform.Mem2RegException
@@ -16,7 +15,7 @@ import ir.types.PrimitiveType
 
 
 //TODO this is not a Reaching Definition Analysis
-abstract class AbstractReachingDefinitionAnalysis(protected val dominatorTree: DominatorTree) {
+abstract class AbstractRewritePrimitives(private val dominatorTree: DominatorTree) {
     protected fun rename(bb: Block, oldValue: Value): Value {
         return tryRename(bb, oldValue, oldValue.type())?: oldValue
     }
@@ -28,7 +27,7 @@ abstract class AbstractReachingDefinitionAnalysis(protected val dominatorTree: D
 
         val newValue = findActualValueOrNull(bb, oldValue)
             ?: return null
-        return ReachingDefinitionAnalysis.convertOrSkip(expectedType, newValue)
+        return RewritePrimitivesUtil.convertOrSkip(expectedType, newValue)
     }
 
     protected fun findActualValue(bb: Label, value: Value): Value {
@@ -50,7 +49,7 @@ abstract class AbstractReachingDefinitionAnalysis(protected val dominatorTree: D
     abstract fun valueMap(): Map<Block, Map<Value, Value>>
 }
 
-class ReachingDefinitionAnalysis private constructor(cfg: FunctionData, dominatorTree: DominatorTree): AbstractReachingDefinitionAnalysis(dominatorTree) {
+class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
     private val escapeState = cfg.analysis(EscapeAnalysisPassFabric)
     private val bbToMapValues = run {
         val bbToMapValues = hashMapOf<Block, MutableMap<Value, Value>>()
@@ -149,14 +148,14 @@ class ReachingDefinitionAnalysis private constructor(cfg: FunctionData, dominato
             return Constant.from(type, value)
         }
 
-        fun run(cfg: FunctionData, dominatorTree: DominatorTree): ReachingDefinition {
-            val ana = ReachingDefinitionAnalysis(cfg, dominatorTree)
-            return ReachingDefinition(ana.bbToMapValues, dominatorTree)
+        fun run(cfg: FunctionData, dominatorTree: DominatorTree): RewritePrimitives {
+            val ana = RewritePrimitivesUtil(cfg, dominatorTree)
+            return RewritePrimitives(ana.bbToMapValues, dominatorTree)
         }
     }
 }
 
-class ReachingDefinition internal constructor(private val info: Map<Block, Map<Value, Value>>, dominatorTree: DominatorTree): AbstractReachingDefinitionAnalysis(dominatorTree) {
+class RewritePrimitives internal constructor(private val info: Map<Block, Map<Value, Value>>, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
     override fun toString(): String {
         val builder = StringBuilder()
         for ((bb, valueMap) in info) {

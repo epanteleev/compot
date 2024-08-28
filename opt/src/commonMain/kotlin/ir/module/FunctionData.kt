@@ -1,16 +1,11 @@
 package ir.module
 
-import ir.pass.analysis.dominance.DominatorTree
-import ir.pass.analysis.dominance.PostDominatorTree
 import ir.value.ArgumentValue
 import ir.module.auxiliary.CopyCFG
-import ir.pass.analysis.intervals.LiveIntervals
-import ir.pass.analysis.intervals.LiveIntervalsBuilder
 import ir.module.block.Block
 import ir.module.block.iterator.*
 import ir.pass.AnalysisResult
 import ir.pass.FunctionAnalysisPassFabric
-import ir.pass.analysis.LoopInfo
 
 
 class FunctionData private constructor(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {
@@ -25,8 +20,6 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
     fun name(): String {
         return prototype.name
     }
-
-    // Analysis
 
     fun preorder(): BasicBlocksIterator {
         return PreorderIterator(begin(), size())
@@ -45,9 +38,9 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
     }
 
     inline fun <reified T: AnalysisResult, reified U: FunctionAnalysisPassFabric<T>> analysis(analysisType: U): T {
+        // Todo cache analysis results
         return analysisType.create(this).run()
     }
-    //
 
     operator fun iterator(): Iterator<Block> {
         return blocks.iterator()

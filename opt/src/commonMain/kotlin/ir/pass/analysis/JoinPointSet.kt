@@ -1,30 +1,25 @@
-package ir.pass.transform.utils
+package ir.pass.analysis
 
 import common.intMapOf
 import ir.instruction.Alloc
 import ir.instruction.Store
-import ir.module.BasicBlocks
 import ir.module.block.Label
-import ir.module.block.AnyBlock
-import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
+import ir.module.block.AnyBlock
+import ir.pass.AnalysisResult
+import ir.pass.FunctionAnalysisPass
+import ir.pass.FunctionAnalysisPassFabric
 import ir.pass.analysis.dominance.DominatorTreeFabric
 
 
-class JoinPointSet internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>) {
+class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>): AnalysisResult() {
     operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<Alloc>>> {
         return joinSet.iterator()
     }
-
-    companion object {
-        fun evaluate(blocks: FunctionData, dominatorTree: DominatorTree): JoinPointSet {
-            val df = dominatorTree.frontiers()
-            return JoinPointSetEvaluate(blocks, df).calculate()
-        }
-    }
 }
 
-private class JoinPointSetEvaluate(private val blocks: FunctionData, private val frontiers: Map<AnyBlock, List<AnyBlock>>) {
+class JoinPointSetEvaluate internal constructor(private val blocks: FunctionData): FunctionAnalysisPass<JoinPointSetResult>() {
+    private val frontiers = blocks.analysis(DominatorTreeFabric).frontiers()
     private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(blocks.size()) { bb: Label -> bb.index }
 
     private fun hasUserInBlock(bb: AnyBlock, variable: Alloc): Boolean {
@@ -69,14 +64,27 @@ private class JoinPointSetEvaluate(private val blocks: FunctionData, private val
         }
     }
 
-    fun calculate(): JoinPointSet {
-        val allocInfo = AllocStoreInfo.create(blocks)
-        val stores = allocInfo.allStores()
+    private fun calculate(): JoinPointSetResult {
+        val allocInfo = blocks.analysis(AllocStoreAnalysisFabric)
 
-        for ((v, vStores) in stores) {
+        for ((v, vStores) in allocInfo) {
             calculateForVariable(v, vStores as MutableSet<AnyBlock>)
         }
 
-        return JoinPointSet(joinSet)
+        return JoinPointSetResult(joinSet)
+    }
+
+    override fun name(): String {
+        return "JoinPointSet"
+    }
+
+    override fun run(): JoinPointSetResult {
+        return calculate()
+    }
+}
+
+object JoinPointSetPassFabric: FunctionAnalysisPassFabric<JoinPointSetResult>() {
+    override fun create(functionData: FunctionData): JoinPointSetEvaluate {
+        return JoinPointSetEvaluate(functionData)
     }
 }

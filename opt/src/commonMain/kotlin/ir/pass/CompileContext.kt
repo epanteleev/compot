@@ -6,7 +6,6 @@ import okio.SYSTEM
 
 
 class CompileContext(private val filename: String, private val suffix: String, private val outputDir: String?) {
-
     fun log(passName: String, message: () -> String) {
         if (outputDir == null) {
             return
