@@ -161,6 +161,14 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@df valueToReplace
     }
 
+    fun updateDF(instruction: Instruction, closure: (Value) -> Value) = mc.df {
+        assertion(instruction.owner() === this) {
+            "instruction=$instruction is not in bb=$this"
+        }
+
+        instruction.update { closure(it) }
+    }
+
     fun updateDF(instruction: Instruction, index: Int, value: Value) = mc.df {
         assertion(instruction.owner() === this) {
             "instruction=$instruction is not in bb=$this"

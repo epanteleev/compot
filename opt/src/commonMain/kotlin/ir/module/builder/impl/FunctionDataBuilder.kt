@@ -15,7 +15,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
     AnyFunctionDataBuilder(prototype, argumentValues), InstructionFabric {
 
     init {
-        switchLabel(fd.blocks.begin())
+        switchLabel(fd.begin())
     }
 
     override fun build(): FunctionData {
