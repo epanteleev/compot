@@ -1025,4 +1025,91 @@ class ParserTest {
         val program = parser.translation_unit()
         assertEquals("int fib(int n) {if(n <= 1) {return n;} return fib(n - 1) + fib(n - 2);}", LineAgnosticAstPrinter.print(program))
     }
+
+    @Test
+    fun testDesignatedInitializer() {
+        val input = "int arr[2] = { [0] = 1, [1] = 2 };"
+
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("int arr[2] = {[0] = 1, [1] = 2};", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Test
+    fun testDesignatedInitializer1() {
+        val input = "int arr[2][3] = { [0][0] = 1, [1][2] = 2 };"
+
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("int arr[2][3] = {[0][0] = 1, [1][2] = 2};", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Test
+    fun testDesignatedInitializer2() {
+        val input = "int arr[2][3] = { [0][0] = 1, [1][2] = 2, 3, 4 };"
+
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("int arr[2][3] = {[0][0] = 1, [1][2] = 2, 3, 4};", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Test
+    fun testDesignatedStructInitializer() {
+        val input = """
+            struct point {
+                int x;
+                int y;
+            };
+            
+            struct point p = { .x = 1, .y = 2 };
+        """.trimIndent()
+
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("struct point {int x; int y;} ; struct point p = {.x = 1, .y = 2};", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Test
+    fun testDesignatedStructInitializer1() {
+        val input = """
+            struct point {
+                int x;
+                int y;
+            };
+            
+            struct point p = { .x = 1, 2 };
+        """.trimIndent()
+
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("struct point {int x; int y;} ; struct point p = {.x = 1, 2};", LineAgnosticAstPrinter.print(program))
+    }
+
+    @Test
+    fun testDesignatedStructArrayInitializer() {
+        val input = """
+            struct point {
+                int x;
+                int y;
+            };
+            
+            struct point p[2] = { [0] = {.x = 1, .y = 2}, [1] = {.x = 3, .y = 4} };
+        """.trimIndent()
+
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("struct point {int x; int y;} ; struct point p[2] = {[0] = {.x = 1, .y = 2}, [1] = {.x = 3, .y = 4}};", LineAgnosticAstPrinter.print(program))
+    }
 }

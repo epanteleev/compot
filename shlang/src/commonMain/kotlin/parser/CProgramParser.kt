@@ -296,7 +296,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             return@rule assignment_expression()
         }
         eat()
-        val list = initializerList()
+        val list = initializer_list()
         if (check("}")) {
             eat()
             return@rule list
@@ -1608,19 +1608,82 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
 
     //initializer_list
     //	: initializer
+    //  | designation initializer
     //	| initializer_list ',' initializer
     //	;
-    fun initializerList(): Expression {
-        val initializers = mutableListOf<Expression>()
+    fun initializer_list(): InitializerList? = rule {
+        val initializers = mutableListOf<Initializer>()
         while (true) {
-            val initializer = initializer() ?: return InitializerList(initializers)
-            initializers.add(initializer)
+            val designator = designation()
+            val initializer = initializer() ?: throw ParserException(InvalidToken("Expected initializer", peak()))
+            if (designator != null) {
+                initializers.add(DesignationInitializer(designator, initializer))
+            } else {
+                initializers.add(SingleInitializer(initializer))
+            }
             if (check(",")) {
                 eat()
             } else {
-                return InitializerList(initializers)
+                return@rule break
             }
         }
+        if (initializers.isEmpty()) {
+            return@rule null
+        } else {
+            return@rule InitializerList(initializers)
+        }
+    }
+
+    // designation
+    //	: designator_list '='
+    //	;
+    fun designation(): Designation? = rule {
+        val designators = designator_list() ?: return@rule null
+        if (check("=")) {
+            eat()
+            return Designation(designators)
+        }
+        throw ParserException(InvalidToken("Expected '='", peak()))
+    }
+
+    // designator-list
+    //	: designator
+    //	| designator-list designator
+    //	;
+    fun designator_list(): List<Designator>? = rule {
+        val designators = mutableListOf<Designator>()
+        while (true) {
+            val designator = designator()?: break
+            designators.add(designator)
+        }
+        return@rule if (designators.isEmpty()) {
+            null
+        } else {
+            designators
+        }
+    }
+
+    // designator
+    //	: '[' constant_expression ']'
+    //	| '.' IDENTIFIER
+    //	;
+    fun designator(): Designator? = rule {
+        if (check("[")) {
+            eat()
+            val expr = constant_expression() ?: throw ParserException(InvalidToken("Expected constant expression", peak()))
+            if (check("]")) {
+                eat()
+                return@rule ArrayDesignator(expr)
+            }
+            throw ParserException(InvalidToken("Expected ']'", peak()))
+        }
+        if (check(".")) {
+            eat()
+            val ident = peak<Identifier>()
+            eat()
+            return@rule MemberDesignator(ident)
+        }
+        return@rule null
     }
 
     // abstract_declarator

@@ -221,7 +221,25 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
     }
 }
 
-data class InitializerList(val initializers: List<Expression>) : Expression() {
+abstract class Initializer : Expression()
+
+class SingleInitializer(val expr: Expression) : Initializer() {
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        return@memoize expr.resolveType(typeHolder)
+    }
+}
+
+class DesignationInitializer(val designation: Designation, val initializer: Expression) : Initializer() {
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        return@memoize initializer.resolveType(typeHolder)
+    }
+}
+
+class InitializerList(val initializers: List<Initializer>) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -238,18 +256,6 @@ data class InitializerList(val initializers: List<Expression>) : Expression() {
             struct.addField("field$i", types[i])
         }
         return@memoize CStructType(struct, emptyList())
-    }
-
-    fun flatten(): List<Expression> {
-        val result = mutableListOf<Expression>()
-        for (init in initializers) {
-            if (init is InitializerList) {
-                result.addAll(init.flatten())
-            } else {
-                result.add(init)
-            }
-        }
-        return result
     }
 
     private fun isSameType(types: List<CType>): Boolean {

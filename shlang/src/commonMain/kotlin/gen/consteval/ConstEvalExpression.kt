@@ -16,6 +16,7 @@ abstract class ConstEvalExpression<T>: ExpressionVisitor<T> {
     }
 }
 
+//TODO copy-pasted many times
 class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalExpression<Int>() {
     override fun visit(identNode: IdentNode): Int {
         throw ConstEvalException("identifier=${identNode}")
@@ -54,7 +55,6 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
             BinaryOpType.GE      -> if (left >= right) 1 else 0
             BinaryOpType.EQ       -> if (left == right) 1 else 0
             BinaryOpType.NE      -> if (left != right) 1 else 0
-
             BinaryOpType.BIT_AND  -> left and right
             BinaryOpType.BIT_OR   -> left or right
             BinaryOpType.BIT_XOR  -> left xor right
@@ -92,6 +92,14 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
     }
 
     override fun visit(initializerList: InitializerList): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(singleInitializer: SingleInitializer): Int {
+        return singleInitializer.expr.accept(this)
+    }
+
+    override fun visit(designationInitializer: DesignationInitializer): Int {
         TODO("Not yet implemented")
     }
 
@@ -201,6 +209,14 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
     }
 
     override fun visit(initializerList: InitializerList): Long {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(singleInitializer: SingleInitializer): Long {
+        return singleInitializer.expr.accept(this)
+    }
+
+    override fun visit(designationInitializer: DesignationInitializer): Long {
         TODO("Not yet implemented")
     }
 
@@ -334,6 +350,14 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
         TODO("Not yet implemented")
     }
 
+    override fun visit(designationInitializer: DesignationInitializer): Float {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(singleInitializer: SingleInitializer): Float {
+        return singleInitializer.expr.accept(this)
+    }
+
     override fun visit(memberAccess: MemberAccess): Float {
         TODO("Not yet implemented")
     }
@@ -450,6 +474,14 @@ class ConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): Cons
 
     override fun visit(emptyExpression: EmptyExpression): Double {
         TODO("Not yet implemented")
+    }
+
+    override fun visit(designationInitializer: DesignationInitializer): Double {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(singleInitializer: SingleInitializer): Double {
+        return singleInitializer.expr.accept(this)
     }
 
     companion object {

@@ -252,6 +252,16 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append('}')
     }
 
+    override fun visit(designationInitializer: DesignationInitializer) {
+        designationInitializer.designation.accept(this)
+        buffer.append(" = ")
+        designationInitializer.initializer.accept(this)
+    }
+
+    override fun visit(singleInitializer: SingleInitializer) {
+        singleInitializer.expr.accept(this)
+    }
+
     override fun visit(arrayDeclarator: ArrayDeclarator) {
         buffer.append('[')
         arrayDeclarator.constexpr.accept(this)
@@ -397,6 +407,23 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         joinTo(directDeclarator.directDeclaratorParams, "") {
             it.accept(this)
         }
+    }
+
+    override fun visit(designation: Designation) {
+        joinTo(designation.designators, "") {
+            it.accept(this)
+        }
+    }
+
+    override fun visit(arrayDesignator: ArrayDesignator) {
+        buffer.append('[')
+        arrayDesignator.constExpression.accept(this)
+        buffer.append(']')
+    }
+
+    override fun visit(memberDesignator: MemberDesignator) {
+        buffer.append('.')
+        buffer.append(memberDesignator.name.str())
     }
 
     override fun visit(varDecl: DirectVarDeclarator) {

@@ -14,4 +14,7 @@ interface UnclassifiedNodeVisitor<T> {
     fun visit(identNode: IdentNode): T
     fun visit(abstractDeclarator: AbstractDeclarator): T
     fun visit(directDeclarator: DirectDeclarator): T
+    fun visit(designation: Designation): T
+    fun visit(arrayDesignator: ArrayDesignator): T
+    fun visit(memberDesignator: MemberDesignator): T
 }
