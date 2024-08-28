@@ -1183,7 +1183,28 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         for ((idx, init) in initializerList.initializers.withIndex()) {
             when (init) {
                 is SingleInitializer -> initializerContext.withIndex(idx) { visitSingleInitializer(init) }
-                else -> TODO()
+                is DesignationInitializer -> initializerContext.withIndex(idx) { visitDesignationInitializer(init) }
+            }
+        }
+    }
+
+    private fun visitDesignationInitializer(designationInitializer: DesignationInitializer) {
+        val type = initializerContext.peekType()
+        val value = initializerContext.peekValue()
+        for (designator in designationInitializer.designation.designators) {
+            when (designator) {
+                is ArrayDesignator -> {
+                    TODO()
+                }
+                is MemberDesignator -> {
+                    val structType = type as CStructType
+                    val fieldType = mb.toIRType<StructType>(typeHolder, structType)
+                    val expression = visitExpression(designationInitializer.initializer, true)
+                    val index = structType.fieldIndex(designator.name())
+                    val converted = ir.convertToType(expression, fieldType.field(index))
+                    val fieldAdr = ir.gfp(value, fieldType, arrayOf(Constant.valueOf(Type.I64, index)))
+                    ir.store(fieldAdr, converted)
+                }
             }
         }
     }

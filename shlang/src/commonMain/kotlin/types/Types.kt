@@ -433,6 +433,10 @@ class CStructType(baseType: StructBaseType, properties: List<TypeProperty> = emp
     override fun copyWith(extraProperties: List<TypeProperty>): CStructType {
         return CStructType(baseType as StructBaseType, properties + extraProperties)
     }
+
+    fun fieldIndex(idx: Int): CType {
+        return baseType.fieldIndex(idx)
+    }
 }
 
 class CUnionType(baseType: UnionBaseType, properties: List<TypeProperty> = emptyList()) : CBaseStructType(baseType, properties) {
