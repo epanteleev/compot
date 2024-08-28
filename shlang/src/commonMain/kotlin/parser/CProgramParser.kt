@@ -19,7 +19,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	: external_declaration
     //	| translation_unit external_declaration
     //	;
-    fun translation_unit(): ProgramNode {//TODO
+    fun translation_unit(): ProgramNode {
         val nodes = mutableListOf<Node>()
         while (!eof()) {
             val node = external_declaration()?:

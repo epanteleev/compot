@@ -394,14 +394,13 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
 
 data class ArrayAccess(val primary: Expression, val expr: Expression) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        val primaryType = primary.resolveType(typeHolder)
-        if (primaryType is CArrayType) {
-            return@memoize primaryType.element()
-        } else if (primaryType is CPointerType) {
-            return@memoize primaryType.dereference()
+        return@memoize when (val primaryType = primary.resolveType(typeHolder)) {
+            is CommonCArrayType -> primaryType.element()
+            is CPointerType     -> primaryType.dereference()
+            else -> throw TypeResolutionException("Array access on non-array type")
         }
-        return@memoize CType.UNKNOWN
     }
 }
 
