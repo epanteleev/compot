@@ -58,19 +58,21 @@ sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
             }
         }
 
-        fun zero(kind: NonTrivialType): GlobalConstant {
+        fun zero(name: String, kind: NonTrivialType): GlobalConstant {
             return when (kind) {
-                Type.I8  -> I8ConstantValue("zero", 0)
-                Type.U8  -> U8ConstantValue("zero", 0U)
-                Type.I16 -> I16ConstantValue("zero", 0)
-                Type.U16 -> U16ConstantValue("zero", 0U)
-                Type.I32 -> I32ConstantValue("zero", 0)
-                Type.U32 -> U32ConstantValue("zero", 0U)
-                Type.I64 -> I64ConstantValue("zero", 0)
-                Type.U64 -> U64ConstantValue("zero", 0U)
-                Type.F32 -> F32ConstantValue("zero", 0.0f)
-                Type.F64 -> F64ConstantValue("zero", 0.0)
-                Type.Ptr -> PointerConstant("zero", 0)
+                Type.I8  -> I8ConstantValue(name, 0)
+                Type.U8  -> U8ConstantValue(name, 0.toUByte())
+                Type.I16 -> I16ConstantValue(name, 0)
+                Type.U16 -> U16ConstantValue(name, 0.toUShort())
+                Type.I32 -> I32ConstantValue(name, 0)
+                Type.U32 -> U32ConstantValue(name, 0.toUInt())
+                Type.I64 -> I64ConstantValue(name, 0)
+                Type.U64 -> U64ConstantValue(name, 0.toULong())
+                Type.F32 -> F32ConstantValue(name, 0.0f)
+                Type.F64 -> F64ConstantValue(name, 0.0)
+                Type.Ptr -> PointerConstant(name, 0)
+                is ArrayType -> ArrayGlobalConstant(name, InitializerListValue.zero(kind))
+                is StructType -> StructGlobalConstant(name, InitializerListValue.zero(kind))
                 else -> throw RuntimeException("Cannot create zero constant: kind=$kind")
             }
         }
@@ -179,7 +181,7 @@ class PointerConstant(override val name: String, val value: Long): GlobalConstan
 }
 
 sealed class AnyAggregateGlobalConstant(override val name: String): GlobalConstant(name) {
-    abstract fun elements(): List<Constant>
+    abstract fun elements(): InitializerListValue
     abstract fun contentType(): NonTrivialType
     override fun type(): NonTrivialType = Type.Ptr
 }
@@ -189,52 +191,36 @@ class StringLiteralConstant(override val name: String, val tp: ArrayType, val st
         return "\"$string\""
     }
 
-    override fun elements(): List<Constant> {
-        if (string == null) return emptyList()
-        return string.map { U8Value(it.code.toByte()) }
+    override fun elements(): InitializerListValue {
+        if (string == null) {
+            return InitializerListValue(ArrayType(Type.I8, 0), emptyList())
+        }
+        return InitializerListValue(ArrayType(Type.I8, string.length), string.map { U8Value(it.code.toByte()) })
     }
 
     override fun content(): String = data()
     override fun contentType(): NonTrivialType = Type.Ptr
 }
 
-sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivialType, protected val elements: List<Constant>): AnyAggregateGlobalConstant(name) {
-    final override fun elements(): List<Constant> {
+sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivialType, protected val elements: InitializerListValue): AnyAggregateGlobalConstant(name) {
+    final override fun elements(): InitializerListValue {
         return elements
     }
 
     final override fun data(): String {
-        return elements.joinToString(", ", prefix = "{", postfix = "}" ) { "$it: ${it.type()}" }
+        return elements.toString()
     }
     final override fun content(): String = data()
 }
 
-class ArrayGlobalConstant(name: String, tp: ArrayType, elements: List<Constant>): AggregateGlobalConstant(name, tp, elements) {
-    init {
-        require(tp.length == elements.size) {
-            "Array size mismatch: ${tp.sizeOf()} != ${elements.size}"
-        }
-        elements.forEach {
-            require(it.type() == tp.elementType()) {
-                "Element type mismatch: ${it.type()} != ${tp.elementType()}"
-            }
-        }
-    }
+class ArrayGlobalConstant(name: String, elements: InitializerListValue): AggregateGlobalConstant(name, elements.type(), elements) {
+    constructor(name: String, tp: ArrayType, elements: List<Constant>): this(name, InitializerListValue(tp, elements))
 
     override fun contentType(): ArrayType = tp as ArrayType
 }
 
-class StructGlobalConstant(name: String, tp: StructType, elements: List<Constant>): AggregateGlobalConstant(name, tp, elements) {
-    init {
-        require(tp.fields.size == elements.size) {
-            "Struct size mismatch: ${tp.sizeOf()} != ${elements.size}"
-        }
-        elements.forEachWith(tp.fields) { elem, field ->
-            require(elem.type() == field) {
-                "Element type mismatch: ${elem.type()} != $field"
-            }
-        }
-    }
+class StructGlobalConstant(name: String, elements: InitializerListValue): AggregateGlobalConstant(name, elements.type(), elements) {
+    constructor(name: String, tp: StructType, elements: List<Constant>): this(name, InitializerListValue(tp, elements))
 
     override fun contentType(): StructType = tp as StructType
 }

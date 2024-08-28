@@ -6,10 +6,7 @@ import ir.global.GlobalConstant
 import ir.global.StringLiteralConstant
 import ir.global.StructGlobalConstant
 import ir.module.builder.impl.ModuleBuilder
-import ir.types.ArrayType
-import ir.types.NonTrivialType
-import ir.types.StructType
-import ir.types.Type
+import ir.types.*
 import ir.value.Constant
 import parser.nodes.Expression
 import parser.nodes.InitializerList
@@ -24,7 +21,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
     protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): GlobalConstant? {
         val result = constEvalExpression0(expr)
         if (result != null) {
-            return GlobalConstant.of(createGlobalConstantName(), lValueType, result)
+            return GlobalConstant.of(createGlobalConstantName(), lValueType as PrimitiveType, result)
         }
         return aggregateInitializer(lValueType, expr)
     }
