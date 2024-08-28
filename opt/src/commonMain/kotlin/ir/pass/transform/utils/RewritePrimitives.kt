@@ -73,7 +73,7 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
     private fun rewriteValuesSetup(bb: Block) {
         val valueMap = bbToMapValues[bb]!!
         for (instruction in bb) {
-            if (instruction.operands().isEmpty()) {
+            if (instruction.emptyOperands()) {
                 continue
             }
 
@@ -131,7 +131,7 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
             if (instruction is Phi) {
                 // Note: all used values are equal in uncompleted phi instruction.
                 // Will take only first value.
-                valueMap[instruction.operands().first()] = instruction
+                valueMap[instruction.operand(0)] = instruction
                 continue
             }
 

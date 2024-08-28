@@ -31,9 +31,9 @@ class Precoloring private constructor(private val intervals: LiveIntervals) {
         val group = arrayListOf<LocalValue>(value)
         visited.add(value)
         var liveRange = range
-        for (used in value.operands()) {
+        value.operands { used ->
             if (used !is LocalValue) {
-                continue
+                return@operands
             }
             assertion(used is Copy) { "expect this invariant: used=$used" }
 

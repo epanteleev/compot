@@ -23,7 +23,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
             bb.updateDF(phi, idx, copy)
         }
 
-        return bb.updateOf(phi) { bb.insertAfter(phi) { it.copy(phi) } }
+        return bb.updateUsages(phi) { bb.insertAfter(phi) { it.copy(phi) } }
     }
 
     fun pass() {

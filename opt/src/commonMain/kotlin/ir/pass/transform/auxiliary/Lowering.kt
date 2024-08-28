@@ -195,7 +195,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     val divProj = inst.proj(0)
                     if (divProj != null) {
                         val proj     = bb.insertBefore(inst) { it.proj(newDiv, 0) }
-                        val truncate = bb.updateOf(divProj) {
+                        val truncate = bb.updateUsages(divProj) {
                             bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
                         }
                         killOnDemand(bb, divProj)
@@ -205,7 +205,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     val remProj = inst.proj(1)
                     if (remProj != null) {
                         val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
-                        val truncate = bb.updateOf(remProj) {
+                        val truncate = bb.updateUsages(remProj) {
                             bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
                         }
                         killOnDemand(bb, remProj)

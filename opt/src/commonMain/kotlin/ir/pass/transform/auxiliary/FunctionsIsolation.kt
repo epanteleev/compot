@@ -17,7 +17,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
 
         val begin = cfg.begin()
         for (arg in cfg.arguments()) {
-            begin.updateOf(arg) { begin.prepend { it.copy(arg) } }
+            begin.updateUsages(arg) { begin.prepend { it.copy(arg) } }
         }
     }
 
@@ -30,7 +30,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
 
             for ((i, arg) in call.arguments().withIndex()) {
                 val copy = bb.insertBefore(call) { it.copy(arg) }
-                call.update(i, copy)
+                bb.updateDF(call, i, copy)
             }
             call.target().prepend { it.upStackFrame(call) }
             return call

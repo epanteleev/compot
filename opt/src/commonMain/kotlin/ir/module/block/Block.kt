@@ -139,37 +139,28 @@ class Block private constructor(override val index: Int):
             assertion(newInstruction is LocalValue) {
                 "should be local value, but newInstruction=$newInstruction"
             }
-            updateOf(instruction) { newInstruction as LocalValue }
+            updateUsages(instruction) { newInstruction as LocalValue }
         }
         kill(instruction, Value.UNDEF)
         return newInstruction
     }
 
-    fun<V: Value> updateOf(localValue: LocalValue, replacement: () -> V): V {
+    fun<V: Value> updateUsages(localValue: LocalValue, replacement: () -> V): V {
         val valueToReplace = replacement()
-        val usedIn = localValue.release()
-        for (user in usedIn) {
-            for ((idxUse, use) in user.operands().withIndex()) {
+        for (user in localValue.release()) {
+            user.operandsWithIndex { idxUse, use ->
                 if (use !== localValue) {
-                    continue
+                    return@operandsWithIndex
                 }
                 // New value can use the old value
                 if (user == valueToReplace) {
-                    continue
+                    return@operandsWithIndex
                 }
 
                 user.update(idxUse, valueToReplace)
             }
         }
         return valueToReplace
-    }
-
-    fun updateDF(instruction: Instruction, closure: (Value) -> Value) {
-        assertion(instruction.owner() === this) {
-            "instruction=$instruction is not in bb=$this"
-        }
-
-        instruction.update { value -> closure(value) }
     }
 
     fun updateDF(instruction: Instruction, index: Int, value: Value) {
@@ -180,12 +171,32 @@ class Block private constructor(override val index: Int):
         instruction.update(index, value)
     }
 
-    fun updateCF(instruction: TerminateInstruction, closure: (Block) -> Block) {
+    fun updateDF(phi: Phi, closure: (Block, Value) -> Value) {
+        assertion(phi.owner() === this) {
+            "phi=$phi is not in bb=$this"
+        }
+
+        phi.zipWithIndex { bb, value, idx ->
+            phi.update(idx, closure(bb, value))
+        }
+    }
+
+    fun updateCF(phi: Phi, closure: (Block, Value) -> Block) {
+        assertion(phi.owner() === this) {
+            "phi=$phi is not in bb=$this"
+        }
+
+        phi.zipWithIndex { bb, value, idx ->
+            phi.updateIncoming(closure(bb, value), idx)
+        }
+    }
+
+    fun updateCF(instruction: TerminateInstruction, fn: (Block) -> Block) {
         assertion(instruction.owner() === this) {
             "instruction=$instruction is not in bb=$this"
         }
 
-        instruction.updateTargets { closure(it) }
+        instruction.updateTargets(fn)
     }
 
     override fun contains(instruction: Instruction): Boolean {
@@ -236,7 +247,7 @@ class Block private constructor(override val index: Int):
 
         val next = instruction.prev()
         if (instruction is LocalValue) {
-            updateOf(instruction) { replacement }
+            updateUsages(instruction) { replacement }
         }
         val removed = remove(instruction)
         removed.destroy()

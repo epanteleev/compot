@@ -56,7 +56,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
         }
 
         for (phi in insertedPhis) {
-            phi.updateDataFlow { l, v -> renameValues(l, v, phi.type()) }
+            phi.owner().updateDF(phi) { l, v -> renameValues(l, v, phi.type()) }
         }
     }
 

@@ -35,9 +35,9 @@ class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
                     continue
                 }
 
-                for (op in inst.operands()) {
+                inst.operands { op ->
                     if (op !is Phi) {
-                        continue
+                        return@operands
                     }
 
                     val place = phiPlacesInfo[op]!!
@@ -53,14 +53,14 @@ class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
             val phi = worklist.last()
             worklist.removeLast()
 
-            for (op in phi.operands()) {
+            phi.operands { op ->
                 if (op !is Phi) {
-                    continue
+                    return@operands
                 }
                 val definedIn = phiPlacesInfo[op] ?: throw RuntimeException("cannon find op=${op}")
 
                 if (usefull.isUseful(op, definedIn)) {
-                    continue
+                    return@operands
                 }
                 usefull.markUseful(op, definedIn)
                 worklist.add(op)
@@ -71,7 +71,7 @@ class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
     private fun prunePhis() {
         fun removePhi(phi: Phi, bb: Block) {
             assertion(phi.usedIn().fold(true) { acc, value -> acc && (value is Phi) }) {
-                "phi value is used in non phi instruction: operands=${phi.operands()}"
+                "phi value is used in non phi instruction"
             }
 
             bb.kill(phi, Value.UNDEF)

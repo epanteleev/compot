@@ -40,9 +40,9 @@ class LiveIntervalsBuilder internal constructor(private val data: FunctionData):
     }
 
     private fun updateLiveRange(inst: Instruction, instructionLocation: OrderedLocation) {
-        for (usage in inst.operands()) {
+        inst.operands { usage ->
             if (usage !is LocalValue) {
-                continue
+                return@operands
             }
 
             val liveRange = intervals[usage] ?: throw LiveIntervalsException("in $usage")

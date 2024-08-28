@@ -155,9 +155,9 @@ private class DumpLModule(module: LModule) : DumpModule<LModule>(module) {
         super.dumpInstruction(instruction, idx)
 
         val killed = arrayListOf<LocalValue>()
-        for (use in instruction.operands()) {
+        instruction.operands { use ->
             if (use !is LocalValue) {
-                continue
+                return@operands
             }
 
             val end = liveness!![use].end()
@@ -166,7 +166,6 @@ private class DumpLModule(module: LModule) : DumpModule<LModule>(module) {
                 killed.add(use)
             }
         }
-
         if (killed.isNotEmpty()) {
             builder.append("\tkill: ")
             killed.joinTo(builder, separator = ",") { it.toString() }
