@@ -140,18 +140,18 @@ enum class PostfixUnaryOpType: UnaryOpType {
 
 
 sealed class Expression : Node() {
-    private var type: CType = CType.UNRESOlVED
+    protected var type: CType = CType.UNRESOlVED
 
     abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
 
     abstract fun resolveType(typeHolder: TypeHolder): CType
 
-    protected fun memoize(closure: () -> CType): CType {
+    protected inline fun<reified T: CType> memoize(closure: () -> T): T {
         if (type != CType.UNRESOlVED) {
-            return type
+            return type as T
         }
         type = closure()
-        return type
+        return type as T
     }
 }
 
@@ -223,13 +223,17 @@ class FuncPointerCall(val primary: UnaryOp, args: List<Expression>) : AnyFunctio
         return primary.nameIdent()
     }
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+    fun resolveFunctionType(typeHolder: TypeHolder): CFunPointerType = memoize {
         resolveParams(typeHolder)
-
-        when (val functionType = typeHolder.getFunctionType(name())) {
-            is CFunPointerType -> return@memoize functionType.cFunctionType.retType
-            else -> throw TypeResolutionException("Function call of '${name()}' with non-function type")
+        val functionType = typeHolder.getFunctionType(name())
+        if (functionType !is CFunPointerType) {
+            throw TypeResolutionException("Function call of '${name()}' with non-function type")
         }
+        return functionType
+    }
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        return resolveFunctionType(typeHolder).retType()
     }
 }
 
@@ -244,13 +248,17 @@ class FunctionCall(val primary: VarNode, args: List<Expression>) : AnyFunctionCa
         return primary.nameIdent()
     }
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+    private fun resolveFunctionType(typeHolder: TypeHolder): CFunctionType = memoize {
         resolveParams(typeHolder)
-
-        when (val functionType = typeHolder.getFunctionType(name())) {
-            is CFunctionType   -> return@memoize functionType.functionType.retType
-            else -> throw TypeResolutionException("Function call of '${name()}' with non-function type")
+        val functionType = typeHolder.getFunctionType(name())
+        if (functionType !is CFunctionType) {
+            throw TypeResolutionException("Function call of '${name()}' with non-function type")
         }
+        return functionType
+    }
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        return resolveFunctionType(typeHolder).retType()
     }
 }
 

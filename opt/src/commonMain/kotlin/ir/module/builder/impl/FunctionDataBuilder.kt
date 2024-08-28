@@ -76,7 +76,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.icall(pointer, func, args, target)
     }
 
-    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Block): IndirectionVoidCall {
+    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionVoidCall {
         return bb.ivcall(pointer, func, args, target)
     }
 
