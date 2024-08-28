@@ -21,6 +21,21 @@ abstract class LiveRange internal constructor(private var creation: OrderedLocat
         }
     }
 
+    fun intersect(other: LiveRange): Boolean {
+        if (creation > other.end() || other.creation > end()) {
+            return false
+        }
+
+        for ((block, location) in other.locations) {
+            val loc = locations[block]
+            if (loc != null && loc < location) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     override fun toString(): String {
         return "range [$creation : ${end()}]"
     }

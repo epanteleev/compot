@@ -36,7 +36,7 @@ class BasicBlocks private constructor(private var maxBBIndex: Int, private val b
         return endBlock
     }
 
-    fun swapBlocks(aIndex: Int, bIndex: Int) {
+    internal fun swapBlocks(aIndex: Int, bIndex: Int) {
         val a = basicBlocks[aIndex]
         val b = basicBlocks[bIndex]
         basicBlocks[aIndex] = b
