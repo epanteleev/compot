@@ -2,26 +2,27 @@ package ir.module.builder
 
 import ir.value.ArgumentValue
 import ir.module.FunctionPrototype
-import ir.instruction.Return
-import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.module.block.Label
 
 
 abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype,
-                                      protected val argumentValues: List<ArgumentValue>,
-                                      protected val blocks: BasicBlocks) {
-    protected var bb: Block = blocks.begin()
-
+                                      private val argumentValues: List<ArgumentValue>) {
+    protected val fd = FunctionData.create(prototype, argumentValues)
+    protected var bb: Block = fd.begin()
 
     protected fun allocateBlock(): Block {
-        return blocks.createBlock()
+        return fd.blocks.createBlock()
+    }
+
+    fun switchLabel(label: Label) {
+        bb = fd.blocks.findBlock(label)
     }
 
     fun currentLabel(): Label = bb
 
-    fun begin(): Label = blocks.begin()
+    fun begin(): Label = fd.blocks.begin()
 
     fun createLabel(): Label = allocateBlock()
 
@@ -34,13 +35,9 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
     abstract fun build(): FunctionData
 
     protected fun normalizeBlocks(): Boolean {
-        val last = blocks.blocks().find {
-            it.lastOrNull() is Return
-        }
-        if (last == null) {
-            throw IllegalStateException("Function '${prototype.name}' does not have return instruction")
-        }
-        blocks.swapBlocks(last.index, blocks.size() - 1)
+        val last = fd.blocks.lastOrNull()
+            ?: throw IllegalStateException("Function '${prototype.name}' does not have return instruction")
+        fd.blocks.swapBlocks(last.index, fd.blocks.size() - 1)
         return true
     }
 }

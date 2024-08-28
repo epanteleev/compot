@@ -8,7 +8,7 @@ abstract class LiveRange internal constructor(private var creation: OrderedLocat
     fun begin(): OrderedLocation = creation
     fun end(): OrderedLocation = locations.maxBy { it.value.order }.value //TODO cached
 
-    fun merge(other: LiveRange): LiveRange {
+    fun merge(other: LiveRange) {
         if (creation > other.creation) {
             creation = other.creation
         }
@@ -19,8 +19,6 @@ abstract class LiveRange internal constructor(private var creation: OrderedLocat
                 locations[block] = location
             }
         }
-
-        return this
     }
 
     override fun toString(): String {
