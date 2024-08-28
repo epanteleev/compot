@@ -6,7 +6,7 @@ import ir.types.*
 import ir.platform.x64.CallConvention
 
 
-class CalleeArgumentAllocator(private val stackFrame: StackFrame, private val arguments: Array<Value>) {
+class CalleeArgumentAllocator(private val stackFrame: StackFrame, private val arguments: List<Value>) {
     private interface Place
     private data class Memory(val index: Int): Place
     private data class RealGPRegister(val registerIndex: Int): Place
@@ -59,7 +59,7 @@ class CalleeArgumentAllocator(private val stackFrame: StackFrame, private val ar
         private val gpRegisters = CallConvention.gpArgumentRegisters
         private val fpRegisters = CallConvention.xmmArgumentRegister
 
-        fun alloc(stackFrame: StackFrame, arguments: Array<Value>): List<Operand> {
+        fun alloc(stackFrame: StackFrame, arguments: List<Value>): List<Operand> {
             return CalleeArgumentAllocator(stackFrame, arguments).calculate()
         }
     }

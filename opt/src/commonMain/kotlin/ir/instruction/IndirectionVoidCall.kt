@@ -1,12 +1,13 @@
 package ir.instruction
 
+import common.arrayWith
+import common.arrayWrapperOf
 import common.assertion
 import ir.value.Value
 import ir.types.Type
 import ir.module.IndirectFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
-
 
 class IndirectionVoidCall private constructor(id: Identity, owner: Block, pointer: Value,
                                               private val func: IndirectFunctionPrototype, args: List<Value>, target: Block):
@@ -32,8 +33,8 @@ class IndirectionVoidCall private constructor(id: Identity, owner: Block, pointe
         return operands[0]
     }
 
-    override fun arguments(): Array<Value> {
-        return operands
+    override fun arguments(): List<Value> {
+        return arrayWrapperOf(arrayWith(operands.size - 1) { operands[it + 1] })
     }
 
     override fun prototype(): IndirectFunctionPrototype {
@@ -49,7 +50,9 @@ class IndirectionVoidCall private constructor(id: Identity, owner: Block, pointe
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("call ${type()} ${pointer()}(")
-        operands.joinTo(builder) { "$it:${it.type()}"}
+        arguments().joinTo(builder) {
+            "$it:${it.type()}"
+        }
         builder.append(") br label ")
         builder.append(target())
         return builder.toString()
@@ -57,12 +60,13 @@ class IndirectionVoidCall private constructor(id: Identity, owner: Block, pointe
 
     companion object {
         fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, block: Block): IndirectionVoidCall {
-            require(Callable.isAppropriateTypes(func, pointer, args.toTypedArray())) {
+            require(Callable.isAppropriateTypes(func, pointer, args)) {
                 args.joinToString(prefix = "inconsistent types: pointer=${pointer}:${pointer.type()}, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
 
-            return registerUser(IndirectionVoidCall(id, owner, pointer, func, args, block), args.iterator())
+            val l = listOf(pointer) + args
+            return registerUser(IndirectionVoidCall(id, owner, pointer, func, args, block), l.iterator())
         }
     }
 }

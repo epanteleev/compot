@@ -1,5 +1,6 @@
 package ir.instruction
 
+import common.arrayWrapperOf
 import common.assertion
 import ir.value.Value
 import ir.types.Type
@@ -14,8 +15,8 @@ class VoidCall private constructor(id: Identity, owner: Block, private val func:
         assertion(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
     }
 
-    override fun arguments(): Array<Value> {
-        return operands
+    override fun arguments(): List<Value> {
+        return arrayWrapperOf(operands)
     }
 
     override fun prototype(): AnyFunctionPrototype {
@@ -46,12 +47,11 @@ class VoidCall private constructor(id: Identity, owner: Block, private val func:
 
     companion object {
         fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>, target: Block): VoidCall {
-            val argsArray = args.toTypedArray()
-            require(Callable.isAppropriateTypes(func, argsArray)) {
+            require(Callable.isAppropriateTypes(func, args)) {
                 args.joinToString(prefix = "inconsistent types, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
-
+            val argsArray = args.toTypedArray()
             return registerUser(VoidCall(id, owner, func, argsArray, target), args.iterator())
         }
     }

@@ -1,5 +1,7 @@
 package ir.instruction
 
+import common.arrayWith
+import common.arrayWrapperOf
 import common.assertion
 import ir.value.Value
 import ir.types.Type
@@ -36,8 +38,8 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
         return operands[0]
     }
 
-    override fun arguments(): Array<Value> {
-        return operands
+    override fun arguments(): List<Value> {
+        return arrayWrapperOf(arrayWith(operands.size - 1) { operands[it + 1] })
     }
 
     override fun prototype(): IndirectFunctionPrototype {
@@ -51,19 +53,25 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("%${name()} = call $tp ${pointer()}(")
-        operands.joinTo(builder) { "$it:${it.type()}"}
+        operands.joinTo(builder) {
+            if (it == pointer()) {
+                return@joinTo ""
+            }
+            "$it:${it.type()}"
+        }
         builder.append(")")
         return builder.toString()
     }
 
     companion object {
         fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Block): IndirectionCall {
-            require(Callable.isAppropriateTypes(func, args.toTypedArray())) {
+            require(Callable.isAppropriateTypes(func, args)) {
                 args.joinToString(prefix = "inconsistent types in '$id', pointer=$pointer:${pointer.type()}, prototype='${func.shortName()}', ")
                 { "$it: ${it.type()}" }
             }
 
-            return registerUser(IndirectionCall(id, owner, pointer, func, args, target), args.iterator())
+            val l = listOf(pointer) + args //TODO
+            return registerUser(IndirectionCall(id, owner, pointer, func, args, target), l.iterator())
         }
     }
 }
