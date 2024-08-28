@@ -7,6 +7,7 @@ import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
 import ir.instruction.Generate
+import ir.pass.analysis.InterferenceGraphFabric
 import ir.pass.analysis.intervals.LiveIntervals
 import ir.types.NonTrivialType
 import ir.types.TupleType
@@ -14,9 +15,12 @@ import ir.types.TupleType
 
 class LinearScan private constructor(private val data: FunctionData, private val liveRanges: LiveIntervals) {
     private val registerMap = hashMapOf<LocalValue, Operand>()
+    private val fixedRegisterMap = hashMapOf<LocalValue, Operand>()
+
     private val active      = hashMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
     private val liveRangesGroup = MergeIntervals.evaluate(data)
+    private val interferenceGraph = data.analysis(InterferenceGraphFabric)
 
     init {
         allocRegistersForArgumentValues()
@@ -26,12 +30,14 @@ class LinearScan private constructor(private val data: FunctionData, private val
     }
 
     private fun build(): RegisterAllocation {
-        return RegisterAllocation(pool.stackSize(), registerMap, liveRanges)
+        return RegisterAllocation(pool.stackSize(), registerMap + fixedRegisterMap, liveRanges)
     }
 
     private fun allocRegistersForArgumentValues() {
         for (arg in data.arguments()) {
-            registerMap[arg] = pool.takeArgument(arg)
+            val reg = pool.takeArgument(arg)
+            fixedRegisterMap[arg] = reg
+            registerMap[arg] = reg
         }
     }
 
@@ -43,7 +49,8 @@ class LinearScan private constructor(private val data: FunctionData, private val
            }
            val allocation = pool.calleeArgumentAllocate(inst.arguments())
            allocation.forEachWith(inst.arguments()) { operand, arg ->
-               registerMap[arg as LocalValue] = operand
+               fixedRegisterMap[arg as LocalValue] = operand
+               registerMap[arg] = operand
            }
        }
     }
