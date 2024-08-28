@@ -74,6 +74,7 @@ sealed interface CType {
                         CHAR -> INT
                         UCHAR -> INT
                         LONG -> LONG
+                        ULONG -> ULONG
                         SHORT -> INT
                         UINT -> UINT
                         DOUBLE -> DOUBLE
