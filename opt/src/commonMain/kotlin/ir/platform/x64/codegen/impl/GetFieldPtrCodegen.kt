@@ -38,7 +38,9 @@ class GetFieldPtrCodegen(val type: PointerType, val basicType: AggregateType, va
     override fun ria(dst: GPRegister, first: Imm32, second: Address) = default(dst, first, second)
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        val disp = basicType.offset(second.value().toInt())
+        asm.mov(POINTER_SIZE, first, dst)
+        asm.lea(POINTER_SIZE, Address.from(dst, disp), dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) = default(dst, first, second)

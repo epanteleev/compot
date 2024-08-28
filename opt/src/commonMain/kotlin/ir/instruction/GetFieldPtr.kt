@@ -33,7 +33,7 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
         return tp as PointerType
     }
 
-    fun source(): Value = getOperand(0)
+    fun source(): Value = getOperand(SOURCE)
 
     fun index(number: Int): IntegerConstant = index[number]
 
@@ -44,6 +44,7 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
     }
 
     companion object {
+        const val SOURCE = 0
         const val NAME = "gfp"
 
         fun make(id: Identity, owner: Block, type: AggregateType, source: Value, indexes: Array<IntegerConstant>): GetFieldPtr {

@@ -10,7 +10,7 @@ typedef struct Rectangle_ {
     Point p2;
 } Rectangle;
 
-struct Rectangle data = { { 2, 3 }, { 4, 5 } };
+Rectangle data = { { 2, 3 }, { 4, 5 } };
 
 int main() {
     printf("%ld %ld %ld %ld\n", data.p1.a, data.p1.b, data.p2.a, data.p2.b);
