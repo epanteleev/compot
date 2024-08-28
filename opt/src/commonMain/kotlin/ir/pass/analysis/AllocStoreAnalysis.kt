@@ -9,7 +9,7 @@ import ir.pass.FunctionAnalysisPass
 import ir.pass.FunctionAnalysisPassFabric
 import ir.pass.isLocalVariable
 
-class AllocStoreAnalysisResult(val storeInfo: Map<Alloc, Set<AnyBlock>>): AnalysisResult(), Iterable<Map.Entry<Alloc, Set<AnyBlock>>> {
+class AllocStoreAnalysisResult(private val storeInfo: Map<Alloc, Set<AnyBlock>>): AnalysisResult(), Iterable<Map.Entry<Alloc, Set<AnyBlock>>> {
     override fun iterator(): Iterator<Map.Entry<Alloc, Set<AnyBlock>>> {
         return storeInfo.iterator()
     }

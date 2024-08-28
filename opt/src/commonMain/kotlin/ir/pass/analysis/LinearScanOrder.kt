@@ -33,7 +33,7 @@ class LinearScanOrder(private val order: List<Block>): AnalysisResult(), Collect
     }
 }
 
-class LinearScanOrderPass(private val functionData: FunctionData): FunctionAnalysisPass<LinearScanOrder>() {
+class LinearScanOrderPass internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<LinearScanOrder>() {
     override fun name(): String {
         return "LinearScanOrder"
     }
