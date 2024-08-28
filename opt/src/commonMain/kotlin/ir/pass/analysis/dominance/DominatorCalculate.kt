@@ -4,8 +4,8 @@ import common.intMapOf
 import ir.module.FunctionData
 import ir.module.block.AnyBlock
 import ir.module.block.Label
-import ir.pass.AnalysisResult
-import ir.pass.FunctionAnalysisPass
+import ir.pass.common.AnalysisResult
+import ir.pass.common.FunctionAnalysisPass
 
 
 abstract class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {

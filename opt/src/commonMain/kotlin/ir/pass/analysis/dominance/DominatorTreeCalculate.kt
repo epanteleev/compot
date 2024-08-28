@@ -2,8 +2,10 @@ package ir.pass.analysis.dominance
 
 import common.assertion
 import ir.module.FunctionData
+import ir.module.Sensitivity
 import ir.module.block.AnyBlock
-import ir.pass.FunctionAnalysisPassFabric
+import ir.pass.common.AnalysisType
+import ir.pass.common.FunctionAnalysisPassFabric
 
 
 class DominatorTreeCalculate internal constructor(private val basicBlocks: FunctionData) : DominatorCalculate<DominatorTree>() {
@@ -37,12 +39,20 @@ class DominatorTreeCalculate internal constructor(private val basicBlocks: Funct
     }
 
     override fun run(): DominatorTree {
-        return DominatorTree(calculate(basicBlocks))
+        return DominatorTree(calculate(basicBlocks), basicBlocks.marker())
     }
 }
 
 object DominatorTreeFabric: FunctionAnalysisPassFabric<DominatorTree>() {
-    override fun create(functionData: FunctionData): DominatorTreeCalculate {
-        return DominatorTreeCalculate(functionData)
+    override fun type(): AnalysisType {
+        return AnalysisType.DOMINATOR_TREE
+    }
+
+    override fun sensitivity(): Sensitivity {
+        return Sensitivity.CONTROL_FLOW
+    }
+
+    override fun create(functionData: FunctionData): DominatorTree {
+        return DominatorTreeCalculate(functionData).run()
     }
 }

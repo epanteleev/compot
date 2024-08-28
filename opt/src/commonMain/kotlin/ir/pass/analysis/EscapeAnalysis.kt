@@ -3,9 +3,12 @@ package ir.pass.analysis
 import ir.value.*
 import ir.instruction.*
 import ir.module.FunctionData
-import ir.pass.AnalysisResult
-import ir.pass.FunctionAnalysisPass
-import ir.pass.FunctionAnalysisPassFabric
+import ir.module.MutationMarker
+import ir.module.Sensitivity
+import ir.pass.common.AnalysisResult
+import ir.pass.common.AnalysisType
+import ir.pass.common.FunctionAnalysisPass
+import ir.pass.common.FunctionAnalysisPassFabric
 
 
 enum class EscapeState {
@@ -94,11 +97,11 @@ class EscapeAnalysis internal constructor(private val functionData: FunctionData
                 }
             }
         }
-        return EscapeAnalysisResult(escapeState)
+        return EscapeAnalysisResult(escapeState, functionData.marker())
     }
 }
 
-class EscapeAnalysisResult(private val escapeState: Map<Value, EscapeState>): AnalysisResult() {
+class EscapeAnalysisResult(private val escapeState: Map<Value, EscapeState>, marker: MutationMarker): AnalysisResult(marker) {
     fun getEscapeState(value: Value): EscapeState {
         if (value is Constant) {
             return EscapeState.Constant
@@ -109,7 +112,15 @@ class EscapeAnalysisResult(private val escapeState: Map<Value, EscapeState>): An
 }
 
 object EscapeAnalysisPassFabric: FunctionAnalysisPassFabric<EscapeAnalysisResult>() {
-    override fun create(functionData: FunctionData): EscapeAnalysis {
-        return EscapeAnalysis(functionData)
+    override fun type(): AnalysisType {
+        return AnalysisType.ESCAPE_ANALYSIS
+    }
+
+    override fun sensitivity(): Sensitivity {
+        return Sensitivity.CONTROL_AND_DATA_FLOW
+    }
+
+    override fun create(functionData: FunctionData): EscapeAnalysisResult {
+        return EscapeAnalysis(functionData).run()
     }
 }

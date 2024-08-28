@@ -4,11 +4,18 @@ import ir.value.ArgumentValue
 import ir.module.auxiliary.CopyCFG
 import ir.module.block.Block
 import ir.module.block.iterator.*
-import ir.pass.AnalysisResult
-import ir.pass.FunctionAnalysisPassFabric
+import ir.pass.AnalysisPassCache
+import ir.pass.common.AnalysisResult
+import ir.pass.common.FunctionAnalysisPassFabric
 
 
 class FunctionData private constructor(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {
+    private val cache = AnalysisPassCache()
+
+    fun marker(): MutationMarker {
+        return blocks.marker()
+    }
+
     fun arguments(): List<ArgumentValue> {
         return argumentValues
     }
@@ -37,9 +44,20 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
         return BfsTraversalIterator(begin(), size())
     }
 
-    inline fun <reified T: AnalysisResult, reified U: FunctionAnalysisPassFabric<T>> analysis(analysisType: U): T {
-        // Todo cache analysis results
-        return analysisType.create(this).run()
+    fun cache(): AnalysisPassCache {
+        return cache
+    }
+
+    inline fun <reified T: AnalysisResult, reified U: FunctionAnalysisPassFabric<T>> analysis(analysisType: U, useCache: Boolean = true): T {
+        if (!useCache) {
+            return analysisType.create(this)
+        }
+        val cached = cache().get(analysisType, marker())
+        if (cached != null) {
+            return cached
+        }
+
+        return cache().put(analysisType, analysisType.create(this))
     }
 
     operator fun iterator(): Iterator<Block> {

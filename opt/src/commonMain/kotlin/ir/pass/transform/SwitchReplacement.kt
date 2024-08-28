@@ -5,8 +5,8 @@ import ir.instruction.IntPredicate
 import ir.instruction.Switch
 import ir.module.BasicBlocks
 import ir.module.Module
-import ir.pass.TransformPassFabric
-import ir.pass.TransformPass
+import ir.pass.common.TransformPassFabric
+import ir.pass.common.TransformPass
 
 
 class SwitchReplacement internal constructor(module: Module) : TransformPass(module) {

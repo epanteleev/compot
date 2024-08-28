@@ -1,8 +1,9 @@
 package ir.pass.analysis.intervals
 
 import common.assertion
+import ir.module.MutationMarker
 import ir.value.LocalValue
-import ir.pass.AnalysisResult
+import ir.pass.common.AnalysisResult
 import ir.platform.x64.regalloc.Group
 
 
@@ -45,7 +46,7 @@ class MergedLiveIntervals(private val liveness: Map<Group, LiveRange>) {
     }
 }
 
-class LiveIntervals(private val liveIntervals: MutableMap<LocalValue, LiveRangeImpl>): AnalysisResult() {
+class LiveIntervals(private val liveIntervals: MutableMap<LocalValue, LiveRangeImpl>, marker: MutationMarker): AnalysisResult(marker) {
     override fun toString(): String {
         val builder = StringBuilder()
         for ((v, ranges) in liveIntervals) {

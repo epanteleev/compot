@@ -4,10 +4,13 @@ import ir.module.block.Block
 import ir.module.block.Label
 import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
-import ir.pass.AnalysisResult
-import ir.pass.FunctionAnalysisPass
-import ir.pass.FunctionAnalysisPassFabric
+import ir.module.MutationMarker
+import ir.module.Sensitivity
+import ir.pass.common.AnalysisResult
+import ir.pass.common.FunctionAnalysisPass
+import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.dominance.DominatorTreeFabric
+import ir.pass.common.AnalysisType
 
 
 data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private val exit: Block) {
@@ -27,7 +30,7 @@ data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private va
     }
 }
 
-data class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>): AnalysisResult() {
+class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>, marker: MutationMarker): AnalysisResult(marker) {
     val size: Int by lazy {
         loopHeaders.values.fold(0) { acc, list -> acc + list.size }
     }
@@ -54,7 +57,7 @@ class LoopDetection internal constructor(private val functionData: FunctionData)
             }
         }
 
-        return LoopInfo(loopHeaders)
+        return LoopInfo(loopHeaders, functionData.marker())
     }
 
     private fun getExitBlock(header: Block, loopBody: Set<Block>): Block {
@@ -105,7 +108,15 @@ class LoopDetection internal constructor(private val functionData: FunctionData)
 }
 
 object LoopDetectionPassFabric: FunctionAnalysisPassFabric<LoopInfo>() {
-    override fun create(functionData: FunctionData): LoopDetection {
-        return LoopDetection(functionData)
+    override fun type(): AnalysisType {
+        return AnalysisType.LOOP_INFO
+    }
+
+    override fun sensitivity(): Sensitivity {
+        return Sensitivity.CONTROL_FLOW
+    }
+
+    override fun create(functionData: FunctionData): LoopInfo {
+        return LoopDetection(functionData).run()
     }
 }

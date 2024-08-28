@@ -1,14 +1,17 @@
 package ir.pass.analysis
 
 import ir.module.FunctionData
+import ir.module.MutationMarker
+import ir.module.Sensitivity
 import ir.module.block.Block
 import ir.module.block.iterator.LinearScanOrderIterator
-import ir.pass.AnalysisResult
-import ir.pass.FunctionAnalysisPass
-import ir.pass.FunctionAnalysisPassFabric
+import ir.pass.common.AnalysisResult
+import ir.pass.common.AnalysisType
+import ir.pass.common.FunctionAnalysisPass
+import ir.pass.common.FunctionAnalysisPassFabric
 
 
-class LinearScanOrder(private val order: List<Block>): AnalysisResult(), Collection<Block> {
+class LinearScanOrder(private val order: List<Block>, marker: MutationMarker): AnalysisResult(marker), Collection<Block> {
     override fun iterator(): Iterator<Block> {
         return order.iterator()
     }
@@ -41,12 +44,20 @@ class LinearScanOrderPass internal constructor(private val functionData: Functio
     override fun run(): LinearScanOrder {
         val loopInfo = functionData.analysis(LoopDetectionPassFabric)
         val order = LinearScanOrderIterator(functionData.begin(), functionData.size(), loopInfo).order()
-        return LinearScanOrder(order.toList())
+        return LinearScanOrder(order.toList(), functionData.marker())
     }
 }
 
 object LinearScanOrderFabric : FunctionAnalysisPassFabric<LinearScanOrder>() {
-    override fun create(functionData: FunctionData): LinearScanOrderPass {
-        return LinearScanOrderPass(functionData)
+    override fun type(): AnalysisType {
+        return AnalysisType.LINEAR_SCAN_ORDER
+    }
+
+    override fun sensitivity(): Sensitivity {
+        return Sensitivity.CONTROL_FLOW
+    }
+
+    override fun create(functionData: FunctionData): LinearScanOrder {
+        return LinearScanOrderPass(functionData).run()
     }
 }
