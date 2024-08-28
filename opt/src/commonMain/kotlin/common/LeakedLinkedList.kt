@@ -253,12 +253,16 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
         }
     }
 
-    fun transform(action: (T) -> T) {
+    fun transform(action: (T) -> T?) {
         var current: LListNode? = head
         while (current != null) {
             @Suppress("UNCHECKED_CAST")
             current = action(current as T)
-            current = current.next
+            current = if (current != null) {
+                current.next
+            } else {
+                head // TODo
+            }
         }
     }
 

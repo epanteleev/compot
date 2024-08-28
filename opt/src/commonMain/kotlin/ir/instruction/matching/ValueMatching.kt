@@ -77,7 +77,7 @@ inline fun alloc(crossinline type: TypeMatcher): ValueMatcher = {
     it is Alloc && type(it.allocatedType)
 }
 
-fun alloc(): ValueMatcher = {
+fun alloc(): InstructionMatcher = {
     it is Alloc
 }
 
