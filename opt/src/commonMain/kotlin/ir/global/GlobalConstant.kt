@@ -37,7 +37,7 @@ sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
     abstract fun content(): String
 
     companion object {
-        fun<T: Number> of(name: String, kind: Type, value: T): GlobalConstant {
+        fun<T: Number> of(name: String, kind: NonTrivialType, value: T): GlobalConstant {
             return when (kind) {
                 Type.I8  -> I8ConstantValue(name, value.toByte())
                 Type.U8  -> U8ConstantValue(name, value.toByte().toUByte())
@@ -49,14 +49,29 @@ sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
                 Type.U64 -> U64ConstantValue(name, value.toLong().toULong())
                 Type.F32 -> F32ConstantValue(name, value.toFloat())
                 Type.F64 -> F64ConstantValue(name, value.toDouble())
-                Type.Ptr -> {
-                    if (value == 0) {
-                        PointerConstant(name, value.toLong())
-                    } else {
-                        throw RuntimeException("Cannot create pointer constant: value=$value")
-                    }
+                Type.Ptr -> if (value == 0) {
+                    PointerConstant(name, value.toLong())
+                } else {
+                    throw RuntimeException("Cannot create pointer constant: value=$value")
                 }
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            }
+        }
+
+        fun zero(kind: NonTrivialType): GlobalConstant {
+            return when (kind) {
+                Type.I8  -> I8ConstantValue("zero", 0)
+                Type.U8  -> U8ConstantValue("zero", 0U)
+                Type.I16 -> I16ConstantValue("zero", 0)
+                Type.U16 -> U16ConstantValue("zero", 0U)
+                Type.I32 -> I32ConstantValue("zero", 0)
+                Type.U32 -> U32ConstantValue("zero", 0U)
+                Type.I64 -> I64ConstantValue("zero", 0)
+                Type.U64 -> U64ConstantValue("zero", 0U)
+                Type.F32 -> F32ConstantValue("zero", 0.0f)
+                Type.F64 -> F64ConstantValue("zero", 0.0)
+                Type.Ptr -> PointerConstant("zero", 0)
+                else -> throw RuntimeException("Cannot create zero constant: kind=$kind")
             }
         }
     }
@@ -196,7 +211,7 @@ sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivi
 
 class ArrayGlobalConstant(name: String, tp: ArrayType, elements: List<Constant>): AggregateGlobalConstant(name, tp, elements) {
     init {
-        require(tp.size == elements.size) {
+        require(tp.length == elements.size) {
             "Array size mismatch: ${tp.sizeOf()} != ${elements.size}"
         }
         elements.forEach {

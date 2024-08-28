@@ -5,7 +5,7 @@ import ir.types.PointerType
 import ir.types.NonTrivialType
 
 
-class ExternValue(val name: String, val type: NonTrivialType): AnyGlobalValue {
+class ExternValue internal constructor(val name: String, val type: NonTrivialType): AnyGlobalValue {
     override fun name(): String = name
 
     override fun dump(): String {

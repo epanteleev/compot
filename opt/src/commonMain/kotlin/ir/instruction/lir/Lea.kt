@@ -8,6 +8,7 @@ import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
+import ir.global.GlobalValue
 import ir.instruction.Identity
 import ir.module.block.Block
 
@@ -43,7 +44,7 @@ class Lea private constructor(id: Identity, owner: Block, value: Value):
             require(isAppropriateType(originType)) {
                 "inconsistent type '$id' generate=$value:$originType"
             }
-            require(value is Generate || value is GlobalConstant || value is FunctionSymbol) {
+            require(value is Generate || value is GlobalConstant || value is FunctionSymbol || value is GlobalValue) {
                 "should be '${NAME}' or global constant, but '$value'"
             }
 

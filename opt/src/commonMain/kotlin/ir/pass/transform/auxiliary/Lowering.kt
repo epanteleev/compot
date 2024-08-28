@@ -1,5 +1,6 @@
 package ir.pass.transform.auxiliary
 
+import ir.global.GlobalValue
 import ir.types.*
 import ir.value.*
 import ir.module.*
@@ -264,15 +265,20 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     return bb.replace(inst) { it.gen(inst.allocatedType) }
                 }
                 store(nop(), generate()) (inst) -> { inst as Store
-                    val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
+                    val lea = bb.insertBefore(inst) { it.lea(inst.value().asValue()) }
                     bb.updateDF(inst, VALUE, lea)
                     return inst
                 }
+                store(gValue(primitive()), nop()) (inst) -> { inst as Store
+                    val lea = bb.insertBefore(inst) { it.lea(inst.pointer().asValue()) } //TODO inefficient lowering
+                    bb.updateDF(inst, Store.DESTINATION, lea)
+                    return inst
+                }
                 copy(generate()) (inst) -> { inst as Copy
-                    return bb.replace(inst) { it.lea(inst.origin() as Generate) }
+                    return bb.replace(inst) { it.lea(inst.origin().asValue()) }
                 }
                 ptr2int(generate()) (inst) -> { inst as Pointer2Int
-                    val lea = bb.insertBefore(inst) { it.lea(inst.value() as Generate) }
+                    val lea = bb.insertBefore(inst) { it.lea(inst.value().asValue()) }
                     bb.updateDF(inst, Pointer2Int.SOURCE, lea)
                     return inst
                 }

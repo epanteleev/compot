@@ -11,6 +11,8 @@ interface Constant: Value {
         else -> toString()
     }
 
+    override fun type(): NonTrivialType
+
     companion object {
         fun of(kind: Type, value: Number): Constant {
             return when (kind) {

@@ -4,7 +4,7 @@ import ir.attributes.GlobalValueAttribute
 import ir.types.*
 
 
-class GlobalValue(val name: String, val data: GlobalConstant, val attribute: List<GlobalValueAttribute>): AnyGlobalValue {
+class GlobalValue internal constructor(val name: String, val data: GlobalConstant, private val attribute: GlobalValueAttribute): AnyGlobalValue {
     init {
         require(data.type() is PrimitiveType) {
             "GlobalValue data must be a PrimitiveType, but was '${data.type()}'"
@@ -14,12 +14,7 @@ class GlobalValue(val name: String, val data: GlobalConstant, val attribute: Lis
     override fun name(): String = name
 
     override fun dump(): String {
-        return buildString {
-            append("@$name = global ${data.type()} ${data.data()}")
-            for (attr in attribute) {
-                append(" !$attr")
-            }
-        }
+        return "@$name = global ${data.type()} ${data.data()} !$attribute"
     }
 
     override fun type(): PointerType = Type.Ptr
