@@ -6,24 +6,16 @@ import ir.value.TupleValue
 import ir.value.LocalValue
 import ir.pass.analysis.intervals.LiveRange
 import ir.pass.analysis.intervals.LiveIntervals
-import ir.pass.analysis.intervals.GroupedLiveIntervals
+import ir.pass.analysis.intervals.MergedLiveIntervals
 
 
-//TODO
-class Coalescing private constructor(private val intervals: LiveIntervals) {
+class MergeIntervals private constructor(private val intervals: LiveIntervals) {
     private val visited = hashSetOf<LocalValue>()
     private val groups = hashMapOf<Group, LiveRange>()
 
-    private fun build(): GroupedLiveIntervals {
-        mergePhiOperands()
-
-        val result = groups.toList().sortedBy { (_, value) -> value.begin().order } // TODO
-        val map = linkedMapOf<Group, LiveRange>()
-        for ((k, v) in result) {
-            map[k] = v
-        }
-
-        return GroupedLiveIntervals(map)
+    private fun build(): MergedLiveIntervals {
+        coalescingInstructionIntervals()
+        return MergedLiveIntervals(groups)
     }
 
     private fun handlePhiOperands(value: Phi, range: LiveRange) {
@@ -46,10 +38,9 @@ class Coalescing private constructor(private val intervals: LiveIntervals) {
     private fun handleTuple(value: TupleValue, range: LiveRange) {
         visited.add(value)
 
-        value.usedIn().forEach { proj ->
-            proj as Projection
+        value.proj { proj ->
             if (visited.contains(proj)) {
-                return@forEach
+                return@proj
             }
 
             range.merge(intervals[proj])
@@ -61,7 +52,7 @@ class Coalescing private constructor(private val intervals: LiveIntervals) {
         }
     }
 
-    private fun mergePhiOperands() {
+    private fun coalescingInstructionIntervals() {
         for ((value, range) in intervals) {
             when (value) {
                 is Phi        -> handlePhiOperands(value, range)
@@ -71,8 +62,8 @@ class Coalescing private constructor(private val intervals: LiveIntervals) {
     }
 
     companion object {
-        fun evaluate(liveIntervals: LiveIntervals): GroupedLiveIntervals {
-            return Coalescing(liveIntervals).build()
+        fun evaluate(liveIntervals: LiveIntervals): MergedLiveIntervals {
+            return MergeIntervals(liveIntervals).build()
         }
     }
 }

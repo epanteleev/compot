@@ -5,10 +5,9 @@ import ir.instruction.Projection
 
 
 interface TupleValue: LocalValue {
+    override fun type(): TupleType
+
     fun proj(index: Int): Projection? {
-        if (type() !is TupleType) {
-            throw IllegalStateException("Cannot project from non-tuple value")
-        }
         for (user in usedIn()) {
             user as Projection
             if (user.index() == index) {
@@ -16,5 +15,12 @@ interface TupleValue: LocalValue {
             }
         }
         return null
+    }
+
+    fun proj(visitor: (Projection) -> Unit) {
+        for (user in usedIn()) {
+            user as Projection
+            visitor(user)
+        }
     }
 }

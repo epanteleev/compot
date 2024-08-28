@@ -16,7 +16,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
     private val registerMap = hashMapOf<LocalValue, Operand>()
     private val active      = hashMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
-    private val liveRangesGroup = Coalescing.evaluate(liveRanges)
+    private val liveRangesGroup = MergeIntervals.evaluate(liveRanges)
 
     init {
         allocRegistersForArgumentValues()
@@ -62,12 +62,11 @@ class LinearScan private constructor(private val data: FunctionData, private val
 
     private fun allocRegistersForLocalVariables() {
         for ((value, range) in liveRanges) {
-            val group = liveRangesGroup.getGroup(value) ?: Group(arrayListOf(value))
-
-            if (registerMap[group.first()] != null) {
+            if (registerMap[value] != null) {
                 continue
             }
-            if (group.first().type() is TupleType) {
+
+            if (value.type() is TupleType) {
                 // Skip tuple instructions
                 // Register allocation for tuple instructions will be done for their projections
                 continue
@@ -82,15 +81,23 @@ class LinearScan private constructor(private val data: FunctionData, private val
                     return@retainAll true
                 }
             }
-            pickOperandGroup(group)
+            pickOperandGroup(value)
         }
     }
 
-    private fun pickOperandGroup(group: Group) {
-        val operand = pool.allocSlot(group.first())
-        for (value in group) {
+    private fun pickOperandGroup(value: LocalValue) {
+        val group = liveRangesGroup.getGroup(value)
+        if (group == null) {
+            val operand = pool.allocSlot(value)
             registerMap[value] = operand
             active[value] = operand
+            return
+        }
+
+        val operand = pool.allocSlot(group.first())
+        for (v in group) {
+            registerMap[v] = operand
+            active[v] = operand
         }
     }
 
@@ -102,10 +109,8 @@ class LinearScan private constructor(private val data: FunctionData, private val
             .append(liveRangesGroup.toString())
             .append("----Register allocation----\n")
 
-        for ((group, _) in liveRangesGroup) {
-            for (value in group) {
-                builder.append("$value -> ${registerMap[value]}\n")
-            }
+        for ((value , _) in liveRanges) {
+            builder.append("$value -> ${registerMap[value]}\n")
         }
         builder.append("----The end----\n")
         return builder.toString()
