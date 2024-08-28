@@ -1,5 +1,6 @@
 package asm.x64
 
+import common.assertion
 import common.forEachWith
 
 enum class SymbolType {
@@ -31,6 +32,10 @@ enum class SymbolType {
 }
 
 data class ObjSymbol(val name: String, val data: List<String>, val type: List<SymbolType>) {
+    init {
+        assertion(data.size == type.size) { "invariant" }
+    }
+
     override fun toString(): String {
         val stringBuilder = StringBuilder()
         stringBuilder.append("$name:\n")

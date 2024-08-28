@@ -2,7 +2,6 @@ package ir.global
 
 import ir.value.*
 import ir.types.*
-import common.forEachWith
 
 
 sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
@@ -186,7 +185,7 @@ sealed class AnyAggregateGlobalConstant(override val name: String): GlobalConsta
     override fun type(): NonTrivialType = Type.Ptr
 }
 
-class StringLiteralConstant(override val name: String, val tp: ArrayType, val string: String?): AnyAggregateGlobalConstant(name) {
+class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, val string: String?): AnyAggregateGlobalConstant(name) {
     override fun data(): String {
         return "\"$string\""
     }

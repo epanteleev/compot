@@ -1,6 +1,5 @@
 package gen
 
-import common.assertion
 import gen.consteval.*
 import ir.global.*
 import ir.module.builder.impl.ModuleBuilder
@@ -81,7 +80,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
     private fun tryMakeGlobalAggregateConstant(lValueType: NonTrivialType, expr: Expression): AnyAggregateGlobalConstant? = when (expr) {
         is StringNode -> {
             val content = expr.data()
-            StringLiteralConstant(createStringLiteralName(), ArrayType(Type.U8, content.length), content)
+            StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.U8, content.length), content)
         }
         is InitializerList -> when (lValueType) {
             is ArrayType -> {

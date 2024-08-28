@@ -9,7 +9,14 @@ import ir.platform.x64.codegen.MacroAssembler
 
 class CompilationUnit: CompiledModule() {
     private val functions = arrayListOf<MacroAssembler>()
-    private val symbols = mutableSetOf<ObjSymbol>()
+    private val symbols = hashMapOf<String, ObjSymbol>()
+
+    private fun addSymbol(objSymbol: ObjSymbol) {
+        val has = symbols.put(objSymbol.name, objSymbol)
+        if (has != null) {
+            throw IllegalArgumentException("symbol with name='${objSymbol.name}' already exists: old='$has', new='$objSymbol'")
+        }
+    }
 
     fun mkFunction(name: String): MacroAssembler {
         val fn = MacroAssembler(name)
@@ -17,24 +24,29 @@ class CompilationUnit: CompiledModule() {
         return fn
     }
 
-    fun mkConstant(globalValue: GlobalConstant) {
-        when (globalValue) {
-            is StringLiteralConstant -> {
-                symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(SymbolType.StringLiteral)))
-            }
-            is AnyAggregateGlobalConstant -> {
-                val types = globalValue.elements().linearize().map { convertToSymbolType(it) }
-                val data  = globalValue.elements().linearize().map { it.data() }
-                symbols.add(ObjSymbol(globalValue.name(), data, types))
-            }
-            else -> symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue)))
+    private fun makeAggregateConstant(globalValue: AnyAggregateGlobalConstant): ObjSymbol {
+        val types = arrayListOf<SymbolType>()
+        val data = arrayListOf<String>()
+        for (e in globalValue.elements().linearize()) {
+            types.add(convertToSymbolType(e))
+            data.add(e.data())
         }
+
+        return ObjSymbol(globalValue.name(), data, types)
+    }
+
+    fun mkConstant(globalValue: GlobalConstant) = when (globalValue) {
+        is StringLiteralGlobalConstant -> {
+            addSymbol(ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(SymbolType.StringLiteral)))
+        }
+        is AggregateGlobalConstant -> addSymbol(makeAggregateConstant(globalValue))
+        else -> addSymbol(ObjSymbol(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue)))
     }
 
     fun makeGlobal(globalValue: AnyGlobalValue) {
         val symbol = convertGlobalValueToSymbolType(globalValue)
         if (symbol != null) {
-            symbols.add(symbol)
+            addSymbol(symbol)
         }
     }
 
@@ -45,13 +57,14 @@ class CompilationUnit: CompiledModule() {
         globalValue as GlobalValue
 
         val constant = globalValue.data
-        if (constant is StringLiteralConstant) {
+        if (constant is StringLiteralGlobalConstant) {
             return ObjSymbol(globalValue.name(), listOf(constant.name()), listOf(SymbolType.Quad))
         }
 
         val symbolType = convertToSymbolType(constant)
         if (constant is AggregateGlobalConstant) {
             val data = constant.elements().linearize().map { it.data() }
+
             return ObjSymbol(globalValue.name(), data, symbolType)
         } else {
             return ObjSymbol(globalValue.name(), listOf(globalValue.data()), symbolType)
@@ -60,7 +73,7 @@ class CompilationUnit: CompiledModule() {
 
     private fun convertToSymbolType(globalValue: GlobalConstant): List<SymbolType> {
         val symType = when (globalValue) {
-            is StringLiteralConstant -> SymbolType.StringLiteral
+            is StringLiteralGlobalConstant -> SymbolType.StringLiteral
             is I64ConstantValue -> SymbolType.Quad
             is U64ConstantValue -> SymbolType.Quad
             is I32ConstantValue -> SymbolType.Long
@@ -108,7 +121,7 @@ class CompilationUnit: CompiledModule() {
         if (symbols.isNotEmpty()) {
             builder.append(".data\n")
         }
-        symbols.forEach {
+        symbols.values.forEach {
             builder.append(it)
             builder.append('\n')
         }
