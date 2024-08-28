@@ -364,7 +364,7 @@ object TypeConverter {
                 if (valueType is IntegerType) {
                     return int2ptr(value)
                 } else {
-                    throw IRCodeGenError("Cannot convert $value to $toType")
+                    throw IRCodeGenError("Cannot convert $value:${valueType} to $toType")
                 }
             }
 
