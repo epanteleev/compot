@@ -18,6 +18,7 @@ enum class CPrimitive(val size: Int, val id: String): BaseType {
     USHORT(2, "unsigned short"),
     UINT(4, "unsigned int"),
     ULONG(8, "unsigned long"),
+    BOOL(1, "_Bool"),
     UNKNOWN(0, "<unknown>");
 
     override fun toString(): String = id

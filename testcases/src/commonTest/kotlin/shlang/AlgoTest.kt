@@ -164,6 +164,13 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("All tests have successfully passed!\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testSudokuSolver() {
+        val result = runCTest("shlang/algo/sudoku_solver", listOf(), options())
+        assertEquals("All tests have successfully passed!\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {

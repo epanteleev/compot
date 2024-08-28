@@ -64,7 +64,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     private fun stringLiteralInitializer(expr: Expression): GlobalConstant? {
         if (expr is StringNode) {
-            val content = expr.str.data()
+            val content = expr.data()
             return StringLiteralConstant(createStringLiteralName(), ArrayType(Type.U8, content.length), content)
         } else if (expr is InitializerList) {
             val type = expr.resolveType(typeHolder)
