@@ -1,10 +1,9 @@
 
+import types.*
 import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.nodes.*
 import tokenizer.CTokenizer
-import types.*
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -218,17 +217,15 @@ class TypeResolutionTest {
         assertEquals("int*", typeResolver["v"].toString())
     }
 
-    @Ignore
+    @Test
     fun testFunctionDeclarator() {
         val tokens = CTokenizer.apply("int b(int b), n(float f);")
         val parser = CProgramParser.build(tokens)
-        val expr = parser.function_definition() as FunctionNode
-        val typeResolver = TypeHolder.default()
-        val fnType = expr.resolveType(typeResolver)
+        parser.translation_unit()
+        val typeResolver = parser.typeHolder()
 
-        assertEquals("int add(int, int)", fnType.toString())
-        assertEquals(CType.INT, typeResolver["a"])
-        assertEquals(CType.INT, typeResolver["b"])
+        assertEquals("int b(int)", typeResolver.getFunctionType("b").toString())
+        assertEquals("int n(float)", typeResolver.getFunctionType("n").toString())
     }
 
     @Test
@@ -263,7 +260,7 @@ class TypeResolutionTest {
         expr.specifyType(typeResolver)
 
         val a = typeResolver["a"]
-        assertEquals("int[10]", a.toString())
+        assertEquals("[10]int", a.toString())
     }
 
     @Test
@@ -276,7 +273,7 @@ class TypeResolutionTest {
         expr.specifyType(typeResolver)
 
         val a = typeResolver["a"]
-        assertEquals("int[10]", a.toString())
+        assertEquals("[10]int", a.toString())
     }
 
     @Test
@@ -290,8 +287,8 @@ class TypeResolutionTest {
 
         val a = typeResolver["a"]
         val b = typeResolver["b"]
-        assertEquals("int[10]", a.toString())
-        assertEquals("int[20]", b.toString())
+        assertEquals("[10]int", a.toString())
+        assertEquals("[20]int", b.toString())
     }
 
     @Test
@@ -306,8 +303,8 @@ class TypeResolutionTest {
         val a = typeResolver["a"]
         val b = typeResolver["b"]
         val c = typeResolver["c"]
-        assertEquals("int[10]", a.toString())
-        assertEquals("int[20]", b.toString())
+        assertEquals("[10]int", a.toString())
+        assertEquals("[20]int", b.toString())
         assertEquals("int*", c.toString())
     }
 
@@ -321,7 +318,7 @@ class TypeResolutionTest {
         expr.specifyType(typeResolver)
 
         val a = typeResolver["a"]
-        assertEquals("int[10][30]", a.toString())
+        assertEquals("[10][30]int", a.toString())
     }
 
     @Test
@@ -382,7 +379,7 @@ class TypeResolutionTest {
 
         val program = parser.translation_unit()
         assertEquals("typedef int A[2][3]; const A a = {{4, 5, 6}, {7, 8, 9}};", LineAgnosticAstPrinter.print(program))
-        assertEquals("int[2][3]", parser.typeHolder().getTypeOrNull("A").toString())
+        assertEquals("[2][3]int", parser.typeHolder().getTypeOrNull("A").toString())
     }
 
     @Test
@@ -401,5 +398,89 @@ class TypeResolutionTest {
         assertEquals("struct s2 {int x;}", typeHolder.getStructType("s2").toString())
         assertEquals("struct s1 {int x;}", typeHolder.getStructType("t1").toString())
         assertTrue { typeHolder.getTypedef("tp1") is CPointerType }
+    }
+
+    @Test
+    fun testInitializerList0() {
+        val input = """
+          int a[] = {1, 2, 3};
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        assertEquals("[3]int", typeHolder["a"].toString())
+    }
+
+    @Test
+    fun testInitializerList1() {
+        val input = """
+          int a[][3] = {{1, 2, 3}, {4, 5, 6}};
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        assertEquals("[2][3]int", typeHolder["a"].toString())
+    }
+
+    @Test
+    fun testInitializerList2() {
+        val input = """
+          int a[2][3] = {{1, 2, 3}, {4, 5, 6}};
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        assertEquals("[2][3]int", typeHolder["a"].toString())
+    }
+
+    @Test
+    fun testInitializerList3() {
+        val input = """
+            typedef struct point { int x; int y; } Point;
+            
+            Point a[] = {{1, 2}, {3, 4}};
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        assertEquals("[2]struct point {int x;int y;}", typeHolder["a"].toString())
+    }
+
+    @Test
+    fun testInitializerList4() {
+        val input = """
+            typedef struct Vec { int point[3]; } Vect3;
+            
+            Vect3 a[] = {{{1, 2, 3}}, {{4, 5, 6}}, {{7, 8, 9}}, {{10, 11, 12}}};
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        assertEquals("[4]struct Vec {[3]int point;}", typeHolder["a"].toString())
+    }
+
+    @Test
+    fun testUncompletedArray() {
+        val input = """
+            typedef struct Array_ { int len; int arr[]; } Array;
+            
+            Array arr;
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        assertEquals("struct Array_ {int len;[]int arr;}", typeHolder["arr"].toString())
     }
 }

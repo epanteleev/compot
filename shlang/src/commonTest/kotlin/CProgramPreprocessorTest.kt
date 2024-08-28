@@ -195,19 +195,18 @@ class CProgramPreprocessorTest {
         assertEquals(expected, TokenPrinter.print(p))
     }
 
-    @Ignore
+    @Test
     fun testInclude3() {
         val tokens = CTokenizer.apply("#include <std-32lib.h>")
         val ctx = PreprocessorContext.empty(headerHolder)
         val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
         val expected = """
-            |#enter[1] test.h
+            |#enter[1] std-32lib.h in 1
             |
-            |int exit(int code);
-            |#exit[1] test.h
-            |#enter[1] test.h
             |
-            |#exit[1] test.h
+            |void exit(int code);
+            |#exit[1] std-32lib.h in 1
+            |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }

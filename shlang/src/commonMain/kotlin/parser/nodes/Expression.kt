@@ -262,6 +262,10 @@ class InitializerList(val initializers: List<Initializer>) : Expression() {
     private fun isSameType(types: List<CType>): Boolean {
         return types.all { it == types.first() }
     }
+
+    fun length(): Int {
+        return initializers.size
+    }
 }
 
 class MemberAccess(val primary: Expression, val ident: Identifier) : Expression() {
@@ -321,8 +325,10 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
         return@memoize CPointerType(CType.CHAR, listOf()) //ToDO restrict?????
     }
 
-    fun data(): String {
-        return literals.joinToString("") { it.unquote() }
+    fun data(): String = if (literals.size == 1) {
+        literals[0].unquote()
+    } else {
+        literals.joinToString("") { it.unquote() }
     }
 }
 

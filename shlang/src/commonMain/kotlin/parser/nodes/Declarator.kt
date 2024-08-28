@@ -75,17 +75,30 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
         pointerType = declarator.directDeclarator.resolveType(pointerType, typeHolder)
         assertion (!declspec.isTypedef) { "typedef is not supported here" }
 
-        if (pointerType is CommonCArrayType && pointerType.hasUncompleted()) {
-            // Special case for array initialization without exact size like:
-            // int a[] = {1, 2};
-            // 'a' is array of 2 elements, not pointer to int
-
-            val rvalueType = rvalue.resolveType(typeHolder)
-            typeHolder.addVar(name(), rvalueType)
-            return@memoizeType rvalueType
+        if (pointerType !is UncompletedArrayType) {
+            typeHolder.addVar(name(), pointerType)
+            return@memoizeType pointerType
         }
-        typeHolder.addVar(name(), pointerType)
-        return@memoizeType pointerType
+
+        when (rvalue) {
+            is InitializerList -> {
+                // Special case for array initialization without exact size like:
+                // int a[] = {1, 2};
+                // 'a' is array of 2 elements, not pointer to int
+
+                val rvalueType = CArrayType(CArrayBaseType(pointerType.element(), rvalue.length().toLong()), listOf())
+                typeHolder.addVar(name(), rvalueType)
+                return@memoizeType rvalueType
+            }
+            is StringNode -> {
+                // Special case for string initialization like:
+                // char a[] = "hello";
+                val rvalueType = rvalue.resolveType(typeHolder)
+                typeHolder.addVar(name(), rvalueType)
+                return@memoizeType rvalueType
+            }
+            else -> throw TypeResolutionException("Array size is not specified")
+        }
     }
 }
 
