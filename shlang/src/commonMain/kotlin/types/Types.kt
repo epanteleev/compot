@@ -89,6 +89,7 @@ sealed interface CType {
                         INT -> LONG
                         SHORT -> LONG
                         UINT -> UINT
+                        ULONG -> ULONG
                         DOUBLE -> DOUBLE
                         FLOAT -> FLOAT
                         else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
@@ -172,6 +173,7 @@ sealed interface CType {
                             if (type1.type == VOID) return type1
                             if (type2.type == VOID) return type2
                         }
+                        ULONG -> return type1
                         else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }

@@ -30,7 +30,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
 
     private fun generateFunction(node: FunctionNode) {
         val gen = IrGenFunction(mb, typeHolder, varStack, nameGenerator)
-        varStack[node.name()] = gen.visit(node)
+        gen.visit(node)
     }
 
     private fun getExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {

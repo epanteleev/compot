@@ -412,8 +412,11 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
 
         val resolvedType = when (opType) {
             PrefixUnaryOpType.DEREF -> {
-                primaryType as AnyCPointerType
-                primaryType.dereference()
+                when (primaryType) {
+                    is AnyCPointerType -> primaryType.dereference()
+                    is CArrayType      -> primaryType.element()
+                    else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType")
+                }
             }
             PrefixUnaryOpType.ADDRESS -> {
                 CPointerType(primaryType, listOf())

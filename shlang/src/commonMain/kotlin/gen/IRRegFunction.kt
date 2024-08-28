@@ -19,6 +19,8 @@ import ir.Definitions.QWORD_SIZE
 import ir.global.StringLiteralConstant
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
+import ir.module.ExternFunction
+import ir.module.FunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
@@ -195,7 +197,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitMemberAccess(memberAccess: MemberAccess, isRvalue: Boolean): Value {
-        val struct = visitExpression(memberAccess.primary, true) //TODO isRvalue???
+        val struct = visitExpression(memberAccess.primary, false) //TODO isRvalue???
         val structType = memberAccess.primary.resolveType(typeHolder)
         if (structType !is CBaseStructType) {
             throw IRCodeGenError("Struct type expected, but got $structType")
@@ -282,7 +284,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
-                is CPrimitiveType, is CPointerType, is UncompletedArrayType -> {
+                is CPrimitiveType, is CPointerType, is CFunctionType, is UncompletedArrayType -> {
                     val convertedArg = convertArg(function, idx, expr)
                     convertedArgs.add(convertedArg)
                 }
@@ -314,7 +316,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitFunPointerCall(funcPointerCall: FuncPointerCall): Value {
         val functionType = funcPointerCall.resolveFunctionType(typeHolder)
-        val loadedFunctionPtr = visitExpression(funcPointerCall.primary, false) //TODO bug
+        val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true) //TODO bug
 
         val irRetType = mb.toIRType<Type>(typeHolder, functionType.retType())
         val argTypes = functionType.args().map { mb.toIRType<NonTrivialType>(typeHolder, it) }
@@ -342,7 +344,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitFunctionCall(functionCall: FunctionCall): Value {
         val functionType = functionCall.resolveType(typeHolder)
-        val function = mb.findFunction(functionCall.name())
+        val function = mb.findFunction(functionCall.name()) ?: throw IRCodeGenError("Function '${functionCall.name()}' not found")
         val convertedArgs = convertFunctionArgs(function, functionCall.args)
 
         val cont = ir.createLabel()
@@ -696,14 +698,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             PrefixUnaryOpType.DEREF -> {
                 val addr = visitExpression(unaryOp.primary, true)
-                val type = unaryOp.resolveType(typeHolder)
-
-                val loadedType = mb.toIRType<PrimitiveType>(typeHolder, type)
-                if (isRvalue) {
-                    ir.load(loadedType, addr)
-                } else {
-                    addr
+                if (!isRvalue) {
+                   return addr
                 }
+                val type = unaryOp.resolveType(typeHolder)
+                val loadedType = mb.toIRType<PrimitiveType>(typeHolder, type)
+                ir.load(loadedType, addr)
             }
             PostfixUnaryOpType.INC -> visitIncOrDec(unaryOp, ArithmeticBinaryOp.Add)
             PostfixUnaryOpType.DEC -> visitIncOrDec(unaryOp, ArithmeticBinaryOp.Sub)
@@ -741,21 +741,28 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
         val name = varNode.name()
-        val rvalueAttr = varStack[name] ?: throw IRCodeGenError("Variable '$name' not found at '${varNode.position()}'")
+        val rvalueAttr = varStack[name]
+        if (rvalueAttr == null) {
+            val global = mb.findFunction(name)
+            if (global != null) {
+                return global
+            }
+            throw IRCodeGenError("Variable '$name' not found")
+        }
+
         val type = typeHolder[name]
 
-        if (type is CArrayType) {
+        if (type is CompoundType) {
             return rvalueAttr
         }
-        val converted = mb.toIRType<NonTrivialType>(typeHolder, type)
         if (!isRvalue) {
             return rvalueAttr
         }
-        return if (type !is CompoundType) {
-            ir.load(converted as PrimitiveType, rvalueAttr)
-        } else {
-            rvalueAttr
+        if (type is CFunPointerType) {
+            return rvalueAttr //tODO hack??!
         }
+        val converted = mb.toIRType<PrimitiveType>(typeHolder, type)
+        return ir.load(converted, rvalueAttr)
     }
 
     private fun argumentTypes(ctypes: List<CType>): List<Type> {
@@ -775,6 +782,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     }
                 }
                 is CommonCArrayType -> {
+                    types.add(Type.Ptr)
+                }
+                is CFunPointerType -> {
                     types.add(Type.Ptr)
                 }
                 else -> throw IRCodeGenError("Unknown type, type=$type")
@@ -804,6 +814,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     currentArg += types.size
                 }
                 is CommonCArrayType -> {
+                    closure(parameters[currentArg], cType, listOf(arguments[currentArg]))
+                    currentArg++
+                }
+                is CFunPointerType -> {
                     closure(parameters[currentArg], cType, listOf(arguments[currentArg]))
                     currentArg++
                 }
@@ -837,6 +851,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
         }
         is CommonCArrayType -> {
+            assertion(args.size == 1) { "invariant" }
+            varStack[param] = args[0]
+        }
+        is CFunPointerType -> {
             assertion(args.size == 1) { "invariant" }
             varStack[param] = args[0]
         }

@@ -91,13 +91,15 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         private val STDC_HOSTED  = MacroReplacement("__STDC_HOSTED__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
         private val STDC_VERSION = MacroReplacement("__STDC_VERSION__", tokenListOf(Numeric("201112L", 10, OriginalPosition.UNKNOWN)))
 
-        // Size of types
-      //  private val __SIZEOF_POINTER__ = PredefinedMacros("__SIZEOF_POINTER__") { tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)) }
-        ///private val __SIZEOF_LONG__    = PredefinedMacros("__SIZEOF_LONG__") { tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)) }
-      //  private val __SIZEOF_INT__     = MacroReplacement("__SIZEOF_INT__") { tokenListOf(Numeric("4", 10, OriginalPosition.UNKNOWN)) }
-      //  private val __SIZEOF_SHORT__   = MacroReplacement("__SIZEOF_SHORT__", tokenListOf(Numeric("2", 10, OriginalPosition.UNKNOWN)))
-      ///  private val __SIZEOF_FLOAT__   = MacroReplacement("__SIZEOF_FLOAT__", tokenListOf(Numeric("4", 10, OriginalPosition.UNKNOWN)))
-       // private val __SIZEOF_DOUBLE__  = MacroReplacement("__SIZEOF_DOUBLE__", tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)))
+        // 3.7.2 Common Predefined Macros
+        // https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
+        private val __SIZEOF_POINTER__ = PredefinedMacros("__SIZEOF_POINTER__") { tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)) }
+        private val __SIZEOF_LONG__    = PredefinedMacros("__SIZEOF_LONG__") { tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)) }
+        private val __SIZEOF_INT__     = PredefinedMacros("__SIZEOF_INT__")  { tokenListOf(Numeric("4", 10, OriginalPosition.UNKNOWN)) }
+        private val __SIZEOF_SHORT__   = PredefinedMacros("__SIZEOF_SHORT__") { tokenListOf(Numeric("2", 10, OriginalPosition.UNKNOWN)) }
+        private val __SIZEOF_FLOAT__   = PredefinedMacros("__SIZEOF_FLOAT__") { tokenListOf(Numeric("4", 10, OriginalPosition.UNKNOWN)) }
+        private val __SIZEOF_DOUBLE__  = PredefinedMacros("__SIZEOF_DOUBLE__") { tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)) }
+        private val __INT32_MAX__      = PredefinedMacros("__INT32_MAX__") { tokenListOf(Numeric("2147483647", 10, OriginalPosition.UNKNOWN)) }
 
 
         // Implementation-defined macros
@@ -117,6 +119,8 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
             "__DATE__" to DATE,
             "__TIME__" to TIME,
             "__STDC__" to STDC,
+
+            "__INT32_MAX__" to __INT32_MAX__,
         )
 
         fun empty(headerHolder: HeaderHolder): PreprocessorContext {
