@@ -2,17 +2,16 @@ package ir.module.block
 
 import ir.types.*
 import ir.value.*
+import common.arrayFrom
+import common.assertion
 import ir.instruction.*
 import ir.instruction.lir.*
 import common.LeakedLinkedList
-import common.arrayFrom
-import common.assertion
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 
 
-class Block(override val index: Int):
-    AnyInstructionFabric, AnyBlock, Iterable<Instruction> {
+class Block private constructor(override val index: Int): AnyInstructionFabric, AnyBlock, Iterable<Instruction> {
     private val instructions = InstructionList()
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
@@ -73,7 +72,8 @@ class Block(override val index: Int):
         return instructions.first()
     }
 
-    val size get(): Int = instructions.size
+    val size
+        get(): Int = instructions.size
 
     private fun addPredecessor(bb: Block) {
         predecessors.add(bb)
@@ -128,7 +128,7 @@ class Block(override val index: Int):
             }
             instruction.replaceUsages(newInstruction as LocalValue)
         }
-        kill(instruction)
+        kill(instruction, Value.UNDEF)
         return newInstruction
     }
 
@@ -173,18 +173,21 @@ class Block(override val index: Int):
         return instructions.removeIf { filter(it) }
     }
 
-    fun kill(instruction: Instruction): Instruction? {
+    fun kill(instruction: Instruction, replacement: Value): Instruction? {
         assertion(instruction.owner() === this) {
             "instruction=$instruction is not in bb=$this"
         }
 
         val next = instruction.prev()
+        if (instruction is LocalValue) {
+            instruction.replaceUsages(replacement)
+        }
         val removed = remove(instruction)
         removed.destroy()
         return next
     }
 
-    fun remove(instruction: Instruction): Instruction {
+    private fun remove(instruction: Instruction): Instruction {
         return instructions.remove(instruction)
     }
 

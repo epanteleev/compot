@@ -4,6 +4,7 @@ import common.assertion
 import ir.module.*
 import ir.instruction.Phi
 import ir.module.block.Block
+import ir.value.Value
 
 
 class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
@@ -73,10 +74,10 @@ class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
                 "phi value is used in non phi instruction: operands=${phi.operands()}"
             }
 
-            bb.remove(phi)
+            bb.kill(phi, Value.UNDEF)
         }
 
-        usefull.forEachUseless { phi, bb -> removePhi(phi, bb)}
+        usefull.forEachUseless { phi, bb -> removePhi(phi, bb) }
     }
 
     private fun run() {

@@ -137,7 +137,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
     private fun killOnDemand(bb: Block, instruction: LocalValue) {
         instruction as Instruction
         if (instruction.usedIn().isEmpty()) { //TODO Need DCE
-            bb.kill(instruction) // TODO bb may not contain pointer
+            bb.kill(instruction, Value.UNDEF) // TODO bb may not contain pointer
         }
     }
 
