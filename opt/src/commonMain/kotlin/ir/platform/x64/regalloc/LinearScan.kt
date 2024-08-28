@@ -2,6 +2,7 @@ package ir.platform.x64.regalloc
 
 import ir.value.LocalValue
 import asm.x64.Operand
+import asm.x64.Register
 import common.forEachWith
 import ir.value.asType
 import ir.module.FunctionData
@@ -15,7 +16,7 @@ import ir.types.TupleType
 
 class LinearScan private constructor(private val data: FunctionData, private val liveRanges: LiveIntervals) {
     private val registerMap = hashMapOf<LocalValue, Operand>()
-    private val fixedRegisterMap = hashMapOf<LocalValue, Operand>()
+    private val fixedValues = arrayListOf<LocalValue>()
 
     private val active      = hashMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
@@ -30,13 +31,13 @@ class LinearScan private constructor(private val data: FunctionData, private val
     }
 
     private fun build(): RegisterAllocation {
-        return RegisterAllocation(pool.stackSize(), registerMap + fixedRegisterMap, liveRanges)
+        return RegisterAllocation(pool.stackSize(), registerMap, liveRanges)
     }
 
     private fun allocRegistersForArgumentValues() {
         for (arg in data.arguments()) {
             val reg = pool.takeArgument(arg)
-            fixedRegisterMap[arg] = reg
+            fixedValues.add(arg)
             registerMap[arg] = reg
         }
     }
@@ -49,7 +50,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
            }
            val allocation = pool.calleeArgumentAllocate(inst.arguments())
            allocation.forEachWith(inst.arguments()) { operand, arg ->
-               fixedRegisterMap[arg as LocalValue] = operand
+               fixedValues.add(arg as LocalValue)
                registerMap[arg] = operand
            }
        }
@@ -61,7 +62,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
                 continue
             }
 
-            val operand = pool.allocSlot(value)
+            val operand = pool.allocSlot(value) { false }
             registerMap[value] = operand
             active[value] = operand
         }
@@ -92,16 +93,24 @@ class LinearScan private constructor(private val data: FunctionData, private val
         }
     }
 
+    private fun excludeIf(neighbors: Set<LocalValue>?, reg: Register): Boolean {
+        if (neighbors == null) {
+            return false
+        }
+        return neighbors.any { registerMap[it] == reg }
+    }
+
     private fun pickOperandGroup(value: LocalValue) {
         val group = liveRangesGroup.getGroup(value)
+        val neighbors = interferenceGraph.neighbors(value)
         if (group == null) {
-            val operand = pool.allocSlot(value)
+            val operand = pool.allocSlot(value) { reg -> excludeIf(neighbors, reg) }
             registerMap[value] = operand
             active[value] = operand
             return
         }
 
-        val operand = pool.allocSlot(group.first())
+        val operand = pool.allocSlot(group.first()) { reg -> excludeIf(neighbors, reg) }
         for (v in group) {
             registerMap[v] = operand
             active[v] = operand

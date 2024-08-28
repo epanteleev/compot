@@ -15,21 +15,21 @@ class InterferenceGraph(private val graph: MutableMap<LocalValue, MutableSet<Loc
     internal fun addEdge(from: LocalValue, to: LocalValue) {
         val fromEdge = graph[from]
         if (fromEdge == null) {
-            graph[from] = mutableSetOf(to)
+            graph[from] = hashSetOf(to)
         } else {
             fromEdge.add(to)
         }
 
         val toEdge = graph[to]
         if (toEdge == null) {
-            graph[to] = mutableSetOf(from)
+            graph[to] = hashSetOf(from)
         } else {
             toEdge.add(from)
         }
     }
 
-    fun neighbors(value: LocalValue): Set<LocalValue> {
-        return graph[value]!!
+    fun neighbors(value: LocalValue): Set<LocalValue>? {
+        return graph[value]
     }
 }
 
