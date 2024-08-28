@@ -222,7 +222,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitSizeOf(sizeOf: SizeOf): Value = when (val expr = sizeOf.expr) {
         is TypeName -> {
-            val resolved = expr.specifyType(typeHolder)
+            val resolved = expr.specifyType(typeHolder, listOf())
             val irType = mb.toIRType<NonTrivialType>(typeHolder, resolved)
             Constant.of(Type.I64, irType.sizeOf())
         }

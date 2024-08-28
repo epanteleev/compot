@@ -230,7 +230,7 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
 
     override fun visit(cast: Cast): Long {
         val expression = cast.cast.accept(this)
-        val type = cast.typeName.specifyType(ctx.typeHolder())
+        val type = cast.typeName.specifyType(ctx.typeHolder(), listOf())
         val converted = when (type) {
             CType.INT -> expression.toInt()
             CType.LONG -> expression

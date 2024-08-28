@@ -48,7 +48,7 @@ class CTypeBuilder {
         return baseTypes[0]
     }
 
-    fun build(typeHolder: TypeHolder): Pair<CType, StorageClass?> {
+    fun build(typeHolder: TypeHolder, isStorageClassIncluded: Boolean): Pair<CType, StorageClass?> {
         val typeNodes = typeProperties.filterIsInstance<BaseType>()
         val storageClass = run {
             val classes = typeProperties.filterIsInstance<StorageClass>()
@@ -57,7 +57,12 @@ class CTypeBuilder {
             }
             classes.firstOrNull()
         }
-        val properties = typeProperties.filterNot { it is BaseType || it is StorageClass }
+        val properties = typeProperties.filterNot {
+            if (!isStorageClassIncluded) {
+                return@filterNot it is StorageClass || it is BaseType
+            }
+            it is BaseType
+        }
         val baseType = if (typeNodes.size == 1 && typeNodes[0] is TypeDef) {
             val ctype = (typeNodes[0] as TypeDef).baseType().copyWith(properties)
             return Pair(ctype, storageClass)
