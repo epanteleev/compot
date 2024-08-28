@@ -18,6 +18,7 @@ import ir.instruction.lir.Lea
 import ir.module.block.Label
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
+import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.platform.common.AnyCodeGenerator
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
@@ -44,6 +45,7 @@ private class CodeEmitter(private val data: FunctionData,
                           private val unit: CompilationUnit,
                           private val valueToRegister: RegisterAllocation,
 ): IRInstructionVisitor<Unit>() {
+    private val liveness by lazy { data.analysis(LivenessAnalysisPassFabric) }
     private val asm = unit.mkFunction(data.prototype.name)
     private var previous: Block? = null
     private var next: Block? = null
@@ -526,7 +528,7 @@ private class CodeEmitter(private val data: FunctionData,
         // so that we can easily get the caller save registers
         // from the live-out of the block
         call as Instruction
-        val liveOut = valueToRegister.liveness.liveOut(call.owner())
+        val liveOut = liveness[call.owner()].liveOut()
         val exclude = if (call is LocalValue) {
             // Exclude call from liveOut
             // because this is value haven't been existed when the call is executed

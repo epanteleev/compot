@@ -10,7 +10,7 @@ import ir.pass.analysis.LinearScanOrderFabric
 import ir.pass.analysis.LivenessAnalysisPassFabric
 
 
-class LiveIntervalsBuilder internal constructor(val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
+class LiveIntervalsBuilder internal constructor(private val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
     private val intervals       = linkedMapOf<LocalValue, LiveRangeImpl>()
     private val linearScanOrder = data.analysis(LinearScanOrderFabric)
     private val liveness        = data.analysis(LivenessAnalysisPassFabric)
@@ -76,18 +76,14 @@ class LiveIntervalsBuilder internal constructor(val data: FunctionData): Functio
         }
     }
 
-    private fun doAnalysis(): LiveIntervals {
-        fun sortedByCreation(): Map<LocalValue, LiveRange> {
-            val pairList = intervals.toList().sortedBy { (_, value) -> value.begin().order }
-            val result = linkedMapOf<LocalValue, LiveRange>()
-            for ((k, v) in pairList) {
-                result[k] = v
-            }
-
-            return result
+    private fun sortedByCreation(): Map<LocalValue, LiveRange> {
+        val pairList = intervals.toList().sortedBy { (_, value) -> value.begin().order }
+        val result = linkedMapOf<LocalValue, LiveRange>()
+        for ((k, v) in pairList) {
+            result[k] = v
         }
 
-        return LiveIntervals(sortedByCreation(), liveness)
+        return result
     }
 
     override fun name(): String {
@@ -95,7 +91,7 @@ class LiveIntervalsBuilder internal constructor(val data: FunctionData): Functio
     }
 
     override fun run(): LiveIntervals {
-        return doAnalysis()
+        return LiveIntervals(sortedByCreation())
     }
 }
 

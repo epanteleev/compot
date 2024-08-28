@@ -26,10 +26,10 @@ class LivenessAnalysisInfo(private val liveness: Map<Label, LiveInfo>): Analysis
 private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue>)
 
 // TODO Inefficient implementation, should be optimized
-class LivenessAnalysis internal constructor(val data: FunctionData, private val linearScanOrder: LinearScanOrder): FunctionAnalysisPass<LivenessAnalysisInfo>() {
+class LivenessAnalysis internal constructor(private val functionData: FunctionData, private val linearScanOrder: LinearScanOrder): FunctionAnalysisPass<LivenessAnalysisInfo>() {
     private val liveness = run {
         val mapOf = mutableMapOf<Label, LiveInfo>()
-        for (bb in data) {
+        for (bb in functionData) {
             mapOf[bb] = LiveInfo(mutableSetOf(), mutableSetOf())
         }
 
