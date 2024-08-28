@@ -9,7 +9,7 @@ import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
-internal class PostDominatorTreeCalculate internal constructor(private val basicBlocks: FunctionData) : DominatorCalculate<PostDominatorTree>() {
+private class PostDominatorTreeCalculate(private val basicBlocks: FunctionData) : DominatorCalculate<PostDominatorTree>() {
     private val backwardPostorder = basicBlocks.analysis(BackwardPostOrderFabric)
 
     override fun calculateIncoming(postorder: BlockOrder, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> {
@@ -29,10 +29,6 @@ internal class PostDominatorTreeCalculate internal constructor(private val basic
 
     override fun blockOrdering(basicBlocks: FunctionData): BlockOrder {
         return backwardPostorder
-    }
-
-    override fun name(): String {
-        return "PostDominatorTree"
     }
 
     override fun run(): PostDominatorTree {

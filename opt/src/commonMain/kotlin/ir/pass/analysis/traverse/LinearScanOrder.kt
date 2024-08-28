@@ -9,12 +9,8 @@ import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
-class LinearScanOrderPass internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<BlockOrder>() {
+private class LinearScanOrderPass(private val functionData: FunctionData) : FunctionAnalysisPass<BlockOrder>() {
     private val loopInfo = functionData.analysis(LoopDetectionPassFabric)
-
-    override fun name(): String {
-        return "LinearScanOrder"
-    }
 
     override fun run(): BlockOrder {
         val order = LinearScanOrderIterator(functionData.begin(), functionData.size(), loopInfo).order()

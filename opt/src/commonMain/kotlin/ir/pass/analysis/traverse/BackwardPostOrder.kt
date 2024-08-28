@@ -9,10 +9,6 @@ import ir.pass.analysis.traverse.iterator.BackwardPostorderIterator
 
 
 class BackwardPostOrderPass internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<BlockOrder>() {
-    override fun name(): String {
-        return "BackwardPostOrder"
-    }
-
     override fun run(): BlockOrder {
         val order = BackwardPostorderIterator(functionData.end(), functionData.size()).order()
         return BlockOrder(order, functionData.marker())

@@ -8,11 +8,7 @@ import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.traverse.iterator.PreorderIterator
 
 
-class PreOrderPass internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<BlockOrder>() {
-    override fun name(): String {
-        return "PreOrder"
-    }
-
+private class PreOrderPass(private val functionData: FunctionData): FunctionAnalysisPass<BlockOrder>() {
     override fun run(): BlockOrder {
         val order = PreorderIterator(functionData.begin(), functionData.size()).order()
         return BlockOrder(order, functionData.marker())

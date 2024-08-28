@@ -20,10 +20,8 @@ class AllocAnalysisResult(private val storeInfo: Map<Alloc, Set<AnyBlock>>, mark
     }
 }
 
-class AllocStoreAnalysis internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<AllocAnalysisResult>() {
+private class AllocStoreAnalysis(private val functionData: FunctionData): FunctionAnalysisPass<AllocAnalysisResult>() {
     private val stores: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal() }
-
-    override fun name(): String = "AllocStoreAnalysis"
 
     private inline fun forEachAlloc(closure: (Alloc) -> Unit) {
         for (bb in functionData) {

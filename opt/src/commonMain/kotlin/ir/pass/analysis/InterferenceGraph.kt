@@ -33,7 +33,7 @@ class InterferenceGraph(private val graph: MutableMap<LocalValue, MutableSet<Loc
     }
 }
 
-class InterferenceGraphBuilder(functionData: FunctionData): FunctionAnalysisPass<InterferenceGraph>() {
+private class InterferenceGraphBuilder(functionData: FunctionData): FunctionAnalysisPass<InterferenceGraph>() {
     private val liveIntervals = functionData.analysis(LiveIntervalsFabric)
     private val interferenceGraph = InterferenceGraph(mutableMapOf(), functionData.marker())
 
@@ -53,10 +53,6 @@ class InterferenceGraphBuilder(functionData: FunctionData): FunctionAnalysisPass
         }
 
         return interferenceGraph
-    }
-
-    override fun name(): String {
-        return "InterferenceGraphBuilder"
     }
 }
 

@@ -10,7 +10,6 @@ abstract class AnalysisResult(protected val marker: MutationMarker) {
 }
 
 abstract class FunctionAnalysisPass<T: AnalysisResult> {
-    abstract fun name(): String
     abstract fun run(): T
 }
 

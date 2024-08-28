@@ -33,16 +33,26 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
         return cache
     }
 
-    inline fun <reified T: AnalysisResult, reified U: FunctionAnalysisPassFabric<T>> analysis(analysisType: U, useCache: Boolean = true): T {
+    inline fun<T> immutable(fn: () -> T): T {
+        val begin = marker()
+        val result = fn()
+        val end = marker()
+        if (begin != end) {
+            throw IllegalStateException("Analysis pass has mutated the function data")
+        }
+        return result
+    }
+
+    inline fun <reified T: AnalysisResult, reified U: FunctionAnalysisPassFabric<T>> analysis(analysisType: U, useCache: Boolean = true): T = immutable {
         if (!useCache) {
-            return analysisType.create(this)
+            return@immutable analysisType.create(this)
         }
         val cached = cache().get(analysisType, marker())
         if (cached != null) {
-            return cached
+            return@immutable cached
         }
 
-        return cache().put(analysisType, analysisType.create(this))
+        return@immutable cache().put(analysisType, analysisType.create(this))
     }
 
     operator fun iterator(): Iterator<Block> {

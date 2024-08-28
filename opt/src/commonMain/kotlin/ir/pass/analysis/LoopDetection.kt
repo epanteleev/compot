@@ -31,7 +31,8 @@ data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private va
     }
 }
 
-class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>, marker: MutationMarker): AnalysisResult(marker) {
+class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>, marker: MutationMarker) :
+    AnalysisResult(marker) {
     val size: Int by lazy {
         loopHeaders.values.fold(0) { acc, list -> acc + list.size }
     }
@@ -40,7 +41,7 @@ class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>, marker:
     fun headers(): Set<Block> = loopHeaders.keys
 }
 
-class LoopDetection internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<LoopInfo>() {
+private class LoopDetection(private val functionData: FunctionData) : FunctionAnalysisPass<LoopInfo>() {
     private val dominatorTree = functionData.analysis(DominatorTreeFabric)
     private val postOrder     = functionData.analysis(PostOrderFabric)
 
@@ -53,7 +54,7 @@ class LoopDetection internal constructor(private val functionData: FunctionData)
                 }
 
                 val loopBody = getLoopBody(bb, p)
-                val exit     = getExitBlock(bb, loopBody)
+                val exit = getExitBlock(bb, loopBody)
 
                 loopHeaders.getOrPut(bb) { arrayListOf() }.add(LoopBlockData(bb, loopBody, exit))
             }
@@ -100,16 +101,12 @@ class LoopDetection internal constructor(private val functionData: FunctionData)
         return loopBody
     }
 
-    override fun name(): String {
-        return "LoopDetection"
-    }
-
     override fun run(): LoopInfo {
         return evaluate()
     }
 }
 
-object LoopDetectionPassFabric: FunctionAnalysisPassFabric<LoopInfo>() {
+object LoopDetectionPassFabric : FunctionAnalysisPassFabric<LoopInfo>() {
     override fun type(): AnalysisType {
         return AnalysisType.LOOP_INFO
     }
