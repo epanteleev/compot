@@ -26,7 +26,7 @@ sealed interface ImmInt: Imm {
 }
 
 @JvmInline
-value class Imm32 private constructor(private val value: Long) : ImmInt {
+value class Imm32 private constructor(private val value: Int) : ImmInt {
     init {
         require(Int.MIN_VALUE <= value && value <= Int.MAX_VALUE) {
             "value=$value is not in range of Int"
@@ -37,7 +37,7 @@ value class Imm32 private constructor(private val value: Long) : ImmInt {
         return "$$value"
     }
 
-    override fun value(): Long = value
+    override fun value(): Long = value.toLong()
 
     override fun toString(size: Int): String {
         return toString()
@@ -47,6 +47,13 @@ value class Imm32 private constructor(private val value: Long) : ImmInt {
 
     companion object {
         fun of(value: Long): Imm32 {
+            assertion(canBeImm32(value)) {
+                "cannot be cast to imm32: value=$value"
+            }
+            return Imm32(value.toInt())
+        }
+
+        fun of(value: Int): Imm32 {
             return Imm32(value)
         }
     }

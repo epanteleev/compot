@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 
 static void print(uint16_t G[][3]) {
     for (int i = 0; i < 4; i++) {

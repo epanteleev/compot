@@ -448,4 +448,10 @@ abstract class Assembler(private val name: String) {
 
         return builder.toString()
     }
+
+    companion object {
+        fun isScaleFactor(scale: Int): Boolean {
+            return scale == 1 || scale == 2 || scale == 4 || scale == 8
+        }
+    }
 }
