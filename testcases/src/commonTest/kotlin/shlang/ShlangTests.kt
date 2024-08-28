@@ -180,6 +180,13 @@ abstract class ShlangTests: CommonCTest() {
     }
 
     @Test
+    fun testHelloWorld2() {
+        val result = runCTest("shlang/hello_world1", listOf(), options())
+        assertEquals("Hello, World!\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
     fun testSizeofTypes() {
         val result = runCTest("shlang/sizeof_types", listOf("runtime/runtime.c"), options())
         assertEquals(0, result.exitCode)
