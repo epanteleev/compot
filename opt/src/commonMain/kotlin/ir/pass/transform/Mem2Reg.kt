@@ -3,6 +3,7 @@ package ir.pass.transform
 import ir.dominance.DominatorTree
 import ir.instruction.*
 import ir.module.BasicBlocks
+import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
 import ir.pass.PassFabric
@@ -24,7 +25,7 @@ class Mem2Reg internal constructor(module: Module): TransformPass(module) {
 
             val dominatorTree = cfg.dominatorTree()
             val joinSet = JoinPointSet.evaluate(cfg, dominatorTree)
-            Mem2RegImpl(cfg, joinSet).pass(dominatorTree)
+            Mem2RegImpl(fnData, joinSet).pass(dominatorTree)
         }
         return PhiFunctionPruning.run(RemoveDeadMemoryInstructions.run(module))
     }
@@ -36,7 +37,7 @@ object Mem2RegFabric: PassFabric {
     }
 }
 
-private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: JoinPointSet) {
+private class Mem2RegImpl(private val cfg: FunctionData, private val joinSet: JoinPointSet) {
     private fun insertPhis(): Set<Phi> {
         val insertedPhis = hashSetOf<Phi>()
         for ((bb, vSet) in joinSet) { bb as Block
@@ -91,7 +92,7 @@ private class Mem2RegImpl(private val cfg: BasicBlocks, private val joinSet: Joi
         completePhis(bbToMapValues, insertedPhis)
 
         val deadPool = hashSetOf<Instruction>()
-        for (bb in cfg.postorder()) {
+        for (bb in cfg.blocks.postorder()) {
             removeRedundantPhis(deadPool, bb)
         }
     }

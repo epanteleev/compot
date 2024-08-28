@@ -3,11 +3,9 @@ package ir.pass.ana
 import ir.value.*
 import ir.instruction.*
 import ir.module.FunctionData
-import ir.types.PrimitiveType
 
 
 enum class EscapeState {
-    Global,   // Global means the value escapes the function
     Local,    // Local means the value is local to the function
     Field,    // Field means the value is a field of a local value
     Argument, // Argument means the value is passed as an argument
@@ -15,12 +13,13 @@ enum class EscapeState {
     Unknown;  // Unknown means the value is unknown
 
     fun union(other: EscapeState): EscapeState {
+        if (this == Unknown || other == Unknown) {
+            return Unknown
+        }
         if (this == other) {
             return this
         }
         return when {
-            this == Local || other == Global -> Global
-            this == Global || other == Local -> Global
             this == Argument || other == Local -> Argument
             this == Local || other == Argument -> Argument
             this == Field || other == Local -> Field
@@ -47,33 +46,44 @@ class EscapeAnalysis private constructor(private val functionData: FunctionData)
         return state.union(newState)
     }
 
+    private fun visitAlloc(alloc: Alloc) {
+        escapeState[alloc] = EscapeState.Local
+    }
+
+    private fun visitStore(store: Store) {
+        escapeState[store.pointer().asValue()] = union(store.pointer(), EscapeState.Local)
+        when (val value = store.value()) {
+            is Constant   -> escapeState[value] = EscapeState.Constant
+            is LocalValue -> escapeState[value] = union(value, EscapeState.Field)
+        }
+    }
+
+    private fun visitLoad(load: Load) {
+        val operand = load.operand()
+        if (operand is LocalValue) {
+            escapeState[load] = union(operand, EscapeState.Field)
+        }
+    }
+
+    private fun visitPointer2Int(pointer2Int: Pointer2Int) {
+        escapeState[pointer2Int.value()] = union(pointer2Int.value(), EscapeState.Unknown)
+    }
+
+    private fun visitCall(call: Callable) {
+        for (argument in call.arguments()) {
+            escapeState[argument] = union(argument, EscapeState.Argument)
+        }
+    }
+
     private fun run(): Map<Value, EscapeState> {
         for (block in functionData.blocks.preorder()) {
             for (instruction in block) {
                 when (instruction) {
-                    is Alloc -> {
-                        if (instruction.isLocalVariable()) {
-                            escapeState[instruction] = EscapeState.Local
-                        } else {
-                            escapeState[instruction] = EscapeState.Global
-                        }
-                    }
-
-                    is Store -> {
-                        if (instruction.isLocalVariable()) {
-                            escapeState[instruction.pointer()] = EscapeState.Local
-                        } else {
-                            escapeState[instruction.pointer()] = EscapeState.Global
-                        }
-                    }
-
-                    is Load -> {
-                        if (instruction.isLocalVariable()) {
-                            escapeState[instruction] = EscapeState.Local
-                        } else {
-                            escapeState[instruction] = EscapeState.Global
-                        }
-                    }
+                    is Alloc -> visitAlloc(instruction)
+                    is Store -> visitStore(instruction)
+                    is Load  -> visitLoad(instruction)
+                    is Callable -> visitCall(instruction)
+                    is Pointer2Int -> visitPointer2Int(instruction)
                 }
             }
         }
@@ -95,46 +105,4 @@ class EscapeAnalysisResult(private val escapeState: Map<Value, EscapeState>) {
         }
         return escapeState[value] ?: EscapeState.Unknown
     }
-}
-
-
-fun Alloc.canBeReplaced(): Boolean {
-    return allocatedType is PrimitiveType
-}
-
-fun Alloc.isLocalVariable(): Boolean {
-    return canBeReplaced() && noEscape()
-}
-
-fun Load.isLocalVariable(): Boolean {
-    return canBeReplaced() && (operand() as Alloc).isLocalVariable()
-}
-
-fun Load.canBeReplaced(): Boolean {
-    val operand = operand()
-    if (operand is Generate) {
-        return true
-    }
-
-    return operand is Alloc
-}
-
-fun Store.isLocalVariable(): Boolean {
-    val pointer = pointer()
-    return (pointer is Alloc && pointer.isLocalVariable()) || pointer is Generate
-}
-
-/** Check whether alloc result isn't leak to other function. **/
-fun Alloc.noEscape(): Boolean {
-    for (user in usedIn()) {
-        if (user is Load) {
-            continue
-        }
-
-        if (user is Store && user.pointer() == this) {
-            continue
-        }
-        return false
-    }
-    return true
 }
