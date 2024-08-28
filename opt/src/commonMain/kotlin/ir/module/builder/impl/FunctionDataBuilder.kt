@@ -164,8 +164,8 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.ptr2int(value, toType)
     }
 
-    override fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant) {
-        bb.memcpy(dst, src, length)
+    override fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy {
+        return bb.memcpy(dst, src, length)
     }
 
     override fun proj(tuple: Value, index: Int): Projection {

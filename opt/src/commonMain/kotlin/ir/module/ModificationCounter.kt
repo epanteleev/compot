@@ -20,13 +20,22 @@ class ModificationCounter {
         valueModificationCounter++
     }
 
-    inline fun cf(closure: () -> Unit) {
-        closure()
+    fun<T> cf(closure: () -> T): T {
+        val res = closure()
         incrementControlFlowModifications()
+        return res
     }
 
-    inline fun df(closure: () -> Unit) {
-        closure()
+    fun<T> df(closure: () -> T): T {
+        val res = closure()
         incrementValueModifications()
+        return res
+    }
+
+    fun<T> dfANDcf(closure: () -> T): T {
+        val res = closure()
+        incrementValueModifications()
+        incrementControlFlowModifications()
+        return res
     }
 }
