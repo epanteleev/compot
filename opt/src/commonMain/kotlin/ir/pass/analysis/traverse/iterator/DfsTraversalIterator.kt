@@ -1,4 +1,4 @@
-package ir.module.block.iterator
+package ir.pass.analysis.traverse.iterator
 
 import ir.instruction.Return
 import ir.module.block.Block

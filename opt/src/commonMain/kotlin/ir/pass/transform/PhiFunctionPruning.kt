@@ -4,6 +4,8 @@ import common.assertion
 import ir.module.*
 import ir.instruction.Phi
 import ir.module.block.Block
+import ir.pass.analysis.traverse.PreOrderFabric
+import ir.pass.analysis.traverse.iterator.PreorderIterator
 import ir.value.Value
 
 
@@ -28,7 +30,7 @@ class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
     }
 
     private fun initialSetup() {
-        for (bb in cfg.preorder()) {
+        for (bb in cfg.analysis(PreOrderFabric)) {
             for (inst in bb) {
                 if (inst is Phi) {
                     usefull.markUseless(inst, bb)

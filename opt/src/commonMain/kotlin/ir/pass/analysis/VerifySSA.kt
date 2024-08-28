@@ -13,6 +13,7 @@ import ir.module.FunctionData
 import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.pass.analysis.dominance.DominatorTreeFabric
+import ir.pass.analysis.traverse.PreOrderFabric
 
 
 class ValidateSSAErrorException(val module: Module, override val message: String): Exception(message) {
@@ -31,7 +32,7 @@ class VerifySSA private constructor(private val module: Module, private val func
 
     private fun pass() {
         validateArguments()
-        for (bb in functionData.preorder()) {
+        for (bb in functionData.analysis(PreOrderFabric)) {
             validateBlock(bb)
         }
         validateExitBlock()

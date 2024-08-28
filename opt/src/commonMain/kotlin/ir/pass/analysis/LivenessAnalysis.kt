@@ -7,6 +7,7 @@ import ir.module.FunctionData
 import ir.module.MutationMarker
 import ir.module.Sensitivity
 import ir.module.block.Label
+import ir.pass.analysis.traverse.LinearScanOrderFabric
 import ir.pass.common.AnalysisResult
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass

@@ -10,6 +10,7 @@ import ir.instruction.lir.*
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.FunctionData
 import ir.module.block.Block
+import ir.pass.analysis.traverse.PreOrderFabric
 import ir.types.PrimitiveType
 import ir.value.*
 
@@ -57,7 +58,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     private fun copyBasicBlocks() {
-        for (bb in fd.preorder()) {
+        for (bb in fd.analysis(PreOrderFabric)) {
             copyBasicBlocks(bb)
         }
 

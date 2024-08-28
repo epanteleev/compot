@@ -10,6 +10,7 @@ import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
 import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.pass.analysis.EscapeState
+import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.transform.Mem2RegException
 import ir.types.PrimitiveType
 
@@ -61,7 +62,7 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
     }
 
     init {
-        for (bb in cfg.preorder()) {
+        for (bb in cfg.analysis(PreOrderFabric)) {
             rewriteValuesSetup(bb)
         }
     }

@@ -4,6 +4,7 @@ import common.intMapOf
 import ir.module.FunctionData
 import ir.module.block.AnyBlock
 import ir.module.block.Label
+import ir.pass.analysis.traverse.BlockOrder
 import ir.pass.common.AnalysisResult
 import ir.pass.common.FunctionAnalysisPass
 
@@ -40,7 +41,7 @@ abstract class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() 
         return finger1
     }
 
-    private fun indexBlocks(blocksOrder: List<AnyBlock>): Map<AnyBlock, Int> {
+    private fun indexBlocks(blocksOrder: BlockOrder): Map<AnyBlock, Int> {
         val blockToIndex = intMapOf<AnyBlock, Int>(blocksOrder.size) { it : Label -> it.index }
         for ((idx, bb) in blocksOrder.withIndex()) {
             blockToIndex[bb] = idx
@@ -58,7 +59,7 @@ abstract class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() 
         }
     }
 
-    private fun enumerationToIdomMap(blocks: List<AnyBlock>, indexToBlock: Map<Int, AnyBlock>, dominators: MutableMap<Int, Int>): Map<AnyBlock, AnyBlock> {
+    private fun enumerationToIdomMap(blocks: BlockOrder, indexToBlock: Map<Int, AnyBlock>, dominators: MutableMap<Int, Int>): Map<AnyBlock, AnyBlock> {
         dominators.remove(blocks.size - 1)
 
         val dominatorTree = intMapOf<AnyBlock, AnyBlock>(blocks.size) { l: Label -> l.index }
@@ -69,9 +70,9 @@ abstract class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() 
         return dominatorTree
     }
 
-    abstract fun calculateIncoming(postorder: List<AnyBlock>, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> //TODO not necessary to evaluate it
+    abstract fun calculateIncoming(postorder: BlockOrder, blockToIndex: Map<AnyBlock, Int>): Map<Int, List<Int>> //TODO not necessary to evaluate it
 
-    abstract fun blockOrdering(basicBlocks: FunctionData): List<AnyBlock>
+    abstract fun blockOrdering(basicBlocks: FunctionData): BlockOrder
 
     fun evalIndexToBlock(blockToIndex: Map<AnyBlock, Int>): Map<Int, AnyBlock> {
         val indexToBlock = intMapOf<Int, AnyBlock>(blockToIndex.size) { it }

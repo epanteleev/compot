@@ -7,6 +7,7 @@ import ir.module.block.Block
 import ir.instruction.matching.*
 import ir.pass.analysis.EscapeState
 import ir.pass.analysis.EscapeAnalysisPassFabric
+import ir.pass.analysis.traverse.PreOrderFabric
 
 
 class RemoveDeadMemoryInstructions private constructor(private val cfg: FunctionData) {
@@ -47,7 +48,7 @@ class RemoveDeadMemoryInstructions private constructor(private val cfg: Function
     }
 
     fun pass() {
-        for (bb in cfg.preorder()) {
+        for (bb in cfg.analysis(PreOrderFabric)) {
             removeMemoryInstructions(bb)
         }
     }

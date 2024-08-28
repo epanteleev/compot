@@ -3,8 +3,9 @@ package ir.module
 import ir.value.ArgumentValue
 import ir.module.auxiliary.CopyCFG
 import ir.module.block.Block
-import ir.module.block.iterator.*
 import ir.pass.AnalysisPassCache
+import ir.pass.analysis.traverse.iterator.*
+import ir.pass.analysis.traverse.iterator.PostorderIterator
 import ir.pass.common.AnalysisResult
 import ir.pass.common.FunctionAnalysisPassFabric
 
@@ -26,22 +27,6 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
 
     fun name(): String {
         return prototype.name
-    }
-
-    fun preorder(): BasicBlocksIterator {
-        return PreorderIterator(begin(), size())
-    }
-
-    fun postorder(): BasicBlocksIterator {
-        return PostorderIterator(begin(), size())
-    }
-
-    fun backwardPostorder(): BasicBlocksIterator {
-        return BackwardPostorderIterator(end(), size())
-    }
-
-    fun bfsTraversal(): BasicBlocksIterator {
-        return BfsTraversalIterator(begin(), size())
     }
 
     fun cache(): AnalysisPassCache {
@@ -76,7 +61,7 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
         return blocks.begin()
     }
 
-    private fun end(): Block {
+    fun end(): Block {
         return blocks.end()
     }
 

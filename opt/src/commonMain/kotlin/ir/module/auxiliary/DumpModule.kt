@@ -5,6 +5,7 @@ import ir.module.*
 import ir.instruction.*
 import ir.module.block.Block
 import ir.pass.analysis.intervals.LiveIntervals
+import ir.pass.analysis.traverse.PreOrderFabric
 import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.LModule
 import ir.value.LocalValue
@@ -73,7 +74,7 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
         dumpPrototype(functionData.prototype, functionData.arguments())
         builder.append("{\n")
 
-        for (bb in functionData.preorder()) {
+        for (bb in functionData.analysis(PreOrderFabric)) {
             dumpBlock(bb)
         }
 
