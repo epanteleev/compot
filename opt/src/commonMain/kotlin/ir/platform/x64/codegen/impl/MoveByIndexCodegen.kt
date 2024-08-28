@@ -24,6 +24,9 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
                 } else if (dst is GPRegister && source is Address && index is ImmInt) {
                     asm.movf(size, source, xmmTemp1)
                     asm.movf(size, xmmTemp1, Address.from(dst, index.value().toInt() * size))
+                } else if (dst is Address && source is XmmRegister && index is ImmInt) {
+                    asm.lea(POINTER_SIZE, dst, temp1) //TODO: inefficient
+                    asm.movf(size, source, Address.from(temp1, index.value().toInt() * size))
                 } else {
                     default(dst, source, index)
                 }
@@ -82,8 +85,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        TODO("untested")
-        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.lea(POINTER_SIZE, dst, temp1)
         asm.mov(size, first, temp2)
         asm.mov(size, temp2, Address.from(temp1, second.value().toInt() * size))
     }
