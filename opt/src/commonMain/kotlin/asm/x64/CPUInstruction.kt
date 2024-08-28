@@ -1,6 +1,7 @@
 package asm.x64
 
 import asm.x64.CPUInstruction.Companion.prefix
+import asm.x64.GPRegister.rdx
 import common.assertion
 
 
@@ -161,12 +162,20 @@ data class Or(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
 }
 
 data class Div(val size: Int, val divider: Operand): Arithmetic {
+    init {
+        assertion(divider != rdx) { "Second operand cannot be rdx" }
+    }
+
     override fun toString(): String {
         return "div${prefix(size)} ${divider.toString(size)}"
     }
 }
 
 data class Idiv(val size: Int, val divider: Operand): Arithmetic {
+    init {
+        assertion(divider != rdx) { "Second operand cannot be rdx" }
+    }
+
     override fun toString(): String {
         return "idiv${prefix(size)} ${divider.toString(size)}"
     }

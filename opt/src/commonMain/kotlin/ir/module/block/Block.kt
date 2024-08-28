@@ -146,10 +146,7 @@ class Block(override val index: Int):
         if (other == null || this::class != other::class) return false
         other as Block
 
-        if (index != other.index) return false
-        if (instructions != other.instructions) return false
-        if (predecessors != other.predecessors) return false
-        return successors == other.successors
+        return index == other.index
     }
 
     override fun hashCode(): Int {

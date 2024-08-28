@@ -155,6 +155,7 @@ abstract class AlgoTests: CommonCTest() {
     @Test
     fun testAtoiStrToInteger() {
         val result = runCTest("shlang/c_atoi_str_to_integer", listOf(), options())
+        assertEquals("<<<< TEST FUNCTION >>>>\n<<<< TEST DONE >>>>\n", result.output)
         assertReturnCode(result, 0)
     }
 
