@@ -64,7 +64,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             }
             is CPointerType -> {
                 val irType     = mb.toIRType<NonTrivialType>(typeHolder, type)
-                val attributes = toIRAttributes<GlobalValueAttribute>(type.dereference().qualifiers()) //TODO don't dereference
+                val attributes = toIRAttributes<GlobalValueAttribute>(type.qualifiers())
                 val constant = GlobalConstant.of(createGlobalConstantName(), irType, 0)
                 varStack[name] = mb.addGlobal(name, constant, attributes)
             }

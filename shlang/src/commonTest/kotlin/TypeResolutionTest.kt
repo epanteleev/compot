@@ -4,6 +4,7 @@ import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.nodes.*
 import tokenizer.CTokenizer
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -482,5 +483,20 @@ class TypeResolutionTest {
         parser.translation_unit()
         val typeHolder = parser.typeHolder()
         assertEquals("struct Array_ {int len;[]int arr;}", typeHolder["arr"].toString())
+    }
+
+    @Ignore
+    fun testStaticStorageClass() {
+        val input = """
+            static int a = 10;
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        val qualifier = typeHolder["a"].qualifiers()
+        assertEquals(1, qualifier.size)
+        assertTrue { qualifier.contains(StorageClass.STATIC) }
     }
 }

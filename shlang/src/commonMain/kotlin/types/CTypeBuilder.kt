@@ -48,11 +48,19 @@ class CTypeBuilder {
         return baseTypes[0]
     }
 
-    fun build(typeHolder: TypeHolder): CType {
+    fun build(typeHolder: TypeHolder): Pair<CType, StorageClass?> {
         val typeNodes = typeProperties.filterIsInstance<BaseType>()
-        val properties = typeProperties.filterNot { it is BaseType }
+        val storageClass = run {
+            val classes = typeProperties.filterIsInstance<StorageClass>()
+            if (classes.size > 1) {
+                throw RuntimeException("Multiple storage classes are not allowed: $classes")
+            }
+            classes.firstOrNull()
+        }
+        val properties = typeProperties.filterNot { it is BaseType || it is StorageClass }
         val baseType = if (typeNodes.size == 1 && typeNodes[0] is TypeDef) {
-            return (typeNodes[0] as TypeDef).baseType().copyWith(properties)
+            val ctype = (typeNodes[0] as TypeDef).baseType().copyWith(properties)
+            return Pair(ctype, storageClass)
         } else if (typeNodes[0] is CPrimitive) {
             finalBaseType(typeNodes)
         } else {
@@ -60,7 +68,8 @@ class CTypeBuilder {
         }
 
         if (baseType !is AggregateBaseType) {
-            return CPrimitiveType(baseType, properties)
+            val cType = CPrimitiveType(baseType, properties)
+            return Pair(cType, storageClass)
         }
 
         val struct = when (baseType) {
@@ -72,7 +81,7 @@ class CTypeBuilder {
             else -> throw RuntimeException("Unknown type $baseType")
         }
 
-        return when (baseType) {
+        val structType = when (baseType) {
             is StructBaseType -> {
                 typeHolder.addTypedef(baseType.name, struct)
             }
@@ -81,5 +90,7 @@ class CTypeBuilder {
             }
             else -> struct
         }
+
+        return Pair(structType, storageClass)
     }
 }
