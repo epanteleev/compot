@@ -45,6 +45,10 @@ abstract class AnyStructType(open val name: String): AggregateBaseType() {
         return fields.indexOfFirst { it.first == name }
     }
 
+    fun fieldIndex(index: Int): CType {
+        return fields[index].second
+    }
+
     fun fields(): List<Pair<String, CType>> {
         return fields
     }

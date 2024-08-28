@@ -105,14 +105,21 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val idx = initializerContext.peekIndex()
         when (val expr = singleInitializer.expr) {
             is InitializerList -> {
-                val t = when (type) {
-                    is CArrayType -> type.element()
-                   // is CStructType -> type.fieldIndex()
+                when (type) {
+                    is CArrayType -> {
+                        val t = type.element()
+                        val irType = mb.toIRType<AggregateType>(typeHolder, t)
+                        val fieldPtr = ir.gep(lvalueAdr, irType, Constant.valueOf(Type.I64, idx))
+                        initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
+                    }
+                    is CStructType -> {
+                        val t = type.fieldType(idx)
+                        val irType = mb.toIRType<AggregateType>(typeHolder, t)
+                        val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(Constant.valueOf(Type.I64, idx)))
+                        initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
+                    }
                     else -> throw IRCodeGenError("Unknown type")
                 }
-                val irType = mb.toIRType<AggregateType>(typeHolder, type)
-                val fieldPtr = ir.gep(lvalueAdr, irType, Constant.valueOf(Type.I64, idx))
-                initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
             }
             else -> {
                 val rvalue = visitExpression(expr, true)
