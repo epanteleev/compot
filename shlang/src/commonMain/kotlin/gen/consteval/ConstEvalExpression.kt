@@ -134,6 +134,10 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
     override fun visit(emptyExpression: EmptyExpression): Int {
         TODO("Not yet implemented")
     }
+
+    override fun visit(funcPointerCall: FuncPointerCall): Int {
+        TODO("Not yet implemented")
+    }
 }
 
 class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEvalExpression<Long>() {
@@ -262,6 +266,10 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
     override fun visit(emptyExpression: EmptyExpression): Long {
         TODO("Not yet implemented")
     }
+
+    override fun visit(funcPointerCall: FuncPointerCall): Long {
+        TODO("Not yet implemented")
+    }
 }
 
 class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstEvalExpression<Float>() {
@@ -363,6 +371,10 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
     }
 
     override fun visit(emptyExpression: EmptyExpression): Float {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(funcPointerCall: FuncPointerCall): Float {
         TODO("Not yet implemented")
     }
 
@@ -482,6 +494,10 @@ class ConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): Cons
 
     override fun visit(singleInitializer: SingleInitializer): Double {
         return singleInitializer.expr.accept(this)
+    }
+
+    override fun visit(funcPointerCall: FuncPointerCall): Double {
+        TODO("Not yet implemented")
     }
 
     companion object {

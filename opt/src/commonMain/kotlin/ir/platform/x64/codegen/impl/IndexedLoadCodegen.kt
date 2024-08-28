@@ -29,8 +29,7 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
             asm.mov(indexType.sizeOf(), index, temp1)
             asm.movf(size, Address.from(operand, 0, temp1, size), dst)
         } else if (dst is XmmRegister && operand is Address && index is ImmInt) {
-            asm.lea(POINTER_SIZE, operand, temp1) //TODO suspicious
-            asm.movf(size, Address.from(temp1, index.value().toInt() * size), dst)
+            asm.movf(size, operand.withOffset(index.value().toInt() * size), dst)
         } else {
             default(dst, operand, index)
         }
@@ -74,8 +73,7 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        asm.lea(POINTER_SIZE, first, temp1) //TODO suspicious
-        asm.mov(size, Address.from(temp1, second.value().toInt() * size), dst)
+        asm.mov(size, first.withOffset(second.value().toInt() * size), dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {

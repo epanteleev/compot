@@ -7,7 +7,7 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
     private val typedefs = arrayListOf(hashMapOf<String, CType>())
 
     operator fun get(varName: String): CType {
-        return valueMap[varName] ?: throw Exception("Type for variable '$varName' not found")
+        return valueMap[varName] ?: functions[varName] ?: throw Exception("Type for variable '$varName' not found")
     }
 
     fun getTypeOrNull(name: String): BaseType? {
@@ -57,7 +57,7 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
     }
 
     fun getFunctionType(name: String): CType {
-        return functions[name] ?: throw Exception("Type for function '$name' not found")
+        return functions[name] ?: valueMap[name] ?: throw Exception("Type for function '$name' not found")
     }
 
     fun addFunctionType(name: String, type: CFunctionType) {

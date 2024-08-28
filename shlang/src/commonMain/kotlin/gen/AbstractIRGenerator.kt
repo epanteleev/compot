@@ -1,13 +1,11 @@
 package gen
 
-import gen.TypeConverter.toIRType
 import gen.consteval.*
 import ir.global.ArrayGlobalConstant
 import ir.global.GlobalConstant
 import ir.global.StringLiteralConstant
 import ir.global.StructGlobalConstant
 import ir.module.builder.impl.ModuleBuilder
-import ir.types.AggregateType
 import ir.types.ArrayType
 import ir.types.StructType
 import ir.types.Type

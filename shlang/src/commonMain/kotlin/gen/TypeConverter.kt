@@ -67,7 +67,7 @@ object TypeConverter {
                 convertUnionType(typeHolder, type)
             }
 
-            is CFunPointerType, is UncompletedArrayType -> Type.Ptr
+            is CFunPointerType, is CFunctionType, is UncompletedArrayType -> Type.Ptr
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
         return ret

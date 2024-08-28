@@ -1,6 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+struct DATA {
+    long a;
+    long b;
+    double c;
+};
+
+struct DATA data;
+
 void printLong(long value) {
 	printf("%ld\n", value);	
 }

@@ -30,7 +30,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
 
     private fun generateFunction(node: FunctionNode) {
         val gen = IrGenFunction(mb, typeHolder, varStack, nameGenerator)
-        gen.visit(node)
+        varStack[node.name()] = gen.visit(node)
     }
 
     private fun getExternFunction(name: String, returnType: Type, arguments: List<Type>, isVararg: Boolean = false): ExternFunction {
@@ -54,7 +54,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 val returnType = mb.toIRType<Type>(typeHolder, abstrType.retType)
 
                 val isVararg = type.functionType.variadic
-                getExternFunction(name, returnType, argTypes, isVararg)
+                varStack[name] = getExternFunction(name, returnType, argTypes, isVararg)
             }
             is CPrimitiveType -> {
                 val irType = mb.toIRType<NonTrivialType>(typeHolder, type)

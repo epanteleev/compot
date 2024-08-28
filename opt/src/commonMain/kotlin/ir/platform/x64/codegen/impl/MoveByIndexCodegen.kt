@@ -25,8 +25,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
                     asm.movf(size, source, xmmTemp1)
                     asm.movf(size, xmmTemp1, Address.from(dst, index.value().toInt() * size))
                 } else if (dst is Address && source is XmmRegister && index is ImmInt) {
-                    asm.lea(POINTER_SIZE, dst, temp1) //TODO: inefficient
-                    asm.movf(size, source, Address.from(temp1, index.value().toInt() * size))
+                    asm.movf(size, source, dst.withOffset(index.value().toInt() * size))
                 } else {
                     default(dst, source, index)
                 }
@@ -79,15 +78,13 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        asm.mov(size, dst, temp1)
+        asm.lea(size, dst, temp1)
         asm.mov(size, second, temp2)
         asm.mov(size, first, Address.from(temp1, 0, temp2, size))
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        asm.lea(POINTER_SIZE, dst, temp1)
-        asm.mov(size, first, temp2)
-        asm.mov(size, temp2, Address.from(temp1, second.value().toInt() * size))
+        asm.mov(size, first, dst.withOffset(second.value().toInt() * size))
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
@@ -95,7 +92,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {
-        asm.mov(size, dst, temp1)
+        asm.lea(size, dst, temp1)
         asm.mov(size, second, temp2)
         asm.mov(size, first, Address.from(temp1, 0, temp2, size))
     }
@@ -114,7 +111,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
         TODO("untested")
-        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.lea(POINTER_SIZE, dst, temp1)
         asm.mov(size, first, temp2)
         asm.mov(size, temp2, Address.from(temp1, 0, second, size))
     }

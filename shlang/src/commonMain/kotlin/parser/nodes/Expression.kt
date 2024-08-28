@@ -188,21 +188,10 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     }
 }
 
-data class FunctionCall(val primary: Expression, val args: List<Expression>) : Expression() {
-    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+sealed class AnyFunctionCall(val args: List<Expression>) : Expression() {
+    abstract fun name(): String
 
-    fun name(): String {
-        return nameIdentifier().str()
-    }
-
-    fun nameIdentifier(): Identifier {
-        return when (primary) {
-            is VarNode -> primary.nameIdent()
-            else -> throw IllegalStateException("Function call primary is not a VarNode, but got ${primary::class.simpleName}")
-        }
-    }
-
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+    protected fun resolveParams(typeHolder: TypeHolder){
         val params = args.map { it.resolveType(typeHolder) }
         if (params.size != args.size) {
             throw TypeResolutionException("Function call of '${name()}' with unresolved types")
@@ -216,9 +205,52 @@ data class FunctionCall(val primary: Expression, val args: List<Expression>) : E
 
             throw TypeResolutionException("Function call of '${name()}' with wrong argument types")
         }
+    }
+}
 
-        val functionType = typeHolder.getFunctionType(name()) as CFunctionType
-        return@memoize functionType.functionType.retType
+class FuncPointerCall(val primary: UnaryOp, args: List<Expression>) : AnyFunctionCall(args) {
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+
+    override fun name(): String {
+        return nameIdentifier().str()
+    }
+
+    private fun nameIdentifier(): Identifier {
+        val primary = primary.primary
+        if (primary !is VarNode) {
+            throw IllegalStateException("Function call primary is not a VarNode, but got ${primary::class.simpleName}")
+        }
+        return primary.nameIdent()
+    }
+
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        resolveParams(typeHolder)
+
+        when (val functionType = typeHolder.getFunctionType(name())) {
+            is CFunPointerType -> return@memoize functionType.cFunctionType.retType
+            else -> throw TypeResolutionException("Function call of '${name()}' with non-function type")
+        }
+    }
+}
+
+class FunctionCall(val primary: VarNode, args: List<Expression>) : AnyFunctionCall(args) {
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+
+    override fun name(): String {
+        return nameIdentifier().str()
+    }
+
+    fun nameIdentifier(): Identifier {
+        return primary.nameIdent()
+    }
+
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        resolveParams(typeHolder)
+
+        when (val functionType = typeHolder.getFunctionType(name())) {
+            is CFunctionType   -> return@memoize functionType.functionType.retType
+            else -> throw TypeResolutionException("Function call of '${name()}' with non-function type")
+        }
     }
 }
 
