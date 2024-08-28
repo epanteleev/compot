@@ -2,6 +2,7 @@ package ir.platform.x64.codegen
 
 import asm.x64.*
 import asm.x64.GPRegister.rdx
+import asm.x64.GPRegister.rax
 import common.assertion
 import ir.Definitions.BYTE_SIZE
 import ir.Definitions.QWORD_SIZE
@@ -167,6 +168,10 @@ class MacroAssembler(name: String): Assembler(name) {
         val numberOfFp = call.arguments().count { it.type() is FloatingPointType }
         assertion(numberOfFp < 255) { "numberOfFp=$numberOfFp" }
 
-        mov(BYTE_SIZE, Imm32.of(numberOfFp.toLong()), GPRegister.rax)
+        if (numberOfFp == 0) {
+            xor(BYTE_SIZE, rax, rax)
+        } else {
+            mov(BYTE_SIZE, Imm32.of(numberOfFp.toLong()), rax)
+        }
     }
 }
