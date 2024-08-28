@@ -16,7 +16,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
     private val registerMap = hashMapOf<LocalValue, Operand>()
     private val active      = hashMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
-    private val liveRangesGroup = Precoloring.evaluate(liveRanges)
+    private val liveRangesGroup = Coalescing.evaluate(liveRanges)
 
     init {
         allocRegistersForArgumentValues()
@@ -61,7 +61,9 @@ class LinearScan private constructor(private val data: FunctionData, private val
     }
 
     private fun allocRegistersForLocalVariables() {
-        for ((group, range) in liveRangesGroup) {
+        for ((value, range) in liveRanges) {
+            val group = liveRangesGroup.getGroup(value) ?: Group(arrayListOf(value))
+
             if (registerMap[group.first()] != null) {
                 continue
             }
@@ -72,7 +74,7 @@ class LinearScan private constructor(private val data: FunctionData, private val
             }
 
             active.entries.retainAll {
-                if (liveRangesGroup[it.key].end() <= range.begin()) {
+                if (liveRanges[it.key].end() <= range.begin()) {
                     val size = it.key.asType<NonTrivialType>().sizeOf()
                     pool.free(it.value, size)
                     return@retainAll false

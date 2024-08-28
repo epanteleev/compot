@@ -10,13 +10,12 @@ import ir.pass.analysis.intervals.GroupedLiveIntervals
 
 
 //TODO
-class Precoloring private constructor(private val intervals: LiveIntervals) {
+class Coalescing private constructor(private val intervals: LiveIntervals) {
     private val visited = hashSetOf<LocalValue>()
     private val groups = hashMapOf<Group, LiveRange>()
 
     private fun build(): GroupedLiveIntervals {
         mergePhiOperands()
-        completeOtherGroups()
 
         val result = groups.toList().sortedBy { (_, value) -> value.begin().order } // TODO
         val map = linkedMapOf<Group, LiveRange>()
@@ -38,9 +37,9 @@ class Precoloring private constructor(private val intervals: LiveIntervals) {
 
             range.merge(intervals[used])
             group.add(used)
+            intervals[used] = range
             visited.add(used)
         }
-
         groups[Group(group)] = range
     }
 
@@ -56,6 +55,7 @@ class Precoloring private constructor(private val intervals: LiveIntervals) {
             range.merge(intervals[proj])
             val group = Group(arrayListOf<LocalValue>(proj))
             groups[group] = range
+            intervals[proj] = range
 
             visited.add(proj)
         }
@@ -70,23 +70,9 @@ class Precoloring private constructor(private val intervals: LiveIntervals) {
         }
     }
 
-    private fun completeOtherGroups() {
-        for ((value, range) in intervals) {
-            if (value is Phi) {
-                continue
-            }
-            if (visited.contains(value)) {
-                continue
-            }
-
-            groups[Group(arrayListOf(value))] = range
-            visited.add(value)
-        }
-    }
-
     companion object {
         fun evaluate(liveIntervals: LiveIntervals): GroupedLiveIntervals {
-            return Precoloring(liveIntervals).build()
+            return Coalescing(liveIntervals).build()
         }
     }
 }
