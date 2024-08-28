@@ -173,7 +173,9 @@ data class Div(val size: Int, val divider: Operand): Arithmetic {
 
 data class Idiv(val size: Int, val divider: Operand): Arithmetic {
     init {
-        assertion(divider != rdx) { "Second operand cannot be rdx" }
+        assertion(divider != rdx) {
+            "Second operand cannot be rdx"
+        }
     }
 
     override fun toString(): String {
