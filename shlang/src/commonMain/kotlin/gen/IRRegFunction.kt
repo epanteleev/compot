@@ -70,7 +70,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         return when (val type = conditionExpr.type()) {
-            is IntegerType, PointerType -> ir.icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            is IntegerType, PointerType -> {
+                type as NonTrivialType
+                ir.icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
+            }
             is FloatingPointType -> ir.fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
             else -> throw IRCodeGenError("Unknown type")
         }
@@ -313,6 +316,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         assertion(toType is NonTrivialType) { "invariant" }
+        toType as NonTrivialType
         return ir.convertToType(value, toType)
     }
 
@@ -723,7 +727,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val type = unaryOp.resolveType(typeHolder)
                 val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
                 val converted = ir.convertToType(value, commonType)
-                makeCondition(converted, eq(commonType), Constant.of(converted.type(), 0))
+                makeCondition(converted, eq(commonType), Constant.of(converted.asType(), 0))
             }
             else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.opType}")
         }
@@ -767,8 +771,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return ir.load(converted, rvalueAttr)
     }
 
-    private fun argumentTypes(ctypes: List<CType>): List<Type> {
-        val types = arrayListOf<Type>()
+    private fun argumentTypes(ctypes: List<CType>): List<NonTrivialType> {
+        val types = arrayListOf<NonTrivialType>()
         for (type in ctypes) {
             when (type) {
                 is CPrimitiveType, is CPointerType -> {
@@ -1035,6 +1039,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val realType = ir.prototype().returnType()
         when (val type = returnStatement.expr.resolveType(typeHolder)) {
             is CPrimitiveType, is CPointerType -> {
+                realType as PrimitiveType
                 val returnType = ir.convertToType(value, realType)
                 ir.store(returnValueAdr!!, returnType)
             }

@@ -27,7 +27,7 @@ class FunctionDataBuilderWithContext private constructor(
 
     private fun getValue(token: AnyValueToken, ty: Type): Value {
         return when (token) {
-            is LiteralValueToken -> token.toConstant(ty)
+            is LiteralValueToken -> token.toConstant(ty as NonTrivialType)
             is LocalValueToken -> {
                 val operand = nameMap[token.name]
                     ?: throw ParseErrorException("in ${token.position()} undefined value '${token.value()}'")
@@ -49,7 +49,7 @@ class FunctionDataBuilderWithContext private constructor(
         }
     }
 
-    private fun getConstant(token: AnyValueToken, ty: Type): Value {
+    private fun getConstant(token: AnyValueToken, ty: NonTrivialType): Value {
         return token.let {
             when (it) {
                 is IntValue        -> Constant.of(ty, it.int)

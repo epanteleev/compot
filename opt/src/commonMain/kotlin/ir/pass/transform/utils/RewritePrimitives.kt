@@ -12,6 +12,7 @@ import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.pass.analysis.EscapeState
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.transform.Mem2RegException
+import ir.types.NonTrivialType
 import ir.types.PrimitiveType
 
 
@@ -146,7 +147,7 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
                 return value
             }
 
-            return Constant.from(type, value)
+            return Constant.from(type as NonTrivialType, value)
         }
 
         fun run(cfg: FunctionData, dominatorTree: DominatorTree): RewritePrimitives {

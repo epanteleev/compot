@@ -1,9 +1,7 @@
 package ir.pass.transform.auxiliary
 
-import ir.attributes.GlobalValueAttribute
 import ir.global.*
 import ir.instruction.Instruction
-import ir.module.BasicBlocks
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
@@ -15,7 +13,7 @@ internal class ConstantLoading private constructor(private val cfg: FunctionData
         fun closure(bb: Block, inst: Instruction): Instruction {
             var inserted: Instruction? = null
             inst.operandsWithIndex { i, use ->
-                if (use is AggregateConstant || use is FunctionSymbol) {
+                if (use is AnyAggregateGlobalConstant || use is FunctionSymbol) {
                     val lea = bb.insertBefore(inst) { it.lea(use) }
                     bb.updateDF(inst, i, lea)
                     inserted = lea

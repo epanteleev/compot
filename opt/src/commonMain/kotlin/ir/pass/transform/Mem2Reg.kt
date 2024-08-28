@@ -12,6 +12,7 @@ import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PostOrderFabric
 import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
+import ir.types.NonTrivialType
 import ir.types.PrimitiveType
 import ir.types.Type
 import ir.value.Value
@@ -52,7 +53,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
     }
 
     private fun completePhis(bbToMapValues: RewritePrimitives, insertedPhis: Set<Phi>) {
-        fun renameValues(block: Block, v: Value, expectedType: Type): Value {
+        fun renameValues(block: Block, v: Value, expectedType: NonTrivialType): Value {
             return bbToMapValues.tryRename(block, v, expectedType)?: Value.UNDEF
         }
 

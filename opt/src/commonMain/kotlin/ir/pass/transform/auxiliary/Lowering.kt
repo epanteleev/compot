@@ -41,7 +41,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                         is AggregateType -> {
                             val index = inst.index()
                             val offset = bb.insertBefore(inst) {
-                                it.arithmeticBinary(index, ArithmeticBinaryOp.Mul, Constant.of(index.type(), baseType.sizeOf()))
+                                it.arithmeticBinary(index, ArithmeticBinaryOp.Mul, Constant.of(index.asType(), baseType.sizeOf()))
                             }
                             return bb.replace(inst) { it.leaStack(inst.source(), Type.I8, offset) }
                         }

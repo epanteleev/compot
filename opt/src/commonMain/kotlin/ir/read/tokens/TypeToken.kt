@@ -19,7 +19,7 @@ abstract class TypeToken(override val line: Int, override val pos: Int) : Token(
 }
 
 abstract class PrimitiveTypeToken(protected open val type: PrimitiveType, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
-    override fun type(resolver: TypeResolver): Type {
+    override fun type(resolver: TypeResolver): NonTrivialType {
         return type
     }
 
@@ -50,7 +50,7 @@ data class BooleanTypeToken(override val line: Int, override val pos: Int)
 }
 
 interface ArithmeticTypeToken: AnyToken {
-    fun type(resolver: TypeResolver): Type
+    fun type(resolver: TypeResolver): NonTrivialType
 }
 
 abstract class IntegerTypeToken(override val type: IntegerType, override val line: Int, override val pos: Int)
