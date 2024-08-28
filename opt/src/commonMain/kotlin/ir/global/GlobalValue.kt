@@ -15,7 +15,7 @@ class GlobalValue(val name: String, val data: GlobalConstant, val attribute: Lis
 
     override fun dump(): String {
         return buildString {
-            append("@$name = global ${data.contentType()} ${data.data()}")
+            append("@$name = global ${data.type()} ${data.data()}")
             for (attr in attribute) {
                 append(" !$attr")
             }

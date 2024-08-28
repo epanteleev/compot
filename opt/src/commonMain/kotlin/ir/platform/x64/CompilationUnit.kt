@@ -25,13 +25,7 @@ class CompilationUnit: CompiledModule() {
             }
             is AggregateConstant -> {
                 val types = globalValue.elements().map { convertToSymbolType(it) }
-                val data  = globalValue.elements().map {
-                    if (it is NullValue) {
-                        return@map "0"
-                    } else {
-                        return@map it.toString()
-                    }
-                }
+                val data  = globalValue.elements().map { it.data() }
                 symbols.add(ObjSymbol(globalValue.name(), data, types))
             }
             else -> symbols.add(ObjSymbol(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue)))
