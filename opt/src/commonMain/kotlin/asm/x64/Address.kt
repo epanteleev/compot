@@ -1,5 +1,7 @@
 package asm.x64
 
+import ir.Definitions.QWORD_SIZE
+
 
 sealed interface Address : Operand {
     companion object {
@@ -7,7 +9,7 @@ sealed interface Address : Operand {
             return Address2(base, offset)
         }
 
-        fun from(base: GPRegister?, offset: Int, index: GPRegister, scale: Int): Address {
+        fun from(base: GPRegister?, offset: Int, index: GPRegister, scale: ScaleFactor): Address {
             return Address4(base, offset, index, scale)
         }
 
@@ -34,9 +36,9 @@ class Address2 internal constructor(val base: GPRegister, val offset: Int) : Add
 
     override fun toString(size: Int): String {
         return if (offset == 0) {
-            "(${base.toString(8)})"
+            "(${base.toString(QWORD_SIZE)})"
         } else {
-            "$offset(${base.toString(8)})"
+            "$offset(${base.toString(QWORD_SIZE)})"
         }
     }
 
@@ -56,10 +58,10 @@ class Address2 internal constructor(val base: GPRegister, val offset: Int) : Add
     }
 }
 
-class Address4 internal constructor(private val base: GPRegister?, private val offset: Int, val index: GPRegister, private val scale: Int) :
+class Address4 internal constructor(private val base: GPRegister?, private val offset: Int, val index: GPRegister, private val scale: ScaleFactor) :
     Address {
     override fun withOffset(disp: Int): Address {
-        return Address4(base, offset + (disp * scale), index, scale)
+        return Address4(base, offset + (disp * scale.value()), index, scale)
     }
 
     override fun toString(): String {
@@ -72,16 +74,16 @@ class Address4 internal constructor(private val base: GPRegister?, private val o
 
     override fun toString(size: Int): String {
         return if (offset == 0) {
-            if (scale == 1) {
-                "(${base(8)}, ${index.toString(8)})"
+            if (scale == ScaleFactor.TIMES_1) {
+                "(${base(QWORD_SIZE)}, ${index.toString(QWORD_SIZE)})"
             } else {
-                "(${base(8)}, ${index.toString(8)}, $scale)"
+                "(${base(QWORD_SIZE)}, ${index.toString(QWORD_SIZE)}, $scale)"
             }
         } else {
-            if (scale == 1) {
-                "$offset(${base(8)}, ${index.toString(8)})"
+            if (scale == ScaleFactor.TIMES_1) {
+                "$offset(${base(QWORD_SIZE)}, ${index.toString(QWORD_SIZE)})"
             } else {
-                "$offset(${base(8)}, ${index.toString(8)}, $scale)"
+                "$offset(${base(QWORD_SIZE)}, ${index.toString(QWORD_SIZE)}, $scale)"
             }
         }
     }
@@ -98,9 +100,9 @@ class ArgumentSlot(private val base: GPRegister, private val offset: Int) : Addr
 
     override fun toString(size: Int): String {
         return if (offset == 0) {
-            "(${base.toString(8)})"
+            "(${base.toString(QWORD_SIZE)})"
         } else {
-            "$offset(${base.toString(8)})"
+            "$offset(${base.toString(QWORD_SIZE)})"
         }
     }
 }
@@ -125,9 +127,7 @@ class InternalAddressLiteral internal constructor(private val offset: Int, label
 
         other as InternalAddressLiteral
 
-        if (label != other.label) return false
-
-        return true
+        return label == other.label
     }
 
     override fun hashCode(): Int {
@@ -151,9 +151,7 @@ class ExternalAddressLiteral internal constructor(label: String) : AddressLitera
 
         other as ExternalAddressLiteral
 
-        if (label != other.label) return false
-
-        return true
+        return label == other.label
     }
 
     override fun hashCode(): Int {

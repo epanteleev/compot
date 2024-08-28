@@ -15,7 +15,7 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
                 if (dst is XmmRegister && source is Address2 && index is ImmInt) {
                     asm.movf(size, Address.from(source.base, source.offset + index.value().toInt() * size), dst)
                 } else if (dst is XmmRegister && source is Address2 && index is GPRegister) {
-                    asm.movf(size, Address.from(source.base, source.offset, index, size), dst)
+                    asm.movf(size, Address.from(source.base, source.offset, index, ScaleFactor.from(size)), dst)
                 } else {
                     default(dst, source, index)
                 }
@@ -35,7 +35,7 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         if (first is Address2) {
-            asm.mov(size, Address.from(first.base, first.offset, second, size), dst)
+            asm.mov(size, Address.from(first.base, first.offset, second, ScaleFactor.from(size)), dst)
         } else {
             throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
         }

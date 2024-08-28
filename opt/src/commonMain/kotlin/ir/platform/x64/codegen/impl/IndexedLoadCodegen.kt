@@ -22,12 +22,12 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
 
     private fun handleXmm(dst: Operand, operand: Operand, index: Operand) {
         if (dst is XmmRegister && operand is GPRegister && index is GPRegister) {
-            asm.movf(size, Address.from(operand, 0, index, size), dst)
+            asm.movf(size, Address.from(operand, 0, index, ScaleFactor.from(size)), dst)
         } else if (dst is XmmRegister && operand is GPRegister && index is ImmInt) {
             asm.movf(size, Address.from(operand, index.value().toInt() * size), dst)
         } else if (dst is XmmRegister && operand is GPRegister && index is Address) {
             asm.mov(indexType.sizeOf(), index, temp1)
-            asm.movf(size, Address.from(operand, 0, temp1, size), dst)
+            asm.movf(size, Address.from(operand, 0, temp1, ScaleFactor.from(size)), dst)
         } else if (dst is XmmRegister && operand is Address && index is ImmInt) {
             asm.movf(size, operand.withOffset(index.value().toInt() * size), dst)
         } else {
@@ -36,12 +36,12 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        asm.mov(size, Address.from(first, 0, second, size), dst)
+        asm.mov(size, Address.from(first, 0, second, ScaleFactor.from(size)), dst)
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
         asm.mov(indexType.sizeOf(), second, temp1)
-        asm.mov(size, Address.from(first, 0, temp1, size), temp1)
+        asm.mov(size, Address.from(first, 0, temp1, ScaleFactor.from(size)), temp1)
         asm.mov(size, temp1, dst)
     }
 
@@ -55,7 +55,7 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
         asm.mov(indexType.sizeOf(), second, temp1)
-        asm.mov(size, Address.from(first, 0, temp1, size), dst)
+        asm.mov(size, Address.from(first, 0, temp1, ScaleFactor.from(size)), dst)
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
@@ -78,7 +78,7 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
         asm.mov(indexType.sizeOf(), second, temp1)
-        asm.mov(size, Address.from(first, 0, temp1, size), temp1)
+        asm.mov(size, Address.from(first, 0, temp1, ScaleFactor.from(size)), temp1)
         asm.mov(size, temp1, dst)
     }
 
@@ -109,14 +109,14 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
     override fun aar(dst: Address, first: Address, second: GPRegister) {
         TODO("untested")
         asm.mov(indexType.sizeOf(), first, temp1)
-        asm.mov(size, Address.from(temp1, 0, second, size), temp1)
+        asm.mov(size, Address.from(temp1, 0, second, ScaleFactor.from(size)), temp1)
         asm.mov(size, temp1, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
         asm.mov(indexType.sizeOf(), second, temp1)
         asm.mov(POINTER_SIZE, first, temp2)
-        asm.mov(size, Address.from(temp2, 0, temp1, size), temp1)
+        asm.mov(size, Address.from(temp2, 0, temp1, ScaleFactor.from(size)), temp1)
         asm.mov(size, temp1, dst)
     }
 

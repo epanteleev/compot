@@ -83,7 +83,7 @@ data class Movzx(val fromSize: Int, val toSize: Int, val src: Operand, val des: 
 
 data class Lea(val size: Int, val src: Operand, val des: Register): CPUInstruction {
     init {
-        assertion(Assembler.isScaleFactor(size)) {
+        assertion(ScaleFactor.isScaleFactor(size)) {
             "shoild be, but size=$size"
         }
     }
