@@ -15,12 +15,6 @@ class LiveIntervalsBuilder internal constructor(private val data: FunctionData):
     private val linearScanOrder = data.analysis(LinearScanOrderFabric)
     private val liveness        = data.analysis(LivenessAnalysisPassFabric)
 
-    init {
-        setupArguments()
-        setupLiveRanges()
-        evaluateUsages()
-    }
-
     private fun setupArguments() {
         val arguments = data.arguments()
         for ((index, arg) in arguments.withIndex()) {
@@ -76,22 +70,15 @@ class LiveIntervalsBuilder internal constructor(private val data: FunctionData):
         }
     }
 
-    private fun sortedByCreation(): Map<LocalValue, LiveRange> {
-        val pairList = intervals.toList().sortedBy { (_, value) -> value.begin().order }
-        val result = linkedMapOf<LocalValue, LiveRange>()
-        for ((k, v) in pairList) {
-            result[k] = v
-        }
-
-        return result
-    }
-
     override fun name(): String {
         return "LiveIntervals"
     }
 
     override fun run(): LiveIntervals {
-        return LiveIntervals(sortedByCreation())
+        setupArguments()
+        setupLiveRanges()
+        evaluateUsages()
+        return LiveIntervals(intervals)
     }
 }
 
