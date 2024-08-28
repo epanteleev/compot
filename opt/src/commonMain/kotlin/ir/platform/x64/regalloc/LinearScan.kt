@@ -112,10 +112,6 @@ class LinearScan private constructor(private val data: FunctionData, private val
     }
 
     companion object {
-        fun alloc(data: FunctionData): RegisterAllocation {
-            return alloc(data, data.liveness())
-        }
-
         fun alloc(data: FunctionData, liveRanges: LiveIntervals): RegisterAllocation {
             val linearScan = LinearScan(data, liveRanges)
             return linearScan.build()

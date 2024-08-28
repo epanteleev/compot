@@ -1,16 +1,14 @@
 package ir.module.builder.impl
 
-import ir.instruction.*
+import ir.types.*
+import ir.value.*
 import ir.module.*
+import ir.value.Value
+import ir.instruction.*
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.InstructionFabric
 import ir.module.builder.AnyFunctionDataBuilder
-import ir.types.*
-import ir.value.ArgumentValue
-import ir.value.IntegerConstant
-import ir.value.UnsignedIntegerConstant
-import ir.value.Value
 
 
 class FunctionDataBuilder private constructor(
