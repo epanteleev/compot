@@ -25,7 +25,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
         val arguments = data.arguments()
         for ((index, arg) in arguments.withIndex()) {
             val begin = OrderedLocation(data.begin(), -1, -(arguments.size - index))
-            intervals[arg] = LiveRangeImpl(begin, begin)
+            intervals[arg] = LiveRangeImpl(begin)
         }
     }
 
@@ -40,7 +40,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
 
                 /** New definition. */
                 val begin = OrderedLocation(bb, idx, ordering)
-                intervals[inst] = LiveRangeImpl(begin, begin)
+                intervals[inst] = LiveRangeImpl(begin)
             }
         }
     }

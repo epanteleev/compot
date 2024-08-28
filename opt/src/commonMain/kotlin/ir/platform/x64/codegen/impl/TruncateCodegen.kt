@@ -21,7 +21,7 @@ data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, v
             return
         }
         //TODO not correct
-        asm.mov(fromSize, src, dst)
+        asm.mov(toSize, src, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {

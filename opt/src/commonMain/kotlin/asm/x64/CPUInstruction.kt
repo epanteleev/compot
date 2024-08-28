@@ -108,6 +108,10 @@ data class Sub(val size: Int, val first: Operand, val second: Operand): Arithmet
 }
 
 data class iMull(val size: Int, val third: Imm32?, val first: Operand, val second: Operand): Arithmetic {
+    init {
+        if (third != null) assertion(size != 1) { "size=$size" }
+    }
+
     override fun toString(): String {
         val t = if (third != null) {
             " $third,"

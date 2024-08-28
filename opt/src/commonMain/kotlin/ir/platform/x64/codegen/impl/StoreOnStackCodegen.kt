@@ -95,13 +95,9 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
         TODO("Not yet implemented")
     }
 
-    override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        when (dst) {
-            is Address2 -> {
-                asm.mov(size, first, Address.from(dst.base, dst.offset + second.value().toInt() * size))
-            }
-            else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
-        }
+    override fun aii(dst: Address, first: Imm32, second: Imm32) = when (dst) {
+        is Address2 -> asm.mov(size, first, dst.withOffset(second.value().toInt() * size))
+        else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {

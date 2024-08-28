@@ -8,6 +8,7 @@ import common.forEachWith
 import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
+import ir.instruction.ValueInstruction
 import ir.pass.analysis.InterferenceGraphFabric
 import ir.pass.analysis.intervals.LiveIntervalsFabric
 import ir.types.NonTrivialType
@@ -88,13 +89,19 @@ class LinearScan private constructor(private val data: FunctionData) {
         if (neighbors == null) {
             return false
         }
+
         return neighbors.any { registerMap[it] == reg }
     }
 
     private fun pickOperandGroup(value: LocalValue) {
         val group = liveRangesGroup.getGroup(value)
         val neighbors = interferenceGraph.neighbors(value)
-        val operand = pool.allocSlot(value) { reg -> excludeIf(neighbors, reg) }
+        val operand = pool.allocSlot(value) { reg ->
+            if (value is ValueInstruction && value.owner().index == 2 && value.identity() == 32) {
+                println("here")
+            }
+            excludeIf(neighbors, reg)
+        }
         if (group == null) {
             registerMap[value] = operand
             active[value] = operand
