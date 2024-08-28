@@ -7,7 +7,7 @@ data class TypeInferenceException(override val message: String) : Exception(mess
 
 data class TypeResolutionException(override val message: String) : Exception(message)
 
-interface CType {
+sealed interface CType {
     fun qualifiers(): List<TypeProperty>
     fun size(): Int
     fun copyWith(extraProperties: List<TypeProperty>): CType
@@ -34,91 +34,99 @@ interface CType {
 
             when (type1) {
                 CHAR -> {
-                    when (type2) {
-                        INT -> return INT
-                        LONG -> return LONG
-                        ULONG -> return ULONG
-                        SHORT -> return SHORT
-                        UINT -> return UINT
-                        DOUBLE -> return DOUBLE
-                        FLOAT -> return FLOAT
+                    return when (type2) {
+                        INT -> INT
+                        LONG -> LONG
+                        ULONG -> ULONG
+                        SHORT -> SHORT
+                        UINT -> UINT
+                        DOUBLE -> DOUBLE
+                        FLOAT -> FLOAT
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
 
                 UCHAR -> {
-                    when (type2) {
-                        INT -> return INT
-                        LONG -> return LONG
-                        CHAR -> return UCHAR
-                        UINT -> return UINT
-                        DOUBLE -> return DOUBLE
-                        FLOAT -> return FLOAT
+                    return when (type2) {
+                        INT -> INT
+                        LONG -> LONG
+                        CHAR -> UCHAR
+                        UINT -> UINT
+                        DOUBLE -> DOUBLE
+                        FLOAT -> FLOAT
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
                 SHORT -> {
-                    when (type2) {
-                        INT -> return INT
-                        LONG -> return LONG
-                        CHAR -> return SHORT
-                        UINT -> return UINT
-                        DOUBLE -> return DOUBLE
-                        FLOAT -> return FLOAT
+                    return when (type2) {
+                        INT -> INT
+                        LONG -> LONG
+                        CHAR -> SHORT
+                        UINT -> UINT
+                        DOUBLE -> DOUBLE
+                        FLOAT -> FLOAT
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
 
                 INT -> {
-                    when (type2) {
-                        CHAR -> return INT
-                        UCHAR -> return INT
-                        LONG -> return LONG
-                        SHORT -> return INT
-                        UINT -> return UINT
-                        DOUBLE -> return DOUBLE
-                        FLOAT -> return FLOAT
+                    return when (type2) {
+                        CHAR -> INT
+                        UCHAR -> INT
+                        LONG -> LONG
+                        SHORT -> INT
+                        UINT -> UINT
+                        DOUBLE -> DOUBLE
+                        FLOAT -> FLOAT
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
 
                 LONG -> {
-                    when (type2) {
-                        CHAR -> return LONG
-                        INT -> return LONG
-                        SHORT -> return LONG
-                        UINT -> return UINT
-                        DOUBLE -> return DOUBLE
-                        FLOAT -> return FLOAT
+                    return when (type2) {
+                        CHAR -> LONG
+                        INT -> LONG
+                        SHORT -> LONG
+                        UINT -> UINT
+                        DOUBLE -> DOUBLE
+                        FLOAT -> FLOAT
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
 
                 FLOAT -> {
-                    when (type2) {
-                        CHAR -> return FLOAT
-                        INT -> return FLOAT
-                        SHORT -> return FLOAT
-                        UINT -> return FLOAT
-                        DOUBLE -> return DOUBLE
-                        LONG -> return DOUBLE
+                    return when (type2) {
+                        CHAR -> FLOAT
+                        INT -> FLOAT
+                        SHORT -> FLOAT
+                        UINT -> FLOAT
+                        DOUBLE -> DOUBLE
+                        LONG -> DOUBLE
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
 
                 DOUBLE -> {
-                    when (type2) {
-                        CHAR -> return DOUBLE
-                        INT -> return DOUBLE
-                        SHORT -> return DOUBLE
-                        UINT -> return DOUBLE
-                        FLOAT -> return DOUBLE
-                        LONG -> return DOUBLE
+                    return when (type2) {
+                        CHAR -> DOUBLE
+                        INT -> DOUBLE
+                        SHORT -> DOUBLE
+                        UINT -> DOUBLE
+                        FLOAT -> DOUBLE
+                        LONG -> DOUBLE
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
 
                 USHORT -> {
-                    when (type2) {
-                        INT -> return INT
-                        LONG -> return LONG
-                        CHAR -> return USHORT
-                        UINT -> return UINT
-                        DOUBLE -> return DOUBLE
-                        FLOAT -> return FLOAT
+                    return when (type2) {
+                        INT -> INT
+                        LONG -> LONG
+                        CHAR -> USHORT
+                        UINT -> UINT
+                        DOUBLE -> DOUBLE
+                        FLOAT -> FLOAT
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
 
@@ -133,19 +141,20 @@ interface CType {
                         INT -> return UINT
                         DOUBLE -> return DOUBLE
                         FLOAT -> return FLOAT
-                        else -> throw RuntimeException("Unknown type $type1, $type2")
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
 
                 ULONG -> {
-                    when (type2) {
-                        CHAR -> return ULONG
-                        INT -> return ULONG
-                        LONG -> return ULONG
-                        SHORT -> return ULONG
-                        UINT -> return ULONG
-                        DOUBLE -> return DOUBLE
-                        FLOAT -> return FLOAT
+                    return when (type2) {
+                        CHAR -> ULONG
+                        INT -> ULONG
+                        LONG -> ULONG
+                        SHORT -> ULONG
+                        UINT -> ULONG
+                        DOUBLE -> DOUBLE
+                        FLOAT -> FLOAT
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
 
@@ -162,6 +171,7 @@ interface CType {
                             if (type1.type == VOID) return type1
                             if (type2.type == VOID) return type2
                         }
+                        else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
 
@@ -172,7 +182,7 @@ interface CType {
     }
 }
 
-interface AnyCPointerType: CType {
+sealed interface AnyCPointerType: CType {
     override fun size(): Int = POINTER_SIZE //TODO must be imported from x64 module
 }
 
@@ -297,11 +307,11 @@ class CFunctionType(val name: String, val functionType: AbstractCFunctionType) :
     }
 }
 
-abstract class CompoundType(protected open val properties: List<TypeProperty>) : CType { //TODO
+sealed class CompoundType(protected open val properties: List<TypeProperty>) : CType { //TODO
     override fun qualifiers(): List<TypeProperty> = properties
 }
 
-abstract class CommonCArrayType(properties: List<TypeProperty>): CompoundType(properties) {
+sealed class CommonCArrayType(properties: List<TypeProperty>): CompoundType(properties) {
     abstract fun element(): CType
 
     abstract fun hasUncompleted(): Boolean
@@ -393,7 +403,7 @@ class UncompletedArrayType(private val elementType: CType, override val properti
     }
 }
 
-abstract class CBaseStructType(protected open val baseType: AnyStructType, override val properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
+sealed class CBaseStructType(protected open val baseType: AnyStructType, override val properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
     override fun toString(): String {
         return buildString {
             properties.forEach { append("$it ") }

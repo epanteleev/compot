@@ -5,8 +5,8 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
     override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
         get() {
             val keyToValue = hashSetOf<IntMapEntry<K, V>>()
-            keys.forEachWith(values) { k, v ->
-                if (k == null || v == null) {
+            keysArray.forEachWith(valuesArray) { k, v ->
+                if (k == null) {
                     return@forEachWith
                 }
 
@@ -26,7 +26,7 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
         }
 
     override val size: Int
-        get() = valuesArray.size
+        get() = keysArray.count { it != null }
 
     override val values: MutableCollection<V>
         get() = valuesArray.fold(arrayListOf()) { acc, v ->
@@ -41,11 +41,12 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
         keysArray.fill(null)
     }
 
-    override fun isEmpty(): Boolean = valuesArray.find { it != null } != null
+    override fun isEmpty(): Boolean = valuesArray.all { it == null }
 
     override fun remove(key: K): V? {
         val idx = closure(key)
-        if (idx >= valuesArray.size || idx < 0) {
+        checkBounds(idx)
+        if (keysArray[idx] != key) {
             return null
         }
         val item = valuesArray[idx]
@@ -62,9 +63,7 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
 
     override fun put(key: K, value: V): V? {
         val idx = closure(key)
-        if (idx >= valuesArray.size || idx < 0) {
-            return null
-        }
+        checkBounds(idx)
         val item = valuesArray[idx]
         valuesArray[idx] = value
         keysArray[idx] = key
@@ -73,9 +72,7 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
 
     override fun get(key: K): V? {
         val idx = closure(key)
-        if (idx >= valuesArray.size || idx < 0) {
-            return null
-        }
+        checkBounds(idx)
         if (keysArray[idx] != key) {
             return null
         }
@@ -88,8 +85,7 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
     }
 
     override fun containsKey(key: K): Boolean {
-        val idx = closure(key)
-        return 0 < idx && idx < keysArray.size && keysArray[idx] == key
+        return keysArray.contains(key)
     }
 
     override fun toString(): String {
@@ -102,20 +98,15 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
         return builder.toString()
     }
 
+    private fun checkBounds(idx: Int) {
+        if (idx >= valuesArray.size || idx < 0) {
+            throw IndexOutOfBoundsException("Index $idx is out of bounds")
+        }
+    }
+
     private data class IntMapEntry<K, V>(override val key: K, override var value: V?) : Map.Entry<K, V?>
 }
 
-inline fun <reified K, reified T> intMapOf(values: Collection<K>, noinline closure: (K) -> Int): MutableMap<K, T> {
-    // todo fix int map
-    val hashMap = hashMapOf<K, T>()
-    for (v in values) {
-        hashMap[v] = closure(v) as T
-    }
-    return hashMap
-}
-
 inline fun <reified K, reified T> intMapOf(size: Int, noinline closure: (K) -> Int): MutableMap<K, T> {
-    // todo fix int map
-    //return IntMap(arrayOfNulls<T>(size), arrayOfNulls<K>(size), closure)
-    return hashMapOf()
+    return IntMap(arrayOfNulls<T>(size), arrayOfNulls<K>(size), closure)
 }

@@ -36,7 +36,7 @@ object LexicalElements {
     val operators2 = allSymbols.filter { it.length == 2 }
     val operators3 = allSymbols.filter { it.length == 3 }
 
-    fun isOperator2(ch1: Char, ch2: Char): Boolean {
+    fun isOperator2(ch1: Char, ch2: Char): Boolean { //TODO remove
         for (operator in operators2) {
             if (operator[0] == ch1 && operator[1] == ch2) {
                 return true
@@ -45,7 +45,7 @@ object LexicalElements {
         return false
     }
 
-    fun isOperator3(ch1: Char, ch2: Char, ch3: Char): Boolean {
+    fun isOperator3(ch1: Char, ch2: Char, ch3: Char): Boolean { //TODO remove
         for (operator in operators3) {
             if (operator[0] == ch1 && operator[1] == ch2 && operator[2] == ch3) {
                 return true

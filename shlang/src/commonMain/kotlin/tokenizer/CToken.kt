@@ -4,7 +4,7 @@ import common.LListNode
 import common.assertion
 
 
-abstract class AnyToken: LListNode() {
+sealed class AnyToken: LListNode() {
     abstract fun str(): String
 
     abstract fun cloneWith(pos: Position): AnyToken
@@ -18,7 +18,7 @@ abstract class AnyToken: LListNode() {
     }
 }
 
-abstract class PreprocessorGuard(val filename: String, val includeLevel: Int, val line: Int): AnyToken()
+sealed class PreprocessorGuard(val filename: String, val includeLevel: Int, val line: Int): AnyToken()
 
 class EnterIncludeGuard(filename: String, includeLevel: Int, line: Int): PreprocessorGuard(filename, includeLevel, line) {
     override fun str(): String = "#enter[$includeLevel] $filename in $line\n"
@@ -36,7 +36,7 @@ class ExitIncludeGuard(filename: String, includeLevel: Int, line: Int): Preproce
     }
 }
 
-abstract class AnySpaceToken: AnyToken()
+sealed class AnySpaceToken: AnyToken()
 
 class Indent private constructor(private val spaces: Int): AnySpaceToken() {
     private val data by lazy { " ".repeat(spaces) }
@@ -77,7 +77,7 @@ class NewLine private constructor(private val spaces: Int): AnySpaceToken() {
     }
 }
 
-abstract class CToken(private val position: Position): AnyToken() {
+sealed class CToken(private val position: Position): AnyToken() {
     fun line(): Int = position.line()
     fun pos(): Int = position.pos()
 

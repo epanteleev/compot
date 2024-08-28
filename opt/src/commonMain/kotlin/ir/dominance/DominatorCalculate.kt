@@ -7,7 +7,7 @@ import ir.module.block.Label
 
 
 interface DominatorCalculate {
-    fun initializeDominator(length: Int): MutableMap<Int, Int> {
+    private fun initializeDominator(length: Int): MutableMap<Int, Int> {
         val dominators = intMapOf<Int, Int>(length) { it }
 
         for (idx in 0 until length) {
@@ -21,7 +21,7 @@ interface DominatorCalculate {
         return dominators
     }
 
-    fun intersect(postDominators: Map<Int, Int>, _finger1: Int, _finger2: Int): Int {
+    private fun intersect(postDominators: Map<Int, Int>, _finger1: Int, _finger2: Int): Int {
         var finger1 = _finger1
         var finger2 = _finger2
 
@@ -38,8 +38,8 @@ interface DominatorCalculate {
         return finger1
     }
 
-    fun indexBlocks(blocksOrder: List<AnyBlock>): Map<AnyBlock, Int> {
-        val blockToIndex = intMapOf<AnyBlock, Int>(blocksOrder) { it : Label -> it.index }
+    private fun indexBlocks(blocksOrder: List<AnyBlock>): Map<AnyBlock, Int> {
+        val blockToIndex = intMapOf<AnyBlock, Int>(blocksOrder.size) { it : Label -> it.index }
         for ((idx, bb) in blocksOrder.withIndex()) {
             blockToIndex[bb] = idx
         }
@@ -47,7 +47,7 @@ interface DominatorCalculate {
         return blockToIndex
     }
 
-    fun evaluateIdom(dominators: Map<Int, Int>, incomingMap: Map<Int, List<Int>>, idx: Int): Int {
+    private fun evaluateIdom(dominators: Map<Int, Int>, incomingMap: Map<Int, List<Int>>, idx: Int): Int {
         val incoming = incomingMap[idx]!!
 
         val definedSuccessors = incoming.filter { dominators[it] != UNDEFINED }
@@ -56,10 +56,10 @@ interface DominatorCalculate {
         }
     }
 
-    fun enumerationToIdomMap(blocks: List<AnyBlock>, indexToBlock: Map<Int, AnyBlock>, dominators: MutableMap<Int, Int>): Map<AnyBlock, AnyBlock> {
+    private fun enumerationToIdomMap(blocks: List<AnyBlock>, indexToBlock: Map<Int, AnyBlock>, dominators: MutableMap<Int, Int>): Map<AnyBlock, AnyBlock> {
         dominators.remove(blocks.size - 1)
 
-        val dominatorTree = hashMapOf<AnyBlock, AnyBlock>()
+        val dominatorTree = intMapOf<AnyBlock, AnyBlock>(blocks.size) { l: Label -> l.index }
         for (entry in dominators) {
             dominatorTree[indexToBlock[entry.key]!!] = indexToBlock[entry.value]!!
         }
@@ -72,7 +72,7 @@ interface DominatorCalculate {
     fun blockOrdering(basicBlocks: BasicBlocks): List<AnyBlock>
 
     fun evalIndexToBlock(blockToIndex: Map<AnyBlock, Int>): Map<Int, AnyBlock> {
-        val indexToBlock = hashMapOf<Int, AnyBlock>()
+        val indexToBlock = intMapOf<Int, AnyBlock>(blockToIndex.size) { it }
         for ((key, value) in blockToIndex) {
             indexToBlock[value] = key
         }
