@@ -51,7 +51,7 @@ interface InstructionFabric {
 
 interface InternalInstructionFabric {
     fun gen(ty: NonTrivialType): Generate
-    fun lea(generate: Value): Lea
+    fun lea(source: Value): Lea
     fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi
     fun copy(value: Value): Copy
     fun move(dst: Generate, fromValue: Value): Move

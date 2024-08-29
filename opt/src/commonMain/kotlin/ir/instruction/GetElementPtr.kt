@@ -22,7 +22,7 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
             "size should be 2 in $this instruction"
         }
 
-        return operands[0]
+        return operands[SOURCE]
     }
 
     fun index(): Value {
@@ -30,7 +30,7 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
             "size should be 2 in $this instruction"
         }
 
-        return operands[1]
+        return operands[INDEX]
     }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
@@ -38,6 +38,8 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
     }
 
     companion object {
+        const val SOURCE = 0
+        const val INDEX  = 1
         const val NAME = "gep"
 
         fun make(id: Identity, owner: Block, elementType: NonTrivialType, source: Value, index: Value): GetElementPtr {

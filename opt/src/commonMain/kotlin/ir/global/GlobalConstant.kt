@@ -190,6 +190,10 @@ class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, 
         return "\"$string\""
     }
 
+    fun isEmpty(): Boolean {
+        return string.isNullOrEmpty()
+    }
+
     override fun elements(): InitializerListValue {
         if (string == null) {
             return InitializerListValue(ArrayType(Type.I8, 0), emptyList())
