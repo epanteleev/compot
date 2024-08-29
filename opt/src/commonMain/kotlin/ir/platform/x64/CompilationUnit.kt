@@ -6,7 +6,10 @@ import ir.global.*
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.MacroAssembler
 
-
+// Using as
+// The GNU Assembler
+//
+// https://ftp.gnu.org/old-gnu/Manuals/gas-2.9.1/html_node/as_toc.html
 class CompilationUnit: CompiledModule() {
     private val functions = arrayListOf<MacroAssembler>()
     private val symbols = hashMapOf<String, ObjSymbol>()
@@ -58,6 +61,9 @@ class CompilationUnit: CompiledModule() {
 
         val constant = globalValue.data
         if (constant is StringLiteralGlobalConstant) {
+            if (constant.isEmpty()) {
+                return ObjSymbol(globalValue.name(), listOf("0"), listOf(SymbolType.Byte))
+            }
             return ObjSymbol(globalValue.name(), listOf(constant.name()), listOf(SymbolType.Quad))
         }
 

@@ -455,8 +455,8 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@df withOutput { Generate.make(it, this, ty) }
     }
 
-    override fun lea(generate: Value): Lea = mc.df {
-        return@df withOutput { Lea.make(it, this, generate) }
+    override fun lea(source: Value): Lea = mc.df {
+        return@df withOutput { Lea.make(it, this, source) }
     }
 
     fun uncompletedPhi(incomingType: PrimitiveType, incoming: List<Value>, labels: List<Block>): Phi = mc.df {

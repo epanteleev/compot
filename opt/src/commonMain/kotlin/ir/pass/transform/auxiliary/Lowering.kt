@@ -269,7 +269,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     bb.updateDF(inst, VALUE, lea)
                     return inst
                 }
-                store(gValue(primitive()), nop()) (inst) -> { inst as Store
+                store(gValue(primitive()), nop()) (inst) -> { inst as Store //TODO inefficient lowering
                     // Before:
                     //  %res = store i8 @global, %ptr
                     //
@@ -277,11 +277,11 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     //  %lea = lea @global
                     //  %res = store i8 %val, %lea
 
-                    val lea = bb.insertBefore(inst) { it.lea(inst.pointer().asValue()) } //TODO inefficient lowering
+                    val lea = bb.insertBefore(inst) { it.lea(inst.pointer().asValue()) }
                     bb.updateDF(inst, Store.DESTINATION, lea)
                     return lea
                 }
-                inst is Value && gfp(gValue(anytype())) (inst) -> { inst as GetFieldPtr
+                inst is Value && gfp(gValue(anytype())) (inst) -> { inst as GetFieldPtr //TODO inefficient lowering
                     // Before:
                     //  %res = gfp @global, %idx
                     //
@@ -291,6 +291,18 @@ class Lowering private constructor(private val cfg: FunctionData) {
 
                     val lea = bb.insertBefore(inst) { it.lea(inst.source().asValue()) }
                     bb.updateDF(inst, GetFieldPtr.SOURCE, lea)
+                    return lea
+                }
+                inst is Value && gep(gValue(anytype()), nop()) (inst) -> { inst as GetElementPtr //TODO inefficient lowering
+                    // Before:
+                    //  %res = gep @global, %idx
+                    //
+                    // after:
+                    //  %lea = lea @global
+                    //  %res = gep %lea, %idx
+
+                    val lea = bb.insertBefore(inst) { it.lea(inst.source().asValue()) }
+                    bb.updateDF(inst, GetElementPtr.SOURCE, lea)
                     return lea
                 }
                 copy(generate()) (inst) -> { inst as Copy

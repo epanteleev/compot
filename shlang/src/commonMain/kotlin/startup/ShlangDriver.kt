@@ -27,7 +27,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
 
     private fun initializePreprocessorContext(): PreprocessorContext {
         val pwd = pwd()
-        val includeDirectories = cli.getIncludeDirectories() + SYSTEM_HEADERS_PATH
+        val includeDirectories = cli.getIncludeDirectories() + SYSTEM_HEADERS_PATH + GNU_LINUX_SYSTEM_HEADERS_PATH
         val headerHolder       = FileHeaderHolder(pwd, includeDirectories)
 
         val ctx = PreprocessorContext.empty(headerHolder)
@@ -81,5 +81,6 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
 
     companion object {
         const val SYSTEM_HEADERS_PATH = "/usr/include"
+        const val GNU_LINUX_SYSTEM_HEADERS_PATH = "/usr/include/x86_64-linux-gnu" // Ubuntu
     }
 }
