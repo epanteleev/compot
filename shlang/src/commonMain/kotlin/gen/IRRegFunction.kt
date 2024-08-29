@@ -1234,8 +1234,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
         if (type.storageClass() == StorageClass.STATIC) {
-            val constant = GlobalConstant.zero(varName, irType)
-            val global = mb.addGlobal(varName, constant, GlobalValueAttribute.INTERNAL)
+            val constant = Constant.zero(irType)
+            val global = mb.addGlobal(varName, irType, constant, GlobalValueAttribute.INTERNAL)
             varStack[varName] = global
             return global
         }
@@ -1285,9 +1285,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val type = typeHolder[initDeclarator.name()]
         if (type.storageClass() == StorageClass.STATIC) {
             val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
-            val constant = tryMakeGlobalConstant(irType, initDeclarator.rvalue) ?: throw IRCodeGenError("Unknown constant")
+            val constant = constEvalExpression(irType, initDeclarator.rvalue) ?: throw IRCodeGenError("Unknown constant")
             val varName = initDeclarator.name()
-            val global = mb.addGlobal(varName, constant, GlobalValueAttribute.INTERNAL)
+            val global = mb.addGlobal(varName, irType, constant, GlobalValueAttribute.INTERNAL)
             varStack[varName] = global
             return global
         }

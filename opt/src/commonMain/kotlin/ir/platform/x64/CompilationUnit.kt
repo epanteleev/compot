@@ -5,6 +5,7 @@ import ir.value.*
 import ir.global.*
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.MacroAssembler
+import ir.types.*
 
 // Using as
 // The GNU Assembler
@@ -12,12 +13,15 @@ import ir.platform.x64.codegen.MacroAssembler
 // https://ftp.gnu.org/old-gnu/Manuals/gas-2.9.1/html_node/as_toc.html
 class CompilationUnit: CompiledModule() {
     private val functions = arrayListOf<MacroAssembler>()
-    private val symbols = hashMapOf<String, ObjSymbol>()
+    private val symbols = hashMapOf<String, AnyObjSymbol>()
+    private var nameCounter = 0
 
-    private fun addSymbol(objSymbol: ObjSymbol) {
-        val has = symbols.put(objSymbol.name, objSymbol)
+    private fun newName() = ".loc.constant.${nameCounter++}"
+
+    private fun addSymbol(objSymbol: AnyObjSymbol) {
+        val has = symbols.put(objSymbol.name(), objSymbol)
         if (has != null) {
-            throw IllegalArgumentException("symbol with name='${objSymbol.name}' already exists: old='$has', new='$objSymbol'")
+            throw IllegalArgumentException("symbol with name='${objSymbol.name()}' already exists: old='$has', new='$objSymbol'")
         }
     }
 
@@ -28,14 +32,18 @@ class CompilationUnit: CompiledModule() {
     }
 
     private fun makeAggregateConstant(globalValue: AnyAggregateGlobalConstant): ObjSymbol {
+        return makeAggregateConstant(globalValue.name(), globalValue.elements())
+    }
+
+    private fun makeAggregateConstant(name: String, initializer: InitializerListValue): ObjSymbol {
         val types = arrayListOf<SymbolType>()
         val data = arrayListOf<String>()
-        for (e in globalValue.elements().linearize()) {
-            types.add(convertToSymbolType(e))
+        for (e in initializer.linearize()) {
+            types.addAll(convertToSymbolType(e))
             data.add(e.data())
         }
 
-        return ObjSymbol(globalValue.name(), data, types)
+        return ObjSymbol(name, data, types)
     }
 
     fun mkConstant(globalValue: GlobalConstant) = when (globalValue) {
@@ -43,7 +51,7 @@ class CompilationUnit: CompiledModule() {
             addSymbol(ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(SymbolType.StringLiteral)))
         }
         is AggregateGlobalConstant -> addSymbol(makeAggregateConstant(globalValue))
-        else -> addSymbol(ObjSymbol(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue)))
+        else -> addSymbol(ObjSymbol(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue.constant())))
     }
 
     fun makeGlobal(globalValue: AnyGlobalValue) {
@@ -53,67 +61,128 @@ class CompilationUnit: CompiledModule() {
         }
     }
 
-    private fun convertGlobalValueToSymbolType(globalValue: AnyGlobalValue): ObjSymbol? {
+    private fun convertGlobalValueToSymbolType(globalValue: AnyGlobalValue): AnyObjSymbol? {
         if (globalValue is ExternValue) {
             return null
         }
         globalValue as GlobalValue
 
-        val constant = globalValue.data
-        if (constant is StringLiteralGlobalConstant) {
-            if (constant.isEmpty()) {
-                return ObjSymbol(globalValue.name(), listOf("0"), listOf(SymbolType.Byte))
+        when (val type = globalValue.contentType()) {
+            is StructType -> {
+                val constant = globalValue.initializer() as InitializerListValue
+                val symbolType = convertToSymbolType(constant)
+                val data = constant.linearize().map { it.data() }
+
+                return ObjSymbol(globalValue.name(), data, symbolType)
             }
-            return ObjSymbol(globalValue.name(), listOf(constant.name()), listOf(SymbolType.Quad))
-        }
+            is ArrayType -> {
+                when (val constant = globalValue.initializer()) {
+                    is InitializerListValue -> {
+                        val symbolType = convertToSymbolType(type)
+                        val data = constant.linearize().map { it.data() }
+                        return ObjSymbol(globalValue.name(), data, symbolType)
+                    }
+                    is StringLiteralConstant -> {
+                        val initializerName = newName()
+                        val initializer = ObjSymbol(initializerName, listOf(constant.data()), listOf(SymbolType.StringLiteral))
+                        addSymbol(initializer)
+                        val init = arrayListOf<String>()
+                        var i = 0
+                        for (c in constant.data()) {
+                            init.add(initializerName)
+                            i += 1
+                        }
 
-        val symbolType = convertToSymbolType(constant)
-        if (constant is AggregateGlobalConstant) {
-            val data = constant.elements().linearize().map { it.data() }
+                        for (j in i until type.length) {
+                            init.add("\\000")
+                        }
 
-            return ObjSymbol(globalValue.name(), data, symbolType)
-        } else {
-            return ObjSymbol(globalValue.name(), listOf(globalValue.data()), symbolType)
+                        return ObjSymbol(globalValue.name(), listOf(initializerName), listOf(SymbolType.Asciiz))
+                    }
+                    else -> throw IllegalArgumentException("unsupported constant type: $constant")
+                }
+            }
+            else -> {
+                val initializer = globalValue.initializer()
+                val symbolType = convertToSymbolType(initializer)
+                return when (initializer) {
+                    is InitializerListValue -> {
+                        val initConstant = makeAggregateConstant(newName(), initializer)
+                        addSymbol(initConstant)
+                        ObjSymbol(globalValue.name(), listOf(initConstant.name()), symbolType)
+                    }
+                    is StringLiteralConstant -> {
+                        val initConstant = ObjSymbol(newName(), listOf(initializer.data()), listOf(SymbolType.StringLiteral))
+                        addSymbol(initConstant)
+                        ObjSymbol(globalValue.name(), listOf(initConstant.name()), listOf(SymbolType.Quad))
+                    }
+                    else -> ObjSymbol(globalValue.name(), listOf(globalValue.data()), symbolType)
+                }
+            }
         }
     }
 
-    private fun convertToSymbolType(globalValue: GlobalConstant): List<SymbolType> {
-        val symType = when (globalValue) {
-            is StringLiteralGlobalConstant -> SymbolType.StringLiteral
-            is I64ConstantValue -> SymbolType.Quad
-            is U64ConstantValue -> SymbolType.Quad
-            is I32ConstantValue -> SymbolType.Long
-            is U32ConstantValue -> SymbolType.Long
-            is I16ConstantValue -> SymbolType.Short
-            is U16ConstantValue -> SymbolType.Short
-            is I8ConstantValue  -> SymbolType.Byte
-            is U8ConstantValue  -> SymbolType.Byte
-            is F32ConstantValue -> SymbolType.Long
-            is F64ConstantValue -> SymbolType.Quad
-            is PointerConstant  -> SymbolType.Quad
+    private fun convertToSymbolType(type: NonTrivialType): List<SymbolType> {
+        val t = when (type) {
+            Type.I64 -> SymbolType.Quad
+            Type.U64 -> SymbolType.Quad
+            Type.I32 -> SymbolType.Long
+            Type.U32 -> SymbolType.Long
+            Type.I16 -> SymbolType.Short
+            Type.U16 -> SymbolType.Short
+            Type.I8  -> SymbolType.Byte
+            Type.U8  -> SymbolType.Byte
+            Type.F32 -> SymbolType.Long
+            Type.F64 -> SymbolType.Quad
+            Type.Ptr -> SymbolType.Quad
             else -> null
         }
-        if (symType != null) {
-            return listOf(symType)
+
+        if (t != null) {
+            return listOf(t)
         }
-        globalValue as AnyAggregateGlobalConstant
-        return globalValue.elements().linearize().map { convertToSymbolType(it) }
+
+        when (type) {
+            is AggregateType -> {
+                val types = arrayListOf<SymbolType>()
+                for (f in type.fields()) {
+                    types.addAll(convertToSymbolType(f))
+                }
+                return types
+            }
+            else -> throw IllegalArgumentException("unsupported type: $type")
+        }
     }
 
-    private fun convertToSymbolType(globalValue: Constant): SymbolType {
-        return when (globalValue) {
-            is I64Value -> SymbolType.Quad
-            is U64Value -> SymbolType.Quad
-            is I32Value -> SymbolType.Long
-            is U32Value -> SymbolType.Long
-            is I16Value -> SymbolType.Short
-            is U16Value -> SymbolType.Short
-            is I8Value  -> SymbolType.Byte
-            is U8Value  -> SymbolType.Byte
-            is F32Value -> SymbolType.Long
-            is F64Value -> SymbolType.Quad
-            is NullValue -> SymbolType.Quad
-            else -> throw RuntimeException("unknown globals value: globalvalue=$globalValue:${globalValue.type()}")
+    private fun convertToSymbolType(globalValue: Constant): List<SymbolType> {
+        val sym = when (globalValue.type()) {
+            Type.I64 -> SymbolType.Quad
+            Type.U64 -> SymbolType.Quad
+            Type.I32 -> SymbolType.Long
+            Type.U32 -> SymbolType.Long
+            Type.I16 -> SymbolType.Short
+            Type.U16 -> SymbolType.Short
+            Type.I8  -> SymbolType.Byte
+            Type.U8  -> SymbolType.Byte
+            Type.F32 -> SymbolType.Long
+            Type.F64 -> SymbolType.Quad
+            Type.Ptr -> SymbolType.Quad
+            else -> null
+        }
+        if (sym != null) {
+            return listOf(sym)
+        }
+
+        when (globalValue) {
+            is StringLiteralConstant -> return listOf(SymbolType.StringLiteral)
+            is InitializerListValue -> {
+                val types = arrayListOf<SymbolType>()
+                for (e in globalValue.linearize()) {
+                    types.addAll(convertToSymbolType(e))
+                }
+                return types
+            }
+            else -> throw IllegalArgumentException("unsupported constant type: $globalValue")
         }
     }
 

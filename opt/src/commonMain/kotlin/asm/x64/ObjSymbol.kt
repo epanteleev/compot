@@ -1,7 +1,8 @@
 package asm.x64
 
-import common.assertion
-import common.forEachWith
+sealed class AnyObjSymbol {
+    abstract fun name(): String
+}
 
 enum class SymbolType {
     StringLiteral {
@@ -28,20 +29,42 @@ enum class SymbolType {
         override fun toString(): String {
             return ".byte"
         }
+    },
+    Asciiz {
+        override fun toString(): String {
+            return ".asciiz"
+        }
     }
 }
 
-data class ObjSymbol(val name: String, val data: List<String>, val type: List<SymbolType>) {
-    init {
-        assertion(data.size == type.size) { "invariant" }
+class ObjSymbol(val name: String, val data: List<String>, val type: List<SymbolType>): AnyObjSymbol() {
+
+    override fun name(): String {
+        return name
     }
 
     override fun toString(): String {
         val stringBuilder = StringBuilder()
         stringBuilder.append("$name:\n")
-        data.forEachWith(type) { d, t ->
+        var i = 0
+        for (d in data) {
+            val t = type[i]
             stringBuilder.append("\t$t $d\n")
+            i++
+        }
+        for (i in i until type.size) {
+            stringBuilder.append("\t${type[i]} 0\n")
         }
         return stringBuilder.toString()
+    }
+}
+
+class CommSymbol(val name: String, val size: Int): AnyObjSymbol() {
+    override fun name(): String {
+        return name
+    }
+
+    override fun toString(): String {
+        return ".comm $name, $size, 32"
     }
 }

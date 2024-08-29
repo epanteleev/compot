@@ -10,6 +10,7 @@ import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
 import ir.value.Constant
+import ir.value.InitializerListValue
 
 
 data class IRCodeGenError(override val message: String) : Exception(message)
@@ -46,8 +47,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         val value = if (type.storageClass() == StorageClass.EXTERN) {
             mb.addExternValue(name, irType)
         } else {
-            val constant = GlobalConstant.of(createGlobalConstantName(), irType, 0)
-            mb.addGlobal(name, constant)
+            val constant = Constant.of(irType, 0)
+            mb.addGlobal(name, irType, constant)
         }
         varStack[name] = value
     }
@@ -76,8 +77,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 }
                 val zero = Constant.of(irType.elementType(), 0 )
                 val elements = generateSequence { zero }.take(irType.length).toList()
-                val constant = ArrayGlobalConstant(createGlobalConstantName(), irType, elements)
-                varStack[name] = mb.addGlobal(name, constant)
+                val constant = InitializerListValue(irType, elements)
+                varStack[name] = mb.addGlobal(name, irType, constant)
             }
             is CStructType -> {
                 val irType = mb.toIRType<StructType>(typeHolder, type)
@@ -90,8 +91,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                     val zero = Constant.of(mb.toIRType<NonTrivialType>(typeHolder, field.second), 0)
                     elements.add(zero)
                 }
-                val constant = StructGlobalConstant(createGlobalConstantName(), irType, elements)
-                varStack[name] = mb.addGlobal(name, constant)
+                val constant = InitializerListValue(irType, elements)
+                varStack[name] = mb.addGlobal(name, irType, constant)
             }
             else -> throw IRCodeGenError("Function or struct expected, but was '$type'")
         }
@@ -105,9 +106,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             varStack[decl.name()] = mb.addExternValue(decl.name(), lValueType)
             return
         }
-        val result = tryMakeGlobalConstant(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
-        val constant = mb.addConstant(result)
-        val global   = mb.addGlobal(createGlobalConstantName(), constant)
+        val constant = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
+        val global   = mb.addGlobal(createGlobalConstantName(), lValueType, constant)
         varStack[decl.name()] = global
     }
 

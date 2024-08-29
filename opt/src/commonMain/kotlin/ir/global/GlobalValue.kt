@@ -2,20 +2,19 @@ package ir.global
 
 import ir.attributes.GlobalValueAttribute
 import ir.types.*
+import ir.value.Constant
 
 
-class GlobalValue internal constructor(val name: String, val data: GlobalConstant, private val attribute: GlobalValueAttribute): AnyGlobalValue {
-    init {
-        require(data.type() is PrimitiveType) {
-            "GlobalValue data must be a PrimitiveType, but was '${data.type()}'"
-        }
-    }
+class GlobalValue internal constructor(val name: String, private val type: NonTrivialType, private val init: Constant, private val attribute: GlobalValueAttribute): AnyGlobalValue {
+    fun initializer(): Constant = init
 
     override fun name(): String = name
 
     override fun dump(): String {
-        return "@$name = global ${data.type()} ${data.data()} !$attribute"
+        return "@$name = global $type ${init.data()} !$attribute"
     }
+
+    fun contentType(): NonTrivialType = type
 
     override fun type(): PointerType = Type.Ptr
 
@@ -37,6 +36,6 @@ class GlobalValue internal constructor(val name: String, val data: GlobalConstan
     }
 
     fun data(): String {
-        return data.data()
+        return init.data()
     }
 }

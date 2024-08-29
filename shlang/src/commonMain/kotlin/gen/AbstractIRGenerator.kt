@@ -6,6 +6,7 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.types.*
 import ir.value.Constant
 import ir.value.InitializerListValue
+import ir.value.StringLiteralConstant
 import parser.nodes.Expression
 import parser.nodes.InitializerList
 import parser.nodes.SingleInitializer
@@ -25,7 +26,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return tryMakeGlobalAggregateConstant(lValueType, expr)
     }
 
-    private fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): Constant? {
+    protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): Constant? {
         val result = constEvalExpression0(expr)
         if (result != null) {
             return Constant.of(lValueType, result)
@@ -33,6 +34,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return when (expr) {
             is InitializerList   -> constEvalInitializers(lValueType, expr)
             is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
+            is StringNode        -> StringLiteralConstant(expr.data())
             else -> throw IRCodeGenError("Unsupported expression $expr")
         }
     }

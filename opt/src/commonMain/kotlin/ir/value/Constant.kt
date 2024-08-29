@@ -4,12 +4,7 @@ import ir.types.*
 
 
 sealed interface Constant: Value {
-    fun data(): String = when (this) {
-        is NullValue -> "0"
-        is F32Value -> f32.toBits().toString()
-        is F64Value -> f64.toBits().toString()
-        else -> toString()
-    }
+    fun data(): String
 
     override fun type(): NonTrivialType
 
@@ -66,6 +61,22 @@ sealed interface Constant: Value {
         fun from(type: AggregateType, elements: List<Constant>): Constant {
             return InitializerListValue(type, elements)
         }
+
+        fun zero(kind: NonTrivialType): Constant = when (kind) {
+            Type.I8  -> I8Value(0)
+            Type.U8  -> U8Value(0)
+            Type.I16 -> I16Value(0)
+            Type.U16 -> U16Value(0)
+            Type.I32 -> I32Value(0)
+            Type.U32 -> U32Value(0)
+            Type.I64 -> I64Value(0)
+            Type.U64 -> U64Value(0)
+            Type.F32 -> F32Value(0.0f)
+            Type.F64 -> F64Value(0.0)
+            Type.Ptr -> NullValue.NULLPTR
+            is AggregateType -> InitializerListValue.zero(kind)
+            else -> throw RuntimeException("Cannot create zero constant: kind=$kind")
+        }
     }
 }
 
@@ -73,6 +84,8 @@ class BoolValue private constructor(val bool: Boolean): Constant {
     override fun type(): NonTrivialType {
         return Type.U1
     }
+
+    override fun data(): String = toString()
 
     override fun toString(): String {
         return bool.toString()
@@ -92,6 +105,8 @@ class NullValue private constructor(): Constant {
     override fun type(): NonTrivialType {
         return Type.Ptr
     }
+
+    override fun data(): String = "0"
 
     override fun toString(): String {
         return "null"
@@ -127,6 +142,8 @@ data class U8Value(val u8: Byte): UnsignedIntegerConstant {
         return Type.U8
     }
 
+    override fun data(): String = toString()
+
     override fun value(): ULong {
         return u8.toUByte().toULong()
     }
@@ -140,6 +157,8 @@ data class I8Value(val i8: Byte): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I8
     }
+
+    override fun data(): String = toString()
 
     override fun value(): Long {
         return i8.toLong()
@@ -155,6 +174,8 @@ data class U16Value(val u16: Short): UnsignedIntegerConstant {
         return Type.U16
     }
 
+    override fun data(): String = toString()
+
     override fun value(): ULong {
         return u16.toUShort().toULong()
     }
@@ -168,6 +189,8 @@ data class I16Value(val i16: Short): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I16
     }
+
+    override fun data(): String = toString()
 
     override fun value(): Long {
         return i16.toLong()
@@ -183,6 +206,8 @@ data class U32Value(val u32: Int): UnsignedIntegerConstant {
         return Type.U32
     }
 
+    override fun data(): String = toString()
+
     override fun value(): ULong {
         return u32.toUInt().toULong()
     }
@@ -196,6 +221,8 @@ data class I32Value(val i32: Int): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I32
     }
+
+    override fun data(): String = toString()
 
     override fun value(): Long {
         return i32.toLong()
@@ -211,6 +238,8 @@ data class U64Value(val u64: Long): UnsignedIntegerConstant {
         return Type.U64
     }
 
+    override fun data(): String = toString()
+
     override fun value(): ULong {
         return u64.toULong()
     }
@@ -224,6 +253,8 @@ data class I64Value(val i64: Long): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I64
     }
+
+    override fun data(): String = toString()
 
     override fun value(): Long {
         return i64
@@ -239,6 +270,8 @@ data class F32Value(val f32: Float): FloatingPointConstant {
         return Type.F32
     }
 
+    override fun data(): String = f32.toBits().toString()
+
     override fun toString(): String {
         return f32.toString()
     }
@@ -249,6 +282,8 @@ data class F64Value(val f64: Double): FloatingPointConstant {
         return Type.F64
     }
 
+    override fun data(): String = f64.toBits().toString()
+
     override fun toString(): String {
         return f64.toString()
     }
@@ -258,6 +293,8 @@ object UndefinedValue: Constant {
     fun name(): String {
         return toString()
     }
+
+    override fun data(): String = toString()
 
     override fun type(): BottomType {
         return Type.UNDEF
@@ -288,7 +325,7 @@ class StringLiteralConstant(val name: String): AggregateConstant {
     }
 
     override fun data(): String {
-        return name
+        return "\"$name\""
     }
 
     override fun toString(): String {
@@ -304,6 +341,8 @@ class InitializerListValue(val type: AggregateType, val elements: List<Constant>
     override fun type(): NonTrivialType {
         return type
     }
+
+    override fun data(): String = toString()
 
     fun size(): Int = elements.size
 
