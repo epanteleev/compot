@@ -13,15 +13,15 @@ import ir.types.*
 // https://ftp.gnu.org/old-gnu/Manuals/gas-2.9.1/html_node/as_toc.html
 class CompilationUnit: CompiledModule() {
     private val functions = arrayListOf<MacroAssembler>()
-    private val symbols = hashMapOf<String, AnyObjSymbol>()
+    private val symbols = hashSetOf<AnyDirective>()
     private var nameCounter = 0
 
     private fun newName() = ".loc.constant.${nameCounter++}"
 
-    private fun addSymbol(objSymbol: AnyObjSymbol) {
-        val has = symbols.put(objSymbol.name(), objSymbol)
-        if (has != null) {
-            throw IllegalArgumentException("symbol with name='${objSymbol.name()}' already exists: old='$has', new='$objSymbol'")
+    private fun addSymbol(objSymbol: AnyDirective) {
+        val has = symbols.add(objSymbol)
+        if (!has) {
+            throw IllegalArgumentException("symbol already exists: $objSymbol")
         }
     }
 
@@ -31,11 +31,11 @@ class CompilationUnit: CompiledModule() {
         return fn
     }
 
-    private fun makeAggregateConstant(globalValue: AnyAggregateGlobalConstant): ObjSymbol {
+    private fun makeAggregateConstant(globalValue: AnyAggregateGlobalConstant): Directive {
         return makeAggregateConstant(globalValue.name(), globalValue.elements())
     }
 
-    private fun makeAggregateConstant(name: String, initializer: InitializerListValue): ObjSymbol {
+    private fun makeAggregateConstant(name: String, initializer: InitializerListValue): Directive {
         val types = arrayListOf<SymbolType>()
         val data = arrayListOf<String>()
         for (e in initializer.linearize()) {
@@ -43,15 +43,15 @@ class CompilationUnit: CompiledModule() {
             data.add(e.data())
         }
 
-        return ObjSymbol(name, data, types)
+        return Directive(name, data, types)
     }
 
     fun mkConstant(globalValue: GlobalConstant) = when (globalValue) {
         is StringLiteralGlobalConstant -> {
-            addSymbol(ObjSymbol(globalValue.name(), listOf(globalValue.data()), listOf(SymbolType.StringLiteral)))
+            addSymbol(Directive(globalValue.name(), listOf(globalValue.data()), listOf(SymbolType.StringLiteral)))
         }
         is AggregateGlobalConstant -> addSymbol(makeAggregateConstant(globalValue))
-        else -> addSymbol(ObjSymbol(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue.constant())))
+        else -> addSymbol(Directive(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue.constant())))
     }
 
     fun makeGlobal(globalValue: AnyGlobalValue) {
@@ -61,7 +61,7 @@ class CompilationUnit: CompiledModule() {
         }
     }
 
-    private fun convertGlobalValueToSymbolType(globalValue: AnyGlobalValue): AnyObjSymbol? {
+    private fun convertGlobalValueToSymbolType(globalValue: AnyGlobalValue): AnyDirective? {
         if (globalValue is ExternValue) {
             return null
         }
@@ -73,18 +73,18 @@ class CompilationUnit: CompiledModule() {
                 val symbolType = convertToSymbolType(constant)
                 val data = constant.linearize().map { it.data() }
 
-                return ObjSymbol(globalValue.name(), data, symbolType)
+                return Directive(globalValue.name(), data, symbolType)
             }
             is ArrayType -> {
                 when (val constant = globalValue.initializer()) {
                     is InitializerListValue -> {
                         val symbolType = convertToSymbolType(type)
                         val data = constant.linearize().map { it.data() }
-                        return ObjSymbol(globalValue.name(), data, symbolType)
+                        return Directive(globalValue.name(), data, symbolType)
                     }
                     is StringLiteralConstant -> {
                         val initializerName = newName()
-                        val initializer = ObjSymbol(initializerName, listOf(constant.data()), listOf(SymbolType.StringLiteral))
+                        val initializer = Directive(initializerName, listOf(constant.data()), listOf(SymbolType.StringLiteral))
                         addSymbol(initializer)
                         val init = StringBuilder()
                         var i = 0
@@ -109,14 +109,14 @@ class CompilationUnit: CompiledModule() {
                     is InitializerListValue -> {
                         val initConstant = makeAggregateConstant(newName(), initializer)
                         addSymbol(initConstant)
-                        ObjSymbol(globalValue.name(), listOf(initConstant.name()), symbolType)
+                        Directive(globalValue.name(), listOf(initConstant.name), symbolType)
                     }
                     is StringLiteralConstant -> {
-                        val initConstant = ObjSymbol(newName(), listOf(initializer.data()), listOf(SymbolType.StringLiteral))
+                        val initConstant = Directive(newName(), listOf(initializer.data()), listOf(SymbolType.StringLiteral))
                         addSymbol(initConstant)
-                        ObjSymbol(globalValue.name(), listOf(initConstant.name()), listOf(SymbolType.Quad))
+                        Directive(globalValue.name(), listOf(initConstant.name), listOf(SymbolType.Quad))
                     }
-                    else -> ObjSymbol(globalValue.name(), listOf(globalValue.data()), symbolType)
+                    else -> Directive(globalValue.name(), listOf(globalValue.data()), symbolType)
                 }
             }
         }
@@ -196,7 +196,7 @@ class CompilationUnit: CompiledModule() {
         if (symbols.isNotEmpty()) {
             builder.append(".data\n")
         }
-        symbols.values.forEach {
+        symbols.forEach {
             builder.append(it)
             builder.append('\n')
         }

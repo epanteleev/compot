@@ -1,4 +1,4 @@
-package ir.platform.x64.regalloc
+package ir.platform.x64.pass.analysis.regalloc
 
 import asm.x64.*
 import ir.types.*

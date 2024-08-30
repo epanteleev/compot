@@ -23,12 +23,12 @@ import ir.pass.analysis.traverse.PreOrderFabric
 import ir.platform.common.AnyCodeGenerator
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
-import ir.platform.x64.regalloc.RegisterAllocation
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.retReg
-import ir.platform.x64.regalloc.SavedContext
+import ir.platform.x64.pass.analysis.regalloc.LinearScanFabric
+import ir.platform.x64.pass.analysis.regalloc.SavedContext
 import ir.value.*
 
 
@@ -43,9 +43,9 @@ internal class X64CodeGenerator(val module: Module): AnyCodeGenerator {
 
 private class CodeEmitter(private val data: FunctionData,
                           private val functionCounter: Int,
-                          private val unit: CompilationUnit,
-                          private val valueToRegister: RegisterAllocation,
+                          private val unit: CompilationUnit
 ): IRInstructionVisitor<Unit>() {
+    private val valueToRegister by lazy { data.analysis(LinearScanFabric) }
     private val liveness by lazy { data.analysis(LivenessAnalysisPassFabric) }
     private val asm = unit.mkFunction(data.prototype.name)
     private var previous: Block? = null
@@ -737,7 +737,7 @@ private class CodeEmitter(private val data: FunctionData,
             }
 
             for ((idx, data) in module.functions().withIndex()) {
-                CodeEmitter(data, idx, asm, module.regAlloc(data)).emit()
+                CodeEmitter(data, idx, asm).emit()
             }
 
             return asm

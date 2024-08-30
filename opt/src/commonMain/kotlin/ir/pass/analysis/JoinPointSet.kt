@@ -22,8 +22,7 @@ class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock,
     }
 }
 
-private class JoinPointSetEvaluate(private val functionData: FunctionData) :
-    FunctionAnalysisPass<JoinPointSetResult>() {
+private class JoinPointSetEvaluate(private val functionData: FunctionData) : FunctionAnalysisPass<JoinPointSetResult>() {
     private val frontiers = functionData.analysis(DominatorTreeFabric).frontiers()
     private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(functionData.size()) { bb: Label -> bb.index }
 

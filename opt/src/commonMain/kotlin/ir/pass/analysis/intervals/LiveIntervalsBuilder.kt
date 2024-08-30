@@ -13,11 +13,13 @@ import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.traverse.LinearScanOrderFabric
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.common.AnalysisType
+import ir.platform.x64.pass.analysis.regalloc.Group
 import ir.value.TupleValue
 
 
 private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
     private val intervals       = hashMapOf<LocalValue, LiveRangeImpl>()
+    private val groups          = hashMapOf<LocalValue, Group>()
     private val linearScanOrder = data.analysis(LinearScanOrderFabric)
     private val liveness        = data.analysis(LivenessAnalysisPassFabric)
 
@@ -78,8 +80,9 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
         }
     }
 
-    private fun handlePhiOperands(value: Phi, range: LiveRangeImpl) {
-        value.operands { used ->
+    private fun handlePhiOperands(phi: Phi, range: LiveRangeImpl) {
+        val groupList = arrayListOf<LocalValue>(phi)
+        phi.operands { used ->
             if (used !is LocalValue) {
                 return@operands
             }
@@ -87,7 +90,17 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
 
             range.merge(intervals[used]!!)
             intervals[used] = range
+            groupList.add(used)
         }
+
+        val group = Group(groupList)
+        phi.operands { used ->
+            if (used !is LocalValue) {
+                return@operands
+            }
+            groups[used] = group
+        }
+        groups[phi] = group
     }
 
     private fun handleTuple(value: TupleValue, range: LiveRangeImpl) {
@@ -112,7 +125,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
         evaluateUsages()
         mergeInstructionIntervals()
 
-        return LiveIntervals(sortIntervals(), data.marker())
+        return LiveIntervals(sortIntervals(), groups, data.marker())
     }
 
     private fun sortIntervals(): Map<LocalValue, LiveRange> {

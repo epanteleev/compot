@@ -4,7 +4,7 @@ import asm.x64.GPRegister.*
 import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.Mem2RegFabric
-import ir.platform.x64.regalloc.VirtualRegistersPool
+import ir.platform.x64.pass.analysis.regalloc.VirtualRegistersPool
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -1,4 +1,4 @@
-package ir.platform.x64.regalloc
+package ir.platform.x64.pass.analysis.regalloc
 
 import ir.value.Value
 import asm.x64.*
@@ -46,7 +46,7 @@ class CalleeArgumentAllocator(private val stackFrame: StackFrame, private val ar
             val operand = when (val pos = emit(arg.type())) {
                 is RealGPRegister -> gpRegisters[pos.registerIndex]
                 is RealFpRegister -> fpRegisters[pos.registerIndex]
-                is Memory         -> stackFrame.takeArgument(pos.index, arg)
+                is Memory -> stackFrame.takeArgument(pos.index, arg)
                 else -> throw IllegalStateException("pos=$pos")
             }
             allocation.add(operand)

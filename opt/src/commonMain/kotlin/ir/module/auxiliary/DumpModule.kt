@@ -5,9 +5,12 @@ import ir.module.*
 import ir.instruction.*
 import ir.module.block.Block
 import ir.pass.analysis.intervals.LiveIntervals
+import ir.pass.analysis.intervals.LiveIntervalsFabric
 import ir.pass.analysis.traverse.PreOrderFabric
-import ir.platform.x64.regalloc.RegisterAllocation
+import ir.platform.x64.pass.analysis.regalloc.RegisterAllocation
 import ir.platform.x64.LModule
+import ir.platform.x64.pass.analysis.regalloc.LinearScan
+import ir.platform.x64.pass.analysis.regalloc.LinearScanFabric
 import ir.value.LocalValue
 import ir.value.TupleValue
 import ir.value.Value
@@ -136,8 +139,8 @@ private class DumpLModule(module: LModule) : DumpModule<LModule>(module) {
 
     override fun dumpFunctionData(functionData: FunctionData) {
         currentFunctionData = functionData
-        regAlloc = module.regAlloc(functionData)
-        liveness = module.liveInfo(functionData)
+        regAlloc = functionData.analysis(LinearScanFabric)
+        liveness = functionData.analysis(LiveIntervalsFabric)
         super.dumpFunctionData(functionData)
     }
 

@@ -14,7 +14,6 @@ import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
 import ir.types.NonTrivialType
 import ir.types.PrimitiveType
-import ir.types.Type
 import ir.value.Value
 
 

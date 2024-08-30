@@ -1,8 +1,27 @@
 package asm.x64
 
-sealed class AnyObjSymbol {
-    abstract fun name(): String
+sealed class AnyDirective {
+    abstract override fun hashCode(): Int
+    abstract override fun equals(other: Any?): Boolean
 }
+
+sealed class NamedDirective: AnyDirective() {
+    abstract val name: String
+
+    final override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Directive
+
+        return name == other.name
+    }
+
+    final override fun hashCode(): Int {
+        return name.hashCode()
+    }
+}
+
 
 enum class SymbolType {
     StringLiteral {
@@ -32,12 +51,7 @@ enum class SymbolType {
     }
 }
 
-class ObjSymbol(val name: String, val data: List<String>, val type: List<SymbolType>): AnyObjSymbol() {
-
-    override fun name(): String {
-        return name
-    }
-
+class Directive(override val name: String, val data: List<String>, val type: List<SymbolType>): NamedDirective() {
     override fun toString(): String {
         val stringBuilder = StringBuilder()
         stringBuilder.append("$name:\n")
@@ -54,9 +68,18 @@ class ObjSymbol(val name: String, val data: List<String>, val type: List<SymbolT
     }
 }
 
-class CommSymbol(val name: String, val size: Int): AnyObjSymbol() {
-    override fun name(): String {
-        return name
+class CommSymbol(val name: String, val size: Int): AnyDirective() {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as CommSymbol
+
+        return name == other.name
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
     }
 
     override fun toString(): String {
@@ -64,11 +87,7 @@ class CommSymbol(val name: String, val size: Int): AnyObjSymbol() {
     }
 }
 
-class AsciiSymbol(val name: String, val data: String): AnyObjSymbol() {
-    override fun name(): String {
-        return name
-    }
-
+class AsciiSymbol(override val name: String, val data: String): NamedDirective() {
     override fun toString(): String {
         return "$name:\n\t.ascii \"$data\""
     }

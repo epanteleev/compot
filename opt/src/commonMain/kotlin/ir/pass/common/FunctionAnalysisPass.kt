@@ -28,7 +28,8 @@ enum class AnalysisType {
     POST_ORDER,
     PRE_ORDER,
     BACKWARD_POST_ORDER,
-    BFS_ORDER;
+    BFS_ORDER,
+    LINEAR_SCAN;
 
     companion object {
         fun size(): Int {

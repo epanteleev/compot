@@ -1,4 +1,4 @@
-package ir.platform.x64.regalloc
+package ir.platform.x64.pass.analysis.regalloc
 
 import ir.value.LocalValue
 

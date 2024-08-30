@@ -1,4 +1,4 @@
-package ir.platform.x64.regalloc
+package ir.platform.x64.pass.analysis.regalloc
 
 import asm.x64.*
 import common.assertion
@@ -7,6 +7,8 @@ import ir.global.ExternValue
 import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
 import ir.global.GlobalValue
+import ir.module.MutationMarker
+import ir.pass.common.AnalysisResult
 import ir.platform.x64.CallConvention
 import ir.platform.x64.CallConvention.gpCalleeSaveRegs
 import ir.platform.x64.CallConvention.gpCallerSaveRegs
@@ -15,7 +17,7 @@ import ir.value.*
 
 
 class RegisterAllocation(private val spilledLocalsStackSize: Int,
-                         private val registerMap: Map<LocalValue, Operand>) {
+                         private val registerMap: Map<LocalValue, Operand>, marker: MutationMarker): AnalysisResult(marker) {
     /** Count of callee save registers in given function. */
     val calleeSaveRegisters: Set<GPRegister> by lazy { //TODO get this from *RegisterList
         val registers = linkedSetOf<GPRegister>()
