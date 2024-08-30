@@ -29,11 +29,6 @@ enum class SymbolType {
         override fun toString(): String {
             return ".byte"
         }
-    },
-    Asciiz {
-        override fun toString(): String {
-            return ".asciiz"
-        }
     }
 }
 
@@ -66,5 +61,15 @@ class CommSymbol(val name: String, val size: Int): AnyObjSymbol() {
 
     override fun toString(): String {
         return ".comm $name, $size, 32"
+    }
+}
+
+class AsciiSymbol(val name: String, val data: String): AnyObjSymbol() {
+    override fun name(): String {
+        return name
+    }
+
+    override fun toString(): String {
+        return "$name:\n\t.ascii \"$data\""
     }
 }

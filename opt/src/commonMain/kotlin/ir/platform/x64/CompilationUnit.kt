@@ -86,18 +86,18 @@ class CompilationUnit: CompiledModule() {
                         val initializerName = newName()
                         val initializer = ObjSymbol(initializerName, listOf(constant.data()), listOf(SymbolType.StringLiteral))
                         addSymbol(initializer)
-                        val init = arrayListOf<String>()
+                        val init = StringBuilder()
                         var i = 0
-                        for (c in constant.data()) {
-                            init.add(initializerName)
+                        for (c in constant.linearize()) {
+                            init.append(c)
                             i += 1
                         }
 
                         for (j in i until type.length) {
-                            init.add("\\000")
+                            init.append("\\000")
                         }
 
-                        return ObjSymbol(globalValue.name(), listOf(initializerName), listOf(SymbolType.Asciiz))
+                        return AsciiSymbol(globalValue.name(),  init.toString())
                     }
                     else -> throw IllegalArgumentException("unsupported constant type: $constant")
                 }

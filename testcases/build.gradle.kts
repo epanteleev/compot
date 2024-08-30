@@ -32,6 +32,7 @@ kotlin {
                 implementation(project(":shlang"))
                 implementation(project(":opt"))
                 implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
+                implementation("com.squareup.okio:okio:3.9.0")
             }
         }
         jvmMain {

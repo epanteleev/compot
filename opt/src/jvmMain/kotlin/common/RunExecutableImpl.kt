@@ -8,14 +8,13 @@ actual fun runCommand(command: String, args: List<String>, workingDir: String?):
     val process = ProcessBuilder(listOf(command) + args)
         .directory(workingDir?.let { File(it) })
         .start()
+    val stdout = process.inputStream.bufferedReader().readText()
+    val stderr = process.errorStream.bufferedReader().readText()
     if (!process.waitFor(60, TimeUnit.SECONDS)) {
         process.destroy()
         throw RuntimeException("execution timed out")
     }
-    return ExecutionResult(
-        process.inputStream.bufferedReader().readText(),
-        process.errorStream.bufferedReader().readText(),
-        process.exitValue())
+    return ExecutionResult(stdout, stderr, process.exitValue())
 }
 
 actual fun env(name: String): String? {

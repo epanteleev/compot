@@ -1,6 +1,10 @@
 package shlang
 
 import common.CommonCTest
+import okio.FileSystem
+import okio.Path
+import okio.Path.Companion.toPath
+import okio.SYSTEM
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -167,10 +171,13 @@ abstract class AlgoTests: CommonCTest() {
         assertReturnCode(result, 0)
     }
 
-    @Ignore
+    @Test
     fun testSudokuSolver() {
         val result = runCTest("shlang/algo/sudoku_solver", listOf(), options())
-        assertEquals("All tests have successfully passed!\n", result.output)
+        val expected = FileSystem.SYSTEM.read("$TESTCASES_DIR/expected_out/shlang/algo/sudoku_solver.output".toPath()) { //TODO
+            readUtf8()
+        }
+        assertEquals(expected, result.output)
         assertReturnCode(result, 0)
     }
 
