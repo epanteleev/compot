@@ -12,7 +12,7 @@ import ir.types.*
 
 data class MacroAssemblerException(override val message: String): Exception(message)
 
-class MacroAssembler(name: String): Assembler(name) {
+class MacroAssembler(name: String, id: Int): Assembler(name, id) {
     /*** Move reminder from 'rdx' register to @param rem. */
     fun moveRem(size: Int, rem: Operand) {
         assertion(size == 1 || size == 2 || size == 4 || size == 8) {

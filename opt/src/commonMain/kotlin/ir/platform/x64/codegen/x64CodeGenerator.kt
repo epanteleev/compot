@@ -34,27 +34,23 @@ import ir.value.*
 
 internal data class CodegenException(override val message: String): Exception(message)
 
-
 internal class X64CodeGenerator(val module: Module): AnyCodeGenerator {
     override fun emit(): CompiledModule {
         return CodeEmitter.codegen(module)
     }
 }
 
-private class CodeEmitter(private val data: FunctionData,
-                          private val functionCounter: Int,
-                          private val unit: CompilationUnit
-): IRInstructionVisitor<Unit>() {
+private class CodeEmitter(private val data: FunctionData, private val unit: CompilationUnit): IRInstructionVisitor<Unit>() {
     private val valueToRegister by lazy { data.analysis(LinearScanFabric) }
     private val liveness by lazy { data.analysis(LivenessAnalysisPassFabric) }
-    private val asm = unit.mkFunction(data.prototype.name)
+    private val asm = unit.function(data.prototype.name)
     private var previous: Block? = null
     private var next: Block? = null
 
     fun next(): Block = next?: throw RuntimeException("next block is null")
     fun previous(): Block = previous?: throw RuntimeException("previous block is null")
 
-    private fun makeLabel(bb: Block) = ".L$functionCounter.${bb.index}"
+    private fun makeLabel(bb: Block) = unit.nameAssistant().newLocalLabel(asm, bb.index)
 
     private fun emitPrologue() {
         val stackSize = valueToRegister.spilledLocalsSize()
@@ -748,8 +744,8 @@ private class CodeEmitter(private val data: FunctionData,
                 return unit
             }
             unit.section(TextSection)
-            for ((idx, data) in module.functions().withIndex()) {
-                CodeEmitter(data, idx, unit).emit()
+            for (data in module.functions()) {
+                CodeEmitter(data, unit).emit()
             }
 
             return unit

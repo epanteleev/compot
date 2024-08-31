@@ -12,7 +12,7 @@ class AsmTest {
         val asm = CompilationUnit()
         asm.global("main")
         asm.section(TextSection)
-        val fn = asm.mkFunction("main")
+        val fn = asm.function("main")
         fn.push(8, rbp)
         fn.mov(8, rsp, rbp)
         fn.sub(8, Imm32.of(16), rsp)

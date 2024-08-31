@@ -23,7 +23,7 @@ private class InstructionList: Iterable<CPUInstruction> {
 
 // X86 and amd64 instruction reference
 // https://www.felixcloutier.com/x86/
-abstract class Assembler(private val name: String): AnonymousDirective() {
+abstract class Assembler(private val name: String, val id: Int): AnonymousDirective() {
     private val codeBlocks: LinkedHashMap<Label, InstructionList>
     private val activeContext: BuilderContext
 

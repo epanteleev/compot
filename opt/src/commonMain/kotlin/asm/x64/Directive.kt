@@ -4,16 +4,14 @@ sealed class AnyDirective
 
 sealed class SectionDirective: AnyDirective()
 
-sealed class NamedDirective(): AnyDirective() {
-    val anonymousDirective = arrayListOf<AnonymousDirective>()
-
+sealed class NamedDirective: AnyDirective() {
     abstract val name: String
 
     final override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
 
-        other as Directive
+        other as NamedDirective
 
         return name == other.name
     }
@@ -46,80 +44,43 @@ data object ExternDirective : AnonymousDirective() {
 }
 
 class ObjLabel(override val name: String): NamedDirective() {
-    override fun toString(): String {
-        return buildString {
-            append("$name:\n")
-            for ((idx, d) in anonymousDirective.withIndex()) {
-                append("$d")
-                if (idx != anonymousDirective.size - 1) {
-                    append("\n")
-                }
+    internal val anonymousDirective = arrayListOf<AnyDirective>()
+
+    override fun toString(): String = buildString {
+        append("$name:\n")
+        for ((idx, d) in anonymousDirective.withIndex()) {
+            append("$d")
+            if (idx != anonymousDirective.size - 1) {
+                append("\n")
             }
         }
     }
 }
 
-enum class SymbolType {
-    StringLiteral {
-        override fun toString(): String {
-            return ".string"
-        }
-    },
-    Quad {
-        override fun toString(): String {
-            return ".quad"
-        }
-    },
-    Long {
-        override fun toString(): String {
-            return ".long"
-        }
-    },
-    Short {
-        override fun toString(): String {
-            return ".short"
-        }
-    },
-    Byte {
-        override fun toString(): String {
-            return ".byte"
-        }
-    }
+class ByteDirective(val value: String): AnonymousDirective() {
+    override fun toString(): String = ".byte $value"
 }
 
-class StringSymbol(override val name: String, val data: String): NamedDirective() {
-    override fun toString(): String = "$name:\n\t.string $data"
+class ShortDirective(val value: String): AnonymousDirective() {
+    override fun toString(): String = ".short $value"
 }
 
-class QuadSymbol(override val name: String, val data: String): NamedDirective() {
-    override fun toString(): String = "$name:\n\t.quad $data"
+class LongDirective(val value: String): AnonymousDirective() {
+    override fun toString(): String = ".long $value"
 }
 
-class Directive(override val name: String, val data: List<String>, val type: List<SymbolType>): NamedDirective() {
-    override fun toString(): String {
-        val stringBuilder = StringBuilder()
-        stringBuilder.append("$name:\n")
-        var i = 0
-        for (d in data) {
-            val t = type[i]
-            stringBuilder.append("\t$t $d\n")
-            i++
-        }
-        for (i in i until type.size) {
-            stringBuilder.append("\t${type[i]} 0\n")
-        }
-        return stringBuilder.toString()
-    }
+class QuadDirective(val value: String): AnonymousDirective() {
+    override fun toString(): String = ".quad $value"
+}
+
+class StringDirective(val value: String): AnonymousDirective() {
+    override fun toString(): String = ".string $value"
 }
 
 class CommSymbol(override val name: String, val size: Int): NamedDirective() {
-    override fun toString(): String {
-        return ".comm $name, $size, 32"
-    }
+    override fun toString(): String = ".comm $name, $size, 32"
 }
 
-class AsciiSymbol(override val name: String, val data: String): NamedDirective() {
-    override fun toString(): String {
-        return "$name:\n\t.ascii \"$data\""
-    }
+class AsciiDirective(val data: String): AnonymousDirective() {
+    override fun toString(): String = ".ascii \"$data\""
 }
