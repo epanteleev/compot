@@ -1,10 +1,12 @@
 package asm.x64
 
+import ir.instruction.Instruction
+
 data class ObjFunctionCreationException(override val message: String): Exception(message)
 
 private data class BuilderContext(var label: Label, var instructions: InstructionList)
 
-private class InstructionList {
+private class InstructionList: Iterable<CPUInstruction> {
     private val list = arrayListOf<CPUInstruction>()
 
     fun add(inst: CPUInstruction) = list.add(inst)
@@ -13,12 +15,15 @@ private class InstructionList {
         // GNU as requires a newline after the last instruction
         list.joinTo(builder, separator, prefix, postfix = "\n")
     }
+
+    fun size() = list.size
+    override fun iterator(): Iterator<CPUInstruction> = list.iterator()
 }
 
 
 // X86 and amd64 instruction reference
 // https://www.felixcloutier.com/x86/
-abstract class Assembler(private val name: String) {
+abstract class Assembler(private val name: String): AnonymousDirective() {
     private val codeBlocks: LinkedHashMap<Label, InstructionList>
     private val activeContext: BuilderContext
 
@@ -437,11 +442,18 @@ abstract class Assembler(private val name: String) {
         val builder = StringBuilder()
         var count = 0
         for ((label, instructions) in codeBlocks) {
-            builder.append("$label:\n")
-            instructions.joinTo(builder, "    ", "\n    ")
+            if (count > 0) {
+                builder.append("$label:\n")
+            }
+            for ((idx, inst) in instructions.withIndex()) {
+                builder.append("    $inst")
+                if (idx < instructions.size() - 1) {
+                    builder.append("\n")
+                }
+            }
 
             if (count < codeBlocks.size - 1) {
-                builder.append('\n')
+                builder.append("\n")
             }
             count += 1
         }

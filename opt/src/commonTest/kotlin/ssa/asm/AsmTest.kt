@@ -10,6 +10,8 @@ class AsmTest {
     @Test
     fun test1() {
         val asm = CompilationUnit()
+        asm.global("main")
+        asm.section(TextSection)
         val fn = asm.mkFunction("main")
         fn.push(8, rbp)
         fn.mov(8, rsp, rbp)
@@ -22,7 +24,6 @@ class AsmTest {
 
         val expected = """
         .global main
-        
         .text
         main:
             pushq %rbp

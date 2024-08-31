@@ -6,13 +6,11 @@ import asm.x64.GPRegister.rax
 import common.assertion
 import ir.Definitions.BYTE_SIZE
 import ir.Definitions.QWORD_SIZE
-import ir.Definitions.WORD_SIZE
 import ir.instruction.*
 import ir.types.*
 
 
 data class MacroAssemblerException(override val message: String): Exception(message)
-
 
 class MacroAssembler(name: String): Assembler(name) {
     /*** Move reminder from 'rdx' register to @param rem. */

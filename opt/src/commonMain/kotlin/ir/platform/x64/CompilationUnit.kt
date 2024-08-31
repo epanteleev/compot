@@ -12,22 +12,35 @@ import ir.types.*
 //
 // https://ftp.gnu.org/old-gnu/Manuals/gas-2.9.1/html_node/as_toc.html
 class CompilationUnit: CompiledModule() {
-    private val functions = arrayListOf<MacroAssembler>()
-    private val symbols = hashSetOf<AnyDirective>()
+    private val symbols = arrayListOf<AnyDirective>()
+    private val namedDirectives = hashSetOf<NamedDirective>()
     private var nameCounter = 0
 
     private fun newName() = ".loc.constant.${nameCounter++}"
 
-    private fun addSymbol(objSymbol: AnyDirective) {
-        val has = symbols.add(objSymbol)
-        if (!has) {
-            throw IllegalArgumentException("symbol already exists: $objSymbol")
+    fun section(section: SectionDirective) {
+        symbols.add(section)
+    }
+
+    fun global(name: String) {
+        addSymbol(GlobalDirective(name))
+    }
+
+    private inline fun<reified T: AnyDirective> addSymbol(objSymbol: T) {
+        if (objSymbol is NamedDirective) {
+            val has = namedDirectives.add(objSymbol)
+            if (!has) {
+                throw IllegalArgumentException("symbol already exists: $objSymbol")
+            }
         }
+        symbols.add(objSymbol)
     }
 
     fun mkFunction(name: String): MacroAssembler {
         val fn = MacroAssembler(name)
-        functions.add(fn)
+        val obj = ObjLabel(name)
+        symbols.add(obj)
+        obj.anonymousDirective.add(fn)
         return fn
     }
 
@@ -48,7 +61,7 @@ class CompilationUnit: CompiledModule() {
 
     fun mkConstant(globalValue: GlobalConstant) = when (globalValue) {
         is StringLiteralGlobalConstant -> {
-            addSymbol(Directive(globalValue.name(), listOf(globalValue.data()), listOf(SymbolType.StringLiteral)))
+            addSymbol(StringSymbol(globalValue.name(), globalValue.data()))
         }
         is AggregateGlobalConstant -> addSymbol(makeAggregateConstant(globalValue))
         else -> addSymbol(Directive(globalValue.name(), listOf(globalValue.data()), convertToSymbolType(globalValue.constant())))
@@ -70,21 +83,14 @@ class CompilationUnit: CompiledModule() {
         when (val type = globalValue.contentType()) {
             is StructType -> {
                 val constant = globalValue.initializer() as InitializerListValue
-                val symbolType = convertToSymbolType(constant)
-                val data = constant.linearize().map { it.data() }
-
-                return Directive(globalValue.name(), data, symbolType)
+                return makeAggregateConstant(globalValue.name(), constant)
             }
             is ArrayType -> {
                 when (val constant = globalValue.initializer()) {
-                    is InitializerListValue -> {
-                        val symbolType = convertToSymbolType(type)
-                        val data = constant.linearize().map { it.data() }
-                        return Directive(globalValue.name(), data, symbolType)
-                    }
+                    is InitializerListValue -> return makeAggregateConstant(globalValue.name(), constant)
                     is StringLiteralConstant -> {
                         val initializerName = newName()
-                        val initializer = Directive(initializerName, listOf(constant.data()), listOf(SymbolType.StringLiteral))
+                        val initializer = StringSymbol(initializerName, constant.data())
                         addSymbol(initializer)
                         val init = StringBuilder()
                         var i = 0
@@ -97,7 +103,7 @@ class CompilationUnit: CompiledModule() {
                             init.append("\\000")
                         }
 
-                        return AsciiSymbol(globalValue.name(),  init.toString())
+                        return AsciiSymbol(globalValue.name(), init.toString())
                     }
                     else -> throw IllegalArgumentException("unsupported constant type: $constant")
                 }
@@ -112,9 +118,9 @@ class CompilationUnit: CompiledModule() {
                         Directive(globalValue.name(), listOf(initConstant.name), symbolType)
                     }
                     is StringLiteralConstant -> {
-                        val initConstant = Directive(newName(), listOf(initializer.data()), listOf(SymbolType.StringLiteral))
+                        val initConstant = StringSymbol(newName(), initializer.data())
                         addSymbol(initConstant)
-                        Directive(globalValue.name(), listOf(initConstant.name), listOf(SymbolType.Quad))
+                        QuadSymbol(globalValue.name(), initConstant.name)
                     }
                     else -> Directive(globalValue.name(), listOf(globalValue.data()), symbolType)
                 }
@@ -122,36 +128,9 @@ class CompilationUnit: CompiledModule() {
         }
     }
 
-    private fun convertToSymbolType(type: NonTrivialType): List<SymbolType> {
-        val t = when (type) {
-            Type.I64 -> SymbolType.Quad
-            Type.U64 -> SymbolType.Quad
-            Type.I32 -> SymbolType.Long
-            Type.U32 -> SymbolType.Long
-            Type.I16 -> SymbolType.Short
-            Type.U16 -> SymbolType.Short
-            Type.I8  -> SymbolType.Byte
-            Type.U8  -> SymbolType.Byte
-            Type.F32 -> SymbolType.Long
-            Type.F64 -> SymbolType.Quad
-            Type.Ptr -> SymbolType.Quad
-            else -> null
-        }
-
-        if (t != null) {
-            return listOf(t)
-        }
-
-        when (type) {
-            is AggregateType -> {
-                val types = arrayListOf<SymbolType>()
-                for (f in type.fields()) {
-                    types.addAll(convertToSymbolType(f))
-                }
-                return types
-            }
-            else -> throw IllegalArgumentException("unsupported type: $type")
-        }
+    private fun makePrimitiveConstant(globalValue: GlobalConstant): Directive {
+        val symbolType = convertToSymbolType(globalValue.constant())
+        return Directive(globalValue.name(), listOf(globalValue.data()), symbolType)
     }
 
     private fun convertToSymbolType(globalValue: Constant): List<SymbolType> {
@@ -188,21 +167,13 @@ class CompilationUnit: CompiledModule() {
 
     override fun toString(): String {
         val builder = StringBuilder()
-        functions.forEach {
-            builder.append(".global ${it.name()}\n")
+        for ((idx, symbol) in symbols.withIndex()) {
+            builder.append(symbol)
+            if (idx < symbols.size - 1) {
+                builder.append("\n")
+            }
         }
-        builder.append('\n')
-
-        if (symbols.isNotEmpty()) {
-            builder.append(".data\n")
-        }
-        symbols.forEach {
-            builder.append(it)
-            builder.append('\n')
-        }
-
-        builder.append(".text\n")
-        functions.joinTo(builder, separator = "\n")
+        builder.append("\n")
         return builder.toString()
     }
 }

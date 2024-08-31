@@ -727,20 +727,32 @@ private class CodeEmitter(private val data: FunctionData,
             if (module !is LModule) {
                 throw CodegenException("cannot transform module")
             }
-            val asm = CompilationUnit()
+            val unit = CompilationUnit()
 
-            for (c in module.constantPool.values) {
-                asm.mkConstant(c)
-            }
-            for (global in module.globals.values) {
-                asm.makeGlobal(global)
+            for (data in module.functions()) {
+                unit.global(data.prototype.name)
             }
 
+            if (module.globals.isNotEmpty() || module.constantPool.isNotEmpty()) {
+                unit.section(DataSection)
+                for (c in module.constantPool.values) {
+                    unit.mkConstant(c)
+                }
+
+                for (global in module.globals.values) {
+                    unit.makeGlobal(global)
+                }
+            }
+
+            if (module.functions().isEmpty()) {
+                return unit
+            }
+            unit.section(TextSection)
             for ((idx, data) in module.functions().withIndex()) {
-                CodeEmitter(data, idx, asm).emit()
+                CodeEmitter(data, idx, unit).emit()
             }
 
-            return asm
+            return unit
         }
     }
 }
