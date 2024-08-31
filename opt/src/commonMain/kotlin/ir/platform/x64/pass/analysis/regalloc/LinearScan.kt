@@ -1,5 +1,6 @@
 package ir.platform.x64.pass.analysis.regalloc
 
+import asm.x64.GPRegister
 import ir.value.LocalValue
 import asm.x64.Operand
 import asm.x64.Register
@@ -28,8 +29,8 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     private val pool        = VirtualRegistersPool.create(data.arguments())
 
     init {
-        allocRegistersForArgumentValues()
         handleCallArguments()
+        allocRegistersForArgumentValues()
         allocRegistersForLocalVariables()
     }
 
@@ -37,10 +38,19 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         return RegisterAllocation(pool.stackSize(), registerMap, data.marker())
     }
 
+    private fun allocate(slot: Operand, value: LocalValue) {
+        registerMap[value] = slot
+        active[value] = slot
+    }
+
     private fun allocRegistersForArgumentValues() {
         for (arg in data.arguments()) {
             fixedValues.add(arg)
-            registerMap[arg] = pool.takeArgument(arg)
+            val reg = pool.takeArgument(arg)
+            registerMap[arg] = reg
+            if (reg != GPRegister.rdx) { //TODO hack
+                active[arg] = reg
+            }
         }
     }
 
@@ -100,13 +110,11 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         val neighbors = interferenceGraph.neighbors(value)
         val operand = pool.allocSlot(value) { reg -> excludeIf(neighbors, reg) }
         if (group == null) {
-            registerMap[value] = operand
-            active[value] = operand
+            allocate(operand, value)
             return
         }
         for (v in group) {
-            registerMap[v] = operand
-            active[v] = operand
+            allocate(operand, v)
         }
     }
 
