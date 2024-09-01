@@ -94,10 +94,66 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.not(value))
     }
 
-    fun arithmeticBinary(name: LocalValueToken, a: AnyValueToken, op: ArithmeticBinaryOp, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
+    fun add(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
         val first  = getValue(a, expectedType.type(moduleBuilder))
         val second = getValue(b, expectedType.type(moduleBuilder))
-        val result = bb.arithmeticBinary(first, op, second)
+        val result = bb.add(first, second)
+        return memorize(name, result)
+    }
+
+    fun sub(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
+        val first  = getValue(a, expectedType.type(moduleBuilder))
+        val second = getValue(b, expectedType.type(moduleBuilder))
+        val result = bb.sub(first, second)
+        return memorize(name, result)
+    }
+
+    fun mul(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
+        val first  = getValue(a, expectedType.type(moduleBuilder))
+        val second = getValue(b, expectedType.type(moduleBuilder))
+        val result = bb.mul(first, second)
+        return memorize(name, result)
+    }
+
+    fun div(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
+        val first  = getValue(a, expectedType.type(moduleBuilder))
+        val second = getValue(b, expectedType.type(moduleBuilder))
+        val result = bb.div(first, second)
+        return memorize(name, result)
+    }
+
+    fun shl(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticBinary {
+        val first  = getValue(a, expectedType.type())
+        val second = getValue(b, expectedType.type())
+        val result = bb.shl(first, second)
+        return memorize(name, result)
+    }
+
+    fun shr(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticBinary {
+        val first  = getValue(a, expectedType.type())
+        val second = getValue(b, expectedType.type())
+        val result = bb.shr(first, second)
+        return memorize(name, result)
+    }
+
+    fun and(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticBinary {
+        val first  = getValue(a, expectedType.type())
+        val second = getValue(b, expectedType.type())
+        val result = bb.and(first, second)
+        return memorize(name, result)
+    }
+
+    fun or(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
+        val first  = getValue(a, expectedType.type(moduleBuilder))
+        val second = getValue(b, expectedType.type(moduleBuilder))
+        val result = bb.or(first, second)
+        return memorize(name, result)
+    }
+
+    fun xor(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
+        val first  = getValue(a, expectedType.type(moduleBuilder))
+        val second = getValue(b, expectedType.type(moduleBuilder))
+        val result = bb.xor(first, second)
         return memorize(name, result)
     }
 

@@ -8,7 +8,15 @@ abstract class IRInstructionVisitor<T> {
     abstract fun visit(alloc: Alloc): T
     abstract fun visit(generate: Generate): T
     abstract fun visit(lea: Lea): T
-    abstract fun visit(binary: ArithmeticBinary): T
+    abstract fun visit(add: Add): T
+    abstract fun visit(and: And): T
+    abstract fun visit(sub: Sub): T
+    abstract fun visit(mul: Mul): T
+    abstract fun visit(or: Or): T
+    abstract fun visit(xor: Xor): T
+    abstract fun visit(shl: Shl): T
+    abstract fun visit(shr: Shr): T
+    abstract fun visit(div: Div): T
     abstract fun visit(neg: Neg): T
     abstract fun visit(not: Not): T
     abstract fun visit(branch: Branch): T

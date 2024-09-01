@@ -41,7 +41,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                         is AggregateType -> {
                             val index = inst.index()
                             val offset = bb.insertBefore(inst) {
-                                it.arithmeticBinary(index, ArithmeticBinaryOp.Mul, Constant.of(index.asType(), baseType.sizeOf()))
+                                it.mul(index, Constant.of(index.asType(), baseType.sizeOf()))
                             }
                             return bb.replace(inst) { it.leaStack(inst.source(), Type.I8, offset) }
                         }
@@ -146,7 +146,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceByteDiv() {
         fun closure(bb: Block, inst: Instruction): Instruction {
             when {
-                binary(ArithmeticBinaryOp.Div, value(i8()), value(i8())) (inst) -> { inst as ArithmeticBinary
+                div(value(i8()), value(i8())) (inst) -> { inst as ArithmeticBinary
                     // Before:
                     //  %res = div i8 %a, %b
                     //
@@ -158,7 +158,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
 
                     val extFirst  = bb.insertBefore(inst) { it.sext(inst.first(), Type.I16) }
                     val extSecond = bb.insertBefore(inst) { it.sext(inst.second(), Type.I16) }
-                    val newDiv = bb.insertBefore(inst) { it.arithmeticBinary(extFirst, ArithmeticBinaryOp.Div, extSecond) }
+                    val newDiv = bb.insertBefore(inst) { it.div(extFirst, extSecond) }
                     bb.replace(inst) { it.trunc(newDiv, Type.I8) }
                     return newDiv
                 }
@@ -203,7 +203,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     killOnDemand(bb, inst)
                     return last
                 }
-                binary(ArithmeticBinaryOp.Div, constant().not(), nop()) (inst) -> { inst as ArithmeticBinary
+                div(constant().not(), nop()) (inst) -> { inst as ArithmeticBinary
                     // TODO temporal
                     val second = inst.second()
                     val copy = bb.insertBefore(inst) { it.copy(second) }

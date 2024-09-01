@@ -3,7 +3,6 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.platform.x64.codegen.visitors.*
-import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
 
@@ -209,6 +208,6 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {
-        throw RuntimeException("Internal error: '${ArithmeticBinaryOp.Add}' dst=$dst, first=$first, second=$second")
+        throw RuntimeException("Internal error: '${ir.instruction.Add.NAME}' dst=$dst, first=$first, second=$second")
     }
 }

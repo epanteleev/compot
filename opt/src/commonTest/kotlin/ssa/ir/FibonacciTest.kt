@@ -1,8 +1,6 @@
 package ssa.ir
 
-import ir.module.FunctionPrototype
 import ir.value.I32Value
-import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate
 import ir.module.Module
 import ir.module.block.BlockViewer
@@ -72,7 +70,7 @@ class FibonacciTest {
         builder.switchLabel(forBody)
         val v4 = builder.load(Type.I32, a)
         val v5 = builder.load(Type.I32, b)
-        val add = builder.arithmeticBinary(v4, ArithmeticBinaryOp.Add, v5)
+        val add = builder.add(v4, v5)
         builder.store(c, add)
         val v6 = builder.load(Type.I32, b)
         builder.store(a, v6)
@@ -82,7 +80,7 @@ class FibonacciTest {
 
         builder.switchLabel(forInc)
         val v8 = builder.load(Type.I32, i)
-        val inc = builder.arithmeticBinary(v8, ArithmeticBinaryOp.Add, I32Value(1))
+        val inc = builder.add(v8, I32Value(1))
         builder.store(i, inc)
 
         builder.branch(forCond)

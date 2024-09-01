@@ -3,7 +3,6 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.platform.x64.codegen.visitors.*
-import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 
 
@@ -161,6 +160,6 @@ class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {
-        throw RuntimeException("Internal error: '${ArithmeticBinaryOp.And}' dst=$dst, first=$first, second=$second")
+        throw RuntimeException("Internal error: '${ir.instruction.And.NAME}' dst=$dst, first=$first, second=$second")
     }
 }

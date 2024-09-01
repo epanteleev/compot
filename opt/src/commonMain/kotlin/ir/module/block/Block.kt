@@ -283,13 +283,40 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@df withOutput { Neg.make(it, this, valueType, value) }
     }
 
-    override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary = mc.df {
-        val ty = a.type()
-        require(ty is ArithmeticType) {
-            "should be arithmetic type, but ty=$ty"
-        }
+    override fun add(a: Value, b: Value): Add {
+        return withOutput { Add.make(it, this, a, b) }
+    }
 
-        return@df withOutput { ArithmeticBinary.make(it, this, ty, a, op, b) }
+    override fun and(a: Value, b: Value): And {
+        return withOutput { And.make(it, this, a, b) }
+    }
+
+    override fun or(a: Value, b: Value): Or {
+        return withOutput { Or.make(it, this, a, b) }
+    }
+
+    override fun shl(a: Value, b: Value): Shl {
+        return withOutput { Shl.make(it, this, a, b) }
+    }
+
+    override fun shr(a: Value, b: Value): Shr {
+        return withOutput { Shr.make(it, this, a, b) }
+    }
+
+    override fun div(a: Value, b: Value): Div {
+        return withOutput { Div.make(it, this, a, b) }
+    }
+
+    override fun sub(a: Value, b: Value): Sub {
+        return withOutput { Sub.make(it, this, a, b) }
+    }
+
+    override fun xor(a: Value, b: Value): Xor {
+        return withOutput { Xor.make(it, this, a, b) }
+    }
+
+    override fun mul(a: Value, b: Value): Mul {
+        return withOutput { Mul.make(it, this, a, b) }
     }
 
     override fun tupleDiv(a: Value, b: Value): TupleDiv = mc.df {

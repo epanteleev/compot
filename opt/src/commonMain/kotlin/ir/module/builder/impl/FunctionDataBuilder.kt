@@ -36,8 +36,40 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.neg(value)
     }
 
-    override fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary {
-        return bb.arithmeticBinary(a, op, b)
+    override fun add(a: Value, b: Value): Add {
+        return bb.add(a, b)
+    }
+
+    override fun xor(a: Value, b: Value): Xor {
+        return bb.xor(a, b)
+    }
+
+    override fun sub(a: Value, b: Value): Sub {
+        return bb.sub(a, b)
+    }
+
+    override fun mul(a: Value, b: Value): Mul {
+        return bb.mul(a, b)
+    }
+
+    override fun shr(a: Value, b: Value): Shr {
+        return bb.shr(a, b)
+    }
+
+    override fun or(a: Value, b: Value): Or {
+        return bb.or(a, b)
+    }
+
+    override fun shl(a: Value, b: Value): Shl {
+        return bb.shl(a, b)
+    }
+
+    override fun and(a: Value, b: Value): And {
+        return bb.and(a, b)
+    }
+
+    override fun div(a: Value, b: Value): Div {
+        return bb.div(a, b)
     }
 
     override fun tupleDiv(a: Value, b: Value): TupleDiv {

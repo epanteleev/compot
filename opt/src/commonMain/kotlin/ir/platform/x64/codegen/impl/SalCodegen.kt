@@ -2,8 +2,6 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.types.*
-import ir.instruction.ArithmeticBinaryOp
-import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
@@ -141,6 +139,6 @@ class SalCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {
-        throw RuntimeException("Internal error: '${ArithmeticBinaryOp.Shl}' dst=$dst, first=$first, second=$second")
+        throw RuntimeException("Internal error: '${ir.instruction.Shl.NAME}' dst=$dst, first=$first, second=$second")
     }
 }

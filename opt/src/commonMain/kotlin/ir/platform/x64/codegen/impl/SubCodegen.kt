@@ -2,7 +2,6 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.types.*
-import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
@@ -184,6 +183,6 @@ data class SubCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {
-        throw RuntimeException("Internal error: '${ArithmeticBinaryOp.Sub}' dst=$dst, first=$first, second=$second")
+        throw RuntimeException("Internal error: '${ir.instruction.Sub.NAME}' dst=$dst, first=$first, second=$second")
     }
 }

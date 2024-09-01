@@ -1,7 +1,6 @@
 package ssa.ir.codegen
 
 import asm.x64.GPRegister.*
-import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.Mem2RegFabric
 import ir.platform.x64.pass.analysis.regalloc.VirtualRegistersPool
@@ -28,7 +27,7 @@ class CodegenTest {
 
         val a = builder.load(Type.U64, arg1Alloc)
         val b = builder.load(Type.U64, arg2Alloc)
-        val add = builder.arithmeticBinary(a, ArithmeticBinaryOp.Add, b)
+        val add = builder.add(a, b)
 
         val printInt = moduleBuilder.createExternFunction("printInt", Type.Void, arrayListOf(Type.U64))
         val cont = builder.createLabel()

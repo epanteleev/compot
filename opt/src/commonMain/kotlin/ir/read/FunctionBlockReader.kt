@@ -6,6 +6,7 @@ import ir.types.*
 import ir.instruction.*
 import ir.read.bulder.*
 import ir.read.tokens.*
+import ir.value.LocalValue
 
 
 class FunctionBlockReader private constructor(private val iterator: TokenIterator,
@@ -16,13 +17,22 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         return iterator.expect<AnyValueToken>(expectMessage)
     }
 
-    private fun parseBinary(resultName: LocalValueToken, op: ArithmeticBinaryOp) {
+    private fun parseBinary(resultName: LocalValueToken, op: (LocalValueToken, AnyValueToken, AnyValueToken, ArithmeticTypeToken) -> LocalValue) {
         val resultType = iterator.expect<ArithmeticTypeToken>("result type")
         val first      = parseOperand("first operand")
         iterator.expect<Comma>("','")
 
         val second = parseOperand("second operand")
-        builder.arithmeticBinary(resultName, first, op, second, resultType)
+        op(resultName, first, second, resultType)
+    }
+
+    private fun parseIntBinary(resultName: LocalValueToken, op: (LocalValueToken, AnyValueToken, AnyValueToken, IntegerTypeToken) -> LocalValue) {
+        val resultType = iterator.expect<IntegerTypeToken>("result type")
+        val first      = parseOperand("first operand")
+        iterator.expect<Comma>("','")
+
+        val second = parseOperand("second operand")
+        op(resultName, first, second, resultType)
     }
 
     private fun parseDiv(resultName: LocalValueToken) {
@@ -56,7 +66,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                 if (resultType !is ArithmeticTypeToken) {
                     throw ParseErrorException("should be arithmetic type, but '${resultType}'")
                 }
-                builder.arithmeticBinary(resultName, first, ArithmeticBinaryOp.Div, second, resultType)
+                builder.div(resultName, first, second, resultType)
             }
         }
     }
@@ -471,15 +481,15 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
                 val instruction = iterator.expect<Identifier>("instruction name")
                 when (instruction.string) {
-                    "add"        -> parseBinary(currentTok, ArithmeticBinaryOp.Add)
-                    "sub"        -> parseBinary(currentTok, ArithmeticBinaryOp.Sub)
-                    "mul"        -> parseBinary(currentTok, ArithmeticBinaryOp.Mul)
+                    "add"        -> parseBinary(currentTok, builder::add)
+                    "sub"        -> parseBinary(currentTok, builder::sub)
+                    "mul"        -> parseBinary(currentTok, builder::mul)
                     "div"        -> parseDiv(currentTok)
-                    "shr"        -> parseBinary(currentTok, ArithmeticBinaryOp.Shr)
-                    "shl"        -> parseBinary(currentTok, ArithmeticBinaryOp.Shl)
-                    "and"        -> parseBinary(currentTok, ArithmeticBinaryOp.And)
-                    "xor"        -> parseBinary(currentTok, ArithmeticBinaryOp.Xor)
-                    "or"         -> parseBinary(currentTok, ArithmeticBinaryOp.Or)
+                    "shr"        -> parseIntBinary(currentTok, builder::shr)
+                    "shl"        -> parseIntBinary(currentTok, builder::shl)
+                    "and"        -> parseIntBinary(currentTok, builder::and)
+                    "xor"        -> parseBinary(currentTok, builder::xor)
+                    "or"         -> parseBinary(currentTok, builder::or)
                     "load"       -> parseLoad(currentTok)
                     "call"       -> parseCall(currentTok)
                     "sext"       -> parseSext(currentTok)

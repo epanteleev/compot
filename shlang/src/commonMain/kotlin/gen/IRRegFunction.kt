@@ -17,9 +17,7 @@ import gen.consteval.ConstEvalExpression
 import gen.consteval.ConstEvalExpressionInt
 import ir.Definitions.QWORD_SIZE
 import ir.attributes.GlobalValueAttribute
-import ir.global.GlobalConstant
 import ir.global.StringLiteralGlobalConstant
-import ir.instruction.ArithmeticBinaryOp
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
@@ -414,7 +412,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown type")
     }
 
-    private fun makeAlgebraicBinary(binop: BinaryOp, op: ArithmeticBinaryOp): Value {
+    private fun makeAlgebraicBinary(binop: BinaryOp, op: (a: Value, b: Value) -> LocalValue): Value {
         val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
 
         if (commonType is PointerType) {
@@ -434,13 +432,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             val size = lValueType.dereference().size()
             val sizeValue = Constant.of(Type.U64, size)
-            val mul = ir.arithmeticBinary(convertedRValue, ArithmeticBinaryOp.Mul, sizeValue)
+            val mul = ir.mul(convertedRValue, sizeValue)
 
-            val result = when (op) {
-                ArithmeticBinaryOp.Add -> ir.arithmeticBinary(convertedLValue, ArithmeticBinaryOp.Add, mul)
-                ArithmeticBinaryOp.Sub -> ir.arithmeticBinary(convertedLValue, ArithmeticBinaryOp.Sub, mul)
-                else -> throw IRCodeGenError("Unsupported operation for pointers: '$op'")
-            }
+            val result = op(convertedLValue, mul)
             return ir.convertToType(result, commonType)
 
         } else {
@@ -450,7 +444,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             val left = visitExpression(binop.left, true)
             val leftConverted = ir.convertToType(left, commonType)
 
-            return ir.arithmeticBinary(leftConverted, op, rightConverted)
+            return op(leftConverted, rightConverted)
         }
     }
 
@@ -469,11 +463,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitBinary(binop: BinaryOp): Value {
         return when (binop.opType) {
             BinaryOpType.ADD -> {
-                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Add)
+                makeAlgebraicBinary(binop, ir::add)
             }
 
             BinaryOpType.SUB -> {
-                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Sub)
+                makeAlgebraicBinary(binop, ir::sub)
             }
 
             BinaryOpType.ASSIGN -> {
@@ -507,7 +501,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     throw IRCodeGenError("Primitive type expected")
                 }
 
-                val sum = ir.arithmeticBinary(loadedLeft, ArithmeticBinaryOp.Add, rightConverted)
+                val sum = ir.add(loadedLeft, rightConverted)
                 ir.store(left, sum)
                 sum // TODO unchecked !!!
             }
@@ -525,7 +519,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     throw IRCodeGenError("Primitive type expected")
                 }
 
-                val div = ir.arithmeticBinary(loadedLeft, ArithmeticBinaryOp.Div, rightConverted)
+                val div = ir.div(loadedLeft, rightConverted)
                 ir.store(left, div)
                 div // TODO unchecked !!!
             }
@@ -543,17 +537,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     throw IRCodeGenError("Primitive type expected")
                 }
 
-                val mul = ir.arithmeticBinary(loadedLeft, ArithmeticBinaryOp.Mul, rightConverted)
+                val mul = ir.mul(loadedLeft, rightConverted)
                 ir.store(left, mul)
                 mul // TODO unchecked !!!
             }
 
             BinaryOpType.BIT_OR -> {
-                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Or)
+                makeAlgebraicBinary(binop, ir::or)
             }
 
             BinaryOpType.MUL -> {
-                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Mul)
+                makeAlgebraicBinary(binop, ir::mul)
             }
 
             BinaryOpType.NE -> {
@@ -610,24 +604,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.switchLabel(end)
                 ir.phi(listOf(U8Value(1), convertedRight), listOf(initialBB, bb))
             }
-            BinaryOpType.GE -> {
-                makeComparisonBinary(binop, ::ge)
-            }
-            BinaryOpType.EQ -> {
-                makeComparisonBinary(binop, ::eq)
-            }
-            BinaryOpType.SHL -> {
-                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Shl)
-            }
-            BinaryOpType.SHR -> {
-                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Shr)
-            }
-            BinaryOpType.BIT_AND -> {
-                makeAlgebraicBinary(binop, ArithmeticBinaryOp.And)
-            }
-            BinaryOpType.BIT_XOR -> {
-                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Xor)
-            }
+            BinaryOpType.GE  -> makeComparisonBinary(binop, ::ge)
+            BinaryOpType.EQ  -> makeComparisonBinary(binop, ::eq)
+            BinaryOpType.SHL -> makeAlgebraicBinary(binop, ir::shl)
+            BinaryOpType.SHR -> makeAlgebraicBinary(binop, ir::shr)
+            BinaryOpType.BIT_AND -> makeAlgebraicBinary(binop, ir::and)
+            BinaryOpType.BIT_XOR -> makeAlgebraicBinary(binop, ir::xor)
             BinaryOpType.MOD -> {
                 val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
 
@@ -640,19 +622,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val rem = ir.tupleDiv(leftConverted, rightConverted)
                 ir.proj(rem, 1)
             }
-            BinaryOpType.DIV -> {
-                makeAlgebraicBinary(binop, ArithmeticBinaryOp.Div)
-            }
+            BinaryOpType.DIV -> makeAlgebraicBinary(binop, ir::div)
             else -> throw IRCodeGenError("Unknown binary operation, op='${binop.opType}'")
         }
     }
 
-    private fun visitIncOrDec(unaryOp: UnaryOp, op: ArithmeticBinaryOp): Value {
+    private fun visitIncOrDec(unaryOp: UnaryOp, op: (a: Value, b: Value) -> LocalValue): Value {
         assertion(unaryOp.opType == PostfixUnaryOpType.INC || unaryOp.opType == PostfixUnaryOpType.DEC) {
             "Unknown operation, op=${unaryOp.opType}"
-        }
-        assertion(op == ArithmeticBinaryOp.Add || op == ArithmeticBinaryOp.Sub) {
-            "Unknown operation, op=${op}"
         }
 
         val ctype = unaryOp.resolveType(typeHolder)
@@ -662,21 +639,18 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val loaded = ir.load(type, addr)
         if (ctype is CPointerType) {
             val converted = ir.convertToType(loaded, Type.I64)
-            val inc = ir.arithmeticBinary(converted, op, Constant.of(Type.I64, ctype.dereference().size()))
+            val inc = op(converted, Constant.of(Type.I64, ctype.dereference().size()))
             ir.store(addr, ir.convertToType(inc, type))
         } else {
-            val inc = ir.arithmeticBinary(loaded, op, Constant.of(loaded.type(), 1))
+            val inc = op(loaded, Constant.of(loaded.type(), 1))
             ir.store(addr, ir.convertToType(inc, type))
         }
         return loaded
     }
 
-    private fun visitPrefixIncOrDec(unaryOp: UnaryOp, op: ArithmeticBinaryOp): Value {
+    private fun visitPrefixIncOrDec(unaryOp: UnaryOp, op: (a: Value, b: Value) -> LocalValue): Value {
         assertion(unaryOp.opType == PrefixUnaryOpType.INC || unaryOp.opType == PrefixUnaryOpType.DEC) {
             "Unknown operation, op=${unaryOp.opType}"
-        }
-        assertion(op == ArithmeticBinaryOp.Add || op == ArithmeticBinaryOp.Sub) {
-            "Unknown operation, op=${op}"
         }
 
         val ctype = unaryOp.resolveType(typeHolder)
@@ -686,11 +660,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val loaded = ir.load(type, addr)
         if (ctype is CPointerType) {
             val converted = ir.convertToType(loaded, Type.I64)
-            val inc = ir.arithmeticBinary(converted, op, Constant.of(Type.I64, ctype.dereference().size()))
+            val inc = op(converted, Constant.of(Type.I64, ctype.dereference().size()))
             ir.store(addr, ir.convertToType(inc, type))
             return inc
         } else {
-            val inc = ir.arithmeticBinary(loaded, op, Constant.of(loaded.type(), 1))
+            val inc = op(loaded, Constant.of(loaded.type(), 1))
             ir.store(addr, ir.convertToType(inc, type))
             return inc
         }
@@ -709,10 +683,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val loadedType = mb.toIRType<PrimitiveType>(typeHolder, type)
                 ir.load(loadedType, addr)
             }
-            PostfixUnaryOpType.INC -> visitIncOrDec(unaryOp, ArithmeticBinaryOp.Add)
-            PostfixUnaryOpType.DEC -> visitIncOrDec(unaryOp, ArithmeticBinaryOp.Sub)
-            PrefixUnaryOpType.INC  -> visitPrefixIncOrDec(unaryOp, ArithmeticBinaryOp.Add)
-            PrefixUnaryOpType.DEC  -> visitPrefixIncOrDec(unaryOp, ArithmeticBinaryOp.Sub)
+            PostfixUnaryOpType.INC -> visitIncOrDec(unaryOp, ir::add)
+            PostfixUnaryOpType.DEC -> visitIncOrDec(unaryOp, ir::sub)
+            PrefixUnaryOpType.INC  -> visitPrefixIncOrDec(unaryOp, ir::add)
+            PrefixUnaryOpType.DEC  -> visitPrefixIncOrDec(unaryOp, ir::sub)
             PrefixUnaryOpType.NEG  -> {
                 val value = visitExpression(unaryOp.primary, true)
                 val type = unaryOp.resolveType(typeHolder)

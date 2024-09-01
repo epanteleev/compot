@@ -13,7 +13,15 @@ import ir.value.Value
 interface InstructionFabric {
     fun neg(value: Value): Neg
     fun not(value: Value): Not
-    fun arithmeticBinary(a: Value, op: ArithmeticBinaryOp, b: Value): ArithmeticBinary
+    fun add(a: Value, b: Value): Add
+    fun and(a: Value, b: Value): And
+    fun or(a: Value, b: Value): Or
+    fun xor(a: Value, b: Value): Xor
+    fun div(a: Value, b: Value): Div
+    fun shl(a: Value, b: Value): Shl
+    fun shr(a: Value, b: Value): Shr
+    fun sub(a: Value, b: Value): Sub
+    fun mul(a: Value, b: Value): Mul
     fun tupleDiv(a: Value, b: Value): TupleDiv
     fun icmp(a: Value, predicate: IntPredicate, b: Value): IntCompare
     fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare

@@ -13,6 +13,14 @@ import common.assertion
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.global.GlobalConstant
+import ir.instruction.Add
+import ir.instruction.And
+import ir.instruction.Div
+import ir.instruction.Or
+import ir.instruction.Shl
+import ir.instruction.Shr
+import ir.instruction.Sub
+import ir.instruction.Xor
 import ir.instruction.lir.*
 import ir.instruction.lir.Lea
 import ir.module.block.Label
@@ -76,68 +84,110 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         asm.leave()
     }
 
-    override fun visit(binary: ArithmeticBinary) {
-        val first  = valueToRegister.operand(binary.first())
-        val second = valueToRegister.operand(binary.second())
-        val dst    = valueToRegister.operand(binary)
+    override fun visit(add: Add) {
+        val first  = valueToRegister.operand(add.first())
+        val second = valueToRegister.operand(add.second())
+        val dst    = valueToRegister.operand(add)
 
-        when (binary.op) {
-            ArithmeticBinaryOp.Add -> AddCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Mul -> MulCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Sub -> SubCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Xor -> XorCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.And -> AndCodegen(binary.type(), asm)(dst, first, second)
-            ArithmeticBinaryOp.Or  -> OrCodegen(binary.type(),  asm)(dst, first, second)
-            ArithmeticBinaryOp.Shl -> {
-                assertion(binary.type() !is FloatingPointType) {
-                    "can't generate code for byte shl: type=${binary.type()}"
+        AddCodegen(add.type(), asm)(dst, first, second)
+    }
+
+    override fun visit(and: And) {
+        val first  = valueToRegister.operand(and.first())
+        val second = valueToRegister.operand(and.second())
+        val dst    = valueToRegister.operand(and)
+
+        AndCodegen(and.type(), asm)(dst, first, second)
+    }
+
+    override fun visit(or: Or) {
+        val first  = valueToRegister.operand(or.first())
+        val second = valueToRegister.operand(or.second())
+        val dst    = valueToRegister.operand(or)
+
+        OrCodegen(or.type(), asm)(dst, first, second)
+    }
+
+    override fun visit(xor: Xor) {
+        val first  = valueToRegister.operand(xor.first())
+        val second = valueToRegister.operand(xor.second())
+        val dst    = valueToRegister.operand(xor)
+
+        XorCodegen(xor.type(), asm)(dst, first, second)
+    }
+
+    override fun visit(mul: Mul) {
+        val first  = valueToRegister.operand(mul.first())
+        val second = valueToRegister.operand(mul.second())
+        val dst    = valueToRegister.operand(mul)
+
+        MulCodegen(mul.type(), asm)(dst, first, second)
+    }
+
+    override fun visit(div: Div) {
+        val first  = valueToRegister.operand(div.first())
+        val second = valueToRegister.operand(div.second())
+        val dst    = valueToRegister.operand(div)
+
+        assertion(div.type() != Type.I8) {
+            "can't generate code for byte div: type=${div.type()}"
+        }
+
+        when (div.type()) {
+            is UnsignedIntType -> {
+                if (dst != rdx) {
+                    asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
                 }
-                when (binary.type()) {
-                    is UnsignedIntType -> ShlCodegen(binary.type(), asm)(dst, first, second)
-                    is SignedIntType   -> SalCodegen(binary.type(), asm)(dst, first, second)
-                    else -> throw CodegenException("unknown type=$binary.type()")
+                UIntDivCodegen(div.type(), rdx, asm)(dst, first, second)
+                if (dst != rdx) {
+                    asm.pop(POINTER_SIZE, rdx)
                 }
             }
-            ArithmeticBinaryOp.Shr -> {
-                assertion(binary.type() !is FloatingPointType) {
-                    "can't generate code for byte shr: type=${binary.type()}"
+            is SignedIntType -> {
+                if (dst != rdx) {
+                    asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
                 }
-                when (binary.type()) {
-                    is UnsignedIntType -> ShrCodegen(binary.type(), asm)(dst, first, second)
-                    is SignedIntType   -> SarCodegen(binary.type(), asm)(dst, first, second)
-                    else -> throw CodegenException("unknown type=$binary.type()")
+                IntDivCodegen(div.type(), rdx, asm)(dst, first, second)
+                if (dst != rdx) {
+                    asm.pop(POINTER_SIZE, rdx)
                 }
             }
-            ArithmeticBinaryOp.Div -> {
-                assertion(binary.type() != Type.I8) {
-                    "can't generate code for byte div: type=${binary.type()}"
-                }
-
-                when (binary.type()) {
-                    is UnsignedIntType -> {
-                        if (dst != rdx) {
-                            asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
-                        }
-                        UIntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
-                        if (dst != rdx) {
-                            asm.pop(POINTER_SIZE, rdx)
-                        }
-                    }
-                    is SignedIntType -> {
-                        if (dst != rdx) {
-                            asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
-                        }
-                        IntDivCodegen(binary.type(), rdx, asm)(dst, first, second)
-                        if (dst != rdx) {
-                            asm.pop(POINTER_SIZE, rdx)
-                        }
-                    }
-                    is FloatingPointType -> {
-                        FloatDivCodegen(binary.type(), asm)(dst, first, second)
-                    }
-                }
+            is FloatingPointType -> {
+                FloatDivCodegen(div.type(), asm)(dst, first, second)
             }
         }
+    }
+
+    override fun visit(shl: Shl) {
+        val first  = valueToRegister.operand(shl.first())
+        val second = valueToRegister.operand(shl.second())
+        val dst    = valueToRegister.operand(shl)
+
+        when (shl.type()) {
+            is UnsignedIntType -> ShlCodegen(shl.type(), asm)(dst, first, second)
+            is SignedIntType   -> SalCodegen(shl.type(), asm)(dst, first, second)
+            else -> throw CodegenException("unknown type=$shl.type()")
+        }
+    }
+
+    override fun visit(shr: Shr) {
+        val first  = valueToRegister.operand(shr.first())
+        val second = valueToRegister.operand(shr.second())
+        val dst    = valueToRegister.operand(shr)
+
+        when (shr.type()) {
+            is UnsignedIntType -> ShrCodegen(shr.type(), asm)(dst, first, second)
+            is SignedIntType   -> SarCodegen(shr.type(), asm)(dst, first, second)
+            else -> throw CodegenException("unknown type=$shr.type()")
+        }
+    }
+
+    override fun visit(sub: Sub) {
+        val first  = valueToRegister.operand(sub.first())
+        val second = valueToRegister.operand(sub.second())
+        val dst    = valueToRegister.operand(sub)
+
+        SubCodegen(sub.type(), asm)(dst, first, second)
     }
 
     private fun emitRetValue(retInstType: PrimitiveType, returnOperand: Operand, returnRegister: Register) = when (retInstType) {

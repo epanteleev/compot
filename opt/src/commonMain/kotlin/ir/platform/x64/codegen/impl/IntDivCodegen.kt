@@ -3,9 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import asm.x64.GPRegister.*
-import common.assertion
 import ir.platform.x64.codegen.visitors.*
-import ir.instruction.ArithmeticBinaryOp
 import ir.platform.x64.codegen.MacroAssembler
 
 
@@ -117,6 +115,6 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {
-        throw RuntimeException("Internal error: '${ArithmeticBinaryOp.Div}' dst=$dst, first=$first, second=$second")
+        throw RuntimeException("Internal error: '${ir.instruction.Div}' dst=$dst, first=$first, second=$second")
     }
 }

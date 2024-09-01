@@ -24,7 +24,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     private val interferenceGraph = data.analysis(InterferenceGraphFabric)
 
     private val registerMap = hashMapOf<LocalValue, Operand>()
-    private val fixedValues = arrayListOf<LocalValue>()
+    private val fixedValues = arrayListOf<LocalValue>() // Debug only purpose
     private val active      = hashMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
 

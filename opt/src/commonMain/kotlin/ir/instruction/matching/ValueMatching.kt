@@ -26,8 +26,8 @@ inline fun copy(crossinline origin: ValueMatcher): InstructionMatcher = {
     it is Copy && origin(it.origin())
 }
 
-inline fun binary(op: ArithmeticBinaryOp, crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
-    it is ArithmeticBinary && it.op == op && a(it.first()) && b(it.second())
+inline fun div(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
+    it is Div && a(it.first()) && b(it.second())
 }
 
 inline fun select(crossinline cond: ValueMatcher, crossinline onTrue: ValueMatcher, crossinline onFalse: ValueMatcher): InstructionMatcher = {

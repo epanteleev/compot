@@ -1,9 +1,7 @@
 package ssa.ir
 
-import ir.module.FunctionPrototype
 import ir.value.I64Value
 import ir.value.U16Value
-import ir.instruction.ArithmeticBinaryOp
 import ir.instruction.IntPredicate
 import ir.module.FunctionData
 import ir.module.block.BlockViewer
@@ -43,10 +41,7 @@ class CFGTraversalTest {
         builder.branch(mergeLabel)
 
         builder.switchLabel(mergeLabel)
-        val arithm = builder.arithmeticBinary(
-            U16Value(1337), ArithmeticBinaryOp.Sub,
-            U16Value(64)
-        )
+        val arithm = builder.sub(U16Value(1337), U16Value(64))
         builder.ret(Type.U16, arrayOf(arithm))
 
         val module = moduleBuilder.build()

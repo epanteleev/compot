@@ -37,7 +37,7 @@ class ReplaceFloatNeg private constructor(val functions: Map<String, FunctionDat
                 return inst
             }
 
-            return bb.replace(inst) { it.arithmeticBinary(inst.operand(), ArithmeticBinaryOp.Xor, minusZero(type)) }
+            return bb.replace(inst) { it.xor(inst.operand(), minusZero(type)) }
         }
 
         bb.transform { inst -> closure(bb, inst) }
