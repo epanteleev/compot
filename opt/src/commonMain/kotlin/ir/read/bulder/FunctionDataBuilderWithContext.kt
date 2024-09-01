@@ -94,67 +94,47 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.not(value))
     }
 
-    fun add(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
+    private fun arithmeticBinary(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken, op: (Value, Value) -> ArithmeticBinary): ArithmeticBinary {
         val first  = getValue(a, expectedType.type(moduleBuilder))
         val second = getValue(b, expectedType.type(moduleBuilder))
-        val result = bb.add(first, second)
+        val result = op(first, second)
         return memorize(name, result)
+    }
+
+    fun add(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
+        return arithmeticBinary(name, a, b, expectedType, bb::add)
     }
 
     fun sub(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
-        val first  = getValue(a, expectedType.type(moduleBuilder))
-        val second = getValue(b, expectedType.type(moduleBuilder))
-        val result = bb.sub(first, second)
-        return memorize(name, result)
+        return arithmeticBinary(name, a, b, expectedType, bb::sub)
     }
 
     fun mul(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
-        val first  = getValue(a, expectedType.type(moduleBuilder))
-        val second = getValue(b, expectedType.type(moduleBuilder))
-        val result = bb.mul(first, second)
-        return memorize(name, result)
+        return arithmeticBinary(name, a, b, expectedType, bb::mul)
     }
 
     fun div(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
-        val first  = getValue(a, expectedType.type(moduleBuilder))
-        val second = getValue(b, expectedType.type(moduleBuilder))
-        val result = bb.div(first, second)
-        return memorize(name, result)
+        return arithmeticBinary(name, a, b, expectedType, bb::div)
     }
 
     fun shl(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticBinary {
-        val first  = getValue(a, expectedType.type())
-        val second = getValue(b, expectedType.type())
-        val result = bb.shl(first, second)
-        return memorize(name, result)
+        return arithmeticBinary(name, a, b, expectedType, bb::shl)
     }
 
     fun shr(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticBinary {
-        val first  = getValue(a, expectedType.type())
-        val second = getValue(b, expectedType.type())
-        val result = bb.shr(first, second)
-        return memorize(name, result)
+        return arithmeticBinary(name, a, b, expectedType, bb::shr)
     }
 
     fun and(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticBinary {
-        val first  = getValue(a, expectedType.type())
-        val second = getValue(b, expectedType.type())
-        val result = bb.and(first, second)
-        return memorize(name, result)
+        return arithmeticBinary(name, a, b, expectedType, bb::and)
     }
 
     fun or(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
-        val first  = getValue(a, expectedType.type(moduleBuilder))
-        val second = getValue(b, expectedType.type(moduleBuilder))
-        val result = bb.or(first, second)
-        return memorize(name, result)
+        return arithmeticBinary(name, a, b, expectedType, bb::or)
     }
 
     fun xor(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
-        val first  = getValue(a, expectedType.type(moduleBuilder))
-        val second = getValue(b, expectedType.type(moduleBuilder))
-        val result = bb.xor(first, second)
-        return memorize(name, result)
+        return arithmeticBinary(name, a, b, expectedType, bb::xor)
     }
 
     fun tupleDiv(name: LocalValueToken, resultType: TupleTypeToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): TupleDiv {

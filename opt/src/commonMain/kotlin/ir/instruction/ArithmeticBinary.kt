@@ -2,17 +2,12 @@ package ir.instruction
 
 import common.assertion
 import ir.value.Value
-import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.types.ArithmeticType
 
 
 abstract class ArithmeticBinary(id: Identity, owner: Block, tp: ArithmeticType, a: Value, b: Value) :
     ValueInstruction(id, owner, tp, arrayOf(a, b)) {
-
-    override fun type(): ArithmeticType {
-        return tp as ArithmeticType
-    }
 
     fun first(): Value {
         assertion(operands.size == 2) {
