@@ -509,17 +509,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             BinaryOpType.DIV_ASSIGN -> {
                 val right = visitExpression(binop.right, true)
                 val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<NonTrivialType>(typeHolder, leftType)
+                val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
                 val rightConverted = ir.convertToType(right, leftIrType)
 
                 val left = visitExpression(binop.left, false)
-                val loadedLeft = if (leftType is CPrimitiveType) {
-                    ir.load(leftIrType as PrimitiveType, left)
-                } else {
-                    throw IRCodeGenError("Primitive type expected")
-                }
+                val loadedLeft = ir.load(leftIrType, left)
 
-                val div = ir.div(loadedLeft, rightConverted)
+                val div = divide(leftIrType, loadedLeft, rightConverted)
                 ir.store(left, div)
                 div // TODO unchecked !!!
             }
@@ -542,21 +538,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 mul // TODO unchecked !!!
             }
 
-            BinaryOpType.BIT_OR -> {
-                makeAlgebraicBinary(binop, ir::or)
-            }
-
-            BinaryOpType.MUL -> {
-                makeAlgebraicBinary(binop, ir::mul)
-            }
-
-            BinaryOpType.NE -> {
-                makeComparisonBinary(binop, ::ne)
-            }
-
-            BinaryOpType.GT -> {
-                makeComparisonBinary(binop, ::gt)
-            }
+            BinaryOpType.BIT_OR -> makeAlgebraicBinary(binop, ir::or)
+            BinaryOpType.MUL -> makeAlgebraicBinary(binop, ir::mul)
+            BinaryOpType.NE -> makeComparisonBinary(binop, ::ne)
+            BinaryOpType.GT -> makeComparisonBinary(binop, ::gt)
             BinaryOpType.LT -> {
                 makeComparisonBinary(binop, ::lt)
             }
@@ -622,8 +607,28 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val rem = ir.tupleDiv(leftConverted, rightConverted)
                 ir.proj(rem, 1)
             }
-            BinaryOpType.DIV -> makeAlgebraicBinary(binop, ir::div)
+            BinaryOpType.DIV -> {
+                val commonType = mb.toIRType<PrimitiveType>(typeHolder, binop.resolveType(typeHolder))
+
+                val right = visitExpression(binop.right, true)
+                val rightConverted = ir.convertToType(right, commonType)
+
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir.convertToType(left, commonType)
+
+                divide(commonType, leftConverted, rightConverted)
+            }
             else -> throw IRCodeGenError("Unknown binary operation, op='${binop.opType}'")
+        }
+    }
+
+    private fun divide(type: PrimitiveType, a: Value, b: Value): Value {
+        if (type is IntegerType) {
+            val tupleDiv = ir.tupleDiv(a, b)
+            return ir.proj(tupleDiv, 0)
+        } else {
+            assertion(type is FloatingPointType) { "Floating point type expected, but got $type" }
+            return ir.div(a, b)
         }
     }
 

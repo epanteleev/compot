@@ -51,7 +51,8 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
                 builder.tupleDiv(resultName, resultType, first, second, secondType)
             }
-            else -> {
+            is FloatTypeToken -> {
+                // %$resultName = div {float_type}, {firstType} {first}, {secondType} {second}
                 iterator.expect<Comma>("','")
                 val firstType = iterator.expect<PrimitiveTypeToken>("first operand type")
                 val first = parseOperand("first operand")
@@ -63,11 +64,9 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                 if (firstType.type() != secondType.type()) {
                     throw ParseErrorException("should be the same integer type: first=${firstType.type()}, second=${secondType.type()}")
                 }
-                if (resultType !is ArithmeticTypeToken) {
-                    throw ParseErrorException("should be arithmetic type, but '${resultType}'")
-                }
                 builder.div(resultName, first, second, resultType)
             }
+            else -> throw ParseErrorException("should be floating point or tuple type", resultType)
         }
     }
 
@@ -474,63 +473,58 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         builder.memcpy(dst, dstType, src, srcType, constant)
     }
 
-    private fun parseInstruction(currentTok: Token) {
-        when (currentTok) {
-            is LocalValueToken -> {
-                iterator.expect<Equal>("'='")
+    private fun parseInstruction(currentTok: Token) = when (currentTok) {
+        is LocalValueToken -> {
+            iterator.expect<Equal>("'='")
 
-                val instruction = iterator.expect<Identifier>("instruction name")
-                when (instruction.string) {
-                    "add"        -> parseBinary(currentTok, builder::add)
-                    "sub"        -> parseBinary(currentTok, builder::sub)
-                    "mul"        -> parseBinary(currentTok, builder::mul)
-                    "div"        -> parseDiv(currentTok)
-                    "shr"        -> parseIntBinary(currentTok, builder::shr)
-                    "shl"        -> parseIntBinary(currentTok, builder::shl)
-                    "and"        -> parseIntBinary(currentTok, builder::and)
-                    "xor"        -> parseBinary(currentTok, builder::xor)
-                    "or"         -> parseBinary(currentTok, builder::or)
-                    "load"       -> parseLoad(currentTok)
-                    "call"       -> parseCall(currentTok)
-                    "sext"       -> parseSext(currentTok)
-                    "zext"       -> parseZext(currentTok)
-                    "trunc"      -> parseTrunc(currentTok)
-                    "flag2int"   -> parseFlag2Int(currentTok)
-                    "int2fp"     -> parseInt2Float(currentTok)
-                    "bitcast"    -> parseBitcast(currentTok)
-                    "fptrunc"    -> parseFptrunc(currentTok)
-                    "fpext"      -> parseFpext(currentTok)
-                    FloatToInt.NAME  -> parseFloat2Int(currentTok)
-                    Int2Pointer.NAME -> parseInt2Pointer(currentTok)
-                    Pointer2Int.NAME -> parsePointer2Int(currentTok)
-                    Alloc.NAME       -> parseStackAlloc(currentTok)
-                    "phi"        -> parsePhi(currentTok)
-                    "gep"        -> parseGep(currentTok)
-                    "neg"        -> parseNeg(currentTok)
-                    "not"        -> parseNot(currentTok)
-                    "icmp"       -> parseIcmp(currentTok)
-                    "fcmp"       -> parseFcmp(currentTok)
-                    "gfp"        -> parseGfp(currentTok)
-                    "select"     -> parseSelect(currentTok)
-                    Projection.NAME -> parseProjection(currentTok)
-                    else -> throw ParseErrorException("instruction name", instruction)
-                }
+            val instruction = iterator.expect<Identifier>("instruction name")
+            when (instruction.string) {
+                Add.NAME     -> parseBinary(currentTok, builder::add)
+                Sub.NAME     -> parseBinary(currentTok, builder::sub)
+                Mul.NAME     -> parseBinary(currentTok, builder::mul)
+                Div.NAME     -> parseDiv(currentTok)
+                Shr.NAME     -> parseIntBinary(currentTok, builder::shr)
+                Shl.NAME     -> parseIntBinary(currentTok, builder::shl)
+                And.NAME     -> parseIntBinary(currentTok, builder::and)
+                Xor.NAME     -> parseBinary(currentTok, builder::xor)
+                Or.NAME      -> parseBinary(currentTok, builder::or)
+                "load"       -> parseLoad(currentTok)
+                "call"       -> parseCall(currentTok)
+                "sext"       -> parseSext(currentTok)
+                "zext"       -> parseZext(currentTok)
+                "trunc"      -> parseTrunc(currentTok)
+                "flag2int"   -> parseFlag2Int(currentTok)
+                "int2fp"     -> parseInt2Float(currentTok)
+                "bitcast"    -> parseBitcast(currentTok)
+                "fptrunc"    -> parseFptrunc(currentTok)
+                "fpext"      -> parseFpext(currentTok)
+                FloatToInt.NAME  -> parseFloat2Int(currentTok)
+                Int2Pointer.NAME -> parseInt2Pointer(currentTok)
+                Pointer2Int.NAME -> parsePointer2Int(currentTok)
+                Alloc.NAME       -> parseStackAlloc(currentTok)
+                "phi"        -> parsePhi(currentTok)
+                "gep"        -> parseGep(currentTok)
+                "neg"        -> parseNeg(currentTok)
+                "not"        -> parseNot(currentTok)
+                "icmp"       -> parseIcmp(currentTok)
+                "fcmp"       -> parseFcmp(currentTok)
+                "gfp"        -> parseGfp(currentTok)
+                "select"     -> parseSelect(currentTok)
+                Projection.NAME -> parseProjection(currentTok)
+                else -> throw ParseErrorException("instruction name", instruction)
             }
-            is LabelDefinition -> builder.switchLabel(currentTok)
-            is Identifier -> {
-                when (currentTok.string) {
-                    Return.NAME -> parseRet()
-                    Call.NAME   -> parseVCall()
-                    Store.NAME  -> parseStore()
-                    Branch.NAME -> parseBranch()
-                    Switch.NAME -> parseSwitch()
-                    Memcpy.NAME -> parseMemcpy()
-                    else        -> throw ParseErrorException("instruction", currentTok)
-                }
-            }
-
-            else -> throw ParseErrorException("instruction", currentTok)
         }
+        is LabelDefinition -> builder.switchLabel(currentTok)
+        is Identifier -> when (currentTok.string) {
+            Return.NAME -> parseRet()
+            Call.NAME   -> parseVCall()
+            Store.NAME  -> parseStore()
+            Branch.NAME -> parseBranch()
+            Switch.NAME -> parseSwitch()
+            Memcpy.NAME -> parseMemcpy()
+            else        -> throw ParseErrorException("instruction", currentTok)
+        }
+        else -> throw ParseErrorException("instruction", currentTok)
     }
 
     private fun parseSwitch() {

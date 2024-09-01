@@ -1,15 +1,16 @@
 package ir.instruction
 
-import ir.instruction.utils.IRInstructionVisitor
-import ir.module.block.Block
-import ir.types.ArithmeticType
 import ir.types.Type
 import ir.value.Value
+import ir.module.block.Block
+import ir.types.FloatingPointType
+import ir.instruction.utils.IRInstructionVisitor
 
-class Div private constructor(id: Identity, owner: Block, tp: ArithmeticType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {
+
+class Div private constructor(id: Identity, owner: Block, tp: FloatingPointType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {
     override fun dump(): String = "%${name()} = $NAME $tp ${first()}, ${second()}"
 
-    override fun type(): ArithmeticType = tp as ArithmeticType
+    override fun type(): FloatingPointType = tp as FloatingPointType
 
     override fun <T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -27,11 +28,11 @@ class Div private constructor(id: Identity, owner: Block, tp: ArithmeticType, a:
                 "incorrect types in '$id' a=$a:$aType, b=$b:$bType"
             }
 
-            return registerUser(Div(id, owner, aType as ArithmeticType, a, b), a, b)
+            return registerUser(Div(id, owner, aType as FloatingPointType, a, b), a, b)
         }
 
         private fun isAppropriateTypes(tp: Type, aType: Type, bType: Type): Boolean {
-            if (tp !is ArithmeticType) {
+            if (tp !is FloatingPointType) {
                 return false
             }
             return aType == tp && bType == tp

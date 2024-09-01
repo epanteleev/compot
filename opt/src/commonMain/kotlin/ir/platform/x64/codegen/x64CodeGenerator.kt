@@ -358,7 +358,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             if (quotient != null) {
                 valueToRegister.operand(quotient)
             } else {
-                rax
+                null
             }
         }
 
@@ -367,7 +367,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             if (remainder != null) {
                 valueToRegister.operand(remainder)
             } else {
-                rdx
+                null
             }
         }
 
@@ -375,8 +375,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
         }
         when (val type = divType.asInnerType<ArithmeticType>(1)) {
-            is SignedIntType   -> IntDivCodegen(type, remainderOperand, asm)(quotientOperand, first, second)
-            is UnsignedIntType -> UIntDivCodegen(type, remainderOperand, asm)(quotientOperand, first, second)
+            is SignedIntType   -> IntDivCodegen(type, remainderOperand ?: rdx, asm)(quotientOperand ?: rax, first, second)
+            is UnsignedIntType -> UIntDivCodegen(type, remainderOperand ?: rdx, asm)(quotientOperand ?: rax, first, second)
             else -> throw RuntimeException("type=$type")
         }
         if (quotientOperand != rdx && remainderOperand != rdx) {

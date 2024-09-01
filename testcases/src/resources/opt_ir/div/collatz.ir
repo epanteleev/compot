@@ -22,8 +22,9 @@ if.end:
 
 if.then2:
   %2 = load i32 %x.addr
-  %div = div i32, i32 %2, i32 2
-  %call = call i32 @collatz(%div: i32) br label %next1
+  %div = div |i32, i32|, i32 %2, i32 2
+  %q = proj |i32, i32|, i32 %div, 0
+  %call = call i32 @collatz(%q: i32) br label %next1
 
 next1:
   store ptr %retval, i32 %call

@@ -113,7 +113,7 @@ class FunctionDataBuilderWithContext private constructor(
         return arithmeticBinary(name, a, b, expectedType, bb::mul)
     }
 
-    fun div(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
+    fun div(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: FloatTypeToken): ArithmeticBinary {
         return arithmeticBinary(name, a, b, expectedType, bb::div)
     }
 
