@@ -17,10 +17,6 @@ internal class ConstantLoading private constructor(private val cfg: FunctionData
                     val lea = bb.insertBefore(inst) { it.lea(use) }
                     bb.updateDF(inst, i, lea)
                     inserted = lea
-                } else if (use is GlobalConstant) {
-                    val lea = bb.insertBefore(inst) { it.copy(use) }
-                    bb.updateDF(inst, i, lea)
-                    inserted = lea
                 } else if (use is ExternValue) {
                     val lea = bb.insertBefore(inst) { it.load(Type.Ptr, use) }
                     bb.updateDF(inst, i, lea)

@@ -25,15 +25,10 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
                         val indexImm = index as ImmInt
                         asm.movf(size, source, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
                     }
-                    dst is Address && source is Address && index is Imm -> {
-                        TODO("untested")
+                    dst is Address2 && source is Address && index is Imm -> {
                         val indexImm = index as ImmInt
-                        if (dst is Address2) {
-                            asm.movf(size, source, xmmTemp1)
-                            asm.movf(size, xmmTemp1, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
-                        } else {
-                            default(dst, source, indexImm)
-                        }
+                        asm.movf(size, source, xmmTemp1)
+                        asm.movf(size, xmmTemp1, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
                     }
                     else -> {
                         println("${index::class}")

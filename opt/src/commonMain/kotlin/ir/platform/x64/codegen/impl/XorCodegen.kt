@@ -42,7 +42,12 @@ data class XorCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+        if (first == dst) {
+            asm.xor(size, second, dst)
+        } else {
+            asm.mov(size, second, dst)
+            asm.xor(size, first, dst)
+        }
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
@@ -138,9 +143,8 @@ data class XorCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
     }
 
     override fun raaF(dst: XmmRegister, first: Address, second: Address) {
-        asm.movf(size, first, xmmTemp1)
-        asm.xorpf(size, second, xmmTemp1)
-        asm.movf(size, xmmTemp1, dst)
+        asm.movf(size, first, dst)
+        asm.xorpf(size, second, dst)
     }
 
     override fun araF(dst: Address, first: XmmRegister, second: Address) {
