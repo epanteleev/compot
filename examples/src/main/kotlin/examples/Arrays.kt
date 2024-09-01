@@ -1,13 +1,12 @@
 package examples
 
 import ir.types.*
-import ir.module.FunctionPrototype
 import ir.value.I32Value
 import ir.value.U64Value
 import ir.module.builder.impl.ModuleBuilder
+import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.analysis.VerifySSA
 import ir.pass.transform.Mem2RegFabric
-
 
 
 fun main() {
@@ -42,13 +41,12 @@ fun main() {
 
     println(module.toString())
 
-    val helloFn = FunctionPrototype("main", Type.U64, arrayListOf())
-    val data = module.findFunction(helloFn)
+    val data = module.findFunction("main")
 
-    println(data.liveness())
+    println(data.analysis(LivenessAnalysisPassFabric))
     val newModule = Mem2RegFabric.create(module).run()
     println(newModule.toString())
 
     VerifySSA.run(newModule)
-    println(data.liveness())
+    println(data.analysis(LivenessAnalysisPassFabric))
 }

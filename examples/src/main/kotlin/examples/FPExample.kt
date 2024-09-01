@@ -1,7 +1,6 @@
 package examples
 
 import ir.types.Type
-import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
@@ -21,7 +20,7 @@ fun main() {
 
         load(Type.F32, first)
         val s = load(Type.F32, second)
-        val res = arithmeticBinary(s, ArithmeticBinaryOp.Add, s)
+        val res = add(s, s)
         val cont = createLabel()
         vcall(printFloat, arrayListOf(res), cont)
         switchLabel(cont)

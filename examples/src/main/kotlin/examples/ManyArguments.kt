@@ -1,7 +1,6 @@
 package examples
 
 import ir.types.Type
-import ir.instruction.ArithmeticBinaryOp
 import ir.module.builder.impl.ModuleBuilder
 
 
@@ -42,25 +41,25 @@ fun main() {
 
     val a = builder.load(Type.U64, arg1Alloc)
     val b = builder.load(Type.U64, arg2Alloc)
-    val add1 = builder.arithmeticBinary(a, ArithmeticBinaryOp.Add, b)
+    val add1 = builder.add(a, b)
 
     val c = builder.load(Type.U64, arg3Alloc)
-    val add2 = builder.arithmeticBinary(add1, ArithmeticBinaryOp.Add, c)
+    val add2 = builder.add(add1, c)
 
     val d = builder.load(Type.U64, arg4Alloc)
-    val add3 = builder.arithmeticBinary(add2, ArithmeticBinaryOp.Add, d)
+    val add3 = builder.add(add2, d)
 
     val e = builder.load(Type.U64, arg5Alloc)
-    val add4 = builder.arithmeticBinary(add3, ArithmeticBinaryOp.Add, e)
+    val add4 = builder.add(add3, e)
 
     val f = builder.load(Type.U64, arg6Alloc)
-    val add5 = builder.arithmeticBinary(add4, ArithmeticBinaryOp.Add, f)
+    val add5 = builder.add(add4, f)
 
     val f1 = builder.load(Type.U64, arg7Alloc)
-    val add6 = builder.arithmeticBinary(add5, ArithmeticBinaryOp.Add, f1)
+    val add6 = builder.add(add5, f1)
 
     val f2 = builder.load(Type.U64, arg8Alloc)
-    val add7 = builder.arithmeticBinary(add6, ArithmeticBinaryOp.Add, f2)
+    val add7 = builder.add(add6, f2)
 
     val cont = builder.createLabel()
     builder.vcall(printInt, arrayListOf(add7), cont)

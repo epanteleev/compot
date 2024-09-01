@@ -17,7 +17,7 @@ fun main() {
         val cont = createLabel()
         call(printf, arrayListOf(helloStr), cont)
         switchLabel(cont)
-        ret(Type.U32, arrayOf(I32Value(0)))
+        ret(Type.I32, arrayOf(I32Value(0)))
     }
 
     val module = builder.build()
