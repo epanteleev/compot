@@ -1,6 +1,5 @@
 package ir.pass.transform.auxiliary
 
-import ir.global.GlobalValue
 import ir.types.*
 import ir.value.*
 import ir.module.*
@@ -13,7 +12,7 @@ import ir.pass.analysis.traverse.BfsOrderOrderFabric
 
 class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceAllocLoadStores() {
-        fun closure(bb: Block, inst: Instruction): Instruction? = when {
+        fun closure(bb: Block, inst: Instruction): Instruction = when {
             store(generate(), nop()) (inst) -> { inst as Store
                 val toValue = inst.pointer().asValue<Generate>()
                 bb.replace(inst) { it.move(toValue, inst.value()) }
@@ -146,22 +145,6 @@ class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceByteDiv() {
         fun closure(bb: Block, inst: Instruction): Instruction {
             when {
-                div(value(i8()), value(i8())) (inst) -> { inst as ArithmeticBinary
-                    // Before:
-                    //  %res = div i8 %a, %b
-                    //
-                    // After:
-                    //  %extFirst  = sext %a to i16
-                    //  %extSecond = sext %b to i16
-                    //  %resI16 = div i16, %extFirst, %extSecond
-                    //  %res = trunc i16 %resI16 to i8
-
-                    val extFirst  = bb.insertBefore(inst) { it.sext(inst.first(), Type.I16) }
-                    val extSecond = bb.insertBefore(inst) { it.sext(inst.second(), Type.I16) }
-                    val newDiv = bb.insertBefore(inst) { it.div(extFirst, extSecond) }
-                    bb.replace(inst) { it.trunc(newDiv, Type.I8) }
-                    return newDiv
-                }
                 tupleDiv(value(i8()), value(i8())) (inst) -> { inst as TupleDiv
                     // Before:
                     //  %resANDrem = div i8 %a, %b
@@ -230,8 +213,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     val extOnTrue  = bb.insertBefore(inst) { it.sext(inst.onTrue(), Type.I16) }
                     val extOnFalse = bb.insertBefore(inst) { it.sext(inst.onFalse(), Type.I16) }
                     val newSelect  = bb.insertBefore(inst) { it.select(inst.condition(), Type.I16, extOnTrue, extOnFalse) }
-                    bb.replace(inst) { it.trunc(newSelect, Type.I8) }
-                    return newSelect
+                    return bb.replace(inst) { it.trunc(newSelect, Type.I8) }
                 }
                 select(nop(), value(u8()), value(u8())) (inst) -> { inst as Select
                     // Before:
@@ -246,8 +228,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     val extOnTrue  = bb.insertBefore(inst) { it.zext(inst.onTrue(), Type.U16) }
                     val extOnFalse = bb.insertBefore(inst) { it.zext(inst.onFalse(), Type.U16) }
                     val newSelect  = bb.insertBefore(inst) { it.select(inst.condition(), Type.U16, extOnTrue, extOnFalse) }
-                    bb.replace(inst) { it.trunc(newSelect, Type.U8) }
-                    return newSelect
+                    return bb.replace(inst) { it.trunc(newSelect, Type.U8) }
                 }
             }
             return inst

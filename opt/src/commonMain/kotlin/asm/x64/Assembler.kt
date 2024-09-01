@@ -1,7 +1,5 @@
 package asm.x64
 
-import ir.instruction.Instruction
-
 data class ObjFunctionCreationException(override val message: String): Exception(message)
 
 private data class BuilderContext(var label: Label, var instructions: InstructionList)
@@ -144,36 +142,21 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
         else -> throw IllegalArgumentException("size=$size")
     }
 
-    fun xor(size: Int, first: Operand, destination: GPRegister): Operand {
-        add(Xor(size, first, destination))
-        return destination
-    }
+    fun xor(size: Int, first: Operand, destination: GPRegister) = add(Xor(size, first, destination))
 
-    fun test(size: Int, first: GPRegister, second: Operand) {
-        add(Test(size, first, second))
-    }
+    fun test(size: Int, first: GPRegister, second: Operand) = add(Test(size, first, second))
 
-    fun setcc(size: Int, tp: SetCCType, reg: GPRegister) {
-        add(SetCc(size, tp, reg))
-    }
+    fun setcc(size: Int, tp: SetCCType, dst: GPRegister)= add(SetCc(size, tp, dst))
+    fun setcc(size: Int, tp: SetCCType, dst: Address)   = add(SetCc(size, tp, dst))
 
-    fun setcc(size: Int, tp: SetCCType, addr: Address) {
-        add(SetCc(size, tp, addr))
-    }
-
+    // Push Word, Doubleword, or Quadword Onto the Stack
     fun push(size: Int, reg: GPRegister) = add(Push(size, reg))
-
     fun push(size: Int, imm: Imm32) = add(Push(size, imm))
 
-    fun pop(size: Int, toReg: GPRegister) {
-        add(Pop(size, toReg))
-    }
+    // Pop a Value From the Stack
+    fun pop(size: Int, toReg: GPRegister) = add(Pop(size, toReg))
 
-    fun <T: Operand> movOld(size: Int, src: Operand, des: T): T {
-        add(Mov(size, src, des))
-        return des
-    }
-
+    // Move
     fun mov(size: Int, src: GPRegister, dst: GPRegister) = add(Mov(size, src, dst))
     fun mov(size: Int, src: Address, dst: GPRegister)    = add(Mov(size, src, dst))
     fun mov(size: Int, src: GPRegister, dst: Address)    = add(Mov(size, src, dst))
@@ -228,7 +211,12 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     protected fun call(reg: GPRegister) = add(Call(reg))
     protected fun call(reg: Address)    = add(Call(reg))
 
-    fun cmp(size: Int, first: Operand, second: Operand) = add(Cmp(size, first, second))
+    // Compare Two Operands
+    fun cmp(size: Int, first: GPRegister, second: GPRegister) = add(Cmp(size, first, second))
+    fun cmp(size: Int, first: Imm32, second: GPRegister)      = add(Cmp(size, first, second))
+    fun cmp(size: Int, first: Imm32, second: Address)         = add(Cmp(size, first, second))
+    fun cmp(size: Int, first: GPRegister, second: Address)    = add(Cmp(size, first, second))
+    fun cmp(size: Int, first: Address, second: GPRegister)    = add(Cmp(size, first, second))
 
     fun jcc(jmpType: CondType, label: String) = add(Jcc(jmpType, label))
     fun jump(label: String) = add(Jump(label))

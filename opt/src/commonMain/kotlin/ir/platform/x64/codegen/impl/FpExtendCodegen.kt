@@ -8,7 +8,6 @@ import ir.platform.x64.codegen.visitors.*
 import ir.platform.x64.CallConvention.xmmTemp1
 
 
-
 data class FpExtendCodegen(val toType: FloatingPointType, val asm: Assembler):
     XmmOperandsVisitorUnaryOp {
     private val toSize = toType.sizeOf()

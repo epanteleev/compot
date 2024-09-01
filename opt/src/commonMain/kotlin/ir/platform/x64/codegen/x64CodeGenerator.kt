@@ -129,33 +129,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val second = valueToRegister.operand(div.second())
         val dst    = valueToRegister.operand(div)
 
-        assertion(div.type() != Type.I8) {
-            "can't generate code for byte div: type=${div.type()}"
-        }
-
-        when (div.type()) {
-            is UnsignedIntType -> {
-                if (dst != rdx) {
-                    asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
-                }
-                UIntDivCodegen(div.type(), rdx, asm)(dst, first, second)
-                if (dst != rdx) {
-                    asm.pop(POINTER_SIZE, rdx)
-                }
-            }
-            is SignedIntType -> {
-                if (dst != rdx) {
-                    asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
-                }
-                IntDivCodegen(div.type(), rdx, asm)(dst, first, second)
-                if (dst != rdx) {
-                    asm.pop(POINTER_SIZE, rdx)
-                }
-            }
-            is FloatingPointType -> {
-                FloatDivCodegen(div.type(), asm)(dst, first, second)
-            }
-        }
+        FloatDivCodegen(div.type(), asm)(dst, first, second)
     }
 
     override fun visit(shl: Shl) {
@@ -166,7 +140,6 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         when (shl.type()) {
             is UnsignedIntType -> ShlCodegen(shl.type(), asm)(dst, first, second)
             is SignedIntType   -> SalCodegen(shl.type(), asm)(dst, first, second)
-            else -> throw CodegenException("unknown type=$shl.type()")
         }
     }
 
@@ -178,7 +151,6 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         when (shr.type()) {
             is UnsignedIntType -> ShrCodegen(shr.type(), asm)(dst, first, second)
             is SignedIntType   -> SarCodegen(shr.type(), asm)(dst, first, second)
-            else -> throw CodegenException("unknown type=$shr.type()")
         }
     }
 
@@ -458,25 +430,17 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(load: Load) {
-        val operand = load.operand()
-        val pointer = valueToRegister.operand(operand)
+        val pointer = valueToRegister.operand(load.operand())
         val value   = valueToRegister.operand(load)
-        LoadCodegen(load.type(), asm)( value, pointer)
+        LoadCodegen(load.type(), asm)(value, pointer)
     }
 
-    override fun visit(icmp: IntCompare) { //TODO
-        var first  = valueToRegister.operand(icmp.first())
+    override fun visit(icmp: IntCompare) {
+        val first  = valueToRegister.operand(icmp.first())
         val second = valueToRegister.operand(icmp.second())
         val dst    = valueToRegister.operand(icmp)
-        val size = icmp.first().asType<NonTrivialType>().sizeOf()
 
-        first = if (first is Address2 || first is ImmInt) { //TODO???
-            asm.movOld(size, first, temp1)
-        } else {
-            first
-        }
-
-        asm.cmp(size, second, first as GPRegister)
+        IntCmpCodegen(icmp.first().asType(), asm)(first, second)
         if (needSetcc(icmp)) {
             asm.setcc(icmp.predicate(), dst)
         }
@@ -491,33 +455,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val first  = valueToRegister.operand(fcmp.first())
         val second = valueToRegister.operand(fcmp.second())
         val dst    = valueToRegister.operand(fcmp)
-        val size = fcmp.first().asType<NonTrivialType>().sizeOf()
 
-        when (first) {
-            is XmmRegister -> when (second) {
-                is XmmRegister -> {
-                    asm.cmpf(size, second, first)
-                }
-                is Address -> {
-                    asm.movf(size, second, xmmTemp1)
-                    asm.cmpf(size, xmmTemp1, first)
-                }
-                else -> throw CodegenException("unknown value=$second")
-            }
-            is Address -> when (second) {
-                is XmmRegister -> {
-                    asm.movf(size, first, xmmTemp1)
-                    asm.cmpf(size, second, xmmTemp1)
-                }
-                is Address -> {
-                    asm.movf(size, first, xmmTemp1)
-                    asm.cmpf(size, second, xmmTemp1)
-                }
-                else -> throw CodegenException("unknown value=$second")
-            }
-            is ImmInt -> TODO()
-            else -> throw CodegenException("unknown value=$second")
-        }
+        FloatCmpCodegen(fcmp.first().asType(), asm)(first, second)
         if (needSetcc(fcmp)) {
             asm.setcc(fcmp.predicate(), dst)
         }
@@ -610,7 +549,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         }
 
         for ((idx, arg) in context.savedXmmRegisters.withIndex()) {
-            asm.movf(8, arg, Address.from(rsp, -(8 * idx + 8))) //TODO 16???
+            asm.movf(8, arg, Address.from(rsp, -(QWORD_SIZE * idx + QWORD_SIZE)))
         }
 
         val size = context.adjustStackSize()
@@ -629,7 +568,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         }
 
         for ((idx, arg) in context.savedXmmRegisters.reversed().withIndex()) {
-            asm.movf(8, Address.from(rsp, -(8 * (context.savedXmmRegisters.size - idx - 1) + 8)), arg) //TODO 16???
+            asm.movf(8, Address.from(rsp, -(QWORD_SIZE * (context.savedXmmRegisters.size - idx - 1) + QWORD_SIZE)), arg)
         }
 
         for (arg in context.savedRegisters.reversed()) {

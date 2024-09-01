@@ -242,11 +242,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
         fn(it)
     }
 
-    fun removeIf(filter: (Instruction) -> Boolean): Boolean = mc.dfANDcf { //TODO
-        return@dfANDcf instructions.removeIf { filter(it) }
-    }
-
-    fun kill(instruction: Instruction, replacement: Value): Instruction? {
+    fun kill(instruction: Instruction, replacement: Value): Instruction? = mc.df {
         assertion(instruction.owner() === this) {
             "instruction=$instruction is not in bb=$this"
         }
@@ -258,7 +254,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
 
         val removed = remove(instruction)
         removed.destroy()
-        return next
+        return@df next
     }
 
     private fun remove(instruction: Instruction): Instruction {

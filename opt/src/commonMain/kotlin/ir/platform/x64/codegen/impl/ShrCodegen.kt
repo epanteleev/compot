@@ -10,11 +10,9 @@ import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 class ShrCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp, XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
-    operator fun invoke(dst: Operand, first: Operand, second: Operand) {
-        when (type) {
-            is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
-            is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
-        }
+    operator fun invoke(dst: Operand, first: Operand, second: Operand) = when (type) {
+        is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
+        is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
