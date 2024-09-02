@@ -18,7 +18,6 @@ class SarCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        TODO("untested")
         when (dst) {
             first -> {
                 asm.mov(size, second, temp1)
@@ -36,7 +35,8 @@ class SarCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.sar(size, second, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
@@ -98,7 +98,13 @@ class SarCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.sar(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.sar(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

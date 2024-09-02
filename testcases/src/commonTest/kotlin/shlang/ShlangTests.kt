@@ -204,6 +204,12 @@ abstract class ShlangTests: CommonCTest() {
         assertEquals("Hello, World!\n", result.error)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testStrcmp1() {
+        val result = runCTest("shlang/strcmp1", listOf("runtime/runtime.c"), options())
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class ShlangTestsO0: ShlangTests() {

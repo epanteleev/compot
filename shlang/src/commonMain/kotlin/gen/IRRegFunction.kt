@@ -541,13 +541,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             BinaryOpType.MUL -> makeAlgebraicBinary(binop, ir::mul)
             BinaryOpType.NE -> makeComparisonBinary(binop, ::ne)
             BinaryOpType.GT -> makeComparisonBinary(binop, ::gt)
-            BinaryOpType.LT -> {
-                makeComparisonBinary(binop, ::lt)
-            }
-
-            BinaryOpType.LE -> {
-                makeComparisonBinary(binop, ::le)
-            }
+            BinaryOpType.LT -> makeComparisonBinary(binop, ::lt)
+            BinaryOpType.LE -> makeComparisonBinary(binop, ::le)
             BinaryOpType.AND -> {
                 val initialBB = ir.currentLabel()
 
@@ -555,7 +550,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedLeft = ir.convertToType(left, Type.U1)
 
                 val bb = ir.createLabel()
-
                 val end = ir.createLabel()
                 ir.branchCond(convertedLeft, bb, end)
                 ir.switchLabel(bb)
@@ -564,9 +558,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedRight = ir.convertToType(right, Type.U8)
                 assertion(right.type() == Type.U1) { "expects"}
 
+                val current = ir.currentLabel()
                 ir.branch(end)
                 ir.switchLabel(end)
-                ir.phi(listOf(U8Value(0), convertedRight), listOf(initialBB, bb))
+                ir.phi(listOf(U8Value(0), convertedRight), listOf(initialBB, current))
             }
             BinaryOpType.OR -> {
                 val initialBB = ir.currentLabel()
@@ -575,7 +570,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedLeft = ir.convertToType(left, Type.U1)
 
                 val bb = ir.createLabel()
-
                 val end = ir.createLabel()
                 ir.branchCond(convertedLeft, end, bb)
                 ir.switchLabel(bb)
@@ -584,9 +578,49 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedRight = ir.convertToType(right, Type.U8)
                 assertion(right.type() == Type.U1) { "expects"}
 
+                val current = ir.currentLabel()
                 ir.branch(end)
                 ir.switchLabel(end)
-                ir.phi(listOf(U8Value(1), convertedRight), listOf(initialBB, bb))
+                ir.phi(listOf(U8Value(1), convertedRight), listOf(initialBB, current))
+            }
+            BinaryOpType.SHR_ASSIGN -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
+                val rightConverted = ir.convertToType(right, leftIrType)
+
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = ir.load(leftIrType, left)
+
+                val shr = ir.shr(loadedLeft, rightConverted)
+                ir.store(left, shr)
+                shr
+            }
+            BinaryOpType.SHL_ASSIGN -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
+                val rightConverted = ir.convertToType(right, leftIrType)
+
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = ir.load(leftIrType, left)
+
+                val shl = ir.shl(loadedLeft, rightConverted)
+                ir.store(left, shl)
+                shl
+            }
+            BinaryOpType.BIT_XOR_ASSIGN -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
+                val rightConverted = ir.convertToType(right, leftIrType)
+
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = ir.load(leftIrType, left)
+
+                val xor = ir.xor(loadedLeft, rightConverted)
+                ir.store(left, xor)
+                xor
             }
             BinaryOpType.GE  -> makeComparisonBinary(binop, ::ge)
             BinaryOpType.EQ  -> makeComparisonBinary(binop, ::eq)

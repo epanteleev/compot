@@ -366,7 +366,7 @@ class VerifySSA private constructor(private val module: Module, private val func
             }
             val actual = creation[use].block
             assert(dominatorTree.dominates(actual, incoming)) {
-                "Inconsistent phi instruction $phi: value defined in $incoming, used in $actual"
+                "${functionData.prototype.shortName()}: inconsistent phi instruction $phi: value defined in $incoming, used in $actual"
             }
         }
 

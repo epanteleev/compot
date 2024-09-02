@@ -233,7 +233,7 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
         val type = cast.typeName.specifyType(ctx.typeHolder(), listOf())
         val converted = when (type) {
             CType.INT -> expression.toInt()
-            CType.LONG -> expression
+            CType.LONG, CType.ULONG -> expression
             CType.SHORT -> expression.toShort()
             else -> throw ConstEvalException("Cannot cast to type $type")
         }
