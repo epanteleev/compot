@@ -267,7 +267,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 throw IRCodeGenError("Too many arguments in function call '${function.shortName()}'")
             }
 
-            //TODO Prove it?!?
             return when (expr.type()) {
                 Type.F32 -> ir.convertToType(expr, Type.F64)
                 Type.I8, Type.I16 -> ir.convertToType(expr, Type.I32)
@@ -475,7 +474,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val leftType = binop.left.resolveType(typeHolder)
 
                 if (leftType is CompoundType) {
-                    val left = visitExpression(binop.left, false)
+                    val left = visitExpression(binop.left, true)
                     ir.memcpy(left, right, U64Value(leftType.size().toLong()))
 
                     right
@@ -833,11 +832,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 varStack[param] = args[0]
             }
         }
-        is CommonCArrayType -> {
-            assertion(args.size == 1) { "invariant" }
-            varStack[param] = args[0]
-        }
-        is CFunPointerType -> {
+        is CommonCArrayType, is CFunPointerType -> {
             assertion(args.size == 1) { "invariant" }
             varStack[param] = args[0]
         }

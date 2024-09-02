@@ -415,6 +415,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 when (primaryType) {
                     is AnyCPointerType -> primaryType.dereference()
                     is CArrayType      -> primaryType.element()
+                    is UncompletedArrayType -> primaryType.element()
                     else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType")
                 }
             }

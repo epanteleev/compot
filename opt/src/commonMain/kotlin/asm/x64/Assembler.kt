@@ -326,11 +326,14 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
         else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
     }
 
-    // Bitwise Logical XOR of Packed Floating-Point Values
-    fun xorpd(src: XmmRegister, dst: XmmRegister) = add(Xorpd(16, src, dst))
-    fun xorpd(src: Address, dst: XmmRegister) = add(Xorpd(16, src, dst))
-    fun xorps(src: XmmRegister, dst: XmmRegister) = add(Xorps(16, src, dst))
-    fun xorps(src: Address, dst: XmmRegister) = add(Xorps(16, src, dst))
+    // Bitwise Logical XOR of Packed Double Precision Floating-Point Values
+    private fun xorpd(src: XmmRegister, dst: XmmRegister) = add(Xorpd(16, src, dst))
+    private fun xorpd(src: Address, dst: XmmRegister) = add(Xorpd(16, src, dst))
+
+    // Bitwise Logical XOR of Packed Single Precision Floating-Point Values
+    private fun xorps(src: XmmRegister, dst: XmmRegister) = add(Xorps(16, src, dst))
+    private fun xorps(src: Address, dst: XmmRegister) = add(Xorps(16, src, dst))
+
     fun xorpf(size: Int, src: Address, dst: XmmRegister) = when (size) {
         4 -> xorps(src, dst)
         8 -> xorpd(src, dst)

@@ -144,7 +144,8 @@ data class XorCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
 
     override fun raaF(dst: XmmRegister, first: Address, second: Address) {
         asm.movf(size, first, dst)
-        asm.xorpf(size, second, dst)
+        asm.movf(size, second, xmmTemp1) //TODO
+        asm.xorpf(size, xmmTemp1, dst)
     }
 
     override fun araF(dst: Address, first: XmmRegister, second: Address) {

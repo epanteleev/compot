@@ -49,7 +49,11 @@ class ObjLabel(override val name: String): NamedDirective() {
     override fun toString(): String = buildString {
         append("$name:\n")
         for ((idx, d) in anonymousDirective.withIndex()) {
-            append("$d")
+            if (d is Assembler) { //TODO: fix this
+                append("$d")
+            } else {
+                append("\t$d")
+            }
             if (idx != anonymousDirective.size - 1) {
                 append("\n")
             }

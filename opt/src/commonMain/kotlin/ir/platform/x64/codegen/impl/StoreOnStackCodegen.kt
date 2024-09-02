@@ -4,6 +4,7 @@ import asm.x64.*
 import ir.types.PrimitiveType
 import ir.instruction.lir.StoreOnStack
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.types.FloatingPointType
@@ -86,8 +87,12 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
         TODO("Not yet implemented")
     }
 
-    override fun ara(dst: Address, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+    override fun ara(dst: Address, first: GPRegister, second: Address) = when (dst) {
+        is Address2 -> {
+            asm.mov(size, second, temp1)
+            asm.mov(size, first, Address.from(dst.base, dst.offset, temp1, ScaleFactor.from(size)))
+        }
+        else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) = when (dst) {
@@ -95,8 +100,12 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
-    override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+    override fun air(dst: Address, first: Imm32, second: GPRegister) = when (dst) {
+        is Address2 -> {
+            asm.mov(size, first, temp1)
+            asm.mov(size, temp1, Address.from(dst.base, dst.offset, second, ScaleFactor.from(size)))
+        }
+        else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) = when (dst) {
@@ -125,8 +134,13 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
         TODO("Not yet implemented")
     }
 
-    override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+    override fun aaa(dst: Address, first: Address, second: Address) = when (dst) {
+        is Address2 -> {
+            asm.mov(size, second, temp1)
+            asm.mov(size, first, temp2)
+            asm.mov(size, temp2, Address.from(dst.base, dst.offset, temp1, ScaleFactor.from(size)))
+        }
+        else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

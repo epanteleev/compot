@@ -22,11 +22,9 @@ data class ImmFp32(val fp: Float): ImmFp {
         return ImmFp32(-fp)
     }
 
-    override fun plus(other: ImmFp): ImmFp {
-        return when (other) {
-            is ImmFp64 -> ImmFp64(other.fp + fp)
-            is ImmFp32 -> ImmFp32(other.fp + fp)
-        }
+    override fun plus(other: ImmFp): ImmFp = when (other) {
+        is ImmFp64 -> ImmFp64(other.fp + fp)
+        is ImmFp32 -> ImmFp32(other.fp + fp)
     }
 
     override fun toString(size: Int): String {
@@ -43,15 +41,11 @@ data class ImmFp64(val fp: Double): ImmFp {
         return Imm64.of(fp.toBits())
     }
 
-    override operator fun unaryMinus(): ImmFp {
-        return ImmFp64(-fp)
-    }
+    override operator fun unaryMinus(): ImmFp = ImmFp64(-fp)
 
-    override fun plus(other: ImmFp): ImmFp {
-        return when (other) {
-            is ImmFp64 -> ImmFp64(other.fp + fp)
-            is ImmFp32 -> ImmFp64(other.fp + fp)
-        }
+    override fun plus(other: ImmFp): ImmFp = when (other) {
+        is ImmFp64 -> ImmFp64(other.fp + fp)
+        is ImmFp32 -> ImmFp64(other.fp + fp)
     }
 
     override fun toString(size: Int): String {

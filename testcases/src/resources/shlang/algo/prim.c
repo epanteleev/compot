@@ -110,13 +110,13 @@ void prim(uint16_t G[][MAX], uint16_t MST[][MAX], uint16_t V)
  * @brief Self-test implementations
  * @returns void
  */
-static void test(uint16_t G[][MAX], uint16_t MST[][MAX], uint16_t V)
+static void test(uint16_t G[][MAX], uint16_t MST[][MAX])
 {
 
   uint16_t test[4][4] = {{0,1,2,3},{1,0,4,6},{2,4,0,5},{3,6,5,0}};
   uint16_t solution[4][4] = {{0,1,2,3},{1,0,0,0},{2,0,0,0},{3,0,0,0}};
 
-  V = 4;
+  uint16_t V = 4;
 
   for(uint16_t i = 0; i < V; ++i)
   {
@@ -185,8 +185,6 @@ void user_graph(uint16_t G[][MAX], uint16_t MST[][MAX], uint16_t V)
 int main(int argc, char const *argv[]) {
     uint16_t G[MAX][MAX];    ///< weighted, connected graph G
     uint16_t MST[MAX][MAX];  ///< adj matrix to hold minimum spanning tree of G
-    uint16_t V;              ///< number of vertices in V in G
-
-    test(&(*G),&(*MST),V);
+    test(&(*G),&(*MST));
     return 0;
 }

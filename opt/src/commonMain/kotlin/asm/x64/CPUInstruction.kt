@@ -363,18 +363,6 @@ data class Movsd(val size: Int, val src: Operand, val dst: Operand): CPUInstruct
     }
 }
 
-data class Movd(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
-    override fun toString(): String {
-        return if (src is XmmRegister) {
-            "movd ${src.toString(16)}, ${dst.toString(size)}"
-        } else if (dst is XmmRegister) {
-            "movd ${src.toString(size)}, ${dst.toString(16)}"
-        } else {
-            throw RuntimeException("Internal error: src=$src, des=$dst")
-        }
-    }
-}
-
 data class Neg(val size: Int, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "neg${prefix(size)} ${dst.toString(size)}"
