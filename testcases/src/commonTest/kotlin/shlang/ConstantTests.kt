@@ -10,6 +10,18 @@ abstract class ConstantTests: CommonCTest() {
         val result = runCTest("shlang/constant/ulong", listOf(), options())
         assertEquals("hash = 5381\n", result.output)
     }
+
+    @Test
+    fun test1() {
+        val result = runCTest("shlang/constant/bit_invert", listOf(), options())
+        assertEquals("inverted = 0\n", result.output)
+    }
+
+    @Test
+    fun test2() {
+        val result = runCTest("shlang/constant/bit_invert1", listOf(), options())
+        assertEquals("inverted = 0\n", result.output)
+    }
 }
 
 class ConstantTestsO0: ConstantTests() {
