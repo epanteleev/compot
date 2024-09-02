@@ -3,6 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.instruction.lir.LoadFromStack
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
@@ -102,8 +103,13 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
         TODO("Not yet implemented")
     }
 
-    override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+    override fun aaa(dst: Address, first: Address, second: Address) = when (first) {
+        is Address2 -> {
+            asm.mov(size, second, temp1)
+            asm.mov(size, Address.from(first.base, first.offset, temp1, ScaleFactor.from(size)), temp1)
+            asm.mov(size, temp1, dst)
+        }
+        else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

@@ -317,7 +317,7 @@ object TypeConverter {
 
                     Type.I64 -> bitcast(value, toType)
                     Type.U8 -> zext(value, toType)
-                    Type.U16 -> trunc(value, toType)
+                    Type.U16 -> zext(value, toType)
                     Type.U32 -> zext(value, toType)
                     Type.F32 -> fp2Int(value, Type.U64)
                     Type.F64 -> fp2Int(value, Type.U64)

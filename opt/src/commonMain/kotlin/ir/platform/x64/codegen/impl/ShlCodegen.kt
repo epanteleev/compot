@@ -16,7 +16,6 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        TODO("untested")
         when (dst) {
             first -> {
                 asm.mov(size, second, temp1)
@@ -83,7 +82,8 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.shl(size, second, dst)
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {

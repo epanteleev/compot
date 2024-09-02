@@ -388,9 +388,7 @@ data class NumNode(val number: Numeric) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        val num = number.toNumberOrNull()
-
-        return@memoize when (num) {
+        when (val num = number.toNumberOrNull()) {
             is Int, is Byte -> CType.INT
             is Long   -> CType.LONG
             is ULong  -> CType.ULONG
@@ -438,11 +436,16 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
             }
             PrefixUnaryOpType.INC,
             PrefixUnaryOpType.DEC,
-            PrefixUnaryOpType.PLUS -> {
-                primaryType
+            PrefixUnaryOpType.PLUS -> primaryType
+            PrefixUnaryOpType.BIT_NOT -> {
+                if (primaryType is CPrimitiveType) {
+                    primaryType
+                } else {
+                    throw TypeResolutionException("Bitwise not on non-primitive type: $primaryType")
+                }
             }
 
-            else -> TODO()
+            else -> TODO("$opType")
         }
 
         return@memoize resolvedType

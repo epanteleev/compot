@@ -622,6 +622,19 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.store(left, xor)
                 xor
             }
+            BinaryOpType.BIT_OR_ASSIGN -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
+                val rightConverted = ir.convertToType(right, leftIrType)
+
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = ir.load(leftIrType, left)
+
+                val or = ir.or(loadedLeft, rightConverted)
+                ir.store(left, or)
+                or
+            }
             BinaryOpType.GE  -> makeComparisonBinary(binop, ::ge)
             BinaryOpType.EQ  -> makeComparisonBinary(binop, ::eq)
             BinaryOpType.SHL -> makeAlgebraicBinary(binop, ir::shl)
@@ -739,7 +752,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val converted = ir.convertToType(value, commonType)
                 makeCondition(converted, eq(commonType), Constant.of(converted.asType(), 0))
             }
-            else -> throw IRCodeGenError("Unknown unary operation, op=${unaryOp.opType}")
+            PrefixUnaryOpType.BIT_NOT -> {
+                val value = visitExpression(unaryOp.primary, true)
+                val type = unaryOp.resolveType(typeHolder)
+                val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
+                val converted = ir.convertToType(value, commonType)
+                ir.not(converted)
+            }
+            else -> throw IRCodeGenError("Unknown unary operation, op='${unaryOp.opType}'")
         }
     }
 

@@ -33,6 +33,20 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
+    fun testHashDjb2() {
+        val result = runCTest("shlang/algo/hash_djb2", listOf(), options())
+        assertEquals("Tests passed\n", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testHashBlake2() {
+        val result = runCTest("shlang/algo/hash_blake2b", listOf(), options())
+        assertEquals("Tests passed\n", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
     fun testBinarySearch() {
         val result = runCTest("shlang/algo/binary_search", listOf(), options())
         assertEquals("Test 1.... passed recursive... passed iterative...\n" +

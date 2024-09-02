@@ -158,9 +158,11 @@ sealed interface CType {
                 ULONG -> {
                     return when (type2) {
                         CHAR -> ULONG
+                        UCHAR -> ULONG
                         INT -> ULONG
                         LONG -> ULONG
                         SHORT -> ULONG
+                        USHORT -> ULONG
                         UINT -> ULONG
                         DOUBLE -> DOUBLE
                         FLOAT -> FLOAT
@@ -265,9 +267,7 @@ class CPrimitiveType(val baseType: BaseType, private val properties: List<TypePr
         if (this === other) return true
         if (other !is CPrimitiveType) return false
 
-        if (baseType != other.baseType) return false
-
-        return true
+        return baseType == other.baseType
     }
 
     override fun hashCode(): Int {
