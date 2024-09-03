@@ -99,7 +99,13 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.shl(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.shl(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {

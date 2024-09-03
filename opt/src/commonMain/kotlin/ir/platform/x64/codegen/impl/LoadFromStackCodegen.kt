@@ -55,7 +55,12 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        if (first is Address2) {
+            asm.mov(size, second, temp1) //TODO check size
+            asm.mov(size, Address.from(first.base, first.offset, temp1, ScaleFactor.from(size)), dst)
+        } else {
+            throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
+        }
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
@@ -105,7 +110,7 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
 
     override fun aaa(dst: Address, first: Address, second: Address) = when (first) {
         is Address2 -> {
-            asm.mov(size, second, temp1)
+            asm.mov(size, second, temp1) //TODO check size
             asm.mov(size, Address.from(first.base, first.offset, temp1, ScaleFactor.from(size)), temp1)
             asm.mov(size, temp1, dst)
         }

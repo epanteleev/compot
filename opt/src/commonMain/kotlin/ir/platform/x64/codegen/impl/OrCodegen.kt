@@ -108,7 +108,21 @@ class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitor
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        when (dst) {
+            first -> {
+                asm.mov(size, second, temp1)
+                asm.or(size, temp1, dst)
+            }
+            second -> {
+                asm.mov(size, first, temp1)
+                asm.or(size, temp1, dst)
+            }
+            else -> {
+                asm.mov(size, first, temp1)
+                asm.or(size, second, temp1)
+                asm.mov(size, temp1, dst)
+            }
+        }
     }
 
     override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {

@@ -40,7 +40,8 @@ class SarCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.sar(size, second, dst)
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {

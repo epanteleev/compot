@@ -102,7 +102,6 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("untested")
         val disp = second.value() * size
         asm.mov(POINTER_SIZE, first, temp1)
         asm.lea(POINTER_SIZE, Address.from(temp1, disp.toInt()), temp1)

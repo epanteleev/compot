@@ -42,7 +42,7 @@ abstract class AlgoTests: CommonCTest() {
     @Test
     fun testHashBlake2() {
         val result = runCTest("shlang/algo/hash_blake2b", listOf(), options())
-        assertEquals("Tests passed\n", result.output)
+        assertEquals("All tests have successfully passed!\n", result.output)
         assertReturnCode(result, 0)
     }
 

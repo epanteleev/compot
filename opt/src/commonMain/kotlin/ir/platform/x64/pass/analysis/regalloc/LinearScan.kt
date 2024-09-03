@@ -12,6 +12,7 @@ import ir.module.FunctionData
 import ir.instruction.Callable
 import ir.instruction.Copy
 import ir.instruction.Shl
+import ir.instruction.Shr
 import ir.instruction.matching.*
 import ir.module.Sensitivity
 import ir.module.block.Block
@@ -75,7 +76,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
                     allocate(rcx, value)
                     fixedValues.add(value)
                 }
-                shr(nop(), constant().not()) (inst) -> { inst as Shl
+                shr(nop(), constant().not()) (inst) -> { inst as Shr
                     val value = inst.second() as Copy
                     allocate(rcx, value)
                     fixedValues.add(value)

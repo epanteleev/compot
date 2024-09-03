@@ -3,6 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.Type
 import ir.instruction.Flag2Int
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
@@ -27,7 +28,8 @@ class Flag2IntCodegen(private val toSize: Int, private val asm: Assembler): GPOp
     }
 
     override fun aa(dst: Address, src: Address) {
-        TODO("Not yet implemented")
+        asm.movzext(fromSize, toSize, src, temp1)
+        asm.mov(toSize, temp1, dst)
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
