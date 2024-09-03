@@ -32,10 +32,6 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
 
     fun operands(): List<Value> = arrayWrapperOf(operands)
 
-    fun operandsWithIndex(visitor: (Int, Value) -> Unit) {
-        operands.forEachIndexed(visitor)
-    }
-
     fun containsOperand(value: Value): Boolean {
         return operands.contains(value)
     }

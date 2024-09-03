@@ -1,10 +1,12 @@
 package ir.instruction.matching
 
+import ir.global.ExternValue
 import ir.global.GlobalValue
 import ir.value.Constant
 import ir.value.Value
 import ir.instruction.*
 import ir.types.AggregateType
+import ir.types.IntegerType
 import ir.types.PrimitiveType
 import ir.types.Type
 import ir.value.UnsignedIntegerConstant
@@ -30,12 +32,28 @@ inline fun div(crossinline a: ValueMatcher, crossinline b: ValueMatcher): Instru
     it is Div && a(it.first()) && b(it.second())
 }
 
+inline fun div(crossinline a: ValueMatcher, crossinline b: ValueMatcher, crossinline type: TypeMatcher): InstructionMatcher = {
+    it is Div && a(it.first()) && b(it.second()) && type(it.type())
+}
+
+inline fun shl(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
+    it is Shl && a(it.first()) && b(it.second())
+}
+
+inline fun shr(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
+    it is Shr && a(it.first()) && b(it.second())
+}
+
 inline fun select(crossinline cond: ValueMatcher, crossinline onTrue: ValueMatcher, crossinline onFalse: ValueMatcher): InstructionMatcher = {
     it is Select && cond(it.condition()) && onTrue(it.onTrue()) && onFalse(it.onFalse())
 }
 
 inline fun tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
     it is TupleDiv && a(it.first()) && b(it.second())
+}
+
+inline fun tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher, crossinline type: TypeMatcher): InstructionMatcher = {
+    it is TupleDiv && a(it.first()) && b(it.second()) && type(it.type())
 }
 
 inline fun ptr2int(crossinline origin: ValueMatcher): InstructionMatcher = {
@@ -87,6 +105,8 @@ inline fun nop(): ValueMatcher = { true }
 
 inline fun constant(): ValueMatcher = { it is Constant }
 
+inline fun extern(): ValueMatcher = { it is ExternValue }
+
 inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()) }
 
 inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
@@ -99,6 +119,8 @@ inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
 fun anytype(): TypeMatcher = { true }
 
 fun primitive(): TypeMatcher = { it is PrimitiveType }
+
+fun int(): TypeMatcher = { it is IntegerType }
 
 fun aggregate(): TypeMatcher = { it is AggregateType }
 

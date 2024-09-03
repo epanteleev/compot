@@ -11,19 +11,19 @@ import ir.types.Type
 internal class ConstantLoading private constructor(private val cfg: FunctionData) {
     private fun pass() {
         fun closure(bb: Block, inst: Instruction): Instruction {
-            var inserted: Instruction? = null
-            inst.operandsWithIndex { i, use ->
-                if (use is AnyAggregateGlobalConstant || use is FunctionSymbol) {
-                    val lea = bb.insertBefore(inst) { it.lea(use) }
-                    bb.updateDF(inst, i, lea)
-                    inserted = lea
-                } else if (use is ExternValue) {
-                    val lea = bb.insertBefore(inst) { it.load(Type.Ptr, use) }
-                    bb.updateDF(inst, i, lea)
-                    inserted = lea
+            for ((i ,use) in inst.operands().withIndex()) {
+                when (use) {
+                    is AnyAggregateGlobalConstant, is FunctionSymbol -> {
+                        val lea = bb.insertBefore(inst) { it.lea(use) }
+                        bb.updateDF(inst, i, lea)
+                    }
+                    is ExternValue -> {
+                        val lea = bb.insertBefore(inst) { it.load(Type.Ptr, use) }
+                        bb.updateDF(inst, i, lea)
+                    }
                 }
             }
-            return inserted?: inst
+            return inst
         }
 
         for (bb in cfg) {

@@ -19,7 +19,7 @@ class Shr private constructor(id: Identity, owner: Block, tp: IntegerType, a: Va
     companion object {
         const val NAME = "shr"
         const val FIRST = 0
-        const val SECOND = 1
+        const val OFFSET = 1
 
         fun make(id: Identity, owner: Block, a: Value, b: Value): Shr {
             val aType = a.type()

@@ -1,6 +1,7 @@
 package ir.pass.transform.auxiliary
 
 import ir.instruction.*
+import ir.instruction.matching.*
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.SSAModule
@@ -23,7 +24,40 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         calls
     }
 
-    private fun mustBeIsolated(arg: ArgumentValue): Boolean {
+    private var isNeed3ArgIsolation: Boolean = false
+    private var isNeed4ArgIsolation: Boolean = false
+
+    private fun isolateBinaryOp() {
+        fun transform(bb: Block, inst: Instruction): Instruction? {
+            when {
+                shl(nop(), constant().not()) (inst) -> { inst as Shl
+                    val copy = bb.insertBefore(inst) { it.copy(inst.second()) }
+                    bb.updateDF(inst, Shl.OFFSET, copy)
+                    isNeed4ArgIsolation = true
+                }
+                shr(nop(), constant().not()) (inst) -> { inst as Shr
+                    val copy = bb.insertBefore(inst) { it.copy(inst.second()) }
+                    bb.updateDF(inst, Shr.OFFSET, copy)
+                    isNeed4ArgIsolation = true
+                }
+                tupleDiv(nop(), nop(), int()) (inst) -> isNeed3ArgIsolation = true
+            }
+            return inst
+        }
+
+        for (bb in cfg)  {
+            bb.transform { inst -> transform(bb, inst) }
+        }
+    }
+
+    private fun mustBeIsolated(arg: ArgumentValue, index: Int): Boolean {
+        if (index == 3 && isNeed3ArgIsolation) {
+            return true
+        }
+        if (index == 4 && isNeed4ArgIsolation) {
+            return true
+        }
+
         for (call in allCalls) {
             call as Callable
             if (liveness.liveOut(call).contains(arg)) {
@@ -40,13 +74,13 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     private fun isolateArgumentValues() {
-        if (allCalls.isEmpty()) {
-            // Not necessary to insert copies
+        if (allCalls.isEmpty() && !isNeed3ArgIsolation && !isNeed4ArgIsolation) {
+            // Not necessary to insert any copies
             return
         }
         val begin = cfg.begin()
-        for (arg in cfg.arguments()) {
-            if (!mustBeIsolated(arg)) {
+        for ((idx, arg) in cfg.arguments().withIndex()) {
+            if (!mustBeIsolated(arg, idx)) {
                 continue
             }
 
@@ -76,6 +110,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     fun pass() {
+        isolateBinaryOp()
         isolateArgumentValues()
         isolateCall()
     }

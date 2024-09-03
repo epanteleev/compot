@@ -37,14 +37,14 @@ class MoveLargeConstants private constructor(val functions: Map<String, Function
 
     private fun handleBlock(bb: Block) {
         bb.transform { inst ->
-            inst.operandsWithIndex { opIdx, operand ->
+            for ((i, operand) in inst.operands().withIndex()) {
                 if (operand !is Constant) {
-                    return@operandsWithIndex
+                    continue
                 }
 
-                val constant = makeConstantOrNull(operand) ?: return@operandsWithIndex
+                val constant = makeConstantOrNull(operand) ?: continue
                 constants[constant.name()] = constant
-                inst.update(opIdx, constant)
+                inst.update(i, constant)
             }
             inst
         }

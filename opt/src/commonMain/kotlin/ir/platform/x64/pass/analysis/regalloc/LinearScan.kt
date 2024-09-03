@@ -4,12 +4,17 @@ import asm.x64.GPRegister
 import ir.value.LocalValue
 import asm.x64.Operand
 import asm.x64.Register
+import asm.x64.GPRegister.rcx
 import common.assertion
 import common.forEachWith
 import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
+import ir.instruction.Copy
+import ir.instruction.Shl
+import ir.instruction.matching.*
 import ir.module.Sensitivity
+import ir.module.block.Block
 import ir.pass.analysis.InterferenceGraphFabric
 import ir.pass.analysis.intervals.LiveIntervalsFabric
 import ir.pass.common.AnalysisType
@@ -29,7 +34,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     private val pool        = VirtualRegistersPool.create(data.arguments())
 
     init {
-        handleCallArguments()
+        allocFixedRegisters()
         allocRegistersForArgumentValues()
         allocRegistersForLocalVariables()
     }
@@ -54,17 +59,39 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         }
     }
 
-    private fun handleCallArguments() {
+    private fun allocFunctionArguments(callable: Callable) {
+        val allocation = pool.calleeArgumentAllocate(callable.arguments())
+        allocation.forEachWith(callable.arguments()) { operand, arg ->
+            fixedValues.add(arg as LocalValue)
+            registerMap[arg] = operand
+        }
+    }
+
+    private fun tryAllocFixedRegisters(bb: Block) {
+        for (inst in bb) {
+            when {
+                shl(nop(), constant().not()) (inst) -> { inst as Shl
+                    val value = inst.second() as Copy
+                    allocate(rcx, value)
+                    fixedValues.add(value)
+                }
+                shr(nop(), constant().not()) (inst) -> { inst as Shl
+                    val value = inst.second() as Copy
+                    allocate(rcx, value)
+                    fixedValues.add(value)
+                }
+            }
+        }
+    }
+
+    private fun allocFixedRegisters() {
        for (bb in data) {
            val inst = bb.last()
-           if (inst !is Callable) {
-               continue
+           if (inst is Callable) {
+               allocFunctionArguments(inst)
            }
-           val allocation = pool.calleeArgumentAllocate(inst.arguments())
-           allocation.forEachWith(inst.arguments()) { operand, arg ->
-               fixedValues.add(arg as LocalValue)
-               registerMap[arg] = operand
-           }
+
+           tryAllocFixedRegisters(bb)
        }
     }
 

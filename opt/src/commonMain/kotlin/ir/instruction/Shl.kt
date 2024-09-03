@@ -18,7 +18,7 @@ class Shl private constructor(id: Identity, owner: Block, tp: IntegerType, a: Va
     companion object {
         const val NAME = "shl"
         const val FIRST = 0
-        const val SECOND = 1
+        const val OFFSET = 1
 
         fun make(id: Identity, owner: Block, a: Value, b: Value): Shl {
             val aType = a.type()

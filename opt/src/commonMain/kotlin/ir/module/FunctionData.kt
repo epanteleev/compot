@@ -13,13 +13,11 @@ import ir.pass.common.FunctionAnalysisPassFabric
 class FunctionData private constructor(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {
     private val cache = AnalysisPassCache()
 
-    fun marker(): MutationMarker {
-        return blocks.marker()
-    }
+    fun marker(): MutationMarker = blocks.marker()
 
-    fun arguments(): List<ArgumentValue> {
-        return argumentValues
-    }
+    fun arguments(): List<ArgumentValue> = argumentValues
+
+    fun arg(idx: Int): ArgumentValue = argumentValues[idx]
 
     fun copy(): FunctionData {
         return CopyCFG.copy(this)

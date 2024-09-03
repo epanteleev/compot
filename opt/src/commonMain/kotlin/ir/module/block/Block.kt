@@ -146,13 +146,13 @@ class Block private constructor(private val mc: ModificationCounter, override va
     fun<V: Value> updateUsages(localValue: LocalValue, replacement: () -> V): V = mc.df {
         val valueToReplace = replacement()
         for (user in localValue.release()) {
-            user.operandsWithIndex { idxUse, use ->
+            for ((idxUse, use) in user.operands().withIndex()) {
                 if (use !== localValue) {
-                    return@operandsWithIndex
+                    continue
                 }
                 // New value can use the old value
                 if (user == valueToReplace) {
-                    return@operandsWithIndex
+                    continue
                 }
 
                 user.update(idxUse, valueToReplace)

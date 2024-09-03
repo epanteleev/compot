@@ -240,7 +240,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
     }
 
     private fun replaceEscaped() {
-        fun closure(bb: Block, inst: Instruction): Instruction {
+        fun closure(bb: Block, inst: Instruction): Instruction? {
             when {
                 alloc() (inst) -> { inst as Alloc
                     return bb.replace(inst) { it.gen(inst.allocatedType) }
@@ -298,12 +298,12 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 memcpy(nop(), generate(), nop()) (inst) -> { inst as Memcpy
                     val src = bb.insertBefore(inst) { it.lea(inst.source().asValue<Generate>()) }
                     bb.updateDF(inst, Memcpy.SOURCE, src)
-                    return inst.prev() as Instruction //TODO refactor
+                    return inst.prev()
                 }
                 memcpy(generate(), nop(), nop()) (inst) -> { inst as Memcpy
                     val dst = bb.insertBefore(inst) { it.lea(inst.destination().asValue<Generate>()) }
                     bb.updateDF(inst, Memcpy.DESTINATION, dst)
-                    return inst.prev() as Instruction //TODO refactor
+                    return inst.prev()
                 }
             }
             return inst
