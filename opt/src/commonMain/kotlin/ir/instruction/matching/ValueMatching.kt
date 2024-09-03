@@ -15,6 +15,48 @@ typealias ValueMatcher = (Value) -> Boolean
 typealias InstructionMatcher = (Instruction) -> Boolean
 typealias TypeMatcher = (Type) -> Boolean
 
+class Matcher(val inst: Instruction) {
+    private var isEnd = false
+    private var result: Instruction? = null
+
+    private inline fun<reified U, reified T: Instruction> rule(matcher: (U) -> Boolean, block: (T) -> Instruction?): Instruction? {
+        if (isEnd) {
+            return result
+        }
+        if (inst !is T) {
+            return null
+        }
+        if (matcher(inst as U)) {
+            isEnd = true
+            return block(inst as T)
+        }
+        return null
+    }
+
+    fun store(pointer: ValueMatcher, value: ValueMatcher, block: (Store) -> Instruction?): Instruction? {
+        return rule(store(pointer, value), block)
+    }
+
+    fun load(pointer: ValueMatcher, block: (Load) -> Instruction?): Instruction? {
+        return rule(load(pointer), block)
+    }
+
+    fun gep(source: ValueMatcher, idx: ValueMatcher, block: (GetElementPtr) -> Instruction?): Instruction? {
+        return rule(gep(source, idx), block)
+    }
+
+    fun gfp(source: ValueMatcher, block: (GetFieldPtr) -> Instruction?): Instruction? {
+        return rule(gfp(source), block)
+    }
+
+    fun default(): Instruction? {
+        return rule<Instruction, Instruction> ({ true }, { it })
+    }
+}
+
+inline fun match(instruction: Instruction, block: Matcher.() -> Instruction?): Instruction? {
+    return Matcher(instruction).block()
+}
 
 inline fun store(crossinline pointer: ValueMatcher, crossinline value: ValueMatcher): InstructionMatcher = {
     it is Store && pointer(it.pointer()) && value(it.value())

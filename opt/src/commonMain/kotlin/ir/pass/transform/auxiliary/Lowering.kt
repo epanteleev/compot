@@ -12,16 +12,16 @@ import ir.pass.analysis.traverse.BfsOrderOrderFabric
 
 class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceAllocLoadStores() {
-        fun closure(bb: Block, inst: Instruction): Instruction = when {
-            store(generate(), nop()) (inst) -> { inst as Store
-                val toValue = inst.pointer().asValue<Generate>()
-                bb.replace(inst) { it.move(toValue, inst.value()) }
+        fun closure(bb: Block, inst: Instruction): Instruction? = match(inst) {
+            store(generate(), nop()) { store ->
+                val toValue = store.pointer().asValue<Generate>()
+                bb.replace(store) { it.move(toValue, store.value()) }
             }
-            load(generate()) (inst) -> { inst as Load
-                val fromValue = inst.operand().asValue<Generate>()
-                bb.replace(inst) { it.copy(fromValue) }
+            load(generate()) { load ->
+                val fromValue = load.operand().asValue<Generate>()
+                bb.replace(load) { it.copy(fromValue) }
             }
-            else -> inst
+            default()
         }
 
         for (bb in cfg) {
@@ -30,47 +30,40 @@ class Lowering private constructor(private val cfg: FunctionData) {
     }
 
     private fun replaceGepToLea() {
-        fun closure(bb: Block, inst: Instruction): Instruction {
-            if (inst !is LocalValue) {
-                return inst
-            }
-            when {
-                gep(generate(), nop()) (inst) -> { inst as GetElementPtr
-                    when (val baseType = inst.basicType) {
-                        is AggregateType -> {
-                            val index = inst.index()
-                            val offset = bb.insertBefore(inst) {
-                                it.mul(index, Constant.of(index.asType(), baseType.sizeOf()))
-                            }
-                            return bb.replace(inst) { it.leaStack(inst.source(), Type.I8, offset) }
+        fun closure(bb: Block, inst: Instruction): Instruction? = match(inst) {
+            gep(generate(), nop()) { gp ->
+                when (val baseType = gp.basicType) {
+                    is AggregateType -> {
+                        val index = gp.index()
+                        val offset = bb.insertBefore(inst) {
+                            it.mul(index, Constant.of(index.asType(), baseType.sizeOf()))
                         }
-                        else -> {
-                            baseType as PrimitiveType
-                            return bb.replace(inst) { it.leaStack(inst.source(), baseType, inst.index()) }
-                        }
+                        bb.replace(inst) { it.leaStack(gp.source(), Type.I8, offset) }
                     }
-
-                }
-                gfp(generate()) (inst) -> { inst as GetFieldPtr
-                    return when (val base = inst.basicType) {
-                        is ArrayType -> {
-                            when (val tp = base.elementType()) {
-                                is AggregateType -> {
-                                    val index = inst.index(0).toInt()
-                                    val offset = tp.offset(index)
-                                    bb.replace(inst) { it.leaStack(inst.source(), Type.I8, Constant.of(Type.U32, offset)) }
-                                }
-                                else -> {
-                                    tp as PrimitiveType
-                                    bb.replace(inst) { it.leaStack(inst.source(), tp, inst.index(0)) }
-                                }
-                            }
-                        }
-                        is StructType -> bb.replace(inst) { it.leaStack(inst.source(), Type.U8, Constant.of(Type.U32, base.offset(inst.index(0).toInt()))) }
+                    is PrimitiveType -> {
+                        bb.replace(inst) { it.leaStack(gp.source(), baseType, gp.index()) }
                     }
                 }
             }
-            return inst
+            gfp(generate()) { gf ->
+                when (val base = gf.basicType) {
+                    is ArrayType -> {
+                        when (val tp = base.elementType()) {
+                            is AggregateType -> {
+                                val index = gf.index(0).toInt()
+                                val offset = tp.offset(index)
+                                bb.replace(inst) { it.leaStack(gf.source(), Type.I8, Constant.of(Type.U32, offset)) }
+                            }
+                            else -> {
+                                tp as PrimitiveType
+                                bb.replace(inst) { it.leaStack(gf.source(), tp, gf.index(0)) }
+                            }
+                        }
+                    }
+                    is StructType -> bb.replace(inst) { it.leaStack(gf.source(), Type.U8, Constant.of(Type.U32, base.offset(gf.index(0).toInt()))) }
+                }
+            }
+            default()
         }
 
         for (bb in cfg) {
