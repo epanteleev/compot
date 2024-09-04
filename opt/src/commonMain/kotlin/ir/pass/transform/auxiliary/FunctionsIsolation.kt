@@ -28,19 +28,21 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     private var isNeed4ArgIsolation: Boolean = false
 
     private fun isolateBinaryOp() {
-        fun transform(bb: Block, inst: Instruction): Instruction? {
-            when {
-                shl(nop(), constant().not()) (inst) -> { inst as Shl
-                    val copy = bb.insertBefore(inst) { it.copy(inst.second()) }
+        fun transform(bb: Block, inst: Instruction): Instruction {
+            match(inst) {
+                shl(nop(), constant().not()) { shl ->
+                    val copy = bb.insertBefore(inst) { it.copy(shl.second()) }
                     bb.updateDF(inst, Shl.OFFSET, copy)
                     isNeed4ArgIsolation = true
                 }
-                shr(nop(), constant().not()) (inst) -> { inst as Shr
-                    val copy = bb.insertBefore(inst) { it.copy(inst.second()) }
+                shr(nop(), constant().not()) { shr ->
+                    val copy = bb.insertBefore(inst) { it.copy(shr.second()) }
                     bb.updateDF(inst, Shr.OFFSET, copy)
                     isNeed4ArgIsolation = true
                 }
-                tupleDiv(nop(), nop(), int()) (inst) -> isNeed3ArgIsolation = true
+                tupleDiv(nop(), nop()) {
+                    isNeed3ArgIsolation = true
+                }
             }
             return inst
         }
@@ -51,10 +53,10 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     private fun mustBeIsolated(arg: ArgumentValue, index: Int): Boolean {
-        if (index == 3 && isNeed3ArgIsolation) {
+        if (index == 2 && isNeed3ArgIsolation) {
             return true
         }
-        if (index == 4 && isNeed4ArgIsolation) {
+        if (index == 3 && isNeed4ArgIsolation) {
             return true
         }
 

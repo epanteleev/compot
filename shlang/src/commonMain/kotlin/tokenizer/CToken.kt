@@ -233,14 +233,14 @@ class Numeric(private val data: String, private val radix: Int, position: Positi
             return cachedNumber
         }
         cachedNumber = when {
-            data.endsWith("UL")  -> data.substring(0, data.length - 2).toULongOrNull(radix)
-            data.endsWith("ul")  -> data.substring(0, data.length - 2).toULongOrNull(radix)
             data.endsWith("ULL") -> data.substring(0, data.length - 3).toULongOrNull(radix)
             data.endsWith("ull") -> data.substring(0, data.length - 3).toULongOrNull(radix)
             data.endsWith("LL")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
             data.endsWith("ll")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
             data.endsWith("LL")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
             data.endsWith("ll")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
+            data.endsWith("UL")  -> data.substring(0, data.length - 2).toULongOrNull(radix)
+            data.endsWith("ul")  -> data.substring(0, data.length - 2).toULongOrNull(radix)
             data.endsWith("L")   -> data.substring(0, data.length - 1).toLongOrNull(radix)
             data.endsWith("U")   -> data.substring(0, data.length - 1).toULongOrNull(radix)
             data.endsWith("u")   -> data.substring(0, data.length - 1).toULongOrNull(radix)

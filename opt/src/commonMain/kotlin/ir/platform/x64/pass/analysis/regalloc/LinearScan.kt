@@ -70,15 +70,15 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
 
     private fun tryAllocFixedRegisters(bb: Block) {
         for (inst in bb) {
-            when {
-                shl(nop(), constant().not()) (inst) -> { inst as Shl
-                    val value = inst.second() as Copy
-                    allocate(rcx, value)
+            match(inst) {
+                shl(nop(), constant().not()) { shl ->
+                    val value = shl.second() as Copy
+                    registerMap[value] = rcx
                     fixedValues.add(value)
                 }
-                shr(nop(), constant().not()) (inst) -> { inst as Shr
-                    val value = inst.second() as Copy
-                    allocate(rcx, value)
+                shr(nop(), constant().not()) { shr ->
+                    val value = shr.second() as Copy
+                    registerMap[value] = rcx
                     fixedValues.add(value)
                 }
             }

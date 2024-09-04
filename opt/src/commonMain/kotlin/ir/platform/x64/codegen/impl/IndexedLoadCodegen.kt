@@ -63,7 +63,9 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, private val inde
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(indexType.sizeOf(), second, temp1)
+        asm.mov(size, first, temp2)
+        asm.mov(size, Address.from(temp2, 0, temp1, ScaleFactor.from(size)), dst)
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) = default(dst, first, second)

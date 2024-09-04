@@ -52,7 +52,10 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        prepareAddress(first)
+        asm.div(size, second)
+        asm.mov(size, rax, dst)
+        asm.moveRem(size, rem)
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
@@ -128,7 +131,10 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        prepareAddress(first)
+        asm.div(size, second)
+        asm.mov(size, rax, dst)
+        asm.moveRem(size, rem)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {

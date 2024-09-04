@@ -62,7 +62,9 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, temp1)
+        asm.mov(indexSize, second, temp2)
+        asm.mov(size, temp1, Address.from(dst, 0, temp2, ScaleFactor.from(size)))
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {

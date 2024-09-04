@@ -109,7 +109,16 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        if (ScaleFactor.isScaleFactor(size)) {
+            asm.mov(POINTER_SIZE, first, temp1)
+            asm.lea(POINTER_SIZE, Address.from(temp1, 0, second, ScaleFactor.from(size)), temp1)
+            asm.mov(POINTER_SIZE, temp1, dst)
+        } else {
+            asm.mul(POINTER_SIZE, Imm32.of(size), second, temp1)
+            asm.add(POINTER_SIZE, first, temp1)
+            asm.mov(POINTER_SIZE, temp1, dst)
+        }
+
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {

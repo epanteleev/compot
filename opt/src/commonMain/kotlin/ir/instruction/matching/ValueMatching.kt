@@ -16,21 +16,23 @@ typealias InstructionMatcher = (Instruction) -> Boolean
 typealias TypeMatcher = (Type) -> Boolean
 
 class Matcher(val inst: Instruction) {
-    private var isEnd = false
-    private var result: Instruction? = null
+    var isEnd = false
+    var result: Any? = null
 
-    private inline fun<reified U, reified T: Instruction> rule(matcher: (U) -> Boolean, block: (T) -> Instruction?): Instruction? {
+    inline fun<reified U, reified T: Instruction, reified R> rule(matcher: (U) -> Boolean, block: (T) -> R?): R? {
         if (isEnd) {
-            return result
+            return result as R?
         }
         if (inst !is T) {
-            return null
+            return result as R?
         }
         if (matcher(inst as U)) {
             isEnd = true
-            return block(inst as T)
+            result = block(inst as T)
+            return result as R?
+        } else {
+            return null
         }
-        return null
     }
 
     fun store(pointer: ValueMatcher, value: ValueMatcher, block: (Store) -> Instruction?): Instruction? {
@@ -49,12 +51,24 @@ class Matcher(val inst: Instruction) {
         return rule(gfp(source), block)
     }
 
+    inline fun<reified R> shl(crossinline a: ValueMatcher, crossinline b: ValueMatcher, block: (Shl) -> R?): R? {
+        return rule(shl(a, b), block)
+    }
+
+    inline fun<reified R> shr(crossinline a: ValueMatcher, crossinline b: ValueMatcher, block: (Shr) -> R?): R? {
+        return rule(shr(a, b), block)
+    }
+
+    inline fun<reified R> tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher, block: (TupleDiv) -> R?): R? {
+        return rule(tupleDiv(a, b), block)
+    }
+
     fun default(): Instruction? {
-        return rule<Instruction, Instruction> ({ true }, { it })
+        return rule<Instruction, Instruction, Instruction> ({ true }, { it })
     }
 }
 
-inline fun match(instruction: Instruction, block: Matcher.() -> Instruction?): Instruction? {
+inline fun<reified R> match(instruction: Instruction, block: Matcher.() -> R?): R? {
     return Matcher(instruction).block()
 }
 
