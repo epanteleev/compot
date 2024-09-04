@@ -33,3 +33,11 @@ sealed interface Type {
         val UNDEF = BottomType
     }
 }
+
+inline fun<reified T: Type> Type.asType(): T {
+    if (this !is T) {
+        throw TypeErrorException("Type $this is not a ${T::class.simpleName}")
+    }
+
+    return this
+}

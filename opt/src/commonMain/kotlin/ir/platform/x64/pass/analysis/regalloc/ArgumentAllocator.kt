@@ -7,7 +7,7 @@ import ir.platform.x64.CallConvention
 
 
 class CalleeArgumentAllocator(private val stackFrame: StackFrame, private val arguments: List<Value>) {
-    private interface Place
+    private sealed interface Place
     private data class Memory(val index: Int): Place
     private data class RealGPRegister(val registerIndex: Int): Place
     private data class RealFpRegister(val registerIndex: Int): Place
@@ -16,7 +16,7 @@ class CalleeArgumentAllocator(private val stackFrame: StackFrame, private val ar
     private var xmmRegPos = 0
     private var memSlots = 0
 
-    private fun emit(type: Type): Place {
+    private fun emit(type: Type): Place? {
         return when (type) {
             is FloatingPointType -> {
                 if (xmmRegPos < fpRegisters.size) {
@@ -36,18 +36,19 @@ class CalleeArgumentAllocator(private val stackFrame: StackFrame, private val ar
                     Memory(memSlots - 1)
                 }
             }
+            is BottomType -> null
             else -> throw IllegalArgumentException("type=$type")
         }
     }
 
-    private fun calculate(): List<Operand> {
-        val allocation = arrayListOf<Operand>()
+    private fun calculate(): List<Operand?> {
+        val allocation = arrayListOf<Operand?>()
         for (arg in arguments) {
             val operand = when (val pos = emit(arg.type())) {
                 is RealGPRegister -> gpRegisters[pos.registerIndex]
                 is RealFpRegister -> fpRegisters[pos.registerIndex]
                 is Memory -> stackFrame.takeArgument(pos.index, arg)
-                else -> throw IllegalStateException("pos=$pos")
+                null -> null
             }
             allocation.add(operand)
         }
@@ -59,7 +60,7 @@ class CalleeArgumentAllocator(private val stackFrame: StackFrame, private val ar
         private val gpRegisters = CallConvention.gpArgumentRegisters
         private val fpRegisters = CallConvention.xmmArgumentRegister
 
-        fun alloc(stackFrame: StackFrame, arguments: List<Value>): List<Operand> {
+        fun alloc(stackFrame: StackFrame, arguments: List<Value>): List<Operand?> {
             return CalleeArgumentAllocator(stackFrame, arguments).calculate()
         }
     }

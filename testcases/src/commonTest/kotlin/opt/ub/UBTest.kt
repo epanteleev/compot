@@ -9,6 +9,12 @@ abstract class UBTests: CommonIrTest() {
         val result = runTest("opt_ir/ub/uninitialized_var", listOf("runtime/runtime.c"), options())
         assertEquals("32\n", result.output)
     }
+
+    @Test
+    fun testUninitializedVar2() {
+        val result = runTest("opt_ir/ub/uninitialized_var2", listOf("runtime/runtime.c"), options())
+        assertEquals("1\n", result.output)
+    }
 }
 
 class UBO1Tests: UBTests() {

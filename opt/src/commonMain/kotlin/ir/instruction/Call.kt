@@ -2,6 +2,7 @@ package ir.instruction
 
 import common.arrayWrapperOf
 import common.assertion
+import common.forEachWith
 import ir.value.Value
 import ir.types.Type
 import ir.module.AnyFunctionPrototype
@@ -35,7 +36,9 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("%${name()} = call $tp @${func.name}(")
-        operands.joinTo(builder) { "$it:${it.type()}"}
+        func.arguments().forEachWith(operands) { expectedType, arg ->
+            builder.append("$arg:${expectedType}")
+        }
         builder.append(") bt label %${target()}")
         return builder.toString()
     }

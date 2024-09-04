@@ -10,11 +10,9 @@ import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
 import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.pass.analysis.traverse.PreOrderFabric
-import ir.pass.transform.Mem2RegException
 import ir.types.NonTrivialType
 
 
-//TODO this is not a Reaching Definition Analysis
 abstract class AbstractRewritePrimitives(private val dominatorTree: DominatorTree) {
     protected fun rename(bb: Block, oldValue: Value): Value {
         return tryRename(bb, oldValue, oldValue.type())?: oldValue
@@ -31,8 +29,10 @@ abstract class AbstractRewritePrimitives(private val dominatorTree: DominatorTre
     }
 
     protected fun findActualValue(bb: Label, value: Value): Value {
-        return findActualValueOrNull(bb, value)
-            ?: throw Mem2RegException("cannot find: basicBlock=$bb, value=$value")
+        return findActualValueOrNull(bb, value) ?: let {
+            println("Warning: use uninitialized value: bb=$bb, value=$value")//TODO remove it in future
+            Value.UNDEF
+        }
     }
 
     protected fun findActualValueOrNull(bb: Label, value: Value): Value? { //TODO Duplicate code

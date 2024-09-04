@@ -3,7 +3,7 @@ package ir.types
 import ir.Definitions.QWORD_SIZE
 
 
-data class StructType internal constructor(val name: String, val fields: List<NonTrivialType>): AggregateType {
+class StructType internal constructor(val name: String, val fields: List<NonTrivialType>): AggregateType {
     override fun offset(index: Int): Int {
         var current = 0
         for (i in 0 until index) {

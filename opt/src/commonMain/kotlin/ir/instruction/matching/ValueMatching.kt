@@ -6,8 +6,10 @@ import ir.value.Constant
 import ir.value.Value
 import ir.instruction.*
 import ir.types.AggregateType
+import ir.types.ArrayType
 import ir.types.IntegerType
 import ir.types.PrimitiveType
+import ir.types.StructType
 import ir.types.Type
 import ir.value.UnsignedIntegerConstant
 
@@ -51,8 +53,16 @@ class Matcher(val inst: Instruction) {
         return rule(gep(source, idx), block)
     }
 
+    fun gep(baseType: TypeMatcher, source: ValueMatcher, idx: ValueMatcher, block: (GetElementPtr) -> Instruction?): Instruction? {
+        return rule(gep(baseType, source, idx), block)
+    }
+
     fun gfp(source: ValueMatcher, block: (GetFieldPtr) -> Instruction?): Instruction? {
         return rule(gfp(source), block)
+    }
+
+    fun gfp(basicType: TypeMatcher, source: ValueMatcher, block: (GetFieldPtr) -> Instruction?): Instruction? {
+        return rule(gfp(basicType, source), block)
     }
 
     inline fun<reified R> shl(crossinline a: ValueMatcher, crossinline b: ValueMatcher, block: (Shl) -> R?): R? {
@@ -132,8 +142,16 @@ inline fun gep(crossinline src: ValueMatcher, crossinline idx: ValueMatcher): Va
     it is GetElementPtr && src(it.source()) && idx(it.index())
 }
 
+inline fun gep(crossinline type: TypeMatcher, crossinline src: ValueMatcher, crossinline idx: ValueMatcher): ValueMatcher = {
+    it is GetElementPtr && src(it.source()) && idx(it.index()) && type(it.basicType)
+}
+
 inline fun gfp(crossinline src: ValueMatcher): ValueMatcher = {
     it is GetFieldPtr && src(it.source())
+}
+
+inline fun gfp(crossinline type: TypeMatcher, crossinline src: ValueMatcher): ValueMatcher = {
+    it is GetFieldPtr && src(it.source()) && type(it.basicType)
 }
 
 inline fun gfpOrGep(crossinline source: ValueMatcher, crossinline idx: ValueMatcher): ValueMatcher =
@@ -187,6 +205,10 @@ fun primitive(): TypeMatcher = { it is PrimitiveType }
 fun int(): TypeMatcher = { it is IntegerType }
 
 fun aggregate(): TypeMatcher = { it is AggregateType }
+
+fun array(elementType: TypeMatcher): TypeMatcher = { it is ArrayType && elementType(it.elementType()) }
+
+fun struct(): TypeMatcher = { it is StructType }
 
 fun i8(): TypeMatcher = { it == Type.I8 }
 

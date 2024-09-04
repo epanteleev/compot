@@ -21,7 +21,7 @@ interface Callable {
     companion object {
         internal fun isAppropriateTypes(func: AnyFunctionPrototype, args: List<Value>): Boolean {
             func.arguments().forEachWith(args) { expectedType, value ->
-                if (expectedType != value.type()) {
+                if (expectedType != value.type() && value.type() != Type.UNDEF) {
                     return func.isVararg
                 }
             }

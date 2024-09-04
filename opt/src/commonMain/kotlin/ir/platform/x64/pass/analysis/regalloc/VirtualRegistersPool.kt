@@ -42,7 +42,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
         return ((frame.size() + (QWORD_SIZE - 1)) / QWORD_SIZE) * QWORD_SIZE
     }
 
-    fun calleeArgumentAllocate(arguments: List<Value>): List<Operand> {
+    fun calleeArgumentAllocate(arguments: List<Value>): List<Operand?> {
         return CalleeArgumentAllocator.alloc(frame, arguments)
     }
 

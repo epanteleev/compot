@@ -64,6 +64,10 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         val allocation = pool.calleeArgumentAllocate(callable.arguments())
         allocation.forEachWith(callable.arguments()) { operand, arg ->
             fixedValues.add(arg as LocalValue)
+            if (operand == null) {
+                // Nothing to do. UB happens
+                return@forEachWith
+            }
             registerMap[arg] = operand
         }
     }

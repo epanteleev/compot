@@ -29,44 +29,43 @@ class Lowering private constructor(private val cfg: FunctionData) {
     }
 
     private fun replaceGepToLea() {
-        fun closure(bb: Block, inst: Instruction): Instruction? = match(inst) {
-            gep(generate(), nop()) { gp ->
-                when (val baseType = gp.basicType) {
-                    is AggregateType -> {
-                        val index = gp.index()
-                        val offset = bb.insertBefore(inst) {
-                            it.mul(index, Constant.of(index.asType(), baseType.sizeOf()))
-                        }
-                        bb.replace(inst) { it.leaStack(gp.source(), Type.I8, offset) }
-                    }
-                    is PrimitiveType -> {
-                        bb.replace(inst) { it.leaStack(gp.source(), baseType, gp.index()) }
-                    }
-                }
+        fun transform(bb: Block, inst: Instruction): Instruction? = match(inst) {
+            gep(primitive(), generate(), nop()) { gp ->
+                val baseType = gp.basicType.asType<PrimitiveType>()
+                bb.replace(inst) { it.leaStack(gp.source(), baseType, gp.index()) }
             }
-            gfp(generate()) { gf ->
-                when (val base = gf.basicType) {
-                    is ArrayType -> {
-                        when (val tp = base.elementType()) {
-                            is AggregateType -> {
-                                val index = gf.index(0).toInt()
-                                val offset = tp.offset(index)
-                                bb.replace(inst) { it.leaStack(gf.source(), Type.I8, Constant.of(Type.U32, offset)) }
-                            }
-                            else -> {
-                                tp as PrimitiveType
-                                bb.replace(inst) { it.leaStack(gf.source(), tp, gf.index(0)) }
-                            }
-                        }
-                    }
-                    is StructType -> bb.replace(inst) { it.leaStack(gf.source(), Type.U8, Constant.of(Type.U32, base.offset(gf.index(0).toInt()))) }
+            gep(aggregate(), generate(), nop()) { gp ->
+                val baseType = gp.basicType.asType<AggregateType>()
+                val index = gp.index()
+                val offset = bb.insertBefore(inst) {
+                    it.mul(index, Constant.of(index.asType(), baseType.sizeOf()))
                 }
+                bb.replace(inst) { it.leaStack(gp.source(), Type.I8, offset) }
+            }
+            gfp(primitive(), generate()) { gf ->
+                val baseType = gf.basicType.asType<PrimitiveType>()
+                bb.replace(inst) { it.leaStack(gf.source(), baseType, gf.index(0)) }
+            }
+            gfp(struct(), generate()) { gf ->
+                val basicType = gf.basicType.asType<StructType>()
+                val index = Constant.of(Type.U32, basicType.offset(gf.index(0).toInt()))
+                bb.replace(inst) { it.leaStack(gf.source(), Type.U8, index) }
+            }
+            gfp(array(primitive()), generate()) { gf ->
+                val baseType = gf.basicType.asType<ArrayType>().elementType().asType<PrimitiveType>()
+                bb.replace(inst) { it.leaStack(gf.source(), baseType, gf.index(0)) }
+            }
+            gfp(array(aggregate()), generate()) { gf ->
+                val tp = gf.basicType.asType<ArrayType>()
+                val index = gf.index(0).toInt()
+                val offset = tp.offset(index)
+                bb.replace(inst) { it.leaStack(gf.source(), Type.I8, Constant.of(Type.U32, offset)) }
             }
             default()
         }
 
         for (bb in cfg) {
-            bb.transform { inst -> closure(bb, inst) }
+            bb.transform { inst -> transform(bb, inst) }
         }
     }
 

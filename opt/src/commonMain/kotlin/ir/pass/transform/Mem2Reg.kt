@@ -17,8 +17,6 @@ import ir.types.PrimitiveType
 import ir.value.Value
 
 
-data class Mem2RegException(override val message: String): Exception(message)
-
 class Mem2Reg internal constructor(module: Module): TransformPass(module) {
     override fun name(): String = "mem2reg"
     override fun run(): Module {

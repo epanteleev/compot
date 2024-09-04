@@ -1,0 +1,22 @@
+extern void @printInt(i32)
+
+define i32 @main() {
+entry:
+  %int.addr = alloc i32
+  %int = load i32 %int.addr
+  %ret = call i32 @get_constant(%int: i32) br label %next
+
+next:
+  call void @printInt(%ret: i32) br label %end
+
+end:
+  ret i32 0
+}
+
+;int get_constant(int i) {
+;    return 1;
+;}
+define i32 @get_constant() {
+entry:
+  ret i32 1
+}
