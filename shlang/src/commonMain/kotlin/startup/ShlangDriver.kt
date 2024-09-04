@@ -80,7 +80,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
     }
 
     companion object {
-        const val SYSTEM_HEADERS_PATH = "/usr/include"
+        const val SYSTEM_HEADERS_PATH = "/usr/include" // Manjaro
         const val GNU_LINUX_SYSTEM_HEADERS_PATH = "/usr/include/x86_64-linux-gnu" // Ubuntu
     }
 }

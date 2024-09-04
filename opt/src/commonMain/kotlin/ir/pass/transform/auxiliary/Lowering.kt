@@ -70,24 +70,20 @@ class Lowering private constructor(private val cfg: FunctionData) {
     }
 
     private fun replaceGEPAndStore() {
-        fun getSource(inst: Instruction): Value {
-            return when (inst) {
-                is GetElementPtr -> inst.source()
-                is GetFieldPtr   -> inst.source()
-                else             -> throw IllegalArgumentException("Expected GEP or GFP")
-            }
+        fun getSource(inst: Instruction): Value = when (inst) {
+            is GetElementPtr -> inst.source()
+            is GetFieldPtr   -> inst.source()
+            else             -> throw IllegalArgumentException("Expected GEP or GFP")
         }
 
-        fun getIndex(inst: Instruction): Value {
-            return when (inst) {
-                is GetElementPtr -> inst.index()
-                is GetFieldPtr -> {
-                    val index = inst.index(0).toInt()
-                    val field = inst.basicType.field(index)
-                    U64Value(inst.basicType.offset(index).toLong() / field.sizeOf())
-                }
-                else -> throw IllegalArgumentException("Expected GEP or GFP")
+        fun getIndex(inst: Instruction): Value = when (inst) {
+            is GetElementPtr -> inst.index()
+            is GetFieldPtr -> {
+                val index = inst.index(0).toInt()
+                val field = inst.basicType.field(index)
+                U64Value(inst.basicType.offset(index).toLong() / field.sizeOf())
             }
+            else -> throw IllegalArgumentException("Expected GEP or GFP")
         }
 
         fun closure(bb: Block, inst: Instruction): Instruction {
@@ -133,7 +129,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
         }
     }
 
-    private fun replaceByteDiv() {
+    private fun replaceByteArguments() {
         fun closure(bb: Block, inst: Instruction): Instruction {
             when {
                 tupleDiv(value(i8()), value(i8())) (inst) -> { inst as TupleDiv
@@ -177,13 +173,6 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     killOnDemand(bb, inst)
                     return last
                 }
-                div(constant().not(), nop()) (inst) -> { inst as ArithmeticBinary
-                    // TODO temporal
-                    val second = inst.second()
-                    val copy = bb.insertBefore(inst) { it.copy(second) }
-                    bb.updateDF(inst, ArithmeticBinary.SECOND, copy)
-                    return inst
-                }
                 tupleDiv(constant().not(), nop()) (inst) -> { inst as TupleDiv
                     // TODO temporal
                     val second = inst.second()
@@ -225,7 +214,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
             return inst
         }
 
-        for (bb in cfg.analysis(BfsOrderOrderFabric)) {
+        for (bb in cfg) {
             bb.transform { inst -> closure(bb, inst) }
         }
     }
@@ -306,7 +295,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
     }
 
     private fun pass() {
-        replaceByteDiv()
+        replaceByteArguments()
         replaceEscaped()
         replaceAllocLoadStores()
         replaceGEPAndStore()
