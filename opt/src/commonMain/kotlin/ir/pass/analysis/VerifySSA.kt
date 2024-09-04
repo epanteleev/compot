@@ -15,13 +15,13 @@ import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PreOrderFabric
 
 
-class ValidateSSAErrorException(val module: Module, override val message: String): Exception(message) {
+class ValidateSSAErrorException(val functionData: FunctionData, override val message: String): Exception(message) {
     override fun toString(): String {
         return "ValidateSSAErrorException: $message"
     }
 }
 
-class VerifySSA private constructor(private val module: Module, private val functionData: FunctionData,
+class VerifySSA private constructor(private val functionData: FunctionData,
                                     private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit>() {
     private val dominatorTree by lazy { functionData.analysis(DominatorTreeFabric) }
     private val creation by lazy { CreationInfo.create(functionData) }
@@ -526,7 +526,7 @@ class VerifySSA private constructor(private val module: Module, private val func
 
     private fun assert(condition: Boolean, message: () -> String) {
         if (!condition) {
-            throw ValidateSSAErrorException(module, message())
+            throw ValidateSSAErrorException(functionData, message())
         }
     }
 
@@ -534,7 +534,7 @@ class VerifySSA private constructor(private val module: Module, private val func
         fun run(module: Module): Module {
             val prototypes = module.prototypes
             module.functions.values.forEach { data ->
-                VerifySSA(module, data, prototypes).pass()
+                VerifySSA(data, prototypes).pass()
             }
 
             return module

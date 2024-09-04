@@ -2,6 +2,8 @@ package ir.module
 
 import ir.value.ArgumentValue
 import ir.module.auxiliary.CopyCFG
+import ir.module.auxiliary.DumpFunctionData
+import ir.module.auxiliary.DumpSSAFunctionData
 import ir.module.block.Block
 import ir.pass.AnalysisPassCache
 import ir.pass.analysis.traverse.iterator.*
@@ -83,6 +85,10 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
 
         other as FunctionData
         return prototype == other.prototype
+    }
+
+    override fun toString(): String {
+        return DumpSSAFunctionData(this).toString()
     }
 
     companion object {

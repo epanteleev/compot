@@ -129,7 +129,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 return irGen.mb.build()
             } catch (e: ValidateSSAErrorException) {
                 println("Error: ${e.message}")
-                println("Module:\n${e.module}")
+                println("Function:\n${e.functionData}")
                 throw e
             }
         }

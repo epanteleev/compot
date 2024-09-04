@@ -4,6 +4,7 @@ import ir.global.AnyGlobalValue
 import ir.global.GlobalConstant
 import ir.global.GlobalValue
 import ir.module.auxiliary.DumpModule
+import ir.module.auxiliary.DumpSSAModule
 import ir.types.StructType
 
 abstract class Module(internal val functions: Map<String, FunctionData>,
@@ -46,6 +47,6 @@ class SSAModule(functions: Map<String, FunctionData>,
     }
 
     override fun toString(): String {
-        return DumpModule.dump(this)
+        return DumpSSAModule(this).toString()
     }
 }
