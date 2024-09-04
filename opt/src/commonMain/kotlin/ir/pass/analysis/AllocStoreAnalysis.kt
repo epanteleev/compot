@@ -10,7 +10,6 @@ import ir.pass.common.AnalysisResult
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
-import ir.pass.isLocalVariable
 
 
 class AllocAnalysisResult(private val storeInfo: Map<Alloc, Set<AnyBlock>>, marker: MutationMarker): AnalysisResult(marker),
@@ -21,6 +20,7 @@ class AllocAnalysisResult(private val storeInfo: Map<Alloc, Set<AnyBlock>>, mark
 }
 
 private class AllocStoreAnalysis(private val functionData: FunctionData): FunctionAnalysisPass<AllocAnalysisResult>() {
+    private val escapeState = functionData.analysis(EscapeAnalysisPassFabric)
     private val stores: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal() }
 
     private inline fun forEachAlloc(closure: (Alloc) -> Unit) {
@@ -30,7 +30,7 @@ private class AllocStoreAnalysis(private val functionData: FunctionData): Functi
                     continue
                 }
 
-                if (!inst.isLocalVariable()) {
+                if (!escapeState.isNoEscape(inst)) {
                     continue
                 }
 
@@ -47,7 +47,7 @@ private class AllocStoreAnalysis(private val functionData: FunctionData): Functi
                 if (user !is Store) {
                     continue
                 }
-                if (!user.isLocalVariable()) {
+                if (!escapeState.isNoEscape(user.pointer())) {
                     break
                 }
                 stores.add(user.owner())

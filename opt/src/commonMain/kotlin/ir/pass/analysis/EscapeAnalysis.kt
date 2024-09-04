@@ -107,6 +107,10 @@ class EscapeAnalysisResult(private val escapeState: Map<Value, EscapeState>, mar
 
         return escapeState[value] ?: EscapeState.Unknown
     }
+
+    fun isNoEscape(value: Value): Boolean {
+        return getEscapeState(value) == EscapeState.NoEscape
+    }
 }
 
 object EscapeAnalysisPassFabric: FunctionAnalysisPassFabric<EscapeAnalysisResult>() {

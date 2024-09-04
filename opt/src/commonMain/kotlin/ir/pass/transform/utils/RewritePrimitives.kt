@@ -4,8 +4,9 @@ import common.assertion
 import ir.value.*
 import ir.types.Type
 import ir.instruction.*
+import ir.instruction.matching.alloc
+import ir.instruction.matching.primitive
 import ir.module.block.*
-import ir.pass.isLocalVariable
 import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
 import ir.pass.analysis.EscapeAnalysisPassFabric
@@ -13,7 +14,6 @@ import ir.pass.analysis.EscapeState
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.transform.Mem2RegException
 import ir.types.NonTrivialType
-import ir.types.PrimitiveType
 
 
 //TODO this is not a Reaching Definition Analysis
@@ -79,7 +79,7 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
                 continue
             }
 
-            if (instruction is Store && instruction.isLocalVariable()) {
+            if (instruction is Store && escapeState.isNoEscape(instruction.pointer())) {
                 assertion(escapeState.getEscapeState(instruction.pointer()) == EscapeState.NoEscape) {
                     "Store to global variable is not supported"
                 }
@@ -94,40 +94,22 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
 
                 continue
             }
-            if (instruction is Store) {
-                val state = escapeState.getEscapeState(instruction.pointer())
-                assertion(state != EscapeState.NoEscape) {
-                    "state=$state, instruction=${instruction.dump()}"
-                }
-            }
 
-            if (instruction is Alloc && instruction.allocatedType is PrimitiveType && instruction.isLocalVariable()) {
+            if (alloc(primitive()) (instruction) && escapeState.isNoEscape(instruction as Alloc)) {
                 assertion(escapeState.getEscapeState(instruction) == EscapeState.NoEscape) {
                     "Alloc to global variable is not supported"
                 }
                 valueMap[instruction] = Value.UNDEF
                 continue
             }
-            if (instruction is Alloc) {
-                val state = escapeState.getEscapeState(instruction)
-                assertion(state != EscapeState.NoEscape) {
-                    "state=$state, instruction=${instruction.dump()}"
-                }
-            }
 
-            if (instruction is Load && instruction.isLocalVariable()) {
+            if (instruction is Load && escapeState.isNoEscape(instruction.operand())) {
                 assertion(escapeState.getEscapeState(instruction.operand()) == EscapeState.NoEscape) {
                     "Load from global variable is not supported"
                 }
                 val actual = findActualValue(bb, instruction.operand())
                 valueMap[instruction] = actual
                 continue
-            }
-            if (instruction is Load) {
-                val state = escapeState.getEscapeState(instruction.operand())
-                assertion(state != EscapeState.NoEscape) {
-                    "state=$state, instruction=${instruction.dump()}"
-                }
             }
 
             if (instruction is Phi) {
