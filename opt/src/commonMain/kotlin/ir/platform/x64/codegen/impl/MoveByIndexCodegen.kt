@@ -44,7 +44,8 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, temp1)
+        asm.mov(size, temp1, Address.from(dst, 0, second, ScaleFactor.from(size)))
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
@@ -52,7 +53,6 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        TODO("untested")
         asm.mov(indexSize, second, temp1)
         asm.mov(size, first, Address.from(dst, 0, temp1, ScaleFactor.from(size)))
     }
@@ -76,7 +76,8 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, temp1)
+        asm.mov(size, temp1, Address.from(dst, second.value().toInt() * size))
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {

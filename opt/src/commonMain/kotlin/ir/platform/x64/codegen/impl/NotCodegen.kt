@@ -24,7 +24,6 @@ data class NotCodegen(val type: IntegerType, val asm: Assembler): GPOperandsVisi
     }
 
     override fun ra(dst: GPRegister, src: Address) {
-        TODO("untested")
         asm.mov(size, src, dst)
         asm.not(size, dst)
     }

@@ -308,7 +308,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val index  = valueToRegister.operand(loadst.index())
         val dst    = valueToRegister.operand(loadst)
 
-        LoadFromStackCodegen(loadst.type(), asm)(dst, origin, index)
+        LoadFromStackCodegen(loadst.type(), loadst.index().asType(), asm)(dst, origin, index)
     }
 
     override fun visit(leaStack: LeaStack) {

@@ -45,7 +45,8 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
             asm.mov(secondOpSize, second, temp1)
             asm.lea(POINTER_SIZE, Address.from(first, 0, temp1, ScaleFactor.from(size)), dst)
         } else {
-            asm.mul(POINTER_SIZE, Imm32.of(size), second, dst)
+            asm.mov(secondOpSize, second, temp1)
+            asm.mul(POINTER_SIZE, Imm32.of(size), temp1, dst)
             asm.add(POINTER_SIZE, first, dst)
         }
     }

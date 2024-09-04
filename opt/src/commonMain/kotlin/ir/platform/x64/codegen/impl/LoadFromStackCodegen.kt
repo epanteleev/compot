@@ -7,8 +7,9 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
+class LoadFromStackCodegen (val type: PrimitiveType, val indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
     private val size = type.sizeOf()
+    private val indexSize = indexType.sizeOf()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {
@@ -17,6 +18,9 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
                     asm.movf(size, Address.from(source.base, source.offset + index.value().toInt() * size), dst)
                 } else if (dst is XmmRegister && source is Address2 && index is GPRegister) {
                     asm.movf(size, Address.from(source.base, source.offset, index, ScaleFactor.from(size)), dst)
+                } else if (dst is XmmRegister && source is Address2 && index is Address2) {
+                    asm.mov(indexSize, index, temp1)
+                    asm.movf(size, Address.from(source.base, source.offset, temp1, ScaleFactor.from(size)), dst)
                 } else {
                     default(dst, source, index)
                 }
@@ -56,7 +60,7 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
         if (first is Address2) {
-            asm.mov(size, second, temp1) //TODO check size
+            asm.mov(indexSize, second, temp1)
             asm.mov(size, Address.from(first.base, first.offset, temp1, ScaleFactor.from(size)), dst)
         } else {
             throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
@@ -110,7 +114,7 @@ class LoadFromStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOpe
 
     override fun aaa(dst: Address, first: Address, second: Address) = when (first) {
         is Address2 -> {
-            asm.mov(size, second, temp1) //TODO check size
+            asm.mov(indexSize, second, temp1)
             asm.mov(size, Address.from(first.base, first.offset, temp1, ScaleFactor.from(size)), temp1)
             asm.mov(size, temp1, dst)
         }

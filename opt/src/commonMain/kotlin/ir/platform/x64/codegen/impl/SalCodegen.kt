@@ -32,7 +32,8 @@ class SalCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.sal(size, second, dst)
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
@@ -67,7 +68,8 @@ class SalCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.sal(size, second, dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {

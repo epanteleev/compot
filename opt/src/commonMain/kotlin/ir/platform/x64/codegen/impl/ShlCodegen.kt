@@ -21,10 +21,6 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
                 asm.mov(size, second, temp1)
                 asm.shl(size, temp1, dst)
             }
-            second -> {
-                asm.mov(size, first, temp1)
-                asm.shl(size, temp1, dst)
-            }
             else -> {
                 asm.mov(size, first, dst)
                 asm.shl(size, second, dst)
@@ -37,7 +33,8 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.shl(size, second, dst)
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
@@ -70,7 +67,8 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.shl(size, second, dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {

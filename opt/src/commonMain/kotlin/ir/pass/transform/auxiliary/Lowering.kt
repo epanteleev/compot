@@ -4,7 +4,6 @@ import ir.types.*
 import ir.value.*
 import ir.module.*
 import ir.instruction.*
-import ir.instruction.Store.Companion.VALUE
 import ir.module.block.Block
 import ir.instruction.matching.*
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
@@ -240,7 +239,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 }
                 store(nop(), generate()) (inst) -> { inst as Store
                     val lea = bb.insertBefore(inst) { it.lea(inst.value().asValue()) }
-                    bb.updateDF(inst, VALUE, lea)
+                    bb.updateDF(inst, Store.VALUE, lea)
                     return inst
                 }
                 store(gValue(primitive()), nop()) (inst) -> { inst as Store //TODO inefficient lowering

@@ -45,7 +45,12 @@ class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitor
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.or(size, second, dst)
+        } else {
+            asm.mov(size, first, dst)
+            asm.or(size, second, dst)
+        }
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
@@ -58,7 +63,12 @@ class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitor
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        if (second == first) {
+            asm.mov(size, first, temp1)
+        } else {
+            asm.mov(size, first, dst)
+            asm.or(size, second, dst)
+        }
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {

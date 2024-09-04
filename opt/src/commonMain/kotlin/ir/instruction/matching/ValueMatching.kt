@@ -43,6 +43,10 @@ class Matcher(val inst: Instruction) {
         return rule(load(pointer), block)
     }
 
+    fun load(type: TypeMatcher, pointer: ValueMatcher, block: (Load) -> Instruction?): Instruction? {
+        return rule(load(type, pointer), block)
+    }
+
     fun gep(source: ValueMatcher, idx: ValueMatcher, block: (GetElementPtr) -> Instruction?): Instruction? {
         return rule(gep(source, idx), block)
     }
@@ -78,6 +82,10 @@ inline fun store(crossinline pointer: ValueMatcher, crossinline value: ValueMatc
 
 inline fun load(crossinline pointer: ValueMatcher): InstructionMatcher = {
     it is Load && pointer(it.operand())
+}
+
+inline fun load(crossinline type: TypeMatcher, crossinline pointer: ValueMatcher): InstructionMatcher = {
+    it is Load && type(it.type()) && pointer(it.operand())
 }
 
 inline fun copy(crossinline origin: ValueMatcher): InstructionMatcher = {
