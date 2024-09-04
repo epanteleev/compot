@@ -1,6 +1,5 @@
 package ir.pass.transform.utils
 
-import common.assertion
 import ir.value.*
 import ir.types.Type
 import ir.instruction.*
@@ -10,7 +9,6 @@ import ir.module.block.*
 import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
 import ir.pass.analysis.EscapeAnalysisPassFabric
-import ir.pass.analysis.EscapeState
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.transform.Mem2RegException
 import ir.types.NonTrivialType
@@ -80,10 +78,6 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
             }
 
             if (instruction is Store && escapeState.isNoEscape(instruction.pointer())) {
-                assertion(escapeState.getEscapeState(instruction.pointer()) == EscapeState.NoEscape) {
-                    "Store to global variable is not supported"
-                }
-
                 val actual = findActualValueOrNull(bb, instruction.value())
                 val pointer = instruction.pointer()
                 if (actual != null) {
@@ -96,17 +90,11 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
             }
 
             if (alloc(primitive()) (instruction) && escapeState.isNoEscape(instruction as Alloc)) {
-                assertion(escapeState.getEscapeState(instruction) == EscapeState.NoEscape) {
-                    "Alloc to global variable is not supported"
-                }
                 valueMap[instruction] = Value.UNDEF
                 continue
             }
 
             if (instruction is Load && escapeState.isNoEscape(instruction.operand())) {
-                assertion(escapeState.getEscapeState(instruction.operand()) == EscapeState.NoEscape) {
-                    "Load from global variable is not supported"
-                }
                 val actual = findActualValue(bb, instruction.operand())
                 valueMap[instruction] = actual
                 continue

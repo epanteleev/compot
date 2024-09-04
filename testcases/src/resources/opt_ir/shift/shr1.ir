@@ -1,0 +1,14 @@
+
+extern void @printInt(i32)
+
+define i32 @main() {
+entry:
+	%0x1 = alloc i32
+	store ptr %0x1, i32 1
+	%0x2 = load i32 %0x1
+	%1x1 = shr i32 4, %0x2
+	call void @printInt(%1x1: i32) br label %L1
+
+L1:
+	ret i32 0
+}
