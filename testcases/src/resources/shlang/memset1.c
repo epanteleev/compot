@@ -6,7 +6,6 @@ static inline void memset(void *dest, char val, int n) {
     }
 }
 
-
 extern void printByteArrayWithSpaces(char arr[], int n);
 
 int main() {

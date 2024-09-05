@@ -267,7 +267,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                 val macroReplacement = MacroReplacement(name.str(), macros)
                 val old = ctx.define(macroReplacement)
                 if (old != null && old != macroReplacement) {
-                    warning("macro $name already defined")
+                    warning("macro $name already defined in ${old.first().position()}")
                 }
             }
             "undef" -> {

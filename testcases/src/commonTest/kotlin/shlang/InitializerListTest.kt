@@ -59,6 +59,12 @@ abstract class InitializerListTest: CommonCTest() {
         val result = runCTest("shlang/initializerList/initializerList8", listOf(), options())
         assertEquals("1 2 3 \n4 5 6 \n7 8 9 \n10 11 12 \n", result.output)
     }
+
+    @Test
+    fun test9() {
+        val result = runCTest("shlang/initializerList/initializerList9", listOf(), options())
+        assertEquals("1 32 3\n", result.output)
+    }
 }
 
 class InitializerListTestsO0: InitializerListTest() {

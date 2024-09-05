@@ -17,18 +17,11 @@ class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         when (dst) {
-            first -> {
-                asm.mov(size, second, temp1)
-                asm.and(size, temp1, dst)
-            }
-            second -> {
-                asm.mov(size, first, temp1)
-                asm.and(size, temp1, dst)
-            }
+            first -> asm.and(size, second, dst)
+            second -> asm.and(size, first, dst)
             else -> {
-                asm.mov(size, first, temp1)
-                asm.and(size, second, temp1)
-                asm.mov(size, temp1, dst)
+                asm.mov(size, first, dst)
+                asm.and(size, second, dst)
             }
         }
     }

@@ -136,24 +136,40 @@ data class And(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
 }
 
 data class Shr(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
+    init {
+        assertion(src == GPRegister.rcx || src is ImmInt) { "src=$src" }
+    }
+
     override fun toString(): String {
         return "shr${prefix(size)} ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
 data class Sar(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
+    init {
+        assertion(src == GPRegister.rcx || src is ImmInt) { "src=$src" }
+    }
+
     override fun toString(): String {
         return "sar${prefix(size)} ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
 data class Shl(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
+    init {
+        assertion(src == GPRegister.rcx || src is ImmInt) { "src=$src" }
+    }
+
     override fun toString(): String {
         return "shl${prefix(size)} ${src.toString(size)}, ${dst.toString(size)}"
     }
 }
 
 data class Sal(val size: Int, val src: Operand, val dst: Operand): Arithmetic {
+    init {
+        assertion(src == GPRegister.rcx || src is ImmInt) { "src=$src" }
+    }
+
     override fun toString(): String {
         return "sal${prefix(size)} ${src.toString(size)}, ${dst.toString(size)}"
     }

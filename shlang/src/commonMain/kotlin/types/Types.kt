@@ -84,6 +84,7 @@ sealed interface CType {
                         LONG -> LONG
                         ULONG -> ULONG
                         SHORT -> INT
+                        USHORT -> INT
                         UINT -> UINT
                         DOUBLE -> DOUBLE
                         FLOAT -> FLOAT

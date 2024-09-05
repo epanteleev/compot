@@ -290,7 +290,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 is CArrayType -> {
                     val type = mb.toIRType<ArrayType>(typeHolder, argCType)
-                    val convertedArg = ir.gep(expr, type.elementType() as PrimitiveType, Constant.of(Type.I64, 0))
+                    val convertedArg = ir.gep(expr, type.elementType(), Constant.of(Type.I64, 0))
                     convertedArgs.add(convertedArg)
                 }
                 is CStructType -> {

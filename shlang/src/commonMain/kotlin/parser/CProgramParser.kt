@@ -297,6 +297,9 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         eat()
         val list = initializer_list()
+        if (check(",")) {
+            eat()
+        }
         if (check("}")) {
             eat()
             return@rule list
