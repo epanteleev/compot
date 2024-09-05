@@ -15,14 +15,27 @@ abstract class CommonCTest: CommonTest() {
         return Result(basename, testResult.output, testResult.error, testResult.exitCode)
     }
 
-    private fun compileExecutable(filename: String, basename: String, optOptions: List<String>, runtimeLib: List<String>) {
+    protected fun compile(filename: String, basename: String, optOptions: List<String>, runtimeLib: List<String>): String {
+        val output = "$TEST_OUTPUT_DIR/$basename"
+
         val args = arrayOf("-c", "$TESTCASES_DIR/$filename.c", "--dump-ir", TEST_OUTPUT_DIR, "-I$TESTCASES_DIR") +
                 optOptions +
-                listOf("-o", "$TEST_OUTPUT_DIR/$basename")
+                listOf("-o", output)
+
+        val cli = CCLIParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
+        ShlangDriver(cli).run()
+        return output
+    }
+
+    private fun compileExecutable(filename: String, basename: String, optOptions: List<String>, runtimeLib: List<String>) {
+        val output = "$TEST_OUTPUT_DIR/$basename"
+        val args = arrayOf("-c", "$TESTCASES_DIR/$filename.c", "--dump-ir", TEST_OUTPUT_DIR, "-I$TESTCASES_DIR") +
+                optOptions +
+                listOf("-o", output)
 
         val cli = CCLIParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         ShlangDriver(cli).run()
 
-        runGCC(basename, runtimeLib)
+        runGCC(output, runtimeLib)
     }
 }

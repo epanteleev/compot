@@ -664,7 +664,50 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 divide(commonType, leftConverted, rightConverted)
             }
-            else -> throw IRCodeGenError("Unknown binary operation, op='${binop.opType}'")
+
+            BinaryOpType.SUB_ASSIGN -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
+                val rightConverted = ir.convertToType(right, leftIrType)
+
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = ir.load(leftIrType, left)
+                val sub = ir.sub(loadedLeft, rightConverted)
+                ir.store(left, sub)
+                sub
+            }
+            BinaryOpType.MOD_ASSIGN -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
+                val rightConverted = ir.convertToType(right, leftIrType)
+
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = ir.load(leftIrType, left)
+
+                val rem = ir.tupleDiv(loadedLeft, rightConverted)
+                val mod = ir.proj(rem, 1)
+                ir.store(left, mod)
+                mod
+            }
+            BinaryOpType.BIT_AND_ASSIGN -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
+                val rightConverted = ir.convertToType(right, leftIrType)
+
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = ir.load(leftIrType, left)
+
+                val and = ir.and(loadedLeft, rightConverted)
+                ir.store(left, and)
+                and
+            }
+            BinaryOpType.COMMA -> {
+                visitExpression(binop.left, false)
+                visitExpression(binop.right, false)
+            }
         }
     }
 

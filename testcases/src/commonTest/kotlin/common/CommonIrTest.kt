@@ -15,13 +15,14 @@ abstract class CommonIrTest: CommonTest() {
     }
 
     private fun compile(filename: String, basename: String, optOptions: List<String>, extraFiles: List<String>) {
+        val output = "$TEST_OUTPUT_DIR/$basename"
         val args = arrayOf("-c", "$TESTCASES_DIR/$filename.ir", "--dump-ir", TEST_OUTPUT_DIR) +
                 optOptions +
-                listOf("-o", "$TEST_OUTPUT_DIR/$basename")
+                listOf("-o", output)
 
         val cli = CliParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         OptDriver(cli).compile()
 
-        runGCC(basename, extraFiles)
+        runGCC(output, extraFiles)
     }
 }

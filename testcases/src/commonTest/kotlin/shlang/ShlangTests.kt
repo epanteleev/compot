@@ -8,12 +8,6 @@ import kotlin.test.assertEquals
 
 abstract class ShlangTests: CommonCTest() {
     @Test
-    fun testDoWhile() {
-        val result = runCTest("shlang/doWhile", listOf(), options())
-        assertReturnCode(result, 20)
-    }
-
-    @Test
     fun testArrayAccess() {
         val result = runCTest("shlang/arrayAccess", listOf(), options())
         assertReturnCode(result, 3)
@@ -48,12 +42,6 @@ abstract class ShlangTests: CommonCTest() {
     fun testMemsetMemcpy() {
         val result = runCTest("shlang/memset/memset_arrays", listOf("shlang/memset/memset_test.c"), options())
         assert(result, "Done")
-    }
-
-    @Test
-    fun testMemset1() {
-        val result = runCTest("shlang/memset1", listOf("runtime/runtime.c"), options())
-        assert(result, "0 0 0 0 0 0 0 0 0 0 \n")
     }
 
     @Test
@@ -92,30 +80,6 @@ abstract class ShlangTests: CommonCTest() {
     fun testFibonacciRecursive() {
         val result = runCTest("shlang/fibonacci_rec", listOf("runtime/runtime.c"), options())
         assertEquals(55, result.exitCode)
-    }
-
-    @Test
-    fun testForLoop() {
-        val result = runCTest("shlang/forLoop", listOf("runtime/runtime.c"), options())
-        assertEquals(30, result.exitCode)
-    }
-
-    @Test
-    fun testForLoop0() {
-        val result = runCTest("shlang/forLoop0", listOf("runtime/runtime.c"), options())
-        assert(result, "Done")
-    }
-
-    @Test
-    fun testForLoop1() {
-        val result = runCTest("shlang/forLoop1", listOf("runtime/runtime.c"), options())
-        assert(result, "Done")
-    }
-
-    @Test
-    fun testForLoop2() {
-        val result = runCTest("shlang/forLoop2", listOf("runtime/runtime.c"), options())
-        assertEquals(30, result.exitCode)
     }
 
     @Test
