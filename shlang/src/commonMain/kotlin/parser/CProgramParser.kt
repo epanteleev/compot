@@ -1628,16 +1628,23 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val initializers = mutableListOf<Initializer>()
         while (true) {
             val designator = designation()
-            val initializer = initializer() ?: throw ParserException(InvalidToken("Expected initializer", peak()))
             if (designator != null) {
-                initializers.add(DesignationInitializer(designator, initializer))
+                val init = initializer()?: throw ParserException(InvalidToken("Expected initializer", peak()))
+                initializers.add(DesignationInitializer(designator, init))
             } else {
-                initializers.add(SingleInitializer(initializer))
+                val init = initializer()?: let {
+                    if (initializers.isEmpty()) {
+                        return@rule null
+                    } else {
+                        return@rule InitializerList(initializers)
+                    }
+                }
+                initializers.add(SingleInitializer(init))
             }
             if (check(",")) {
                 eat()
             } else {
-                return@rule break
+                break
             }
         }
         if (initializers.isEmpty()) {

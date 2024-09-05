@@ -542,6 +542,17 @@ class ParserTest {
     }
 
     @Test
+    fun test_array_initializer_list4() {
+        val tokens = CTokenizer.apply("int arr[1][3] = {{9, 8, 8},};")
+        val parser = CProgramParser.build(tokens)
+
+        val expr = parser.translation_unit() as Node
+        println(expr)
+        val expected = "int arr[1][3] = {{9, 8, 8}};"
+        assertEquals(expected, LineAgnosticAstPrinter.print(expr))
+    }
+
+    @Test
     fun test_cast() {
         val tokens = CTokenizer.apply("(int) a")
         val parser = CProgramParser.build(tokens)
