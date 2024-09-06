@@ -476,3 +476,47 @@ class CUncompletedUnionType(baseType: UncompletedUnionBaseType, properties: List
         return CUncompletedUnionType(baseType as UncompletedUnionBaseType, properties + extraProperties)
     }
 }
+
+class CUncompletedEnumType(val baseType: UncompletedEnumType, val properties: List<TypeProperty> = emptyList()) : CType {
+    override fun copyWith(extraProperties: List<TypeProperty>): CType {
+        return CUncompletedEnumType(baseType, properties + extraProperties)
+    }
+
+    override fun qualifiers(): List<TypeProperty> {
+        return properties
+    }
+
+    override fun size(): Int {
+        return baseType.size()
+    }
+}
+
+class CEnumType(private val baseType: EnumBaseType, override val properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
+    override fun size(): Int {
+        return baseType.size()
+    }
+
+    override fun toString(): String {
+        return buildString {
+            properties.forEach { append("$it ") }
+            append(baseType)
+        }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CEnumType) return false
+
+        if (baseType != other.baseType) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return baseType.hashCode()
+    }
+
+    override fun copyWith(extraProperties: List<TypeProperty>): CType {
+        return CEnumType(baseType, properties + extraProperties)
+    }
+}

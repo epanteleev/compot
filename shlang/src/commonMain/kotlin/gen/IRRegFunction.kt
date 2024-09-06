@@ -818,30 +818,33 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}")
     }
 
-    private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
-        val name = varNode.name()
-        val rvalueAttr = varStack[name]
-        if (rvalueAttr == null) {
-            val global = mb.findFunction(name)
-            if (global != null) {
-                return global
-            }
-            throw IRCodeGenError("Variable '$name' not found")
-        }
-
+    private fun getVariableAddress(name: String, rvalueAddr: Value, isRvalue: Boolean): Value {
         val type = typeHolder[name]
 
         if (type is CompoundType) {
-            return rvalueAttr
+            return rvalueAddr
         }
         if (!isRvalue) {
-            return rvalueAttr
+            return rvalueAddr
         }
         if (type is CFunPointerType) {
-            return rvalueAttr //tODO hack??!
+            return rvalueAddr //tODO hack??!
         }
         val converted = mb.toIRType<PrimitiveType>(typeHolder, type)
-        return ir.load(converted, rvalueAttr)
+        return ir.load(converted, rvalueAddr)
+    }
+
+    private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
+        val name = varNode.name()
+        val rvalueAttr = varStack[name]
+        if (rvalueAttr != null) {
+            return getVariableAddress(name, rvalueAttr, isRvalue)
+        }
+        val global = mb.findFunction(name)
+        if (global != null) {
+            return global
+        }
+        throw IRCodeGenError("Variable '$name' not found")
     }
 
     private fun argumentTypes(ctypes: List<CType>): List<NonTrivialType> {

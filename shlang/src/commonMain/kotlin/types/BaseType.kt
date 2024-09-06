@@ -35,9 +35,9 @@ class TypeDef(val name: String, private val baseType: CType): BaseType {
     override fun toString(): String = baseType.toString()
 }
 
-abstract class AggregateBaseType: BaseType
+sealed class AggregateBaseType: BaseType
 
-abstract class AnyStructType(open val name: String): AggregateBaseType() {
+sealed class AnyStructType(open val name: String): AggregateBaseType() {
     protected val fields = arrayListOf<Pair<String, CType>>()
     override fun typename(): String = name
 
@@ -60,7 +60,7 @@ abstract class AnyStructType(open val name: String): AggregateBaseType() {
 }
 
 
-abstract class UncompletedType(name: String): AnyStructType(name) {
+sealed class UncompletedType(name: String): AnyStructType(name) {
     override fun size(): Int = throw Exception("Uncompleted type")
 }
 

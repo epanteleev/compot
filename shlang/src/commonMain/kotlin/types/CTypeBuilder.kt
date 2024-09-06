@@ -83,7 +83,8 @@ class CTypeBuilder {
             is UncompletedStructBaseType -> CUncompletedStructType(baseType, properties)
             is UncompletedUnionBaseType  -> CUncompletedUnionType(baseType, properties)
             is CArrayBaseType            -> CArrayType(baseType, properties)
-            else -> throw RuntimeException("Unknown type $baseType")
+            is EnumBaseType              -> CEnumType(baseType, properties)
+            is UncompletedEnumType       -> CUncompletedEnumType(baseType, properties)
         }
 
         return Pair(structType, storageClass)
