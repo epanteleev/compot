@@ -5,7 +5,6 @@ import ir.types.*
 import parser.nodes.*
 import ir.module.Module
 import gen.TypeConverter.toIRType
-import ir.global.*
 import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
@@ -16,7 +15,6 @@ import ir.value.InitializerListValue
 data class IRCodeGenError(override val message: String) : Exception(message)
 
 class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack(), NameGenerator()) {
-
     fun visit(programNode: ProgramNode) = varStack.scoped {
         for (node in programNode.nodes) {
             when (node) {

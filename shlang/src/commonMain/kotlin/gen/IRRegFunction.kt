@@ -461,14 +461,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitBinary(binop: BinaryOp): Value {
         return when (binop.opType) {
-            BinaryOpType.ADD -> {
-                makeAlgebraicBinary(binop, ir::add)
-            }
-
-            BinaryOpType.SUB -> {
-                makeAlgebraicBinary(binop, ir::sub)
-            }
-
+            BinaryOpType.ADD -> makeAlgebraicBinary(binop, ir::add)
+            BinaryOpType.SUB -> makeAlgebraicBinary(binop, ir::sub)
             BinaryOpType.ASSIGN -> {
                 val right = visitExpression(binop.right, true)
                 val leftType = binop.left.resolveType(typeHolder)
@@ -771,7 +765,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             PrefixUnaryOpType.DEREF -> {
                 val addr = visitExpression(unaryOp.primary, true)
                 if (!isRvalue) {
-                   return addr
+                    return addr
                 }
                 val type = unaryOp.resolveType(typeHolder)
                 val loadedType = mb.toIRType<PrimitiveType>(typeHolder, type)
@@ -802,7 +796,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val converted = ir.convertToType(value, commonType)
                 ir.not(converted)
             }
-            else -> throw IRCodeGenError("Unknown unary operation, op='${unaryOp.opType}'")
+
+            PrefixUnaryOpType.PLUS -> visitExpression(unaryOp.primary, isRvalue)
         }
     }
 

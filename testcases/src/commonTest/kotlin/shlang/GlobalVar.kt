@@ -129,6 +129,13 @@ abstract class GlobalVar: CommonCTest() {
         assertEquals("2 3 0 0\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testGlobalVar12() {
+        val result = runCTest("shlang/global_var/global_var12", listOf("runtime/runtime.c"), options())
+        assertEquals("1000, -1000, 1234, 3200, -1314, 0, 32767, -32768,", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class GlobalVarO0: GlobalVar() {

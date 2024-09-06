@@ -2,6 +2,7 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.Definitions.POINTER_SIZE
+import ir.Definitions.QWORD_SIZE
 import ir.types.*
 import ir.instruction.lir.Move
 import ir.platform.x64.CallConvention.temp1
@@ -81,9 +82,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        asm.lea(POINTER_SIZE, dst, temp1)
-        asm.mov(size, second, temp2)
-        asm.mov(size, first, Address.from(temp1, 0, temp2, ScaleFactor.from(size)))
+        TODO()
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
@@ -91,19 +90,15 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        asm.lea(POINTER_SIZE, dst, temp1)
-        asm.mov(size, second, temp2)
-        asm.mov(size, first, Address.from(temp1, 0, temp2, ScaleFactor.from(size)))
+        TODO()
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {
-        asm.lea(POINTER_SIZE, dst, temp1)
-        asm.mov(size, second, temp2)
-        asm.mov(size, first, Address.from(temp1, 0, temp2, ScaleFactor.from(size)))
+        TODO()
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        asm.mov(size, first, dst.withOffset(second.value().toInt() * size))
+        TODO()
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
@@ -111,14 +106,15 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("untested")
-        asm.lea(POINTER_SIZE, dst, temp1)
-        asm.mov(size, first, temp2)
-        asm.mov(size, temp2, Address.from(temp1, 0, second, ScaleFactor.from(size)))
+        TODO()
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, dst, temp1)
+        asm.mov(indexSize, second, temp2)
+        asm.lea(POINTER_SIZE, Address.from(temp1, 0, temp2, ScaleFactor.from(size)), temp1)
+        asm.mov(size, first, temp2)
+        asm.mov(size, temp2, Address.from(temp1, 0))
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

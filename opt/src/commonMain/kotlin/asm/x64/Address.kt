@@ -30,6 +30,10 @@ class Address2 internal constructor(val base: GPRegister, val offset: Int) : Add
         return Address2(base, offset + disp)
     }
 
+    fun withOffset(index: GPRegister): Address {
+        return Address4(base, offset, index, ScaleFactor.TIMES_1)
+    }
+
     override fun toString(): String {
         return toString(Int.MAX_VALUE)
     }
