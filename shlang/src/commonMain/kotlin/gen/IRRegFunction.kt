@@ -44,9 +44,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         get() = currentFunction ?: throw IRCodeGenError("Function expected")
 
     private inline fun<reified T> scoped(noinline block: () -> T): T {
-        return typeHolder.scoped {
-            varStack.scoped(block)
-        }
+        return typeHolder.scoped { varStack.scoped(block) }
     }
 
     private fun seekOrAddLabel(name: String): Label {
@@ -72,42 +70,35 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         return when (val type = conditionExpr.type()) {
-            is IntegerType, PointerType -> {
-                type as NonTrivialType
-                ir.icmp(conditionExpr, IntPredicate.Ne, Constant.of(type, 0))
-            }
+            is IntegerType, PointerType -> ir.icmp(conditionExpr, IntPredicate.Ne, Constant.of(type.asType(), 0))
             is FloatingPointType -> ir.fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
             else -> throw IRCodeGenError("Unknown type")
         }
     }
 
-    private inline fun<reified T: AnyPredicateType> makeCondition(a: Value, predicate: T, b: Value): Value {
-        return when (a.type()) {
-            is IntegerType, PointerType -> ir.icmp(a, predicate as IntPredicate, b)
-            is FloatingPointType -> ir.fcmp(a, predicate as FloatPredicate, b)
-            else -> throw IRCodeGenError("Unknown type")
-        }
+    private inline fun<reified T: AnyPredicateType> makeCondition(a: Value, predicate: T, b: Value): Value = when (a.type()) {
+        is IntegerType, PointerType -> ir.icmp(a, predicate as IntPredicate, b)
+        is FloatingPointType -> ir.fcmp(a, predicate as FloatPredicate, b)
+        else -> throw IRCodeGenError("Unknown type")
     }
 
-    private fun visitExpression(expression: Expression, isRvalue: Boolean): Value {
-        return when (expression) {
-            is BinaryOp     -> visitBinary(expression)
-            is UnaryOp      -> visitUnary(expression, isRvalue)
-            is NumNode      -> visitNumNode(expression)
-            is VarNode      -> visitVarNode(expression, isRvalue)
-            is FunctionCall -> visitFunctionCall(expression)
-            is Cast         -> visitCast(expression)
-            is ArrayAccess  -> visitArrayAccess(expression, isRvalue)
-            is StringNode   -> visitStringNode(expression)
-            is SizeOf       -> visitSizeOf(expression)
-            is MemberAccess -> visitMemberAccess(expression, isRvalue)
-            is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
-            is FuncPointerCall   -> visitFunPointerCall(expression)
-            is Conditional       -> visitConditional(expression)
-            is CharNode          -> visitCharNode(expression)
-            is SingleInitializer -> visitSingleInitializer(expression)
-            else -> throw IRCodeGenError("Unknown expression: $expression")
-        }
+    private fun visitExpression(expression: Expression, isRvalue: Boolean): Value = when (expression) {
+        is BinaryOp     -> visitBinary(expression)
+        is UnaryOp      -> visitUnary(expression, isRvalue)
+        is NumNode      -> visitNumNode(expression)
+        is VarNode      -> visitVarNode(expression, isRvalue)
+        is FunctionCall -> visitFunctionCall(expression)
+        is Cast         -> visitCast(expression)
+        is ArrayAccess  -> visitArrayAccess(expression, isRvalue)
+        is StringNode   -> visitStringNode(expression)
+        is SizeOf       -> visitSizeOf(expression)
+        is MemberAccess -> visitMemberAccess(expression, isRvalue)
+        is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
+        is FuncPointerCall   -> visitFunPointerCall(expression)
+        is Conditional       -> visitConditional(expression)
+        is CharNode          -> visitCharNode(expression)
+        is SingleInitializer -> visitSingleInitializer(expression)
+        else -> throw IRCodeGenError("Unknown expression: $expression")
     }
 
     private fun visitSingleInitializer(singleInitializer: SingleInitializer): Value {
@@ -976,22 +967,18 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun irReturnType(retType: CType): Type {
-        when (retType) {
-            is CPrimitiveType, is CPointerType -> {
-                return mb.toIRType<Type>(typeHolder, retType)
+    private fun irReturnType(retType: CType): Type = when (retType) {
+        is CPrimitiveType, is CPointerType -> mb.toIRType<Type>(typeHolder, retType)
+        is CStructType -> {
+            val structType = mb.toIRType<StructType>(typeHolder, retType)
+            val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
+            if (list.size == 1) {
+                list[0]
+            } else {
+                TupleType(list.toTypedArray())
             }
-            is CStructType -> {
-                val structType = mb.toIRType<StructType>(typeHolder, retType)
-                val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
-                return if (list.size == 1) {
-                    list[0]
-                } else {
-                    TupleType(list.toTypedArray())
-                }
-            }
-            else -> throw IRCodeGenError("Unknown return type, type=$retType")
         }
+        else -> throw IRCodeGenError("Unknown return type, type=$retType")
     }
 
     override fun visit(functionNode: FunctionNode): Value = scoped {
@@ -1018,7 +1005,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return@scoped ir.prototype()
     }
 
-    private fun visitStatement(statement: Statement) = typeHolder.scoped {
+    private fun visitStatement(statement: Statement) = scoped {
         statement.accept(this)
     }
 
