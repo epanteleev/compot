@@ -349,7 +349,6 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
 data class VarNode(private val str: Identifier) : Expression() {
     fun name(): String = str.str()
     fun nameIdent(): Identifier = str
-    fun position(): Position = str.position()
 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 

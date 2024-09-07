@@ -15,4 +15,5 @@ void test(int16_t *pcm, size_t len) {
 
 int main() {
     test(pcm, LEN);
+    return 0;
 }

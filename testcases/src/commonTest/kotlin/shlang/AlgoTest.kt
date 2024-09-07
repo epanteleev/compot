@@ -205,7 +205,7 @@ abstract class AlgoTests: CommonCTest() {
     @Test
     fun testAlaw() {
         val result = runCTest("shlang/algo/alaw", listOf(), options())
-        assertEquals("All tests passed\n", result.output)
+        assertEquals("All tests passed!\n", result.output)
         assertReturnCode(result, 0)
     }
 }

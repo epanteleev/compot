@@ -11,7 +11,7 @@ import ir.pass.analysis.traverse.BfsOrderOrderFabric
 
 class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceAllocLoadStores() {
-        fun closure(bb: Block, inst: Instruction): Instruction? = match(inst) {
+        fun transform(bb: Block, inst: Instruction): Instruction? = match(inst) {
             store(generate(), nop()) { store ->
                 val toValue = store.pointer().asValue<Generate>()
                 bb.replace(store) { it.move(toValue, store.value()) }
@@ -24,7 +24,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
         }
 
         for (bb in cfg) {
-            bb.transform { inst -> closure(bb, inst) }
+            bb.transform { inst -> transform(bb, inst) }
         }
     }
 

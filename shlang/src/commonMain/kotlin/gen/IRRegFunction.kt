@@ -28,7 +28,7 @@ import parser.nodes.visitors.StatementVisitor
 
 class IrGenFunction(moduleBuilder: ModuleBuilder,
                     typeHolder: TypeHolder,
-                    varStack: VarStack,
+                    varStack: VarStack<Value>,
                     nameGenerator: NameGenerator):
     AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator),
     StatementVisitor<Unit>,
@@ -42,6 +42,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private val ir: FunctionDataBuilder
         get() = currentFunction ?: throw IRCodeGenError("Function expected")
+
+    private inline fun<reified T> scoped(noinline block: () -> T): T {
+        return typeHolder.scoped {
+            varStack.scoped(block)
+        }
+    }
 
     private fun seekOrAddLabel(name: String): Label {
         return stringTolabel[name] ?: let {
@@ -813,8 +819,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}")
     }
 
-    private fun getVariableAddress(name: String, rvalueAddr: Value, isRvalue: Boolean): Value {
-        val type = typeHolder[name]
+    private fun getVariableAddress(varNode: VarNode, rvalueAddr: Value, isRvalue: Boolean): Value {
+        val type = varNode.resolveType(typeHolder)
 
         if (type is CompoundType) {
             return rvalueAddr
@@ -833,7 +839,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val name = varNode.name()
         val rvalueAttr = varStack[name]
         if (rvalueAttr != null) {
-            return getVariableAddress(name, rvalueAttr, isRvalue)
+            return getVariableAddress(varNode, rvalueAttr, isRvalue)
         }
         val global = mb.findFunction(name)
         if (global != null) {
@@ -988,11 +994,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    override fun visit(functionNode: FunctionNode): Value = varStack.scoped {
+    override fun visit(functionNode: FunctionNode): Value = scoped {
         val parameters = functionNode.functionDeclarator().params()
-        val fnType  = functionNode.declareType(functionNode.specifier, typeHolder)
-        val retType = fnType.retType()
-        val irRetType = irReturnType(retType)
+        val fnType     = functionNode.declareType(functionNode.specifier, typeHolder)
+        val retType    = fnType.retType()
+        val irRetType  = irReturnType(retType)
 
         val argTypes = argumentTypes(fnType.args())
         currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes)
@@ -1009,10 +1015,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (ir.last() !is TerminateInstruction) {
             ir.branch(exitBlock)
         }
-        return@scoped currentFunction!!.prototype()
+        return@scoped ir.prototype()
     }
 
-    private fun visitStatement(statement: Statement) {
+    private fun visitStatement(statement: Statement) = typeHolder.scoped {
         statement.accept(this)
     }
 
@@ -1067,13 +1073,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branch(loopInfo.resolveExit(ir))
     }
 
-    override fun visit(defaultStatement: DefaultStatement) = varStack.scoped {
+    override fun visit(defaultStatement: DefaultStatement) = scoped {
         val switchInfo = stmtStack.top() as SwitchStmtInfo
         ir.switchLabel(switchInfo.default)
         visitStatement(defaultStatement.stmt)
     }
 
-    override fun visit(caseStatement: CaseStatement) = varStack.scoped {
+    override fun visit(caseStatement: CaseStatement) = scoped {
         val switchInfo = stmtStack.top() as SwitchStmtInfo
 
         val ctx = CommonConstEvalContext<Int>(typeHolder)
@@ -1119,7 +1125,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branch(exitBlock)
     }
 
-    override fun visit(compoundStatement: CompoundStatement) = varStack.scoped {
+    override fun visit(compoundStatement: CompoundStatement) = scoped {
         if (ir.last() is TerminateInstruction) {
             return@scoped
         }
@@ -1132,7 +1138,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    override fun visit(ifStatement: IfStatement) = varStack.scoped {
+    override fun visit(ifStatement: IfStatement) = scoped {
         if (ir.last() is TerminateInstruction) {
             return@scoped
         }
@@ -1177,7 +1183,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    override fun visit(doWhileStatement: DoWhileStatement) = varStack.scoped {
+    override fun visit(doWhileStatement: DoWhileStatement) = scoped {
         if (ir.last() is TerminateInstruction) {
             return@scoped
         }
@@ -1204,7 +1210,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    override fun visit(whileStatement: WhileStatement) = varStack.scoped {
+    override fun visit(whileStatement: WhileStatement) = scoped {
         if (ir.last() is TerminateInstruction) {
             return@scoped
         }
@@ -1241,7 +1247,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         visitExpression(update, true)
     }
 
-    override fun visit(forStatement: ForStatement) = varStack.scoped {
+    override fun visit(forStatement: ForStatement) = scoped {
         if (ir.last() is TerminateInstruction) {
             return@scoped
         }
@@ -1270,7 +1276,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    override fun visit(switchStatement: SwitchStatement) = varStack.scoped {
+    override fun visit(switchStatement: SwitchStatement) = scoped {
         if (ir.last() is TerminateInstruction) {
             return@scoped
         }

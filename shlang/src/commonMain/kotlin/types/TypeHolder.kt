@@ -1,33 +1,23 @@
 package types
 
+import gen.VarStack
 
-class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
-    private val typeMap = arrayListOf(hashMapOf<String, BaseType>()) //TODO separate holder for struct, enum, union.
+
+class TypeHolder(private val valueMap: VarStack<CType>): Scope {
+    private val typeMap = VarStack<BaseType>()//TODO separate holder for struct, enum, union.
     private val functions = hashMapOf<String, CFunctionType>()
-    private val typedefs = arrayListOf(hashMapOf<String, CType>())
+    private val typedefs = VarStack<CType>()
 
     operator fun get(varName: String): CType {
         return valueMap[varName] ?: functions[varName] ?: throw Exception("Type for variable '$varName' not found")
     }
 
     fun getTypeOrNull(name: String): BaseType? {
-        for (i in typeMap.size - 1 downTo 0) {
-            val type = typeMap[i][name]
-            if (type != null) {
-                return type
-            }
-        }
-        return null
+        return typeMap[name]
     }
 
     private fun getTypedefOrNull(name: String): CType? {
-        for (i in typedefs.size - 1 downTo 0) {
-            val type = typedefs[i][name]
-            if (type != null) {
-                return type
-            }
-        }
-        return null
+        return typedefs[name]
     }
 
     fun getTypedef(name: String): CType {
@@ -35,7 +25,7 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
     }
 
     fun addTypedef(name: String, type: CType): CType {
-        typedefs.last()[name] = type
+        typedefs[name] = type
         return type
     }
 
@@ -52,7 +42,7 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
     }
 
     fun <T : BaseType> addNewType(name: String, type: T): T {
-        typeMap.last()[name] = type
+        typeMap[name] = type
         return type
     }
 
@@ -65,17 +55,18 @@ class TypeHolder(private val valueMap: MutableMap<String, CType>): Scope {
     }
 
     override fun enter() {
-        typeMap.add(hashMapOf())
+        typeMap.enter()
+        valueMap.enter()
     }
 
     override fun leave() {
-        typeMap.removeLast()
+        typeMap.leave()
+        valueMap.leave()
     }
 
     companion object {
         fun default(): TypeHolder {
-            val typeMap = hashMapOf<String, CType>()
-            return TypeHolder(typeMap)
+            return TypeHolder(VarStack<CType>())
         }
     }
 }

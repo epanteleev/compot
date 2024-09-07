@@ -470,6 +470,19 @@ class TypeResolutionTest {
     }
 
     @Test
+    fun testInitializerList5() {
+        val input = """
+          int a[] = {1, 2, 3};
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        assertEquals("[3]int", typeHolder["a"].toString())
+    }
+
+    @Test
     fun testUncompletedArray() {
         val input = """
             typedef struct Array_ { int len; int arr[]; } Array;

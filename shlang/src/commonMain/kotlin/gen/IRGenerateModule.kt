@@ -10,11 +10,12 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
 import ir.value.Constant
 import ir.value.InitializerListValue
+import ir.value.Value
 
 
 data class IRCodeGenError(override val message: String) : Exception(message)
 
-class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack(), NameGenerator()) {
+class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack<Value>(), NameGenerator()) {
     fun visit(programNode: ProgramNode) = varStack.scoped {
         for (node in programNode.nodes) {
             when (node) {
@@ -25,7 +26,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         }
     }
 
-    private fun generateFunction(node: FunctionNode) {
+    private fun generateFunction(node: FunctionNode) = typeHolder.scoped {
         val gen = IrGenFunction(mb, typeHolder, varStack, nameGenerator)
         gen.visit(node)
     }

@@ -1,6 +1,5 @@
 package parser.nodes
 
-import common.assertion
 import types.*
 import tokenizer.*
 import parser.nodes.visitors.*
