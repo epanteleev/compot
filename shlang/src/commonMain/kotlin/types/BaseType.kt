@@ -6,26 +6,73 @@ interface BaseType: TypeProperty {
     fun size(): Int
 }
 
-enum class CPrimitive(val size: Int, val id: String): BaseType {
-    VOID(-1, "void"),
-    CHAR(1, "char"),
-    SHORT(2, "short"),
-    INT(4, "int"),
-    LONG(8, "long"),
-    FLOAT(4, "float"),
-    DOUBLE(8, "double"),
-    UCHAR(1, "unsigned char"),
-    USHORT(2, "unsigned short"),
-    UINT(4, "unsigned int"),
-    ULONG(8, "unsigned long"),
-    BOOL(1, "_Bool"),
-    UNKNOWN(0, "<unknown>");
+sealed class CPrimitive: BaseType {
+    override fun toString(): String = typename()
+}
 
-    override fun toString(): String = id
+object VOID: CPrimitive() {
+    override fun typename(): String = "void"
+    override fun size(): Int = -1
+}
 
-    override fun typename(): String = id
+object CHAR: CPrimitive() {
+    override fun typename(): String = "char"
+    override fun size(): Int = 1
+}
 
-    override fun size(): Int = size
+object SHORT: CPrimitive() {
+    override fun typename(): String = "short"
+    override fun size(): Int = 2
+}
+
+object INT: CPrimitive() {
+    override fun typename(): String = "int"
+    override fun size(): Int = 4
+}
+
+object LONG: CPrimitive() {
+    override fun typename(): String = "long"
+    override fun size(): Int = 8
+}
+
+object FLOAT: CPrimitive() {
+    override fun typename(): String = "float"
+    override fun size(): Int = 4
+}
+
+object DOUBLE: CPrimitive() {
+    override fun typename(): String = "double"
+    override fun size(): Int = 8
+}
+
+object UCHAR: CPrimitive() {
+    override fun typename(): String = "unsigned char"
+    override fun size(): Int = 1
+}
+
+object USHORT: CPrimitive() {
+    override fun typename(): String = "unsigned short"
+    override fun size(): Int = 2
+}
+
+object UINT: CPrimitive() {
+    override fun typename(): String = "unsigned int"
+    override fun size(): Int = 4
+}
+
+object ULONG: CPrimitive() {
+    override fun typename(): String = "unsigned long"
+    override fun size(): Int = 8
+}
+
+object BOOL: CPrimitive() {
+    override fun typename(): String = "_Bool"
+    override fun size(): Int = 1
+}
+
+object UNKNOWN: CPrimitive() {
+    override fun typename(): String = "<unknown>"
+    override fun size(): Int = 0
 }
 
 class TypeDef(val name: String, private val baseType: CType): BaseType {
@@ -107,7 +154,7 @@ data class EnumBaseType(val name: String): BaseType {
     override fun typename(): String = name
 
     override fun size(): Int {
-        return CType.INT.size()
+        return CType.CINT.size()
     }
 
     fun addEnumeration(name: String) {

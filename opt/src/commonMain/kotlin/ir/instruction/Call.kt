@@ -36,8 +36,11 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("%${name()} = call $tp @${func.name}(")
-        func.arguments().forEachWith(operands) { expectedType, arg ->
+        func.arguments().forEachWith(operands) { expectedType, arg, i ->
             builder.append("$arg:${expectedType}")
+            if (i != operands.size - 1) {
+                builder.append(", ")
+            }
         }
         builder.append(") bt label %${target()}")
         return builder.toString()

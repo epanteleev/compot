@@ -180,8 +180,8 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val typeTrue   = eTrue.resolveType(typeHolder)
         val typeFalse  = eFalse.resolveType(typeHolder)
-        if (typeTrue == typeFalse && typeTrue == CType.VOID) {
-            return@memoize CType.VOID
+        if (typeTrue == typeFalse && typeTrue == CType.CVOID) {
+            return@memoize CType.CVOID
         }
         val commonType = CType.interfereTypes(typeTrue, typeFalse)
         return@memoize commonType
@@ -361,7 +361,7 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize CPointerType(CType.CHAR, listOf()) //ToDO restrict?????
+        return@memoize CPointerType(CType.CCHAR, listOf()) //ToDO restrict?????
     }
 
     fun data(): String = if (literals.size == 1) {
@@ -375,7 +375,7 @@ data class CharNode(val char: CharLiteral) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize CType.CHAR
+        return@memoize CType.CCHAR
     }
 
     fun toInt(): Int {
@@ -388,11 +388,11 @@ data class NumNode(val number: Numeric) : Expression() {
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         when (val num = number.toNumberOrNull()) {
-            is Int, is Byte -> CType.INT
-            is Long   -> CType.LONG
-            is ULong  -> CType.ULONG
-            is Float  -> CType.FLOAT
-            is Double -> CType.DOUBLE
+            is Int, is Byte -> CType.CINT
+            is Long   -> CType.CLONG
+            is ULong  -> CType.CULONG
+            is Float  -> CType.CFLOAT
+            is Double -> CType.CDOUBLE
             else      -> throw TypeResolutionException("Unknown number type, but got $num")
         }
     }
@@ -421,7 +421,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
             }
             PrefixUnaryOpType.NOT -> {
                 if (primaryType is CPointerType) {
-                    CType.LONG //TODO UNSIGNED???
+                    CType.CLONG //TODO UNSIGNED???
                 } else {
                     primaryType
                 }
@@ -467,7 +467,7 @@ data class SizeOf(val expr: Node) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize CType.INT
+        return@memoize CType.CINT
     }
 
     fun constEval(typeHolder: TypeHolder): Int {

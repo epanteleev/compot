@@ -106,17 +106,17 @@ data class TypeNode(private val name: CToken) : AnyTypeNode() {
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
         when (name.str()) {
-            "void"    -> CPrimitive.VOID
-            "char"    -> CPrimitive.CHAR
-            "short"   -> CPrimitive.SHORT
-            "int"     -> CPrimitive.INT
-            "long"    -> CPrimitive.LONG
-            "float"   -> CPrimitive.FLOAT
-            "double"  -> CPrimitive.DOUBLE
-            "signed"  -> CPrimitive.INT
-            "unsigned"-> CPrimitive.UINT
-            "_Bool"   -> CPrimitive.BOOL
-            "__builtin_va_list" -> CPrimitive.LONG //TODO hack
+            "void"    -> VOID
+            "char"    -> CHAR
+            "short"   -> SHORT
+            "int"     -> INT
+            "long"    -> LONG
+            "float"   -> FLOAT
+            "double"  -> DOUBLE
+            "signed"  -> INT
+            "unsigned"-> UINT
+            "_Bool"   -> BOOL
+            "__builtin_va_list" -> LONG //TODO hack
             else      -> typeHolder.getStructType(name.str())
         }
     }

@@ -8,8 +8,6 @@ import ir.Definitions.WORD_SIZE
 import ir.Definitions.BYTE_SIZE
 import ir.Definitions.HWORD_SIZE
 import ir.Definitions.QWORD_SIZE
-import ir.attributes.AnyAttribute
-import ir.attributes.GlobalValueAttribute
 import ir.instruction.Alloc
 import ir.instruction.IntPredicate
 import ir.module.builder.impl.FunctionDataBuilder
@@ -37,18 +35,18 @@ object TypeConverter {
         }
 
         val ret = when (type) {
-            CType.BOOL -> Type.I8 //TODO one bit
-            CType.CHAR -> Type.I8
-            CType.UCHAR -> Type.U8
-            CType.SHORT -> Type.I16
-            CType.USHORT -> Type.U16
-            CType.INT -> Type.I32
-            CType.UINT -> Type.U32
-            CType.LONG -> Type.I64
-            CType.ULONG -> Type.U64
-            CType.FLOAT -> Type.F32
-            CType.DOUBLE -> Type.F64
-            CType.VOID -> Type.Void // TODO handle case '(void) 0'
+            CType.CBOOL -> Type.I8 //TODO one bit
+            CType.CCHAR -> Type.I8
+            CType.CUCHAR -> Type.U8
+            CType.CSHORT -> Type.I16
+            CType.CUSHORT -> Type.U16
+            CType.CINT -> Type.I32
+            CType.CUINT -> Type.U32
+            CType.CLONG -> Type.I64
+            CType.CULONG -> Type.U64
+            CType.CFLOAT -> Type.F32
+            CType.CDOUBLE -> Type.F64
+            CType.CVOID -> Type.Void // TODO handle case '(void) 0'
             is CStructType -> {
                 convertStructType(typeHolder, type)
             }

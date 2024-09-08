@@ -2,7 +2,6 @@ package gen.consteval
 
 import parser.nodes.*
 import parser.nodes.visitors.ExpressionVisitor
-import tokenizer.CharLiteral
 import types.CType
 
 
@@ -232,9 +231,9 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
         val expression = cast.cast.accept(this)
         val type = cast.typeName.specifyType(ctx.typeHolder(), listOf())
         val converted = when (type) {
-            CType.INT -> expression.toInt()
-            CType.LONG, CType.ULONG -> expression
-            CType.SHORT -> expression.toShort()
+            CType.CINT -> expression.toInt()
+            CType.CLONG, CType.CULONG -> expression
+            CType.CSHORT -> expression.toShort()
             else -> throw ConstEvalException("Cannot cast to type $type")
         }
 

@@ -323,7 +323,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val cont = ir.createLabel()
         val ret = when (functionType.retType()) {
-            CType.VOID -> {
+            CType.CVOID -> {
                 ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 Value.UNDEF
             }
@@ -347,7 +347,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val cont = ir.createLabel()
         val ret = when (functionType) {
-            CType.VOID -> {
+            CType.CVOID -> {
                 ir.vcall(function, convertedArgs, cont)
                 Value.UNDEF
             }
@@ -933,7 +933,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun emitReturnType(retCType: CType) {
         exitBlock = ir.createLabel()
-        if (retCType == CType.VOID) {
+        if (retCType == CType.CVOID) {
             ir.switchLabel(exitBlock)
             ir.retVoid()
             return

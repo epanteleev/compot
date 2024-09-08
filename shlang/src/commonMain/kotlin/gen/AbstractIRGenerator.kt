@@ -33,19 +33,19 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     private fun constEvalExpression0(expr: Expression): Number? = when (expr.resolveType(typeHolder)) {
-        CType.INT, CType.SHORT, CType.CHAR, CType.UINT, CType.USHORT, CType.UCHAR -> {
+        CType.CINT, CType.CSHORT, CType.CCHAR, CType.CUINT, CType.CUSHORT, CType.CUCHAR -> {
             val ctx = CommonConstEvalContext<Int>(typeHolder)
             ConstEvalExpression.eval(expr, ConstEvalExpressionInt(ctx))
         }
-        CType.LONG, CType.ULONG -> {
+        CType.CLONG, CType.CULONG -> {
             val ctx = CommonConstEvalContext<Long>(typeHolder)
             ConstEvalExpression.eval(expr, ConstEvalExpressionLong(ctx))
         }
-        CType.FLOAT -> {
+        CType.CFLOAT -> {
             val ctx = CommonConstEvalContext<Float>(typeHolder)
             ConstEvalExpression.eval(expr, ConstEvalExpressionFloat(ctx))
         }
-        CType.DOUBLE -> {
+        CType.CDOUBLE -> {
             val ctx = CommonConstEvalContext<Double>(typeHolder)
             ConstEvalExpression.eval(expr, ConstEvalExpressionDouble(ctx))
         }

@@ -9,7 +9,7 @@ class CTypeBuilder {
         typeProperties.add(property)
     }
 
-    private inline fun check(baseTypes: List<BaseType>, vararg types: CPrimitive): Boolean {
+    private fun check(baseTypes: List<BaseType>, vararg types: CPrimitive): Boolean {
         if (baseTypes.size != types.size) {
             return false
         }
@@ -23,24 +23,24 @@ class CTypeBuilder {
 
     private fun finalBaseType(baseTypes: List<BaseType>): BaseType {
         when {
-            check(baseTypes, CPrimitive.UINT,  CPrimitive.LONG,  CPrimitive.LONG, CPrimitive.INT) -> return CPrimitive.ULONG
-            check(baseTypes, CPrimitive.UINT,  CPrimitive.LONG,  CPrimitive.LONG) -> return CPrimitive.LONG
-            check(baseTypes, CPrimitive.UINT,  CPrimitive.SHORT, CPrimitive.INT) -> return CPrimitive.USHORT
-            check(baseTypes, CPrimitive.UINT,  CPrimitive.LONG,  CPrimitive.INT) -> return CPrimitive.ULONG
-            check(baseTypes, CPrimitive.INT,   CPrimitive.SHORT, CPrimitive.INT) -> return CPrimitive.SHORT
-            check(baseTypes, CPrimitive.INT,   CPrimitive.LONG,  CPrimitive.INT) -> return CPrimitive.LONG
-            check(baseTypes, CPrimitive.LONG,  CPrimitive.LONG,  CPrimitive.INT) -> return CPrimitive.LONG
-            check(baseTypes, CPrimitive.LONG,  CPrimitive.UINT,  CPrimitive.INT) -> return CPrimitive.ULONG
-            check(baseTypes, CPrimitive.INT,   CPrimitive.INT)                   -> return CPrimitive.INT
-            check(baseTypes, CPrimitive.UINT,  CPrimitive.CHAR)                  -> return CPrimitive.UCHAR
-            check(baseTypes, CPrimitive.UINT,  CPrimitive.SHORT)                 -> return CPrimitive.USHORT
-            check(baseTypes, CPrimitive.UINT,  CPrimitive.INT)                   -> return CPrimitive.UINT
-            check(baseTypes, CPrimitive.UINT,  CPrimitive.LONG)                  -> return CPrimitive.ULONG
-            check(baseTypes, CPrimitive.LONG,  CPrimitive.LONG)                  -> return CPrimitive.LONG
-            check(baseTypes, CPrimitive.INT,   CPrimitive.CHAR)                  -> return CPrimitive.CHAR
-            check(baseTypes, CPrimitive.LONG,  CPrimitive.INT)                   -> return CPrimitive.LONG
-            check(baseTypes, CPrimitive.USHORT,CPrimitive.INT)                   -> return CPrimitive.USHORT
-            check(baseTypes, CPrimitive.LONG,  CPrimitive.DOUBLE)                -> return CPrimitive.DOUBLE
+            check(baseTypes, UINT,  LONG,  LONG, INT) -> return ULONG
+            check(baseTypes, UINT,  LONG,  LONG)      -> return LONG
+            check(baseTypes, UINT,  SHORT, INT)       -> return USHORT
+            check(baseTypes, UINT,  LONG,  INT)       -> return ULONG
+            check(baseTypes, INT,   SHORT, INT)       -> return SHORT
+            check(baseTypes, INT,   LONG,  INT)       -> return LONG
+            check(baseTypes, LONG,  LONG,  INT)       -> return LONG
+            check(baseTypes, LONG,  UINT,  INT)       -> return ULONG
+            check(baseTypes, INT,   INT)              -> return INT
+            check(baseTypes, UINT,  CHAR)             -> return UCHAR
+            check(baseTypes, UINT,  SHORT)            -> return USHORT
+            check(baseTypes, UINT,  INT)              -> return UINT
+            check(baseTypes, UINT,  LONG)             -> return ULONG
+            check(baseTypes, LONG,  LONG)             -> return LONG
+            check(baseTypes, INT,   CHAR)             -> return CHAR
+            check(baseTypes, LONG,  INT)              -> return LONG
+            check(baseTypes, USHORT,INT)              -> return USHORT
+            check(baseTypes, LONG,  DOUBLE)           -> return DOUBLE
         }
         assertion(baseTypes.size == 1) {
             "Unknown type '$baseTypes'"

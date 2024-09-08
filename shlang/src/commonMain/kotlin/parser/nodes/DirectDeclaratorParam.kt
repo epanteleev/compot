@@ -80,7 +80,7 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
             val type = params[0].resolveType(typeHolder)
             // Special case for void
             // Pattern: 'void f(void)' can be found in the C program.
-            return if (type == CType.VOID) {
+            return if (type == CType.CVOID) {
                 emptyList()
             } else {
                 listOf(type)
