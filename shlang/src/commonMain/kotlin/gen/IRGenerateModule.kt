@@ -41,7 +41,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         return mb.createExternFunction(name, returnType, arguments, isVararg)
     }
 
-    private fun makeGlobalValue(name: String, type: CType) {
+    private fun makeGlobalValue(name: String, type: TypeDesc) {
         val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
         val value = if (type.storageClass() == StorageClass.EXTERN) {
             mb.addExternValue(name, irType)

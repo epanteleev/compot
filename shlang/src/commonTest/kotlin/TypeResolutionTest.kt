@@ -18,7 +18,7 @@ class TypeResolutionTest {
         val expr = parser.assignment_expression() as Expression
         val typeResolver = TypeHolder.default()
         val type = expr.resolveType(typeResolver)
-        assertEquals(CType.CINT, type)
+        assertEquals(TypeDesc.CINT, type)
     }
 
     @Test
@@ -29,7 +29,7 @@ class TypeResolutionTest {
         val expr = parser.assignment_expression() as Expression
         val typeResolver = TypeHolder.default()
         val type = expr.resolveType(typeResolver)
-        assertEquals(CType.CFLOAT, type)
+        assertEquals(TypeDesc.CFLOAT, type)
     }
 
     @Test
@@ -71,7 +71,7 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
-        assertEquals(CType.CINT, typeResolver["a"])
+        assertEquals(TypeDesc.CINT, typeResolver["a"])
     }
 
     @Test
@@ -83,8 +83,8 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
-        assertEquals(CType.CINT, typeResolver["a"])
-        assertEquals(CType.CINT, typeResolver["v"])
+        assertEquals(TypeDesc.CINT, typeResolver["a"])
+        assertEquals(TypeDesc.CINT, typeResolver["v"])
     }
 
     @Test
@@ -100,9 +100,9 @@ class TypeResolutionTest {
         assertTrue { typeResolver.containsVar("a") }
         assertTrue { typeResolver.containsVar("v") }
         assertTrue { typeResolver.containsVar("p") }
-        assertEquals(CType.CINT, typeResolver["a"])
-        assertEquals(CType.CINT, typeResolver["v"])
-        assertEquals(CPointerType(CType.CINT), typeResolver["p"])
+        assertEquals(TypeDesc.CINT, typeResolver["a"])
+        assertEquals(TypeDesc.CINT, typeResolver["v"])
+        assertEquals(CPointerType(TypeDesc.CINT), typeResolver["p"])
     }
 
     @Test
@@ -141,8 +141,8 @@ class TypeResolutionTest {
         val fnType = expr.resolveType(typeResolver)
 
         assertEquals("int add(int, int)", fnType.toString())
-        assertEquals(CType.CINT, typeResolver["a"])
-        assertEquals(CType.CINT, typeResolver["b"])
+        assertEquals(TypeDesc.CINT, typeResolver["a"])
+        assertEquals(TypeDesc.CINT, typeResolver["b"])
     }
 
     @Test
@@ -166,7 +166,7 @@ class TypeResolutionTest {
 
         assertEquals("int add(int(*)(int, int), int)", fnType.toString())
         assertEquals("int(*)(int, int)", typeResolver["a"].toString())
-        assertEquals(CType.CINT, typeResolver["b"])
+        assertEquals(TypeDesc.CINT, typeResolver["b"])
     }
 
     @Test
@@ -342,7 +342,7 @@ class TypeResolutionTest {
         expr.specifyType(typeResolver)
 
         val a = typeResolver["a"]
-        assertEquals(CType.CUINT, a)
+        assertEquals(TypeDesc.CUINT, a)
     }
 
     // https://port70.net/~nsz/c/c11/n1570.html#6.7.2.3p11

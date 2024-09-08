@@ -75,8 +75,8 @@ object UNKNOWN: CPrimitive() {
     override fun size(): Int = 0
 }
 
-class TypeDef(val name: String, private val baseType: CType): BaseType {
-    fun baseType(): CType = baseType
+class TypeDef(val name: String, private val baseType: TypeDesc): BaseType {
+    fun baseType(): TypeDesc = baseType
     override fun typename(): String = name
     override fun size(): Int = baseType.size()
     override fun toString(): String = baseType.toString()
@@ -85,23 +85,23 @@ class TypeDef(val name: String, private val baseType: CType): BaseType {
 sealed class AggregateBaseType: BaseType
 
 sealed class AnyStructType(open val name: String): AggregateBaseType() {
-    protected val fields = arrayListOf<Pair<String, CType>>()
+    protected val fields = arrayListOf<Pair<String, TypeDesc>>()
     override fun typename(): String = name
 
     fun fieldIndex(name: String): Int {
         return fields.indexOfFirst { it.first == name }
     }
 
-    fun fieldIndex(index: Int): CType {
+    fun fieldIndex(index: Int): TypeDesc {
         return fields[index].second
     }
 
-    fun fields(): List<Pair<String, CType>> {
+    fun fields(): List<Pair<String, TypeDesc>> {
         return fields
     }
 
     //TODO avoid???
-    internal fun addField(name: String, type: CType) {
+    internal fun addField(name: String, type: TypeDesc) {
         fields.add(name to type)
     }
 }
@@ -154,7 +154,7 @@ data class EnumBaseType(val name: String): BaseType {
     override fun typename(): String = name
 
     override fun size(): Int {
-        return CType.CINT.size()
+        return TypeDesc.CINT.size()
     }
 
     fun addEnumeration(name: String) {
@@ -163,7 +163,7 @@ data class EnumBaseType(val name: String): BaseType {
 }
 
 
-data class CArrayBaseType(val type: CType, val dimension: Long) : AggregateBaseType() {
+data class CArrayBaseType(val type: TypeDesc, val dimension: Long) : AggregateBaseType() {
     override fun typename(): String {
         return toString()
     }

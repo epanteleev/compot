@@ -15,7 +15,7 @@ import ir.module.builder.impl.ModuleBuilder
 
 
 object TypeConverter {
-    inline fun <reified T : Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: CType): T {
+    inline fun <reified T : Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: TypeDesc): T {
         val converted = toIRTypeUnchecked(typeHolder, type)
         if (converted !is T) {
             throw IRCodeGenError("Cannot convert '$type' to ${T::class}")
@@ -24,7 +24,7 @@ object TypeConverter {
         return converted
     }
 
-    fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type {
+    fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: TypeDesc): Type {
         if (type is CPointerType) {
             return Type.Ptr
         }
@@ -35,18 +35,18 @@ object TypeConverter {
         }
 
         val ret = when (type) {
-            CType.CBOOL -> Type.I8 //TODO one bit
-            CType.CCHAR -> Type.I8
-            CType.CUCHAR -> Type.U8
-            CType.CSHORT -> Type.I16
-            CType.CUSHORT -> Type.U16
-            CType.CINT -> Type.I32
-            CType.CUINT -> Type.U32
-            CType.CLONG -> Type.I64
-            CType.CULONG -> Type.U64
-            CType.CFLOAT -> Type.F32
-            CType.CDOUBLE -> Type.F64
-            CType.CVOID -> Type.Void // TODO handle case '(void) 0'
+            TypeDesc.CBOOL -> Type.I8 //TODO one bit
+            TypeDesc.CCHAR -> Type.I8
+            TypeDesc.CUCHAR -> Type.U8
+            TypeDesc.CSHORT -> Type.I16
+            TypeDesc.CUSHORT -> Type.U16
+            TypeDesc.CINT -> Type.I32
+            TypeDesc.CUINT -> Type.U32
+            TypeDesc.CLONG -> Type.I64
+            TypeDesc.CULONG -> Type.U64
+            TypeDesc.CFLOAT -> Type.F32
+            TypeDesc.CDOUBLE -> Type.F64
+            TypeDesc.CVOID -> Type.Void // TODO handle case '(void) 0'
             is CStructType -> {
                 convertStructType(typeHolder, type)
             }

@@ -1,12 +1,12 @@
 package parser.nodes
 
-import types.CType
+import types.TypeDesc
 import types.TypeHolder
 import parser.nodes.visitors.*
 
 
 abstract class AnyParameter : Node() {
-    abstract fun resolveType(typeHolder: TypeHolder): CType
+    abstract fun resolveType(typeHolder: TypeHolder): TypeDesc
     abstract fun<T> accept(visitor: ParameterVisitor<T>): T
 }
 
@@ -21,7 +21,7 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) :
         return declarator.directDeclarator.decl.name()
     }
 
-    override fun resolveType(typeHolder: TypeHolder): CType {
+    override fun resolveType(typeHolder: TypeHolder): TypeDesc {
         val type = declspec.specifyType(typeHolder, listOf())
         return when (declarator) {
             is Declarator         -> declarator.declareType(declspec, typeHolder)
@@ -34,7 +34,7 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) :
 
 class ParameterVarArg: AnyParameter() {
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
-    override fun resolveType(typeHolder: TypeHolder): CType {
+    override fun resolveType(typeHolder: TypeHolder): TypeDesc {
         throw IllegalStateException("VarArg type is not resolved")
     }
 }

@@ -6,22 +6,22 @@ import parser.nodes.visitors.*
 
 
 sealed class AnyDeclarator: Node() {
-    protected var cachedType: CType = CType.UNRESOlVED
+    protected var cachedType: TypeDesc = TypeDesc.UNRESOlVED
 
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
-    internal abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType
+    internal abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): TypeDesc
 
-    fun cType(): CType {
-        if (cachedType == CType.UNRESOlVED) {
+    fun cType(): TypeDesc {
+        if (cachedType == TypeDesc.UNRESOlVED) {
             throw IllegalStateException("type is not resolved")
         }
 
         return cachedType
     }
 
-    protected inline fun<reified T: CType> memoizeType(type: () -> T): T {
-        if (cachedType == CType.UNRESOlVED) {
+    protected inline fun<reified T: TypeDesc> memoizeType(type: () -> T): T {
+        if (cachedType == TypeDesc.UNRESOlVED) {
             cachedType = type()
         }
 
@@ -36,7 +36,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         return directDeclarator.name()
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType = memoizeType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): TypeDesc = memoizeType {
         var pointerType = declspec.specifyType(typeHolder, pointers)
         pointerType = directDeclarator.resolveType(pointerType, declspec.storageClass(), typeHolder)
         if (declspec.isTypedef) {
@@ -62,7 +62,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
         return declarator.name()
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType = memoizeType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): TypeDesc = memoizeType {
         var pointerType = declspec.specifyType(typeHolder, declarator.pointers)
 
         pointerType = declarator.directDeclarator.resolveType(pointerType, declspec.storageClass(), typeHolder)
@@ -100,7 +100,7 @@ data object EmptyDeclarator : AnyDeclarator() {
 
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): TypeDesc {
         throw TypeResolutionException("Empty declarator is not supported")
     }
 }
@@ -110,7 +110,7 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
         return visitor.visit(this)
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CType = memoizeType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): TypeDesc = memoizeType {
         require(expr is EmptyExpression) {
             "unsupported expression in struct declarator $expr"
         }

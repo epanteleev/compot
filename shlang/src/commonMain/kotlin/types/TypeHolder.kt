@@ -3,12 +3,12 @@ package types
 import gen.VarStack
 
 
-class TypeHolder(private val valueMap: VarStack<CType>): Scope {
+class TypeHolder(private val valueMap: VarStack<TypeDesc>): Scope {
     private val typeMap = VarStack<BaseType>()//TODO separate holder for struct, enum, union.
     private val functions = hashMapOf<String, CFunctionType>()
-    private val typedefs = VarStack<CType>()
+    private val typedefs = VarStack<TypeDesc>()
 
-    operator fun get(varName: String): CType {
+    operator fun get(varName: String): TypeDesc {
         return valueMap[varName] ?: functions[varName] ?: throw Exception("Type for variable '$varName' not found")
     }
 
@@ -16,20 +16,20 @@ class TypeHolder(private val valueMap: VarStack<CType>): Scope {
         return typeMap[name]
     }
 
-    private fun getTypedefOrNull(name: String): CType? {
+    private fun getTypedefOrNull(name: String): TypeDesc? {
         return typedefs[name]
     }
 
-    fun getTypedef(name: String): CType {
+    fun getTypedef(name: String): TypeDesc {
         return getTypedefOrNull(name) ?: throw Exception("Type for 'typedef $name' not found")
     }
 
-    fun addTypedef(name: String, type: CType): CType {
+    fun addTypedef(name: String, type: TypeDesc): TypeDesc {
         typedefs[name] = type
         return type
     }
 
-    fun addVar(name: String, type: CType) {
+    fun addVar(name: String, type: TypeDesc) {
         valueMap[name] = type
     }
 
@@ -46,7 +46,7 @@ class TypeHolder(private val valueMap: VarStack<CType>): Scope {
         return type
     }
 
-    fun getFunctionType(name: String): CType {
+    fun getFunctionType(name: String): TypeDesc {
         return functions[name] ?: valueMap[name] ?: throw Exception("Type for function '$name' not found")
     }
 
@@ -66,7 +66,7 @@ class TypeHolder(private val valueMap: VarStack<CType>): Scope {
 
     companion object {
         fun default(): TypeHolder {
-            return TypeHolder(VarStack<CType>())
+            return TypeHolder(VarStack<TypeDesc>())
         }
     }
 }

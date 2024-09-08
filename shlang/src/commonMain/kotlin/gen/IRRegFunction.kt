@@ -323,7 +323,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val cont = ir.createLabel()
         val ret = when (functionType.retType()) {
-            CType.CVOID -> {
+            TypeDesc.CVOID -> {
                 ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 Value.UNDEF
             }
@@ -347,7 +347,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val cont = ir.createLabel()
         val ret = when (functionType) {
-            CType.CVOID -> {
+            TypeDesc.CVOID -> {
                 ir.vcall(function, convertedArgs, cont)
                 Value.UNDEF
             }
@@ -839,7 +839,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         throw IRCodeGenError("Variable '$name' not found")
     }
 
-    private fun argumentTypes(ctypes: List<CType>): List<NonTrivialType> {
+    private fun argumentTypes(ctypes: List<TypeDesc>): List<NonTrivialType> {
         val types = arrayListOf<NonTrivialType>()
         for (type in ctypes) {
             when (type) {
@@ -868,9 +868,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitParameters(parameters: List<String>,
-                                cTypes: List<CType>,
+                                cTypes: List<TypeDesc>,
                                 arguments: List<ArgumentValue>,
-                                closure: (String, CType, List<ArgumentValue>) -> Unit) {
+                                closure: (String, TypeDesc, List<ArgumentValue>) -> Unit) {
         var currentArg = 0
         while (currentArg < arguments.size) {
             when (val cType = cTypes[currentArg]) {
@@ -900,7 +900,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitParameter(param: String, cType: CType, args: List<ArgumentValue>) = when (cType) {
+    private fun visitParameter(param: String, cType: TypeDesc, args: List<ArgumentValue>) = when (cType) {
         is CPrimitiveType, is CPointerType -> {
             assertion(args.size == 1) { "invariant" }
 
@@ -931,9 +931,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown type, type=$cType")
     }
 
-    private fun emitReturnType(retCType: CType) {
+    private fun emitReturnType(retCType: TypeDesc) {
         exitBlock = ir.createLabel()
-        if (retCType == CType.CVOID) {
+        if (retCType == TypeDesc.CVOID) {
             ir.switchLabel(exitBlock)
             ir.retVoid()
             return
@@ -967,7 +967,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun irReturnType(retType: CType): Type = when (retType) {
+    private fun irReturnType(retType: TypeDesc): Type = when (retType) {
         is CPrimitiveType, is CPointerType -> mb.toIRType<Type>(typeHolder, retType)
         is CStructType -> {
             val structType = mb.toIRType<StructType>(typeHolder, retType)
