@@ -8,42 +8,31 @@ import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.visitors.*
 
 
-class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, val asm: Assembler): GPOperandsVisitorBinaryOp {
+class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: Assembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
-        when (type) {
-            is IntegerType -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
-            else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
-        }
+        GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
-    private fun matchIntCondition(): CMoveFlag {
-        return when (condition.operandsType()) {
-            is SignedIntType -> {
-                when (condition.predicate()) {
-                    IntPredicate.Eq -> CMoveFlag.CMOVE
-                    IntPredicate.Ne -> CMoveFlag.CMOVNE
-                    IntPredicate.Gt -> CMoveFlag.CMOVG
-                    IntPredicate.Ge -> CMoveFlag.CMOVGE
-                    IntPredicate.Lt -> CMoveFlag.CMOVL
-                    IntPredicate.Le -> CMoveFlag.CMOVLE
-                    else -> throw RuntimeException("unexpected condition type: condition=$condition")
-                }
-            }
-            is UnsignedIntType, PointerType -> {
-                when (condition.predicate()) {
-                    IntPredicate.Eq -> CMoveFlag.CMOVE
-                    IntPredicate.Ne -> CMoveFlag.CMOVNE
-                    IntPredicate.Gt -> CMoveFlag.CMOVA
-                    IntPredicate.Ge -> CMoveFlag.CMOVAE
-                    IntPredicate.Lt -> CMoveFlag.CMOVB
-                    IntPredicate.Le -> CMoveFlag.CMOVBE
-                    else -> throw RuntimeException("unexpected condition type: condition=$condition")
-                }
-            }
-            else -> throw RuntimeException("unexpected condition type: condition=$condition")
+    private fun matchIntCondition(): CMoveFlag = when (condition.operandsType()) {
+        is SignedIntType -> when (condition.predicate()) {
+            IntPredicate.Eq -> CMoveFlag.CMOVE
+            IntPredicate.Ne -> CMoveFlag.CMOVNE
+            IntPredicate.Gt -> CMoveFlag.CMOVG
+            IntPredicate.Ge -> CMoveFlag.CMOVGE
+            IntPredicate.Lt -> CMoveFlag.CMOVL
+            IntPredicate.Le -> CMoveFlag.CMOVLE
         }
+        is UnsignedIntType, PointerType -> when (condition.predicate()) {
+            IntPredicate.Eq -> CMoveFlag.CMOVE
+            IntPredicate.Ne -> CMoveFlag.CMOVNE
+            IntPredicate.Gt -> CMoveFlag.CMOVA
+            IntPredicate.Ge -> CMoveFlag.CMOVAE
+            IntPredicate.Lt -> CMoveFlag.CMOVB
+            IntPredicate.Le -> CMoveFlag.CMOVBE
+        }
+        else -> throw RuntimeException("unexpected condition type: condition=$condition")
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
@@ -62,11 +51,23 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
+        TODO("untested")
+        if (first == second) {
+            asm.mov(size, first, dst)
+            return
+        }
+        asm.mov(size, second, temp1)
+        asm.cmovcc(size, matchIntCondition(), first, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        if (dst == second) {
+            asm.cmovcc(size, matchIntCondition(), first, dst)
+        } else {
+            asm.mov(size, second, dst)
+            asm.cmovcc(size, matchIntCondition(), first, dst)
+        }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
@@ -78,7 +79,7 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
         if (dst == first) {
-            TODO()
+            TODO("untested")
             asm.cmovcc(size, matchIntCondition(), second, dst)
         } else {
             asm.mov(size, second, dst)
@@ -87,12 +88,25 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        asm.mov(size, second, dst)
-        asm.cmovcc(size, matchIntCondition(), first, dst)
+        if (dst == first) {
+            TODO("untested")
+            asm.mov(size, second, temp1)
+            asm.cmovcc(size, matchIntCondition().invert(), temp1, dst)
+        } else {
+            asm.mov(size, second, dst)
+            asm.cmovcc(size, matchIntCondition(), first, dst)
+        }
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        TODO("untested")
+        if (first == second) {
+            asm.mov(size, first, dst)
+            return
+        } else {
+            asm.mov(size, second, dst)
+            asm.cmovcc(size, matchIntCondition(), first, dst)
+        }
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
@@ -106,7 +120,9 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
-        TODO("Not yet implemented")
+        TODO("untested")
+        asm.mov(size, first, dst)
+        asm.cmovcc(size, matchIntCondition().invert(), second, dst)
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
@@ -130,15 +146,24 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+        TODO("untested")
+        asm.mov(size, first, temp2)
+        asm.cmovcc(size, matchIntCondition().invert(), second, temp2)
+        asm.mov(size, temp2, dst)
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {
-        TODO("Not yet implemented")
+        TODO("untested")
+        asm.mov(size, first, temp1)
+        asm.cmovcc(size, matchIntCondition().invert(), second, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        TODO("untested")
+        asm.mov(size, second, temp1)
+        asm.cmovcc(size, matchIntCondition(), first, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
@@ -149,11 +174,37 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        TODO("untested")
+        asm.mov(size, first, temp1)
+        asm.cmovcc(size, matchIntCondition().invert(), second, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        TODO("untested")
+        if (first == second) {
+            asm.mov(size, first, temp1)
+            asm.mov(size, temp1, dst)
+            return
+        }
+        when (dst) {
+            second -> {
+                asm.mov(size, first, temp1)
+                asm.cmovcc(size, matchIntCondition().invert(), dst, temp1)
+                asm.mov(size, temp1, dst)
+            }
+            second -> {
+                asm.mov(size, second, temp2)
+                asm.cmovcc(size, matchIntCondition(), first, temp2)
+                asm.mov(size, temp2, dst)
+            }
+            else -> {
+                asm.mov(size, second, temp2)
+                asm.mov(size, first, temp1)
+                asm.cmovcc(size, matchIntCondition(), temp1, temp2)
+                asm.mov(size, temp2, dst)
+            }
+        }
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

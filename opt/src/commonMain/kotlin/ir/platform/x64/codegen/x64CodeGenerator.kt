@@ -649,7 +649,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val dst     = valueToRegister.operand(select)
         val onTrue  = valueToRegister.operand(select.onTrue())
         val onFalse = valueToRegister.operand(select.onFalse())
-        SelectCodegen(select.type(), select.condition() as CompareInstruction, asm)(dst, onTrue, onFalse)
+        SelectCodegen(select.type(), select.condition() as IntCompare, asm)(dst, onTrue, onFalse)
     }
 
     override fun visit(phi: Phi) { /* nothing to do */ }
