@@ -8,7 +8,7 @@ data class TypeInferenceException(override val message: String) : Exception(mess
 
 data class TypeResolutionException(override val message: String) : Exception(message)
 
-sealed class TypeDesc {
+sealed class TypeDesc(val properties: List<TypeProperty>) {
     abstract fun qualifiers(): List<TypeProperty>
     fun storageClass(): StorageClass? {
         assertion(qualifiers().filterIsInstance<StorageClass>().size <= 1) {
@@ -196,30 +196,41 @@ sealed class TypeDesc {
     }
 }
 
-sealed class AnyCPointerType: TypeDesc() {
-    override fun size(): Int = POINTER_SIZE //TODO must be imported from x64 module
+sealed class AnyCPointerType(properties: List<TypeProperty>): TypeDesc(properties) {
+    override fun size(): Int = POINTER_SIZE
 
     abstract fun dereference(): TypeDesc
 }
 
-data class CPointerType(val type: TypeDesc, val properties: List<TypeProperty> = listOf()) : AnyCPointerType() {
+class CPointerType(val type: TypeDesc, properties: List<TypeProperty> = listOf()) : AnyCPointerType(properties) {
     override fun qualifiers(): List<TypeProperty> = properties
 
     override fun dereference(): TypeDesc = type
 
-    override fun toString(): String {
-        return buildString {
-            append(type)
-            append("*")
-        }
+    override fun toString(): String = buildString {
+        append(type)
+        append("*")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CPointerType) return false
+
+        if (type != other.type) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return type.hashCode()
     }
 
     override fun copyWith(extraProperties: List<TypeProperty>): CPointerType {
-        return CPointerType(type, properties + extraProperties)
+        return CPointerType(type, qualifiers() + extraProperties)
     }
 }
 
-data class CFunPointerType(val cFunctionType: AbstractCFunctionType, private val properties: List<TypeProperty> = emptyList()) : AnyCPointerType() {
+class CFunPointerType(private val cFunctionType: AbstractCFunctionType, properties: List<TypeProperty> = emptyList()) : AnyCPointerType(properties) {
     override fun qualifiers(): List<TypeProperty> = emptyList()
 
     override fun toString(): String {
@@ -245,7 +256,7 @@ data class CFunPointerType(val cFunctionType: AbstractCFunctionType, private val
     }
 }
 
-data class NoType(val message: String) : TypeDesc() {
+data class NoType(val message: String) : TypeDesc(listOf()) {
     override fun size(): Int = UNKNOWN.size()
     override fun qualifiers(): List<TypeProperty> = emptyList()
     override fun copyWith(extraProperties: List<TypeProperty>): TypeDesc {
@@ -253,7 +264,7 @@ data class NoType(val message: String) : TypeDesc() {
     }
 }
 
-class CPrimitiveType(val baseType: BaseType, private val properties: List<TypeProperty> = emptyList()) : TypeDesc() {
+class CPrimitiveType(val baseType: BaseType, properties: List<TypeProperty> = arrayListOf()) : TypeDesc(properties) {
     override fun size(): Int = baseType.size()
     override fun qualifiers(): List<TypeProperty> = properties
 
@@ -280,7 +291,7 @@ class CPrimitiveType(val baseType: BaseType, private val properties: List<TypePr
     }
 }
 
-data class AbstractCFunctionType(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): TypeDesc() {
+data class AbstractCFunctionType(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): TypeDesc(listOf()) {
     override fun size(): Int = throw RuntimeException("Function type has no size")
     override fun qualifiers(): List<TypeProperty> = retType.qualifiers()
 
@@ -302,7 +313,7 @@ data class AbstractCFunctionType(val retType: TypeDesc, val argsTypes: List<Type
     }
 }
 
-class CFunctionType(val name: String, val functionType: AbstractCFunctionType, val properties: List<TypeProperty> = arrayListOf()) : TypeDesc() {
+class CFunctionType(val name: String, val functionType: AbstractCFunctionType, properties: List<TypeProperty> = arrayListOf()) : TypeDesc(properties) {
     override fun size(): Int = throw RuntimeException("Function type has no size")
     override fun qualifiers(): List<TypeProperty> = functionType.qualifiers()
 
@@ -327,7 +338,7 @@ class CFunctionType(val name: String, val functionType: AbstractCFunctionType, v
     }
 }
 
-sealed class CompoundType(protected open val properties: List<TypeProperty>) : TypeDesc() { //TODO
+sealed class CompoundType(properties: List<TypeProperty>) : TypeDesc(properties) {
     override fun qualifiers(): List<TypeProperty> = properties
 }
 
@@ -336,7 +347,7 @@ sealed class CommonCArrayType(properties: List<TypeProperty>): CompoundType(prop
 }
 
 
-class CArrayType(private val elementType: CArrayBaseType, override val properties: List<TypeProperty> = emptyList()) : CommonCArrayType(properties) {
+class CArrayType(private val elementType: CArrayBaseType, properties: List<TypeProperty> = emptyList()) : CommonCArrayType(properties) {
     override fun size(): Int {
         return elementType.size()
     }
@@ -372,7 +383,7 @@ class CArrayType(private val elementType: CArrayBaseType, override val propertie
     }
 }
 
-class UncompletedArrayType(private val elementType: TypeDesc, override val properties: List<TypeProperty> = emptyList()) : CommonCArrayType(properties) {
+class UncompletedArrayType(private val elementType: TypeDesc, properties: List<TypeProperty> = emptyList()) : CommonCArrayType(properties) {
     override fun size(): Int {
         return POINTER_SIZE
     }
@@ -407,7 +418,7 @@ class UncompletedArrayType(private val elementType: TypeDesc, override val prope
     }
 }
 
-sealed class CBaseStructType(protected open val baseType: AnyStructType, override val properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
+sealed class CBaseStructType(protected open val baseType: AnyStructType, properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
     override fun toString(): String {
         return buildString {
             properties.forEach { append("$it ") }
@@ -477,7 +488,7 @@ class CUncompletedUnionType(baseType: UncompletedUnionBaseType, properties: List
     }
 }
 
-class CUncompletedEnumType(val baseType: UncompletedEnumType, val properties: List<TypeProperty> = emptyList()) : TypeDesc() {
+class CUncompletedEnumType(val baseType: UncompletedEnumType, properties: List<TypeProperty> = emptyList()) : TypeDesc(properties) {
     override fun copyWith(extraProperties: List<TypeProperty>): TypeDesc {
         return CUncompletedEnumType(baseType, properties + extraProperties)
     }
@@ -491,7 +502,7 @@ class CUncompletedEnumType(val baseType: UncompletedEnumType, val properties: Li
     }
 }
 
-class CEnumType(private val baseType: EnumBaseType, override val properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
+class CEnumType(private val baseType: EnumBaseType, properties: List<TypeProperty> = emptyList()) : CompoundType(properties) {
     override fun size(): Int {
         return baseType.size()
     }

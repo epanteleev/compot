@@ -1,5 +1,7 @@
 package types
 
+import ir.Definitions.POINTER_SIZE
+
 
 interface BaseType: TypeProperty {
     fun typename(): String
@@ -73,6 +75,26 @@ object BOOL: CPrimitive() {
 object UNKNOWN: CPrimitive() {
     override fun typename(): String = "<unknown>"
     override fun size(): Int = 0
+}
+
+sealed class AnyCPointer: CPrimitive() {
+    override fun size(): Int = POINTER_SIZE //TODO must be imported from x64 module
+
+    abstract fun qualifiers(): Set<TypeQualifier>
+    abstract fun dereference(): BaseType
+}
+
+class CPointerT(val type: BaseType, private val properties: Set<TypeQualifier>) : AnyCPointer() {
+    override fun qualifiers(): Set<TypeQualifier> = properties
+
+    override fun dereference(): BaseType = type
+
+    override fun typename(): String {
+        return buildString {
+            append(type)
+            append("*")
+        }
+    }
 }
 
 class TypeDef(val name: String, private val baseType: TypeDesc): BaseType {
