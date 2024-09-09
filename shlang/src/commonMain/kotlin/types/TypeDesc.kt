@@ -10,12 +10,6 @@ data class TypeResolutionException(override val message: String) : Exception(mes
 
 sealed class TypeDesc(val properties: List<TypeProperty>) {
     abstract fun qualifiers(): List<TypeProperty>
-    fun storageClass(): StorageClass? {
-        assertion(qualifiers().filterIsInstance<StorageClass>().size <= 1) {
-            "Multiple storage classes in type $this"
-        }
-        return qualifiers().firstOrNull { it is StorageClass } as StorageClass?
-    }
 
     abstract fun size(): Int
     abstract fun copyWith(extraProperties: List<TypeProperty>): TypeDesc

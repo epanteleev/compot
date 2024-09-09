@@ -3,12 +3,12 @@ package types
 import gen.VarStack
 
 
-class TypeHolder(private val valueMap: VarStack<TypeDesc>): Scope {
+class TypeHolder(private val valueMap: VarStack<VarDescriptor>): Scope {
     private val typeMap = VarStack<BaseType>()//TODO separate holder for struct, enum, union.
-    private val functions = hashMapOf<String, CFunctionType>()
+    private val functions = hashMapOf<String, VarDescriptor>()
     private val typedefs = VarStack<TypeDesc>()
 
-    operator fun get(varName: String): TypeDesc {
+    operator fun get(varName: String): VarDescriptor {
         return valueMap[varName] ?: functions[varName] ?: throw Exception("Type for variable '$varName' not found")
     }
 
@@ -29,8 +29,9 @@ class TypeHolder(private val valueMap: VarStack<TypeDesc>): Scope {
         return type
     }
 
-    fun addVar(name: String, type: TypeDesc) {
+    fun addVar(name: String, type: VarDescriptor): VarDescriptor {
         valueMap[name] = type
+        return type
     }
 
     fun containsVar(varName: String): Boolean {
@@ -46,12 +47,13 @@ class TypeHolder(private val valueMap: VarStack<TypeDesc>): Scope {
         return type
     }
 
-    fun getFunctionType(name: String): TypeDesc {
+    fun getFunctionType(name: String): VarDescriptor {
         return functions[name] ?: valueMap[name] ?: throw Exception("Type for function '$name' not found")
     }
 
-    fun addFunctionType(name: String, type: CFunctionType) {
+    fun addFunctionType(name: String, type: VarDescriptor): VarDescriptor {
         functions[name] = type
+        return type
     }
 
     override fun enter() {
@@ -66,7 +68,7 @@ class TypeHolder(private val valueMap: VarStack<TypeDesc>): Scope {
 
     companion object {
         fun default(): TypeHolder {
-            return TypeHolder(VarStack<TypeDesc>())
+            return TypeHolder(VarStack<VarDescriptor>())
         }
     }
 }

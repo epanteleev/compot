@@ -8,7 +8,7 @@ import ir.value.IntegerConstant
 class StmtStack {
     private val stack = mutableListOf<StmtInfo>()
 
-    private inline fun<T: StmtInfo> push(stmtInfo: T): T {
+    private fun<T: StmtInfo> push(stmtInfo: T): T {
         stack.add(stmtInfo)
         return stmtInfo
     }

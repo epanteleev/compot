@@ -9,7 +9,7 @@ sealed class TypeSpecifier : Node() {
     private var cachedStorage: StorageClass? = null
 
     abstract fun<T> accept(visitor: TypeSpecifierVisitor<T>): T
-    abstract fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): TypeDesc
+    abstract fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor
 
     fun storageClass(): StorageClass? {
         return cachedStorage
@@ -40,11 +40,11 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
         return@memoizeType typeBuilder.build(typeHolder, pointers.isEmpty())
     }
 
-    override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): TypeDesc {
+    override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor {
         val type = specifyType1(typeHolder, pointers)
 
         if (pointers.isEmpty()) {
-            return type
+            return VarDescriptor(type, storageClass())
         }
 
         var pointerType = type
@@ -55,9 +55,9 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
 
         val storageClass = storageClass()
         return if (storageClass != null) {
-            CPointerType(pointerType, pointers.last().property() + storageClass)
+            VarDescriptor(CPointerType(pointerType, pointers.last().property()), storageClass)
         } else {
-            CPointerType(pointerType, pointers.last().property())
+            VarDescriptor(CPointerType(pointerType, pointers.last().property()), storageClass)
         }
     }
 
@@ -67,11 +67,11 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
 data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: AbstractDeclarator?) : TypeSpecifier() {
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 
-    override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): TypeDesc {
+    override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor {
         val specifierType = specifiers.specifyType(typeHolder, pointers)
         if (abstractDecl == null) {
             return specifierType
         }
-        return abstractDecl.resolveType(specifierType, typeHolder)
+        return VarDescriptor(abstractDecl.resolveType(specifierType.type, typeHolder), null)
     }
 }

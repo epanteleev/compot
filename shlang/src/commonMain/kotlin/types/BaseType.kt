@@ -97,6 +97,18 @@ class CPointerT(val type: BaseType, private val properties: Set<TypeQualifier>) 
     }
 }
 
+class CFunPointerT(val retType: BaseType, val argsTypes: List<BaseType>, val properties: Set<TypeQualifier>, var variadic: Boolean) : AnyCPointer() {
+    override fun qualifiers(): Set<TypeQualifier> = properties
+
+    override fun dereference(): BaseType = retType
+    override fun typename(): String = buildString {
+        append(retType)
+        append("(*")
+        append(argsTypes.joinToString(", ") { it.toString() })
+        append(")")
+    }
+}
+
 class TypeDef(val name: String, private val baseType: TypeDesc): BaseType {
     fun baseType(): TypeDesc = baseType
     override fun typename(): String = name

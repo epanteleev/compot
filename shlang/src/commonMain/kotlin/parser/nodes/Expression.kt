@@ -225,7 +225,7 @@ class FuncPointerCall(val primary: Expression, args: List<Expression>) : AnyFunc
 
     fun resolveFunctionType(typeHolder: TypeHolder): CFunPointerType = memoize {
         resolveParams(typeHolder)
-        val functionType = typeHolder.getFunctionType(name())
+        val functionType = typeHolder.getFunctionType(name()).type
         if (functionType !is CFunPointerType) {
             throw TypeResolutionException("Function call of '${name()}' with non-function type")
         }
@@ -250,7 +250,7 @@ class FunctionCall(val primary: VarNode, args: List<Expression>) : AnyFunctionCa
 
     private fun resolveFunctionType(typeHolder: TypeHolder): CFunctionType = memoize {
         resolveParams(typeHolder)
-        val functionType = typeHolder.getFunctionType(name())
+        val functionType = typeHolder.getFunctionType(name()).type
         if (functionType !is CFunctionType) {
             throw TypeResolutionException("Function call of '${name()}' with non-function type")
         }
@@ -353,7 +353,7 @@ data class VarNode(private val str: Identifier) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): TypeDesc = memoize {
-        return@memoize typeHolder[str.str()]
+        return@memoize typeHolder[str.str()].type
     }
 }
 
@@ -473,7 +473,7 @@ data class SizeOf(val expr: Node) : Expression() {
     fun constEval(typeHolder: TypeHolder): Int {
         when (expr) {
             is TypeName -> {
-                val resolved = expr.specifyType(typeHolder, listOf())
+                val resolved = expr.specifyType(typeHolder, listOf()).type
                 return resolved.size()
             }
             is VarNode -> {
@@ -489,6 +489,6 @@ data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): TypeDesc = memoize {
-        return@memoize typeName.specifyType(typeHolder, listOf())
+        return@memoize typeName.specifyType(typeHolder, listOf()).type
     }
 }

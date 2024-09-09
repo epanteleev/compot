@@ -221,7 +221,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitSizeOf(sizeOf: SizeOf): Value = when (val expr = sizeOf.expr) {
         is TypeName -> {
             val resolved = expr.specifyType(typeHolder, listOf())
-            val irType = mb.toIRType<NonTrivialType>(typeHolder, resolved)
+            val irType = mb.toIRType<NonTrivialType>(typeHolder, resolved.type)
             Constant.of(Type.I64, irType.sizeOf())
         }
         is Expression -> {
@@ -983,7 +983,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(functionNode: FunctionNode): Value = scoped {
         val parameters = functionNode.functionDeclarator().params()
-        val fnType     = functionNode.declareType(functionNode.specifier, typeHolder)
+        val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).asType<CFunctionType>()
         val retType    = fnType.retType()
         val irRetType  = irReturnType(retType)
 
@@ -1294,8 +1294,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val type    = typeHolder[declarator.name()]
         val varName = declarator.name()
 
-        val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
-        if (type.storageClass() == StorageClass.STATIC) {
+        val irType = mb.toIRType<NonTrivialType>(typeHolder, type.type)
+        if (type.storageClass == StorageClass.STATIC) {
             val constant = Constant.zero(irType)
             val global = mb.addGlobal(varName, irType, constant, GlobalValueAttribute.INTERNAL)
             varStack[varName] = global
@@ -1344,15 +1344,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(initDeclarator: InitDeclarator): Value {
-        val type = typeHolder[initDeclarator.name()]
-        if (type.storageClass() == StorageClass.STATIC) {
-            val irType = mb.toIRType<NonTrivialType>(typeHolder, type)
+        val varDesc = typeHolder[initDeclarator.name()]
+        if (varDesc.storageClass == StorageClass.STATIC) {
+            val irType = mb.toIRType<NonTrivialType>(typeHolder, varDesc.type)
             val constant = constEvalExpression(irType, initDeclarator.rvalue) ?: throw IRCodeGenError("Unknown constant")
             val varName = initDeclarator.name()
             val global = mb.addGlobal(varName, irType, constant, GlobalValueAttribute.INTERNAL)
             varStack[varName] = global
             return global
         }
+        val type = varDesc.type
         if (type !is CompoundType) {
             val rvalue = visitExpression(initDeclarator.rvalue, true)
             val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
@@ -1365,7 +1366,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val lvalueAdr = initDeclarator.declarator.accept(this)
         when (val rvalue = initDeclarator.rvalue) {
             is InitializerList -> {
-                initializerContext.scope(lvalueAdr, initDeclarator.cType()) { visitInitializerList(rvalue) }
+                initializerContext.scope(lvalueAdr, initDeclarator.cType().type) { visitInitializerList(rvalue) }
                 return lvalueAdr
             }
             is FunctionCall -> {

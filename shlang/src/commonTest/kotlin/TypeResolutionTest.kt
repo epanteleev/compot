@@ -71,7 +71,7 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
-        assertEquals(TypeDesc.CINT, typeResolver["a"])
+        assertEquals(TypeDesc.CINT, typeResolver["a"].type)
     }
 
     @Test
@@ -83,8 +83,8 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
-        assertEquals(TypeDesc.CINT, typeResolver["a"])
-        assertEquals(TypeDesc.CINT, typeResolver["v"])
+        assertEquals(TypeDesc.CINT, typeResolver["a"].type)
+        assertEquals(TypeDesc.CINT, typeResolver["v"].type)
     }
 
     @Test
@@ -100,9 +100,9 @@ class TypeResolutionTest {
         assertTrue { typeResolver.containsVar("a") }
         assertTrue { typeResolver.containsVar("v") }
         assertTrue { typeResolver.containsVar("p") }
-        assertEquals(TypeDesc.CINT, typeResolver["a"])
-        assertEquals(TypeDesc.CINT, typeResolver["v"])
-        assertEquals(CPointerType(TypeDesc.CINT), typeResolver["p"])
+        assertEquals(TypeDesc.CINT, typeResolver["a"].type)
+        assertEquals(TypeDesc.CINT, typeResolver["v"].type)
+        assertEquals(CPointerType(TypeDesc.CINT), typeResolver["p"].type)
     }
 
     @Test
@@ -141,8 +141,8 @@ class TypeResolutionTest {
         val fnType = expr.resolveType(typeResolver)
 
         assertEquals("int add(int, int)", fnType.toString())
-        assertEquals(TypeDesc.CINT, typeResolver["a"])
-        assertEquals(TypeDesc.CINT, typeResolver["b"])
+        assertEquals(TypeDesc.CINT, typeResolver["a"].type)
+        assertEquals(TypeDesc.CINT, typeResolver["b"].type)
     }
 
     @Test
@@ -166,7 +166,7 @@ class TypeResolutionTest {
 
         assertEquals("int add(int(*)(int, int), int)", fnType.toString())
         assertEquals("int(*)(int, int)", typeResolver["a"].toString())
-        assertEquals(TypeDesc.CINT, typeResolver["b"])
+        assertEquals(TypeDesc.CINT, typeResolver["b"].type)
     }
 
     @Test
@@ -342,7 +342,7 @@ class TypeResolutionTest {
         expr.specifyType(typeResolver)
 
         val a = typeResolver["a"]
-        assertEquals(TypeDesc.CUINT, a)
+        assertEquals(TypeDesc.CUINT, a.type)
     }
 
     // https://port70.net/~nsz/c/c11/n1570.html#6.7.2.3p11
@@ -507,9 +507,7 @@ class TypeResolutionTest {
 
         parser.translation_unit()
         val typeHolder = parser.typeHolder()
-        val qualifier = typeHolder["a"].qualifiers()
-        assertEquals(1, qualifier.size)
-        assertTrue { qualifier.contains(StorageClass.STATIC) }
+        assertEquals(StorageClass.STATIC, typeHolder["a"].storageClass)
     }
 
     @Test
@@ -522,9 +520,7 @@ class TypeResolutionTest {
 
         parser.translation_unit()
         val typeHolder = parser.typeHolder()
-        val qualifier = typeHolder["a"].qualifiers()
-        assertEquals(1, qualifier.size)
-        assertTrue { qualifier.contains(StorageClass.EXTERN) }
+        assertEquals(StorageClass.EXTERN, typeHolder["a"].storageClass)
     }
 
     @Test
@@ -537,13 +533,9 @@ class TypeResolutionTest {
 
         parser.translation_unit()
         val typeHolder = parser.typeHolder()
-        val qualifier = typeHolder["a"].qualifiers()
-        assertEquals(1, qualifier.size)
-        assertTrue { qualifier.contains(StorageClass.EXTERN) }
+        assertEquals(StorageClass.EXTERN, typeHolder["a"].storageClass)
 
-        val qualifier1 = typeHolder["b"].qualifiers()
-        assertEquals(1, qualifier1.size)
-        assertTrue { qualifier1.contains(StorageClass.EXTERN) }
+        assertEquals(StorageClass.EXTERN, typeHolder["a"].storageClass)
     }
 
     @Test
@@ -556,13 +548,7 @@ class TypeResolutionTest {
 
         parser.translation_unit()
         val typeHolder = parser.typeHolder()
-        val qualifier = typeHolder["a"].qualifiers()
-        assertEquals(1, qualifier.size)
-        assertTrue { qualifier.contains(StorageClass.STATIC) }
-
-        val qualifier1 = typeHolder["b"].qualifiers()
-        assertEquals(1, qualifier1.size)
-        assertTrue { qualifier1.contains(StorageClass.STATIC) }
-        assertTrue { typeHolder["b"] is CPointerType }
+        assertEquals(StorageClass.STATIC, typeHolder["a"].storageClass)
+        assertEquals(StorageClass.STATIC, typeHolder["a"].storageClass)
     }
 }

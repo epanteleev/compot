@@ -6,26 +6,26 @@ import parser.nodes.visitors.*
 
 
 sealed class AnyDeclarator: Node() {
-    protected var cachedType: TypeDesc = TypeDesc.UNRESOlVED
+    protected var cachedType: VarDescriptor? = null
 
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
-    internal abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): TypeDesc
+    internal abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor
 
-    fun cType(): TypeDesc {
-        if (cachedType == TypeDesc.UNRESOlVED) {
+    fun cType(): VarDescriptor {
+        if (cachedType == null) {
             throw IllegalStateException("type is not resolved")
         }
 
-        return cachedType
+        return cachedType!!
     }
 
-    protected inline fun<reified T: TypeDesc> memoizeType(type: () -> T): T {
-        if (cachedType == TypeDesc.UNRESOlVED) {
+    protected fun memoizeType(type: () -> VarDescriptor): VarDescriptor {
+        if (cachedType == null) {
             cachedType = type()
         }
 
-        return cachedType as T
+        return cachedType!!
     }
 }
 
@@ -36,22 +36,25 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         return directDeclarator.name()
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): TypeDesc = memoizeType {
-        var pointerType = declspec.specifyType(typeHolder, pointers)
-        pointerType = directDeclarator.resolveType(pointerType, declspec.storageClass(), typeHolder)
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor = memoizeType {
+        val declspecType = declspec.specifyType(typeHolder, pointers)
+        val type = directDeclarator.resolveType(declspecType.type, declspec.storageClass(), typeHolder)
         if (declspec.isTypedef) {
-            typeHolder.addNewType(name(), TypeDef(name(), pointerType))
-            typeHolder.addTypedef(name(), pointerType)
-            return@memoizeType pointerType
+            assertion(declspecType.storageClass == null) { "typedef with storage class is not supported" }
+
+            typeHolder.addNewType(name(), TypeDef(name(), type))
+            typeHolder.addTypedef(name(), type)
+            return@memoizeType VarDescriptor(type, declspecType.storageClass)
         }
 
-        if (pointerType is CFunctionType) {
+        val varDesc = VarDescriptor(type, declspecType.storageClass)
+        if (type is CFunctionType) {
             // declare extern function or function without body
-            typeHolder.addFunctionType(name(), pointerType)
+            typeHolder.addFunctionType(name(), varDesc)
         } else {
-            typeHolder.addVar(name(), pointerType)
+            typeHolder.addVar(name(), varDesc)
         }
-        return@memoizeType pointerType
+        return@memoizeType varDesc
     }
 }
 
@@ -62,15 +65,14 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
         return declarator.name()
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): TypeDesc = memoizeType {
-        var pointerType = declspec.specifyType(typeHolder, declarator.pointers)
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor = memoizeType {
+        val declspecType = declspec.specifyType(typeHolder, declarator.pointers)
 
-        pointerType = declarator.directDeclarator.resolveType(pointerType, declspec.storageClass(), typeHolder)
+        val type = declarator.directDeclarator.resolveType(declspecType.type, declspec.storageClass(), typeHolder)
         assertion (!declspec.isTypedef) { "typedef is not supported here" }
 
-        if (pointerType !is UncompletedArrayType) {
-            typeHolder.addVar(name(), pointerType)
-            return@memoizeType pointerType
+        if (type !is UncompletedArrayType) {
+            return@memoizeType typeHolder.addVar(name(), VarDescriptor(type, declspecType.storageClass))
         }
 
         when (rvalue) {
@@ -79,16 +81,14 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                 // int a[] = {1, 2};
                 // 'a' is array of 2 elements, not pointer to int
 
-                val rvalueType = CArrayType(CArrayBaseType(pointerType.element(), rvalue.length().toLong()), listOf())
-                typeHolder.addVar(name(), rvalueType)
-                return@memoizeType rvalueType
+                val rvalueType = CArrayType(CArrayBaseType(type.element(), rvalue.length().toLong()), listOf())
+                return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
             }
             is StringNode -> {
                 // Special case for string initialization like:
                 // char a[] = "hello";
                 val rvalueType = rvalue.resolveType(typeHolder)
-                typeHolder.addVar(name(), rvalueType)
-                return@memoizeType rvalueType
+                return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
             }
             else -> throw TypeResolutionException("Array size is not specified")
         }
@@ -100,7 +100,7 @@ data object EmptyDeclarator : AnyDeclarator() {
 
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): TypeDesc {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor {
         throw TypeResolutionException("Empty declarator is not supported")
     }
 }
@@ -110,7 +110,7 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
         return visitor.visit(this)
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): TypeDesc = memoizeType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor = memoizeType {
         require(expr is EmptyExpression) {
             "unsupported expression in struct declarator $expr"
         }
@@ -132,21 +132,20 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
         return declarator.directDeclarator.directDeclaratorParams[0] as ParameterTypeList
     }
 
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): CFunctionType = memoizeType {
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor = memoizeType {
         assertion(specifier === declspec) { "specifier should be the same" }
 
-        var pointerType = declspec.specifyType(typeHolder, declarator.pointers)
+        val declspecType = declspec.specifyType(typeHolder, declarator.pointers)
 
-        pointerType = declarator.directDeclarator.resolveType(pointerType, declspec.storageClass(), typeHolder)
+        val type = declarator.directDeclarator.resolveType(declspecType.type, declspec.storageClass(), typeHolder)
         assertion(!declspec.isTypedef) { "typedef is not supported here" }
 
-        assertion(pointerType is CFunctionType) { "function type expected" }
-        typeHolder.addFunctionType(name(), pointerType as CFunctionType)
-        return@memoizeType pointerType
+        assertion(type is CFunctionType) { "function type expected" }
+        return@memoizeType typeHolder.addFunctionType(name(), VarDescriptor(type, declspecType.storageClass))
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
-        return declareType(specifier, typeHolder)
+        return declareType(specifier, typeHolder).type as CFunctionType
     }
 
     override fun <T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)
