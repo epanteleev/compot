@@ -5,21 +5,14 @@ import parser.nodes.visitors.TypeSpecifierVisitor
 
 
 sealed class TypeSpecifier : Node() {
-    private var cachedType: TypeDesc? = null
-    private var cachedStorage: StorageClass? = null
+    private var cachedType: VarDescriptor? = null
 
     abstract fun<T> accept(visitor: TypeSpecifierVisitor<T>): T
     abstract fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor
 
-    fun storageClass(): StorageClass? {
-        return cachedStorage
-    }
-
-    protected fun memoizeType(type: () -> Pair<TypeDesc, StorageClass?>): TypeDesc {
+    protected fun memoizeType(type: () -> VarDescriptor): VarDescriptor {
         if (cachedType == null) {
-            val (resType, storage) = type()
-            cachedType = resType
-            cachedStorage = storage
+            cachedType = type()
         }
 
         return cachedType!!
@@ -29,7 +22,7 @@ sealed class TypeSpecifier : Node() {
 data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier() {
     internal var isTypedef = false
 
-    private fun specifyType1(typeHolder: TypeHolder, pointers: List<NodePointer>) = memoizeType {
+    private fun specifyType1(typeHolder: TypeHolder) = memoizeType {
         val typeBuilder = CTypeBuilder()
         for (specifier in specifiers) {
             val property = specifier.typeResolve(typeHolder, typeBuilder)
@@ -37,28 +30,23 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
                 isTypedef = true
             }
         }
-        return@memoizeType typeBuilder.build(typeHolder, pointers.isEmpty())
+
+        return@memoizeType typeBuilder.build(typeHolder)
     }
 
     override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor {
-        val type = specifyType1(typeHolder, pointers)
-
+        val type = specifyType1(typeHolder)
         if (pointers.isEmpty()) {
-            return VarDescriptor(type, storageClass())
+            return type
         }
 
-        var pointerType = type
+        var pointerType = type.type
         for (idx in 0 until pointers.size - 1) {
             val pointer = pointers[idx]
             pointerType = CPointerType(pointerType, pointer.property())
         }
 
-        val storageClass = storageClass()
-        return if (storageClass != null) {
-            VarDescriptor(CPointerType(pointerType, pointers.last().property()), storageClass)
-        } else {
-            VarDescriptor(CPointerType(pointerType, pointers.last().property()), storageClass)
-        }
+        return VarDescriptor(CPointerType(pointerType, pointers.last().property()), type.storageClass)
     }
 
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
@@ -72,6 +60,7 @@ data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: Abst
         if (abstractDecl == null) {
             return specifierType
         }
-        return VarDescriptor(abstractDecl.resolveType(specifierType.type, typeHolder), null)
+
+        return VarDescriptor(abstractDecl.resolveType(specifierType.type, typeHolder), specifierType.storageClass)
     }
 }

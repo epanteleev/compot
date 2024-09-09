@@ -1,6 +1,5 @@
 package types
 
-import common.assertion
 import ir.Definitions.POINTER_SIZE
 
 
@@ -457,10 +456,6 @@ sealed class CBaseStructType(protected open val baseType: AnyStructType, propert
 class CStructType(baseType: StructBaseType, properties: List<TypeQualifier> = emptyList()) : CBaseStructType(baseType, properties) {
     override fun copyWith(extraProperties: List<TypeQualifier>): CStructType {
         return CStructType(baseType as StructBaseType, properties + extraProperties)
-    }
-
-    fun fieldIndex(idx: Int): TypeDesc {
-        return baseType.fieldIndex(idx)
     }
 }
 

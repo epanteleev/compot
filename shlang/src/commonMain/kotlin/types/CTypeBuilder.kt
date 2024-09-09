@@ -3,10 +3,20 @@ package types
 import common.assertion
 
 class CTypeBuilder {
-    private val typeProperties = mutableListOf<TypeProperty>()
+    private val typeProperties = mutableListOf<TypeQualifier>()
+    private val baseTypes = mutableListOf<BaseType>()
+    private var storageClass: StorageClass? = null
 
-    fun add(property: TypeProperty) {
-        typeProperties.add(property)
+    fun add(property: TypeProperty) = when (property) {
+        is BaseType -> baseTypes.add(property)
+        is StorageClass -> {
+            assertion(storageClass == null) {
+                "Multiple storage classes are not allowed: $storageClass, $property"
+            }
+            storageClass = property
+        }
+        is TypeQualifier -> typeProperties.add(property)
+        is FunctionSpecifier -> TODO()
     }
 
     private fun check(baseTypes: List<BaseType>, vararg types: CPrimitive): Boolean {
@@ -48,40 +58,31 @@ class CTypeBuilder {
         return baseTypes[0]
     }
 
-    fun build(typeHolder: TypeHolder, isStorageClassIncluded: Boolean): Pair<TypeDesc, StorageClass?> {
-        val typeNodes = typeProperties.filterIsInstance<BaseType>()
-        val storageClass = run {
-            val classes = typeProperties.filterIsInstance<StorageClass>()
-            if (classes.size > 1) {
-                throw RuntimeException("Multiple storage classes are not allowed: $classes")
-            }
-            classes.firstOrNull()
-        }
-        val properties = typeProperties.filterIsInstance<TypeQualifier>()
-        val baseType = if (typeNodes.size == 1 && typeNodes[0] is TypeDef) {
-            val ctype = (typeNodes[0] as TypeDef).baseType().copyWith(properties)
-            return Pair(ctype, storageClass)
-        } else if (typeNodes[0] is CPrimitive) {
-            finalBaseType(typeNodes)
+    fun build(typeHolder: TypeHolder): VarDescriptor {
+        val baseType = if (baseTypes.size == 1 && baseTypes[0] is TypeDef) {
+            val ctype = (baseTypes[0] as TypeDef).baseType().copyWith(typeProperties)
+            return VarDescriptor(ctype, storageClass)
+        } else if (baseTypes[0] is CPrimitive) {
+            finalBaseType(baseTypes)
         } else {
-            typeNodes[0]
+            baseTypes[0]
         }
 
         if (baseType !is AggregateBaseType) {
-            val cType = CPrimitiveType(baseType, properties)
-            return Pair(cType, storageClass)
+            val cType = CPrimitiveType(baseType, typeProperties)
+            return VarDescriptor(cType, storageClass)
         }
 
         val structType = when (baseType) {
-            is StructBaseType            -> typeHolder.addTypedef(baseType.name, CStructType(baseType, properties))
-            is UnionBaseType             -> typeHolder.addTypedef(baseType.name, CUnionType(baseType, properties))
-            is UncompletedStructBaseType -> CUncompletedStructType(baseType, properties)
-            is UncompletedUnionBaseType  -> CUncompletedUnionType(baseType, properties)
-            is CArrayBaseType            -> CArrayType(baseType, properties)
-            is EnumBaseType              -> CEnumType(baseType, properties)
-            is UncompletedEnumType       -> CUncompletedEnumType(baseType, properties)
+            is StructBaseType            -> typeHolder.addTypedef(baseType.name, CStructType(baseType, typeProperties))
+            is UnionBaseType             -> typeHolder.addTypedef(baseType.name, CUnionType(baseType, typeProperties))
+            is UncompletedStructBaseType -> CUncompletedStructType(baseType, typeProperties)
+            is UncompletedUnionBaseType  -> CUncompletedUnionType(baseType, typeProperties)
+            is CArrayBaseType            -> CArrayType(baseType, typeProperties)
+            is EnumBaseType              -> CEnumType(baseType, typeProperties)
+            is UncompletedEnumType       -> CUncompletedEnumType(baseType, typeProperties)
         }
 
-        return Pair(structType, storageClass)
+        return VarDescriptor(structType, storageClass)
     }
 }
