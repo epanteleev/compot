@@ -47,8 +47,18 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        asm.mov(size, second, dst)
-        asm.cmovcc(size, matchIntCondition(), first, dst)
+        if (first == second) {
+            asm.mov(size, first, dst)
+            return
+        }
+        when (dst) {
+            first -> asm.cmovcc(size, matchIntCondition(), second, dst)
+            second -> asm.cmovcc(size, matchIntCondition().invert(), first, dst)
+            else -> {
+                asm.mov(size, second, dst)
+                asm.cmovcc(size, matchIntCondition(), first, dst)
+            }
+        }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
@@ -67,8 +77,13 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        asm.mov(size, second, dst)
-        asm.cmovcc(size, matchIntCondition(), first, dst)
+        if (dst == first) {
+            TODO()
+            asm.cmovcc(size, matchIntCondition(), second, dst)
+        } else {
+            asm.mov(size, second, dst)
+            asm.cmovcc(size, matchIntCondition(), first, dst)
+        }
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
@@ -108,7 +123,7 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
             asm.mov(size, first, dst)
             return
         }
-        asm.mov(size, second, dst)
+        asm.mov(size, second, temp2)
         asm.mov(size, first, temp1)
         asm.cmovcc(size, matchIntCondition(), temp1, temp2)
         asm.mov(size, temp2, dst)
@@ -127,7 +142,7 @@ class SelectCodegen(val type: PrimitiveType, val condition: CompareInstruction, 
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        asm.mov(size, second, dst)
+        asm.mov(size, second, temp2)
         asm.mov(size, first, temp1)
         asm.cmovcc(size, matchIntCondition(), temp1, temp2)
         asm.mov(size, temp2, dst)
