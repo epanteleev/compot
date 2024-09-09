@@ -8,36 +8,28 @@ import parser.nodes.visitors.DirectDeclaratorParamVisitor
 
 
 abstract class DirectDeclaratorParam: Node() {
-    abstract fun resolveType(baseType: TypeDesc, storageClass: StorageClass?, typeHolder: TypeHolder): TypeDesc
+    abstract fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc
     abstract fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T
 }
 
 data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() {
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(baseType: TypeDesc, storageClass: StorageClass?, typeHolder: TypeHolder): TypeDesc {
+    override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         if (constexpr is EmptyExpression) {
-            return if (storageClass == null) {
-                UncompletedArrayType(baseType)
-            } else {
-                UncompletedArrayType(baseType, arrayListOf(storageClass))
-            }
+            return UncompletedArrayType(baseType)
         }
 
         val ctx = CommonConstEvalContext<Long>(typeHolder)
         val size = ConstEvalExpression.eval<Long>(constexpr, ConstEvalExpressionLong(ctx))
-        return if (storageClass == null) {
-            CArrayType(CArrayBaseType(baseType, size))
-        } else {
-            CArrayType(CArrayBaseType(baseType, size), arrayListOf(storageClass))
-        }
+        return CArrayType(CArrayBaseType(baseType, size))
     }
 }
 
 data class IndentifierList(val list: List<IdentNode>): DirectDeclaratorParam() {
     override fun <T> accept(visitor: DirectDeclaratorParamVisitor<T>): T = visitor.visit(this)
 
-    override fun resolveType(baseType: TypeDesc, storageClass: StorageClass?, typeHolder: TypeHolder): TypeDesc {
+    override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         TODO("Not yet implemented")
     }
 }
@@ -45,8 +37,7 @@ data class IndentifierList(val list: List<IdentNode>): DirectDeclaratorParam() {
 data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorParam() {
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(baseType: TypeDesc, storageClass: StorageClass?, typeHolder: TypeHolder): AbstractCFunctionType {
-        assertion(storageClass == null) { "Unimpl" }
+    override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): AbstractCFunctionType {
         val params = resolveParams(typeHolder)
         return AbstractCFunctionType(baseType, params, isVarArg())
     }
@@ -113,7 +104,7 @@ data class FunctionPointerDeclarator(val declarator: Declarator): DirectDeclarat
 
     fun declarator(): Declarator = declarator
 
-    override fun resolveType(baseType: TypeDesc, storageClass: StorageClass?, typeHolder: TypeHolder): TypeDesc {
+    override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         TODO("Not yet implemented")
     }
 }
@@ -122,7 +113,7 @@ data class DirectVarDeclarator(val ident: Identifier): DirectDeclaratorFirstPara
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 
-    override fun resolveType(baseType: TypeDesc, storageClass: StorageClass?, typeHolder: TypeHolder): TypeDesc {
+    override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         TODO("Not yet implemented")
     }
 }

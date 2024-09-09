@@ -57,12 +57,7 @@ class CTypeBuilder {
             }
             classes.firstOrNull()
         }
-        val properties = typeProperties.filterNot {
-            if (!isStorageClassIncluded) {
-                return@filterNot it is StorageClass || it is BaseType
-            }
-            it is BaseType
-        }
+        val properties = typeProperties.filterIsInstance<TypeQualifier>()
         val baseType = if (typeNodes.size == 1 && typeNodes[0] is TypeDef) {
             val ctype = (typeNodes[0] as TypeDef).baseType().copyWith(properties)
             return Pair(ctype, storageClass)
