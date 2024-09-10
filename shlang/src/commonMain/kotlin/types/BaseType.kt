@@ -125,10 +125,25 @@ data class AbstractCFunctionT(val retType: TypeDesc, val argsTypes: List<TypeDes
     }
 }
 
+data class CBaseFunctionType(val name: String, val functionType: AbstractCFunctionT): BaseType {
+    override fun size(): Int = throw RuntimeException("Function type has no size")
+
+    override fun typename(): String = buildString {
+        append(functionType.retType)
+        append(" $name(")
+        functionType.argsTypes.forEachIndexed { index, type ->
+            append(type)
+            if (index < functionType.argsTypes.size - 1) append(", ")
+        }
+        if (functionType.variadic) append(", ...")
+        append(")")
+    }
+}
+
 class CFunPointerT(val functionType: AbstractCFunctionT, private val properties: Set<TypeQualifier>) : AnyCPointer() {
     override fun qualifiers(): Set<TypeQualifier> = properties
 
-    override fun dereference(): TypeDesc = TODO()
+    override fun dereference(): TypeDesc = functionType.retType
     override fun typename(): String = buildString {
         append(functionType.retType)
         append("(*)(")
@@ -172,7 +187,6 @@ sealed class AnyStructType(open val name: String): AggregateBaseType() {
     }
 }
 
-
 sealed class UncompletedType(name: String): AnyStructType(name) {
     override fun size(): Int = throw Exception("Uncompleted type")
 }
@@ -203,15 +217,13 @@ data class UnionBaseType(override val name: String): AnyStructType(name) {
         return fields.maxOf { it.second.size() }
     }
 
-    override fun toString(): String {
-        return buildString {
-            append("union $name")
-            append(" {")
-            fields.forEach { (name, type) ->
-                append("$type $name;")
-            }
-            append("}")
+    override fun toString(): String = buildString {
+        append("union $name")
+        append(" {")
+        fields.forEach { (name, type) ->
+            append("$type $name;")
         }
+        append("}")
     }
 }
 

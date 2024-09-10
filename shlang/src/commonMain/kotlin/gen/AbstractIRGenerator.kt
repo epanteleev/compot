@@ -33,19 +33,19 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     private fun constEvalExpression0(expr: Expression): Number? = when (expr.resolveType(typeHolder)) {
-        TypeDesc.CINT, TypeDesc.CSHORT, TypeDesc.CCHAR, TypeDesc.CUINT, TypeDesc.CUSHORT, TypeDesc.CUCHAR -> {
+        INT, SHORT, CHAR, UINT, USHORT, UCHAR -> {
             val ctx = CommonConstEvalContext<Int>(typeHolder)
             ConstEvalExpression.eval(expr, ConstEvalExpressionInt(ctx))
         }
-        TypeDesc.CLONG, TypeDesc.CULONG -> {
+        LONG, ULONG -> {
             val ctx = CommonConstEvalContext<Long>(typeHolder)
             ConstEvalExpression.eval(expr, ConstEvalExpressionLong(ctx))
         }
-        TypeDesc.CFLOAT -> {
+        FLOAT -> {
             val ctx = CommonConstEvalContext<Float>(typeHolder)
             ConstEvalExpression.eval(expr, ConstEvalExpressionFloat(ctx))
         }
-        TypeDesc.CDOUBLE -> {
+        DOUBLE -> {
             val ctx = CommonConstEvalContext<Double>(typeHolder)
             ConstEvalExpression.eval(expr, ConstEvalExpressionDouble(ctx))
         }
@@ -70,26 +70,5 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     protected fun createGlobalConstantName(): String {
         return nameGenerator.createGlobalConstantName()
-    }
-
-    private fun tryMakeGlobalAggregateConstant(lValueType: NonTrivialType, expr: Expression): AnyAggregateGlobalConstant? = when (expr) {
-        is StringNode -> {
-            val content = expr.data()
-            StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.U8, content.length), content)
-        }
-        is InitializerList -> when (lValueType) {
-            is ArrayType -> {
-                val elements = constEvalInitializers(lValueType, expr)
-                ArrayGlobalConstant(createStringLiteralName(), elements)
-            }
-
-            is StructType -> {
-                val elements = constEvalInitializers(lValueType, expr)
-                StructGlobalConstant(createStringLiteralName(), elements)
-            }
-
-            else -> throw IRCodeGenError("Unsupported type $lValueType")
-        }
-        else -> null
     }
 }

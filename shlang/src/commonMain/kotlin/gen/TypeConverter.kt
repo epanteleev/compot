@@ -15,7 +15,7 @@ import ir.module.builder.impl.ModuleBuilder
 
 
 object TypeConverter {
-    inline fun <reified T : Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: TypeDesc): T {
+    inline fun <reified T : Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: BaseType): T {
         val converted = toIRTypeUnchecked(typeHolder, type)
         if (converted !is T) {
             throw IRCodeGenError("Cannot convert '$type' to ${T::class}")
@@ -24,80 +24,95 @@ object TypeConverter {
         return converted
     }
 
-    fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: TypeDesc): Type {
-        if (type is CPointerType) {
+    private fun primitiveType(type: BaseType): Type = when (type) {
+        BOOL -> Type.I8 //TODO one bit
+        CHAR -> Type.I8
+        UCHAR -> Type.U8
+        SHORT -> Type.I16
+        USHORT -> Type.U16
+        INT -> Type.I32
+        UINT -> Type.U32
+        LONG -> Type.I64
+        ULONG -> Type.U64
+        FLOAT -> Type.F32
+        DOUBLE -> Type.F64
+        VOID -> Type.Void // TODO handle case '(void) 0'
+        is CPointerT -> Type.Ptr
+        is CFunPointerT -> Type.Ptr
+        else -> throw IRCodeGenError("Unknown primitive type, type=$type")
+    }
+
+    fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: BaseType): Type {
+        if (type is CPointerT) {
             return Type.Ptr
         }
 
-        if (type is CArrayType) {
-            val elementType = toIRType<NonTrivialType>(typeHolder, type.element())
-            return ArrayType(elementType, type.dimension().toInt())
+        if (type is CArrayBaseType) {
+            val elementType = toIRType<NonTrivialType>(typeHolder, type.type.baseType())
+            return ArrayType(elementType, type.dimension.toInt())
         }
 
         val ret = when (type) {
-            TypeDesc.CBOOL -> Type.I8 //TODO one bit
-            TypeDesc.CCHAR -> Type.I8
-            TypeDesc.CUCHAR -> Type.U8
-            TypeDesc.CSHORT -> Type.I16
-            TypeDesc.CUSHORT -> Type.U16
-            TypeDesc.CINT -> Type.I32
-            TypeDesc.CUINT -> Type.U32
-            TypeDesc.CLONG -> Type.I64
-            TypeDesc.CULONG -> Type.U64
-            TypeDesc.CFLOAT -> Type.F32
-            TypeDesc.CDOUBLE -> Type.F64
-            TypeDesc.CVOID -> Type.Void // TODO handle case '(void) 0'
-            is CStructType -> {
-                convertStructType(typeHolder, type)
+            BOOL -> Type.I8 //TODO one bit
+            CHAR -> Type.I8
+            UCHAR -> Type.U8
+            SHORT -> Type.I16
+            USHORT -> Type.U16
+            INT -> Type.I32
+            UINT -> Type.U32
+            LONG -> Type.I64
+            ULONG -> Type.U64
+            FLOAT -> Type.F32
+            DOUBLE -> Type.F64
+            VOID -> Type.Void // TODO handle case '(void) 0'
+            is StructBaseType -> convertStructType(typeHolder, type)
+
+            is UncompletedStructBaseType -> {
+                val structType = typeHolder.getTypedef(type.name) as CStructType //TODO
+                convertStructType(typeHolder, structType.baseType())
             }
 
-            is CUncompletedStructType -> {
-                val structType = typeHolder.getTypedef(type.name()) as CStructType //TODO
-                convertStructType(typeHolder, structType)
+            is UncompletedUnionBaseType -> {
+                val unionType = typeHolder.getTypedef(type.name) as CUnionType //TODO
+                convertStructType(typeHolder, unionType.baseType())
             }
 
-            is CUncompletedUnionType -> {
-                val unionType = typeHolder.getTypedef(type.name()) as CUnionType //TODO
-                convertStructType(typeHolder, unionType)
-            }
+            is UnionBaseType -> convertUnionType(typeHolder, type)
+            is CPrimitive -> primitiveType(type)
 
-            is CUnionType -> {
-                convertUnionType(typeHolder, type)
-            }
-
-            is CFunPointerType, is CFunctionType, is UncompletedArrayType, is AbstractCFunctionType -> Type.Ptr
+            is CFunPointerT, is CBaseFunctionType, is CUncompletedArrayBaseType, is AbstractCFunctionT -> Type.Ptr
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
         return ret
     }
 
-    private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: CBaseStructType): Type {
-        val fields = type.fields().map { toIRType<NonTrivialType>(typeHolder, it.second) }
-        val structType = findStructTypeOrNull(type.name())
+    private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: AnyStructType): Type {
+        val fields = type.fields().map { toIRType<NonTrivialType>(typeHolder, it.second.baseType()) }
+        val structType = findStructTypeOrNull(type.name)
         if (structType != null) {
             return structType
         }
 
-        return structType(type.name(), fields)
+        return structType(type.name, fields)
     }
 
-    private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: CUnionType): Type {
+    private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: UnionBaseType): Type {
         val field = type.fields().maxByOrNull { it.second.size() }.let {
             if (it == null) {
                 null
             } else {
-                toIRType<NonTrivialType>(typeHolder, it.second)
+                toIRType<NonTrivialType>(typeHolder, it.second.baseType())
             }
         }
-        val structType = findStructTypeOrNull(type.name())
+        val structType = findStructTypeOrNull(type.name)
         if (structType != null) {
             return structType
         }
 
         return if (field == null) {
-            structType(type.name(), listOf())
+            structType(type.name, listOf())
         } else {
-            structType(type.name(), listOf(field))
+            structType(type.name, listOf(field))
         }
     }
 

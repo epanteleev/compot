@@ -18,7 +18,7 @@ class TypeResolutionTest {
         val expr = parser.assignment_expression() as Expression
         val typeResolver = TypeHolder.default()
         val type = expr.resolveType(typeResolver)
-        assertEquals(TypeDesc.CINT, type)
+        assertEquals(INT, type)
     }
 
     @Test
@@ -29,7 +29,7 @@ class TypeResolutionTest {
         val expr = parser.assignment_expression() as Expression
         val typeResolver = TypeHolder.default()
         val type = expr.resolveType(typeResolver)
-        assertEquals(TypeDesc.CFLOAT, type)
+        assertEquals(FLOAT, type)
     }
 
     @Test

@@ -42,7 +42,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     }
 
     private fun makeGlobalValue(name: String, type: VarDescriptor) {
-        val irType = mb.toIRType<NonTrivialType>(typeHolder, type.type)
+        val irType = mb.toIRType<NonTrivialType>(typeHolder, type.type.baseType())
         val value = if (type.storageClass == StorageClass.EXTERN) {
             mb.addExternValue(name, irType)
         } else {
@@ -58,19 +58,19 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
         when (val type = varDesc.type) {
             is CFunctionType -> {
                 val abstrType = type.functionType
-                val argTypes  = abstrType.argsTypes.map {
-                    mb.toIRType<NonTrivialType>(typeHolder, it)
+                val argTypes  = abstrType.functionType.argsTypes.map {
+                    mb.toIRType<NonTrivialType>(typeHolder, it.baseType())
                 }
-                val returnType = mb.toIRType<Type>(typeHolder, abstrType.retType)
+                val returnType = mb.toIRType<Type>(typeHolder, abstrType.functionType.retType.baseType())
 
-                val isVararg = type.functionType.variadic
+                val isVararg = type.functionType.functionType.variadic
                 varStack[name] = getExternFunction(name, returnType, argTypes, isVararg)
             }
             is CPrimitiveType, is CPointerType -> {
                 makeGlobalValue(name, varDesc)
             }
             is CArrayType -> {
-                val irType = mb.toIRType<ArrayType>(typeHolder, type)
+                val irType = mb.toIRType<ArrayType>(typeHolder, type.baseType())
                 if (varDesc.storageClass == StorageClass.EXTERN) {
                     varStack[name] = mb.addExternValue(name, irType)
                     return
@@ -81,14 +81,14 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 varStack[name] = mb.addGlobal(name, irType, constant)
             }
             is CStructType -> {
-                val irType = mb.toIRType<StructType>(typeHolder, type)
+                val irType = mb.toIRType<StructType>(typeHolder, type.baseType())
                 if (varDesc.storageClass == StorageClass.EXTERN) {
                     varStack[name] = mb.addExternValue(name, irType)
                     return
                 }
                 val elements = arrayListOf<Constant>()
                 for (field in type.fields()) {
-                    val zero = Constant.of(mb.toIRType<NonTrivialType>(typeHolder, field.second), 0)
+                    val zero = Constant.of(mb.toIRType<NonTrivialType>(typeHolder, field.second.baseType()), 0)
                     elements.add(zero)
                 }
                 val constant = InitializerListValue(irType, elements)
@@ -100,7 +100,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
 
     private fun generateAssignmentDeclarator(decl: InitDeclarator) {
         val cType = decl.cType()
-        val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType.type)
+        val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType.type.baseType())
 
         if (cType.storageClass == StorageClass.EXTERN) {
             varStack[decl.name()] = mb.addExternValue(decl.name(), lValueType)

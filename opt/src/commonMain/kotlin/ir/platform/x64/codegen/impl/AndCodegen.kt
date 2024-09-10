@@ -31,7 +31,12 @@ class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        if (dst == second) {
+            asm.and(size, first, dst)
+        } else {
+            asm.mov(size, second, dst)
+            asm.and(size, first, dst)
+        }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
