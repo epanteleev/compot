@@ -16,7 +16,7 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
 
     override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         if (constexpr is EmptyExpression) {
-            return UncompletedArrayType(baseType)
+            return UncompletedArrayType(CUncompletedArrayBaseType(baseType))
         }
 
         val ctx = CommonConstEvalContext<Long>(typeHolder)

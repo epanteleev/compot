@@ -125,13 +125,13 @@ data class AbstractCFunctionT(val retType: TypeDesc, val argsTypes: List<TypeDes
     }
 }
 
-class CFunPointerT(val name: String, val functionType: AbstractCFunctionT, private val properties: Set<TypeQualifier>) : AnyCPointer() {
+class CFunPointerT(val functionType: AbstractCFunctionT, private val properties: Set<TypeQualifier>) : AnyCPointer() {
     override fun qualifiers(): Set<TypeQualifier> = properties
 
     override fun dereference(): TypeDesc = TODO()
     override fun typename(): String = buildString {
         append(functionType.retType)
-        append(" $name(")
+        append("(*)(")
         functionType.argsTypes.forEachIndexed { index, type ->
             append(type)
             if (index < functionType.argsTypes.size - 1) append(", ")
@@ -244,7 +244,7 @@ data class CArrayBaseType(val type: TypeDesc, val dimension: Long) : AggregateBa
     }
 }
 
-data class CUncompletedArrayBaseType(val elementType: BaseType) : AggregateBaseType() {
+data class CUncompletedArrayBaseType(val elementType: TypeDesc) : AggregateBaseType() {
     override fun typename(): String {
         return toString()
     }

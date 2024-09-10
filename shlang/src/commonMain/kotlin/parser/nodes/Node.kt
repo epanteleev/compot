@@ -86,7 +86,7 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
         is FunctionPointerDeclarator -> {
             val fnDecl = directDeclaratorParams[0] as ParameterTypeList
             val type = fnDecl.resolveType(baseType, typeHolder)
-            CFunPointerType(type, arrayListOf())
+            CFunPointerType(CFunPointerT(type.baseType, emptySet()))
         }
         is DirectVarDeclarator -> resolveAllDecl(baseType, typeHolder)
     }

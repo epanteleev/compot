@@ -68,7 +68,7 @@ class CTypeBuilder {
             baseTypes[0]
         }
 
-        if (baseType !is AggregateBaseType) {
+        if (baseType is CPrimitive) {
             val cType = CPrimitiveType(baseType, typeProperties)
             return VarDescriptor(cType, storageClass)
         }
@@ -82,6 +82,7 @@ class CTypeBuilder {
             is CUncompletedArrayBaseType      -> TODO()
             is EnumBaseType              -> CEnumType(baseType, typeProperties)
             is UncompletedEnumType       -> CUncompletedEnumType(baseType, typeProperties)
+            else -> TODO()
         }
 
         return VarDescriptor(structType, storageClass)

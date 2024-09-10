@@ -131,16 +131,16 @@ sealed class TypeDesc(val properties: List<TypeQualifier>) {
                 }
 
                 CUINT -> {
-                    when (type2) {
-                        CCHAR -> return CUINT
-                        CUCHAR -> return CUINT
-                        CLONG -> return CLONG
-                        CULONG -> return CULONG
-                        CSHORT -> return CUINT
-                        CUSHORT -> return CUINT
-                        CINT -> return CUINT
-                        CDOUBLE -> return CDOUBLE
-                        CFLOAT -> return CFLOAT
+                    return when (type2) {
+                        CCHAR -> CUINT
+                        CUCHAR -> CUINT
+                        CLONG -> CLONG
+                        CULONG -> CULONG
+                        CSHORT -> CUINT
+                        CUSHORT -> CUINT
+                        CINT -> CUINT
+                        CDOUBLE -> CDOUBLE
+                        CFLOAT -> CFLOAT
                         else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
                     }
                 }
@@ -216,39 +216,29 @@ class CPointerType(val type: CPointerT, properties: List<TypeQualifier> = listOf
     }
 }
 
-class CFunPointerType(private val cFunctionType: AbstractCFunctionType, properties: List<TypeQualifier> = emptyList()) : AnyCPointerType(properties) {
+class CFunPointerType(val type: CFunPointerT, properties: List<TypeQualifier> = emptyList()) : AnyCPointerType(properties) {
     override fun qualifiers(): List<TypeQualifier> = emptyList()
 
-    override fun toString(): String = buildString {
-        append(cFunctionType.retType())
-        append("(*)(")
-        cFunctionType.argsTypes().forEachIndexed { index, type ->
-            append(type)
-            if (index < cFunctionType.argsTypes().size - 1) append(", ")
-        }
-        append(")")
-    }
+    override fun toString(): String = type.typename()
 
-    fun retType() = cFunctionType.retType()
-    fun args() = cFunctionType.argsTypes()
-    fun isVariadic() = cFunctionType.variadic()
+    fun retType() = type.functionType.retType
+    fun args() = type.functionType.argsTypes
+    fun isVariadic() = type.functionType.variadic
 
-    override fun dereference(): TypeDesc = cFunctionType
+    override fun dereference(): TypeDesc = AbstractCFunctionType(type.functionType, arrayListOf())
 
     override fun copyWith(extraProperties: List<TypeQualifier>): CFunPointerType {
-        return CFunPointerType(cFunctionType.copyWith(extraProperties))
+        return CFunPointerType(type, properties + extraProperties)
     }
 }
 
-class CPrimitiveType(val baseType: BaseType, properties: List<TypeQualifier> = arrayListOf()) : TypeDesc(properties) {
+class CPrimitiveType(val baseType: CPrimitive, properties: List<TypeQualifier> = arrayListOf()) : TypeDesc(properties) {
     override fun size(): Int = baseType.size()
     override fun qualifiers(): List<TypeQualifier> = properties
 
-    override fun toString(): String {
-        return buildString {
-            properties.forEach { append("$it ") }
-            append(baseType)
-        }
+    override fun toString(): String = buildString {
+        properties.forEach { append("$it ") }
+        append(baseType)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -275,10 +265,6 @@ class AbstractCFunctionType(val baseType: AbstractCFunctionT, properties: List<T
     override fun copyWith(extraProperties: List<TypeQualifier>): AbstractCFunctionType {
         return AbstractCFunctionType(baseType, properties + extraProperties)
     }
-
-    fun retType(): TypeDesc = baseType.retType
-    fun argsTypes(): List<TypeDesc> = baseType.argsTypes
-    fun variadic(): Boolean = baseType.variadic
 }
 
 class CFunctionType(val name: String, val functionType: AbstractCFunctionT, properties: List<TypeQualifier> = arrayListOf()) : TypeDesc(properties) {
@@ -346,18 +332,13 @@ class CArrayType(private val elementType: CArrayBaseType, properties: List<TypeQ
     }
 }
 
-class UncompletedArrayType(private val elementType: TypeDesc, properties: List<TypeQualifier> = emptyList()) : CommonCArrayType(properties) {
-    override fun size(): Int {
-        return POINTER_SIZE
-    }
-
-    override fun element(): TypeDesc = elementType
-
+class UncompletedArrayType(private val elementType: CUncompletedArrayBaseType, properties: List<TypeQualifier> = emptyList()) : CommonCArrayType(properties) {
+    override fun size(): Int = POINTER_SIZE
+    override fun element(): TypeDesc = elementType.elementType
     override fun qualifiers(): List<TypeQualifier> = properties
 
     override fun toString(): String = buildString {
         properties.forEach { append("$it ") }
-        append("[]")
         append(elementType)
     }
 
@@ -365,9 +346,7 @@ class UncompletedArrayType(private val elementType: TypeDesc, properties: List<T
         if (this === other) return true
         if (other !is UncompletedArrayType) return false
 
-        if (elementType != other.elementType) return false
-
-        return true
+        return elementType == other.elementType
     }
 
     override fun hashCode(): Int {
@@ -380,11 +359,9 @@ class UncompletedArrayType(private val elementType: TypeDesc, properties: List<T
 }
 
 sealed class CBaseStructType(protected open val baseType: AnyStructType, properties: List<TypeQualifier> = emptyList()) : CompoundType(properties) {
-    override fun toString(): String {
-        return buildString {
-            properties.forEach { append("$it ") }
-            append(baseType)
-        }
+    override fun toString(): String = buildString {
+        properties.forEach { append("$it ") }
+        append(baseType)
     }
 
     fun fieldIndex(name: String): Int {
@@ -464,11 +441,9 @@ class CEnumType(private val baseType: EnumBaseType, properties: List<TypeQualifi
         return baseType.size()
     }
 
-    override fun toString(): String {
-        return buildString {
-            properties.forEach { append("$it ") }
-            append(baseType)
-        }
+    override fun toString(): String = buildString {
+        properties.forEach { append("$it ") }
+        append(baseType)
     }
 
     override fun equals(other: Any?): Boolean {
