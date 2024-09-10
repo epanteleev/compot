@@ -3,7 +3,7 @@ package types
 import ir.Definitions.POINTER_SIZE
 
 
-interface BaseType: TypeProperty {
+sealed interface BaseType: TypeProperty {
     fun typename(): String
     fun size(): Int
 }
@@ -141,7 +141,7 @@ class CFunPointerT(val functionType: AbstractCFunctionT, private val properties:
     }
 }
 
-class TypeDef(val name: String, private val baseType: TypeDesc): BaseType {
+class TypeDef(val name: String, val baseType: TypeDesc): BaseType {
     fun baseType(): TypeDesc = baseType
     override fun typename(): String = name
     override fun size(): Int = baseType.size()
@@ -228,8 +228,9 @@ data class EnumBaseType(val name: String): BaseType {
     }
 }
 
+sealed class AnyCArrayType: AggregateBaseType()
 
-data class CArrayBaseType(val type: TypeDesc, val dimension: Long) : AggregateBaseType() {
+data class CArrayBaseType(val type: TypeDesc, val dimension: Long) : AnyCArrayType() {
     override fun typename(): String {
         return toString()
     }
@@ -244,7 +245,7 @@ data class CArrayBaseType(val type: TypeDesc, val dimension: Long) : AggregateBa
     }
 }
 
-data class CUncompletedArrayBaseType(val elementType: TypeDesc) : AggregateBaseType() {
+data class CUncompletedArrayBaseType(val elementType: TypeDesc) : AnyCArrayType() {
     override fun typename(): String {
         return toString()
     }

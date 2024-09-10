@@ -9,7 +9,7 @@ data class TypeResolutionException(override val message: String) : Exception(mes
 
 sealed class TypeDesc(val properties: List<TypeQualifier>) {
     abstract fun qualifiers(): List<TypeQualifier>
-
+    abstract fun baseType(): BaseType
     abstract fun size(): Int
     abstract fun copyWith(extraProperties: List<TypeQualifier>): TypeDesc
 
@@ -182,6 +182,21 @@ sealed class TypeDesc(val properties: List<TypeQualifier>) {
             }
             throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
         }
+
+        fun from(baseType: BaseType): TypeDesc = when (baseType) {
+            is CPrimitive -> CPrimitiveType(baseType)
+            is CPointerT -> CPointerType(baseType)
+            is CArrayBaseType -> CArrayType(baseType)
+            is CUncompletedArrayBaseType -> UncompletedArrayType(baseType)
+            is AbstractCFunctionT -> AbstractCFunctionType(baseType, arrayListOf())
+            is StructBaseType -> CStructType(baseType)
+            is UnionBaseType -> CUnionType(baseType)
+            is UncompletedStructBaseType -> CUncompletedStructType(baseType)
+            is UncompletedUnionBaseType -> CUncompletedUnionType(baseType)
+            is EnumBaseType -> CEnumType(baseType)
+            is UncompletedEnumType -> CUncompletedEnumType(baseType)
+            is TypeDef -> TODO()
+        }
     }
 }
 
@@ -193,7 +208,7 @@ sealed class AnyCPointerType(properties: List<TypeQualifier>): TypeDesc(properti
 
 class CPointerType(val type: CPointerT, properties: List<TypeQualifier> = listOf()) : AnyCPointerType(properties) {
     override fun qualifiers(): List<TypeQualifier> = properties
-
+    override fun baseType(): BaseType = type
     override fun dereference(): TypeDesc = type.dereference()
 
     override fun toString(): String = type.toString()
@@ -218,7 +233,7 @@ class CPointerType(val type: CPointerT, properties: List<TypeQualifier> = listOf
 
 class CFunPointerType(val type: CFunPointerT, properties: List<TypeQualifier> = emptyList()) : AnyCPointerType(properties) {
     override fun qualifiers(): List<TypeQualifier> = emptyList()
-
+    override fun baseType(): BaseType = type
     override fun toString(): String = type.typename()
 
     fun retType() = type.functionType.retType
@@ -235,6 +250,7 @@ class CFunPointerType(val type: CFunPointerT, properties: List<TypeQualifier> = 
 class CPrimitiveType(val baseType: CPrimitive, properties: List<TypeQualifier> = arrayListOf()) : TypeDesc(properties) {
     override fun size(): Int = baseType.size()
     override fun qualifiers(): List<TypeQualifier> = properties
+    override fun baseType(): BaseType = baseType
 
     override fun toString(): String = buildString {
         properties.forEach { append("$it ") }
@@ -261,6 +277,7 @@ class AbstractCFunctionType(val baseType: AbstractCFunctionT, properties: List<T
     override fun size(): Int = throw RuntimeException("Function type has no size")
     override fun qualifiers(): List<TypeQualifier> = properties
     override fun toString(): String = baseType.typename()
+    override fun baseType(): BaseType = baseType
 
     override fun copyWith(extraProperties: List<TypeQualifier>): AbstractCFunctionType {
         return AbstractCFunctionType(baseType, properties + extraProperties)
@@ -270,7 +287,7 @@ class AbstractCFunctionType(val baseType: AbstractCFunctionT, properties: List<T
 class CFunctionType(val name: String, val functionType: AbstractCFunctionT, properties: List<TypeQualifier> = arrayListOf()) : TypeDesc(properties) {
     override fun size(): Int = throw RuntimeException("Function type has no size")
     override fun qualifiers(): List<TypeQualifier> = properties
-
+    override fun baseType(): BaseType = functionType
     fun retType() = functionType.retType
     fun args() = functionType.argsTypes
 
@@ -299,13 +316,10 @@ sealed class CommonCArrayType(properties: List<TypeQualifier>): CompoundType(pro
 }
 
 class CArrayType(private val elementType: CArrayBaseType, properties: List<TypeQualifier> = emptyList()) : CommonCArrayType(properties) {
-    override fun size(): Int {
-        return elementType.size()
-    }
-
+    override fun size(): Int = elementType.size()
     override fun element(): TypeDesc = elementType.type
-
     fun dimension(): Long = elementType.dimension
+    override fun baseType(): BaseType = elementType
 
     override fun qualifiers(): List<TypeQualifier> = properties
 
@@ -336,6 +350,7 @@ class UncompletedArrayType(private val elementType: CUncompletedArrayBaseType, p
     override fun size(): Int = POINTER_SIZE
     override fun element(): TypeDesc = elementType.elementType
     override fun qualifiers(): List<TypeQualifier> = properties
+    override fun baseType(): BaseType = elementType
 
     override fun toString(): String = buildString {
         properties.forEach { append("$it ") }
@@ -363,6 +378,8 @@ sealed class CBaseStructType(protected open val baseType: AnyStructType, propert
         properties.forEach { append("$it ") }
         append(baseType)
     }
+
+    override fun baseType(): BaseType = baseType
 
     fun fieldIndex(name: String): Int {
         return baseType.fieldIndex(name)
@@ -427,6 +444,8 @@ class CUncompletedEnumType(val baseType: UncompletedEnumType, properties: List<T
         return CUncompletedEnumType(baseType, properties + extraProperties)
     }
 
+    override fun baseType(): BaseType = baseType
+
     override fun qualifiers(): List<TypeQualifier> {
         return properties
     }
@@ -440,6 +459,8 @@ class CEnumType(private val baseType: EnumBaseType, properties: List<TypeQualifi
     override fun size(): Int {
         return baseType.size()
     }
+
+    override fun baseType(): BaseType = baseType
 
     override fun toString(): String = buildString {
         properties.forEach { append("$it ") }
