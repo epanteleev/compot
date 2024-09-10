@@ -79,6 +79,7 @@ class CTypeBuilder {
             is UncompletedStructBaseType -> CUncompletedStructType(baseType, typeProperties)
             is UncompletedUnionBaseType  -> CUncompletedUnionType(baseType, typeProperties)
             is CArrayBaseType            -> CArrayType(baseType, typeProperties)
+            is CUncompletedArrayBaseType      -> TODO()
             is EnumBaseType              -> CEnumType(baseType, typeProperties)
             is UncompletedEnumType       -> CUncompletedEnumType(baseType, typeProperties)
         }

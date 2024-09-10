@@ -21,7 +21,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
     fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         var pointerType = baseType
         for (pointer in pointers) {
-            pointerType = CPointerType(pointerType, pointer.property())
+            pointerType = CPointerType(CPointerT(pointerType), pointer.property())
         }
 
         if (directAbstractDeclarator == null) {
@@ -73,7 +73,7 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
 
                 is ParameterTypeList -> {
                     val abstractType = decl.resolveType(currentType, typeHolder)
-                    currentType = CFunctionType(name(), abstractType)
+                    currentType = CFunctionType(name(), abstractType.baseType, abstractType.properties)
                 }
 
                 else -> throw IllegalStateException("Unknown declarator $decl")

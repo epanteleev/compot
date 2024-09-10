@@ -81,13 +81,26 @@ sealed class AnyCPointer: CPrimitive() {
     override fun size(): Int = POINTER_SIZE //TODO must be imported from x64 module
 
     abstract fun qualifiers(): Set<TypeQualifier>
-    abstract fun dereference(): BaseType
+    abstract fun dereference(): TypeDesc
 }
 
-class CPointerT(val type: BaseType, private val properties: Set<TypeQualifier>) : AnyCPointer() {
+class CPointerT(val type: TypeDesc, private val properties: Set<TypeQualifier> = setOf()) : AnyCPointer() {
     override fun qualifiers(): Set<TypeQualifier> = properties
 
-    override fun dereference(): BaseType = type
+    override fun dereference(): TypeDesc = type
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CPointerT) return false
+
+        if (type != other.type) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return type.hashCode()
+    }
 
     override fun typename(): String {
         return buildString {
@@ -97,14 +110,33 @@ class CPointerT(val type: BaseType, private val properties: Set<TypeQualifier>) 
     }
 }
 
-class CFunPointerT(val retType: BaseType, val argsTypes: List<BaseType>, val properties: Set<TypeQualifier>, var variadic: Boolean) : AnyCPointer() {
-    override fun qualifiers(): Set<TypeQualifier> = properties
+data class AbstractCFunctionT(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): BaseType {
+    override fun size(): Int = throw RuntimeException("Function type has no size")
 
-    override fun dereference(): BaseType = retType
     override fun typename(): String = buildString {
         append(retType)
-        append("(*")
-        append(argsTypes.joinToString(", ") { it.toString() })
+        append("(")
+        argsTypes.forEachIndexed { index, type ->
+            append(type)
+            if (index < argsTypes.size - 1) append(", ")
+        }
+        if (variadic) append(", ...")
+        append(")")
+    }
+}
+
+class CFunPointerT(val name: String, val functionType: AbstractCFunctionT, private val properties: Set<TypeQualifier>) : AnyCPointer() {
+    override fun qualifiers(): Set<TypeQualifier> = properties
+
+    override fun dereference(): TypeDesc = TODO()
+    override fun typename(): String = buildString {
+        append(functionType.retType)
+        append(" $name(")
+        functionType.argsTypes.forEachIndexed { index, type ->
+            append(type)
+            if (index < functionType.argsTypes.size - 1) append(", ")
+        }
+        if (functionType.variadic) append(", ...")
         append(")")
     }
 }
@@ -206,11 +238,24 @@ data class CArrayBaseType(val type: TypeDesc, val dimension: Long) : AggregateBa
         return type.size() * dimension.toInt() //TODO
     }
 
-    override fun toString(): String {
-        return buildString {
-            append("[$dimension]")
-            append(type)
-        }
+    override fun toString(): String = buildString {
+        append("[$dimension]")
+        append(type)
+    }
+}
+
+data class CUncompletedArrayBaseType(val elementType: BaseType) : AggregateBaseType() {
+    override fun typename(): String {
+        return toString()
+    }
+
+    override fun size(): Int {
+        return -1
+    }
+
+    override fun toString(): String = buildString {
+        append("[]")
+        append(elementType)
     }
 }
 

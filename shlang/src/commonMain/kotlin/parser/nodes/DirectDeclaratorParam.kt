@@ -1,6 +1,5 @@
 package parser.nodes
 
-import common.assertion
 import types.*
 import gen.consteval.*
 import tokenizer.Identifier
@@ -39,7 +38,7 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
 
     override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): AbstractCFunctionType {
         val params = resolveParams(typeHolder)
-        return AbstractCFunctionType(baseType, params, isVarArg())
+        return AbstractCFunctionType(AbstractCFunctionT(baseType, params, isVarArg()), arrayListOf())
     }
 
     fun params(): List<String> {

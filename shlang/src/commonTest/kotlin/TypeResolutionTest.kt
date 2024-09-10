@@ -102,7 +102,7 @@ class TypeResolutionTest {
         assertTrue { typeResolver.containsVar("p") }
         assertEquals(TypeDesc.CINT, typeResolver["a"].type)
         assertEquals(TypeDesc.CINT, typeResolver["v"].type)
-        assertEquals(CPointerType(TypeDesc.CINT), typeResolver["p"].type)
+        assertEquals(CPointerType(CPointerT(TypeDesc.CINT)), typeResolver["p"].type)
     }
 
     @Test

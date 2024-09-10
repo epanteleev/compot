@@ -43,10 +43,10 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
         var pointerType = type.type
         for (idx in 0 until pointers.size - 1) {
             val pointer = pointers[idx]
-            pointerType = CPointerType(pointerType, pointer.property())
+            pointerType = CPointerType(CPointerT(pointerType), pointer.property())
         }
 
-        return VarDescriptor(CPointerType(pointerType, pointers.last().property()), type.storageClass)
+        return VarDescriptor(CPointerType(CPointerT(pointerType), pointers.last().property()), type.storageClass)
     }
 
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)

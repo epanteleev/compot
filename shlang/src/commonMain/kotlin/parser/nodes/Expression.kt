@@ -140,14 +140,14 @@ enum class PostfixUnaryOpType: UnaryOpType {
 
 
 sealed class Expression : Node() {
-    protected var type: TypeDesc = TypeDesc.UNRESOlVED
+    protected var type: TypeDesc? = null
 
     abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
 
     abstract fun resolveType(typeHolder: TypeHolder): TypeDesc
 
     protected inline fun<reified T: TypeDesc> memoize(closure: () -> T): T {
-        if (type != TypeDesc.UNRESOlVED) {
+        if (type != null) {
             return type as T
         }
         type = closure()
@@ -361,7 +361,7 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): TypeDesc = memoize {
-        return@memoize CPointerType(TypeDesc.CCHAR, listOf()) //ToDO restrict?????
+        return@memoize CPointerType(CPointerT(TypeDesc.CCHAR), listOf()) //ToDO restrict?????
     }
 
     fun data(): String = if (literals.size == 1) {
@@ -417,7 +417,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 }
             }
             PrefixUnaryOpType.ADDRESS -> {
-                CPointerType(primaryType, listOf())
+                CPointerType(CPointerT(primaryType), listOf())
             }
             PrefixUnaryOpType.NOT -> {
                 if (primaryType is CPointerType) {
