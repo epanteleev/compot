@@ -3,14 +3,13 @@ package types
 import ir.Definitions.POINTER_SIZE
 
 
-sealed interface BaseType: TypeProperty {
-    fun typename(): String
-    fun size(): Int
-}
-
-sealed class CPrimitive: BaseType {
+sealed class BaseType: TypeProperty {
+    abstract fun typename(): String
+    abstract fun size(): Int
     override fun toString(): String = typename()
 }
+
+sealed class CPrimitive: BaseType()
 
 object VOID: CPrimitive() {
     override fun typename(): String = "void"
@@ -106,7 +105,7 @@ class CPointerT(val type: BaseType, private val properties: Set<TypeQualifier> =
     }
 }
 
-data class AbstractCFunctionT(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): BaseType {
+data class AbstractCFunctionT(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): BaseType() {
     override fun size(): Int = throw RuntimeException("Function type has no size")
 
     override fun typename(): String = buildString {
@@ -121,8 +120,11 @@ data class AbstractCFunctionT(val retType: TypeDesc, val argsTypes: List<TypeDes
     }
 }
 
-data class CBaseFunctionType(val name: String, val functionType: AbstractCFunctionT): BaseType {
+class CBaseFunctionType(val name: String, val functionType: AbstractCFunctionT): BaseType() {
     override fun size(): Int = throw RuntimeException("Function type has no size")
+
+    fun retType(): TypeDesc = functionType.retType
+    fun args(): List<TypeDesc> = functionType.argsTypes
 
     override fun typename(): String = buildString {
         append(functionType.retType)
@@ -152,14 +154,14 @@ class CFunPointerT(val functionType: AbstractCFunctionT, private val properties:
     }
 }
 
-class TypeDef(val name: String, val baseType: TypeDesc): BaseType {
+class TypeDef(val name: String, val baseType: TypeDesc): BaseType() {
     fun baseType(): TypeDesc = baseType
     override fun typename(): String = name
     override fun size(): Int = baseType.size()
     override fun toString(): String = baseType.toString()
 }
 
-sealed class AggregateBaseType: BaseType
+sealed class AggregateBaseType: BaseType()
 
 sealed class AnyStructType(open val name: String): AggregateBaseType() {
     protected val fields = arrayListOf<Pair<String, TypeDesc>>()
@@ -223,7 +225,7 @@ data class UnionBaseType(override val name: String): AnyStructType(name) {
     }
 }
 
-data class EnumBaseType(val name: String): BaseType {
+data class EnumBaseType(val name: String): BaseType() {
     private val enumerators = mutableListOf<String>()
     override fun typename(): String = name
 
@@ -236,9 +238,11 @@ data class EnumBaseType(val name: String): BaseType {
     }
 }
 
-sealed class AnyCArrayType: AggregateBaseType()
+sealed class AnyCArrayType(val type: TypeDesc): AggregateBaseType() {
+    fun element(): TypeDesc = type
+}
 
-data class CArrayBaseType(val type: TypeDesc, val dimension: Long) : AnyCArrayType() {
+class CArrayBaseType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     override fun typename(): String {
         return toString()
     }
@@ -253,7 +257,7 @@ data class CArrayBaseType(val type: TypeDesc, val dimension: Long) : AnyCArrayTy
     }
 }
 
-data class CUncompletedArrayBaseType(val elementType: TypeDesc) : AnyCArrayType() {
+data class CUncompletedArrayBaseType(val elementType: TypeDesc) : AnyCArrayType(elementType) {
     override fun typename(): String {
         return toString()
     }

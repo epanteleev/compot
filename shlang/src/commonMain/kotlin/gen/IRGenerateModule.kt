@@ -55,22 +55,22 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     private fun generateDeclarator(decl: Declarator) {
         val name = decl.name()
         val varDesc = decl.cType()
-        when (val type = varDesc.type) {
-            is CFunctionType -> {
+        when (val type = varDesc.type.baseType()) {
+            is CBaseFunctionType -> {
                 val abstrType = type.functionType
-                val argTypes  = abstrType.functionType.argsTypes.map {
+                val argTypes  = abstrType.argsTypes.map {
                     mb.toIRType<NonTrivialType>(typeHolder, it.baseType())
                 }
-                val returnType = mb.toIRType<Type>(typeHolder, abstrType.functionType.retType.baseType())
+                val returnType = mb.toIRType<Type>(typeHolder, abstrType.retType.baseType())
 
-                val isVararg = type.functionType.functionType.variadic
+                val isVararg = type.functionType.variadic
                 varStack[name] = getExternFunction(name, returnType, argTypes, isVararg)
             }
-            is CPrimitiveType, is CPointerType -> {
+            is CPrimitive, is CPointerT -> {
                 makeGlobalValue(name, varDesc)
             }
-            is CArrayType -> {
-                val irType = mb.toIRType<ArrayType>(typeHolder, type.baseType())
+            is CArrayBaseType -> {
+                val irType = mb.toIRType<ArrayType>(typeHolder, type)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
                     varStack[name] = mb.addExternValue(name, irType)
                     return
@@ -80,8 +80,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 val constant = InitializerListValue(irType, elements)
                 varStack[name] = mb.addGlobal(name, irType, constant)
             }
-            is CStructType -> {
-                val irType = mb.toIRType<StructType>(typeHolder, type.baseType())
+            is StructBaseType -> {
+                val irType = mb.toIRType<StructType>(typeHolder, type)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
                     varStack[name] = mb.addExternValue(name, irType)
                     return

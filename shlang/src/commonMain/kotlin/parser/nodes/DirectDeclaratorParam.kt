@@ -16,7 +16,7 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
 
     override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         if (constexpr is EmptyExpression) {
-            return UncompletedArrayType(CUncompletedArrayBaseType(baseType))
+            return TypeDesc.from(CUncompletedArrayBaseType(baseType))
         }
 
         val ctx = CommonConstEvalContext<Long>(typeHolder)
@@ -36,9 +36,9 @@ data class IndentifierList(val list: List<IdentNode>): DirectDeclaratorParam() {
 data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorParam() {
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): AbstractCFunctionType {
+    override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         val params = resolveParams(typeHolder)
-        return AbstractCFunctionType(AbstractCFunctionT(baseType, params, isVarArg()), arrayListOf())
+        return TypeDesc.from(AbstractCFunctionT(baseType, params, isVarArg()), arrayListOf())
     }
 
     fun params(): List<String> {

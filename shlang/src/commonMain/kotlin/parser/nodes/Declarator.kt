@@ -48,7 +48,8 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         }
 
         val varDesc = VarDescriptor(type, declspecType.storageClass)
-        if (type is CFunctionType) {
+        val baseType = type.baseType()
+        if (baseType is CBaseFunctionType) {
             // declare extern function or function without body
             typeHolder.addFunctionType(name(), varDesc)
         } else {
@@ -71,7 +72,8 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
         val type = declarator.directDeclarator.resolveType(declspecType.type, typeHolder)
         assertion (!declspec.isTypedef) { "typedef is not supported here" }
 
-        if (type !is UncompletedArrayType) {
+        val baseType = type.baseType()
+        if (baseType !is CUncompletedArrayBaseType) {
             return@memoizeType typeHolder.addVar(name(), VarDescriptor(type, declspecType.storageClass))
         }
 
@@ -81,7 +83,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                 // int a[] = {1, 2};
                 // 'a' is array of 2 elements, not pointer to int
 
-                val rvalueType = TypeDesc.from(CArrayBaseType(type.element(), rvalue.length().toLong()), listOf())
+                val rvalueType = TypeDesc.from(CArrayBaseType(baseType.element(), rvalue.length().toLong()), listOf())
                 return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
             }
             is StringNode -> {
@@ -140,12 +142,13 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
         val type = declarator.directDeclarator.resolveType(declspecType.type, typeHolder)
         assertion(!declspec.isTypedef) { "typedef is not supported here" }
 
-        assertion(type is CFunctionType) { "function type expected" }
+        val baseType = type.baseType()
+        assertion(baseType is CBaseFunctionType) { "function type expected" }
         return@memoizeType typeHolder.addFunctionType(name(), VarDescriptor(type, declspecType.storageClass))
     }
 
-    fun resolveType(typeHolder: TypeHolder): CFunctionType {
-        return declareType(specifier, typeHolder).type as CFunctionType
+    fun resolveType(typeHolder: TypeHolder): CBaseFunctionType {
+        return declareType(specifier, typeHolder).type.baseType() as CBaseFunctionType
     }
 
     override fun <T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)

@@ -224,11 +224,11 @@ class FuncPointerCall(val primary: Expression, args: List<Expression>) : AnyFunc
 
     fun resolveFunctionType(typeHolder: TypeHolder): CFunPointerT = memoize {
         resolveParams(typeHolder)
-        val functionType = typeHolder.getFunctionType(name()).type
-        if (functionType !is CFunPointerType) {
+        val functionType = typeHolder.getFunctionType(name()).type.baseType()
+        if (functionType !is CFunPointerT) {
             throw TypeResolutionException("Function call of '${name()}' with non-function type")
         }
-        return functionType.type
+        return functionType
     }
 
     override fun resolveType(typeHolder: TypeHolder): BaseType {
@@ -249,11 +249,11 @@ class FunctionCall(val primary: VarNode, args: List<Expression>) : AnyFunctionCa
 
     private fun resolveFunctionType(typeHolder: TypeHolder): CBaseFunctionType = memoize {
         resolveParams(typeHolder)
-        val functionType = typeHolder.getFunctionType(name()).type
-        if (functionType !is CFunctionType) {
+        val functionType = typeHolder.getFunctionType(name()).type.baseType()
+        if (functionType !is CBaseFunctionType) {
             throw TypeResolutionException("Function call of '${name()}' with non-function type")
         }
-        return functionType.functionType
+        return functionType
     }
 
     override fun resolveType(typeHolder: TypeHolder): BaseType {
@@ -284,21 +284,15 @@ class InitializerList(val initializers: List<Initializer>) : Expression() {
 
     override fun resolveType(typeHolder: TypeHolder): BaseType = memoize {
         val types      = initializers.map { it.resolveType(typeHolder) }
-        val commonType = TypeDesc.from(types(types))
+
         if (isSameType(types)) {
-            return@memoize CArrayBaseType(commonType, types.size.toLong())
+            return@memoize CArrayBaseType(TypeDesc.from(types.first()), types.size.toLong())
         }
         val struct = StructBaseType("initializer")
         for (i in initializers.indices) {
             struct.addField("field$i", TypeDesc.from(types[i]))
         }
         return@memoize struct
-    }
-
-    private fun types(list: List<BaseType>): BaseType {
-        return list.reduce { acc, type ->
-            TypeDesc.interfereTypes(acc, type)
-        }
     }
 
     private fun isSameType(types: List<BaseType>): Boolean {
@@ -412,8 +406,8 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
         val resolvedType = when (opType) {
             PrefixUnaryOpType.DEREF -> {
                 when (primaryType) {
-                    is CPointerT -> primaryType.dereference()
                     is CFunPointerT -> primaryType.functionType
+                    is CPointerT -> primaryType.dereference()
                     is CArrayBaseType      -> primaryType.type.baseType()
                     is CUncompletedArrayBaseType -> primaryType.elementType.baseType()
                     else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType")

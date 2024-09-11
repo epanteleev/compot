@@ -24,24 +24,6 @@ object TypeConverter {
         return converted
     }
 
-    private fun primitiveType(type: BaseType): Type = when (type) {
-        BOOL -> Type.I8 //TODO one bit
-        CHAR -> Type.I8
-        UCHAR -> Type.U8
-        SHORT -> Type.I16
-        USHORT -> Type.U16
-        INT -> Type.I32
-        UINT -> Type.U32
-        LONG -> Type.I64
-        ULONG -> Type.U64
-        FLOAT -> Type.F32
-        DOUBLE -> Type.F64
-        VOID -> Type.Void // TODO handle case '(void) 0'
-        is CPointerT -> Type.Ptr
-        is CFunPointerT -> Type.Ptr
-        else -> throw IRCodeGenError("Unknown primitive type, type=$type")
-    }
-
     fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: BaseType): Type {
         if (type is CPointerT) {
             return Type.Ptr
@@ -68,19 +50,18 @@ object TypeConverter {
             is StructBaseType -> convertStructType(typeHolder, type)
 
             is UncompletedStructBaseType -> {
-                val structType = typeHolder.getTypedef(type.name) as CStructType //TODO
-                convertStructType(typeHolder, structType.baseType())
+                val structType = typeHolder.getTypedef(type.name).baseType() as StructBaseType //TODO
+                convertStructType(typeHolder, structType)
             }
 
             is UncompletedUnionBaseType -> {
-                val unionType = typeHolder.getTypedef(type.name) as CUnionType //TODO
-                convertStructType(typeHolder, unionType.baseType())
+                val unionType = typeHolder.getTypedef(type.name).baseType() as UnionBaseType //TODO
+                convertStructType(typeHolder, unionType)
             }
 
             is UnionBaseType -> convertUnionType(typeHolder, type)
-            is CPrimitive -> primitiveType(type)
-
-            is CFunPointerT, is CBaseFunctionType, is CUncompletedArrayBaseType, is AbstractCFunctionT -> Type.Ptr
+            is AnyCPointer -> Type.Ptr
+            is CBaseFunctionType, is CUncompletedArrayBaseType, is AbstractCFunctionT -> Type.Ptr
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
         return ret
