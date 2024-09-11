@@ -5,7 +5,7 @@ struct Point {
 };
 
 int inc() {
-    static Point i;
+    static struct Point i;
     return i.y++;
 }
 

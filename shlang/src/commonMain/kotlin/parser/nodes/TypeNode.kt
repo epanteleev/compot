@@ -13,7 +13,7 @@ sealed class AnyTypeNode : Node() {
 
     abstract fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder): TypeProperty
 
-    protected fun addToBuilder(typeBuilder: CTypeBuilder, closure: () -> TypeProperty): TypeProperty {
+    protected inline fun<reified T: TypeProperty> addToBuilder(typeBuilder: CTypeBuilder, closure: () -> T): T {
         val property = closure()
         typeBuilder.add(property)
         return property
@@ -45,7 +45,7 @@ data class UnionDeclaration(val name: Identifier) : AnyTypeNode() { //TODO separ
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addNewType(name.str(), UncompletedUnionBaseType(name.str()))
+        typeHolder.getTypeOrNull<UnionBaseType>(name.str()) ?: typeHolder.addNewType(name.str(), UncompletedUnionBaseType(name.str()))
     }
 
     override fun name(): String = name.str()
@@ -117,7 +117,7 @@ data class TypeNode(private val name: CToken) : AnyTypeNode() {
             "unsigned"-> UINT
             "_Bool"   -> BOOL
             "__builtin_va_list" -> LONG //TODO hack
-            else      -> typeHolder.getStructType(name.str())
+            else      -> typeHolder.getTypedef(name.str()).baseType()
         }
     }
 }
@@ -136,8 +136,7 @@ data class StructSpecifier(private val name: Identifier, val fields: List<Struct
             }
         }
 
-        typeHolder.addNewType(name.str(), structType)
-        return@addToBuilder structType
+        return@addToBuilder typeHolder.addNewType(name.str(), structType)
     }
 }
 
@@ -145,8 +144,8 @@ data class StructDeclaration(private val name: Identifier) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
     override fun name(): String = name.str()
 
-    override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        typeHolder.getTypeOrNull(name.str()) ?: typeHolder.addNewType(name.str(), UncompletedStructBaseType(name.str()))
+    override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder<BaseType>(typeBuilder) {
+        typeHolder.getTypeOrNull<StructBaseType>(name.str()) ?: typeHolder.addNewType(name.str(), UncompletedStructBaseType(name.str()))
     }
 }
 
@@ -159,7 +158,7 @@ data class EnumSpecifier(private val name: Identifier, val enumerators: List<Enu
             enumBaseType.addEnumeration(field.name())
         }
 
-        return@addToBuilder enumBaseType
+        return@addToBuilder typeHolder.addNewType(name.str(), enumBaseType)
     }
 
     override fun name(): String = name.str()
@@ -169,7 +168,7 @@ data class EnumDeclaration(private val name: Identifier) : AnyTypeNode() {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        typeHolder.getTypeOrNull(name.str()) ?: UncompletedEnumType(name.str())
+        typeHolder.getTypeOrNull<EnumBaseType>(name.str()) ?: UncompletedEnumType(name.str())
     }
 
     override fun name(): String = name.str()

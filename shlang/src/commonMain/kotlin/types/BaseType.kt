@@ -1,7 +1,8 @@
 package types
 
-import ir.Definitions.POINTER_SIZE
 
+import ir.Definitions.POINTER_SIZE
+import parser.nodes.TypeName
 
 sealed class BaseType: TypeProperty {
     abstract fun typename(): String
@@ -9,7 +10,178 @@ sealed class BaseType: TypeProperty {
     override fun toString(): String = typename()
 }
 
-sealed class CPrimitive: BaseType()
+sealed class CPrimitive: BaseType() {
+    fun interfere(type2: BaseType): BaseType {
+        if (this == type2) return this
+        when (this) {
+            CHAR -> {
+                return when (type2) {
+                    INT -> INT
+                    LONG -> LONG
+                    ULONG -> ULONG
+                    SHORT -> SHORT
+                    UINT -> UINT
+                    DOUBLE -> DOUBLE
+                    FLOAT -> FLOAT
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+
+            UCHAR -> {
+                return when (type2) {
+                    INT -> INT
+                    LONG -> LONG
+                    CHAR -> UCHAR
+                    UINT -> UINT
+                    DOUBLE -> DOUBLE
+                    FLOAT -> FLOAT
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+            SHORT -> {
+                return when (type2) {
+                    INT -> INT
+                    LONG -> LONG
+                    CHAR -> SHORT
+                    UINT -> UINT
+                    DOUBLE -> DOUBLE
+                    FLOAT -> FLOAT
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+
+            INT -> {
+                return when (type2) {
+                    CHAR -> INT
+                    UCHAR -> INT
+                    LONG -> LONG
+                    ULONG -> ULONG
+                    SHORT -> INT
+                    USHORT -> INT
+                    UINT -> UINT
+                    DOUBLE -> DOUBLE
+                    FLOAT -> FLOAT
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+
+            LONG -> {
+                return when (type2) {
+                    CHAR -> LONG
+                    INT -> LONG
+                    SHORT -> LONG
+                    UINT -> LONG
+                    ULONG -> ULONG
+                    DOUBLE -> DOUBLE
+                    FLOAT -> FLOAT
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+
+            FLOAT -> {
+                return when (type2) {
+                    CHAR -> FLOAT
+                    INT -> FLOAT
+                    SHORT -> FLOAT
+                    UINT -> FLOAT
+                    DOUBLE -> DOUBLE
+                    LONG -> DOUBLE
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+
+            DOUBLE -> {
+                return when (type2) {
+                    CHAR -> DOUBLE
+                    INT -> DOUBLE
+                    SHORT -> DOUBLE
+                    UINT -> DOUBLE
+                    FLOAT -> DOUBLE
+                    LONG -> DOUBLE
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+
+            USHORT -> {
+                return when (type2) {
+                    INT -> INT
+                    LONG -> LONG
+                    CHAR -> USHORT
+                    UINT -> UINT
+                    DOUBLE -> DOUBLE
+                    FLOAT -> FLOAT
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+
+            UINT -> {
+                return when (type2) {
+                    CHAR -> UINT
+                    UCHAR -> UINT
+                    LONG -> LONG
+                    ULONG -> ULONG
+                    SHORT -> UINT
+                    USHORT -> UINT
+                    INT -> UINT
+                    DOUBLE -> DOUBLE
+                    FLOAT -> FLOAT
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+
+            ULONG -> {
+                return when (type2) {
+                    CHAR -> ULONG
+                    UCHAR -> ULONG
+                    INT -> ULONG
+                    LONG -> ULONG
+                    SHORT -> ULONG
+                    USHORT -> ULONG
+                    UINT -> ULONG
+                    DOUBLE -> DOUBLE
+                    FLOAT -> FLOAT
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+
+            is CPointerT -> {
+                when (type2) {
+                    CHAR -> return this
+                    INT -> return this
+                    SHORT -> return this
+                    UINT -> return this
+                    FLOAT -> return this
+                    LONG -> return this
+                    is CPointerT -> {
+                        if (type == type2.type) return this
+                        if (dereference() == VOID) return this
+                        if (type2.dereference() == VOID) return type2
+                    }
+                    ULONG -> return this
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+            is EnumBaseType -> {
+                return when (type2) {
+                    CHAR -> INT
+                    UCHAR -> INT
+                    SHORT -> INT
+                    USHORT -> INT
+                    INT -> INT
+                    UINT -> UINT
+                    LONG -> LONG
+                    ULONG -> ULONG
+                    FLOAT -> FLOAT
+                    DOUBLE -> DOUBLE
+                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                }
+            }
+
+            else -> throw RuntimeException("Unknown type $this, $type2")
+        }
+        throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+    }
+}
 
 object VOID: CPrimitive() {
     override fun typename(): String = "void"
@@ -185,25 +357,20 @@ sealed class AnyStructType(open val name: String): AggregateBaseType() {
     }
 }
 
-sealed class UncompletedType(name: String): AnyStructType(name) {
-    override fun size(): Int = throw Exception("Uncompleted type")
-}
+sealed interface UncompletedType
 
 data class StructBaseType(override val name: String): AnyStructType(name) { //TODO
     override fun size(): Int {
         return fields.sumOf { it.second.size() }
     }
 
-    override fun toString(): String {
-        return buildString {
-            append("struct $name")
-            append(" {")
-            fields.forEach { (name, type) ->
-                append("$type $name;")
-            }
-            append("}")
-
+    override fun toString(): String = buildString {
+        append("struct $name")
+        append(" {")
+        fields.forEach { (name, type) ->
+            append("$type $name;")
         }
+        append("}")
     }
 }
 
@@ -225,12 +392,20 @@ data class UnionBaseType(override val name: String): AnyStructType(name) {
     }
 }
 
-data class EnumBaseType(val name: String): BaseType() {
+data class EnumBaseType(val name: String): CPrimitive() {
     private val enumerators = mutableListOf<String>()
     override fun typename(): String = name
 
     override fun size(): Int {
         return INT.size()
+    }
+
+    fun hasEnumerator(name: String): Boolean {
+        return enumerators.contains(name)
+    }
+
+    fun enumerator(name: String): Int {
+        return enumerators.indexOf(name) //TODO temporal
     }
 
     fun addEnumeration(name: String) {
@@ -257,7 +432,7 @@ class CArrayBaseType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) 
     }
 }
 
-data class CUncompletedArrayBaseType(val elementType: TypeDesc) : AnyCArrayType(elementType) {
+data class CUncompletedArrayBaseType(val elementType: TypeDesc) : AnyCArrayType(elementType){
     override fun typename(): String {
         return toString()
     }
@@ -272,7 +447,7 @@ data class CUncompletedArrayBaseType(val elementType: TypeDesc) : AnyCArrayType(
     }
 }
 
-data class UncompletedStructBaseType(override val name: String): UncompletedType(name) {
+data class UncompletedStructBaseType(override val name: String): UncompletedType, AnyStructType(name) {
     override fun typename(): String = name
 
     override fun size(): Int = throw Exception("Uncompleted type '$name'")
@@ -282,7 +457,7 @@ data class UncompletedStructBaseType(override val name: String): UncompletedType
     }
 }
 
-data class UncompletedUnionBaseType(override val name: String): UncompletedType(name) {
+data class UncompletedUnionBaseType(override val name: String): UncompletedType, AnyStructType(name) {
     override fun typename(): String = name
 
     override fun size(): Int = throw Exception("Uncompleted type")
@@ -292,12 +467,8 @@ data class UncompletedUnionBaseType(override val name: String): UncompletedType(
     }
 }
 
-data class UncompletedEnumType(override val name: String): UncompletedType(name) {
-    override fun typename(): String = name
+data class UncompletedEnumType(val name: String): UncompletedType, CPrimitive() {
+    override fun typename(): String = "enum $name"
 
     override fun size(): Int = throw Exception("Uncompleted type")
-
-    override fun toString(): String {
-        return "enum $name"
-    }
 }

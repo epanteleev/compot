@@ -62,7 +62,7 @@ class CTypeBuilder {
         return baseTypes[0]
     }
 
-    fun build(typeHolder: TypeHolder): VarDescriptor {
+    fun build(): VarDescriptor {
         val baseType = if (baseTypes.size == 1 && baseTypes[0] is TypeDef) {
             val ctype = (baseTypes[0] as TypeDef).baseType().copyWith(typeProperties)
             return VarDescriptor(ctype, storageClass)
@@ -72,23 +72,7 @@ class CTypeBuilder {
             baseTypes[0]
         }
 
-        if (baseType is CPrimitive) {
-            val cType = TypeDesc.from(baseType, typeProperties)
-            return VarDescriptor(cType, storageClass)
-        }
-
-        val structType = when (baseType) {
-            is StructBaseType            -> typeHolder.addTypedef(baseType.name, TypeDesc.from(baseType, typeProperties))
-            is UnionBaseType             -> typeHolder.addTypedef(baseType.name, TypeDesc.from(baseType, typeProperties))
-            is UncompletedStructBaseType -> TypeDesc.from(baseType, typeProperties)
-            is UncompletedUnionBaseType  -> TypeDesc.from(baseType, typeProperties)
-            is CArrayBaseType            -> TypeDesc.from(baseType, typeProperties)
-            is CUncompletedArrayBaseType      -> TODO()
-            is EnumBaseType              -> TypeDesc.from(baseType, typeProperties)
-            is UncompletedEnumType       -> TypeDesc.from(baseType, typeProperties)
-            else -> TODO()
-        }
-
-        return VarDescriptor(structType, storageClass)
+        val cType = TypeDesc.from(baseType, typeProperties)
+        return VarDescriptor(cType, storageClass)
     }
 }

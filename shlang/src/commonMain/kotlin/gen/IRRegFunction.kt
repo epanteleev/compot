@@ -836,6 +836,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (global != null) {
             return global
         }
+
+        val enumValue = typeHolder.findEnumByEnumerator(name)
+        if (enumValue != null) {
+            return Constant.of(Type.I32, enumValue)
+        }
+
         throw IRCodeGenError("Variable '$name' not found")
     }
 

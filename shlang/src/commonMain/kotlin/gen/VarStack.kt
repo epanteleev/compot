@@ -2,7 +2,7 @@ package gen
 
 import types.Scope
 
-class VarStack<V>: Scope {
+class VarStack<V>: Scope, Iterable<V> {
     private val stack = mutableListOf<MutableMap<String, V>>(hashMapOf())
 
     fun containsKey(name: String): Boolean {
@@ -34,5 +34,35 @@ class VarStack<V>: Scope {
             }
         }
         return null
+    }
+
+    override fun iterator(): Iterator<V> {
+        return VarStackIterator(stack)
+    }
+
+    private class VarStackIterator<V>(private val stack: List<MutableMap<String, V>>) : Iterator<V> {
+        private var index = 0
+        private var iterator: Iterator<V>? = null
+
+        override fun hasNext(): Boolean {
+            while (index < stack.size) {
+                if (iterator == null) {
+                    iterator = stack[index].values.iterator()
+                }
+                if (iterator!!.hasNext()) {
+                    return true
+                }
+                index++
+                iterator = null
+            }
+            return false
+        }
+
+        override fun next(): V {
+            if (!hasNext()) {
+                throw NoSuchElementException()
+            }
+            return iterator!!.next()
+        }
     }
 }

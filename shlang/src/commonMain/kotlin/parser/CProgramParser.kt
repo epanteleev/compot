@@ -820,7 +820,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
 
         if (check<Identifier>()) {
             val tok = peak<Identifier>()
-            if (typeHolder.getTypeOrNull(tok.str()) != null) {
+            if (typeHolder.getTypedefOrNull(tok.str()) != null) {
                 eat()
                 return@rule TypeNode(tok)
             }

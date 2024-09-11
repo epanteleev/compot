@@ -42,7 +42,6 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         if (declspec.isTypedef) {
             assertion(declspecType.storageClass == null) { "typedef with storage class is not supported" }
 
-            typeHolder.addNewType(name(), TypeDef(name(), type))
             typeHolder.addTypedef(name(), type)
             return@memoizeType VarDescriptor(type, declspecType.storageClass)
         }

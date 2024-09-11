@@ -59,8 +59,17 @@ object TypeConverter {
                 convertStructType(typeHolder, unionType)
             }
 
+            is UncompletedEnumType -> {
+                if (typeHolder.getTypedefOrNull(type.name) == null) {
+                    throw IRCodeGenError("Enum type not found, name=${type.name}")
+                }
+
+                Type.I32
+            }
+
             is UnionBaseType -> convertUnionType(typeHolder, type)
             is AnyCPointer -> Type.Ptr
+            is EnumBaseType -> Type.I32
             is CBaseFunctionType, is CUncompletedArrayBaseType, is AbstractCFunctionT -> Type.Ptr
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }

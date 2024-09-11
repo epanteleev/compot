@@ -159,9 +159,9 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): BaseType = memoize {
-        val leftType   = left.resolveType(typeHolder)
-        val rightType  = right.resolveType(typeHolder)
-        return@memoize TypeDesc.interfereTypes(leftType, rightType)
+        val leftType   = left.resolveType(typeHolder) as CPrimitive
+        val rightType  = right.resolveType(typeHolder) as CPrimitive
+        return@memoize leftType.interfere(rightType)
     }
 }
 
@@ -177,13 +177,13 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): BaseType = memoize {
-        val typeTrue   = eTrue.resolveType(typeHolder)
-        val typeFalse  = eFalse.resolveType(typeHolder)
+        val typeTrue   = eTrue.resolveType(typeHolder) as CPrimitive
+        val typeFalse  = eFalse.resolveType(typeHolder) as CPrimitive
         if (typeTrue == typeFalse && typeTrue == VOID) {
             return@memoize VOID
         }
 
-        return@memoize TypeDesc.interfereTypes(typeTrue, typeFalse)
+        return@memoize typeTrue.interfere(typeFalse)
     }
 }
 
@@ -349,7 +349,17 @@ data class VarNode(private val str: Identifier) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): BaseType = memoize {
-        return@memoize typeHolder[str.str()].type.baseType()
+        val varType = typeHolder.getVarTypeOrNull(str.str())
+        if (varType != null) {
+            return@memoize varType.type.baseType()
+        }
+
+        val enumType = typeHolder.findEnum(str.str())
+        if (enumType != null) {
+            return@memoize enumType
+        }
+
+        throw TypeResolutionException("Variable $str not found")
     }
 }
 

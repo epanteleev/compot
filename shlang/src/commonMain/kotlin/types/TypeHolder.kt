@@ -3,20 +3,56 @@ package types
 import gen.VarStack
 
 
-class TypeHolder(private val valueMap: VarStack<VarDescriptor>): Scope {
-    private val typeMap = VarStack<BaseType>()//TODO separate holder for struct, enum, union.
+class TypeHolder: Scope {
+    private val valueMap: VarStack<VarDescriptor> = VarStack<VarDescriptor>()
+    val enumTypeMap = VarStack<CPrimitive>()//TODO separate holder for struct, enum, union.
+    val structTypeMap = VarStack<AggregateBaseType>()
+    val unionTypeMap = VarStack<AggregateBaseType>()
+
     private val functions = hashMapOf<String, VarDescriptor>()
     private val typedefs = VarStack<TypeDesc>()
 
     operator fun get(varName: String): VarDescriptor {
-        return valueMap[varName] ?: functions[varName] ?: throw Exception("Type for variable '$varName' not found")
+        return getVarTypeOrNull(varName) ?: throw Exception("Type for variable '$varName' not found")
     }
 
-    fun getTypeOrNull(name: String): BaseType? {
-        return typeMap[name]
+    fun getVarTypeOrNull(varName: String): VarDescriptor? {
+        return valueMap[varName] ?: functions[varName]
     }
 
-    private fun getTypedefOrNull(name: String): TypeDesc? {
+    fun findEnumByEnumerator(name: String): Int? {
+        for (enumType in enumTypeMap) {
+            if (enumType !is EnumBaseType) {
+                continue
+            }
+            if (enumType.hasEnumerator(name)) {
+                return enumType.enumerator(name)
+            }
+        }
+        return null
+    }
+
+    fun findEnum(name: String): BaseType? {
+        for (enumType in enumTypeMap) {
+            if (enumType !is EnumBaseType) {
+                continue
+            }
+            if (enumType.hasEnumerator(name)) {
+                return enumType
+            }
+        }
+        return null
+    }
+
+    inline fun<reified T: BaseType> getTypeOrNull(name: String): BaseType? = when (T::class) {
+        EnumBaseType::class, UncompletedEnumType::class         -> enumTypeMap[name]
+        StructBaseType::class, UncompletedStructBaseType::class -> structTypeMap[name]
+        UnionBaseType::class, UncompletedUnionBaseType::class   -> unionTypeMap[name]
+        BaseType::class -> enumTypeMap[name] ?: structTypeMap[name] ?: unionTypeMap[name] as? T
+        else -> null
+    }
+
+    fun getTypedefOrNull(name: String): TypeDesc? {
         return typedefs[name]
     }
 
@@ -38,12 +74,17 @@ class TypeHolder(private val valueMap: VarStack<VarDescriptor>): Scope {
         return valueMap.containsKey(varName)
     }
 
-    fun getStructType(name: String): BaseType {
-        return getTypeOrNull(name) ?: throw Exception("Type for struct $name not found")
+    inline fun<reified T: BaseType> getStructType(name: String): BaseType {
+        return getTypeOrNull<T>(name) ?: throw Exception("Type for struct $name not found")
     }
 
-    fun <T : BaseType> addNewType(name: String, type: T): T {
-        typeMap[name] = type
+    inline fun <reified T : BaseType> addNewType(name: String, type: T): T {
+        when (type) {
+            is EnumBaseType, is UncompletedEnumType         -> enumTypeMap[name] = type
+            is StructBaseType, is UncompletedStructBaseType -> structTypeMap[name] = type
+            is UnionBaseType, is UncompletedUnionBaseType   -> unionTypeMap[name] = type
+            else -> throw RuntimeException("Unknown type $type")
+        }
         return type
     }
 
@@ -57,18 +98,22 @@ class TypeHolder(private val valueMap: VarStack<VarDescriptor>): Scope {
     }
 
     override fun enter() {
-        typeMap.enter()
+        enumTypeMap.enter()
+        structTypeMap.enter()
+        unionTypeMap.enter()
         valueMap.enter()
     }
 
     override fun leave() {
-        typeMap.leave()
         valueMap.leave()
+        unionTypeMap.leave()
+        structTypeMap.leave()
+        enumTypeMap.leave()
     }
 
     companion object {
         fun default(): TypeHolder {
-            return TypeHolder(VarStack<VarDescriptor>())
+            return TypeHolder()
         }
     }
 }

@@ -235,7 +235,7 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
-        assertEquals("struct point {int x;int y;}", typeResolver.getStructType("point").toString())
+        assertEquals("struct point {int x;int y;}", typeResolver.getStructType<StructBaseType>("point").toString())
     }
 
     @Test
@@ -245,7 +245,7 @@ class TypeResolutionTest {
         val expr = parser.declaration() as Declaration
         val typeResolver = parser.typeHolder()
         expr.specifyType(typeResolver)
-        assertEquals("struct point", typeResolver.getStructType("point").toString())
+        assertEquals("struct point", typeResolver.getStructType<StructBaseType>("point").toString())
     }
 
     @Test
@@ -362,7 +362,7 @@ class TypeResolutionTest {
         assertEquals("typedef struct tnode TNODE; struct tnode {int count; TNODE *left, *right;} ; TNODE s, *sp;", LineAgnosticAstPrinter.print(program))
 
         val typeHolder = parser.typeHolder()
-        assertEquals("struct tnode {int count;struct tnode* left;struct tnode* right;}", typeHolder.getStructType("tnode").toString())
+        assertEquals("struct tnode {int count;struct tnode* left;struct tnode* right;}", typeHolder.getStructType<StructBaseType>("tnode").toString())
     }
 
     // https://port70.net/~nsz/c/c11/n1570.html#6.7.3p12
@@ -377,7 +377,7 @@ class TypeResolutionTest {
 
         val program = parser.translation_unit()
         assertEquals("typedef int A[2][3]; const A a = {{4, 5, 6}, {7, 8, 9}};", LineAgnosticAstPrinter.print(program))
-        assertEquals("[2][3]int", parser.typeHolder().getTypeOrNull("A").toString())
+        assertEquals("[2][3]int", parser.typeHolder().getTypedef("A").toString())
     }
 
     @Test
@@ -392,9 +392,9 @@ class TypeResolutionTest {
         val program = parser.translation_unit()
         assertEquals("typedef struct s1 {int x;} t1, *tp1; typedef struct s2 {int x;} t2, *tp2;", LineAgnosticAstPrinter.print(program))
         val typeHolder = parser.typeHolder()
-        assertEquals("struct s1 {int x;}", typeHolder.getStructType("s1").toString())
-        assertEquals("struct s2 {int x;}", typeHolder.getStructType("s2").toString())
-        assertEquals("struct s1 {int x;}", typeHolder.getStructType("t1").toString())
+        assertEquals("struct s1 {int x;}", typeHolder.getStructType<StructBaseType>("s1").toString())
+        assertEquals("struct s2 {int x;}", typeHolder.getStructType<StructBaseType>("s2").toString())
+        assertEquals("struct s1 {int x;}", typeHolder.getTypedef("t1").toString())
         assertTrue { typeHolder.getTypedef("tp1").baseType() is CPointerT }
     }
 

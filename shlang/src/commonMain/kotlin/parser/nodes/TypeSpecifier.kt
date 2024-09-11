@@ -31,7 +31,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
             }
         }
 
-        return@memoizeType typeBuilder.build(typeHolder)
+        return@memoizeType typeBuilder.build()
     }
 
     override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor {
@@ -46,7 +46,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
             pointerType = CPointerT(pointerType, pointer.property().toSet())
         }
 
-        return VarDescriptor(TypeDesc.from(CPointerT(pointerType), type.type.properties), type.storageClass)
+        return VarDescriptor(TypeDesc.from(CPointerT(pointerType), type.type.qualifiers()), type.storageClass)
     }
 
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
