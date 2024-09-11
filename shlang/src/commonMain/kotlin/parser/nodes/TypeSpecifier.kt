@@ -46,7 +46,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
             pointerType = CPointerT(pointerType, pointer.property().toSet())
         }
 
-        return VarDescriptor(CPointerType(CPointerT(pointerType), type.type.properties), type.storageClass)
+        return VarDescriptor(TypeDesc.from(CPointerT(pointerType), type.type.properties), type.storageClass)
     }
 
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
@@ -61,6 +61,6 @@ data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: Abst
             return specifierType
         }
 
-        return VarDescriptor(abstractDecl.resolveType(specifierType.type, typeHolder), specifierType.storageClass)
+        return VarDescriptor(abstractDecl.resolveType(specifierType.type), specifierType.storageClass)
     }
 }

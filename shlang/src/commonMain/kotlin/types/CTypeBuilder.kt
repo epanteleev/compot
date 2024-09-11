@@ -73,19 +73,19 @@ class CTypeBuilder {
         }
 
         if (baseType is CPrimitive) {
-            val cType = CPrimitiveType(baseType, typeProperties)
+            val cType = TypeDesc.from(baseType, typeProperties)
             return VarDescriptor(cType, storageClass)
         }
 
         val structType = when (baseType) {
-            is StructBaseType            -> typeHolder.addTypedef(baseType.name, CStructType(baseType, typeProperties))
-            is UnionBaseType             -> typeHolder.addTypedef(baseType.name, CUnionType(baseType, typeProperties))
-            is UncompletedStructBaseType -> CUncompletedStructType(baseType, typeProperties)
-            is UncompletedUnionBaseType  -> CUncompletedUnionType(baseType, typeProperties)
-            is CArrayBaseType            -> CArrayType(baseType, typeProperties)
+            is StructBaseType            -> typeHolder.addTypedef(baseType.name, TypeDesc.from(baseType, typeProperties))
+            is UnionBaseType             -> typeHolder.addTypedef(baseType.name, TypeDesc.from(baseType, typeProperties))
+            is UncompletedStructBaseType -> TypeDesc.from(baseType, typeProperties)
+            is UncompletedUnionBaseType  -> TypeDesc.from(baseType, typeProperties)
+            is CArrayBaseType            -> TypeDesc.from(baseType, typeProperties)
             is CUncompletedArrayBaseType      -> TODO()
-            is EnumBaseType              -> CEnumType(baseType, typeProperties)
-            is UncompletedEnumType       -> CUncompletedEnumType(baseType, typeProperties)
+            is EnumBaseType              -> TypeDesc.from(baseType, typeProperties)
+            is UncompletedEnumType       -> TypeDesc.from(baseType, typeProperties)
             else -> TODO()
         }
 

@@ -18,23 +18,13 @@ sealed class UnclassifiedNode : Node() {
 data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<DirectDeclaratorParam>?) : UnclassifiedNode() {   //TODO
     override fun<T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 
-    fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
-        var pointerType = baseType
+    fun resolveType(baseType: TypeDesc): TypeDesc {
+        var pointerType = baseType.baseType()
         for (pointer in pointers) {
-            pointerType = CPointerType(CPointerT(pointerType.baseType(), pointerType.properties.toSet()), pointer.property())
+            pointerType = CPointerT(pointerType, pointer.property().toSet())
         }
 
-        if (directAbstractDeclarator == null) {
-            return pointerType
-        }
-
-        for (decl in directAbstractDeclarator) {
-            when (decl) {
-                is ArrayDeclarator -> decl.resolveType(pointerType, typeHolder)
-                else -> throw IllegalStateException("Unknown declarator $decl")
-            }
-        }
-        return pointerType
+        return TypeDesc.from(pointerType)
     }
 }
 
@@ -86,7 +76,7 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
         is FunctionPointerDeclarator -> {
             val fnDecl = directDeclaratorParams[0] as ParameterTypeList
             val type = fnDecl.resolveType(baseType, typeHolder)
-            CFunPointerType(CFunPointerT(type.baseType, emptySet()))
+            TypeDesc.from(CFunPointerT(type.baseType, emptySet()))
         }
         is DirectVarDeclarator -> resolveAllDecl(baseType, typeHolder)
     }

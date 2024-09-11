@@ -81,14 +81,14 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                 // int a[] = {1, 2};
                 // 'a' is array of 2 elements, not pointer to int
 
-                val rvalueType = CArrayType(CArrayBaseType(type.element(), rvalue.length().toLong()), listOf())
+                val rvalueType = TypeDesc.from(CArrayBaseType(type.element(), rvalue.length().toLong()), listOf())
                 return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
             }
             is StringNode -> {
                 // Special case for string initialization like:
                 // char a[] = "hello";
                 val rvalueType = rvalue.resolveType(typeHolder)
-                return@memoizeType typeHolder.addVar(name(), VarDescriptor(CPointerType(rvalueType), declspecType.storageClass))
+                return@memoizeType typeHolder.addVar(name(), VarDescriptor(TypeDesc.from(rvalueType), declspecType.storageClass))
             }
             else -> throw TypeResolutionException("Array size is not specified")
         }

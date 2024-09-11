@@ -102,7 +102,7 @@ class TypeResolutionTest {
         assertTrue { typeResolver.containsVar("p") }
         assertEquals(INT, typeResolver["a"].type.baseType())
         assertEquals(INT, typeResolver["v"].type.baseType())
-        assertEquals(CPointerType(CPointerT(INT)), typeResolver["p"].type)
+        assertEquals(CPointerT(INT), typeResolver["p"].type.baseType())
     }
 
     @Test
@@ -395,7 +395,7 @@ class TypeResolutionTest {
         assertEquals("struct s1 {int x;}", typeHolder.getStructType("s1").toString())
         assertEquals("struct s2 {int x;}", typeHolder.getStructType("s2").toString())
         assertEquals("struct s1 {int x;}", typeHolder.getStructType("t1").toString())
-        assertTrue { typeHolder.getTypedef("tp1") is CPointerType }
+        assertTrue { typeHolder.getTypedef("tp1").baseType() is CPointerT }
     }
 
     @Test

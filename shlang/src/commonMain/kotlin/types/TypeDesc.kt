@@ -170,20 +170,21 @@ sealed class TypeDesc(val properties: List<TypeQualifier>) {
             throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
         }
 
-        fun from(baseType: BaseType): TypeDesc = when (baseType) {
-            is CPointerT -> CPointerType(baseType)
-            is CPrimitive -> CPrimitiveType(baseType)
-            is CArrayBaseType -> CArrayType(baseType)
-            is CUncompletedArrayBaseType -> UncompletedArrayType(baseType)
-            is AbstractCFunctionT -> AbstractCFunctionType(baseType, arrayListOf())
-            is StructBaseType -> CStructType(baseType)
-            is UnionBaseType -> CUnionType(baseType)
-            is UncompletedStructBaseType -> CUncompletedStructType(baseType)
-            is UncompletedUnionBaseType -> CUncompletedUnionType(baseType)
+        fun from(baseType: BaseType, properties: List<TypeQualifier> = arrayListOf()): TypeDesc = when (baseType) {
+            is CPointerT -> CPointerType(baseType, properties)
+            is CFunPointerT -> CFunPointerType(baseType, properties)
+            is CPrimitive -> CPrimitiveType(baseType, properties)
+            is CArrayBaseType -> CArrayType(baseType, properties)
+            is CUncompletedArrayBaseType -> UncompletedArrayType(baseType, properties)
+            is AbstractCFunctionT -> AbstractCFunctionType(baseType, properties)
+            is StructBaseType -> CStructType(baseType, properties)
+            is UnionBaseType -> CUnionType(baseType, properties)
+            is UncompletedStructBaseType -> CUncompletedStructType(baseType, properties)
+            is UncompletedUnionBaseType -> CUncompletedUnionType(baseType, properties)
             is EnumBaseType -> CEnumType(baseType)
-            is UncompletedEnumType -> CUncompletedEnumType(baseType)
+            is UncompletedEnumType -> CUncompletedEnumType(baseType, properties)
             is TypeDef -> TODO()
-            is CBaseFunctionType -> CFunctionType(baseType)
+            is CBaseFunctionType -> CFunctionType(baseType, properties)
         }
     }
 }
