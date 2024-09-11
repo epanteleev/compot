@@ -337,7 +337,7 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
             throw TypeResolutionException("Arrow member access on non-pointer type, but got $structType")
         }
         val baseType = structType.dereference()
-        if (baseType !is CBaseStructType) {
+        if (baseType !is AnyStructType) {
             throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType")
         }
         val field = baseType.fieldIndex(ident.str())
@@ -363,7 +363,7 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CPointerT = memoize {
-        return@memoize CPointerT(TypeDesc.CCHAR) //ToDO restrict?????
+        return@memoize CPointerT(CHAR) //ToDO restrict?????
     }
 
     fun data(): String = if (literals.size == 1) {
@@ -412,7 +412,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
         val resolvedType = when (opType) {
             PrefixUnaryOpType.DEREF -> {
                 when (primaryType) {
-                    is CPointerT -> primaryType.dereference().baseType()
+                    is CPointerT -> primaryType.dereference()
                     is CFunPointerT -> primaryType.functionType
                     is CArrayBaseType      -> primaryType.type.baseType()
                     is CUncompletedArrayBaseType -> primaryType.elementType.baseType()
@@ -420,7 +420,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 }
             }
             PrefixUnaryOpType.ADDRESS -> {
-                CPointerT(TypeDesc.from(primaryType))
+                CPointerT(primaryType)
             }
             PrefixUnaryOpType.NOT -> {
                 if (primaryType is CPointerT) {
@@ -461,7 +461,7 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
         return@memoize when (val primaryType = primary.resolveType(typeHolder)) {
             is CArrayBaseType -> primaryType.type.baseType()
             is CUncompletedArrayBaseType -> primaryType.elementType.baseType()
-            is CPointerT     -> primaryType.dereference().baseType()
+            is CPointerT     -> primaryType.dereference()
             else -> throw TypeResolutionException("Array access on non-array type")
         }
     }

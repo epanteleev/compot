@@ -2,21 +2,25 @@ package types
 
 import common.assertion
 
+
 class CTypeBuilder {
     private val typeProperties = mutableListOf<TypeQualifier>()
     private val baseTypes = mutableListOf<BaseType>()
     private var storageClass: StorageClass? = null
 
-    fun add(property: TypeProperty) = when (property) {
-        is BaseType -> baseTypes.add(property)
-        is StorageClass -> {
-            assertion(storageClass == null) {
-                "Multiple storage classes are not allowed: $storageClass, $property"
+    fun add(property: TypeProperty) {
+        when (property) {
+            is BaseType -> baseTypes.add(property)
+            is StorageClass -> {
+                assertion(storageClass == null) {
+                    "Multiple storage classes are not allowed: $storageClass, $property"
+                }
+                storageClass = property
             }
-            storageClass = property
+
+            is TypeQualifier -> typeProperties.add(property)
+            is FunctionSpecifier -> TODO()
         }
-        is TypeQualifier -> typeProperties.add(property)
-        is FunctionSpecifier -> TODO()
     }
 
     private fun check(baseTypes: List<BaseType>, vararg types: CPrimitive): Boolean {

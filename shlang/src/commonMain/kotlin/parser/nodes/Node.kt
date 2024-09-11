@@ -21,7 +21,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
     fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         var pointerType = baseType
         for (pointer in pointers) {
-            pointerType = CPointerType(CPointerT(pointerType), pointer.property())
+            pointerType = CPointerType(CPointerT(pointerType.baseType(), pointerType.properties.toSet()), pointer.property())
         }
 
         if (directAbstractDeclarator == null) {

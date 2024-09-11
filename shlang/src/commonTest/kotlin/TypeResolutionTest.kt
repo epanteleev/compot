@@ -71,7 +71,7 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
-        assertEquals(TypeDesc.CINT, typeResolver["a"].type)
+        assertEquals(INT, typeResolver["a"].type.baseType())
     }
 
     @Test
@@ -83,8 +83,8 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
-        assertEquals(TypeDesc.CINT, typeResolver["a"].type)
-        assertEquals(TypeDesc.CINT, typeResolver["v"].type)
+        assertEquals(INT, typeResolver["a"].type.baseType())
+        assertEquals(INT, typeResolver["v"].type.baseType())
     }
 
     @Test
@@ -100,9 +100,9 @@ class TypeResolutionTest {
         assertTrue { typeResolver.containsVar("a") }
         assertTrue { typeResolver.containsVar("v") }
         assertTrue { typeResolver.containsVar("p") }
-        assertEquals(TypeDesc.CINT, typeResolver["a"].type)
-        assertEquals(TypeDesc.CINT, typeResolver["v"].type)
-        assertEquals(CPointerType(CPointerT(TypeDesc.CINT)), typeResolver["p"].type)
+        assertEquals(INT, typeResolver["a"].type.baseType())
+        assertEquals(INT, typeResolver["v"].type.baseType())
+        assertEquals(CPointerType(CPointerT(INT)), typeResolver["p"].type)
     }
 
     @Test
@@ -141,8 +141,8 @@ class TypeResolutionTest {
         val fnType = expr.resolveType(typeResolver)
 
         assertEquals("int add(int, int)", fnType.toString())
-        assertEquals(TypeDesc.CINT, typeResolver["a"].type)
-        assertEquals(TypeDesc.CINT, typeResolver["b"].type)
+        assertEquals(INT, typeResolver["a"].type.baseType())
+        assertEquals(INT, typeResolver["b"].type.baseType())
     }
 
     @Test
@@ -166,7 +166,7 @@ class TypeResolutionTest {
 
         assertEquals("int add(int(*)(int, int), int)", fnType.toString())
         assertEquals("int(*)(int, int)", typeResolver["a"].toString())
-        assertEquals(TypeDesc.CINT, typeResolver["b"].type)
+        assertEquals(INT, typeResolver["b"].type.baseType())
     }
 
     @Test
@@ -185,7 +185,6 @@ class TypeResolutionTest {
         val tokens = CTokenizer.apply("int (*add)(int, int) = 0;")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
@@ -197,7 +196,6 @@ class TypeResolutionTest {
         val tokens = CTokenizer.apply("int (*add)(int, int);")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
@@ -233,7 +231,7 @@ class TypeResolutionTest {
         val tokens = CTokenizer.apply("struct point { int x; int y; };")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        println(expr)
+
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
@@ -255,7 +253,7 @@ class TypeResolutionTest {
         val tokens = CTokenizer.apply("int a[10];")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        println(expr)
+
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
@@ -268,7 +266,7 @@ class TypeResolutionTest {
         val tokens = CTokenizer.apply("int a[5 + 5];")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        println(expr)
+
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
@@ -281,7 +279,7 @@ class TypeResolutionTest {
         val tokens = CTokenizer.apply("int a[10], b[20];")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        println(expr)
+
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
@@ -296,7 +294,7 @@ class TypeResolutionTest {
         val tokens = CTokenizer.apply("int a[10], b[20], *c = 0;")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        println(expr)
+
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
@@ -313,7 +311,7 @@ class TypeResolutionTest {
         val tokens = CTokenizer.apply("int a[10][30];")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        println(expr)
+
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
@@ -342,7 +340,7 @@ class TypeResolutionTest {
         expr.specifyType(typeResolver)
 
         val a = typeResolver["a"]
-        assertEquals(TypeDesc.CUINT, a.type)
+        assertEquals(UINT, a.type.baseType())
     }
 
     // https://port70.net/~nsz/c/c11/n1570.html#6.7.2.3p11

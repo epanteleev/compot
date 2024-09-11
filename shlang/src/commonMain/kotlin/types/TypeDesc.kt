@@ -14,19 +14,6 @@ sealed class TypeDesc(val properties: List<TypeQualifier>) {
     abstract fun copyWith(extraProperties: List<TypeQualifier>): TypeDesc
 
     companion object {
-        val CINT = CPrimitiveType(INT)
-        val CCHAR = CPrimitiveType(CHAR)
-        val CVOID = CPrimitiveType(VOID)
-        val CFLOAT = CPrimitiveType(FLOAT)
-        val CDOUBLE = CPrimitiveType(DOUBLE)
-        val CLONG = CPrimitiveType(LONG)
-        val CSHORT = CPrimitiveType(SHORT)
-        val CUINT = CPrimitiveType(UINT)
-        val CUSHORT = CPrimitiveType(USHORT)
-        val CUCHAR = CPrimitiveType(UCHAR)
-        val CULONG = CPrimitiveType(ULONG)
-        val CBOOL = CPrimitiveType(BOOL)
-
         fun interfereTypes(type1: BaseType, type2: BaseType): BaseType {
             if (type1 == type2) return type1
             when (type1) {
@@ -170,8 +157,8 @@ sealed class TypeDesc(val properties: List<TypeQualifier>) {
                         LONG -> return type1
                         is CPointerT -> {
                             if (type1.type == type2.type) return type1
-                            if (type1.dereference() == CVOID) return type1
-                            if (type2.dereference() == CVOID) return type2
+                            if (type1.dereference() == VOID) return type1
+                            if (type2.dereference() == VOID) return type2
                         }
                         ULONG -> return type1
                         else -> throw TypeInferenceException("Can't interfere types '$type1' and '$type2'")
@@ -204,15 +191,18 @@ sealed class TypeDesc(val properties: List<TypeQualifier>) {
 sealed class AnyCPointerType(properties: List<TypeQualifier>): TypeDesc(properties) {
     override fun size(): Int = POINTER_SIZE
 
-    abstract fun dereference(): TypeDesc
+    abstract fun dereference(): BaseType
 }
 
 class CPointerType(val type: CPointerT, properties: List<TypeQualifier> = listOf()) : AnyCPointerType(properties) {
     override fun qualifiers(): List<TypeQualifier> = properties
     override fun baseType(): BaseType = type
-    override fun dereference(): TypeDesc = type.dereference()
+    override fun dereference(): BaseType = type.dereference()
 
-    override fun toString(): String = type.toString()
+    override fun toString(): String = buildString {
+        properties.forEach { append("$it ") }
+        append(type)
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -241,7 +231,7 @@ class CFunPointerType(val type: CFunPointerT, properties: List<TypeQualifier> = 
     fun args() = type.functionType.argsTypes
     fun isVariadic() = type.functionType.variadic
 
-    override fun dereference(): TypeDesc = AbstractCFunctionType(type.functionType, arrayListOf())
+    override fun dereference(): BaseType = type.functionType
 
     override fun copyWith(extraProperties: List<TypeQualifier>): CFunPointerType {
         return CFunPointerType(type, properties + extraProperties)

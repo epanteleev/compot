@@ -174,9 +174,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
         val struct       = visitExpression(arrowMemberAccess.primary, true)
         val structType   = arrowMemberAccess.primary.resolveType(typeHolder) as CPointerT
-        val structIRType = mb.toIRType<StructType>(typeHolder, structType.dereference().baseType())
+        val structIRType = mb.toIRType<StructType>(typeHolder, structType.dereference())
 
-        val baseStructType = structType.dereference() as CBaseStructType
+        val baseStructType = structType.dereference() as AnyStructType
         val member = baseStructType.fieldIndex(arrowMemberAccess.ident.str())
 
         val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, member))
@@ -322,13 +322,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val convertedArgs = convertFunctionArgs(prototype, funcPointerCall.args)
 
         val cont = ir.createLabel()
-        val ret = when (functionType.functionType.retType) {
-            TypeDesc.CVOID -> {
+        val ret = when (functionType.functionType.retType.baseType()) {
+            VOID -> {
                 ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 Value.UNDEF
             }
-            is CPrimitiveType, is CPointerType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
-            is CStructType -> when (prototype.returnType()) {
+            is CPrimitive, is CPointerT -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
+            is StructBaseType -> when (prototype.returnType()) {
                 is PrimitiveType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 //is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
                 is StructType    -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
@@ -933,7 +933,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun emitReturnType(retCType: TypeDesc) {
         exitBlock = ir.createLabel()
-        if (retCType == TypeDesc.CVOID) {
+        if (retCType.baseType() == VOID) {
             ir.switchLabel(exitBlock)
             ir.retVoid()
             return

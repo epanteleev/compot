@@ -72,22 +72,17 @@ object BOOL: CPrimitive() {
     override fun size(): Int = 1
 }
 
-object UNKNOWN: CPrimitive() {
-    override fun typename(): String = "<unknown>"
-    override fun size(): Int = 0
-}
-
 sealed class AnyCPointer: CPrimitive() {
     override fun size(): Int = POINTER_SIZE //TODO must be imported from x64 module
 
     abstract fun qualifiers(): Set<TypeQualifier>
-    abstract fun dereference(): TypeDesc
+    abstract fun dereference(): BaseType
 }
 
-class CPointerT(val type: TypeDesc, private val properties: Set<TypeQualifier> = setOf()) : AnyCPointer() {
+class CPointerT(val type: BaseType, private val properties: Set<TypeQualifier> = setOf()) : AnyCPointer() {
     override fun qualifiers(): Set<TypeQualifier> = properties
 
-    override fun dereference(): TypeDesc = type
+    override fun dereference(): BaseType = type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -104,6 +99,7 @@ class CPointerT(val type: TypeDesc, private val properties: Set<TypeQualifier> =
 
     override fun typename(): String {
         return buildString {
+            properties.forEach { append(it) }
             append(type)
             append("*")
         }
@@ -143,7 +139,7 @@ data class CBaseFunctionType(val name: String, val functionType: AbstractCFuncti
 class CFunPointerT(val functionType: AbstractCFunctionT, private val properties: Set<TypeQualifier>) : AnyCPointer() {
     override fun qualifiers(): Set<TypeQualifier> = properties
 
-    override fun dereference(): TypeDesc = functionType.retType
+    override fun dereference(): BaseType = functionType.retType.baseType()
     override fun typename(): String = buildString {
         append(functionType.retType)
         append("(*)(")
@@ -232,7 +228,7 @@ data class EnumBaseType(val name: String): BaseType {
     override fun typename(): String = name
 
     override fun size(): Int {
-        return TypeDesc.CINT.size()
+        return INT.size()
     }
 
     fun addEnumeration(name: String) {
