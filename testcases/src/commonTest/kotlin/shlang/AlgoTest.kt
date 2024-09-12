@@ -99,6 +99,13 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
+    fun testRot13_2() {
+        val result = runCTest("shlang/algo/rot-13", listOf(), options())
+        assertEquals("ROT-13 tests: SUCCEEDED\n", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
     fun testAffineCipher() {
         val result = runCTest("shlang/algo/affine", listOf(), options())
         assertEquals("All tests have successfully passed!\n", result.output)

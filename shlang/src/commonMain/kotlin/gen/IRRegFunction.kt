@@ -179,14 +179,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val right = visitExpression(conditional.eTrue, true)
                 val convertedRight = ir.convertToType(right, commonType)
 
+                val trueBBCurrent = ir.currentLabel()
                 ir.branch(end)
                 ir.switchLabel(falseBB)
 
                 val left = visitExpression(conditional.eFalse, true)
                 val convertedLeft = ir.convertToType(left, commonType)
+
+                val falseBBCurrent = ir.currentLabel()
                 ir.branch(end)
                 ir.switchLabel(end)
-                return ir.phi(listOf(convertedRight, convertedLeft), listOf(trueBB, falseBB))
+                return ir.phi(listOf(convertedRight, convertedLeft), listOf(trueBBCurrent, falseBBCurrent))
             }
             else -> throw IRCodeGenError("Unknown type: $commonType")
         }
@@ -568,7 +571,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 val right = visitExpression(binop.right, true)
                 val convertedRight = ir.convertToType(right, Type.U8)
-                assertion(right.type() == Type.U1) { "expects"}
 
                 val current = ir.currentLabel()
                 ir.branch(end)
@@ -588,7 +590,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 val right = visitExpression(binop.right, true)
                 val convertedRight = ir.convertToType(right, Type.U8)
-                assertion(right.type() == Type.U1) { "expects"}
 
                 val current = ir.currentLabel()
                 ir.branch(end)
@@ -1269,7 +1270,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         stmtStack.scoped(LoopStmtInfo()) { loopStmtInfo ->
             visitInit(forStatement.init)
 
-            val conditionBlock = ir.createLabel()
+            val conditionBlock = loopStmtInfo.resolveCondition(ir)
             ir.branch(conditionBlock)
             ir.switchLabel(conditionBlock)
             val condition = makeConditionFromExpression(forStatement.condition)
