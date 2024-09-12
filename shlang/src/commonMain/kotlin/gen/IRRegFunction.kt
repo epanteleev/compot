@@ -140,34 +140,55 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitConditional(conditional: Conditional): Value {
-        val commonType = mb.toIRType<Type>(typeHolder, conditional.resolveType(typeHolder))
-        if (commonType == Type.Void) {
-            val condition = makeConditionFromExpression(conditional.cond)
-            val thenBlock = ir.createLabel()
-            val elseBlock = ir.createLabel()
-            val exitBlock = ir.createLabel()
+        when (val commonType = mb.toIRType<Type>(typeHolder, conditional.resolveType(typeHolder))) {
+            Type.Void -> {
+                val condition = makeConditionFromExpression(conditional.cond)
+                val thenBlock = ir.createLabel()
+                val elseBlock = ir.createLabel()
+                val exitBlock = ir.createLabel()
 
-            ir.branchCond(condition, thenBlock, elseBlock)
-            ir.switchLabel(thenBlock)
-            visitExpression(conditional.eTrue, true)
-            ir.branch(exitBlock)
+                ir.branchCond(condition, thenBlock, elseBlock)
+                ir.switchLabel(thenBlock)
+                visitExpression(conditional.eTrue, true)
+                ir.branch(exitBlock)
 
-            ir.switchLabel(elseBlock)
-            visitExpression(conditional.eFalse, true)
-            ir.branch(exitBlock)
+                ir.switchLabel(elseBlock)
+                visitExpression(conditional.eFalse, true)
+                ir.branch(exitBlock)
 
-            ir.switchLabel(exitBlock)
-            return Value.UNDEF
+                ir.switchLabel(exitBlock)
+                return Value.UNDEF
+            }
+            is IntegerType -> { // TODO: pointer type also can be here
+                val onTrue    = visitExpression(conditional.eTrue, true)
+                val onFalse   = visitExpression(conditional.eFalse, true)
+                val condition = makeConditionFromExpression(conditional.cond)
+                val onTrueConverted = ir.convertToType(onTrue, commonType)
+                val onFalseConverted = ir.convertToType(onFalse, commonType)
+                return ir.select(condition, commonType, onTrueConverted, onFalseConverted)
+            }
+            is NonTrivialType -> {
+                val condition = makeConditionFromExpression(conditional.cond)
 
-        } else {
-            //TODO 'if else' pattern????
-            val onTrue    = visitExpression(conditional.eTrue, true)
-            val onFalse   = visitExpression(conditional.eFalse, true)
-            val condition = makeConditionFromExpression(conditional.cond)
-            commonType as IntegerType //TODO
-            val onTrueConverted = ir.convertToType(onTrue, commonType)
-            val onFalseConverted = ir.convertToType(onFalse, commonType)
-            return ir.select(condition, commonType, onTrueConverted, onFalseConverted)
+                val trueBB = ir.createLabel()
+                val falseBB = ir.createLabel()
+                val end = ir.createLabel()
+                ir.branchCond(condition, trueBB, falseBB)
+                ir.switchLabel(trueBB)
+
+                val right = visitExpression(conditional.eTrue, true)
+                val convertedRight = ir.convertToType(right, commonType)
+
+                ir.branch(end)
+                ir.switchLabel(falseBB)
+
+                val left = visitExpression(conditional.eFalse, true)
+                val convertedLeft = ir.convertToType(left, commonType)
+                ir.branch(end)
+                ir.switchLabel(end)
+                return ir.phi(listOf(convertedRight, convertedLeft), listOf(trueBB, falseBB))
+            }
+            else -> throw IRCodeGenError("Unknown type: $commonType")
         }
     }
 
@@ -969,18 +990,20 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun irReturnType(retType: TypeDesc): Type = when (retType.baseType()) {
-        is CPrimitive -> mb.toIRType<Type>(typeHolder, retType.baseType())
-        is StructBaseType -> {
-            val structType = mb.toIRType<StructType>(typeHolder, retType.baseType())
-            val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
-            if (list.size == 1) {
-                list[0]
-            } else {
-                TupleType(list.toTypedArray())
+    private fun irReturnType(retType: TypeDesc): Type {
+        return when (retType.baseType()) {
+            is CPrimitive -> mb.toIRType<Type>(typeHolder, retType.baseType())
+            is StructBaseType -> {
+                val structType = mb.toIRType<StructType>(typeHolder, retType.baseType())
+                val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
+                if (list.size == 1) {
+                    list[0]
+                } else {
+                    TupleType(list.toTypedArray())
+                }
             }
+            else -> throw IRCodeGenError("Unknown return type, type=$retType")
         }
-        else -> throw IRCodeGenError("Unknown return type, type=$retType")
     }
 
     override fun visit(functionNode: FunctionNode): Value = scoped {
@@ -1221,11 +1244,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitInit(init: Node) = when (init) {
-        is Declaration    -> visitDeclaration(init)
-        is ExprStatement  -> visit(init)
-        is EmptyStatement -> {}
-        else -> throw IRCodeGenError("Unknown init statement, init=$init")
+    private fun visitInit(init: Node) {
+        when (init) {
+            is Declaration -> visitDeclaration(init)
+            is ExprStatement -> visit(init)
+            is EmptyStatement, is DummyNode -> {}
+            else -> throw IRCodeGenError("Unknown init statement, init=$init")
+        }
     }
 
     private fun visitUpdate(update: Expression) {

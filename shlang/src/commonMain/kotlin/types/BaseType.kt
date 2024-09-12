@@ -392,8 +392,7 @@ data class UnionBaseType(override val name: String): AnyStructType(name) {
     }
 }
 
-data class EnumBaseType(val name: String): CPrimitive() {
-    private val enumerators = mutableListOf<String>()
+data class EnumBaseType(val name: String, private val enumerators: Map<String, Int>): CPrimitive() {
     override fun typename(): String = name
 
     override fun size(): Int {
@@ -404,12 +403,8 @@ data class EnumBaseType(val name: String): CPrimitive() {
         return enumerators.contains(name)
     }
 
-    fun enumerator(name: String): Int {
-        return enumerators.indexOf(name) //TODO temporal
-    }
-
-    fun addEnumeration(name: String) {
-        enumerators.add(name)
+    fun enumerator(name: String): Int? {
+        return enumerators[name] //TODO temporal
     }
 }
 

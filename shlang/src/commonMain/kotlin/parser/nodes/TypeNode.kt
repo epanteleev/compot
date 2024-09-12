@@ -1,5 +1,8 @@
 package parser.nodes
 
+import gen.consteval.CommonConstEvalContext
+import gen.consteval.ConstEvalExpression
+import gen.consteval.ConstEvalExpressionInt
 import types.*
 import tokenizer.CToken
 import tokenizer.Keyword
@@ -153,12 +156,19 @@ data class EnumSpecifier(private val name: Identifier, val enumerators: List<Enu
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        val enumBaseType = EnumBaseType(name.str())
+        val enumeratorValues = hashMapOf<String, Int>()
+        var enumValue = 0
         for (field in enumerators) {
-            enumBaseType.addEnumeration(field.name())
+            val constExpression = field.constExpr
+            if (constExpression !is EmptyExpression) {
+                val ctx = CommonConstEvalContext<Int>(typeHolder)
+                enumValue = ConstEvalExpression.eval(constExpression, ConstEvalExpressionInt(ctx))
+            }
+            enumeratorValues[field.name()] = enumValue
+            enumValue++
         }
 
-        return@addToBuilder typeHolder.addNewType(name.str(), enumBaseType)
+        return@addToBuilder typeHolder.addNewType(name.str(), EnumBaseType(name.str(), enumeratorValues))
     }
 
     override fun name(): String = name.str()

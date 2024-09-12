@@ -65,7 +65,7 @@ void test_c_atoi()
     int result = c_atoi("123");
     assert(result == atoi("123"));
     assert(c_atoi("-123") == atoi("-123"));
-    //assert(c_atoi("") == atoi(""));
+    assert(c_atoi("") == atoi(""));
     assert(c_atoi("-h23") == atoi("-h23"));
     assert(c_atoi("         23") == atoi("         23"));
     assert(c_atoi("999999999") == atoi("999999999"));

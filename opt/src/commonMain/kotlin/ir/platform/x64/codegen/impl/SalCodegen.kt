@@ -1,6 +1,7 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
+import ir.platform.x64.CallConvention.temp1
 import ir.types.*
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
@@ -90,11 +91,23 @@ class SalCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.sal(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.sal(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.sal(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.sal(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {

@@ -52,10 +52,7 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("%${name()} = call $tp ${pointer()}(")
-        arguments().joinTo(builder) {
-            "$it:${it.type()}"
-        }
-        builder.append(")")
+        printArguments(builder)
         return builder.toString()
     }
 

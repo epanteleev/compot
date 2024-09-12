@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 int main() {
 	int x = 50;
 	int j;
@@ -5,5 +7,6 @@ int main() {
 		x = x - 1;
 		j++;
 	}
+	printf("Success");
 	return j;
 }

@@ -18,6 +18,26 @@ interface Callable {
 
     fun type(): Type
 
+    fun printArguments(builder: StringBuilder) {
+        builder.append("(")
+        var count = 0
+        prototype().arguments().forEachWith(arguments()) { expectedType, arg, i ->
+            builder.append("$arg:${expectedType}")
+            if (i != arguments().size - 1) {
+                builder.append(", ")
+            }
+            count++
+        }
+
+        for (i in count until arguments().size) {
+            builder.append("${arguments()[i]}:${arguments()[i].type()}")
+            if (i != arguments().size - 1) {
+                builder.append(", ")
+            }
+        }
+        builder.append(") bt label %${target()}")
+    }
+
     companion object {
         internal fun isAppropriateTypes(func: AnyFunctionPrototype, args: List<Value>): Boolean {
             func.arguments().forEachWith(args) { expectedType, value ->

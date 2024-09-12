@@ -32,9 +32,8 @@ class TupleCall private constructor(id: Identity, owner: Block, private val func
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%${name()} = call $tp @${func.name}(")
-        operands.joinTo(builder) { "$it:${it.type()}"}
-        builder.append(") bt label %${target()}")
+        builder.append("%${name()} = call $tp @${func.name}")
+        printArguments(builder)
         return builder.toString()
     }
 

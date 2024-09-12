@@ -33,9 +33,8 @@ class VoidCall private constructor(id: Identity, owner: Block, private val func:
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("call ${Type.Void} @${func.name}(")
-        operands.joinTo(builder) { "$it:${it.type()}"}
-        builder.append(") br label ${target()}")
+        builder.append("call ${Type.Void} @${func.name}")
+        printArguments(builder)
         return builder.toString()
     }
 

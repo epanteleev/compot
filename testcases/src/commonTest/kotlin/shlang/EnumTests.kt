@@ -10,6 +10,12 @@ abstract class EnumTests: CommonCTest() {
         val result = runCTest("shlang/enum/enum1", listOf(), options())
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun test2() {
+        val result = runCTest("shlang/enum/enum2", listOf(), options())
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class EnumTestsO0: EnumTests() {

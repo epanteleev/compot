@@ -211,6 +211,8 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     // <iteration-statement> ::= while ( <expression> ) <statement>
     //                        | do <statement> while ( <expression> ) ;
     //                        | for ( {<expression>}? ; {<expression>}? ; {<expression>}? ) <statement>
+    //                        | for ( <declaration> {<expression>}? ; {<expression>}? ) <statement>
+    //                        ;
     fun iteration_statement(): Statement? = rule {
         if (check("while")) {
             eat()
@@ -260,28 +262,18 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val init = declaration() ?: expression_statement() ?: DummyNode
 
-            val condition = if (!check(";")) {
-                expression() ?: throw ParserException(InvalidToken("Expected expression", peak()))
-            } else {
-                EmptyExpression
-            }
-
+            val condition = expression()
             if (!check(";")) {
                 throw ParserException(InvalidToken("Expected ';'", peak()))
             }
             eat()
-
-            val update = if (!check(")")) {
-                expression() ?: throw ParserException(InvalidToken("Expected expression", peak()))
-            } else {
-                EmptyExpression
-            }
+            val update = expression()
             if (!check(")")) {
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
             eat()
             val body = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return ForStatement(init, condition, update, body)
+            return@rule ForStatement(init, condition ?: EmptyExpression, update ?: EmptyExpression, body)
         }
         return@rule null
     }

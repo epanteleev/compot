@@ -11,8 +11,6 @@ import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
 import ir.instruction.Copy
-import ir.instruction.Shl
-import ir.instruction.Shr
 import ir.instruction.matching.*
 import ir.module.Sensitivity
 import ir.module.block.Block

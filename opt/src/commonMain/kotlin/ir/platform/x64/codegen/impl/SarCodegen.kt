@@ -112,7 +112,13 @@ class SarCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.sar(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.sar(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {

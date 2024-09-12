@@ -2,7 +2,6 @@ package ir.platform.x64.pass.analysis.regalloc
 
 import asm.x64.*
 import common.assertion
-import ir.attributes.GlobalValueAttribute
 import ir.global.ExternValue
 import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
@@ -96,6 +95,10 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
             is ExternValue -> Address.external(value.name())
             is GlobalValue -> Address.internal(value.name())
             is NullValue -> Imm64.of(0)
+            is UndefinedValue -> {
+                println("Warning: undefined behaviour\n") //TODO: remove this
+                GPRegister.rax
+            }
             else -> throw RuntimeException("found '$value': '${value.type()}'")
         }
     }

@@ -4,7 +4,7 @@ import gen.VarStack
 
 
 class TypeHolder: Scope {
-    private val valueMap: VarStack<VarDescriptor> = VarStack<VarDescriptor>()
+    private val valueMap = VarStack<VarDescriptor>()
     val enumTypeMap = VarStack<CPrimitive>()//TODO separate holder for struct, enum, union.
     val structTypeMap = VarStack<AggregateBaseType>()
     val unionTypeMap = VarStack<AggregateBaseType>()
@@ -48,7 +48,6 @@ class TypeHolder: Scope {
         EnumBaseType::class, UncompletedEnumType::class         -> enumTypeMap[name]
         StructBaseType::class, UncompletedStructBaseType::class -> structTypeMap[name]
         UnionBaseType::class, UncompletedUnionBaseType::class   -> unionTypeMap[name]
-        BaseType::class -> enumTypeMap[name] ?: structTypeMap[name] ?: unionTypeMap[name] as? T
         else -> null
     }
 
