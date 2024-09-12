@@ -1,10 +1,10 @@
 package ir.platform.x64.pass.analysis.regalloc
 
-import asm.x64.GPRegister
 import ir.value.LocalValue
 import asm.x64.Operand
 import asm.x64.Register
 import asm.x64.GPRegister.rcx
+import asm.x64.GPRegister.rdx
 import common.assertion
 import common.forEachWith
 import ir.value.asType
@@ -52,7 +52,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
             fixedValues.add(arg)
             val reg = pool.takeArgument(arg)
             registerMap[arg] = reg
-            if (reg != GPRegister.rdx) { //TODO hack
+            if (reg != rdx) { //TODO hack
                 active[arg] = reg
             }
         }
@@ -61,11 +61,12 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     private fun allocFunctionArguments(callable: Callable) {
         val allocation = pool.calleeArgumentAllocate(callable.arguments())
         allocation.forEachWith(callable.arguments()) { operand, arg ->
-            fixedValues.add(arg as LocalValue)
             if (operand == null) {
                 // Nothing to do. UB happens
                 return@forEachWith
             }
+
+            fixedValues.add(arg as LocalValue)
             registerMap[arg] = operand
         }
     }
@@ -127,7 +128,14 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         }
     }
 
-    private fun excludeIf(neighbors: Set<LocalValue>?, reg: Register): Boolean {
+    private fun excludeIf(value: LocalValue, reg: Register): Boolean {
+        if (reg == rdx) {
+            for (use in value.usedIn()) {
+                if (tupleDiv(nop(), it_is(value)) (use)) return true
+            }
+        }
+
+        val neighbors = interferenceGraph.neighbors(value)
         if (neighbors == null) {
             return false
         }
@@ -136,9 +144,8 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     }
 
     private fun pickOperandGroup(value: LocalValue) {
+        val operand = pool.allocSlot(value) { reg -> excludeIf(value, reg) }
         val group = liveRanges.getGroup(value)
-        val neighbors = interferenceGraph.neighbors(value)
-        val operand = pool.allocSlot(value) { reg -> excludeIf(neighbors, reg) }
         if (group == null) {
             allocate(operand, value)
             return

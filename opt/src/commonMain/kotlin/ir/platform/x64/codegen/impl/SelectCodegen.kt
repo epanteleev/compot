@@ -147,9 +147,9 @@ class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: A
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
         TODO("untested")
-        asm.mov(size, first, temp2)
-        asm.cmovcc(size, matchIntCondition().invert(), second, temp2)
-        asm.mov(size, temp2, dst)
+        asm.mov(size, first, temp1)
+        asm.cmovcc(size, matchIntCondition().invert(), second, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {
@@ -160,7 +160,6 @@ class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: A
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("untested")
         asm.mov(size, second, temp1)
         asm.cmovcc(size, matchIntCondition(), first, temp1)
         asm.mov(size, temp1, dst)

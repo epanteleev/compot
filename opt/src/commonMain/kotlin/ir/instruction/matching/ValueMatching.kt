@@ -213,3 +213,5 @@ fun struct(): TypeMatcher = { it is StructType }
 fun i8(): TypeMatcher = { it == Type.I8 }
 
 fun u8(): TypeMatcher = { it == Type.U8 }
+
+fun it_is(value: Value): ValueMatcher = { it == value }

@@ -173,6 +173,47 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     killOnDemand(bb, inst)
                     return last
                 }
+                tupleDiv(value(u8()), value(u8())) (inst) -> { inst as TupleDiv
+                    // Before:
+                    //  %resANDrem = div u8 %a, %b
+                    //
+                    // After:
+                    //  %extFirst  = zext %a to u16
+                    //  %extSecond = zext %b to u16
+                    //  %newDiv = div u16 %extFirst, %extSecond
+                    //  %projDiv = proj %newDiv, 0
+                    //  %projRem = proj %newDiv, 1
+                    //  %res = trunc %projDiv to u8
+                    //  %rem = trunc %projRem to u8
+
+                    val extFirst  = bb.insertBefore(inst) { it.zext(inst.first(), Type.U16) }
+                    val extSecond = bb.insertBefore(inst) { it.zext(inst.second(), Type.U16) }
+                    val newDiv    = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
+                    var last: Instruction = newDiv
+
+                    val divProj = inst.proj(0)
+                    if (divProj != null) {
+                        val proj     = bb.insertBefore(inst) { it.proj(newDiv, 0) }
+                        val truncate = bb.updateUsages(divProj) {
+                            bb.insertBefore(inst) { it.trunc(proj, Type.U8) }
+                        }
+                        killOnDemand(bb, divProj)
+                        last = truncate
+                    }
+
+                    val remProj = inst.proj(1)
+                    if (remProj != null) {
+                        val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
+                        val truncate = bb.updateUsages(remProj) {
+                            bb.insertBefore(inst) { it.trunc(proj, Type.U8) }
+                        }
+                        killOnDemand(bb, remProj)
+                        last = truncate
+                    }
+
+                    killOnDemand(bb, inst)
+                    return last
+                }
                 tupleDiv(constant().not(), nop()) (inst) -> { inst as TupleDiv
                     // TODO temporal
                     val second = inst.second()

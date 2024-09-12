@@ -76,10 +76,6 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     private fun isolateArgumentValues() {
-        if (allCalls.isEmpty() && !isNeed3ArgIsolation && !isNeed4ArgIsolation) {
-            // Not necessary to insert any copies
-            return
-        }
         val begin = cfg.begin()
         for ((idx, arg) in cfg.arguments().withIndex()) {
             if (!mustBeIsolated(arg, idx)) {

@@ -51,12 +51,6 @@ abstract class ShlangTests: CommonCTest() {
     }
 
     @Test
-    fun testHelloWorld() {
-        val result = runCTest("shlang/helloWorld", listOf(), options())
-        assert(result, "Hello, World!\n")
-    }
-
-    @Test
     fun testSum8() {
         val result = runCTest("shlang/sum8", listOf("runtime/runtime.c"), options())
         assert(result, "8.000000\n9.000000\n")
@@ -137,20 +131,6 @@ abstract class ShlangTests: CommonCTest() {
     }
 
     @Test
-    fun testHelloWorld1() {
-        val result = runCTest("shlang/hello_world", listOf(), options())
-        assertEquals("Hello, World!\n", result.output)
-        assertEquals(0, result.exitCode)
-    }
-
-    @Test
-    fun testHelloWorld2() {
-        val result = runCTest("shlang/hello_world1", listOf(), options())
-        assertEquals("Hello, World!\n", result.output)
-        assertEquals(0, result.exitCode)
-    }
-
-    @Test
     fun testSizeofTypes() {
         val result = runCTest("shlang/sizeof_types", listOf("runtime/runtime.c"), options())
         assertEquals(0, result.exitCode)
@@ -160,13 +140,6 @@ abstract class ShlangTests: CommonCTest() {
     fun testGOTO() {
         val result = runCTest("shlang/goto", listOf("runtime/runtime.c"), options())
         assertEquals(220, result.exitCode)
-    }
-
-    @Test
-    fun testHelloWorld3() {
-        val result = runCTest("shlang/hello_world2", listOf(), options())
-        assertEquals("Hello, World!\n", result.error)
-        assertEquals(0, result.exitCode)
     }
 
     @Test

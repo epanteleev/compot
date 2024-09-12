@@ -153,6 +153,11 @@ class MacroAssembler(name: String, id: Int): Assembler(name, id) {
         }
     }
 
+    fun copy(size: Int, src: GPRegister, dst: GPRegister) {
+        if (src == dst) return
+        mov(size, src, dst)
+    }
+
     fun callFunction(call: Callable) {
         emitFPVarargsCount(call)
         call(call.prototype().name)

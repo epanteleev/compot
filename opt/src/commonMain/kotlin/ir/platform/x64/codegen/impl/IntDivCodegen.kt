@@ -18,7 +18,7 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
         asm.mov(size, first, rax)
         asm.cdq(size)
         asm.idiv(size, second)
-        asm.mov(size, rax, dst)
+        asm.copy(size, rax, dst)
         asm.moveRem(size, rem)
     }
 
@@ -30,7 +30,7 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
         asm.mov(size, first, rax)
         asm.cdq(size)
         asm.idiv(size, second)
-        asm.mov(size, rax, dst)
+        asm.copy(size, rax, dst)
         asm.moveRem(size, rem)
     }
 
@@ -42,7 +42,7 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
         asm.mov(size, first, rax)
         asm.cdq(size)
         asm.idiv(size, second)
-        asm.mov(size, rax, dst)
+        asm.copy(size, rax, dst)
         asm.moveRem(size, rem)
     }
 
@@ -52,7 +52,7 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
         asm.mov(size, first, rax)
         asm.cdq(size)
         asm.idiv(size, second)
-        asm.mov(size, rax, dst)
+        asm.copy(size, rax, dst)
         asm.moveRem(size, rem)
     }
 

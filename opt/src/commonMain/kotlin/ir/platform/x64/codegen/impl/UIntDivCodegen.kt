@@ -2,10 +2,8 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.types.*
-import asm.x64.GPRegister.*
 import common.assertion
-import ir.Definitions.POINTER_SIZE
-import ir.Definitions.WORD_SIZE
+import asm.x64.GPRegister.*
 import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
@@ -19,42 +17,27 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
-    private fun prepareRegs(reg: GPRegister) {
-        if (size != 1) {
-            asm.xor(POINTER_SIZE, rdx, rdx)
-            asm.mov(size, reg, rax)
-        } else {
-            asm.movzext(size, WORD_SIZE, reg, rax)
-        }
-    }
-
-    private fun prepareAddress(reg: Address) {
-        if (size != 1) {
-            asm.xor(POINTER_SIZE, rdx, rdx)
-            asm.mov(size, reg, rax)
-        } else {
-            asm.movzext(size, WORD_SIZE, reg, rax)
-        }
-    }
-
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        prepareRegs(first)
+        asm.mov(size, first, rax)
+        asm.cdq(size)
         asm.div(size, second)
-        asm.mov(size, rax, dst)
+        asm.copy(size, rax, dst)
         asm.moveRem(size, rem)
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        prepareRegs(first)
+        asm.mov(size, first, rax)
+        asm.cdq(size)
         asm.div(size, second)
         asm.mov(size, rax, dst)
         asm.moveRem(size, rem)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        prepareAddress(first)
+        asm.mov(size, first, rax)
+        asm.cdq(size)
         asm.div(size, second)
-        asm.mov(size, rax, dst)
+        asm.copy(size, rax, dst)
         asm.moveRem(size, rem)
     }
 
@@ -63,9 +46,10 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        prepareRegs(first)
+        asm.mov(size, first, rax)
+        asm.cdq(size)
         asm.div(size, second)
-        asm.mov(size, rax, dst)
+        asm.copy(size, rax, dst)
         asm.moveRem(size, rem)
     }
 
@@ -74,9 +58,10 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        prepareAddress(first)
+        asm.mov(size, first, rax)
+        asm.cdq(size)
         asm.div(size, second)
-        asm.mov(size, rax, dst)
+        asm.copy(size, rax, dst)
         asm.moveRem(size, rem)
     }
 
@@ -104,7 +89,8 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        prepareRegs(first)
+        asm.mov(size, first, rax)
+        asm.cdq(size)
         asm.div(size, second)
         asm.mov(size, rax, dst)
         asm.moveRem(size, rem)
@@ -131,14 +117,16 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        prepareAddress(first)
+        asm.mov(size, first, rax)
+        asm.cdq(size)
         asm.div(size, second)
         asm.mov(size, rax, dst)
         asm.moveRem(size, rem)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        prepareAddress(first)
+        asm.mov(size, first, rax)
+        asm.cdq(size)
         asm.div(size, second)
         asm.mov(size, rax, dst)
         asm.moveRem(size, rem)
