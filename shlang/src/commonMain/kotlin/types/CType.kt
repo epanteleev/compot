@@ -143,7 +143,7 @@ sealed class CPrimitive: CType() {
                 }
             }
 
-            is CPointer -> {
+            is AnyCPointer -> {
                 when (type2) {
                     CHAR -> return this
                     INT -> return this
@@ -151,8 +151,8 @@ sealed class CPrimitive: CType() {
                     UINT -> return this
                     FLOAT -> return this
                     LONG -> return this
-                    is CPointer -> {
-                        if (type == type2.type) return this
+                    is AnyCPointer -> {
+                        if (dereference() == type2.dereference()) return this
                         if (dereference() == VOID) return this
                         if (type2.dereference() == VOID) return type2
                     }
@@ -247,6 +247,15 @@ sealed class AnyCPointer: CPrimitive() {
 
     abstract fun qualifiers(): Set<TypeQualifier>
     abstract fun dereference(): CType
+}
+
+class SliceType(val elementType: CType, val dimension: Long): AnyCPointer() {
+    override fun qualifiers(): Set<TypeQualifier> = setOf()
+    override fun dereference(): CType = elementType
+    override fun typename(): String = buildString {
+        append(elementType)
+        append("[$dimension]")
+    }
 }
 
 class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : AnyCPointer() {

@@ -129,6 +129,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 else -> throw IRCodeGenError("Unknown type")
             }
+            is StringNode -> {
+                val string = expr.data()
+                ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value(string.length.toLong()))
+            }
             else -> {
                 val rvalue = visitExpression(expr, true)
                 val irType = mb.toIRType<AggregateType>(typeHolder, type)
@@ -899,7 +903,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is CArrayType, is CUncompletedArrayType -> {
                     types.add(Type.Ptr)
                 }
-                is CFunPointerT -> {
+                is AnyCPointer -> {
                     types.add(Type.Ptr)
                 }
                 is CPrimitive -> {
@@ -1412,7 +1416,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val lvalueAdr = initDeclarator.declarator.accept(this)
         when (val rvalue = initDeclarator.rvalue) {
             is InitializerList -> {
-                initializerContext.scope(lvalueAdr, initDeclarator.cType().type) { visitInitializerList(rvalue) }
+                initializerContext.scope(lvalueAdr, varDesc.type) { visitInitializerList(rvalue) }
                 return lvalueAdr
             }
             is FunctionCall -> {

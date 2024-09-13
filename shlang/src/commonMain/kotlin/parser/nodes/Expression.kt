@@ -361,8 +361,8 @@ data class VarNode(private val str: Identifier) : Expression() {
 data class StringNode(val literals: List<StringLiteral>) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CPointer = memoize {
-        return@memoize CPointer(CHAR) //ToDO restrict?????
+    override fun resolveType(typeHolder: TypeHolder): SliceType = memoize {
+        return@memoize SliceType(CHAR, data().length.toLong()) //ToDO restrict?????
     }
 
     fun data(): String = if (literals.size == 1) {
