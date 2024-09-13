@@ -2,16 +2,15 @@ package types
 
 
 import ir.Definitions.POINTER_SIZE
-import parser.nodes.TypeName
 
-sealed class BaseType: TypeProperty {
+sealed class CType: TypeProperty {
     abstract fun typename(): String
     abstract fun size(): Int
     override fun toString(): String = typename()
 }
 
-sealed class CPrimitive: BaseType() {
-    fun interfere(type2: BaseType): BaseType {
+sealed class CPrimitive: CType() {
+    fun interfere(type2: CType): CType {
         if (this == type2) return this
         when (this) {
             CHAR -> {
@@ -144,7 +143,7 @@ sealed class CPrimitive: BaseType() {
                 }
             }
 
-            is CPointerT -> {
+            is CPointer -> {
                 when (type2) {
                     CHAR -> return this
                     INT -> return this
@@ -152,7 +151,7 @@ sealed class CPrimitive: BaseType() {
                     UINT -> return this
                     FLOAT -> return this
                     LONG -> return this
-                    is CPointerT -> {
+                    is CPointer -> {
                         if (type == type2.type) return this
                         if (dereference() == VOID) return this
                         if (type2.dereference() == VOID) return type2
@@ -161,7 +160,7 @@ sealed class CPrimitive: BaseType() {
                     else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
                 }
             }
-            is EnumBaseType -> {
+            is CEnumType -> {
                 return when (type2) {
                     CHAR -> INT
                     UCHAR -> INT
@@ -244,20 +243,20 @@ object BOOL: CPrimitive() {
 }
 
 sealed class AnyCPointer: CPrimitive() {
-    override fun size(): Int = POINTER_SIZE //TODO must be imported from x64 module
+    override fun size(): Int = POINTER_SIZE
 
     abstract fun qualifiers(): Set<TypeQualifier>
-    abstract fun dereference(): BaseType
+    abstract fun dereference(): CType
 }
 
-class CPointerT(val type: BaseType, private val properties: Set<TypeQualifier> = setOf()) : AnyCPointer() {
+class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : AnyCPointer() {
     override fun qualifiers(): Set<TypeQualifier> = properties
 
-    override fun dereference(): BaseType = type
+    override fun dereference(): CType = type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is CPointerT) return false
+        if (other !is CPointer) return false
 
         if (type != other.type) return false
 
@@ -275,7 +274,7 @@ class CPointerT(val type: BaseType, private val properties: Set<TypeQualifier> =
     }
 }
 
-data class AbstractCFunctionT(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): BaseType() {
+data class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): CType() {
     override fun size(): Int = throw RuntimeException("Function type has no size")
 
     override fun typename(): String = buildString {
@@ -290,7 +289,7 @@ data class AbstractCFunctionT(val retType: TypeDesc, val argsTypes: List<TypeDes
     }
 }
 
-class CBaseFunctionType(val name: String, val functionType: AbstractCFunctionT): BaseType() {
+class CBaseFunctionType(val name: String, val functionType: AbstractCFunction): CType() {
     override fun size(): Int = throw RuntimeException("Function type has no size")
 
     fun retType(): TypeDesc = functionType.retType
@@ -308,10 +307,10 @@ class CBaseFunctionType(val name: String, val functionType: AbstractCFunctionT):
     }
 }
 
-class CFunPointerT(val functionType: AbstractCFunctionT, private val properties: Set<TypeQualifier>) : AnyCPointer() {
+class CFunPointerT(val functionType: AbstractCFunction, private val properties: Set<TypeQualifier>) : AnyCPointer() {
     override fun qualifiers(): Set<TypeQualifier> = properties
 
-    override fun dereference(): BaseType = functionType.retType.baseType()
+    override fun dereference(): CType = functionType.retType.baseType()
     override fun typename(): String = buildString {
         append(functionType.retType)
         append("(*)(")
@@ -324,14 +323,14 @@ class CFunPointerT(val functionType: AbstractCFunctionT, private val properties:
     }
 }
 
-class TypeDef(val name: String, val baseType: TypeDesc): BaseType() {
+class TypeDef(val name: String, val baseType: TypeDesc): CType() {
     fun baseType(): TypeDesc = baseType
     override fun typename(): String = name
     override fun size(): Int = baseType.size()
     override fun toString(): String = baseType.toString()
 }
 
-sealed class AggregateBaseType: BaseType()
+sealed class AggregateBaseType: CType()
 
 sealed class AnyStructType(open val name: String): AggregateBaseType() {
     protected val fields = arrayListOf<Pair<String, TypeDesc>>()
@@ -357,7 +356,7 @@ sealed class AnyStructType(open val name: String): AggregateBaseType() {
 
 sealed interface UncompletedType
 
-data class StructBaseType(override val name: String): AnyStructType(name) { //TODO
+data class CStructType(override val name: String): AnyStructType(name) { //TODO
     override fun size(): Int {
         return fields.sumOf { it.second.size() }
     }
@@ -372,7 +371,7 @@ data class StructBaseType(override val name: String): AnyStructType(name) { //TO
     }
 }
 
-data class UnionBaseType(override val name: String): AnyStructType(name) {
+data class CUnionType(override val name: String): AnyStructType(name) {
     override fun size(): Int {
         if (fields.isEmpty()) {
             return 0
@@ -390,7 +389,7 @@ data class UnionBaseType(override val name: String): AnyStructType(name) {
     }
 }
 
-data class EnumBaseType(val name: String, private val enumerators: Map<String, Int>): CPrimitive() {
+data class CEnumType(val name: String, private val enumerators: Map<String, Int>): CPrimitive() {
     override fun typename(): String = name
 
     override fun size(): Int {
@@ -410,7 +409,7 @@ sealed class AnyCArrayType(val type: TypeDesc): AggregateBaseType() {
     fun element(): TypeDesc = type
 }
 
-class CArrayBaseType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
+class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     override fun typename(): String {
         return toString()
     }
@@ -425,7 +424,7 @@ class CArrayBaseType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) 
     }
 }
 
-data class CUncompletedArrayBaseType(val elementType: TypeDesc) : AnyCArrayType(elementType){
+data class CUncompletedArrayType(val elementType: TypeDesc) : AnyCArrayType(elementType){
     override fun typename(): String {
         return toString()
     }
@@ -440,7 +439,7 @@ data class CUncompletedArrayBaseType(val elementType: TypeDesc) : AnyCArrayType(
     }
 }
 
-data class UncompletedStructBaseType(override val name: String): UncompletedType, AnyStructType(name) {
+data class CUncompletedStructType(override val name: String): UncompletedType, AnyStructType(name) {
     override fun typename(): String = name
 
     override fun size(): Int = throw Exception("Uncompleted type '$name'")
@@ -450,7 +449,7 @@ data class UncompletedStructBaseType(override val name: String): UncompletedType
     }
 }
 
-data class UncompletedUnionBaseType(override val name: String): UncompletedType, AnyStructType(name) {
+data class CUncompletedUnionType(override val name: String): UncompletedType, AnyStructType(name) {
     override fun typename(): String = name
 
     override fun size(): Int = throw Exception("Uncompleted type")
@@ -460,13 +459,13 @@ data class UncompletedUnionBaseType(override val name: String): UncompletedType,
     }
 }
 
-data class UncompletedEnumType(val name: String): UncompletedType, CPrimitive() {
+data class CUncompletedEnumType(val name: String): UncompletedType, CPrimitive() {
     override fun typename(): String = "enum $name"
 
     override fun size(): Int = throw Exception("Uncompleted type")
 }
 
-class InitializerType(val initializer: List<BaseType>): BaseType() {
+class InitializerType(val initializer: List<CType>): CType() {
     override fun typename(): String = buildString {
         append("{")
         initializer.forEachIndexed { index, type ->

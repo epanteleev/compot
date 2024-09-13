@@ -22,7 +22,7 @@ class TypeHolder: Scope {
 
     fun findEnumByEnumerator(name: String): Int? {
         for (enumType in enumTypeMap) {
-            if (enumType !is EnumBaseType) {
+            if (enumType !is CEnumType) {
                 continue
             }
             if (enumType.hasEnumerator(name)) {
@@ -32,9 +32,9 @@ class TypeHolder: Scope {
         return null
     }
 
-    fun findEnum(name: String): BaseType? {
+    fun findEnum(name: String): CType? {
         for (enumType in enumTypeMap) {
-            if (enumType !is EnumBaseType) {
+            if (enumType !is CEnumType) {
                 continue
             }
             if (enumType.hasEnumerator(name)) {
@@ -44,10 +44,10 @@ class TypeHolder: Scope {
         return null
     }
 
-    inline fun<reified T: BaseType> getTypeOrNull(name: String): BaseType? = when (T::class) {
-        EnumBaseType::class, UncompletedEnumType::class         -> enumTypeMap[name]
-        StructBaseType::class, UncompletedStructBaseType::class -> structTypeMap[name]
-        UnionBaseType::class, UncompletedUnionBaseType::class   -> unionTypeMap[name]
+    inline fun<reified T: CType> getTypeOrNull(name: String): CType? = when (T::class) {
+        CEnumType::class, CUncompletedEnumType::class         -> enumTypeMap[name]
+        CStructType::class, CUncompletedStructType::class -> structTypeMap[name]
+        CUnionType::class, CUncompletedUnionType::class   -> unionTypeMap[name]
         else -> null
     }
 
@@ -73,15 +73,15 @@ class TypeHolder: Scope {
         return valueMap.containsKey(varName)
     }
 
-    inline fun<reified T: BaseType> getStructType(name: String): BaseType {
+    inline fun<reified T: CType> getStructType(name: String): CType {
         return getTypeOrNull<T>(name) ?: throw Exception("Type for struct $name not found")
     }
 
-    inline fun <reified T : BaseType> addNewType(name: String, type: T): T {
+    inline fun <reified T : CType> addNewType(name: String, type: T): T {
         when (type) {
-            is EnumBaseType, is UncompletedEnumType         -> enumTypeMap[name] = type
-            is StructBaseType, is UncompletedStructBaseType -> structTypeMap[name] = type
-            is UnionBaseType, is UncompletedUnionBaseType   -> unionTypeMap[name] = type
+            is CEnumType, is CUncompletedEnumType         -> enumTypeMap[name] = type
+            is CStructType, is CUncompletedStructType -> structTypeMap[name] = type
+            is CUnionType, is CUncompletedUnionType   -> unionTypeMap[name] = type
             else -> throw RuntimeException("Unknown type $type")
         }
         return type

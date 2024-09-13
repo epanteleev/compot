@@ -16,12 +16,12 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
 
     override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         if (constexpr is EmptyExpression) {
-            return TypeDesc.from(CUncompletedArrayBaseType(baseType))
+            return TypeDesc.from(CUncompletedArrayType(baseType))
         }
 
         val ctx = CommonConstEvalContext<Long>(typeHolder)
         val size = ConstEvalExpression.eval<Long>(constexpr, ConstEvalExpressionLong(ctx))
-        return TypeDesc.from(CArrayBaseType(baseType, size))
+        return TypeDesc.from(CArrayType(baseType, size))
     }
 }
 
@@ -38,7 +38,7 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
 
     override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         val params = resolveParams(typeHolder)
-        return TypeDesc.from(AbstractCFunctionT(baseType, params, isVarArg()), arrayListOf())
+        return TypeDesc.from(AbstractCFunction(baseType, params, isVarArg()), arrayListOf())
     }
 
     fun params(): List<String> {

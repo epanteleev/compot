@@ -15,7 +15,7 @@ import ir.module.builder.impl.ModuleBuilder
 
 
 object TypeConverter {
-    inline fun <reified T : Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: BaseType): T {
+    inline fun <reified T : Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: CType): T {
         val converted = toIRTypeUnchecked(typeHolder, type)
         if (converted !is T) {
             throw IRCodeGenError("Cannot convert '$type' to ${T::class}")
@@ -24,7 +24,7 @@ object TypeConverter {
         return converted
     }
 
-    fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: BaseType): Type = when (type) {
+    fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type = when (type) {
         BOOL   -> Type.I8 //TODO one bit
         CHAR   -> Type.I8
         UCHAR  -> Type.U8
@@ -37,22 +37,22 @@ object TypeConverter {
         FLOAT  -> Type.F32
         DOUBLE -> Type.F64
         VOID   -> Type.Void // TODO handle case '(void) 0'
-        is StructBaseType -> convertStructType(typeHolder, type)
-        is CArrayBaseType -> {
+        is CStructType -> convertStructType(typeHolder, type)
+        is CArrayType -> {
             val elementType = toIRType<NonTrivialType>(typeHolder, type.type.baseType())
             ArrayType(elementType, type.dimension.toInt())
         }
-        is UncompletedStructBaseType -> {
-            val structType = typeHolder.getTypedef(type.name).baseType() as StructBaseType //TODO
+        is CUncompletedStructType -> {
+            val structType = typeHolder.getTypedef(type.name).baseType() as CStructType //TODO
             convertStructType(typeHolder, structType)
         }
 
-        is UncompletedUnionBaseType -> {
-            val unionType = typeHolder.getTypedef(type.name).baseType() as UnionBaseType //TODO
+        is CUncompletedUnionType -> {
+            val unionType = typeHolder.getTypedef(type.name).baseType() as CUnionType //TODO
             convertStructType(typeHolder, unionType)
         }
 
-        is UncompletedEnumType -> {
+        is CUncompletedEnumType -> {
             if (typeHolder.getTypedefOrNull(type.name) == null) {
                 throw IRCodeGenError("Enum type not found, name=${type.name}")
             }
@@ -60,10 +60,10 @@ object TypeConverter {
             Type.I32
         }
 
-        is UnionBaseType -> convertUnionType(typeHolder, type)
+        is CUnionType -> convertUnionType(typeHolder, type)
         is AnyCPointer -> Type.Ptr
-        is EnumBaseType -> Type.I32
-        is CBaseFunctionType, is CUncompletedArrayBaseType, is AbstractCFunctionT -> Type.Ptr
+        is CEnumType -> Type.I32
+        is CBaseFunctionType, is CUncompletedArrayType, is AbstractCFunction -> Type.Ptr
         else -> throw IRCodeGenError("Unknown type, type=$type")
     }
 
@@ -77,7 +77,7 @@ object TypeConverter {
         return structType(type.name, fields)
     }
 
-    private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: UnionBaseType): Type {
+    private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: CUnionType): Type {
         val field = type.fields().maxByOrNull { it.second.size() }.let {
             if (it == null) {
                 null

@@ -5,12 +5,12 @@ import common.assertion
 
 class CTypeBuilder {
     private val typeProperties = mutableListOf<TypeQualifier>()
-    private val baseTypes = mutableListOf<BaseType>()
+    private val baseTypes = mutableListOf<CType>()
     private var storageClass: StorageClass? = null
 
     fun add(property: TypeProperty) {
         when (property) {
-            is BaseType -> baseTypes.add(property)
+            is CType -> baseTypes.add(property)
             is StorageClass -> {
                 assertion(storageClass == null) {
                     "Multiple storage classes are not allowed: $storageClass, $property"
@@ -23,7 +23,7 @@ class CTypeBuilder {
         }
     }
 
-    private fun check(baseTypes: List<BaseType>, vararg types: CPrimitive): Boolean {
+    private fun check(baseTypes: List<CType>, vararg types: CPrimitive): Boolean {
         if (baseTypes.size != types.size) {
             return false
         }
@@ -35,7 +35,7 @@ class CTypeBuilder {
         return true
     }
 
-    private fun finalBaseType(baseTypes: List<BaseType>): BaseType {
+    private fun finalBaseType(baseTypes: List<CType>): CType {
         when {
             check(baseTypes, UINT,  LONG,  LONG, INT) -> return ULONG
             check(baseTypes, UINT,  LONG,  LONG)      -> return LONG

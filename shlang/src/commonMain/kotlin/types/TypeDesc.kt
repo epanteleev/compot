@@ -5,9 +5,9 @@ data class TypeInferenceException(override val message: String) : Exception(mess
 
 data class TypeResolutionException(override val message: String) : Exception(message)
 
-class TypeDesc(private val baseType: BaseType, private val properties: List<TypeQualifier>) {
+class TypeDesc(private val baseType: CType, private val properties: List<TypeQualifier>) {
     fun qualifiers(): List<TypeQualifier> = properties
-    fun baseType(): BaseType = baseType
+    fun baseType(): CType = baseType
     fun size(): Int = baseType.size()
     fun copyWith(extraProperties: List<TypeQualifier>): TypeDesc {
         return TypeDesc(baseType, properties + extraProperties)
@@ -26,6 +26,6 @@ class TypeDesc(private val baseType: BaseType, private val properties: List<Type
     }
 
     companion object {
-        fun from(baseType: BaseType, properties: List<TypeQualifier> = arrayListOf()): TypeDesc = TypeDesc(baseType, properties)
+        fun from(baseType: CType, properties: List<TypeQualifier> = arrayListOf()): TypeDesc = TypeDesc(baseType, properties)
     }
 }

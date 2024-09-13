@@ -72,7 +72,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
         assertion (!declspec.isTypedef) { "typedef is not supported here" }
 
         val baseType = type.baseType()
-        if (baseType !is CUncompletedArrayBaseType) {
+        if (baseType !is CUncompletedArrayType) {
             return@memoizeType typeHolder.addVar(name(), VarDescriptor(type, declspecType.storageClass))
         }
 
@@ -84,11 +84,11 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
 
                 when (val initializerType = rvalue.resolveType(typeHolder)) {
                     is InitializerType -> {
-                        val rvalueType = TypeDesc.from(CArrayBaseType(baseType.element(), rvalue.length().toLong()), listOf())
+                        val rvalueType = TypeDesc.from(CArrayType(baseType.element(), rvalue.length().toLong()), listOf())
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
-                    is CArrayBaseType -> {
-                        val rvalueType = TypeDesc.from(CArrayBaseType(baseType.element(), initializerType.dimension), listOf())
+                    is CArrayType -> {
+                        val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerType.dimension), listOf())
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
                     else -> throw TypeResolutionException("Array size is not specified: type=$initializerType")

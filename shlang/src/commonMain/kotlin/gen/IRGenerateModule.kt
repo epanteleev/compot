@@ -69,7 +69,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             is CPrimitive -> {
                 makeGlobalValue(name, varDesc)
             }
-            is CArrayBaseType -> {
+            is CArrayType -> {
                 val irType = mb.toIRType<ArrayType>(typeHolder, type)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
                     varStack[name] = mb.addExternValue(name, irType)
@@ -80,7 +80,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 val constant = InitializerListValue(irType, elements)
                 varStack[name] = mb.addGlobal(name, irType, constant)
             }
-            is StructBaseType -> {
+            is CStructType -> {
                 val irType = mb.toIRType<StructType>(typeHolder, type)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
                     varStack[name] = mb.addExternValue(name, irType)
