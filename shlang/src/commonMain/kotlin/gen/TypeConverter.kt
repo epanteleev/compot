@@ -24,56 +24,47 @@ object TypeConverter {
         return converted
     }
 
-    fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: BaseType): Type {
-        if (type is CPointerT) {
-            return Type.Ptr
-        }
-
-        if (type is CArrayBaseType) {
+    fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: BaseType): Type = when (type) {
+        BOOL   -> Type.I8 //TODO one bit
+        CHAR   -> Type.I8
+        UCHAR  -> Type.U8
+        SHORT  -> Type.I16
+        USHORT -> Type.U16
+        INT    -> Type.I32
+        UINT   -> Type.U32
+        LONG   -> Type.I64
+        ULONG  -> Type.U64
+        FLOAT  -> Type.F32
+        DOUBLE -> Type.F64
+        VOID   -> Type.Void // TODO handle case '(void) 0'
+        is StructBaseType -> convertStructType(typeHolder, type)
+        is CArrayBaseType -> {
             val elementType = toIRType<NonTrivialType>(typeHolder, type.type.baseType())
-            return ArrayType(elementType, type.dimension.toInt())
+            ArrayType(elementType, type.dimension.toInt())
+        }
+        is UncompletedStructBaseType -> {
+            val structType = typeHolder.getTypedef(type.name).baseType() as StructBaseType //TODO
+            convertStructType(typeHolder, structType)
         }
 
-        val ret = when (type) {
-            BOOL -> Type.I8 //TODO one bit
-            CHAR -> Type.I8
-            UCHAR -> Type.U8
-            SHORT -> Type.I16
-            USHORT -> Type.U16
-            INT -> Type.I32
-            UINT -> Type.U32
-            LONG -> Type.I64
-            ULONG -> Type.U64
-            FLOAT -> Type.F32
-            DOUBLE -> Type.F64
-            VOID -> Type.Void // TODO handle case '(void) 0'
-            is StructBaseType -> convertStructType(typeHolder, type)
-
-            is UncompletedStructBaseType -> {
-                val structType = typeHolder.getTypedef(type.name).baseType() as StructBaseType //TODO
-                convertStructType(typeHolder, structType)
-            }
-
-            is UncompletedUnionBaseType -> {
-                val unionType = typeHolder.getTypedef(type.name).baseType() as UnionBaseType //TODO
-                convertStructType(typeHolder, unionType)
-            }
-
-            is UncompletedEnumType -> {
-                if (typeHolder.getTypedefOrNull(type.name) == null) {
-                    throw IRCodeGenError("Enum type not found, name=${type.name}")
-                }
-
-                Type.I32
-            }
-
-            is UnionBaseType -> convertUnionType(typeHolder, type)
-            is AnyCPointer -> Type.Ptr
-            is EnumBaseType -> Type.I32
-            is CBaseFunctionType, is CUncompletedArrayBaseType, is AbstractCFunctionT -> Type.Ptr
-            else -> throw IRCodeGenError("Unknown type, type=$type")
+        is UncompletedUnionBaseType -> {
+            val unionType = typeHolder.getTypedef(type.name).baseType() as UnionBaseType //TODO
+            convertStructType(typeHolder, unionType)
         }
-        return ret
+
+        is UncompletedEnumType -> {
+            if (typeHolder.getTypedefOrNull(type.name) == null) {
+                throw IRCodeGenError("Enum type not found, name=${type.name}")
+            }
+
+            Type.I32
+        }
+
+        is UnionBaseType -> convertUnionType(typeHolder, type)
+        is AnyCPointer -> Type.Ptr
+        is EnumBaseType -> Type.I32
+        is CBaseFunctionType, is CUncompletedArrayBaseType, is AbstractCFunctionT -> Type.Ptr
+        else -> throw IRCodeGenError("Unknown type, type=$type")
     }
 
     private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: AnyStructType): Type {

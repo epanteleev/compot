@@ -6,7 +6,7 @@ import parser.nodes.visitors.*
 
 
 sealed class AnyDeclarator: Node() {
-    protected var cachedType: VarDescriptor? = null
+    private var cachedType: VarDescriptor? = null
 
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
@@ -82,8 +82,17 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                 // int a[] = {1, 2};
                 // 'a' is array of 2 elements, not pointer to int
 
-                val rvalueType = TypeDesc.from(CArrayBaseType(baseType.element(), rvalue.length().toLong()), listOf())
-                return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
+                when (val initializerType = rvalue.resolveType(typeHolder)) {
+                    is InitializerType -> {
+                        val rvalueType = TypeDesc.from(CArrayBaseType(baseType.element(), rvalue.length().toLong()), listOf())
+                        return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
+                    }
+                    is CArrayBaseType -> {
+                        val rvalueType = TypeDesc.from(CArrayBaseType(baseType.element(), initializerType.dimension), listOf())
+                        return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
+                    }
+                    else -> throw TypeResolutionException("Array size is not specified: type=$initializerType")
+                }
             }
             is StringNode -> {
                 // Special case for string initialization like:

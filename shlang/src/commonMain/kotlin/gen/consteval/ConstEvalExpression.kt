@@ -91,7 +91,10 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
     }
 
     override fun visit(initializerList: InitializerList): Int {
-        TODO("Not yet implemented")
+        if (initializerList.initializers.size != 1) {
+            throw ConstEvalException("Cannot evaluate initializer list with size ${initializerList.initializers.size}")
+        }
+        return initializerList.initializers[0].accept(this)
     }
 
     override fun visit(singleInitializer: SingleInitializer): Int {

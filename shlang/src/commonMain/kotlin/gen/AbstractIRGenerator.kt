@@ -20,15 +20,17 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val varStack: VarStack<Value>,
                                    protected val nameGenerator: NameGenerator) {
     protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): Constant? {
-        val result = constEvalExpression0(expr)
-        if (result != null) {
-            return Constant.of(lValueType, result)
-        }
         return when (expr) {
             is InitializerList   -> constEvalInitializers(lValueType, expr)
             is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
             is StringNode        -> StringLiteralConstant(expr.data())
-            else -> throw IRCodeGenError("Unsupported expression $expr")
+            else -> {
+                val result = constEvalExpression0(expr)
+                if (result != null) {
+                    return Constant.of(lValueType, result)
+                }
+                throw IRCodeGenError("Unsupported expression $expr")
+            }
         }
     }
 

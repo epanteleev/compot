@@ -268,12 +268,10 @@ class CPointerT(val type: BaseType, private val properties: Set<TypeQualifier> =
         return type.hashCode()
     }
 
-    override fun typename(): String {
-        return buildString {
-            properties.forEach { append(it) }
-            append(type)
-            append("*")
-        }
+    override fun typename(): String = buildString {
+        properties.forEach { append(it) }
+        append(type)
+        append("*")
     }
 }
 
@@ -466,4 +464,17 @@ data class UncompletedEnumType(val name: String): UncompletedType, CPrimitive() 
     override fun typename(): String = "enum $name"
 
     override fun size(): Int = throw Exception("Uncompleted type")
+}
+
+class InitializerType(val initializer: List<BaseType>): BaseType() {
+    override fun typename(): String = buildString {
+        append("{")
+        initializer.forEachIndexed { index, type ->
+            append(type)
+            if (index < initializer.size - 1) append(", ")
+        }
+        append("}")
+    }
+
+    override fun size(): Int = initializer.fold(0) { acc, type -> acc + type.size() }
 }

@@ -283,25 +283,20 @@ class InitializerList(val initializers: List<Initializer>) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): BaseType = memoize {
-        val types      = initializers.map { it.resolveType(typeHolder) }
+        val types = initializers.map { it.resolveType(typeHolder) }
 
-        if (isSameType(types)) {
-            return@memoize CArrayBaseType(TypeDesc.from(types.first()), types.size.toLong())
-        }
-        val struct = StructBaseType("initializer")
+        val baseTypes = arrayListOf<BaseType>()
         for (i in initializers.indices) {
-            struct.addField("field$i", TypeDesc.from(types[i]))
+            baseTypes.add(types[i])
         }
-        return@memoize struct
+        if (baseTypes.size == 1) {
+            return@memoize baseTypes[0]
+        } else {
+            return@memoize InitializerType(baseTypes)
+        }
     }
 
-    private fun isSameType(types: List<BaseType>): Boolean {
-        return types.all { it == types.first() }
-    }
-
-    fun length(): Int {
-        return initializers.size
-    }
+    fun length(): Int = initializers.size
 }
 
 class MemberAccess(val primary: Expression, val ident: Identifier) : Expression() {

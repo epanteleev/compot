@@ -98,7 +98,15 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         is Conditional       -> visitConditional(expression)
         is CharNode          -> visitCharNode(expression)
         is SingleInitializer -> visitSingleInitializer(expression)
+        is InitializerList   -> visitSingleInitializer0(expression.initializers[0] as SingleInitializer)
         else -> throw IRCodeGenError("Unknown expression: $expression")
+    }
+
+    private fun visitSingleInitializer0(singleInitializer: SingleInitializer): Value {
+        return when (val expr = singleInitializer.expr) {
+            is InitializerList -> visitSingleInitializer0(expr.initializers[0] as SingleInitializer)
+            else -> visitExpression(expr, true)
+        }
     }
 
     private fun visitSingleInitializer(singleInitializer: SingleInitializer): Value {
@@ -305,7 +313,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
-                is CPrimitive, is CPointerT, is CBaseFunctionType, is CUncompletedArrayBaseType -> {
+                is CPrimitive, is CBaseFunctionType, is CUncompletedArrayBaseType -> {
                     val convertedArg = convertArg(function, idx, expr)
                     convertedArgs.add(convertedArg)
                 }
@@ -351,7 +359,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 Value.UNDEF
             }
-            is CPrimitive, is CPointerT -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
+            is CPrimitive -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
             is StructBaseType -> when (prototype.returnType()) {
                 is PrimitiveType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 //is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
@@ -376,7 +384,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 Value.UNDEF
             }
 
-            is CPrimitive, is CPointerT -> ir.call(function, convertedArgs, cont)
+            is CPrimitive -> ir.call(function, convertedArgs, cont)
             is StructBaseType -> when (function.returnType()) {
                 is PrimitiveType -> ir.call(function, convertedArgs, cont)
                 is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
@@ -724,14 +732,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun divide(type: PrimitiveType, a: Value, b: Value): Value {
-        if (type is IntegerType) {
+    private fun divide(type: PrimitiveType, a: Value, b: Value): Value = when (type) {
+        is IntegerType -> {
             val tupleDiv = ir.tupleDiv(a, b)
-            return ir.proj(tupleDiv, 0)
-        } else {
-            assertion(type is FloatingPointType) { "Floating point type expected, but got $type" }
-            return ir.div(a, b)
+            ir.proj(tupleDiv, 0)
         }
+        is FloatingPointType -> ir.div(a, b)
+        else -> throw IRCodeGenError("Unknown type")
     }
 
     private fun visitIncOrDec(unaryOp: UnaryOp, op: (a: Value, b: Value) -> LocalValue): Value {
@@ -1124,7 +1131,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val value = visitExpression(expr, true)
         val realType = ir.prototype().returnType()
         when (val type = returnStatement.expr.resolveType(typeHolder)) {
-            is CPrimitive, is CPointerT -> {
+            is CPrimitive -> {
                 realType as PrimitiveType
                 val returnType = ir.convertToType(value, realType)
                 ir.store(returnValueAdr!!, returnType)

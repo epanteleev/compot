@@ -66,7 +66,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
                 val isVararg = type.functionType.variadic
                 varStack[name] = getExternFunction(name, returnType, argTypes, isVararg)
             }
-            is CPrimitive, is CPointerT -> {
+            is CPrimitive -> {
                 makeGlobalValue(name, varDesc)
             }
             is CArrayBaseType -> {
