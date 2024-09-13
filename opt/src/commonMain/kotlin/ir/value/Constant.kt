@@ -29,6 +29,7 @@ sealed interface Constant: Value {
                     }
                 }
                 Type.U1  -> BoolValue.of(value.toInt() != 0)
+                is AggregateType -> InitializerListValue(kind, arrayListOf(of(kind.field(0), value)))
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
         }
@@ -101,7 +102,7 @@ class BoolValue private constructor(val bool: Boolean): Constant {
     }
 }
 
-class NullValue private constructor(): Constant {
+object NullValue : Constant {
     override fun type(): NonTrivialType {
         return Type.Ptr
     }
@@ -112,18 +113,15 @@ class NullValue private constructor(): Constant {
         return "null"
     }
 
-    companion object {
-        val NULLPTR = NullValue()
-    }
+    val NULLPTR = NullValue //TODO remove it
 }
 
-interface IntegerConstant: Constant {
-    fun toInt(): Int {
-        return when (val c = this) {
-            is UnsignedIntegerConstant -> c.value().toInt()
-            is SignedIntegerConstant -> c.value().toInt()
-            else                        -> error("Unexpected index type")
-        }
+sealed interface PrimitiveConstant: Constant
+
+sealed interface IntegerConstant: PrimitiveConstant {
+    fun toInt(): Int = when (this) {
+        is UnsignedIntegerConstant -> value().toInt()
+        is SignedIntegerConstant   -> value().toInt()
     }
 }
 
@@ -135,7 +133,7 @@ sealed interface UnsignedIntegerConstant: IntegerConstant {
     fun value(): ULong
 }
 
-sealed interface FloatingPointConstant: Constant
+sealed interface FloatingPointConstant: PrimitiveConstant
 
 data class U8Value(val u8: Byte): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType {
@@ -357,10 +355,9 @@ class InitializerListValue(val type: AggregateType, val elements: List<Constant>
     override fun linearize(): List<Constant> {
         val result = mutableListOf<Constant>()
         for (element in elements) {
-            if (element is InitializerListValue) {
-                result.addAll(element.linearize())
-            } else {
-                result.add(element)
+            when (element) {
+                is InitializerListValue -> result.addAll(element.linearize())
+                else -> result.add(element)
             }
         }
         return result

@@ -26,5 +26,5 @@ inline fun<reified T: Value> Value.asValue(): T {
         throw RuntimeException("Cannot cast $this to ${T::class}")
     }
 
-    return this as T
+    return this
 }

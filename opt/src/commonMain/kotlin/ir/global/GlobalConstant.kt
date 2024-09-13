@@ -80,8 +80,9 @@ sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
     }
 }
 
+sealed class PrimitiveGlobalConstant(override val name: String): GlobalConstant(name)
 
-class U8ConstantValue(override val name: String, val u8: UByte): GlobalConstant(name) {
+class U8ConstantValue(override val name: String, val u8: UByte): PrimitiveGlobalConstant(name) {
     override fun data(): String {
         return u8.toString()
     }
@@ -92,7 +93,7 @@ class U8ConstantValue(override val name: String, val u8: UByte): GlobalConstant(
     override fun constant(): Constant = U8Value(u8.toByte())
 }
 
-class I8ConstantValue(override val name: String, val i8: Byte): GlobalConstant(name) {
+class I8ConstantValue(override val name: String, val i8: Byte): PrimitiveGlobalConstant(name) {
     override fun data(): String {
         return i8.toString()
     }
@@ -103,7 +104,7 @@ class I8ConstantValue(override val name: String, val i8: Byte): GlobalConstant(n
     override fun constant(): Constant = I8Value(i8)
 }
 
-class U16ConstantValue(override val name: String, val u16: UShort): GlobalConstant(name) {
+class U16ConstantValue(override val name: String, val u16: UShort): PrimitiveGlobalConstant(name) {
     override fun data(): String {
         return u16.toString()
     }
@@ -113,7 +114,7 @@ class U16ConstantValue(override val name: String, val u16: UShort): GlobalConsta
     override fun constant(): Constant = U16Value(u16.toShort())
 }
 
-class I16ConstantValue(override val name: String, val i16: Short): GlobalConstant(name) {
+class I16ConstantValue(override val name: String, val i16: Short): PrimitiveGlobalConstant(name) {
 
     override fun data(): String {
         return i16.toString()
@@ -125,7 +126,7 @@ class I16ConstantValue(override val name: String, val i16: Short): GlobalConstan
     override fun constant(): Constant = I16Value(i16)
 }
 
-class U32ConstantValue(override val name: String, val u32: UInt): GlobalConstant(name) {
+class U32ConstantValue(override val name: String, val u32: UInt): PrimitiveGlobalConstant(name) {
     override fun data(): String {
         return u32.toString()
     }
@@ -137,7 +138,7 @@ class U32ConstantValue(override val name: String, val u32: UInt): GlobalConstant
     }
 }
 
-class I32ConstantValue(override val name: String, val i32: Int): GlobalConstant(name) {
+class I32ConstantValue(override val name: String, val i32: Int): PrimitiveGlobalConstant(name) {
     override fun data(): String {
         return i32.toString()
     }
@@ -149,7 +150,7 @@ class I32ConstantValue(override val name: String, val i32: Int): GlobalConstant(
     }
 }
 
-class U64ConstantValue(override val name: String, val u64: ULong): GlobalConstant(name) {
+class U64ConstantValue(override val name: String, val u64: ULong): PrimitiveGlobalConstant(name) {
     override fun data(): String {
         return u64.toString()
     }
@@ -161,7 +162,7 @@ class U64ConstantValue(override val name: String, val u64: ULong): GlobalConstan
     }
 }
 
-class I64ConstantValue(override val name: String, val i64: Long): GlobalConstant(name) {
+class I64ConstantValue(override val name: String, val i64: Long): PrimitiveGlobalConstant(name) {
     override fun data(): String {
         return i64.toString()
     }
@@ -173,7 +174,7 @@ class I64ConstantValue(override val name: String, val i64: Long): GlobalConstant
     }
 }
 
-class F32ConstantValue(override val name: String, val f32: Float): GlobalConstant(name) {
+class F32ConstantValue(override val name: String, val f32: Float): PrimitiveGlobalConstant(name) {
     override fun data(): String {
         return f32.toBits().toString()
     }
@@ -185,7 +186,7 @@ class F32ConstantValue(override val name: String, val f32: Float): GlobalConstan
     }
 }
 
-class F64ConstantValue(override val name: String, val f64: Double): GlobalConstant(name) {
+class F64ConstantValue(override val name: String, val f64: Double): PrimitiveGlobalConstant(name) {
     override fun data(): String {
         return f64.toBits().toString()
     }
@@ -197,7 +198,7 @@ class F64ConstantValue(override val name: String, val f64: Double): GlobalConsta
     }
 }
 
-class PointerConstant(override val name: String, val value: Long): GlobalConstant(name) {
+class PointerConstant(override val name: String, val value: Long): PrimitiveGlobalConstant(name) {
     override fun data(): String {
         return value.toString()
     }

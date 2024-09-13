@@ -26,7 +26,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             }
         }
         is AggregateGlobalConstant -> makeAggregateConstant(globalValue.name(), globalValue.elements())
-        else -> makePrimitiveConstant(globalValue)
+        is PrimitiveGlobalConstant -> makePrimitiveConstant(globalValue)
     }
 
     fun makeGlobal(globalValue: AnyGlobalValue) {
@@ -36,57 +36,58 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         convertGlobalValueToSymbolType(globalValue as GlobalValue)
     }
 
-    private fun convertGlobalValueToSymbolType(globalValue: GlobalValue) {
-        when (val type = globalValue.contentType()) {
-            is StructType -> {
-                val constant = globalValue.initializer() as InitializerListValue
-                makeAggregateConstant(globalValue.name(), constant)
-            }
-            is ArrayType -> {
-                when (val constant = globalValue.initializer()) {
-                    is InitializerListValue -> makeAggregateConstant(globalValue.name(), constant)
-                    is StringLiteralConstant -> {
-                        val init = StringBuilder()
-                        var i = 0
-                        for (c in constant.linearize()) {
-                            init.append(c)
-                            i += 1
-                        }
-
-                        for (j in i until type.length) {
-                            init.append("\\000")
-                        }
-
-                        label(globalValue.name()) {
-                            ascii(init.toString())
-                        }
-                    }
-                    else -> throw IllegalArgumentException("unsupported constant type: $constant")
-                }
-            }
-            else -> {
-                when (val initializer = globalValue.initializer()) {
-                    is InitializerListValue -> anonConstant {
-                        for (e in initializer.linearize()) {
-                            primitive(this, e.asType(), e.data())
-                        }
-                    }
-                    is StringLiteralConstant -> {
-                        val initConstant = anonConstant {
-                            string(initializer.data())
-                        }
-                        label(globalValue.name()) {
-                            quad(initConstant.name)
-                        }
-                    }
-                    else -> {
-                        label(globalValue.name()) {
-                            primitive(this, globalValue.asType(), initializer.data())
-                        }
-                    }
-                }
+    private fun makeStringLiteralConstant(globalValue: GlobalValue, type: ArrayType, constant: StringLiteralConstant): ObjLabel {
+        val values = constant.linearize()
+        if (values.size == type.length) {
+            return label(globalValue.name()) {
+                string(constant.data())
             }
         }
+        if (values.isNotEmpty()) {
+            throw IllegalArgumentException("string too long: $values")
+        }
+        val init = StringBuilder()
+
+        for (j in 0 until type.length) {
+            init.append("\\000")
+        }
+
+        return label(globalValue.name()) {
+            ascii(init.toString())
+        }
+    }
+
+    private fun makePrimitiveConstant(globalValue: GlobalValue): ObjLabel = when (val initializer = globalValue.initializer()) {
+        is InitializerListValue -> anonConstant {
+            for (e in initializer.linearize()) {
+                primitive(this, e.asType(), e.data())
+            }
+        }
+        is StringLiteralConstant -> {
+            val initConstant = anonConstant {
+                string(initializer.data())
+            }
+            label(globalValue.name()) {
+                quad(initConstant.name)
+            }
+        }
+        is PrimitiveConstant -> label(globalValue.name()) {
+            primitive(this, globalValue.asType(), initializer.data())
+        }
+        else -> throw IllegalArgumentException("unsupported constant type: $initializer")
+    }
+
+    private fun convertGlobalValueToSymbolType(globalValue: GlobalValue) = when (val type = globalValue.contentType()) {
+        is StructType -> {
+            val constant = globalValue.initializer() as InitializerListValue
+            makeAggregateConstant(globalValue.name(), constant)
+        }
+        is ArrayType -> when (val constant = globalValue.initializer()) {
+            is InitializerListValue  -> makeAggregateConstant(globalValue.name(), constant)
+            is StringLiteralConstant -> makeStringLiteralConstant(globalValue, type, constant)
+            else -> throw IllegalArgumentException("unsupported constant type: $constant")
+        }
+        is PrimitiveType -> makePrimitiveConstant(globalValue)
     }
 
     private fun primitive(builder: ObjBuilder, type: PrimitiveType, data: String) = when (type) {

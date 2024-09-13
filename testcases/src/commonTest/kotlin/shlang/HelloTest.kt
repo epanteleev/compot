@@ -39,6 +39,13 @@ abstract class HelloTests: CommonCTest() {
         assertEquals("Hello World!\n", result.error)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testHelloWorld4() {
+        val result = runCTest("shlang/hello_world/hello_world4", listOf(), options())
+        assertEquals("Hello World!\n", result.error)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class HelloTestsO0: HelloTests() {

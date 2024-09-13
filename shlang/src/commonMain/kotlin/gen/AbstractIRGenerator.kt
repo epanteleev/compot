@@ -54,10 +54,15 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         else -> null
     }
 
-    private fun constEvalInitializers(lValueType: NonTrivialType, expr: InitializerList): InitializerListValue {
+    private fun constEvalInitializers(lValueType: NonTrivialType, expr: InitializerList): Constant {
         if (lValueType !is AggregateType) {
             throw IRCodeGenError("Unsupported type $lValueType")
         }
+
+        if (expr.initializers.size == 1) {
+            return constEvalExpression(lValueType, expr.initializers[0]) ?: throw IRCodeGenError("Unsupported type $lValueType")
+        }
+
         val elements = expr.initializers.mapIndexed { index, initializer ->
             val elementLValueType = lValueType.field(index)
             constEvalExpression(elementLValueType, initializer) ?: throw IRCodeGenError("Unsupported type $elementLValueType")
