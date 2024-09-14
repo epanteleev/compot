@@ -2,7 +2,6 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.Definitions.POINTER_SIZE
-import ir.Definitions.QWORD_SIZE
 import ir.types.*
 import ir.instruction.lir.Move
 import ir.platform.x64.CallConvention.temp1
@@ -110,7 +109,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        asm.mov(size, dst, temp1)
+        asm.mov(POINTER_SIZE, dst, temp1)
         asm.mov(indexSize, second, temp2)
         asm.lea(POINTER_SIZE, Address.from(temp1, 0, temp2, ScaleFactor.from(size)), temp1)
         asm.mov(size, first, temp2)

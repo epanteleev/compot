@@ -4,6 +4,7 @@ import asm.x64.*
 import ir.types.*
 import ir.Definitions.POINTER_SIZE
 import ir.instruction.GetElementPtr
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
@@ -31,9 +32,7 @@ class GetFieldPtrCodegen(val type: PointerType, val basicType: AggregateType, va
 
     override fun raa(dst: GPRegister, first: Address, second: Address) = default(dst, first, second)
 
-    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
-    }
+    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) = default(dst, first, second)
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) = default(dst, first, second)
 
@@ -45,20 +44,25 @@ class GetFieldPtrCodegen(val type: PointerType, val basicType: AggregateType, va
 
     override fun ara(dst: Address, first: GPRegister, second: Address) = default(dst, first, second)
 
-    override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
-    }
+    override fun aii(dst: Address, first: Imm32, second: Imm32) = default(dst, first, second)
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) = default(dst, first, second)
 
     override fun aia(dst: Address, first: Imm32, second: Address) = default(dst, first, second)
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        TODO("untested")
+        val disp = basicType.offset(second.value().toInt())
+        asm.lea(POINTER_SIZE, Address.from(first, disp), temp1)
+        asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        TODO("untested")
+        val disp = basicType.offset(second.value().toInt())
+        asm.mov(POINTER_SIZE, first, temp1)
+        asm.lea(POINTER_SIZE, Address.from(temp1, disp), temp1)
+        asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) = default(dst, first, second)

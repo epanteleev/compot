@@ -10,10 +10,12 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.types.FloatingPointType
 import ir.types.IntegerType
 import ir.types.PointerType
+import ir.types.Type
 
 
-class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
+class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
     private val size = type.sizeOf()
+    private val indexSize = indexType.sizeOf()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
         when (type) {
@@ -28,7 +30,7 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
                     }
                     dst is Address2 && source is Address && index is Imm -> {
                         val indexImm = index as ImmInt
-                        asm.movf(size, source, xmmTemp1)
+                        asm.movf(indexSize, source, xmmTemp1)
                         asm.movf(size, xmmTemp1, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
                     }
                     else -> {
@@ -89,7 +91,7 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
 
     override fun ara(dst: Address, first: GPRegister, second: Address) = when (dst) {
         is Address2 -> {
-            asm.mov(size, second, temp1)
+            asm.mov(indexSize, second, temp1)
             asm.mov(size, first, Address.from(dst.base, dst.offset, temp1, ScaleFactor.from(size)))
         }
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
@@ -102,15 +104,14 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) = when (dst) {
         is Address2 -> {
-            asm.mov(size, first, temp1)
-            asm.mov(size, temp1, Address.from(dst.base, dst.offset, second, ScaleFactor.from(size)))
+            asm.mov(size, first, Address.from(dst.base, dst.offset, second, ScaleFactor.from(size)))
         }
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) = when (dst) {
         is Address2 -> {
-            asm.mov(size, second, temp1)
+            asm.mov(indexSize, second, temp1)
             asm.mov(size, first, Address.from(dst.base, dst.offset, temp1, ScaleFactor.from(size)))
         }
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
@@ -136,7 +137,7 @@ class StoreOnStackCodegen (val type: PrimitiveType, val asm: Assembler) : GPOper
 
     override fun aaa(dst: Address, first: Address, second: Address) = when (dst) {
         is Address2 -> {
-            asm.mov(size, second, temp1)
+            asm.mov(indexSize, second, temp1)
             asm.mov(size, first, temp2)
             asm.mov(size, temp2, Address.from(dst.base, dst.offset, temp1, ScaleFactor.from(size)))
         }

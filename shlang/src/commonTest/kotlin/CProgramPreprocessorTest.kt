@@ -1151,12 +1151,12 @@ class CProgramPreprocessorTest {
     @Test
     fun testDefined4() {
         val data = """
-            |#ifndef __SIZE_TYPE__
-            |#define __SIZE_TYPE__ long unsigned int
+            |#ifndef __SIZE_TYPET__
+            |#define __SIZE_TYPET__ long unsigned int
             |#endif
             |#if !(defined (__GNUG__) \
             |   && defined (size_t))
-            |typedef __SIZE_TYPE__ size_t;
+            |typedef __SIZE_TYPET__ size_t;
             |#ifdef __BEOS__
             |typedef long ssize_t;
             |#endif /* __BEOS__ */

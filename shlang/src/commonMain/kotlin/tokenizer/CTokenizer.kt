@@ -35,25 +35,31 @@ class CTokenizer private constructor(private val filename: String, private val r
         tokens.add(next)
     }
 
-    private fun isBackSlash(): Boolean {
+    private fun isEndOfLine(): Boolean {
         return reader.check('\\') && reader.peekOffset(1) == '\n'
     }
 
-    private fun rearLiteral(quote: Char): String {
+    private fun readLiteral(quote: Char): String {
         eat()
-        val literal = reader.readBlock {
-            while (!reader.check(quote)) {
+        val builder = StringBuilder()
+
+        while (!reader.check(quote)) {
+            builder.append(eat())
+            if (isEndOfLine()) {
+                builder.append(eat())
+                builder.append(eat())
+                incrementLine()
+            }
+            if (reader.check('\\') && reader.peekOffset(1) == '\"') {
                 eat()
-                if (isBackSlash()) {
-                    eat(2)
-                    incrementLine()
-                }
+                builder.append(eat())
             }
         }
+
         if (!reader.eof) {
             eat()
         }
-        return literal
+        return builder.toString()
     }
 
     private fun readSpaces(): Int {
@@ -68,7 +74,7 @@ class CTokenizer private constructor(private val filename: String, private val r
     private fun doTokenizeHelper() {
         while (!reader.eof) {
             val v = reader.peek()
-            if (isBackSlash()) {
+            if (isEndOfLine()) {
                 eat(2)
                 incrementLine()
                 continue
@@ -92,7 +98,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
             if (reader.check('"')) {
-                val literal = rearLiteral(v)
+                val literal = readLiteral(v)
                 append(StringLiteral(literal, OriginalPosition(line, position - (literal.length + 2), filename)))
                 continue
             }

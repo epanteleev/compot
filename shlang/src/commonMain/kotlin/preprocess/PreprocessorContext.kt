@@ -100,6 +100,7 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         private val __SIZEOF_FLOAT__   = MacroReplacement("__SIZEOF_FLOAT__", tokenListOf(Numeric("4", 10, OriginalPosition.UNKNOWN)))
         private val __SIZEOF_DOUBLE__  = MacroReplacement("__SIZEOF_DOUBLE__", tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)))
         private val __INT32_MAX__      = MacroReplacement("__INT32_MAX__", tokenListOf(Numeric("2147483647", 10, OriginalPosition.UNKNOWN)))
+        private val __SIZE_TYPE__      = MacroReplacement("__SIZE_TYPE__", tokenListOf(Keyword("unsigned", OriginalPosition.UNKNOWN), Keyword("long", OriginalPosition.UNKNOWN)))
 
 
         // Implementation-defined macros
@@ -138,6 +139,7 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
                 "__SIZEOF_FLOAT__"   to __SIZEOF_FLOAT__,
                 "__SIZEOF_DOUBLE__"  to __SIZEOF_DOUBLE__,
                 "__INT32_MAX__"      to __INT32_MAX__,
+                "__SIZE_TYPE__"      to __SIZE_TYPE__,
             )
 
             return PreprocessorContext(macroReplacements, hashMapOf(), hashMapOf(), predefined, headerHolder)

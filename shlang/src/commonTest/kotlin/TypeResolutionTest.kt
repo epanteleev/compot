@@ -496,6 +496,19 @@ class TypeResolutionTest {
     }
 
     @Test
+    fun testTypedefValue() {
+        val input = """
+            typedef unsigned long A;
+        """.trimIndent()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        assertEquals("unsigned long", typeHolder.getTypedef("A").baseType().toString())
+    }
+
+    @Test
     fun testStaticStorageClass() {
         val input = """
             static int a = 10;

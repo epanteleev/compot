@@ -89,7 +89,7 @@ class StringReader(val str: String, var pos: Int = 0) {
         }
     }
 
-    inline fun readIdentifier(): String = readBlock {
+    fun readIdentifier(): String = readBlock {
         while (!eof && (peek().isLetter() || peek().isDigit() || check('_'))) {
             read()
         }

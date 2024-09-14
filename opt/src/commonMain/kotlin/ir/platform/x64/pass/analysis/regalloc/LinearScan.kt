@@ -50,11 +50,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     private fun allocRegistersForArgumentValues() {
         for (arg in data.arguments()) {
             fixedValues.add(arg)
-            val reg = pool.takeArgument(arg)
-            registerMap[arg] = reg
-            if (reg != rdx) { //TODO hack
-                active[arg] = reg
-            }
+            allocate(pool.takeArgument(arg), arg)
         }
     }
 
@@ -101,11 +97,13 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
 
     private fun allocRegistersForLocalVariables() {
         for ((value, range) in liveRanges) {
-            if (registerMap[value] != null) {
+            val reg = registerMap[value]
+            if (reg != null) {
                 assertion(fixedValues.contains(value)
                         || liveRanges.getGroup(value) != null) {
                     "value=$value is already allocated"
                 }
+                active[value] = reg
                 continue
             }
 

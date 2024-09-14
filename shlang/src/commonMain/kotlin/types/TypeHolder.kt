@@ -3,9 +3,9 @@ package types
 import gen.VarStack
 
 
-class TypeHolder: Scope {
+class TypeHolder private constructor(): Scope {
     private val valueMap = VarStack<VarDescriptor>()
-    val enumTypeMap = VarStack<CPrimitive>()//TODO separate holder for struct, enum, union.
+    val enumTypeMap = VarStack<CPrimitive>()
     val structTypeMap = VarStack<AggregateBaseType>()
     val unionTypeMap = VarStack<AggregateBaseType>()
 
@@ -45,7 +45,7 @@ class TypeHolder: Scope {
     }
 
     inline fun<reified T: CType> getTypeOrNull(name: String): CType? = when (T::class) {
-        CEnumType::class, CUncompletedEnumType::class         -> enumTypeMap[name]
+        CEnumType::class, CUncompletedEnumType::class     -> enumTypeMap[name]
         CStructType::class, CUncompletedStructType::class -> structTypeMap[name]
         CUnionType::class, CUncompletedUnionType::class   -> unionTypeMap[name]
         else -> null
@@ -79,7 +79,7 @@ class TypeHolder: Scope {
 
     inline fun <reified T : CType> addNewType(name: String, type: T): T {
         when (type) {
-            is CEnumType, is CUncompletedEnumType         -> enumTypeMap[name] = type
+            is CEnumType, is CUncompletedEnumType     -> enumTypeMap[name] = type
             is CStructType, is CUncompletedStructType -> structTypeMap[name] = type
             is CUnionType, is CUncompletedUnionType   -> unionTypeMap[name] = type
             else -> throw RuntimeException("Unknown type $type")

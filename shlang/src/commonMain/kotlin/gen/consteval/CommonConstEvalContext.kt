@@ -6,8 +6,12 @@ import tokenizer.CToken
 import types.TypeHolder
 
 
-class CommonConstEvalContext<T: Number>(val typeHolder: TypeHolder): ConstEvalContext<T> {
+class CommonConstEvalContext<T: Number>(val typeHolder: TypeHolder, val enumerationValues: Map<String, Int> = hashMapOf<String, Int>()): ConstEvalContext<T> {
     override fun getVariable(name: CToken): T {
+        val value = enumerationValues[name.str()]
+        if (value != null) {
+            return value as T //TODO
+        }
         val error = InvalidToken("Cannot consteval expression: found variable", name)
         throw ParserException(error)
     }

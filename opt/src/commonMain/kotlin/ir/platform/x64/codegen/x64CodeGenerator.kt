@@ -300,7 +300,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val value = valueToRegister.operand(store.source())
         val index = valueToRegister.operand(store.index())
 
-        StoreOnStackCodegen(store.source().type() as PrimitiveType, asm)(pointerOperand, value, index)
+        StoreOnStackCodegen(store.source().type().asType(), store.index().asType(), asm)(pointerOperand, value, index)
     }
 
     override fun visit(loadst: LoadFromStack) {

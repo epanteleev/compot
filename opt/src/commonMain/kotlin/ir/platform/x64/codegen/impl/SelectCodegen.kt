@@ -41,8 +41,8 @@ class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: A
             return
         }
         when (dst) {
-            first -> asm.cmovcc(size, matchIntCondition(), second, dst)
-            second -> asm.cmovcc(size, matchIntCondition().invert(), first, dst)
+            first -> asm.cmovcc(size, matchIntCondition().invert(), second, dst)
+            second -> asm.cmovcc(size, matchIntCondition(), first, dst)
             else -> {
                 asm.mov(size, second, dst)
                 asm.cmovcc(size, matchIntCondition(), first, dst)

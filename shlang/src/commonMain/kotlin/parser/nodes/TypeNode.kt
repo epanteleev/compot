@@ -161,7 +161,7 @@ data class EnumSpecifier(private val name: Identifier, val enumerators: List<Enu
         for (field in enumerators) {
             val constExpression = field.constExpr
             if (constExpression !is EmptyExpression) {
-                val ctx = CommonConstEvalContext<Int>(typeHolder)
+                val ctx = CommonConstEvalContext<Int>(typeHolder, enumeratorValues)
                 enumValue = ConstEvalExpression.eval(constExpression, ConstEvalExpressionInt(ctx))
             }
             enumeratorValues[field.name()] = enumValue
