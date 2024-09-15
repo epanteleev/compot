@@ -5,9 +5,7 @@ import ir.types.*
 import ir.value.*
 import ir.instruction.*
 import asm.x64.GPRegister.*
-import ir.Definitions.DOUBLE_SIZE
 import ir.Definitions.QWORD_SIZE
-import ir.platform.x64.CallConvention
 
 
 class VirtualRegistersPool private constructor(private val argumentSlots: List<Operand>) {
@@ -46,8 +44,16 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
         else            -> throw RuntimeException("unknown operand operand=$operand, size=$size")
     }
 
-    fun stackSize(): Int {
+    fun spilledLocalsAreaSize(): Int {
         return ((frame.size() + (QWORD_SIZE - 1)) / QWORD_SIZE) * QWORD_SIZE
+    }
+
+    fun usedGPCalleeSaveRegisters(): List<GPRegister> {
+        return gpRegisters.usedCalleeSaveRegisters()
+    }
+
+    fun usedXmmCalleeSaveRegisters(): List<XmmRegister> {
+        return xmmRegisters.usedCalleeSaveRegisters()
     }
 
     fun calleeArgumentAllocate(arguments: List<Value>): List<Operand?> {
@@ -55,52 +61,8 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
     }
 
     companion object {
-        private const val RETURN_ADDRESS_SIZE = QWORD_SIZE
-        private const val FRAME_POINTER_SIZE = QWORD_SIZE
-        const val ARGUMENTS_OFFSET = RETURN_ADDRESS_SIZE + FRAME_POINTER_SIZE
-
-
-        private class ArgumentAllocator {
-            private var freeArgumentRegisters = CallConvention.gpArgumentRegisters.toMutableList().asReversed()
-            private var freeXmmArgumentRegisters = CallConvention.xmmArgumentRegister.toMutableList().asReversed()
-            private var argumentSlotIndex: Int = 0
-
-            private fun peakIntegerArgument(): Operand {
-                return if (freeArgumentRegisters.isNotEmpty()) {
-                    freeArgumentRegisters.removeLast()
-                } else {
-                    val old = argumentSlotIndex
-                    argumentSlotIndex += 1
-                    ArgumentSlot(rbp, old * QWORD_SIZE + ARGUMENTS_OFFSET)
-                }
-            }
-
-            private fun peakFPArgument(): Operand {
-                return if (freeXmmArgumentRegisters.isNotEmpty()) {
-                    freeXmmArgumentRegisters.removeLast()
-                } else {
-                    val old = argumentSlotIndex
-                    argumentSlotIndex += 1
-                    ArgumentSlot(rbp, old * DOUBLE_SIZE + ARGUMENTS_OFFSET)
-                }
-            }
-
-            private fun pickArgument(type: PrimitiveType): Operand = when (type) {
-                is IntegerType, is PointerType -> peakIntegerArgument()
-                is FloatingPointType -> peakFPArgument()
-                else -> throw RuntimeException("type=$type")
-            }
-
-            fun allocate(arguments: List<ArgumentValue>): List<Operand> {
-                return arguments.mapTo(arrayListOf()) {
-                    pickArgument(it.type() as PrimitiveType)
-                }
-            }
-        }
-
         fun create(argumentValues: List<ArgumentValue>): VirtualRegistersPool {
-            val allocator = ArgumentAllocator()
-            return VirtualRegistersPool(allocator.allocate(argumentValues))
+            return VirtualRegistersPool(CallerArgumentAllocator.allocate(argumentValues))
         }
     }
 }

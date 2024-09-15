@@ -4,11 +4,39 @@ import asm.x64.*
 import ir.platform.x64.CallConvention
 
 
-internal class GPRegistersList(argumentValue: List<GPRegister>) {
-    private var freeRegisters = CallConvention.availableRegisters(argumentValue).toMutableList()
+internal class GPRegistersList(usedArgumentRegisters: List<GPRegister>) {
+    private var freeRegisters = CallConvention.availableRegisters(usedArgumentRegisters).toMutableList()
+
+    private val usedCalleeSaveRegisters = hashSetOf<GPRegister>()
+
+    init {
+        for (reg in usedArgumentRegisters) {
+            if (CallConvention.gpCalleeSaveRegs.contains(reg)) {
+                usedCalleeSaveRegisters.add(reg)
+            }
+        }
+    }
+
+    fun usedCalleeSaveRegisters(): List<GPRegister> {
+        return usedCalleeSaveRegisters.toList()
+    }
+
+    private fun tryAddCalleeSaveRegister(register: GPRegister) {
+        if (!CallConvention.gpCalleeSaveRegs.contains(register)) {
+            return
+        }
+
+        usedCalleeSaveRegisters.add(register)
+    }
 
     fun pickRegister(excludeIf: (Register) -> Boolean): GPRegister? {
-        return freeRegisters.lastOrNull { !excludeIf(it) }?.also { freeRegisters.remove(it) }
+        val reg = freeRegisters.findLast { !excludeIf(it) }
+        if (reg == null) {
+            return null
+        }
+        freeRegisters.remove(reg)
+        tryAddCalleeSaveRegister(reg)
+        return reg
     }
 
     fun returnRegister(reg: GPRegister) {

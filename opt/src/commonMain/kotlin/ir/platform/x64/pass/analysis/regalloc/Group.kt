@@ -20,8 +20,6 @@ class Group(val values: List<LocalValue>) {
 
         other as Group
 
-        if (values != other.values) return false
-
-        return true
+        return values == other.values
     }
 }

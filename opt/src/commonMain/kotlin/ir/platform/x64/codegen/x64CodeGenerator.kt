@@ -48,7 +48,7 @@ internal class X64CodeGenerator(val module: Module): AnyCodeGenerator {
 }
 
 private class CodeEmitter(private val data: FunctionData, private val unit: CompilationUnit): IRInstructionVisitor<Unit>() {
-    private val valueToRegister by lazy { data.analysis(LinearScanFabric) }
+    private val registerAllocation by lazy { data.analysis(LinearScanFabric) }
     private val liveness by lazy { data.analysis(LivenessAnalysisPassFabric) }
     private val asm = unit.function(data.prototype.name)
     private var previous: Block? = null
@@ -60,8 +60,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     private fun makeLabel(bb: Block) = unit.nameAssistant().newLocalLabel(asm, bb.index)
 
     private fun emitPrologue() {
-        val stackSize = valueToRegister.spilledLocalsSize()
-        val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
+        val stackSize = registerAllocation.spilledLocalsSize()
+        val calleeSaveRegisters = registerAllocation.calleeSaveRegisters
 
         asm.push(QWORD_SIZE, rbp)
         asm.mov(QWORD_SIZE, rsp, rbp)
@@ -75,66 +75,66 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     private fun emitEpilogue() {
-        val calleeSaveRegisters = valueToRegister.calleeSaveRegisters
-        for (reg in calleeSaveRegisters.reversed()) { //TODO created new ds
-            asm.pop(QWORD_SIZE, reg)
+        val calleeSaveRegisters = registerAllocation.calleeSaveRegisters
+        for (idx in calleeSaveRegisters.indices.reversed()) {
+            asm.pop(QWORD_SIZE, calleeSaveRegisters[idx])
         }
 
         asm.leave()
     }
 
     override fun visit(add: Add) {
-        val first  = valueToRegister.operand(add.first())
-        val second = valueToRegister.operand(add.second())
-        val dst    = valueToRegister.operand(add)
+        val first  = registerAllocation.operand(add.first())
+        val second = registerAllocation.operand(add.second())
+        val dst    = registerAllocation.operand(add)
 
         AddCodegen(add.type(), asm)(dst, first, second)
     }
 
     override fun visit(and: And) {
-        val first  = valueToRegister.operand(and.first())
-        val second = valueToRegister.operand(and.second())
-        val dst    = valueToRegister.operand(and)
+        val first  = registerAllocation.operand(and.first())
+        val second = registerAllocation.operand(and.second())
+        val dst    = registerAllocation.operand(and)
 
         AndCodegen(and.type(), asm)(dst, first, second)
     }
 
     override fun visit(or: Or) {
-        val first  = valueToRegister.operand(or.first())
-        val second = valueToRegister.operand(or.second())
-        val dst    = valueToRegister.operand(or)
+        val first  = registerAllocation.operand(or.first())
+        val second = registerAllocation.operand(or.second())
+        val dst    = registerAllocation.operand(or)
 
         OrCodegen(or.type(), asm)(dst, first, second)
     }
 
     override fun visit(xor: Xor) {
-        val first  = valueToRegister.operand(xor.first())
-        val second = valueToRegister.operand(xor.second())
-        val dst    = valueToRegister.operand(xor)
+        val first  = registerAllocation.operand(xor.first())
+        val second = registerAllocation.operand(xor.second())
+        val dst    = registerAllocation.operand(xor)
 
         XorCodegen(xor.type(), asm)(dst, first, second)
     }
 
     override fun visit(mul: Mul) {
-        val first  = valueToRegister.operand(mul.first())
-        val second = valueToRegister.operand(mul.second())
-        val dst    = valueToRegister.operand(mul)
+        val first  = registerAllocation.operand(mul.first())
+        val second = registerAllocation.operand(mul.second())
+        val dst    = registerAllocation.operand(mul)
 
         MulCodegen(mul.type(), asm)(dst, first, second)
     }
 
     override fun visit(div: Div) {
-        val first  = valueToRegister.operand(div.first())
-        val second = valueToRegister.operand(div.second())
-        val dst    = valueToRegister.operand(div)
+        val first  = registerAllocation.operand(div.first())
+        val second = registerAllocation.operand(div.second())
+        val dst    = registerAllocation.operand(div)
 
         FloatDivCodegen(div.type(), asm)(dst, first, second)
     }
 
     override fun visit(shl: Shl) {
-        val first  = valueToRegister.operand(shl.first())
-        val second = valueToRegister.operand(shl.second())
-        val dst    = valueToRegister.operand(shl)
+        val first  = registerAllocation.operand(shl.first())
+        val second = registerAllocation.operand(shl.second())
+        val dst    = registerAllocation.operand(shl)
 
         when (shl.type()) {
             is UnsignedIntType -> ShlCodegen(shl.type(), asm)(dst, first, second)
@@ -143,9 +143,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(shr: Shr) {
-        val first  = valueToRegister.operand(shr.first())
-        val second = valueToRegister.operand(shr.second())
-        val dst    = valueToRegister.operand(shr)
+        val first  = registerAllocation.operand(shr.first())
+        val second = registerAllocation.operand(shr.second())
+        val dst    = registerAllocation.operand(shr)
 
         when (shr.type()) {
             is UnsignedIntType -> ShrCodegen(shr.type(), asm)(dst, first, second)
@@ -154,9 +154,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(sub: Sub) {
-        val first  = valueToRegister.operand(sub.first())
-        val second = valueToRegister.operand(sub.second())
-        val dst    = valueToRegister.operand(sub)
+        val first  = registerAllocation.operand(sub.first())
+        val second = registerAllocation.operand(sub.second())
+        val dst    = registerAllocation.operand(sub)
 
         SubCodegen(sub.type(), asm)(dst, first, second)
     }
@@ -173,16 +173,16 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     override fun visit(returnValue: ReturnValue) {
         when (val returnType = returnValue.type()) {
-            is IntegerType, is PointerType -> { returnType as PrimitiveType
-                val value = valueToRegister.operand(returnValue.returnValue(0))
+            is IntegerType, is PointerType -> {
+                val value = registerAllocation.operand(returnValue.returnValue(0))
                 emitRetValue(returnType, value, retReg)
             }
             is FloatingPointType -> {
-                val value = valueToRegister.operand(returnValue.returnValue(0))
+                val value = registerAllocation.operand(returnValue.returnValue(0))
                 emitRetValue(returnType, value, fpRet)
             }
             is TupleType -> {
-                val value = valueToRegister.operand(returnValue.returnValue(0))
+                val value = registerAllocation.operand(returnValue.returnValue(0))
                 when (val first  = returnType.asInnerType<PrimitiveType>(0)) {
                     is IntegerType, is PointerType -> {
                         ReturnIntCodegen(first, asm)(retReg, value)
@@ -193,7 +193,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                     else -> throw CodegenException("unknown type=$first")
                 }
 
-                val value1 = valueToRegister.operand(returnValue.returnValue(1))
+                val value1 = registerAllocation.operand(returnValue.returnValue(1))
                 when (val second = returnType.asInnerType<PrimitiveType>(1)) {
                     is IntegerType, is PointerType -> {
                         ReturnIntCodegen(second, asm)(rdx, value1)
@@ -217,8 +217,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(neg: Neg) {
-        val operand = valueToRegister.operand(neg.operand())
-        val result  = valueToRegister.operand(neg)
+        val operand = registerAllocation.operand(neg.operand())
+        val result  = registerAllocation.operand(neg)
         if (neg.type() == Type.F32) {
             unit.mkConstant(GlobalConstant.of(FLOAT_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroFloat))
         } else if (neg.type() == Type.F64) {
@@ -229,8 +229,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(not: Not) {
-        val operand = valueToRegister.operand(not.operand())
-        val result  = valueToRegister.operand(not)
+        val operand = registerAllocation.operand(not.operand())
+        val result  = registerAllocation.operand(not)
         NotCodegen(not.type(), asm)(result, operand)
     }
 
@@ -250,7 +250,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val first  = retType.asInnerType<PrimitiveType>(0)
         val second = retType.asInnerType<PrimitiveType>(1)
 
-        val value = valueToRegister.operand(tupleCall.proj(0)!!)
+        val value = registerAllocation.operand(tupleCall.proj(0)!!)
         if (first is IntegerType || first is PointerType) {
             CallIntCodegen(first, asm)(value, retReg)
         } else if (first is FloatingPointType) {
@@ -259,7 +259,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             throw CodegenException("unknown type=$first")
         }
 
-        val value1 = valueToRegister.operand(tupleCall.proj(1)!!)
+        val value1 = registerAllocation.operand(tupleCall.proj(1)!!)
         if (second is IntegerType || second is PointerType) {
             CallIntCodegen(second, asm)(value1, rdx)
         } else if (second is FloatingPointType) {
@@ -270,50 +270,50 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(int2ptr: Int2Pointer) {
-        val dst = valueToRegister.operand(int2ptr)
-        val src = valueToRegister.operand(int2ptr.value())
+        val dst = registerAllocation.operand(int2ptr)
+        val src = registerAllocation.operand(int2ptr.value())
         CopyCodegen(int2ptr.type(), asm)(dst, src)
     }
 
     override fun visit(ptr2Int: Pointer2Int) {
-        val dst = valueToRegister.operand(ptr2Int)
-        val src = valueToRegister.operand(ptr2Int.value())
+        val dst = registerAllocation.operand(ptr2Int)
+        val src = registerAllocation.operand(ptr2Int.value())
         CopyCodegen(ptr2Int.type(), asm)(dst, src)
     }
 
     override fun visit(memcpy: Memcpy) {
-        val dst = valueToRegister.operand(memcpy.destination())
-        val src = valueToRegister.operand(memcpy.source())
+        val dst = registerAllocation.operand(memcpy.destination())
+        val src = registerAllocation.operand(memcpy.source())
         MemcpyCodegen(memcpy.length(), asm)(dst, src)
     }
 
     override fun visit(indexedLoad: IndexedLoad) {
-        val dst = valueToRegister.operand(indexedLoad)
-        val first = valueToRegister.operand(indexedLoad.origin())
-        val second = valueToRegister.operand(indexedLoad.index())
-        IndexedLoadCodegen(indexedLoad.type(), indexedLoad.index().asType<PrimitiveType>(), asm)(dst, first, second)
+        val dst = registerAllocation.operand(indexedLoad)
+        val first = registerAllocation.operand(indexedLoad.origin())
+        val second = registerAllocation.operand(indexedLoad.index())
+        IndexedLoadCodegen(indexedLoad.type(), indexedLoad.index().asType(), asm)(dst, first, second)
     }
 
     override fun visit(store: StoreOnStack) {
-        val pointerOperand = valueToRegister.operand(store.destination())
-        val value = valueToRegister.operand(store.source())
-        val index = valueToRegister.operand(store.index())
+        val pointerOperand = registerAllocation.operand(store.destination())
+        val value = registerAllocation.operand(store.source())
+        val index = registerAllocation.operand(store.index())
 
         StoreOnStackCodegen(store.source().type().asType(), store.index().asType(), asm)(pointerOperand, value, index)
     }
 
     override fun visit(loadst: LoadFromStack) {
-        val origin = valueToRegister.operand(loadst.origin())
-        val index  = valueToRegister.operand(loadst.index())
-        val dst    = valueToRegister.operand(loadst)
+        val origin = registerAllocation.operand(loadst.origin())
+        val index  = registerAllocation.operand(loadst.index())
+        val dst    = registerAllocation.operand(loadst)
 
         LoadFromStackCodegen(loadst.type(), loadst.index().asType(), asm)(dst, origin, index)
     }
 
     override fun visit(leaStack: LeaStack) {
-        val sourceOperand = valueToRegister.operand(leaStack.origin())
-        val index         = valueToRegister.operand(leaStack.index())
-        val dest          = valueToRegister.operand(leaStack)
+        val sourceOperand = registerAllocation.operand(leaStack.origin())
+        val index         = registerAllocation.operand(leaStack.index())
+        val dest          = registerAllocation.operand(leaStack)
 
         LeaStackCodegen(Type.Ptr, leaStack.loadedType, asm)(dest, sourceOperand, index)
     }
@@ -321,13 +321,13 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(binary: TupleDiv) {
         val divType = binary.type()
 
-        val first  = valueToRegister.operand(binary.first())
-        val second = valueToRegister.operand(binary.second())
+        val first  = registerAllocation.operand(binary.first())
+        val second = registerAllocation.operand(binary.second())
 
         val quotientOperand = run {
             val quotient = binary.quotient()
             if (quotient != null) {
-                valueToRegister.operand(quotient)
+                registerAllocation.operand(quotient)
             } else {
                 null
             }
@@ -336,7 +336,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val remainderOperand = run {
             val remainder = binary.remainder()
             if (remainder != null) {
-                valueToRegister.operand(remainder)
+                registerAllocation.operand(remainder)
             } else {
                 null
             }
@@ -367,12 +367,12 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         asm.callFunction(call)
 
         when (val retType = call.type()) {
-            is IntegerType, is PointerType, is BooleanType -> { retType as PrimitiveType
-                CallIntCodegen(retType, asm)(valueToRegister.operand(call), retReg)
+            is IntegerType, is PointerType, is BooleanType -> {
+                CallIntCodegen(retType, asm)(registerAllocation.operand(call), retReg)
             }
 
             is FloatingPointType -> {
-                CallFloatCodegen(retType, asm)(valueToRegister.operand(call), fpRet)
+                CallFloatCodegen(retType, asm)(registerAllocation.operand(call), fpRet)
             }
             else -> throw RuntimeException("unknown value type=$retType")
         }
@@ -384,8 +384,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(flag2Int: Flag2Int) {
-        val dst = valueToRegister.operand(flag2Int)
-        val src = valueToRegister.operand(flag2Int.value())
+        val dst = registerAllocation.operand(flag2Int)
+        val src = registerAllocation.operand(flag2Int.value())
         val compare = flag2Int.value() as CompareInstruction
 
         val isNeighbour = flag2Int.prev() != null && flag2Int.prev() == flag2Int.value()
@@ -399,45 +399,45 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(indirectionCall: IndirectionCall) {
-        val pointer = valueToRegister.operand(indirectionCall.pointer())
+        val pointer = registerAllocation.operand(indirectionCall.pointer())
         asm.indirectCall(indirectionCall, pointer)
 
         when (val retType = indirectionCall.type()) {
-            is IntegerType, is PointerType, is BooleanType -> { retType as PrimitiveType
-                CallIntCodegen(retType, asm)(valueToRegister.operand(indirectionCall), retReg)
+            is IntegerType, is PointerType, is BooleanType -> {
+                CallIntCodegen(retType, asm)(registerAllocation.operand(indirectionCall), retReg)
             }
             is FloatingPointType -> {
-                CallFloatCodegen(retType, asm)(valueToRegister.operand(indirectionCall), fpRet)
+                CallFloatCodegen(retType, asm)(registerAllocation.operand(indirectionCall), fpRet)
             }
             else -> throw RuntimeException("unknown value type=$retType")
         }
     }
 
     override fun visit(indirectionVoidCall: IndirectionVoidCall) {
-        val pointer = valueToRegister.operand(indirectionVoidCall.pointer())
+        val pointer = registerAllocation.operand(indirectionVoidCall.pointer())
         asm.indirectCall(indirectionVoidCall, pointer)
     }
 
     override fun visit(store: Store) {
         val pointer = store.pointer()
 
-        val pointerOperand = valueToRegister.operand(pointer)
-        val value          = valueToRegister.operand(store.value())
+        val pointerOperand = registerAllocation.operand(pointer)
+        val value          = registerAllocation.operand(store.value())
         val type = store.value().type()
 
         StoreCodegen(type as PrimitiveType, asm)(value, pointerOperand)
     }
 
     override fun visit(load: Load) {
-        val pointer = valueToRegister.operand(load.operand())
-        val value   = valueToRegister.operand(load)
+        val pointer = registerAllocation.operand(load.operand())
+        val value   = registerAllocation.operand(load)
         LoadCodegen(load.type(), asm)(value, pointer)
     }
 
     override fun visit(icmp: IntCompare) {
-        val first  = valueToRegister.operand(icmp.first())
-        val second = valueToRegister.operand(icmp.second())
-        val dst    = valueToRegister.operand(icmp)
+        val first  = registerAllocation.operand(icmp.first())
+        val second = registerAllocation.operand(icmp.second())
+        val dst    = registerAllocation.operand(icmp)
 
         IntCmpCodegen(icmp.first().asType(), asm)(first, second)
         if (needSetcc(icmp)) {
@@ -451,9 +451,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(fcmp: FloatCompare) {
-        val first  = valueToRegister.operand(fcmp.first())
-        val second = valueToRegister.operand(fcmp.second())
-        val dst    = valueToRegister.operand(fcmp)
+        val first  = registerAllocation.operand(fcmp.first())
+        val second = registerAllocation.operand(fcmp.second())
+        val dst    = registerAllocation.operand(fcmp)
 
         FloatCmpCodegen(fcmp.first().asType(), asm)(first, second)
         if (needSetcc(fcmp)) {
@@ -499,26 +499,26 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             // Do nothing. UB is UB
             return
         }
-        val result  = valueToRegister.operand(copy)
-        val operand = valueToRegister.operand(copy.origin())
+        val result  = registerAllocation.operand(copy)
+        val operand = registerAllocation.operand(copy.origin())
         CopyCodegen(copy.type(), asm)(result, operand)
     }
 
     override fun visit(move: Move) {
-        val source      = valueToRegister.operand(move.source())
-        val destination = valueToRegister.operand(move.destination())
+        val source      = registerAllocation.operand(move.source())
+        val destination = registerAllocation.operand(move.destination())
 
         val type = move.source().asType<PrimitiveType>()
         MoveCodegen(type, asm)(destination, source)
     }
 
     override fun visit(move: MoveByIndex) {
-        val index       = valueToRegister.operand(move.index())
-        val destination = valueToRegister.operand(move.destination())
+        val index       = registerAllocation.operand(move.index())
+        val destination = registerAllocation.operand(move.destination())
 
         val indexType  = move.index().asType<PrimitiveType>()
         val sourceType = move.source().asType<PrimitiveType>()
-        val srcOperand = valueToRegister.operand(move.source())
+        val srcOperand = registerAllocation.operand(move.source())
         MoveByIndexCodegen(sourceType, indexType, asm)(destination, srcOperand, index)
     }
 
@@ -536,7 +536,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             setOf()
         }
 
-        return valueToRegister.callerSaveRegisters(liveOut, exclude)
+        return registerAllocation.callerSaveRegisters(liveOut, exclude)
     }
 
     override fun visit(downStackFrame: DownStackFrame) {
@@ -552,12 +552,12 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         }
 
         var argumentsSlotsSize = 0 // TODO refactor
-        for (arg in call.arguments()) {
-            val reg = valueToRegister.operand(arg)
+        for (reg in registerAllocation.callArguments(call)) {
             if (reg is Address) {
                 argumentsSlotsSize += POINTER_SIZE
             }
         }
+
         val size = context.adjustStackSize() + argumentsSlotsSize
         if (size != 0) {
             asm.sub(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
@@ -569,8 +569,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val context = getState(call)
 
         var argumentsSlotsSize = 0
-        for (arg in call.arguments()) { // TODO refactor
-            val reg = valueToRegister.operand(arg)
+        for (reg in registerAllocation.callArguments(call)) { // TODO refactor
             if (reg is Address) {
                 argumentsSlotsSize += POINTER_SIZE
             }
@@ -592,9 +591,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     override fun visit(gep: GetElementPtr) {
         val source = gep.source()
-        val sourceOperand = valueToRegister.operand(source)
-        val index         = valueToRegister.operand(gep.index())
-        val dest          = valueToRegister.operand(gep)
+        val sourceOperand = registerAllocation.operand(source)
+        val index         = registerAllocation.operand(gep.index())
+        val dest          = registerAllocation.operand(gep)
 
         val elementSize = gep.index().asType<NonTrivialType>().sizeOf()
         GetElementPtrCodegen(gep.type(), elementSize, gep.basicType, asm)(dest, sourceOperand, index)
@@ -602,67 +601,67 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     override fun visit(gfp: GetFieldPtr) {
         val source = gfp.source()
-        val sourceOperand = valueToRegister.operand(source)
-        val index         = valueToRegister.operand(gfp.index(0))
-        val dest          = valueToRegister.operand(gfp)
+        val sourceOperand = registerAllocation.operand(source)
+        val index         = registerAllocation.operand(gfp.index(0))
+        val dest          = registerAllocation.operand(gfp)
 
         GetFieldPtrCodegen(gfp.type(), gfp.basicType, asm)(dest, sourceOperand, index)
     }
 
     override fun visit(bitcast: Bitcast) {
-        val des = valueToRegister.operand(bitcast)
-        val src = valueToRegister.operand(bitcast.value())
+        val des = registerAllocation.operand(bitcast)
+        val src = registerAllocation.operand(bitcast.value())
         BitcastCodegen(bitcast.type(), asm)(des, src)
     }
 
     override fun visit(itofp: Int2Float) {
-        val dst = valueToRegister.operand(itofp)
-        val src = valueToRegister.operand(itofp.value())
+        val dst = registerAllocation.operand(itofp)
+        val src = registerAllocation.operand(itofp.value())
         Int2FloatCodegen(itofp.type(), itofp.value().asType<IntegerType>(), asm)(dst, src)
     }
 
     override fun visit(zext: ZeroExtend) {
-        val dst = valueToRegister.operand(zext)
-        val src = valueToRegister.operand(zext.value())
+        val dst = registerAllocation.operand(zext)
+        val src = registerAllocation.operand(zext.value())
         val toType   = zext.asType<IntegerType>()
         val fromType = zext.value().asType<IntegerType>()
         ZeroExtendCodegen(fromType, toType, asm)(dst, src)
     }
 
     override fun visit(sext: SignExtend) {
-        val dst = valueToRegister.operand(sext)
-        val src = valueToRegister.operand(sext.value())
-        SignExtendCodegen(sext.value().asType<IntegerType>(), sext.type(), asm)(dst, src)
+        val dst = registerAllocation.operand(sext)
+        val src = registerAllocation.operand(sext.value())
+        SignExtendCodegen(sext.value().asType(), sext.type(), asm)(dst, src)
     }
 
     override fun visit(trunc: Truncate) {
-        val dst = valueToRegister.operand(trunc)
-        val src = valueToRegister.operand(trunc.value())
-        TruncateCodegen(trunc.value().asType<IntegerType>(), trunc.type(), asm)(dst, src)
+        val dst = registerAllocation.operand(trunc)
+        val src = registerAllocation.operand(trunc.value())
+        TruncateCodegen(trunc.value().asType(), trunc.type(), asm)(dst, src)
     }
 
     override fun visit(fptruncate: FpTruncate) {
-        val dst = valueToRegister.operand(fptruncate)
-        val src = valueToRegister.operand(fptruncate.value())
+        val dst = registerAllocation.operand(fptruncate)
+        val src = registerAllocation.operand(fptruncate.value())
         FptruncateCodegen(fptruncate.type(), asm)(dst, src)
     }
 
     override fun visit(fpext: FpExtend) {
-        val dst = valueToRegister.operand(fpext)
-        val src = valueToRegister.operand(fpext.value())
+        val dst = registerAllocation.operand(fpext)
+        val src = registerAllocation.operand(fpext.value())
         FpExtendCodegen(fpext.type(), asm)(dst, src)
     }
 
     override fun visit(fptosi: FloatToInt) {
-        val dst = valueToRegister.operand(fptosi)
-        val src = valueToRegister.operand(fptosi.value())
-        FloatToSignedCodegen(fptosi.type(), fptosi.value().asType<FloatingPointType>(), asm)(dst, src)
+        val dst = registerAllocation.operand(fptosi)
+        val src = registerAllocation.operand(fptosi.value())
+        FloatToSignedCodegen(fptosi.type(), fptosi.value().asType(), asm)(dst, src)
     }
 
     override fun visit(select: Select) {
-        val dst     = valueToRegister.operand(select)
-        val onTrue  = valueToRegister.operand(select.onTrue())
-        val onFalse = valueToRegister.operand(select.onFalse())
+        val dst     = registerAllocation.operand(select)
+        val onTrue  = registerAllocation.operand(select.onTrue())
+        val onFalse = registerAllocation.operand(select.onFalse())
         SelectCodegen(select.type(), select.condition() as IntCompare, asm)(dst, onTrue, onFalse)
     }
 
@@ -675,8 +674,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(generate: Generate) { /* nothing to do */ }
 
     override fun visit(lea: Lea) {
-        val dst = valueToRegister.operand(lea)
-        val gen = valueToRegister.operand(lea.operand()) as Address
+        val dst = registerAllocation.operand(lea)
+        val gen = registerAllocation.operand(lea.operand()) as Address
 
         when (dst) {
             is Address -> {

@@ -28,7 +28,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     private val interferenceGraph = data.analysis(InterferenceGraphFabric)
 
     private val registerMap = hashMapOf<LocalValue, Operand>()
-    private val fixedValues = arrayListOf<LocalValue>() // Debug only purpose
+    private val callInfo    = hashMapOf<Callable, List<Operand?>>()
     private val active      = hashMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
 
@@ -39,7 +39,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     }
 
     override fun run(): RegisterAllocation {
-        return RegisterAllocation(pool.stackSize(), registerMap, data.marker())
+        return RegisterAllocation(pool.spilledLocalsAreaSize(), registerMap, pool.usedGPCalleeSaveRegisters(), callInfo, data.marker())
     }
 
     private fun allocate(slot: Operand, value: LocalValue) {
@@ -49,21 +49,22 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
 
     private fun allocRegistersForArgumentValues() {
         for (arg in data.arguments()) {
-            fixedValues.add(arg)
             allocate(pool.takeArgument(arg), arg)
         }
     }
 
     private fun allocFunctionArguments(callable: Callable) {
         val allocation = pool.calleeArgumentAllocate(callable.arguments())
+        callInfo[callable] = allocation
+
         allocation.forEachWith(callable.arguments()) { operand, arg ->
             if (operand == null) {
                 // Nothing to do. UB happens
                 return@forEachWith
             }
+            assertion(arg is LocalValue) { "arg=$arg" }
 
-            fixedValues.add(arg as LocalValue)
-            registerMap[arg] = operand
+            registerMap[arg as LocalValue] = operand
         }
     }
 
@@ -71,14 +72,12 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         for (inst in bb) {
             match(inst) {
                 shl(nop(), constant().not()) { shl ->
-                    val value = shl.second() as Copy
-                    registerMap[value] = rcx
-                    fixedValues.add(value)
+                    assertion(shl.second() is Copy) { "shl=$shl" }
+                    registerMap[shl.second() as Copy] = rcx
                 }
                 shr(nop(), constant().not()) { shr ->
-                    val value = shr.second() as Copy
-                    registerMap[value] = rcx
-                    fixedValues.add(value)
+                    assertion(shr.second() is Copy) { "shr=$shr" }
+                    registerMap[shr.second() as Copy] = rcx
                 }
             }
         }
@@ -99,10 +98,8 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         for ((value, range) in liveRanges) {
             val reg = registerMap[value]
             if (reg != null) {
-                assertion(fixedValues.contains(value)
-                        || liveRanges.getGroup(value) != null) {
-                    "value=$value is already allocated"
-                }
+                // Found fixed register. Skip it
+                // Register allocation for fixed registers is already done
                 active[value] = reg
                 continue
             }

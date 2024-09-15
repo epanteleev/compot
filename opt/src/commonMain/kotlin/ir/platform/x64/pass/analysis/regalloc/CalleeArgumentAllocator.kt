@@ -6,7 +6,7 @@ import ir.types.*
 import ir.platform.x64.CallConvention
 
 
-class CalleeArgumentAllocator(private val stackFrame: StackFrame, private val arguments: List<Value>) {
+class CalleeArgumentAllocator private constructor(private val stackFrame: StackFrame, private val arguments: List<Value>) {
     private sealed interface Place
     private data class Memory(val index: Int): Place
     private data class RealGPRegister(val registerIndex: Int): Place
@@ -16,30 +16,29 @@ class CalleeArgumentAllocator(private val stackFrame: StackFrame, private val ar
     private var xmmRegPos = 0
     private var memSlots = 0
 
-    private fun emit(type: Type): Place? {
-        return when (type) {
-            is FloatingPointType -> {
-                if (xmmRegPos < fpRegisters.size) {
-                    xmmRegPos += 1
-                    RealFpRegister(xmmRegPos - 1)
-                } else {
-                    memSlots += 1
-                    Memory(memSlots - 1)
-                }
+    private fun emit(type: Type): Place? = when (type) {
+        is FloatingPointType -> {
+            if (xmmRegPos < fpRegisters.size) {
+                xmmRegPos += 1
+                RealFpRegister(xmmRegPos - 1)
+            } else {
+                memSlots += 1
+                Memory(memSlots - 1)
             }
-            is IntegerType, is PointerType, is BooleanType -> {
-                if (gpRegPos < gpRegisters.size) {
-                    gpRegPos += 1
-                    RealGPRegister(gpRegPos - 1)
-                } else {
-                    memSlots += 1
-                    Memory(memSlots - 1)
-                }
-            }
-            is BottomType -> null
-            else -> throw IllegalArgumentException("type=$type")
         }
+        is IntegerType, is PointerType, is BooleanType -> {
+            if (gpRegPos < gpRegisters.size) {
+                gpRegPos += 1
+                RealGPRegister(gpRegPos - 1)
+            } else {
+                memSlots += 1
+                Memory(memSlots - 1)
+            }
+        }
+        is BottomType -> null
+        else -> throw IllegalArgumentException("type=$type")
     }
+
 
     private fun calculate(): List<Operand?> {
         val allocation = arrayListOf<Operand?>()

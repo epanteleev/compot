@@ -3,6 +3,7 @@ package ir.platform.x64.pass.analysis.regalloc
 import ir.value.*
 import ir.types.Type
 import asm.x64.Address
+import asm.x64.ArgumentSlot
 import asm.x64.GPRegister.*
 import common.assertion
 import ir.Definitions.QWORD_SIZE
@@ -84,6 +85,6 @@ private class BasePointerAddressedStackFrame : StackFrame {
 
     override fun takeArgument(index: Int, arg: Value): Address {
         frameSize = withAlignment(QWORD_SIZE, frameSize)
-        return Address.from(rsp, index * QWORD_SIZE)
+        return ArgumentSlot(rsp, index * QWORD_SIZE)
     }
 }
