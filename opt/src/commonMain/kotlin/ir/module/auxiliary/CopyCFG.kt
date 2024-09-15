@@ -104,7 +104,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return value
     }
 
-    private inline fun mapOperands(old: Instruction): List<Value> {
+    private fun mapOperands(old: Instruction): List<Value> {
         assertion(old !is Callable) { "unexpected type for instruction=$old" }
 
         val newUsages = arrayListOf<Value>()
@@ -115,7 +115,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return newUsages
     }
 
-    private inline fun mapArguments(old: Callable): List<Value> {
+    private fun mapArguments(old: Callable): List<Value> {
         val newUsages = arrayListOf<Value>()
         old.arguments().forEach {
             newUsages.add(mapUsage<Value>(it))

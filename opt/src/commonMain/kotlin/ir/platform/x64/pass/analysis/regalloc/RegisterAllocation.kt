@@ -113,7 +113,7 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
     }
 }
 
-data class SavedContext(val savedRegisters: Set<GPRegister>, val savedXmmRegisters: Set<XmmRegister>, private val frameSize: Int) {
+data class SavedContext(val savedGPRegisters: Set<GPRegister>, val savedXmmRegisters: Set<XmmRegister>, private val frameSize: Int) {
     fun adjustStackSize(): Int {
         var sizeToAdjust = savedXmmRegisters.size * 8
         val remains = frameSize % CallConvention.STACK_ALIGNMENT

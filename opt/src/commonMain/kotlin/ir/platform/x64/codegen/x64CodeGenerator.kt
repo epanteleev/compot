@@ -31,7 +31,6 @@ import ir.pass.analysis.traverse.PreOrderFabric
 import ir.platform.common.AnyCodeGenerator
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
-import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.retReg
@@ -544,7 +543,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val call = downStackFrame.call()
         val context = getState(call)
 
-        for (arg in context.savedRegisters) {
+        for (arg in context.savedGPRegisters) {
             asm.push(POINTER_SIZE, arg)
         }
 
@@ -552,7 +551,14 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             asm.movf(8, arg, Address.from(rsp, -(QWORD_SIZE * idx + QWORD_SIZE)))
         }
 
-        val size = context.adjustStackSize()
+        var argumentsSlotsSize = 0 // TODO refactor
+        for (arg in call.arguments()) {
+            val reg = valueToRegister.operand(arg)
+            if (reg is Address) {
+                argumentsSlotsSize += POINTER_SIZE
+            }
+        }
+        val size = context.adjustStackSize() + argumentsSlotsSize
         if (size != 0) {
             asm.sub(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
         }
@@ -562,7 +568,15 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val call = upStackFrame.call()
         val context = getState(call)
 
-        val size = context.adjustStackSize()
+        var argumentsSlotsSize = 0
+        for (arg in call.arguments()) { // TODO refactor
+            val reg = valueToRegister.operand(arg)
+            if (reg is Address) {
+                argumentsSlotsSize += POINTER_SIZE
+            }
+        }
+
+        val size = context.adjustStackSize() + argumentsSlotsSize
         if (size != 0) {
             asm.add(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
         }
@@ -571,7 +585,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             asm.movf(8, Address.from(rsp, -(QWORD_SIZE * (context.savedXmmRegisters.size - idx - 1) + QWORD_SIZE)), arg)
         }
 
-        for (arg in context.savedRegisters.reversed()) {
+        for (arg in context.savedGPRegisters.reversed()) {
             asm.pop(POINTER_SIZE, arg)
         }
     }
