@@ -30,7 +30,7 @@ class AsmTest {
             movq %rsp, %rbp
             subq $16, %rsp
             movq %rdi, -8(%rbp)
-            movq $0, %rax
+            xorq %rax, %rax
             movq %rbp, %rsp
             ret
         

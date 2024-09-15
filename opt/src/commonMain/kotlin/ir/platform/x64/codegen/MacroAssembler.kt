@@ -159,8 +159,11 @@ class MacroAssembler(name: String, id: Int): Assembler(name, id) {
     }
 
     fun copy(size: Int, src: ImmInt, dst: GPRegister) {
-        // TODO implement xor optimization
-        mov(size, src, dst)
+        if (src.value() == 0L) {
+            xor(size, dst, dst)
+        } else {
+            mov(size, src, dst)
+        }
     }
 
     fun callFunction(call: Callable) {

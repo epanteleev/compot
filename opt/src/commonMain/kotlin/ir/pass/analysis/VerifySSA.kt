@@ -90,6 +90,21 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    private fun validatePredicate(user: Instruction, condition: Value) = when (condition) {
+        is BoolValue -> {}
+        is CompareInstruction -> {
+            val prev = user.prev()
+            assert(prev is CompareInstruction) {
+                "Previous instruction must be an comparison: '${user.prev()}'"
+            }
+            val cmp = prev as CompareInstruction
+            assert(cmp === condition) {
+                "Comparison operands must have the same type: '${cmp.dump()}'"
+            }
+        }
+        else -> assert(false) { "Condition must be a boolean value: '$condition'" }
+    }
+
     private fun validateInstructions(block: Block) {
         for (instruction in block) {
             if (instruction !is Phi) {
@@ -232,21 +247,6 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
 
         validatePredicate(branchCond, branchCond.condition())
-    }
-
-    private fun validatePredicate(user: Instruction, condition: Value) = when (condition) {
-        is BoolValue -> {}
-        is CompareInstruction -> {
-            val prev = user.prev()
-            assert(prev is CompareInstruction) {
-                "Previous instruction must be an comparison: '${user.prev()}'"
-            }
-            val cmp = prev as CompareInstruction
-            assert(cmp === condition) {
-                "Comparison operands must have the same type: '${cmp.dump()}'"
-            }
-        }
-        else -> assert(false) { "Condition must be a boolean value: '$condition'" }
     }
 
     override fun visit(call: Call) {
