@@ -41,8 +41,7 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, indexType: Primi
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        asm.mov(indexSize, second, temp1)
-        asm.mov(size, Address.from(first, 0, temp1, ScaleFactor.from(size)), temp1)
+        asm.mov(size, Address.from(first, 0, second, ScaleFactor.from(size)), temp1)
         asm.mov(size, temp1, dst)
     }
 

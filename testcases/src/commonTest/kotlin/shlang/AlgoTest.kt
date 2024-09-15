@@ -226,9 +226,9 @@ class AlgoTestsO0: AlgoTests() {
 }
 
 class AgoTestsO1: AlgoTests() {
-    @Ignore
+    @Test
     override fun testHashBlake2() {
-
+        super.testHashBlake2()
     }
     override fun options(): List<String> = listOf("-O1")
 }

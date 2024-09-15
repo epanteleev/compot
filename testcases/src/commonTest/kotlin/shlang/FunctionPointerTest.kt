@@ -40,6 +40,12 @@ abstract class FunctionPointerTest: CommonCTest() {
         val result = runCTest("shlang/function_pointer/function_ptr5", listOf(), options())
         assertEquals("Value: 10", result.output)
     }
+
+    @Test
+    fun testFunctionPointer6() {
+        val result = runCTest("shlang/function_pointer/function_ptr6", listOf(), options())
+        assertEquals("1\n2\n", result.output)
+    }
 }
 
 class FunctionPointerTestO0: FunctionPointerTest() {

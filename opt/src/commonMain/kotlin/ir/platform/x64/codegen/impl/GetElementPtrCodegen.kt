@@ -31,9 +31,13 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        TODO("untested")
-        asm.mov(POINTER_SIZE, first, temp1)
-        asm.lea(POINTER_SIZE, Address.from(temp1, 0, second, ScaleFactor.from(size)), dst)
+        if (ScaleFactor.isScaleFactor(size)) {
+            asm.mov(POINTER_SIZE, first, temp1)
+            asm.lea(POINTER_SIZE, Address.from(temp1, 0, second, ScaleFactor.from(size)), dst)
+        } else {
+            asm.mul(POINTER_SIZE, Imm32.of(size), second, dst)
+            asm.add(POINTER_SIZE, first, dst)
+        }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
@@ -96,7 +100,6 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("untested")
         val disp = second.value() * size
         asm.lea(POINTER_SIZE, Address.from(first, disp.toInt()), temp1)
         asm.mov(POINTER_SIZE, temp1, dst)

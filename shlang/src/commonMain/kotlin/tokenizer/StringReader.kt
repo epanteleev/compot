@@ -22,7 +22,7 @@ class StringReader(val str: String, var pos: Int = 0) {
         return str[pos]
     }
 
-    inline fun isSpace(): Boolean {
+    fun isSpace(): Boolean {
         return peek() == ' ' || peek() == '\t' || peek() == '\r'
     }
 
@@ -61,18 +61,25 @@ class StringReader(val str: String, var pos: Int = 0) {
         pos += count
     }
 
-    inline fun readCharLiteral(): Char {
+    fun readEscapedChar(): Char {
+        if (peek() != '\\') {
+            throw IllegalStateException("Expected escape character")
+        }
+        read()
+        return when (peek()) {
+            'n' -> '\n'
+            't' -> '\t'
+            'r' -> '\r'
+            '0' -> '\u0000'
+            '\'' -> '\''
+            '\\' -> '\\'
+            else -> throw IllegalStateException("Unknown escape character")
+        }
+    }
+
+    fun readCharLiteral(): Char {
         if (peek() == '\\') {
-            read()
-            val ch = when (peek()) {
-                'n' -> '\n'
-                't' -> '\t'
-                'r' -> '\r'
-                '0' -> '\u0000'
-                '\'' -> '\''
-                '\\' -> '\\'
-                else -> throw IllegalStateException("Unknown escape character")
-            }
+            val ch = readEscapedChar()
             read()
             if (peek() != '\'') {
                 throw IllegalStateException("Expected closing quote")
@@ -102,14 +109,14 @@ class StringReader(val str: String, var pos: Int = 0) {
     }
 
     private fun tryGetSuffix(start: Int): String? {
-        if (check("ll") || check("LL")) {
-            read(2)
-            return str.substring(start, pos)
-        } else if (check("LLU") || check("llu")) {
+        if (check("LLU") || check("llu")) {
             read(3)
             return str.substring(start, pos)
         } else if (check("ULL") || check("ull")) {
             read(3)
+            return str.substring(start, pos)
+        } else if (check("ll") || check("LL")) {
+            read(2)
             return str.substring(start, pos)
         } else if (check("LU") || check("lu")) {
             read(2)

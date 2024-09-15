@@ -32,10 +32,18 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
     }
 
     fun free(operand: Operand, size: Int) = when (operand) {
-        is GPRegister  -> gpRegisters.returnRegister(operand)
-        is XmmRegister -> xmmRegisters.returnRegister(operand)
-        is Address     -> frame.returnSlot(operand, size)
-        else           -> throw RuntimeException("unknown operand operand=$operand, size=$size")
+        is GPRegister   -> gpRegisters.returnRegister(operand)
+        is XmmRegister  -> xmmRegisters.returnRegister(operand)
+        is ArgumentSlot -> Unit
+        is Address2     -> {
+            if (operand.base != rsp) {
+                frame.returnSlot(operand, size)
+            } else {
+                Unit
+            }
+        }
+        is Address      -> frame.returnSlot(operand, size)
+        else            -> throw RuntimeException("unknown operand operand=$operand, size=$size")
     }
 
     fun stackSize(): Int {

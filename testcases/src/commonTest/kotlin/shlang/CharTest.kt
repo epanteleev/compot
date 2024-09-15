@@ -6,8 +6,15 @@ import kotlin.test.assertEquals
 
 abstract class CharTest: CommonCTest() {
     @Test
-    fun test0() {
+    fun test1() {
         val result = runCTest("shlang/char/char1", listOf(), options())
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun test2() {
+        val result = runCTest("shlang/char/char2", listOf(), options())
+        assertEquals("\n", result.output)
         assertEquals(0, result.exitCode)
     }
 }
