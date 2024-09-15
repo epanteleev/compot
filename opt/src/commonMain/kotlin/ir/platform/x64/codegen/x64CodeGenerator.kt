@@ -385,15 +385,25 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     override fun visit(flag2Int: Flag2Int) {
         val dst = registerAllocation.operand(flag2Int)
-        val src = registerAllocation.operand(flag2Int.value())
-        val compare = flag2Int.value() as CompareInstruction
 
-        val isNeighbour = flag2Int.prev() != null && flag2Int.prev() == flag2Int.value()
-        if (isNeighbour) { //TODO improve
-            asm.setcc(compare.predicate(), dst)
-            Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, dst)
-        } else {
-            Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, src)
+        when (val compare = flag2Int.value()) {
+            is CompareInstruction -> {
+                when (val jmpType = compare.predicate()) {
+                    is IntPredicate   -> asm.setccInt(jmpType, dst)
+                    is FloatPredicate -> asm.setccFloat(jmpType, dst)
+                }
+                Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, dst)
+            }
+            is BoolValue -> {
+                val size = flag2Int.type().sizeOf()
+                val res = if (compare.bool) 1 else 0
+                when (dst) {
+                    is Address    -> asm.mov(size, Imm32.of(res), dst)
+                    is GPRegister -> asm.mov(size, Imm32.of(res), dst)
+                    else -> throw CodegenException("unknown dst=$dst")
+                }
+            }
+            else -> throw CodegenException("unknown compare=$compare")
         }
     }
 

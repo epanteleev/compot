@@ -150,8 +150,8 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun test(size: Int, first: Imm32, second: GPRegister)      = add(Test(size, first, second))
     fun test(size: Int, first: Imm32, second: Address)         = add(Test(size, first, second))
 
-    fun setcc(size: Int, tp: SetCCType, dst: GPRegister)= add(SetCc(size, tp, dst))
-    fun setcc(size: Int, tp: SetCCType, dst: Address)   = add(SetCc(size, tp, dst))
+    fun setcc(tp: SetCCType, dst: GPRegister)= add(SetCc(tp, dst))
+    fun setcc(tp: SetCCType, dst: Address)   = add(SetCc(tp, dst))
 
     // Push Word, Doubleword, or Quadword Onto the Stack
     fun push(size: Int, reg: GPRegister) = add(Push(size, reg))

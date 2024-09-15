@@ -29,69 +29,47 @@ class MacroAssembler(name: String, id: Int): Assembler(name, id) {
         }
     }
 
-    private fun setccFloat(jmpType: FloatPredicate, dst: Operand) = when (jmpType) {
-        FloatPredicate.Ult -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
-            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
-        }
-        FloatPredicate.Ogt -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETA, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETA, dst)
-            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
-        }
-        FloatPredicate.Olt -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETB, dst)
-            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
-        }
-        FloatPredicate.Oeq -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETE, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETE, dst)
-            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
-        }
-        //TODO not fully implemented
-        else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
+    private fun floatPredicateToSetCCType(jmpType: FloatPredicate): SetCCType = when (jmpType) {
+        FloatPredicate.Oeq -> SetCCType.SETE
+        FloatPredicate.Ogt -> SetCCType.SETA
+        FloatPredicate.Oge -> SetCCType.SETAE
+        FloatPredicate.Olt -> SetCCType.SETB
+        FloatPredicate.Ole -> SetCCType.SETBE
+        FloatPredicate.One -> SetCCType.SETNE
+        FloatPredicate.Ord -> TODO()
+        FloatPredicate.Ueq -> SetCCType.SETE
+        FloatPredicate.Ugt -> SetCCType.SETA
+        FloatPredicate.Uge -> SetCCType.SETAE
+        FloatPredicate.Ult -> SetCCType.SETB
+        FloatPredicate.Ule -> SetCCType.SETBE
+        FloatPredicate.Uno -> TODO()
+        FloatPredicate.Une -> SetCCType.SETNE
     }
 
-    private fun setccInt(jmpType: IntPredicate, dst: Operand) = when (jmpType) {
-        IntPredicate.Eq -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETE, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETE, dst)
-            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
-        }
-        IntPredicate.Ne -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETNE, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETNE, dst)
-            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
-        }
-        IntPredicate.Gt -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETG, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETG, dst)
-            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
-        }
-        IntPredicate.Ge -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETGE, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETGE, dst)
-            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
-        }
-        IntPredicate.Lt -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETL, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETL, dst)
-            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
-        }
-        IntPredicate.Le -> when (dst) {
-            is Address    -> setcc(QWORD_SIZE, SetCCType.SETLE, dst)
-            is GPRegister -> setcc(QWORD_SIZE, SetCCType.SETLE, dst)
+    fun setccFloat(jmpType: FloatPredicate, dst: Operand) {
+        val type = floatPredicateToSetCCType(jmpType)
+        when (dst) {
+            is Address    -> setcc(type, dst)
+            is GPRegister -> setcc(type, dst)
             else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
         }
     }
 
-    fun setcc(jmpType: AnyPredicateType, dst: Operand) {
-        assertion(dst is Address || dst is GPRegister) { "dst=${dst}" }
-        when (jmpType) {
-            is IntPredicate   -> setccInt(jmpType, dst)
-            is FloatPredicate -> setccFloat(jmpType, dst)
+    private fun intPredicateToSetCCType(jmpType: IntPredicate): SetCCType = when (jmpType) {
+        IntPredicate.Eq -> SetCCType.SETE
+        IntPredicate.Ne -> SetCCType.SETNE
+        IntPredicate.Gt -> SetCCType.SETG
+        IntPredicate.Ge -> SetCCType.SETGE
+        IntPredicate.Lt -> SetCCType.SETL
+        IntPredicate.Le -> SetCCType.SETLE
+    }
+
+    fun setccInt(jmpType: IntPredicate, dst: Operand) {
+        val type = intPredicateToSetCCType(jmpType)
+        when (dst) {
+            is Address    -> setcc(type, dst)
+            is GPRegister -> setcc(type, dst)
+            else -> throw MacroAssemblerException("unknown jmpType=$jmpType")
         }
     }
 

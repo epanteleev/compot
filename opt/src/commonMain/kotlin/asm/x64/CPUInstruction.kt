@@ -349,7 +349,7 @@ enum class SetCCType {
     },
 }
 
-data class SetCc(val size: Int, val tp: SetCCType, val reg: Operand): CPUInstruction {
+data class SetCc(val tp: SetCCType, val reg: Operand): CPUInstruction {
     override fun toString(): String {
         return "$tp ${reg.toString(1)}"
     }
