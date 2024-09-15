@@ -9,29 +9,28 @@ sealed interface Constant: Value {
     override fun type(): NonTrivialType
 
     companion object {
-        fun of(kind: NonTrivialType, value: Number): Constant {
-            return when (kind) {
-                Type.I8  -> I8Value(value.toByte())
-                Type.U8  -> U8Value(value.toByte())
-                Type.I16 -> I16Value(value.toShort())
-                Type.U16 -> U16Value(value.toShort())
-                Type.I32 -> I32Value(value.toInt())
-                Type.U32 -> U32Value(value.toInt())
-                Type.I64 -> I64Value(value.toLong())
-                Type.U64 -> U64Value(value.toLong())
-                Type.F32 -> F32Value(value.toFloat())
-                Type.F64 -> F64Value(value.toDouble())
-                Type.Ptr -> {
-                    if (value.toLong() == 0L) {
-                        NullValue.NULLPTR
-                    } else {
-                        throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
-                    }
-                }
-                Type.U1  -> BoolValue.of(value.toInt() != 0)
-                is AggregateType -> InitializerListValue(kind, arrayListOf(of(kind.field(0), value)))
+        fun of(kind: NonTrivialType, value: Number): Constant = when (kind) {
+            Type.I8  -> I8Value(value.toByte())
+            Type.U8  -> U8Value(value.toByte())
+            Type.I16 -> I16Value(value.toShort())
+            Type.U16 -> U16Value(value.toShort())
+            Type.I32 -> I32Value(value.toInt())
+            Type.U32 -> U32Value(value.toInt())
+            Type.I64 -> I64Value(value.toLong())
+            Type.U64 -> U64Value(value.toLong())
+            Type.F32 -> F32Value(value.toFloat())
+            Type.F64 -> F64Value(value.toDouble())
+            Type.Ptr -> when (value.toLong()) {
+                0L -> NullValue.NULLPTR
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
+            Type.U1  -> when (value.toInt()) {
+                0 -> BoolValue.FALSE
+                1 -> BoolValue.TRUE
+                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            }
+            is AggregateType -> InitializerListValue(kind, arrayListOf(of(kind.field(0), value)))
+            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
         }
 
         inline fun<reified U: Constant> valueOf(kind: NonTrivialType, value: Number): U {
@@ -335,7 +334,7 @@ class StringLiteralConstant(val name: String): AggregateConstant {
     }
 }
 
-class InitializerListValue(val type: AggregateType, val elements: List<Constant>): AggregateConstant, Iterable<Constant> {
+class InitializerListValue(private val type: AggregateType, val elements: List<Constant>): AggregateConstant, Iterable<Constant> {
     override fun type(): NonTrivialType {
         return type
     }
