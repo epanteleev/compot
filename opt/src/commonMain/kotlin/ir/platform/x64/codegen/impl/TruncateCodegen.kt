@@ -4,10 +4,11 @@ import asm.x64.*
 import ir.types.IntegerType
 import ir.instruction.Truncate
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: Assembler):
+data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: MacroAssembler):
     GPOperandsVisitorUnaryOp {
     private val toSize = toType.sizeOf()
     private val fromSize = fromType.sizeOf()
@@ -21,7 +22,7 @@ data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, v
             return
         }
         //TODO not correct
-        asm.mov(toSize, src, dst)
+        asm.copy(toSize, src, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {
@@ -29,7 +30,7 @@ data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, v
     }
 
     override fun ar(dst: Address, src: GPRegister) {
-        asm.mov(fromSize, src, temp1)
+        asm.copy(fromSize, src, temp1)
         asm.mov(toSize, temp1, dst)
     }
 

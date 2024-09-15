@@ -1,12 +1,13 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
+import ir.platform.x64.codegen.MacroAssembler
 import ir.types.PrimitiveType
 import ir.platform.x64.codegen.visitors.CallGPOperandValueVisitor
 import ir.platform.x64.codegen.visitors.CallXmmOperandValueVisitor
 
 
-class CallIntCodegen(val type: PrimitiveType, val asm: Assembler) : CallGPOperandValueVisitor {
+class CallIntCodegen(val type: PrimitiveType, val asm: MacroAssembler) : CallGPOperandValueVisitor {
     private val size = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: GPRegister) {
@@ -17,7 +18,7 @@ class CallIntCodegen(val type: PrimitiveType, val asm: Assembler) : CallGPOperan
         if (dst == src) {
             return
         }
-        asm.mov(size, src, dst)
+        asm.copy(size, src, dst)
     }
 
     override fun ar(dst: Address, src: GPRegister) {

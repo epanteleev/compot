@@ -4,10 +4,11 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.Bitcast
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class BitcastCodegen (val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp {
+data class BitcastCodegen (val type: PrimitiveType, val asm: MacroAssembler): GPOperandsVisitorUnaryOp {
     private val size = type.sizeOf() // toSize
 
     operator fun invoke(dst: Operand, src: Operand) {
@@ -18,11 +19,7 @@ data class BitcastCodegen (val type: PrimitiveType, val asm: Assembler): GPOpera
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {
-        if (dst == src) {
-            return
-        }
-
-        asm.mov(size, src, dst)
+        asm.copy(size, src, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {

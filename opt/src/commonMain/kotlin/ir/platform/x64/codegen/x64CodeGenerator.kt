@@ -64,7 +64,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val calleeSaveRegisters = registerAllocation.calleeSaveRegisters
 
         asm.push(QWORD_SIZE, rbp)
-        asm.mov(QWORD_SIZE, rsp, rbp)
+        asm.copy(QWORD_SIZE, rsp, rbp)
 
         if (stackSize != 0) {
             asm.sub(QWORD_SIZE, Imm32.of(stackSize.toLong()), rsp)

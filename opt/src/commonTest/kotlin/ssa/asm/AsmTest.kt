@@ -14,12 +14,12 @@ class AsmTest {
         asm.section(TextSection)
         val fn = asm.function("main")
         fn.push(8, rbp)
-        fn.mov(8, rsp, rbp)
+        fn.copy(8, rsp, rbp)
         fn.sub(8, Imm32.of(16), rsp)
         fn.mov(8, rdi, Address.from(rbp,-8))
 
         fn.mov(8, Imm32.of(0), rax)
-        fn.mov(8, rbp, rsp)
+        fn.copy(8, rbp, rsp)
         fn.ret()
 
         val expected = """

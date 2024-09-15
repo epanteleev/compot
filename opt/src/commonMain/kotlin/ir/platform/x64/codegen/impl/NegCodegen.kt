@@ -3,10 +3,11 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class NegCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp {
+data class NegCodegen(val type: PrimitiveType, val asm: MacroAssembler): GPOperandsVisitorUnaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {
@@ -17,12 +18,8 @@ data class NegCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVi
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {
-        if (dst == src) {
-            asm.neg(size, dst)
-        } else {
-            asm.mov(size, src, dst)
-            asm.neg(size, dst)
-        }
+        asm.copy(size, src, dst)
+        asm.neg(size, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {

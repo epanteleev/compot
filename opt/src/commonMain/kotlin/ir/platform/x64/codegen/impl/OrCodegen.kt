@@ -4,9 +4,10 @@ import asm.x64.*
 import ir.types.*
 import ir.platform.x64.codegen.visitors.*
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 
 
-class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp,
+class OrCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
@@ -20,7 +21,7 @@ class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitor
             first  -> asm.or(size, second, dst)
             second -> asm.or(size, first, dst)
             else -> {
-                asm.mov(size, first, dst)
+                asm.copy(size, first, dst)
                 asm.or(size, second, dst)
             }
         }
@@ -45,19 +46,15 @@ class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitor
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        if (dst == first) {
-            asm.or(size, second, dst)
-        } else {
-            asm.mov(size, first, dst)
-            asm.or(size, second, dst)
-        }
+        asm.copy(size, first, dst)
+        asm.or(size, second, dst)
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
         if (dst == first) {
             asm.or(size, second, dst)
         } else {
-            asm.mov(size, first, dst)
+            asm.copy(size, first, dst)
             asm.or(size, second, dst)
         }
     }
@@ -87,7 +84,7 @@ class OrCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitor
         if (dst == second) {
             asm.or(size, first, dst)
         } else {
-            asm.mov(size, first, temp1)
+            asm.copy(size, first, temp1)
             asm.or(size, second, temp1)
             asm.mov(size, temp1, dst)
         }

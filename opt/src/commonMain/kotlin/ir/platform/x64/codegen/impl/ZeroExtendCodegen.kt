@@ -4,10 +4,11 @@ import asm.x64.*
 import ir.types.IntegerType
 import ir.instruction.ZeroExtend
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: Assembler): GPOperandsVisitorUnaryOp {
+class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: MacroAssembler): GPOperandsVisitorUnaryOp {
     private val fromTypeSize = fromType.sizeOf()
     private val toTypeSize = toType.sizeOf()
 
@@ -20,7 +21,7 @@ class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: Ass
             if (dst == src) {
                 return
             }
-            asm.mov(fromTypeSize, src, dst)
+            asm.copy(fromTypeSize, src, dst)
         } else {
             asm.movzext(fromTypeSize, toTypeSize, src, dst)
         }

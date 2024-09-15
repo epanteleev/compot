@@ -5,10 +5,11 @@ import ir.types.*
 import ir.instruction.*
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.*
 
 
-class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: Assembler): GPOperandsVisitorBinaryOp {
+class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
@@ -37,14 +38,14 @@ class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: A
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         if (first == second) {
-            asm.mov(size, first, dst)
+            asm.copy(size, first, dst)
             return
         }
         when (dst) {
             first -> asm.cmovcc(size, matchIntCondition().invert(), second, dst)
             second -> asm.cmovcc(size, matchIntCondition(), first, dst)
             else -> {
-                asm.mov(size, second, dst)
+                asm.copy(size, second, dst)
                 asm.cmovcc(size, matchIntCondition(), first, dst)
             }
         }
@@ -56,7 +57,7 @@ class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: A
             asm.mov(size, first, dst)
             return
         }
-        asm.mov(size, second, temp1)
+        asm.copy(size, second, temp1)
         asm.cmovcc(size, matchIntCondition(), first, temp1)
         asm.mov(size, temp1, dst)
     }
@@ -65,14 +66,14 @@ class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: A
         if (dst == second) {
             asm.cmovcc(size, matchIntCondition(), first, dst)
         } else {
-            asm.mov(size, second, dst)
+            asm.copy(size, second, dst)
             asm.cmovcc(size, matchIntCondition(), first, dst)
         }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
         TODO("untested")
-        asm.mov(size, second, dst)
+        asm.copy(size, second, dst)
         asm.mov(size, first, temp1)
         asm.cmovcc(size, matchIntCondition(), temp1, dst)
     }

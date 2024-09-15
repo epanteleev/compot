@@ -4,11 +4,12 @@ import asm.x64.*
 import ir.types.*
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-data class SubCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp,
+data class SubCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
@@ -21,9 +22,9 @@ data class SubCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
         when {
             (first == dst) -> asm.sub(size, second, dst)
             else -> {
-                asm.mov(size, first, temp1)
+                asm.copy(size, first, temp1)
                 asm.sub(size, second, temp1)
-                asm.mov(size, temp1, dst)
+                asm.copy(size, temp1, dst)
             }
         }
     }
@@ -47,19 +48,15 @@ data class SubCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
         when {
             (first == dst) -> asm.sub(size, second, dst)
             else -> {
-                asm.mov(size, first, dst)
+                asm.copy(size, first, dst)
                 asm.sub(size, second, dst)
             }
         }
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        if (dst == first) {
-            asm.sub(size, second, dst)
-        } else {
-            asm.mov(size, first, dst)
-            asm.sub(size, second, dst)
-        }
+        asm.copy(size, first, dst)
+        asm.sub(size, second, dst)
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
@@ -82,7 +79,7 @@ data class SubCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        asm.mov(size, first, temp1)
+        asm.copy(size, first, temp1)
         asm.sub(size, second, temp1)
         asm.mov(size, temp1, dst)
     }

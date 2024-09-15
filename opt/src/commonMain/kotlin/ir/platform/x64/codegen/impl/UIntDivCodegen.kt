@@ -18,7 +18,7 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        asm.mov(size, first, rax)
+        asm.copy(size, first, rax)
         asm.cdq(size)
         asm.div(size, second)
         asm.copy(size, rax, dst)
@@ -26,7 +26,7 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        asm.mov(size, first, rax)
+        asm.copy(size, first, rax)
         asm.cdq(size)
         asm.div(size, second)
         asm.mov(size, rax, dst)
@@ -46,7 +46,7 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        asm.mov(size, first, rax)
+        asm.copy(size, first, rax)
         asm.cdq(size)
         asm.div(size, second)
         asm.copy(size, rax, dst)
@@ -89,7 +89,7 @@ class UIntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: MacroA
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        asm.mov(size, first, rax)
+        asm.copy(size, first, rax)
         asm.cdq(size)
         asm.div(size, second)
         asm.mov(size, rax, dst)

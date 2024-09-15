@@ -3,11 +3,12 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-class SarCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp, XmmOperandsVisitorBinaryOp {
+class SarCodegen (val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp, XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
@@ -20,15 +21,15 @@ class SarCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         when (dst) {
             first -> {
-                asm.mov(size, second, temp1)
-                asm.sar(size, temp1, dst)
+                asm.sar(size, second, dst)
             }
             second -> {
-                asm.mov(size, first, temp1)
+                TODO("Not yet implemented") //TODO proba;y bug here
+                asm.copy(size, first, temp1)
                 asm.sar(size, temp1, dst)
             }
             else -> {
-                asm.mov(size, first, dst)
+                asm.copy(size, first, dst)
                 asm.sar(size, second, dst)
             }
         }
@@ -54,12 +55,8 @@ class SarCodegen (val type: ArithmeticType, val asm: Assembler): GPOperandsVisit
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        if (dst == first) {
-            asm.sar(size, second, dst)
-        } else {
-            asm.mov(size, first, dst)
-            asm.sar(size, second, dst)
-        }
+        asm.copy(size, first, dst)
+        asm.sar(size, second, dst)
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {

@@ -5,9 +5,10 @@ import ir.types.*
 import ir.platform.x64.codegen.visitors.*
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
+import ir.platform.x64.codegen.MacroAssembler
 
 
-data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp,
+data class AddCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
@@ -22,7 +23,7 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
         } else if (second == dst) {
             asm.add(size, first, dst)
         } else {
-            asm.mov(size, first, dst)
+            asm.copy(size, first, dst)
             asm.add(size, second, dst)
         }
     }
@@ -50,7 +51,7 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        asm.mov(size, first, dst)
+        asm.copy(size, first, dst)
         asm.add(size, second, dst)
     }
 
@@ -58,7 +59,7 @@ data class AddCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
         if (dst == first) {
             asm.add(size, second, dst)
         } else {
-            asm.mov(size, first, dst)
+            asm.copy(size, first, dst)
             asm.add(size, second, dst)
         }
     }

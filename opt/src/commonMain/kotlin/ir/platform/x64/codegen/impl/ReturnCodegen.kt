@@ -2,12 +2,13 @@ package ir.platform.x64.codegen.impl
 
 import asm.x64.*
 import ir.instruction.Return
+import ir.platform.x64.codegen.MacroAssembler
 import ir.types.PrimitiveType
 import ir.platform.x64.codegen.visitors.ReturnGPOperandVisitor
 import ir.platform.x64.codegen.visitors.ReturnXmmOperandVisitor
 
 
-class ReturnIntCodegen(val type: PrimitiveType, val asm: Assembler) : ReturnGPOperandVisitor {
+class ReturnIntCodegen(val type: PrimitiveType, val asm: MacroAssembler) : ReturnGPOperandVisitor {
     private val size = type.sizeOf()
 
     operator fun invoke(dst: GPRegister, src: Operand) {
@@ -15,11 +16,7 @@ class ReturnIntCodegen(val type: PrimitiveType, val asm: Assembler) : ReturnGPOp
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {
-        if (dst == src) {
-            return
-        }
-
-        asm.mov(size, src, dst)
+        asm.copy(size, src, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {

@@ -4,9 +4,10 @@ import asm.x64.*
 import ir.types.*
 import ir.platform.x64.codegen.visitors.*
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 
 
-class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp,
+class AndCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
@@ -20,7 +21,7 @@ class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
             first -> asm.and(size, second, dst)
             second -> asm.and(size, first, dst)
             else -> {
-                asm.mov(size, first, dst)
+                asm.copy(size, first, dst)
                 asm.and(size, second, dst)
             }
         }
@@ -34,7 +35,7 @@ class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
         if (dst == second) {
             asm.and(size, first, dst)
         } else {
-            asm.mov(size, second, dst)
+            asm.copy(size, second, dst)
             asm.and(size, first, dst)
         }
     }
@@ -43,27 +44,19 @@ class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
         if (dst == second) {
             asm.and(size, first, dst)
         } else {
-            asm.mov(size, second, dst)
+            asm.copy(size, second, dst)
             asm.and(size, first, dst)
         }
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        if (dst == first) {
-            asm.and(size, second, dst)
-        } else {
-            asm.mov(size, first, dst)
-            asm.and(size, second, dst)
-        }
+        asm.copy(size, first, dst)
+        asm.and(size, second, dst)
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        if (dst == first) {
-            asm.and(size, second, dst)
-        } else {
-            asm.mov(size, first, dst)
-            asm.and(size, second, dst)
-        }
+        asm.copy(size, first, dst)
+        asm.and(size, second, dst)
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
@@ -89,7 +82,7 @@ class AndCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
         if (dst == second) {
             asm.and(size, first, dst)
         } else {
-            asm.mov(size, first, temp1)
+            asm.copy(size, first, temp1)
             asm.and(size, second, temp1)
             asm.mov(size, temp1, dst)
         }

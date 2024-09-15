@@ -4,10 +4,11 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.Not
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class NotCodegen(val type: IntegerType, val asm: Assembler): GPOperandsVisitorUnaryOp {
+data class NotCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperandsVisitorUnaryOp {
     private val size = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {
@@ -15,12 +16,8 @@ data class NotCodegen(val type: IntegerType, val asm: Assembler): GPOperandsVisi
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {
-        if (dst == src) {
-            asm.not(size, dst)
-        } else {
-            asm.mov(size, src, dst)
-            asm.not(size, dst)
-        }
+        asm.copy(size, src, dst)
+        asm.not(size, dst)
     }
 
     override fun ra(dst: GPRegister, src: Address) {

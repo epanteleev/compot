@@ -15,7 +15,7 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        asm.mov(size, first, rax)
+        asm.copy(size, first, rax)
         asm.cdq(size)
         asm.idiv(size, second)
         asm.copy(size, rax, dst)
@@ -23,7 +23,7 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        asm.mov(size, first, rax)
+        asm.copy(size, first, rax)
         asm.cdq(size)
         asm.idiv(size, second)
         asm.mov(size, rax, dst)
@@ -43,7 +43,7 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        asm.mov(size, first, rax)
+        asm.copy(size, first, rax)
         asm.cdq(size)
         asm.idiv(size, second)
         asm.copy(size, rax, dst)

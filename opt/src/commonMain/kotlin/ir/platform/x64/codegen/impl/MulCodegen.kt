@@ -3,11 +3,12 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-data class MulCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp,
+data class MulCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp,
     XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
@@ -22,13 +23,13 @@ data class MulCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
         } else if (second == dst) {
             asm.mul(size, first, dst)
         } else {
-            asm.mov(size, first, dst)
+            asm.copy(size, first, dst)
             asm.mul(size, second, dst)
         }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        asm.mov(size, first, temp1)
+        asm.copy(size, first, temp1)
         asm.mul(size, second, temp1)
         asm.mov(size, temp1, dst)
     }
@@ -85,7 +86,7 @@ data class MulCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        asm.mov(size, first, temp1)
+        asm.copy(size, first, temp1)
         asm.mul(size, second, temp1)
         asm.mov(size, temp1, dst)
     }
@@ -115,7 +116,7 @@ data class MulCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsV
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        asm.mov(size, second, temp1)
+        asm.copy(size, second, temp1)
         asm.mul(size, first, temp1)
         asm.mov(size, temp1, dst)
     }

@@ -1,13 +1,13 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
-import ir.platform.x64.CallConvention.temp1
 import ir.types.*
+import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
-import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-class SalCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp {
+class SalCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
@@ -18,7 +18,7 @@ class SalCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
         when (dst) {
             first -> asm.sal(size, second, dst)
             else -> {
-                asm.mov(size, first, dst)
+                asm.copy(size, first, dst)
                 asm.sal(size, second, dst)
             }
         }
@@ -43,12 +43,8 @@ class SalCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        if (dst == first) {
-            asm.sal(size, second, dst)
-        } else {
-            asm.mov(size, first, dst)
-            asm.sal(size, second, dst)
-        }
+        asm.copy(size, first, dst)
+        asm.sal(size, second, dst)
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {

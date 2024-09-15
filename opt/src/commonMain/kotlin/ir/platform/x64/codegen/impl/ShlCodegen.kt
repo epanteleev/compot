@@ -3,11 +3,12 @@ package ir.platform.x64.codegen.impl
 import asm.x64.*
 import ir.types.*
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisitorBinaryOp, XmmOperandsVisitorBinaryOp {
+class ShlCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp, XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) = when (type) {
@@ -18,11 +19,11 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         when (dst) {
             first -> {
-                asm.mov(size, second, temp1)
+                asm.copy(size, second, temp1)
                 asm.shl(size, temp1, dst)
             }
             else -> {
-                asm.mov(size, first, dst)
+                asm.copy(size, first, dst)
                 asm.shl(size, second, dst)
             }
         }
@@ -50,7 +51,7 @@ class ShlCodegen(val type: ArithmeticType, val asm: Assembler): GPOperandsVisito
         if (dst == first) {
             asm.shl(size, second, dst)
         } else {
-            asm.mov(size, first, dst)
+            asm.copy(size, first, dst)
             asm.shl(size, second, dst)
         }
     }
