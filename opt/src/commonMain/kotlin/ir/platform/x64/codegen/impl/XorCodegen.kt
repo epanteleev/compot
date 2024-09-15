@@ -65,7 +65,7 @@ data class XorCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOper
         if (dst == first) {
             asm.xor(size, second, dst)
         } else {
-            asm.mov(size, second, dst)
+            asm.copy(size, second, dst)
             asm.xor(size, first, dst)
         }
     }

@@ -4,10 +4,11 @@ import asm.x64.*
 import ir.types.PrimitiveType
 import ir.instruction.IntCompare
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.CmpGPOperandVisitor
 
 
-class IntCmpCodegen(val type: PrimitiveType, val asm: Assembler): CmpGPOperandVisitor {
+class IntCmpCodegen(val type: PrimitiveType, val asm: MacroAssembler): CmpGPOperandVisitor {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(first: Operand, second: Operand) {
@@ -36,12 +37,12 @@ class IntCmpCodegen(val type: PrimitiveType, val asm: Assembler): CmpGPOperandVi
     }
 
     override fun ia(first: Imm32, second: Address) {
-        asm.mov(size, first, temp1)
+        asm.copy(size, first, temp1)
         asm.cmp(size, second, temp1)
     }
 
     override fun ir(first: Imm32, second: GPRegister) {
-        asm.mov(size, first, temp1)
+        asm.copy(size, first, temp1)
         asm.cmp(size, second, temp1)
     }
 
@@ -50,7 +51,7 @@ class IntCmpCodegen(val type: PrimitiveType, val asm: Assembler): CmpGPOperandVi
     }
 
     override fun ii(first: Imm32, second: Imm32) {
-        asm.mov(size, first, temp1)
+        asm.copy(size, first, temp1)
         asm.cmp(size, second, temp1)
     }
 

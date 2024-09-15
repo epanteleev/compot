@@ -40,7 +40,7 @@ data class SubCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOper
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        asm.mov(size, first, dst)
+        asm.copy(size, first, dst)
         asm.sub(size, second, dst)
     }
 
@@ -65,11 +65,11 @@ data class SubCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOper
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        asm.mov(size, Imm32.of(first.value() - second.value()), dst) //TODO overflow
+        asm.copy(size, Imm32.of(first.value() - second.value()), dst) //TODO overflow
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
-        asm.mov(size, first, dst)
+        asm.copy(size, first, dst)
         asm.sub(size, second, dst)
     }
 

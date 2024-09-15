@@ -74,7 +74,7 @@ data class MulCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOper
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        asm.mov(size, Imm32.of(first.value() * second.value()), dst) //TODO overflow???
+        asm.copy(size, Imm32.of(first.value() * second.value()), dst) //TODO overflow???
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {

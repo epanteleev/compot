@@ -43,7 +43,7 @@ data class NegCodegen(val type: PrimitiveType, val asm: MacroAssembler): GPOpera
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        asm.mov(size, Imm32.of(-src.value()), dst)
+        asm.copy(size, Imm32.of(-src.value()), dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {

@@ -158,6 +158,11 @@ class MacroAssembler(name: String, id: Int): Assembler(name, id) {
         mov(size, src, dst)
     }
 
+    fun copy(size: Int, src: ImmInt, dst: GPRegister) {
+        // TODO implement xor optimization
+        mov(size, src, dst)
+    }
+
     fun callFunction(call: Callable) {
         emitFPVarargsCount(call)
         call(call.prototype().name)

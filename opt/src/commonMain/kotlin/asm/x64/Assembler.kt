@@ -144,7 +144,11 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
 
     fun xor(size: Int, first: Operand, destination: GPRegister) = add(Xor(size, first, destination))
 
-    fun test(size: Int, first: GPRegister, second: Operand) = add(Test(size, first, second))
+    // TEST — Logical Compare
+    fun test(size: Int, first: GPRegister, second: GPRegister) = add(Test(size, first, second))
+    fun test(size: Int, first: GPRegister, second: Address)    = add(Test(size, first, second))
+    fun test(size: Int, first: Imm32, second: GPRegister)      = add(Test(size, first, second))
+    fun test(size: Int, first: Imm32, second: Address)         = add(Test(size, first, second))
 
     fun setcc(size: Int, tp: SetCCType, dst: GPRegister)= add(SetCc(size, tp, dst))
     fun setcc(size: Int, tp: SetCCType, dst: Address)   = add(SetCc(size, tp, dst))
@@ -161,7 +165,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun mov(size: Int, src: Address, dst: GPRegister)    = add(Mov(size, src, dst))
     fun mov(size: Int, src: GPRegister, dst: Address)    = add(Mov(size, src, dst))
     fun mov(size: Int, imm: ImmInt, dst: Address)        = add(Mov(size, imm, dst))
-    fun mov(size: Int, imm: ImmInt, dst: GPRegister)     = add(Mov(size, imm, dst))
+    protected fun mov(size: Int, imm: ImmInt, dst: GPRegister)     = add(Mov(size, imm, dst))
 
     // Move With Sign-Extension
     private fun movsx(fromSize: Int, toSize: Int, src: GPRegister, dst: GPRegister)  = add(Movsx(fromSize, toSize, src, dst))

@@ -34,7 +34,7 @@ class SalCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsV
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        asm.mov(size, first, dst)
+        asm.copy(size, first, dst)
         asm.sal(size, second, dst)
     }
 
@@ -53,7 +53,7 @@ class SalCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsV
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
         val res = first.value() shl second.value().toInt()
-        asm.mov(size, Imm32.of(res), dst)
+        asm.copy(size, Imm32.of(res), dst)
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {

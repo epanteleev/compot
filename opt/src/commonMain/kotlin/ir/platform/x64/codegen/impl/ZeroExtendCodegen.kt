@@ -58,7 +58,7 @@ class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: Mac
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        asm.mov(toTypeSize, src, dst)
+        asm.copy(toTypeSize, src, dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {

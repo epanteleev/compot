@@ -18,7 +18,7 @@ class AsmTest {
         fn.sub(8, Imm32.of(16), rsp)
         fn.mov(8, rdi, Address.from(rbp,-8))
 
-        fn.mov(8, Imm32.of(0), rax)
+        fn.copy(8, Imm32.of(0), rax)
         fn.copy(8, rbp, rsp)
         fn.ret()
 

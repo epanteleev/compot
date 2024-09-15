@@ -1,5 +1,6 @@
 package ssa.ir
 
+import ir.instruction.IntPredicate
 import ir.value.F32Value
 import ir.module.FunctionPrototype
 import ir.value.I32Value
@@ -92,6 +93,61 @@ class InconsistentCFG {
             proj(tuple, 0)
             val proj1 = proj(tuple, 0)
             ret(Type.U32, arrayOf(proj1))
+        }
+
+        val throwable = assertFails { builder.build() }
+        assertTrue { throwable is ValidateSSAErrorException }
+    }
+
+    @Test
+    fun testInconsistentCondBranch() {
+        val builder = ModuleBuilder.create()
+
+        builder.createFunction("main", Type.I32, arrayListOf(Type.I32)).apply {
+            val arg = argument(0)
+            val cmp = icmp(I32Value(0), IntPredicate.Eq, arg)
+            val add = add(I32Value(0), arg)
+            val cont = createLabel()
+            val then = createLabel()
+            branchCond(cmp, then, cont)
+            switchLabel(then).let {
+                branch(cont)
+            }
+            switchLabel(cont).let {
+                ret(Type.I32, arrayOf(add))
+            }
+        }
+
+        val throwable = assertFails { builder.build() }
+        assertTrue { throwable is ValidateSSAErrorException }
+    }
+
+    @Test
+    fun testInconsistentFlagToInt() {
+        val builder = ModuleBuilder.create()
+
+        builder.createFunction("main", Type.I32, arrayListOf(Type.I32)).apply {
+            val arg = argument(0)
+            val cmp = icmp(I32Value(0), IntPredicate.Eq, arg)
+            val add = add(I32Value(0), arg)
+            val i = flag2int(cmp, Type.I32)
+            ret(Type.I32, arrayOf(i))
+        }
+
+        val throwable = assertFails { builder.build() }
+        assertTrue { throwable is ValidateSSAErrorException }
+    }
+
+    @Test
+    fun testInconsistentSelect() {
+        val builder = ModuleBuilder.create()
+
+        builder.createFunction("main", Type.I32, arrayListOf(Type.I32)).apply {
+            val arg = argument(0)
+            val cmp = icmp(I32Value(0), IntPredicate.Eq, arg)
+            val add = add(I32Value(0), arg)
+            val i = select(cmp, Type.I32, I32Value(0), add)
+            ret(Type.I32, arrayOf(i))
         }
 
         val throwable = assertFails { builder.build() }

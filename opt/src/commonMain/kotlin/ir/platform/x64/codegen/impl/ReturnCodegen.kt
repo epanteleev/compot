@@ -24,7 +24,7 @@ class ReturnIntCodegen(val type: PrimitiveType, val asm: MacroAssembler) : Retur
     }
 
     override fun ri(dst: GPRegister, src: ImmInt) {
-        asm.mov(size, src, dst)
+        asm.copy(size, src, dst)
     }
 
     override fun default(dst: Operand, src: Operand) {

@@ -42,7 +42,7 @@ data class CopyCodegen(val type: PrimitiveType, val asm: MacroAssembler): GPOper
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        asm.mov(size, src, dst)
+        asm.copy(size, src, dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {

@@ -13,6 +13,9 @@ import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PreOrderFabric
+import ir.types.BooleanType
+import ir.value.BoolValue
+import ir.value.Value
 
 
 class ValidateSSAErrorException(val functionData: FunctionData, override val message: String): Exception(message) {
@@ -227,6 +230,23 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         assert(onFalse.predecessors().contains(bb)) {
             "Block '$onTrue' has inconsistent predecessors: branch='${branchCond.dump()}', predecessors='${onTrue.predecessors()}'"
         }
+
+        validatePredicate(branchCond, branchCond.condition())
+    }
+
+    private fun validatePredicate(user: Instruction, condition: Value) = when (condition) {
+        is BoolValue -> {}
+        is CompareInstruction -> {
+            val prev = user.prev()
+            assert(prev is CompareInstruction) {
+                "Previous instruction must be an comparison: '${user.prev()}'"
+            }
+            val cmp = prev as CompareInstruction
+            assert(cmp === condition) {
+                "Comparison operands must have the same type: '${cmp.dump()}'"
+            }
+        }
+        else -> assert(false) { "Condition must be a boolean value: '$condition'" }
     }
 
     override fun visit(call: Call) {
@@ -253,6 +273,8 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         assert(Flag2Int.typeCheck(flag2Int)) {
             "Instruction '${flag2Int.dump()}' has inconsistent types."
         }
+
+        validatePredicate(flag2Int, flag2Int.value())
     }
 
     override fun visit(bitcast: Bitcast) {
@@ -415,6 +437,8 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         assert(Select.typeCheck(select)) {
             "Instruction '${select.dump()}' requires all operands to be of the same type."
         }
+
+        validatePredicate(select, select.condition())
     }
 
     override fun visit(store: Store) {

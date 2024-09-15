@@ -66,7 +66,7 @@ class AndCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsV
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
         val and = first.value() and second.value()
-        asm.mov(size, Imm32.of(and), dst)
+        asm.copy(size, Imm32.of(and), dst)
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -100,7 +100,7 @@ class AndCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsV
         if (second == dst) {
             asm.and(size, first, dst)
         } else {
-            asm.mov(size, first, temp1)
+            asm.copy(size, first, temp1)
             asm.and(size, second, temp1)
             asm.mov(size, temp1, dst)
         }

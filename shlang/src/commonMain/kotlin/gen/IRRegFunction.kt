@@ -174,9 +174,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is IntegerType -> { // TODO: pointer type also can be here
                 val onTrue    = visitExpression(conditional.eTrue, true)
                 val onFalse   = visitExpression(conditional.eFalse, true)
-                val condition = makeConditionFromExpression(conditional.cond)
                 val onTrueConverted = ir.convertToType(onTrue, commonType)
                 val onFalseConverted = ir.convertToType(onFalse, commonType)
+                val condition = makeConditionFromExpression(conditional.cond)
                 return ir.select(condition, commonType, onTrueConverted, onFalseConverted)
             }
             is NonTrivialType -> {

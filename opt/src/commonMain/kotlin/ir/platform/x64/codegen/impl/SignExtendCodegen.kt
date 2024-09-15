@@ -4,10 +4,11 @@ import asm.x64.*
 import ir.types.IntegerType
 import ir.instruction.SignExtend
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class SignExtendCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: Assembler):
+data class SignExtendCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: MacroAssembler):
     GPOperandsVisitorUnaryOp {
     private val toSize   = toType.sizeOf()
     private val fromSize = fromType.sizeOf()
@@ -35,7 +36,7 @@ data class SignExtendCodegen(val fromType: IntegerType, val toType: IntegerType,
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        asm.mov(toSize, src, dst)
+        asm.copy(toSize, src, dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {

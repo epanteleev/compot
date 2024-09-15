@@ -301,7 +301,7 @@ data class Call(private val data: String): CPUInstruction {
     }
 }
 
-data class Test(val size: Int, val first: Register, val second: Operand): CPUInstruction {
+data class Test(val size: Int, val first: Operand, val second: Operand): CPUInstruction {
     override fun toString(): String {
         return "test${prefix(size)} ${first.toString(size)}, ${second.toString(size)}"
     }

@@ -389,13 +389,12 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val compare = flag2Int.value() as CompareInstruction
 
         val isNeighbour = flag2Int.prev() != null && flag2Int.prev() == flag2Int.value()
-        if (isNeighbour) {
+        if (isNeighbour) { //TODO improve
             asm.setcc(compare.predicate(), dst)
             Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, dst)
         } else {
             Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, src)
         }
-
     }
 
     override fun visit(indirectionCall: IndirectionCall) {
@@ -437,28 +436,15 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(icmp: IntCompare) {
         val first  = registerAllocation.operand(icmp.first())
         val second = registerAllocation.operand(icmp.second())
-        val dst    = registerAllocation.operand(icmp)
 
         IntCmpCodegen(icmp.first().asType(), asm)(first, second)
-        if (needSetcc(icmp)) {
-            asm.setcc(icmp.predicate(), dst)
-        }
-    }
-
-    private fun needSetcc(cmp: CompareInstruction): Boolean {
-        val users = cmp.usedIn()
-        return users.size > 1 || users.first() != cmp.next()
     }
 
     override fun visit(fcmp: FloatCompare) {
         val first  = registerAllocation.operand(fcmp.first())
         val second = registerAllocation.operand(fcmp.second())
-        val dst    = registerAllocation.operand(fcmp)
 
         FloatCmpCodegen(fcmp.first().asType(), asm)(first, second)
-        if (needSetcc(fcmp)) {
-            asm.setcc(fcmp.predicate(), dst)
-        }
     }
 
     private fun doJump(target: Block) {
@@ -662,6 +648,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val dst     = registerAllocation.operand(select)
         val onTrue  = registerAllocation.operand(select.onTrue())
         val onFalse = registerAllocation.operand(select.onFalse())
+
         SelectCodegen(select.type(), select.condition() as IntCompare, asm)(dst, onTrue, onFalse)
     }
 

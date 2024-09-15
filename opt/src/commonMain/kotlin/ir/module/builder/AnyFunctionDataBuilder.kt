@@ -26,7 +26,13 @@ abstract class AnyFunctionDataBuilder(protected val prototype: FunctionPrototype
 
     fun createLabel(): Label = allocateBlock()
 
-    fun argument(index: Int): ArgumentValue = argumentValues[index]
+    fun argument(index: Int): ArgumentValue {
+        if (index >= argumentValues.size) {
+            throw IllegalArgumentException("Argument index $index is out of bounds")
+        }
+
+        return argumentValues[index]
+    }
 
     fun arguments(): List<ArgumentValue> = argumentValues
 

@@ -223,31 +223,47 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 }
                 select(nop(), value(i8()), value(i8())) (inst) -> { inst as Select
                     // Before:
+                    //  %cond = icmp <predicate> i8 %a, %b
                     //  %res = select i1 %cond, i8 %onTrue, i8 %onFalse
                     //
                     // After:
                     //  %extOnTrue  = sext %onTrue to i16
                     //  %extOnFalse = sext %onFalse to i16
+                    //  %cond = icmp <predicate> i8 %a, %b
                     //  %newSelect = select i1 %cond, i16 %extOnTrue, i16 %extOnFalse
                     //  %res = trunc %newSelect to i8
 
-                    val extOnTrue  = bb.insertBefore(inst) { it.sext(inst.onTrue(), Type.I16) }
-                    val extOnFalse = bb.insertBefore(inst) { it.sext(inst.onFalse(), Type.I16) }
+                    val insertPos = if (inst.condition() is CompareInstruction) {
+                        inst.condition() as CompareInstruction
+                    } else {
+                        inst
+                    }
+
+                    val extOnTrue  = bb.insertBefore(insertPos) { it.sext(inst.onTrue(), Type.I16) }
+                    val extOnFalse = bb.insertBefore(insertPos) { it.sext(inst.onFalse(), Type.I16) }
                     val newSelect  = bb.insertBefore(inst) { it.select(inst.condition(), Type.I16, extOnTrue, extOnFalse) }
                     return bb.replace(inst) { it.trunc(newSelect, Type.I8) }
                 }
                 select(nop(), value(u8()), value(u8())) (inst) -> { inst as Select
                     // Before:
-                    //  %res = select i1 %cond, i8 %onTrue, i8 %onFalse
+                    //  %cond = icmp <predicate> u8 %a, %b
+                    //  %res = select i1 %cond, u8 %onTrue, u8 %onFalse
                     //
                     // After:
-                    //  %extOnTrue  = zext %onTrue to i16
-                    //  %extOnFalse = zext %onFalse to i16
-                    //  %newSelect = select i1 %cond, i16 %extOnTrue, i16 %extOnFalse
-                    //  %res = trunc %newSelect to i8
+                    //  %extOnTrue  = zext %onTrue to u16
+                    //  %extOnFalse = zext %onFalse to u16
+                    //  %cond = icmp <predicate> u8 %a, %b
+                    //  %newSelect = select i1 %cond, u16 %extOnTrue, u16 %extOnFalse
+                    //  %res = trunc %newSelect to u8
 
-                    val extOnTrue  = bb.insertBefore(inst) { it.zext(inst.onTrue(), Type.U16) }
-                    val extOnFalse = bb.insertBefore(inst) { it.zext(inst.onFalse(), Type.U16) }
+                    val insertPos = if (inst.condition() is CompareInstruction) {
+                        inst.condition() as CompareInstruction
+                    } else {
+                        inst
+                    }
+
+                    val extOnTrue  = bb.insertBefore(insertPos) { it.zext(inst.onTrue(), Type.U16) }
+                    val extOnFalse = bb.insertBefore(insertPos) { it.zext(inst.onFalse(), Type.U16) }
                     val newSelect  = bb.insertBefore(inst) { it.select(inst.condition(), Type.U16, extOnTrue, extOnFalse) }
                     return bb.replace(inst) { it.trunc(newSelect, Type.U8) }
                 }
