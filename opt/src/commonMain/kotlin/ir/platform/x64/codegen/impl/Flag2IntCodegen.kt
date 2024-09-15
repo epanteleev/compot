@@ -9,7 +9,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 class Flag2IntCodegen(private val toSize: Int, private val asm: Assembler): GPOperandsVisitorUnaryOp {
     operator fun invoke(dst: Operand, src: Operand) {
-        if (toSize == fromSize) {
+        if (toSize == fromSize && dst == src) {
             return
         }
         GPOperandsVisitorUnaryOp.apply(dst, src, this)
