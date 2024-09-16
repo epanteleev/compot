@@ -855,14 +855,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun getVariableAddress(varNode: VarNode, rvalueAddr: Value, isRvalue: Boolean): Value {
         val type = varNode.resolveType(typeHolder)
 
-        if (type is AggregateBaseType) {
+        if (type is AggregateBaseType || type is CFunPointerT) {
             return rvalueAddr
         }
         if (!isRvalue) {
             return rvalueAddr
-        }
-        if (type is CFunPointerT) {
-            return rvalueAddr //tODO hack??!
         }
         val converted = mb.toIRType<PrimitiveType>(typeHolder, type)
         return ir.load(converted, rvalueAddr)

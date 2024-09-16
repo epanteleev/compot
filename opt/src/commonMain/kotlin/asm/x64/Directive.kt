@@ -61,6 +61,19 @@ class ObjLabel(override val name: String): NamedDirective() {
     }
 }
 
+enum class SectionType {
+    PROGBITS {
+        override fun toString(): String = "@progbits"
+    },
+    NOBITS {
+        override fun toString(): String = "@nobits"
+    }
+}
+
+class Section(val name: String, val flags: String, val type: SectionType): SectionDirective() {
+    override fun toString(): String = ".section $name,$flags,$type"
+}
+
 class ByteDirective(val value: String): AnonymousDirective() {
     override fun toString(): String = ".byte $value"
 }

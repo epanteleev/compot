@@ -224,9 +224,9 @@ class FuncPointerCall(val primary: Expression, args: List<Expression>) : AnyFunc
 
     fun resolveFunctionType(typeHolder: TypeHolder): CFunPointerT = memoize {
         resolveParams(typeHolder)
-        val functionType = typeHolder.getFunctionType(name()).type.baseType()
+        val functionType = primary.resolveType(typeHolder)
         if (functionType !is CFunPointerT) {
-            throw TypeResolutionException("Function call of '${name()}' with non-function type")
+            throw TypeResolutionException("Function call with non-function type: $functionType")
         }
         return functionType
     }
@@ -411,7 +411,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
         val resolvedType = when (opType) {
             PrefixUnaryOpType.DEREF -> {
                 when (primaryType) {
-                    is CFunPointerT -> primaryType.functionType
+                    is CFunPointerT -> primaryType
                     is CPointer -> primaryType.dereference()
                     is CArrayType      -> primaryType.type.baseType()
                     is CUncompletedArrayType -> primaryType.elementType.baseType()
@@ -461,7 +461,7 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
             is CArrayType -> primaryType.type.baseType()
             is CUncompletedArrayType -> primaryType.elementType.baseType()
             is CPointer     -> primaryType.dereference()
-            else -> throw TypeResolutionException("Array access on non-array type")
+            else -> throw TypeResolutionException("Array access on non-array type: $primaryType")
         }
     }
 }

@@ -1,5 +1,6 @@
 package parser.nodes
 
+import common.assertion
 import types.*
 import tokenizer.*
 import parser.nodes.visitors.*
@@ -74,9 +75,10 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
 
     fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc = when (decl) {
         is FunctionPointerDeclarator -> {
+            assertion(directDeclaratorParams.size == 1) { "Function pointer should have only one parameter" }
             val fnDecl = directDeclaratorParams[0] as ParameterTypeList
             val type = fnDecl.resolveType(baseType, typeHolder)
-            TypeDesc.from(CFunPointerT(type.baseType() as AbstractCFunction, emptySet()))
+            decl.resolveType(type, typeHolder)
         }
         is DirectVarDeclarator -> resolveAllDecl(baseType, typeHolder)
     }

@@ -747,6 +747,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                 CodeEmitter(data, unit).emit()
             }
 
+            // Ubuntu requires this section to be present
+            unit.section(Section("\".note.GNU-stack\"", "\"\"", SectionType.PROGBITS))
+
             return unit
         }
     }
