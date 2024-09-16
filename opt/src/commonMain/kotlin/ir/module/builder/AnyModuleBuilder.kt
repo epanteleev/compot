@@ -14,8 +14,8 @@ abstract class AnyModuleBuilder {
     protected val structs = hashMapOf<String, StructType>()
     protected val externFunctions = hashMapOf<String, ExternFunction>()
 
-    fun addGlobal(name: String, type: NonTrivialType, data: Constant, attributes: GlobalValueAttribute): GlobalValue {
-        val global = GlobalValue(name, type, data, attributes)
+    fun addGlobal(name: String, type: NonTrivialType, initializer: Constant, attributes: GlobalValueAttribute): GlobalValue {
+        val global = GlobalValue.create(name, type, initializer, attributes)
         val has = globals.put(name, global)
         if (has != null) {
             throw IllegalArgumentException("global with name='$name' already exists")

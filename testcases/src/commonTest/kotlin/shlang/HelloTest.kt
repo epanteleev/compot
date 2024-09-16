@@ -60,6 +60,13 @@ abstract class HelloTests: CommonCTest() {
         assertEquals("Hello World!\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testHelloWorld7() {
+        val result = runCTest("shlang/hello_world/hello_world7", listOf(), options())
+        assertEquals("Hello World!\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class HelloTestsO0: HelloTests() {

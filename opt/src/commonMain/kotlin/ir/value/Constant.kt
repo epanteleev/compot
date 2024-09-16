@@ -317,8 +317,8 @@ interface AggregateConstant: Constant {
 }
 
 class StringLiteralConstant(val name: String): AggregateConstant {
-    override fun type(): PointerType {
-        return Type.Ptr
+    override fun type(): ArrayType {
+        return ArrayType(Type.U8, name.length + 1)
     }
 
     override fun data(): String {
