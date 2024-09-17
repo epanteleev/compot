@@ -457,6 +457,7 @@ class CProgramPreprocessorTest {
 
     // 6.10.3.5 Scope of macro definitions
     // EXAMPLE 3
+    @Test
     @Ignore //TODO not fully correct test
     fun testMacroFunction444() {
         val data = """
@@ -1051,6 +1052,7 @@ class CProgramPreprocessorTest {
         assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }
 
+    @Test
     @Ignore
     fun testSysInclude4() {
         val data = """

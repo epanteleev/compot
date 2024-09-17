@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     kotlin("multiplatform") version "2.0.0"
@@ -52,7 +53,7 @@ kotlin {
 tasks.withType(Test::class.java).all {
     jvmArgs("-ea")
     testLogging {
-        events("passed", "skipped", "failed")
+        events = setOf(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT, TestLogEvent.STANDARD_ERROR)
         exceptionFormat = TestExceptionFormat.FULL
     }
 }

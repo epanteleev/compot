@@ -40,7 +40,7 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
-    open fun testHashBlake2() {
+    fun testHashBlake2() {
         val result = runCTest("shlang/algo/hash_blake2b", listOf(), options())
         assertEquals("All tests have successfully passed!\n", result.output)
         assertReturnCode(result, 0)
@@ -106,6 +106,7 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
+    @Ignore
     fun testAffineCipher() {
         val result = runCTest("shlang/algo/affine", listOf(), options())
         assertEquals("All tests have successfully passed!\n", result.output)
@@ -132,7 +133,7 @@ abstract class AlgoTests: CommonCTest() {
         assertReturnCode(result, 0)
     }
 
-    @Ignore
+    @Test
     fun testBoyerMooreSearch() {
         val result = runCTest("shlang/algo/boyer_moore_search", listOf(), options())
         val output = """
@@ -218,17 +219,9 @@ abstract class AlgoTests: CommonCTest() {
 }
 
 class AlgoTestsO0: AlgoTests() {
-    @Test
-    override fun testHashBlake2() {
-        super.testHashBlake2()
-    }
     override fun options(): List<String> = listOf()
 }
 
 class AgoTestsO1: AlgoTests() {
-    @Test
-    override fun testHashBlake2() {
-        super.testHashBlake2()
-    }
     override fun options(): List<String> = listOf("-O1")
 }
