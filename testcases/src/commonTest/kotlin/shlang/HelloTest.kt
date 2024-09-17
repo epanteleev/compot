@@ -64,7 +64,6 @@ abstract class HelloTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testHelloWorld7() {
         val result = runCTest("shlang/hello_world/hello_world7", listOf(), options())
         assertEquals("Hello World!\n", result.output)

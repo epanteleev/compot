@@ -130,8 +130,23 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 else -> throw IRCodeGenError("Unknown type")
             }
             is StringNode -> {
-                val string = expr.data()
-                ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value(string.length.toLong()))
+                if (type !is CArrayType) {
+                    throw IRCodeGenError("Expect array type, but type=$type")
+                }
+                when (type.element().baseType()) {
+                    is CHAR -> {
+                        val string = expr.data()
+                        ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value(string.length.toLong()))
+                    }
+                    is CPointer -> {
+                        val string = expr.data()
+                        val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.I8, string.length), string)
+                        val stringPtr = mb.addConstant(stringLiteral)
+                        val fieldPtr = ir.gep(lvalueAdr, Type.I64, Constant.valueOf(Type.I64, idx))
+                        ir.store(fieldPtr, stringPtr)
+                    }
+                    else -> throw IRCodeGenError("Unknown type")
+                }
             }
             else -> {
                 val rvalue = visitExpression(expr, true)
