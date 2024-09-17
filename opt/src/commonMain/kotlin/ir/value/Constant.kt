@@ -1,5 +1,6 @@
 package ir.value
 
+import ir.global.GlobalConstant
 import ir.types.*
 
 
@@ -113,6 +114,14 @@ object NullValue : Constant {
     }
 
     val NULLPTR = NullValue //TODO remove it
+}
+
+class PointerLiteral(val gConstant: GlobalConstant): Constant {
+    override fun data(): String = "@${gConstant.name()}"
+
+    override fun type(): NonTrivialType {
+        return Type.Ptr
+    }
 }
 
 sealed interface PrimitiveConstant: Constant

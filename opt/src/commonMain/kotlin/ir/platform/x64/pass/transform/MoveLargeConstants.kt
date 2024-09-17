@@ -1,8 +1,11 @@
 package ir.platform.x64.pass.transform
 
-import ir.types.Type
 import asm.x64.ImmInt.Companion.canBeImm32
+import ir.global.F32ConstantValue
+import ir.global.F64ConstantValue
 import ir.global.GlobalConstant
+import ir.global.I64ConstantValue
+import ir.global.U64ConstantValue
 import ir.module.Module
 import ir.module.block.Block
 import ir.module.FunctionData
@@ -25,10 +28,10 @@ class MoveLargeConstants private constructor(val functions: Map<String, Function
 
     private fun makeConstantOrNull(operand: Constant): GlobalConstant? {
         val global = when {
-            operand is U64Value && !canBeImm32(operand.u64) -> GlobalConstant.of("$prefix${constantIndex}", Type.U64, operand.u64)
-            operand is I64Value && !canBeImm32(operand.i64) -> GlobalConstant.of("$prefix${constantIndex}", Type.I64, operand.i64)
-            operand is F32Value -> GlobalConstant.of("$prefix${constantIndex}", Type.F32, operand.f32)
-            operand is F64Value -> GlobalConstant.of("$prefix${constantIndex}", Type.F64, operand.f64)
+            operand is U64Value && !canBeImm32(operand.u64) -> U64ConstantValue("$prefix${constantIndex}", operand.u64.toULong())
+            operand is I64Value && !canBeImm32(operand.i64) -> I64ConstantValue("$prefix${constantIndex}", operand.i64)
+            operand is F32Value -> F32ConstantValue("$prefix${constantIndex}", operand.f32)
+            operand is F64Value -> F64ConstantValue("$prefix${constantIndex}", operand.f64)
             else -> null
         }
         constantIndex += 1

@@ -36,48 +36,6 @@ sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
     abstract fun content(): String
 
     abstract fun constant(): Constant
-
-    companion object {
-        fun<T: Number> of(name: String, kind: NonTrivialType, value: T): GlobalConstant {
-            return when (kind) {
-                Type.I8  -> I8ConstantValue(name, value.toByte())
-                Type.U8  -> U8ConstantValue(name, value.toByte().toUByte())
-                Type.I16 -> I16ConstantValue(name, value.toShort())
-                Type.U16 -> U16ConstantValue(name, value.toShort().toUShort())
-                Type.I32 -> I32ConstantValue(name, value.toInt())
-                Type.U32 -> U32ConstantValue(name, value.toInt().toUInt())
-                Type.I64 -> I64ConstantValue(name, value.toLong())
-                Type.U64 -> U64ConstantValue(name, value.toLong().toULong())
-                Type.F32 -> F32ConstantValue(name, value.toFloat())
-                Type.F64 -> F64ConstantValue(name, value.toDouble())
-                Type.Ptr -> if (value == 0) {
-                    PointerConstant(name, value.toLong())
-                } else {
-                    throw RuntimeException("Cannot create pointer constant: value=$value")
-                }
-                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
-            }
-        }
-
-        fun zero(name: String, kind: NonTrivialType): GlobalConstant {
-            return when (kind) {
-                Type.I8  -> I8ConstantValue(name, 0)
-                Type.U8  -> U8ConstantValue(name, 0.toUByte())
-                Type.I16 -> I16ConstantValue(name, 0)
-                Type.U16 -> U16ConstantValue(name, 0.toUShort())
-                Type.I32 -> I32ConstantValue(name, 0)
-                Type.U32 -> U32ConstantValue(name, 0.toUInt())
-                Type.I64 -> I64ConstantValue(name, 0)
-                Type.U64 -> U64ConstantValue(name, 0.toULong())
-                Type.F32 -> F32ConstantValue(name, 0.0f)
-                Type.F64 -> F64ConstantValue(name, 0.0)
-                Type.Ptr -> PointerConstant(name, 0)
-                is ArrayType -> ArrayGlobalConstant(name, InitializerListValue.zero(kind))
-                is StructType -> StructGlobalConstant(name, InitializerListValue.zero(kind))
-                else -> throw RuntimeException("Cannot create zero constant: kind=$kind")
-            }
-        }
-    }
 }
 
 sealed class PrimitiveGlobalConstant(override val name: String): GlobalConstant(name)
@@ -195,18 +153,6 @@ class F64ConstantValue(override val name: String, val f64: Double): PrimitiveGlo
     override fun content(): String = f64.toString()
     override fun constant(): Constant {
         return F64Value(f64)
-    }
-}
-
-class PointerConstant(override val name: String, val value: Long): PrimitiveGlobalConstant(name) {
-    override fun data(): String {
-        return value.toString()
-    }
-
-    override fun type(): NonTrivialType = Type.Ptr
-    override fun content(): String = data()
-    override fun constant(): Constant {
-        return U64Value(value)
     }
 }
 

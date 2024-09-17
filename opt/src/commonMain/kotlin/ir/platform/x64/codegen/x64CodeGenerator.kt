@@ -13,6 +13,7 @@ import common.assertion
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.global.GlobalConstant
+import ir.global.U64ConstantValue
 import ir.instruction.Add
 import ir.instruction.And
 import ir.instruction.Div
@@ -172,39 +173,24 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(returnValue: ReturnValue) {
+        val value = registerAllocation.operand(returnValue.returnValue(0))
         when (val returnType = returnValue.type()) {
-            is IntegerType, is PointerType -> {
-                val value = registerAllocation.operand(returnValue.returnValue(0))
-                emitRetValue(returnType, value, retReg)
-            }
-            is FloatingPointType -> {
-                val value = registerAllocation.operand(returnValue.returnValue(0))
-                emitRetValue(returnType, value, fpRet)
-            }
+            is IntegerType, is PointerType -> emitRetValue(returnType, value, retReg)
+            is FloatingPointType -> emitRetValue(returnType, value, fpRet)
             is TupleType -> {
-                val value = registerAllocation.operand(returnValue.returnValue(0))
-                when (val first  = returnType.asInnerType<PrimitiveType>(0)) {
-                    is IntegerType, is PointerType -> {
-                        ReturnIntCodegen(first, asm)(retReg, value)
-                    }
-                    is FloatingPointType -> {
-                        ReturnFloatCodegen(first, asm)(fpRet, value)
-                    }
+                when (val first = returnType.asInnerType<PrimitiveType>(0)) {
+                    is IntegerType, is PointerType -> ReturnIntCodegen(first, asm)(retReg, value)
+                    is FloatingPointType -> ReturnFloatCodegen(first, asm)(fpRet, value)
                     else -> throw CodegenException("unknown type=$first")
                 }
 
                 val value1 = registerAllocation.operand(returnValue.returnValue(1))
                 when (val second = returnType.asInnerType<PrimitiveType>(1)) {
-                    is IntegerType, is PointerType -> {
-                        ReturnIntCodegen(second, asm)(rdx, value1)
-                    }
-                    is FloatingPointType -> {
-                        ReturnFloatCodegen(second, asm)(XmmRegister.xmm1, value1)
-                    }
+                    is IntegerType, is PointerType -> ReturnIntCodegen(second, asm)(rdx, value1)
+                    is FloatingPointType -> ReturnFloatCodegen(second, asm)(XmmRegister.xmm1, value1)
                     else -> throw CodegenException("unknown type=$second")
                 }
             }
-
             else -> throw CodegenException("unknown type=$returnType")
         }
         emitEpilogue()
@@ -219,12 +205,6 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(neg: Neg) {
         val operand = registerAllocation.operand(neg.operand())
         val result  = registerAllocation.operand(neg)
-        if (neg.type() == Type.F32) {
-            unit.mkConstant(GlobalConstant.of(FLOAT_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroFloat))
-        } else if (neg.type() == Type.F64) {
-            unit.mkConstant(GlobalConstant.of(DOUBLE_SUB_ZERO_SYMBOL, Type.U64, ImmInt.minusZeroDouble))
-        }
-
         NegCodegen(neg.type(), asm)(result, operand)
     }
 
