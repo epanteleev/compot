@@ -16,7 +16,6 @@ import gen.consteval.CommonConstEvalContext
 import gen.consteval.ConstEvalExpression
 import gen.consteval.ConstEvalExpressionInt
 import ir.Definitions.QWORD_SIZE
-import ir.attributes.GlobalValueAttribute
 import ir.global.StringLiteralGlobalConstant
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
@@ -1353,16 +1352,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(declarator: Declarator): Value {
-        val type    = typeHolder[declarator.name()]
-        val varName = declarator.name()
-
-        val irType = mb.toIRType<NonTrivialType>(typeHolder, type.type.baseType())
+        val type = typeHolder[declarator.name()]
         if (type.storageClass == StorageClass.STATIC) {
-            val constant = Constant.zero(irType)
-            val global = mb.addGlobal(varName, irType, constant, GlobalValueAttribute.INTERNAL)
-            varStack[varName] = global
-            return global
+            return generateGlobalDeclarator(declarator)
         }
+
+        val varName = declarator.name()
+        val irType = mb.toIRType<NonTrivialType>(typeHolder, type.type.baseType())
+
         val rvalueAdr     = ir.alloc(irType)
         varStack[varName] = rvalueAdr
         return rvalueAdr
@@ -1408,12 +1405,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     override fun visit(initDeclarator: InitDeclarator): Value {
         val varDesc = typeHolder[initDeclarator.name()]
         if (varDesc.storageClass == StorageClass.STATIC) {
-            val irType = mb.toIRType<NonTrivialType>(typeHolder, varDesc.type.baseType())
-            val constant = constEvalExpression(irType, initDeclarator.rvalue) ?: throw IRCodeGenError("Unknown constant")
-            val varName = initDeclarator.name()
-
-
-            return generateAssignmentDeclarator(initDeclarator)
+            return generateGlobalAssignmentDeclarator(initDeclarator)
         }
         val type = varDesc.type.baseType()
         if (type !is AggregateBaseType) {

@@ -119,10 +119,8 @@ object NullValue : Constant {
 
 class PointerLiteral(val gConstant: GlobalConstant): PrimitiveConstant {
     override fun data(): String = gConstant.name()
-
-    override fun type(): NonTrivialType {
-        return Type.Ptr
-    }
+    override fun toString(): String = gConstant.name()
+    override fun type(): NonTrivialType = Type.Ptr
 }
 
 sealed interface PrimitiveConstant: Constant

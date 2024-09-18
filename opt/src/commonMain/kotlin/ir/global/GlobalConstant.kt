@@ -179,7 +179,7 @@ class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, 
     }
 
     override fun content(): String = data()
-    override fun contentType(): NonTrivialType = Type.Ptr
+    override fun contentType(): NonTrivialType = ArrayType(Type.I8, string?.length ?: 0)
     override fun constant(): Constant {
         return StringLiteralConstant(string ?: "")
     }
