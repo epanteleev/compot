@@ -1411,9 +1411,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             val irType = mb.toIRType<NonTrivialType>(typeHolder, varDesc.type.baseType())
             val constant = constEvalExpression(irType, initDeclarator.rvalue) ?: throw IRCodeGenError("Unknown constant")
             val varName = initDeclarator.name()
-            val global = mb.addGlobal(varName, irType, constant, GlobalValueAttribute.INTERNAL)
-            varStack[varName] = global
-            return global
+
+
+            return generateAssignmentDeclarator(initDeclarator)
         }
         val type = varDesc.type.baseType()
         if (type !is AggregateBaseType) {

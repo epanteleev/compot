@@ -1,14 +1,19 @@
 package gen
 
+import gen.TypeConverter.toIRType
 import gen.consteval.*
+import ir.attributes.GlobalValueAttribute
 import ir.global.*
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.*
 import ir.value.Constant
 import ir.value.InitializerListValue
+import ir.value.PointerLiteral
+import ir.value.PrimitiveConstant
 import ir.value.StringLiteralConstant
 import ir.value.Value
 import parser.nodes.Expression
+import parser.nodes.InitDeclarator
 import parser.nodes.InitializerList
 import parser.nodes.SingleInitializer
 import parser.nodes.StringNode
@@ -23,7 +28,12 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return when (expr) {
             is InitializerList   -> constEvalInitializers(lValueType, expr)
             is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
-            is StringNode        -> StringLiteralConstant(expr.data())
+            is StringNode        -> {
+                val constant = expr.data()
+                val stringLiteral = StringLiteralGlobalConstant(createGlobalConstantName(), ArrayType(Type.U8, constant.length), constant.toString())
+                val g = mb.addConstant(stringLiteral)
+                PointerLiteral(g)
+            }
             else -> {
                 val result = constEvalExpression0(expr)
                 if (result != null) {
@@ -32,6 +42,62 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 throw IRCodeGenError("Unsupported expression $expr")
             }
         }
+    }
+
+    protected fun generateAssignmentDeclarator(decl: InitDeclarator): AnyGlobalValue {
+        val cType = decl.cType()
+        val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType.type.baseType())
+
+        if (cType.storageClass == StorageClass.EXTERN) {
+            val extern = mb.addExternValue(decl.name(), lValueType)
+            varStack[decl.name()] = extern
+            return extern
+        }
+
+        val attr = if (cType.storageClass == StorageClass.STATIC) {
+            GlobalValueAttribute.INTERNAL
+        } else {
+            GlobalValueAttribute.DEFAULT
+        }
+
+        val constant = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
+        when (constant) {
+            is PointerLiteral -> when (lValueType) {
+                is ArrayType -> {
+                    val global = mb.addGlobal(decl.name(), lValueType, constant.gConstant.constant(), attr)
+                    varStack[decl.name()] = global
+                    return global
+                }
+                is PointerType -> {
+                    val global = mb.addGlobal(decl.name(), lValueType, constant, attr)
+                    varStack[decl.name()] = global
+                    return global
+                }
+                else -> throw IRCodeGenError("Unsupported type $lValueType")
+            }
+            is PrimitiveConstant -> {
+                val g = mb.addGlobal(decl.name(), lValueType, constant, attr)
+                varStack[decl.name()] = g
+                return g
+            }
+            is InitializerListValue -> {
+                when (lValueType) {
+                    is ArrayType -> {
+                        val global = mb.addGlobal(decl.name(), lValueType, constant, attr)
+                        varStack[decl.name()] = global
+                        return global
+                    }
+                    is StructType -> {
+                        val global = mb.addGlobal(decl.name(), lValueType, constant, attr)
+                        varStack[decl.name()] = global
+                        return global
+                    }
+                    else -> throw IRCodeGenError("Unsupported type $lValueType")
+                }
+            }
+            else -> TODO("$constant")
+        }
+        throw IRCodeGenError("Unsupported declarator '$decl'")
     }
 
     private fun constEvalExpression0(expr: Expression): Number? = when (expr.resolveType(typeHolder)) {

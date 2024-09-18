@@ -5,12 +5,31 @@ import ir.types.*
 import parser.nodes.*
 import ir.module.Module
 import gen.TypeConverter.toIRType
+import ir.global.StringLiteralGlobalConstant
 import ir.module.ExternFunction
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
+import ir.value.AggregateConstant
+import ir.value.BoolValue
 import ir.value.Constant
+import ir.value.F32Value
+import ir.value.F64Value
+import ir.value.I16Value
+import ir.value.I32Value
+import ir.value.I64Value
+import ir.value.I8Value
 import ir.value.InitializerListValue
+import ir.value.NullValue
+import ir.value.PointerLiteral
+import ir.value.PrimitiveConstant
+import ir.value.StringLiteralConstant
+import ir.value.U16Value
+import ir.value.U32Value
+import ir.value.U64Value
+import ir.value.U8Value
+import ir.value.UndefinedValue
 import ir.value.Value
+import tokenizer.StringLiteral
 
 
 data class IRCodeGenError(override val message: String) : Exception(message)
@@ -94,19 +113,6 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             }
             else -> throw IRCodeGenError("Function or struct expected, but was '$type'")
         }
-    }
-
-    private fun generateAssignmentDeclarator(decl: InitDeclarator) {
-        val cType = decl.cType()
-        val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType.type.baseType())
-
-        if (cType.storageClass == StorageClass.EXTERN) {
-            varStack[decl.name()] = mb.addExternValue(decl.name(), lValueType)
-            return
-        }
-        val constant = constEvalExpression(lValueType, decl.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$decl'")
-        val global   = mb.addGlobal(createGlobalConstantName(), lValueType, constant)
-        varStack[decl.name()] = global
     }
 
     private fun generateDeclaration(node: Declaration) {

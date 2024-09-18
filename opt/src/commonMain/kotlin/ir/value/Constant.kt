@@ -1,5 +1,6 @@
 package ir.value
 
+import common.assertion
 import ir.global.GlobalConstant
 import ir.types.*
 
@@ -116,8 +117,8 @@ object NullValue : Constant {
     val NULLPTR = NullValue //TODO remove it
 }
 
-class PointerLiteral(val gConstant: GlobalConstant): Constant {
-    override fun data(): String = "@${gConstant.name()}"
+class PointerLiteral(val gConstant: GlobalConstant): PrimitiveConstant {
+    override fun data(): String = gConstant.name()
 
     override fun type(): NonTrivialType {
         return Type.Ptr
@@ -335,7 +336,7 @@ class StringLiteralConstant(val name: String): AggregateConstant {
     }
 
     override fun toString(): String {
-        return "\"$name\""
+        return name
     }
 
     override fun linearize(): List<Constant> {

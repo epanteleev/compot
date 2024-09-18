@@ -48,7 +48,7 @@ class GlobalValue private constructor(val name: String, private val type: NonTri
 
         private fun checkConstantType(type: NonTrivialType, constant: Constant) = when (type) {
             is PointerType -> {
-                assertion(constant.type() is PointerType || constant.type() is ArrayType) {
+                assertion(constant.type() is PointerType) {
                     "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
                 }
             }
@@ -59,9 +59,6 @@ class GlobalValue private constructor(val name: String, private val type: NonTri
             }
 
             is ArrayType -> {
-                assertion(constant.type() is ArrayType) {
-                    "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
-                }
                 assertion((constant.type() as ArrayType).elementType().sizeOf() == type.elementType().sizeOf()) {
                     "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
                 }
