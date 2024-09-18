@@ -225,6 +225,9 @@ class FuncPointerCall(val primary: Expression, args: List<Expression>) : AnyFunc
     fun resolveFunctionType(typeHolder: TypeHolder): CFunPointerT = memoize {
         resolveParams(typeHolder)
         val functionType = primary.resolveType(typeHolder)
+        if (functionType is AbstractCFunction) {
+            return@memoize CFunPointerT(functionType, setOf())
+        }
         if (functionType !is CFunPointerT) {
             throw TypeResolutionException("Function call with non-function type: $functionType")
         }

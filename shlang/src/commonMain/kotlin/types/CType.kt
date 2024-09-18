@@ -283,7 +283,7 @@ class CPointer(val type: CType, private val properties: Set<TypeQualifier> = set
     }
 }
 
-class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): AggregateBaseType() {
+class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): CPrimitive() {
     override fun size(): Int = throw RuntimeException("Function type has no size")
 
     override fun typename(): String = buildString {
