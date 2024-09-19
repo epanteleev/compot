@@ -61,6 +61,6 @@ data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: Abst
             return specifierType
         }
 
-        return VarDescriptor(abstractDecl.resolveType(specifierType.type), specifierType.storageClass)
+        return VarDescriptor(abstractDecl.resolveType(specifierType.type, typeHolder), specifierType.storageClass)
     }
 }

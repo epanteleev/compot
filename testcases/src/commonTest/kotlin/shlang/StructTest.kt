@@ -50,7 +50,6 @@ abstract class StructTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testStruct6() {
         val result = runCTest("shlang/struct/struct6", listOf("runtime/runtime.c"), options())
         assertEquals("Point: (10, 20)\n", result.output)

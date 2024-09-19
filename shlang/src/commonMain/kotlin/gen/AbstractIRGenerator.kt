@@ -12,12 +12,16 @@ import ir.value.InitializerListValue
 import ir.value.PointerLiteral
 import ir.value.PrimitiveConstant
 import ir.value.Value
+import parser.nodes.CompoundLiteral
 import parser.nodes.Declarator
 import parser.nodes.Expression
 import parser.nodes.InitDeclarator
 import parser.nodes.InitializerList
+import parser.nodes.PrefixUnaryOpType
 import parser.nodes.SingleInitializer
 import parser.nodes.StringNode
+import parser.nodes.UnaryOp
+import parser.nodes.UnaryOpType
 import types.*
 
 
@@ -25,24 +29,52 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val typeHolder: TypeHolder,
                                    protected val varStack: VarStack<Value>,
                                    protected val nameGenerator: NameGenerator) {
-    protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): Constant? {
-        return when (expr) {
-            is InitializerList   -> constEvalInitializers(lValueType, expr)
-            is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
-            is StringNode        -> {
-                val constant = expr.data()
-                val stringLiteral = StringLiteralGlobalConstant(createGlobalConstantName(), ArrayType(Type.U8, constant.length), constant.toString())
-                val g = mb.addConstant(stringLiteral)
-                PointerLiteral(g)
-            }
-            else -> {
-                val result = constEvalExpression0(expr)
-                if (result != null) {
-                    return Constant.of(lValueType, result)
-                }
-                throw IRCodeGenError("Unsupported expression $expr")
+    protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): Constant? = when (expr) {
+        is InitializerList   -> constEvalInitializers(lValueType, expr)
+        is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
+        is StringNode        -> {
+            val constant = expr.data()
+            val stringLiteral = StringLiteralGlobalConstant(createGlobalConstantName(), ArrayType(Type.U8, constant.length), constant.toString())
+            val g = mb.addConstant(stringLiteral)
+            PointerLiteral(g)
+        }
+        else -> {
+            val result = constEvalExpression0(expr)
+            if (result != null) {
+                Constant.of(lValueType, result)
+            } else {
+                null
             }
         }
+    }
+
+    private fun staticInitializer(expr: Expression): Constant? = when (expr) {
+        is UnaryOp -> {
+            val operand = staticInitializer(expr.primary) ?: throw IRCodeGenError("Unsupported: $expr")
+            when (expr.opType) {
+                is PrefixUnaryOpType -> when (expr.opType) {
+                    PrefixUnaryOpType.ADDRESS -> operand
+                    else -> throw IRCodeGenError("Unsupported unary operator ${expr.opType}")
+                }
+                else -> throw IRCodeGenError("Unsupported unary operator ${expr.opType}")
+            }
+        }
+        is CompoundLiteral -> {
+            val varDesc = expr.typeName.specifyType(typeHolder, listOf())
+            val lValueType = mb.toIRType<NonTrivialType>(typeHolder, varDesc.type.baseType())
+            val constant = constEvalInitializers(lValueType, expr.initializerList) as InitializerListValue
+            val gConstant = when (varDesc.type.baseType()) {
+                is CArrayType -> {
+                    ArrayGlobalConstant(createGlobalConstantName(), constant)
+                }
+                is CStructType -> {
+                    StructGlobalConstant(createGlobalConstantName(), constant)
+                }
+                else -> throw IRCodeGenError("Unsupported type $lValueType")
+            }
+            PointerLiteral(mb.addConstant(gConstant))
+        }
+        else -> TODO()
     }
 
     private fun toIrAttribute(storageClass: StorageClass?): GlobalValueAttribute? = when (storageClass) {
@@ -63,7 +95,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
         val attr = toIrAttribute(cType.storageClass)!!
 
-        val constant = constEvalExpression(lValueType, declarator.rvalue) ?: throw IRCodeGenError("Unsupported declarator '$declarator'")
+        val constant = constEvalExpression(lValueType, declarator.rvalue) ?: staticInitializer(declarator.rvalue)
         when (constant) {
             is PointerLiteral -> when (lValueType) {
                 is ArrayType -> {

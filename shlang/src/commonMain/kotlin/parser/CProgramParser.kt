@@ -1406,6 +1406,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     // cast_expression
     //	: unary_expression
     //	| '(' type_name ')' cast_expression
+    //  | '(' type_name ')' '{' initializer_list '}' <-- compound literal //TODO modified grammar
     //	;
     fun cast_expression(): Expression? = rule {
         val cast = rule castRule@ {
@@ -1416,8 +1417,15 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             val declspec = type_name() ?: return@castRule null
             if (check(")")) {
                 eat()
-                val cast = cast_expression() ?: throw ParserException(InvalidToken("Expected cast expression", peak()))
-                return@castRule Cast(declspec, cast)
+                val cast = cast_expression()
+                if (cast != null) {
+                    return@castRule Cast(declspec, cast)
+                }
+                val initializerList = initializer_list()
+                if (initializerList != null) {
+                    return@castRule CompoundLiteral(declspec, initializerList)
+                }
+                throw ParserException(InvalidToken("Expected cast expression", peak()))
             }
             throw ParserException(InvalidToken("Expected ')'", peak()))
         }

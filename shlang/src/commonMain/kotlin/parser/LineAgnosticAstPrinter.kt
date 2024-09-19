@@ -26,6 +26,13 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(identNode.str())
     }
 
+    override fun visit(expression: CompoundLiteral) {
+        buffer.append('(')
+        expression.typeName.accept(this)
+        buffer.append(')')
+        expression.initializerList.accept(this)
+    }
+
     override fun visit(cast: Cast) {
         buffer.append('(')
         cast.typeName.accept(this)

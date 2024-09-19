@@ -19,22 +19,33 @@ sealed class UnclassifiedNode : Node() {
 data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<DirectDeclaratorParam>?) : UnclassifiedNode() {   //TODO
     override fun<T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 
-    fun resolveType(baseType: TypeDesc): TypeDesc {
+    fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         var pointerType = baseType.baseType()
         for (pointer in pointers) {
             pointerType = CPointer(pointerType, pointer.property().toSet())
         }
+        var typeDesc = TypeDesc.from(pointerType)
+        if (directAbstractDeclarator == null) {
+            return typeDesc
+        }
 
-        return TypeDesc.from(pointerType)
+        for (decl in directAbstractDeclarator.reversed()) {
+            typeDesc = when (decl) {
+                is ArrayDeclarator -> decl.resolveType(typeDesc, typeHolder)
+                else -> throw IllegalStateException("Unknown declarator $decl")
+            }
+        }
+
+        return typeDesc
     }
 }
 
 data class Declaration(val declspec: DeclarationSpecifier, private val declarators: List<AnyDeclarator>): UnclassifiedNode() {
     fun specifyType(typeHolder: TypeHolder) {
-        declspec.specifyType(typeHolder, listOf()) // Important: define new type here
         for (it in declarators) {
             it.declareType(declspec, typeHolder)
         }
+        declspec.specifyType(typeHolder, listOf())
     }
 
     fun nonTypedefDeclarators(): List<AnyDeclarator> {

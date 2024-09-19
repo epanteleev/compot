@@ -21,6 +21,10 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
         throw ConstEvalException("identifier=${identNode}")
     }
 
+    override fun visit(expression: CompoundLiteral): Int {
+        TODO("Not yet implemented")
+    }
+
     override fun visit(unaryOp: UnaryOp): Int {
         return when (unaryOp.opType) {
             PrefixUnaryOpType.NEG     -> -unaryOp.primary.accept(this)
@@ -145,6 +149,10 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
 class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEvalExpression<Long>() {
     override fun visit(identNode: IdentNode): Long {
         throw ConstEvalException("identifier=${identNode}")
+    }
+
+    override fun visit(expression: CompoundLiteral): Long {
+        TODO("Not yet implemented")
     }
 
     override fun visit(unaryOp: UnaryOp): Long {
@@ -279,6 +287,10 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
         throw ConstEvalException("identifier=${identNode}")
     }
 
+    override fun visit(expression: CompoundLiteral): Float {
+        TODO("Not yet implemented")
+    }
+
     override fun visit(unaryOp: UnaryOp): Float {
         return when (unaryOp.opType) {
             PrefixUnaryOpType.NEG -> -unaryOp.primary.accept(this)
@@ -398,6 +410,10 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
 class ConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): ConstEvalExpression<Double>() {
     override fun visit(identNode: IdentNode): Double {
         throw ConstEvalException("identifier=${identNode}")
+    }
+
+    override fun visit(expression: CompoundLiteral): Double {
+        TODO("Not yet implemented")
     }
 
     override fun visit(unaryOp: UnaryOp): Double {

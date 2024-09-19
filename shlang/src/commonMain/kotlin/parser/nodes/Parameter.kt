@@ -25,7 +25,7 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) :
         val type = declspec.specifyType(typeHolder, listOf()).type
         return when (declarator) {
             is Declarator         -> declarator.declareType(declspec, typeHolder).type
-            is AbstractDeclarator -> declarator.resolveType(type)
+            is AbstractDeclarator -> declarator.resolveType(type, typeHolder)
             is EmptyDeclarator    -> type
             else -> throw IllegalStateException("Unknown declarator $declarator")
         }

@@ -6,7 +6,7 @@ import tokenizer.Identifier
 import parser.nodes.visitors.DirectDeclaratorParamVisitor
 
 
-abstract class DirectDeclaratorParam: Node() {
+sealed class DirectDeclaratorParam: Node() {
     abstract fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc
     abstract fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T
 }

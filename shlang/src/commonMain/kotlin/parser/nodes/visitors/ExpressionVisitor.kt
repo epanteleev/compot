@@ -4,6 +4,7 @@ import parser.nodes.*
 
 
 interface ExpressionVisitor<T> {
+    fun visit(expression: CompoundLiteral): T
     fun visit(identNode: IdentNode): T
     fun visit(unaryOp: UnaryOp): T
     fun visit(binop: BinaryOp): T
