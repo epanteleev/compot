@@ -1053,7 +1053,6 @@ class CProgramPreprocessorTest {
     }
 
     @Test
-    @Ignore
     fun testSysInclude4() {
         val data = """
             |#if VERSION == 1
@@ -1078,11 +1077,11 @@ class CProgramPreprocessorTest {
             |
             |
             |
-            |#enter[1] test.h
+            |#enter[1] stdio.h in 8
             |
             |
-            |int a = 9;
-            |#exit[1] test.h
+            |int printf(char* format, ...);
+            |#exit[1] stdio.h in 8
             |
             |int aa = 90;
         """.trimMargin()

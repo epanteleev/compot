@@ -280,7 +280,9 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             }
             "include" -> {
                 ctx.enterInclude()
-                val nameOrBracket = headerFileName()
+                headerFileName(peak())
+                val nameOrBracket = peak<AnyToken>()
+                kill()
                 if (nameOrBracket is StringLiteral) {
                     val header = ctx.findHeader(nameOrBracket.unquote(), HeaderType.USER) ?:
                         throw PreprocessorException("Cannot find header $nameOrBracket")
@@ -396,16 +398,15 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
         }
     }
 
-    private fun headerFileName(): AnyToken {
-        val nameOrBracket = peak<AnyToken>()
-        if (nameOrBracket is Identifier && ctx.findMacros(nameOrBracket.str()) != null) {
-            val name = getMacroReplacement(nameOrBracket) { _, replacement ->
-                replacement.first() // Ignore all other tokens
+    private fun headerFileName(tok: CToken) {
+        getMacroReplacement(tok) { macros, replacement ->
+            if (replacement.isEmpty()) {
+                return@getMacroReplacement
             }
-            return name ?: throw PreprocessorException("Cannot find macro replacement")
-        } else {
-            kill()
-            return nameOrBracket
+            addAll(replacement)
+            if (macros.first().str() == tok.str()) {
+                eat()
+            }
         }
     }
 
