@@ -42,14 +42,28 @@ object TypeConverter {
             val elementType = toIRType<NonTrivialType>(typeHolder, type.type.baseType())
             ArrayType(elementType, type.dimension.toInt())
         }
-        is CUncompletedStructType -> {
-            val structType = typeHolder.getTypedef(type.name).baseType() as CStructType //TODO
-            convertStructType(typeHolder, structType)
+        is CUncompletedStructType -> when (val structType = typeHolder.getTypedef(type.name).baseType()) {
+            is CStructType -> convertStructType(typeHolder, structType)
+            is CUncompletedStructType -> {
+                val resolved = typeHolder.getTypeOrNull<CStructType>(type.name)
+                if (resolved == null) {
+                    throw IRCodeGenError("Struct type not found, name=${type.name}")
+                }
+                convertStructType(typeHolder, resolved as CStructType)
+            }
+            else -> throw IRCodeGenError("Unknown type, type=$type")
         }
 
-        is CUncompletedUnionType -> {
-            val unionType = typeHolder.getTypedef(type.name).baseType() as CUnionType //TODO
-            convertStructType(typeHolder, unionType)
+        is CUncompletedUnionType -> when (val unionType = typeHolder.getTypedef(type.name).baseType()) {
+            is CUnionType -> convertUnionType(typeHolder, unionType)
+            is CUncompletedUnionType -> {
+                val resolved = typeHolder.getTypeOrNull<CUnionType>(type.name)
+                if (resolved == null) {
+                    throw IRCodeGenError("Union type not found, name=${type.name}")
+                }
+                convertUnionType(typeHolder, resolved as CUnionType)
+            }
+            else -> throw IRCodeGenError("Unknown type, type=$type")
         }
 
         is CUncompletedEnumType -> {
