@@ -402,7 +402,8 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
         val macroReplacement = ctx.findMacroReplacement(tok.str())
         if (macroReplacement != null) {
             kill()
-            return Pair(macroReplacement, macroReplacement.substitute(tok.position()))
+            val preprocessed = macroReplacement.substitute(tok.position())
+            return Pair(macroReplacement, preprocessed)
         }
 
         val macroFunction = ctx.findMacroFunction(tok.str())
@@ -418,7 +419,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             }
             killWithSpaces()
             val args = parseMacroFunctionArguments()
-            val preprocessedArgs = args.map { create(filename, it, ctx).preprocess() }
+            val preprocessedArgs = args.map { create(filename, it, ctx).preprocess() } //TODO remove this
 
             val substitution = SubstituteMacroFunction(macroFunction, ctx)
                 .substitute(tok.position(), preprocessedArgs)
@@ -442,9 +443,6 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
     }
 
     private fun handleToken(tok: CToken): Boolean {
-        if (tok.str() == "z") {
-            println()
-        }
         val (macros, replacement) = getMacroReplacement(tok) ?: return false
         if (replacement.isEmpty()) {
             return true

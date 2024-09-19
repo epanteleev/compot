@@ -427,6 +427,7 @@ class CProgramPreprocessorTest {
             |
             |2*9*g
         """.trimMargin()
+        // or 2*9*g
         assertEquals(expected, TokenPrinter.print(p))
     }
 
@@ -452,6 +453,40 @@ class CProgramPreprocessorTest {
             |
             |23(2)(9)
         """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    @Ignore
+    fun testRecursiveExpansion2() {
+        val data = """
+            |#define    x          3
+            |#define    f(a)       f(x * (a))
+            |#undef     x
+            |#define    x          2
+            |#define    z          z[0]
+            |#define    q(x)       x
+            |f(f(z));
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |
+            |
+            |
+            |
+            |
+            |f(2 * (f(2 * (z[0]))));
+        """.trimMargin()
+
+        //1) t(t(g)(0) + t)(1)
+        //2) t(g)(0) + t(1)
+        //3) g(0) + t(1)
+        //4) f(2 * (0)) + t(1)
+
         assertEquals(expected, TokenPrinter.print(p))
     }
 
