@@ -280,7 +280,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             }
             "include" -> {
                 ctx.enterInclude()
-                headerFileName(peak())
+                handleToken(peak())
                 val nameOrBracket = peak<AnyToken>()
                 kill()
                 if (nameOrBracket is StringLiteral) {
@@ -398,23 +398,11 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
         }
     }
 
-    private fun headerFileName(tok: CToken) {
-        getMacroReplacement(tok) { macros, replacement ->
-            if (replacement.isEmpty()) {
-                return@getMacroReplacement
-            }
-            addAll(replacement)
-            if (macros.first().str() == tok.str()) {
-                eat()
-            }
-        }
-    }
-
-    private fun<T> getMacroReplacement(tok: CToken, handler: (Macros, TokenList) -> T): T? {
+    private fun getMacroReplacement(tok: CToken): Pair<Macros, TokenList>? {
         val macroReplacement = ctx.findMacroReplacement(tok.str())
         if (macroReplacement != null) {
             kill()
-            return handler(macroReplacement, macroReplacement.substitute(tok.position()))
+            return Pair(macroReplacement, macroReplacement.substitute(tok.position()))
         }
 
         val macroFunction = ctx.findMacroFunction(tok.str())
@@ -432,40 +420,41 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             val args = parseMacroFunctionArguments()
             val preprocessedArgs = args.map { create(filename, it, ctx).preprocess() }
 
-            val substitution = SubstituteFunction(macroFunction, ctx)
+            val substitution = SubstituteMacroFunction(macroFunction, ctx)
                 .substitute(tok.position(), preprocessedArgs)
 
-            return handler(macroFunction, substitution)
+            return Pair(macroFunction, substitution)
         }
 
         val predefinedMacros = ctx.findPredefinedMacros(tok.str())
         if (predefinedMacros != null) {
             kill()
             val clone = predefinedMacros.cloneContentWith(tok.position())
-            return handler(predefinedMacros, clone)
+            return Pair(predefinedMacros, clone)
         }
 
         val macro = ctx.findMacroDefinition(tok.str())
         if (macro != null) {
             kill()
-            return handler(macro, TokenList())
+            return Pair(macro, TokenList())
         }
         return null
     }
 
-    private fun handleToken(tok: CToken) {
-        val res = getMacroReplacement(tok) { macros, replacement ->
-            if (replacement.isEmpty()) {
-                return@getMacroReplacement
-            }
-            addAll(replacement)
-            if (macros.first().str() == tok.str()) {
-                eat()
-            }
+    private fun handleToken(tok: CToken): Boolean {
+        if (tok.str() == "z") {
+            println()
         }
-        if (res == null) {
+        val (macros, replacement) = getMacroReplacement(tok) ?: return false
+        if (replacement.isEmpty()) {
+            return true
+        }
+        addAll(replacement)
+        if (macros.first().str() == tok.str()) {
             eat()
         }
+
+        return true
     }
 
     private fun preprocess0(): TokenList {
@@ -476,7 +465,9 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             }
             if (!check("#")) {
                 val tok = peak<CToken>()
-                handleToken(tok)
+                if (!handleToken(tok)) {
+                    eat()
+                }
                 continue
             }
             val sharp = kill()
