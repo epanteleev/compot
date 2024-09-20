@@ -242,6 +242,7 @@ class Numeric(private val data: String, private val radix: Int, position: Positi
             data.endsWith("UL")  -> data.substring(0, data.length - 2).toULongOrNull(radix)
             data.endsWith("ul")  -> data.substring(0, data.length - 2).toULongOrNull(radix)
             data.endsWith("L")   -> data.substring(0, data.length - 1).toLongOrNull(radix)
+            data.endsWith("l")   -> data.substring(0, data.length - 1).toLongOrNull(radix)
             data.endsWith("U")   -> data.substring(0, data.length - 1).toULongOrNull(radix)
             data.endsWith("u")   -> data.substring(0, data.length - 1).toULongOrNull(radix)
             else -> data.toByteOrNull(radix) ?: data.toIntOrNull(radix) ?: data.toLongOrNull(radix) ?: data.toULongOrNull(radix) ?: data.toFloatOrNull() ?: data.toDoubleOrNull()

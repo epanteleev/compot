@@ -18,7 +18,7 @@ abstract class AnyModuleBuilder {
         val global = GlobalValue.create(name, type, initializer, attributes)
         val has = globals.put(name, global)
         if (has != null) {
-            throw IllegalArgumentException("global with name='$name' already exists")
+            throw IllegalArgumentException("global with name='$name' already exists.")
         }
 
         return global

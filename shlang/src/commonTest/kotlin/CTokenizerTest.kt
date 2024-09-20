@@ -140,4 +140,14 @@ class CTokenizerTest {
         assertEquals(1, tokens.size)
         tokens[0].isEqual(1, 1, "0.f")
     }
+
+    @Test
+    fun testZeroFloatLiteral2() {
+        val input = "00000000l"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is Numeric }
+        assertEquals(1, tokens.size)
+        val num = tokens[0] as Numeric
+        assertEquals(0L, num.toNumberOrNull())
+    }
 }

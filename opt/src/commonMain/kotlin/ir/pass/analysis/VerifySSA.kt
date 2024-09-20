@@ -95,7 +95,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         is CompareInstruction -> {
             val prev = user.prev()
             assert(prev is CompareInstruction) {
-                "Previous instruction must be an comparison: '${user.prev()}'"
+                "Previous instruction must be an comparison: '${user.prev()?.dump()}'"
             }
             val cmp = prev as CompareInstruction
             assert(cmp === condition) {

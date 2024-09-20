@@ -401,13 +401,13 @@ data class NumNode(val number: Numeric) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        when (val num = number.toNumberOrNull()) {
+        when (number.toNumberOrNull()) {
             is Int, is Byte -> INT
             is Long   -> LONG
             is ULong  -> ULONG
             is Float  -> FLOAT
             is Double -> DOUBLE
-            else      -> throw TypeResolutionException("Unknown number type, but got $num")
+            else      -> throw TypeResolutionException("Unknown number type, but got ${number.str()}")
         }
     }
 }
@@ -424,9 +424,9 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
         val resolvedType = when (opType) {
             PrefixUnaryOpType.DEREF -> {
                 when (primaryType) {
-                    is CFunPointerT -> primaryType
-                    is CPointer -> primaryType.dereference()
-                    is CArrayType      -> primaryType.type.baseType()
+                    is CFunPointerT          -> primaryType
+                    is CPointer              -> primaryType.dereference()
+                    is CArrayType            -> primaryType.type.baseType()
                     is CUncompletedArrayType -> primaryType.elementType.baseType()
                     else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType")
                 }

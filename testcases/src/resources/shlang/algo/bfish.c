@@ -39,180 +39,12 @@ extern void bfish_write(const bfblk_t* blk, void* buf);
 #define BFISH_ENCRYPT 0
 #define BFISH_DECRYPT 1
 
-static const BFISH_U32 pbox[18];
-static const BFISH_U32 sbox[4][256];
-
-static void _bfish_magic_f(bfish_t* bf, bfblk_t* blk)
-{
-	BFISH_U32 a;
-	BFISH_U32 b;
-	BFISH_U32 c;
-	BFISH_U32 d;
-	BFISH_U32 e;
-
-	e = (unsigned char)(d = blk->hi);
-	a = bf->sbox[3][e];
-	e = (unsigned char)(d >>= 8);
-	b = bf->sbox[2][e];
-	e = (unsigned char)(d >>= 8);
-	c = bf->sbox[1][e];
-	e = (unsigned char)(d >>= 8);
-	c += bf->sbox[0][e];
-	c ^= b;
-	c += a;
-	blk->lo ^= c;
-}
-static void _bfish_swap_hilo(bfblk_t* blk)
-{
-	BFISH_U32 t;
-
-	t = blk->hi;
-	blk->hi = blk->lo;
-	blk->lo = t;
-}
-static void _bfish_crypt(bfish_t *bf, void *buf, size_t len, int mth)
-{
-	bfblk_t blk;
-	unsigned char* _buf = buf;
-	void (*fnc[])(bfish_t*, bfblk_t*) = { bfish_enblock, bfish_deblock };
-
-	while (len) {
-		int rb = bfish_read(&blk, _buf, len);
-		fnc[mth](bf, &blk);
-		bfish_write(&blk, _buf);
-		len -= rb;
-		_buf += rb;
-	}
-}
-size_t bfish_buflen(size_t len)
-{
-	int t = len % 8;
-
-	return len + (t ? 8 - t : 0);
-}
-void bfish_deblock(bfish_t* bf, bfblk_t* blk)
-{
-	int i;
-
-	assert(bf != NULL);
-	assert(blk != NULL);
-
-	for (i = 17; i > 1; i --) {
-		blk->hi ^= bf->pbox[i];
-		_bfish_magic_f(bf, blk);
-		_bfish_swap_hilo(blk);
-	}
-	_bfish_swap_hilo(blk);
-	blk->lo ^= bf->pbox[1];
-	blk->hi ^= bf->pbox[0];
-}
-void bfish_enblock(bfish_t* bf, bfblk_t* blk)
-{
-	int i;
-
-	assert(bf != NULL);
-	assert(blk != NULL);
-
-	for (i = 0; i < 16; i ++) {
-		blk->hi ^= bf->pbox[i];
-		_bfish_magic_f(bf, blk);
-		_bfish_swap_hilo(blk);
-	}
-	_bfish_swap_hilo(blk);
-	blk->lo ^= bf->pbox[16];
-	blk->hi ^= bf->pbox[17];
-}
-void bfish_encrypt(bfish_t* bf, const void* buf, size_t len)
-{
-	assert(bf != NULL);
-	assert(buf != NULL);
-
-	if (len == (size_t)-1)
-		len = strlen(buf);
-	_bfish_crypt(bf, (void*)buf, len, BFISH_ENCRYPT);
-}
-void bfish_decrypt(bfish_t* bf, void* buf, size_t len)
-{
-	assert(bf != NULL);
-	assert(buf != NULL);
-	assert((len % 8) == 0);
-
-	_bfish_crypt(bf, buf, len, BFISH_DECRYPT);
-}
-void bfish_init(bfish_t* bf, const void* key, size_t len)
-{
-	int i;
-	int j;
-	int k;
-	BFISH_U32 t;
-	bfblk_t blk = { 0 };
-	const unsigned char* _key = key;
-
-	assert(bf != NULL);
-	assert(key != NULL);
-
-	if (len == (size_t)-1)
-		len = strlen((char*)_key);
-	assert(len >= BFISH_MIN_KEY_LEN && len <= BFISH_MAX_KEY_LEN);
-
-	memcpy(bf->sbox, sbox, sizeof(sbox));
-	memcpy(bf->pbox, pbox, sizeof(pbox));
-	for (i = k = t = 0; i < BFISH_NUMOF(bf->pbox); i ++) {
-		for (j = 0; j < 4; j ++, k ++) {
-			if (k == len)
-				k = 0;
-			t = (t << 8) | _key[k];
-		}
-		bf->pbox[i] = pbox[i] ^ t;
-	}
-	for (i = 0; i < BFISH_NUMOF(bf->pbox); i += 2) {
-		bfish_enblock(bf, &blk);
-		bf->pbox[i] = blk.hi;
-		bf->pbox[i + 1] = blk.lo;
-	}
-
-	for (i = 0; i < BFISH_NUMOF(bf->sbox); i ++) {
-		for (j = 0; j < BFISH_NUMOF(*bf->sbox); j += 2) {
-			bfish_enblock(bf, &blk);
-			bf->sbox[i][j] = blk.hi;
-			bf->sbox[i][j + 1] = blk.lo;
-		}
-	}
-}
-size_t bfish_read(bfblk_t* blk, const void* buf, size_t len)
-{
-	int i;
-	const unsigned char* _buf = buf;
-	BFISH_U32* hilo = (BFISH_U32*)blk;
-
-	assert(blk != NULL);
-	assert(buf != NULL);
-
-	len = (len < 8) ? len : 8;
-	for (i = 0; i < 8; i ++) {
-		hilo[(i > 3)] <<= 8;
-		hilo[(i > 3)] |= (i < len) ? _buf[i] : 0x00;
-	}
-
-	return len;
-}
-void bfish_write(const bfblk_t* blk, void* buf)
-{
-	int i;
-	BFISH_U32 hilo[2];
-	unsigned char* _buf = buf;
-
-	assert(blk != NULL);
-	assert(buf != NULL);
-
-	hilo[0] = blk->hi;
-	hilo[1] = blk->lo;
-	for (i = 7; i > -1; i --) {
-		_buf[i] = (unsigned char)hilo[(i > 3)];
-		hilo[i > 3] >>= 8;
-	}
-}
-
+static const BFISH_U32 pbox[18] = {
+	0x243f6a88L, 0x85a308d3L, 0x13198a2eL, 0x03707344L, 0xa4093822L,
+	0x299f31d0L, 0x082efa98L, 0xec4e6c89L, 0x452821e6L, 0x38d01377L,
+	0xbe5466cfL, 0x34e90c6cL, 0xc0ac29b7L, 0xc97c50ddL, 0x3f84d5b5L,
+	0xb5470917L, 0x9216d5d9L, 0x8979fb1bL
+};
 /*
    =============================================================
    The hex digits of pi, arranged as four s_boxes & one p_array,
@@ -221,13 +53,8 @@ void bfish_write(const bfblk_t* blk, void* buf)
    =============================================================
 
 */
-static const BFISH_U32 pbox[18] = {
-	0x243f6a88L, 0x85a308d3L, 0x13198a2eL, 0x03707344L, 0xa4093822L,
-	0x299f31d0L, 0x082efa98L, 0xec4e6c89L, 0x452821e6L, 0x38d01377L,
-	0xbe5466cfL, 0x34e90c6cL, 0xc0ac29b7L, 0xc97c50ddL, 0x3f84d5b5L,
-	0xb5470917L, 0x9216d5d9L, 0x8979fb1bL
-};
 static const BFISH_U32 sbox[4][256] = { {
+
 	0xd1310ba6L, 0x98dfb5acL, 0x2ffd72dbL, 0xd01adfb7L, 0xb8e1afedL,
 	0x6a267e96L, 0xba7c9045L, 0xf12c7f99L, 0x24a19947L, 0xb3916cf7L,
 	0x0801f2e2L, 0x858efc16L, 0x636920d8L, 0x71574e69L, 0xa458fea3L,
@@ -440,6 +267,177 @@ static const BFISH_U32 sbox[4][256] = { {
 	0x3f09252dL, 0xc208e69fL, 0xb74e6132L, 0xce77e25bL, 0x578fdfe3L,
 	0x3ac372e6L
 } };
+
+static void _bfish_magic_f(bfish_t* bf, bfblk_t* blk)
+{
+	BFISH_U32 a;
+	BFISH_U32 b;
+	BFISH_U32 c;
+	BFISH_U32 d;
+	BFISH_U32 e;
+
+	e = (unsigned char)(d = blk->hi);
+	a = bf->sbox[3][e];
+	e = (unsigned char)(d >>= 8);
+	b = bf->sbox[2][e];
+	e = (unsigned char)(d >>= 8);
+	c = bf->sbox[1][e];
+	e = (unsigned char)(d >>= 8);
+	c += bf->sbox[0][e];
+	c ^= b;
+	c += a;
+	blk->lo ^= c;
+}
+static void _bfish_swap_hilo(bfblk_t* blk)
+{
+	BFISH_U32 t;
+
+	t = blk->hi;
+	blk->hi = blk->lo;
+	blk->lo = t;
+}
+static void _bfish_crypt(bfish_t *bf, void *buf, size_t len, int mth)
+{
+	bfblk_t blk;
+	unsigned char* _buf = buf;
+	void (*fnc[])(bfish_t*, bfblk_t*) = { bfish_enblock, bfish_deblock };
+
+	while (len) {
+		int rb = bfish_read(&blk, _buf, len);
+		fnc[mth](bf, &blk);
+		bfish_write(&blk, _buf);
+		len -= rb;
+		_buf += rb;
+	}
+}
+size_t bfish_buflen(size_t len)
+{
+	int t = len % 8;
+
+	return len + (t ? 8 - t : 0);
+}
+void bfish_deblock(bfish_t* bf, bfblk_t* blk)
+{
+	int i;
+
+	assert(bf != NULL);
+	assert(blk != NULL);
+
+	for (i = 17; i > 1; i --) {
+		blk->hi ^= bf->pbox[i];
+		_bfish_magic_f(bf, blk);
+		_bfish_swap_hilo(blk);
+	}
+	_bfish_swap_hilo(blk);
+	blk->lo ^= bf->pbox[1];
+	blk->hi ^= bf->pbox[0];
+}
+void bfish_enblock(bfish_t* bf, bfblk_t* blk)
+{
+	int i;
+
+	assert(bf != NULL);
+	assert(blk != NULL);
+
+	for (i = 0; i < 16; i ++) {
+		blk->hi ^= bf->pbox[i];
+		_bfish_magic_f(bf, blk);
+		_bfish_swap_hilo(blk);
+	}
+	_bfish_swap_hilo(blk);
+	blk->lo ^= bf->pbox[16];
+	blk->hi ^= bf->pbox[17];
+}
+void bfish_encrypt(bfish_t* bf, const void* buf, size_t len)
+{
+	assert(bf != NULL);
+	assert(buf != NULL);
+
+	if (len == (size_t)-1)
+		len = strlen(buf);
+	_bfish_crypt(bf, (void*)buf, len, BFISH_ENCRYPT);
+}
+void bfish_decrypt(bfish_t* bf, void* buf, size_t len)
+{
+	assert(bf != NULL);
+	assert(buf != NULL);
+	assert((len % 8) == 0);
+
+	_bfish_crypt(bf, buf, len, BFISH_DECRYPT);
+}
+void bfish_init(bfish_t* bf, const void* key, size_t len)
+{
+	int i;
+	int j;
+	int k;
+	BFISH_U32 t;
+	bfblk_t blk = { 0 };
+	const unsigned char* _key = key;
+
+	assert(bf != NULL);
+	assert(key != NULL);
+
+	if (len == (size_t)-1)
+		len = strlen((char*)_key);
+	assert(len >= BFISH_MIN_KEY_LEN && len <= BFISH_MAX_KEY_LEN);
+
+	memcpy(bf->sbox, sbox, sizeof(sbox));
+	memcpy(bf->pbox, pbox, sizeof(pbox));
+	for (i = k = t = 0; i < BFISH_NUMOF(bf->pbox); i ++) {
+		for (j = 0; j < 4; j ++, k ++) {
+			if (k == len)
+				k = 0;
+			t = (t << 8) | _key[k];
+		}
+		bf->pbox[i] = pbox[i] ^ t;
+	}
+	for (i = 0; i < BFISH_NUMOF(bf->pbox); i += 2) {
+		bfish_enblock(bf, &blk);
+		bf->pbox[i] = blk.hi;
+		bf->pbox[i + 1] = blk.lo;
+	}
+
+	for (i = 0; i < BFISH_NUMOF(bf->sbox); i ++) {
+		for (j = 0; j < BFISH_NUMOF(*bf->sbox); j += 2) {
+			bfish_enblock(bf, &blk);
+			bf->sbox[i][j] = blk.hi;
+			bf->sbox[i][j + 1] = blk.lo;
+		}
+	}
+}
+size_t bfish_read(bfblk_t* blk, const void* buf, size_t len)
+{
+	int i;
+	const unsigned char* _buf = buf;
+	BFISH_U32* hilo = (BFISH_U32*)blk;
+
+	assert(blk != NULL);
+	assert(buf != NULL);
+
+	len = (len < 8) ? len : 8;
+	for (i = 0; i < 8; i ++) {
+		hilo[(i > 3)] <<= 8;
+		hilo[(i > 3)] |= (i < len) ? _buf[i] : 0x00;
+	}
+
+	return len;
+}
+void bfish_write(const bfblk_t* blk, void* buf)
+{
+	int i;
+	BFISH_U32 hilo[2];
+	unsigned char* _buf = buf;
+
+	assert(blk != NULL);
+	assert(buf != NULL);
+
+	hilo[0] = blk->hi;
+	hilo[1] = blk->lo;
+	for (i = 7; i > -1; i --) {
+		_buf[i] = (unsigned char)hilo[(i > 3)];
+		hilo[i > 3] >>= 8;
+	}
+}
 
 #undef BFISH_DECRYPT
 #undef BFISH_ENCRYPT

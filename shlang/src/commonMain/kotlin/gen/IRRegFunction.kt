@@ -494,6 +494,50 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
+    private fun makeAlgebraicBinaryWithAssignment(binop: BinaryOp, op: (a: Value, b: Value) -> LocalValue): Value {
+        val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
+
+        if (commonType is PointerType) {
+            val rvalue     = visitExpression(binop.right, true)
+            val rValueType = binop.right.resolveType(typeHolder)
+            if (rValueType !is CPrimitive) {
+                throw IRCodeGenError("Primitive type expected")
+            }
+            val convertedRValue = ir.convertToType(rvalue, Type.U64)
+
+            val lvalueAddress = visitExpression(binop.left, false)
+            val lValueType    = binop.left.resolveType(typeHolder)
+            val lvalue        = ir.load(Type.U64, lvalueAddress)
+
+            if (lValueType !is CPointer) {
+                throw IRCodeGenError("Pointer type expected")
+            }
+            val convertedLValue = ir.convertToType(lvalue, Type.U64)
+
+            val size = lValueType.dereference().size()
+            val sizeValue = Constant.of(Type.U64, size)
+            val mul = ir.mul(convertedRValue, sizeValue)
+
+            val result = op(convertedLValue, mul)
+            val res = ir.convertToType(result, commonType)
+            ir.store(lvalueAddress, res)
+            return res
+
+        } else {
+            val right = visitExpression(binop.right, true)
+            val leftType = binop.left.resolveType(typeHolder)
+            val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
+            val rightConverted = ir.convertToType(right, leftIrType)
+
+            val left = visitExpression(binop.left, false)
+            val loadedLeft = ir.load(leftIrType, left)
+
+            val sum = ir.add(loadedLeft, rightConverted)
+            ir.store(left, sum)
+            return sum
+        }
+    }
+
     private inline fun makeComparisonBinary(binop: BinaryOp, crossinline predicate: (NonTrivialType) -> AnyPredicateType): Value {
         val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
 
@@ -528,23 +572,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     leftConverted //TODO test it
                 }
             }
-            BinaryOpType.ADD_ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<NonTrivialType>(typeHolder, leftType)
-                val rightConverted = ir.convertToType(right, leftIrType)
-
-                val left = visitExpression(binop.left, false)
-                val loadedLeft = if (leftType is CPrimitive) {
-                    ir.load(leftIrType as PrimitiveType, left)
-                } else {
-                    throw IRCodeGenError("Primitive type expected")
-                }
-
-                val sum = ir.add(loadedLeft, rightConverted)
-                ir.store(left, sum)
-                sum // TODO unchecked !!!
-            }
+            BinaryOpType.ADD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::add)
 
             BinaryOpType.DIV_ASSIGN -> {
                 val right = visitExpression(binop.right, true)
