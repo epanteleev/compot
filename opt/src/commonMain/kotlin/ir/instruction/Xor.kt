@@ -8,7 +8,7 @@ import ir.module.block.Block
 
 class Xor private constructor(id: Identity, owner: Block, tp: ArithmeticType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {
     override fun dump(): String {
-        return "%${name()} = $NAME $tp ${first()}, ${second()}"
+        return "%${name()} = $NAME $tp ${lhs()}, ${rhs()}"
     }
 
     override fun type(): ArithmeticType = tp as ArithmeticType
@@ -40,7 +40,7 @@ class Xor private constructor(id: Identity, owner: Block, tp: ArithmeticType, a:
         }
 
         fun typeCheck(binary: ArithmeticBinary): Boolean {
-            return isAppropriateTypes(binary.type(), binary.first().type(), binary.second().type())
+            return isAppropriateTypes(binary.type(), binary.lhs().type(), binary.rhs().type())
         }
     }
 }

@@ -142,64 +142,64 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     override fun visit(add: Add): LocalValue {
-        val first  = mapUsage<Value>(add.first())
-        val second = mapUsage<Value>(add.second())
+        val first  = mapUsage<Value>(add.lhs())
+        val second = mapUsage<Value>(add.rhs())
 
         return bb.add(first, second)
     }
 
     override fun visit(and: And): LocalValue {
-        val first  = mapUsage<Value>(and.first())
-        val second = mapUsage<Value>(and.second())
+        val first  = mapUsage<Value>(and.lhs())
+        val second = mapUsage<Value>(and.rhs())
 
         return bb.and(first, second)
     }
 
     override fun visit(div: Div): LocalValue {
-        val first  = mapUsage<Value>(div.first())
-        val second = mapUsage<Value>(div.second())
+        val first  = mapUsage<Value>(div.lhs())
+        val second = mapUsage<Value>(div.rhs())
 
         return bb.div(first, second)
     }
 
     override fun visit(mul: Mul): LocalValue {
-        val first  = mapUsage<Value>(mul.first())
-        val second = mapUsage<Value>(mul.second())
+        val first  = mapUsage<Value>(mul.lhs())
+        val second = mapUsage<Value>(mul.rhs())
 
         return bb.mul(first, second)
     }
 
     override fun visit(or: Or): LocalValue {
-        val first  = mapUsage<Value>(or.first())
-        val second = mapUsage<Value>(or.second())
+        val first  = mapUsage<Value>(or.lhs())
+        val second = mapUsage<Value>(or.rhs())
 
         return bb.or(first, second)
     }
 
     override fun visit(shl: Shl): LocalValue {
-        val first  = mapUsage<Value>(shl.first())
-        val second = mapUsage<Value>(shl.second())
+        val first  = mapUsage<Value>(shl.lhs())
+        val second = mapUsage<Value>(shl.rhs())
 
         return bb.shl(first, second)
     }
 
     override fun visit(shr: Shr): LocalValue {
-        val first  = mapUsage<Value>(shr.first())
-        val second = mapUsage<Value>(shr.second())
+        val first  = mapUsage<Value>(shr.lhs())
+        val second = mapUsage<Value>(shr.rhs())
 
         return bb.shr(first, second)
     }
 
     override fun visit(sub: Sub): LocalValue {
-        val first  = mapUsage<Value>(sub.first())
-        val second = mapUsage<Value>(sub.second())
+        val first  = mapUsage<Value>(sub.lhs())
+        val second = mapUsage<Value>(sub.rhs())
 
         return bb.sub(first, second)
     }
 
     override fun visit(xor: Xor): LocalValue {
-        val first  = mapUsage<Value>(xor.first())
-        val second = mapUsage<Value>(xor.second())
+        val first  = mapUsage<Value>(xor.lhs())
+        val second = mapUsage<Value>(xor.rhs())
 
         return bb.xor(first, second)
     }

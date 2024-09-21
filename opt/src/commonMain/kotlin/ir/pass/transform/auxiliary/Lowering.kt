@@ -335,12 +335,12 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 memcpy(nop(), generate(), nop()) (inst) -> { inst as Memcpy
                     val src = bb.insertBefore(inst) { it.lea(inst.source().asValue<Generate>()) }
                     bb.updateDF(inst, Memcpy.SOURCE, src)
-                    return inst.prev()
+                    return bb.idom(inst)
                 }
                 memcpy(generate(), nop(), nop()) (inst) -> { inst as Memcpy
                     val dst = bb.insertBefore(inst) { it.lea(inst.destination().asValue<Generate>()) }
                     bb.updateDF(inst, Memcpy.DESTINATION, dst)
-                    return inst.prev()
+                    return bb.idom(inst)
                 }
             }
             return inst

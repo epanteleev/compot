@@ -12,8 +12,6 @@ import asm.x64.GPRegister.*
 import common.assertion
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
-import ir.global.GlobalConstant
-import ir.global.U64ConstantValue
 import ir.instruction.Add
 import ir.instruction.And
 import ir.instruction.Div
@@ -32,8 +30,6 @@ import ir.pass.analysis.traverse.PreOrderFabric
 import ir.platform.common.AnyCodeGenerator
 import ir.platform.common.CompiledModule
 import ir.platform.x64.codegen.impl.*
-import ir.platform.x64.CallConvention.DOUBLE_SUB_ZERO_SYMBOL
-import ir.platform.x64.CallConvention.FLOAT_SUB_ZERO_SYMBOL
 import ir.platform.x64.CallConvention.retReg
 import ir.platform.x64.pass.analysis.regalloc.LinearScanFabric
 import ir.platform.x64.pass.analysis.regalloc.SavedContext
@@ -85,56 +81,56 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(add: Add) {
-        val first  = registerAllocation.operand(add.first())
-        val second = registerAllocation.operand(add.second())
+        val first  = registerAllocation.operand(add.lhs())
+        val second = registerAllocation.operand(add.rhs())
         val dst    = registerAllocation.operand(add)
 
         AddCodegen(add.type(), asm)(dst, first, second)
     }
 
     override fun visit(and: And) {
-        val first  = registerAllocation.operand(and.first())
-        val second = registerAllocation.operand(and.second())
+        val first  = registerAllocation.operand(and.lhs())
+        val second = registerAllocation.operand(and.rhs())
         val dst    = registerAllocation.operand(and)
 
         AndCodegen(and.type(), asm)(dst, first, second)
     }
 
     override fun visit(or: Or) {
-        val first  = registerAllocation.operand(or.first())
-        val second = registerAllocation.operand(or.second())
+        val first  = registerAllocation.operand(or.lhs())
+        val second = registerAllocation.operand(or.rhs())
         val dst    = registerAllocation.operand(or)
 
         OrCodegen(or.type(), asm)(dst, first, second)
     }
 
     override fun visit(xor: Xor) {
-        val first  = registerAllocation.operand(xor.first())
-        val second = registerAllocation.operand(xor.second())
+        val first  = registerAllocation.operand(xor.lhs())
+        val second = registerAllocation.operand(xor.rhs())
         val dst    = registerAllocation.operand(xor)
 
         XorCodegen(xor.type(), asm)(dst, first, second)
     }
 
     override fun visit(mul: Mul) {
-        val first  = registerAllocation.operand(mul.first())
-        val second = registerAllocation.operand(mul.second())
+        val first  = registerAllocation.operand(mul.lhs())
+        val second = registerAllocation.operand(mul.rhs())
         val dst    = registerAllocation.operand(mul)
 
         MulCodegen(mul.type(), asm)(dst, first, second)
     }
 
     override fun visit(div: Div) {
-        val first  = registerAllocation.operand(div.first())
-        val second = registerAllocation.operand(div.second())
+        val first  = registerAllocation.operand(div.lhs())
+        val second = registerAllocation.operand(div.rhs())
         val dst    = registerAllocation.operand(div)
 
         FloatDivCodegen(div.type(), asm)(dst, first, second)
     }
 
     override fun visit(shl: Shl) {
-        val first  = registerAllocation.operand(shl.first())
-        val second = registerAllocation.operand(shl.second())
+        val first  = registerAllocation.operand(shl.lhs())
+        val second = registerAllocation.operand(shl.rhs())
         val dst    = registerAllocation.operand(shl)
 
         when (shl.type()) {
@@ -144,8 +140,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(shr: Shr) {
-        val first  = registerAllocation.operand(shr.first())
-        val second = registerAllocation.operand(shr.second())
+        val first  = registerAllocation.operand(shr.lhs())
+        val second = registerAllocation.operand(shr.rhs())
         val dst    = registerAllocation.operand(shr)
 
         when (shr.type()) {
@@ -155,8 +151,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(sub: Sub) {
-        val first  = registerAllocation.operand(sub.first())
-        val second = registerAllocation.operand(sub.second())
+        val first  = registerAllocation.operand(sub.lhs())
+        val second = registerAllocation.operand(sub.rhs())
         val dst    = registerAllocation.operand(sub)
 
         SubCodegen(sub.type(), asm)(dst, first, second)

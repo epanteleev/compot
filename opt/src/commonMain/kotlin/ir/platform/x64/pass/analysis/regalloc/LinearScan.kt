@@ -72,12 +72,12 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         for (inst in bb) {
             match(inst) {
                 shl(nop(), constant().not()) { shl ->
-                    assertion(shl.second() is Copy) { "shl=$shl" }
-                    registerMap[shl.second() as Copy] = rcx
+                    assertion(shl.rhs() is Copy) { "shl=$shl" }
+                    registerMap[shl.rhs() as Copy] = rcx
                 }
                 shr(nop(), constant().not()) { shr ->
-                    assertion(shr.second() is Copy) { "shr=$shr" }
-                    registerMap[shr.second() as Copy] = rcx
+                    assertion(shr.rhs() is Copy) { "shr=$shr" }
+                    registerMap[shr.rhs() as Copy] = rcx
                 }
             }
         }

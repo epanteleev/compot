@@ -515,6 +515,22 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@df withOutput { LeaStack.make(it, this, loadedType, origin, index) }
     }
 
+    fun idom(instruction: Instruction): Instruction? {
+        assertion(instruction.owner() === this) {
+            "instruction=$instruction is not in bb=$this"
+        }
+
+        return instruction.prev()
+    }
+
+    fun ipdom(instruction: Instruction): Instruction? {
+        assertion(instruction.owner() === this) {
+            "instruction=$instruction is not in bb=$this"
+        }
+
+        return instruction.next()
+    }
+
     private fun makeEdge(to: Block) = mc.cf {
         successors.add(to)
         to.predecessors.add(this)

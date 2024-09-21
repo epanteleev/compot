@@ -11,7 +11,6 @@ import ir.types.IntegerType
 import ir.types.PrimitiveType
 import ir.types.StructType
 import ir.types.Type
-import ir.value.UnsignedIntegerConstant
 
 typealias ValueMatcher = (Value) -> Boolean
 typealias InstructionMatcher = (Instruction) -> Boolean
@@ -103,19 +102,19 @@ inline fun copy(crossinline origin: ValueMatcher): InstructionMatcher = {
 }
 
 inline fun div(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
-    it is Div && a(it.first()) && b(it.second())
+    it is Div && a(it.lhs()) && b(it.rhs())
 }
 
 inline fun div(crossinline a: ValueMatcher, crossinline b: ValueMatcher, crossinline type: TypeMatcher): InstructionMatcher = {
-    it is Div && a(it.first()) && b(it.second()) && type(it.type())
+    it is Div && a(it.lhs()) && b(it.rhs()) && type(it.type())
 }
 
 inline fun shl(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
-    it is Shl && a(it.first()) && b(it.second())
+    it is Shl && a(it.lhs()) && b(it.rhs())
 }
 
 inline fun shr(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
-    it is Shr && a(it.first()) && b(it.second())
+    it is Shr && a(it.lhs()) && b(it.rhs())
 }
 
 inline fun select(crossinline cond: ValueMatcher, crossinline onTrue: ValueMatcher, crossinline onFalse: ValueMatcher): InstructionMatcher = {

@@ -13,7 +13,6 @@ import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PreOrderFabric
-import ir.types.BooleanType
 import ir.value.BoolValue
 import ir.value.Value
 
@@ -93,9 +92,9 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     private fun validatePredicate(user: Instruction, condition: Value) = when (condition) {
         is BoolValue -> {}
         is CompareInstruction -> {
-            val prev = user.prev()
+            val prev = bb.idom(user)
             assert(prev is CompareInstruction) {
-                "Previous instruction must be an comparison: '${user.prev()?.dump()}'"
+                "Previous instruction must be an comparison: '${prev?.dump()}'"
             }
             val cmp = prev as CompareInstruction
             assert(cmp === condition) {
@@ -143,55 +142,55 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
     override fun visit(add: Add) {
         assert(Add.typeCheck(add)) {
-            "Instruction '${add.dump()}' requires all operands to be of the same type: a=${add.first().type()}, b=${add.second().type()}"
+            "Instruction '${add.dump()}' requires all operands to be of the same type: a=${add.lhs().type()}, b=${add.rhs().type()}"
         }
     }
 
     override fun visit(and: And) {
         assert(And.typeCheck(and)) {
-            "Instruction '${and.dump()}' requires all operands to be of the same type: a=${and.first().type()}, b=${and.second().type()}"
+            "Instruction '${and.dump()}' requires all operands to be of the same type: a=${and.lhs().type()}, b=${and.rhs().type()}"
         }
     }
 
     override fun visit(mul: Mul) {
         assert(Mul.typeCheck(mul)) {
-            "Instruction '${mul.dump()}' requires all operands to be of the same type: a=${mul.first().type()}, b=${mul.second().type()}"
+            "Instruction '${mul.dump()}' requires all operands to be of the same type: a=${mul.lhs().type()}, b=${mul.rhs().type()}"
         }
     }
 
     override fun visit(or: Or) {
         assert(Or.typeCheck(or)) {
-            "Instruction '${or.dump()}' requires all operands to be of the same type: a=${or.first().type()}, b=${or.second().type()}"
+            "Instruction '${or.dump()}' requires all operands to be of the same type: a=${or.lhs().type()}, b=${or.rhs().type()}"
         }
     }
 
     override fun visit(xor: Xor) {
         assert(Xor.typeCheck(xor)) {
-            "Instruction '${xor.dump()}' requires all operands to be of the same type: a=${xor.first().type()}, b=${xor.second().type()}"
+            "Instruction '${xor.dump()}' requires all operands to be of the same type: a=${xor.lhs().type()}, b=${xor.rhs().type()}"
         }
     }
 
     override fun visit(div: Div) {
         assert(Div.typeCheck(div)) {
-            "Instruction '${div.dump()}' requires all operands to be of the same type: a=${div.first().type()}, b=${div.second().type()}"
+            "Instruction '${div.dump()}' requires all operands to be of the same type: a=${div.lhs().type()}, b=${div.rhs().type()}"
         }
     }
 
     override fun visit(sub: Sub) {
         assert(Sub.typeCheck(sub)) {
-            "Instruction '${sub.dump()}' requires all operands to be of the same type: a=${sub.first().type()}, b=${sub.second().type()}"
+            "Instruction '${sub.dump()}' requires all operands to be of the same type: a=${sub.lhs().type()}, b=${sub.rhs().type()}"
         }
     }
 
     override fun visit(shr: Shr) {
         assert(Shr.typeCheck(shr)) {
-            "Instruction '${shr.dump()}' requires all operands to be of the same type: a=${shr.first().type()}, b=${shr.second().type()}"
+            "Instruction '${shr.dump()}' requires all operands to be of the same type: a=${shr.lhs().type()}, b=${shr.rhs().type()}"
         }
     }
 
     override fun visit(shl: Shl) {
         assert(Shl.typeCheck(shl)) {
-            "Instruction '${shl.dump()}' requires all operands to be of the same type: a=${shl.first().type()}, b=${shl.second().type()}"
+            "Instruction '${shl.dump()}' requires all operands to be of the same type: a=${shl.lhs().type()}, b=${shl.rhs().type()}"
         }
     }
 

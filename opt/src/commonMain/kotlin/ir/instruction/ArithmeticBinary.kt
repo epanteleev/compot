@@ -9,24 +9,24 @@ import ir.types.ArithmeticType
 abstract class ArithmeticBinary(id: Identity, owner: Block, tp: ArithmeticType, a: Value, b: Value) :
     ValueInstruction(id, owner, tp, arrayOf(a, b)) {
 
-    fun first(): Value {
-        assertion(operands.size == 2) {
-            "size should be 2 in $this instruction"
-        }
-
-        return operands[FIRST]
+    fun lhs(): Value {
+        check()
+        return operands[LHS]
     }
 
-    fun second(): Value {
+    fun rhs(): Value {
+        check()
+        return operands[RHS]
+    }
+
+    private fun check() {
         assertion(operands.size == 2) {
             "size should be 2 in $this instruction"
         }
-
-        return operands[SECOND]
     }
 
     companion object {
-        const val FIRST = 0
-        const val SECOND = 1
+        const val LHS = 0
+        const val RHS = 1
     }
 }

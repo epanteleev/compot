@@ -31,12 +31,12 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         fun transform(bb: Block, inst: Instruction): Instruction {
             match(inst) {
                 shl(nop(), constant().not()) { shl ->
-                    val copy = bb.insertBefore(inst) { it.copy(shl.second()) }
+                    val copy = bb.insertBefore(inst) { it.copy(shl.rhs()) }
                     bb.updateDF(inst, Shl.OFFSET, copy)
                     isNeed4ArgIsolation = true
                 }
                 shr(nop(), constant().not()) { shr ->
-                    val copy = bb.insertBefore(inst) { it.copy(shr.second()) }
+                    val copy = bb.insertBefore(inst) { it.copy(shr.rhs()) }
                     bb.updateDF(inst, Shr.OFFSET, copy)
                     isNeed4ArgIsolation = true
                 }

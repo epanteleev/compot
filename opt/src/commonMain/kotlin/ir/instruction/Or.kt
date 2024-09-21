@@ -9,7 +9,7 @@ import ir.types.IntegerType
 
 
 class Or private constructor(id: Identity, owner: Block, tp: ArithmeticType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {
-    override fun dump(): String = "%${name()} = $NAME $tp ${first()}, ${second()}"
+    override fun dump(): String = "%${name()} = $NAME $tp ${lhs()}, ${rhs()}"
 
     override fun type(): ArithmeticType = tp as ArithmeticType
 
@@ -40,7 +40,7 @@ class Or private constructor(id: Identity, owner: Block, tp: ArithmeticType, a: 
         }
 
         fun typeCheck(binary: ArithmeticBinary): Boolean {
-            return isAppropriateTypes(binary.type(), binary.first().type(), binary.second().type())
+            return isAppropriateTypes(binary.type(), binary.lhs().type(), binary.rhs().type())
         }
     }
 }

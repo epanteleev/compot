@@ -7,7 +7,7 @@ import ir.module.block.Block
 
 
 class Shl private constructor(id: Identity, owner: Block, tp: IntegerType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {
-    override fun dump(): String = "%${name()} = $NAME $tp ${first()}, ${second()}"
+    override fun dump(): String = "%${name()} = $NAME $tp ${lhs()}, ${rhs()}"
 
     override fun type(): IntegerType = tp as IntegerType
 
@@ -38,7 +38,7 @@ class Shl private constructor(id: Identity, owner: Block, tp: IntegerType, a: Va
         }
 
         fun typeCheck(binary: ArithmeticBinary): Boolean {
-            return isAppropriateTypes(binary.type(), binary.first().type(), binary.second().type())
+            return isAppropriateTypes(binary.type(), binary.lhs().type(), binary.rhs().type())
         }
     }
 }

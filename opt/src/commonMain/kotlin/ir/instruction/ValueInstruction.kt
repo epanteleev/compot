@@ -7,7 +7,7 @@ import ir.types.Type
 
 abstract class ValueInstruction(id: Identity,
                                 owner: Block,
-                                protected val tp: Type,
+                                protected val tp: Type, //todo remove???
                                 operands: Array<Value>):
     Instruction(id, owner, operands),
     LocalValue {
