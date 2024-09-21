@@ -290,12 +290,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitArrayAccess(arrayAccess: ArrayAccess, isRvalue: Boolean): Value {
         val index = visitExpression(arrayAccess.expr, true)
+        val convertedIndex = ir.toIndexType(index)
         val array = visitExpression(arrayAccess.primary, true)
 
         val arrayType = arrayAccess.resolveType(typeHolder)
         val elementType = mb.toIRType<NonTrivialType>(typeHolder, arrayType)
 
-        val convertedIndex = ir.toIndexType(index)
         val adr = ir.gep(array, elementType, convertedIndex)
         if (!isRvalue) {
             return adr
@@ -507,12 +507,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             val lvalueAddress = visitExpression(binop.left, false)
             val lValueType    = binop.left.resolveType(typeHolder)
-            val lvalue        = ir.load(Type.U64, lvalueAddress)
+            val lvalue        = ir.load(Type.Ptr, lvalueAddress)
+            val ptr2intLValue = ir.ptr2int(lvalue, Type.U64)
 
             if (lValueType !is CPointer) {
                 throw IRCodeGenError("Pointer type expected")
             }
-            val convertedLValue = ir.convertToType(lvalue, Type.U64)
+            val convertedLValue = ir.convertToType(ptr2intLValue, Type.U64)
 
             val size = lValueType.dereference().size()
             val sizeValue = Constant.of(Type.U64, size)

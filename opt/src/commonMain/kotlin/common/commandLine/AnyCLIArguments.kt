@@ -23,7 +23,15 @@ abstract class AnyCLIArguments {
             return outFilename!!
         }
 
-        return getFilename()
+        val name = getFilename()
+        val lastIndex = name.lastIndexOf('.')
+        val basename = if (lastIndex != -1) {
+            name.substring(0, lastIndex)
+        } else {
+            name
+        }
+
+        return "$basename.o"
     }
 
     fun setOutputFilename(name: String) {

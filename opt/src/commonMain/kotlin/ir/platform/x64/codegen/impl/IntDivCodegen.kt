@@ -64,9 +64,6 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
         val imm = first.value() / second.value()
         asm.copy(size, Imm32.of(imm), dst)
         val remImm = first.value() % second.value()
-        if (rem == rdx) { // todo COPY-PASTE
-            return
-        }
         when (rem) {
             is GPRegister -> asm.copy(size, Imm32.of(remImm), rdx)
             is Address    -> asm.copy(size, Imm32.of(remImm), rdx)
@@ -87,7 +84,14 @@ data class IntDivCodegen(val type: ArithmeticType, val rem: Operand, val asm: Ma
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
+        val imm = first.value() / second.value()
+        asm.mov(size, Imm32.of(imm), dst)
+        val remImm = first.value() % second.value()
+        when (rem) {
+            is GPRegister -> asm.mov(size, Imm32.of(remImm), rdx)
+            is Address    -> asm.mov(size, Imm32.of(remImm), rdx)
+            else -> throw RuntimeException("rem=$rem")
+        }
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {

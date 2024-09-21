@@ -31,7 +31,7 @@ abstract class CommonCTest: CommonTest() {
         val output = "$TEST_OUTPUT_DIR/$basename"
         val args = arrayOf("-c", "$TESTCASES_DIR/$filename.c", "--dump-ir", TEST_OUTPUT_DIR, "-I$TESTCASES_DIR") +
                 optOptions +
-                listOf("-o", output)
+                listOf("-o", "$output.o")
 
         val cli = CCLIParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         ShlangDriver(cli).run()

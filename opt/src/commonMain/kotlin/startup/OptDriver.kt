@@ -62,7 +62,8 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
                 val dst = "${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/$asmFileName".toPath()
                 FileSystem.SYSTEM.copy(temp, dst)
             }
-            GNUAssemblerRunner.run(optimizedAsm, "${commandLineArguments.getOutputFilename()}.o")
+
+            GNUAssemblerRunner.run(optimizedAsm, commandLineArguments.getOutputFilename())
         } finally {
             FileSystem.SYSTEM.delete(optimizedAsm.toPath())
         }

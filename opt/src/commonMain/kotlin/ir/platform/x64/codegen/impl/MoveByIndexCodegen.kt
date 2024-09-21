@@ -40,7 +40,8 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.mov(size, first, Address.from(temp1, 0, second, ScaleFactor.from(size)))
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
