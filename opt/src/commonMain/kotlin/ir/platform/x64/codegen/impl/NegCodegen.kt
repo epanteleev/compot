@@ -11,10 +11,7 @@ data class NegCodegen(val type: PrimitiveType, val asm: MacroAssembler): GPOpera
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {
-        when (type) {
-            is IntegerType -> GPOperandsVisitorUnaryOp.apply(dst, src, this)
-            else -> throw RuntimeException("Unknown type=$type, dst=$dst, src=$src")
-        }
+        GPOperandsVisitorUnaryOp.apply(dst, src, this)
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {
