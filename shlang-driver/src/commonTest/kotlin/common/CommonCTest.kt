@@ -1,5 +1,8 @@
 package common
 
+import okio.FileSystem
+import okio.Path.Companion.toPath
+import okio.SYSTEM
 import startup.ShlangDriver
 import startup.CCLIParser
 
@@ -25,6 +28,12 @@ abstract class CommonCTest: CommonTest() {
         val cli = CCLIParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         ShlangDriver(cli).run()
         return output
+    }
+
+    protected fun readExpectedOutput(filename: String): String {
+        return FileSystem.SYSTEM.read("$TESTCASES_DIR/expected_out/$filename".toPath()) {
+            readUtf8()
+        }
     }
 
     private fun compileExecutable(filename: String, basename: String, optOptions: List<String>, runtimeLib: List<String>) {

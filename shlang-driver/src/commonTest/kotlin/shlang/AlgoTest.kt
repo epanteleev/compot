@@ -196,9 +196,8 @@ abstract class AlgoTests: CommonCTest() {
     @Test
     fun testSudokuSolver() {
         val result = runCTest("shlang/algo/sudoku_solver", listOf(), options())
-        val expected = FileSystem.SYSTEM.read("$TESTCASES_DIR/expected_out/shlang/algo/sudoku_solver.output".toPath()) { //TODO
-            readUtf8()
-        }
+        val expected = readExpectedOutput("shlang/algo/sudoku_solver.output")
+
         assertEquals(expected, result.output)
         assertReturnCode(result, 0)
     }

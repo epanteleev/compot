@@ -43,7 +43,6 @@ data class NotCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperand
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        TODO("untested")
         asm.copy(size, Imm32.of(src.value().inv()), dst)
     }
 
