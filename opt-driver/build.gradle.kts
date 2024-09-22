@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
     kotlin("multiplatform") version "2.0.0"
     id("org.jetbrains.dokka") version "1.9.20"
@@ -29,12 +32,33 @@ kotlin {
     }
 
     sourceSets {
+        commonTest {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-test-common")
+                implementation("org.jetbrains.kotlin:kotlin-test-annotations-common")
+            }
+        }
+        jvmMain {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-compiler")
+            }
+        }
         commonMain {
             dependencies {
                 implementation(project(":opt"))
             }
         }
+        jvmTest {
+            dependencies {
+                implementation("junit:junit:4.13")
+                implementation("org.jetbrains.kotlin:kotlin-test-junit")
+            }
+        }
     }
+}
+
+tasks.named<Jar>("jvmJar") {
+    dependsOn.add(tasks.findByName("jvmTest"))
 }
 
 tasks.named<Jar>("jar") {
@@ -42,4 +66,15 @@ tasks.named<Jar>("jar") {
         configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
         subprojects.flatMap { it.configurations.getByName("runtimeClasspath").files }
     })
+}
+
+tasks.withType(Test::class.java).all {
+    jvmArgs("-ea")
+    mkdir("test-results")
+    environment("TEST_RESULT_DIR", "test-results")
+
+    testLogging {
+        events = setOf(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT, TestLogEvent.STANDARD_ERROR)
+        exceptionFormat = TestExceptionFormat.FULL
+    }
 }

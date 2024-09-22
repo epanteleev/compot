@@ -5,4 +5,5 @@ gradle
 .idea/
 # Ignore Gradle build output directory
 build
-testcases/test-results/
+shlang-driver/test-results/
+opt-driver/test-results/

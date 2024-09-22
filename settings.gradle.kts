@@ -38,6 +38,5 @@ pluginManagement {
 include("opt")
 include("examples")
 include("shlang")
-include("testcases")
 include("opt-driver")
 include("shlang-driver")
