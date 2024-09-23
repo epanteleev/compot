@@ -296,17 +296,15 @@ object TypeConverter {
                         val sext = sext(value, Type.I32)
                         bitcast(sext, toType)
                     }
-
                     Type.I16 -> {
-                        val bitcast = bitcast(value, Type.U16)
-                        zext(bitcast, toType)
+                        val sext = sext(value, Type.I32)
+                        bitcast(sext, toType)
                     }
                     Type.I32 -> bitcast(value, toType)
                     Type.I64 -> {
                         val bitcast = bitcast(value, Type.U64)
                         trunc(bitcast, Type.U32)
                     }
-
                     Type.U8 -> zext(value, toType)
                     Type.U16 -> zext(value, toType)
                     Type.U64 -> trunc(value, toType)
@@ -325,13 +323,14 @@ object TypeConverter {
                         val sext = sext(value, Type.I64)
                         bitcast(sext, toType)
                     }
-
-                    Type.I16 -> trunc(value, toType)
+                    Type.I16 -> {
+                        val sext = sext(value, Type.I64)
+                        bitcast(sext, toType)
+                    }
                     Type.I32 -> {
                         val tmp = sext(value, Type.I64)
                         bitcast(tmp, toType)
                     }
-
                     Type.I64 -> bitcast(value, toType)
                     Type.U8 -> zext(value, toType)
                     Type.U16 -> zext(value, toType)

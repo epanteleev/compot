@@ -471,7 +471,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
 
     override fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi = mc.df {
         val blocks = predecessors().mapTo(arrayListOf()) { it }
-        return@df withOutput { Phi.makeUncompleted(it, this, ty, incoming, blocks) }
+        return@df withOutput { Phi.makeUncompleted(it, this, ty, incoming, blocks) } //TODO separate instruction
     }
 
     override fun gen(ty: NonTrivialType): Generate = mc.df {

@@ -21,7 +21,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testCast() {
         val result = runCTest("shlang/llvm-c-tests/2002-05-02-CastTest", listOf(), options())
         val expected = """ubc0 = 'd'	   [0x64]
@@ -38,7 +37,9 @@ abstract class LLVMCTests: CommonCTest() {
         |is4  = 256	   [0x100]
         |is5  = 0	   [0x0]
         |uic4 = 'd'	   [0x64]
-        |uis4 = 4294966527  [0xfffffcff]""".trimIndent()
+        |uis4 = 4294966527  [0xfffffcff]
+        |
+        """.trimMargin()
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }

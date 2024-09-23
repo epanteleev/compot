@@ -87,8 +87,8 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
         return ctx.callFunction(functionCall.nameIdentifier(), evaluated)
     }
 
-    override fun visit(arrayAccess: ArrayAccess): Int {
-        TODO("Not yet implemented")
+    override fun visit(arrayAccess: ArrayAccess): Int? {
+        return null
     }
 
     override fun visit(stringNode: StringNode): Int {
@@ -96,7 +96,7 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(assignment: CharNode): Int? {
-        return null
+        return assignment.toInt()
     }
 
     override fun visit(initializerList: InitializerList): Int? {

@@ -44,14 +44,14 @@ class Truncate private constructor(id: Identity, owner: Block, toType: IntegerTy
         }
 
         private fun isAppropriateType(toType: IntegerType, valueType: Type): Boolean {
-            val isSameSign = (toType is SignedIntType && valueType is SignedIntType) ||
-                    (toType is UnsignedIntType && valueType is UnsignedIntType)
-            if (!isSameSign) {
-                return false
+            if (toType is SignedIntType && valueType is SignedIntType) {
+                return toType.sizeOf() < valueType.sizeOf()
+            }
+            if (toType is UnsignedIntType && valueType is UnsignedIntType) {
+                return toType.sizeOf() < valueType.sizeOf()
             }
 
-            valueType as IntegerType
-            return toType.sizeOf() < valueType.sizeOf()
+            return false
         }
 
         fun typeCheck(trunc: Truncate): Boolean {
