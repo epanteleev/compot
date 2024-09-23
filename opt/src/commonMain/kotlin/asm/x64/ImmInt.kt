@@ -32,6 +32,8 @@ value class Imm32 private constructor(private val value: Int) : ImmInt {
         return "$$value"
     }
 
+    fun toInt(): Int = value
+
     override fun value(): Long = value.toLong()
 
     override fun toString(size: Int): String {

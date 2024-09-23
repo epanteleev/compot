@@ -45,7 +45,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testCast1() {
         val result = runCTest("shlang/llvm-c-tests/2002-05-02-CastTest1", listOf(), options())
         assertEquals("bs0  = -1 255\n", result.output)
