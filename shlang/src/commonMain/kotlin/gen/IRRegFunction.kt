@@ -318,6 +318,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 Type.F32 -> ir.convertToType(expr, Type.F64)
                 Type.I8, Type.I16 -> ir.convertToType(expr, Type.I32)
                 Type.U8, Type.U16 -> ir.convertToType(expr, Type.U32)
+                Type.U1 -> ir.convertToType(expr, Type.I32)
                 else -> expr
             }
         }

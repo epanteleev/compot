@@ -79,11 +79,13 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testNot() {
         val result = runCTest("shlang/llvm-c-tests/2002-05-03-NotTest", listOf(), options())
-        val expected = """Bitwise Not: -2 -3 2 -6
-                          Boolean Not: 0 1 0 1 0 1""".trimIndent()
+        val expected = """
+            Bitwise Not: -2 -3 2 -6
+            Boolean Not: 0 1 0 1 0 1
+            
+            """.trimIndent()
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }
