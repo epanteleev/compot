@@ -2,7 +2,7 @@ package parser.nodes
 
 import gen.consteval.CommonConstEvalContext
 import gen.consteval.ConstEvalExpression
-import gen.consteval.ConstEvalExpressionLong
+import gen.consteval.TryConstEvalExpressionLong
 import tokenizer.Identifier
 import parser.nodes.visitors.UnclassifiedNodeVisitor
 import types.TypeHolder
@@ -23,7 +23,12 @@ class ArrayDesignator(val constExpression: Expression): Designator() {
 
     fun constEval(typeHolder: TypeHolder): Long {
         val ctx = CommonConstEvalContext<Long>(typeHolder)
-        return ConstEvalExpression.eval(constExpression, ConstEvalExpressionLong(ctx))
+        val constEval = ConstEvalExpression.eval(constExpression, TryConstEvalExpressionLong(ctx))
+        if (constEval == null) {
+            throw Exception("Cannot evaluate array designator")
+        }
+
+        return constEval
     }
 }
 

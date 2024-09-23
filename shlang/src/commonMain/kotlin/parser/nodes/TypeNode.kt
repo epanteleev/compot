@@ -2,7 +2,7 @@ package parser.nodes
 
 import gen.consteval.CommonConstEvalContext
 import gen.consteval.ConstEvalExpression
-import gen.consteval.ConstEvalExpressionInt
+import gen.consteval.TryConstEvalExpressionInt
 import types.*
 import tokenizer.CToken
 import tokenizer.Keyword
@@ -162,7 +162,11 @@ data class EnumSpecifier(private val name: Identifier, val enumerators: List<Enu
             val constExpression = field.constExpr
             if (constExpression !is EmptyExpression) {
                 val ctx = CommonConstEvalContext<Int>(typeHolder, enumeratorValues)
-                enumValue = ConstEvalExpression.eval(constExpression, ConstEvalExpressionInt(ctx))
+                val constExpr = ConstEvalExpression.eval(constExpression, TryConstEvalExpressionInt(ctx))
+                if (constExpr == null) {
+                    throw IllegalStateException("Cannot evaluate enum value")
+                }
+                enumValue = constExpr
             }
             enumeratorValues[field.name()] = enumValue
             enumValue++

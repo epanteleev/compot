@@ -134,10 +134,13 @@ object TypeConverter {
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> trunc(value, toType)
                     Type.I64 -> trunc(value, toType)
-                    Type.U8 -> trunc(value, toType)
+                    Type.U8 ->  bitcast(value, toType)
                     Type.U16 -> trunc(value, toType)
                     Type.U32 -> trunc(value, toType)
-                    Type.U64 -> trunc(value, toType)
+                    Type.U64 -> {
+                        val bitcast = bitcast(value, Type.I64)
+                        trunc(bitcast, toType)
+                    }
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
                     Type.Ptr -> ptr2int(value, toType)
@@ -227,7 +230,10 @@ object TypeConverter {
                 when (value.type()) {
                     Type.U1 -> flag2int(value, toType)
                     Type.I8 -> bitcast(value, toType)
-                    Type.I16 -> trunc(value, toType)
+                    Type.I16 -> {
+                        val bitcast = bitcast(value, Type.U16)
+                        trunc(bitcast, toType)
+                    }
                     Type.I32 -> {
                         val trunc = trunc(value, Type.I8)
                         bitcast(trunc, Type.U8)
@@ -291,7 +297,10 @@ object TypeConverter {
                         bitcast(sext, toType)
                     }
 
-                    Type.I16 -> trunc(value, toType)
+                    Type.I16 -> {
+                        val bitcast = bitcast(value, Type.U16)
+                        zext(bitcast, toType)
+                    }
                     Type.I32 -> bitcast(value, toType)
                     Type.I64 -> {
                         val bitcast = bitcast(value, Type.U64)

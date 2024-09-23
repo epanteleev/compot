@@ -1,10 +1,15 @@
 package ir.pass.transform.utils
 
+import common.intMapOf
 import ir.value.*
 import ir.types.Type
 import ir.instruction.*
 import ir.instruction.matching.alloc
+import ir.instruction.matching.load
+import ir.instruction.matching.nop
 import ir.instruction.matching.primitive
+import ir.instruction.matching.store
+import ir.instruction.matching.value
 import ir.module.block.*
 import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
@@ -49,20 +54,32 @@ abstract class AbstractRewritePrimitives(private val dominatorTree: DominatorTre
     abstract fun valueMap(): Map<Block, Map<Value, Value>>
 }
 
-class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
+class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val insertedPhis: Set<Phi>, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
     private val escapeState = cfg.analysis(EscapeAnalysisPassFabric)
-    private val bbToMapValues = run {
-        val bbToMapValues = hashMapOf<Block, MutableMap<Value, Value>>()
+    private val bbToMapValues = setupValueMap()
+
+    init {
+        val phisToRewrite = hashSetOf<Phi>()
+        for (bb in cfg.analysis(PreOrderFabric)) {
+            rewriteValuesSetup(bb, phisToRewrite)
+        }
+
+        laterRewrite(phisToRewrite)
+    }
+
+    private fun setupValueMap(): MutableMap<Block, MutableMap<Value, Value>> {
+        val bbToMapValues = intMapOf<Block, MutableMap<Value, Value>>(cfg.size()) { it: Label -> it.index }
         for (bb in cfg) {
             bbToMapValues[bb] = hashMapOf()
         }
 
-        bbToMapValues
+        return bbToMapValues
     }
 
-    init {
-        for (bb in cfg.analysis(PreOrderFabric)) {
-            rewriteValuesSetup(bb)
+    // Rewrite phi instructions that was not inserted by mem2reg pass.
+    private fun laterRewrite(phisToRewrite: MutableSet<Phi>) {
+        for (phi in phisToRewrite) {
+            phi.owner().updateDF(phi) { bb, v -> rename(bb, v) }
         }
     }
 
@@ -70,14 +87,14 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
         return bbToMapValues
     }
 
-    private fun rewriteValuesSetup(bb: Block) {
+    private fun rewriteValuesSetup(bb: Block, phisToRewrite: MutableSet<Phi>) {
         val valueMap = bbToMapValues[bb]!!
         for (instruction in bb) {
             if (instruction.emptyOperands()) {
                 continue
             }
 
-            if (instruction is Store && escapeState.isNoEscape(instruction.pointer())) {
+            if (store(nop(), value(primitive())) (instruction) && escapeState.isNoEscape((instruction as Store).pointer())) {
                 val actual = findActualValueOrNull(bb, instruction.value())
                 val pointer = instruction.pointer()
                 if (actual != null) {
@@ -94,13 +111,19 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
                 continue
             }
 
-            if (instruction is Load && escapeState.isNoEscape(instruction.operand())) {
+            if (load(primitive(), nop()) (instruction) && escapeState.isNoEscape((instruction as Load).operand())) {
                 val actual = findActualValue(bb, instruction.operand())
                 valueMap[instruction] = actual
                 continue
             }
 
             if (instruction is Phi) {
+                if (!insertedPhis.contains(instruction)) {
+                    // Phi instruction is not inserted by mem2reg pass.
+                    // Will rewrite it later.
+                    phisToRewrite.add(instruction)
+                    continue
+                }
                 // Note: all used values are equal in uncompleted phi instruction.
                 // Will take only first value.
                 valueMap[instruction.operand(0)] = instruction
@@ -120,8 +143,8 @@ class RewritePrimitivesUtil private constructor(cfg: FunctionData, dominatorTree
             return Constant.from(type as NonTrivialType, value)
         }
 
-        fun run(cfg: FunctionData, dominatorTree: DominatorTree): RewritePrimitives {
-            val ana = RewritePrimitivesUtil(cfg, dominatorTree)
+        fun run(cfg: FunctionData, insertedPhis: Set<Phi>, dominatorTree: DominatorTree): RewritePrimitives {
+            val ana = RewritePrimitivesUtil(cfg, insertedPhis, dominatorTree)
             return RewritePrimitives(ana.bbToMapValues, dominatorTree)
         }
     }

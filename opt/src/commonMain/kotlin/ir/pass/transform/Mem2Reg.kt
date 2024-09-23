@@ -80,7 +80,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
 
     fun pass(dominatorTree: DominatorTree) {
         val insertedPhis = insertPhis()
-        val bbToMapValues = RewritePrimitivesUtil.run(cfg, dominatorTree)
+        val bbToMapValues = RewritePrimitivesUtil.run(cfg, insertedPhis, dominatorTree)
 
         if (insertedPhis.isEmpty()) {
             // No phis were inserted, so no need to make steps further

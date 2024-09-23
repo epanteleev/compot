@@ -7,16 +7,16 @@ import parser.nodes.visitors.ExpressionVisitor
 
 data class ConstEvalException(override val message: String): Exception(message)
 
-abstract class ConstEvalExpression<T>: ExpressionVisitor<T> {
+abstract class ConstEvalExpression<T>: ExpressionVisitor<T?> {
     companion object {
-        inline fun <reified T : Number> eval(expression: Expression, ctx: ConstEvalExpression<T>): T {
+        inline fun <reified T : Number?> eval(expression: Expression, ctx: ConstEvalExpression<T>): T? {
             return expression.accept(ctx)
         }
     }
 }
 
 //TODO copy-pasted many times
-class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalExpression<Int>() {
+class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalExpression<Int?>() {
     override fun visit(identNode: IdentNode): Int {
         throw ConstEvalException("identifier=${identNode}")
     }
@@ -25,27 +25,30 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
         TODO("Not yet implemented")
     }
 
-    override fun visit(unaryOp: UnaryOp): Int {
+    override fun visit(unaryOp: UnaryOp): Int? {
+        val primary = unaryOp.primary.accept(this) ?: return null
         return when (unaryOp.opType) {
-            PrefixUnaryOpType.NEG     -> -unaryOp.primary.accept(this)
-            PrefixUnaryOpType.NOT     -> if (unaryOp.primary.accept(this) == 0) 1 else 0
-            PrefixUnaryOpType.BIT_NOT -> unaryOp.primary.accept(this).inv()
-            PrefixUnaryOpType.INC     -> unaryOp.primary.accept(this) + 1
-            PrefixUnaryOpType.DEC     -> unaryOp.primary.accept(this) - 1
-            PostfixUnaryOpType.INC    -> unaryOp.primary.accept(this) + 1
-            PostfixUnaryOpType.DEC    -> unaryOp.primary.accept(this) - 1
-            else                      -> throw ConstEvalException("Cannot evaluate unary operator ${unaryOp.opType}")
+            PrefixUnaryOpType.NEG     -> -primary
+            PrefixUnaryOpType.NOT     -> if (primary == 0) 1 else 0
+            PrefixUnaryOpType.BIT_NOT -> primary.inv()
+            PrefixUnaryOpType.INC     -> primary + 1
+            PrefixUnaryOpType.DEC     -> primary - 1
+            PostfixUnaryOpType.INC    -> primary + 1
+            PostfixUnaryOpType.DEC    -> primary - 1
+            PrefixUnaryOpType.DEREF   -> null
+            PrefixUnaryOpType.ADDRESS -> null
+            PrefixUnaryOpType.PLUS    -> null
         }
     }
 
-    override fun visit(binop: BinaryOp): Int {
+    override fun visit(binop: BinaryOp): Int? {
         when (binop.opType) {
             BinaryOpType.AND -> return if (binop.left.accept(this) != 0 && binop.right.accept(this) != 0) 1 else 0
             BinaryOpType.OR  -> return if (binop.left.accept(this) != 0 || binop.right.accept(this) != 0) 1 else 0
             else -> {}
         }
-        val left = binop.left.accept(this)
-        val right = binop.right.accept(this)
+        val left = binop.left.accept(this) ?: return null
+        val right = binop.right.accept(this) ?: return null
         return when (binop.opType) {
             BinaryOpType.ADD      -> left + right
             BinaryOpType.SUB      -> left - right
@@ -67,18 +70,20 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
         }
     }
 
-    override fun visit(conditional: Conditional): Int {
-        return if (conditional.cond.accept(this) != 0) {
+    override fun visit(conditional: Conditional): Int? {
+        val cond = conditional.cond.accept(this) ?: return null
+        return if (cond != 0) {
             conditional.eTrue.accept(this)
         } else {
             conditional.eFalse.accept(this)
         }
     }
 
-    override fun visit(functionCall: FunctionCall): Int {
+    override fun visit(functionCall: FunctionCall): Int? {
         val evaluated = functionCall.args.map {
-            it.accept(this)
+            it.accept(this) ?: return null
         }
+
         return ctx.callFunction(functionCall.nameIdentifier(), evaluated)
     }
 
@@ -90,18 +95,18 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
         TODO("Not yet implemented")
     }
 
-    override fun visit(assignment: CharNode): Int {
-        TODO("Not yet implemented")
+    override fun visit(assignment: CharNode): Int? {
+        return null
     }
 
-    override fun visit(initializerList: InitializerList): Int {
+    override fun visit(initializerList: InitializerList): Int? {
         if (initializerList.initializers.size != 1) {
-            throw ConstEvalException("Cannot evaluate initializer list with size ${initializerList.initializers.size}")
+            return null
         }
         return initializerList.initializers[0].accept(this)
     }
 
-    override fun visit(singleInitializer: SingleInitializer): Int {
+    override fun visit(singleInitializer: SingleInitializer): Int? {
         return singleInitializer.expr.accept(this)
     }
 
@@ -113,19 +118,26 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
         return sizeOf.constEval(ctx.typeHolder())
     }
 
-    override fun visit(cast: Cast): Int {
-        TODO("Not yet implemented")
+    override fun visit(cast: Cast): Int? {
+        val expression = cast.cast.accept(this) ?: return null
+        val type = cast.typeName.specifyType(ctx.typeHolder(), listOf()).type
+        return when (type.baseType()) {
+            INT -> expression.toInt()
+            LONG, ULONG -> expression.toInt()
+            SHORT -> expression.toInt()
+            else -> null
+        }
     }
 
-    override fun visit(numNode: NumNode): Int {
+    override fun visit(numNode: NumNode): Int? {
         val number = numNode.number.toNumberOrNull() ?: throw ConstEvalException("Cannot evaluate number ${numNode.number}")
         if (number !is Number) {
-            throw ConstEvalException("Cannot evaluate number ${numNode.number}")
+            return null
         }
         return number.toInt()
     }
 
-    override fun visit(varNode: VarNode): Int {
+    override fun visit(varNode: VarNode): Int? {
         return ctx.getVariable(varNode.nameIdent())
     }
 
@@ -146,7 +158,7 @@ class ConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalE
     }
 }
 
-class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEvalExpression<Long>() {
+class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEvalExpression<Long?>() {
     override fun visit(identNode: IdentNode): Long {
         throw ConstEvalException("identifier=${identNode}")
     }
@@ -155,27 +167,30 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
         TODO("Not yet implemented")
     }
 
-    override fun visit(unaryOp: UnaryOp): Long {
+    override fun visit(unaryOp: UnaryOp): Long? {
+        val primary = unaryOp.primary.accept(this) ?: return null
         return when (unaryOp.opType) {
-            PrefixUnaryOpType.NEG -> -unaryOp.primary.accept(this)
-            PrefixUnaryOpType.NOT -> if (unaryOp.primary.accept(this) == 0L) 1L else 0L
-            PrefixUnaryOpType.BIT_NOT -> unaryOp.primary.accept(this).inv()
-            PrefixUnaryOpType.INC -> unaryOp.primary.accept(this) + 1
-            PrefixUnaryOpType.DEC -> unaryOp.primary.accept(this) - 1
-            PostfixUnaryOpType.INC -> unaryOp.primary.accept(this) + 1
-            PostfixUnaryOpType.DEC -> unaryOp.primary.accept(this) - 1
-            else -> throw ConstEvalException("Cannot evaluate unary operator ${unaryOp.opType}")
+            PrefixUnaryOpType.NEG     -> -primary
+            PrefixUnaryOpType.NOT     -> if (primary == 0L) 1L else 0L
+            PrefixUnaryOpType.BIT_NOT -> primary.inv()
+            PrefixUnaryOpType.INC     -> primary + 1
+            PrefixUnaryOpType.DEC     -> primary - 1
+            PostfixUnaryOpType.INC    -> primary + 1
+            PostfixUnaryOpType.DEC    -> primary - 1
+            PrefixUnaryOpType.DEREF   -> null
+            PrefixUnaryOpType.ADDRESS -> null
+            PrefixUnaryOpType.PLUS    -> null
         }
     }
 
-    override fun visit(binop: BinaryOp): Long {
+    override fun visit(binop: BinaryOp): Long? {
         when (binop.opType) {
             BinaryOpType.AND -> return if (binop.left.accept(this) != 0L && binop.right.accept(this) != 0L) 1 else 0
             BinaryOpType.OR  -> return if (binop.left.accept(this) != 0L || binop.right.accept(this) != 0L) 1 else 0
             else -> {}
         }
-        val left = binop.left.accept(this)
-        val right = binop.right.accept(this)
+        val left = binop.left.accept(this) ?: return null
+        val right = binop.right.accept(this) ?: return null
         return when (binop.opType) {
             BinaryOpType.ADD -> left + right
             BinaryOpType.SUB -> left - right
@@ -197,16 +212,17 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
         }
     }
 
-    override fun visit(conditional: Conditional): Long {
-        return if (conditional.cond.accept(this) != 0L) {
+    override fun visit(conditional: Conditional): Long? {
+        val cond = conditional.cond.accept(this) ?: return null
+        return if (cond != 0L) {
             conditional.eTrue.accept(this)
         } else {
             conditional.eFalse.accept(this)
         }
     }
 
-    override fun visit(functionCall: FunctionCall): Long {
-        val evaluated = functionCall.args.map { it.accept(this) }
+    override fun visit(functionCall: FunctionCall): Long? {
+        val evaluated = functionCall.args.map { it.accept(this)?: return null }
         return ctx.callFunction(functionCall.nameIdentifier(), evaluated)
     }
 
@@ -226,7 +242,7 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
         TODO("Not yet implemented")
     }
 
-    override fun visit(singleInitializer: SingleInitializer): Long {
+    override fun visit(singleInitializer: SingleInitializer): Long? {
         return singleInitializer.expr.accept(this)
     }
 
@@ -238,8 +254,8 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
         return sizeOf.constEval(ctx.typeHolder()).toLong()
     }
 
-    override fun visit(cast: Cast): Long {
-        val expression = cast.cast.accept(this)
+    override fun visit(cast: Cast): Long? {
+        val expression = cast.cast.accept(this) ?: return null
         val type = cast.typeName.specifyType(ctx.typeHolder(), listOf()).type
         val converted = when (type.baseType()) {
             INT -> expression.toInt()
@@ -251,8 +267,8 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
         return converted.toLong()
     }
 
-    override fun visit(numNode: NumNode): Long {
-        val num = numNode.number.toNumberOrNull() ?: throw ConstEvalException("Cannot evaluate number ${numNode.number}")
+    override fun visit(numNode: NumNode): Long? {
+        val num = numNode.number.toNumberOrNull() ?: return null
         if (num !is Number) {
             println("warning num=${num}")
             return (num as ULong).toLong()
@@ -261,8 +277,9 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
         return num.toLong()
     }
 
-    override fun visit(varNode: VarNode): Long {
-        return ctx.getVariable(varNode.nameIdent()).toLong()
+    override fun visit(varNode: VarNode): Long? {
+        val variable = ctx.getVariable(varNode.nameIdent()) ?: return null
+        return variable.toLong()
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess): Long {
@@ -282,7 +299,7 @@ class ConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEva
     }
 }
 
-class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstEvalExpression<Float>() {
+class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstEvalExpression<Float>() {
     override fun visit(identNode: IdentNode): Float {
         throw ConstEvalException("identifier=${identNode}")
     }
@@ -291,20 +308,25 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
         TODO("Not yet implemented")
     }
 
-    override fun visit(unaryOp: UnaryOp): Float {
+    override fun visit(unaryOp: UnaryOp): Float? {
+        val primary = unaryOp.primary.accept(this) ?: return null
         return when (unaryOp.opType) {
-            PrefixUnaryOpType.NEG -> -unaryOp.primary.accept(this)
-            PrefixUnaryOpType.INC -> unaryOp.primary.accept(this) + 1
-            PrefixUnaryOpType.DEC -> unaryOp.primary.accept(this) - 1
-            PostfixUnaryOpType.INC -> unaryOp.primary.accept(this) + 1
-            PostfixUnaryOpType.DEC -> unaryOp.primary.accept(this) - 1
-            else -> throw ConstEvalException("Cannot evaluate unary operator ${unaryOp.opType}")
+            PrefixUnaryOpType.NEG -> -primary
+            PrefixUnaryOpType.INC -> primary + 1
+            PrefixUnaryOpType.DEC -> primary - 1
+            PostfixUnaryOpType.INC -> primary + 1
+            PostfixUnaryOpType.DEC -> primary - 1
+            PrefixUnaryOpType.NOT -> TODO()
+            PrefixUnaryOpType.DEREF -> TODO()
+            PrefixUnaryOpType.ADDRESS -> TODO()
+            PrefixUnaryOpType.PLUS -> primary
+            PrefixUnaryOpType.BIT_NOT -> TODO()
         }
     }
 
-    override fun visit(binop: BinaryOp): Float {
-        val left = binop.left.accept(this)
-        val right = binop.right.accept(this)
+    override fun visit(binop: BinaryOp): Float? {
+        val left = binop.left.accept(this) ?: return null
+        val right = binop.right.accept(this) ?: return null
         return when (binop.opType) {
             BinaryOpType.ADD -> left + right
             BinaryOpType.SUB -> left - right
@@ -323,16 +345,17 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
         }
     }
 
-    override fun visit(conditional: Conditional): Float {
-        return if (compare(conditional.cond.accept(this), 0f) == 0) {
+    override fun visit(conditional: Conditional): Float? {
+        val result = conditional.cond.accept(this) ?: return null
+        return if (compare(result, 0f) == 0) {
             conditional.eTrue.accept(this)
         } else {
             conditional.eFalse.accept(this)
         }
     }
 
-    override fun visit(functionCall: FunctionCall): Float {
-        val evaluated = functionCall.args.map { it.accept(this) }
+    override fun visit(functionCall: FunctionCall): Float? {
+        val evaluated = functionCall.args.map { it.accept(this) ?: return null }
         return ctx.callFunction(functionCall.nameIdentifier(), evaluated)
     }
 
@@ -364,8 +387,9 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
         return numNode.number.toNumberOrNull() as Float
     }
 
-    override fun visit(varNode: VarNode): Float {
-        return ctx.getVariable(varNode.nameIdent()).toFloat()
+    override fun visit(varNode: VarNode): Float? {
+        val variable = ctx.getVariable(varNode.nameIdent()) ?: return null
+        return variable.toFloat()
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess): Float {
@@ -376,7 +400,7 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
         TODO("Not yet implemented")
     }
 
-    override fun visit(singleInitializer: SingleInitializer): Float {
+    override fun visit(singleInitializer: SingleInitializer): Float? {
         return singleInitializer.expr.accept(this)
     }
 
@@ -407,7 +431,7 @@ class ConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstE
     }
 }
 
-class ConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): ConstEvalExpression<Double>() {
+class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): ConstEvalExpression<Double?>() {
     override fun visit(identNode: IdentNode): Double {
         throw ConstEvalException("identifier=${identNode}")
     }
@@ -416,20 +440,25 @@ class ConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): Cons
         TODO("Not yet implemented")
     }
 
-    override fun visit(unaryOp: UnaryOp): Double {
+    override fun visit(unaryOp: UnaryOp): Double? {
+        val primary = unaryOp.primary.accept(this) ?: return null
         return when (unaryOp.opType) {
-            PrefixUnaryOpType.NEG -> -unaryOp.primary.accept(this)
-            PrefixUnaryOpType.INC -> unaryOp.primary.accept(this) + 1
-            PrefixUnaryOpType.DEC -> unaryOp.primary.accept(this) - 1
-            PostfixUnaryOpType.INC -> unaryOp.primary.accept(this) + 1
-            PostfixUnaryOpType.DEC -> unaryOp.primary.accept(this) - 1
-            else -> throw ConstEvalException("Cannot evaluate unary operator ${unaryOp.opType}")
+            PrefixUnaryOpType.NEG -> -primary
+            PrefixUnaryOpType.INC -> primary + 1
+            PrefixUnaryOpType.DEC -> primary - 1
+            PostfixUnaryOpType.INC -> primary + 1
+            PostfixUnaryOpType.DEC -> primary - 1
+            PrefixUnaryOpType.NOT -> TODO()
+            PrefixUnaryOpType.DEREF -> TODO()
+            PrefixUnaryOpType.ADDRESS -> TODO()
+            PrefixUnaryOpType.PLUS -> primary
+            PrefixUnaryOpType.BIT_NOT -> TODO()
         }
     }
 
-    override fun visit(binop: BinaryOp): Double {
-        val left = binop.left.accept(this)
-        val right = binop.right.accept(this)
+    override fun visit(binop: BinaryOp): Double? {
+        val left = binop.left.accept(this) ?: return null
+        val right = binop.right.accept(this) ?: return null
         return when (binop.opType) {
             BinaryOpType.ADD -> left + right
             BinaryOpType.SUB -> left - right
@@ -449,16 +478,17 @@ class ConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): Cons
     }
 
 
-    override fun visit(conditional: Conditional): Double {
-        return if (compare(conditional.cond.accept(this), 0.0) == 0) {
+    override fun visit(conditional: Conditional): Double? {
+        val result = conditional.cond.accept(this) ?: return null
+        return if (compare(result, 0.0) == 0) {
             conditional.eTrue.accept(this)
         } else {
             conditional.eFalse.accept(this)
         }
     }
 
-    override fun visit(functionCall: FunctionCall): Double {
-        val evaluated = functionCall.args.map { it.accept(this) }
+    override fun visit(functionCall: FunctionCall): Double? {
+        val evaluated = functionCall.args.map { it.accept(this) ?: return null }
         return ctx.callFunction(functionCall.nameIdentifier(), evaluated)
     }
 
@@ -490,8 +520,9 @@ class ConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): Cons
         return numNode.number.toNumberOrNull() as Double
     }
 
-    override fun visit(varNode: VarNode): Double {
-        return ctx.getVariable(varNode.nameIdent()).toDouble()
+    override fun visit(varNode: VarNode): Double? {
+        val variable = ctx.getVariable(varNode.nameIdent()) ?: return null
+        return variable.toDouble()
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess): Double {
@@ -510,7 +541,7 @@ class ConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): Cons
         TODO("Not yet implemented")
     }
 
-    override fun visit(singleInitializer: SingleInitializer): Double {
+    override fun visit(singleInitializer: SingleInitializer): Double? {
         return singleInitializer.expr.accept(this)
     }
 

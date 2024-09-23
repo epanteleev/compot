@@ -3,7 +3,7 @@ package preprocess
 import tokenizer.*
 import parser.CProgramParser
 import gen.consteval.ConstEvalExpression
-import gen.consteval.ConstEvalExpressionLong
+import gen.consteval.TryConstEvalExpressionLong
 
 
 private enum class ConditionType {
@@ -72,7 +72,11 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(preprocessed)}'")
 
         val evaluationContext = ConditionEvaluationContext(ctx)
-        return ConstEvalExpression.eval(constexpr, ConstEvalExpressionLong(evaluationContext))
+        val constExpr = ConstEvalExpression.eval(constexpr, TryConstEvalExpressionLong(evaluationContext))
+        if (constExpr == null) {
+            throw PreprocessorException("Cannot evaluate expression: '${TokenPrinter.print(preprocessed)}'")
+        }
+        return constExpr
     }
 
     private fun skipBlock2() {

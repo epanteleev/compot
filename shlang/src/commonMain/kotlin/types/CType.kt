@@ -32,6 +32,7 @@ sealed class CPrimitive: CType() {
                     LONG -> LONG
                     CHAR -> UCHAR
                     UINT -> UINT
+                    ULONG -> ULONG
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")

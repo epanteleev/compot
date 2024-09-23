@@ -21,7 +21,6 @@ import parser.nodes.PrefixUnaryOpType
 import parser.nodes.SingleInitializer
 import parser.nodes.StringNode
 import parser.nodes.UnaryOp
-import parser.nodes.UnaryOpType
 import types.*
 
 
@@ -211,22 +210,22 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         throw IRCodeGenError("Unsupported declarator $declarator")
     }
 
-    private fun constEvalExpression0(expr: Expression): Number? = when (expr.resolveType(typeHolder)) {
+    protected fun constEvalExpression0(expr: Expression): Number? = when (expr.resolveType(typeHolder)) {
         INT, SHORT, CHAR, UINT, USHORT, UCHAR -> {
             val ctx = CommonConstEvalContext<Int>(typeHolder)
-            ConstEvalExpression.eval(expr, ConstEvalExpressionInt(ctx))
+            ConstEvalExpression.eval(expr, TryConstEvalExpressionInt(ctx))
         }
         LONG, ULONG -> {
             val ctx = CommonConstEvalContext<Long>(typeHolder)
-            ConstEvalExpression.eval(expr, ConstEvalExpressionLong(ctx))
+            ConstEvalExpression.eval(expr, TryConstEvalExpressionLong(ctx))
         }
         FLOAT -> {
             val ctx = CommonConstEvalContext<Float>(typeHolder)
-            ConstEvalExpression.eval(expr, ConstEvalExpressionFloat(ctx))
+            ConstEvalExpression.eval(expr, TryConstEvalExpressionFloat(ctx))
         }
         DOUBLE -> {
             val ctx = CommonConstEvalContext<Double>(typeHolder)
-            ConstEvalExpression.eval(expr, ConstEvalExpressionDouble(ctx))
+            ConstEvalExpression.eval(expr, TryConstEvalExpressionDouble(ctx))
         }
         else -> null
     }

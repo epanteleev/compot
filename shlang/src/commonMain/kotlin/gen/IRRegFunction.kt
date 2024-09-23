@@ -14,7 +14,7 @@ import gen.TypeConverter.toIRType
 import gen.TypeConverter.toIndexType
 import gen.consteval.CommonConstEvalContext
 import gen.consteval.ConstEvalExpression
-import gen.consteval.ConstEvalExpressionInt
+import gen.consteval.TryConstEvalExpressionInt
 import ir.Definitions.QWORD_SIZE
 import ir.global.StringLiteralGlobalConstant
 import ir.module.AnyFunctionPrototype
@@ -165,6 +165,31 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return ir.convertToType(charValue, mb.toIRType<PrimitiveType>(typeHolder, charType))
     }
 
+    private fun generateIfElsePattern(commonType: NonTrivialType, conditional: Conditional): Value {
+        val condition = makeConditionFromExpression(conditional.cond)
+
+        val trueBB = ir.createLabel()
+        val falseBB = ir.createLabel()
+        val end = ir.createLabel()
+        ir.branchCond(condition, trueBB, falseBB)
+        ir.switchLabel(trueBB)
+
+        val right = visitExpression(conditional.eTrue, true)
+        val convertedRight = ir.convertToType(right, commonType)
+
+        val trueBBCurrent = ir.currentLabel()
+        ir.branch(end)
+        ir.switchLabel(falseBB)
+
+        val left = visitExpression(conditional.eFalse, true)
+        val convertedLeft = ir.convertToType(left, commonType)
+
+        val falseBBCurrent = ir.currentLabel()
+        ir.branch(end)
+        ir.switchLabel(end)
+        return ir.phi(listOf(convertedRight, convertedLeft), listOf(trueBBCurrent, falseBBCurrent))
+    }
+
     private fun visitConditional(conditional: Conditional): Value {
         when (val commonType = mb.toIRType<Type>(typeHolder, conditional.resolveType(typeHolder))) {
             Type.Void -> {
@@ -186,37 +211,18 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 return Value.UNDEF
             }
             is IntegerType -> { // TODO: pointer type also can be here
-                val onTrue    = visitExpression(conditional.eTrue, true)
-                val onFalse   = visitExpression(conditional.eFalse, true)
-                val onTrueConverted = ir.convertToType(onTrue, commonType)
-                val onFalseConverted = ir.convertToType(onFalse, commonType)
+                val onTrue = constEvalExpression0(conditional.eTrue) ?:
+                    return generateIfElsePattern(commonType, conditional)
+
+                val onFalse = constEvalExpression0(conditional.eFalse) ?:
+                    return generateIfElsePattern(commonType, conditional)
+
+                val onTrueContant  = Constant.of(commonType, onTrue)
+                val onFalseContant = Constant.of(commonType, onFalse)
                 val condition = makeConditionFromExpression(conditional.cond)
-                return ir.select(condition, commonType, onTrueConverted, onFalseConverted)
+                return ir.select(condition, commonType, onTrueContant, onFalseContant)
             }
-            is NonTrivialType -> {
-                val condition = makeConditionFromExpression(conditional.cond)
-
-                val trueBB = ir.createLabel()
-                val falseBB = ir.createLabel()
-                val end = ir.createLabel()
-                ir.branchCond(condition, trueBB, falseBB)
-                ir.switchLabel(trueBB)
-
-                val right = visitExpression(conditional.eTrue, true)
-                val convertedRight = ir.convertToType(right, commonType)
-
-                val trueBBCurrent = ir.currentLabel()
-                ir.branch(end)
-                ir.switchLabel(falseBB)
-
-                val left = visitExpression(conditional.eFalse, true)
-                val convertedLeft = ir.convertToType(left, commonType)
-
-                val falseBBCurrent = ir.currentLabel()
-                ir.branch(end)
-                ir.switchLabel(end)
-                return ir.phi(listOf(convertedRight, convertedLeft), listOf(trueBBCurrent, falseBBCurrent))
-            }
+            is NonTrivialType -> return generateIfElsePattern(commonType, conditional)
             else -> throw IRCodeGenError("Unknown type: $commonType")
         }
     }
@@ -1131,7 +1137,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val switchInfo = stmtStack.top() as SwitchStmtInfo
 
         val ctx = CommonConstEvalContext<Int>(typeHolder)
-        val constant = ConstEvalExpression.eval(caseStatement.constExpression, ConstEvalExpressionInt(ctx))
+        val constant = ConstEvalExpression.eval(caseStatement.constExpression, TryConstEvalExpressionInt(ctx))
+        if (constant == null) {
+            throw IRCodeGenError("Case statement with non-constant expression")
+        }
 
         val caseValueConverted = I32Value(constant)
         val caseBlock = ir.createLabel()
