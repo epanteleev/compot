@@ -11,9 +11,6 @@ sealed interface ImmInt: Imm {
     fun asImm32(): Imm32
 
     companion object {
-        const val minusZeroFloat: Long = 0x80000000
-        val minusZeroDouble: Long = (-0.0).toBits()
-
         fun canBeImm32(constant: Long): Boolean {
             return Int.MIN_VALUE <= constant && constant <= Int.MAX_VALUE
         }

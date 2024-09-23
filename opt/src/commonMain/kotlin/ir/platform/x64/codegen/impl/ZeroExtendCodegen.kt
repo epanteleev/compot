@@ -58,15 +58,15 @@ class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: Mac
     }
 
     override fun ri(dst: GPRegister, src: Imm32) {
-        val mask = (1 shl fromTypeSize * 8) - 1
-        val value = src.toInt() and mask
-        asm.copy(toTypeSize, Imm32.of(value), dst)
+        val mask = (1L shl fromTypeSize * 8) - 1
+        val value = src.value() and mask
+        asm.copy(toTypeSize, Imm64.of(value), dst)
     }
 
     override fun ai(dst: Address, src: Imm32) {
-        val mask = (1 shl fromTypeSize * 8) - 1
-        val value = src.toInt() and mask
-        asm.mov(toTypeSize, Imm32.of(value), dst)
+        val mask = (1L shl fromTypeSize * 8) - 1
+        val value = src.value() and mask
+        asm.mov(toTypeSize, Imm64.of(value), dst)
     }
 
     override fun default(dst: Operand, src: Operand) {

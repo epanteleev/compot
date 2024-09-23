@@ -90,21 +90,22 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testDiv() {
         val result = runCTest("shlang/llvm-c-tests/2002-05-19-DivTest", listOf(), options())
-        val expected = """-1048544
-                        -65534
-                        -3
-                        0
-                        -1048543
-                        -65533
-                        -3
-                        0
-                        4
-                        -127
-                        5
-                        -127""".trimIndent()
+        val expected = """
+            |-1048544
+            |-65534
+            |-3
+            |0
+            |-1048543
+            |-65533
+            |-3
+            |0
+            |4
+            |-127
+            |5
+            |-127
+            |""".trimMargin()
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }
