@@ -163,9 +163,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (val type = varDesc.type.baseType()) {
             is CBaseFunctionType -> {
                 val abstrType = type.functionType
-                val argTypes  = abstrType.argsTypes.map {
-                    mb.toIRType<NonTrivialType>(typeHolder, it.baseType())
-                }
+                val argTypes  = argumentTypes(abstrType.argsTypes)
                 val returnType = mb.toIRType<Type>(typeHolder, abstrType.retType.baseType())
 
                 val isVararg = type.functionType.variadic
@@ -248,6 +246,37 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
 
         return InitializerListValue(lValueType, elements)
+    }
+
+    protected fun argumentTypes(ctypes: List<TypeDesc>): List<NonTrivialType> {
+        val types = arrayListOf<NonTrivialType>()
+        for (type in ctypes) {
+            when (type.baseType()) {
+                is CStructType -> {
+                    val irType = mb.toIRType<StructType>(typeHolder, type.baseType())
+                    val parameters = CallConvention.coerceArgumentTypes(irType)
+                    if (parameters != null) {
+                        types.addAll(parameters)
+                    } else {
+                        types.add(Type.Ptr)
+                    }
+                }
+                is CArrayType, is CUncompletedArrayType -> {
+                    types.add(Type.Ptr)
+                }
+                is AnyCPointer -> {
+                    types.add(Type.Ptr)
+                }
+                is BOOL -> {
+                    types.add(Type.U8)
+                }
+                is CPrimitive -> {
+                    types.add(mb.toIRType<PrimitiveType>(typeHolder, type.baseType()))
+                }
+                else -> throw IRCodeGenError("Unknown type, type=$type")
+            }
+        }
+        return types
     }
 
     protected fun createStringLiteralName(): String {

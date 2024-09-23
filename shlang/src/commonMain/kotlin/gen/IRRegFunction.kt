@@ -927,34 +927,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         throw IRCodeGenError("Variable '$name' not found")
     }
 
-    private fun argumentTypes(ctypes: List<TypeDesc>): List<NonTrivialType> {
-        val types = arrayListOf<NonTrivialType>()
-        for (type in ctypes) {
-            when (type.baseType()) {
-                is CStructType -> {
-                    val irType = mb.toIRType<StructType>(typeHolder, type.baseType())
-                    val parameters = CallConvention.coerceArgumentTypes(irType)
-                    if (parameters != null) {
-                        types.addAll(parameters)
-                    } else {
-                        types.add(Type.Ptr)
-                    }
-                }
-                is CArrayType, is CUncompletedArrayType -> {
-                    types.add(Type.Ptr)
-                }
-                is AnyCPointer -> {
-                    types.add(Type.Ptr)
-                }
-                is CPrimitive -> {
-                    types.add(mb.toIRType<PrimitiveType>(typeHolder, type.baseType()))
-                }
-                else -> throw IRCodeGenError("Unknown type, type=$type")
-            }
-        }
-        return types
-    }
-
     private fun visitParameters(parameters: List<String>,
                                 cTypes: List<TypeDesc>,
                                 arguments: List<ArgumentValue>,
