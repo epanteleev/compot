@@ -14,7 +14,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testArgumentTest() {
         val result = runCTest("shlang/llvm-c-tests/2002-05-02-ArgumentTest", listOf(), options())
         assertEquals("12, 1.245000, 120, 123456677890, -10, 4500000000000000.000000\n", result.output)

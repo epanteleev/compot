@@ -150,4 +150,14 @@ class CTokenizerTest {
         val num = tokens[0] as Numeric
         assertEquals(0L, num.toNumberOrNull())
     }
+
+    @Test
+    fun testExponent() {
+        val input = "45e14"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is Numeric }
+        tokens[0].isEqual(1, 1, "45e14")
+        val num = tokens[0] as Numeric
+        assertEquals(4500000000000000.000000, num.toNumberOrNull())
+    }
 }
