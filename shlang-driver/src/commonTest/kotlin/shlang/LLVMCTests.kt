@@ -52,7 +52,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testCast2() {
         val result = runCTest("shlang/llvm-c-tests/2002-05-02-CastTest2", listOf(), options())
         assertEquals("us2  = 64767\n", result.output)
@@ -67,11 +66,12 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testManyArgs() {
         val result = runCTest("shlang/llvm-c-tests/2002-05-02-ManyArguments", listOf(), options())
-        val expected = """12, 2, 123.234000, 1231.123169, -12
-            |23, 123456, 0, 1234567, 123124124124""".trimIndent()
+        val expected = """
+            |12, 2, 123.234000, 1231.123169, -12
+            |23, 123456, 0, 1234567, 123124124124
+            |""".trimMargin()
 
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)

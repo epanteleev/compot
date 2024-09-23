@@ -122,7 +122,8 @@ object TypeConverter {
         if (value.type() == toType) {
             return value
         }
-        if (value is Constant) {
+        if (value is Constant && toType !is PointerType) {
+            // Opt IR does not support pointer constants.
             return convertConstant(value, toType)
         }
 
