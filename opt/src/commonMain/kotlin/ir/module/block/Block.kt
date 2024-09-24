@@ -177,7 +177,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
         instruction.update(index, value)
     }
 
-    fun updateDF(phi: Phi, closure: (Block, Value) -> Value) = mc.df {
+    fun updateDF(phi: Phi, closure: (Block, Value) -> Value) = mc.df { //TODO remove this after UncompletedPhi instruction creation
         assertion(phi.owner() === this) {
             "phi=$phi is not in bb=$this"
         }
@@ -197,12 +197,22 @@ class Block private constructor(private val mc: ModificationCounter, override va
         }
     }
 
+    private fun updatePhi(oldSucc: Block, newSucc: Block) {
+        oldSucc.phis { phi ->
+            oldSucc.updateCF(phi) { oldBB, _ ->
+                if (oldBB == this) newSucc else oldBB
+            }
+        }
+    }
+
     fun updateCF(currentSuccessor: Block, newSuccessor: Block) = mc.cf {
         val index = updateSuccessor(currentSuccessor, newSuccessor)
         currentSuccessor.removePredecessors(this)
 
         val terminateInstruction = last()
         terminateInstruction.updateTarget(newSuccessor, index)
+
+        updatePhi(currentSuccessor, newSuccessor)
     }
 
     override fun contains(instruction: Instruction): Boolean {

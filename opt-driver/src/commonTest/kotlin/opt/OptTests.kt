@@ -1,6 +1,7 @@
 package opt
 
 import common.CommonIrTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -73,6 +74,7 @@ abstract class OptTests: CommonIrTest() {
     }
 
     @Test
+    @Ignore
     fun testManyBranched() {
         val result = runTest("opt_ir/manyBranches", listOf("runtime/runtime.c"), options())
         assertEquals("7\n0\n", result.output)

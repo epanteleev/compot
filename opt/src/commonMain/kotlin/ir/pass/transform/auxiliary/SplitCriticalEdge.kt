@@ -6,45 +6,20 @@ import ir.module.block.Block
 
 
 internal class SplitCriticalEdge private constructor(private val functionData: FunctionData) {
-    private val predecessorMap = hashMapOf<Block, Block>()
-    private val criticalEdgeBetween = hashMapOf<Block, Block>()
-
     fun pass() {
-        for (fd in functionData) {
-            for (p in fd.predecessors()) {
-                if (!fd.hasCriticalEdgeFrom(p)) {
+        val criticalEdgeBetween = hashMapOf<Block, Block>()
+        for (bb in functionData) {
+            for (p in bb.predecessors()) {
+                if (!bb.hasCriticalEdgeFrom(p)) {
                     continue
                 }
 
-                criticalEdgeBetween[p] = fd
+                criticalEdgeBetween[p] = bb
             }
         }
 
         for ((p, bb) in criticalEdgeBetween) {
             insertBasicBlock(bb, p)
-        }
-
-        updatePhi()
-    }
-
-    private fun updatePhi() {
-        for (bb in functionData) {
-            bb.phis { phi ->
-                var changed = false
-                bb.updateCF(phi) { oldBB, _ ->
-                    val p = predecessorMap[oldBB]
-                    if (p != null) {
-                        changed = true
-                        p
-                    } else {
-                        oldBB
-                    }
-                }
-
-                if (!changed) {
-                    return@phis
-                }
-            }
         }
     }
 
@@ -53,7 +28,6 @@ internal class SplitCriticalEdge private constructor(private val functionData: F
             branch(bb)
         }
         p.updateCF(bb, newBlock)
-        predecessorMap[p] = newBlock
     }
 
     companion object {

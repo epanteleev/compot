@@ -1,5 +1,6 @@
 package ir.pass.analysis
 
+import common.forEachWith
 import ir.value.LocalValue
 import ir.types.Type
 import ir.module.Module
@@ -395,6 +396,11 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         val predecessors = bb.predecessors()
         assert(predecessors.size == incoming.size) {
             "Inconsistent phi instruction: incoming blocks and predecessors are not equal. incoming=$incoming predecessors=$predecessors"
+        }
+        incoming.forEach { inc ->
+            assert(predecessors.contains(inc)) { //TODO strict order
+                "Inconsistent phi instruction: incoming block $inc is not a predecessor of $bb"
+            }
         }
     }
 

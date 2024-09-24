@@ -621,13 +621,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             BinaryOpType.LT -> makeComparisonBinary(binop, ::lt)
             BinaryOpType.LE -> makeComparisonBinary(binop, ::le)
             BinaryOpType.AND -> {
-                val initialBB = ir.currentLabel()
-
                 val left = visitExpression(binop.left, true)
                 val convertedLeft = ir.convertToType(left, Type.U1)
 
                 val bb = ir.createLabel()
                 val end = ir.createLabel()
+                val initialBB = ir.currentLabel()
                 ir.branchCond(convertedLeft, bb, end)
                 ir.switchLabel(bb)
 
@@ -640,11 +639,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.phi(listOf(U8Value(0), convertedRight), listOf(initialBB, current))
             }
             BinaryOpType.OR -> {
-                val initialBB = ir.currentLabel()
-
                 val left = visitExpression(binop.left, true)
                 val convertedLeft = ir.convertToType(left, Type.U1)
 
+                val initialBB = ir.currentLabel()
                 val bb = ir.createLabel()
                 val end = ir.createLabel()
                 ir.branchCond(convertedLeft, end, bb)
@@ -1142,7 +1140,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Case statement with non-constant expression")
         }
 
-        val caseValueConverted = I32Value(constant)
+        val caseValueConverted = Constant.of(switchInfo.conditionType.asType(), constant)
         val caseBlock = ir.createLabel()
         if (switchInfo.table.isNotEmpty() && ir.last() !is TerminateInstruction) {
             // fall through
@@ -1150,7 +1148,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         switchInfo.table.add(caseBlock)
-        switchInfo.values.add(caseValueConverted)
+        switchInfo.values.add(caseValueConverted as IntegerConstant)
 
         ir.switchLabel(caseBlock)
         visitStatement(caseStatement.stmt)
@@ -1343,7 +1341,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val conditionBlock = ir.currentLabel()
 
         val defaultBlock = ir.createLabel()
-        stmtStack.scoped(SwitchStmtInfo(defaultBlock, arrayListOf(), arrayListOf())) { info ->
+        stmtStack.scoped(SwitchStmtInfo(defaultBlock, condition.type().asType(), arrayListOf(), arrayListOf())) { info ->
             visitStatement(switchStatement.body)
             if (info.exit() != null) {
                 val endBlock = info.resolveExit(ir)

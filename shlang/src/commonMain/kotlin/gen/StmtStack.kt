@@ -2,7 +2,9 @@ package gen
 
 import ir.module.block.Label
 import ir.module.builder.impl.FunctionDataBuilder
+import ir.types.IntegerType
 import ir.value.IntegerConstant
+import ir.value.Value
 
 
 class StmtStack {
@@ -52,7 +54,7 @@ sealed class StmtInfo {
     }
 }
 
-class SwitchStmtInfo(val default: Label, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo()
+class SwitchStmtInfo(val default: Label, val conditionType: IntegerType, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo()
 
 class LoopStmtInfo : StmtInfo() {
     private var conditionBB: Label? = null
