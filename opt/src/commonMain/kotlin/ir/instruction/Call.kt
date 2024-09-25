@@ -9,6 +9,7 @@ import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.types.NonTrivialType
+import ir.types.PrimitiveType
 import ir.types.TupleType
 import kotlin.jvm.JvmInline
 
@@ -19,6 +20,10 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
 
     init {
         assertion(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
+    }
+
+    override fun type(): PrimitiveType {
+        return tp as PrimitiveType
     }
 
     override fun arguments(): List<Value> {

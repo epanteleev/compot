@@ -339,11 +339,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             is IntegerType, is PointerType, is BooleanType -> {
                 CallIntCodegen(retType, asm)(registerAllocation.operand(call), retReg)
             }
-
             is FloatingPointType -> {
                 CallFloatCodegen(retType, asm)(registerAllocation.operand(call), fpRet)
             }
-            else -> throw RuntimeException("unknown value type=$retType")
+            is BottomType -> println("UB in call") //TODO remove this
         }
 
         assertion(call.target() === next()) {
