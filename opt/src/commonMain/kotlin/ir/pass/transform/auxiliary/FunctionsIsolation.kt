@@ -40,7 +40,13 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                     bb.updateDF(inst, Shr.OFFSET, copy)
                     isNeed4ArgIsolation = true
                 }
-                tupleDiv(nop(), nop()) {
+                tupleDiv(nop(), nop()) { tupleDiv ->
+                    val rem = tupleDiv.remainder()
+                    if (rem == null) {
+                        bb.insertAfter(inst) { it.proj(tupleDiv, 1) }
+                    } else {
+                        bb.updateUsages(rem) { bb.insertAfter(rem) { it.copy(rem) } }
+                    }
                     isNeed3ArgIsolation = true
                 }
             }

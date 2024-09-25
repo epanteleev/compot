@@ -11,6 +11,7 @@ import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
 import ir.instruction.Copy
+import ir.instruction.Projection
 import ir.instruction.matching.*
 import ir.module.Sensitivity
 import ir.module.block.Block
@@ -78,6 +79,11 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
                 shr(nop(), constant().not()) { shr ->
                     assertion(shr.rhs() is Copy) { "shr=$shr" }
                     registerMap[shr.rhs() as Copy] = rcx
+                }
+                tupleDiv(nop(), nop()) { div ->
+                    val rem = div.remainder()
+                    assertion(rem != null) { "div=$div" }
+                    registerMap[rem as Projection] = rdx
                 }
             }
         }

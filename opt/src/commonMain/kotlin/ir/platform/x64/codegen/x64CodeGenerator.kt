@@ -305,29 +305,22 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             if (quotient != null) {
                 registerAllocation.operand(quotient)
             } else {
-                null
+                rax
             }
         }
 
-        val remainderOperand = run {
-            val remainder = binary.remainder()
-            if (remainder != null) {
-                registerAllocation.operand(remainder)
-            } else {
-                null
-            }
+        val remainderOperand = binary.remainder()
+        assertion(remainderOperand != null) {
+            "remainder is null"
+        }
+        assertion(registerAllocation.operand(remainderOperand as Projection) == rdx) {
+            "remainderOperand=${registerAllocation.operand(remainderOperand)}, rdx=$rdx"
         }
 
-        if (quotientOperand != rdx && remainderOperand != rdx) {
-            asm.push(POINTER_SIZE, rdx) //TODO pessimistic spill rdx
-        }
         when (val type = divType.asInnerType<ArithmeticType>(1)) {
-            is SignedIntType   -> IntDivCodegen(type, remainderOperand ?: rdx, asm)(quotientOperand ?: rax, first, second)
-            is UnsignedIntType -> UIntDivCodegen(type, remainderOperand ?: rdx, asm)(quotientOperand ?: rax, first, second)
+            is SignedIntType   -> IntDivCodegen(type, asm)(quotientOperand, first, second)
+            is UnsignedIntType -> UIntDivCodegen(type, asm)(quotientOperand, first, second)
             else -> throw RuntimeException("type=$type")
-        }
-        if (quotientOperand != rdx && remainderOperand != rdx) {
-            asm.pop(POINTER_SIZE, rdx)
         }
     }
 

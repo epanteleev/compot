@@ -19,11 +19,8 @@ class MacroAssembler(name: String, id: Int): Assembler(name, id) {
             "expects given operand size, but size=${size}"
         }
 
-        if (rem == rdx) {
-            return
-        }
         when (rem) {
-            is GPRegister -> mov(size, rdx, rem)
+            is GPRegister -> copy(size, rdx, rem)
             is Address    -> mov(size, rdx, rem)
             else -> throw MacroAssemblerException("rem=$rem")
         }

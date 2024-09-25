@@ -150,7 +150,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     val newDiv    = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
                     var last: Instruction = newDiv
 
-                    val divProj = inst.proj(0)
+                    val divProj = inst.quotient()
                     if (divProj != null) {
                         val proj     = bb.insertBefore(inst) { it.proj(newDiv, 0) }
                         val truncate = bb.updateUsages(divProj) {
@@ -160,15 +160,13 @@ class Lowering private constructor(private val cfg: FunctionData) {
                         last = truncate
                     }
 
-                    val remProj = inst.proj(1)
-                    if (remProj != null) {
-                        val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
-                        val truncate = bb.updateUsages(remProj) {
-                            bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
-                        }
-                        killOnDemand(bb, remProj)
-                        last = truncate
+                    val remProj  = inst.remainder() ?: throw IllegalStateException("Remainder projection is missing")
+                    val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
+                    val truncate = bb.updateUsages(remProj) {
+                        bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
                     }
+                    killOnDemand(bb, remProj)
+                    last = truncate
 
                     killOnDemand(bb, inst)
                     return last
@@ -201,15 +199,13 @@ class Lowering private constructor(private val cfg: FunctionData) {
                         last = truncate
                     }
 
-                    val remProj = inst.proj(1)
-                    if (remProj != null) {
-                        val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
-                        val truncate = bb.updateUsages(remProj) {
-                            bb.insertBefore(inst) { it.trunc(proj, Type.U8) }
-                        }
-                        killOnDemand(bb, remProj)
-                        last = truncate
+                    val remProj = inst.remainder() ?: throw IllegalStateException("Remainder projection is missing")
+                    val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
+                    val truncate = bb.updateUsages(remProj) {
+                        bb.insertBefore(inst) { it.trunc(proj, Type.U8) }
                     }
+                    killOnDemand(bb, remProj)
+                    last = truncate
 
                     killOnDemand(bb, inst)
                     return last
