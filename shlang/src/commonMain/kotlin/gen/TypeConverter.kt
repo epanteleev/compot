@@ -239,8 +239,10 @@ object TypeConverter {
                         val trunc = trunc(value, Type.I8)
                         bitcast(trunc, Type.U8)
                     }
-
-                    Type.I64 -> trunc(value, toType)
+                    Type.I64 -> {
+                        val trunc = trunc(value, Type.I8)
+                        bitcast(trunc, toType)
+                    }
                     Type.U16 -> trunc(value, toType)
                     Type.U32 -> trunc(value, toType)
                     Type.U64 -> trunc(value, toType)
@@ -270,7 +272,10 @@ object TypeConverter {
                         trunc(bitcast, toType)
                     }
 
-                    Type.I64 -> trunc(value, toType)
+                    Type.I64 -> {
+                        val bitcast = bitcast(value, Type.U64)
+                        trunc(bitcast, toType)
+                    }
                     Type.U8 -> trunc(value, toType)
                     Type.U32 -> trunc(value, toType)
                     Type.U64 -> trunc(value, toType)
