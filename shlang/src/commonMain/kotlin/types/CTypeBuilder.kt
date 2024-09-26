@@ -38,7 +38,7 @@ class CTypeBuilder {
     private fun finalBaseType(baseTypes: List<CType>): CType {
         when {
             check(baseTypes, UINT,  LONG,  LONG, INT) -> return ULONG
-            check(baseTypes, UINT,  LONG,  LONG)      -> return LONG
+            check(baseTypes, UINT,  LONG,  LONG)      -> return ULONG
             check(baseTypes, UINT,  SHORT, INT)       -> return USHORT
             check(baseTypes, UINT,  LONG,  INT)       -> return ULONG
             check(baseTypes, INT,   SHORT, INT)       -> return SHORT

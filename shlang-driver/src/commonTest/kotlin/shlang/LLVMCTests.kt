@@ -237,7 +237,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testShorts() {
         val result = runCTest("shlang/llvm-c-tests/2003-05-26-Shorts", listOf(), options())
         val expected = readExpectedOutput("shlang/llvm-c-tests/2003-05-26-Shorts.reference_output")

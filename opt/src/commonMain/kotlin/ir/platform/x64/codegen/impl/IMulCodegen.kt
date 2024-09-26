@@ -8,10 +8,7 @@ import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
 data class IMulCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp {
-    private val size: Int = run {
-        val size = type.sizeOf()
-        if (size == 1) 2 else size
-    }
+    private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)

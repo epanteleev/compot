@@ -16,6 +16,7 @@ import gen.consteval.CommonConstEvalContext
 import gen.consteval.ConstEvalExpression
 import gen.consteval.TryConstEvalExpressionInt
 import ir.Definitions.QWORD_SIZE
+import ir.Definitions.WORD_SIZE
 import ir.global.StringLiteralGlobalConstant
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
@@ -465,39 +466,53 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown type")
     }
 
-    private fun makeAlgebraicBinary(binop: BinaryOp, op: (a: Value, b: Value) -> LocalValue): Value {
-        val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
+    private fun makeAlgebraicBinary(binop: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
+        when (val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))) {
+            is PointerType -> {
+                val rvalue     = visitExpression(binop.right, true)
+                val rValueType = binop.right.resolveType(typeHolder)
+                if (rValueType !is CPrimitive) {
+                    throw IRCodeGenError("Primitive type expected")
+                }
+                val convertedRValue = ir.convertToType(rvalue, Type.U64)
 
-        if (commonType is PointerType) {
-            val rvalue     = visitExpression(binop.right, true)
-            val rValueType = binop.right.resolveType(typeHolder)
-            if (rValueType !is CPrimitive) {
-                throw IRCodeGenError("Primitive type expected")
+                val lvalue     = visitExpression(binop.left, true)
+                val lValueType = binop.left.resolveType(typeHolder)
+                if (lValueType !is CPointer) {
+                    throw IRCodeGenError("Pointer type expected")
+                }
+                val convertedLValue = ir.convertToType(lvalue, Type.U64)
+
+                val size = lValueType.dereference().size()
+                val sizeValue = Constant.of(Type.U64, size)
+                val mul = ir.mul(convertedRValue, sizeValue)
+
+                val result = op(convertedLValue, mul)
+                return ir.convertToType(result, commonType)
             }
-            val convertedRValue = ir.convertToType(rvalue, Type.U64)
+            is FloatingPointType -> {
+                val right = visitExpression(binop.right, true)
+                val rightConverted = ir.convertToType(right, commonType)
 
-            val lvalue     = visitExpression(binop.left, true)
-            val lValueType = binop.left.resolveType(typeHolder)
-            if (lValueType !is CPointer) {
-                throw IRCodeGenError("Pointer type expected")
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir.convertToType(left, commonType)
+
+                return op(leftConverted, rightConverted)
             }
-            val convertedLValue = ir.convertToType(lvalue, Type.U64)
+            is IntegerType -> {
+                val cvtType = when (commonType) {
+                    is SignedIntType -> if (commonType.sizeOf() < WORD_SIZE) Type.I32 else commonType
+                    is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) Type.U32 else commonType
+                }
+                val right = visitExpression(binop.right, true)
+                val rightConverted = ir.convertToType(right, cvtType)
 
-            val size = lValueType.dereference().size()
-            val sizeValue = Constant.of(Type.U64, size)
-            val mul = ir.mul(convertedRValue, sizeValue)
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir.convertToType(left, cvtType)
 
-            val result = op(convertedLValue, mul)
-            return ir.convertToType(result, commonType)
-
-        } else {
-            val right = visitExpression(binop.right, true)
-            val rightConverted = ir.convertToType(right, commonType)
-
-            val left = visitExpression(binop.left, true)
-            val leftConverted = ir.convertToType(left, commonType)
-
-            return op(leftConverted, rightConverted)
+                return op(leftConverted, rightConverted)
+            }
+            else -> throw IRCodeGenError("Unknown type")
         }
     }
 
@@ -581,7 +596,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
             }
             BinaryOpType.ADD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::add)
-
             BinaryOpType.DIV_ASSIGN -> {
                 val right = visitExpression(binop.right, true)
                 val leftType = binop.left.resolveType(typeHolder)
@@ -591,7 +605,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val left = visitExpression(binop.left, false)
                 val loadedLeft = ir.load(leftIrType, left)
 
-                val div = divide(leftIrType, loadedLeft, rightConverted)
+                val div = divide(loadedLeft, rightConverted)
                 ir.store(left, div)
                 div // TODO unchecked !!!
             }
@@ -726,18 +740,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val rem = ir.tupleDiv(leftConverted, rightConverted)
                 ir.proj(rem, 1)
             }
-            BinaryOpType.DIV -> {
-                val commonType = mb.toIRType<PrimitiveType>(typeHolder, binop.resolveType(typeHolder))
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir.convertToType(right, commonType)
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir.convertToType(left, commonType)
-
-                divide(commonType, leftConverted, rightConverted)
-            }
-
+            BinaryOpType.DIV -> makeAlgebraicBinary(binop, ::divide)
             BinaryOpType.SUB_ASSIGN -> {
                 val right = visitExpression(binop.right, true)
                 val leftType = binop.left.resolveType(typeHolder)
@@ -784,7 +787,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun divide(type: PrimitiveType, a: Value, b: Value): Value = when (type) {
+    private fun divide(a: Value, b: Value): Value = when (a.type()) {
         is IntegerType -> {
             val tupleDiv = ir.tupleDiv(a, b)
             ir.proj(tupleDiv, 0)

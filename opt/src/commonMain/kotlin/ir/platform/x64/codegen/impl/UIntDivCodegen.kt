@@ -14,26 +14,24 @@ class UIntDivCodegen(val type: ArithmeticType, val asm: MacroAssembler):
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         assertion(second != rdx) { "Second operand cannot be rdx" }
+        asm.xor(size, rdx, rdx)
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         asm.copy(size, first, rax)
-        asm.cdq(size)
         asm.div(size, second)
         asm.copy(size, rax, dst)
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
         asm.copy(size, first, rax)
-        asm.cdq(size)
         asm.div(size, second)
         asm.mov(size, rax, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         asm.mov(size, first, rax)
-        asm.cdq(size)
         asm.div(size, second)
         asm.copy(size, rax, dst)
     }
@@ -44,7 +42,6 @@ class UIntDivCodegen(val type: ArithmeticType, val asm: MacroAssembler):
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
         asm.copy(size, first, rax)
-        asm.cdq(size)
         asm.div(size, second)
         asm.copy(size, rax, dst)
     }
@@ -55,7 +52,6 @@ class UIntDivCodegen(val type: ArithmeticType, val asm: MacroAssembler):
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
         asm.mov(size, first, rax)
-        asm.cdq(size)
         asm.div(size, second)
         asm.copy(size, rax, dst)
     }
@@ -78,7 +74,6 @@ class UIntDivCodegen(val type: ArithmeticType, val asm: MacroAssembler):
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
         asm.copy(size, first, rax)
-        asm.cdq(size)
         asm.div(size, second)
         asm.mov(size, rax, dst)
     }
@@ -105,14 +100,12 @@ class UIntDivCodegen(val type: ArithmeticType, val asm: MacroAssembler):
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
         asm.mov(size, first, rax)
-        asm.cdq(size)
         asm.div(size, second)
         asm.mov(size, rax, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
         asm.mov(size, first, rax)
-        asm.cdq(size)
         asm.div(size, second)
         asm.mov(size, rax, dst)
     }
