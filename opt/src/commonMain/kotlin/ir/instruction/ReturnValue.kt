@@ -44,6 +44,9 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
             if (retType is VoidType) {
                 return false
             }
+            if (retType is BooleanType) {
+                return false
+            }
             if (retType is BottomType) {
                 return false
             }

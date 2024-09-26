@@ -25,7 +25,7 @@ object TypeConverter {
     }
 
     fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type = when (type) {
-        BOOL   -> Type.I8 //TODO one bit
+        BOOL   -> Type.U1
         CHAR   -> Type.I8
         UCHAR  -> Type.U8
         SHORT  -> Type.I16

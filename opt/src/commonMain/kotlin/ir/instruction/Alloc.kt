@@ -31,7 +31,7 @@ class Alloc private constructor(id: Identity, owner: Block, val allocatedType: N
         }
 
         private fun isAppropriateType(ty: Type): Boolean {
-            return ty !is VoidType && ty !is BottomType
+            return ty !is VoidType && ty !is BottomType && ty !is BooleanType
         }
 
         fun typeCheck(alloc: Alloc): Boolean {

@@ -245,7 +245,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testCastToBool() {
         val result = runCTest("shlang/llvm-c-tests/2003-05-31-CastToBool", listOf(), options())
         val expected = """
@@ -262,6 +261,7 @@ abstract class LLVMCTests: CommonCTest() {
             y = 2, (y == 2 || y == 0) == 1
             y = 2, (y > 2 || y < 5) == 0
             y = 2, (y ^ 2 ^ ~y) == 1
+            
         """.trimIndent()
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
