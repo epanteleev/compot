@@ -15,6 +15,15 @@ import ir.module.builder.impl.ModuleBuilder
 
 
 object TypeConverter {
+    inline fun <reified T : PrimitiveType> ModuleBuilder.toIRLVType(typeHolder: TypeHolder, type: CType): T {
+        val converted = toIRType<T>(typeHolder, type)
+        return if (converted == Type.U1) {
+            Type.I8 as T
+        } else {
+            converted
+        }
+    }
+
     inline fun <reified T : Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: CType): T {
         val converted = toIRTypeUnchecked(typeHolder, type)
         if (converted !is T) {

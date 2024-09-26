@@ -10,6 +10,7 @@ import ir.instruction.*
 import ir.instruction.Alloc
 import ir.module.block.Label
 import gen.TypeConverter.convertToType
+import gen.TypeConverter.toIRLVType
 import gen.TypeConverter.toIRType
 import gen.TypeConverter.toIndexType
 import gen.consteval.CommonConstEvalContext
@@ -608,13 +609,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                     right
                 } else {
-                    val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
-                    val realType = if (leftIrType != Type.U1) {
-                        leftIrType
-                    } else {
-                        Type.I8
-                    }
-                    val leftConverted = ir.convertToType(right, realType)
+                    val leftIrType = mb.toIRLVType<PrimitiveType>(typeHolder, leftType)
+                    val leftConverted = ir.convertToType(right, leftIrType)
 
                     val left = visitExpression(binop.left, false)
                     ir.store(left, leftConverted)
@@ -784,14 +780,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             PrefixUnaryOpType.NOT -> {
                 val value = visitExpression(unaryOp.primary, true)
                 val type = unaryOp.resolveType(typeHolder)
-                val commonType = mb.toIRType<PrimitiveType>(typeHolder, type)
-                val realType = if (commonType != Type.U1) {
-                    commonType
-                } else {
-                    Type.I8
-                }
-                val converted = ir.convertToType(value, realType)
-                makeCondition(converted, eq(realType), Constant.of(converted.asType(), 0))
+                val commonType = mb.toIRLVType<PrimitiveType>(typeHolder, type)
+                val converted = ir.convertToType(value, commonType) //TODO do we need this?
+                makeCondition(converted, eq(commonType), Constant.of(converted.asType(), 0))
             }
             PrefixUnaryOpType.BIT_NOT -> {
                 val value = visitExpression(unaryOp.primary, true)
@@ -826,12 +817,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (!isRvalue) {
             return rvalueAddr
         }
-        val converted = mb.toIRType<PrimitiveType>(typeHolder, type)
-        return if (converted != Type.U1) {
-            ir.load(converted, rvalueAddr)
-        } else {
-            ir.load(Type.I8, rvalueAddr)
-        }
+        val converted = mb.toIRLVType<PrimitiveType>(typeHolder, type)
+        return ir.load(converted, rvalueAddr)
     }
 
     private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
@@ -890,14 +877,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         is CPrimitive -> {
             assertion(args.size == 1) { "invariant" }
 
-            val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
-            val realType = if (irType != Type.U1) {
-                irType
-            } else {
-                Type.I8
-            }
-            val rvalueAdr = ir.alloc(realType)
-            ir.store(rvalueAdr, ir.convertToType(args[0], realType))
+            val irType    = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
+            val rvalueAdr = ir.alloc(irType)
+            ir.store(rvalueAdr, ir.convertToType(args[0], irType))
             varStack[param] = rvalueAdr
         }
         is CStructType -> {
@@ -920,33 +902,33 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun emitReturnType(retCType: TypeDesc) {
         exitBlock = ir.createLabel()
-        if (retCType.baseType() == VOID) {
-            ir.switchLabel(exitBlock)
-            ir.retVoid()
-            return
+        when (val cType = retCType.baseType()) {
+            is VOID -> {
+                ir.switchLabel(exitBlock)
+                ir.retVoid()
+            }
+            is CPrimitive -> {
+                val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType.baseType())
+                returnValueAdr = ir.alloc(retType)
+                ir.switchLabel(exitBlock)
+                emitReturn(retCType.baseType(), returnValueAdr!!)
+            }
+            is AggregateBaseType -> {
+                val retType = mb.toIRType<NonTrivialType>(typeHolder, retCType.baseType())
+                returnValueAdr = ir.alloc(retType)
+                ir.switchLabel(exitBlock)
+                emitReturn(retCType.baseType(), returnValueAdr!!)
+            }
+            else -> throw IRCodeGenError("Unknown return type, type=$cType")
         }
-        val retType = mb.toIRType<NonTrivialType>(typeHolder, retCType.baseType())
-        val realType = if (retType != Type.U1) {
-            retType
-        } else {
-            Type.I8
-        }
-        returnValueAdr = ir.alloc(realType)
-        ir.switchLabel(exitBlock)
-        emitReturn(retCType.baseType(), returnValueAdr!!)
     }
 
     private fun emitReturn(retCType: CType, value: Value) {
         when (retCType) {
             is CPrimitive -> {
-                val retType = mb.toIRType<PrimitiveType>(typeHolder, retCType)
-                val realType = if (retType != Type.U1) {
-                    retType
-                } else {
-                    Type.I8
-                }
-                val ret = ir.load(realType, value)
-                ir.ret(realType, arrayOf(ret))
+                val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType)
+                val ret = ir.load(retType, value)
+                ir.ret(retType, arrayOf(ret))
             }
             is AnyStructType -> {
                 val retType = mb.toIRType<StructType>(typeHolder, retCType)
@@ -968,14 +950,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun irReturnType(retType: TypeDesc): Type {
         return when (retType.baseType()) {
-            is CPrimitive -> {
-                val retType = mb.toIRType<Type>(typeHolder, retType.baseType())
-                if (retType != Type.U1) {
-                    retType
-                } else {
-                    Type.I8
-                }
-            }
+            is VOID -> Type.Void
+            is CPrimitive -> mb.toIRLVType<PrimitiveType>(typeHolder, retType.baseType())
             is CStructType -> {
                 val structType = mb.toIRType<StructType>(typeHolder, retType.baseType())
                 val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
@@ -1111,12 +1087,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (val type = returnStatement.expr.resolveType(typeHolder)) {
             is CPrimitive -> {
                 returnType as PrimitiveType
-                val realType = if (returnType != Type.U1) {
-                    returnType
-                } else {
-                    Type.I8
-                }
-                val returnValue = ir.convertToType(value, realType)
+                val returnValue = ir.convertToType(value, returnType)
                 ir.store(returnValueAdr!!, returnValue)
             }
             is CStructType -> {
@@ -1315,14 +1286,13 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val varName = declarator.name()
-        val irType = mb.toIRType<NonTrivialType>(typeHolder, type.type.baseType())
-        val realType = if (irType != Type.U1) {
-            irType
-        } else {
-            Type.I8
+        val irType = when (val cType = type.type.baseType()) {
+            is CPrimitive        -> mb.toIRLVType<PrimitiveType>(typeHolder, cType)
+            is AggregateBaseType -> mb.toIRType<NonTrivialType>(typeHolder, cType)
+            else -> throw IRCodeGenError("Unknown type, type=$cType")
         }
 
-        val rvalueAdr     = ir.alloc(realType)
+        val rvalueAdr = ir.alloc(irType)
         varStack[varName] = rvalueAdr
         return rvalueAdr
     }
@@ -1372,13 +1342,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val type = varDesc.type.baseType()
         if (type !is AggregateBaseType) {
             val rvalue = visitExpression(initDeclarator.rvalue, true)
-            val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
-            val realType = if (commonType != Type.U1) {
-                commonType
-            } else {
-                Type.I8
-            }
-            val convertedRvalue = ir.convertToType(rvalue, realType)
+            val commonType = mb.toIRLVType<PrimitiveType>(typeHolder, type)
+            val convertedRvalue = ir.convertToType(rvalue, commonType)
 
             val lvalueAdr = visit(initDeclarator.declarator)
             ir.store(lvalueAdr, convertedRvalue)
