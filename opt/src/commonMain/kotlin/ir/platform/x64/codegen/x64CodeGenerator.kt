@@ -117,7 +117,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val second = registerAllocation.operand(mul.rhs())
         val dst    = registerAllocation.operand(mul)
 
-        MulCodegen(mul.type(), asm)(dst, first, second)
+        when (val type = mul.type()) {
+            is IntegerType     -> IMulCodegen(type, asm)(dst, first, second)
+            is FloatingPointType -> FMulCodegen(type, asm)(dst, first, second)
+        }
     }
 
     override fun visit(div: Div) {

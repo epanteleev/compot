@@ -5,72 +5,72 @@ import ir.types.*
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
-import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-data class MulCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp,
-    XmmOperandsVisitorBinaryOp {
-    private val size: Int = type.sizeOf()
+data class IMulCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp {
+    private val size: Int = run {
+        val size = type.sizeOf()
+        if (size == 1) 2 else size
+    }
 
-    operator fun invoke(dst: Operand, first: Operand, second: Operand) = when (type) {
-        is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
-        is IntegerType       -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
+    operator fun invoke(dst: Operand, first: Operand, second: Operand) {
+        GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         if (first == dst) {
-            asm.mul(size, second, dst)
+            asm.imul(size, second, dst)
         } else if (second == dst) {
-            asm.mul(size, first, dst)
+            asm.imul(size, first, dst)
         } else {
             asm.copy(size, first, dst)
-            asm.mul(size, second, dst)
+            asm.imul(size, second, dst)
         }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
         asm.copy(size, first, temp1)
-        asm.mul(size, second, temp1)
+        asm.imul(size, second, temp1)
         asm.mov(size, temp1, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         if (dst == second) {
-            asm.mul(size, first, second)
+            asm.imul(size, first, second)
         } else {
             asm.mov(size, first, dst)
-            asm.mul(size, second, dst)
+            asm.imul(size, second, dst)
         }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
         if (dst == second) {
-            asm.mul(size, first, dst)
+            asm.imul(size, first, dst)
         } else {
-            asm.mul(size, first, second, dst)
+            asm.imul(size, first, second, dst)
         }
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
         if (dst == first) {
-            asm.mul(size, second, dst)
+            asm.imul(size, second, dst)
         } else {
             asm.mov(size, second, dst)
-            asm.mul(size, first, dst)
+            asm.imul(size, first, dst)
         }
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
         if (dst == first) {
-            asm.mul(size, second, dst)
+            asm.imul(size, second, dst)
         } else {
-            asm.mul(size, second, first, dst)
+            asm.imul(size, second, first, dst)
         }
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
         asm.mov(size, first, dst)
-        asm.mul(size, second, dst)
+        asm.imul(size, second, dst)
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
@@ -78,16 +78,16 @@ data class MulCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOper
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
-        asm.mul(size, first, second, dst)
+        asm.imul(size, first, second, dst)
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        asm.mul(size, second, first, dst)
+        asm.imul(size, second, first, dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
         asm.copy(size, first, temp1)
-        asm.mul(size, second, temp1)
+        asm.imul(size, second, temp1)
         asm.mov(size, temp1, dst)
     }
 
@@ -96,86 +96,35 @@ data class MulCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOper
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        asm.mul(size, first, second, temp1)
+        asm.imul(size, first, second, temp1)
         asm.mov(size, temp1, dst)
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {
-        asm.mul(size, first, second, temp1)
+        asm.imul(size, first, second, temp1)
         asm.mov(size, temp1, dst)
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        asm.mul(size, second, first, temp1)
+        asm.imul(size, second, first, temp1)
         asm.mov(size, temp1, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        asm.mul(size, second, first, temp1)
+        asm.imul(size, second, first, temp1)
         asm.mov(size, temp1, dst)
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
         asm.copy(size, second, temp1)
-        asm.mul(size, first, temp1)
+        asm.imul(size, first, temp1)
         asm.mov(size, temp1, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
         asm.mov(size, first, temp1)
-        asm.mul(size, second, temp1)
+        asm.imul(size, second, temp1)
         asm.mov(size, temp1, dst)
-    }
-
-    override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
-        if (first == dst) {
-            asm.mulf(size, second, dst)
-        } else if (second == dst) {
-            asm.mulf(size, first, dst)
-        } else {
-            asm.movf(size, second, dst)
-            asm.mulf(size, first, dst)
-        }
-    }
-
-    override fun arrF(dst: Address, first: XmmRegister, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
-        if (dst == second) {
-            asm.mulf(size, first, second)
-        } else {
-            asm.movf(size, first, dst)
-            asm.mulf(size, second, dst)
-        }
-    }
-
-
-    override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
-        if (dst == first) {
-            asm.mulf(size, second, dst)
-        } else {
-            asm.movf(size, second, dst)
-            asm.mulf(size, first, dst)
-        }
-    }
-
-    override fun raaF(dst: XmmRegister, first: Address, second: Address) {
-        asm.movf(size, first, dst)
-        asm.mulf(size, second, dst)
-    }
-
-    override fun araF(dst: Address, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aarF(dst: Address, first: Address, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aaaF(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

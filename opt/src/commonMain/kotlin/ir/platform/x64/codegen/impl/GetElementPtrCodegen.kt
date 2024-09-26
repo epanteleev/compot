@@ -20,7 +20,7 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
         if (ScaleFactor.isScaleFactor(size)) {
             asm.lea(POINTER_SIZE, Address.from(first, 0, second, ScaleFactor.from(size)), dst)
         } else {
-            asm.mul(POINTER_SIZE, Imm32.of(size), second, dst)
+            asm.imul(POINTER_SIZE, Imm32.of(size), second, dst)
             asm.add(POINTER_SIZE, first, dst)
         }
     }
@@ -30,7 +30,7 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
             asm.lea(POINTER_SIZE, Address.from(first, 0, second, ScaleFactor.from(size)), temp1)
             asm.mov(POINTER_SIZE, temp1, dst)
         } else {
-            asm.mul(POINTER_SIZE, Imm32.of(size), second, temp1)
+            asm.imul(POINTER_SIZE, Imm32.of(size), second, temp1)
             asm.add(POINTER_SIZE, first, temp1)
         }
     }
@@ -40,7 +40,7 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
             asm.mov(POINTER_SIZE, first, temp1)
             asm.lea(POINTER_SIZE, Address.from(temp1, 0, second, ScaleFactor.from(size)), dst)
         } else {
-            asm.mul(POINTER_SIZE, Imm32.of(size), second, dst)
+            asm.imul(POINTER_SIZE, Imm32.of(size), second, dst)
             asm.add(POINTER_SIZE, first, dst)
         }
     }
@@ -55,7 +55,7 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
             asm.lea(POINTER_SIZE, Address.from(first, 0, temp1, ScaleFactor.from(size)), dst)
         } else {
             asm.mov(secondOpSize, second, temp1)
-            asm.mul(POINTER_SIZE, Imm32.of(size), temp1, dst)
+            asm.imul(POINTER_SIZE, Imm32.of(size), temp1, dst)
             asm.add(POINTER_SIZE, first, dst)
         }
     }
@@ -123,7 +123,7 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
             asm.lea(POINTER_SIZE, Address.from(temp1, 0, second, ScaleFactor.from(size)), temp1)
             asm.mov(POINTER_SIZE, temp1, dst)
         } else {
-            asm.mul(POINTER_SIZE, Imm32.of(size), second, temp1)
+            asm.imul(POINTER_SIZE, Imm32.of(size), second, temp1)
             asm.add(POINTER_SIZE, first, temp1)
             asm.mov(POINTER_SIZE, temp1, dst)
         }
