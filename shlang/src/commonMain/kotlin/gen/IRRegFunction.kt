@@ -516,48 +516,69 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun makeAlgebraicBinaryWithAssignment(binop: BinaryOp, op: (a: Value, b: Value) -> LocalValue): Value {
+    private fun makeAlgebraicBinaryWithAssignment(binop: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
         val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
+        when (commonType) {
+            is PointerType -> {
+                val rvalue     = visitExpression(binop.right, true)
+                val rValueType = binop.right.resolveType(typeHolder)
+                if (rValueType !is CPrimitive) {
+                    throw IRCodeGenError("Primitive type expected")
+                }
+                val convertedRValue = ir.convertToType(rvalue, Type.U64)
 
-        if (commonType is PointerType) {
-            val rvalue     = visitExpression(binop.right, true)
-            val rValueType = binop.right.resolveType(typeHolder)
-            if (rValueType !is CPrimitive) {
-                throw IRCodeGenError("Primitive type expected")
+                val lvalueAddress = visitExpression(binop.left, false)
+                val lValueType    = binop.left.resolveType(typeHolder)
+                val lvalue        = ir.load(Type.Ptr, lvalueAddress)
+                val ptr2intLValue = ir.ptr2int(lvalue, Type.U64)
+
+                if (lValueType !is CPointer) {
+                    throw IRCodeGenError("Pointer type expected")
+                }
+                val convertedLValue = ir.convertToType(ptr2intLValue, Type.U64)
+
+                val size = lValueType.dereference().size()
+                val sizeValue = Constant.of(Type.U64, size)
+                val mul = ir.mul(convertedRValue, sizeValue)
+
+                val result = op(convertedLValue, mul)
+                val res = ir.convertToType(result, commonType)
+                ir.store(lvalueAddress, res)
+                return res
             }
-            val convertedRValue = ir.convertToType(rvalue, Type.U64)
+            is FloatingPointType -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
+                val rightConverted = ir.convertToType(right, leftIrType)
 
-            val lvalueAddress = visitExpression(binop.left, false)
-            val lValueType    = binop.left.resolveType(typeHolder)
-            val lvalue        = ir.load(Type.Ptr, lvalueAddress)
-            val ptr2intLValue = ir.ptr2int(lvalue, Type.U64)
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = ir.load(leftIrType, left)
 
-            if (lValueType !is CPointer) {
-                throw IRCodeGenError("Pointer type expected")
+                val sum = op(loadedLeft, rightConverted)
+                ir.store(left, sum)
+                return sum
             }
-            val convertedLValue = ir.convertToType(ptr2intLValue, Type.U64)
+            is IntegerType -> {
+                val right = visitExpression(binop.right, true)
+                val leftType = binop.left.resolveType(typeHolder)
+                val originalIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
+                val leftIrType = when (originalIrType) {
+                    is SignedIntType -> if (originalIrType.sizeOf() < WORD_SIZE) Type.I32 else originalIrType
+                    is UnsignedIntType -> if (originalIrType.sizeOf() < WORD_SIZE) Type.U32 else originalIrType
+                }
+                val rightConverted = ir.convertToType(right, leftIrType)
 
-            val size = lValueType.dereference().size()
-            val sizeValue = Constant.of(Type.U64, size)
-            val mul = ir.mul(convertedRValue, sizeValue)
+                val left = visitExpression(binop.left, false)
+                val loadedLeft = ir.load(originalIrType, left)
+                val cvtLft = ir.convertToType(loadedLeft, leftIrType)
 
-            val result = op(convertedLValue, mul)
-            val res = ir.convertToType(result, commonType)
-            ir.store(lvalueAddress, res)
-            return res
-
-        } else {
-            val right = visitExpression(binop.right, true)
-            val leftType = binop.left.resolveType(typeHolder)
-            val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
-            val rightConverted = ir.convertToType(right, leftIrType)
-
-            val left = visitExpression(binop.left, false)
-            val loadedLeft = ir.load(leftIrType, left)
-
-            val sum = ir.add(loadedLeft, rightConverted)
-            ir.store(left, sum)
-            return sum
+                val sum = op(cvtLft, rightConverted)
+                val sumCvt = ir.convertToType(sum, originalIrType)
+                ir.store(left, sumCvt)
+                return sum
+            }
+            else -> throw IRCodeGenError("Unknown type")
         }
     }
 
@@ -596,38 +617,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
             }
             BinaryOpType.ADD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::add)
-            BinaryOpType.DIV_ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
-                val rightConverted = ir.convertToType(right, leftIrType)
-
-                val left = visitExpression(binop.left, false)
-                val loadedLeft = ir.load(leftIrType, left)
-
-                val div = divide(loadedLeft, rightConverted)
-                ir.store(left, div)
-                div // TODO unchecked !!!
-            }
-
-            BinaryOpType.MUL_ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<NonTrivialType>(typeHolder, leftType)
-                val rightConverted = ir.convertToType(right, leftIrType)
-
-                val left = visitExpression(binop.left, false)
-                val loadedLeft = if (leftType is CPrimitive) {
-                    ir.load(leftIrType as PrimitiveType, left)
-                } else {
-                    throw IRCodeGenError("Primitive type expected")
-                }
-
-                val mul = ir.mul(loadedLeft, rightConverted)
-                ir.store(left, mul)
-                mul // TODO unchecked !!!
-            }
-
+            BinaryOpType.DIV_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ::divide)
+            BinaryOpType.MUL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::mul)
             BinaryOpType.BIT_OR -> makeAlgebraicBinary(binop, ir::or)
             BinaryOpType.MUL -> makeAlgebraicBinary(binop, ir::mul)
             BinaryOpType.NE -> makeComparisonBinary(binop, ::ne)
@@ -670,116 +661,21 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.switchLabel(end)
                 ir.phi(listOf(U8Value(1), convertedRight), listOf(initialBB, current))
             }
-            BinaryOpType.SHR_ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
-                val rightConverted = ir.convertToType(right, leftIrType)
-
-                val left = visitExpression(binop.left, false)
-                val loadedLeft = ir.load(leftIrType, left)
-
-                val shr = ir.shr(loadedLeft, rightConverted)
-                ir.store(left, shr)
-                shr
-            }
-            BinaryOpType.SHL_ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
-                val rightConverted = ir.convertToType(right, leftIrType)
-
-                val left = visitExpression(binop.left, false)
-                val loadedLeft = ir.load(leftIrType, left)
-
-                val shl = ir.shl(loadedLeft, rightConverted)
-                ir.store(left, shl)
-                shl
-            }
-            BinaryOpType.BIT_XOR_ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
-                val rightConverted = ir.convertToType(right, leftIrType)
-
-                val left = visitExpression(binop.left, false)
-                val loadedLeft = ir.load(leftIrType, left)
-
-                val xor = ir.xor(loadedLeft, rightConverted)
-                ir.store(left, xor)
-                xor
-            }
-            BinaryOpType.BIT_OR_ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
-                val rightConverted = ir.convertToType(right, leftIrType)
-
-                val left = visitExpression(binop.left, false)
-                val loadedLeft = ir.load(leftIrType, left)
-
-                val or = ir.or(loadedLeft, rightConverted)
-                ir.store(left, or)
-                or
-            }
+            BinaryOpType.SHR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::shr)
+            BinaryOpType.SHL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::shl)
+            BinaryOpType.BIT_XOR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::xor)
+            BinaryOpType.BIT_OR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::or)
             BinaryOpType.GE  -> makeComparisonBinary(binop, ::ge)
             BinaryOpType.EQ  -> makeComparisonBinary(binop, ::eq)
             BinaryOpType.SHL -> makeAlgebraicBinary(binop, ir::shl)
             BinaryOpType.SHR -> makeAlgebraicBinary(binop, ir::shr)
             BinaryOpType.BIT_AND -> makeAlgebraicBinary(binop, ir::and)
             BinaryOpType.BIT_XOR -> makeAlgebraicBinary(binop, ir::xor)
-            BinaryOpType.MOD -> {
-                val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-
-                val left = visitExpression(binop.left, true)
-                val leftConverted = ir.convertToType(left, commonType)
-
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir.convertToType(right, commonType)
-
-                val rem = ir.tupleDiv(leftConverted, rightConverted)
-                ir.proj(rem, 1)
-            }
+            BinaryOpType.MOD -> makeAlgebraicBinary(binop, ::rem)
             BinaryOpType.DIV -> makeAlgebraicBinary(binop, ::divide)
-            BinaryOpType.SUB_ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
-                val rightConverted = ir.convertToType(right, leftIrType)
-
-                val left = visitExpression(binop.left, false)
-                val loadedLeft = ir.load(leftIrType, left)
-                val sub = ir.sub(loadedLeft, rightConverted)
-                ir.store(left, sub)
-                sub
-            }
-            BinaryOpType.MOD_ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
-                val rightConverted = ir.convertToType(right, leftIrType)
-
-                val left = visitExpression(binop.left, false)
-                val loadedLeft = ir.load(leftIrType, left)
-
-                val rem = ir.tupleDiv(loadedLeft, rightConverted)
-                val mod = ir.proj(rem, 1)
-                ir.store(left, mod)
-                mod
-            }
-            BinaryOpType.BIT_AND_ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
-                val leftIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
-                val rightConverted = ir.convertToType(right, leftIrType)
-
-                val left = visitExpression(binop.left, false)
-                val loadedLeft = ir.load(leftIrType, left)
-
-                val and = ir.and(loadedLeft, rightConverted)
-                ir.store(left, and)
-                and
-            }
+            BinaryOpType.SUB_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::sub)
+            BinaryOpType.MOD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ::rem)
+            BinaryOpType.BIT_AND_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::and)
             BinaryOpType.COMMA -> {
                 visitExpression(binop.left, false)
                 visitExpression(binop.right, false)
@@ -793,6 +689,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.proj(tupleDiv, 0)
         }
         is FloatingPointType -> ir.div(a, b)
+        else -> throw IRCodeGenError("Unknown type")
+    }
+
+    private fun rem(a: Value, b: Value): Value = when (a.type()) {
+        is IntegerType -> {
+            val tupleDiv = ir.tupleDiv(a, b)
+            ir.proj(tupleDiv, 1)
+        }
         else -> throw IRCodeGenError("Unknown type")
     }
 
