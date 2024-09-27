@@ -372,17 +372,21 @@ data class VarNode(private val str: Identifier) : Expression() {
 }
 
 data class StringNode(val literals: List<StringLiteral>) : Expression() {
+    private val data by lazy {
+        if (literals.all { it.unquote().isEmpty() }) {
+            ""
+        } else {
+            literals.joinToString("") { it.unquote() } + "\\0"
+        }
+    }
+
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): SliceType = memoize {
         return@memoize SliceType(CHAR, data().length.toLong()) //ToDO restrict?????
     }
 
-    fun data(): String = if (literals.size == 1) {
-        literals[0].unquote()
-    } else {
-        literals.joinToString("") { it.unquote() }
-    }
+    fun data(): String = data
 }
 
 data class CharNode(val char: CharLiteral) : Expression() {

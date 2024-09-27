@@ -2,6 +2,7 @@ package gen
 
 import gen.TypeConverter.toIRType
 import gen.consteval.*
+import ir.Definitions.QWORD_SIZE
 import ir.attributes.GlobalValueAttribute
 import ir.global.*
 import ir.module.ExternFunction
@@ -162,7 +163,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (val type = varDesc.type.baseType()) {
             is CBaseFunctionType -> {
                 val abstrType = type.functionType
-                val argTypes  = argumentTypes(abstrType.argsTypes)
+                val argTypes  = argumentTypes(abstrType.argsTypes, abstrType.retType)
                 val returnType = mb.toIRType<Type>(typeHolder, abstrType.retType.baseType())
 
                 val isVararg = type.functionType.variadic
@@ -249,8 +250,11 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return InitializerListValue(lValueType, elements)
     }
 
-    protected fun argumentTypes(ctypes: List<TypeDesc>): List<NonTrivialType> {
+    protected fun argumentTypes(ctypes: List<TypeDesc>, retTypeDesc: TypeDesc): List<NonTrivialType> {
         val types = arrayListOf<NonTrivialType>()
+        if (retTypeDesc.baseType() is AggregateBaseType && retTypeDesc.baseType().size() > QWORD_SIZE * 2) {
+            types.add(Type.Ptr)
+        }
         for (type in ctypes) {
             when (type.baseType()) {
                 is CStructType -> {

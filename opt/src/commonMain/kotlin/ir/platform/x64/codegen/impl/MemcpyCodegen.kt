@@ -20,15 +20,15 @@ class MemcpyCodegen(val length: UnsignedIntegerConstant, val asm: Assembler):
         val iterations8 = length.value() / POINTER_SIZE.toUInt()
         val remains8 = length.value() % POINTER_SIZE.toUInt()
         for (i in 0 until iterations8.toInt()) {
-            asm.mov(POINTER_SIZE, Address.from(src, i), temp1)
-            asm.mov(POINTER_SIZE, temp1, Address.from(dst, i))
+            asm.mov(POINTER_SIZE, Address.from(src, i * POINTER_SIZE), temp1)
+            asm.mov(POINTER_SIZE, temp1, Address.from(dst, i * POINTER_SIZE))
         }
         val base = iterations8.toInt() * POINTER_SIZE
         val iterations4 = remains8 / WORD_SIZE.toUInt()
         val remains4 = remains8 % WORD_SIZE.toUInt()
         for (i in 0 until iterations4.toInt()) {
-            asm.mov(WORD_SIZE, Address.from(src, base + i), temp1)
-            asm.mov(WORD_SIZE, temp1, Address.from(dst, base + i))
+            asm.mov(WORD_SIZE, Address.from(src, base + i * WORD_SIZE), temp1)
+            asm.mov(WORD_SIZE, temp1, Address.from(dst, base + i * WORD_SIZE))
         }
         val base4 = base + iterations4.toInt() * WORD_SIZE
         for (i in 0 until remains4.toInt()) {

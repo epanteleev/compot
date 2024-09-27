@@ -35,7 +35,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     StatementVisitor<Unit>,
     DeclaratorVisitor<Value> {
     private var currentFunction: FunctionDataBuilder? = null
-    private var returnValueAdr: Alloc? = null
+    private var returnValueAdr: Value? = null
     private var exitBlock: Label = Label.entry //TODO late initialization
     private var stringTolabel = mutableMapOf<String, Label>()
     private val stmtStack = StmtStack()
@@ -905,7 +905,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown type, type=$cType")
     }
 
-    private fun emitReturnType(retCType: TypeDesc) {
+    private fun emitReturnType(retCType: TypeDesc, args: List<ArgumentValue>) {
         exitBlock = ir.createLabel()
         when (val cType = retCType.baseType()) {
             is VOID -> {
@@ -919,10 +919,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 emitReturn(retCType.baseType(), returnValueAdr!!)
             }
             is AggregateBaseType -> {
-                val retType = mb.toIRType<NonTrivialType>(typeHolder, retCType.baseType())
-                returnValueAdr = ir.alloc(retType)
-                ir.switchLabel(exitBlock)
-                emitReturn(retCType.baseType(), returnValueAdr!!)
+                if (cType.size() > QWORD_SIZE * 2) {
+                    returnValueAdr = args[0]
+                    ir.switchLabel(exitBlock)
+                    emitReturn(retCType.baseType(), returnValueAdr!!)
+                } else {
+                    returnValueAdr = ir.alloc(mb.toIRType<StructType>(typeHolder, cType))
+                    ir.switchLabel(exitBlock)
+                    emitReturn(retCType.baseType(), returnValueAdr!!)
+                }
+
             }
             else -> throw IRCodeGenError("Unknown return type, type=$cType")
         }
@@ -937,16 +943,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             is AnyStructType -> {
                 val retType = mb.toIRType<StructType>(typeHolder, retCType)
-                val retValues = ir.coerceArguments(retType, value)
                 val retTupleType = CallConvention.coerceArgumentTypes(retType)
                 if (retTupleType != null) {
+                    val retValues = ir.coerceArguments(retType, value)
                     if (retTupleType.size == 1) {
                         ir.ret(retTupleType[0], retValues.toTypedArray())
                     } else {
                         ir.ret(TupleType(retTupleType.toTypedArray()), retValues.toTypedArray())
                     }
                 } else {
-                    ir.ret(Type.Ptr, retValues.toTypedArray())
+                    ir.retVoid()
                 }
             }
             else -> throw IRCodeGenError("Unknown return type, type=$retCType")
@@ -974,14 +980,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val retType    = fnType.retType()
         val irRetType  = irReturnType(retType)
 
-        val argTypes = argumentTypes(fnType.args())
+        if (functionNode.name() == "getVect") {
+            println()
+        }
+        val argTypes = argumentTypes(fnType.args(), retType)
         currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes)
 
         visitParameters(parameters, fnType.args(), ir.arguments()) { param, cType, args ->
             visitParameter(param, cType, args)
         }
 
-        emitReturnType(retType)
+        emitReturnType(retType, ir.arguments())
 
         ir.switchLabel(Label.entry)
         visitStatement(functionNode.body)
