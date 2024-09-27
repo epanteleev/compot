@@ -133,6 +133,16 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
+            if (reader.check('.') && reader.peekOffset(1).isDigit()) {
+                val pair = reader.readCNumber()
+                if (pair != null) {
+                    val diff = reader.pos
+                    position += diff
+                    append(Numeric(pair.first, pair.second, OriginalPosition(line, position - diff, filename)))
+                }
+                continue
+            }
+
             // Punctuations and operators (or indentifiers)
             if (tryPunct(v)) {
                 position += 1

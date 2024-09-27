@@ -844,28 +844,27 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                                 cTypes: List<TypeDesc>,
                                 arguments: List<ArgumentValue>,
                                 closure: (String, CType, List<ArgumentValue>) -> Unit) {
-        var currentArg = 0
-        while (currentArg < arguments.size) {
+        var argumentIdx = 0
+        for (currentArg in cTypes.indices) {
             when (val cType = cTypes[currentArg].baseType()) {
                 is CPrimitive -> {
-                    closure(parameters[currentArg], cType, listOf(arguments[currentArg]))
-                    currentArg++
+                    closure(parameters[currentArg], cType, listOf(arguments[argumentIdx]))
                 }
                 is CStructType -> {
                     val types = CallConvention.coerceArgumentTypes(mb.toIRType<StructType>(typeHolder, cType)) ?: listOf(Type.Ptr)
                     val args = mutableListOf<ArgumentValue>()
                     for (i in types.indices) {
-                        args.add(arguments[currentArg + i])
+                        args.add(arguments[argumentIdx + i])
                     }
+                    argumentIdx += types.size - 1
                     closure(parameters[currentArg], cType, args)
-                    currentArg += types.size
                 }
                 is AnyCArrayType -> {
-                    closure(parameters[currentArg], cType, listOf(arguments[currentArg]))
-                    currentArg++
+                    closure(parameters[currentArg], cType, listOf(arguments[argumentIdx]))
                 }
                 else -> throw IRCodeGenError("Unknown type, type=$cType")
             }
+            argumentIdx++
         }
     }
 
