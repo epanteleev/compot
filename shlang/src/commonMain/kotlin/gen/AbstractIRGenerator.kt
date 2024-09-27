@@ -241,7 +241,9 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
         val elements = expr.initializers.mapIndexed { index, initializer ->
             val elementLValueType = lValueType.field(index)
-            constEvalExpression(elementLValueType, initializer) ?: throw IRCodeGenError("Unsupported type $elementLValueType")
+            constEvalExpression(elementLValueType, initializer) ?: let {
+                throw IRCodeGenError("Unsupported type $elementLValueType")
+            }
         }
 
         return InitializerListValue(lValueType, elements)

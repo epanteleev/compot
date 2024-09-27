@@ -416,6 +416,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is PrimitiveType -> ir.call(function, convertedArgs, cont)
                 is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
                 is StructType    -> ir.call(function, convertedArgs, cont)
+                is VoidType      -> {
+                    val retType = mb.toIRType<StructType>(typeHolder, functionType)
+                    val retValue = ir.alloc(retType)
+                    ir.vcall(function, arrayListOf(retValue) + convertedArgs, cont)
+                    retValue
+                }
                 else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
             }
 
@@ -947,21 +953,19 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun irReturnType(retType: TypeDesc): Type {
-        return when (retType.baseType()) {
-            is VOID -> Type.Void
-            is CPrimitive -> mb.toIRLVType<PrimitiveType>(typeHolder, retType.baseType())
-            is CStructType -> {
-                val structType = mb.toIRType<StructType>(typeHolder, retType.baseType())
-                val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
-                if (list.size == 1) {
-                    list[0]
-                } else {
-                    TupleType(list.toTypedArray())
-                }
+    private fun irReturnType(retType: TypeDesc): Type = when (retType.baseType()) {
+        is VOID -> Type.Void
+        is CPrimitive -> mb.toIRLVType<PrimitiveType>(typeHolder, retType.baseType())
+        is CStructType -> {
+            val structType = mb.toIRType<StructType>(typeHolder, retType.baseType())
+            val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
+            if (list.size == 1) {
+                list[0] as PrimitiveType
+            } else {
+                TupleType(list.toTypedArray())
             }
-            else -> throw IRCodeGenError("Unknown return type, type=$retType")
         }
+        else -> throw IRCodeGenError("Unknown return type, type=$retType")
     }
 
     override fun visit(functionNode: FunctionNode): Value = scoped {

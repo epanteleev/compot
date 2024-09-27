@@ -152,7 +152,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testStructureArgsSimple() {
         val result = runCTest("shlang/llvm-c-tests/2002-10-12-StructureArgsSimple", listOf(), options())
         assertEquals("0.500000, 1.200000\n", result.output)
