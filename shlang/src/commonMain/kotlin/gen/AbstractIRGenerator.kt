@@ -1,5 +1,6 @@
 package gen
 
+import gen.TypeConverter.toIRLVType
 import gen.TypeConverter.toIRType
 import gen.consteval.*
 import ir.Definitions.QWORD_SIZE
@@ -164,7 +165,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
             is CBaseFunctionType -> {
                 val abstrType = type.functionType
                 val argTypes  = argumentTypes(abstrType.argsTypes, abstrType.retType)
-                val returnType = mb.toIRType<Type>(typeHolder, abstrType.retType.baseType())
+                val returnType = irReturnType(abstrType.retType)
 
                 val isVararg = type.functionType.variadic
                 val externFunc = getExternFunction(name, returnType, argTypes, isVararg)
@@ -282,6 +283,21 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
         }
         return types
+    }
+
+    protected fun irReturnType(retType: TypeDesc): Type = when (retType.baseType()) {
+        is VOID -> Type.Void
+        is CPrimitive -> mb.toIRLVType<PrimitiveType>(typeHolder, retType.baseType())
+        is CStructType -> {
+            val structType = mb.toIRType<StructType>(typeHolder, retType.baseType())
+            val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
+            if (list.size == 1) {
+                list[0] as PrimitiveType
+            } else {
+                TupleType(list.toTypedArray())
+            }
+        }
+        else -> throw IRCodeGenError("Unknown return type, type=$retType")
     }
 
     protected fun createStringLiteralName(): String {

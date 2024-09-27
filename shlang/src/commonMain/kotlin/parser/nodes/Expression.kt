@@ -376,7 +376,7 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
         if (literals.all { it.unquote().isEmpty() }) {
             ""
         } else {
-            literals.joinToString("") { it.unquote() } + "\\0"
+            literals.joinToString("", postfix = "\\0") { it.unquote() }
         }
     }
 

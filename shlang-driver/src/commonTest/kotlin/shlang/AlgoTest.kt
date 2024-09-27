@@ -106,7 +106,6 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testAffineCipher() {
         val result = runCTest("shlang/algo/affine", listOf(), options())
         assertEquals("All tests have successfully passed!\n", result.output)

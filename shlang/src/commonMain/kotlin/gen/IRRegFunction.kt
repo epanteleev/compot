@@ -405,21 +405,41 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val convertedArgs = convertFunctionArgs(function, functionCall.args)
 
         val cont = ir.createLabel()
+
         val ret = when (functionType) {
             VOID -> {
                 ir.vcall(function, convertedArgs, cont)
+                ir.switchLabel(cont)
                 Value.UNDEF
             }
-
-            is CPrimitive -> ir.call(function, convertedArgs, cont)
-            is CStructType -> when (function.returnType()) {
-                is PrimitiveType -> ir.call(function, convertedArgs, cont)
-                is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
-                is StructType    -> ir.call(function, convertedArgs, cont)
+            is CPrimitive -> {
+                val call = ir.call(function, convertedArgs, cont)
+                ir.switchLabel(cont)
+                call
+            }
+            is CStructType -> when (val t = function.returnType()) {
+                is PrimitiveType -> {
+                    val alloc = ir.alloc(t)
+                    val call = ir.call(function, convertedArgs, cont)
+                    ir.switchLabel(cont)
+                    ir.store(alloc, call)
+                    alloc
+                }
+                is TupleType     -> {
+                    val tup = ir.tupleCall(function, convertedArgs, cont)
+                    ir.switchLabel(cont)
+                    tup
+                }
+                is StructType    -> {
+                    val call = ir.call(function, convertedArgs, cont)
+                    ir.switchLabel(cont)
+                    call
+                }
                 is VoidType      -> {
                     val retType = mb.toIRType<StructType>(typeHolder, functionType)
                     val retValue = ir.alloc(retType)
                     ir.vcall(function, arrayListOf(retValue) + convertedArgs, cont)
+                    ir.switchLabel(cont)
                     retValue
                 }
                 else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
@@ -427,7 +447,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             else -> TODO("$functionType")
         }
-        ir.switchLabel(cont)
+
         return ret
     }
 
@@ -611,8 +631,29 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 if (leftType is AggregateBaseType) {
                     val left = visitExpression(binop.left, true)
-                    ir.memcpy(left, right, U64Value(leftType.size().toLong()))
+                    if (leftType.size() > QWORD_SIZE * 2) {
+                        ir.memcpy(left, right, U64Value(leftType.size().toLong()))
+                    } else {
+                        val structType = mb.toIRType<AggregateType>(typeHolder, leftType)
+                        val list = CallConvention.coerceArgumentTypes(structType)
+                        if (list == null) {
+                            ir.memcpy(left, right, U64Value(leftType.size().toLong()))
+                            return left
+                        }
 
+                        if (list.size == 1) {
+                            val loadedRight = ir.load(list[0] as PrimitiveType, right)
+                            val gep = ir.gep(left, structType, Constant.of(Type.I64, 0))
+                            ir.store(gep, loadedRight)
+                        } else {
+                            list.forEachIndexed { idx, arg ->
+                                val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
+                                val fieldPtr = ir.gep(left, arg, Constant.valueOf(Type.I64, offset))
+                                val proj = ir.proj(right, idx)
+                                ir.store(fieldPtr, proj)
+                            }
+                        }
+                    }
                     right
                 } else {
                     val leftIrType = mb.toIRLVType<PrimitiveType>(typeHolder, leftType)
@@ -957,21 +998,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             else -> throw IRCodeGenError("Unknown return type, type=$retCType")
         }
-    }
-
-    private fun irReturnType(retType: TypeDesc): Type = when (retType.baseType()) {
-        is VOID -> Type.Void
-        is CPrimitive -> mb.toIRLVType<PrimitiveType>(typeHolder, retType.baseType())
-        is CStructType -> {
-            val structType = mb.toIRType<StructType>(typeHolder, retType.baseType())
-            val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
-            if (list.size == 1) {
-                list[0] as PrimitiveType
-            } else {
-                TupleType(list.toTypedArray())
-            }
-        }
-        else -> throw IRCodeGenError("Unknown return type, type=$retType")
     }
 
     override fun visit(functionNode: FunctionNode): Value = scoped {
@@ -1368,7 +1394,25 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 return lvalueAdr
             }
             is FunctionCall -> {
-                val call = visitExpression(rvalue, true)
+                val functionType = rvalue.resolveType(typeHolder)
+                val function = mb.findFunction(rvalue.name()) ?: throw IRCodeGenError("Function '${rvalue.name()}' not found")
+                val convertedArgs = convertFunctionArgs(function, rvalue.args)
+
+                val cont = ir.createLabel()
+                val call = when (function.returnType()) {
+                    is PrimitiveType -> ir.call(function, convertedArgs, cont)
+                    is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
+                    is StructType    -> ir.call(function, convertedArgs, cont)
+                    is VoidType      -> {
+                        val retType = mb.toIRType<StructType>(typeHolder, functionType)
+                        val retValue = ir.alloc(retType)
+                        ir.vcall(function, arrayListOf(retValue) + convertedArgs, cont)
+                        retValue
+                    }
+                    else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
+                }
+                ir.switchLabel(cont)
+
                 when (val rType = rvalue.resolveType(typeHolder)) {
                     is CStructType -> {
                         val structType = mb.toIRType<StructType>(typeHolder, rType)
