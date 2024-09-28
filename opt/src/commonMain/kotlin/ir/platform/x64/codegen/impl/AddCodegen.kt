@@ -8,13 +8,11 @@ import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.MacroAssembler
 
 
-data class AddCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp,
-    XmmOperandsVisitorBinaryOp {
+data class AddCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
-    operator fun invoke(dst: Operand, first: Operand, second: Operand) = when (type) {
-        is FloatingPointType  -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
-        is IntegerType        -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
+    operator fun invoke(dst: Operand, first: Operand, second: Operand) {
+        GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
@@ -145,63 +143,6 @@ data class AddCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOper
                 asm.mov(size, temp1, dst)
             }
         }
-    }
-
-    override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
-        if (first == dst) {
-            asm.addf(size, second, dst)
-        } else if (second == dst) {
-            asm.addf(size, first, dst)
-        } else {
-            asm.movf(size, first, dst)
-            asm.addf(size, second, dst)
-        }
-    }
-
-    override fun arrF(dst: Address, first: XmmRegister, second: XmmRegister) {
-        asm.movf(size, first, xmmTemp1)
-        asm.addf(size, second, xmmTemp1)
-        asm.movf(size, xmmTemp1, dst)
-    }
-
-    override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
-        if (second == dst) {
-            asm.addf(size, first, dst)
-        } else {
-            asm.movf(size, first, xmmTemp1)
-            asm.addf(size, second, xmmTemp1)
-            asm.movf(size, xmmTemp1, dst)
-        }
-    }
-
-    override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
-        if (dst == first) {
-            asm.addf(size, second, dst)
-        } else {
-            asm.movf(size, first, dst)
-            asm.addf(size, second, dst)
-        }
-    }
-
-    override fun raaF(dst: XmmRegister, first: Address, second: Address) {
-        asm.movf(size, first, dst)
-        asm.addf(size, second, dst)
-    }
-
-    override fun araF(dst: Address, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aarF(dst: Address, first: Address, second: XmmRegister) {
-        asm.movf(size, first, xmmTemp1)
-        asm.addf(size, second, xmmTemp1)
-        asm.movf(size, xmmTemp1, dst)
-    }
-
-    override fun aaaF(dst: Address, first: Address, second: Address) {
-        asm.movf(size, first, xmmTemp1)
-        asm.addf(size, second, xmmTemp1)
-        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

@@ -400,13 +400,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitFunctionCall(functionCall: FunctionCall): Value {
-        val functionType = functionCall.resolveType(typeHolder)
         val function = mb.findFunction(functionCall.name()) ?: throw IRCodeGenError("Function '${functionCall.name()}' not found")
         val convertedArgs = convertFunctionArgs(function, functionCall.args)
-
         val cont = ir.createLabel()
-
-        val ret = when (functionType) {
+        return when (val functionType = functionCall.resolveType(typeHolder)) {
             VOID -> {
                 ir.vcall(function, convertedArgs, cont)
                 ir.switchLabel(cont)
@@ -430,11 +427,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     ir.switchLabel(cont)
                     tup
                 }
-                is StructType    -> {
-                    val call = ir.call(function, convertedArgs, cont)
-                    ir.switchLabel(cont)
-                    call
-                }
                 is VoidType      -> {
                     val retType = mb.toIRType<StructType>(typeHolder, functionType)
                     val retValue = ir.alloc(retType)
@@ -447,8 +439,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             else -> TODO("$functionType")
         }
-
-        return ret
     }
 
     private fun eq(type: Type): AnyPredicateType = when (type) {
@@ -1394,7 +1384,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 return lvalueAdr
             }
             is FunctionCall -> {
-                val functionType = rvalue.resolveType(typeHolder)
                 val function = mb.findFunction(rvalue.name()) ?: throw IRCodeGenError("Function '${rvalue.name()}' not found")
                 val convertedArgs = convertFunctionArgs(function, rvalue.args)
 
@@ -1404,24 +1393,20 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
                     is StructType    -> ir.call(function, convertedArgs, cont)
                     is VoidType      -> {
-                        val retType = mb.toIRType<StructType>(typeHolder, functionType)
-                        val retValue = ir.alloc(retType)
-                        ir.vcall(function, arrayListOf(retValue) + convertedArgs, cont)
-                        retValue
+                        ir.vcall(function, arrayListOf(lvalueAdr) + convertedArgs, cont)
+                        lvalueAdr
                     }
                     else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
                 }
                 ir.switchLabel(cont)
 
-                when (val rType = rvalue.resolveType(typeHolder)) {
+                when (val functionType = rvalue.resolveType(typeHolder)) {
                     is CStructType -> {
-                        val structType = mb.toIRType<StructType>(typeHolder, rType)
-                        val list = CallConvention.coerceArgumentTypes(structType)
-                        if (list == null) {
-                            ir.memcpy(lvalueAdr, call, U64Value(rType.size().toLong()))
+                        if (functionType.size() > QWORD_SIZE * 2) {
                             return lvalueAdr
                         }
-
+                        val structType = mb.toIRType<StructType>(typeHolder, functionType)
+                        val list = CallConvention.coerceArgumentTypes(structType) ?: throw IRCodeGenError("Unknown type, type=$functionType")
                         if (list.size == 1) {
                             val gep = ir.gep(lvalueAdr, structType, Constant.of(Type.I64, 0))
                             ir.store(gep, call)
@@ -1433,10 +1418,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                                 ir.store(fieldPtr, proj)
                             }
                         }
-
                         return lvalueAdr
                     }
-                    else -> throw IRCodeGenError("Unknown type, type=$rType")
+                    else -> throw IRCodeGenError("Unknown type, type=$functionType")
                 }
             }
             else -> {

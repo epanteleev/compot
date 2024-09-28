@@ -12,7 +12,7 @@ class FloatDivCodegen(val type: ArithmeticType, val asm: Assembler): XmmOperands
         XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
-    override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
+    override fun rrr(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
         if (first == dst) {
             asm.divf(size, second, dst)
         } else {
@@ -21,33 +21,33 @@ class FloatDivCodegen(val type: ArithmeticType, val asm: Assembler): XmmOperands
         }
     }
 
-    override fun arrF(dst: Address, first: XmmRegister, second: XmmRegister) {
+    override fun arr(dst: Address, first: XmmRegister, second: XmmRegister) {
         TODO("Not yet implemented")
     }
 
-    override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
+    override fun rar(dst: XmmRegister, first: Address, second: XmmRegister) {
         TODO("Not yet implemented")
     }
 
-    override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
+    override fun rra(dst: XmmRegister, first: XmmRegister, second: Address) {
         asm.movf(size, first, dst)
         asm.divf(size, second, dst)
     }
 
-    override fun raaF(dst: XmmRegister, first: Address, second: Address) {
+    override fun raa(dst: XmmRegister, first: Address, second: Address) {
         asm.movf(size, first, dst)
         asm.divf(size, second, dst)
     }
 
-    override fun araF(dst: Address, first: XmmRegister, second: Address) {
+    override fun ara(dst: Address, first: XmmRegister, second: Address) {
         TODO("Not yet implemented")
     }
 
-    override fun aarF(dst: Address, first: Address, second: XmmRegister) {
+    override fun aar(dst: Address, first: Address, second: XmmRegister) {
         TODO("Not yet implemented")
     }
 
-    override fun aaaF(dst: Address, first: Address, second: Address) {
+    override fun aaa(dst: Address, first: Address, second: Address) {
         TODO("Not yet implemented")
     }
 

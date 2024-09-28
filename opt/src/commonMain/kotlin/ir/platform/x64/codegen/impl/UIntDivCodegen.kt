@@ -8,8 +8,7 @@ import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class UIntDivCodegen(val type: ArithmeticType, val asm: MacroAssembler):
-    GPOperandsVisitorBinaryOp {
+class UIntDivCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {

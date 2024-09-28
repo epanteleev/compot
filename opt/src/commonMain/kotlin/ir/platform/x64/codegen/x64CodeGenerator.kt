@@ -85,7 +85,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val second = registerAllocation.operand(add.rhs())
         val dst    = registerAllocation.operand(add)
 
-        AddCodegen(add.type(), asm)(dst, first, second)
+        when (val type = add.type()) {
+            is IntegerType       -> AddCodegen(type, asm)(dst, first, second)
+            is FloatingPointType -> FAddCodegen(type, asm)(dst, first, second)
+        }
     }
 
     override fun visit(and: And) {
@@ -109,7 +112,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val second = registerAllocation.operand(xor.rhs())
         val dst    = registerAllocation.operand(xor)
 
-        XorCodegen(xor.type(), asm)(dst, first, second)
+        when (val type = xor.type()) {
+            is IntegerType       -> XorCodegen(type, asm)(dst, first, second)
+            is FloatingPointType -> FXorCodegen(type, asm)(dst, first, second)
+        }
     }
 
     override fun visit(mul: Mul) {
@@ -158,7 +164,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val second = registerAllocation.operand(sub.rhs())
         val dst    = registerAllocation.operand(sub)
 
-        SubCodegen(sub.type(), asm)(dst, first, second)
+        when (val type = sub.type()) {
+            is IntegerType       -> SubCodegen(type, asm)(dst, first, second)
+            is FloatingPointType -> FSubCodegen(type, asm)(dst, first, second)
+        }
     }
 
     private fun emitRetValue(retInstType: PrimitiveType, returnOperand: Operand, returnRegister: Register) = when (retInstType) {

@@ -7,13 +7,11 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.MacroAssembler
 
 
-class AndCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp,
-    XmmOperandsVisitorBinaryOp {
+class AndCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
-    operator fun invoke(dst: Operand, first: Operand, second: Operand) = when (type) {
-        is FloatingPointType -> XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
-        is IntegerType       -> GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
+    operator fun invoke(dst: Operand, first: Operand, second: Operand) {
+        GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
@@ -128,38 +126,6 @@ class AndCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsV
             asm.and(size, second, temp1)
             asm.mov(size, temp1, dst)
         }
-    }
-
-    override fun rrrF(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun arrF(dst: Address, first: XmmRegister, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun rarF(dst: XmmRegister, first: Address, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun rraF(dst: XmmRegister, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun raaF(dst: XmmRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun araF(dst: Address, first: XmmRegister, second: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aarF(dst: Address, first: Address, second: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aaaF(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {
