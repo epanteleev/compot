@@ -26,7 +26,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
     private fun setupArguments() {
         val arguments = data.arguments()
         for ((index, arg) in arguments.withIndex()) {
-            val begin = Location(-1, -(arguments.size - index))
+            val begin = Location(-(arguments.size - index))
             intervals[arg] = LiveRangeImpl(data.begin(), begin)
         }
     }
@@ -41,7 +41,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
                 }
 
                 /** New definition. */
-                val begin = Location(idx, ordering)
+                val begin = Location(ordering)
                 intervals[inst] = LiveRangeImpl(bb, begin)
             }
         }
@@ -68,13 +68,13 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
                 val liveRange = intervals[op] ?: throw LiveIntervalsException("cannot find $op")
 
                 val index = bb.size
-                liveRange.registerUsage(bb, Location(index, ordering + index))
+                liveRange.registerUsage(bb, Location(ordering + index))
             }
 
             for ((idx, inst) in bb.withIndex()) {
                 ordering += 1
 
-                val location = Location(idx, ordering)
+                val location = Location(ordering)
                 updateLiveRange(inst, bb, location)
             }
         }

@@ -12,13 +12,11 @@ import ir.value.TupleValue
 
 class DumpLIRFunctionData(functionData: FunctionData): DumpFunctionData(functionData) {
     private val regAlloc = functionData.analysis(LinearScanFabric)
-    private val liveness = functionData.analysis(LiveIntervalsFabric)
     private var currentBlock: Block? = null
 
     override fun dumpBlock(bb: Block) {
         currentBlock = bb
         super.dumpBlock(bb)
-        killedInBlock(bb)
     }
 
     override fun dumpInstruction(instruction: Instruction, idx: Int) {
@@ -30,45 +28,5 @@ class DumpLIRFunctionData(functionData: FunctionData): DumpFunctionData(function
         }
 
         super.dumpInstruction(instruction, idx)
-
-        val killed = arrayListOf<LocalValue>()
-        instruction.operands { use ->
-            if (use !is LocalValue) {
-                return@operands
-            }
-
-            val end = liveness[use].end()
-            currentBlock as Block
-            if (end.thisPlace(idx)) {
-                killed.add(use)
-            }
-        }
-        if (killed.isNotEmpty()) {
-            builder.append("\tkill: ")
-            killed.joinTo(builder, separator = ",") { it.toString() }
-        }
-    }
-
-    private fun killedInBlock(bb: Block) {
-        val killedInBlock = arrayListOf<LocalValue>()
-
-        for (current in functionData) {
-            for (inst in current) {
-                if (inst !is LocalValue) {
-                    continue
-                }
-
-                val end = liveness[inst].end()
-                if (end.thisPlace(bb.size)) {
-                    killedInBlock.add(inst)
-                }
-            }
-        }
-
-        if (killedInBlock.isNotEmpty()) {
-            builder.append("\t; killed: ")
-            killedInBlock.joinTo(builder, separator = ", ") { it.toString() }
-            builder.append('\n')
-        }
     }
 }
