@@ -110,7 +110,13 @@ class AndCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperandsVisi
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        if (first == dst) {
+            asm.and(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.and(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

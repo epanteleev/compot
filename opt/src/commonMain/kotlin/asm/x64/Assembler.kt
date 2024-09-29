@@ -339,7 +339,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     private fun xorps(src: XmmRegister, dst: XmmRegister) = add(Xorps(16, src, dst))
     private fun xorps(src: Address, dst: XmmRegister) = add(Xorps(16, src, dst))
 
-    fun xorpf(size: Int, src: Address, dst: XmmRegister) = when (size) {
+    private fun xorpf(size: Int, src: Address, dst: XmmRegister) = when (size) { //TODO Don't use THIS
         4 -> xorps(src, dst)
         8 -> xorpd(src, dst)
         else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")

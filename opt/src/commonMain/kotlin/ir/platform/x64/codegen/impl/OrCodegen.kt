@@ -101,7 +101,9 @@ class OrCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperandsVisit
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.copy(size, first, temp1)
+        asm.or(size, second, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {

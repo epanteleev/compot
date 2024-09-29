@@ -47,7 +47,9 @@ private class InterferenceGraphBuilder(functionData: FunctionData): FunctionAnal
                 }
             }
 
-            active.keys.retainAll { it -> interval1.end() > liveIntervals[it].begin() }
+            active.entries.retainAll { (_, interval) ->
+                interval1.end().to > interval.begin().from
+            }
             active[v1] = interval1
         }
 

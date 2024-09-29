@@ -122,10 +122,10 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
                 continue
             }
 
-            active.entries.retainAll {
-                if (liveRanges[it.key].end() <= range.begin()) {
-                    val size = it.key.asType<NonTrivialType>().sizeOf()
-                    pool.free(it.value, size)
+            active.entries.retainAll { (local, operand) ->
+                if (liveRanges[local].end().to <= range.begin().from) {
+                    val size = local.asType<NonTrivialType>().sizeOf()
+                    pool.free(operand, size)
                     return@retainAll false
                 } else {
                     return@retainAll true

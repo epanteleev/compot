@@ -41,7 +41,8 @@ class FXorCodegen(val type: FloatingPointType, val asm: MacroAssembler): XmmOper
 
     override fun rra(dst: XmmRegister, first: XmmRegister, second: Address) {
         if (first == dst) {
-            asm.xorpf(size, second, dst)
+            asm.movf(size, second, xmmTemp1) //TODO
+            asm.xorpf(size, xmmTemp1, dst)
         } else {
             asm.movf(size, second, dst)
             asm.xorpf(size, first, dst)
