@@ -4,10 +4,10 @@ import common.assertion
 import ir.instruction.Copy
 import ir.value.LocalValue
 import ir.module.FunctionData
-import ir.utils.OrderedLocation
 import ir.instruction.Instruction
 import ir.instruction.Phi
 import ir.module.Sensitivity
+import ir.module.block.Block
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.traverse.LinearScanOrderFabric
@@ -26,8 +26,8 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
     private fun setupArguments() {
         val arguments = data.arguments()
         for ((index, arg) in arguments.withIndex()) {
-            val begin = OrderedLocation(data.begin(), -1, -(arguments.size - index))
-            intervals[arg] = LiveRangeImpl(begin)
+            val begin = Location(-1, -(arguments.size - index))
+            intervals[arg] = LiveRangeImpl(data.begin(), begin)
         }
     }
 
@@ -41,13 +41,13 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
                 }
 
                 /** New definition. */
-                val begin = OrderedLocation(bb, idx, ordering)
-                intervals[inst] = LiveRangeImpl(begin)
+                val begin = Location(idx, ordering)
+                intervals[inst] = LiveRangeImpl(bb, begin)
             }
         }
     }
 
-    private fun updateLiveRange(inst: Instruction, instructionLocation: OrderedLocation) {
+    private fun updateLiveRange(inst: Instruction, bb: Block, instructionLocation: Location) {
         inst.operands { usage ->
             if (usage !is LocalValue) {
                 return@operands
@@ -56,7 +56,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
             val liveRange = intervals[usage] ?: let {
                 throw LiveIntervalsException("in $usage")
             }
-            liveRange.registerUsage(instructionLocation)
+            liveRange.registerUsage(bb, instructionLocation)
         }
     }
 
@@ -67,15 +67,15 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
             for (op in liveness.liveOut(bb)) {
                 val liveRange = intervals[op] ?: throw LiveIntervalsException("cannot find $op")
 
-                val index = bb.size + 1
-                liveRange.registerUsage(OrderedLocation(bb, index, ordering + index))
+                val index = bb.size
+                liveRange.registerUsage(bb, Location(index, ordering + index))
             }
 
             for ((idx, inst) in bb.withIndex()) {
                 ordering += 1
 
-                val location = OrderedLocation(bb, idx, ordering)
-                updateLiveRange(inst, location)
+                val location = Location(idx, ordering)
+                updateLiveRange(inst, bb, location)
             }
         }
     }

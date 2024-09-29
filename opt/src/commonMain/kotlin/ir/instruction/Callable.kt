@@ -11,7 +11,7 @@ interface Callable {
     fun arguments(): List<Value>
     fun prototype(): AnyFunctionPrototype
     fun shortName(): String {
-        return prototype().shortName()
+        return prototype().shortDescription()
     }
 
     fun target(): Block

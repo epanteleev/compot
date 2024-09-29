@@ -4,6 +4,7 @@ import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.*
 import ir.module.AnyFunctionPrototype
+import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.value.IntegerConstant
 import ir.value.UnsignedIntegerConstant
@@ -27,9 +28,9 @@ interface InstructionFabric {
     fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare
     fun load(loadedType: PrimitiveType, ptr: Value): Load
     fun store(ptr: Value, value: Value): Store
-    fun call(func: AnyFunctionPrototype, args: List<Value>, target: Label): Call
-    fun tupleCall(func: AnyFunctionPrototype, args: List<Value>, target: Label): TupleCall
-    fun vcall(func: AnyFunctionPrototype, args: List<Value>, target: Label): VoidCall
+    fun call(func: DirectFunctionPrototype, args: List<Value>, target: Label): Call
+    fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, target: Label): TupleCall
+    fun vcall(func: DirectFunctionPrototype, args: List<Value>, target: Label): VoidCall
     fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionCall
     fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionVoidCall
     fun branch(target: Block): Branch

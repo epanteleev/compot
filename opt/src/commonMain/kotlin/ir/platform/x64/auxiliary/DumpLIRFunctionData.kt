@@ -39,7 +39,7 @@ class DumpLIRFunctionData(functionData: FunctionData): DumpFunctionData(function
 
             val end = liveness[use].end()
             currentBlock as Block
-            if (end.thisPlace(currentBlock!!, idx)) {
+            if (end.thisPlace(idx)) {
                 killed.add(use)
             }
         }
@@ -59,7 +59,7 @@ class DumpLIRFunctionData(functionData: FunctionData): DumpFunctionData(function
                 }
 
                 val end = liveness[inst].end()
-                if (end.thisPlace(bb, bb.size)) {
+                if (end.thisPlace(bb.size)) {
                     killedInBlock.add(inst)
                 }
             }

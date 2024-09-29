@@ -7,6 +7,7 @@ import ir.pass.common.AnalysisResult
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.intervals.LiveIntervalsFabric
+import ir.pass.analysis.intervals.LiveRange
 import ir.pass.common.AnalysisType
 import ir.value.LocalValue
 
@@ -38,18 +39,16 @@ private class InterferenceGraphBuilder(functionData: FunctionData): FunctionAnal
     private val interferenceGraph = InterferenceGraph(mutableMapOf(), functionData.marker())
 
     override fun run(): InterferenceGraph {
-        //TODO Absolutely inefficient!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-        // O(n^2) complexity
+        val active = hashMapOf<LocalValue, LiveRange>()
         for ((v1, interval1) in liveIntervals) {
-            for ((v2, interval2) in liveIntervals) {
-                if (interval1 == interval2) {
-                    continue
-                }
-
+            for ((v2, interval2) in active) {
                 if (interval1.intersect(interval2)) {
                     interferenceGraph.addEdge(v1,v2)
                 }
             }
+
+            active.keys.retainAll { it -> interval1.end() > liveIntervals[it].begin() }
+            active[v1] = interval1
         }
 
         return interferenceGraph

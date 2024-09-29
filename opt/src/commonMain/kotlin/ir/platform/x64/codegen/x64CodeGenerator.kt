@@ -223,7 +223,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(voidCall: VoidCall) {
-        asm.callFunction(voidCall)
+        asm.callFunction(voidCall, voidCall.prototype())
 
         assertion(voidCall.target() === next()) {
             // This is a bug in the compiler if this assertion fails
@@ -232,7 +232,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(tupleCall: TupleCall) { //TODO not compatible with linux C calling convention
-        asm.callFunction(tupleCall)
+        asm.callFunction(tupleCall, tupleCall.prototype())
         val retType = tupleCall.type()
 
         val first  = retType.asInnerType<PrimitiveType>(0)
@@ -345,10 +345,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(call: Call) {
-        asm.callFunction(call)
+        asm.callFunction(call, call.prototype())
 
         when (val retType = call.type()) {
-            is IntegerType, is PointerType, is FlagType -> {
+            is IntegerType, is PointerType -> {
                 CallIntCodegen(retType, asm)(registerAllocation.operand(call), retReg)
             }
             is FloatingPointType -> {
@@ -426,6 +426,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(icmp: IntCompare) {
         val first  = registerAllocation.operand(icmp.first())
         val second = registerAllocation.operand(icmp.second())
+        assertion(registerAllocation.operandOrNull(icmp) == null) {
+            "wasting register in icmp=${icmp}, operand=${registerAllocation.operandOrNull(icmp)}"
+        }
 
         IntCmpCodegen(icmp.first().asType(), asm)(first, second)
     }
@@ -433,6 +436,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(fcmp: FloatCompare) {
         val first  = registerAllocation.operand(fcmp.first())
         val second = registerAllocation.operand(fcmp.second())
+        assertion(registerAllocation.operandOrNull(fcmp) == null) {
+            "wasting register in icmp=${fcmp}, operand=${registerAllocation.operandOrNull(fcmp)}"
+        }
 
         FloatCmpCodegen(fcmp.first().asType(), asm)(first, second)
     }

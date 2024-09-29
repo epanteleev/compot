@@ -92,15 +92,15 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.store(ptr, value)
     }
 
-    override fun call(func: AnyFunctionPrototype, args: List<Value>, target: Label): Call {
+    override fun call(func: DirectFunctionPrototype, args: List<Value>, target: Label): Call {
         return bb.call(func, args, target as Block)
     }
 
-    override fun tupleCall(func: AnyFunctionPrototype, args: List<Value>, target: Label): TupleCall {
+    override fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, target: Label): TupleCall {
         return bb.tupleCall(func, args, target)
     }
 
-    override fun vcall(func: AnyFunctionPrototype, args: List<Value>, target: Label): VoidCall {
+    override fun vcall(func: DirectFunctionPrototype, args: List<Value>, target: Label): VoidCall {
         return bb.vcall(func, args, target as Block)
     }
 
@@ -222,13 +222,9 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
             return builder
         }
 
-        fun create(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, isVararg: Boolean = false): FunctionDataBuilder {
+        fun create(name: String, returnType: Type, argumentTypes: List<PrimitiveType>, isVararg: Boolean = false): FunctionDataBuilder {
             val argumentValues = arrayListOf<ArgumentValue>()
             for ((idx, arg) in argumentTypes.withIndex()) {
-                if (arg !is PrimitiveType) { //TODO not coeer
-                    continue
-                }
-
                 argumentValues.add(ArgumentValue(idx, arg))
             }
 

@@ -1,12 +1,10 @@
 package ir.pass.analysis
 
-import common.forEachWith
 import ir.value.LocalValue
 import ir.types.Type
 import ir.module.Module
 import ir.instruction.*
 import ir.instruction.lir.*
-import ir.utils.CreationInfo
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.FunctionData
@@ -14,6 +12,7 @@ import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PreOrderFabric
+import ir.value.ArgumentValue
 import ir.value.BoolValue
 import ir.value.Value
 
@@ -27,7 +26,6 @@ class ValidateSSAErrorException(val functionData: FunctionData, override val mes
 class VerifySSA private constructor(private val functionData: FunctionData,
                                     private val prototypes: List<AnyFunctionPrototype>): IRInstructionVisitor<Unit>() {
     private val dominatorTree by lazy { functionData.analysis(DominatorTreeFabric) }
-    private val creation by lazy { CreationInfo.create(functionData) }
     private var bb = functionData.begin()
     private var exitBlocks = 0
     private val adjustStackFrame = arrayListOf<AdjustStackFrame>()
@@ -83,8 +81,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
             if (use !is LocalValue) {
                 return@operands
             }
+            if (use is ArgumentValue) {
+                return@operands
+            }
+            use as Instruction
 
-            val definedIn = creation[use].block
+            val definedIn = use.owner()
             val isDefDominatesUse = dominatorTree.dominates(definedIn, block)
             assert(isDefDominatesUse) { "Definition doesn't dominate to usage: value defined in '$definedIn', but used in '$block'" }
         }
@@ -386,9 +388,13 @@ class VerifySSA private constructor(private val functionData: FunctionData,
             if (use !is LocalValue) {
                 return@zip
             }
-            val actual = creation[use].block
+            if (use is ArgumentValue) {
+                return@zip
+            }
+            use as Instruction
+            val actual = use.owner()
             assert(dominatorTree.dominates(actual, incoming)) {
-                "${functionData.prototype.shortName()}: inconsistent phi instruction $phi: value defined in $incoming, used in $actual"
+                "${functionData.prototype.shortDescription()}: inconsistent phi instruction $phi: value defined in $incoming, used in $actual"
             }
         }
 

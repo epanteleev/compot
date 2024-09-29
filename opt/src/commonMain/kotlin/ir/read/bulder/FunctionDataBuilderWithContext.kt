@@ -212,20 +212,20 @@ class FunctionDataBuilderWithContext private constructor(
         return argumentValues
     }
 
-    fun tupleCall(name: LocalValueToken, func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage): TupleCall {
+    fun tupleCall(name: LocalValueToken, func: DirectFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage): TupleCall {
         val argumentValues = convertToValues(func.arguments(), args)
         val block          = getBlockOrCreate(target.labelName)
         return memorize(name, bb.tupleCall(func, argumentValues, block))
     }
 
-    fun call(name: LocalValueToken, func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): Value {
+    fun call(name: LocalValueToken, func: DirectFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): Value {
         require(func.returnType() !is VoidType)
         val argumentValues = convertToValues(func.arguments(), args)
         val block          = getBlockOrCreate(labelUsage.labelName)
         return memorize(name, bb.call(func, argumentValues, block))
     }
 
-    fun vcall(func: AnyFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage) {
+    fun vcall(func: DirectFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage) {
         require(func.returnType() is VoidType)
 
         val argumentValues = convertToValues(func.arguments(), args)

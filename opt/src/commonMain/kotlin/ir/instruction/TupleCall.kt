@@ -8,9 +8,10 @@ import ir.value.TupleValue
 import ir.module.block.Block
 import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.DirectFunctionPrototype
 
 
-class TupleCall private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>, target: Block):
+class TupleCall private constructor(id: Identity, owner: Block, private val func: DirectFunctionPrototype, args: Array<Value>, target: Block):
     TerminateTupleInstruction(id, owner, func.returnType() as TupleType, args, arrayOf(target)), TupleValue,
     Callable {
 
@@ -18,7 +19,7 @@ class TupleCall private constructor(id: Identity, owner: Block, private val func
         return arrayWrapperOf(operands)
     }
 
-    override fun prototype(): AnyFunctionPrototype {
+    override fun prototype(): DirectFunctionPrototype {
         return func
     }
 
@@ -48,12 +49,12 @@ class TupleCall private constructor(id: Identity, owner: Block, private val func
     companion object {
         const val NAME = "call"
 
-        fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>, target: Block): TupleCall {
+        fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, args: List<Value>, target: Block): TupleCall {
             assertion(func.returnType() is TupleType) { "Must be non ${Type.Void}" }
 
 
             require(Callable.isAppropriateTypes(func, args)) {
-                args.joinToString(prefix = "inconsistent types in '$id', prototype='${func.shortName()}', ")
+                args.joinToString(prefix = "inconsistent types in '$id', prototype='${func.shortDescription()}', ")
                 { "$it: ${it.type()}" }
             }
             val argsArray = args.toTypedArray()

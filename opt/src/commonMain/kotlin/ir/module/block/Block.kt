@@ -8,6 +8,7 @@ import ir.instruction.*
 import ir.instruction.lir.*
 import common.LeakedLinkedList
 import ir.module.AnyFunctionPrototype
+import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.ModificationCounter
 
@@ -350,19 +351,19 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@df withOutput { Store.make(it,this, ptr, value) }
     }
 
-    override fun call(func: AnyFunctionPrototype, args: List<Value>, target: Label): Call = mc.dfANDcf {
+    override fun call(func: DirectFunctionPrototype, args: List<Value>, target: Label): Call = mc.dfANDcf {
         require(func.returnType() != Type.Void)
         return@dfANDcf addTerminate { Call.make(it, this, func, args, target as Block) }
     }
 
-    override fun tupleCall(func: AnyFunctionPrototype, args: List<Value>, target: Label): TupleCall = mc.dfANDcf {
+    override fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, target: Label): TupleCall = mc.dfANDcf {
         require(func.returnType() is TupleType) {
             "should be tuple type, but ty=${func.returnType()}"
         }
         return@dfANDcf addTerminate { TupleCall.make(it, this, func, args, target as Block) }
     }
 
-    override fun vcall(func: AnyFunctionPrototype, args: List<Value>, target: Label): VoidCall = mc.dfANDcf {
+    override fun vcall(func: DirectFunctionPrototype, args: List<Value>, target: Label): VoidCall = mc.dfANDcf {
         require(func.returnType() == Type.Void)
         return@dfANDcf addTerminate { VoidCall.make(it, this, func, args, target as Block) }
     }

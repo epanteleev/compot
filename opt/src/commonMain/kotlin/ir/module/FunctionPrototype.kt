@@ -5,15 +5,15 @@ import ir.global.FunctionSymbol
 import ir.types.NonTrivialType
 
 
-abstract class AnyFunctionPrototype(val name: String,
-                                    private val returnType: Type,
-                                    protected val arguments: List<NonTrivialType>, val isVararg: Boolean) {
-
+sealed class AnyFunctionPrototype(protected val returnType: Type, protected val arguments: List<NonTrivialType>, val isVararg: Boolean) {
     fun arguments(): List<NonTrivialType> = arguments
-
     fun returnType(): Type = returnType
+    abstract fun shortDescription(): String
+}
 
-    fun shortName(): String {
+sealed class DirectFunctionPrototype(val name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false):
+    AnyFunctionPrototype(returnType, arguments, isVararg), FunctionSymbol {
+    override fun shortDescription(): String {
         val builder = StringBuilder()
         builder.append("$returnType @$name(")
         arguments.joinTo(builder)
@@ -21,23 +21,20 @@ abstract class AnyFunctionPrototype(val name: String,
         return builder.toString()
     }
 
-    override fun hashCode(): Int {
+    final override fun hashCode(): Int {
         return name.hashCode() + arguments.hashCode() + returnType.hashCode()
     }
 
-    override fun equals(other: Any?): Boolean {
+    final override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is AnyFunctionPrototype) return false
+        if (other !is DirectFunctionPrototype) return false
 
         if (name != other.name) return false
         if (returnType != other.returnType) return false
 
         return true
     }
-}
 
-abstract class DirectFunctionPrototype(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false):
-    AnyFunctionPrototype(name, returnType, arguments, isVararg), FunctionSymbol {
     final override fun dump(): String = toString()
     final override fun type(): NonTrivialType = Type.Ptr
     final override fun name(): String = name
@@ -46,18 +43,33 @@ abstract class DirectFunctionPrototype(name: String, returnType: Type, arguments
 class FunctionPrototype(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false):
    DirectFunctionPrototype(name, returnType, arguments, isVararg), FunctionSymbol {
     override fun toString(): String {
-        return "define ${shortName()}"
+        return "define ${shortDescription()}"
     }
 }
 
 class IndirectFunctionPrototype(returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean):
-    AnyFunctionPrototype("<indirect>", returnType, arguments, isVararg) {
+    AnyFunctionPrototype(returnType, arguments, isVararg) {
+
+    override fun shortDescription(): String {
+        val builder = StringBuilder()
+        builder.append("$returnType @<indirect>(")
+        arguments.joinTo(builder)
+        builder.append(")")
+        return builder.toString()
+    }
+
     override fun toString(): String {
-        return "define ${shortName()}"
+        return "define ${shortDescription()}"
     }
 
     override fun equals(other: Any?): Boolean {
-        return this === other //TODO???
+        if (this === other) return true
+        if (other !is IndirectFunctionPrototype) return false
+
+        if (returnType() != other.returnType()) return false
+        if (arguments() != other.arguments()) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
@@ -68,6 +80,6 @@ class IndirectFunctionPrototype(returnType: Type, arguments: List<NonTrivialType
 class ExternFunction internal constructor(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean):
     DirectFunctionPrototype(name, returnType, arguments, isVararg), FunctionSymbol {
     override fun toString(): String {
-        return "extern ${shortName()}"
+        return "extern ${shortDescription()}"
     }
 }

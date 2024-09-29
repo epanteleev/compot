@@ -7,11 +7,12 @@ import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
 import ir.types.AggregateType
 import ir.types.NonTrivialType
+import ir.types.PrimitiveType
 import ir.types.StructType
 
 
 object CallConvention {
-    fun coerceArgumentTypes(cType: AggregateType): List<NonTrivialType>? = when (cType.sizeOf()) {
+    fun coerceArgumentTypes(cType: AggregateType): List<PrimitiveType>? = when (cType.sizeOf()) {
         BYTE_SIZE  -> arrayListOf(Type.I8)
         HWORD_SIZE -> arrayListOf(Type.I16)
         WORD_SIZE  -> {

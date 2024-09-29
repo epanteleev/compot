@@ -6,6 +6,7 @@ import asm.x64.GPRegister.rax
 import common.assertion
 import ir.Definitions.BYTE_SIZE
 import ir.instruction.*
+import ir.module.DirectFunctionPrototype
 import ir.types.*
 
 
@@ -140,9 +141,9 @@ class MacroAssembler(name: String, id: Int): Assembler(name, id) {
         }
     }
 
-    fun callFunction(call: Callable) {
+    fun callFunction(call: Callable, func: DirectFunctionPrototype) {
         emitFPVarargsCount(call)
-        call(call.prototype().name)
+        call(func.name)
     }
 
     private fun emitFPVarargsCount(call: Callable) {

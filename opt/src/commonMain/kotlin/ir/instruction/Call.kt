@@ -2,19 +2,17 @@ package ir.instruction
 
 import common.arrayWrapperOf
 import common.assertion
-import common.forEachWith
 import ir.value.Value
 import ir.types.Type
 import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.DirectFunctionPrototype
 import ir.module.block.Block
-import ir.types.NonTrivialType
 import ir.types.PrimitiveType
 import ir.types.TupleType
-import kotlin.jvm.JvmInline
 
 
-class Call private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>, target: Block):
+class Call private constructor(id: Identity, owner: Block, private val func: DirectFunctionPrototype, args: Array<Value>, target: Block):
     TerminateValueInstruction(id, owner, func.returnType(), args, arrayOf(target)),
     Callable {
 
@@ -30,7 +28,7 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
         return arrayWrapperOf(operands)
     }
 
-    override fun prototype(): AnyFunctionPrototype {
+    override fun prototype(): DirectFunctionPrototype {
         return func
     }
 
@@ -69,12 +67,12 @@ class Call private constructor(id: Identity, owner: Block, private val func: Any
     companion object {
         const val NAME = "call"
 
-        fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>, target: Block): Call {
+        fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, args: List<Value>, target: Block): Call {
             assertion(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
 
 
             require(Callable.isAppropriateTypes(func, args)) {
-                args.joinToString(prefix = "inconsistent types in '$id', prototype='${func.shortName()}', ")
+                args.joinToString(prefix = "inconsistent types in '$id', prototype='${func.shortDescription()}', ")
                     { "$it: ${it.type()}" }
             }
 

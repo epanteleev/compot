@@ -256,8 +256,8 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return InitializerListValue(lValueType, elements)
     }
 
-    protected fun argumentTypes(ctypes: List<TypeDesc>, retTypeDesc: TypeDesc): List<NonTrivialType> {
-        val types = arrayListOf<NonTrivialType>()
+    protected fun argumentTypes(ctypes: List<TypeDesc>, retTypeDesc: TypeDesc): List<PrimitiveType> {
+        val types = arrayListOf<PrimitiveType>()
         if (retTypeDesc.baseType() is CAggregateType && retTypeDesc.baseType().size() > QWORD_SIZE * 2) {
             types.add(Type.Ptr)
         }

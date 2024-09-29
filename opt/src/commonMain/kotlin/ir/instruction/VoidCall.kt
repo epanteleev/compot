@@ -7,9 +7,10 @@ import ir.types.Type
 import ir.module.block.Block
 import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.DirectFunctionPrototype
 
 
-class VoidCall private constructor(id: Identity, owner: Block, private val func: AnyFunctionPrototype, args: Array<Value>, target: Block):
+class VoidCall private constructor(id: Identity, owner: Block, private val func: DirectFunctionPrototype, args: Array<Value>, target: Block):
     TerminateInstruction(id, owner, args, arrayOf(target)), Callable {
     init {
         assertion(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
@@ -19,7 +20,7 @@ class VoidCall private constructor(id: Identity, owner: Block, private val func:
         return arrayWrapperOf(operands)
     }
 
-    override fun prototype(): AnyFunctionPrototype {
+    override fun prototype(): DirectFunctionPrototype {
         return func
     }
 
@@ -45,9 +46,9 @@ class VoidCall private constructor(id: Identity, owner: Block, private val func:
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, func: AnyFunctionPrototype, args: List<Value>, target: Block): VoidCall {
+        fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, args: List<Value>, target: Block): VoidCall {
             require(Callable.isAppropriateTypes(func, args)) {
-                args.joinToString(prefix = "inconsistent types, prototype='${func.shortName()}', ")
+                args.joinToString(prefix = "inconsistent types, prototype='${func.shortDescription()}', ")
                 { "$it: ${it.type()}" }
             }
             val argsArray = args.toTypedArray()

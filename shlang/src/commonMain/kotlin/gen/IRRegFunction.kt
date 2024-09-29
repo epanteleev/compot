@@ -318,7 +318,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun convertArg(function: AnyFunctionPrototype, argIdx: Int, expr: Value): Value {
         if (argIdx >= function.arguments().size) {
             if (!function.isVararg) {
-                throw IRCodeGenError("Too many arguments in function call '${function.shortName()}'")
+                throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'")
             }
 
             return when (expr.type()) {
