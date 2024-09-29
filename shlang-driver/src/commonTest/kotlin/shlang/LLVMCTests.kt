@@ -137,7 +137,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testArrayResolution() {
         val result = runCTest("shlang/llvm-c-tests/2002-10-09-ArrayResolution", listOf(), options())
         assertEquals("0\n", result.output)

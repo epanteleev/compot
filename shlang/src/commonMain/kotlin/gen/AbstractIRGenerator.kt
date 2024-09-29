@@ -39,13 +39,15 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
             val g = mb.addConstant(stringLiteral)
             PointerLiteral(g)
         }
-        else -> {
-            val result = constEvalExpression0(expr)
-            if (result != null) {
-                Constant.of(lValueType, result)
-            } else {
-                null
-            }
+        else -> defaultContEval(lValueType, expr)
+    }
+
+    private fun defaultContEval(lValueType: NonTrivialType, expr: Expression): Constant? {
+        val result = constEvalExpression0(expr)
+        return if (result != null) {
+            Constant.of(lValueType, result)
+        } else {
+            null
         }
     }
 
@@ -206,6 +208,9 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 val global = mb.addGlobal(name, irType, constant)
                 varStack[name] = global
                 return global
+            }
+            is CUncompletedArrayType -> {
+                return Value.UNDEF //TODO
             }
             else -> throw IRCodeGenError("Function or struct expected, but was '$type'")
         }

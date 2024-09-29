@@ -57,15 +57,15 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
             BinaryOpType.MOD      -> left % right
             BinaryOpType.LT       -> if (left < right) 1 else 0
             BinaryOpType.GT       -> if (left > right) 1 else 0
-            BinaryOpType.LE      -> if (left <= right) 1 else 0
-            BinaryOpType.GE      -> if (left >= right) 1 else 0
+            BinaryOpType.LE       -> if (left <= right) 1 else 0
+            BinaryOpType.GE       -> if (left >= right) 1 else 0
             BinaryOpType.EQ       -> if (left == right) 1 else 0
-            BinaryOpType.NE      -> if (left != right) 1 else 0
+            BinaryOpType.NE       -> if (left != right) 1 else 0
             BinaryOpType.BIT_AND  -> left and right
             BinaryOpType.BIT_OR   -> left or right
             BinaryOpType.BIT_XOR  -> left xor right
-            BinaryOpType.SHL   -> left shl right
-            BinaryOpType.SHR   -> left shr right
+            BinaryOpType.SHL      -> left shl right
+            BinaryOpType.SHR      -> left shr right
             else -> throw ConstEvalException("Cannot evaluate binary operator ${binop.opType}")
         }
     }
