@@ -173,7 +173,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testSwitch() {
         val result = runCTest("shlang/llvm-c-tests/2003-04-22-Switch", listOf(), options())
         assertEquals("A\nB\nA\nA\nD\nD\nD\nB\nC\nA\nB\n", result.output)

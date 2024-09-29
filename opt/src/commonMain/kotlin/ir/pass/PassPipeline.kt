@@ -29,7 +29,7 @@ class PassPipeline private constructor(private val passFabrics: List<TransformPa
 
     companion object {
         fun base(ctx: CompileContext): PassPipeline = create(arrayListOf(SwitchReplacementFabric, CSSAConstructionFabric, SSADestructionFabric), ctx)
-        fun opt(ctx: CompileContext): PassPipeline = create(arrayListOf(Mem2RegFabric, SwitchReplacementFabric, CSSAConstructionFabric, SSADestructionFabric), ctx)
+        fun opt(ctx: CompileContext): PassPipeline = create(arrayListOf(SwitchReplacementFabric, Mem2RegFabric, CSSAConstructionFabric, SSADestructionFabric), ctx)
 
         fun create(passFabrics: List<TransformPassFabric>, ctx: CompileContext): PassPipeline {
             return PassPipeline(passFabrics, ctx)

@@ -50,6 +50,9 @@ private class SwitchReplacementImpl(val cfg: BasicBlocks) {
                 return@forEachWith
             }
 
+            // TODO: Implement phi node handling
+            target.phis { throw IllegalStateException("Switch target has phi nodes: target=$target") }
+
             val newBB = cfg.createBlock()
             if (switch.owner() == current) {
                 val inst = current.insertBefore(current.last()) {

@@ -1,10 +1,6 @@
 package shlang
 
 import common.CommonCTest
-import okio.FileSystem
-import okio.Path
-import okio.Path.Companion.toPath
-import okio.SYSTEM
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
