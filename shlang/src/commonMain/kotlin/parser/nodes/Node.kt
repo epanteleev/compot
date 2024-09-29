@@ -75,7 +75,7 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
 
                 is ParameterTypeList -> {
                     val abstractType = decl.resolveType(currentType, typeHolder)
-                    currentType = TypeDesc.from(CBaseFunctionType(name(), abstractType.baseType() as AbstractCFunction), abstractType.qualifiers())
+                    currentType = TypeDesc.from(CFunctionType(name(), abstractType.baseType() as AbstractCFunction), abstractType.qualifiers())
                 }
 
                 else -> throw IllegalStateException("Unknown declarator $decl")

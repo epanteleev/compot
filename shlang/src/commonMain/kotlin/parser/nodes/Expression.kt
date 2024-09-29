@@ -232,20 +232,35 @@ class FuncPointerCall(val primary: Expression, args: List<Expression>) : AnyFunc
         else -> throw TypeResolutionException("Function call of '${primary}' with non-function type")
     }
 
-    fun resolveFunctionType(typeHolder: TypeHolder): CFunPointerT = memoize {
+    private fun resolveFunctionType(typeHolder: TypeHolder): CPointer = memoize {
         resolveParams(typeHolder)
         val functionType = primary.resolveType(typeHolder)
         if (functionType is AbstractCFunction) {
-            return@memoize CFunPointerT(functionType, setOf())
+            return@memoize CPointer(functionType, setOf())
         }
-        if (functionType !is CFunPointerT) {
+        if (functionType !is CPointer) {
             throw TypeResolutionException("Function call with non-function type: $functionType")
         }
         return functionType
     }
 
+    fun functionType(typeHolder: TypeHolder): AnyFunctionType {
+        val ptr = resolveFunctionType(typeHolder)
+        val deref = ptr.dereference()
+        if (deref !is AnyFunctionType) {
+            throw TypeResolutionException("Function call with non-function type: $deref")
+        }
+
+        return deref
+    }
+
     override fun resolveType(typeHolder: TypeHolder): CType {
-        return resolveFunctionType(typeHolder).functionType.retType.baseType()
+        val ptr = resolveFunctionType(typeHolder)
+        return when (val deref = ptr.dereference()) {
+            is AbstractCFunction -> deref.retType.baseType()
+            is CFunctionType -> deref.retType().baseType()
+            else -> throw TypeResolutionException("Function call with non-function type: $deref")
+        }
     }
 }
 
@@ -260,10 +275,10 @@ class FunctionCall(val primary: VarNode, args: List<Expression>) : AnyFunctionCa
         return primary.nameIdent()
     }
 
-    private fun resolveFunctionType(typeHolder: TypeHolder): CBaseFunctionType = memoize {
+    private fun resolveFunctionType(typeHolder: TypeHolder): CFunctionType = memoize {
         resolveParams(typeHolder)
         val functionType = typeHolder.getFunctionType(name()).type.baseType()
-        if (functionType !is CBaseFunctionType) {
+        if (functionType !is CFunctionType) {
             throw TypeResolutionException("Function call of '${name()}' with non-function type")
         }
         return functionType
@@ -428,7 +443,6 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
         val resolvedType = when (opType) {
             PrefixUnaryOpType.DEREF -> {
                 when (primaryType) {
-                    is CFunPointerT          -> primaryType
                     is CPointer              -> primaryType.dereference()
                     is CArrayType            -> primaryType.type.baseType()
                     is CUncompletedArrayType -> primaryType.elementType.baseType()

@@ -6,8 +6,8 @@ import gen.VarStack
 class TypeHolder private constructor(): Scope {
     private val valueMap = VarStack<VarDescriptor>()
     val enumTypeMap = VarStack<CPrimitive>()
-    val structTypeMap = VarStack<AggregateBaseType>()
-    val unionTypeMap = VarStack<AggregateBaseType>()
+    val structTypeMap = VarStack<CAggregateType>()
+    val unionTypeMap = VarStack<CAggregateType>()
 
     private val functions = hashMapOf<String, VarDescriptor>()
     private val typedefs = VarStack<TypeDesc>()

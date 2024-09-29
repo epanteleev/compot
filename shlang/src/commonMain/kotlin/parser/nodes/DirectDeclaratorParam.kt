@@ -107,7 +107,7 @@ data class FunctionPointerDeclarator(val declarator: Declarator): DirectDeclarat
     override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         val t = declarator.directDeclarator.resolveType(baseType, typeHolder)
         if (t.baseType() is AbstractCFunction) {
-            return TypeDesc.from(CFunPointerT(t.baseType() as AbstractCFunction, setOf()), listOf())
+            return TypeDesc.from(CPointer(t.baseType() as AbstractCFunction, setOf()), listOf())
         }
 
         return t

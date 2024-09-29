@@ -86,7 +86,7 @@ object TypeConverter {
         is CUnionType -> convertUnionType(typeHolder, type)
         is AnyCPointer -> Type.Ptr
         is CEnumType -> Type.I32
-        is CBaseFunctionType, is CUncompletedArrayType, is AbstractCFunction -> Type.Ptr
+        is CFunctionType, is CUncompletedArrayType, is AbstractCFunction -> Type.Ptr
         else -> throw IRCodeGenError("Unknown type, type=$type")
     }
 

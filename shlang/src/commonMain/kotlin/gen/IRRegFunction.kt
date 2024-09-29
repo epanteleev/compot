@@ -7,7 +7,6 @@ import parser.nodes.*
 import common.assertion
 import gen.TypeConverter.coerceArguments
 import ir.instruction.*
-import ir.instruction.Alloc
 import ir.module.block.Label
 import gen.TypeConverter.convertToType
 import gen.TypeConverter.toIRLVType
@@ -112,7 +111,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitSingleInitializer(singleInitializer: SingleInitializer): Value {
         val lvalueAdr = initializerContext.peekValue()
-        val type = initializerContext.peekType().baseType() as AggregateBaseType
+        val type = initializerContext.peekType().baseType() as CAggregateType
         val idx = initializerContext.peekIndex()
         when (val expr = singleInitializer.expr) {
             is InitializerList -> when (type) {
@@ -244,7 +243,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val memberType = baseStructType.fields()[member].second.baseType()
-        return if (memberType !is AggregateBaseType) {
+        return if (memberType !is CAggregateType) {
             val memberIRType = mb.toIRType<PrimitiveType>(typeHolder, memberType)
             ir.load(memberIRType, gep)
         } else {
@@ -268,7 +267,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return gep
         }
         val memberType = structType.fields()[member].second.baseType()
-        return if (memberType !is AggregateBaseType) {
+        return if (memberType !is CAggregateType) {
             val memberIRType = mb.toIRLVType<PrimitiveType>(typeHolder, memberType)
             ir.load(memberIRType, gep)
         } else {
@@ -309,7 +308,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return adr
         }
 
-        return if (arrayType is AggregateBaseType) {
+        return if (arrayType is CAggregateType && arrayType !is AnyFunctionType) {
             adr
         } else {
             ir.load(elementType as PrimitiveType, adr)
@@ -340,7 +339,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
-                is CPrimitive, is CBaseFunctionType, is CUncompletedArrayType -> {
+                is CPrimitive, is CFunctionType, is CUncompletedArrayType -> {
                     val convertedArg = convertArg(function, idx, expr)
                     convertedArgs.add(convertedArg)
                 }
@@ -372,16 +371,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitFunPointerCall(funcPointerCall: FuncPointerCall): Value {
-        val functionType = funcPointerCall.resolveFunctionType(typeHolder)
+        val functionType = funcPointerCall.functionType(typeHolder)
+
         val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true) //TODO bug
 
-        val irRetType = mb.toIRType<Type>(typeHolder, functionType.functionType.retType.baseType())
-        val argTypes = functionType.functionType.argsTypes.map { mb.toIRType<NonTrivialType>(typeHolder, it.baseType()) }
-        val prototype = IndirectFunctionPrototype(irRetType, argTypes, functionType.functionType.variadic)
+        val irRetType = mb.toIRType<Type>(typeHolder, functionType.retType().baseType())
+        val argTypes = functionType.args().map { mb.toIRType<NonTrivialType>(typeHolder, it.baseType()) }
+        val prototype = IndirectFunctionPrototype(irRetType, argTypes, functionType.variadic())
         val convertedArgs = convertFunctionArgs(prototype, funcPointerCall.args)
 
         val cont = ir.createLabel()
-        val ret = when (functionType.functionType.retType.baseType()) {
+        val ret = when (functionType.retType().baseType()) {
             VOID -> {
                 ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 Value.UNDEF
@@ -391,9 +391,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is PrimitiveType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
                 //is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
                 is StructType    -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
-                else -> throw IRCodeGenError("Unknown type ${functionType.functionType.retType}")
+                else -> throw IRCodeGenError("Unknown type ${functionType.retType()}")
             }
-            else -> throw IRCodeGenError("Unknown type ${functionType.functionType.retType}")
+            else -> throw IRCodeGenError("Unknown type ${functionType.retType()}")
         }
         ir.switchLabel(cont)
         return ret
@@ -619,7 +619,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val right = visitExpression(binop.right, true)
                 val leftType = binop.left.resolveType(typeHolder)
 
-                if (leftType is AggregateBaseType) {
+                if (leftType is CAggregateType) {
                     val left = visitExpression(binop.left, true)
                     if (leftType.size() > QWORD_SIZE * 2) {
                         ir.memcpy(left, right, U64Value(leftType.size().toLong()))
@@ -848,7 +848,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun getVariableAddress(varNode: VarNode, rvalueAddr: Value, isRvalue: Boolean): Value {
         val type = varNode.resolveType(typeHolder)
 
-        if (type is AggregateBaseType || type is CFunPointerT) {
+        if (type is CAggregateType) {
+            return rvalueAddr
+        }
+        if (type is CPointer && type.dereference() is AnyFunctionType) {
             return rvalueAddr
         }
         if (!isRvalue) {
@@ -906,9 +909,20 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitParameter(param: String, cType: CType, args: List<ArgumentValue>) = when (cType) {
-        is CFunPointerT, is AnyCArrayType -> {
+        is AnyCArrayType -> {
             assertion(args.size == 1) { "invariant" }
             varStack[param] = args[0]
+        }
+        is CPointer -> {
+            assertion(args.size == 1) { "invariant" }
+            if (cType.dereference() is AnyFunctionType) {
+                varStack[param] = args[0]
+            } else {
+                val irType    = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
+                val rvalueAdr = ir.alloc(irType)
+                ir.store(rvalueAdr, ir.convertToType(args[0], irType))
+                varStack[param] = rvalueAdr
+            }
         }
         is CPrimitive -> {
             assertion(args.size == 1) { "invariant" }
@@ -949,7 +963,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.switchLabel(exitBlock)
                 emitReturn(retCType.baseType(), returnValueAdr!!)
             }
-            is AggregateBaseType -> {
+            is CAggregateType -> {
                 if (cType.size() > QWORD_SIZE * 2) {
                     returnValueAdr = args[0]
                     ir.switchLabel(exitBlock)
@@ -992,7 +1006,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(functionNode: FunctionNode): Value = scoped {
         val parameters = functionNode.functionDeclarator().params()
-        val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CBaseFunctionType>()
+        val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
         val retType    = fnType.retType()
         val irRetType  = irReturnType(retType)
 
@@ -1316,7 +1330,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val varName = declarator.name()
         val irType = when (val cType = type.type.baseType()) {
             is CPrimitive        -> mb.toIRLVType<PrimitiveType>(typeHolder, cType)
-            is AggregateBaseType -> mb.toIRType<NonTrivialType>(typeHolder, cType)
+            is CAggregateType -> mb.toIRType<NonTrivialType>(typeHolder, cType)
             else -> throw IRCodeGenError("Unknown type, type=$cType")
         }
 
@@ -1368,7 +1382,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return generateGlobalAssignmentDeclarator(initDeclarator)
         }
         val type = varDesc.type.baseType()
-        if (type !is AggregateBaseType) {
+        if (type !is CAggregateType) {
             val rvalue = visitExpression(initDeclarator.rvalue, true)
             val commonType = mb.toIRLVType<PrimitiveType>(typeHolder, type)
             val convertedRvalue = ir.convertToType(rvalue, commonType)

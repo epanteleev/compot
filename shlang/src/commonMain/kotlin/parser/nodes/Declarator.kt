@@ -48,7 +48,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
 
         val varDesc = VarDescriptor(type, declspecType.storageClass)
         val baseType = type.baseType()
-        if (baseType is CBaseFunctionType) {
+        if (baseType is CFunctionType) {
             // declare extern function or function without body
             typeHolder.addFunctionType(name(), varDesc)
         } else {
@@ -154,12 +154,12 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
         assertion(!declspec.isTypedef) { "typedef is not supported here" }
 
         val baseType = type.baseType()
-        assertion(baseType is CBaseFunctionType) { "function type expected" }
+        assertion(baseType is CFunctionType) { "function type expected" }
         return@memoizeType typeHolder.addFunctionType(name(), VarDescriptor(type, declspecType.storageClass))
     }
 
-    fun resolveType(typeHolder: TypeHolder): CBaseFunctionType {
-        return declareType(specifier, typeHolder).type.baseType() as CBaseFunctionType
+    fun resolveType(typeHolder: TypeHolder): CFunctionType {
+        return declareType(specifier, typeHolder).type.baseType() as CFunctionType
     }
 
     override fun <T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)

@@ -164,7 +164,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         val name = declarator.name()
         val varDesc = declarator.cType()
         when (val type = varDesc.type.baseType()) {
-            is CBaseFunctionType -> {
+            is CFunctionType -> {
                 val abstrType = type.functionType
                 val argTypes  = argumentTypes(abstrType.argsTypes, abstrType.retType)
                 val returnType = irReturnType(abstrType.retType)
@@ -258,7 +258,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     protected fun argumentTypes(ctypes: List<TypeDesc>, retTypeDesc: TypeDesc): List<NonTrivialType> {
         val types = arrayListOf<NonTrivialType>()
-        if (retTypeDesc.baseType() is AggregateBaseType && retTypeDesc.baseType().size() > QWORD_SIZE * 2) {
+        if (retTypeDesc.baseType() is CAggregateType && retTypeDesc.baseType().size() > QWORD_SIZE * 2) {
             types.add(Type.Ptr)
         }
         for (type in ctypes) {

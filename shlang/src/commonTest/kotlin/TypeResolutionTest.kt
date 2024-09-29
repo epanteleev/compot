@@ -164,8 +164,8 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         val fnType = expr.resolveType(typeResolver)
 
-        assertEquals("int add(int(*)(int, int), int)", fnType.toString())
-        assertEquals("int(*)(int, int)", typeResolver["a"].toString())
+        assertEquals("int add(int(int, int)*, int)", fnType.toString())
+        assertEquals("int(int, int)*", typeResolver["a"].toString())
         assertEquals(INT, typeResolver["b"].type.baseType())
     }
 
@@ -188,7 +188,7 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
-        assertEquals("int(*)(int, int)", typeResolver["add"].toString())
+        assertEquals("int(int, int)*", typeResolver["add"].toString())
     }
 
     @Test
@@ -199,7 +199,7 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
-        assertEquals("int(*)(int, int)", typeResolver["add"].toString())
+        assertEquals("int(int, int)*", typeResolver["add"].toString())
     }
 
     @Test
@@ -210,7 +210,7 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
 
-        assertEquals("int(*)()", typeResolver["add"].toString())
+        assertEquals("int()*", typeResolver["add"].toString())
         assertEquals("int", typeResolver["val"].toString())
         assertEquals("int*", typeResolver["v"].toString())
     }
