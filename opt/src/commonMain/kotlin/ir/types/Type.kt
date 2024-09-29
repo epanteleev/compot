@@ -12,7 +12,7 @@ data class TypeErrorException(override val message: String) : Exception(message)
 
 sealed interface Type {
     companion object {
-        val U1  = BooleanType
+        val U1  = FlagType
 
         val U8  = UnsignedIntType(BYTE_SIZE)
         val U16 = UnsignedIntType(HWORD_SIZE)
@@ -30,7 +30,7 @@ sealed interface Type {
         val Ptr = PointerType
 
         val Void  = VoidType
-        val UNDEF = BottomType
+        val UNDEF = UndefType
     }
 }
 

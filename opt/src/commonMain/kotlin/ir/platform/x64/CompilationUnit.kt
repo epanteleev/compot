@@ -87,6 +87,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             is StringLiteralConstant -> makeStringLiteralConstant(globalValue, type, constant)
             else -> throw IllegalArgumentException("unsupported constant type: $constant")
         }
+        is FlagType -> makePrimitiveConstant(globalValue)
         is PrimitiveType -> makePrimitiveConstant(globalValue)
     }
 

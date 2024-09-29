@@ -17,7 +17,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
         is Generate   -> frame.takeSlot(value)
         is LocalValue -> when (val tp = value.type()) {
             is FloatingPointType -> xmmRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)
-            is PrimitiveType     -> gpRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)
+            is IntegerType, is PointerType -> gpRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)
             else -> throw IllegalArgumentException("not allowed for this type=$tp")
         }
         else -> throw IllegalArgumentException("not allowed for this value=$value")
@@ -33,13 +33,6 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
         is GPRegister   -> gpRegisters.returnRegister(operand)
         is XmmRegister  -> xmmRegisters.returnRegister(operand)
         is ArgumentSlot -> Unit
-        is Address2     -> {
-            if (operand.base != rsp) {
-                frame.returnSlot(operand, size)
-            } else {
-                Unit
-            }
-        }
         is Address      -> frame.returnSlot(operand, size)
         else            -> throw RuntimeException("unknown operand operand=$operand, size=$size")
     }

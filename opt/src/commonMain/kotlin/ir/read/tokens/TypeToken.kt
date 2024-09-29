@@ -18,12 +18,12 @@ abstract class TypeToken(override val line: Int, override val pos: Int) : Token(
     }
 }
 
-abstract class PrimitiveTypeToken(protected open val type: PrimitiveType, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+abstract class PrimitiveTypeToken(protected open val type: NonTrivialType, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
     override fun type(resolver: TypeResolver): NonTrivialType {
         return type
     }
 
-    abstract fun type(): PrimitiveType
+    abstract fun type(): NonTrivialType
 
     inline fun<reified T: Type> asType(): T {
         val ty = type()
@@ -46,7 +46,7 @@ data class PointerTypeToken(override val line: Int, override val pos: Int)
 
 data class BooleanTypeToken(override val line: Int, override val pos: Int)
     : PrimitiveTypeToken(Type.U1, line, pos)  {
-    override fun type(): BooleanType = Type.U1
+    override fun type(): FlagType = Type.U1
 }
 
 interface ArithmeticTypeToken: AnyToken {

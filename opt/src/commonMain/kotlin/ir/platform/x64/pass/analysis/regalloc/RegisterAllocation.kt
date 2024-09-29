@@ -62,14 +62,12 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
         return SavedContext(registers, xmmRegisters, frameSize(registers, xmmRegisters))
     }
 
-    fun operand(value: Value): Operand = when (value) {
-        is LocalValue -> {
-            val operand = registerMap[value]
-            assertion(operand != null) {
-                "cannot find operand for $value"
-            }
-            operand as Operand
-        }
+    fun operand(value: Value): Operand {
+        return operandOrNull(value) ?: throw IllegalArgumentException("cannot find operand for $value")
+    }
+
+    fun operandOrNull(value: Value): Operand? = when (value) {
+        is LocalValue -> registerMap[value]
         is U8Value -> Imm32.of(value.u8.toLong())
         is I8Value -> Imm32.of(value.i8.toLong())
         is U16Value -> Imm32.of(value.u16.toLong())
@@ -89,7 +87,7 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
             println("Warning: undefined behaviour\n") //TODO: remove this
             GPRegister.rax
         }
-        else -> throw RuntimeException("found '$value': '${value.type()}'")
+        else -> null
     }
 
     override fun toString(): String {

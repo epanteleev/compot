@@ -303,7 +303,7 @@ class FunctionDataBuilderWithContext private constructor(
 
     fun bitcast(name: LocalValueToken, operandToken: AnyValueToken, operandType: PrimitiveTypeToken, resultType: PrimitiveTypeToken): Bitcast {
         val value = getValue(operandToken, operandType.type())
-        return memorize(name, bb.bitcast(value, resultType.type()))
+        return memorize(name, bb.bitcast(value, resultType.asType()))
     }
 
     fun zext(name: LocalValueToken, operandToken: AnyValueToken, operandType: UnsignedIntegerTypeToken, resultType: UnsignedIntegerTypeToken): ZeroExtend {

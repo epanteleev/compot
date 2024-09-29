@@ -1,11 +1,11 @@
 package ir.types
 
-import ir.Definitions.BYTE_SIZE
+object UndefType : TrivialType, NonTrivialType, PrimitiveType {
+    override fun sizeOf(): Int {
+        return 0
+    }
 
-
-object BooleanType : PrimitiveType {
-    override fun toString(): String = "u1"
-    override fun sizeOf(): Int = BYTE_SIZE
+    override fun toString(): String = "undef"
 
     override fun hashCode(): Int {
         return this::class.hashCode()

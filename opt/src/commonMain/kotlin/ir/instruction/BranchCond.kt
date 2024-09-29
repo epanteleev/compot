@@ -52,7 +52,7 @@ class BranchCond private constructor(id: Identity, owner: Block, value: Value, o
         }
 
         private fun isAppropriateType(valueType: Type): Boolean {
-            return valueType is BooleanType
+            return valueType is FlagType
         }
 
         fun typeCheck(branchCond: BranchCond): Boolean {

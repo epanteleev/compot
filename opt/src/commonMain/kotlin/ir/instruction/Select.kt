@@ -58,7 +58,7 @@ class Select private constructor(id: Identity, owner: Block, ty: IntegerType, co
         }
 
         private fun isAppropriateType(ty: IntegerType, condType: Type, onTrueType: Type, onFalseType: Type): Boolean {
-            if (condType !is BooleanType) {
+            if (condType !is FlagType) {
                 return false
             }
 

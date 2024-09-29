@@ -300,7 +300,7 @@ object UndefinedValue: Constant {
 
     override fun data(): String = toString()
 
-    override fun type(): BottomType {
+    override fun type(): UndefType {
         return Type.UNDEF
     }
 

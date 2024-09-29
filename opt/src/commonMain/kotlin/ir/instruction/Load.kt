@@ -42,7 +42,7 @@ class Load private constructor(id: Identity, owner: Block, loadedType: Primitive
         }
 
         private fun isAppropriateTypes(tp: Type, loadedType: PrimitiveType): Boolean {
-            return tp is PointerType && loadedType !is BooleanType
+            return tp is PointerType && loadedType !is FlagType
         }
 
         fun typeCheck(load: Load): Boolean {

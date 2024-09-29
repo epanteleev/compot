@@ -41,7 +41,7 @@ class Flag2Int private constructor(id: Identity, owner: Block, toType: IntegerTy
         }
 
         fun isAppropriateType(valueType: Type): Boolean {
-            return valueType is BooleanType
+            return valueType is FlagType
         }
 
         fun typeCheck(bitcast: Flag2Int): Boolean {

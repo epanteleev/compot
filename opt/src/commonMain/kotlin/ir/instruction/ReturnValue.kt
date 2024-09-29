@@ -44,10 +44,10 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
             if (retType is VoidType) {
                 return false
             }
-            if (retType is BooleanType) {
+            if (retType is FlagType) {
                 return false
             }
-            if (retType is BottomType) {
+            if (retType is UndefType) {
                 return false
             }
             if (retType is TupleType) {

@@ -1,8 +1,9 @@
 package ir.platform.x64.pass.analysis.regalloc
 
-import ir.value.LocalValue
+import ir.types.*
 import asm.x64.Operand
 import asm.x64.Register
+import ir.value.LocalValue
 import asm.x64.GPRegister.rcx
 import asm.x64.GPRegister.rdx
 import common.assertion
@@ -20,8 +21,6 @@ import ir.pass.analysis.intervals.LiveIntervalsFabric
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
-import ir.types.NonTrivialType
-import ir.types.TupleType
 
 
 class LinearScan internal constructor(private val data: FunctionData): FunctionAnalysisPass<RegisterAllocation>() {
@@ -102,17 +101,24 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
 
     private fun allocRegistersForLocalVariables() {
         for ((value, range) in liveRanges) {
+            if (value.type() is TupleType) {
+                // Skip tuple instructions
+                // Register allocation for tuple instructions will be done for their projections
+                continue
+            }
+            if (value.type() is FlagType) {
+                // Skip boolean instructions
+                continue
+            }
+            if (value.type() is UndefType) {
+                // Skip undefined instructions
+                continue
+            }
             val reg = registerMap[value]
             if (reg != null) {
                 // Found fixed register. Skip it
                 // Register allocation for fixed registers is already done
                 active[value] = reg
-                continue
-            }
-
-            if (value.type() is TupleType) {
-                // Skip tuple instructions
-                // Register allocation for tuple instructions will be done for their projections
                 continue
             }
 
@@ -130,27 +136,13 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     }
 
     private fun excludeIf(value: LocalValue, reg: Register): Boolean {
-        if (reg == rdx) {
-            for (use in value.usedIn()) {
-                if (tupleDiv(nop(), it_is(value)) (use)) return true
-            }
-        }
-
-        val neighbors = interferenceGraph.neighbors(value)
-        if (neighbors == null) {
-            return false
-        }
-
+        val neighbors = interferenceGraph.neighbors(value) ?: return false
         return neighbors.any { registerMap[it] == reg }
     }
 
     private fun pickOperandGroup(value: LocalValue) {
         val operand = pool.allocSlot(value) { reg -> excludeIf(value, reg) }
-        val group = liveRanges.getGroup(value)
-        if (group == null) {
-            allocate(operand, value)
-            return
-        }
+        val group = liveRanges.getGroup(value) ?: return allocate(operand, value)
         for (v in group) {
             allocate(operand, v)
         }

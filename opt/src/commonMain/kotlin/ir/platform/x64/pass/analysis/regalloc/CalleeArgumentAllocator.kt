@@ -26,7 +26,7 @@ class CalleeArgumentAllocator private constructor(private val stackFrame: StackF
                 Memory(memSlots - 1)
             }
         }
-        is IntegerType, is PointerType, is BooleanType -> {
+        is IntegerType, is PointerType, is FlagType -> {
             if (gpRegPos < gpRegisters.size) {
                 gpRegPos += 1
                 RealGPRegister(gpRegPos - 1)
@@ -35,7 +35,7 @@ class CalleeArgumentAllocator private constructor(private val stackFrame: StackF
                 Memory(memSlots - 1)
             }
         }
-        is BottomType -> null
+        is UndefType -> null
         else -> throw IllegalArgumentException("type=$type")
     }
 

@@ -58,5 +58,5 @@ abstract class CompareInstruction(id: Identity, owner: Block, first: Value, seco
         return operands[1]
     }
 
-    override fun type(): BooleanType = tp as BooleanType
+    override fun type(): FlagType = tp as FlagType
 }

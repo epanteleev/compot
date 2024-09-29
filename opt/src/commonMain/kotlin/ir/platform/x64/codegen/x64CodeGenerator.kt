@@ -348,13 +348,13 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         asm.callFunction(call)
 
         when (val retType = call.type()) {
-            is IntegerType, is PointerType, is BooleanType -> {
+            is IntegerType, is PointerType, is FlagType -> {
                 CallIntCodegen(retType, asm)(registerAllocation.operand(call), retReg)
             }
             is FloatingPointType -> {
                 CallFloatCodegen(retType, asm)(registerAllocation.operand(call), fpRet)
             }
-            is BottomType -> println("UB in call") //TODO remove this
+            is UndefType -> println("UB in call") //TODO remove this
         }
 
         assertion(call.target() === next()) {
@@ -392,7 +392,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         asm.indirectCall(indirectionCall, pointer)
 
         when (val retType = indirectionCall.type()) {
-            is IntegerType, is PointerType, is BooleanType -> {
+            is IntegerType, is PointerType -> {
                 CallIntCodegen(retType, asm)(registerAllocation.operand(indirectionCall), retReg)
             }
             is FloatingPointType -> {

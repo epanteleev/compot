@@ -269,7 +269,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         val memberType = structType.fields()[member].second.baseType()
         return if (memberType !is AggregateBaseType) {
-            val memberIRType = mb.toIRType<PrimitiveType>(typeHolder, memberType)
+            val memberIRType = mb.toIRLVType<PrimitiveType>(typeHolder, memberType)
             ir.load(memberIRType, gep)
         } else {
             gep

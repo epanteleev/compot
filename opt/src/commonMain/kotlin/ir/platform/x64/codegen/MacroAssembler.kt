@@ -5,7 +5,6 @@ import asm.x64.GPRegister.rdx
 import asm.x64.GPRegister.rax
 import common.assertion
 import ir.Definitions.BYTE_SIZE
-import ir.Definitions.QWORD_SIZE
 import ir.instruction.*
 import ir.types.*
 
@@ -114,8 +113,8 @@ class MacroAssembler(name: String, id: Int): Assembler(name, id) {
                     else -> throw CodegenException("unknown conversion type: convType=$convType")
                 }
             }
-            BooleanType -> TODO()
-            BottomType -> TODO()
+            FlagType -> TODO()
+            UndefType -> TODO()
         }
     }
 

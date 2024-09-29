@@ -56,7 +56,7 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
             if (valueType !is PrimitiveType) {
                 return false
             }
-            if (valueType is BooleanType) {
+            if (valueType is FlagType) {
                 return false
             }
 
