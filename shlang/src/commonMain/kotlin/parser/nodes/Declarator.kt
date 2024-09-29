@@ -124,8 +124,8 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
     }
 
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor = memoizeType {
-        require(expr is EmptyExpression) {
-            "unsupported expression in struct declarator $expr"
+        if(expr !is EmptyExpression) {
+            println("Warning: bit field is not supported")
         }
 
         return@memoizeType declarator.declareType(declspec, typeHolder)

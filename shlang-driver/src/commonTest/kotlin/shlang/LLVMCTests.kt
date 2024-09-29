@@ -262,6 +262,295 @@ abstract class LLVMCTests: CommonCTest() {
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    @Ignore
+    fun testLongShift() {
+        val result = runCTest("shlang/llvm-c-tests/2003-05-31-LongShifts", listOf(), options())
+        val expected = readExpectedOutput("shlang/llvm-c-tests/2003-05-31-LongShifts.reference_output")
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testIntOverflow() {
+        val result = runCTest("shlang/llvm-c-tests/2003-07-06-IntOverflow", listOf(), options())
+        val expected = """
+            compare after overflow is TRUE
+            divide after overflow = -170 (0xffffff56)
+            divide negative value by power-of-2 = -16 (0xfffffff0)
+            subtract after overflow = 2134900731 (0x7f3ffffb)
+            
+        """.trimIndent()
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testBitOps() {
+        val result = runCTest("shlang/llvm-c-tests/2003-07-08-BitOpsTest", listOf(), options())
+        val expected = "-15 -1 0 -3 12\n"
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testLoadShorts() {
+        val result = runCTest("shlang/llvm-c-tests/2003-07-09-LoadShorts", listOf(), options())
+        val expected = readExpectedOutput("shlang/llvm-c-tests/2003-07-09-LoadShorts.reference_output")
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testSignedArgs() {
+        val result = runCTest("shlang/llvm-c-tests/2003-07-09-SignedArgs", listOf(), options())
+        val expected = """getShort():	1 1 1 1 1 1
+        getShort():	-128 116 116 -3852 -31232 -1708916736
+        getUnknown():	-128 116 116 -3852 -31232 30556 -1708916736
+        -1708921160
+        """.trimIndent()
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testSignConversion() {
+        val result = runCTest("shlang/llvm-c-tests/2003-07-10-SignConversions", listOf(), options())
+        val expected = """-128 128 --> unsigned: us = 65408, us2 = 128
+        -128 128 -->   signed:  s = -128,  s2 = 128
+        -128 128 --> unsigned: uc = 128, uc2 = 128
+        -128 128 -->   signed: sc = -128, sc2 = -128
+        """.trimIndent()
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testCastFPToUint() {
+        val result = runCTest("shlang/llvm-c-tests/2003-08-05-CastFPToUint", listOf(), options())
+        val expected = """DC = 240.000000, DS = 65520.000000, DI = 4294967280.000000
+        uc = 240, us = 65520, ui = 4294967280""".trimIndent()
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testVaListArg() {
+        val result = runCTest("shlang/llvm-c-tests/2003-08-11-VaListArg", listOf(), options())
+        val expected = readExpectedOutput("shlang/llvm-c-tests/2003-08-11-VaListArg.reference_output")
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testFoldBug() {
+        val result = runCTest("shlang/llvm-c-tests/2003-08-20-FoldBug", listOf(), options())
+        assertEquals("All ok\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testBitFieldTest() {
+        val result = runCTest("shlang/llvm-c-tests/2003-09-18-BitFieldTest", listOf(), options())
+        assertEquals("0 1\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testSwitch2() {
+        val result = runCTest("shlang/llvm-c-tests/2003-10-13-SwitchTest", listOf(), options())
+        assertEquals("GOOD\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testScalarReplBug() {
+        val result = runCTest("shlang/llvm-c-tests/2003-10-29-ScalarReplBug", listOf(), options())
+        assertEquals("0\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testNegativeZero() {
+        val result = runCTest("shlang/llvm-c-tests/2004-02-02-NegativeZero", listOf(), options())
+        val expected = """
+        |-0.000000 -0.000000
+        |0.000000 0.000000
+        |negzero = -0.000000  poszero = 0.000000
+        |
+        """.trimMargin()
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testStaticBitFieldInit() {
+        val result = runCTest("shlang/llvm-c-tests/2004-06-20-StaticBitfieldInit", listOf(), options())
+        assertEquals("1 5 1\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testGlobalBoolLayout() {
+        val result = runCTest("shlang/llvm-c-tests/2004-11-28-GlobalBoolLayout", listOf(), options())
+        assertEquals("1 1 4\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testInt64ToFP() {
+        val result = runCTest("shlang/llvm-c-tests/2005-05-12-Int64ToFP", listOf(), options())
+        val expected = readExpectedOutput("shlang/llvm-c-tests/2005-05-12-Int64ToFP.reference_output")
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testSDivTwo() {
+        val result = runCTest("shlang/llvm-c-tests/2005-05-13-SDivTwo", listOf(), options())
+        val expected = readExpectedOutput("shlang/llvm-c-tests/2005-05-13-SDivTwo.reference_output")
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testBitField_ABI() {
+        val result = runCTest("shlang/llvm-c-tests/2005-07-15-Bitfield-ABI", listOf(), options())
+        assertEquals("fffffc3f\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testIntTOFP() {
+        val result = runCTest("shlang/llvm-c-tests/2005-07-17-INT-To-FP", listOf(), options())
+        val expected = readExpectedOutput("shlang/llvm-c-tests/2005-07-15-IntToFP.reference_output")
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testLongSwitch() {
+        val result = runCTest("shlang/llvm-c-tests/2005-11-29-LongSwitch", listOf(), options())
+        assertEquals("foo = 0\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testUnionInit() {
+        val result = runCTest("shlang/llvm-c-tests/2006-01-23-UnionInit", listOf(), options())
+        val expect = """
+            |PR156: swapper
+            |PR295/PR568: 1888, 256
+            |PR574: 61172160, 4, 22, 2
+            |PR162: 1, 2, 513
+            |PR650: relname, 1852597618
+            |PR199: 5, 1, 2, 3
+            |PR199: 5, 1, 2, 3
+            |PR431: 0, 1, 2, 3
+            |PR654: 0, '   xyzkasjdlf     '
+            |PR323: 3, 'foo'
+            |returning raw_lock
+            |PR627: 0
+            |PR684: 1, 2, 0 1
+            |rdar://6828787: 23122, -12312731, -312
+        """.trimMargin()
+        assertEquals(expect, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testSimpleIndirectCall() {
+        val result = runCTest("shlang/llvm-c-tests/2006-01-29-SimpleIndirectCall", listOf(), options())
+        assertEquals("Goodbye, world!\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testDivRem() {
+        val result = runCTest("shlang/llvm-c-tests/2006-02-04-DivRem", listOf(), options())
+        val expected = readExpectedOutput("shlang/llvm-c-tests/2006-02-04-DivRem.reference_output")
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testFloat_Varg() {
+        val result = runCTest("shlang/llvm-c-tests/2006-12-01-float_varg", listOf(), options())
+        assertEquals("foo 1.230000 12312.100000 3.100000 13.100000\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testCompare64BitConstant() {
+        val result = runCTest("shlang/llvm-c-tests/2006-12-07-Compare64BitConstant", listOf(), options())
+        assertEquals("Works.\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testLoadConstants() {
+        val result = runCTest("shlang/llvm-c-tests/2006-12-11-LoadConstants", listOf(), options())
+        val expected = readExpectedOutput("shlang/llvm-c-tests/2006-12-11-LoadConstants.reference_output")
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testKNR_Args() {
+        val result = runCTest("shlang/llvm-c-tests/2007-01-04-KNR-Args", listOf(), options())
+        val expected = """
+            |a 4.000000 1 5.000000 2 4.000000 3 5.000000
+            |a 4.000000 1 5.000000 2 4.000000 3 5.000000
+            |
+        """.trimMargin()
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testVaCopy() {
+        val result = runCTest("shlang/llvm-c-tests/2007-03-02-VaCopy", listOf(), options())
+        assertEquals("string abc\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testBitfield() {
+        val result = runCTest("shlang/llvm-c-tests/2007-04-10-BitfieldTest", listOf(), options())
+        assertEquals("p = 0x24\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testLoopBug() {
+        val result = runCTest("shlang/llvm-c-tests/2008-04-18-LoopBug", listOf(), options())
+        val expected = """0 5 5 6 7
+        |1 5 6 6 7
+        |2 5 6 7 7
+        |3 5 6 7 8
+        |4 5 6 7 8
+        |-1 5 6 7 8
+        """.trimMargin()
+        assertEquals("0\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class LLVMCTestsO0: LLVMCTests() {
