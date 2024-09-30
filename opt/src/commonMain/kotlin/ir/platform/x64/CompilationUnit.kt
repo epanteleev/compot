@@ -11,8 +11,8 @@ import ir.types.*
 //
 // https://ftp.gnu.org/old-gnu/Manuals/gas-2.9.1/html_node/as_toc.html
 class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
-    private fun makeAggregateConstant(name: String, initializer: InitializerListValue): ObjLabel = label(name) {
-        for (e in initializer.linearize()) {
+    private fun makeAggregateConstant(name: String, aggregateType: AggregateType, initializer: InitializerListValue): ObjLabel = label(name) {
+        for (e in initializer.linearize(aggregateType)) {
             primitive(this, e.asType(), e.data())
         }
     }
@@ -25,7 +25,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
                 string(globalValue.data())
             }
         }
-        is AggregateGlobalConstant -> makeAggregateConstant(globalValue.name(), globalValue.elements())
+        is AggregateGlobalConstant -> makeAggregateConstant(globalValue.name(), globalValue.contentType().asType(), globalValue.elements())
         is PrimitiveGlobalConstant -> makePrimitiveConstant(globalValue)
     }
 
@@ -37,7 +37,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
     }
 
     private fun makeStringLiteralConstant(globalValue: GlobalValue, type: ArrayType, constant: StringLiteralConstant): ObjLabel {
-        val values = constant.linearize()
+        val values = constant.linearize(type)
         if (values.size == type.length) {
             return label(globalValue.name()) {
                 string(constant.data())
@@ -59,7 +59,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
 
     private fun makePrimitiveConstant(globalValue: GlobalValue): ObjLabel = when (val initializer = globalValue.initializer()) {
         is InitializerListValue -> anonConstant {
-            for (e in initializer.linearize()) {
+            for (e in initializer.linearize(globalValue.contentType().asType())) {
                 primitive(this, e.asType(), e.data())
             }
         }
@@ -80,10 +80,10 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
     private fun convertGlobalValueToSymbolType(globalValue: GlobalValue) = when (val type = globalValue.contentType()) {
         is StructType -> {
             val constant = globalValue.initializer() as InitializerListValue
-            makeAggregateConstant(globalValue.name(), constant)
+            makeAggregateConstant(globalValue.name(), globalValue.contentType().asType(), constant)
         }
         is ArrayType -> when (val constant = globalValue.initializer()) {
-            is InitializerListValue  -> makeAggregateConstant(globalValue.name(), constant)
+            is InitializerListValue  -> makeAggregateConstant(globalValue.name(), globalValue.contentType().asType(), constant)
             is StringLiteralConstant -> makeStringLiteralConstant(globalValue, type, constant)
             else -> throw IllegalArgumentException("unsupported constant type: $constant")
         }

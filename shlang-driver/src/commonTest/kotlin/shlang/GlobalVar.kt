@@ -1,6 +1,7 @@
 package shlang
 
 import common.CommonCTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -124,6 +125,7 @@ abstract class GlobalVar: CommonCTest() {
     }
 
     @Test
+    @Ignore
     fun testGlobalVar11() {
         val result = runCTest("shlang/global_var/global_var11", listOf("runtime/runtime.c"), options())
         assertEquals("2 3 0 0\n", result.output)

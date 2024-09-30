@@ -264,7 +264,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testLongShift() {
         val result = runCTest("shlang/llvm-c-tests/2003-05-31-LongShifts", listOf(), options())
         val expected = readExpectedOutput("shlang/llvm-c-tests/2003-05-31-LongShifts.reference_output")

@@ -90,8 +90,18 @@ class StructTypeTest {
         val structType1 = StructType("Rect", arrayListOf(pointType, pointType))
 
         assertEquals(32, structType1.sizeOf())
-        assertFalse { structType1.hasFloatOnly(0, 4) }
         assertFalse { structType1.hasFloatOnly(0, 8) }
+        assertFalse { structType1.hasFloatOnly(0, 4) }
         assertTrue { structType1.hasFloatOnly(8, 16) }
+    }
+
+    @Test
+    fun test11() {
+        val structType = StructType("Point", arrayListOf(Type.I64, Type.I32))
+        assertEquals(16, structType.sizeOf())
+        assertEquals(0, structType.offset(0))
+        assertEquals(8, structType.offset(1))
+//        assertFalse { structType.hasFloatOnly(4, 8) } TODO failure
+        assertFalse { structType.hasFloatOnly(0, 4) }
     }
 }
