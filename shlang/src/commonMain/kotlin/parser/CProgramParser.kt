@@ -1406,41 +1406,23 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     // cast_expression
     //	: unary_expression
     //	| '(' type_name ')' cast_expression
-    //  | '(' type_name ')' '{' initializer_list '}' <-- compound literal //TODO modified grammar
     //	;
     fun cast_expression(): Expression? = rule {
-        val cast = rule castRule@ {
-            if (!check("(")) {
-                return@castRule null
+        val unary = unary_expression()
+        if (unary != null) {
+            return@cast_expression unary
+        }
+        if (check("(")) {
+            eat()
+            val typeName = type_name()?: throw ParserException(InvalidToken("Expected type name", peak()))
+            if (!check(")")) {
+                throw ParserException(InvalidToken("Expected ')'", peak()))
             }
             eat()
-            val declspec = type_name() ?: return@castRule null
-            if (check(")")) {
-                eat()
-                val cast = cast_expression()
-                if (cast != null) {
-                    return@castRule Cast(declspec, cast)
-                }
-                if (check("{")) {
-                    eat()
-                } else {
-                    throw ParserException(InvalidToken("Expected '{' or cast expression", peak()))
-                }
-                val initializerList = initializer_list()
-                if (initializerList != null) {
-                    if (check("}")) {
-                        eat()
-                    } else {
-                        throw ParserException(InvalidToken("Expected '}'", peak()))
-                    }
-                    return@castRule CompoundLiteral(declspec, initializerList)
-                }
-                throw ParserException(InvalidToken("Expected cast expression", peak()))
-            }
-            throw ParserException(InvalidToken("Expected ')'", peak()))
+            val cast = cast_expression()?: throw ParserException(InvalidToken("Expected cast expression", peak()))
+            return@cast_expression Cast(typeName, cast)
         }
-
-        return@rule cast ?: unary_expression()
+        return@rule null
     }
 
     // type_name
@@ -1481,6 +1463,42 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
     }
 
+    // unary_operator
+    //	: '&'
+    //	| '*'
+    //	| '+'
+    //	| '-'
+    //  | '~'
+    //	| '!'
+    //	;
+    fun unary_operator(): PrefixUnaryOpType? = rule {
+        if (check("&")) {
+            eat()
+            return@rule PrefixUnaryOpType.ADDRESS
+        }
+        if (check("*")) {
+            eat()
+            return@rule PrefixUnaryOpType.DEREF
+        }
+        if (check("+")) {
+            eat()
+            return@rule PrefixUnaryOpType.PLUS
+        }
+        if (check("-")) {
+            eat()
+            return@rule PrefixUnaryOpType.NEG
+        }
+        if (check("~")) {
+            eat()
+            return@rule PrefixUnaryOpType.BIT_NOT
+        }
+        if (check("!")) {
+            eat()
+            return@rule PrefixUnaryOpType.NOT
+        }
+        return@rule null
+    }
+
     // unary_expression
     //	: postfix_expression
     //	| '++' unary_expression
@@ -1490,6 +1508,21 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	| sizeof '(' type_name ')'
     //	;
     fun unary_expression(): Expression? = rule {
+        if (check("++")) {
+            eat()
+            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            return@rule UnaryOp(unary, PrefixUnaryOpType.INC)
+        }
+        if (check("--")) {
+            eat()
+            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            return@rule UnaryOp(unary, PrefixUnaryOpType.DEC)
+        }
+        val op = unary_operator()
+        if (op != null) {
+            val cast = cast_expression()?: throw ParserException(InvalidToken("Expected cast expression", peak()))
+            return@rule UnaryOp(cast, op)
+        }
         if (check("sizeof")) {
             eat()
             if (check("(")) {
@@ -1505,49 +1538,40 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             val expr = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
             return@rule SizeOf(expr)
         }
-        if (check("++")) {
-            eat()
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-            return@rule UnaryOp(unary, PrefixUnaryOpType.INC)
-        }
-        if (check("--")) {
-            eat()
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-            return@rule UnaryOp(unary, PrefixUnaryOpType.DEC)
-        }
-        if (check("&")) {
-            eat()
-            val unary = cast_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-            return@rule UnaryOp(unary, PrefixUnaryOpType.ADDRESS)
-        }
-        if (check("*")) {
-            eat()
-            val unary = cast_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-            return@rule UnaryOp(unary, PrefixUnaryOpType.DEREF)
-        }
-        if (check("+")) {
-            eat()
-            val unary = cast_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-            return@rule UnaryOp(unary, PrefixUnaryOpType.PLUS)
-        }
-        if (check("-")) {
-            eat()
-            val unary = cast_expression()?: let {
-                throw ParserException(InvalidToken("Expected unary expression", peak()))
-            }
-            return@rule UnaryOp(unary, PrefixUnaryOpType.NEG)
-        }
-        if (check("~")) {
-            eat()
-            val unary = cast_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-            return@rule UnaryOp(unary, PrefixUnaryOpType.BIT_NOT)
-        }
-        if (check("!")) {
-            eat()
-            val unary = cast_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-            return@rule UnaryOp(unary, PrefixUnaryOpType.NOT)
-        }
         return@rule postfix_expression()
+    }
+
+    // compound_literal
+    //  : '(' type-name ')' '{' initializer-list '}'
+    //  | '(' type-name ')' '{' initializer-list ',' '}'
+    //  ;
+    fun compound_literal(): CompoundLiteral? = rule {
+        val token = peak<CToken>()
+        if (token.str() != "(") {
+            return@rule null
+        }
+        eat()
+        val type = type_name()?: throw ParserException(InvalidToken("Expected type name", peak()))
+        if (!check(")")) {
+            throw ParserException(InvalidToken("Expected ')'", peak()))
+        }
+        eat()
+        if (!check("{")) {
+            return@rule null
+        }
+        eat()
+        val initList = initializer_list()
+        if (initList != null) {
+            if (check("}")) {
+                eat()
+                return@rule CompoundLiteral(type, initList)
+            } else {
+                throw ParserException(InvalidToken("Expected '}'", peak()))
+            }
+        } else {
+            throw ParserException(InvalidToken("Expected initializer list", peak()))
+        }
+        return@rule null
     }
 
     // postfix_expression
@@ -1559,11 +1583,15 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	| postfix_expression '->' IDENTIFIER
     //	| postfix_expression '--'
     //	| postfix_expression '++'
+    //  | ( type-name ) { initializer-list }
+    //  | ( type-name ) { initializer-list , }
     //	;
     fun postfix_expression(): Expression? = rule {
-        val primary_expr: Expression = primary_expression() ?: return@rule null
-        var primary = primary_expr
-        while (!eof()) {
+        var primary: Expression = primary_expression() ?: return@rule compound_literal()
+        while (true) {
+            if (eof()) {
+                break
+            }
             val token = peak<CToken>()
             if (token.str() == "[") {
                 eat()
@@ -1574,6 +1602,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 } else {
                     throw ParserException(InvalidToken("Expected ']'", peak()))
                 }
+                continue
             } else if (token.str() == "(") {
                 eat()
                 val args = argument_expression_list()
@@ -1587,26 +1616,30 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 } else {
                     throw ParserException(InvalidToken("Expected ')'", peak()))
                 }
+                continue
             }
             else if (token.str() == ".") {
                 eat()
                 val ident = peak<Identifier>()
                 eat()
                 primary = MemberAccess(primary, ident)
+                continue
             } else if (token.str() == "->") {
                 eat()
                 val ident = peak<Identifier>()
                 eat()
                 primary = ArrowMemberAccess(primary, ident)
+                continue
             } else if (token.str() == "++") {
                 eat()
                 primary = UnaryOp(primary, PostfixUnaryOpType.INC)
+                continue
             } else if (token.str() == "--") {
                 eat()
                 primary = UnaryOp(primary, PostfixUnaryOpType.DEC)
-            } else {
-                break
+                continue
             }
+            break
         }
 
         return@rule primary
@@ -1642,7 +1675,8 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 val init = initializer()?: throw ParserException(InvalidToken("Expected initializer", peak()))
                 initializers.add(DesignationInitializer(designator, init))
             } else {
-                val init = initializer()?: let {
+                val init = initializer()
+                if (init == null) {
                     if (initializers.isEmpty()) {
                         return@rule null
                     } else {
@@ -1700,7 +1734,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     fun designator(): Designator? = rule {
         if (check("[")) {
             eat()
-            val expr = constant_expression() ?: throw ParserException(InvalidToken("Expected constant expression", peak()))
+            val expr = constant_expression() ?: return@rule null
             if (check("]")) {
                 eat()
                 return@rule ArrayDesignator(expr)
@@ -1738,20 +1772,10 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	| '(' expression ')'
     //	;
     fun primary_expression(): Expression? = rule {
-        if (check("(")) {
-            eat()
-            val expr = expression()
-            if (check(")")) {
-                eat()
-                return@rule expr
-            } else {
-                throw ParserException(InvalidToken("Expected ')'", peak()))
-            }
-        }
         if (check("_Generic")) {
             TODO()
         }
-        if (check<Identifier>()) {
+        if (check<Identifier>() && typeHolder.getTypedefOrNull(peak<Identifier>().str()) == null) {
             val ident = peak<Identifier>()
             eat()
             return@rule VarNode(ident)
@@ -1775,6 +1799,18 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             val num = peak<Numeric>()
             eat()
             return@rule NumNode(num)
+        }
+        if (check("(")) {
+            eat()
+            val expr = expression()
+            if (expr != null) {
+                if (check(")")) {
+                    eat()
+                    return@rule expr
+                } else {
+                    throw ParserException(InvalidToken("Expected ')'", peak()))
+                }
+            }
         }
         return@rule null
     }
