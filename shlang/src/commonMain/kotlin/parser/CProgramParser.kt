@@ -1421,8 +1421,18 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 if (cast != null) {
                     return@castRule Cast(declspec, cast)
                 }
+                if (check("{")) {
+                    eat()
+                } else {
+                    throw ParserException(InvalidToken("Expected '{' or cast expression", peak()))
+                }
                 val initializerList = initializer_list()
                 if (initializerList != null) {
+                    if (check("}")) {
+                        eat()
+                    } else {
+                        throw ParserException(InvalidToken("Expected '}'", peak()))
+                    }
                     return@castRule CompoundLiteral(declspec, initializerList)
                 }
                 throw ParserException(InvalidToken("Expected cast expression", peak()))

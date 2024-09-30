@@ -31,7 +31,17 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val varStack: VarStack<Value>,
                                    protected val nameGenerator: NameGenerator) {
     protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): Constant? = when (expr) {
-        is InitializerList   -> constEvalInitializers(lValueType, expr)
+        is InitializerList -> when (lValueType) {
+            is IntegerType -> {
+                if (expr.initializers.size != 1) {
+                    throw IRCodeGenError("Unsupported initializer list size ${expr.initializers.size}")
+                }
+                constEvalExpression(lValueType, expr.initializers[0])
+            }
+            is ArrayType  -> constEvalInitializers(lValueType, expr)
+            is StructType -> constEvalInitializers(lValueType, expr)
+            else -> throw IRCodeGenError("Unsupported type $lValueType")
+        }
         is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
         is StringNode        -> {
             val constant = expr.data()
@@ -64,8 +74,8 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         is CompoundLiteral -> {
             val varDesc = expr.typeName.specifyType(typeHolder, listOf())
-            val lValueType = mb.toIRType<NonTrivialType>(typeHolder, varDesc.type.baseType())
-            val constant = constEvalInitializers(lValueType, expr.initializerList) as InitializerListValue
+            val lValueType = mb.toIRType<AggregateType>(typeHolder, varDesc.type.baseType())
+            val constant = constEvalExpression(lValueType, expr.initializerList) as InitializerListValue
             val gConstant = when (varDesc.type.baseType()) {
                 is CArrayType -> {
                     ArrayGlobalConstant(createGlobalConstantName(), constant)
@@ -237,15 +247,27 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         else -> null
     }
 
-    private fun constEvalInitializers(lValueType: NonTrivialType, expr: InitializerList): Constant {
-        if (lValueType !is AggregateType) {
-            throw IRCodeGenError("Unsupported type $lValueType")
-        }
+    private fun constEvalInitializers(lValueType: AggregateType, expr: InitializerList): Constant = when (lValueType) {
+        is ArrayType  -> constEvalInitializers(lValueType, expr)
+        is StructType -> constEvalInitializers(lValueType, expr)
+    }
 
+    private fun constEvalInitializers(lValueType: ArrayType, expr: InitializerList): Constant {
         if (expr.initializers.size == 1) {
             return constEvalExpression(lValueType, expr.initializers[0]) ?: throw IRCodeGenError("Unsupported type $lValueType")
         }
 
+        val elements = expr.initializers.mapIndexed { index, initializer ->
+            val elementLValueType = lValueType.field(index)
+            constEvalExpression(elementLValueType, initializer) ?: let {
+                throw IRCodeGenError("Unsupported type $elementLValueType")
+            }
+        }
+
+        return InitializerListValue(lValueType, elements)
+    }
+
+    private fun constEvalInitializers(lValueType: StructType, expr: InitializerList): Constant {
         val elements = expr.initializers.mapIndexed { index, initializer ->
             val elementLValueType = lValueType.field(index)
             constEvalExpression(elementLValueType, initializer) ?: let {

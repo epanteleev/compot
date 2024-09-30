@@ -157,7 +157,7 @@ sealed class Expression : Node() {
 
 // https://port70.net/~nsz/c/c11/n1570.html#6.5.2.5
 // 6.5.2.5 Compound literals
-class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerList) : Expression() {
+class CompoundLiteral(val typeName: TypeName, val initializerList: Expression) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {

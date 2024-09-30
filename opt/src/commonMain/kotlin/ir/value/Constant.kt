@@ -319,9 +319,7 @@ object UndefinedValue: Constant {
     }
 }
 
-interface AggregateConstant: Constant {
-    fun linearize(aggregateType: AggregateType): List<Constant>
-}
+sealed interface AggregateConstant: Constant
 
 class StringLiteralConstant(val name: String): AggregateConstant {
     override fun type(): ArrayType {
@@ -334,13 +332,6 @@ class StringLiteralConstant(val name: String): AggregateConstant {
 
     override fun toString(): String {
         return name
-    }
-
-    override fun linearize(aggregateType: AggregateType): List<Constant> {
-        if (aggregateType !is ArrayType) {
-            throw IllegalArgumentException("Expected ArrayType, got $aggregateType")
-        }
-        return name.map { U8Value(it.code.toByte()) }
     }
 }
 
@@ -361,28 +352,11 @@ class InitializerListValue(private val type: AggregateType, val elements: List<C
         return elements.joinToString(", ", "{", "}")
     }
 
-    private fun fillIn(constants: MutableList<Constant>, aggregateType: AggregateType, structSize: Int, initializerListSizeOf: Int) {
+    private fun fillIn(constants: MutableList<Constant>, structSize: Int, initializerListSizeOf: Int) {
         val diff = structSize - initializerListSizeOf
         for (i in 0 until diff) {
             constants.add(Constant.zero(Type.I8))
         }
-    }
-
-    override fun linearize(aggregateType: AggregateType): List<Constant> {
-        val result = mutableListOf<Constant>()
-        var initializerListSizeOf = 0
-        for ((idx, element) in elements.withIndex()) {
-            val structSize = aggregateType.offset(idx) + aggregateType.field(idx).sizeOf()
-            initializerListSizeOf += element.type().sizeOf()
-
-            fillIn(result, aggregateType, structSize, initializerListSizeOf)
-            when (element) {
-                is InitializerListValue -> result.addAll(element.linearize(aggregateType.field(idx) as AggregateType))
-                else -> result.add(element)
-            }
-        }
-        fillIn(result, aggregateType, aggregateType.sizeOf(), initializerListSizeOf)
-        return result
     }
 
     companion object {

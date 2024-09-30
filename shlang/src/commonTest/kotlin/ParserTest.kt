@@ -1134,4 +1134,22 @@ class ParserTest {
         val program = parser.translation_unit()
         assertEquals("struct point {int x; int y;} ; struct point p[2] = {[0] = {.x = 1, .y = 2}, [1] = {.x = 3, .y = 4}};", LineAgnosticAstPrinter.print(program))
     }
+
+    @Test
+    fun testCompoundLiteral() {
+        val input = """
+            typedef struct point {
+                int x;
+                int y;
+            } Point;
+            
+            Point *p = &(Point){1, 1};
+        """.trimIndent()
+
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        val program = parser.translation_unit()
+        assertEquals("typedef struct point {int x; int y;} Point; Point *p = &(Point){1, 1};", LineAgnosticAstPrinter.print(program))
+    }
 }

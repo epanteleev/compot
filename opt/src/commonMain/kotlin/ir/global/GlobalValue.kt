@@ -63,8 +63,10 @@ class GlobalValue private constructor(val name: String, private val type: NonTri
                     "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
                 }
             }
-
-            is StructType, is FlagType -> assertion(constant.type() == type) { "GlobalValue: type mismatch" }
+            is StructType -> {}
+            is FlagType -> {
+                assertion(constant.type() == type) { "GlobalValue: type mismatch" }
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ import asm.x64.*
 import ir.value.*
 import ir.global.*
 import ir.platform.common.CompiledModule
+import ir.platform.x64.auxiliary.LinearizeInitializerList
 import ir.types.*
 
 // Using as
@@ -12,7 +13,7 @@ import ir.types.*
 // https://ftp.gnu.org/old-gnu/Manuals/gas-2.9.1/html_node/as_toc.html
 class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
     private fun makeAggregateConstant(name: String, aggregateType: AggregateType, initializer: InitializerListValue): ObjLabel = label(name) {
-        for (e in initializer.linearize(aggregateType)) {
+        for (e in LinearizeInitializerList.linearize(initializer, aggregateType)) {
             primitive(this, e.asType(), e.data())
         }
     }
@@ -37,7 +38,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
     }
 
     private fun makeStringLiteralConstant(globalValue: GlobalValue, type: ArrayType, constant: StringLiteralConstant): ObjLabel {
-        val values = constant.linearize(type)
+        val values = LinearizeInitializerList.linearize(constant, type)
         if (values.size == type.length) {
             return label(globalValue.name()) {
                 string(constant.data())
@@ -59,7 +60,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
 
     private fun makePrimitiveConstant(globalValue: GlobalValue): ObjLabel = when (val initializer = globalValue.initializer()) {
         is InitializerListValue -> anonConstant {
-            for (e in initializer.linearize(globalValue.contentType().asType())) {
+            for (e in LinearizeInitializerList.linearize(initializer, globalValue.contentType().asType())) {
                 primitive(this, e.asType(), e.data())
             }
         }
