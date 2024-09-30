@@ -165,7 +165,10 @@ object TypeConverter {
                     Type.I8 -> sext(value, toType)
                     Type.I32 -> trunc(value, toType)
                     Type.I64 -> trunc(value, toType)
-                    Type.U8 -> sext(value, toType)
+                    Type.U8 ->  {
+                        val zext = zext(value, Type.U16)
+                        bitcast(zext, toType)
+                    }
                     Type.U16 -> bitcast(value, toType)
                     Type.U32 -> trunc(value, toType)
                     Type.U64 -> {
@@ -277,7 +280,10 @@ object TypeConverter {
                 toType as UnsignedIntType
                 when (value.type()) {
                     Type.U1 -> flag2int(value, toType)
-                    Type.I8 -> trunc(value, toType)
+                    Type.I8 -> {
+                        val sext = sext(value, Type.I16)
+                        bitcast(sext, toType)
+                    }
                     Type.I16 -> bitcast(value, toType)
                     Type.I32 -> {
                         val bitcast = bitcast(value, Type.U32)
@@ -288,7 +294,9 @@ object TypeConverter {
                         val bitcast = bitcast(value, Type.U64)
                         trunc(bitcast, toType)
                     }
-                    Type.U8 -> trunc(value, toType)
+                    Type.U8 -> {
+                        zext(value, toType)
+                    }
                     Type.U32 -> trunc(value, toType)
                     Type.U64 -> trunc(value, toType)
                     Type.F32 -> {

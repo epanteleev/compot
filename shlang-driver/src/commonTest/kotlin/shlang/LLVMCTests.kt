@@ -316,14 +316,15 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testSignConversion() {
         val result = runCTest("shlang/llvm-c-tests/2003-07-10-SignConversions", listOf(), options())
-        val expected = """-128 128 --> unsigned: us = 65408, us2 = 128
-        -128 128 -->   signed:  s = -128,  s2 = 128
-        -128 128 --> unsigned: uc = 128, uc2 = 128
-        -128 128 -->   signed: sc = -128, sc2 = -128
-        """.trimIndent()
+        val expected = """
+            |-128 128 --> unsigned: us = 65408, us2 = 128
+            |-128 128 -->   signed:  s = -128,  s2 = 128
+            |-128 128 --> unsigned: uc = 128, uc2 = 128
+            |-128 128 -->   signed: sc = -128, sc2 = -128
+            |
+        """.trimMargin()
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }
