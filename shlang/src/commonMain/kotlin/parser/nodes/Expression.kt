@@ -1,7 +1,7 @@
 package parser.nodes
 
 import types.*
-import tokenizer.*
+import tokenizer.tokens.*
 import gen.IRCodeGenError
 import parser.nodes.visitors.*
 
@@ -416,7 +416,7 @@ data class CharNode(val char: CharLiteral) : Expression() {
     }
 }
 
-data class NumNode(val number: Numeric) : Expression() {
+data class NumNode(val number: PPNumber) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {

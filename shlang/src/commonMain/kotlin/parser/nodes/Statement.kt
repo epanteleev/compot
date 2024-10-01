@@ -1,8 +1,8 @@
 package parser.nodes
 
 import parser.LabelResolver
+import tokenizer.tokens.Identifier
 import parser.nodes.visitors.StatementVisitor
-import tokenizer.Identifier
 
 
 sealed class Statement: Node() {

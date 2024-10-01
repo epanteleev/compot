@@ -2,7 +2,7 @@ package gen.consteval
 
 import parser.InvalidToken
 import parser.ParserException
-import tokenizer.CToken
+import tokenizer.tokens.CToken
 import types.TypeHolder
 
 

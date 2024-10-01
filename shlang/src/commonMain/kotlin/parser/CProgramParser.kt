@@ -1,9 +1,9 @@
 package parser
 
-import common.assertion
 import tokenizer.*
 import parser.nodes.*
-import tokenizer.LexicalElements.allOperators
+import common.assertion
+import tokenizer.tokens.*
 
 
 data class ParserException(val info: ProgramMessage) : Exception(info.toString())
@@ -1777,8 +1777,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             TODO()
         }
         if (check<Identifier>() &&
-            typeHolder.getTypedefOrNull(peak<Identifier>().str()) == null &&
-            !allOperators.contains(peak<Identifier>().str())) {
+            typeHolder.getTypedefOrNull(peak<Identifier>().str()) == null) {
             val ident = peak<Identifier>()
             eat()
             return@rule VarNode(ident)
@@ -1798,8 +1797,8 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             return@rule CharNode(char)
         }
-        if (check<Numeric>()) {
-            val num = peak<Numeric>()
+        if (check<PPNumber>()) {
+            val num = peak<PPNumber>()
             eat()
             return@rule NumNode(num)
         }

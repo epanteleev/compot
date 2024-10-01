@@ -1,6 +1,7 @@
 package preprocess
 
 import tokenizer.*
+import tokenizer.tokens.*
 import parser.CProgramParser
 import gen.consteval.ConstEvalExpression
 import gen.consteval.TryConstEvalExpressionLong
@@ -43,12 +44,12 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             val macros = ctx.findMacros(name.str())
 
             if (macros == null) {
-                val num = Numeric("0", 10, name.position())
+                val num = PPNumber("0", 10, name.position())
                 tokens.addAfter(name, num)
                 tokens.kill(name)
                 token = num.next()
             } else {
-                val num = Numeric("1", 10, name.position())
+                val num = PPNumber("1", 10, name.position())
                 tokens.addAfter(name, num)
                 tokens.kill(name)
                 token = num.next()

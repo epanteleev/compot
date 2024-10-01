@@ -2,6 +2,7 @@ package preprocess
 
 import parser.*
 import tokenizer.*
+import tokenizer.tokens.*
 
 
 data class PreprocessorException(val info: String, val position: Position? = null) : Exception(info) {

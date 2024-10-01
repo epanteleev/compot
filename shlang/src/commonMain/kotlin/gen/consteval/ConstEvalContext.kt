@@ -1,6 +1,6 @@
 package gen.consteval
 
-import tokenizer.CToken
+import tokenizer.tokens.CToken
 import types.TypeHolder
 
 interface ConstEvalContext<T: Number> {

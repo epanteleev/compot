@@ -2,6 +2,7 @@ package parser
 
 import tokenizer.*
 import types.TypeHolder
+import tokenizer.tokens.*
 
 
 abstract class AbstractCParser(val filename: String, tokens: TokenList) {

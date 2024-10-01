@@ -1,6 +1,6 @@
 package parser
 
-import tokenizer.*
+import tokenizer.tokens.*
 
 
 abstract class ProgramMessage

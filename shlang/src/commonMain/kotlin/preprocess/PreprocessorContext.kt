@@ -1,6 +1,7 @@
 package preprocess
 
 import tokenizer.*
+import tokenizer.tokens.*
 
 
 class PreprocessorContext private constructor(private val macroReplacements: MutableMap<String, MacroReplacement>,
@@ -83,31 +84,31 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
 
     companion object {
         // 6.10.8.1 Mandatory macros
-        private val LINE = PredefinedMacros("__LINE__") { tokenListOf(Numeric("${it.line()}", 10, it)) }
+        private val LINE = PredefinedMacros("__LINE__") { tokenListOf(PPNumber("${it.line()}", 10, it)) }
         private val FILE = PredefinedMacros("__FILE__") { tokenListOf(StringLiteral(it.filename(), it)) }
         private val DATE = PredefinedMacros("__DATE__") { tokenListOf(StringLiteral("June  6 666", it)) }
         private val TIME = PredefinedMacros("__TIME__") { tokenListOf(StringLiteral("66:66:66", it)) }
-        private val STDC = PredefinedMacros("__STDC__") { tokenListOf(Numeric("1", 10, it)) }
-        private val STDC_HOSTED  = MacroReplacement("__STDC_HOSTED__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
-        private val STDC_VERSION = MacroReplacement("__STDC_VERSION__", tokenListOf(Numeric("201112L", 10, OriginalPosition.UNKNOWN)))
+        private val STDC = PredefinedMacros("__STDC__") { tokenListOf(PPNumber("1", 10, it)) }
+        private val STDC_HOSTED  = MacroReplacement("__STDC_HOSTED__", tokenListOf(PPNumber("1", 10, OriginalPosition.UNKNOWN)))
+        private val STDC_VERSION = MacroReplacement("__STDC_VERSION__", tokenListOf(PPNumber("201112L", 10, OriginalPosition.UNKNOWN)))
 
         // 3.7.2 Common Predefined Macros
         // https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
-        private val __SIZEOF_POINTER__ = MacroReplacement("__SIZEOF_POINTER__", tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)))
-        private val __SIZEOF_LONG__    = MacroReplacement("__SIZEOF_LONG__", tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)))
-        private val __SIZEOF_INT__     = MacroReplacement("__SIZEOF_INT__", tokenListOf(Numeric("4", 10, OriginalPosition.UNKNOWN)))
-        private val __SIZEOF_SHORT__   = MacroReplacement("__SIZEOF_SHORT__", tokenListOf(Numeric("2", 10, OriginalPosition.UNKNOWN)))
-        private val __SIZEOF_FLOAT__   = MacroReplacement("__SIZEOF_FLOAT__", tokenListOf(Numeric("4", 10, OriginalPosition.UNKNOWN)))
-        private val __SIZEOF_DOUBLE__  = MacroReplacement("__SIZEOF_DOUBLE__", tokenListOf(Numeric("8", 10, OriginalPosition.UNKNOWN)))
-        private val __INT32_MAX__      = MacroReplacement("__INT32_MAX__", tokenListOf(Numeric("2147483647", 10, OriginalPosition.UNKNOWN)))
+        private val __SIZEOF_POINTER__ = MacroReplacement("__SIZEOF_POINTER__", tokenListOf(PPNumber("8", 10, OriginalPosition.UNKNOWN)))
+        private val __SIZEOF_LONG__    = MacroReplacement("__SIZEOF_LONG__", tokenListOf(PPNumber("8", 10, OriginalPosition.UNKNOWN)))
+        private val __SIZEOF_INT__     = MacroReplacement("__SIZEOF_INT__", tokenListOf(PPNumber("4", 10, OriginalPosition.UNKNOWN)))
+        private val __SIZEOF_SHORT__   = MacroReplacement("__SIZEOF_SHORT__", tokenListOf(PPNumber("2", 10, OriginalPosition.UNKNOWN)))
+        private val __SIZEOF_FLOAT__   = MacroReplacement("__SIZEOF_FLOAT__", tokenListOf(PPNumber("4", 10, OriginalPosition.UNKNOWN)))
+        private val __SIZEOF_DOUBLE__  = MacroReplacement("__SIZEOF_DOUBLE__", tokenListOf(PPNumber("8", 10, OriginalPosition.UNKNOWN)))
+        private val __INT32_MAX__      = MacroReplacement("__INT32_MAX__", tokenListOf(PPNumber("2147483647", 10, OriginalPosition.UNKNOWN)))
         private val __SIZE_TYPE__      = MacroReplacement("__SIZE_TYPE__", tokenListOf(Keyword("unsigned", OriginalPosition.UNKNOWN), Keyword("long", OriginalPosition.UNKNOWN)))
 
 
         // Implementation-defined macros
-        private val PLATFORM = MacroReplacement("__x86_64__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
-        private val LP64     = MacroReplacement("__LP64__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
-        private val LINUX    = MacroReplacement("__linux__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
-        private val UNIX     = MacroReplacement("__unix__", tokenListOf(Numeric("1", 10, OriginalPosition.UNKNOWN)))
+        private val PLATFORM = MacroReplacement("__x86_64__", tokenListOf(PPNumber("1", 10, OriginalPosition.UNKNOWN)))
+        private val LP64     = MacroReplacement("__LP64__", tokenListOf(PPNumber("1", 10, OriginalPosition.UNKNOWN)))
+        private val LINUX    = MacroReplacement("__linux__", tokenListOf(PPNumber("1", 10, OriginalPosition.UNKNOWN)))
+        private val UNIX     = MacroReplacement("__unix__", tokenListOf(PPNumber("1", 10, OriginalPosition.UNKNOWN)))
         private val __func__ = MacroReplacement("__func__", tokenListOf(StringLiteral("in function", OriginalPosition.UNKNOWN)))
 
         private val predefined = hashMapOf(

@@ -31,10 +31,11 @@ object LexicalElements {
     val ternaryOperators = setOf("?", ":")
     val postPreFixOperators = setOf("++", "--")
 
-    val allOperators = unaryOperators + binaryOperators + ternaryOperators + postPreFixOperators + assignmentOperators
-    val allSymbols = allOperators + setOf("->", "(", ")", "[", "]", "{", "}", ";", ",", ".", "...", "#", "##", "\\")
-    val operators2 = allSymbols.filter { it.length == 2 }
-    val operators3 = allSymbols.filter { it.length == 3 }
+    // 6.4.6 Punctuators
+    private val punctuators = unaryOperators + binaryOperators + ternaryOperators + postPreFixOperators + assignmentOperators
+    val allPunctuators = punctuators + setOf("->", "(", ")", "[", "]", "{", "}", ";", ",", ".", "...", "#", "##", "\\")
+    private val operators2 = allPunctuators.filter { it.length == 2 }
+    private val operators3 = allPunctuators.filter { it.length == 3 }
 
     fun isOperator2(ch1: Char, ch2: Char): Boolean { //TODO remove
         for (operator in operators2) {

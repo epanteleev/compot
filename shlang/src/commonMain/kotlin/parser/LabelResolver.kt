@@ -1,8 +1,7 @@
 package parser
 
-import parser.nodes.GotoStatement
-import parser.nodes.LabeledStatement
-import tokenizer.Identifier
+import parser.nodes.*
+import tokenizer.tokens.Identifier
 
 
 class LabelResolver private constructor(private val labels: MutableMap<String, LabeledStatement>, private val gotos: MutableSet<GotoStatement>) {

@@ -1,11 +1,9 @@
 package parser.nodes
 
-import gen.consteval.CommonConstEvalContext
-import gen.consteval.ConstEvalExpression
-import gen.consteval.TryConstEvalExpressionLong
-import tokenizer.Identifier
-import parser.nodes.visitors.UnclassifiedNodeVisitor
+import gen.consteval.*
 import types.TypeHolder
+import tokenizer.tokens.Identifier
+import parser.nodes.visitors.UnclassifiedNodeVisitor
 
 
 class Designation(val designators: List<Designator>): UnclassifiedNode() {

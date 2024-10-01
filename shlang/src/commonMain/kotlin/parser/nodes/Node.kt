@@ -1,9 +1,9 @@
 package parser.nodes
 
-import common.assertion
 import types.*
-import tokenizer.*
+import common.assertion
 import parser.nodes.visitors.*
+import tokenizer.tokens.Identifier
 
 
 sealed class Node {

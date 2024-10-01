@@ -2,6 +2,7 @@ package preprocess
 
 import tokenizer.*
 import common.forEachWith
+import tokenizer.tokens.*
 import preprocess.Macros.Companion.newTokenFrom
 
 
@@ -106,7 +107,7 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
                             result.add(tok.cloneWith(PreprocessedPosition.UNKNOWN))
                         }
                         if (arg != remains.last()) {
-                            result.add(Punct(',', PreprocessedPosition.UNKNOWN))
+                            result.add(Punctuator(",", PreprocessedPosition.UNKNOWN))
                         }
                     }
                     current = current.next()

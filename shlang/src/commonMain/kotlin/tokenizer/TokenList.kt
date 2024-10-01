@@ -1,6 +1,8 @@
 package tokenizer
 
+import tokenizer.tokens.*
 import common.LeakedLinkedList
+
 
 class TokenList: LeakedLinkedList<AnyToken>() {
     fun kill(token: AnyToken): AnyToken? {

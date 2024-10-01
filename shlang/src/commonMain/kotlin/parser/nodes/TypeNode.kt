@@ -1,12 +1,9 @@
 package parser.nodes
 
-import gen.consteval.CommonConstEvalContext
-import gen.consteval.ConstEvalExpression
-import gen.consteval.TryConstEvalExpressionInt
 import types.*
-import tokenizer.CToken
-import tokenizer.Keyword
-import tokenizer.Identifier
+import gen.consteval.*
+import tokenizer.tokens.*
+import tokenizer.tokens.CToken
 import parser.nodes.visitors.TypeNodeVisitor
 
 

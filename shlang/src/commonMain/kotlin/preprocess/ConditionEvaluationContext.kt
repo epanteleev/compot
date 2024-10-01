@@ -1,7 +1,7 @@
 package preprocess
 
 import gen.consteval.ConstEvalContext
-import tokenizer.CToken
+import tokenizer.tokens.CToken
 import types.TypeHolder
 
 

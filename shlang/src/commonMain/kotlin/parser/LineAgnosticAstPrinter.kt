@@ -2,7 +2,7 @@ package parser
 
 import parser.nodes.*
 import parser.nodes.visitors.NodeVisitor
-import tokenizer.Identifier
+import tokenizer.tokens.Identifier
 
 
 class LineAgnosticAstPrinter: NodeVisitor<Unit> {

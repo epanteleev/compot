@@ -1,10 +1,8 @@
 package preprocess
 
-import common.assertion
 import tokenizer.*
-import common.forEachWith
-import preprocess.Macros.Companion.newTokenFrom
-import kotlin.jvm.JvmStatic
+import common.assertion
+import tokenizer.tokens.*
 
 
 data class MacroExpansionException(override val message: String): Exception(message)
@@ -69,7 +67,7 @@ class PredefinedMacros(name: String, private val callback: (Position) -> TokenLi
         val token = tokens.first()
         assertion(tokens.size == 1) { "invariant"}
 
-        if (token !is Numeric) {
+        if (token !is PPNumber) {
             throw PreprocessorException("Predefined macro '$name' is not a number")
         }
 

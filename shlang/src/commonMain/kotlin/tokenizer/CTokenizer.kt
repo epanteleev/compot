@@ -1,9 +1,10 @@
 package tokenizer
 
-import tokenizer.StringReader.Companion.tryPunct
+import tokenizer.tokens.*
+import tokenizer.LexicalElements.keywords
 import tokenizer.LexicalElements.isOperator2
 import tokenizer.LexicalElements.isOperator3
-import tokenizer.LexicalElements.keywords
+import tokenizer.StringReader.Companion.tryPunct
 
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
@@ -138,7 +139,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 if (pair != null) {
                     val diff = reader.pos
                     position += diff
-                    append(Numeric(pair.first, pair.second, OriginalPosition(line, position - diff, filename)))
+                    append(PPNumber(pair.first, pair.second, OriginalPosition(line, position - diff, filename)))
                 }
                 continue
             }
@@ -151,18 +152,18 @@ class CTokenizer private constructor(private val filename: String, private val r
                     val operator = reader.peek(3)
                     reader.read(3)
                     position += 2
-                    append(Identifier(operator, OriginalPosition(line, position - 3, filename)))
+                    append(Punctuator(operator, OriginalPosition(line, position - 3, filename)))
                 } else if (reader.inRange(1) && isOperator2(v, reader.peekOffset(1))) {
                     val operator = reader.peek(2)
                     reader.read(2)
                     position += 1
-                    append(Identifier(operator, OriginalPosition(line, position - 2, filename)))
+                    append(Punctuator(operator, OriginalPosition(line, position - 2, filename)))
                 } else if (v == '\\' && reader.peekOffset(1) == '\n') {
                     reader.read(2)
                     position += 1
                     incrementLine()
                 } else {
-                    append(Punct(reader.read(), OriginalPosition(line, position - 1, filename)))
+                    append(Punctuator(reader.read().toString(), OriginalPosition(line, position - 1, filename)))
                 }
                 continue
             }
@@ -186,7 +187,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 pair != null -> {
                     val diff = reader.pos - saved
                     position += diff
-                    append(Numeric(pair.first,pair.second, OriginalPosition(line, position - diff, filename)))
+                    append(PPNumber(pair.first,pair.second, OriginalPosition(line, position - diff, filename)))
                 }
                 else -> error("Unknown symbol: '$v' in '$filename' at $line:$position")
             }
