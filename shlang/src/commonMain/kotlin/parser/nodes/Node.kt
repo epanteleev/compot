@@ -4,6 +4,9 @@ import types.*
 import common.assertion
 import parser.nodes.visitors.*
 import tokenizer.tokens.Identifier
+import typedesc.TypeDesc
+import typedesc.TypeHolder
+import typedesc.TypeQualifier
 
 
 sealed class Node {
@@ -20,7 +23,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
     override fun<T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 
     fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
-        var pointerType = baseType.baseType()
+        var pointerType = baseType.cType()
         for (pointer in pointers) {
             pointerType = CPointer(pointerType, pointer.property().toSet())
         }
@@ -75,7 +78,7 @@ data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDecl
 
                 is ParameterTypeList -> {
                     val abstractType = decl.resolveType(currentType, typeHolder)
-                    currentType = TypeDesc.from(CFunctionType(name(), abstractType.baseType() as AbstractCFunction), abstractType.qualifiers())
+                    currentType = TypeDesc.from(CFunctionType(name(), abstractType.cType() as AbstractCFunction), abstractType.qualifiers())
                 }
 
                 else -> throw IllegalStateException("Unknown declarator $decl")

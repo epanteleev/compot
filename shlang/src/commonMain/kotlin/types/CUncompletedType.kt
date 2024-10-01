@@ -1,5 +1,7 @@
 package types
 
+import typedesc.TypeDesc
+
 sealed interface CUncompletedType
 
 data class CUncompletedArrayType(val elementType: TypeDesc) : AnyCArrayType(elementType){

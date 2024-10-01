@@ -3,6 +3,10 @@ package parser.nodes
 import types.*
 import common.assertion
 import parser.nodes.visitors.*
+import typedesc.TypeDesc
+import typedesc.TypeHolder
+import typedesc.TypeResolutionException
+import typedesc.VarDescriptor
 
 
 sealed class AnyDeclarator: Node() {
@@ -47,7 +51,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         }
 
         val varDesc = VarDescriptor(type, declspecType.storageClass)
-        val baseType = type.baseType()
+        val baseType = type.cType()
         if (baseType is CFunctionType) {
             // declare extern function or function without body
             typeHolder.addFunctionType(name(), varDesc)
@@ -71,7 +75,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
         val type = declarator.directDeclarator.resolveType(declspecType.type, typeHolder)
         assertion (!declspec.isTypedef) { "typedef is not supported here" }
 
-        val baseType = type.baseType()
+        val baseType = type.cType()
         if (baseType !is CUncompletedArrayType) {
             return@memoizeType typeHolder.addVar(name(), VarDescriptor(type, declspecType.storageClass))
         }
@@ -101,7 +105,9 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
             is StringNode -> {
                 // Special case for string initialization like:
                 // char a[] = "hello";
-                return@memoizeType typeHolder.addVar(name(), VarDescriptor(TypeDesc.from(CPointer(CHAR)), declspecType.storageClass))
+                return@memoizeType typeHolder.addVar(name(),
+                    VarDescriptor(TypeDesc.from(CPointer(CHAR)), declspecType.storageClass)
+                )
             }
             else -> throw TypeResolutionException("Array size is not specified")
         }
@@ -153,13 +159,13 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
         val type = declarator.directDeclarator.resolveType(declspecType.type, typeHolder)
         assertion(!declspec.isTypedef) { "typedef is not supported here" }
 
-        val baseType = type.baseType()
+        val baseType = type.cType()
         assertion(baseType is CFunctionType) { "function type expected" }
         return@memoizeType typeHolder.addFunctionType(name(), VarDescriptor(type, declspecType.storageClass))
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
-        return declareType(specifier, typeHolder).type.baseType() as CFunctionType
+        return declareType(specifier, typeHolder).type.cType() as CFunctionType
     }
 
     override fun <T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)

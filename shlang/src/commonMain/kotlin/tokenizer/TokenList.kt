@@ -18,10 +18,4 @@ fun tokenListOf(vararg tokens: AnyToken): TokenList {
     return list
 }
 
-fun cTokenListOf(vararg tokens: CToken): CTokenList {
-    val list = CTokenList()
-    tokens.forEach { list.add(it) }
-    return list
-}
-
 class CTokenList: LeakedLinkedList<CToken>()

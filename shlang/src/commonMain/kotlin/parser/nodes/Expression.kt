@@ -4,6 +4,8 @@ import types.*
 import tokenizer.tokens.*
 import gen.IRCodeGenError
 import parser.nodes.visitors.*
+import typedesc.TypeHolder
+import typedesc.TypeResolutionException
 
 
 enum class BinaryOpType {
@@ -161,7 +163,7 @@ class CompoundLiteral(val typeName: TypeName, val initializerList: Expression) :
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize typeName.specifyType(typeHolder, listOf()).type.baseType()
+        return@memoize typeName.specifyType(typeHolder, listOf()).type.cType()
     }
 }
 
@@ -257,8 +259,8 @@ class FuncPointerCall(val primary: Expression, args: List<Expression>) : AnyFunc
     override fun resolveType(typeHolder: TypeHolder): CType {
         val ptr = resolveFunctionType(typeHolder)
         return when (val deref = ptr.dereference()) {
-            is AbstractCFunction -> deref.retType.baseType()
-            is CFunctionType -> deref.retType().baseType()
+            is AbstractCFunction -> deref.retType.cType()
+            is CFunctionType -> deref.retType().cType()
             else -> throw TypeResolutionException("Function call with non-function type: $deref")
         }
     }
@@ -277,7 +279,7 @@ class FunctionCall(val primary: VarNode, args: List<Expression>) : AnyFunctionCa
 
     private fun resolveFunctionType(typeHolder: TypeHolder): CFunctionType = memoize {
         resolveParams(typeHolder)
-        val functionType = typeHolder.getFunctionType(name()).type.baseType()
+        val functionType = typeHolder.getFunctionType(name()).type.cType()
         if (functionType !is CFunctionType) {
             throw TypeResolutionException("Function call of '${name()}' with non-function type")
         }
@@ -285,7 +287,7 @@ class FunctionCall(val primary: VarNode, args: List<Expression>) : AnyFunctionCa
     }
 
     override fun resolveType(typeHolder: TypeHolder): CType {
-        return resolveFunctionType(typeHolder).functionType.retType.baseType()
+        return resolveFunctionType(typeHolder).functionType.retType.cType()
     }
 }
 
@@ -339,7 +341,7 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
         }
         val field = structType.fieldIndex(ident.str())
         if (field != -1) {
-            return@memoize structType.fields()[field].second.baseType()
+            return@memoize structType.fields()[field].second.cType()
         }
         throw TypeResolutionException("Field $ident not found in struct $structType")
     }
@@ -359,7 +361,7 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
         }
         val field = baseType.fieldIndex(ident.str())
         if (field != -1) {
-            return@memoize baseType.fields()[field].second.baseType()
+            return@memoize baseType.fields()[field].second.cType()
         }
         throw TypeResolutionException("Field $ident not found in struct $baseType")
     }
@@ -374,7 +376,7 @@ data class VarNode(private val str: Identifier) : Expression() {
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val varType = typeHolder.getVarTypeOrNull(str.str())
         if (varType != null) {
-            return@memoize varType.type.baseType()
+            return@memoize varType.type.cType()
         }
 
         val enumType = typeHolder.findEnum(str.str())
@@ -444,8 +446,8 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
             PrefixUnaryOpType.DEREF -> {
                 when (primaryType) {
                     is CPointer              -> primaryType.dereference()
-                    is CArrayType            -> primaryType.type.baseType()
-                    is CUncompletedArrayType -> primaryType.elementType.baseType()
+                    is CArrayType            -> primaryType.type.cType()
+                    is CUncompletedArrayType -> primaryType.elementType.cType()
                     else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType")
                 }
             }
@@ -489,8 +491,8 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         return@memoize when (val primaryType = primary.resolveType(typeHolder)) {
-            is CArrayType -> primaryType.type.baseType()
-            is CUncompletedArrayType -> primaryType.elementType.baseType()
+            is CArrayType -> primaryType.type.cType()
+            is CUncompletedArrayType -> primaryType.elementType.cType()
             is CPointer     -> primaryType.dereference()
             else -> throw TypeResolutionException("Array access on non-array type: $primaryType")
         }
@@ -523,6 +525,6 @@ data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize typeName.specifyType(typeHolder, listOf()).type.baseType()
+        return@memoize typeName.specifyType(typeHolder, listOf()).type.cType()
     }
 }

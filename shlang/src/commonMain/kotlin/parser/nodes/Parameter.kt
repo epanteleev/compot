@@ -1,7 +1,7 @@
 package parser.nodes
 
-import types.TypeDesc
-import types.TypeHolder
+import typedesc.TypeDesc
+import typedesc.TypeHolder
 import parser.nodes.visitors.*
 
 

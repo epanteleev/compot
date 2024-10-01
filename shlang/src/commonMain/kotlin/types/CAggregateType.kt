@@ -1,5 +1,7 @@
 package types
 
+import typedesc.TypeDesc
+
 
 sealed class CAggregateType: CType()
 

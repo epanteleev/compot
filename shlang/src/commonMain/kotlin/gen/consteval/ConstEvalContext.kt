@@ -1,7 +1,7 @@
 package gen.consteval
 
 import tokenizer.tokens.CToken
-import types.TypeHolder
+import typedesc.TypeHolder
 
 interface ConstEvalContext<T: Number> {
     fun getVariable(name: CToken): T?

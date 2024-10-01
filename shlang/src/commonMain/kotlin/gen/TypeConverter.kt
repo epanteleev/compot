@@ -12,6 +12,7 @@ import ir.instruction.Alloc
 import ir.instruction.IntPredicate
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
+import typedesc.TypeHolder
 
 
 object TypeConverter {
@@ -48,10 +49,10 @@ object TypeConverter {
         VOID   -> Type.Void // TODO handle case '(void) 0'
         is CStructType -> convertStructType(typeHolder, type)
         is CArrayType -> {
-            val elementType = toIRType<NonTrivialType>(typeHolder, type.type.baseType())
+            val elementType = toIRType<NonTrivialType>(typeHolder, type.type.cType())
             ArrayType(elementType, type.dimension.toInt())
         }
-        is CUncompletedStructType -> when (val structType = typeHolder.getTypedef(type.name).baseType()) {
+        is CUncompletedStructType -> when (val structType = typeHolder.getTypedef(type.name).cType()) {
             is CStructType -> convertStructType(typeHolder, structType)
             is CUncompletedStructType -> {
                 val resolved = typeHolder.getTypeOrNull<CStructType>(type.name)
@@ -63,7 +64,7 @@ object TypeConverter {
             else -> throw IRCodeGenError("Unknown type, type=$type")
         }
 
-        is CUncompletedUnionType -> when (val unionType = typeHolder.getTypedef(type.name).baseType()) {
+        is CUncompletedUnionType -> when (val unionType = typeHolder.getTypedef(type.name).cType()) {
             is CUnionType -> convertUnionType(typeHolder, unionType)
             is CUncompletedUnionType -> {
                 val resolved = typeHolder.getTypeOrNull<CUnionType>(type.name)
@@ -91,7 +92,7 @@ object TypeConverter {
     }
 
     private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: AnyStructType): Type {
-        val fields = type.fields().map { toIRType<NonTrivialType>(typeHolder, it.second.baseType()) }
+        val fields = type.fields().map { toIRType<NonTrivialType>(typeHolder, it.second.cType()) }
         val structType = findStructTypeOrNull(type.name)
         if (structType != null) {
             return structType
@@ -105,7 +106,7 @@ object TypeConverter {
             if (it == null) {
                 null
             } else {
-                toIRType<NonTrivialType>(typeHolder, it.second.baseType())
+                toIRType<NonTrivialType>(typeHolder, it.second.cType())
             }
         }
         val structType = findStructTypeOrNull(type.name)

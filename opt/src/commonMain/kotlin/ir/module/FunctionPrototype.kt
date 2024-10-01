@@ -7,6 +7,13 @@ import ir.types.NonTrivialType
 
 sealed class AnyFunctionPrototype(protected val returnType: Type, protected val arguments: List<NonTrivialType>, val isVararg: Boolean) {
     fun arguments(): List<NonTrivialType> = arguments
+    fun argument(index: Int): NonTrivialType {
+        if (index < 0 || index >= arguments.size) {
+            throw IndexOutOfBoundsException("Index $index is out of bounds for arguments of size ${arguments.size}")
+        }
+
+        return arguments[index]
+    }
     fun returnType(): Type = returnType
     abstract fun shortDescription(): String
 }

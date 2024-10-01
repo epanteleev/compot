@@ -3,7 +3,7 @@ package gen.consteval
 import parser.InvalidToken
 import parser.ParserException
 import tokenizer.tokens.CToken
-import types.TypeHolder
+import typedesc.TypeHolder
 
 
 class CommonConstEvalContext<T: Number>(val typeHolder: TypeHolder, val enumerationValues: Map<String, Int> = hashMapOf<String, Int>()): ConstEvalContext<T> {

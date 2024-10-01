@@ -1,4 +1,4 @@
-package types
+package typedesc
 
 interface Scope {
     fun enter()

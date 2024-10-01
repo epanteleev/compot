@@ -23,10 +23,14 @@ import parser.nodes.PrefixUnaryOpType
 import parser.nodes.SingleInitializer
 import parser.nodes.StringNode
 import parser.nodes.UnaryOp
+import typedesc.StorageClass
+import typedesc.TypeDesc
+import typedesc.TypeHolder
+import typedesc.VarDescriptor
 import types.*
 
 
-abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
+sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val typeHolder: TypeHolder,
                                    protected val varStack: VarStack<Value>,
                                    protected val nameGenerator: NameGenerator) {
@@ -74,9 +78,9 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         is CompoundLiteral -> {
             val varDesc = expr.typeName.specifyType(typeHolder, listOf())
-            val lValueType = mb.toIRType<AggregateType>(typeHolder, varDesc.type.baseType())
+            val lValueType = mb.toIRType<AggregateType>(typeHolder, varDesc.type.cType())
             val constant = constEvalExpression(lValueType, expr.initializerList) as InitializerListValue
-            val gConstant = when (varDesc.type.baseType()) {
+            val gConstant = when (varDesc.type.cType()) {
                 is CArrayType -> {
                     ArrayGlobalConstant(createGlobalConstantName(), constant)
                 }
@@ -98,7 +102,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     protected fun generateGlobalAssignmentDeclarator(declarator: InitDeclarator): AnyGlobalValue {
         val cType = declarator.cType()
-        val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType.type.baseType())
+        val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType.type.cType())
 
         if (cType.storageClass == StorageClass.EXTERN) {
             val extern = mb.addExternValue(declarator.name(), lValueType)
@@ -159,7 +163,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     private fun makeGlobalValue(name: String, type: VarDescriptor): Value {
-        val irType = mb.toIRType<NonTrivialType>(typeHolder, type.type.baseType())
+        val irType = mb.toIRType<NonTrivialType>(typeHolder, type.type.cType())
         val value = if (type.storageClass == StorageClass.EXTERN) {
             mb.addExternValue(name, irType)
         } else {
@@ -173,7 +177,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
     protected fun generateGlobalDeclarator(declarator: Declarator): Value {
         val name = declarator.name()
         val varDesc = declarator.cType()
-        when (val type = varDesc.type.baseType()) {
+        when (val type = varDesc.type.cType()) {
             is CFunctionType -> {
                 val abstrType = type.functionType
                 val argTypes  = argumentTypes(abstrType.argsTypes, abstrType.retType)
@@ -211,7 +215,7 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 }
                 val elements = arrayListOf<Constant>()
                 for (field in type.fields()) {
-                    val zero = Constant.of(mb.toIRType<NonTrivialType>(typeHolder, field.second.baseType()), 0)
+                    val zero = Constant.of(mb.toIRType<NonTrivialType>(typeHolder, field.second.cType()), 0)
                     elements.add(zero)
                 }
                 val constant = InitializerListValue(irType, elements)
@@ -247,11 +251,6 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
         else -> null
     }
 
-    private fun constEvalInitializers(lValueType: AggregateType, expr: InitializerList): Constant = when (lValueType) {
-        is ArrayType  -> constEvalInitializers(lValueType, expr)
-        is StructType -> constEvalInitializers(lValueType, expr)
-    }
-
     private fun constEvalInitializers(lValueType: ArrayType, expr: InitializerList): Constant {
         if (expr.initializers.size == 1) {
             return constEvalExpression(lValueType, expr.initializers[0]) ?: throw IRCodeGenError("Unsupported type $lValueType")
@@ -280,13 +279,13 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     protected fun argumentTypes(ctypes: List<TypeDesc>, retTypeDesc: TypeDesc): List<PrimitiveType> {
         val types = arrayListOf<PrimitiveType>()
-        if (retTypeDesc.baseType() is CAggregateType && retTypeDesc.baseType().size() > QWORD_SIZE * 2) {
+        if (retTypeDesc.cType() is CAggregateType && retTypeDesc.cType().size() > QWORD_SIZE * 2) {
             types.add(Type.Ptr)
         }
         for (type in ctypes) {
-            when (type.baseType()) {
+            when (type.cType()) {
                 is CStructType -> {
-                    val irType = mb.toIRType<StructType>(typeHolder, type.baseType())
+                    val irType = mb.toIRType<StructType>(typeHolder, type.cType())
                     val parameters = CallConvention.coerceArgumentTypes(irType)
                     if (parameters != null) {
                         types.addAll(parameters)
@@ -294,32 +293,24 @@ abstract class AbstractIRGenerator(protected val mb: ModuleBuilder,
                         types.add(Type.Ptr)
                     }
                 }
-                is CArrayType, is CUncompletedArrayType -> {
-                    types.add(Type.Ptr)
-                }
-                is AnyCPointer -> {
-                    types.add(Type.Ptr)
-                }
-                is BOOL -> {
-                    types.add(Type.U8)
-                }
-                is CPrimitive -> {
-                    types.add(mb.toIRType<PrimitiveType>(typeHolder, type.baseType()))
-                }
+                is CArrayType, is CUncompletedArrayType -> types.add(Type.Ptr)
+                is AnyCPointer -> types.add(Type.Ptr)
+                is BOOL        -> types.add(Type.U8)
+                is CPrimitive  -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type.cType()))
                 else -> throw IRCodeGenError("Unknown type, type=$type")
             }
         }
         return types
     }
 
-    protected fun irReturnType(retType: TypeDesc): Type = when (retType.baseType()) {
+    protected fun irReturnType(retType: TypeDesc): Type = when (retType.cType()) {
         is VOID -> Type.Void
-        is CPrimitive -> mb.toIRLVType<PrimitiveType>(typeHolder, retType.baseType())
+        is CPrimitive -> mb.toIRLVType<PrimitiveType>(typeHolder, retType.cType())
         is CStructType -> {
-            val structType = mb.toIRType<StructType>(typeHolder, retType.baseType())
+            val structType = mb.toIRType<StructType>(typeHolder, retType.cType())
             val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
             if (list.size == 1) {
-                list[0] as PrimitiveType
+                list[0]
             } else {
                 TupleType(list.toTypedArray())
             }

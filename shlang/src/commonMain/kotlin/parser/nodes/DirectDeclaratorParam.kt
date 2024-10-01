@@ -4,6 +4,8 @@ import types.*
 import gen.consteval.*
 import tokenizer.tokens.Identifier
 import parser.nodes.visitors.DirectDeclaratorParamVisitor
+import typedesc.TypeDesc
+import typedesc.TypeHolder
 
 
 sealed class DirectDeclaratorParam: Node() {
@@ -73,7 +75,7 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
             val type = params[0].resolveType(typeHolder)
             // Special case for void
             // Pattern: 'void f(void)' can be found in the C program.
-            return if (type.baseType() == VOID) {
+            return if (type.cType() == VOID) {
                 emptyList()
             } else {
                 listOf(type)
@@ -106,8 +108,8 @@ data class FunctionPointerDeclarator(val declarator: Declarator): DirectDeclarat
 
     override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         val t = declarator.directDeclarator.resolveType(baseType, typeHolder)
-        if (t.baseType() is AbstractCFunction) {
-            return TypeDesc.from(CPointer(t.baseType() as AbstractCFunction, setOf()), listOf())
+        if (t.cType() is AbstractCFunction) {
+            return TypeDesc.from(CPointer(t.cType() as AbstractCFunction, setOf()), listOf())
         }
 
         return t

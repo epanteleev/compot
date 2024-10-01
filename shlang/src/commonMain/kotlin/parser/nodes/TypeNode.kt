@@ -5,6 +5,12 @@ import gen.consteval.*
 import tokenizer.tokens.*
 import tokenizer.tokens.CToken
 import parser.nodes.visitors.TypeNodeVisitor
+import typedesc.CTypeBuilder
+import typedesc.FunctionSpecifier
+import typedesc.StorageClass
+import typedesc.TypeHolder
+import typedesc.TypeProperty
+import typedesc.TypeQualifier
 
 
 sealed class AnyTypeNode : Node() {
@@ -117,7 +123,7 @@ data class TypeNode(private val name: CToken) : AnyTypeNode() {
             "unsigned"-> UINT
             "_Bool"   -> BOOL
             "__builtin_va_list" -> LONG //TODO hack
-            else      -> typeHolder.getTypedef(name.str()).baseType()
+            else      -> typeHolder.getTypedef(name.str()).cType()
         }
     }
 }

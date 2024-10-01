@@ -1,6 +1,6 @@
 package gen
 
-import types.Scope
+import typedesc.Scope
 
 class VarStack<V>: Scope, Iterable<V> {
     private val stack = mutableListOf<MutableMap<String, V>>(hashMapOf())

@@ -2,7 +2,7 @@ package preprocess
 
 import gen.consteval.ConstEvalContext
 import tokenizer.tokens.CToken
-import types.TypeHolder
+import typedesc.TypeHolder
 
 
 class ConditionEvaluationContext(private val preprocessorContext: PreprocessorContext): ConstEvalContext<Long> {

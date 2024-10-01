@@ -1,7 +1,7 @@
 package parser.nodes
 
 import gen.consteval.*
-import types.TypeHolder
+import typedesc.TypeHolder
 import tokenizer.tokens.Identifier
 import parser.nodes.visitors.UnclassifiedNodeVisitor
 

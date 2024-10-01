@@ -1,6 +1,15 @@
-package types
+package typedesc
 
 import gen.VarStack
+import types.CAggregateType
+import types.CEnumType
+import types.CPrimitive
+import types.CStructType
+import types.CType
+import types.CUncompletedEnumType
+import types.CUncompletedStructType
+import types.CUncompletedUnionType
+import types.CUnionType
 
 
 class TypeHolder private constructor(): Scope {
@@ -79,9 +88,9 @@ class TypeHolder private constructor(): Scope {
 
     inline fun <reified T : CType> addNewType(name: String, type: T): T {
         when (type) {
-            is CEnumType, is CUncompletedEnumType     -> enumTypeMap[name] = type
+            is CEnumType, is CUncompletedEnumType -> enumTypeMap[name] = type
             is CStructType, is CUncompletedStructType -> structTypeMap[name] = type
-            is CUnionType, is CUncompletedUnionType   -> unionTypeMap[name] = type
+            is CUnionType, is CUncompletedUnionType -> unionTypeMap[name] = type
             else -> throw RuntimeException("Unknown type $type")
         }
         return type

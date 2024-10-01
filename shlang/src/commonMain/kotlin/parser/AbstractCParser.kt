@@ -1,7 +1,7 @@
 package parser
 
 import tokenizer.*
-import types.TypeHolder
+import typedesc.TypeHolder
 import tokenizer.tokens.*
 
 

@@ -1,11 +1,11 @@
 package gen
 
-import types.*
 import parser.nodes.*
 import ir.module.Module
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
 import ir.value.Value
+import typedesc.TypeHolder
 
 
 data class IRCodeGenError(override val message: String) : Exception(message)

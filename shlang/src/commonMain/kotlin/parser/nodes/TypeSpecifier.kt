@@ -2,6 +2,11 @@ package parser.nodes
 
 import types.*
 import parser.nodes.visitors.TypeSpecifierVisitor
+import typedesc.CTypeBuilder
+import typedesc.StorageClass
+import typedesc.TypeDesc
+import typedesc.TypeHolder
+import typedesc.VarDescriptor
 
 
 sealed class TypeSpecifier : Node() {
@@ -40,7 +45,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
             return type
         }
 
-        var pointerType = type.type.baseType()
+        var pointerType = type.type.cType()
         for (idx in 0 until pointers.size - 1) {
             val pointer = pointers[idx]
             pointerType = CPointer(pointerType, pointer.property().toSet())

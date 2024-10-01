@@ -1,6 +1,8 @@
 package types
 
 import ir.Definitions.POINTER_SIZE
+import typedesc.TypeInferenceException
+import typedesc.TypeQualifier
 
 
 sealed class CPrimitive: CType() {

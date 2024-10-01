@@ -4,6 +4,8 @@ import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.nodes.*
 import tokenizer.CTokenizer
+import typedesc.StorageClass
+import typedesc.TypeHolder
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -71,7 +73,7 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
-        assertEquals(INT, typeResolver["a"].type.baseType())
+        assertEquals(INT, typeResolver["a"].type.cType())
     }
 
     @Test
@@ -83,8 +85,8 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver)
-        assertEquals(INT, typeResolver["a"].type.baseType())
-        assertEquals(INT, typeResolver["v"].type.baseType())
+        assertEquals(INT, typeResolver["a"].type.cType())
+        assertEquals(INT, typeResolver["v"].type.cType())
     }
 
     @Test
@@ -100,9 +102,9 @@ class TypeResolutionTest {
         assertTrue { typeResolver.containsVar("a") }
         assertTrue { typeResolver.containsVar("v") }
         assertTrue { typeResolver.containsVar("p") }
-        assertEquals(INT, typeResolver["a"].type.baseType())
-        assertEquals(INT, typeResolver["v"].type.baseType())
-        assertEquals(CPointer(INT), typeResolver["p"].type.baseType())
+        assertEquals(INT, typeResolver["a"].type.cType())
+        assertEquals(INT, typeResolver["v"].type.cType())
+        assertEquals(CPointer(INT), typeResolver["p"].type.cType())
     }
 
     @Test
@@ -141,8 +143,8 @@ class TypeResolutionTest {
         val fnType = expr.resolveType(typeResolver)
 
         assertEquals("int add(int, int)", fnType.toString())
-        assertEquals(INT, typeResolver["a"].type.baseType())
-        assertEquals(INT, typeResolver["b"].type.baseType())
+        assertEquals(INT, typeResolver["a"].type.cType())
+        assertEquals(INT, typeResolver["b"].type.cType())
     }
 
     @Test
@@ -166,7 +168,7 @@ class TypeResolutionTest {
 
         assertEquals("int add(int(int, int)*, int)", fnType.toString())
         assertEquals("int(int, int)*", typeResolver["a"].toString())
-        assertEquals(INT, typeResolver["b"].type.baseType())
+        assertEquals(INT, typeResolver["b"].type.cType())
     }
 
     @Test
@@ -340,7 +342,7 @@ class TypeResolutionTest {
         expr.specifyType(typeResolver)
 
         val a = typeResolver["a"]
-        assertEquals(UINT, a.type.baseType())
+        assertEquals(UINT, a.type.cType())
     }
 
     // https://port70.net/~nsz/c/c11/n1570.html#6.7.2.3p11
@@ -395,7 +397,7 @@ class TypeResolutionTest {
         assertEquals("struct s1 {int x;}", typeHolder.getStructType<CStructType>("s1").toString())
         assertEquals("struct s2 {int x;}", typeHolder.getStructType<CStructType>("s2").toString())
         assertEquals("struct s1 {int x;}", typeHolder.getTypedef("t1").toString())
-        assertTrue { typeHolder.getTypedef("tp1").baseType() is CPointer }
+        assertTrue { typeHolder.getTypedef("tp1").cType() is CPointer }
     }
 
     @Test
@@ -505,7 +507,7 @@ class TypeResolutionTest {
 
         parser.translation_unit()
         val typeHolder = parser.typeHolder()
-        assertEquals("unsigned long", typeHolder.getTypedef("A").baseType().toString())
+        assertEquals("unsigned long", typeHolder.getTypedef("A").cType().toString())
     }
 
     @Test
