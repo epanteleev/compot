@@ -1,11 +1,11 @@
 package preprocess
 
-import common.getInclude
 import okio.SYSTEM
+import common.getInclude
 import okio.FileSystem
-import okio.Path.Companion.toPath
 import tokenizer.CTokenizer
 import tokenizer.TokenList
+import okio.Path.Companion.toPath
 
 
 enum class HeaderType {
@@ -71,10 +71,8 @@ class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>)
         return null
     }
 
-    override fun getHeader(name: String, includeType: HeaderType): Header? {
-        return when (includeType) {
-            HeaderType.USER   -> getUserHeader(name) ?: getSystemHeader(name)
-            HeaderType.SYSTEM -> getSystemHeader(name)
-        }
+    override fun getHeader(name: String, includeType: HeaderType): Header? = when (includeType) {
+        HeaderType.USER   -> getUserHeader(name) ?: getSystemHeader(name)
+        HeaderType.SYSTEM -> getSystemHeader(name)
     }
 }

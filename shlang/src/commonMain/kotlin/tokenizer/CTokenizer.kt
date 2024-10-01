@@ -4,6 +4,7 @@ import tokenizer.tokens.*
 import tokenizer.LexicalElements.keywords
 import tokenizer.LexicalElements.isOperator2
 import tokenizer.LexicalElements.isOperator3
+import tokenizer.StringReader.Companion.isSeparator
 import tokenizer.StringReader.Companion.tryPunct
 
 
@@ -63,6 +64,146 @@ class CTokenizer private constructor(private val filename: String, private val r
         return builder.toString()
     }
 
+    fun readEscapedChar(): Char {
+        if (reader.peek() != '\\') {
+            throw IllegalStateException("Expected escape character")
+        }
+        reader.read()
+        return when (reader.peek()) {
+            'n' -> '\n'
+            't' -> '\t'
+            'r' -> '\r'
+            '0' -> '\u0000'
+            '\'' -> '\''
+            '\\' -> '\\'
+            else -> throw IllegalStateException("Unknown escape character")
+        }
+    }
+
+    fun readCharLiteral(): Char {
+        if (reader.peek() == '\\') {
+            val ch = readEscapedChar()
+            reader.read()
+            if (reader.peek() != '\'') {
+                throw IllegalStateException("Expected closing quote")
+            }
+            reader.read()
+            return ch
+        } else {
+            val ch = reader.read()
+            if (reader.peek() != '\'') {
+                throw IllegalStateException("Expected closing quote")
+            }
+            reader.read()
+            return ch
+        }
+    }
+
+    private fun tryGetSuffix(start: Int): String? {
+        if (reader.check("LLU") || reader.check("llu")) {
+            reader.read(3)
+            return reader.str.substring(start, reader.pos)
+        } else if (reader.check("ULL") || reader.check("ull")) {
+            reader.read(3)
+            return reader.str.substring(start, reader.pos)
+        } else if (reader.check("ll") || reader.check("LL")) {
+            reader.read(2)
+            return reader.str.substring(start, reader.pos)
+        } else if (reader.check("LU") || reader.check("lu")) {
+            reader.read(2)
+            return reader.str.substring(start, reader.pos)
+        } else if (reader.check("UL") || reader.check("ul")) {
+            reader.read(2)
+            return reader.str.substring(start, reader.pos)
+        } else if (reader.check("U") || reader.check("u")) {
+            reader.read()
+            return reader.str.substring(start, reader.pos)
+        } else if (reader.check("L") || reader.check("l")) {
+            reader.read()
+            return reader.str.substring(start, reader.pos)
+        } else if (reader.check("F") || reader.check("f")) {
+            reader.read()
+            return reader.str.substring(start, reader.pos)
+        } else if (reader.check("D") || reader.check("d")) {
+            reader.read()
+            return reader.str.substring(start, reader.pos)
+        }
+        return null
+    }
+
+    private inline fun <T> tryRead(callback: () -> T?): T? {
+        val old = reader.pos
+        val result = callback()
+        if (result == null) {
+            reader.pos = old
+        }
+        return result
+    }
+
+    fun readPPNumber(): Pair<String, Int>? {
+        return tryRead {
+            val start = reader.pos
+            if (reader.peek() == '0' && (reader.peekOffset(1) == 'x' || reader.peekOffset(1) == 'X')) {
+                reader.read()
+                reader.read()
+                while (!reader.eof && (reader.peek().isDigit() || reader.peek().lowercaseChar() in 'a'..'f')) {
+                    reader.read()
+                }
+                val withPostfix = tryGetSuffix(start + 2)
+                if (withPostfix != null) {
+                    return@tryRead Pair(withPostfix, 16)
+                }
+                val hexString = reader.str.substring(start + 2, reader.pos)
+                return@tryRead Pair(hexString, 16)
+            }
+
+            reader.read()
+            while (!reader.eof &&
+                (reader.peek().isDigit() ||
+                        reader.peek() == 'e' ||
+                        reader.peek() == 'E' ||
+                        reader.peek() == 'p' ||
+                        reader.peek() == 'P')) {
+                reader.read()
+            }
+            if (reader.eof) {
+                return@tryRead Pair(reader.str.substring(start, reader.pos), 10)
+            }
+
+            if (reader.check('.') && (reader.eof(1) ||
+                        reader.peekOffset(1).isWhitespace() ||
+                        reader.peekOffset(1).isDigit() ||
+                        reader.peekOffset(1) == 'f' ||
+                        reader.peekOffset(1) == 'F')) {
+                //Floating point value
+                reader.read()
+                while (!reader.eof && !isSeparator(reader.peek())) {
+                    reader.read()
+                }
+                val result = tryGetSuffix(start) ?: reader.str.substring(start, reader.pos)
+                return@tryRead Pair(result, 10)
+            } else if (!reader.peek().isLetter() && reader.peek() != '_') {
+                // Integer
+                val result = tryGetSuffix(start) ?: reader.str.substring(start, reader.pos)
+                return@tryRead Pair(result, 10)
+            }
+
+            val postfix = tryGetSuffix(start)
+            if (postfix != null) {
+                return@tryRead Pair(postfix, 10)
+            }
+            return@tryRead null
+        }
+    }
+
+    fun readIdentifier(): String {
+        val startPos = reader.pos
+        while (!reader.eof && (reader.peek().isLetter() || reader.peek().isDigit() || reader.check('_'))) {
+            reader.read()
+        }
+        return reader.str.substring(startPos, reader.pos)
+    }
+
     private fun readSpaces(): Int {
         var spaces = 0
         while (!reader.eof && reader.isSpace()) {
@@ -94,7 +235,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
             if (reader.check('\'')) {
                 reader.read()
-                val literal = reader.readCharLiteral()
+                val literal = readCharLiteral()
                 append(CharLiteral(literal, OriginalPosition(line, position - 1, filename)))
                 continue
             }
@@ -135,7 +276,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
 
             if (reader.check('.') && reader.peekOffset(1).isDigit()) {
-                val pair = reader.readCNumber()
+                val pair = readPPNumber()
                 if (pair != null) {
                     val diff = reader.pos
                     position += diff
@@ -169,7 +310,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
 
             if (reader.check('_') || v.isLetter()) {
-                val identifier = reader.readIdentifier()
+                val identifier = readIdentifier()
                 position += identifier.length
 
                 if (keywords.contains(identifier)) {
@@ -181,7 +322,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
 
             val saved = reader.pos
-            val pair = reader.readCNumber()
+            val pair = readPPNumber()
 
             when {
                 pair != null -> {

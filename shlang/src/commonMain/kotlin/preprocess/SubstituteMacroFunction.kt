@@ -2,54 +2,16 @@ package preprocess
 
 import tokenizer.*
 import common.forEachWith
+import preprocess.macros.MacroExpansionException
+import preprocess.macros.MacroFunction
 import tokenizer.tokens.*
-import preprocess.Macros.Companion.newTokenFrom
+import preprocess.macros.Macros.Companion.newTokenFrom
 
 
-class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx: PreprocessorContext) {
-    private fun seekNonSpace(idx: AnyToken?): CToken {
-        var current: AnyToken? = idx
-        do {
-            if (current == null) {
-                throw MacroExpansionException("Invalid macro expansion")
-            }
-
-            if (current is CToken) {
-                return current
-            }
-            current = current.next()
-        } while (true)
-    }
-
-    private fun concatTokens(result: TokenList, argToValue: Map<CToken, TokenList>, current: CToken): AnyToken? {
-        val i = seekNonSpace(current.next())
-        val value = argToValue[i] ?: tokenListOf(i.cloneWith(current.position()))
-
-        val preprocessed = CProgramPreprocessor.create(value, ctx).preprocess()
-
-        val arg1 = result.findLast { it is CToken }
-        if (arg1 == null) {
-            return i
-        }
-
-        val str = preprocessed.joinToString("") { it.str() }
-        val str1 = arg1.str()
-        result.remove(arg1)
-
-        if (result.lastOrNull() is Indent) {
-            result.removeLast()
-        }
-        val tokens = CTokenizer.apply(str1 + str)
-        result.addAll(tokens)
-        return i.next()
-    }
-
-    private fun stringify(result: TokenList, argToValue: Map<CToken, TokenList>, current: CToken): AnyToken? {
-        val value = argToValue[current] ?: throw MacroExpansionException("Invalid macro expansion: # without argument")
-        val str = value.joinToString("") { it.str() }
-        result.add(StringLiteral(str, current.position()))
-        return current.next()
-    }
+class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx: PreprocessorContext, val args: List<TokenList>):
+    AbstractCPreprocessor(macros.name, macros.value) {
+    private val result = TokenList()
+    private val argToValue = evaluateSubstitution(args)
 
     private fun evaluateSubstitution(args: List<TokenList>): Map<CToken, TokenList> {
         val res = mutableMapOf<CToken, TokenList>()
@@ -59,75 +21,108 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
         return res
     }
 
-    fun substitute(macrosNamePos: Position, args: List<TokenList>): TokenList {
-        val argToValue = evaluateSubstitution(args)
+    private fun concatTokens(current: CToken) {
+        val value = argToValue[current] ?: tokenListOf(current.cloneWith(current.position()))
+        val preprocessed = CProgramPreprocessor.create(value, ctx).preprocess()
 
-        val result = TokenList()
-        var current = macros.value.firstOrNull()
-        do {
-            if (current == null) {
-                break
+        val arg1 = result.findLast { it is CToken }
+        if (arg1 == null) {
+            return
+        }
+
+        val str1 = arg1.str()
+        result.remove(arg1)
+
+        if (result.lastOrNull() is Indent) {
+            result.removeLast()
+        }
+
+        val str = preprocessed.joinToString("", prefix = str1) { it.str() }
+        val tokens = CTokenizer.apply(str)
+        result.addAll(tokens)
+        eat()
+    }
+
+    private fun stringify(current: CToken) {
+        val value = argToValue[current] ?: throw MacroExpansionException("Invalid macro expansion: # without argument")
+        val str = value.joinToString("") { it.str() }
+        result.add(StringLiteral(str, current.position()))
+        eat()
+    }
+
+    private fun concatVariadicArgs(): String {
+        val stringBuilder = StringBuilder()
+        for (arg in args) {
+            for (tok in arg) {
+                stringBuilder.append(tok.str())
             }
+            if (arg != args.last()) {
+                stringBuilder.append(", ")
+            }
+        }
+
+        return stringBuilder.toString()
+    }
+
+    fun substitute(macrosNamePos: Position): TokenList {
+        while (!eof()) {
+            val current = peak<AnyToken>()
             if (current !is CToken) {
-                result.add(current.cloneWith(PreprocessedPosition.UNKNOWN))
-                current = current.next()
+                result.add(current.cloneWith(macrosNamePos))
+                eat()
                 continue
             }
 
-            when(current.str()) {
-                "##" -> {
-                    current = concatTokens(result, argToValue, current)
-                    continue
-                }
-                "#" -> {
-                    current = seekNonSpace(current.next())
-
-                    if (current.str() == "__VA_ARGS__") {
-                        val stringBuilder = StringBuilder()
-                        for (arg in args) {
-                            for (tok in arg) {
-                                stringBuilder.append(tok.str())
-                            }
-                            if (arg != args.last()) {
-                                stringBuilder.append(", ")
-                            }
-                        }
-                        result.add(StringLiteral(stringBuilder.toString(), current.position()))
-                        current = current.next()
-                        continue
-                    } else {
-                        current = stringify(result, argToValue, current)
-                    }
-                    continue
-                }
-                "__VA_ARGS__" -> {
-                    val remains = args.takeLast(args.size - macros.argNames.size + 1)
-                    for (arg in remains) {
-                        for (tok in arg) {
-                            result.add(tok.cloneWith(PreprocessedPosition.UNKNOWN))
-                        }
-                        if (arg != remains.last()) {
-                            result.add(Punctuator(",", PreprocessedPosition.UNKNOWN))
-                        }
-                    }
-                    current = current.next()
-                    continue
-                }
+            if (check("##")) {
+                eat()
+                eatSpace()
+                concatTokens(peak())
+                continue
             }
 
-            val value = argToValue[current]
+            if (check("#")) {
+                eat()
+                eatSpace()
+
+                if (!check("__VA_ARGS__")) {
+                    stringify(peak())
+                    continue
+                }
+                // #__VA_ARGS__ pattern
+                val concat = concatVariadicArgs()
+                result.add(StringLiteral(concat, peak<CToken>().position()))
+                eat()
+                continue
+            }
+
+            if (check("__VA_ARGS__")) {
+                val remains = args.takeLast(args.size - macros.argNames.size + 1)
+
+                for (arg in remains) {
+                    for (tok in arg) {
+                        result.add(tok.cloneWith(macrosNamePos))
+                    }
+                    if (arg != remains.last()) {
+                        result.add(Punctuator(",", macrosNamePos))
+                    }
+                }
+                eat()
+                continue
+            }
+
+            val value = argToValue[peak()]
             if (value == null) {
-                result.add(newTokenFrom(macrosNamePos, current))
-                current = current.next()
+                result.add(newTokenFrom(macrosNamePos, peak()))
+                eat()
                 continue
             }
 
-            val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, current.position() as OriginalPosition)
+            val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, peak<CToken>().position() as OriginalPosition)
             for (tok in value) {
                 result.add(tok.cloneWith(preprocessedPosition))
             }
-            current = current.next()
-        } while (current != null)
+            eat()
+        }
         return result
     }
 }

@@ -50,23 +50,6 @@ abstract class AbstractCParser(val filename: String, tokens: TokenList) {
         return current!!.str() == s
     }
 
-    protected fun checkOffset(offset: Int, expects: String): Boolean {
-        skipSpaces()
-        var iter = 0
-        var current = current
-        do {
-            if (eof()) {
-                return false
-            }
-            if (iter == offset) {
-                return current!!.str() == expects
-            }
-
-            current = current!!.next()
-            iter++
-        } while (true)
-    }
-
     protected inline fun<reified T> check(): Boolean {
         skipSpaces()
         if (eof()) {

@@ -9,6 +9,7 @@ import okio.Path.Companion.toPath
 import okio.SYSTEM
 import tokenizer.CTokenizer
 import parser.CProgramParser
+import preprocess.macros.MacroReplacement
 import tokenizer.TokenList
 import tokenizer.TokenPrinter
 

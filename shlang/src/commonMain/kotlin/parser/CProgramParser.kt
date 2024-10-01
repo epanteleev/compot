@@ -120,9 +120,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //                      | case <constant-expression> : <statement>
     //                      | default : <statement>
     fun labeled_statement(): Statement? = rule {
-        if (check<Identifier>() && checkOffset(1, ":")) {
+        if (check<Identifier>()) {
             val ident = peak<Identifier>()
             eat()
+            if (!check(":")) {
+                return@rule null
+            }
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
             return@rule labelResolver.addLabel(LabeledStatement(ident, stmt))
@@ -338,12 +341,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	;
     fun expression(): Expression? = rule {
         val assign = assignment_expression()?: return@rule null
-        if (check(",")) {
-            eat()
-            val expr = expression()?: throw ParserException(InvalidToken("Expected expression", peak()))
-            return@rule BinaryOp(assign, expr, BinaryOpType.COMMA)
+        if (!check(",")) {
+            return@rule assign
         }
-        return@rule assign
+        eat()
+        val expr = expression()?: throw ParserException(InvalidToken("Expected expression", peak()))
+        return@rule BinaryOp(assign, expr, BinaryOpType.COMMA)
     }
 
     // assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^="
@@ -446,12 +449,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	              ;
     fun init_declarator(): AnyDeclarator? = rule {
         val declarator = declarator()?: return@rule null
-        if (check("=")) {
-            eat()
-            val initializer = initializer()?: throw ParserException(InvalidToken("Expected initializer", peak()))
-            return@rule InitDeclarator(declarator, initializer) //TODO
+        if (!check("=")) {
+            return@rule declarator
         }
-        return@rule declarator
+        eat()
+        val initializer = initializer()?: throw ParserException(InvalidToken("Expected initializer", peak()))
+        return@rule InitDeclarator(declarator, initializer)
     }
 
     // init_declarator_list
@@ -575,11 +578,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     fun struct_declaration(): StructField? = rule {
         val declspec = specifier_qualifier_list()?: return@rule null
         val declarators = struct_declarator_list()
-        if (check(";")) {
-            eat()
-            return@rule StructField(declspec, declarators)
+        if (!check(";")) {
+            throw ParserException(InvalidToken("Expected ';'", peak()))
         }
-        throw ParserException(InvalidToken("Expected ';'", peak()))
+        eat()
+        return@rule StructField(declspec, declarators)
     }
 
     // struct_declaration_list
@@ -670,12 +673,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         val name = peak<Identifier>()
         eat()
-        if (check("=")) {
-            eat()
-            val expr = constant_expression()?: throw ParserException(InvalidToken("Expected constant expression", peak()))
-            return@rule Enumerator(name, expr)
+        if (!check("=")) {
+            return@rule Enumerator(name, EmptyExpression)
         }
-        return@rule Enumerator(name, EmptyExpression)
+        eat()
+        val expr = constant_expression()?: throw ParserException(InvalidToken("Expected constant expression", peak()))
+        return@rule Enumerator(name, expr)
     }
 
     // enumerator_list

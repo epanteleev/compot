@@ -1,6 +1,7 @@
 package preprocess
 
 import parser.*
+import preprocess.macros.MacroExpansionException
 import tokenizer.*
 import tokenizer.tokens.*
 
@@ -92,6 +93,19 @@ abstract class AbstractCPreprocessor(val filename: String, protected val tokens:
             removed += indent.str().length
         }
         return removed
+    }
+
+    protected fun eatSpace() {
+        do {
+            if (eof()) {
+                throw MacroExpansionException("Invalid macro expansion")
+            }
+
+            if (current is CToken) {
+                return
+            }
+            eat()
+        } while (true)
     }
 
     protected fun addAll(others: TokenList) {
