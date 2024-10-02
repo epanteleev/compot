@@ -16,7 +16,7 @@ import typedesc.TypeHolder
 
 
 object TypeConverter {
-    inline fun <reified T : PrimitiveType> ModuleBuilder.toIRLVType(typeHolder: TypeHolder, type: CType): T {
+    inline fun <reified T : NonTrivialType> ModuleBuilder.toIRLVType(typeHolder: TypeHolder, type: CType): T {
         val converted = toIRType<NonTrivialType>(typeHolder, type)
         return if (converted == Type.U1) {
             Type.I8 as T
@@ -92,7 +92,7 @@ object TypeConverter {
     }
 
     private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: AnyStructType): Type {
-        val fields = type.fields().map { toIRType<NonTrivialType>(typeHolder, it.second.cType()) }
+        val fields = type.fields().map { toIRLVType<NonTrivialType>(typeHolder, it.second.cType()) }
         val structType = findStructTypeOrNull(type.name)
         if (structType != null) {
             return structType
@@ -132,7 +132,7 @@ object TypeConverter {
         if (value.type() == toType) {
             return value
         }
-        if (value is Constant && toType !is PointerType) {
+        if (value is PrimitiveConstant && toType !is PointerType) {
             // Opt IR does not support pointer constants.
             return convertConstant(value, toType)
         }
@@ -514,7 +514,7 @@ object TypeConverter {
         }
     }
 
-    private fun convertConstant(value: Constant, type: NonTrivialType): Value {
-        return Constant.from(type, value)
+    private fun convertConstant(value: PrimitiveConstant, type: NonTrivialType): Value {
+        return PrimitiveConstant.from(type, value)
     }
 }

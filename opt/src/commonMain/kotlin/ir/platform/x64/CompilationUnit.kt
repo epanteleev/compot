@@ -12,9 +12,11 @@ import ir.types.*
 //
 // https://ftp.gnu.org/old-gnu/Manuals/gas-2.9.1/html_node/as_toc.html
 class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
+
     private fun makeAggregateConstant(name: String, aggregateType: AggregateType, initializer: InitializerListValue): ObjLabel = label(name) {
-        for (e in LinearizeInitializerList.linearize(initializer, aggregateType)) {
-            primitive(this, e.asType(), e.data())
+        val linear = LinearizeInitializerList.linearize(initializer, aggregateType)
+        for (e in linear) {
+            primitive(this, e)
         }
     }
 
@@ -61,7 +63,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
     private fun makePrimitiveConstant(globalValue: GlobalValue): ObjLabel = when (val initializer = globalValue.initializer()) {
         is InitializerListValue -> anonConstant {
             for (e in LinearizeInitializerList.linearize(initializer, globalValue.contentType().asType())) {
-                primitive(this, e.asType(), e.data())
+                primitive(this, e)
             }
         }
         is StringLiteralConstant -> {
@@ -69,11 +71,12 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
                 string(initializer.data())
             }
             label(globalValue.name()) {
-                quad(initConstant.name)
+                quad(initConstant)
             }
         }
         is PrimitiveConstant -> label(globalValue.name()) {
-            primitive(this, globalValue.asType(), initializer.data())
+            val cvt = PrimitiveConstant.from(globalValue.contentType().asType(), initializer)
+            primitive(this, cvt)
         }
         else -> throw IllegalArgumentException("unsupported constant type: $initializer")
     }
@@ -92,25 +95,28 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         is PrimitiveType -> makePrimitiveConstant(globalValue)
     }
 
-    private fun primitive(builder: ObjBuilder, type: PrimitiveType, data: String) = when (type) {
-        Type.I64 -> builder.quad(data)
-        Type.U64 -> builder.quad(data)
-        Type.I32 -> builder.long(data)
-        Type.U32 -> builder.long(data)
-        Type.I16 -> builder.short(data)
-        Type.U16 -> builder.short(data)
-        Type.I8  -> builder.byte(data)
-        Type.U8  -> builder.byte(data)
-        Type.F32 -> builder.long(data)
-        Type.F64 -> builder.quad(data)
-        Type.Ptr -> builder.quad(data)
-        else -> throw IllegalArgumentException("unsupported constant type: $type")
+    private fun primitive(builder: ObjBuilder, data: Constant) = when (data) {
+        is I64Value -> builder.quad(data.i64)
+        is U64Value -> builder.quad(data.u64)
+        is I32Value -> builder.long(data.i32)
+        is U32Value -> builder.long(data.u32)
+        is I16Value -> builder.short(data.i16)
+        is U16Value -> builder.short(data.u16)
+        is I8Value  -> builder.byte(data.i8)
+        is U8Value  -> builder.byte(data.u8)
+        is F32Value -> builder.long(data.bits())
+        is F64Value -> builder.quad(data.bits())
+        is PointerLiteral -> {
+            val gConstant = data.gConstant
+            builder.quad(findLabel(gConstant.name()))
+        }
+        is StringLiteralConstant -> builder.string(data.data())
+        else -> throw IllegalArgumentException("unsupported constant type: $data")
     }
 
-    private fun makePrimitiveConstant(globalValue: GlobalConstant): ObjLabel {
-        val data = globalValue.data()
+    private fun makePrimitiveConstant(globalValue: PrimitiveGlobalConstant): ObjLabel {
         return label(globalValue.name()) {
-            primitive(this, globalValue.asType(), data)
+            primitive(this, globalValue.constant())
         }
     }
 }

@@ -1,15 +1,47 @@
 package ir.types
 
-import ir.Definitions.QWORD_SIZE
-
 
 class StructType internal constructor(val name: String, val fields: List<NonTrivialType>): AggregateType {
+    private val alignments = alignments()
+    private var maxAlignment = Int.MIN_VALUE
+    init {
+        require(fields.all { it !is FlagType }) { "StructType cannot contain FlagType" }
+    }
+
+    override fun maxAlignment(): Int {
+        if (maxAlignment == Int.MIN_VALUE) {
+            maxAlignment = alignments.maxOrNull() ?: 1
+        }
+        return maxAlignment
+    }
+
+    private fun alignments(): IntArray {
+        var current = 0
+        var alignment = 1
+        val result = IntArray(fields.size)
+        for (i in fields.indices) {
+            val field = fields[i]
+            alignment = align(alignment, field)
+            current = alignTo(current + field.sizeOf(), alignment)
+            result[i] = alignment
+        }
+        return result
+    }
+
+    private fun align(alignment: Int, field: NonTrivialType): Int {
+        return if (field is AggregateType) {
+            maxOf(alignment, field.maxAlignment())
+        } else {
+            maxOf(alignment, field.sizeOf())
+        }
+    }
+
     override fun offset(index: Int): Int {
         var current = 0
         for (i in 0 until index) {
-            current = alignTo(current, fields[i].sizeOf()) + fields[i].sizeOf()
+            current = alignTo(current + fields[i].sizeOf(), alignments[i])
         }
-        return alignTo(current, fields[index].sizeOf())
+        return alignTo(current, alignments[index])
     }
 
     override fun field(index: Int): NonTrivialType {
@@ -23,16 +55,10 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
             return 0
         }
         var offset = 0
-        var alignment = 1
-        for (field in fields) {
-            alignment = if (field.sizeOf() <= QWORD_SIZE) {
-                maxOf(alignment, field.sizeOf())
-            } else {
-                QWORD_SIZE
-            }
-            offset = alignTo(offset, alignment) + field.sizeOf()
+        for (idx in fields.indices) {
+            offset = alignTo(offset + fields[idx].sizeOf(), alignments[idx])
         }
-        return alignTo(offset, alignment)
+        return offset
     }
 
     override fun toString(): String = "$$name"

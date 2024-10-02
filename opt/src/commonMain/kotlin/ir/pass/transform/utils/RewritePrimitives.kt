@@ -136,11 +136,11 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
 
     companion object {
         internal fun convertOrSkip(type: Type, value: Value): Value {
-            if (value !is Constant) {
+            if (value !is PrimitiveConstant) {
                 return value
             }
 
-            return Constant.from(type as NonTrivialType, value)
+            return PrimitiveConstant.from(type as NonTrivialType, value)
         }
 
         fun run(cfg: FunctionData, insertedPhis: Set<Phi>, dominatorTree: DominatorTree): RewritePrimitives {

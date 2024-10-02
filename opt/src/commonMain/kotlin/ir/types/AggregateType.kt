@@ -4,6 +4,7 @@ sealed interface AggregateType : NonTrivialType {
     fun offset(index: Int): Int
     fun field(index: Int): NonTrivialType
     fun fields(): List<NonTrivialType>
+    fun maxAlignment(): Int
 
     fun hasFloatOnly(lo: Int, hi: Int): Boolean {
         return hasFloat(this, lo, hi, 0)

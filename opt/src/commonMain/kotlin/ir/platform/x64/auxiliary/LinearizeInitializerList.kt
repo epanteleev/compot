@@ -19,11 +19,12 @@ object LinearizeInitializerList {
             val structSize = aggregateType.offset(idx) + aggregateType.field(idx).sizeOf()
             initializerListSizeOf += element.type().sizeOf()
 
-            fillIn(result, structSize, initializerListSizeOf)
+
             when (element) {
                 is InitializerListValue -> result.addAll(linearize(element, aggregateType.field(idx) as AggregateType))
                 else -> result.add(element)
             }
+            fillIn(result, structSize, initializerListSizeOf)
         }
         fillIn(result, aggregateType.sizeOf(), initializerListSizeOf)
         return result

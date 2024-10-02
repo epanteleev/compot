@@ -4,6 +4,7 @@ import common.assertion
 import ir.attributes.GlobalValueAttribute
 import ir.types.*
 import ir.value.Constant
+import ir.value.PrimitiveConstant
 
 
 class GlobalValue private constructor(val name: String, private val type: NonTrivialType, private val init: Constant, private val attribute: GlobalValueAttribute): AnyGlobalValue {
@@ -53,6 +54,10 @@ class GlobalValue private constructor(val name: String, private val type: NonTri
                 }
             }
             is PrimitiveType -> {
+                assertion(constant.type() is PrimitiveType) {
+                    "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
+                }
+                constant as PrimitiveConstant
                 assertion(constant.type().sizeOf() == type.sizeOf()) {
                     "GlobalValue: type mismatch: type=$type, init=${constant}"
                 }

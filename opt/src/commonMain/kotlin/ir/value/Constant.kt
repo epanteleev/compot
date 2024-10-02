@@ -2,6 +2,7 @@ package ir.value
 
 import ir.global.GlobalConstant
 import ir.types.*
+import ir.value.Constant.Companion.of
 
 
 sealed interface Constant: Value {
@@ -43,26 +44,6 @@ sealed interface Constant: Value {
             return result
         }
 
-        fun from(kind: NonTrivialType, value: Constant): Constant = when (value) {
-            is I8Value -> of(kind, value.i8)
-            is U8Value -> of(kind, value.u8)
-            is I16Value -> of(kind, value.i16)
-            is U16Value -> of(kind, value.u16)
-            is I32Value -> of(kind, value.i32)
-            is U32Value -> of(kind, value.u32)
-            is I64Value -> of(kind, value.i64)
-            is U64Value -> of(kind, value.u64)
-            is F32Value -> of(kind, value.f32)
-            is F64Value -> of(kind, value.f64)
-            is NullValue -> of(kind, 0)
-            is UndefinedValue -> Value.UNDEF
-            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
-        }
-
-        fun from(type: AggregateType, elements: List<Constant>): Constant {
-            return InitializerListValue(type, elements)
-        }
-
         fun zero(kind: NonTrivialType): Constant = when (kind) {
             Type.I8  -> I8Value(0)
             Type.U8  -> U8Value(0)
@@ -102,8 +83,8 @@ class BoolValue private constructor(val bool: Boolean): Constant {
     }
 }
 
-object NullValue : Constant {
-    override fun type(): NonTrivialType {
+object NullValue : PrimitiveConstant {
+    override fun type(): PointerType {
         return Type.Ptr
     }
 
@@ -119,10 +100,30 @@ object NullValue : Constant {
 class PointerLiteral(val gConstant: GlobalConstant): PrimitiveConstant {
     override fun data(): String = gConstant.name()
     override fun toString(): String = gConstant.name()
-    override fun type(): NonTrivialType = Type.Ptr
+    override fun type(): PointerType = Type.Ptr
 }
 
-sealed interface PrimitiveConstant: Constant
+sealed interface PrimitiveConstant: Constant {
+    override fun type(): PrimitiveType
+
+    companion object {
+        fun from(kind: NonTrivialType, value: PrimitiveConstant): Constant = when (value) {
+            is I8Value -> of(kind, value.i8)
+            is U8Value -> of(kind, value.u8)
+            is I16Value -> of(kind, value.i16)
+            is U16Value -> of(kind, value.u16)
+            is I32Value -> of(kind, value.i32)
+            is U32Value -> of(kind, value.u32)
+            is I64Value -> of(kind, value.i64)
+            is U64Value -> of(kind, value.u64)
+            is F32Value -> of(kind, value.f32)
+            is F64Value -> of(kind, value.f64)
+            is NullValue -> of(kind, 0)
+            is UndefinedValue -> Value.UNDEF
+            is PointerLiteral -> PointerLiteral(value.gConstant)
+        }
+    }
+}
 
 sealed interface IntegerConstant: PrimitiveConstant {
     fun toInt(): Int = when (this) {
@@ -276,6 +277,8 @@ data class F32Value(val f32: Float): FloatingPointConstant {
 
     override fun data(): String = f32.toBits().toString()
 
+    fun bits(): Int = f32.toBits()
+
     override fun toString(): String {
         return f32.toString()
     }
@@ -288,12 +291,14 @@ data class F64Value(val f64: Double): FloatingPointConstant {
 
     override fun data(): String = f64.toBits().toString()
 
+    fun bits(): Long = f64.toBits()
+
     override fun toString(): String {
         return f64.toString()
     }
 }
 
-object UndefinedValue: Constant {
+object UndefinedValue: Constant, PrimitiveConstant {
     fun name(): String {
         return toString()
     }

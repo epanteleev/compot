@@ -5,17 +5,26 @@ import ir.platform.x64.codegen.MacroAssembler
 abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
     private val symbols = arrayListOf<AnyDirective>()
     private var arrayToAppend = symbols
-    private val namedDirectives = hashSetOf<NamedDirective>()
+    private val namedDirectives = hashMapOf<String, NamedDirective>()
 
     private fun newConstantName() = nameAssistant.nextConstant()
 
     private inline fun<reified T: NamedDirective> addSymbol(objSymbol: T): T {
-        val has = namedDirectives.add(objSymbol)
-        if (!has) {
+        val has = namedDirectives.put(objSymbol.name, objSymbol)
+        if (has != null) {
             throw IllegalArgumentException("symbol already exists: $objSymbol")
         }
         symbols.add(objSymbol)
         return objSymbol
+    }
+
+    protected fun findLabel(name: String): ObjLabel {
+        val directive = namedDirectives[name] ?: throw IllegalArgumentException("label not found: $name")
+        if (directive !is ObjLabel) {
+            throw IllegalArgumentException("label not found: $name")
+        }
+
+        return directive
     }
 
     fun nameAssistant(): NameAssistant = nameAssistant
@@ -48,20 +57,28 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
         return fn
     }
 
-    override fun byte(value: String) {
-        arrayToAppend.add(ByteDirective(value))
+    override fun byte(value: Byte) {
+        arrayToAppend.add(ByteDirective(value.toString()))
     }
 
-    override fun short(value: String) {
-        arrayToAppend.add(ShortDirective(value))
+    override fun short(value: Short) {
+        arrayToAppend.add(ShortDirective(value.toString()))
     }
 
-    override fun long(value: String) {
-        arrayToAppend.add(LongDirective(value))
+    override fun long(value: Int) {
+        arrayToAppend.add(LongDirective(value.toString()))
     }
 
-    override fun quad(value: String) {
-        arrayToAppend.add(QuadDirective(value))
+    override fun quad(value: Long) {
+        arrayToAppend.add(QuadDirective(value.toString()))
+    }
+
+    override fun quad(label: ObjLabel) {
+        if (!namedDirectives.contains(label.name)) {
+            throw IllegalArgumentException("label not found: $label")
+        }
+
+        arrayToAppend.add(QuadDirective(label.name))
     }
 
     override fun string(value: String) {

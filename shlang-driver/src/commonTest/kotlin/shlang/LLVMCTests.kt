@@ -397,7 +397,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testGlobalBoolLayout() {
         val result = runCTest("shlang/llvm-c-tests/2004-11-28-GlobalBoolLayout", listOf(), options())
         assertEquals("1 1 4\n", result.output)

@@ -13,6 +13,7 @@ import ir.value.Constant
 import ir.value.InitializerListValue
 import ir.value.PointerLiteral
 import ir.value.PrimitiveConstant
+import ir.value.StringLiteralConstant
 import ir.value.Value
 import parser.nodes.CompoundLiteral
 import parser.nodes.Declarator
@@ -47,11 +48,14 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             else -> throw IRCodeGenError("Unsupported type $lValueType")
         }
         is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
-        is StringNode        -> {
-            val constant = expr.data()
-            val stringLiteral = StringLiteralGlobalConstant(createGlobalConstantName(), ArrayType(Type.U8, constant.length), constant.toString())
-            val g = mb.addConstant(stringLiteral)
-            PointerLiteral(g)
+        is StringNode        -> when (lValueType) {
+            is ArrayType -> StringLiteralConstant(expr.data())
+            else -> {
+                val constant = expr.data()
+                val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.U8, constant.length), constant.toString())
+                val g = mb.addConstant(stringLiteral)
+                PointerLiteral(g)
+            }
         }
         else -> defaultContEval(lValueType, expr)
     }
@@ -146,6 +150,11 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     }
                     else -> throw IRCodeGenError("Unsupported type $lValueType")
                 }
+            }
+            is StringLiteralConstant -> {
+                val global = mb.addGlobal(declarator.name(), lValueType, constant, attr)
+                varStack[declarator.name()] = global
+                return global
             }
             else -> TODO("$constant")
         }

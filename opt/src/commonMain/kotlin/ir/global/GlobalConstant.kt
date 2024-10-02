@@ -17,11 +17,11 @@ sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
         return name
     }
 
-    override fun hashCode(): Int {
+    final override fun hashCode(): Int {
         return name.hashCode()
     }
 
-    override fun equals(other: Any?): Boolean {
+    final override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
 

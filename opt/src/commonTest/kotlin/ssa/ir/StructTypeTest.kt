@@ -104,4 +104,11 @@ class StructTypeTest {
 //        assertFalse { structType.hasFloatOnly(4, 8) } TODO failure
         assertFalse { structType.hasFloatOnly(0, 4) }
     }
+
+    @Test
+    fun test12() {
+        val structType = StructType("Point", arrayListOf(Type.I8, Type.I8, ArrayType(Type.I8, 3)))
+        assertEquals(5, structType.sizeOf())
+        assertEquals(2, structType.offset(2))
+    }
 }
