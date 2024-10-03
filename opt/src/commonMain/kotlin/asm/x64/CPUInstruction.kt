@@ -457,15 +457,15 @@ data class Ucomisd(val size: Int, val src1: Operand, val src2: Operand): CPUInst
     }
 }
 
-data class Cvtsd2ss(val src1: Operand, val src2: Operand): CPUInstruction {
+data class Cvtsd2ss(val src1: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
-        return "cvtsd2ss ${src1.toString(16)}, ${src2.toString(16)}"
+        return "cvtsd2ss ${src1.toString(16)}, ${dst.toString(16)}"
     }
 }
 
-data class Cvtss2sd(val src1: Operand, val src2: Operand): CPUInstruction {
+data class Cvtss2sd(val src1: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
-        return "cvtss2sd ${src1.toString(16)}, ${src2.toString(16)}"
+        return "cvtss2sd ${src1.toString(16)}, ${dst.toString(16)}"
     }
 }
 

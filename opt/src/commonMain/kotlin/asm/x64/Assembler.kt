@@ -9,11 +9,6 @@ private class InstructionList: Iterable<CPUInstruction> {
 
     fun add(inst: CPUInstruction) = list.add(inst)
 
-    fun joinTo(builder: StringBuilder, prefix: String, separator: String) {
-        // GNU as requires a newline after the last instruction
-        list.joinTo(builder, separator, prefix, postfix = "\n")
-    }
-
     fun size() = list.size
     override fun iterator(): Iterator<CPUInstruction> = list.iterator()
 }
@@ -22,7 +17,7 @@ private class InstructionList: Iterable<CPUInstruction> {
 // X86 and amd64 instruction reference
 // https://www.felixcloutier.com/x86/
 abstract class Assembler(private val name: String, val id: Int): AnonymousDirective() {
-    private val codeBlocks: LinkedHashMap<Label, InstructionList>
+    private val codeBlocks: LinkedHashMap<Label, InstructionList> //TODO label resolution mechanism
     private val activeContext: BuilderContext
     private var anonLabelCounter = 0
 
@@ -63,7 +58,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
 
     fun anonLabel(): Label {
         anonLabelCounter++
-        return label("anon$anonLabelCounter")
+        return label(".L.anon.$anonLabelCounter")
     }
 
     fun currentLabel(): Label {
@@ -77,7 +72,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun add(size: Int, first: Imm32, destination: GPRegister)      = add(Add(size, first, destination))
     fun add(size: Int, first: GPRegister, destination: Address)    = add(Add(size, first, destination))
     fun add(size: Int, first: Address, destination: GPRegister)    = add(Add(size, first, destination))
-    fun add(size: Int, first: Imm32, destination: Address)         = add(Add(size, first, destination)) //TODO Use THIS
+    fun add(size: Int, first: Imm32, destination: Address)         = add(Add(size, first, destination))
 
     fun sub(size: Int, first: GPRegister, destination: GPRegister) = add(Sub(size, first, destination))
     fun sub(size: Int, first: Imm32, destination: GPRegister)      = add(Sub(size, first, destination))
@@ -177,7 +172,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun pop(size: Int, toReg: GPRegister) = add(Pop(size, toReg))
 
     // Move
-    protected fun mov(size: Int, src: GPRegister, dst: GPRegister) = add(Mov(size, src, dst))
+    fun mov(size: Int, src: GPRegister, dst: GPRegister) = add(Mov(size, src, dst))
     fun mov(size: Int, src: Address, dst: GPRegister)    = add(Mov(size, src, dst))
     fun mov(size: Int, src: GPRegister, dst: Address)    = add(Mov(size, src, dst))
     fun mov(size: Int, imm: ImmInt, dst: Address)        = add(Mov(size, imm, dst))

@@ -1,7 +1,6 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
-import common.assertion
 import ir.Definitions.QWORD_SIZE
 import ir.types.*
 import ir.instruction.Int2Float
@@ -21,7 +20,7 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     }
 
     override fun rx(dst: XmmRegister, src: GPRegister) {
-        if (fromType == Type.U64) {
+        if (fromType == Type.U64 || fromType == Type.U32) {
             cvtU64(dst, src)
             return
         }
@@ -34,7 +33,7 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     }
 
     override fun ax(dst: XmmRegister, src: Address) {
-        if (fromType == Type.U64) {
+        if (fromType == Type.U64 || fromType == Type.U32) {
             cvtU64(dst, src)
             return
         }
@@ -47,7 +46,7 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     }
 
     override fun ar(dst: Address, src: GPRegister) {
-        if (fromType == Type.U64) {
+        if (fromType == Type.U64 || fromType == Type.U32) {
             cvtU64(dst, src)
             return
         }
@@ -62,7 +61,7 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     }
 
     override fun aa(dst: Address, src: Address) {
-        if (fromType == Type.U64) {
+        if (fromType == Type.U64 || fromType == Type.U32) {
             cvtU64(dst, src)
             return
         }
@@ -104,21 +103,25 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
         val slowPath     = asm.anonLabel()
         val cont         = asm.anonLabel()
         asm.switchTo(currentLabel).let {
+            if (fromType == Type.U32) { //TODO simplify for U32 ???????????????
+                asm.mov(fromSize, src, src)
+            }
             asm.test(QWORD_SIZE, src, src)
-            asm.jcc(CondType.JL, slowPath)
+            asm.jcc(CondType.JS, slowPath)
         }
         currentLabel.let {
-            asm.cvtint2fp(fromSize, toSize, src, dst)
+            asm.cvtint2fp(QWORD_SIZE, toSize, src, dst)
             asm.jump(cont)
         }
         asm.switchTo(slowPath).let {
-            asm.copy(QWORD_SIZE, src, temp1)
-            asm.copy(QWORD_SIZE, src, temp2)
+            asm.copy(fromSize, src, temp1)
+            asm.copy(fromSize, src, temp2)
             asm.shr(QWORD_SIZE, Imm32.of(1), temp1)
-            asm.and(QWORD_SIZE, Imm32.of(1), temp2)
+            asm.and(fromSize, Imm32.of(1), temp2)
             asm.or(QWORD_SIZE, temp1, temp2)
-            asm.cvtint2fp(fromSize, toSize, temp2, dst)
-            asm.addf(toSize, dst, dst)
+            asm.pxor(dst, dst)
+            asm.cvtint2fp(QWORD_SIZE, toSize, temp2, dst)
+            asm.addf(QWORD_SIZE, dst, dst)
         }
         asm.switchTo(cont)
     }
@@ -128,21 +131,25 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
         val slowPath     = asm.anonLabel()
         val cont         = asm.anonLabel()
         asm.switchTo(currentLabel).let {
-            asm.mov(QWORD_SIZE, src, temp1)
+            asm.mov(fromSize, src, temp1)
+            if (fromType == Type.U32) { //TODO simplify for U32 ???????????????
+                asm.mov(fromSize, temp1, temp1)
+            }
             asm.test(QWORD_SIZE, temp1, temp1)
-            asm.jcc(CondType.JL, slowPath)
+            asm.jcc(CondType.JS, slowPath)
         }
         currentLabel.let {
-            asm.cvtint2fp(fromSize, toSize, src, dst)
+            asm.cvtint2fp(QWORD_SIZE, toSize, src, dst)
             asm.jump(cont)
         }
         asm.switchTo(slowPath).let {
-            asm.mov(QWORD_SIZE, src, temp2)
+            asm.mov(fromSize, src, temp2)
             asm.shr(QWORD_SIZE, Imm32.of(1), temp1)
-            asm.and(QWORD_SIZE, Imm32.of(1), temp2)
+            asm.and(fromSize, Imm32.of(1), temp2)
             asm.or(QWORD_SIZE, temp1, temp2)
-            asm.cvtint2fp(fromSize, toSize, temp2, dst)
-            asm.addf(toSize, dst, dst)
+            asm.pxor(dst, dst)
+            asm.cvtint2fp(QWORD_SIZE, toSize, temp2, dst)
+            asm.addf(QWORD_SIZE, dst, dst)
         }
         asm.switchTo(cont)
     }

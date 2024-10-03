@@ -405,7 +405,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testInt64ToFP() {
         val result = runCTest("shlang/llvm-c-tests/2005-05-12-Int64ToFP", listOf(), options())
         val expected = readExpectedOutput("shlang/llvm-c-tests/2005-05-12-Int64ToFP.reference_output")
@@ -430,7 +429,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testIntTOFP() {
         val result = runCTest("shlang/llvm-c-tests/2005-07-17-INT-To-FP", listOf(), options())
         val expected = readExpectedOutput("shlang/llvm-c-tests/2005-07-17-INT-To-FP.reference_output")
