@@ -17,7 +17,6 @@ class Int2FloatCodegen(toType: FloatingPointType, fromType: SignedIntType, val a
     }
 
     override fun rx(dst: XmmRegister, src: GPRegister) {
-        asm.pxor(dst, dst)
         val temp = convertOnDemand(src)
         if (temp != null) {
             asm.cvtint2fp(TEMP_SIZE, toSize, temp, dst)
@@ -27,7 +26,6 @@ class Int2FloatCodegen(toType: FloatingPointType, fromType: SignedIntType, val a
     }
 
     override fun ax(dst: XmmRegister, src: Address) {
-        asm.pxor(dst, dst)
         val temp = convertOnDemand(src)
         if (temp != null) {
             asm.cvtint2fp(TEMP_SIZE, toSize, temp, dst)

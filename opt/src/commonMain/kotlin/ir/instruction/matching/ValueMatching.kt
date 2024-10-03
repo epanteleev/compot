@@ -76,6 +76,10 @@ class Matcher(val inst: Instruction) {
         return rule(tupleDiv(a, b), block)
     }
 
+    inline fun<reified R> uint2float(crossinline origin: ValueMatcher, block: (Unsigned2Float) -> R?): R? {
+        return rule(uint2float(origin), block)
+    }
+
     fun default(): Instruction? {
         return rule<Instruction, Instruction, Instruction> ({ true }, { it })
     }
@@ -123,6 +127,10 @@ inline fun select(crossinline cond: ValueMatcher, crossinline onTrue: ValueMatch
 
 inline fun tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
     it is TupleDiv && a(it.first()) && b(it.second())
+}
+
+inline fun uint2float(crossinline origin: ValueMatcher): InstructionMatcher = {
+    it is Unsigned2Float && origin(it.value())
 }
 
 inline fun tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher, crossinline type: TypeMatcher): InstructionMatcher = {
@@ -212,5 +220,7 @@ fun struct(): TypeMatcher = { it is StructType }
 fun i8(): TypeMatcher = { it == Type.I8 }
 
 fun u8(): TypeMatcher = { it == Type.U8 }
+
+fun u64(): TypeMatcher = { it == Type.U64 }
 
 fun it_is(value: Value): ValueMatcher = { it == value }

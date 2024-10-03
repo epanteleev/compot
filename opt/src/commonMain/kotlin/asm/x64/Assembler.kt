@@ -24,6 +24,7 @@ private class InstructionList: Iterable<CPUInstruction> {
 abstract class Assembler(private val name: String, val id: Int): AnonymousDirective() {
     private val codeBlocks: LinkedHashMap<Label, InstructionList>
     private val activeContext: BuilderContext
+    private var anonLabelCounter = 0
 
     init {
         val label = Label(name)
@@ -41,7 +42,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
         activeContext.instructions.add(inst)
     }
 
-    fun label(name: String) {
+    fun label(name: String): Label {
         val newLabel = Label(name)
         if (codeBlocks[newLabel] != null) {
             throw ObjFunctionCreationException("Label with name '$name' already exist")
@@ -51,6 +52,22 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
         codeBlocks[newLabel] = newInstructions
         activeContext.label = newLabel
         activeContext.instructions = newInstructions
+        return newLabel
+    }
+
+    fun switchTo(label: Label) {
+        val instructions = codeBlocks[label] ?: throw ObjFunctionCreationException("Label with name '${label.id}' not found")
+        activeContext.label = label
+        activeContext.instructions = instructions
+    }
+
+    fun anonLabel(): Label {
+        anonLabelCounter++
+        return label("anon$anonLabelCounter")
+    }
+
+    fun currentLabel(): Label {
+        return activeContext.label
     }
 
     // Load Effective Address
@@ -222,7 +239,9 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun cmp(size: Int, first: Address, second: GPRegister)    = add(Cmp(size, first, second))
 
     fun jcc(jmpType: CondType, label: String) = add(Jcc(jmpType, label))
+    fun jcc(jmpType: CondType, label: Label) = add(Jcc(jmpType, label.id))
     fun jump(label: String) = add(Jump(label))
+    fun jump(label: Label) = add(Jump(label.id))
 
     fun ret() = add(Ret)
     fun leave() = add(Leave)

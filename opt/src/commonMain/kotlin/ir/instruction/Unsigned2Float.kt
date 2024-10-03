@@ -34,6 +34,7 @@ class Unsigned2Float private constructor(id: Identity, owner: Block, toType: Flo
 
     companion object {
         const val NAME = "uint2fp"
+        const val VALUE = 0
 
         fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): Unsigned2Float {
             val valueType = value.type()
