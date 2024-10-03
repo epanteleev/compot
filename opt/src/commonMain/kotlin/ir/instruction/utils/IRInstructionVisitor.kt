@@ -26,6 +26,7 @@ abstract class IRInstructionVisitor<T> {
     abstract fun visit(flag2Int: Flag2Int): T
     abstract fun visit(bitcast: Bitcast): T
     abstract fun visit(itofp: Int2Float): T
+    abstract fun visit(utofp: Unsigned2Float): T
     abstract fun visit(zext: ZeroExtend): T
     abstract fun visit(sext: SignExtend): T
     abstract fun visit(trunc: Truncate): T

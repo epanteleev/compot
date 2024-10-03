@@ -354,6 +354,11 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.int2fp(value, expectedType.type()))
     }
 
+    fun uint2Float(name: LocalValueToken, valueTok: AnyValueToken, operandType: UnsignedIntegerTypeToken, expectedType: FloatTypeToken): Unsigned2Float {
+        val value = getValue(valueTok, operandType.type())
+        return memorize(name, bb.uint2fp(value, expectedType.type()))
+    }
+
     fun ptr2int(name: LocalValueToken, valueTok: AnyValueToken, operandType: PointerTypeToken, intType: IntegerTypeToken): Pointer2Int {
         val value = getValue(valueTok, operandType.type())
         return memorize(name, bb.ptr2int(value, intType.type()))

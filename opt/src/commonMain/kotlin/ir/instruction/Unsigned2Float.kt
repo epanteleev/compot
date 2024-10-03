@@ -1,13 +1,14 @@
 package ir.instruction
 
-import common.assertion
-import ir.value.Value
 import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
+import ir.value.Value
+import common.assertion
 import ir.module.block.Block
+import ir.types.FloatingPointType
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class Int2Float private constructor(id: Identity, owner: Block, toType: FloatingPointType, value: Value):
+class Unsigned2Float private constructor(id: Identity, owner: Block, toType: FloatingPointType, value: Value):
     ValueInstruction(id, owner, toType, arrayOf(value)) {
     override fun dump(): String {
         return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
@@ -21,7 +22,7 @@ class Int2Float private constructor(id: Identity, owner: Block, toType: Floating
         return operands[0]
     }
 
-    fun fromType(): SignedIntType {
+    fun fromType(): UnsignedIntType {
         return value().type().asType()
     }
 
@@ -32,23 +33,23 @@ class Int2Float private constructor(id: Identity, owner: Block, toType: Floating
     }
 
     companion object {
-        const val NAME = "int2fp"
+        const val NAME = "uint2fp"
 
-        fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): Int2Float {
+        fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): Unsigned2Float {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
                 "inconsistent types in '$id': ty=$toType, value=$value:$valueType"
             }
 
-            return registerUser(Int2Float(id, owner, toType, value), value)
+            return registerUser(Unsigned2Float(id, owner, toType, value), value)
         }
 
         private fun isAppropriateType(valueType: Type): Boolean {
-            return valueType is SignedIntType
+            return valueType is UnsignedIntType
         }
 
-        fun typeCheck(fpext: Int2Float): Boolean {
-            return isAppropriateType(fpext.value().type())
+        fun typeCheck(uint2fp: Unsigned2Float): Boolean {
+            return isAppropriateType(uint2fp.value().type())
         }
     }
 }

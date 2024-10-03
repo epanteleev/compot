@@ -262,6 +262,11 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return bb.int2fp(operand, itofp.type())
     }
 
+    override fun visit(utofp: Unsigned2Float): LocalValue? {
+        val operand = mapUsage<Value>(utofp.value())
+        return bb.uint2fp(operand, utofp.type())
+    }
+
     override fun visit(sext: SignExtend): ValueInstruction {
         val operand = mapUsage<Value>(sext.value())
         return bb.sext(operand, sext.type())

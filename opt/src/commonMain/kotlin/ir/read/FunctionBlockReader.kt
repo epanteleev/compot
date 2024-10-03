@@ -440,11 +440,20 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseInt2Float(currentTok: LocalValueToken) {
         // %$identifier = int2fp %{type} %{value} to {operand type}
-        val dstType = iterator.expect<IntegerTypeToken>("integer type")
+        val srcType = iterator.expect<SignedIntegerTypeToken>("integer type")
         val source = iterator.expect<LocalValueToken>("source value")
         iterator.expect<To>("'to' keyword")
         val type = iterator.expect<FloatTypeToken>("floating point type")
-        builder.int2Float(currentTok, source, dstType, type)
+        builder.int2Float(currentTok, source, srcType, type)
+    }
+
+    private fun parseUint2Float(currentTok: LocalValueToken) {
+        // %$identifier = uint2fp %{type} %{value} to {operand type}
+        val dstType = iterator.expect<UnsignedIntegerTypeToken>("unsigned integer type")
+        val source = iterator.expect<LocalValueToken>("source value")
+        iterator.expect<To>("'to' keyword")
+        val type = iterator.expect<FloatTypeToken>("floating point type")
+        builder.uint2Float(currentTok, source, dstType, type)
     }
 
     private fun parsePointer2Int(currentTok: LocalValueToken) {
@@ -494,7 +503,8 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                 "zext"       -> parseZext(currentTok)
                 "trunc"      -> parseTrunc(currentTok)
                 "flag2int"   -> parseFlag2Int(currentTok)
-                "int2fp"     -> parseInt2Float(currentTok)
+                Int2Float.NAME      -> parseInt2Float(currentTok)
+                Unsigned2Float.NAME -> parseUint2Float(currentTok)
                 "bitcast"    -> parseBitcast(currentTok)
                 "fptrunc"    -> parseFptrunc(currentTok)
                 "fpext"      -> parseFpext(currentTok)

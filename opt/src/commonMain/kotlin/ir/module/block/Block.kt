@@ -414,6 +414,10 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@df withOutput { Int2Float.make(it, this, ty, value) }
     }
 
+    override fun uint2fp(value: Value, ty: FloatingPointType): Unsigned2Float {
+        return withOutput { Unsigned2Float.make(it, this, ty, value) }
+    }
+
     override fun bitcast(value: Value, ty: PrimitiveType): Bitcast = mc.df {
         return@df withOutput { Bitcast.make(it, this, ty, value) }
     }

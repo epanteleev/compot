@@ -18,6 +18,6 @@ entry:
   %1 = alloc u8
   store ptr %1, u8 %i
   %2 = load u8 %1
-  %3 = int2fp u8 %2 to f32
+  %3 = uint2fp u8 %2 to f32
   ret f32 %3
 }

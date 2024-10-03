@@ -152,6 +152,10 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.int2fp(value, ty)
     }
 
+    override fun uint2fp(value: Value, ty: FloatingPointType): Unsigned2Float {
+        return bb.uint2fp(value, ty)
+    }
+
     override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {
         return bb.bitcast(value, ty)
     }

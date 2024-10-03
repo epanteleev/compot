@@ -291,6 +291,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    override fun visit(utofp: Unsigned2Float) {
+        assert(Unsigned2Float.typeCheck(utofp)) {
+            "Instruction '${utofp.dump()}' has inconsistent types."
+        }
+    }
+
     override fun visit(zext: ZeroExtend) {
         assert(ZeroExtend.typeCheck(zext)) {
             "Instruction '${zext.dump()}' has inconsistent types."

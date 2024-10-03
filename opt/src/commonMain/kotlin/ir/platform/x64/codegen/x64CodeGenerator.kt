@@ -599,10 +599,15 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(itofp: Int2Float) {
         val dst = registerAllocation.operand(itofp)
         val src = registerAllocation.operand(itofp.value())
-        when (val type = itofp.fromType()) {
-            is SignedIntType   -> Int2FloatCodegen(itofp.type(), type, asm)(dst, src)
-            is UnsignedIntType -> Uint2FloatCodegen(itofp.type(), type, asm)(dst, src)
-        }
+        val type = itofp.fromType()
+        Int2FloatCodegen(itofp.type(), type, asm)(dst, src)
+    }
+
+    override fun visit(utofp: Unsigned2Float) {
+        val dst = registerAllocation.operand(utofp)
+        val src = registerAllocation.operand(utofp.value())
+        val type = utofp.fromType()
+        Uint2FloatCodegen(utofp.type(), type, asm)(dst, src)
     }
 
     override fun visit(zext: ZeroExtend) {
