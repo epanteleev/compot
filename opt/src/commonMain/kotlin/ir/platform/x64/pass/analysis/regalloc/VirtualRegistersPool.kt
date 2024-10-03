@@ -4,7 +4,6 @@ import asm.x64.*
 import ir.types.*
 import ir.value.*
 import ir.instruction.*
-import asm.x64.GPRegister.*
 import ir.Definitions.QWORD_SIZE
 
 

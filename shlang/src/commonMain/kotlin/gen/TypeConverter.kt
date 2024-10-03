@@ -206,7 +206,10 @@ object TypeConverter {
                         trunc(bitcast, toType)
                     }
                     Type.F32 -> fp2Int(value, toType)
-                    Type.F64 -> fp2Int(value, toType)
+                    Type.F64 -> {
+                        val tmp = fp2Int(value, Type.I64)
+                        trunc(tmp, toType)
+                    }
                     Type.Ptr -> ptr2int(value, toType)
                     else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $toType")
                 }
@@ -262,16 +265,8 @@ object TypeConverter {
                     Type.U16 -> trunc(value, toType)
                     Type.U32 -> trunc(value, toType)
                     Type.U64 -> trunc(value, toType)
-                    Type.F32 -> {
-                        val tmp = fp2Int(value, Type.I32)
-                        trunc(tmp, toType)
-                    }
-
-                    Type.F64 -> {
-                        val tmp = fp2Int(value, Type.I64)
-                        trunc(tmp, toType)
-                    }
-
+                    Type.F32 -> fp2Int(value, Type.U8)
+                    Type.F64 -> fp2Int(value, Type.U8)
                     Type.Ptr -> ptr2int(value, toType)
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
@@ -305,11 +300,7 @@ object TypeConverter {
                         trunc(tmp, toType)
                     }
 
-                    Type.F64 -> {
-                        val tmp = fp2Int(value, Type.I64)
-                        trunc(tmp, toType)
-                    }
-
+                    Type.F64 -> fp2Int(value, Type.U16)
                     Type.Ptr -> ptr2int(value, toType)
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }
@@ -332,11 +323,14 @@ object TypeConverter {
                         val bitcast = bitcast(value, Type.U64)
                         trunc(bitcast, Type.U32)
                     }
-                    Type.U8 -> zext(value, toType)
+                    Type.U8  -> zext(value, toType)
                     Type.U16 -> zext(value, toType)
                     Type.U64 -> trunc(value, toType)
-                    Type.F32 -> fp2Int(value, Type.U32)
-                    Type.F64 -> fp2Int(value, Type.U32)
+                    Type.F32 -> fp2Int(value, toType)
+                    Type.F64 -> {
+                        val tmp = fp2Int(value, Type.U64)
+                        trunc(tmp, toType)
+                    }
                     Type.Ptr -> ptr2int(value, toType)
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }

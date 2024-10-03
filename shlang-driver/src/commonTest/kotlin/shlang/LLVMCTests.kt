@@ -329,11 +329,12 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testCastFPToUint() {
         val result = runCTest("shlang/llvm-c-tests/2003-08-05-CastFPToUint", listOf(), options())
-        val expected = """DC = 240.000000, DS = 65520.000000, DI = 4294967280.000000
-        uc = 240, us = 65520, ui = 4294967280""".trimIndent()
+        val expected = """
+            |DC = 240.000000, DS = 65520.000000, DI = 4294967280.000000
+            |uc = 240, us = 65520, ui = 4294967280
+            |""".trimMargin()
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }
