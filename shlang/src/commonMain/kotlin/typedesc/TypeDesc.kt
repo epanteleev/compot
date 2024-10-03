@@ -27,6 +27,18 @@ class TypeDesc(private val baseType: CType, private val properties: List<TypeQua
         append(baseType)
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TypeDesc) return false
+
+        if (baseType != other.baseType) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return baseType.hashCode()
+    }
+
     companion object {
         fun from(baseType: CType, properties: List<TypeQualifier> = arrayListOf()): TypeDesc = TypeDesc(baseType, properties)
     }

@@ -433,7 +433,7 @@ abstract class LLVMCTests: CommonCTest() {
     @Ignore
     fun testIntTOFP() {
         val result = runCTest("shlang/llvm-c-tests/2005-07-17-INT-To-FP", listOf(), options())
-        val expected = readExpectedOutput("shlang/llvm-c-tests/2005-07-15-IntToFP.reference_output")
+        val expected = readExpectedOutput("shlang/llvm-c-tests/2005-07-17-INT-To-FP.reference_output")
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }

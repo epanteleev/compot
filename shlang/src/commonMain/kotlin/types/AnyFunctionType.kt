@@ -34,6 +34,25 @@ class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, va
     override fun variadic(): Boolean {
         return variadic
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AbstractCFunction) return false
+
+        if (retType != other.retType) return false
+        if (argsTypes != other.argsTypes) return false
+        if (variadic != other.variadic) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = retType.hashCode()
+        result = 31 * result + argsTypes.hashCode()
+        result = 31 * result + variadic.hashCode()
+        return result
+    }
+
 }
 
 class CFunctionType(val name: String, val functionType: AbstractCFunction): CAggregateType(), AnyFunctionType {

@@ -147,7 +147,10 @@ object TypeConverter {
                     Type.I64 -> trunc(value, toType)
                     Type.U8 ->  bitcast(value, toType)
                     Type.U16 -> trunc(value, toType)
-                    Type.U32 -> trunc(value, toType)
+                    Type.U32 -> {
+                        val trunc = trunc(value, Type.U8)
+                        bitcast(trunc, toType)
+                    }
                     Type.U64 -> {
                         val bitcast = bitcast(value, Type.I64)
                         trunc(bitcast, toType)
@@ -171,7 +174,10 @@ object TypeConverter {
                         bitcast(zext, toType)
                     }
                     Type.U16 -> bitcast(value, toType)
-                    Type.U32 -> trunc(value, toType)
+                    Type.U32 -> {
+                        val bitcast = bitcast(value, Type.I32)
+                        trunc(bitcast, toType)
+                    }
                     Type.U64 -> {
                         val bitcast = bitcast(value, Type.I64)
                         trunc(bitcast, toType)

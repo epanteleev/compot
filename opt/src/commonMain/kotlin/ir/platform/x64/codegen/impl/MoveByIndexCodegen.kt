@@ -82,7 +82,9 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        TODO()
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.mov(indexSize, second, temp2)
+        asm.mov(size, first, Address.from(temp1, 0, temp2, ScaleFactor.from(size)))
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {

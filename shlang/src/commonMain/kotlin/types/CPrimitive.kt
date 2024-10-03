@@ -262,7 +262,13 @@ class SliceType(val elementType: CType, val dimension: Long): AnyCPointer() {
 class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : AnyCPointer() {
     override fun qualifiers(): Set<TypeQualifier> = properties
 
-    override fun dereference(): CType = type
+    override fun dereference(): CType {
+        return if (type is CFunctionType) {
+            type.functionType
+        } else {
+            type
+        }
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

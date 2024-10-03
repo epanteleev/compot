@@ -92,7 +92,8 @@ class ShlCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsV
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.shl(size, second, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
