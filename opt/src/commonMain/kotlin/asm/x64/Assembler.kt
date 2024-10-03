@@ -143,8 +143,6 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
         else -> throw IllegalArgumentException("size=$size")
     }
 
-    fun xor(size: Int, first: Operand, destination: GPRegister) = add(Xor(size, first, destination))
-
     // TEST — Logical Compare
     fun test(size: Int, first: GPRegister, second: GPRegister) = add(Test(size, first, second))
     fun test(size: Int, first: GPRegister, second: Address)    = add(Test(size, first, second))
@@ -349,6 +347,10 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
         8 -> xorpd(src, dst)
         else -> throw IllegalArgumentException("size=$size, src=$src, dst=$dst")
     }
+
+    // Logical Exclusive OR
+    fun pxor(src: XmmRegister, dst: XmmRegister) = add(Pxor(16, src, dst))
+    fun pxor(src: Address, dst: XmmRegister)     = add(Pxor(16, src, dst))
 
     // Unordered Compare Scalar Single-Precision Floating-Point Values and set EFLAGS
     fun ucomiss(src: Address, dst: XmmRegister) = add(Ucomiss(16, src, dst))

@@ -403,6 +403,12 @@ data class Xorpd(val size: Int, val src: Operand, val dst: Operand): CPUInstruct
     }
 }
 
+data class Pxor(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
+    override fun toString(): String {
+        return "pxor ${src.toString(size)}, ${dst.toString(size)}"
+    }
+}
+
 data class Subss(val size: Int, val src: Operand, val dst: Operand): CPUInstruction {
     override fun toString(): String {
         return "subss ${src.toString(size)}, ${dst.toString(size)}"

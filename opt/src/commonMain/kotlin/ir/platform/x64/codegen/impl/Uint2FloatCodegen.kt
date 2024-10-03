@@ -8,7 +8,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.GPOperandToXmmVisitor
 
 
-class Int2FloatCodegen(toType: FloatingPointType, fromType: SignedIntType, val asm: Assembler) : GPOperandToXmmVisitor {
+class Uint2FloatCodegen(toType: FloatingPointType, private val fromType: UnsignedIntType, val asm: Assembler) : GPOperandToXmmVisitor {
     private val toSize = toType.sizeOf()
     private val fromSize = fromType.sizeOf()
 
@@ -63,20 +63,20 @@ class Int2FloatCodegen(toType: FloatingPointType, fromType: SignedIntType, val a
     }
 
     private fun convertOnDemand(src: GPRegister): GPRegister? {
-        if (fromSize == Type.I32.sizeOf() || fromSize == Type.I64.sizeOf()) {
+        if (fromSize == Type.U32.sizeOf() || fromSize == Type.U64.sizeOf()) {
             return null
         }
 
-        asm.movsext(fromSize, TEMP_SIZE, src, temp1)
+        asm.movzext(fromSize, TEMP_SIZE, src, temp1)
         return temp1
     }
 
     private fun convertOnDemand(src: Address): GPRegister? { //todo code duplication
-        if (fromSize == Type.I32.sizeOf() || fromSize == Type.I64.sizeOf()) {
+        if (fromSize == Type.U32.sizeOf() || fromSize == Type.U64.sizeOf()) {
             return null
         }
 
-        asm.movsext(fromSize, TEMP_SIZE, src, temp1)
+        asm.movzext(fromSize, TEMP_SIZE, src, temp1)
         return temp1
     }
 

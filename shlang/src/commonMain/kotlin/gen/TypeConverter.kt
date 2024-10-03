@@ -362,8 +362,8 @@ object TypeConverter {
                     Type.U8 -> zext(value, toType)
                     Type.U16 -> zext(value, toType)
                     Type.U32 -> zext(value, toType)
-                    Type.F32 -> fp2Int(value, Type.U64)
-                    Type.F64 -> fp2Int(value, Type.U64)
+                    Type.F32 -> fp2Int(value, toType)
+                    Type.F64 -> fp2Int(value, toType)
                     Type.Ptr -> ptr2int(value, toType)
                     else -> throw IRCodeGenError("Cannot convert $value to $toType")
                 }

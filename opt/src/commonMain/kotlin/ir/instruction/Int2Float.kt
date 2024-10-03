@@ -21,6 +21,10 @@ class Int2Float private constructor(id: Identity, owner: Block, toType: Floating
         return operands[0]
     }
 
+    fun fromType(): IntegerType {
+        return value().type() as IntegerType
+    }
+
     override fun type(): FloatingPointType = tp as FloatingPointType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
