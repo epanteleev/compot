@@ -97,7 +97,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         is SizeOf       -> visitSizeOf(expression)
         is MemberAccess -> visitMemberAccess(expression, isRvalue)
         is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
-        is FuncPointerCall   -> visitFunPointerCall(expression)
         is Conditional       -> visitConditional(expression)
         is CharNode          -> visitCharNode(expression)
         is SingleInitializer -> visitSingleInitializer(expression)
@@ -373,13 +372,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return ir.convertToType(value, toType)
     }
 
-    private fun visitFunPointerCall(funcPointerCall: FuncPointerCall): Value {
+    private fun visitFunPointerCall(funcPointerCall: FunctionCall): Value {
         val functionType = funcPointerCall.functionType(typeHolder)
-
         val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true) //TODO bug
 
         val irRetType = mb.toIRType<Type>(typeHolder, functionType.retType().cType())
-        val argTypes = functionType.args().map { mb.toIRType<NonTrivialType>(typeHolder, it.cType()) }
+        val argTypes = functionType.args().map {
+            mb.toIRType<NonTrivialType>(typeHolder, it.cType())
+        }
         val prototype = IndirectFunctionPrototype(irRetType, argTypes, functionType.variadic())
         val convertedArgs = convertFunctionArgs(prototype, funcPointerCall.args)
 
@@ -403,7 +403,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitFunctionCall(functionCall: FunctionCall): Value {
-        val function = mb.findFunction(functionCall.name()) ?: throw IRCodeGenError("Function '${functionCall.name()}' not found")
+        val primary = functionCall.primary
+        if (primary !is VarNode) {
+            return visitFunPointerCall(functionCall)
+        }
+        val name = primary.name()
+        val function = mb.findFunction(name) ?: return visitFunPointerCall(functionCall)
         val convertedArgs = convertFunctionArgs(function, functionCall.args)
         val cont = ir.createLabel()
         return when (val functionType = functionCall.resolveType(typeHolder)) {
@@ -1403,7 +1408,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 return lvalueAdr
             }
             is FunctionCall -> {
-                val function = mb.findFunction(rvalue.name()) ?: throw IRCodeGenError("Function '${rvalue.name()}' not found")
+                val primary = rvalue.primary
+                if (primary !is VarNode) {
+                    throw IRCodeGenError("Unknown function call, primary=$primary")
+                }
+                val name = primary.name()
+                val function = mb.findFunction(name) ?: throw IRCodeGenError("Function '$name' not found")
                 val convertedArgs = convertFunctionArgs(function, rvalue.args)
 
                 val cont = ir.createLabel()

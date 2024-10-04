@@ -213,15 +213,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append('}')
     }
 
-    override fun visit(funcPointerCall: FuncPointerCall) {
-        funcPointerCall.primary.accept(this)
-        buffer.append('(')
-        joinTo(funcPointerCall.args, ", ") {
-            it.accept(this)
-        }
-        buffer.append(')')
-    }
-
     override fun visit(parameter: Parameter) {
         parameter.declspec.accept(this)
         buffer.append(' ')

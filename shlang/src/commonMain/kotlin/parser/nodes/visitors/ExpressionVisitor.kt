@@ -23,5 +23,4 @@ interface ExpressionVisitor<T> {
     fun visit(emptyExpression: EmptyExpression): T
     fun visit(designationInitializer: DesignationInitializer): T
     fun visit(singleInitializer: SingleInitializer): T
-    fun visit(funcPointerCall: FuncPointerCall): T
 }

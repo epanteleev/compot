@@ -80,11 +80,15 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(functionCall: FunctionCall): Int? {
+        val primary = functionCall.primary
+        if (primary !is VarNode) {
+            throw ConstEvalException("Cannot evaluate function call with primary $primary")
+        }
         val evaluated = functionCall.args.map {
             it.accept(this) ?: return null
         }
 
-        return ctx.callFunction(functionCall.nameIdentifier(), evaluated)
+        return ctx.callFunction(primary.nameIdent(), evaluated)
     }
 
     override fun visit(arrayAccess: ArrayAccess): Int? {
@@ -150,10 +154,6 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(emptyExpression: EmptyExpression): Int {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(funcPointerCall: FuncPointerCall): Int {
         TODO("Not yet implemented")
     }
 }
@@ -222,8 +222,13 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
     }
 
     override fun visit(functionCall: FunctionCall): Long? {
-        val evaluated = functionCall.args.map { it.accept(this)?: return null }
-        return ctx.callFunction(functionCall.nameIdentifier(), evaluated)
+        val primary = functionCall.primary
+        if (primary !is VarNode) {
+            throw ConstEvalException("Cannot evaluate function call with primary $primary")
+        }
+
+        val evaluated = functionCall.args.map { it.accept(this) ?: return null }
+        return ctx.callFunction(primary.nameIdent(), evaluated)
     }
 
     override fun visit(arrayAccess: ArrayAccess): Long {
@@ -293,10 +298,6 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
     override fun visit(emptyExpression: EmptyExpression): Long {
         TODO("Not yet implemented")
     }
-
-    override fun visit(funcPointerCall: FuncPointerCall): Long {
-        TODO("Not yet implemented")
-    }
 }
 
 class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstEvalExpression<Float>() {
@@ -355,8 +356,12 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
     }
 
     override fun visit(functionCall: FunctionCall): Float? {
+        val primary = functionCall.primary
+        if (primary !is VarNode) {
+            throw ConstEvalException("Cannot evaluate function call with primary $primary")
+        }
         val evaluated = functionCall.args.map { it.accept(this) ?: return null }
-        return ctx.callFunction(functionCall.nameIdentifier(), evaluated)
+        return ctx.callFunction(primary.nameIdent(), evaluated)
     }
 
     override fun visit(arrayAccess: ArrayAccess): Float {
@@ -409,10 +414,6 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
     }
 
     override fun visit(emptyExpression: EmptyExpression): Float {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(funcPointerCall: FuncPointerCall): Float {
         TODO("Not yet implemented")
     }
 
@@ -488,8 +489,12 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
     }
 
     override fun visit(functionCall: FunctionCall): Double? {
+        val primary = functionCall.primary
+        if (primary !is VarNode) {
+            throw ConstEvalException("Cannot evaluate function call with primary $primary")
+        }
         val evaluated = functionCall.args.map { it.accept(this) ?: return null }
-        return ctx.callFunction(functionCall.nameIdentifier(), evaluated)
+        return ctx.callFunction(primary.nameIdent(), evaluated)
     }
 
     override fun visit(arrayAccess: ArrayAccess): Double {
@@ -543,10 +548,6 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
 
     override fun visit(singleInitializer: SingleInitializer): Double? {
         return singleInitializer.expr.accept(this)
-    }
-
-    override fun visit(funcPointerCall: FuncPointerCall): Double {
-        TODO("Not yet implemented")
     }
 
     companion object {

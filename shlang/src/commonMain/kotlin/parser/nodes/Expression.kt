@@ -3,6 +3,7 @@ package parser.nodes
 import types.*
 import tokenizer.tokens.*
 import gen.IRCodeGenError
+import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.*
 import typedesc.TypeHolder
 import typedesc.TypeResolutionException
@@ -199,13 +200,13 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     }
 }
 
-sealed class AnyFunctionCall(val args: List<Expression>) : Expression() {
-    abstract fun name(): String
+class FunctionCall(val primary: Expression, val args: List<Expression>) : Expression() {
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    protected fun resolveParams(typeHolder: TypeHolder){
+    private fun resolveParams(typeHolder: TypeHolder){
         val params = args.map { it.resolveType(typeHolder) }
         if (params.size != args.size) {
-            throw TypeResolutionException("Function call of '${name()}' with unresolved types")
+            throw TypeResolutionException("Function call of '${LineAgnosticAstPrinter.print(primary)}' with unresolved types")
         }
 
         for (i in args.indices) {
@@ -213,32 +214,14 @@ sealed class AnyFunctionCall(val args: List<Expression>) : Expression() {
             if (argType == params[i]) {
                 continue
             }
-
-            throw TypeResolutionException("Function call of '${name()}' with wrong argument types")
+            throw TypeResolutionException("Function call of '${LineAgnosticAstPrinter.print(primary)}' with wrong argument types")
         }
     }
-}
 
-class FuncPointerCall(val primary: Expression, args: List<Expression>) : AnyFunctionCall(args) {
-    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun name(): String {
-        return nameIdentifier().str()
-    }
-
-    private fun nameIdentifier(): Identifier = when (primary) {
-        is UnaryOp -> (primary.primary as VarNode).nameIdent()
-        is VarNode -> primary.nameIdent()
-        is MemberAccess -> primary.ident
-        is ArrowMemberAccess -> primary.ident
-        else -> throw TypeResolutionException("Function call of '${primary}' with non-function type")
-    }
-
-    private fun resolveFunctionType(typeHolder: TypeHolder): CPointer = memoize {
-        resolveParams(typeHolder)
+    private fun resolveFunctionType0(typeHolder: TypeHolder): CPointer {
         val functionType = primary.resolveType(typeHolder)
         if (functionType is AbstractCFunction) {
-            return@memoize CPointer(functionType, setOf())
+            return CPointer(functionType, setOf())
         }
         if (functionType !is CPointer) {
             throw TypeResolutionException("Function call with non-function type: $functionType")
@@ -247,47 +230,24 @@ class FuncPointerCall(val primary: Expression, args: List<Expression>) : AnyFunc
     }
 
     fun functionType(typeHolder: TypeHolder): AnyFunctionType {
-        val ptr = resolveFunctionType(typeHolder)
-        val deref = ptr.dereference()
-        if (deref !is AnyFunctionType) {
-            throw TypeResolutionException("Function call with non-function type: $deref")
-        }
-
-        return deref
-    }
-
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        val ptr = resolveFunctionType(typeHolder)
-        return when (val deref = ptr.dereference()) {
-            is AbstractCFunction -> deref.retType.cType()
-            is CFunctionType -> deref.retType().cType()
-            else -> throw TypeResolutionException("Function call with non-function type: $deref")
-        }
-    }
-}
-
-class FunctionCall(val primary: VarNode, args: List<Expression>) : AnyFunctionCall(args) {
-    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun name(): String {
-        return nameIdentifier().str()
-    }
-
-    fun nameIdentifier(): Identifier {
-        return primary.nameIdent()
-    }
-
-    private fun resolveFunctionType(typeHolder: TypeHolder): CFunctionType = memoize {
         resolveParams(typeHolder)
-        val functionType = typeHolder.getFunctionType(name()).type.cType()
-        if (functionType !is CFunctionType) {
-            throw TypeResolutionException("Function call of '${name()}' with non-function type")
+        val functionType = if (primary !is VarNode) {
+            resolveFunctionType0(typeHolder)
+        } else {
+            typeHolder.getFunctionType(primary.name()).type.cType()
         }
+        if (functionType is CPointer) {
+            return functionType.dereference() as AbstractCFunction
+        }
+        if (functionType !is CFunctionType) {
+            throw TypeResolutionException("Function call of '' with non-function type")
+        }
+
         return functionType
     }
 
     override fun resolveType(typeHolder: TypeHolder): CType {
-        return resolveFunctionType(typeHolder).functionType.retType.cType()
+        return functionType(typeHolder).retType().cType()
     }
 }
 

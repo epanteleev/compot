@@ -1609,11 +1609,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 val args = argument_expression_list()
                 if (check(")")) {
                     eat()
-                    primary = if (primary is VarNode) {
-                        FunctionCall(primary, args)
-                    } else {
-                        FuncPointerCall(primary, args)
-                    }
+                    primary = FunctionCall(primary, args)
                 } else {
                     throw ParserException(InvalidToken("Expected ')'", peak()))
                 }
