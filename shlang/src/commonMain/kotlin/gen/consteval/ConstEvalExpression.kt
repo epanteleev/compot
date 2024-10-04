@@ -145,8 +145,8 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
         return ctx.getVariable(varNode.nameIdent())
     }
 
-    override fun visit(arrowMemberAccess: ArrowMemberAccess): Int {
-        TODO("Not yet implemented")
+    override fun visit(arrowMemberAccess: ArrowMemberAccess): Int? {
+        return null
     }
 
     override fun visit(memberAccess: MemberAccess): Int {

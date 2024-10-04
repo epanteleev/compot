@@ -1,6 +1,7 @@
 package ir.value
 
 import ir.global.GlobalConstant
+import ir.global.GlobalSymbol
 import ir.types.*
 import ir.value.Constant.Companion.of
 
@@ -97,7 +98,7 @@ object NullValue : PrimitiveConstant {
     val NULLPTR = NullValue //TODO remove it
 }
 
-class PointerLiteral(val gConstant: GlobalConstant): PrimitiveConstant {
+class PointerLiteral(val gConstant: GlobalSymbol): PrimitiveConstant {
     override fun data(): String = gConstant.name()
     override fun toString(): String = gConstant.name()
     override fun type(): PointerType = Type.Ptr

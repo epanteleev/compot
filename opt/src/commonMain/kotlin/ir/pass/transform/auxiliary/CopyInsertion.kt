@@ -6,6 +6,7 @@ import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
 import ir.module.FunctionData
+import ir.instruction.matching.*
 
 
 internal class CopyInsertion private constructor(private val cfg: FunctionData) {
@@ -19,7 +20,12 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
                 "Flow graph has critical edge from $incoming to $bb"
             }
 
-            val copy = incoming.insertBefore(incoming.last()) { it.copy(operand) }
+            val last = incoming.last()
+            val copy = if (gValue(aggregate()) (operand)) {
+                incoming.insertBefore(last) { it.lea(operand) }
+            } else {
+                incoming.insertBefore(last) { it.copy(operand) }
+            }
             bb.updateDF(phi, idx, copy)
         }
 

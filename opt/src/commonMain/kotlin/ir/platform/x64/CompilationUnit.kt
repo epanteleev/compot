@@ -110,6 +110,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             val gConstant = data.gConstant
             builder.quad(findLabel(gConstant.name()))
         }
+        is NullValue -> builder.quad(0)
         is StringLiteralConstant -> builder.string(data.data())
         else -> throw IllegalArgumentException("unsupported constant type: $data")
     }

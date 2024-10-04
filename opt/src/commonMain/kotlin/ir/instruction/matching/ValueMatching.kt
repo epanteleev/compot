@@ -1,5 +1,6 @@
 package ir.instruction.matching
 
+import asm.x64.Lea
 import ir.global.ExternValue
 import ir.global.GlobalValue
 import ir.value.Constant
@@ -101,6 +102,10 @@ inline fun load(crossinline type: TypeMatcher, crossinline pointer: ValueMatcher
     it is Load && type(it.type()) && pointer(it.operand())
 }
 
+inline fun lea(crossinline pointer: ValueMatcher): InstructionMatcher = {
+    it is ir.instruction.lir.Lea && pointer(it.operand())
+}
+
 inline fun copy(crossinline origin: ValueMatcher): InstructionMatcher = {
     it is Copy && origin(it.origin())
 }
@@ -190,16 +195,16 @@ fun alloc(): InstructionMatcher = {
     it is Alloc
 }
 
-inline fun nop(): ValueMatcher = { true }
+fun nop(): ValueMatcher = { true }
 
-inline fun constant(): ValueMatcher = { it is Constant }
+fun constant(): ValueMatcher = { it is Constant }
 
-inline fun extern(): ValueMatcher = { it is ExternValue }
+fun extern(): ValueMatcher = { it is ExternValue }
 
 inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()) }
 
 inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
-    it is GlobalValue && type(it.type()) //TODO bug in type() method
+    it is GlobalValue && type(it.contentType()) //TODO bug in type() method
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

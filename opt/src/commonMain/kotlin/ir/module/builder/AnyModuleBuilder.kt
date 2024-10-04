@@ -10,7 +10,7 @@ import ir.value.Constant
 
 abstract class AnyModuleBuilder {
     protected val constantPool = hashMapOf<String, GlobalConstant>()
-    protected val globals = hashMapOf<String, AnyGlobalValue>()
+    protected val globals = linkedMapOf<String, AnyGlobalValue>()
     protected val structs = hashMapOf<String, StructType>()
     protected val externFunctions = hashMapOf<String, ExternFunction>()
 

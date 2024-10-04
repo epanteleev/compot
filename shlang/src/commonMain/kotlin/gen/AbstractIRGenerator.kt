@@ -1,34 +1,18 @@
 package gen
 
-import gen.TypeConverter.toIRLVType
-import gen.TypeConverter.toIRType
-import gen.consteval.*
-import ir.Definitions.QWORD_SIZE
-import ir.attributes.GlobalValueAttribute
-import ir.global.*
-import ir.module.ExternFunction
-import ir.module.builder.impl.ModuleBuilder
-import ir.types.*
-import ir.value.Constant
-import ir.value.InitializerListValue
-import ir.value.PointerLiteral
-import ir.value.PrimitiveConstant
-import ir.value.StringLiteralConstant
-import ir.value.Value
-import parser.nodes.CompoundLiteral
-import parser.nodes.Declarator
-import parser.nodes.Expression
-import parser.nodes.InitDeclarator
-import parser.nodes.InitializerList
-import parser.nodes.PrefixUnaryOpType
-import parser.nodes.SingleInitializer
-import parser.nodes.StringNode
-import parser.nodes.UnaryOp
-import typedesc.StorageClass
-import typedesc.TypeDesc
-import typedesc.TypeHolder
-import typedesc.VarDescriptor
 import types.*
+import ir.types.*
+import ir.value.*
+import typedesc.*
+import ir.global.*
+import parser.nodes.*
+import gen.consteval.*
+import ir.module.ExternFunction
+import ir.Definitions.QWORD_SIZE
+import gen.TypeConverter.toIRType
+import gen.TypeConverter.toIRLVType
+import ir.attributes.GlobalValueAttribute
+import ir.module.builder.impl.ModuleBuilder
 
 
 sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
@@ -47,17 +31,33 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             is StructType -> constEvalInitializers(lValueType, expr)
             else -> throw IRCodeGenError("Unsupported type $lValueType")
         }
+        is UnaryOp -> when (expr.opType) {
+            is PrefixUnaryOpType -> when (expr.opType) {
+                PrefixUnaryOpType.ADDRESS -> staticAddressOf(expr.primary) ?: defaultContEval(lValueType, expr)
+                else -> defaultContEval(lValueType, expr)
+            }
+            else -> defaultContEval(lValueType, expr)
+        }
         is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
         is StringNode        -> when (lValueType) {
             is ArrayType -> StringLiteralConstant(expr.data())
             else -> {
                 val constant = expr.data()
                 val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.U8, constant.length), constant.toString())
-                val g = mb.addConstant(stringLiteral)
-                PointerLiteral(g)
+                PointerLiteral(mb.addConstant(stringLiteral))
             }
         }
         else -> defaultContEval(lValueType, expr)
+    }
+
+    private fun staticAddressOf(expr: Expression): Constant? {
+        if (expr !is VarNode) {
+            return null
+        }
+        val name = expr.name()
+        val value = varStack[name] ?: return null
+        value as GlobalValue
+        return PointerLiteral(value)
     }
 
     private fun defaultContEval(lValueType: NonTrivialType, expr: Expression): Constant? {
@@ -120,7 +120,8 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (constant) {
             is PointerLiteral -> when (lValueType) {
                 is ArrayType -> {
-                    val global = mb.addGlobal(declarator.name(), lValueType, constant.gConstant.constant(), attr)
+                    val gc = constant.gConstant as GlobalConstant
+                    val global = mb.addGlobal(declarator.name(), lValueType, gc.constant(), attr)
                     varStack[declarator.name()] = global
                     return global
                 }

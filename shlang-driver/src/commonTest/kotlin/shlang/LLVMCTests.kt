@@ -179,15 +179,16 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testDependentPhi() {
         val result = runCTest("shlang/llvm-c-tests/2003-05-02-DependentPHI", listOf(), options())
-        val expected = """0 -1
-        1 0
-        2 1
-        3 2
-        4 3
-        5 4""".trimIndent()
+        val expected = """
+            |0 -1
+            |1 0
+            |2 1
+            |3 2
+            |4 3
+            |5 4
+            |""".trimMargin()
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }
