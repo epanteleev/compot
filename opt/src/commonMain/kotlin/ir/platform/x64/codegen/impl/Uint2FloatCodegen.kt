@@ -88,9 +88,6 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
         val slowPath     = asm.anonLabel()
         val cont         = asm.anonLabel()
         asm.switchTo(currentLabel).let {
-            if (fromType == Type.U32) { //TODO simplify for U32 ???????????????
-                asm.mov(fromSize, src, src)
-            }
             asm.test(QWORD_SIZE, src, src)
             asm.jcc(CondType.JS, slowPath)
         }
@@ -117,9 +114,6 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
         val cont         = asm.anonLabel()
         asm.switchTo(currentLabel).let {
             asm.mov(fromSize, src, temp1)
-            if (fromType == Type.U32) { //TODO simplify for U32 ???????????????
-                asm.mov(fromSize, temp1, temp1)
-            }
             asm.test(QWORD_SIZE, temp1, temp1)
             asm.jcc(CondType.JS, slowPath)
         }

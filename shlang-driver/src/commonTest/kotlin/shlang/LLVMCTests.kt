@@ -437,7 +437,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testLongSwitch() {
         val result = runCTest("shlang/llvm-c-tests/2005-11-29-LongSwitch", listOf(), options())
         assertEquals("foo = 0\n", result.output)
@@ -469,7 +468,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testSimpleIndirectCall() {
         val result = runCTest("shlang/llvm-c-tests/2006-01-29-SimpleIndirectCall", listOf(), options())
         assertEquals("Goodbye, world!\n", result.output)

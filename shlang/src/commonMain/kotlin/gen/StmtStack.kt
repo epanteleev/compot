@@ -54,7 +54,21 @@ sealed class StmtInfo {
     }
 }
 
-class SwitchStmtInfo(val default: Label, val conditionType: IntegerType, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo()
+class SwitchStmtInfo(val conditionType: IntegerType, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo() {
+    private var default: Label? = null
+
+    fun resolveDefault(ir: FunctionDataBuilder): Label {
+        if (default == null) {
+            default = ir.createLabel()
+        }
+
+        return default as Label
+    }
+
+    fun default(): Label? {
+        return default
+    }
+}
 
 class LoopStmtInfo : StmtInfo() {
     private var conditionBB: Label? = null

@@ -1093,7 +1093,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(defaultStatement: DefaultStatement) = scoped {
         val switchInfo = stmtStack.top() as SwitchStmtInfo
-        ir.switchLabel(switchInfo.default)
+        ir.switchLabel(switchInfo.resolveDefault(ir))
         visitStatement(defaultStatement.stmt)
     }
 
@@ -1306,8 +1306,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val condition = visitExpression(switchStatement.condition, true)
         val conditionBlock = ir.currentLabel()
 
-        val defaultBlock = ir.createLabel()
-        stmtStack.scoped(SwitchStmtInfo(defaultBlock, condition.type().asType(), arrayListOf(), arrayListOf())) { info ->
+        stmtStack.scoped(SwitchStmtInfo(condition.type().asType(), arrayListOf(), arrayListOf())) { info ->
             visitStatement(switchStatement.body)
             if (info.exit() != null) {
                 val endBlock = info.resolveExit(ir)
@@ -1317,7 +1316,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
 
             ir.switchLabel(conditionBlock)
-            ir.switch(condition, defaultBlock, info.values, info.table)
+            val default = info.default() ?: info.resolveExit(ir)
+            ir.switch(condition, default, info.values, info.table)
 
             if (info.exit() != null) {
                 val endBlock = info.resolveExit(ir)
