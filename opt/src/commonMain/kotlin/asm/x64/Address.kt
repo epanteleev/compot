@@ -21,17 +21,15 @@ sealed interface Address : Operand {
             return ExternalAddressLiteral(label)
         }
     }
-
-    fun withOffset(disp: Int): Address
 }
 
 class Address2 internal constructor(val base: GPRegister, val offset: Int) : Address {
-    override fun withOffset(disp: Int): Address {
-        return Address2(base, offset + disp)
-    }
-
     fun withOffset(index: GPRegister): Address {
         return Address4(base, offset, index, ScaleFactor.TIMES_1)
+    }
+
+    fun withOffset(disp: Int): Address {
+        return Address2(base, offset + disp)
     }
 
     override fun toString(): String {
@@ -64,10 +62,6 @@ class Address2 internal constructor(val base: GPRegister, val offset: Int) : Add
 
 class Address4 internal constructor(private val base: GPRegister?, private val offset: Int, val index: GPRegister, private val scale: ScaleFactor) :
     Address {
-    override fun withOffset(disp: Int): Address {
-        return Address4(base, offset + (disp * scale.value()), index, scale)
-    }
-
     override fun toString(): String {
         return toString(Int.MAX_VALUE)
     }
@@ -94,10 +88,6 @@ class Address4 internal constructor(private val base: GPRegister?, private val o
 }
 
 class ArgumentSlot(private val base: GPRegister, private val offset: Int) : Address {
-    override fun withOffset(disp: Int): Address {
-        return ArgumentSlot(base, offset + disp)
-    }
-
     override fun toString(): String {
         return toString(Int.MAX_VALUE)
     }
@@ -114,7 +104,6 @@ class ArgumentSlot(private val base: GPRegister, private val offset: Int) : Addr
 abstract class AddressLiteral internal constructor(val label: String) : Address
 
 class InternalAddressLiteral internal constructor(private val offset: Int, label: String) : AddressLiteral(label) {
-    override fun withOffset(disp: Int): Address = InternalAddressLiteral(offset + disp, label)
     override fun toString(): String = if (offset != 0) {
         "$label+$offset(%rip)"
     } else {
@@ -140,7 +129,6 @@ class InternalAddressLiteral internal constructor(private val offset: Int, label
 }
 
 class ExternalAddressLiteral internal constructor(label: String) : AddressLiteral(label) {
-    override fun withOffset(disp: Int): Address = throw RuntimeException("impossible to calculate")
     override fun toString(): String {
         return "$label@GOTPCREL(%rip)"
     }

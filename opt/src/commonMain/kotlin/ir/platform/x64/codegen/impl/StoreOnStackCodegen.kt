@@ -103,9 +103,7 @@ class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, 
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) = when (dst) {
-        is Address2 -> {
-            asm.mov(size, first, Address.from(dst.base, dst.offset, second, ScaleFactor.from(size)))
-        }
+        is Address2 -> asm.mov(size, first, Address.from(dst.base, dst.offset, second, ScaleFactor.from(size)))
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 

@@ -25,7 +25,8 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
                     asm.movf(size, source, xmmTemp1)
                     asm.movf(size, xmmTemp1, Address.from(dst, index.value().toInt() * size))
                 } else if (dst is Address && source is XmmRegister && index is ImmInt) {
-                    asm.movf(size, source, dst.withOffset(index.value().toInt() * size))
+                    TODO("untested")
+                   // asm.movf(size, source, dst.withOffset(index.value().toInt() * size))
                 } else {
                     default(dst, source, index)
                 }
@@ -88,7 +89,8 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        asm.mov(size, first, dst.withOffset(second.value().toInt() * size))
+        TODO("Not yet implemented")
+        //asm.mov(size, first, dst.withOffset(second.value().toInt() * size))
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {

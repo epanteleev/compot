@@ -30,7 +30,8 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, indexType: Primi
             asm.mov(indexSize, index, temp1)
             asm.movf(size, Address.from(operand, 0, temp1, ScaleFactor.from(size)), dst)
         } else if (dst is XmmRegister && operand is Address && index is ImmInt) {
-            asm.movf(size, operand.withOffset(index.value().toInt() * size), dst)
+            TODO("untested")
+            //asm.movf(size, operand.withOffset(index.value().toInt() * size), dst)
         } else {
             default(dst, operand, index)
         }
@@ -76,7 +77,8 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, indexType: Primi
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        asm.mov(size, first.withOffset(second.value().toInt() * size), dst)
+        TODO("Not yet implemented")
+        //asm.mov(size, first.withOffset(second.value().toInt() * size), dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
