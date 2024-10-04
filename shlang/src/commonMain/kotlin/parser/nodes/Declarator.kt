@@ -170,3 +170,41 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
 
     override fun <T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)
 }
+
+data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDeclaratorParams: List<DirectDeclaratorParam>): AnyDeclarator() {
+    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder, ): VarDescriptor {
+        TODO("Not yet implemented")
+    }
+
+    private fun resolveAllDecl(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
+        var currentType = baseType
+        for (decl in directDeclaratorParams.reversed()) {
+            when (decl) {
+                is ArrayDeclarator -> {
+                    currentType = decl.resolveType(currentType, typeHolder)
+                }
+
+                is ParameterTypeList -> {
+                    val abstractType = decl.resolveType(currentType, typeHolder)
+                    currentType = TypeDesc.from(CFunctionType(name(), abstractType.cType() as AbstractCFunction), abstractType.qualifiers())
+                }
+
+                else -> throw IllegalStateException("Unknown declarator $decl")
+            }
+        }
+        return currentType
+    }
+
+    fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc = when (decl) {
+        is FunctionPointerDeclarator -> {
+            assertion(directDeclaratorParams.size == 1) { "Function pointer should have only one parameter" }
+            val fnDecl = directDeclaratorParams[0] as ParameterTypeList
+            val type = fnDecl.resolveType(baseType, typeHolder)
+            decl.resolveType(type, typeHolder)
+        }
+        is DirectVarDeclarator -> resolveAllDecl(baseType, typeHolder)
+    }
+
+    override fun name(): String = decl.name()
+}

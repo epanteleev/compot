@@ -9,6 +9,7 @@ import ir.instruction.Phi
 import ir.instruction.matching.aggregate
 import ir.instruction.matching.gValue
 import ir.instruction.matching.lea
+import ir.instruction.matching.nop
 import ir.module.Sensitivity
 import ir.module.block.Block
 import ir.module.block.Label
@@ -103,7 +104,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
                 return@operands
             }
             used as Instruction
-            assertion(used is Copy || lea(gValue(aggregate()))(used)) { "expect this invariant: used=$used" }
+            assertion(used is Copy || lea(nop())(used)) { "expect this invariant: used=$used" }
 
             range.merge(intervals[used]!!)
             intervals[used] = range

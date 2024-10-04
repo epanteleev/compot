@@ -9,4 +9,5 @@ interface DirectDeclaratorParamVisitor<T> {
     fun visit(functionPointer: FunctionPointerDeclarator): T
     fun visit(varDecl: DirectVarDeclarator): T
     fun visit(identifierList: IndentifierList): T
+    fun visit(abstractDeclarator: AbstractDeclarator): T
 }

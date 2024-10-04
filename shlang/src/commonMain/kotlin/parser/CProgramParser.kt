@@ -1121,6 +1121,15 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                     }
                     throw ParserException(InvalidToken("Expected ')'", peak()))
                 }
+                val declarator = abstract_declarator()
+                if (declarator != null) {
+                    if (check(")")) {
+                        eat()
+                        abstractDeclarators.add(declarator)
+                        continue
+                    }
+                    throw ParserException(InvalidToken("Expected ')'", peak()))
+                }
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
             if (check("[")) {

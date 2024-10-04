@@ -13,6 +13,32 @@ sealed class DirectDeclaratorParam: Node() {
     abstract fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T
 }
 
+data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarator: List<DirectDeclaratorParam>?) : DirectDeclaratorParam() {   //TODO
+    override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T = visitor.visit(this)
+
+    override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
+        var pointerType = baseType.cType()
+        for (pointer in pointers) {
+            pointerType = CPointer(pointerType, pointer.property().toSet())
+        }
+        var typeDesc = TypeDesc.from(pointerType)
+        if (directAbstractDeclarator == null) {
+            return typeDesc
+        }
+
+        for (decl in directAbstractDeclarator.reversed()) {
+            typeDesc = when (decl) {
+                is ArrayDeclarator    -> decl.resolveType(typeDesc, typeHolder)
+                is AbstractDeclarator -> decl.resolveType(typeDesc, typeHolder)
+                is ParameterTypeList  -> decl.resolveType(typeDesc, typeHolder)
+                else -> throw IllegalStateException("Unknown declarator $decl")
+            }
+        }
+
+        return typeDesc
+    }
+}
+
 data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() {
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
 

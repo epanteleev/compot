@@ -1019,10 +1019,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
         val retType    = fnType.retType()
         val irRetType  = irReturnType(retType)
-
-        if (functionNode.name() == "getVect") {
-            println()
-        }
         val argTypes = argumentTypes(fnType.args(), retType)
         currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes)
 

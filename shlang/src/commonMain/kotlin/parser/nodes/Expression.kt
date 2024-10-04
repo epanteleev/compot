@@ -488,3 +488,12 @@ data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
         return@memoize typeName.specifyType(typeHolder, listOf()).type.cType()
     }
 }
+
+data class IdentNode(private val str: Identifier) : Expression() {
+    fun str(): String = str.str()
+    override fun <T> accept(visitor: ExpressionVisitor<T>): T = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType {
+        TODO("Not yet implemented")
+    }
+}

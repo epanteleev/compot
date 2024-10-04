@@ -10,7 +10,6 @@ interface TypeNodeVisitor<T> {
     fun visit(enumSpecifier: EnumSpecifier): T
     fun visit(typeQualifier: TypeQualifierNode): T
     fun visit(storageClassSpecifier: StorageClassSpecifier): T
-    fun visit(structField: StructField): T
     fun visit(structDeclaration: StructDeclaration): T
     fun visit(unionDeclaration: UnionDeclaration): T
     fun visit(enumDeclaration: EnumDeclaration): T
