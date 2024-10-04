@@ -161,4 +161,14 @@ class CTokenizerTest {
         val num = tokens[0] as PPNumber
         assertEquals(4500000000000000.000000, num.toNumberOrNull())
     }
+
+    @Test
+    fun testLongLiteral() {
+        val input = "0xffff000000000000LL"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is PPNumber }
+        tokens[0].isEqual(1, 1, "ffff000000000000LL")
+        val num = tokens[0] as PPNumber
+        assertEquals("FFFF000000000000".toULong(16).toLong(), num.toNumberOrNull())
+    }
 }

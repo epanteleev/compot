@@ -497,7 +497,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testLoadConstants() {
         val result = runCTest("shlang/llvm-c-tests/2006-12-11-LoadConstants", listOf(), options())
         val expected = readExpectedOutput("shlang/llvm-c-tests/2006-12-11-LoadConstants.reference_output")

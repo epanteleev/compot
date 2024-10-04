@@ -19,7 +19,7 @@ class PPNumber(private val data: String, private val radix: Int, position: Posit
         cachedNumber = when {
             data.endsWith("ULL") -> data.substring(0, data.length - 3).toULongOrNull(radix)
             data.endsWith("ull") -> data.substring(0, data.length - 3).toULongOrNull(radix)
-            data.endsWith("LL")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
+            data.endsWith("LL")  -> data.substring(0, data.length - 2).toULongOrNull(radix)?.toLong()
             data.endsWith("ll")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
             data.endsWith("LL")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
             data.endsWith("ll")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
