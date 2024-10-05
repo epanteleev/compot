@@ -1,5 +1,7 @@
 package ir.types
 
+import ir.Definitions
+
 
 class StructType internal constructor(val name: String, val fields: List<NonTrivialType>): AggregateType {
     private val alignments = alignments()
@@ -22,7 +24,7 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
         for (i in fields.indices) {
             val field = fields[i]
             alignment = align(alignment, field)
-            current = alignTo(current + field.sizeOf(), alignment)
+            current = Definitions.alignTo(current + field.sizeOf(), alignment)
             result[i] = alignment
         }
         return result
@@ -39,9 +41,9 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
     override fun offset(index: Int): Int {
         var current = 0
         for (i in 0 until index) {
-            current = alignTo(current + fields[i].sizeOf(), alignments[i])
+            current = Definitions.alignTo(current + fields[i].sizeOf(), alignments[i])
         }
-        return alignTo(current, alignments[index])
+        return Definitions.alignTo(current, alignments[index])
     }
 
     override fun field(index: Int): NonTrivialType {
@@ -56,7 +58,7 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
         }
         var offset = 0
         for (idx in fields.indices) {
-            offset = alignTo(offset + fields[idx].sizeOf(), alignments[idx])
+            offset = Definitions.alignTo(offset + fields[idx].sizeOf(), alignments[idx])
         }
         return offset
     }
@@ -65,11 +67,5 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
 
     fun dump(): String {
         return fields.joinToString(prefix = "$$name = type {", separator = ", ", postfix = "}")
-    }
-
-    companion object {
-        private fun alignTo(value: Int, alignment: Int): Int {
-            return ((value + alignment - 1) / alignment) * alignment
-        }
     }
 }

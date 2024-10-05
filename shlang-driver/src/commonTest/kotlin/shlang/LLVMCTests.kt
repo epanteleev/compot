@@ -533,7 +533,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testLoopBug() {
         val result = runCTest("shlang/llvm-c-tests/2008-04-18-LoopBug", listOf(), options())
         val expected = """0 5 5 6 7
@@ -542,8 +541,9 @@ abstract class LLVMCTests: CommonCTest() {
         |3 5 6 7 8
         |4 5 6 7 8
         |-1 5 6 7 8
+        |
         """.trimMargin()
-        assertEquals("0\n", result.output)
+        assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }
 }

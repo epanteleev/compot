@@ -92,7 +92,7 @@ object TypeConverter {
     }
 
     private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: AnyStructType): Type {
-        val fields = type.fields().map { toIRLVType<NonTrivialType>(typeHolder, it.second.cType()) }
+        val fields = type.fields().map { toIRLVType<NonTrivialType>(typeHolder, it.cType()) }
         val structType = findStructTypeOrNull(type.name)
         if (structType != null) {
             return structType
@@ -102,11 +102,11 @@ object TypeConverter {
     }
 
     private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: CUnionType): Type {
-        val field = type.fields().maxByOrNull { it.second.size() }.let {
+        val field = type.fields().maxByOrNull { it.cType().size() }.let {
             if (it == null) {
                 null
             } else {
-                toIRType<NonTrivialType>(typeHolder, it.second.cType())
+                toIRType<NonTrivialType>(typeHolder, it.cType())
             }
         }
         val structType = findStructTypeOrNull(type.name)

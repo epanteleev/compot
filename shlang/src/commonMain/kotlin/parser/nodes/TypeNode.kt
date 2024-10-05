@@ -30,14 +30,15 @@ data class UnionSpecifier(val name: Identifier, val fields: List<StructField>) :
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        val structType = CUnionType(name())
+        val members = arrayListOf<Member>()
         for (field in fields) {
             val type = field.declspec.specifyType(typeHolder, listOf()).type
             for (declarator in field.declarators) {
-                structType.addField(declarator.name(), type)
+                members.add(Member(declarator.name(), type))
             }
         }
 
+        val structType = CUnionType(name(), members)
         name.let { typeHolder.addNewType(it.str(), structType) }
         return@addToBuilder structType
     }
@@ -133,15 +134,15 @@ data class StructSpecifier(private val name: Identifier, val fields: List<Struct
     override fun name(): String = name.str()
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        val structType = CStructType(name.str())
+        val members = arrayListOf<Member>()
         for (field in fields) {
             val type = field.declspec.specifyType(typeHolder, listOf()) //TODo
             for (declarator in field.declarators) {
                 val resolved = declarator.declareType(field.declspec, typeHolder).type
-                structType.addField(declarator.name(), resolved)
+                members.add(Member(declarator.name(), resolved))
             }
         }
-
+        val structType = CStructType(name.str(), members)
         return@addToBuilder typeHolder.addNewType(name.str(), structType)
     }
 }

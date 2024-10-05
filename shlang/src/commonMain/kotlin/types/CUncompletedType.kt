@@ -19,7 +19,7 @@ data class CUncompletedArrayType(val elementType: TypeDesc) : AnyCArrayType(elem
     }
 }
 
-data class CUncompletedStructType(override val name: String): CUncompletedType, AnyStructType(name) {
+data class CUncompletedStructType(val name: String): CUncompletedType, CType() {
     override fun typename(): String = name
 
     override fun size(): Int = throw Exception("Uncompleted type '$name'")
@@ -29,7 +29,7 @@ data class CUncompletedStructType(override val name: String): CUncompletedType, 
     }
 }
 
-data class CUncompletedUnionType(override val name: String): CUncompletedType, AnyStructType(name) {
+data class CUncompletedUnionType(val name: String): CUncompletedType, CType() {
     override fun typename(): String = name
 
     override fun size(): Int = throw Exception("Uncompleted type")
@@ -42,5 +42,5 @@ data class CUncompletedUnionType(override val name: String): CUncompletedType, A
 data class CUncompletedEnumType(val name: String): CUncompletedType, CPrimitive() {
     override fun typename(): String = "enum $name"
 
-    override fun size(): Int = throw Exception("Uncompleted type")
+    override fun size(): Int = throw Exception("Uncompleted type") //TODO remove this
 }

@@ -1,35 +1,68 @@
 package types
 
+import ir.Definitions
 import typedesc.TypeDesc
 
 
 sealed class CAggregateType: CType()
 
-sealed class AnyStructType(open val name: String): CAggregateType() {
-    protected val fields = arrayListOf<Pair<String, TypeDesc>>()
+sealed class AnyStructType(open val name: String, protected val fields: List<Member>): CAggregateType() {
     override fun typename(): String = name
 
     fun fieldIndex(name: String): Int {
-        return fields.indexOfFirst { it.first == name }
+        return fields.indexOfFirst { it.name == name }
     }
 
     fun fieldIndex(index: Int): TypeDesc {
-        return fields[index].second
+        return fields[index].typeDesc
     }
 
-    fun fields(): List<Pair<String, TypeDesc>> {
+    fun fields(): List<Member> {
         return fields
     }
 
-    //TODO avoid???
-    internal fun addField(name: String, type: TypeDesc) {
-        fields.add(name to type)
-    }
+    abstract fun maxAlignment(): Int
 }
 
-data class CStructType(override val name: String): AnyStructType(name) { //TODO
+class CStructType(override val name: String, fields: List<Member>): AnyStructType(name, fields) {
+    private val alignments = alignments()
+    private var maxAlignment = Int.MIN_VALUE
+
+    override fun maxAlignment(): Int {
+        if (maxAlignment == Int.MIN_VALUE) {
+            maxAlignment = alignments.maxOrNull() ?: 1
+        }
+        return maxAlignment
+    }
+
+    private fun alignments(): IntArray {
+        var current = 0
+        var alignment = 1
+        val result = IntArray(fields.size)
+        for (i in fields.indices) {
+            val field = fields[i]
+            alignment = align(alignment, field.typeDesc.cType())
+            current = Definitions.alignTo(current + field.typeDesc.size(), alignment)
+            result[i] = alignment
+        }
+        return result
+    }
+
     override fun size(): Int {
-        return fields.sumOf { it.second.size() }
+        if (fields.isEmpty()) {
+            return 0
+        }
+        var offset = 0
+        for (idx in fields.indices) {
+            offset = Definitions.alignTo(offset + fields[idx].typeDesc.size(), alignments[idx])
+        }
+        return offset
+    }
+
+    private fun align(alignment: Int, field: CType): Int = when (field) {
+        is AnyStructType -> maxOf(alignment, field.maxAlignment())
+        is CArrayType    -> maxOf(alignment, field.maxAlignment())
+        else -> maxOf(alignment, field.size())
     }
 
     override fun toString(): String = buildString {
@@ -42,12 +75,12 @@ data class CStructType(override val name: String): AnyStructType(name) { //TODO
     }
 }
 
-data class CUnionType(override val name: String): AnyStructType(name) {
+class CUnionType(override val name: String, fields: List<Member>): AnyStructType(name, fields) {
     override fun size(): Int {
         if (fields.isEmpty()) {
             return 0
         }
-        return fields.maxOf { it.second.size() }
+        return fields.maxOf { it.typeDesc.size() }
     }
 
     override fun toString(): String = buildString {
@@ -58,21 +91,9 @@ data class CUnionType(override val name: String): AnyStructType(name) {
         }
         append("}")
     }
-}
 
-data class CEnumType(val name: String, private val enumerators: Map<String, Int>): CPrimitive() {
-    override fun typename(): String = name
-
-    override fun size(): Int {
-        return INT.size()
-    }
-
-    fun hasEnumerator(name: String): Boolean {
-        return enumerators.contains(name)
-    }
-
-    fun enumerator(name: String): Int? {
-        return enumerators[name] //TODO temporal
+    override fun maxAlignment(): Int {
+        return fields.maxOf { it.typeDesc.cType().size() }
     }
 }
 
@@ -81,6 +102,8 @@ sealed class AnyCArrayType(val type: TypeDesc): CAggregateType() {
 }
 
 class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
+    private var maxAlignment = Int.MIN_VALUE
+
     override fun typename(): String {
         return toString()
     }
@@ -92,5 +115,17 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     override fun toString(): String = buildString {
         append("[$dimension]")
         append(type)
+    }
+
+    fun maxAlignment(): Int {
+        if (maxAlignment == Int.MIN_VALUE) {
+            val cType = type.cType()
+            maxAlignment = when (cType) {
+                is CArrayType    -> cType.maxAlignment()
+                is AnyStructType -> cType.maxAlignment()
+                else -> cType.size()
+            }
+        }
+        return maxAlignment
     }
 }

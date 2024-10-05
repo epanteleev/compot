@@ -52,7 +52,6 @@ class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, va
         result = 31 * result + variadic.hashCode()
         return result
     }
-
 }
 
 class CFunctionType(val name: String, val functionType: AbstractCFunction): CAggregateType(), AnyFunctionType {

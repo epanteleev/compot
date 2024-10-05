@@ -9,4 +9,8 @@ object Definitions {
 
     const val FLOAT_SIZE  = 4
     const val DOUBLE_SIZE = 8
+
+    fun alignTo(value: Int, alignment: Int): Int {
+        return ((value + alignment - 1) / alignment) * alignment
+    }
 }

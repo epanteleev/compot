@@ -15,8 +15,8 @@ import types.CUnionType
 class TypeHolder private constructor(): Scope {
     private val valueMap = VarStack<VarDescriptor>()
     val enumTypeMap = VarStack<CPrimitive>()
-    val structTypeMap = VarStack<CAggregateType>()
-    val unionTypeMap = VarStack<CAggregateType>()
+    val structTypeMap = VarStack<CType>()
+    val unionTypeMap = VarStack<CType>()
 
     private val functions = hashMapOf<String, VarDescriptor>()
     private val typedefs = VarStack<TypeDesc>()

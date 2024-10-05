@@ -289,3 +289,19 @@ class CPointer(val type: CType, private val properties: Set<TypeQualifier> = set
         append("*")
     }
 }
+
+data class CEnumType(val name: String, private val enumerators: Map<String, Int>): CPrimitive() {
+    override fun typename(): String = name
+
+    override fun size(): Int {
+        return INT.size()
+    }
+
+    fun hasEnumerator(name: String): Boolean {
+        return enumerators.contains(name)
+    }
+
+    fun enumerator(name: String): Int? {
+        return enumerators[name] //TODO temporal
+    }
+}

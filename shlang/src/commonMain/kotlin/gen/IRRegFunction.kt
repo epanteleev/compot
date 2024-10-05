@@ -244,7 +244,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return gep
         }
 
-        val memberType = baseStructType.fields()[member].second.cType()
+        val memberType = baseStructType.fields()[member].cType()
         if (memberType is CAggregateType) {
             return gep
         }
@@ -267,7 +267,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (!isRvalue) {
             return gep
         }
-        val memberType = structType.fields()[member].second.cType()
+        val memberType = structType.fields()[member].cType()
         if (memberType is CAggregateType) {
             return gep
         }
@@ -315,22 +315,21 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun convertArg(function: AnyFunctionPrototype, argIdx: Int, expr: Value): Value {
-        if (argIdx >= function.arguments().size) {
-            if (!function.isVararg) {
-                throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'")
-            }
-
-            return when (expr.type()) {
-                Type.F32          -> ir.convertToType(expr, Type.F64)
-                Type.I8, Type.I16 -> ir.convertToType(expr, Type.I32)
-                Type.U8, Type.U16 -> ir.convertToType(expr, Type.U32)
-                Type.U1           -> ir.convertToType(expr, Type.I32)
-                else -> expr
-            }
+        if (argIdx < function.arguments().size) {
+            val cvt = function.argument(argIdx)
+            return ir.convertToType(expr, cvt)
         }
 
-        val cvt = function.argument(argIdx)
-        return ir.convertToType(expr, cvt)
+        if (!function.isVararg) {
+            throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'")
+        }
+        return when (expr.type()) {
+            Type.F32          -> ir.convertToType(expr, Type.F64)
+            Type.I8, Type.I16 -> ir.convertToType(expr, Type.I32)
+            Type.U8, Type.U16 -> ir.convertToType(expr, Type.U32)
+            Type.U1           -> ir.convertToType(expr, Type.I32)
+            else -> expr
+        }
     }
 
     private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): List<Value> {
@@ -371,7 +370,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitFunPointerCall(funcPointerCall: FunctionCall): Value {
         val functionType = funcPointerCall.functionType(typeHolder)
-        val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true) //TODO bug
+        val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true)
 
         val irRetType = mb.toIRType<Type>(typeHolder, functionType.retType().cType())
         val argTypes = functionType.args().map {
@@ -857,7 +856,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun getVariableAddress(varNode: VarNode, rvalueAddr: Value, isRvalue: Boolean): Value {
         val type = varNode.resolveType(typeHolder)
-
         if (!isRvalue) {
             return rvalueAddr
         }
@@ -1001,9 +999,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(functionNode: FunctionNode): Value = scoped {
-        if (functionNode.name() == "iter") {
-            println()
-        }
         val parameters = functionNode.functionDeclarator().params()
         val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
         val retType    = fnType.retType()

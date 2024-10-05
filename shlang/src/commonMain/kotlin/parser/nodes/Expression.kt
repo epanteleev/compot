@@ -301,7 +301,7 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
         }
         val field = structType.fieldIndex(ident.str())
         if (field != -1) {
-            return@memoize structType.fields()[field].second.cType()
+            return@memoize structType.fields()[field].cType()
         }
         throw TypeResolutionException("Field $ident not found in struct $structType")
     }
@@ -321,7 +321,7 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
         }
         val field = baseType.fieldIndex(ident.str())
         if (field != -1) {
-            return@memoize baseType.fields()[field].second.cType()
+            return@memoize baseType.fields()[field].cType()
         }
         throw TypeResolutionException("Field $ident not found in struct $baseType")
     }
