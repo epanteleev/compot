@@ -133,12 +133,12 @@ data class FunctionPointerDeclarator(val declarator: Declarator): DirectDeclarat
     override fun name(): String = declarator.name()
 
     override fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
-        val t = declarator.directDeclarator.resolveType(baseType, typeHolder)
-        if (t.cType() is AbstractCFunction) {
-            return TypeDesc.from(CPointer(t.cType() as AbstractCFunction, setOf()), listOf())
+        val cType = if (baseType.cType() is AbstractCFunction) {
+            TypeDesc.from(CPointer(baseType.cType() as AbstractCFunction, setOf()), listOf())
+        } else {
+            baseType
         }
-
-        return t
+        return declarator.directDeclarator.resolveType(cType, typeHolder)
     }
 }
 

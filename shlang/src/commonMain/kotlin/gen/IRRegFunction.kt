@@ -245,12 +245,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val memberType = baseStructType.fields()[member].second.cType()
-        return if (memberType !is CAggregateType) {
-            val memberIRType = mb.toIRType<PrimitiveType>(typeHolder, memberType)
-            ir.load(memberIRType, gep)
-        } else {
-            gep
+        if (memberType is CAggregateType) {
+            return gep
         }
+        val memberIRType = mb.toIRType<PrimitiveType>(typeHolder, memberType)
+        return ir.load(memberIRType, gep)
     }
 
     private fun visitMemberAccess(memberAccess: MemberAccess, isRvalue: Boolean): Value {
@@ -269,12 +268,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return gep
         }
         val memberType = structType.fields()[member].second.cType()
-        return if (memberType !is CAggregateType) {
-            val memberIRType = mb.toIRLVType<PrimitiveType>(typeHolder, memberType)
-            ir.load(memberIRType, gep)
-        } else {
-            gep
+        if (memberType is CAggregateType) {
+            return gep
         }
+
+        val memberIRType = mb.toIRLVType<PrimitiveType>(typeHolder, memberType)
+        return ir.load(memberIRType, gep)
     }
 
     private fun visitSizeOf(sizeOf: SizeOf): Value = when (val expr = sizeOf.expr) {
@@ -309,12 +308,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (!isRvalue) {
             return adr
         }
-
-        return if (arrayType is CAggregateType && arrayType !is AnyFunctionType) {
-            adr
-        } else {
-            ir.load(elementType as PrimitiveType, adr)
+        if (arrayType is CAggregateType) {
+            return adr
         }
+        return ir.load(elementType as PrimitiveType, adr)
     }
 
     private fun convertArg(function: AnyFunctionPrototype, argIdx: Int, expr: Value): Value {
@@ -810,6 +807,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     return addr
                 }
                 val type = unaryOp.resolveType(typeHolder)
+                if (type is CAggregateType) {
+                    return addr
+                }
                 val loadedType = mb.toIRType<PrimitiveType>(typeHolder, type)
                 ir.load(loadedType, addr)
             }
@@ -858,13 +858,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun getVariableAddress(varNode: VarNode, rvalueAddr: Value, isRvalue: Boolean): Value {
         val type = varNode.resolveType(typeHolder)
 
-        if (type is CAggregateType) {
-            return rvalueAddr
-        }
-        if (type is CPointer && type.dereference() is AnyFunctionType) {
-            return rvalueAddr
-        }
         if (!isRvalue) {
+            return rvalueAddr
+        }
+        if (type is CAggregateType) {
             return rvalueAddr
         }
         val converted = mb.toIRLVType<PrimitiveType>(typeHolder, type)
@@ -922,17 +919,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         is AnyCArrayType -> {
             assertion(args.size == 1) { "invariant" }
             varStack[param] = args[0]
-        }
-        is CPointer -> {
-            assertion(args.size == 1) { "invariant" }
-            if (cType.dereference() is AnyFunctionType) {
-                varStack[param] = args[0]
-            } else {
-                val irType    = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
-                val rvalueAdr = ir.alloc(irType)
-                ir.store(rvalueAdr, ir.convertToType(args[0], irType))
-                varStack[param] = rvalueAdr
-            }
         }
         is CPrimitive -> {
             assertion(args.size == 1) { "invariant" }
@@ -1015,6 +1001,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(functionNode: FunctionNode): Value = scoped {
+        if (functionNode.name() == "iter") {
+            println()
+        }
         val parameters = functionNode.functionDeclarator().params()
         val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
         val retType    = fnType.retType()

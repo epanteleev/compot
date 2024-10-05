@@ -72,7 +72,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                 // Argument is live out of the call
                 return true
             }
-            if (call.arguments().contains(arg)) {
+            if (call.operands().contains(arg)) {
                 // Argument is used in the call
                 return true
             }

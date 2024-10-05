@@ -371,7 +371,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testScalarReplBug() {
         val result = runCTest("shlang/llvm-c-tests/2003-10-29-ScalarReplBug", listOf(), options())
         assertEquals("0\n", result.output)
