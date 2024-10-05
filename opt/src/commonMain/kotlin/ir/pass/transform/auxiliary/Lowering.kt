@@ -91,35 +91,33 @@ class Lowering private constructor(private val cfg: FunctionData) {
             else -> throw IllegalArgumentException("Expected GEP or GFP")
         }
 
-        fun closure(bb: Block, inst: Instruction): Instruction {
-            when {
-                store(gfpOrGep(generate().not(), nop()), nop()) (inst) -> { inst as Store
-                    val pointer = inst.pointer().asValue<ValueInstruction>()
-                    val move = bb.replace(inst) { it.move(getSource(pointer), getIndex(pointer), inst.value()) }
-                    killOnDemand(bb, pointer)
-                    return move
-                }
-                store(gfpOrGep(generate(), nop()), nop()) (inst) -> { inst as Store
-                    val pointer = inst.pointer().asValue<ValueInstruction>()
-                    val st = bb.replace(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
-                    killOnDemand(bb, pointer)
-                    return st
-                }
-                load(gfpOrGep(generate().not(), nop())) (inst) -> { inst as Load
-                    val pointer = inst.operand().asValue<ValueInstruction>()
-                    val copy = bb.replace(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
-                    killOnDemand(bb, pointer)
-                    return copy
-                }
-                load(gfpOrGep(generate(), nop())) (inst) -> { inst as Load
-                    val pointer = inst.operand().asValue<ValueInstruction>()
-                    val index = getIndex(pointer)
-                    val copy = bb.replace(inst) { it.loadFromStack(getSource(pointer), inst.type(), index) }
-                    killOnDemand(bb, pointer)
-                    return copy
-                }
+        fun closure(bb: Block, inst: Instruction): Instruction? = match(inst) {
+            store(gfpOrGep(generate().not(), nop()), generate()) { inst ->
+                val pointer = inst.pointer().asValue<ValueInstruction>()
+                val move = bb.replace(inst) { it.move(getSource(pointer), getIndex(pointer), inst.value()) }
+                killOnDemand(bb, pointer)
+                move
             }
-            return inst
+            store(gfpOrGep(generate(), nop()), generate()) { inst ->
+                val pointer = inst.pointer().asValue<ValueInstruction>()
+                val st = bb.replace(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
+                killOnDemand(bb, pointer)
+                st
+            }
+            load(gfpOrGep(generate().not(), nop())) { inst ->
+                val pointer = inst.operand().asValue<ValueInstruction>()
+                val copy = bb.replace(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
+                killOnDemand(bb, pointer)
+                copy
+            }
+            load(gfpOrGep(generate(), nop())) { inst ->
+                val pointer = inst.operand().asValue<ValueInstruction>()
+                val index = getIndex(pointer)
+                val copy = bb.replace(inst) { it.loadFromStack(getSource(pointer), inst.type(), index) }
+                killOnDemand(bb, pointer)
+                copy
+            }
+            default()
         }
 
         for (bb in cfg) {

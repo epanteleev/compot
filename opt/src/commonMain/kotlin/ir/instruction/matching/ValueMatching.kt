@@ -65,6 +65,10 @@ class Matcher(val inst: Instruction) {
         return rule(gfp(basicType, source), block)
     }
 
+    fun select(cond: ValueMatcher, onTrue: ValueMatcher, onFalse: ValueMatcher, block: (Select) -> Instruction?): Instruction? {
+        return rule(select(cond, onTrue, onFalse), block)
+    }
+
     inline fun<reified R> shl(crossinline a: ValueMatcher, crossinline b: ValueMatcher, block: (Shl) -> R?): R? {
         return rule(shl(a, b), block)
     }

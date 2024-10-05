@@ -76,8 +76,6 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
         is I32Value -> Imm32.of(value.i32.toLong())
         is I64Value -> Imm64.of(value.i64)
         is U64Value -> Imm64.of(value.u64)
-        is F32Value -> ImmFp32(value.f32)
-        is F64Value -> ImmFp64(value.f64)
         is GlobalConstant -> Address.internal(value.name())
         is FunctionSymbol -> Address.internal(value.name())
         is ExternValue -> Address.external(value.name())

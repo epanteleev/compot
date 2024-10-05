@@ -66,7 +66,6 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("untested")
         asm.mov(secondOpSize, second, temp1)
         asm.mov(POINTER_SIZE, first, dst)
         asm.lea(POINTER_SIZE, Address.from(dst, 0, temp1, ScaleFactor.from(size)), dst)
