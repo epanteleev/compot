@@ -72,6 +72,13 @@ abstract class StructTests: CommonCTest() {
     }
 
     @Test
+    fun testStruct8() {
+        val result = runCTest("shlang/struct/struct8", listOf("runtime/runtime.c"), options())
+        assertEquals("Success\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
     fun testUnion0() {
         val result = runCTest("shlang/struct/union0", listOf("runtime/runtime.c"), options())
         assertEquals("1.000000\n", result.output)
@@ -158,6 +165,13 @@ abstract class StructTests: CommonCTest() {
     fun testArgumentStruct4() {
         val result = runCTest("shlang/struct/argument_struct4", listOf(), options())
         assertEquals("x: 1, y: 2, z: 3\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun testArgumentStruct5() {
+        val result = runCTest("shlang/struct/argument_struct5", listOf(), options())
         assertEquals(0, result.exitCode)
     }
 
