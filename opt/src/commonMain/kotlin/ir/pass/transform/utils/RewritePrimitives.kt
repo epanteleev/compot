@@ -94,7 +94,7 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
                 continue
             }
 
-            if (store(nop(), value(primitive())) (instruction) && escapeState.isNoEscape((instruction as Store).pointer())) {
+            if (instruction.isa(store(nop(), value(primitive()))) && escapeState.isNoEscape((instruction as Store).pointer())) {
                 val actual = findActualValueOrNull(bb, instruction.value())
                 val pointer = instruction.pointer()
                 if (actual != null) {
@@ -106,12 +106,12 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
                 continue
             }
 
-            if (alloc(primitive()) (instruction) && escapeState.isNoEscape(instruction as Alloc)) {
+            if (instruction.isa(alloc(primitive())) && escapeState.isNoEscape(instruction as Alloc)) {
                 valueMap[instruction] = Value.UNDEF
                 continue
             }
 
-            if (load(primitive(), nop()) (instruction) && escapeState.isNoEscape((instruction as Load).operand())) {
+            if (instruction.isa(load(primitive(), nop())) && escapeState.isNoEscape((instruction as Load).operand())) {
                 val actual = findActualValue(bb, instruction.operand())
                 valueMap[instruction] = actual
                 continue

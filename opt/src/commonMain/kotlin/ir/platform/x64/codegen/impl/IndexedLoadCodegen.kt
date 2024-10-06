@@ -77,8 +77,8 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, indexType: Primi
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
-        //asm.mov(size, first.withOffset(second.value().toInt() * size), dst)
+        asm.mov(POINTER_SIZE, first, temp1)
+        asm.mov(size, Address.from(temp1, second.value().toInt() * size), dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {

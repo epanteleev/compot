@@ -5,6 +5,7 @@ import ir.Definitions.POINTER_SIZE
 import ir.types.*
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.temp1
+import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
@@ -129,7 +130,16 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        if (ScaleFactor.isScaleFactor(size)) {
+            asm.mov(POINTER_SIZE, first, temp1)
+            asm.mov(secondOpSize, second, temp2)
+            asm.lea(POINTER_SIZE, Address.from(temp1, 0, temp2, ScaleFactor.from(size)), temp1)
+            asm.mov(POINTER_SIZE, temp1, dst)
+        } else {
+            asm.imul(POINTER_SIZE, Imm32.of(size), second, temp1)
+            asm.add(POINTER_SIZE, first, temp1)
+            asm.mov(POINTER_SIZE, temp1, dst)
+        }
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

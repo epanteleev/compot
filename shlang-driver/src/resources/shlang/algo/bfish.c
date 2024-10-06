@@ -598,6 +598,8 @@ void tst_variable_key(void)
 		assert(blk.lo == ciphertext_vr[i]);
 		bfish_init(&bf, variable_key[i], 8);
 		bfish_deblock(&bf, &blk);
+		printf("blk.hi: %x\n", blk.hi);
+		printf("plain: %x\n", plaintext_vl[i]);
 		assert(blk.hi == plaintext_vl[i]);
 		assert(blk.lo == plaintext_vr[i]);
 	}

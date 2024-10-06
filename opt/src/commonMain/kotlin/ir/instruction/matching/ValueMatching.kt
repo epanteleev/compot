@@ -130,7 +130,7 @@ inline fun shr(crossinline a: ValueMatcher, crossinline b: ValueMatcher): Instru
     it is Shr && a(it.lhs()) && b(it.rhs())
 }
 
-inline fun select(crossinline cond: ValueMatcher, crossinline onTrue: ValueMatcher, crossinline onFalse: ValueMatcher): InstructionMatcher = {
+inline fun<reified T: Instruction> select(crossinline cond: ValueMatcher, crossinline onTrue: ValueMatcher, crossinline onFalse: ValueMatcher): (T) -> Boolean = {
     it is Select && cond(it.condition()) && onTrue(it.onTrue()) && onFalse(it.onFalse())
 }
 

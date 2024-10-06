@@ -4,6 +4,9 @@ import ir.value.Value
 import common.LListNode
 import common.arrayWrapperOf
 import common.assertion
+import ir.instruction.matching.InstructionMatcher
+import ir.instruction.matching.TypeMatcher
+import ir.instruction.matching.ValueMatcher
 import ir.value.LocalValue
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
@@ -35,8 +38,6 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
     fun containsOperand(value: Value): Boolean {
         return operands.contains(value)
     }
-
-    fun countOperands(): Int = operands.size
 
     fun emptyOperands(): Boolean = operands.isEmpty()
 
@@ -106,7 +107,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
     abstract fun dump(): String
 
     companion object {
-        internal inline fun<T: Instruction> registerUser(user: T, vararg operands: Value): T {
+        internal fun<T: Instruction> registerUser(user: T, vararg operands: Value): T {
             for (i in operands) {
                 if (i !is LocalValue) {
                     continue
@@ -118,7 +119,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
             return user
         }
 
-        internal inline fun<T: Instruction> registerUser(user: T, operands: Iterator<Value>): T {
+        internal fun<T: Instruction> registerUser(user: T, operands: Iterator<Value>): T {
             for (i in operands) {
                 if (i !is LocalValue) {
                     continue
@@ -130,4 +131,23 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
             return user
         }
     }
+}
+
+inline fun<reified T> Instruction.isa(matcher: (T) -> Boolean): Boolean {
+    if (this !is T) {
+        return false
+    }
+
+    return matcher(this)
+}
+
+inline fun<reified T> Instruction.match(noinline matcher: (T) -> Boolean, action: (T) -> Instruction?) {
+    if (this !is T) {
+        return
+    }
+    if (!isa(matcher)) {
+        return
+    }
+
+    action(this)
 }
