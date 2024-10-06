@@ -347,8 +347,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     convertedArgs.add(convertedArg)
                 }
                 is CStructType -> {
-                    val type = mb.toIRType<StructType>(typeHolder, argCType)
-                    convertedArgs.addAll(ir.coerceArguments(type, expr))
+                    convertedArgs.addAll(ir.coerceArguments(argCType, expr))
                 }
                 else -> throw IRCodeGenError("Unknown type, type=${argCType} in function call")
             }
@@ -630,13 +629,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     if (leftType.size() > QWORD_SIZE * 2) {
                         ir.memcpy(left, right, U64Value(leftType.size().toLong()))
                     } else {
-                        val structType = mb.toIRType<AggregateType>(typeHolder, leftType)
-                        val list = CallConvention.coerceArgumentTypes(structType)
+                        val list = CallConvention.coerceArgumentTypes(leftType)
                         if (list == null) {
                             ir.memcpy(left, right, U64Value(leftType.size().toLong()))
                             return left
                         }
-
+                        val structType = mb.toIRType<AggregateType>(typeHolder, leftType)
                         if (list.size == 1) {
                             val loadedRight = ir.load(list[0], right)
                             val gep = ir.gep(left, structType, I64Value(0))
@@ -896,7 +894,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     closure(parameters[currentArg], cType, listOf(arguments[argumentIdx]))
                 }
                 is CStructType -> {
-                    val types = CallConvention.coerceArgumentTypes(mb.toIRType<StructType>(typeHolder, cType)) ?: listOf(Type.Ptr)
+                    val types = CallConvention.coerceArgumentTypes(cType) ?: listOf(Type.Ptr)
                     val args = mutableListOf<ArgumentValue>()
                     for (i in types.indices) {
                         args.add(arguments[argumentIdx + i])
@@ -980,11 +978,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val ret = ir.load(retType, value)
                 ir.ret(retType, arrayOf(ret))
             }
-            is AnyStructType -> {
-                val retType = mb.toIRType<StructType>(typeHolder, retCType)
-                val retTupleType = CallConvention.coerceArgumentTypes(retType)
+            is CStructType -> {
+                val retTupleType = CallConvention.coerceArgumentTypes(retCType)
                 if (retTupleType != null) {
-                    val retValues = ir.coerceArguments(retType, value)
+                    val retValues = ir.coerceArguments(retCType, value)
                     if (retTupleType.size == 1) {
                         ir.ret(retTupleType[0], retValues.toTypedArray())
                     } else {
@@ -1415,7 +1412,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                             return lvalueAdr
                         }
                         val structType = mb.toIRType<StructType>(typeHolder, functionType)
-                        val list = CallConvention.coerceArgumentTypes(structType) ?: throw IRCodeGenError("Unknown type, type=$functionType")
+                        val list = CallConvention.coerceArgumentTypes(functionType) ?: throw IRCodeGenError("Unknown type, type=$functionType")
                         if (list.size == 1) {
                             val gep = ir.gep(lvalueAdr, structType, Constant.of(Type.I64, 0))
                             ir.store(gep, call)

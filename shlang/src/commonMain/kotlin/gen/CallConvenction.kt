@@ -9,10 +9,11 @@ import ir.types.AggregateType
 import ir.types.NonTrivialType
 import ir.types.PrimitiveType
 import ir.types.StructType
+import types.CAggregateType
 
 
 object CallConvention {
-    fun coerceArgumentTypes(cType: AggregateType): List<PrimitiveType>? = when (cType.sizeOf()) {
+    fun coerceArgumentTypes(cType: CAggregateType): List<PrimitiveType>? = when (cType.size()) {
         BYTE_SIZE  -> arrayListOf(Type.I8)
         HWORD_SIZE -> arrayListOf(Type.I16)
         WORD_SIZE  -> {

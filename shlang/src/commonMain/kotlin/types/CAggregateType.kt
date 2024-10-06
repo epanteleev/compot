@@ -4,7 +4,32 @@ import ir.Definitions
 import typedesc.TypeDesc
 
 
-sealed class CAggregateType: CType()
+sealed class CAggregateType: CType() {
+    fun hasFloatOnly(lo: Int, hi: Int): Boolean {
+        return hasFloat(this, lo, hi, 0)
+    }
+
+    private fun hasFloat(ty: CType, lo: Int, hi: Int, offset: Int): Boolean {
+        if (ty is AnyStructType) {
+            for ((idx, field) in ty.fields().withIndex()) {
+                if (!hasFloat(field.cType(), lo, hi, offset + ty.offset(idx))) { //TODO inefficient
+                    return false
+                }
+            }
+            return true
+
+        } else if (ty is CArrayType) {
+            for (i in 0 until ty.dimension.toInt()) {
+                if (!hasFloat(ty.type.cType(), lo, hi, offset + i * ty.type.cType().size())) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        return offset < lo || hi <= offset || ty is FLOAT || ty is DOUBLE
+    }
+}
 
 sealed class AnyStructType(open val name: String, protected val fields: List<Member>): CAggregateType() {
     override fun typename(): String = name
@@ -21,6 +46,7 @@ sealed class AnyStructType(open val name: String, protected val fields: List<Mem
         return fields
     }
 
+    abstract fun offset(index: Int): Int
     abstract fun maxAlignment(): Int
 }
 
@@ -65,6 +91,14 @@ class CStructType(override val name: String, fields: List<Member>): AnyStructTyp
         else -> maxOf(alignment, field.size())
     }
 
+    override fun offset(index: Int): Int {
+        var current = 0
+        for (i in 0 until index) {
+            current = Definitions.alignTo(current + fields[i].size(), alignments[i])
+        }
+        return Definitions.alignTo(current, alignments[index])
+    }
+
     override fun toString(): String = buildString {
         append("struct $name")
         append(" {")
@@ -92,6 +126,10 @@ class CUnionType(override val name: String, fields: List<Member>): AnyStructType
         append("}")
     }
 
+    override fun offset(index: Int): Int {
+        return 0
+    }
+
     override fun maxAlignment(): Int {
         return fields.maxOf { it.typeDesc.cType().size() }
     }
@@ -115,6 +153,10 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     override fun toString(): String = buildString {
         append("[$dimension]")
         append(type)
+    }
+
+    fun offset(index: Int): Int {
+        return index * type.size()
     }
 
     fun maxAlignment(): Int {

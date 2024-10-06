@@ -293,10 +293,9 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             types.add(Type.Ptr)
         }
         for (type in ctypes) {
-            when (type.cType()) {
+            when (val ty = type.cType()) {
                 is CStructType -> {
-                    val irType = mb.toIRType<StructType>(typeHolder, type.cType())
-                    val parameters = CallConvention.coerceArgumentTypes(irType)
+                    val parameters = CallConvention.coerceArgumentTypes(ty)
                     if (parameters != null) {
                         types.addAll(parameters)
                     } else {
@@ -313,12 +312,11 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return types
     }
 
-    protected fun irReturnType(retType: TypeDesc): Type = when (retType.cType()) {
+    protected fun irReturnType(retType: TypeDesc): Type = when (val ty = retType.cType()) {
         is VOID -> Type.Void
         is CPrimitive -> mb.toIRLVType<PrimitiveType>(typeHolder, retType.cType())
         is CStructType -> {
-            val structType = mb.toIRType<StructType>(typeHolder, retType.cType())
-            val list = CallConvention.coerceArgumentTypes(structType) ?: return Type.Void
+            val list = CallConvention.coerceArgumentTypes(ty) ?: return Type.Void
             if (list.size == 1) {
                 list[0]
             } else {
