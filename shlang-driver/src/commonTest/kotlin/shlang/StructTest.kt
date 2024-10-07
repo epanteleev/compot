@@ -169,7 +169,6 @@ abstract class StructTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testArgumentStruct5() {
         val result = runCTest("shlang/struct/argument_struct5", listOf(), options())
         assertEquals(0, result.exitCode)

@@ -334,11 +334,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): List<Value> {
         val convertedArgs = mutableListOf<Value>()
+        var offset = 0
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
                 is CPrimitive, is CFunctionType, is CUncompletedArrayType -> {
-                    val convertedArg = convertArg(function, idx, expr)
+                    val convertedArg = convertArg(function, idx + offset, expr)
                     convertedArgs.add(convertedArg)
                 }
                 is CArrayType -> {
@@ -347,7 +348,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     convertedArgs.add(convertedArg)
                 }
                 is CStructType -> {
-                    convertedArgs.addAll(ir.coerceArguments(argCType, expr))
+                    val argValues = ir.coerceArguments(argCType, expr)
+                    convertedArgs.addAll(argValues)
+                    offset += argValues.size - 1
                 }
                 else -> throw IRCodeGenError("Unknown type, type=${argCType} in function call")
             }
