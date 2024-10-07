@@ -60,6 +60,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val stackSize = registerAllocation.spilledLocalsSize()
         val calleeSaveRegisters = registerAllocation.calleeSaveRegisters
 
+        // Stack frame layout check.
+        //asm.assertStackFrameLayout()
+
         asm.push(QWORD_SIZE, rbp)
         asm.copy(QWORD_SIZE, rsp, rbp)
 

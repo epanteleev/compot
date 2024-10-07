@@ -5,6 +5,7 @@ import asm.x64.GPRegister.rdx
 import asm.x64.GPRegister.rax
 import common.assertion
 import ir.Definitions.BYTE_SIZE
+import ir.Definitions.QWORD_SIZE
 import ir.instruction.*
 import ir.module.DirectFunctionPrototype
 import ir.types.*
@@ -139,6 +140,19 @@ class MacroAssembler(name: String, id: Int): Assembler(name, id) {
         } else {
             mov(size, src, dst)
         }
+    }
+
+    fun assertStackFrameLayout() {
+        val currentLabel = currentLabel()
+        val cont = anonLabel()
+        switchTo(currentLabel).let {
+            test(QWORD_SIZE, Imm32.of(0xf - 1), GPRegister.rsp)
+            jcc(CondType.JNE, cont)
+            mov(QWORD_SIZE, Imm32.of(0x0), rax)
+            mov(QWORD_SIZE, Address.from(rax, 0), rax)
+        }
+
+        switchTo(cont)
     }
 
     fun callFunction(call: Callable, func: DirectFunctionPrototype) {

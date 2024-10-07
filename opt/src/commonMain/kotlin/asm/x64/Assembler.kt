@@ -58,7 +58,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
 
     fun anonLabel(): Label {
         anonLabelCounter++
-        return label(".L.anon.$anonLabelCounter")
+        return label(".L.anon.$id.$anonLabelCounter")
     }
 
     fun currentLabel(): Label {

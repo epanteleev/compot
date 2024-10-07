@@ -1,6 +1,7 @@
 package shlang
 
 import common.CommonCTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -64,6 +65,13 @@ abstract class InitializerListTest: CommonCTest() {
     fun test9() {
         val result = runCTest("shlang/initializerList/initializerList9", listOf(), options())
         assertEquals("1 32 3 ", result.output)
+    }
+
+    @Test
+    @Ignore
+    fun test10() {
+        val result = runCTest("shlang/initializerList/initializerList10", listOf(), options())
+        assertEquals("10 0", result.output)
     }
 }
 
