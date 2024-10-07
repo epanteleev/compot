@@ -654,11 +654,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     right
                 } else {
                     val leftIrType = mb.toIRLVType<PrimitiveType>(typeHolder, leftType)
-                    val leftConverted = ir.convertToType(right, leftIrType)
+                    val rightCvt = ir.convertToType(right, leftIrType)
 
                     val left = visitExpression(binop.left, false)
-                    ir.store(left, leftConverted)
-                    leftConverted //TODO test it
+                    ir.store(left, rightCvt)
+                    rightCvt //TODO test it
                 }
             }
             BinaryOpType.ADD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::add)

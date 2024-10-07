@@ -37,10 +37,6 @@ class GlobalValue private constructor(val name: String, private val type: NonTri
         return name == other.name
     }
 
-    fun data(): String {
-        return init.data()
-    }
-
     companion object {
         fun create(name: String, type: NonTrivialType, initializer: Constant, attributes: GlobalValueAttribute): GlobalValue {
             checkConstantType(type, initializer)

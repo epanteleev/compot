@@ -1,8 +1,7 @@
 package ir.value
 
-import ir.global.GlobalConstant
-import ir.global.GlobalSymbol
 import ir.types.*
+import ir.global.GlobalSymbol
 import ir.value.Constant.Companion.of
 
 
@@ -358,18 +357,11 @@ class InitializerListValue(private val type: AggregateType, val elements: List<C
         return elements.joinToString(", ", "{", "}")
     }
 
-    private fun fillIn(constants: MutableList<Constant>, structSize: Int, initializerListSizeOf: Int) {
-        val diff = structSize - initializerListSizeOf
-        for (i in 0 until diff) {
-            constants.add(Constant.zero(Type.I8))
-        }
-    }
-
     companion object {
         fun zero(type: AggregateType): InitializerListValue {
             fun makeConstantForField(fieldType: NonTrivialType): Constant = when (fieldType) {
                 is AggregateType -> zero(fieldType)
-                else -> Constant.of(fieldType, 0)
+                else -> of(fieldType, 0)
             }
             return InitializerListValue(type, type.fields().map { makeConstantForField(it) })
         }

@@ -7,14 +7,12 @@ import common.assertion
 
 sealed interface CPUInstruction {
     companion object {
-        fun prefix(size: Int): Char {
-            return when (size) {
-                8 -> 'q'
-                4 -> 'l'
-                2 -> 'w'
-                1 -> 'b'
-                else -> throw RuntimeException("Unknown operand size: $size")
-            }
+        fun prefix(size: Int): Char = when (size) {
+            8 -> 'q'
+            4 -> 'l'
+            2 -> 'w'
+            1 -> 'b'
+            else -> throw RuntimeException("Unknown operand size: $size")
         }
     }
 }

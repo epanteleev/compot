@@ -172,7 +172,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun pop(size: Int, toReg: GPRegister) = add(Pop(size, toReg))
 
     // Move
-    fun mov(size: Int, src: GPRegister, dst: GPRegister) = add(Mov(size, src, dst))
+    protected fun mov(size: Int, src: GPRegister, dst: GPRegister) = add(Mov(size, src, dst))
     fun mov(size: Int, src: Address, dst: GPRegister)    = add(Mov(size, src, dst))
     fun mov(size: Int, src: GPRegister, dst: Address)    = add(Mov(size, src, dst))
     fun mov(size: Int, imm: ImmInt, dst: Address)        = add(Mov(size, imm, dst))

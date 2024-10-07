@@ -23,7 +23,6 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     override fun rx(dst: XmmRegister, src: GPRegister) = when (fromType) {
         Type.U64 -> cvtU64(dst, src)
         Type.U32 -> {
-            asm.mov(fromSize, src, src)
             asm.cvtint2fp(QWORD_SIZE, toSize, src, dst)
         }
         Type.U16, Type.U8 -> {
@@ -50,7 +49,6 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     override fun ar(dst: Address, src: GPRegister) = when (fromType) {
         Type.U64 -> cvtU64(dst, src)
         Type.U32 -> {
-            asm.mov(fromSize, src, src)
             asm.cvtint2fp(QWORD_SIZE, toSize, src, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
         }

@@ -229,7 +229,7 @@ class FunctionCall(val primary: Expression, val args: List<Expression>) : Expres
         return functionType
     }
 
-    fun functionType(typeHolder: TypeHolder): AnyFunctionType {
+    fun functionType(typeHolder: TypeHolder): AnyCFunctionType {
         resolveParams(typeHolder)
         val functionType = if (primary !is VarNode) {
             resolveFunctionType0(typeHolder)

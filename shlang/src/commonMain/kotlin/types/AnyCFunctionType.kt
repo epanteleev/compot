@@ -3,13 +3,13 @@ package types
 import typedesc.TypeDesc
 
 
-sealed interface AnyFunctionType {
+sealed interface AnyCFunctionType {
     fun retType(): TypeDesc
     fun args(): List<TypeDesc>
     fun variadic(): Boolean
 }
 
-class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): CAggregateType(), AnyFunctionType {
+class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): CAggregateType(), AnyCFunctionType {
     override fun size(): Int = throw RuntimeException("Function type has no size")
 
     override fun typename(): String = buildString {
@@ -54,7 +54,7 @@ class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, va
     }
 }
 
-class CFunctionType(val name: String, val functionType: AbstractCFunction): CAggregateType(), AnyFunctionType {
+class CFunctionType(val name: String, val functionType: AbstractCFunction): CAggregateType(), AnyCFunctionType {
     override fun size(): Int = throw RuntimeException("Function type has no size")
 
     override fun retType(): TypeDesc = functionType.retType
