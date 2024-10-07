@@ -212,7 +212,6 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testBFish() {
         val result = runCTest("shlang/algo/bfish", listOf(), options())
         assertEquals("All tests passed!\n", result.output)

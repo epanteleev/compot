@@ -6,10 +6,11 @@ import ir.types.*
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
+import ir.platform.x64.codegen.MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: NonTrivialType, val asm: Assembler) :
+class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: NonTrivialType, val asm: MacroAssembler) :
     GPOperandsVisitorBinaryOp {
     private val size: Int = basicType.sizeOf()
 
@@ -21,8 +22,14 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
         if (ScaleFactor.isScaleFactor(size)) {
             asm.lea(POINTER_SIZE, Address.from(first, 0, second, ScaleFactor.from(size)), dst)
         } else {
-            asm.imul(POINTER_SIZE, Imm32.of(size), second, dst)
-            asm.add(POINTER_SIZE, first, dst)
+            if (dst == first) {
+                asm.copy(POINTER_SIZE, first, temp1)
+                asm.imul(POINTER_SIZE, Imm32.of(size), second, dst)
+                asm.add(POINTER_SIZE, temp1, dst)
+            } else {
+                asm.imul(POINTER_SIZE, Imm32.of(size), second, dst)
+                asm.add(POINTER_SIZE, first, dst)
+            }
         }
     }
 
@@ -33,6 +40,7 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
         } else {
             asm.imul(POINTER_SIZE, Imm32.of(size), second, temp1)
             asm.add(POINTER_SIZE, first, temp1)
+            asm.mov(POINTER_SIZE, temp1, dst)
         }
     }
 
@@ -55,9 +63,14 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
             asm.mov(secondOpSize, second, temp1)
             asm.lea(POINTER_SIZE, Address.from(first, 0, temp1, ScaleFactor.from(size)), dst)
         } else {
-            asm.mov(secondOpSize, second, temp1)
-            asm.imul(POINTER_SIZE, Imm32.of(size), temp1, dst)
-            asm.add(POINTER_SIZE, first, dst)
+            if (dst == first) {
+                asm.copy(POINTER_SIZE, first, temp1)
+                asm.imul(POINTER_SIZE, Imm32.of(size), second, dst)
+                asm.add(POINTER_SIZE, temp1, dst)
+            } else {
+                asm.imul(POINTER_SIZE, Imm32.of(size), second, dst)
+                asm.add(POINTER_SIZE, first, dst)
+            }
         }
     }
 
@@ -118,28 +131,15 @@ class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int,
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        if (ScaleFactor.isScaleFactor(size)) {
-            asm.mov(POINTER_SIZE, first, temp1)
-            asm.lea(POINTER_SIZE, Address.from(temp1, 0, second, ScaleFactor.from(size)), temp1)
-            asm.mov(POINTER_SIZE, temp1, dst)
-        } else {
-            asm.imul(POINTER_SIZE, Imm32.of(size), second, temp1)
-            asm.add(POINTER_SIZE, first, temp1)
-            asm.mov(POINTER_SIZE, temp1, dst)
-        }
+        asm.imul(POINTER_SIZE, Imm32.of(size), second, temp1)
+        asm.add(POINTER_SIZE, first, temp1)
+        asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        if (ScaleFactor.isScaleFactor(size)) {
-            asm.mov(POINTER_SIZE, first, temp1)
-            asm.mov(secondOpSize, second, temp2)
-            asm.lea(POINTER_SIZE, Address.from(temp1, 0, temp2, ScaleFactor.from(size)), temp1)
-            asm.mov(POINTER_SIZE, temp1, dst)
-        } else {
-            asm.imul(POINTER_SIZE, Imm32.of(size), second, temp1)
-            asm.add(POINTER_SIZE, first, temp1)
-            asm.mov(POINTER_SIZE, temp1, dst)
-        }
+        asm.imul(POINTER_SIZE, Imm32.of(size), second, temp1)
+        asm.add(POINTER_SIZE, first, temp1)
+        asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

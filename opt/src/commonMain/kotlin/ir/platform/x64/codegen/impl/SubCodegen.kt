@@ -38,8 +38,14 @@ data class SubCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperand
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        asm.copy(size, first, dst)
-        asm.sub(size, second, dst)
+        if (dst == second) {
+            TODO()
+            asm.sub(size, first, dst)
+            asm.neg(size, dst)
+        } else {
+            asm.copy(size, first, dst)
+            asm.sub(size, second, dst)
+        }
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
@@ -53,8 +59,12 @@ data class SubCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperand
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        asm.copy(size, first, dst)
-        asm.sub(size, second, dst)
+        if (dst == first) {
+            asm.sub(size, second, dst)
+        } else {
+            asm.copy(size, first, dst)
+            asm.sub(size, second, dst)
+        }
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {

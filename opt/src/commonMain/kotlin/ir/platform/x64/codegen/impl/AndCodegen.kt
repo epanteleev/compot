@@ -48,13 +48,21 @@ class AndCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperandsVisi
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        asm.copy(size, first, dst)
-        asm.and(size, second, dst)
+        if (first == dst) {
+            asm.and(size, second, dst)
+        } else {
+            asm.copy(size, first, dst)
+            asm.and(size, second, dst)
+        }
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        asm.copy(size, first, dst)
-        asm.and(size, second, dst)
+        if (dst == first) {
+            asm.and(size, second, dst)
+        } else {
+            asm.copy(size, first, dst)
+            asm.and(size, second, dst)
+        }
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
