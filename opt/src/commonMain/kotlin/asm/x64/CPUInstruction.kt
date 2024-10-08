@@ -43,12 +43,6 @@ data class Mov(val size: Int, val src: Operand, val des: Operand): CPUInstructio
     }
 }
 
-data class MovAbs(val size: Int, val src: Operand, val des: Register): CPUInstruction {
-    override fun toString(): String {
-        return "movabs${prefix(size)} ${src.toString(size)}, ${des.toString(size)}"
-    }
-}
-
 data class Movsx(val fromSize: Int, val toSize: Int, val src: Operand, val des: Operand): CPUInstruction {
     init {
         assertion(fromSize <= toSize && fromSize < 4) {

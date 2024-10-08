@@ -1317,22 +1317,20 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return generateGlobalDeclarator(declarator)
         }
 
-        val varName = declarator.name()
         val irType = when (val cType = type.type.cType()) {
-            is CPrimitive        -> mb.toIRLVType<PrimitiveType>(typeHolder, cType)
+            is CPrimitive     -> mb.toIRLVType<PrimitiveType>(typeHolder, cType)
             is CAggregateType -> mb.toIRType<NonTrivialType>(typeHolder, cType)
             else -> throw IRCodeGenError("Unknown type, type=$cType")
         }
 
         val rvalueAdr = ir.alloc(irType)
-        varStack[varName] = rvalueAdr
+        varStack[declarator.name()] = rvalueAdr
         return rvalueAdr
     }
 
     private fun zeroingMemory(initializerList: InitializerList) {
-        val type = initializerContext.peekType().cType()
         val value = initializerContext.peekValue()
-        when (type) {
+        when (val type = initializerContext.peekType().cType()) {
             is CStructType -> {
                 for (i in initializerList.initializers.size until type.fields().size) {
                     val converted = mb.toIRType<StructType>(typeHolder, type)

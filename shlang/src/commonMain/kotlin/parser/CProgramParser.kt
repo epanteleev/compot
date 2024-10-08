@@ -292,7 +292,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             return@rule assignment_expression()
         }
         eat()
-        val list = initializer_list()
+        val list = initializer_list() ?: InitializerList(listOf())
         if (check(",")) {
             eat()
         }

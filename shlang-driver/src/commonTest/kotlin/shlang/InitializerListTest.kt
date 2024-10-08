@@ -80,6 +80,13 @@ abstract class InitializerListTest: CommonCTest() {
         assertEquals("0 0", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun test12() {
+        val result = runCTest("shlang/initializerList/initializerList12", listOf(), options())
+        assertEquals("0 0", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class InitializerListTestsO0: InitializerListTest() {
