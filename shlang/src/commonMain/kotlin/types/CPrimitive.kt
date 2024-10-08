@@ -1,6 +1,7 @@
 package types
 
 import ir.Definitions.POINTER_SIZE
+import typedesc.TypeDesc
 import typedesc.TypeInferenceException
 import typedesc.TypeQualifier
 
@@ -250,12 +251,14 @@ sealed class AnyCPointer: CPrimitive() {
     abstract fun dereference(): CType
 }
 
-class SliceType(val elementType: CType, val dimension: Long): AnyCPointer() {
-    override fun qualifiers(): Set<TypeQualifier> = setOf()
-    override fun dereference(): CType = elementType
+class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(elementType) {
     override fun typename(): String = buildString {
-        append(elementType)
+        append(type)
         append("[$dimension]")
+    }
+
+    override fun size(): Int {
+        return type.size() * dimension.toInt()
     }
 }
 

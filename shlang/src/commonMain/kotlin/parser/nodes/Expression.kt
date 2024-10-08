@@ -5,6 +5,7 @@ import tokenizer.tokens.*
 import gen.IRCodeGenError
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.*
+import typedesc.TypeDesc
 import typedesc.TypeHolder
 import typedesc.TypeResolutionException
 
@@ -190,6 +191,9 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        if (eTrue is StringNode) {
+            return@memoize CPointer(CHAR)
+        }
         val typeTrue   = eTrue.resolveType(typeHolder) as CPrimitive
         val typeFalse  = eFalse.resolveType(typeHolder) as CPrimitive
         if (typeTrue == typeFalse && typeTrue == VOID) {
@@ -280,6 +284,7 @@ class InitializerList(val initializers: List<Initializer>) : Expression() {
             baseTypes.add(types[i])
         }
         if (baseTypes.size == 1) {
+            val cType = baseTypes[0]
             return@memoize baseTypes[0]
         } else {
             return@memoize InitializerType(baseTypes)
@@ -359,8 +364,8 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): SliceType = memoize {
-        return@memoize SliceType(CHAR, data().length.toLong()) //ToDO restrict?????
+    override fun resolveType(typeHolder: TypeHolder): CStringLiteral = memoize {
+        return@memoize CStringLiteral(TypeDesc.from(CHAR), data().length.toLong()) //ToDO restrict?????
     }
 
     fun data(): String = data

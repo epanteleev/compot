@@ -1,11 +1,6 @@
 extern int printf(const char *, ...);
 extern void *memset(void *, int, unsigned long);
 
-typedef struct bfblk {
-		unsigned hi;
-		unsigned lo;
-} bfblk_t;
-
 void polluteStack() {
     volatile long arr[100];
     memset(arr, -1, sizeof(arr));
@@ -13,7 +8,7 @@ void polluteStack() {
 
 int main() {
     polluteStack();
-    bfblk_t v = { 10 };
-    printf("%d %d", v.hi, v.lo);
+    int arr[10] = { 10 };
+    printf("%d %d", arr[8], arr[9]);
     return 0;
 }

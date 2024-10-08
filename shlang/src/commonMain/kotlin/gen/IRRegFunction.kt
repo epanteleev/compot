@@ -338,7 +338,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
-                is CPrimitive, is CFunctionType, is CUncompletedArrayType -> {
+                is CPrimitive, is CFunctionType, is CUncompletedArrayType, is CStringLiteral -> {
                     val convertedArg = convertArg(function, idx + offset, expr)
                     convertedArgs.add(convertedArg)
                 }
@@ -1329,6 +1329,33 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         return rvalueAdr
     }
 
+    private fun zeroingMemory(initializerList: InitializerList) {
+        val type = initializerContext.peekType().cType()
+        val value = initializerContext.peekValue()
+        when (type) {
+            is CStructType -> {
+                for (i in initializerList.initializers.size until type.fields().size) {
+                    val converted = mb.toIRType<StructType>(typeHolder, type)
+                    val elementType = converted.field(i)
+                    val elementAdr = ir.gfp(value, converted, arrayOf(Constant.valueOf(Type.I64, i)))
+                    ir.store(elementAdr, Constant.valueOf(elementType.asType(), 0))
+                }
+            }
+            is CArrayType -> {
+                if (initializerList.resolveType(typeHolder) is CStringLiteral) {
+                    return
+                }
+                for (i in initializerList.initializers.size until type.dimension) {
+                    val elementType = type.element()
+                    val irElementType = mb.toIRType<NonTrivialType>(typeHolder, elementType.cType())
+                    val elementAdr = ir.gep(value, irElementType, I64Value(i))
+                    ir.store(elementAdr, Constant.valueOf(irElementType.asType(), 0))
+                }
+            }
+            else -> throw IRCodeGenError("Unknown type, type=$type")
+        }
+    }
+
     private fun visitInitializerList(initializerList: InitializerList) {
         for ((idx, init) in initializerList.initializers.withIndex()) {
             when (init) {
@@ -1336,6 +1363,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is DesignationInitializer -> initializerContext.withIndex(idx) { visitDesignationInitializer(init) }
             }
         }
+        zeroingMemory(initializerList)
     }
 
     private fun visitDesignationInitializer(designationInitializer: DesignationInitializer) {

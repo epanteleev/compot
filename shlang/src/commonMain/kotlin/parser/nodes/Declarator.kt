@@ -95,7 +95,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                         val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerType.dimension), listOf())
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
-                    is SliceType -> {
+                    is CStringLiteral -> {
                         val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerType.dimension), listOf())
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
@@ -105,9 +105,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
             is StringNode -> {
                 // Special case for string initialization like:
                 // char a[] = "hello";
-                return@memoizeType typeHolder.addVar(name(),
-                    VarDescriptor(TypeDesc.from(CPointer(CHAR)), declspecType.storageClass)
-                )
+                return@memoizeType typeHolder.addVar(name(), VarDescriptor(TypeDesc.from(CPointer(CHAR)), declspecType.storageClass))
             }
             else -> throw TypeResolutionException("Array size is not specified")
         }

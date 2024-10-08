@@ -371,7 +371,7 @@ void bfish_init(bfish_t* bf, const void* key, size_t len)
 	int j;
 	int k;
 	BFISH_U32 t;
-	bfblk_t blk = { 0, 0 };
+	bfblk_t blk = { 0 };
 	const unsigned char* _key = key;
 
 	assert(bf != NULL);
