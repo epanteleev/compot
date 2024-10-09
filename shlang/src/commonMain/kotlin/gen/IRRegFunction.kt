@@ -361,13 +361,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitCast(cast: Cast): Value {
         val value = visitExpression(cast.cast, true)
         val toType = mb.toIRType<Type>(typeHolder, cast.resolveType(typeHolder))
-        if (toType == Type.Void) {
-            return value
+        return when (toType) {
+            Type.Void -> value
+            Type.U1   -> ir.convertToType(value, Type.U1)
+            else      -> ir.convertToType(value, toType)
         }
-
-        assertion(toType is NonTrivialType) { "invariant" }
-        toType as NonTrivialType
-        return ir.convertToType(value, toType)
     }
 
     private fun visitFunPointerCall(funcPointerCall: FunctionCall): Value {
@@ -539,8 +537,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun makeAlgebraicBinaryWithAssignment(binop: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
-        val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
-        when (commonType) {
+        when (val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))) {
             is PointerType -> {
                 val rvalue     = visitExpression(binop.right, true)
                 val rValueType = binop.right.resolveType(typeHolder)
@@ -751,7 +748,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val ctype = unaryOp.resolveType(typeHolder)
-
         val addr = visitExpression(unaryOp.primary, false)
         val type = mb.toIRType<PrimitiveType>(typeHolder, ctype)
         val loaded = ir.load(type, addr)
@@ -952,6 +948,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.switchLabel(exitBlock)
                 ir.retVoid()
             }
+            is BOOL -> {
+                returnValueAdr = ir.alloc(Type.I8)
+                ir.switchLabel(exitBlock)
+                emitReturn(retCType.cType(), returnValueAdr!!)
+            }
             is CPrimitive -> {
                 val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType.cType())
                 returnValueAdr = ir.alloc(retType)
@@ -974,28 +975,30 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun emitReturn(retCType: CType, value: Value) {
-        when (retCType) {
-            is CPrimitive -> {
-                val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType)
-                val ret = ir.load(retType, value)
-                ir.ret(retType, arrayOf(ret))
-            }
-            is CStructType -> {
-                val retTupleType = CallConvention.coerceArgumentTypes(retCType)
-                if (retTupleType != null) {
-                    val retValues = ir.coerceArguments(retCType, value)
-                    if (retTupleType.size == 1) {
-                        ir.ret(retTupleType[0], retValues.toTypedArray())
-                    } else {
-                        ir.ret(TupleType(retTupleType.toTypedArray()), retValues.toTypedArray())
-                    }
-                } else {
-                    ir.retVoid()
-                }
-            }
-            else -> throw IRCodeGenError("Unknown return type, type=$retCType")
+    private fun emitReturn(retCType: CType, value: Value) = when (retCType) {
+        is BOOL -> {
+            val ret = ir.load(Type.I8, value)
+            ir.ret(Type.I8, arrayOf(ret))
         }
+        is CPrimitive -> {
+            val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType)
+            val ret = ir.load(retType, value)
+            ir.ret(retType, arrayOf(ret))
+        }
+        is CStructType -> {
+            val retTupleType = CallConvention.coerceArgumentTypes(retCType)
+            if (retTupleType != null) {
+                val retValues = ir.coerceArguments(retCType, value)
+                if (retTupleType.size == 1) {
+                    ir.ret(retTupleType[0], retValues.toTypedArray())
+                } else {
+                    ir.ret(TupleType(retTupleType.toTypedArray()), retValues.toTypedArray())
+                }
+            } else {
+                ir.retVoid()
+            }
+        }
+        else -> throw IRCodeGenError("Unknown return type, type=$retCType")
     }
 
     override fun visit(functionNode: FunctionNode): Value = scoped {

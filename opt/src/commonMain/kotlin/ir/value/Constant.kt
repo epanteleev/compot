@@ -8,7 +8,7 @@ import ir.value.Constant.Companion.of
 sealed interface Constant: Value {
     fun data(): String
 
-    override fun type(): NonTrivialType
+    override fun type(): Type
 
     companion object {
         fun of(kind: NonTrivialType, value: Number): Constant = when (kind) {
@@ -31,7 +31,7 @@ sealed interface Constant: Value {
                 1 -> BoolValue.TRUE
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
-            is AggregateType -> InitializerListValue(kind, arrayListOf(of(kind.field(0), value)))
+            is AggregateType -> InitializerListValue(kind, arrayListOf(NonTrivialConstant.of(kind.field(0), value)))
             else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
         }
 
@@ -62,8 +62,20 @@ sealed interface Constant: Value {
     }
 }
 
+sealed interface NonTrivialConstant: Constant {
+    abstract override fun type(): NonTrivialType
+
+    companion object {
+        fun of(kind: NonTrivialType, value: Number): NonTrivialConstant = when (kind) {
+            is PrimitiveType -> PrimitiveConstant.of(kind, value)
+            is AggregateType -> InitializerListValue(kind, arrayListOf(of(kind.field(0), value)))
+            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+        }
+    }
+}
+
 class BoolValue private constructor(val bool: Boolean): Constant {
-    override fun type(): NonTrivialType {
+    override fun type(): Type {
         return Type.U1
     }
 
@@ -103,7 +115,7 @@ class PointerLiteral(val gConstant: GlobalSymbol): PrimitiveConstant {
     override fun type(): PointerType = Type.Ptr
 }
 
-sealed interface PrimitiveConstant: Constant {
+sealed interface PrimitiveConstant: NonTrivialConstant {
     override fun type(): PrimitiveType
 
     companion object {
@@ -121,6 +133,24 @@ sealed interface PrimitiveConstant: Constant {
             is NullValue -> of(kind, 0)
             is UndefinedValue -> Value.UNDEF
             is PointerLiteral -> PointerLiteral(value.gConstant)
+        }
+
+        fun of(kind: NonTrivialType, value: Number): PrimitiveConstant = when (kind) {
+            Type.I8  -> I8Value(value.toByte())
+            Type.U8  -> U8Value(value.toByte())
+            Type.I16 -> I16Value(value.toShort())
+            Type.U16 -> U16Value(value.toShort())
+            Type.I32 -> I32Value(value.toInt())
+            Type.U32 -> U32Value(value.toInt())
+            Type.I64 -> I64Value(value.toLong())
+            Type.U64 -> U64Value(value.toLong())
+            Type.F32 -> F32Value(value.toFloat())
+            Type.F64 -> F64Value(value.toDouble())
+            Type.Ptr -> when (value.toLong()) {
+                0L -> NullValue.NULLPTR
+                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            }
+            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
         }
     }
 }
@@ -324,7 +354,7 @@ object UndefinedValue: Constant, PrimitiveConstant {
     }
 }
 
-sealed interface AggregateConstant: Constant
+sealed interface AggregateConstant: NonTrivialConstant
 
 class StringLiteralConstant(val name: String): AggregateConstant {
     override fun type(): ArrayType {
@@ -340,7 +370,7 @@ class StringLiteralConstant(val name: String): AggregateConstant {
     }
 }
 
-class InitializerListValue(private val type: AggregateType, val elements: List<Constant>): AggregateConstant, Iterable<Constant> {
+class InitializerListValue(private val type: AggregateType, val elements: List<NonTrivialConstant>): AggregateConstant, Iterable<Constant> {
     override fun type(): NonTrivialType {
         return type
     }
@@ -359,9 +389,9 @@ class InitializerListValue(private val type: AggregateType, val elements: List<C
 
     companion object {
         fun zero(type: AggregateType): InitializerListValue {
-            fun makeConstantForField(fieldType: NonTrivialType): Constant = when (fieldType) {
+            fun makeConstantForField(fieldType: NonTrivialType): NonTrivialConstant = when (fieldType) {
                 is AggregateType -> zero(fieldType)
-                else -> of(fieldType, 0)
+                else -> NonTrivialConstant.of(fieldType, 0)
             }
             return InitializerListValue(type, type.fields().map { makeConstantForField(it) })
         }

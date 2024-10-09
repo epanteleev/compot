@@ -5,7 +5,7 @@ import ir.read.bulder.TypeResolver
 import ir.types.*
 
 
-abstract class TypeToken(override val line: Int, override val pos: Int) : Token(line, pos) {
+sealed class TypeToken(override val line: Int, override val pos: Int) : Token(line, pos) {
     abstract fun type(resolver: TypeResolver): Type
 
     inline fun<reified T: Type> asType(resolver: TypeResolver): T {
@@ -44,9 +44,14 @@ data class PointerTypeToken(override val line: Int, override val pos: Int)
     override fun type(): PointerType = Type.Ptr
 }
 
-data class BooleanTypeToken(override val line: Int, override val pos: Int)
-    : PrimitiveTypeToken(Type.U1, line, pos)  {
-    override fun type(): FlagType = Type.U1
+data class BooleanTypeToken(override val line: Int, override val pos: Int) : TypeToken(line, pos)  {
+    override fun type(resolver: TypeResolver): Type {
+        return Type.U1
+    }
+
+    override fun message(): String {
+        return "type '${Type.U1}'"
+    }
 }
 
 interface ArithmeticTypeToken: AnyToken {

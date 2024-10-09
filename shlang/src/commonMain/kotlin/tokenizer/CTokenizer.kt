@@ -46,7 +46,6 @@ class CTokenizer private constructor(private val filename: String, private val r
         val builder = StringBuilder()
 
         while (!reader.check(quote)) {
-            builder.append(eat())
             if (isEndOfLine()) {
                 builder.append(eat())
                 builder.append(eat())
@@ -55,7 +54,9 @@ class CTokenizer private constructor(private val filename: String, private val r
             if (reader.check('\\') && reader.peekOffset(1) == '\"') {
                 eat()
                 builder.append(eat())
+                continue
             }
+            builder.append(eat())
         }
 
         if (!reader.eof) {
@@ -245,8 +246,10 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
             if (reader.check('"')) {
+                val start = reader.pos
                 val literal = readLiteral(v)
-                append(StringLiteral(literal, OriginalPosition(line, position - (literal.length + 2), filename)))
+                val diff = reader.pos - start
+                append(StringLiteral(literal, OriginalPosition(line, position - diff, filename)))
                 continue
             }
 

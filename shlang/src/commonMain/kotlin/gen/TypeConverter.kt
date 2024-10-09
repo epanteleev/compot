@@ -17,7 +17,7 @@ import typedesc.TypeHolder
 
 object TypeConverter {
     inline fun <reified T : NonTrivialType> ModuleBuilder.toIRLVType(typeHolder: TypeHolder, type: CType): T {
-        val converted = toIRType<NonTrivialType>(typeHolder, type)
+        val converted = toIRType<Type>(typeHolder, type)
         return if (converted == Type.U1) {
             Type.I8 as T
         } else {
@@ -56,9 +56,7 @@ object TypeConverter {
             is CStructType -> convertStructType(typeHolder, structType)
             is CUncompletedStructType -> {
                 val resolved = typeHolder.getTypeOrNull<CStructType>(type.name)
-                if (resolved == null) {
-                    throw IRCodeGenError("Struct type not found, name=${type.name}")
-                }
+                    ?: throw IRCodeGenError("Struct type not found, name=${type.name}")
                 convertStructType(typeHolder, resolved as CStructType)
             }
             else -> throw IRCodeGenError("Unknown type, type=$type")
@@ -68,9 +66,7 @@ object TypeConverter {
             is CUnionType -> convertUnionType(typeHolder, unionType)
             is CUncompletedUnionType -> {
                 val resolved = typeHolder.getTypeOrNull<CUnionType>(type.name)
-                if (resolved == null) {
-                    throw IRCodeGenError("Union type not found, name=${type.name}")
-                }
+                    ?: throw IRCodeGenError("Union type not found, name=${type.name}")
                 convertUnionType(typeHolder, resolved as CUnionType)
             }
             else -> throw IRCodeGenError("Unknown type, type=$type")
@@ -122,19 +118,22 @@ object TypeConverter {
     }
 
     fun FunctionDataBuilder.toIndexType(value: Value): Value {
+        if (value.type() == Type.U1) {
+            return convertToType(value, Type.I64)
+        }
         if (value.asType<NonTrivialType>().sizeOf() >= WORD_SIZE) {
             return value
         }
         return convertToType(value, Type.I64)
     }
 
-    fun FunctionDataBuilder.convertToType(value: Value, toType: NonTrivialType): Value {
+    fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {
         if (value.type() == toType) {
             return value
         }
         if (value is PrimitiveConstant && toType !is PointerType) {
             // Opt IR does not support pointer constants.
-            return convertConstant(value, toType)
+            return convertConstant(value, toType as NonTrivialType)
         }
 
         return when (toType) {

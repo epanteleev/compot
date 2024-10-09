@@ -1,13 +1,11 @@
 package parser.nodes
 
 import types.*
+import typedesc.*
 import tokenizer.tokens.*
 import gen.IRCodeGenError
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.*
-import typedesc.TypeDesc
-import typedesc.TypeHolder
-import typedesc.TypeResolutionException
 
 
 enum class BinaryOpType {
@@ -173,8 +171,8 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        val leftType   = left.resolveType(typeHolder) as CPrimitive
-        val rightType  = right.resolveType(typeHolder) as CPrimitive
+        val leftType  = left.resolveType(typeHolder) as CPrimitive
+        val rightType = right.resolveType(typeHolder) as CPrimitive
         return@memoize leftType.interfere(rightType)
     }
 }
@@ -284,7 +282,6 @@ class InitializerList(val initializers: List<Initializer>) : Expression() {
             baseTypes.add(types[i])
         }
         if (baseTypes.size == 1) {
-            val cType = baseTypes[0]
             return@memoize baseTypes[0]
         } else {
             return@memoize InitializerType(baseTypes)
@@ -408,17 +405,13 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
         }
 
         val resolvedType = when (opType) {
-            PrefixUnaryOpType.DEREF -> {
-                when (primaryType) {
-                    is CPointer              -> primaryType.dereference()
-                    is CArrayType            -> primaryType.type.cType()
-                    is CUncompletedArrayType -> primaryType.elementType.cType()
-                    else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType")
-                }
+            PrefixUnaryOpType.DEREF -> when (primaryType) {
+                is CPointer              -> primaryType.dereference()
+                is CArrayType            -> primaryType.type.cType()
+                is CUncompletedArrayType -> primaryType.elementType.cType()
+                else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType")
             }
-            PrefixUnaryOpType.ADDRESS -> {
-                CPointer(primaryType)
-            }
+            PrefixUnaryOpType.ADDRESS -> CPointer(primaryType)
             PrefixUnaryOpType.NOT -> {
                 if (primaryType is CPointer) {
                     LONG //TODO UNSIGNED???
@@ -471,18 +464,16 @@ data class SizeOf(val expr: Node) : Expression() {
         return@memoize INT
     }
 
-    fun constEval(typeHolder: TypeHolder): Int {
-        when (expr) {
-            is TypeName -> {
-                val resolved = expr.specifyType(typeHolder, listOf()).type
-                return resolved.size()
-            }
-            is VarNode -> {
-                val resolved = expr.resolveType(typeHolder)
-                return resolved.size()
-            }
-            else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
+    fun constEval(typeHolder: TypeHolder): Int = when (expr) {
+        is TypeName -> {
+            val resolved = expr.specifyType(typeHolder, listOf()).type
+            resolved.size()
         }
+        is VarNode -> {
+            val resolved = expr.resolveType(typeHolder)
+            resolved.size()
+        }
+        else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
     }
 }
 

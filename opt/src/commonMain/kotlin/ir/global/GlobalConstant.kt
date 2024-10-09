@@ -200,13 +200,13 @@ sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivi
 }
 
 class ArrayGlobalConstant(name: String, elements: InitializerListValue): AggregateGlobalConstant(name, elements.type(), elements) {
-    constructor(name: String, tp: ArrayType, elements: List<Constant>): this(name, InitializerListValue(tp, elements))
+    constructor(name: String, tp: ArrayType, elements: List<NonTrivialConstant>): this(name, InitializerListValue(tp, elements))
 
     override fun contentType(): ArrayType = tp as ArrayType
 }
 
 class StructGlobalConstant(name: String, elements: InitializerListValue): AggregateGlobalConstant(name, elements.type(), elements) {
-    constructor(name: String, tp: StructType, elements: List<Constant>): this(name, InitializerListValue(tp, elements))
+    constructor(name: String, tp: StructType, elements: List<NonTrivialConstant>): this(name, InitializerListValue(tp, elements))
 
     override fun contentType(): StructType = tp as StructType
 }

@@ -159,7 +159,7 @@ class ModuleReader(string: String) {
 
     // TODO copy paste from makeConstant
     private fun parseInitializerListValue(type: AggregateTypeToken): Constant {
-        val fields = arrayListOf<Constant>()
+        val fields = arrayListOf<NonTrivialConstant>()
         do {
             val field = tokenIterator.next("field")
             if (field is CloseBrace) {
@@ -195,7 +195,7 @@ class ModuleReader(string: String) {
     }
 
     private fun parseAggregateInitializer(name: String, type: AggregateTypeToken): GlobalConstant {
-        val fields = arrayListOf<Constant>()
+        val fields = arrayListOf<NonTrivialConstant>()
         do {
             val field = tokenIterator.next("field")
             if (field is CloseBrace) {

@@ -171,4 +171,12 @@ class CTokenizerTest {
         val num = tokens[0] as PPNumber
         assertEquals("FFFF000000000000".toULong(16).toLong(), num.toNumberOrNull())
     }
+
+    @Test
+    fun testQuotedString() {
+        val input = "\"\\\"Hello, World!\\\"\""
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is StringLiteral }
+        tokens[0].isEqual(1, 1, "\"\"Hello, World!\"\"")
+    }
 }

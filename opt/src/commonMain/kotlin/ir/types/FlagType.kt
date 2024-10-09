@@ -1,11 +1,8 @@
 package ir.types
 
-import ir.Definitions.BYTE_SIZE
 
-
-object FlagType : NonTrivialType {
+object FlagType : Type {
     override fun toString(): String = "u1"
-    override fun sizeOf(): Int = BYTE_SIZE
 
     override fun hashCode(): Int {
         return this::class.hashCode()

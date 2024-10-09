@@ -342,7 +342,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                 builder.branch(labelOrType)
             }
 
-            is PrimitiveTypeToken -> {
+            is BooleanTypeToken -> {
                 // br {cmpValue} label {trueLabel}, label {falseLabel}
                 val cmpValue = iterator.expect<AnyValueToken>("value token")
 

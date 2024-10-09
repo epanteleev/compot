@@ -27,7 +27,21 @@ class FunctionDataBuilderWithContext private constructor(
 
     private fun getValue(token: AnyValueToken, ty: Type): Value {
         return when (token) {
-            is LiteralValueToken -> token.toConstant(ty as NonTrivialType)
+            is LiteralValueToken -> when (token) {
+                is IntValue -> {
+                    ty as NonTrivialType
+                    Constant.of(ty, token.int)
+                }
+                is FloatValue -> {
+                    ty as NonTrivialType
+                    Constant.of(ty, token.fp)
+                }
+                is BoolValueToken -> {
+                    BoolValue.of(token.bool)
+                }
+                is NULLValueToken -> NullValue.NULLPTR
+                else -> throw RuntimeException("unexpected literal value: $this")
+            }
             is LocalValueToken -> {
                 val operand = nameMap[token.name]
                     ?: throw ParseErrorException("in ${token.position()} undefined value '${token.value()}'")

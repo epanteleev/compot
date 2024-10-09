@@ -984,6 +984,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             return declarators
         }
 
+        if (check<Identifier>()) {
+            val ident = peak<Identifier>()
+            eat()
+            return@rule DirectDeclarator(DirectVarDeclarator(ident), declarator_list())
+        }
         if (check("(")) {
             eat()
             val declarator = declarator()
@@ -995,11 +1000,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 }
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
-        }
-        if (check<Identifier>()) {
-            val ident = peak<Identifier>()
-            eat()
-            return@rule DirectDeclarator(DirectVarDeclarator(ident), declarator_list())
         }
         return@rule null
     }
@@ -1098,10 +1098,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	| direct_abstract_declarator '(' parameter_type_list ')'
     //	;
     fun direct_abstract_declarator(): List<DirectDeclaratorParam>? = rule {
-        if (!check("(") && !check("[")) {
-            return@rule null
-        }
-
         val abstractDeclarators = mutableListOf<DirectDeclaratorParam>()
         while (true) {
             if (check("(")) {
@@ -1149,7 +1145,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             break
         }
-        return@rule abstractDeclarators
+        return@rule if (abstractDeclarators.isEmpty()) {
+            null
+        } else {
+            abstractDeclarators
+        }
     }
 
     // conditional_expression

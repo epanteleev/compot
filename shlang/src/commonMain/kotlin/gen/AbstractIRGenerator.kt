@@ -19,7 +19,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val typeHolder: TypeHolder,
                                    protected val varStack: VarStack<Value>,
                                    protected val nameGenerator: NameGenerator) {
-    protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): Constant? = when (expr) {
+    protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): NonTrivialConstant? = when (expr) {
         is InitializerList -> when (lValueType) {
             is IntegerType -> {
                 if (expr.initializers.size != 1) {
@@ -50,7 +50,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         else -> defaultContEval(lValueType, expr)
     }
 
-    private fun staticAddressOf(expr: Expression): Constant? {
+    private fun staticAddressOf(expr: Expression): NonTrivialConstant? {
         if (expr !is VarNode) {
             return null
         }
@@ -60,10 +60,10 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return PointerLiteral(value)
     }
 
-    private fun defaultContEval(lValueType: NonTrivialType, expr: Expression): Constant? {
+    private fun defaultContEval(lValueType: NonTrivialType, expr: Expression): NonTrivialConstant? {
         val result = constEvalExpression0(expr)
         return if (result != null) {
-            Constant.of(lValueType, result)
+            NonTrivialConstant.of(lValueType, result)
         } else {
             null
         }
@@ -209,7 +209,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     return externValue
                 }
                 val attr = toIrAttribute(varDesc.storageClass)!!
-                val zero = Constant.of(irType.elementType(), 0)
+                val zero = NonTrivialConstant.of(irType.elementType(), 0)
                 val elements = generateSequence { zero }.take(irType.length).toList()
                 val constant = InitializerListValue(irType, elements)
                 val global = mb.addGlobal(name, irType, constant, attr)
@@ -223,9 +223,10 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     varStack[name] = externValue
                     return externValue
                 }
-                val elements = arrayListOf<Constant>()
+                val elements = arrayListOf<NonTrivialConstant>()
                 for (field in type.fields()) {
-                    val zero = Constant.of(mb.toIRType<NonTrivialType>(typeHolder, field.cType()), 0)
+                    val irType = mb.toIRType<NonTrivialType>(typeHolder, field.cType())
+                    val zero = NonTrivialConstant.of(irType, 0)
                     elements.add(zero)
                 }
                 val constant = InitializerListValue(irType, elements)
@@ -261,7 +262,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         else -> null
     }
 
-    private fun constEvalInitializers(lValueType: ArrayType, expr: InitializerList): Constant {
+    private fun constEvalInitializers(lValueType: ArrayType, expr: InitializerList): NonTrivialConstant {
         if (expr.initializers.size == 1) {
             return constEvalExpression(lValueType, expr.initializers[0]) ?: throw IRCodeGenError("Unsupported type $lValueType")
         }
@@ -276,7 +277,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return InitializerListValue(lValueType, elements)
     }
 
-    private fun constEvalInitializers(lValueType: StructType, expr: InitializerList): Constant {
+    private fun constEvalInitializers(lValueType: StructType, expr: InitializerList): NonTrivialConstant {
         val elements = expr.initializers.mapIndexed { index, initializer ->
             val elementLValueType = lValueType.field(index)
             constEvalExpression(elementLValueType, initializer) ?: let {
@@ -314,7 +315,8 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     protected fun irReturnType(retType: TypeDesc): Type = when (val ty = retType.cType()) {
         is VOID -> Type.Void
-        is CPrimitive -> mb.toIRLVType<PrimitiveType>(typeHolder, retType.cType())
+        is BOOL -> Type.I8
+        is CPrimitive -> mb.toIRType<PrimitiveType>(typeHolder, retType.cType())
         is CStructType -> {
             val list = CallConvention.coerceArgumentTypes(ty) ?: return Type.Void
             if (list.size == 1) {
