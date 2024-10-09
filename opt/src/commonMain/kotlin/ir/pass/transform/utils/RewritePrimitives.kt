@@ -16,6 +16,7 @@ import ir.module.FunctionData
 import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.types.NonTrivialType
+import ir.value.constant.PrimitiveConstant
 
 
 abstract class AbstractRewritePrimitives(private val dominatorTree: DominatorTree) {

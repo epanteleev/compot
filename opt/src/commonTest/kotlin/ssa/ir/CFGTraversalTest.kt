@@ -1,7 +1,6 @@
 package ssa.ir
 
-import ir.value.I64Value
-import ir.value.U16Value
+import ir.value.constant.*
 import ir.instruction.IntPredicate
 import ir.module.FunctionData
 import ir.module.block.BlockViewer

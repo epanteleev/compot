@@ -1,6 +1,7 @@
 package ir.value
 
 import ir.types.*
+import ir.value.constant.UndefinedValue
 
 
 interface Value {

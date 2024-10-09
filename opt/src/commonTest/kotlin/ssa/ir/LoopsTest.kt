@@ -1,15 +1,14 @@
 package ssa.ir
 
 import ir.instruction.*
-import ir.module.FunctionPrototype
 import ir.module.Module
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.traverse.LinearScanOrderFabric
 import ir.pass.analysis.LoopDetectionPassFabric
 import ir.types.Type
-import ir.value.I32Value
-import ir.value.I64Value
+import ir.value.constant.I32Value
+import ir.value.constant.I64Value
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

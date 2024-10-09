@@ -6,7 +6,7 @@ import ir.value.Value
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.types.IntegerType
-import ir.value.IntegerConstant
+import ir.value.constant.IntegerConstant
 
 
 class Switch private constructor(id: Identity, owner: Block,

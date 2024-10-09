@@ -5,7 +5,7 @@ import ir.global.*
 import ir.module.ExternFunction
 import ir.module.Module
 import ir.types.*
-import ir.value.Constant
+import ir.value.constant.Constant
 
 
 abstract class AnyModuleBuilder {

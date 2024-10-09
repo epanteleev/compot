@@ -1,11 +1,12 @@
 package ir.platform.x64
 
 import asm.x64.*
-import ir.value.*
+import ir.types.*
 import ir.global.*
+import ir.value.constant.*
 import ir.platform.common.CompiledModule
 import ir.platform.x64.auxiliary.LinearizeInitializerList
-import ir.types.*
+
 
 // Using as
 // The GNU Assembler
@@ -87,7 +88,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             makeAggregateConstant(globalValue.name(), globalValue.contentType().asType(), constant)
         }
         is ArrayType -> when (val constant = globalValue.initializer()) {
-            is InitializerListValue  -> makeAggregateConstant(globalValue.name(), globalValue.contentType().asType(), constant)
+            is InitializerListValue -> makeAggregateConstant(globalValue.name(), globalValue.contentType().asType(), constant)
             is StringLiteralConstant -> makeStringLiteralConstant(globalValue, type, constant)
             else -> throw IllegalArgumentException("unsupported constant type: $constant")
         }
@@ -102,8 +103,8 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         is U32Value -> builder.long(data.u32)
         is I16Value -> builder.short(data.i16)
         is U16Value -> builder.short(data.u16)
-        is I8Value  -> builder.byte(data.i8)
-        is U8Value  -> builder.byte(data.u8)
+        is I8Value -> builder.byte(data.i8)
+        is U8Value -> builder.byte(data.u8)
         is F32Value -> builder.long(data.bits())
         is F64Value -> builder.quad(data.bits())
         is PointerLiteral -> {

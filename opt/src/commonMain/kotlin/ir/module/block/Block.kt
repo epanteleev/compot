@@ -7,10 +7,11 @@ import common.assertion
 import ir.instruction.*
 import ir.instruction.lir.*
 import common.LeakedLinkedList
-import ir.module.AnyFunctionPrototype
 import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.ModificationCounter
+import ir.value.constant.IntegerConstant
+import ir.value.constant.UnsignedIntegerConstant
 
 
 class Block private constructor(private val mc: ModificationCounter, override val index: Int):

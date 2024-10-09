@@ -3,8 +3,7 @@ package gen
 import ir.module.block.Label
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.types.IntegerType
-import ir.value.IntegerConstant
-import ir.value.Value
+import ir.value.constant.IntegerConstant
 
 
 class StmtStack {

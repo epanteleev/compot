@@ -9,6 +9,8 @@ import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.InstructionFabric
 import ir.module.builder.AnyFunctionDataBuilder
+import ir.value.constant.IntegerConstant
+import ir.value.constant.UnsignedIntegerConstant
 
 
 class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argumentValues: List<ArgumentValue>):

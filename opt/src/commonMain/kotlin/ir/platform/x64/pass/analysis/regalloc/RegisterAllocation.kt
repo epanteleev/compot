@@ -2,7 +2,6 @@ package ir.platform.x64.pass.analysis.regalloc
 
 import asm.x64.*
 import ir.value.*
-import common.assertion
 import ir.Definitions.QWORD_SIZE
 import ir.global.ExternValue
 import ir.global.FunctionSymbol
@@ -14,6 +13,7 @@ import ir.pass.common.AnalysisResult
 import ir.platform.x64.CallConvention
 import ir.platform.x64.CallConvention.gpCallerSaveRegs
 import ir.platform.x64.CallConvention.xmmCallerSaveRegs
+import ir.value.constant.*
 
 
 class RegisterAllocation(private val spilledLocalsStackSize: Int,

@@ -3,8 +3,8 @@ package ir.global
 import common.assertion
 import ir.attributes.GlobalValueAttribute
 import ir.types.*
-import ir.value.Constant
-import ir.value.PrimitiveConstant
+import ir.value.constant.Constant
+import ir.value.constant.PrimitiveConstant
 
 
 class GlobalValue private constructor(val name: String, private val type: NonTrivialType, private val init: Constant, private val attribute: GlobalValueAttribute): AnyGlobalValue {

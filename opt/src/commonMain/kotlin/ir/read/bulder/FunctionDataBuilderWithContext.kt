@@ -9,6 +9,11 @@ import ir.read.tokens.*
 import ir.module.block.*
 import ir.module.builder.*
 import common.forEachWith
+import ir.value.constant.BoolValue
+import ir.value.constant.Constant
+import ir.value.constant.IntegerConstant
+import ir.value.constant.NullValue
+import ir.value.constant.UnsignedIntegerConstant
 
 
 class ParseErrorException(message: String): Exception(message) {
@@ -36,9 +41,7 @@ class FunctionDataBuilderWithContext private constructor(
                     ty as NonTrivialType
                     Constant.of(ty, token.fp)
                 }
-                is BoolValueToken -> {
-                    BoolValue.of(token.bool)
-                }
+                is BoolValueToken -> BoolValue.of(token.bool)
                 is NULLValueToken -> NullValue.NULLPTR
                 else -> throw RuntimeException("unexpected literal value: $this")
             }

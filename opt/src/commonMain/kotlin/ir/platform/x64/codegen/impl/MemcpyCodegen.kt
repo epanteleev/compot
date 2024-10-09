@@ -4,7 +4,7 @@ import asm.x64.*
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.WORD_SIZE
 import ir.instruction.Memcpy
-import ir.value.UnsignedIntegerConstant
+import ir.value.constant.UnsignedIntegerConstant
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 

@@ -1,7 +1,7 @@
 package ir.global
 
-import ir.value.*
 import ir.types.*
+import ir.value.constant.*
 
 
 sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
@@ -200,13 +200,17 @@ sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivi
 }
 
 class ArrayGlobalConstant(name: String, elements: InitializerListValue): AggregateGlobalConstant(name, elements.type(), elements) {
-    constructor(name: String, tp: ArrayType, elements: List<NonTrivialConstant>): this(name, InitializerListValue(tp, elements))
+    constructor(name: String, tp: ArrayType, elements: List<NonTrivialConstant>): this(name,
+        InitializerListValue(tp, elements)
+    )
 
     override fun contentType(): ArrayType = tp as ArrayType
 }
 
 class StructGlobalConstant(name: String, elements: InitializerListValue): AggregateGlobalConstant(name, elements.type(), elements) {
-    constructor(name: String, tp: StructType, elements: List<NonTrivialConstant>): this(name, InitializerListValue(tp, elements))
+    constructor(name: String, tp: StructType, elements: List<NonTrivialConstant>): this(name,
+        InitializerListValue(tp, elements)
+    )
 
     override fun contentType(): StructType = tp as StructType
 }

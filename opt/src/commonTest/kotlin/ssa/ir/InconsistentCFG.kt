@@ -1,14 +1,13 @@
 package ssa.ir
 
 import ir.instruction.IntPredicate
-import ir.value.F32Value
+import ir.value.constant.F32Value
 import ir.module.FunctionPrototype
-import ir.value.I32Value
-import ir.value.U32Value
 import ir.types.Type
 import kotlin.test.Test
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
+import ir.value.constant.*
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
 

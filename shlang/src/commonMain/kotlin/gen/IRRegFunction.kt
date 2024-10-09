@@ -22,6 +22,7 @@ import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
+import ir.value.constant.*
 import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
 import typedesc.StorageClass
@@ -144,7 +145,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                         val string = expr.data()
                         val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.I8, string.length), string)
                         val stringPtr = mb.addConstant(stringLiteral)
-                        val fieldPtr = ir.gep(lvalueAdr, Type.I64, Constant.valueOf(Type.I64, idx))
+                        val fieldPtr = ir.gep(lvalueAdr, Type.I64,
+                            Constant.valueOf(Type.I64, idx)
+                        )
                         ir.store(fieldPtr, stringPtr)
                     }
                     else -> throw IRCodeGenError("Unknown type")
@@ -155,7 +158,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val irType = mb.toIRType<AggregateType>(typeHolder, type)
                 val fieldType = irType.field(idx)
                 val converted = ir.convertToType(rvalue, fieldType)
-                val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(Constant.valueOf(Type.I64, idx)))
+                val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(
+                    Constant.valueOf(
+                        Type.I64,
+                        idx
+                    )
+                ))
                 ir.store(fieldPtr, converted)
             }
         }
@@ -642,7 +650,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                         } else {
                             list.forEachIndexed { idx, arg ->
                                 val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
-                                val fieldPtr = ir.gep(left, arg, Constant.valueOf(Type.I64, offset))
+                                val fieldPtr = ir.gep(left, arg,
+                                    Constant.valueOf(Type.I64, offset)
+                                )
                                 val proj = ir.proj(right, idx)
                                 ir.store(fieldPtr, proj)
                             }
@@ -929,7 +939,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val rvalueAdr = ir.alloc(irType)
                 args.forEachIndexed { idx, arg ->
                     val offset   = (idx * QWORD_SIZE) / arg.type().sizeOf()
-                    val fieldPtr = ir.gep(rvalueAdr, arg.type(), Constant.valueOf(Type.I64, offset))
+                    val fieldPtr = ir.gep(rvalueAdr, arg.type(),
+                        Constant.valueOf(Type.I64, offset)
+                    )
                     ir.store(fieldPtr, arg)
                 }
                 varStack[param] = rvalueAdr
@@ -1338,7 +1350,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 for (i in initializerList.initializers.size until type.fields().size) {
                     val converted = mb.toIRType<StructType>(typeHolder, type)
                     val elementType = converted.field(i)
-                    val elementAdr = ir.gfp(value, converted, arrayOf(Constant.valueOf(Type.I64, i)))
+                    val elementAdr = ir.gfp(value, converted, arrayOf(
+                        Constant.valueOf(
+                            Type.I64,
+                            i
+                        )
+                    ))
                     ir.store(elementAdr, Constant.valueOf(elementType.asType(), 0))
                 }
             }
@@ -1379,7 +1396,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val expression = visitExpression(designationInitializer.initializer, true)
                     val index = designator.constEval(typeHolder)
                     val convertedRvalue = ir.convertToType(expression, converted)
-                    val elementAdr = ir.gep(value, converted, Constant.valueOf(Type.I64, index))
+                    val elementAdr = ir.gep(value, converted,
+                        Constant.valueOf(Type.I64, index)
+                    )
                     ir.store(elementAdr, convertedRvalue)
                 }
                 is MemberDesignator -> {
@@ -1388,7 +1407,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val expression = visitExpression(designationInitializer.initializer, true)
                     val index = type.fieldIndex(designator.name())
                     val converted = ir.convertToType(expression, fieldType.field(index))
-                    val fieldAdr = ir.gfp(value, fieldType, arrayOf(Constant.valueOf(Type.I64, index)))
+                    val fieldAdr = ir.gfp(value, fieldType, arrayOf(
+                        Constant.valueOf(
+                            Type.I64,
+                            index
+                        )
+                    ))
                     ir.store(fieldAdr, converted)
                 }
             }
@@ -1446,12 +1470,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                         val structType = mb.toIRType<StructType>(typeHolder, functionType)
                         val list = CallConvention.coerceArgumentTypes(functionType) ?: throw IRCodeGenError("Unknown type, type=$functionType")
                         if (list.size == 1) {
-                            val gep = ir.gep(lvalueAdr, structType, Constant.of(Type.I64, 0))
+                            val gep = ir.gep(lvalueAdr, structType,
+                                Constant.of(Type.I64, 0)
+                            )
                             ir.store(gep, call)
                         } else {
                             list.forEachIndexed { idx, arg ->
                                 val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
-                                val fieldPtr = ir.gep(lvalueAdr, arg, Constant.valueOf(Type.I64, offset))
+                                val fieldPtr = ir.gep(lvalueAdr, arg,
+                                    Constant.valueOf(Type.I64, offset)
+                                )
                                 val proj = ir.proj(call, idx)
                                 ir.store(fieldPtr, proj)
                             }

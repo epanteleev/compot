@@ -10,9 +10,14 @@ import gen.consteval.*
 import ir.module.ExternFunction
 import ir.Definitions.QWORD_SIZE
 import gen.TypeConverter.toIRType
-import gen.TypeConverter.toIRLVType
 import ir.attributes.GlobalValueAttribute
 import ir.module.builder.impl.ModuleBuilder
+import ir.value.constant.Constant
+import ir.value.constant.InitializerListValue
+import ir.value.constant.NonTrivialConstant
+import ir.value.constant.PointerLiteral
+import ir.value.constant.PrimitiveConstant
+import ir.value.constant.StringLiteralConstant
 
 
 sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,

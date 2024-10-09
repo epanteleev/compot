@@ -11,7 +11,7 @@ import ir.module.block.Block
 import ir.module.FunctionData
 import ir.module.SSAModule
 import ir.platform.x64.CallConvention
-import ir.value.*
+import ir.value.constant.*
 
 
 // Move large constant to constant pool

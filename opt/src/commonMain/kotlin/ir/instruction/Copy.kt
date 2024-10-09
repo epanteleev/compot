@@ -1,7 +1,7 @@
 package ir.instruction
 
 import common.assertion
-import ir.value.UndefinedValue
+import ir.value.constant.UndefinedValue
 import ir.value.Value
 import ir.value.asType
 import ir.types.Type

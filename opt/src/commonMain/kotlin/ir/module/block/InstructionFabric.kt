@@ -3,11 +3,10 @@ package ir.module.block
 import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.*
-import ir.module.AnyFunctionPrototype
 import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
-import ir.value.IntegerConstant
-import ir.value.UnsignedIntegerConstant
+import ir.value.constant.IntegerConstant
+import ir.value.constant.UnsignedIntegerConstant
 import ir.value.Value
 
 

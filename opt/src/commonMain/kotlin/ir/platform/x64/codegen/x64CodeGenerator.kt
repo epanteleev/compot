@@ -34,6 +34,8 @@ import ir.platform.x64.CallConvention.retReg
 import ir.platform.x64.pass.analysis.regalloc.LinearScanFabric
 import ir.platform.x64.pass.analysis.regalloc.SavedContext
 import ir.value.*
+import ir.value.constant.BoolValue
+import ir.value.constant.UndefinedValue
 
 
 internal data class CodegenException(override val message: String): Exception(message)

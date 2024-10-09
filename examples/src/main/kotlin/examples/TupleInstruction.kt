@@ -1,7 +1,7 @@
 package examples
 
 import ir.types.Type
-import ir.value.I32Value
+import I32Value
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
 

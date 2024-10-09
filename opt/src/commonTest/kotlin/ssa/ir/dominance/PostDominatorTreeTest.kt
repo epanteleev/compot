@@ -3,12 +3,10 @@ package ssa.ir.dominance
 import ir.types.Type
 import ir.module.Module
 import ir.instruction.IntPredicate
-import ir.module.FunctionPrototype
 import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.dominance.PostDominatorTreeFabric
-import ir.value.I32Value
-import ir.value.U16Value
+import ir.value.constant.*
 
 import kotlin.test.Test
 import kotlin.test.assertFalse

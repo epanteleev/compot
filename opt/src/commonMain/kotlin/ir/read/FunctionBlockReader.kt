@@ -1,7 +1,7 @@
 package ir.read
 
-import ir.value.Constant
-import ir.value.UnsignedIntegerConstant
+import ir.value.constant.Constant
+import ir.value.constant.UnsignedIntegerConstant
 import ir.types.*
 import ir.instruction.*
 import ir.read.bulder.*

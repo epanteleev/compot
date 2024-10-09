@@ -10,6 +10,7 @@ import ir.pass.common.AnalysisResult
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
+import ir.value.constant.Constant
 
 
 enum class EscapeState {
@@ -61,7 +62,7 @@ private class EscapeAnalysis(private val functionData: FunctionData): FunctionAn
     private fun visitStore(store: Store) {
         escapeState[store.pointer().asValue()] = union(store.pointer(), EscapeState.NoEscape)
         when (val value = store.value()) {
-            is Constant   -> escapeState[value] = EscapeState.Constant
+            is Constant -> escapeState[value] = EscapeState.Constant
             is LocalValue -> escapeState[value] = union(value, EscapeState.Field)
         }
     }

@@ -6,9 +6,6 @@ import ir.Definitions
 class StructType internal constructor(val name: String, val fields: List<NonTrivialType>): AggregateType {
     private val alignments = alignments()
     private var maxAlignment = Int.MIN_VALUE
-    init {
-        require(fields.all { it !is FlagType }) { "StructType cannot contain FlagType" }
-    }
 
     override fun maxAlignment(): Int {
         if (maxAlignment == Int.MIN_VALUE) {

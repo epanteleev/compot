@@ -1,8 +1,6 @@
 package ssa.ir.dominance
 
-import ir.module.FunctionPrototype
-import ir.value.I32Value
-import ir.value.U16Value
+import ir.value.constant.U16Value
 import ir.instruction.IntPredicate
 import ir.module.Module
 import ir.module.block.BlockViewer
@@ -11,6 +9,7 @@ import ir.pass.analysis.VerifySSA
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.transform.Mem2RegFabric
 import ir.types.Type
+import ir.value.constant.I32Value
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -26,10 +25,7 @@ class DominatorTreeTest {
 
         val b2 = builder.createLabel()
         val b3 = builder.createLabel()
-        val cmp1 = builder.icmp(
-            I32Value(12), IntPredicate.Ne,
-            I32Value(43)
-        )
+        val cmp1 = builder.icmp(I32Value(12), IntPredicate.Ne, I32Value(43))
         builder.branchCond(cmp1, b2, b3)
 
         builder.switchLabel(b3)

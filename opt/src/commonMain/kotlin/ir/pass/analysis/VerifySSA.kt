@@ -13,7 +13,7 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.value.ArgumentValue
-import ir.value.BoolValue
+import ir.value.constant.BoolValue
 import ir.value.Value
 
 

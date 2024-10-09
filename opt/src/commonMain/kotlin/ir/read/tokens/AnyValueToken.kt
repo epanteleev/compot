@@ -1,12 +1,9 @@
 package ir.read.tokens
 
 import ir.types.NonTrivialType
-import ir.value.BoolValue
-import ir.value.Constant
-import ir.value.NullValue
-import ir.types.Type
-import ir.value.NonTrivialConstant
-import ir.value.PrimitiveConstant
+import ir.value.constant.NullValue
+import ir.value.constant.NonTrivialConstant
+import ir.value.constant.PrimitiveConstant
 
 
 abstract class AnyValueToken(override val line: Int, override val pos: Int): Token(line, pos)

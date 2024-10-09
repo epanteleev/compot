@@ -1,6 +1,6 @@
 package ssa.ir
 
-import ir.value.I32Value
+import ir.value.constant.*
 import ir.instruction.IntPredicate
 import ir.module.Module
 import ir.module.block.BlockViewer

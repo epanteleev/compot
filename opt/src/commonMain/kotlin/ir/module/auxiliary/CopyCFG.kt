@@ -14,6 +14,7 @@ import ir.module.block.Block
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.types.PrimitiveType
 import ir.value.*
+import ir.value.constant.Constant
 
 
 class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<LocalValue?>() {

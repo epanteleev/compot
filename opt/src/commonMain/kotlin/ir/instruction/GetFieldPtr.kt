@@ -5,6 +5,7 @@ import ir.value.*
 import common.assertion
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
+import ir.value.constant.IntegerConstant
 
 
 class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType: AggregateType, source: Value, private val index: Array<IntegerConstant>):

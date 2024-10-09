@@ -6,8 +6,8 @@ import ir.pass.transform.SSADestructionFabric
 import ir.pass.transform.SwitchReplacementFabric
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
-import ir.value.I32Value
-import ir.value.U8Value
+import I32Value
+import U8Value
 
 
 fun main() {

@@ -1,8 +1,8 @@
 package examples
 
 import ir.types.*
-import ir.value.I32Value
-import ir.value.U64Value
+import I32Value
+import U64Value
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.analysis.VerifySSA

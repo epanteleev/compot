@@ -12,6 +12,8 @@ import ir.instruction.Alloc
 import ir.instruction.IntPredicate
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
+import ir.value.constant.Constant
+import ir.value.constant.PrimitiveConstant
 import typedesc.TypeHolder
 
 
