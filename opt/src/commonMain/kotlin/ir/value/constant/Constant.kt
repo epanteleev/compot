@@ -1,7 +1,6 @@
 package ir.value.constant
 
 import ir.types.*
-import ir.global.GlobalSymbol
 import ir.value.Value
 
 

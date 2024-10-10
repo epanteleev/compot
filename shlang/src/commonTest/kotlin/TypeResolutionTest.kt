@@ -6,6 +6,7 @@ import parser.nodes.*
 import tokenizer.CTokenizer
 import typedesc.StorageClass
 import typedesc.TypeHolder
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -398,6 +399,57 @@ class TypeResolutionTest {
         assertEquals("struct s2 {int x;}", typeHolder.getStructType<CStructType>("s2").toString())
         assertEquals("struct s1 {int x;}", typeHolder.getTypedef("t1").toString())
         assertTrue { typeHolder.getTypedef("tp1").cType() is CPointer }
+    }
+
+    @Test
+    fun testAnonMember() {
+        val input = """
+            |union B {
+            | int a;
+            | struct {
+            |    int b;
+            |    char c;
+            | };
+            |};
+            |union B b;
+        """.trimMargin()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        val unionType = typeHolder.getVarTypeOrNull("b") ?: error("Cannot find union type")
+        assertEquals("union B {int a;struct <unknown> {int b;char c;}}", unionType.toString())
+        val ty = unionType.type.cType() as CUnionType
+        assertEquals(0, ty.fieldIndex("a"))
+        assertEquals(1, ty.fieldIndex("b"))
+        assertEquals(2, ty.fieldIndex("c"))
+    }
+
+    @Test
+    @Ignore
+    fun testAnonMember1() {
+        val input = """
+            |struct A {
+            | int a;
+            | union {
+            |    int b;
+            |    char c;
+            | };
+            |};
+            |struct A a;
+        """.trimMargin()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        val structType = typeHolder.getVarTypeOrNull("a") ?: error("Cannot find struct type")
+        assertEquals("struct A {int a;union <unknown> {int b;char c;}}", structType.toString())
+        val ty = structType.type.cType() as CStructType
+        assertEquals(0, ty.fieldIndex("a"))
+        assertEquals(1, ty.fieldIndex("b"))
+        assertEquals(1, ty.fieldIndex("c"))
     }
 
     @Test

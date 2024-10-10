@@ -33,8 +33,12 @@ data class UnionSpecifier(val name: Identifier, val fields: List<StructField>) :
         val members = arrayListOf<Member>()
         for (field in fields) {
             val type = field.declspec.specifyType(typeHolder, listOf()).type
+            if (field.declarators.isEmpty()) {
+                members.add(AnonMember(type))
+                continue
+            }
             for (declarator in field.declarators) {
-                members.add(Member(declarator.name(), type))
+                members.add(FieldMember(declarator.name(), type))
             }
         }
 
@@ -137,9 +141,13 @@ data class StructSpecifier(private val name: Identifier, val fields: List<Struct
         val members = arrayListOf<Member>()
         for (field in fields) {
             val type = field.declspec.specifyType(typeHolder, listOf()) //TODo
+            if (field.declarators.isEmpty()) {
+                members.add(AnonMember(type.type))
+                continue
+            }
             for (declarator in field.declarators) {
                 val resolved = declarator.declareType(field.declspec, typeHolder).type
-                members.add(Member(declarator.name(), resolved))
+                members.add(FieldMember(declarator.name(), resolved))
             }
         }
         val structType = CStructType(name.str(), members)

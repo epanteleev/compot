@@ -34,12 +34,30 @@ sealed class CAggregateType: CType() {
 sealed class AnyStructType(open val name: String, protected val fields: List<Member>): CAggregateType() {
     override fun typename(): String = name
 
-    fun fieldIndex(name: String): Int {
-        return fields.indexOfFirst { it.name == name }
+    fun fieldIndex(name: String): Int? {
+        for ((idx, field) in fields.withIndex()) {
+            when (field) {
+                is FieldMember -> {
+                    if (field.name == name) {
+                        return idx
+                    }
+                }
+                is AnonMember -> {
+                    val i = field.cType().fieldIndex(name)
+                    if (i != null) {
+                        return idx + i
+                    }
+                }
+            }
+        }
+        return null
     }
 
-    fun fieldIndex(index: Int): TypeDesc {
-        return fields[index].typeDesc
+    fun fieldIndex(index: Int): TypeDesc? {
+        if (index < 0 || index >= fields.size) {
+            return null
+        }
+        return fields[index].typeDesc()
     }
 
     fun fields(): List<Member> {
@@ -67,8 +85,8 @@ class CStructType(override val name: String, fields: List<Member>): AnyStructTyp
         val result = IntArray(fields.size)
         for (i in fields.indices) {
             val field = fields[i]
-            alignment = align(alignment, field.typeDesc.cType())
-            current = Definitions.alignTo(current + field.typeDesc.size(), alignment)
+            alignment = align(alignment, field.cType())
+            current = Definitions.alignTo(current + field.size(), alignment)
             result[i] = alignment
         }
         return result
@@ -80,7 +98,7 @@ class CStructType(override val name: String, fields: List<Member>): AnyStructTyp
         }
         var offset = 0
         for (idx in fields.indices) {
-            offset = Definitions.alignTo(offset + fields[idx].typeDesc.size(), alignments[idx])
+            offset = Definitions.alignTo(offset + fields[idx].typeDesc().size(), alignments[idx])
         }
         return offset
     }
@@ -102,9 +120,7 @@ class CStructType(override val name: String, fields: List<Member>): AnyStructTyp
     override fun toString(): String = buildString {
         append("struct $name")
         append(" {")
-        fields.forEach { (name, type) ->
-            append("$type $name;")
-        }
+        fields.joinTo(this, separator = "") { field -> field.toString() }
         append("}")
     }
 }
@@ -114,15 +130,13 @@ class CUnionType(override val name: String, fields: List<Member>): AnyStructType
         if (fields.isEmpty()) {
             return 0
         }
-        return fields.maxOf { it.typeDesc.size() }
+        return fields.maxOf { it.cType().size() }
     }
 
     override fun toString(): String = buildString {
         append("union $name")
         append(" {")
-        fields.forEach { (name, type) ->
-            append("$type $name;")
-        }
+        fields.joinTo(this, separator = "") { field -> field.toString() }
         append("}")
     }
 
@@ -131,7 +145,7 @@ class CUnionType(override val name: String, fields: List<Member>): AnyStructType
     }
 
     override fun maxAlignment(): Int {
-        return fields.maxOf { it.typeDesc.cType().size() }
+        return fields.maxOf { it.cType().size() }
     }
 }
 
