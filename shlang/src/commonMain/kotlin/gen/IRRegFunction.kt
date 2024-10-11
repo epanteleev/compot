@@ -271,7 +271,8 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         val structIRType = mb.toIRType<StructType>(typeHolder, structType)
 
-        val member = structType.fieldIndex(memberAccess.memberName()) ?: throw IRCodeGenError("Field not found")
+        val fieldName = memberAccess.memberName()
+        val member = structType.fieldIndex(fieldName) ?: throw IRCodeGenError("Field not found: $fieldName")
 
         val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, member))
         val gep = ir.gfp(struct, structIRType, indexes)

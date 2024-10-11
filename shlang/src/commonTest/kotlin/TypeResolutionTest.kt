@@ -427,7 +427,6 @@ class TypeResolutionTest {
     }
 
     @Test
-    @Ignore
     fun testAnonMember1() {
         val input = """
             |struct A {
@@ -450,6 +449,37 @@ class TypeResolutionTest {
         assertEquals(0, ty.fieldIndex("a"))
         assertEquals(1, ty.fieldIndex("b"))
         assertEquals(1, ty.fieldIndex("c"))
+    }
+
+    @Test
+    @Ignore
+    fun testAnonMember2() {
+        val input = """
+            |struct C {
+            |    union {
+            |        struct {
+            |            int i, j;
+            |        };
+            |        struct {
+            |            long k, l;
+            |        } w;
+            |    };
+            |    int m;
+            |} c;
+        """.trimMargin()
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        val structType = typeHolder.getVarTypeOrNull("c") ?: error("Cannot find struct type")
+        assertEquals("struct C {union <unknown> {struct <unknown> {int i;int j;}struct <unknown> {long k;long l;} w;}int m;}", structType.toString())
+        val ty = structType.type.cType() as CStructType
+        val idx = ty.fieldIndex("w") ?: error("Cannot find field w")
+        assertEquals(0, idx)
+        val unionType = ty.fieldIndex(0)!!.cType() as CUnionType
+        assertEquals(0, unionType.fieldIndex("k"))
+        assertEquals(1, unionType.fieldIndex("l"))
     }
 
     @Test

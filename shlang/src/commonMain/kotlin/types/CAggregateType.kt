@@ -35,17 +35,28 @@ sealed class AnyStructType(open val name: String, protected val fields: List<Mem
     override fun typename(): String = name
 
     fun fieldIndex(name: String): Int? {
+        var offset = 0
         for ((idx, field) in fields.withIndex()) {
             when (field) {
                 is FieldMember -> {
                     if (field.name == name) {
-                        return idx
+                        return idx + offset
                     }
                 }
-                is AnonMember -> {
-                    val i = field.cType().fieldIndex(name)
-                    if (i != null) {
-                        return idx + i
+                is AnonMember -> when (val cType = field.cType()) {
+                    is CUnionType -> {
+                        val i = cType.fieldIndex(name)
+                        if (i != null) {
+                            return idx + offset
+                        }
+                        offset += cType.fields().size
+                    }
+                    is CStructType -> {
+                        val i = cType.fieldIndex(name)
+                        if (i != null) {
+                            return idx + i + offset
+                        }
+                        offset += cType.fields().size
                     }
                 }
             }
