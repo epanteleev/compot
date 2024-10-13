@@ -1,6 +1,7 @@
 package gen
 
 import common.padTo
+import gen.TypeConverter.toIRLVType
 import types.*
 import ir.types.*
 import ir.value.*
@@ -19,6 +20,7 @@ import ir.value.constant.NonTrivialConstant
 import ir.value.constant.PointerLiteral
 import ir.value.constant.PrimitiveConstant
 import ir.value.constant.StringLiteralConstant
+import parser.LineAgnosticAstPrinter
 
 
 sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
@@ -202,7 +204,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     private fun makeGlobalValue(name: String, type: VarDescriptor): Value {
-        val irType = mb.toIRType<NonTrivialType>(typeHolder, type.type.cType())
+        val irType = mb.toIRLVType<NonTrivialType>(typeHolder, type.type.cType())
         val value = if (type.storageClass == StorageClass.EXTERN) {
             mb.addExternValue(name, irType)
         } else {
@@ -293,13 +295,14 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     private fun constEvalInitializers(lValueType: ArrayType, expr: InitializerList): NonTrivialConstant {
         if (expr.initializers.size == 1) {
-            return constEvalExpression(lValueType, expr.initializers[0]) ?: throw IRCodeGenError("Unsupported type $lValueType")
+            return constEvalExpression(lValueType, expr.initializers[0]) ?:
+                throw IRCodeGenError("Unsupported type $lValueType, expr=${LineAgnosticAstPrinter.print(expr)}")
         }
 
         val elements = expr.initializers.mapIndexed { index, initializer ->
             val elementLValueType = lValueType.field(index)
             constEvalExpression(elementLValueType, initializer) ?: let {
-                throw IRCodeGenError("Unsupported type $elementLValueType")
+                throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}")
             }
         }
 
@@ -310,7 +313,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         val elements = expr.initializers.mapIndexed { index, initializer ->
             val elementLValueType = lValueType.field(index)
             constEvalExpression(elementLValueType, initializer) ?: let {
-                throw IRCodeGenError("Unsupported type $elementLValueType")
+                throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}")
             }
         }
 
@@ -324,7 +327,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         for (type in ctypes) {
             when (val ty = type.cType()) {
-                is CStructType -> {
+                is AnyStructType -> {
                     val parameters = CallConvention.coerceArgumentTypes(ty)
                     if (parameters != null) {
                         types.addAll(parameters)

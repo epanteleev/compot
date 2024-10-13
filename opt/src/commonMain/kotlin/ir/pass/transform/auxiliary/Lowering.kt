@@ -14,7 +14,7 @@ import ir.value.constant.Constant
 class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceAllocLoadStores() {
         fun transform(bb: Block, inst: Instruction): Instruction? = match(inst) {
-            store(generate(), gValue(aggregate())) { store ->
+            store(generate(), gValue(anytype())) { store ->
                 val toValue = store.pointer().asValue<Generate>()
                 val value = bb.insertBefore(store) { it.lea(store.value()) }
                 bb.replace(store) { it.move(toValue, value) }

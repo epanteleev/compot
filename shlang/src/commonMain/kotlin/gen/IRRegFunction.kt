@@ -158,12 +158,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val irType = mb.toIRType<AggregateType>(typeHolder, type)
                 val fieldType = irType.field(idx)
                 val converted = ir.convertToType(rvalue, fieldType)
-                val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(
-                    Constant.valueOf(
-                        Type.I64,
-                        idx
-                    )
-                ))
+                val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(Constant.valueOf(Type.I64, idx)))
                 ir.store(fieldPtr, converted)
             }
         }
@@ -359,7 +354,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val convertedArg = ir.gep(expr, type.elementType(), I64Value(0))
                     convertedArgs.add(convertedArg)
                 }
-                is CStructType -> {
+                is AnyStructType -> {
                     val argValues = ir.coerceArguments(argCType, expr)
                     convertedArgs.addAll(argValues)
                     offset += argValues.size - 1
@@ -906,7 +901,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is CPrimitive -> {
                     closure(parameters[currentArg], cType, listOf(arguments[argumentIdx]))
                 }
-                is CStructType -> {
+                is AnyStructType -> {
                     val types = CallConvention.coerceArgumentTypes(cType) ?: listOf(Type.Ptr)
                     val args = mutableListOf<ArgumentValue>()
                     for (i in types.indices) {
@@ -937,7 +932,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.store(rvalueAdr, ir.convertToType(args[0], irType))
             varStack[param] = rvalueAdr
         }
-        is CStructType -> {
+        is AnyStructType -> {
             if (cType.size() <= QWORD_SIZE * 2) {
                 val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
                 val rvalueAdr = ir.alloc(irType)
@@ -1354,12 +1349,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 for (i in initializerList.initializers.size until type.fields().size) {
                     val converted = mb.toIRType<StructType>(typeHolder, type)
                     val elementType = converted.field(i)
-                    val elementAdr = ir.gfp(value, converted, arrayOf(
-                        Constant.valueOf(
-                            Type.I64,
-                            i
-                        )
-                    ))
+                    val elementAdr = ir.gfp(value, converted, arrayOf(Constant.valueOf(Type.I64, i)))
                     ir.store(elementAdr, Constant.valueOf(elementType.asType(), 0))
                 }
             }

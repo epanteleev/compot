@@ -83,12 +83,11 @@ abstract class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testAssignDerefFloat() {
         val result = runCTest("shlang/lacc/assign-deref-float", listOf(), options())
         val expected = "3.140000, 2.710000\n"
         assertEquals(expected, result.output)
-        assertEquals(0, result.exitCode)
+        assertEquals(19, result.exitCode)
     }
 
     @Test

@@ -34,7 +34,28 @@ sealed class CAggregateType: CType() {
 sealed class AnyStructType(open val name: String, protected val fields: List<Member>): CAggregateType() {
     override fun typename(): String = name
 
-    fun fieldIndex(name: String): Int? {
+    abstract fun fieldIndex(name: String): Int?
+
+    fun fieldIndex(index: Int): TypeDesc? {
+        if (index < 0 || index >= fields.size) {
+            return null
+        }
+        return fields[index].typeDesc()
+    }
+
+    fun fields(): List<Member> {
+        return fields
+    }
+
+    abstract fun offset(index: Int): Int
+    abstract fun maxAlignment(): Int
+}
+
+class CStructType(override val name: String, fields: List<Member>): AnyStructType(name, fields) {
+    private val alignments = alignments()
+    private var maxAlignment = Int.MIN_VALUE
+
+    override fun fieldIndex(name: String): Int? {
         var offset = 0
         for ((idx, field) in fields.withIndex()) {
             when (field) {
@@ -63,25 +84,6 @@ sealed class AnyStructType(open val name: String, protected val fields: List<Mem
         }
         return null
     }
-
-    fun fieldIndex(index: Int): TypeDesc? {
-        if (index < 0 || index >= fields.size) {
-            return null
-        }
-        return fields[index].typeDesc()
-    }
-
-    fun fields(): List<Member> {
-        return fields
-    }
-
-    abstract fun offset(index: Int): Int
-    abstract fun maxAlignment(): Int
-}
-
-class CStructType(override val name: String, fields: List<Member>): AnyStructType(name, fields) {
-    private val alignments = alignments()
-    private var maxAlignment = Int.MIN_VALUE
 
     override fun maxAlignment(): Int {
         if (maxAlignment == Int.MIN_VALUE) {
@@ -137,6 +139,13 @@ class CStructType(override val name: String, fields: List<Member>): AnyStructTyp
 }
 
 class CUnionType(override val name: String, fields: List<Member>): AnyStructType(name, fields) {
+    override fun fieldIndex(name: String): Int? {
+        if (fields.isEmpty()) {
+            return null
+        }
+        return 0
+    }
+
     override fun size(): Int {
         if (fields.isEmpty()) {
             return 0

@@ -431,7 +431,7 @@ object TypeConverter {
         }
     }
 
-    fun FunctionDataBuilder.coerceArguments(argCType: CStructType, expr: Value): List<Value> = when (argCType.size()) {
+    fun FunctionDataBuilder.coerceArguments(argCType: AnyStructType, expr: Value): List<Value> = when (argCType.size()) {
         BYTE_SIZE -> {
             val fieldConverted = gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
             val load           = load(Type.I8, fieldConverted)

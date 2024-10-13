@@ -2,10 +2,23 @@ package ir.value
 
 import ir.types.*
 import ir.value.constant.UndefinedValue
+import ir.instruction.matching.ValueMatcher
 
 
 interface Value {
     fun type(): Type
+
+    fun isa(matcher: ValueMatcher): Boolean {
+        return matcher(this)
+    }
+
+    fun match(matcher: ValueMatcher, action: (Value) -> Value?) {
+        if (!isa(matcher)) {
+            return
+        }
+
+        action(this)
+    }
 
     companion object {
         val UNDEF: UndefinedValue = UndefinedValue

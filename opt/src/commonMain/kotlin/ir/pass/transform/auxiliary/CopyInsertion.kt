@@ -21,7 +21,7 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
             }
 
             val last = incoming.last()
-            val copy = if (gValue(aggregate()) (operand)) {
+            val copy = if (operand.isa(gValue(anytype()))) {
                 incoming.insertBefore(last) { it.lea(operand) }
             } else {
                 incoming.insertBefore(last) { it.copy(operand) }

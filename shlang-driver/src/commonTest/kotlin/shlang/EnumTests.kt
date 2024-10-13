@@ -1,8 +1,8 @@
 package shlang
 
+import kotlin.test.*
 import common.CommonCTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
+
 
 abstract class EnumTests: CommonCTest() {
     @Test
@@ -20,6 +20,14 @@ abstract class EnumTests: CommonCTest() {
     @Test
     fun test3() {
         val result = runCTest("shlang/enum/enum3", listOf(), options())
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @Ignore
+    fun test4() {
+        val result = runCTest("shlang/enum/enum4", listOf(), options())
+        assertEquals("Data: (2, 20)\n", result.output)
         assertEquals(0, result.exitCode)
     }
 }
