@@ -217,6 +217,14 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("All tests passed\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    @Ignore
+    fun testMd5() {
+        val result = runCTest("shlang/algo/md5", listOf(), options())
+        assertEquals("MD5 tests: SUCCEEDED\n", result.output)
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {

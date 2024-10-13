@@ -136,7 +136,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 if (type !is CArrayType) {
                     throw IRCodeGenError("Expect array type, but type=$type")
                 }
-                when (type.element().cType()) {
+                when (val type = type.element().cType()) {
                     is CHAR -> {
                         val string = expr.data()
                         ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value(string.length.toLong()))
@@ -150,7 +150,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                         )
                         ir.store(fieldPtr, stringPtr)
                     }
-                    else -> throw IRCodeGenError("Unknown type")
+                    else -> throw IRCodeGenError("Unknown type $type")
                 }
             }
             else -> {
