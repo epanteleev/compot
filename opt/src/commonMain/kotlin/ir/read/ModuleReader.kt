@@ -96,7 +96,7 @@ class ModuleReader(string: String) {
                     throw throw ParseErrorException("expect float type, but: type=${type}")
                 }
 
-                StringLiteralConstant(data.string)
+                StringLiteralConstant(ArrayType(Type.I8, data.string.length), data.string)
             }
             is OpenBrace -> {
                 if (type !is AggregateTypeToken) {

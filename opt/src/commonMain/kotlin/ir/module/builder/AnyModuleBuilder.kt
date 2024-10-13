@@ -1,11 +1,10 @@
 package ir.module.builder
 
-import ir.attributes.GlobalValueAttribute
-import ir.global.*
-import ir.module.ExternFunction
-import ir.module.Module
 import ir.types.*
+import ir.global.*
+import ir.module.*
 import ir.value.constant.Constant
+import ir.attributes.GlobalValueAttribute
 
 
 abstract class AnyModuleBuilder {

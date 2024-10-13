@@ -1,10 +1,9 @@
 package ir.global
 
-import common.assertion
-import ir.attributes.GlobalValueAttribute
 import ir.types.*
-import ir.value.constant.Constant
-import ir.value.constant.PrimitiveConstant
+import common.assertion
+import ir.value.constant.*
+import ir.attributes.GlobalValueAttribute
 
 
 class GlobalValue private constructor(val name: String, private val type: NonTrivialType, private val init: Constant, private val attribute: GlobalValueAttribute): AnyGlobalValue {
@@ -63,9 +62,11 @@ class GlobalValue private constructor(val name: String, private val type: NonTri
                 assertion((constant.type() as ArrayType).elementType().sizeOf() == type.elementType().sizeOf()) {
                     "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
                 }
+                assertion((constant.type() as ArrayType).length == type.length) {
+                    "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
+                }
             }
             is StructType -> {}
-            is FlagType -> assertion(constant.type() == type) { "GlobalValue: type mismatch" }
         }
     }
 }

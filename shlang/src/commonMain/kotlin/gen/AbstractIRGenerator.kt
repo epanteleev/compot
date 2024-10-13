@@ -45,7 +45,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
         is StringNode        -> when (lValueType) {
-            is ArrayType -> StringLiteralConstant(expr.data())
+            is ArrayType -> StringLiteralConstant(ArrayType(Type.I8, expr.data().length) ,expr.data())
             else -> {
                 val constant = expr.data()
                 val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.U8, constant.length), constant.toString())
@@ -158,9 +158,24 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 }
             }
             is StringLiteralConstant -> {
-                val global = mb.addGlobal(declarator.name(), lValueType, constant, attr)
-                varStack[declarator.name()] = global
-                return global
+                val cArrayType = cType.type.cType() as CArrayType
+                println("'${constant.data()}'")
+                if (cArrayType.dimension > constant.data().length.toLong()) {
+                    val stringBuilder = StringBuilder()
+                    stringBuilder.append(constant.content)
+                    for (i in 0 until cArrayType.dimension - constant.data().length) {
+                        stringBuilder.append("\\0")
+                    }
+                    val content = stringBuilder.toString()
+                    val newConstant = StringLiteralConstant(ArrayType(Type.I8, cArrayType.dimension.toInt()), content)
+                    val global = mb.addGlobal(declarator.name(), lValueType, newConstant, attr)
+                    varStack[declarator.name()] = global
+                    return global
+                } else {
+                    val global = mb.addGlobal(declarator.name(), lValueType, constant, attr)
+                    varStack[declarator.name()] = global
+                    return global
+                }
             }
             else -> TODO("$constant")
         }

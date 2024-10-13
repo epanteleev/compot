@@ -151,42 +151,26 @@ class F64ConstantValue(override val name: String, val f64: Double): PrimitiveGlo
 
     override fun type(): NonTrivialType = Type.F64
     override fun content(): String = f64.toString()
-    override fun constant(): Constant {
-        return F64Value(f64)
-    }
+    override fun constant(): Constant = F64Value(f64)
 }
 
 sealed class AnyAggregateGlobalConstant(override val name: String): GlobalConstant(name) {
-    abstract fun elements(): InitializerListValue
     abstract fun contentType(): NonTrivialType
     override fun type(): NonTrivialType = Type.Ptr
 }
 
-class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, val string: String?): AnyAggregateGlobalConstant(name) {
+class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, val string: String): AnyAggregateGlobalConstant(name) {
     override fun data(): String {
         return "\"$string\""
     }
 
-    fun isEmpty(): Boolean {
-        return string.isNullOrEmpty()
-    }
-
-    override fun elements(): InitializerListValue {
-        if (string == null) {
-            return InitializerListValue(ArrayType(Type.I8, 0), emptyList())
-        }
-        return InitializerListValue(ArrayType(Type.I8, string.length), string.map { U8Value(it.code.toByte()) })
-    }
-
     override fun content(): String = data()
-    override fun contentType(): NonTrivialType = ArrayType(Type.I8, string?.length ?: 0)
-    override fun constant(): Constant {
-        return StringLiteralConstant(string ?: "")
-    }
+    override fun contentType(): NonTrivialType = ArrayType(Type.I8, string.length)
+    override fun constant(): Constant = StringLiteralConstant(tp, string)
 }
 
 sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivialType, protected val elements: InitializerListValue): AnyAggregateGlobalConstant(name) {
-    final override fun elements(): InitializerListValue {
+    fun elements(): InitializerListValue {
         return elements
     }
 

@@ -3,8 +3,6 @@ package ir.platform.x64.auxiliary
 import ir.types.*
 import ir.value.constant.Constant
 import ir.value.constant.InitializerListValue
-import ir.value.constant.StringLiteralConstant
-import ir.value.constant.U8Value
 
 
 object LinearizeInitializerList {
@@ -31,12 +29,5 @@ object LinearizeInitializerList {
         }
         fillIn(result, aggregateType.sizeOf(), initializerListSizeOf)
         return result
-    }
-
-    fun linearize(literal: StringLiteralConstant, aggregateType: AggregateType): List<Constant> {
-        if (aggregateType !is ArrayType) {
-            throw IllegalArgumentException("Expected ArrayType, got $aggregateType")
-        }
-        return literal.name.map { U8Value(it.code.toByte()) }
     }
 }

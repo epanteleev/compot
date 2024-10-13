@@ -13,7 +13,6 @@ import ir.platform.x64.auxiliary.LinearizeInitializerList
 //
 // https://ftp.gnu.org/old-gnu/Manuals/gas-2.9.1/html_node/as_toc.html
 class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
-
     private fun makeAggregateConstant(name: String, aggregateType: AggregateType, initializer: InitializerListValue): ObjLabel = label(name) {
         val linear = LinearizeInitializerList.linearize(initializer, aggregateType)
         for (e in linear) {
@@ -41,23 +40,11 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
     }
 
     private fun makeStringLiteralConstant(globalValue: GlobalValue, type: ArrayType, constant: StringLiteralConstant): ObjLabel {
-        val values = LinearizeInitializerList.linearize(constant, type)
-        if (values.size == type.length) {
-            return label(globalValue.name()) {
-                string(constant.data())
-            }
+        require(globalValue.contentType() == type) {
+            "type mismatch: ${globalValue.contentType()} != $type"
         }
-        if (values.isNotEmpty()) {
-            throw IllegalArgumentException("string too long: $values")
-        }
-        val init = StringBuilder()
-
-        for (j in 0 until type.length) {
-            init.append("\\000")
-        }
-
         return label(globalValue.name()) {
-            ascii(init.toString())
+            string(constant.data())
         }
     }
 
@@ -92,7 +79,6 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             is StringLiteralConstant -> makeStringLiteralConstant(globalValue, type, constant)
             else -> throw IllegalArgumentException("unsupported constant type: $constant")
         }
-        is FlagType -> makePrimitiveConstant(globalValue)
         is PrimitiveType -> makePrimitiveConstant(globalValue)
     }
 
@@ -103,8 +89,8 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         is U32Value -> builder.long(data.u32)
         is I16Value -> builder.short(data.i16)
         is U16Value -> builder.short(data.u16)
-        is I8Value -> builder.byte(data.i8)
-        is U8Value -> builder.byte(data.u8)
+        is I8Value  -> builder.byte(data.i8)
+        is U8Value  -> builder.byte(data.u8)
         is F32Value -> builder.long(data.bits())
         is F64Value -> builder.quad(data.bits())
         is PointerLiteral -> {

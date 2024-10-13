@@ -5,17 +5,17 @@ import ir.types.*
 
 sealed interface AggregateConstant: NonTrivialConstant
 
-class StringLiteralConstant(val name: String): AggregateConstant {
+class StringLiteralConstant(val ty: ArrayType, val content: String): AggregateConstant {
     override fun type(): ArrayType {
-        return ArrayType(Type.U8, name.length + 1)
+        return ty
     }
 
     override fun data(): String {
-        return "\"$name\""
+        return "\"$content\""
     }
 
     override fun toString(): String {
-        return name
+        return content
     }
 }
 
