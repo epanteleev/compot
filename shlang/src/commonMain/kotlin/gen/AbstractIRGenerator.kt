@@ -1,5 +1,6 @@
 package gen
 
+import common.padTo
 import types.*
 import ir.types.*
 import ir.value.*
@@ -126,31 +127,47 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             is PointerLiteral -> when (lValueType) {
                 is ArrayType -> {
                     val gc = constant.gConstant as GlobalConstant
-                    val global = mb.addGlobal(declarator.name(), lValueType, gc.constant(), attr)
+                    val constant = gc.constant()
+                    if (constant.type() != lValueType) {
+                        throw IRCodeGenError("Type mismatch: ${gc.constant().type()} != $lValueType")
+                    }
+                    val global = mb.addGlobal(declarator.name(), constant, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
                 is PointerType -> {
-                    val global = mb.addGlobal(declarator.name(), lValueType, constant, attr)
+                    if (lValueType != constant.type()) {
+                        throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType")
+                    }
+                    val global = mb.addGlobal(declarator.name(), constant, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
                 else -> throw IRCodeGenError("Unsupported type $lValueType")
             }
             is PrimitiveConstant -> {
-                val g = mb.addGlobal(declarator.name(), lValueType, constant, attr)
+                if (lValueType != constant.type()) {
+                    throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType")
+                }
+                val g = mb.addGlobal(declarator.name(), constant, attr)
                 varStack[declarator.name()] = g
                 return g
             }
             is InitializerListValue -> {
                 when (lValueType) {
                     is ArrayType -> {
-                        val global = mb.addGlobal(declarator.name(), lValueType, constant, attr)
+                        if (lValueType != constant.type()) {
+                            throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType")
+                        }
+                        val global = mb.addGlobal(declarator.name(), constant, attr)
                         varStack[declarator.name()] = global
                         return global
                     }
                     is StructType -> {
-                        val global = mb.addGlobal(declarator.name(), lValueType, constant, attr)
+                        if (lValueType != constant.type()) {
+                            throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType")
+                        }
+                        val global = mb.addGlobal(declarator.name(), constant, attr)
                         varStack[declarator.name()] = global
                         return global
                     }
@@ -159,23 +176,15 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
             is StringLiteralConstant -> {
                 val cArrayType = cType.type.cType() as CArrayType
-                println("'${constant.data()}'")
-                if (cArrayType.dimension > constant.data().length.toLong()) {
-                    val stringBuilder = StringBuilder()
-                    stringBuilder.append(constant.content)
-                    for (i in 0 until cArrayType.dimension - constant.data().length) {
-                        stringBuilder.append("\\0")
-                    }
-                    val content = stringBuilder.toString()
-                    val newConstant = StringLiteralConstant(ArrayType(Type.I8, cArrayType.dimension.toInt()), content)
-                    val global = mb.addGlobal(declarator.name(), lValueType, newConstant, attr)
-                    varStack[declarator.name()] = global
-                    return global
+                val newConstant = if (cArrayType.dimension > constant.data().length.toLong()) {
+                    val content = constant.content.padTo(cArrayType.dimension.toInt(), "\\0")
+                    StringLiteralConstant(ArrayType(Type.I8, cArrayType.dimension.toInt()), content)
                 } else {
-                    val global = mb.addGlobal(declarator.name(), lValueType, constant, attr)
-                    varStack[declarator.name()] = global
-                    return global
+                    constant
                 }
+                val global = mb.addGlobal(declarator.name(), newConstant, attr)
+                varStack[declarator.name()] = global
+                return global
             }
             else -> TODO("$constant")
         }
@@ -198,7 +207,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             mb.addExternValue(name, irType)
         } else {
             val constant = Constant.of(irType, 0)
-            mb.addGlobal(name, irType, constant)
+            mb.addGlobal(name, constant)
         }
         varStack[name] = value
         return value
@@ -232,7 +241,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 val zero = NonTrivialConstant.of(irType.elementType(), 0)
                 val elements = generateSequence { zero }.take(irType.length).toList()
                 val constant = InitializerListValue(irType, elements)
-                val global = mb.addGlobal(name, irType, constant, attr)
+                val global = mb.addGlobal(name, constant, attr)
                 varStack[name] = global
                 return global
             }
@@ -250,7 +259,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     elements.add(zero)
                 }
                 val constant = InitializerListValue(irType, elements)
-                val global = mb.addGlobal(name, irType, constant)
+                val global = mb.addGlobal(name, constant)
                 varStack[name] = global
                 return global
             }

@@ -10,6 +10,7 @@ import ir.instruction.matching.ValueMatcher
 import ir.value.LocalValue
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
+import ir.value.UsableValue
 
 
 typealias Identity = Int
@@ -55,19 +56,19 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
         }
 
         val op = operands[index]
-        if (op is LocalValue) {
+        if (op is UsableValue) {
             op.killUser(this)
         }
 
         operands[index] = new
 
-        if (new is LocalValue) {
+        if (new is UsableValue) {
             new.addUser(this)
         }
     }
 
     internal fun destroy() {
-        if (this is LocalValue) {
+        if (this is UsableValue) {
             assertion(usedIn().isEmpty()) {
                 "removed useful instruction: removed=$this, users=${usedIn()}"
             }
@@ -81,7 +82,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
 
         for (idx in operands.indices) {
             val op = operands[idx]
-            if (op is LocalValue) {
+            if (op is UsableValue) {
                 op.killUser(this)
             }
 
@@ -109,7 +110,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
     companion object {
         internal fun<T: Instruction> registerUser(user: T, vararg operands: Value): T {
             for (i in operands) {
-                if (i !is LocalValue) {
+                if (i !is UsableValue) {
                     continue
                 }
 
@@ -121,7 +122,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
 
         internal fun<T: Instruction> registerUser(user: T, operands: Iterator<Value>): T {
             for (i in operands) {
-                if (i !is LocalValue) {
+                if (i !is UsableValue) {
                     continue
                 }
 

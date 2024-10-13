@@ -241,7 +241,10 @@ class ModuleReader(string: String) {
             is GlobalKeyword -> {
                 val constant = makeConstant0(typeToken) //TODO refactor type resolution
                 val type = typeToken.asType<NonTrivialType>(moduleBuilder)
-                moduleBuilder.addGlobal(name.name, type, constant)
+                if (constant.type() != type) {
+                    throw ParseErrorException("type mismatch: expected $type, but got ${constant.type()}")
+                }
+                moduleBuilder.addGlobal(name.name, constant)
             }
             else -> throw ParseErrorException("constant or global", keyword)
         }

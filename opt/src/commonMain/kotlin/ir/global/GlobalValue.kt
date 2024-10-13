@@ -1,21 +1,24 @@
 package ir.global
 
 import ir.types.*
-import common.assertion
 import ir.value.constant.*
+import ir.value.UsableValue
+import ir.instruction.Instruction
 import ir.attributes.GlobalValueAttribute
 
 
-class GlobalValue private constructor(val name: String, private val type: NonTrivialType, private val init: Constant, private val attribute: GlobalValueAttribute): AnyGlobalValue {
+class GlobalValue private constructor(val name: String, private val init: Constant, private val attribute: GlobalValueAttribute): AnyGlobalValue, UsableValue {
+    override var usedIn: MutableList<Instruction> = mutableListOf()
+
     fun initializer(): Constant = init
 
     override fun name(): String = name
 
     override fun dump(): String {
-        return "@$name = global $type ${init.data()} !$attribute"
+        return "@$name = global ${contentType()} ${init.data()} !$attribute"
     }
 
-    fun contentType(): NonTrivialType = type
+    fun contentType(): NonTrivialType = init.type() as NonTrivialType
 
     override fun type(): PointerType = Type.Ptr
 
@@ -37,36 +40,8 @@ class GlobalValue private constructor(val name: String, private val type: NonTri
     }
 
     companion object {
-        fun create(name: String, type: NonTrivialType, initializer: Constant, attributes: GlobalValueAttribute): GlobalValue {
-            checkConstantType(type, initializer)
-            return GlobalValue(name, type, initializer, attributes)
-        }
-
-        private fun checkConstantType(type: NonTrivialType, constant: Constant) = when (type) {
-            is PointerType -> {
-                assertion(constant.type() is PointerType) {
-                    "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
-                }
-            }
-            is PrimitiveType -> {
-                assertion(constant.type() is PrimitiveType) {
-                    "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
-                }
-                constant as PrimitiveConstant
-                assertion(constant.type().sizeOf() == type.sizeOf()) {
-                    "GlobalValue: type mismatch: type=$type, init=${constant}"
-                }
-            }
-
-            is ArrayType -> {
-                assertion((constant.type() as ArrayType).elementType().sizeOf() == type.elementType().sizeOf()) {
-                    "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
-                }
-                assertion((constant.type() as ArrayType).length == type.length) {
-                    "GlobalValue: type mismatch: type=$type, init=${constant.type()}"
-                }
-            }
-            is StructType -> {}
+        fun create(name: String, initializer: Constant, attributes: GlobalValueAttribute): GlobalValue {
+            return GlobalValue(name, initializer, attributes)
         }
     }
 }

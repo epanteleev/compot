@@ -77,7 +77,6 @@ abstract class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testArray() {
         val result = runCTest("shlang/lacc/array", listOf(), options())
         assertEquals(5, result.exitCode)

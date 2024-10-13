@@ -5,6 +5,7 @@ import ir.global.*
 import ir.module.*
 import ir.value.constant.Constant
 import ir.attributes.GlobalValueAttribute
+import ir.value.UsableValue
 
 
 abstract class AnyModuleBuilder {
@@ -13,18 +14,18 @@ abstract class AnyModuleBuilder {
     protected val structs = hashMapOf<String, StructType>()
     protected val externFunctions = hashMapOf<String, ExternFunction>()
 
-    fun addGlobal(name: String, type: NonTrivialType, initializer: Constant, attributes: GlobalValueAttribute): GlobalValue {
-        val global = GlobalValue.create(name, type, initializer, attributes)
+    fun addGlobal(name: String, initializer: Constant, attributes: GlobalValueAttribute): GlobalValue {
+        val global = GlobalValue.create(name, initializer, attributes)
         val has = globals.put(name, global)
         if (has != null) {
-            throw IllegalArgumentException("global with name='$name' already exists.")
+            UsableValue.updateUsages(global) { has }
         }
 
         return global
     }
 
-    fun addGlobal(name: String, type: NonTrivialType, data: Constant): GlobalValue {
-        return addGlobal(name, type, data, GlobalValueAttribute.DEFAULT)
+    fun addGlobal(name: String, data: Constant): GlobalValue {
+        return addGlobal(name, data, GlobalValueAttribute.DEFAULT)
     }
 
     fun addExternValue(name: String, type: NonTrivialType): ExternValue {

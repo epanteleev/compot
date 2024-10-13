@@ -135,32 +135,18 @@ class Block private constructor(private val mc: ModificationCounter, override va
         }
 
         val newInstruction = insertBefore(instruction) { builder(it) }
-        if (instruction is LocalValue) {
-            assertion(newInstruction is LocalValue) {
+        if (instruction is UsableValue) {
+            assertion(newInstruction is UsableValue) {
                 "should be local value, but newInstruction=$newInstruction"
             }
-            updateUsages(instruction) { newInstruction as LocalValue }
+            updateUsages(instruction) { newInstruction as UsableValue }
         }
         kill(instruction, Value.UNDEF)
         return newInstruction
     }
 
-    fun<V: Value> updateUsages(localValue: LocalValue, replacement: () -> V): V = mc.df {
-        val valueToReplace = replacement()
-        for (user in localValue.release()) {
-            for ((idxUse, use) in user.operands().withIndex()) {
-                if (use !== localValue) {
-                    continue
-                }
-                // New value can use the old value
-                if (user == valueToReplace) {
-                    continue
-                }
-
-                user.update(idxUse, valueToReplace)
-            }
-        }
-        return@df valueToReplace
+    fun<V: Value> updateUsages(localValue: UsableValue, replacement: () -> V): V = mc.df {
+        return@df UsableValue.updateUsages(localValue, replacement)
     }
 
     fun updateDF(instruction: Instruction, closure: (Value) -> Value) = mc.df {
@@ -260,7 +246,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
         }
 
         val next = instruction.prev()
-        if (instruction is LocalValue) {
+        if (instruction is UsableValue) {
             updateUsages(instruction) { replacement }
         }
 

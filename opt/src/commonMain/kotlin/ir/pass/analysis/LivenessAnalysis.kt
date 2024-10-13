@@ -117,10 +117,11 @@ private class LivenessAnalysis(private val functionData: FunctionData): Function
 
         for (bb in linearScanOrder) {
             bb.phis { phi ->
+                val livenessBB = liveness[bb]!!
                 phi.zip { block, value ->
                     if (value is LocalValue) {
                         liveness[block]!!.liveOut.add(value)
-                        liveness[bb]!!.liveIn.add(value)
+                        livenessBB.liveIn.add(value)
                     }
                 }
             }

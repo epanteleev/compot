@@ -63,12 +63,10 @@ private class BasePointerAddressedStackFrame : StackFrame {
         return Address.from(rbp, -frameSize)
     }
 
-    override fun takeSlot(value: Value): Address {
-        return when (value) {
-            is Generate   -> stackSlotAlloc(value)
-            is LocalValue -> valueInstructionAlloc(value)
-            else -> throw StackFrameException("Cannot alloc slot for this value=$value")
-        }
+    override fun takeSlot(value: Value): Address = when (value) {
+        is Generate   -> stackSlotAlloc(value)
+        is LocalValue -> valueInstructionAlloc(value)
+        else -> throw StackFrameException("Cannot alloc slot for this value=$value")
     }
 
     override fun returnSlot(slot: Address, size: Int) {

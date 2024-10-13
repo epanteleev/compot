@@ -13,6 +13,7 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.value.ArgumentValue
+import ir.value.UsableValue
 import ir.value.constant.BoolValue
 import ir.value.Value
 
@@ -113,7 +114,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
                 validateDefUse(instruction, block)
             }
 
-            if (instruction is LocalValue) {
+            if (instruction is UsableValue) {
                 for (user in instruction.usedIn()) {
                     assert(user.containsOperand(instruction)) {
                         "should be inst='${instruction.dump()}', user='${user.dump()}', usedIn='${instruction.usedIn()}'"

@@ -449,7 +449,7 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         return@memoize when (val primaryType = primary.resolveType(typeHolder)) {
-            is CArrayType -> primaryType.type.cType()
+            is CArrayType            -> primaryType.type.cType()
             is CUncompletedArrayType -> primaryType.elementType.cType()
             is CPointer     -> primaryType.dereference()
             else -> throw TypeResolutionException("Array access on non-array type: $primaryType")
