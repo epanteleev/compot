@@ -137,7 +137,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     throw IRCodeGenError("Expect array type, but type=$type")
                 }
                 when (val type = type.element().cType()) {
-                    is CHAR -> {
+                    is CHAR, is UCHAR -> {
                         val string = expr.data()
                         ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value(string.length.toLong()))
                     }

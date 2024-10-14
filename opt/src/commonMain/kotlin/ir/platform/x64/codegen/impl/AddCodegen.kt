@@ -49,8 +49,12 @@ data class AddCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOper
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        asm.copy(size, first, dst)
-        asm.add(size, second, dst)
+        if (dst == first) {
+            asm.add(size, second, dst)
+        } else {
+            asm.copy(size, first, dst)
+            asm.add(size, second, dst)
+        }
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {

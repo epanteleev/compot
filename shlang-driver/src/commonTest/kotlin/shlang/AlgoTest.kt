@@ -1,7 +1,6 @@
 package shlang
 
 import common.CommonCTest
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -219,7 +218,6 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testMd5() {
         val result = runCTest("shlang/algo/md5", listOf(), options())
         assertEquals("MD5 tests: SUCCEEDED\n", result.output)

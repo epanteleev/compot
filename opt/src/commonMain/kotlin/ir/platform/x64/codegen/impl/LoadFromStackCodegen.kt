@@ -30,13 +30,9 @@ class LoadFromStackCodegen (val type: PrimitiveType, indexType: IntegerType, val
         }
     }
 
-    override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
-    }
+    override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) = default(dst, first, second)
 
-    override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
-    }
+    override fun arr(dst: Address, first: GPRegister, second: GPRegister) = default(dst, first, second)
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         if (first is Address2) {
@@ -46,17 +42,11 @@ class LoadFromStackCodegen (val type: PrimitiveType, indexType: IntegerType, val
         }
     }
 
-    override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
-    }
+    override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) = default(dst, first, second)
 
-    override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
-    }
+    override fun rra(dst: GPRegister, first: GPRegister, second: Address) = default(dst, first, second)
 
-    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
-    }
+    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) = default(dst, first, second)
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
         if (first is Address2) {
@@ -67,13 +57,9 @@ class LoadFromStackCodegen (val type: PrimitiveType, indexType: IntegerType, val
         }
     }
 
-    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
-    }
+    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) = default(dst, first, second)
 
-    override fun ria(dst: GPRegister, first: Imm32, second: Address) {
-        TODO("Not yet implemented")
-    }
+    override fun ria(dst: GPRegister, first: Imm32, second: Address) = default(dst, first, second)
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
         when (first) {
@@ -84,25 +70,15 @@ class LoadFromStackCodegen (val type: PrimitiveType, indexType: IntegerType, val
         }
     }
 
-    override fun ara(dst: Address, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
-    }
+    override fun ara(dst: Address, first: GPRegister, second: Address) = default(dst, first, second)
 
-    override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
-    }
+    override fun aii(dst: Address, first: Imm32, second: Imm32) = default(dst, first, second)
 
-    override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
-    }
+    override fun air(dst: Address, first: Imm32, second: GPRegister) = default(dst, first, second)
 
-    override fun aia(dst: Address, first: Imm32, second: Address) {
-        TODO("Not yet implemented")
-    }
+    override fun aia(dst: Address, first: Imm32, second: Address) = default(dst, first, second)
 
-    override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
-    }
+    override fun ari(dst: Address, first: GPRegister, second: Imm32) = default(dst, first, second)
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
         TODO("Not yet implemented")

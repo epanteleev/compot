@@ -15,9 +15,6 @@ class CallIntCodegen(val type: PrimitiveType, val asm: MacroAssembler) : CallGPO
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {
-        if (dst == src) {
-            return
-        }
         asm.copy(size, src, dst)
     }
 

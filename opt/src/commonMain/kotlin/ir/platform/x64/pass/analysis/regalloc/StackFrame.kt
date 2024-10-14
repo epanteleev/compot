@@ -40,6 +40,9 @@ private class BasePointerAddressedStackFrame : StackFrame {
     }
 
     private fun withAlignment(alignment: Int, value: Int): Int {
+        if (alignment == 0) {
+            return value
+        }
         return ((value + (alignment * 2 - 1)) / alignment) * alignment
     }
 

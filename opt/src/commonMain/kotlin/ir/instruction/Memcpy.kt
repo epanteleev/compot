@@ -50,19 +50,22 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
         const val LENGTH = 2
 
         fun make(id: Identity, owner: Block, dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy {
-            require(isAppropriateTypes(dst.type(), src.type())) {
+            require(isAppropriateTypes(dst.type(), src.type(), length)) {
                 "inconsistent types: dst=$dst:${dst.type()}, src=$src:${src.type()}"
             }
 
             return registerUser(Memcpy(id, owner, dst, src, length), dst, src)
         }
 
-        private fun isAppropriateTypes(dstType: Type, srcType: Type): Boolean {
+        private fun isAppropriateTypes(dstType: Type, srcType: Type, length: UnsignedIntegerConstant): Boolean {
+            if (length.value() == 0UL) {
+                return false
+            }
             return dstType == srcType && dstType is PointerType
         }
 
         fun typeCheck(memcpy: Memcpy): Boolean {
-            return isAppropriateTypes(memcpy.destination().type(), memcpy.source().type())
+            return isAppropriateTypes(memcpy.destination().type(), memcpy.source().type(), memcpy.length())
         }
     }
 }

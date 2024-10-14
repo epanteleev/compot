@@ -16,8 +16,16 @@ class ShrCodegen (val type: ArithmeticType, val asm: MacroAssembler): GPOperands
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        asm.copy(size, first, dst)
-        asm.shr(size, second, dst)
+        if (first == dst) {
+            asm.shr(size, second, dst)
+        } else if (second == dst) {
+            asm.copy(size, first, temp1)
+            asm.shr(size, second, temp1)
+            asm.copy(size, temp1, dst)
+        } else {
+            asm.copy(size, first, dst)
+            asm.shr(size, second, dst)
+        }
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {

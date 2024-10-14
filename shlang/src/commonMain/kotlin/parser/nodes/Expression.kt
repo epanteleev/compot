@@ -353,7 +353,7 @@ data class VarNode(private val str: Identifier) : Expression() {
 data class StringNode(val literals: List<StringLiteral>) : Expression() {
     private val data by lazy {
         if (literals.all { it.unquote().isEmpty() }) {
-            ""
+            "\\0"
         } else {
             literals.joinToString("", postfix = "\\0") { it.unquote() }
         }
