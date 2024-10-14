@@ -8,7 +8,7 @@ import typedesc.TypeHolder
 
 class CommonConstEvalContext<T: Number>(val typeHolder: TypeHolder, val enumerationValues: Map<String, Int> = hashMapOf<String, Int>()): ConstEvalContext<T> {
     override fun getVariable(name: CToken): T? {
-        val value = enumerationValues[name.str()]
+        val value = enumerationValues[name.str()] ?: typeHolder.findEnumByEnumerator(name.str())
         if (value != null) {
             return value as T //TODO
         }

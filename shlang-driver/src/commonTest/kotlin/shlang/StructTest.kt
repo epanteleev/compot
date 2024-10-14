@@ -79,6 +79,14 @@ abstract class StructTests: CommonCTest() {
     }
 
     @Test
+    @Ignore
+    fun testStruct9() {
+        val result = runCTest("shlang/struct/struct9", listOf("runtime/runtime.c"), options())
+        assertEquals("Data: (2, 20)\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
     fun testReturnStruct() {
         val result = runCTest("shlang/struct/return_struct", listOf("runtime/runtime.c"), options())
         assertEquals("x: 1, y: 2\n", result.output)

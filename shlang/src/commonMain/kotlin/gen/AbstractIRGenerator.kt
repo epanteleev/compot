@@ -90,16 +90,17 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         is CompoundLiteral -> {
             val varDesc = expr.typeName.specifyType(typeHolder, listOf())
-            val lValueType = mb.toIRType<AggregateType>(typeHolder, varDesc.type.cType())
+            val cType = varDesc.type.cType()
+            val lValueType = mb.toIRType<AggregateType>(typeHolder,cType)
             val constant = constEvalExpression(lValueType, expr.initializerList) as InitializerListValue
-            val gConstant = when (varDesc.type.cType()) {
+            val gConstant = when (cType) {
                 is CArrayType -> {
                     ArrayGlobalConstant(createGlobalConstantName(), constant)
                 }
                 is CStructType -> {
                     StructGlobalConstant(createGlobalConstantName(), constant)
                 }
-                else -> throw IRCodeGenError("Unsupported type $lValueType")
+                else -> throw IRCodeGenError("Unsupported type '$cType', expr='${LineAgnosticAstPrinter.print(expr)}'")
             }
             PointerLiteral(mb.addConstant(gConstant))
         }
@@ -273,8 +274,8 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         throw IRCodeGenError("Unsupported declarator $declarator")
     }
 
-    protected fun constEvalExpression0(expr: Expression): Number? = when (expr.resolveType(typeHolder)) {
-        INT, SHORT, CHAR, UINT, USHORT, UCHAR -> {
+    protected fun constEvalExpression0(expr: Expression): Number? = when (val ty = expr.resolveType(typeHolder)) {
+        INT, SHORT, CHAR, UINT, USHORT, UCHAR, is CEnumType -> {
             val ctx = CommonConstEvalContext<Int>(typeHolder)
             ConstEvalExpression.eval(expr, TryConstEvalExpressionInt(ctx))
         }

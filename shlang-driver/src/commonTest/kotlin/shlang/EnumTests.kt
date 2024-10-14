@@ -24,7 +24,6 @@ abstract class EnumTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun test4() {
         val result = runCTest("shlang/enum/enum4", listOf(), options())
         assertEquals("Data: (2, 20)\n", result.output)
