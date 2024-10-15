@@ -235,7 +235,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
         val struct       = visitExpression(arrowMemberAccess.primary, true)
         val cPointer    = arrowMemberAccess.primary.resolveType(typeHolder) as CPointer
-        val cStructType = cPointer.dereference()
+        val cStructType = cPointer.dereference(typeHolder)
         val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
 
         if (cStructType !is AnyCStructType) {
@@ -513,7 +513,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 val convertedLValue = ir.convertToType(lvalue, Type.U64)
 
-                val size = lValueType.dereference().size()
+                val size = lValueType.dereference(typeHolder).size()
                 val mul = ir.mul(convertedRValue, U64Value(size.toLong()))
 
                 val result = op(convertedLValue, mul)
@@ -565,7 +565,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 val convertedLValue = ir.convertToType(ptr2intLValue, Type.U64)
 
-                val size = lValueType.dereference().size()
+                val size = lValueType.dereference(typeHolder).size()
                 val mul = ir.mul(convertedRValue, U64Value(size.toLong()))
 
                 val result = op(convertedLValue, mul)
@@ -765,7 +765,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (ctype) {
             is CPointer -> {
                 val converted = ir.convertToType(loaded, Type.I64)
-                val inc = op(converted, Constant.of(Type.I64, ctype.dereference().size()))
+                val inc = op(converted, Constant.of(Type.I64, ctype.dereference(typeHolder).size()))
                 ir.store(addr, ir.convertToType(inc, type))
             }
             is CPrimitive -> {
@@ -791,7 +791,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (ctype) {
             is CPointer -> {
                 val converted = ir.convertToType(loaded, Type.I64)
-                val inc = op(converted, Constant.of(Type.I64, ctype.dereference().size()))
+                val inc = op(converted, Constant.of(Type.I64, ctype.dereference(typeHolder).size()))
                 ir.store(addr, ir.convertToType(inc, type))
                 return inc
             }
@@ -1282,9 +1282,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             val conditionBlock = loopStmtInfo.resolveCondition(ir)
             ir.branch(conditionBlock)
             ir.switchLabel(conditionBlock)
-            val condition = makeConditionFromExpression(forStatement.condition)
-            val endBlock = loopStmtInfo.resolveExit(ir)
-            ir.branchCond(condition, bodyBlock, endBlock)
+            val cond = forStatement.condition
+            if (cond is EmptyExpression) {
+                ir.branch(bodyBlock)
+            } else {
+                val condition = makeConditionFromExpression(cond)
+                val endBlock = loopStmtInfo.resolveExit(ir)
+                ir.branchCond(condition, bodyBlock, endBlock)
+            }
             ir.switchLabel(bodyBlock)
             visitStatement(forStatement.body)
             if (ir.last() !is TerminateInstruction) {
@@ -1296,6 +1301,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     ir.branch(conditionBlock)
                 }
             }
+            val endBlock = loopStmtInfo.resolveExit(ir)
             ir.switchLabel(endBlock)
         }
     }

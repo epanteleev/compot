@@ -8,7 +8,7 @@ import typedesc.TypeQualifier
 
 
 sealed class CPrimitive: CType() {
-    fun interfere(type2: CType): CType {
+    fun interfere(typeHolder: TypeHolder, type2: CType): CType {
         if (this == type2) return this
         when (this) {
             CHAR -> {
@@ -154,9 +154,11 @@ sealed class CPrimitive: CType() {
                     FLOAT -> return this
                     LONG -> return this
                     is CPointer -> {
-                        if (dereference() == type2.dereference()) return this
-                        if (dereference() == VOID) return this
-                        if (type2.dereference() == VOID) return type2
+                        val deref1 = dereference(typeHolder)
+                        val deref2 = type2.dereference(typeHolder)
+                        if (deref1 == deref2) return this
+                        if (deref1 == VOID) return this
+                        if (deref2 == VOID) return type2
                         throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
                     }
                     ULONG -> return this
@@ -259,15 +261,12 @@ class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(
 class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : CPrimitive() {
     override fun size(): Int = POINTER_SIZE
 
-    fun dereference(): CType {
-        when (type) {
-            is CFunctionType -> {
-                return type.functionType
-            }
-            else -> {
-                return type
-            }
-        }
+    fun dereference(typeHolder: TypeHolder): CType= when (type) {
+        is CFunctionType          -> type.functionType
+        is CUncompletedStructType -> typeHolder.getStructType<CStructType>(type.name)
+        is CUncompletedUnionType  -> typeHolder.getStructType<CUnionType>(type.name)
+        is CUncompletedEnumType   -> typeHolder.getStructType<CEnumType>(type.name)
+        else -> type
     }
 
     override fun equals(other: Any?): Boolean {

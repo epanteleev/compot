@@ -173,7 +173,7 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val leftType  = left.resolveType(typeHolder) as CPrimitive
         val rightType = right.resolveType(typeHolder) as CPrimitive
-        return@memoize leftType.interfere(rightType)
+        return@memoize leftType.interfere(typeHolder, rightType)
     }
 }
 
@@ -198,7 +198,7 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
             return@memoize VOID
         }
 
-        return@memoize typeTrue.interfere(typeFalse)
+        return@memoize typeTrue.interfere(typeHolder, typeFalse)
     }
 }
 
@@ -239,7 +239,7 @@ class FunctionCall(val primary: Expression, val args: List<Expression>) : Expres
             typeHolder.getFunctionType(primary.name()).type.cType()
         }
         if (functionType is CPointer) {
-            return functionType.dereference() as AbstractCFunction
+            return functionType.dereference(typeHolder) as AbstractCFunction
         }
         if (functionType !is CFunctionType) {
             throw TypeResolutionException("Function call of '' with non-function type")
@@ -316,7 +316,7 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
         if (structType !is CPointer) {
             throw TypeResolutionException("Arrow member access on non-pointer type, but got $structType")
         }
-        val baseType = structType.dereference()
+        val baseType = structType.dereference(typeHolder)
         if (baseType !is AnyCStructType) {
             throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType")
         }
@@ -397,7 +397,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
 
         val resolvedType = when (opType) {
             PrefixUnaryOpType.DEREF -> when (primaryType) {
-                is CPointer              -> primaryType.dereference()
+                is CPointer              -> primaryType.dereference(typeHolder)
                 is CArrayType            -> primaryType.type.cType()
                 is CUncompletedArrayType -> primaryType.elementType.cType()
                 else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType")
@@ -442,7 +442,7 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
         return@memoize when (val primaryType = primary.resolveType(typeHolder)) {
             is CArrayType            -> primaryType.type.cType()
             is CUncompletedArrayType -> primaryType.elementType.cType()
-            is CPointer     -> primaryType.dereference()
+            is CPointer     -> primaryType.dereference(typeHolder)
             else -> throw TypeResolutionException("Array access on non-array type: $primaryType")
         }
     }
