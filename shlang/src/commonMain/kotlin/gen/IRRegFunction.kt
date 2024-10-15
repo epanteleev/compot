@@ -238,7 +238,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val structType   = arrowMemberAccess.primary.resolveType(typeHolder) as CPointer
         val structIRType = mb.toIRType<StructType>(typeHolder, structType.dereference())
 
-        val baseStructType = structType.dereference() as AnyStructType
+        val baseStructType = structType.dereference()
+        if (baseStructType !is AnyStructType) {
+            throw IRCodeGenError("Struct type expected, but got '$baseStructType'")
+        }
         val fieldName = arrowMemberAccess.ident.str()
         val member = baseStructType.fieldIndex(fieldName) ?: let {
             throw IRCodeGenError("Field not found: $fieldName")

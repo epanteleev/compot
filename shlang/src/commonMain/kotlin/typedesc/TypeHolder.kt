@@ -65,7 +65,28 @@ class TypeHolder private constructor(): Scope {
     }
 
     fun getTypedef(name: String): TypeDesc {
-        return getTypedefOrNull(name) ?: throw Exception("Type for 'typedef $name' not found")
+        val t = getTypedefOrNull(name) ?: throw Exception("Type for 'typedef $name' not found")
+        when (val cType = t.cType()) {
+            is CUncompletedStructType -> {
+                val structType = structTypeMap[cType.name]?: return t
+                val typeDesc = TypeDesc.from(structType, t.qualifiers())
+                typedefs[name] = typeDesc
+                return typeDesc
+            }
+            is CUncompletedEnumType -> {
+                val enumType = enumTypeMap[cType.name]?: return t
+                val typeDesc = TypeDesc.from(enumType, t.qualifiers())
+                typedefs[name] = typeDesc
+                return typeDesc
+            }
+            is CUncompletedUnionType -> {
+                val unionType = unionTypeMap[cType.name]?: return t
+                val typeDesc = TypeDesc.from(unionType, t.qualifiers())
+                typedefs[name] = typeDesc
+                return typeDesc
+            }
+            else -> return t
+        }
     }
 
     fun addTypedef(name: String, type: TypeDesc): TypeDesc {
