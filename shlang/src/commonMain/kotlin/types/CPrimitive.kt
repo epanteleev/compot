@@ -2,6 +2,7 @@ package types
 
 import ir.Definitions.POINTER_SIZE
 import typedesc.TypeDesc
+import typedesc.TypeHolder
 import typedesc.TypeInferenceException
 import typedesc.TypeQualifier
 
@@ -144,7 +145,7 @@ sealed class CPrimitive: CType() {
                 }
             }
 
-            is AnyCPointer -> {
+            is CPointer -> {
                 when (type2) {
                     CHAR -> return this
                     INT -> return this
@@ -152,7 +153,7 @@ sealed class CPrimitive: CType() {
                     UINT -> return this
                     FLOAT -> return this
                     LONG -> return this
-                    is AnyCPointer -> {
+                    is CPointer -> {
                         if (dereference() == type2.dereference()) return this
                         if (dereference() == VOID) return this
                         if (type2.dereference() == VOID) return type2
@@ -244,13 +245,6 @@ object BOOL: CPrimitive() {
     override fun size(): Int = 1
 }
 
-sealed class AnyCPointer: CPrimitive() {
-    override fun size(): Int = POINTER_SIZE
-
-    abstract fun qualifiers(): Set<TypeQualifier>
-    abstract fun dereference(): CType
-}
-
 class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(elementType) {
     override fun typename(): String = buildString {
         append(type)
@@ -262,14 +256,17 @@ class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(
     }
 }
 
-class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : AnyCPointer() {
-    override fun qualifiers(): Set<TypeQualifier> = properties
+class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : CPrimitive() {
+    override fun size(): Int = POINTER_SIZE
 
-    override fun dereference(): CType {
-        return if (type is CFunctionType) {
-            type.functionType
-        } else {
-            type
+    fun dereference(): CType {
+        when (type) {
+            is CFunctionType -> {
+                return type.functionType
+            }
+            else -> {
+                return type
+            }
         }
     }
 

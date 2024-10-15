@@ -5,12 +5,17 @@ import typedesc.TypeHolder
 import tokenizer.tokens.*
 
 
-abstract class AbstractCParser(val filename: String, tokens: TokenList) {
+sealed class AbstractCParser(val filename: String, tokens: TokenList) {
+    private var anonymousCounter = 0
     protected var current: AnyToken? = tokens.firstOrNull()
     protected val typeHolder = TypeHolder.default()
     protected var labelResolver = LabelResolver.default()
 
     fun typeHolder(): TypeHolder = typeHolder
+
+    protected fun anonymousName(prefix: String): String {
+        return "$prefix.${anonymousCounter++}"
+    }
 
     protected fun eof(): Boolean {
         skipSpaces()

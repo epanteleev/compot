@@ -337,7 +337,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     }
                 }
                 is CArrayType, is CUncompletedArrayType -> types.add(Type.Ptr)
-                is AnyCPointer -> types.add(Type.Ptr)
+                is CPointer -> types.add(Type.Ptr)
                 is BOOL        -> types.add(Type.U8)
                 is CPrimitive  -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type.cType()))
                 else -> throw IRCodeGenError("Unknown type, type=$type")

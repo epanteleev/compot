@@ -419,7 +419,7 @@ class TypeResolutionTest {
         parser.translation_unit()
         val typeHolder = parser.typeHolder()
         val unionType = typeHolder.getVarTypeOrNull("b") ?: error("Cannot find union type")
-        assertEquals("union B {int a;struct <unknown> {int b;char c;}}", unionType.toString())
+        assertEquals("union B {int a;struct struct.0 {int b;char c;}}", unionType.toString())
         val ty = unionType.type.cType() as CUnionType
         assertEquals(0, ty.fieldIndex("a"))
         assertEquals(0, ty.fieldIndex("b"))
@@ -444,7 +444,7 @@ class TypeResolutionTest {
         parser.translation_unit()
         val typeHolder = parser.typeHolder()
         val structType = typeHolder.getVarTypeOrNull("a") ?: error("Cannot find struct type")
-        assertEquals("struct A {int a;union <unknown> {int b;char c;}}", structType.toString())
+        assertEquals("struct A {int a;union union.0 {int b;char c;}}", structType.toString())
         val ty = structType.type.cType() as CStructType
         assertEquals(0, ty.fieldIndex("a"))
         assertEquals(1, ty.fieldIndex("b"))

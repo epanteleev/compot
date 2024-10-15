@@ -613,7 +613,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 val fields = struct_declaration_list()
                 if (check("}")) {
                     eat()
-                    return@rule StructSpecifier(Identifier.UNKNOWN, fields)
+                    return@rule StructSpecifier(Identifier.unknown(anonymousName("struct")), fields)
                 }
                 throw ParserException(InvalidToken("Expected '}'", peak()))
             }
@@ -640,7 +640,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 val fields = struct_declaration_list()
                 if (check("}")) {
                     eat()
-                    return@rule UnionSpecifier(Identifier.UNKNOWN, fields)
+                    return@rule UnionSpecifier(Identifier.unknown(anonymousName("union")), fields)
                 }
                 throw ParserException(InvalidToken("Expected '}'", peak()))
             }
@@ -713,7 +713,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             val enumerators = enumerator_list()
             if (check("}")) {
                 eat()
-                return@rule EnumSpecifier(Identifier.UNKNOWN, enumerators)
+                return@rule EnumSpecifier(Identifier.unknown(anonymousName("enum")), enumerators)
             }
             throw ParserException(InvalidToken("Expected '}'", peak()))
         }
@@ -1015,7 +1015,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	: IDENTIFIER
     //	| identifier_list ',' IDENTIFIER
     //	;
-    fun identifier_list(): IndentifierList? = rule {
+    fun identifier_list(): IdentifierList? = rule {
         val identifiers = mutableListOf<IdentNode>()
         while (true) {
             if (!check<Identifier>()) {
@@ -1033,7 +1033,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (identifiers.isEmpty()) {
             return@rule null
         } else {
-            return@rule IndentifierList(identifiers)
+            return@rule IdentifierList(identifiers)
         }
     }
 

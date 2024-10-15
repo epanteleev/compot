@@ -282,7 +282,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         typeName.abstractDecl?.accept(this)
     }
 
-    override fun visit(identifierList: IndentifierList) {
+    override fun visit(identifierList: IdentifierList) {
         buffer.append('(')
         joinTo(identifierList.list, ", ") {
             it.accept(this)
@@ -291,11 +291,11 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(abstractDeclarator: AbstractDeclarator) {
-        if (abstractDeclarator.directAbstractDeclarator == null) {
+        if (abstractDeclarator.directAbstractDeclarators == null) {
             return
         }
 
-        joinTo(abstractDeclarator.directAbstractDeclarator, " ") {
+        joinTo(abstractDeclarator.directAbstractDeclarators, " ") {
             it.accept(this)
         }
     }
@@ -347,10 +347,8 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(unionSpecifier: UnionSpecifier) {
         buffer.append("union")
-        if (unionSpecifier.name != Identifier.UNKNOWN) {
-            buffer.append(' ')
-            buffer.append(unionSpecifier.name.str())
-        }
+        buffer.append(' ')
+        buffer.append(unionSpecifier.name.str())
 
         buffer.append(" {")
         joinTo(unionSpecifier.fields, " ") {
@@ -404,7 +402,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(arrowMemberAccess: ArrowMemberAccess) {
         arrowMemberAccess.primary.accept(this)
         buffer.append("->")
-        buffer.append(arrowMemberAccess.ident.str())
+        buffer.append(arrowMemberAccess.fieldName())
     }
 
     override fun visit(parameterVarArg: ParameterVarArg) {

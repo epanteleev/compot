@@ -306,7 +306,9 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
     }
 }
 
-class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expression() {
+class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) : Expression() {
+    fun fieldName(): String = ident.str()
+
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -335,12 +337,7 @@ data class VarNode(private val str: Identifier) : Expression() {
             return@memoize varType.type.cType()
         }
 
-        val enumType = typeHolder.findEnum(str.str())
-        if (enumType != null) {
-            return@memoize enumType
-        }
-
-        throw TypeResolutionException("Variable $str not found")
+        return@memoize typeHolder.findEnum(str.str()) ?: throw TypeResolutionException("Variable '$str' not found")
     }
 }
 

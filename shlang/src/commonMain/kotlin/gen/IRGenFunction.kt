@@ -23,6 +23,7 @@ import ir.module.IndirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.value.constant.*
+import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
 import typedesc.*
@@ -233,15 +234,15 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
         val struct       = visitExpression(arrowMemberAccess.primary, true)
-        val structType   = arrowMemberAccess.primary.resolveType(typeHolder) as CPointer
-        val structIRType = mb.toIRType<StructType>(typeHolder, structType.dereference())
+        val cPointer    = arrowMemberAccess.primary.resolveType(typeHolder) as CPointer
+        val cStructType = cPointer.dereference()
+        val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
 
-        val baseStructType = structType.dereference()
-        if (baseStructType !is AnyCStructType) {
-            throw IRCodeGenError("Struct type expected, but got '$baseStructType'")
+        if (cStructType !is AnyCStructType) {
+            throw IRCodeGenError("Struct type expected, but got '$cStructType'")
         }
-        val fieldName = arrowMemberAccess.ident.str()
-        val member = baseStructType.fieldIndex(fieldName) ?: let {
+        val fieldName = arrowMemberAccess.fieldName()
+        val member = cStructType.fieldIndex(fieldName) ?: let {
             throw IRCodeGenError("Field not found: $fieldName")
         }
 
@@ -251,11 +252,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return gep
         }
 
-        val memberType = baseStructType.field(fieldName) ?: throw IRCodeGenError("Field not found: $fieldName")
+        val memberType = cStructType.field(fieldName) ?: throw IRCodeGenError("Field not found: $fieldName")
         if (memberType is CAggregateType) {
             return gep
         }
-        val memberIRType = mb.toIRType<PrimitiveType>(typeHolder, memberType)
+        val memberIRType = mb.toIRLVType<PrimitiveType>(typeHolder, memberType)
         return ir.load(memberIRType, gep)
     }
 
@@ -609,7 +610,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private inline fun makeComparisonBinary(binop: BinaryOp, crossinline predicate: (NonTrivialType) -> AnyPredicateType, isRvalue: Boolean): Value {
-        val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
+        val commonType = mb.toIRLVType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
 
         val right = visitExpression(binop.right, true)
         val rightConverted = ir.convertToType(right, commonType)
@@ -1103,7 +1104,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val ctx = CommonConstEvalContext<Int>(typeHolder)
         val constant = ConstEvalExpression.eval(caseStatement.constExpression, TryConstEvalExpressionInt(ctx))
         if (constant == null) {
-            throw IRCodeGenError("Case statement with non-constant expression")
+            throw IRCodeGenError("Case statement with non-constant expression: ${LineAgnosticAstPrinter.print(caseStatement.constExpression)}")
         }
 
         val caseValueConverted = Constant.of(switchInfo.conditionType.asType(), constant)

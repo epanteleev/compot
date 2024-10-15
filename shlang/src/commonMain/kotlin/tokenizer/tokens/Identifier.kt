@@ -35,6 +35,8 @@ class Identifier(private val data: String, position: Position): CToken(position)
     }
 
     companion object {
-        val UNKNOWN = Identifier("<unknown>",  Position.UNKNOWN)
+        fun unknown(name: String): Identifier {
+            return Identifier(name, Position.UNKNOWN)
+        }
     }
 }

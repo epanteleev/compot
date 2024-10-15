@@ -55,10 +55,10 @@ object TypeConverter {
             ArrayType(elementType, type.dimension.toInt())
         }
         is CUnionType -> convertUnionType(typeHolder, type)
-        is AnyCPointer -> Type.Ptr
+        is CPointer -> Type.Ptr
         is CEnumType -> Type.I32
         is CFunctionType, is CUncompletedArrayType, is AbstractCFunction -> Type.Ptr
-        else -> throw IRCodeGenError("Unknown type, type=$type")
+        else -> throw IRCodeGenError("Unknown type, type=$type, class=${type::class}")
     }
 
     private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: AnyCStructType): Type {
@@ -387,7 +387,7 @@ object TypeConverter {
             }
 
             Type.U1 -> {
-                when (value.type()) {
+                when (val vType = value.type()) {
                     Type.I8  -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I8, 0))
                     Type.I16 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I16, 0))
                     Type.I32 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I32, 0))
@@ -396,7 +396,8 @@ object TypeConverter {
                     Type.U16 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U16, 0))
                     Type.U32 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U32, 0))
                     Type.U64 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U64, 0))
-                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                    Type.Ptr -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.Ptr, 0))
+                    else -> throw IRCodeGenError("Cannot convert $value:$vType to $toType")
                 }
             }
             else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $toType")
