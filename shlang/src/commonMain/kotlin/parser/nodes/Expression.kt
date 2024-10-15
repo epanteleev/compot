@@ -298,14 +298,11 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val structType = primary.resolveType(typeHolder)
-        if (structType !is AnyStructType) {
+        if (structType !is AnyCStructType) {
             throw TypeResolutionException("Member access on non-struct type, but got $structType")
         }
-        val field = structType.fieldIndex(ident.str())
-        if (field != null) {
-            return@memoize structType.fields()[field].cType()
-        }
-        throw TypeResolutionException("Field $ident not found in struct $structType")
+
+        return@memoize structType.field(ident.str()) ?: throw TypeResolutionException("Field $ident not found in struct $structType")
     }
 }
 
@@ -318,14 +315,11 @@ class ArrowMemberAccess(val primary: Expression, val ident: Identifier) : Expres
             throw TypeResolutionException("Arrow member access on non-pointer type, but got $structType")
         }
         val baseType = structType.dereference()
-        if (baseType !is AnyStructType) {
+        if (baseType !is AnyCStructType) {
             throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType")
         }
-        val field = baseType.fieldIndex(ident.str())
-        if (field != null) {
-            return@memoize baseType.fields()[field].cType()
-        }
-        throw TypeResolutionException("Field $ident not found in struct $baseType")
+
+        return@memoize baseType.field(ident.str()) ?: throw TypeResolutionException("Field $ident not found in struct $baseType")
     }
 }
 

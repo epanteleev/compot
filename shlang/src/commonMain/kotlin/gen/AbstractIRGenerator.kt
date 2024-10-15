@@ -328,7 +328,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         for (type in ctypes) {
             when (val ty = type.cType()) {
-                is AnyStructType -> {
+                is AnyCStructType -> {
                     val parameters = CallConvention.coerceArgumentTypes(ty)
                     if (parameters != null) {
                         types.addAll(parameters)

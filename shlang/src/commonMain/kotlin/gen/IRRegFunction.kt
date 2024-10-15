@@ -25,9 +25,7 @@ import ir.module.builder.impl.FunctionDataBuilder
 import ir.value.constant.*
 import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
-import typedesc.StorageClass
-import typedesc.TypeDesc
-import typedesc.TypeHolder
+import typedesc.*
 
 
 class IrGenFunction(moduleBuilder: ModuleBuilder,
@@ -239,7 +237,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val structIRType = mb.toIRType<StructType>(typeHolder, structType.dereference())
 
         val baseStructType = structType.dereference()
-        if (baseStructType !is AnyStructType) {
+        if (baseStructType !is AnyCStructType) {
             throw IRCodeGenError("Struct type expected, but got '$baseStructType'")
         }
         val fieldName = arrowMemberAccess.ident.str()
@@ -253,7 +251,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return gep
         }
 
-        val memberType = baseStructType.fields()[member].cType()
+        val memberType = baseStructType.field(fieldName) ?: throw IRCodeGenError("Field not found: $fieldName")
         if (memberType is CAggregateType) {
             return gep
         }
@@ -264,7 +262,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitMemberAccess(memberAccess: MemberAccess, isRvalue: Boolean): Value {
         val struct = visitExpression(memberAccess.primary, false) //TODO isRvalue???
         val structType = memberAccess.primary.resolveType(typeHolder)
-        if (structType !is AnyStructType) {
+        if (structType !is AnyCStructType) {
             throw IRCodeGenError("Struct type expected, but got '$structType'")
         }
         val structIRType = mb.toIRType<StructType>(typeHolder, structType)
@@ -277,7 +275,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (!isRvalue) {
             return gep
         }
-        val memberType = structType.fields()[member].cType()
+        val memberType = structType.field(fieldName) ?: throw IRCodeGenError("Field not found: $fieldName")
         if (memberType is CAggregateType) {
             return gep
         }
@@ -357,7 +355,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val convertedArg = ir.gep(expr, type.elementType(), I64Value(0))
                     convertedArgs.add(convertedArg)
                 }
-                is AnyStructType -> {
+                is AnyCStructType -> {
                     val argValues = ir.coerceArguments(argCType, expr)
                     convertedArgs.addAll(argValues)
                     offset += argValues.size - 1
@@ -904,7 +902,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is CPrimitive -> {
                     closure(parameters[currentArg], cType, listOf(arguments[argumentIdx]))
                 }
-                is AnyStructType -> {
+                is AnyCStructType -> {
                     val types = CallConvention.coerceArgumentTypes(cType) ?: listOf(Type.Ptr)
                     val args = mutableListOf<ArgumentValue>()
                     for (i in types.indices) {
@@ -935,7 +933,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.store(rvalueAdr, ir.convertToType(args[0], irType))
             varStack[param] = rvalueAdr
         }
-        is AnyStructType -> {
+        is AnyCStructType -> {
             if (cType.size() <= QWORD_SIZE * 2) {
                 val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
                 val rvalueAdr = ir.alloc(irType)

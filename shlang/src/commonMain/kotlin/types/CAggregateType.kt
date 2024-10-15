@@ -10,7 +10,7 @@ sealed class CAggregateType: CType() {
     }
 
     private fun hasFloat(ty: CType, lo: Int, hi: Int, offset: Int): Boolean {
-        if (ty is AnyStructType) {
+        if (ty is AnyCStructType) {
             for ((idx, field) in ty.fields().withIndex()) {
                 if (!hasFloat(field.cType(), lo, hi, offset + ty.offset(idx))) { //TODO inefficient
                     return false
@@ -31,7 +31,7 @@ sealed class CAggregateType: CType() {
     }
 }
 
-sealed class AnyStructType(open val name: String, protected val fields: List<Member>): CAggregateType() {
+sealed class AnyCStructType(open val name: String, protected val fields: List<Member>): CAggregateType() {
     override fun typename(): String = name
 
     abstract fun fieldIndex(name: String): Int?
@@ -43,7 +43,12 @@ sealed class AnyStructType(open val name: String, protected val fields: List<Mem
         return fields[index].typeDesc()
     }
 
-    fun fields(): List<Member> {
+    fun field(name: String): CType? {
+        val field = fields.find { it is FieldMember && it.name == name }
+        return field?.cType()
+    }
+
+    fun fields(): Collection<Member> {
         return fields
     }
 
@@ -51,7 +56,7 @@ sealed class AnyStructType(open val name: String, protected val fields: List<Mem
     abstract fun maxAlignment(): Int
 }
 
-class CStructType(override val name: String, fields: List<Member>): AnyStructType(name, fields) {
+class CStructType(override val name: String, fields: List<Member>): AnyCStructType(name, fields) {
     private val alignments = alignments()
     private var maxAlignment = Int.MIN_VALUE
 
@@ -117,7 +122,7 @@ class CStructType(override val name: String, fields: List<Member>): AnyStructTyp
     }
 
     private fun align(alignment: Int, field: CType): Int = when (field) {
-        is AnyStructType -> maxOf(alignment, field.maxAlignment())
+        is AnyCStructType -> maxOf(alignment, field.maxAlignment())
         is CArrayType    -> maxOf(alignment, field.maxAlignment())
         else -> maxOf(alignment, field.size())
     }
@@ -138,7 +143,7 @@ class CStructType(override val name: String, fields: List<Member>): AnyStructTyp
     }
 }
 
-class CUnionType(override val name: String, fields: List<Member>): AnyStructType(name, fields) {
+class CUnionType(override val name: String, fields: List<Member>): AnyCStructType(name, fields) {
     override fun fieldIndex(name: String): Int? {
         if (fields.isEmpty()) {
             return null
@@ -198,7 +203,7 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
             val cType = type.cType()
             maxAlignment = when (cType) {
                 is CArrayType    -> cType.maxAlignment()
-                is AnyStructType -> cType.maxAlignment()
+                is AnyCStructType -> cType.maxAlignment()
                 else -> cType.size()
             }
         }

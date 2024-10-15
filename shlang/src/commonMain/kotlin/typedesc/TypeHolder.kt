@@ -1,15 +1,7 @@
 package typedesc
 
+import types.*
 import gen.VarStack
-import types.CAggregateType
-import types.CEnumType
-import types.CPrimitive
-import types.CStructType
-import types.CType
-import types.CUncompletedEnumType
-import types.CUncompletedStructType
-import types.CUncompletedUnionType
-import types.CUnionType
 
 
 class TypeHolder private constructor(): Scope {
@@ -30,18 +22,10 @@ class TypeHolder private constructor(): Scope {
     }
 
     fun findEnumByEnumerator(name: String): Int? {
-        for (enumType in enumTypeMap) {
-            if (enumType !is CEnumType) {
-                continue
-            }
-            if (enumType.hasEnumerator(name)) {
-                return enumType.enumerator(name)
-            }
-        }
-        return null
+        return findEnum(name)?.enumerator(name)
     }
 
-    fun findEnum(name: String): CType? {
+    fun findEnum(name: String): CEnumType? {
         for (enumType in enumTypeMap) {
             if (enumType !is CEnumType) {
                 continue
@@ -68,19 +52,19 @@ class TypeHolder private constructor(): Scope {
         val t = getTypedefOrNull(name) ?: throw Exception("Type for 'typedef $name' not found")
         when (val cType = t.cType()) {
             is CUncompletedStructType -> {
-                val structType = structTypeMap[cType.name]?: return t
+                val structType = structTypeMap[cType.name] ?: return t
                 val typeDesc = TypeDesc.from(structType, t.qualifiers())
                 typedefs[name] = typeDesc
                 return typeDesc
             }
             is CUncompletedEnumType -> {
-                val enumType = enumTypeMap[cType.name]?: return t
+                val enumType = enumTypeMap[cType.name] ?: return t
                 val typeDesc = TypeDesc.from(enumType, t.qualifiers())
                 typedefs[name] = typeDesc
                 return typeDesc
             }
             is CUncompletedUnionType -> {
-                val unionType = unionTypeMap[cType.name]?: return t
+                val unionType = unionTypeMap[cType.name] ?: return t
                 val typeDesc = TypeDesc.from(unionType, t.qualifiers())
                 typedefs[name] = typeDesc
                 return typeDesc

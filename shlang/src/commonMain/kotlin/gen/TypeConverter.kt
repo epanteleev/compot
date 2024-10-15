@@ -61,7 +61,7 @@ object TypeConverter {
         else -> throw IRCodeGenError("Unknown type, type=$type")
     }
 
-    private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: AnyStructType): Type {
+    private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: AnyCStructType): Type {
         val fields = type.fields().map { toIRLVType<NonTrivialType>(typeHolder, it.cType()) }
         val structType = findStructTypeOrNull(type.name)
         if (structType != null) {
@@ -403,7 +403,7 @@ object TypeConverter {
         }
     }
 
-    fun FunctionDataBuilder.coerceArguments(argCType: AnyStructType, expr: Value): List<Value> = when (argCType.size()) {
+    fun FunctionDataBuilder.coerceArguments(argCType: AnyCStructType, expr: Value): List<Value> = when (argCType.size()) {
         BYTE_SIZE -> {
             val fieldConverted = gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
             val load           = load(Type.I8, fieldConverted)

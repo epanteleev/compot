@@ -19,7 +19,6 @@ sealed class UnionTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testUnion2() {
         val result = runCTest("shlang/union/union2", listOf("runtime/runtime.c"), options())
         assertEquals("1.000000\n", result.output)
