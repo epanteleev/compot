@@ -179,4 +179,12 @@ class CTokenizerTest {
         assertTrue { tokens[0] is StringLiteral }
         tokens[0].isEqual(1, 1, "\"\"Hello, World!\"\"")
     }
+
+    @Test
+    fun testCharLiteral() {
+        val input = "'\\x3b'"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is CharLiteral }
+        tokens[0].isEqual(1, 1, "';'")
+    }
 }

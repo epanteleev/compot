@@ -12,8 +12,7 @@ import ir.instruction.Alloc
 import ir.instruction.IntPredicate
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.module.builder.impl.ModuleBuilder
-import ir.value.constant.Constant
-import ir.value.constant.PrimitiveConstant
+import ir.value.constant.*
 import typedesc.TypeHolder
 
 
@@ -107,7 +106,7 @@ object TypeConverter {
         }
         if (value is PrimitiveConstant && toType !is PointerType) {
             // Opt IR does not support pointer constants.
-            return convertConstant(value, toType as NonTrivialType)
+            return convertConstant(value, toType)
         }
 
         return when (toType) {
@@ -486,7 +485,43 @@ object TypeConverter {
         }
     }
 
-    private fun convertConstant(value: PrimitiveConstant, type: NonTrivialType): Value {
-        return PrimitiveConstant.from(type, value)
+    private fun convertConstant(value: PrimitiveConstant, type: Type): Value = when (type) {
+        is NonTrivialType -> PrimitiveConstant.from(type, value)
+        is FlagType -> when (value) {
+            is I8Value -> when (value.i8.toInt()) { //TODO toInt???
+                0 -> BoolValue.FALSE
+                else -> BoolValue.TRUE
+            }
+            is U8Value -> when (value.u8.toInt()) {
+                0 -> BoolValue.FALSE
+                else -> BoolValue.TRUE
+            }
+            is I16Value -> when (value.i16.toInt()) {
+                0 -> BoolValue.FALSE
+                else -> BoolValue.TRUE
+            }
+            is U16Value -> when (value.u16.toInt()) {
+                0 -> BoolValue.FALSE
+                else -> BoolValue.TRUE
+            }
+            is I32Value -> when (value.i32.toInt()) {
+                0 -> BoolValue.FALSE
+                else -> BoolValue.TRUE
+            }
+            is U32Value -> when (value.u32.toInt()) {
+                0 -> BoolValue.FALSE
+                else -> BoolValue.TRUE
+            }
+            is I64Value -> when (value.i64.toInt()) {
+                0 -> BoolValue.FALSE
+                else -> BoolValue.TRUE
+            }
+            is U64Value -> when (value.u64.toInt()) {
+                0 -> BoolValue.FALSE
+                else -> BoolValue.TRUE
+            }
+            else -> throw IRCodeGenError("Cannot convert $value to $type")
+        }
+        else -> throw IRCodeGenError("Cannot convert $value to $type")
     }
 }

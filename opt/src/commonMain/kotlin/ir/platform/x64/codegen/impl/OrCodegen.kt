@@ -40,7 +40,8 @@ class OrCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperandsVisit
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.copy(size, second, dst)
+        asm.or(size, first, dst)
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {

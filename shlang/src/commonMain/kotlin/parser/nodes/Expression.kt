@@ -171,8 +171,29 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        val leftType  = left.resolveType(typeHolder) as CPrimitive
-        val rightType = right.resolveType(typeHolder) as CPrimitive
+        val leftType  = run {
+            val l = left.resolveType(typeHolder)
+            if (l is CArrayType) {
+                return@run l.asPointer()
+            } else {
+                return@run l
+            }
+        }
+
+        if (leftType !is CPrimitive) {
+            throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(left)}'")
+        }
+        val rightType = run {
+            val r = right.resolveType(typeHolder)
+            if (r is CArrayType) {
+                return@run r.asPointer()
+            } else {
+                return@run r
+            }
+        }
+        if (rightType !is CPrimitive) {
+            throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(right)}'")
+        }
         return@memoize leftType.interfere(typeHolder, rightType)
     }
 }

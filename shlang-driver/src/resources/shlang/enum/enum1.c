@@ -11,5 +11,6 @@ int main() {
     assert(c == 0);
     assert(GREEN == 1);
     assert(BLUE == 2);
+    assert(1 + RED == GREEN);
     return 0;
 }

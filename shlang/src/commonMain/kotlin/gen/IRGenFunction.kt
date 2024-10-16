@@ -500,16 +500,30 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))) {
             is PointerType -> {
                 val rvalue     = visitExpression(binop.right, true)
-                val rValueType = binop.right.resolveType(typeHolder)
+                val rValueType = run {
+                    val r = binop.right.resolveType(typeHolder) //TODO copy & paste
+                    if (r is CArrayType) {
+                        return@run r.asPointer()
+                    } else {
+                        return@run r
+                    }
+                }
                 if (rValueType !is CPrimitive) {
                     throw IRCodeGenError("Primitive type expected")
                 }
                 val convertedRValue = ir.convertToType(rvalue, Type.U64)
 
                 val lvalue     = visitExpression(binop.left, true)
-                val lValueType = binop.left.resolveType(typeHolder)
+                val lValueType = run {
+                    val l = binop.left.resolveType(typeHolder) //TODO copy & paste
+                    if (l is CArrayType) {
+                        return@run l.asPointer()
+                    } else {
+                        return@run l
+                    }
+                }
                 if (lValueType !is CPointer) {
-                    throw IRCodeGenError("Pointer type expected")
+                    throw IRCodeGenError("Pointer type expected, but got $lValueType")
                 }
                 val convertedLValue = ir.convertToType(lvalue, Type.U64)
 

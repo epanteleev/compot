@@ -198,6 +198,10 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
         return index * type.size()
     }
 
+    fun asPointer(): CPointer {
+        return CPointer(type.cType())
+    }
+
     fun maxAlignment(): Int {
         if (maxAlignment == Int.MIN_VALUE) {
             val cType = type.cType()

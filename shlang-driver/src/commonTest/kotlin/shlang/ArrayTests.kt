@@ -17,6 +17,12 @@ abstract class ArrayTests: CommonCTest() {
         val result = runCTest("shlang/array/array2", listOf(), options())
         assertEquals("{1, 2, 3}\n", result.output)
     }
+
+    @Test
+    fun test3() {
+        val result = runCTest("shlang/array/array3", listOf(), options())
+        assertEquals("{1, 2, 3}\n", result.output)
+    }
 }
 
 class ArrayTestsO0: ArrayTests() {
