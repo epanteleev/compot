@@ -61,8 +61,8 @@ class ShlCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsV
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        asm.mov(size, first, dst)
-        asm.shl(size, second, dst)
+        val value = first.value() shl second.value().toInt()
+        asm.copy(size, Imm64.of(value), dst)
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {

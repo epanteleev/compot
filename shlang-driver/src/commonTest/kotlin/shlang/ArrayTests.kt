@@ -1,6 +1,7 @@
 package shlang
 
 import common.CommonCTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -21,7 +22,14 @@ abstract class ArrayTests: CommonCTest() {
     @Test
     fun test3() {
         val result = runCTest("shlang/array/array3", listOf(), options())
-        assertEquals("{1, 2, 3}\n", result.output)
+        assertEquals("{1, 20, 3}\n", result.output)
+    }
+
+    @Test
+    @Ignore
+    fun test4() {
+        val result = runCTest("shlang/array/array4", listOf(), options())
+        assertEquals("len=3 {1, 2, 3}\n", result.output)
     }
 }
 

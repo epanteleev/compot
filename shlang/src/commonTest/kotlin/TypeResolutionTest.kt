@@ -629,8 +629,6 @@ class TypeResolutionTest {
         parser.translation_unit()
         val typeHolder = parser.typeHolder()
         assertEquals(StorageClass.EXTERN, typeHolder["a"].storageClass)
-
-        assertEquals(StorageClass.EXTERN, typeHolder["a"].storageClass)
     }
 
     @Test
@@ -643,7 +641,6 @@ class TypeResolutionTest {
 
         parser.translation_unit()
         val typeHolder = parser.typeHolder()
-        assertEquals(StorageClass.STATIC, typeHolder["a"].storageClass)
         assertEquals(StorageClass.STATIC, typeHolder["a"].storageClass)
     }
 }

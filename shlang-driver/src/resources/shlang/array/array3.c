@@ -11,6 +11,7 @@ int printArray(struct Holder holder) {
 
 int main(void) {
     struct Holder foo = {{1, 2, 3}};
+    *(foo.array + 1) = 20;
     printArray(foo);
     return 0;
 }

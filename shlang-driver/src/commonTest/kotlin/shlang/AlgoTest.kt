@@ -223,6 +223,12 @@ abstract class AlgoTests: CommonCTest() {
         assertEquals("MD5 tests: SUCCEEDED\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testYxml() {
+        val result = runCTest("shlang/algo/yxml", listOf(), options())
+        assertReturnCode(result, 0)
+    }
 }
 
 class AlgoTestsO0: AlgoTests() {
