@@ -86,10 +86,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitCompoundLiteral(compoundLiteral: CompoundLiteral): Value {
-        val type   = compoundLiteral.resolveType(typeHolder)
-        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+        val type   = compoundLiteral.typeDesc(typeHolder)
+        val irType = mb.toIRType<AggregateType>(typeHolder, type.cType())
         val adr    = ir.alloc(irType)
-        initializerContext.scope(adr, TypeDesc.from(type)) {
+        initializerContext.scope(adr, type) {
             visitInitializerList(compoundLiteral.initializerList)
         }
         return adr
@@ -115,11 +115,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown expression: $expression")
     }
 
-    private fun visitSingleInitializer0(singleInitializer: SingleInitializer): Value {
-        return when (val expr = singleInitializer.expr) {
-            is InitializerList -> visitSingleInitializer0(expr.initializers[0] as SingleInitializer)
-            else -> visitExpression(expr, true)
-        }
+    private fun visitSingleInitializer0(singleInitializer: SingleInitializer): Value = when (val expr = singleInitializer.expr) {
+        is InitializerList -> visitSingleInitializer0(expr.initializers[0] as SingleInitializer)
+        else -> visitExpression(expr, true)
     }
 
     private fun visitSingleInitializer(singleInitializer: SingleInitializer): Value {

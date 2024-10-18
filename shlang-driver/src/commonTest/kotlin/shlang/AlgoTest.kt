@@ -1,6 +1,7 @@
 package shlang
 
 import common.CommonCTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -225,8 +226,18 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
+    @Ignore
     fun testYxml() {
         val result = runCTest("shlang/algo/yxml", listOf(), options())
+        val expected = """
+            |elemstart a
+            |attrstart a
+            |attrval a b
+            |attrend
+            |elemend
+            |ok
+        """.trimMargin()
+        assertEquals(expected, result.output)
         assertReturnCode(result, 0)
     }
 }

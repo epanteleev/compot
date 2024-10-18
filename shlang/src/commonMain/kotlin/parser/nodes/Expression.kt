@@ -162,8 +162,12 @@ sealed class Expression : Node() {
 class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerList) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
+    fun typeDesc(typeHolder: TypeHolder): TypeDesc {
+        return typeName.specifyType(typeHolder, listOf()).type
+    }
+
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize typeName.specifyType(typeHolder, listOf()).type.cType()
+        return@memoize typeDesc(typeHolder).cType()
     }
 }
 
