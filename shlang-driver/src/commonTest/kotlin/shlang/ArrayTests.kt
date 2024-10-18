@@ -26,7 +26,6 @@ abstract class ArrayTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun test4() {
         val result = runCTest("shlang/array/array4", listOf(), options())
         assertEquals("len=3 {1, 2, 3}\n", result.output)

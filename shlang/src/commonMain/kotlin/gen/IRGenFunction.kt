@@ -85,6 +85,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown type")
     }
 
+    private fun visitCompoundLiteral(compoundLiteral: CompoundLiteral): Value {
+        val type   = compoundLiteral.resolveType(typeHolder)
+        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+        val adr    = ir.alloc(irType)
+        initializerContext.scope(adr, TypeDesc.from(type)) {
+            visitInitializerList(compoundLiteral.initializerList)
+        }
+        return adr
+    }
+
     private fun visitExpression(expression: Expression, isRvalue: Boolean): Value = when (expression) {
         is BinaryOp     -> visitBinary(expression, isRvalue)
         is UnaryOp      -> visitUnary(expression, isRvalue)
@@ -101,6 +111,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         is CharNode          -> visitCharNode(expression)
         is SingleInitializer -> visitSingleInitializer(expression)
         is InitializerList   -> visitSingleInitializer0(expression.initializers[0] as SingleInitializer)
+        is CompoundLiteral   -> visitCompoundLiteral(expression)
         else -> throw IRCodeGenError("Unknown expression: $expression")
     }
 
@@ -234,7 +245,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
         val struct       = visitExpression(arrowMemberAccess.primary, true)
-        val cPointer    = arrowMemberAccess.primary.resolveType(typeHolder) as CPointer
+        val cPointer    = run {
+            val ty = arrowMemberAccess.primary.resolveType(typeHolder)
+            if (ty is CArrayType) {
+                return@run ty.asPointer()
+            } else {
+                return@run ty as CPointer
+            }
+        }
         val cStructType = cPointer.dereference(typeHolder)
         val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
 

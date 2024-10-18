@@ -159,7 +159,7 @@ sealed class Expression : Node() {
 
 // https://port70.net/~nsz/c/c11/n1570.html#6.5.2.5
 // 6.5.2.5 Compound literals
-class CompoundLiteral(val typeName: TypeName, val initializerList: Expression) : Expression() {
+class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerList) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -333,7 +333,14 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        val structType = primary.resolveType(typeHolder)
+        val structType = run {
+            val ty = primary.resolveType(typeHolder)
+            if (ty is CArrayType) {
+                return@run ty.asPointer()
+            } else {
+                return@run ty
+            }
+        }
         if (structType !is CPointer) {
             throw TypeResolutionException("Arrow member access on non-pointer type, but got $structType")
         }
