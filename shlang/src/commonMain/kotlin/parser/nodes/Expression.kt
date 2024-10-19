@@ -175,29 +175,24 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        val leftType  = run {
-            val l = left.resolveType(typeHolder)
-            if (l is CArrayType) {
-                return@run l.asPointer()
-            } else {
-                return@run l
-            }
+        val leftType  = when (val l = left.resolveType(typeHolder)) {
+            is CArrayType            -> l.asPointer()
+            is CUncompletedArrayType -> l.asPointer()
+            else -> l
         }
-
         if (leftType !is CPrimitive) {
             throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(left)}'")
         }
-        val rightType = run {
-            val r = right.resolveType(typeHolder)
-            if (r is CArrayType) {
-                return@run r.asPointer()
-            } else {
-                return@run r
-            }
+
+        val rightType = when (val r = right.resolveType(typeHolder)) {
+            is CArrayType            -> r.asPointer()
+            is CUncompletedArrayType -> r.asPointer()
+            else -> r
         }
         if (rightType !is CPrimitive) {
             throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(right)}'")
         }
+
         return@memoize leftType.interfere(typeHolder, rightType)
     }
 }
@@ -337,13 +332,10 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        val structType = run {
-            val ty = primary.resolveType(typeHolder)
-            if (ty is CArrayType) {
-                return@run ty.asPointer()
-            } else {
-                return@run ty
-            }
+        val structType = when(val ty = primary.resolveType(typeHolder)) {
+            is CArrayType            -> ty.asPointer()
+            is CUncompletedArrayType -> ty.asPointer()
+            else -> ty
         }
         if (structType !is CPointer) {
             throw TypeResolutionException("Arrow member access on non-pointer type, but got $structType")
@@ -475,6 +467,14 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
             is CArrayType            -> primaryType.type.cType()
             is CUncompletedArrayType -> primaryType.elementType.cType()
             is CPointer     -> primaryType.dereference(typeHolder)
+            is CPrimitive   -> {
+                val exprType = when (val e = expr.resolveType(typeHolder)) {
+                    is CArrayType            -> e.asPointer()
+                    is CUncompletedArrayType -> e.asPointer()
+                    else -> e as CPointer
+                }
+                primaryType.interfere(typeHolder, exprType)
+            }
             else -> throw TypeResolutionException("Array access on non-array type: $primaryType")
         }
     }

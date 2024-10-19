@@ -403,7 +403,7 @@ object TypeConverter {
         }
     }
 
-    fun FunctionDataBuilder.coerceArguments(argCType: AnyCStructType, expr: Value): List<Value> = when (argCType.size()) {
+    fun FunctionDataBuilder.coerceArguments(argCType: AnyCStructType, expr: Value): List<Value> = when (val sizeOf = argCType.size()) {
         BYTE_SIZE -> {
             val fieldConverted = gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
             val load           = load(Type.I8, fieldConverted)
@@ -478,6 +478,9 @@ object TypeConverter {
             values
         }
         else -> {
+            assertion(sizeOf > QWORD_SIZE * 2) {
+                "Cannot coerce arguments for size $sizeOf"
+            }
             assertion(expr is Alloc) {
                 "Expected Alloc, but got $expr"
             }

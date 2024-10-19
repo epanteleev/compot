@@ -5,6 +5,7 @@ import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+
 abstract class LACCTests : CommonCTest() {
     @Test
     fun testAddressDerefOffset() {
@@ -27,11 +28,10 @@ abstract class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testArrayDecay() {
         val result = runCTest("shlang/lacc/array-decay", listOf(), options())
-        assertEquals("2, 2", result.output)
-        assertEquals(0, result.exitCode)
+        assertEquals("2, 2\n", result.output)
+        assertEquals(5, result.exitCode)
     }
 
     @Test

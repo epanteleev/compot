@@ -9,6 +9,10 @@ data class CUncompletedArrayType(val elementType: TypeDesc) : AnyCArrayType(elem
         return toString()
     }
 
+    fun asPointer(): CPointer {
+        return CPointer(elementType.cType(), setOf())
+    }
+
     override fun size(): Int {
         return -1
     }

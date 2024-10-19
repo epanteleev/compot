@@ -242,14 +242,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
-        val struct       = visitExpression(arrowMemberAccess.primary, true)
-        val cPointer    = run {
-            val ty = arrowMemberAccess.primary.resolveType(typeHolder)
-            if (ty is CArrayType) {
-                return@run ty.asPointer()
-            } else {
-                return@run ty as CPointer
-            }
+        val struct   = visitExpression(arrowMemberAccess.primary, true)
+        val cPointer = when (val ty = arrowMemberAccess.primary.resolveType(typeHolder)) {
+            is CArrayType            -> ty.asPointer()
+            is CUncompletedArrayType -> ty.asPointer()
+            else -> ty as CPointer
         }
         val cStructType = cPointer.dereference(typeHolder)
         val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
@@ -385,8 +382,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitCast(cast: Cast): Value {
         val value = visitExpression(cast.cast, true)
-        val toType = mb.toIRType<Type>(typeHolder, cast.resolveType(typeHolder))
-        return when (toType) {
+        return when (val toType = mb.toIRType<Type>(typeHolder, cast.resolveType(typeHolder))) {
             Type.Void -> value
             Type.U1   -> ir.convertToType(value, Type.U1)
             else      -> ir.convertToType(value, toType)
@@ -516,13 +512,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))) {
             is PointerType -> {
                 val rvalue     = visitExpression(binop.right, true)
-                val rValueType = run {
-                    val r = binop.right.resolveType(typeHolder) //TODO copy & paste
-                    if (r is CArrayType) {
-                        return@run r.asPointer()
-                    } else {
-                        return@run r
-                    }
+                val rValueType = when (val r = binop.right.resolveType(typeHolder)) {
+                    is CArrayType            -> r.asPointer()
+                    is CUncompletedArrayType -> r.asPointer()
+                    else -> r
                 }
                 if (rValueType !is CPrimitive) {
                     throw IRCodeGenError("Primitive type expected")
@@ -530,13 +523,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedRValue = ir.convertToType(rvalue, Type.U64)
 
                 val lvalue     = visitExpression(binop.left, true)
-                val lValueType = run {
-                    val l = binop.left.resolveType(typeHolder) //TODO copy & paste
-                    if (l is CArrayType) {
-                        return@run l.asPointer()
-                    } else {
-                        return@run l
-                    }
+                val lValueType = when (val l = binop.left.resolveType(typeHolder)) {
+                    is CArrayType -> l.asPointer()
+                    is CUncompletedArrayType -> l.asPointer()
+                    else -> l
                 }
                 if (lValueType !is CPointer) {
                     throw IRCodeGenError("Pointer type expected, but got $lValueType")
@@ -893,10 +883,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun getVariableAddress(varNode: VarNode, rvalueAddr: Value, isRvalue: Boolean): Value {
-        val type = varNode.resolveType(typeHolder)
         if (!isRvalue) {
             return rvalueAddr
         }
+        val type = varNode.resolveType(typeHolder)
         if (type is CAggregateType) {
             return rvalueAddr
         }

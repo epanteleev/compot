@@ -63,6 +63,7 @@ sealed class CPrimitive: CType() {
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     is CEnumType -> INT
+                    is CPointer -> type2
                     else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
                 }
             }
