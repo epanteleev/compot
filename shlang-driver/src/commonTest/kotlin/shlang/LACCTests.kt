@@ -41,12 +41,12 @@ abstract class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testArrayParam() {
         val result = runCTest("shlang/lacc/array-param", listOf(), options())
         val expected = """
             |5, 7, 4 (13)
-            |1, 2, 0 (3)""".trimMargin()
+            |1, 2, 0 (3)
+            |""".trimMargin()
         assertEquals(expected, result.output)
         assertEquals(12, result.exitCode)
     }

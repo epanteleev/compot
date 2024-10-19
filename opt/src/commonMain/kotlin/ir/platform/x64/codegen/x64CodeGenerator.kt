@@ -240,25 +240,30 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         asm.callFunction(tupleCall, tupleCall.prototype())
         val retType = tupleCall.type()
 
-        val first  = retType.asInnerType<PrimitiveType>(0)
-        val second = retType.asInnerType<PrimitiveType>(1)
-
-        val value = registerAllocation.operand(tupleCall.proj(0)!!)
-        if (first is IntegerType || first is PointerType) {
-            CallIntCodegen(first, asm)(value, retReg)
-        } else if (first is FloatingPointType) {
-            CallFloatCodegen(first, asm)(value, fpRet)
-        } else {
-            throw CodegenException("unknown type=$first")
+        val firstProj = tupleCall.proj(0)
+        if (firstProj != null) {
+            val first  = retType.asInnerType<PrimitiveType>(0)
+            val value = registerAllocation.operand(firstProj)
+            if (first is IntegerType || first is PointerType) {
+                CallIntCodegen(first, asm)(value, retReg)
+            } else if (first is FloatingPointType) {
+                CallFloatCodegen(first, asm)(value, fpRet)
+            } else {
+                throw CodegenException("unknown type=$first")
+            }
         }
 
-        val value1 = registerAllocation.operand(tupleCall.proj(1)!!)
-        if (second is IntegerType || second is PointerType) {
-            CallIntCodegen(second, asm)(value1, rdx)
-        } else if (second is FloatingPointType) {
-            CallFloatCodegen(second, asm)(value1, XmmRegister.xmm1)
-        } else {
-            throw CodegenException("unknown type=$second")
+        val secondProj = tupleCall.proj(1)
+        if (secondProj != null) {
+            val second = retType.asInnerType<PrimitiveType>(1)
+            val value1 = registerAllocation.operand(secondProj)
+            if (second is IntegerType || second is PointerType) {
+                CallIntCodegen(second, asm)(value1, rdx)
+            } else if (second is FloatingPointType) {
+                CallFloatCodegen(second, asm)(value1, XmmRegister.xmm1)
+            } else {
+                throw CodegenException("unknown type=$second")
+            }
         }
     }
 
