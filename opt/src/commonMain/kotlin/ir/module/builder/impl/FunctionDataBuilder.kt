@@ -5,10 +5,12 @@ import ir.value.*
 import ir.module.*
 import ir.value.Value
 import ir.instruction.*
+import ir.intrinsic.IntrinsicImplementor
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.InstructionFabric
 import ir.module.builder.AnyFunctionDataBuilder
+import ir.platform.MacroAssembler
 import ir.value.constant.IntegerConstant
 import ir.value.constant.UnsignedIntegerConstant
 
@@ -212,6 +214,10 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
 
     override fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch {
         return bb.switch(value, default, table, targets)
+    }
+
+    override fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor<MacroAssembler>, target: Label): Intrinsic {
+        return bb.intrinsic(inputs, implementor, target)
     }
 
     companion object {

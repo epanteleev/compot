@@ -1,16 +1,16 @@
 package ir.platform.x64.codegen.impl
 
+import asm.Operand
 import asm.x64.*
 import ir.Definitions.POINTER_SIZE
 import ir.types.*
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.CallConvention.temp2
-import ir.platform.x64.codegen.MacroAssembler
+import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: NonTrivialType, val asm: MacroAssembler) :
+class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: NonTrivialType, val asm: X64MacroAssembler) :
     GPOperandsVisitorBinaryOp {
     private val size: Int = basicType.sizeOf()
 

@@ -1,5 +1,6 @@
 package ir.platform.x64.pass.analysis.regalloc
 
+import asm.Operand
 import ir.value.Value
 import asm.x64.*
 import ir.types.*

@@ -3,8 +3,10 @@ package ir.module.block
 import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.*
+import ir.intrinsic.IntrinsicImplementor
 import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
+import ir.platform.MacroAssembler
 import ir.value.constant.IntegerConstant
 import ir.value.constant.UnsignedIntegerConstant
 import ir.value.Value
@@ -56,6 +58,7 @@ interface InstructionFabric {
     fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy
     fun proj(tuple: Value, index: Int): Projection
     fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch
+    fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor<MacroAssembler>, target: Label): Intrinsic
 }
 
 interface InternalInstructionFabric {

@@ -1,15 +1,16 @@
 package ir.platform.x64.codegen.impl
 
+import asm.Operand
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Copy
 import ir.platform.x64.codegen.visitors.*
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.MacroAssembler
+import ir.platform.x64.codegen.X64MacroAssembler
 
 
-data class CopyCodegen(val type: PrimitiveType, val asm: MacroAssembler): GPOperandsVisitorUnaryOp, XmmOperandsVisitorUnaryOp {
+data class CopyCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp, XmmOperandsVisitorUnaryOp {
     val size = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {

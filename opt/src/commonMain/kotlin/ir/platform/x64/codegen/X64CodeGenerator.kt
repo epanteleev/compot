@@ -1,5 +1,6 @@
 package ir.platform.x64.codegen
 
+import asm.*
 import asm.x64.*
 import ir.types.*
 import ir.module.*
@@ -49,7 +50,7 @@ internal class X64CodeGenerator(val module: Module): AnyCodeGenerator {
 private class CodeEmitter(private val data: FunctionData, private val unit: CompilationUnit): IRInstructionVisitor<Unit>() {
     private val registerAllocation by lazy { data.analysis(LinearScanFabric) }
     private val liveness by lazy { data.analysis(LivenessAnalysisPassFabric) }
-    private val asm = unit.function(data.prototype.name)
+    private val  asm = unit.function(data.prototype.name)
     private var previous: Block? = null
     private var next: Block? = null
 
@@ -351,6 +352,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(switch: Switch) {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(intrinsic: Intrinsic) {
         TODO("Not yet implemented")
     }
 

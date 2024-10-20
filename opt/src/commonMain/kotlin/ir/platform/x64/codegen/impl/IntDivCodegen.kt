@@ -1,13 +1,14 @@
 package ir.platform.x64.codegen.impl
 
+import asm.Operand
 import asm.x64.*
 import ir.types.*
 import asm.x64.GPRegister.*
 import ir.platform.x64.codegen.visitors.*
-import ir.platform.x64.codegen.MacroAssembler
+import ir.platform.x64.codegen.X64MacroAssembler
 
 
-data class IntDivCodegen(val type: ArithmeticType, val asm: MacroAssembler): GPOperandsVisitorBinaryOp {
+data class IntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {

@@ -469,6 +469,17 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return null
     }
 
+    override fun visit(intrinsic: Intrinsic): LocalValue? {
+        val newUsages = arrayListOf<Value>()
+        intrinsic.inputs().forEach {
+            newUsages.add(mapUsage<Value>(it))
+        }
+
+        val target = mapBlock(intrinsic.target())
+        bb.intrinsic(newUsages, intrinsic.implementor, target)
+        return null
+    }
+
     override fun visit(memcpy: Memcpy): ValueInstruction? {
         val dst = mapUsage<Value>(memcpy.destination())
         val src = mapUsage<Value>(memcpy.source())

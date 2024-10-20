@@ -1,5 +1,6 @@
 package ir.platform.x64.codegen.impl
 
+import asm.Operand
 import asm.x64.*
 import common.assertion
 import ir.types.*

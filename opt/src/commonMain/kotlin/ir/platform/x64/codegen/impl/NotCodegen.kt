@@ -1,14 +1,15 @@
 package ir.platform.x64.codegen.impl
 
+import asm.Operand
 import asm.x64.*
 import ir.types.*
 import ir.instruction.Not
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.MacroAssembler
+import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class NotCodegen(val type: IntegerType, val asm: MacroAssembler): GPOperandsVisitorUnaryOp {
+data class NotCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp {
     private val size = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {

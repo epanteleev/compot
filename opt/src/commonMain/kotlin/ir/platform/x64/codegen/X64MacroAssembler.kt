@@ -1,5 +1,6 @@
 package ir.platform.x64.codegen
 
+import asm.Operand
 import asm.x64.*
 import asm.x64.GPRegister.rdx
 import asm.x64.GPRegister.rax
@@ -8,12 +9,13 @@ import ir.Definitions.BYTE_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.instruction.*
 import ir.module.DirectFunctionPrototype
+import ir.platform.MacroAssembler
 import ir.types.*
 
 
 data class MacroAssemblerException(override val message: String): Exception(message)
 
-class MacroAssembler(name: String, id: Int): Assembler(name, id) {
+class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssembler {
     /*** Move reminder from 'rdx' register to @param rem. */
     fun moveRem(size: Int, rem: Operand) {
         assertion(size == 1 || size == 2 || size == 4 || size == 8) {

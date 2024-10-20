@@ -1,14 +1,15 @@
 package ir.platform.x64.codegen.impl
 
+import asm.Operand
 import asm.x64.*
 import ir.types.PrimitiveType
 import ir.instruction.IntCompare
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.MacroAssembler
+import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.CmpGPOperandVisitor
 
 
-class IntCmpCodegen(val type: PrimitiveType, val asm: MacroAssembler): CmpGPOperandVisitor {
+class IntCmpCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): CmpGPOperandVisitor {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(first: Operand, second: Operand) {

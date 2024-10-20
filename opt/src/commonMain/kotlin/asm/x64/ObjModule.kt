@@ -1,6 +1,6 @@
 package asm.x64
 
-import ir.platform.x64.codegen.MacroAssembler
+import ir.platform.x64.codegen.X64MacroAssembler
 
 abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
     private val symbols = arrayListOf<AnyDirective>()
@@ -50,8 +50,8 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
         return label(name, builder)
     }
 
-    fun function(name: String): MacroAssembler {
-        val fn = MacroAssembler(name, nameAssistant.nextFunction())
+    fun function(name: String): X64MacroAssembler {
+        val fn = X64MacroAssembler(name, nameAssistant.nextFunction())
         val obj = addSymbol(ObjLabel(name))
         obj.anonymousDirective.add(fn)
         return fn

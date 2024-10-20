@@ -29,7 +29,7 @@ internal class XmmRegisterList(usedArgumentRegisters: List<XmmRegister>) {
         usedCalleeSaveRegisters.add(register)
     }
 
-    fun pickRegister(excludeIf: (Register) -> Boolean): XmmRegister? {
+    fun pickRegister(excludeIf: (XmmRegister) -> Boolean): XmmRegister? {
         val reg = freeRegisters.findLast { !excludeIf(it) }
         if (reg == null) {
             return null

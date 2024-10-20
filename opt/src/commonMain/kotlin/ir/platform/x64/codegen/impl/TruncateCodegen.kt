@@ -1,14 +1,15 @@
 package ir.platform.x64.codegen.impl
 
+import asm.Operand
 import asm.x64.*
 import ir.types.IntegerType
 import ir.instruction.Truncate
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.MacroAssembler
+import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: MacroAssembler):
+data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: X64MacroAssembler):
     GPOperandsVisitorUnaryOp {
     private val toSize = toType.sizeOf()
     private val fromSize = fromType.sizeOf()

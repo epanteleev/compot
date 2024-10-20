@@ -1,8 +1,8 @@
 package ir.platform.x64.pass.analysis.regalloc
 
 import ir.types.*
-import asm.x64.Operand
-import asm.x64.Register
+import asm.Operand
+import asm.Register
 import ir.value.LocalValue
 import asm.x64.GPRegister.rcx
 import asm.x64.GPRegister.rdx

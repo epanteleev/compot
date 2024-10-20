@@ -29,7 +29,7 @@ internal class GPRegistersList(usedArgumentRegisters: List<GPRegister>) {
         usedCalleeSaveRegisters.add(register)
     }
 
-    fun pickRegister(excludeIf: (Register) -> Boolean): GPRegister? {
+    fun pickRegister(excludeIf: (GPRegister) -> Boolean): GPRegister? {
         val reg = freeRegisters.findLast { !excludeIf(it) }
         if (reg == null) {
             return null

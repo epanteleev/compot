@@ -1,5 +1,6 @@
 package asm.x64
 
+import asm.Operand
 import ir.Definitions.QWORD_SIZE
 
 

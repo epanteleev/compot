@@ -566,6 +566,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    override fun visit(intrinsic: Intrinsic) {
+        assert(Intrinsic.typeCheck(intrinsic)) {
+            "Instruction '${intrinsic.dump()}' has inconsistent types."
+        }
+    }
+
     private fun assert(condition: Boolean, message: () -> String) {
         if (!condition) {
             throw ValidateSSAErrorException(functionData, message())

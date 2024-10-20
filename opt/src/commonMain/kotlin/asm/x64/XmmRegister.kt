@@ -1,5 +1,7 @@
 package asm.x64
 
+import asm.Register
+
 
 enum class XmmRegister : Register {
     xmm0 {

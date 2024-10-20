@@ -1,14 +1,15 @@
 package ir.platform.x64.codegen.impl
 
+import asm.Operand
 import asm.x64.*
 import ir.instruction.Return
-import ir.platform.x64.codegen.MacroAssembler
+import ir.platform.x64.codegen.X64MacroAssembler
 import ir.types.PrimitiveType
 import ir.platform.x64.codegen.visitors.ReturnGPOperandVisitor
 import ir.platform.x64.codegen.visitors.ReturnXmmOperandVisitor
 
 
-class ReturnIntCodegen(val type: PrimitiveType, val asm: MacroAssembler) : ReturnGPOperandVisitor {
+class ReturnIntCodegen(val type: PrimitiveType, val asm: X64MacroAssembler) : ReturnGPOperandVisitor {
     private val size = type.sizeOf()
 
     operator fun invoke(dst: GPRegister, src: Operand) {

@@ -1,5 +1,7 @@
 package asm.x64
 
+import asm.Operand
+import asm.Register
 import asm.x64.CPUInstruction.Companion.prefix
 import asm.x64.GPRegister.rdx
 import common.assertion

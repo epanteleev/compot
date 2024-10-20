@@ -1,5 +1,6 @@
 package ir.platform.x64.codegen.impl
 
+import asm.Operand
 import asm.x64.*
 import ir.Definitions.QWORD_SIZE
 import ir.types.*
@@ -7,12 +8,11 @@ import ir.instruction.Int2Float
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.MacroAssembler
-import ir.platform.x64.codegen.impl.Uint2FloatCodegen.Companion.TEMP_SIZE
+import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandToXmmVisitor
 
 
-class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType, val asm: MacroAssembler) : GPOperandToXmmVisitor {
+class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType, val asm: X64MacroAssembler) : GPOperandToXmmVisitor {
     private val toSize = toType.sizeOf()
     private val fromSize = fromType.sizeOf()
 
