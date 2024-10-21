@@ -21,7 +21,8 @@ sealed interface PrimitiveConstant: NonTrivialConstant {
             is F64Value -> of(kind, value.f64)
             is NullValue -> of(kind, 0)
             is UndefinedValue -> Value.UNDEF
-            is PointerLiteral -> PointerLiteral(value.gConstant)
+            is PointerLiteral -> PointerLiteral.of(value.gConstant, value.index) //TODO remove it???
+            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
         }
 
         fun of(kind: NonTrivialType, value: Number): PrimitiveConstant = when (kind) {

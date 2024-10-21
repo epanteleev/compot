@@ -70,7 +70,7 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
     }
 
     override fun quad(value: Long) {
-        arrayToAppend.add(QuadDirective(value.toString()))
+        arrayToAppend.add(QuadDirective(value.toString(), 0))
     }
 
     override fun quad(label: ObjLabel) {
@@ -78,7 +78,15 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
             throw IllegalArgumentException("label not found: $label")
         }
 
-        arrayToAppend.add(QuadDirective(label.name))
+        arrayToAppend.add(QuadDirective(label.name, 0))
+    }
+
+    override fun quad(label: ObjLabel, offset: Int) {
+        if (!namedDirectives.contains(label.name)) {
+            throw IllegalArgumentException("label not found: $label")
+        }
+
+        arrayToAppend.add(QuadDirective(label.name, offset))
     }
 
     override fun string(value: String) {

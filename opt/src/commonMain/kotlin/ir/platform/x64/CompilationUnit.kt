@@ -95,7 +95,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         is F64Value -> builder.quad(data.bits())
         is PointerLiteral -> {
             val gConstant = data.gConstant
-            builder.quad(findLabel(gConstant.name()))
+            builder.quad(findLabel(gConstant.name()), data.index)
         }
         is NullValue -> builder.quad(0)
         is StringLiteralConstant -> builder.string(data.data())

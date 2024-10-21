@@ -16,6 +16,7 @@ import ir.attributes.GlobalValueAttribute
 import ir.module.builder.impl.ModuleBuilder
 import ir.value.constant.Constant
 import ir.value.constant.InitializerListValue
+import ir.value.constant.IntegerConstant
 import ir.value.constant.NonTrivialConstant
 import ir.value.constant.PointerLiteral
 import ir.value.constant.PrimitiveConstant
@@ -52,7 +53,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             else -> {
                 val constant = expr.data()
                 val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.U8, constant.length), constant.toString())
-                PointerLiteral(mb.addConstant(stringLiteral))
+                PointerLiteral.of(mb.addConstant(stringLiteral))
             }
         }
         else -> defaultContEval(lValueType, expr)
@@ -65,7 +66,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         val name = expr.name()
         val value = varStack[name] ?: return null
         value as GlobalValue
-        return PointerLiteral(value)
+        return PointerLiteral.of(value)
     }
 
     private fun defaultContEval(lValueType: NonTrivialType, expr: Expression): NonTrivialConstant? {
@@ -102,7 +103,22 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 }
                 else -> throw IRCodeGenError("Unsupported type '$cType', expr='${LineAgnosticAstPrinter.print(expr)}'")
             }
-            PointerLiteral(mb.addConstant(gConstant))
+            PointerLiteral.of(mb.addConstant(gConstant))
+        }
+        is ArrayAccess -> {
+            val indexType = expr.expr.resolveType(typeHolder)
+            val irType = mb.toIRType<IntegerType>(typeHolder, indexType)
+            val index = constEvalExpression(irType, expr.expr) ?: throw IRCodeGenError("Unsupported: $expr")
+            val array = staticInitializer(expr.primary) ?: throw IRCodeGenError("Unsupported: $expr")
+            array as PointerLiteral
+            val gConstant = array.gConstant as GlobalValue
+            index as IntegerConstant
+            PointerLiteral.of(gConstant, index.toInt())
+        }
+        is VarNode -> {
+            val name = expr.name()
+            val value = varStack[name] ?: throw IRCodeGenError("Variable not found: $name")
+            PointerLiteral.of(value as GlobalValue)
         }
         else -> TODO()
     }

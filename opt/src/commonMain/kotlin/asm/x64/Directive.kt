@@ -86,8 +86,12 @@ class LongDirective(val value: String): AnonymousDirective() {
     override fun toString(): String = ".long $value"
 }
 
-class QuadDirective(val value: String): AnonymousDirective() {
-    override fun toString(): String = ".quad $value"
+class QuadDirective(val value: String, val offset: Int): AnonymousDirective() {
+    override fun toString(): String = if (offset == 0) {
+        ".quad $value"
+    } else {
+        ".quad $value + $offset"
+    }
 }
 
 class StringDirective(val value: String): AnonymousDirective() {

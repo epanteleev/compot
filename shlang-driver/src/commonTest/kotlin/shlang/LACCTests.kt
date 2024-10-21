@@ -187,7 +187,6 @@ abstract class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testCompare() {
         val result = runCTest("shlang/lacc/compare", listOf(), options())
         assertEquals("1, 0, 0, 1\n", result.output)
