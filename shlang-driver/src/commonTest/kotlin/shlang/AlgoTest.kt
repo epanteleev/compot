@@ -227,6 +227,42 @@ abstract class AlgoTests: CommonCTest() {
 
     @Test
     @Ignore
+    fun testAes() {
+        val result = runCTest("shlang/algo/aes", listOf(), options())
+        val expected = """
+            |
+            |Testing AES128
+            |
+            |CBC encrypt: SUCCESS!
+            |CBC decrypt: SUCCESS!
+            |CTR encrypt: SUCCESS!
+            |CTR decrypt: SUCCESS!
+            |ECB decrypt: SUCCESS!
+            |ECB encrypt: SUCCESS!
+            |ECB encrypt verbose:
+            |
+            |plain text:
+            |6bc1bee22e409f96e93d7e117393172a
+            |ae2d8a571e03ac9c9eb76fac45af8e51
+            |30c81c46a35ce411e5fbc1191a0a52ef
+            |f69f2445df4f9b17ad2b417be66c3710
+            |
+            |key:
+            |2b7e151628aed2a6abf7158809cf4f3c
+            |
+            |ciphertext:
+            |3ad77bb40d7a3660a89ecaf32466ef97
+            |f5d3d58503b9699de785895a96fdbaaf
+            |43b1cd7f598ece23881b00e3ed030688
+            |7b0c785e27e8ad3f8223207104725dd4
+            |
+        """.trimMargin()
+        assertEquals(expected, result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    @Ignore
     fun testYxml() {
         val result = runCTest("shlang/algo/yxml", listOf(), options())
         val expected = """

@@ -37,7 +37,6 @@ data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperands
     }
 
     override fun aa(dst: Address, src: Address) {
-        TODO("untested")
         asm.mov(POINTER_SIZE, dst, temp1)
         asm.mov(size, src, temp2)
         asm.mov(size, temp2, Address.from(temp1, 0))

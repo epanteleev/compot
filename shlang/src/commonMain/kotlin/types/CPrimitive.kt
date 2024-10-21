@@ -159,6 +159,7 @@ sealed class CPrimitive: CType() {
             is CPointer -> {
                 when (type2) {
                     CHAR -> return this
+                    UCHAR -> return this
                     INT -> return this
                     SHORT -> return this
                     UINT -> return this

@@ -68,7 +68,8 @@ class XorCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsV
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.xor(size, second, dst)
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
@@ -85,7 +86,13 @@ class XorCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsV
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+        if (second == dst) {
+            asm.xor(size, first, dst)
+        } else {
+            asm.mov(size, second, temp1)
+            asm.xor(size, first, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
@@ -109,7 +116,13 @@ class XorCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsV
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        if (first == dst) {
+            asm.xor(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.xor(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
