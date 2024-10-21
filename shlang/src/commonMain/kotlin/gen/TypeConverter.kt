@@ -489,7 +489,7 @@ object TypeConverter {
     }
 
     private fun convertConstant(value: PrimitiveConstant, type: Type): Value = when (type) {
-        is NonTrivialType -> PrimitiveConstant.from(type, value)
+        is PrimitiveType -> PrimitiveConstant.from(type, value)
         is FlagType -> when (value) {
             is I8Value -> when (value.i8.toInt()) { //TODO toInt???
                 0 -> BoolValue.FALSE

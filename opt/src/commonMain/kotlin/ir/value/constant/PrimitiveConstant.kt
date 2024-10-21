@@ -8,7 +8,7 @@ sealed interface PrimitiveConstant: NonTrivialConstant {
     override fun type(): PrimitiveType
 
     companion object {
-        fun from(kind: NonTrivialType, value: PrimitiveConstant): Constant = when (value) {
+        fun from(kind: PrimitiveType, value: PrimitiveConstant): Constant = when (value) {
             is I8Value -> of(kind, value.i8)
             is U8Value -> of(kind, value.u8)
             is I16Value -> of(kind, value.i16)
@@ -22,25 +22,20 @@ sealed interface PrimitiveConstant: NonTrivialConstant {
             is NullValue -> of(kind, 0)
             is UndefinedValue -> Value.UNDEF
             is PointerLiteral -> PointerLiteral.of(value.gConstant, value.index) //TODO remove it???
-            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
         }
 
-        fun of(kind: NonTrivialType, value: Number): PrimitiveConstant = when (kind) {
-            Type.I8  -> I8Value(value.toByte())
-            Type.U8  -> U8Value(value.toByte())
-            Type.I16 -> I16Value(value.toShort())
-            Type.U16 -> U16Value(value.toShort())
-            Type.I32 -> I32Value(value.toInt())
-            Type.U32 -> U32Value(value.toInt())
-            Type.I64 -> I64Value(value.toLong())
-            Type.U64 -> U64Value(value.toLong())
-            Type.F32 -> F32Value(value.toFloat())
-            Type.F64 -> F64Value(value.toDouble())
-            Type.Ptr -> when (value.toLong()) {
+        fun of(kind: PrimitiveType, value: Number): PrimitiveConstant = when (kind) {
+            is IntegerType -> IntegerConstant.of(kind, value)
+            is PointerType -> when (value.toLong()) {
                 0L -> NullValue.NULLPTR
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
-            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            is FloatingPointType -> when (kind) {
+                Type.F32 -> F32Value(value.toFloat())
+                Type.F64 -> F64Value(value.toDouble())
+                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            }
+            is UndefType -> Value.UNDEF
         }
     }
 }

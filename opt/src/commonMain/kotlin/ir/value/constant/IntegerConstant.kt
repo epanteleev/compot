@@ -1,5 +1,6 @@
 package ir.value.constant
 
+import ir.types.IntegerType
 import ir.types.SignedIntType
 import ir.types.Type
 import ir.types.UnsignedIntType
@@ -9,6 +10,25 @@ sealed interface IntegerConstant: PrimitiveConstant {
     fun toInt(): Int = when (this) {
         is UnsignedIntegerConstant -> value().toInt()
         is SignedIntegerConstant   -> value().toInt()
+    }
+
+    companion object {
+        fun of(kind: IntegerType, value: Number): IntegerConstant = when (kind) {
+            is UnsignedIntType -> when (kind) {
+                Type.U8  -> U8Value(value.toByte())
+                Type.U16 -> U16Value(value.toShort())
+                Type.U32 -> U32Value(value.toInt())
+                Type.U64 -> U64Value(value.toLong())
+                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            }
+            is SignedIntType -> when (kind) {
+                Type.I8  -> I8Value(value.toByte())
+                Type.I16 -> I16Value(value.toShort())
+                Type.I32 -> I32Value(value.toInt())
+                Type.I64 -> I64Value(value.toLong())
+                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            }
+        }
     }
 }
 

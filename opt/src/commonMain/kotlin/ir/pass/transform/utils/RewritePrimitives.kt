@@ -16,15 +16,21 @@ import ir.module.FunctionData
 import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.types.NonTrivialType
+import ir.types.PrimitiveType
 import ir.value.constant.PrimitiveConstant
 
 
 abstract class AbstractRewritePrimitives(private val dominatorTree: DominatorTree) {
     protected fun rename(bb: Block, oldValue: Value): Value {
-        return tryRename(bb, oldValue, oldValue.type())?: oldValue
+        val valueType = oldValue.type()
+        if (valueType !is PrimitiveType) {
+            return oldValue
+        }
+
+        return tryRename(bb, oldValue, valueType)?: oldValue
     }
 
-    fun tryRename(bb: Block, oldValue: Value, expectedType: Type): Value? {
+    fun tryRename(bb: Block, oldValue: Value, expectedType: PrimitiveType): Value? {
         if (oldValue !is LocalValue) {
             return oldValue
         }
@@ -136,12 +142,12 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
     }
 
     companion object {
-        internal fun convertOrSkip(type: Type, value: Value): Value {
+        internal fun convertOrSkip(type: PrimitiveType, value: Value): Value {
             if (value !is PrimitiveConstant) {
                 return value
             }
 
-            return PrimitiveConstant.from(type as NonTrivialType, value)
+            return PrimitiveConstant.from(type, value)
         }
 
         fun run(cfg: FunctionData, insertedPhis: Set<Phi>, dominatorTree: DominatorTree): RewritePrimitives {

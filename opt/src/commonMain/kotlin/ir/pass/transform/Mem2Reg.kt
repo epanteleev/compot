@@ -50,7 +50,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
     }
 
     private fun completePhis(bbToMapValues: RewritePrimitives, insertedPhis: Set<Phi>) {
-        fun renameValues(block: Block, v: Value, expectedType: NonTrivialType): Value {
+        fun renameValues(block: Block, v: Value, expectedType: PrimitiveType): Value {
             return bbToMapValues.tryRename(block, v, expectedType)?: Value.UNDEF
         }
 

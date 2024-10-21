@@ -176,7 +176,7 @@ class ModuleReader(string: String) {
             }
             val constType = tokenIterator.expect<TypeToken>("field type") //TODO check correct type with declared type
 
-            fields.add(field.toConstant(constType.asType<NonTrivialType>(moduleBuilder)))
+            fields.add(field.toConstant(constType.asType<PrimitiveType>(moduleBuilder)))
 
             val next = tokenIterator.next("comma or '}'")
             if (next is CloseBrace) {
@@ -212,7 +212,8 @@ class ModuleReader(string: String) {
             }
             val constType = tokenIterator.expect<TypeToken>("field type") //TODO check correct type with declared type
 
-            fields.add(field.toConstant(constType.asType<NonTrivialType>(moduleBuilder)))
+            val primitiveType = constType.asType<PrimitiveType>(moduleBuilder)
+            fields.add(field.toConstant(primitiveType))
 
             val next = tokenIterator.next("comma or '}'")
             if (next is CloseBrace) {
