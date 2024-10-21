@@ -382,10 +382,26 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitCast(cast: Cast): Value {
         val value = visitExpression(cast.cast, true)
-        return when (val toType = mb.toIRType<Type>(typeHolder, cast.resolveType(typeHolder))) {
+        val castToType = cast.resolveType(typeHolder)
+        return when (val toType = mb.toIRType<Type>(typeHolder, castToType)) {
             Type.Void -> value
             Type.U1   -> ir.convertToType(value, Type.U1)
-            else      -> ir.convertToType(value, toType)
+            Type.Ptr  -> {
+                val baseAddr = when (val fromType = cast.cast.resolveType(typeHolder)) {
+                    is CArrayType -> {
+                        val irType = mb.toIRType<ArrayType>(typeHolder, fromType)
+                        ir.gep(value, irType.elementType(), I64Value(0))
+                    }
+                    is CStructType -> {
+                        val irType = mb.toIRType<StructType>(typeHolder, fromType)
+                        ir.gep(value, irType, I64Value(0))
+                    }
+                    is CPrimitive, is CFunctionType -> value
+                    else -> throw IRCodeGenError("Cannon cast to pointer from type $fromType")
+                }
+                ir.convertToType(baseAddr, Type.Ptr)
+            }
+            else -> ir.convertToType(value, toType)
         }
     }
 

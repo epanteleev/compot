@@ -166,7 +166,6 @@ abstract class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testCast() {
         val result = runCTest("shlang/lacc/cast", listOf(), options())
         assertEquals(1, result.exitCode)
