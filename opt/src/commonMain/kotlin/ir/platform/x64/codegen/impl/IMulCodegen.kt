@@ -72,7 +72,7 @@ data class IMulCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOpe
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        asm.copy(size, Imm32.of(first.value() * second.value()), dst) //TODO overflow???
+        asm.copy(size, Imm64.of(first.value() * second.value()), dst) //TODO overflow???
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {

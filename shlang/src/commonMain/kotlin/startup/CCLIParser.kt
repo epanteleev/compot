@@ -116,7 +116,7 @@ object CCLIParser {
     private fun parseDefine(shlangCLIArguments: ShlangCLIArguments, define: String) {
         val parts = define.split('=')
         if (parts.size == 1) {
-            shlangCLIArguments.addDefine(parts[0], "")
+            shlangCLIArguments.addDefine(parts[0], "1")
             return
         }
         if (parts.size != 2) {
@@ -142,7 +142,8 @@ object CCLIParser {
         println("  --dump-ir                 Dump IR to files")
         println("  -o <filename>             Specify output filename")
         println("  -I <directory>            Add include directory")
-        println("  -D <macro>                Define macro")
+        println("  -D <macro>                Predefine name as a macro, with definition 1.")
+        println("  -D <macro>=<value>        Predefine name as a macro, with definition value.")
         println("  -h, --help                Print this help message")
         println("  -E                        Preprocess only; do not compile, assemble or link")
     }

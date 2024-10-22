@@ -59,7 +59,7 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 #endif
 
 
-#define AES128 1
+//#define AES128 1
 //#define AES192 1
 //#define AES256 1
 

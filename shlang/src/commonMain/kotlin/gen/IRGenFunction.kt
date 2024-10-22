@@ -396,7 +396,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                         val irType = mb.toIRType<StructType>(typeHolder, fromType)
                         ir.gep(value, irType, I64Value(0))
                     }
-                    is CPrimitive, is CFunctionType -> value
+                    is CPrimitive, is CFunctionType, is CStringLiteral -> value
                     else -> throw IRCodeGenError("Cannon cast to pointer from type $fromType")
                 }
                 ir.convertToType(baseAddr, Type.Ptr)

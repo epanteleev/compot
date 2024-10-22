@@ -1255,7 +1255,7 @@ yxml_ret_t yxml_eof(yxml_t *x) {
 
 
 static char stack[8*1024];
-static int verbose = 1;
+static int verbose = 0;
 
 
 static void y_printchar(char c) {
