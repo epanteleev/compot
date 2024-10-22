@@ -37,22 +37,23 @@ class CTokenizer private constructor(private val filename: String, private val r
         tokens.add(next)
     }
 
-    private fun isEndOfLine(): Boolean {
-        return reader.check('\\') && reader.peekOffset(1) == '\n'
-    }
-
     private fun readLiteral(quote: Char): String {
         eat()
         val builder = StringBuilder()
 
         while (!reader.check(quote)) {
-            if (isEndOfLine()) {
-                builder.append(eat())
-                builder.append(eat())
+            if (reader.check("\\\n")) {
+                eat()
+                eat()
                 incrementLine()
             }
-            if (reader.check('\\') && reader.peekOffset(1) == '\"') {
+            if (reader.check("\\\"")) {
                 eat()
+                builder.append(eat())
+                continue
+            }
+            if (reader.check("\\\\")) {
+                builder.append(eat())
                 builder.append(eat())
                 continue
             }
@@ -115,7 +116,7 @@ class CTokenizer private constructor(private val filename: String, private val r
         } else {
             val ch = reader.read()
             if (reader.peek() != '\'') {
-                throw IllegalStateException("Expected closing quote")
+                throw IllegalStateException("Expected closing quote: '${reader.peek()}' in line $line")
             }
             reader.read()
             return ch
@@ -179,25 +180,19 @@ class CTokenizer private constructor(private val filename: String, private val r
     fun readPPNumber(): Pair<String, Int>? {
         return tryRead {
             val start = reader.pos
-            if (reader.peek() == '0' && (reader.peekOffset(1) == 'x' || reader.peekOffset(1) == 'X')) {
-                reader.read()
-                reader.read()
+            if (reader.check("0x") || reader.check("0X")) {
+                reader.read(2)
                 val hexString = readHexNumber()
                 return@tryRead Pair(hexString, 16)
             }
 
-            reader.read()
-            while (!reader.eof &&
-                (reader.peek().isDigit() ||
-                        reader.peek() == 'e' ||
-                        reader.peek() == 'E' ||
-                        reader.peek() == 'p' ||
-                        reader.peek() == 'P')) {
+            do {
                 reader.read()
-            }
-            if (reader.eof) {
-                return@tryRead Pair(reader.str.substring(start, reader.pos), 10)
-            }
+                if (reader.eof) {
+                    return@tryRead Pair(reader.str.substring(start, reader.pos), 10)
+                }
+                val ch = reader.peek()
+            } while (!reader.eof && (ch.isDigit() || ch == 'e' || ch == 'E' || ch == 'p' || ch == 'P'))
 
             if (reader.check('.') && (reader.eof(1) ||
                         reader.peekOffset(1).isWhitespace() ||
@@ -235,17 +230,45 @@ class CTokenizer private constructor(private val filename: String, private val r
 
     private fun readSpaces(): Int {
         var spaces = 0
-        while (!reader.eof && reader.isSpace()) {
+        while (reader.isSpace()) {
             eat()
             spaces += 1
         }
         return spaces
     }
 
+    private fun skipComment() {
+        while (!reader.eof) {
+            if (reader.check('\n')) {
+                break
+            }
+            eat()
+        }
+    }
+
+    private fun skipMultilineComments() {
+        while (!reader.eof) {
+            if (reader.check("*/")) {
+                eat(2)
+                break
+            }
+            if (reader.check("*\\\n/")) {
+                eat(4)
+                incrementLine()
+                break
+            }
+            if (reader.check('\n')) {
+                eat()
+                incrementLine()
+                continue
+            }
+            eat()
+        }
+    }
+
     private fun doTokenizeHelper() {
         while (!reader.eof) {
-            val v = reader.peek()
-            if (isEndOfLine()) {
+            if (reader.check("\\\n")) {
                 eat(2)
                 incrementLine()
                 continue
@@ -270,7 +293,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
             if (reader.check('"')) {
                 val start = reader.pos
-                val literal = readLiteral(v)
+                val literal = readLiteral(reader.peek())
                 val diff = reader.pos - start
                 append(StringLiteral(literal, OriginalPosition(line, position - diff, filename)))
                 continue
@@ -279,30 +302,20 @@ class CTokenizer private constructor(private val filename: String, private val r
             // Single line comments
             if (reader.check("//")) {
                 eat(2)
-                while (!reader.eof) {
-                    if (reader.peek() == '\n') {
-                        break
-                    }
-                    eat()
-                }
+                skipComment()
                 continue
             }
 
             // Multi line comments
             if (reader.check("/*")) {
                 eat(2)
-
-                while (!reader.eof && !reader.check("*/")) {
-                    if (reader.peek() != '\n') {
-                        eat()
-                        continue
-                    }
-                    eat()
-                    incrementLine()
-                }
-                if (!reader.eof) {
-                    eat(2)
-                }
+                skipMultilineComments()
+                continue
+            }
+            if (reader.check("/\\\n*")) {
+                eat(4)
+                incrementLine()
+                skipMultilineComments()
                 continue
             }
 
@@ -317,7 +330,8 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
 
             // Punctuations and operators (or indentifiers)
-            if (tryPunct(v)) {
+            if (tryPunct(reader.peek())) {
+                val v = reader.peek()
                 position += 1
                 if (reader.inRange(2) &&
                     isOperator3(v, reader.peekOffset(1), reader.peekOffset(2))) {
@@ -330,7 +344,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                     reader.read(2)
                     position += 1
                     append(Punctuator(operator, OriginalPosition(line, position - 2, filename)))
-                } else if (v == '\\' && reader.peekOffset(1) == '\n') {
+                } else if (reader.check("\\\n")) {
                     reader.read(2)
                     position += 1
                     incrementLine()
@@ -340,7 +354,8 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
-            if (reader.check('_') || v.isLetter()) {
+            val v = reader.peek()
+            if (v == '_' || v.isLetter()) {
                 val identifier = readIdentifier()
                 position += identifier.length
 
@@ -353,16 +368,11 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
 
             val saved = reader.pos
-            val pair = readPPNumber()
+            val pair = readPPNumber() ?: error("Unknown symbol: '$v' in '$filename' at $line:$position")
 
-            when {
-                pair != null -> {
-                    val diff = reader.pos - saved
-                    position += diff
-                    append(PPNumber(pair.first,pair.second, OriginalPosition(line, position - diff, filename)))
-                }
-                else -> error("Unknown symbol: '$v' in '$filename' at $line:$position")
-            }
+            val diff = reader.pos - saved
+            position += diff
+            append(PPNumber(pair.first,pair.second, OriginalPosition(line, position - diff, filename)))
         }
     }
 

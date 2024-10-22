@@ -33,7 +33,7 @@ object LexicalElements {
 
     // 6.4.6 Punctuators
     private val punctuators = unaryOperators + binaryOperators + ternaryOperators + postPreFixOperators + assignmentOperators
-    val allPunctuators = punctuators + setOf("->", "(", ")", "[", "]", "{", "}", ";", ",", ".", "...", "#", "##", "\\")
+    val allPunctuators = punctuators + setOf("->", "(", ")", "[", "]", "{", "}", ";", ",", ".", "...", "#", "##") //TODO add binary operators
     private val operators2 = allPunctuators.filter { it.length == 2 }
     private val operators3 = allPunctuators.filter { it.length == 3 }
 

@@ -23,11 +23,17 @@ class StringReader(val str: String, var pos: Int = 0) {
     }
 
     fun isSpace(): Boolean {
+        if (eof) {
+            return false
+        }
         return peek() == ' ' || peek() == '\t' || peek() == '\r'
     }
 
     fun check(char: Char): Boolean {
-        return !eof && str[pos] == char
+        if (eof) {
+            return false
+        }
+        return str[pos] == char
     }
 
     fun check(expect: String): Boolean {

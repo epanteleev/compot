@@ -179,7 +179,6 @@ abstract class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testComment() {
         val result = runCTest("shlang/lacc/comment", listOf(), options())
         assertEquals("24, 24, w ??=*/ /*t???, a\"/*b\"\\\\, 34, 39\n", result.output)
