@@ -527,17 +527,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun makeAlgebraicBinary(binop: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
         when (val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))) {
             is PointerType -> {
-                val rvalue     = visitExpression(binop.right, true)
-                val rValueType = when (val r = binop.right.resolveType(typeHolder)) {
-                    is CArrayType            -> r.asPointer()
-                    is CUncompletedArrayType -> r.asPointer()
-                    else -> r
-                }
-                if (rValueType !is CPrimitive) {
-                    throw IRCodeGenError("Primitive type expected")
-                }
-                val convertedRValue = ir.convertToType(rvalue, Type.U64)
-
                 val lvalue     = visitExpression(binop.left, true)
                 val lValueType = when (val l = binop.left.resolveType(typeHolder)) {
                     is CArrayType -> l.asPointer()
@@ -549,6 +538,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 val convertedLValue = ir.convertToType(lvalue, Type.U64)
 
+                val rvalue     = visitExpression(binop.right, true)
+                val rValueType = when (val r = binop.right.resolveType(typeHolder)) {
+                    is CArrayType            -> r.asPointer()
+                    is CUncompletedArrayType -> r.asPointer()
+                    else -> r
+                }
+                if (rValueType !is CPrimitive) {
+                    throw IRCodeGenError("Primitive type expected")
+                }
+                val convertedRValue = ir.convertToType(rvalue, Type.U64)
+
                 val size = lValueType.dereference(typeHolder).size()
                 val mul = ir.mul(convertedRValue, U64Value(size.toLong()))
 
@@ -556,11 +556,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 return ir.convertToType(result, commonType)
             }
             is FloatingPointType -> {
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir.convertToType(right, commonType)
-
                 val left = visitExpression(binop.left, true)
                 val leftConverted = ir.convertToType(left, commonType)
+
+                val right = visitExpression(binop.right, true)
+                val rightConverted = ir.convertToType(right, commonType)
 
                 return op(leftConverted, rightConverted)
             }
@@ -569,11 +569,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     is SignedIntType -> if (commonType.sizeOf() < WORD_SIZE) Type.I32 else commonType
                     is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) Type.U32 else commonType
                 }
-                val right = visitExpression(binop.right, true)
-                val rightConverted = ir.convertToType(right, cvtType)
-
                 val left = visitExpression(binop.left, true)
                 val leftConverted = ir.convertToType(left, cvtType)
+
+                val right = visitExpression(binop.right, true)
+                val rightConverted = ir.convertToType(right, cvtType)
 
                 return op(leftConverted, rightConverted)
             }
@@ -647,12 +647,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private inline fun makeComparisonBinary(binop: BinaryOp, crossinline predicate: (NonTrivialType) -> AnyPredicateType, isRvalue: Boolean): Value {
         val commonType = mb.toIRLVType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
+        val left = visitExpression(binop.left, true)
+        val leftConverted = ir.convertToType(left, commonType)
 
         val right = visitExpression(binop.right, true)
         val rightConverted = ir.convertToType(right, commonType)
-
-        val left = visitExpression(binop.left, true)
-        val leftConverted = ir.convertToType(left, commonType)
 
         val cmp = makeCondition(leftConverted, predicate(commonType), rightConverted)
         if (isRvalue) {

@@ -25,7 +25,7 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsV
 
     override fun ra(dst: GPRegister, src: Address) {
         when (src) {
-            is AddressLiteral -> asm.mov(size, src, dst)
+            is AddressLiteral -> asm.mov(size, src, dst) // TODO: should be removed after implementing the correct handling of AddressLiteral
             else -> TODO()
         }
     }
@@ -36,6 +36,12 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsV
     }
 
     override fun aa(dst: Address, src: Address) {
+        if (src is AddressLiteral) {
+            // TODO should be removed after implementing the correct handling of AddressLiteral
+            asm.mov(size, src, temp1)
+            asm.mov(size, temp1, dst)
+            return
+        }
         asm.mov(POINTER_SIZE, src, temp1)
         asm.mov(size, Address.from(temp1, 0), temp1)
         asm.mov(size, temp1, dst)
@@ -55,7 +61,7 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsV
 
     override fun raF(dst: XmmRegister, src: Address) {
         when (src) {
-            is AddressLiteral -> asm.movf(size, src, dst)
+            is AddressLiteral -> asm.movf(size, src, dst) // TODO: should be removed after implementing the correct handling of AddressLiteral
             else -> TODO()
         }
     }
