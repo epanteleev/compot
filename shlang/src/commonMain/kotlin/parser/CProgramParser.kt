@@ -495,14 +495,21 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
 
     // parameter_type_list
     //	: parameter_list
-    //	| parameter_list ',' '...' <- skip it here
+    //	| parameter_list ',' '...'
     //	;
     fun parameter_type_list(): List<AnyParameter>? = rule {
-        val parameters = parameter_list()
+        val parameters = parameter_list() ?: return@rule null
         if (parameters.isEmpty()) {
             return@rule null
         }
-
+        if (check(",")) {
+            eat()
+            if (!check("...")) {
+                throw ParserException(InvalidToken("Expected '...'", peak()))
+            }
+            eat()
+            return@rule parameters + ParameterVarArg()
+        }
         return@rule parameters
     }
 
@@ -510,29 +517,26 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	: parameter_declaration
     //	| parameter_list ',' parameter_declaration
     //	;
-    fun parameter_list(): List<AnyParameter> {
+    fun parameter_list(): List<AnyParameter>? = rule {
         val parameters = mutableListOf<AnyParameter>()
         val param = parameter_declaration()
         if (param != null) {
             parameters.add(param)
         }
         while (true) {
-            val parameter = rule {
+            val param = rule  {
                 if (!check(",")) {
                     return@rule null
                 }
                 eat()
-                if (check("...")) {
-                    eat()
-                    return@rule ParameterVarArg()
-                }
-                parameter_declaration() ?: throw ParserException(InvalidToken("Expected parameter declaration", peak()))
+                parameter_declaration()
             }
-            if (parameter == null) {
-                return parameters
+            if (param == null) {
+                return@rule parameters
             }
-            parameters.add(parameter)
+            parameters.add(param)
         }
+        return@rule parameters
     }
 
     // struct_declarator
@@ -1774,15 +1778,32 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         return@rule AbstractDeclarator(listOf(), declarator)
     }
 
+    // Reference: https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.cc#L11004
     // primary_expression
-    //	: IDENTIFIER
+    //	: __builtin_va_arg ( assignment-expression , type-name )
+    //  | IDENTIFIER
     //	| CONSTANT
     //	| STRING_LITERAL
     //	| '(' expression ')'
     //	;
     fun primary_expression(): Expression? = rule {
-        if (check("_Generic")) {
-            TODO()
+        if (check("__builtin_va_arg")) {
+            eat()
+            if (!check("(")) {
+                throw ParserException(InvalidToken("Expected '('", peak()))
+            }
+            eat()
+            val expr = assignment_expression()?: throw ParserException(InvalidToken("Expected assignment expression", peak()))
+            if (!check(",")) {
+                throw ParserException(InvalidToken("Expected ','", peak()))
+            }
+            eat()
+            val typeName = type_name()?: throw ParserException(InvalidToken("Expected type name", peak()))
+            if (!check(")")) {
+                throw ParserException(InvalidToken("Expected ')'", peak()))
+            }
+            eat()
+            return@rule BuiltinExpression("__builtin_va_arg", expr, typeName)
         }
         if (check<Identifier>() &&
             typeHolder.getTypedefOrNull(peak<Identifier>().str()) == null) {

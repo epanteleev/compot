@@ -516,3 +516,11 @@ data class IdentNode(private val str: Identifier) : Expression() {
         TODO("Not yet implemented")
     }
 }
+
+class BuiltinExpression(val name: String, val assign: Expression, val typeName: TypeName) : Expression() {
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        return@memoize typeName.specifyType(typeHolder, listOf()).type.cType()
+    }
+}
