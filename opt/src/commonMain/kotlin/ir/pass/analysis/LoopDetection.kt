@@ -31,8 +31,7 @@ data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private va
     }
 }
 
-class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>, marker: MutationMarker) :
-    AnalysisResult(marker) {
+class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>, marker: MutationMarker) : AnalysisResult(marker) {
     val size: Int by lazy {
         loopHeaders.values.fold(0) { acc, list -> acc + list.size }
     }

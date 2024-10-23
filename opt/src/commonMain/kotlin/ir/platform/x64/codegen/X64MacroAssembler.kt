@@ -76,48 +76,41 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
     fun condType(cond: CompareInstruction, type: PrimitiveType): CondType {
         val convType = cond.predicate().invert()
         return when (type) {
-            is SignedIntType -> {
-                when (convType) {
-                    IntPredicate.Eq -> CondType.JE
-                    IntPredicate.Ne -> CondType.JNE
-                    IntPredicate.Gt -> CondType.JG
-                    IntPredicate.Ge -> CondType.JGE
-                    IntPredicate.Lt -> CondType.JL
-                    IntPredicate.Le -> CondType.JLE
-                    else -> throw CodegenException("unknown conversion type: convType=$convType")
-                }
+            is SignedIntType -> when (convType) {
+                IntPredicate.Eq -> CondType.JE
+                IntPredicate.Ne -> CondType.JNE
+                IntPredicate.Gt -> CondType.JG
+                IntPredicate.Ge -> CondType.JGE
+                IntPredicate.Lt -> CondType.JL
+                IntPredicate.Le -> CondType.JLE
+                else -> throw CodegenException("unknown conversion type: convType=$convType")
             }
-            is UnsignedIntType, PointerType -> {
-                when (convType) {
-                    IntPredicate.Eq -> CondType.JE
-                    IntPredicate.Ne -> CondType.JNE
-                    IntPredicate.Gt -> CondType.JA
-                    IntPredicate.Ge -> CondType.JAE
-                    IntPredicate.Lt -> CondType.JB
-                    IntPredicate.Le -> CondType.JBE
-                    else -> throw CodegenException("unknown conversion type: convType=$convType")
-                }
+            is UnsignedIntType, PointerType -> when (convType) {
+                IntPredicate.Eq -> CondType.JE
+                IntPredicate.Ne -> CondType.JNE
+                IntPredicate.Gt -> CondType.JA
+                IntPredicate.Ge -> CondType.JAE
+                IntPredicate.Lt -> CondType.JB
+                IntPredicate.Le -> CondType.JBE
+                else -> throw CodegenException("unknown conversion type: convType=$convType")
             }
-            is FloatingPointType -> {
-                when (convType) {
-                    FloatPredicate.Oeq -> CondType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
-                    FloatPredicate.Ogt -> CondType.JA
-                    FloatPredicate.Oge -> CondType.JAE
-                    FloatPredicate.Olt -> TODO()
-                    FloatPredicate.Ole -> CondType.JBE
-                    FloatPredicate.One -> CondType.JNE // TODO Clang insert extra instruction 'jp ${labelName}"
-                    FloatPredicate.Ord -> TODO()
-                    FloatPredicate.Ueq -> TODO()
-                    FloatPredicate.Ugt -> TODO()
-                    FloatPredicate.Uge -> TODO()
-                    FloatPredicate.Ult -> TODO()
-                    FloatPredicate.Ule -> CondType.JBE
-                    FloatPredicate.Uno -> TODO()
-                    FloatPredicate.Une -> TODO()
-                    else -> throw CodegenException("unknown conversion type: convType=$convType")
-                }
+            is FloatingPointType -> when (convType) {
+                FloatPredicate.Oeq -> CondType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
+                FloatPredicate.Ogt -> CondType.JA
+                FloatPredicate.Oge -> CondType.JAE
+                FloatPredicate.Olt -> TODO()
+                FloatPredicate.Ole -> CondType.JBE
+                FloatPredicate.One -> CondType.JNE // TODO Clang insert extra instruction 'jp ${labelName}"
+                FloatPredicate.Ord -> TODO()
+                FloatPredicate.Ueq -> TODO()
+                FloatPredicate.Ugt -> TODO()
+                FloatPredicate.Uge -> TODO()
+                FloatPredicate.Ult -> TODO()
+                FloatPredicate.Ule -> CondType.JBE
+                FloatPredicate.Uno -> TODO()
+                FloatPredicate.Une -> TODO()
+                else -> throw CodegenException("unknown conversion type: convType=$convType")
             }
-            FlagType -> TODO()
             UndefType -> TODO()
         }
     }

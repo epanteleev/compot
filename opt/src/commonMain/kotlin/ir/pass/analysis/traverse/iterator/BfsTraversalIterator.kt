@@ -3,7 +3,7 @@ package ir.pass.analysis.traverse.iterator
 import ir.module.block.Block
 
 
-class BfsTraversalIterator(start: Block, countOfBlocks: Int) : BasicBlocksIterator(countOfBlocks) {
+internal class BfsTraversalIterator(start: Block, countOfBlocks: Int) : BasicBlocksIterator(countOfBlocks) {
     private val iterator: MutableIterator<Block>
 
     init {

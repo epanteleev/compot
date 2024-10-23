@@ -15,8 +15,13 @@ class TypeDesc(private val baseType: CType, private val properties: List<TypeQua
         return TypeDesc(baseType, properties + extraProperties)
     }
 
-    inline fun<reified T> asType(): T {
-        return cType() as T
+    inline fun<reified T: CType> asType(): T {
+        val cTy = cType()
+        if (cTy !is T) {
+            throw TypeResolutionException("Type $cTy is not of type ${T::class.simpleName}")
+        }
+
+        return cTy
     }
 
     override fun toString(): String = buildString {
@@ -30,8 +35,8 @@ class TypeDesc(private val baseType: CType, private val properties: List<TypeQua
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is TypeDesc) return false
-
         if (baseType != other.baseType) return false
+
         return true
     }
 

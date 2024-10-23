@@ -8,8 +8,4 @@ class VarDescriptor(val type: TypeDesc, val storageClass: StorageClass?) {
             "$storageClass $type"
         }
     }
-
-    inline fun<reified T> asType(): T {
-        return type as T
-    }
 }
