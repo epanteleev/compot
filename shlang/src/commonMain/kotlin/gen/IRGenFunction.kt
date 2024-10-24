@@ -1289,13 +1289,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitInit(init: Node) {
-        when (init) {
-            is Declaration -> visitDeclaration(init)
-            is ExprStatement -> visit(init)
-            is EmptyStatement, is DummyNode -> {}
-            else -> throw IRCodeGenError("Unknown init statement, init=$init")
-        }
+    private fun visitInit(init: Node) = when (init) {
+        is Declaration -> visitDeclaration(init)
+        is ExprStatement -> visit(init)
+        is EmptyStatement, is DummyNode -> {}
+        else -> throw IRCodeGenError("Unknown init statement, init=$init")
     }
 
     private fun visitUpdate(update: Expression) {

@@ -116,7 +116,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val pointer = inst.operand().asValue<ValueInstruction>()
                 val index = getIndex(pointer)
                 val copy = bb.replace(inst) { it.loadFromStack(getSource(pointer), inst.type(), index) }
-                killOnDemand(bb, pointer)
+                killOnDemand(pointer.owner(), pointer)
                 copy
             }
             default()
