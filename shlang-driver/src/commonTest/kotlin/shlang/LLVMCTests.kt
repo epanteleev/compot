@@ -546,6 +546,33 @@ abstract class LLVMCTests: CommonCTest() {
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testDivLLVM() {
+        val result = runCTest("shlang/llvm-c-tests/div", listOf(), options())
+        val expected = """
+            uDivTest1(42,3) = 0
+            uDivTest2(42,3) = 42
+            uDivTest3(42,3) = 0
+            uDivTest4(42,3) = 3
+            uDivTest5(42,3) = 3
+            uDivTest6(42,3) = 3
+            uDivTest7(42,3) = 3
+            uDivTest8(42,3) = 5
+            uDivTest9(42,3) = 5
+            uDivTest10(42,3) = 10
+            uDivTest11(42,3) = 10
+            uDivTest12(42,3) = 1
+            uDivTest13(42,3) = 1
+            uDivTest14(42,3) = 10
+            uDivTest15(42,3) = 10
+            uDivTest16(42,3) = 2147483627
+            uDivTest17(42,3) = 2147483627
+            
+        """.trimIndent()
+        assertEquals(expected, result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class LLVMCTestsO0: LLVMCTests() {

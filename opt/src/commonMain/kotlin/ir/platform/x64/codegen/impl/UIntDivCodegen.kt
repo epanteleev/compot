@@ -37,7 +37,9 @@ class UIntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOp
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.copy(size, first, rax)
+        asm.div(size, second)
+        asm.copy(size, rax, dst)
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
