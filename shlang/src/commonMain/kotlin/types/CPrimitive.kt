@@ -265,10 +265,6 @@ class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(
         append("[$dimension]")
     }
 
-    fun asPointer(): CPointer {
-        return CPointer(type.cType())
-    }
-
     override fun size(): Int {
         return type.size() * dimension.toInt()
     }

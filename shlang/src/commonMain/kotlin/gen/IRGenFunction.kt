@@ -244,9 +244,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
         val struct   = visitExpression(arrowMemberAccess.primary, true)
         val cPointer = when (val ty = arrowMemberAccess.primary.resolveType(typeHolder)) {
-            is CArrayType            -> ty.asPointer()
-            is CUncompletedArrayType -> ty.asPointer()
-            else -> ty as CPointer
+            is AnyCArrayType -> ty.asPointer()
+            is CPointer      -> ty
+            else -> throw IRCodeGenError("Pointer type expected, but got $ty")
         }
         val cStructType = cPointer.dereference(typeHolder)
         val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
@@ -529,23 +529,16 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is PointerType -> {
                 val lvalue     = visitExpression(binop.left, true)
                 val lValueType = when (val l = binop.left.resolveType(typeHolder)) {
-                    is CArrayType -> l.asPointer()
-                    is CUncompletedArrayType -> l.asPointer()
-                    else -> l
-                }
-                if (lValueType !is CPointer) {
-                    throw IRCodeGenError("Pointer type expected, but got $lValueType")
+                    is AnyCArrayType -> l.asPointer()
+                    is CPointer      -> l
+                    else -> throw IRCodeGenError("Pointer type expected, but got $l")
                 }
                 val convertedLValue = ir.convertToType(lvalue, Type.U64)
 
-                val rvalue     = visitExpression(binop.right, true)
-                val rValueType = when (val r = binop.right.resolveType(typeHolder)) {
-                    is CArrayType            -> r.asPointer()
-                    is CUncompletedArrayType -> r.asPointer()
-                    else -> r
-                }
-                if (rValueType !is CPrimitive) {
-                    throw IRCodeGenError("Primitive type expected")
+                val rvalue = visitExpression(binop.right, true)
+                when (val r = binop.right.resolveType(typeHolder)) {
+                    is AnyCArrayType, is CPrimitive -> {}
+                    else -> throw IRCodeGenError("Primitive type expected, but got $r")
                 }
                 val convertedRValue = ir.convertToType(rvalue, Type.U64)
 

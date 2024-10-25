@@ -175,6 +175,10 @@ class CUnionType(override val name: String, fields: List<Member>): AnyCStructTyp
 }
 
 sealed class AnyCArrayType(val type: TypeDesc): CAggregateType() {
+    fun asPointer(): CPointer {
+        return CPointer(type.cType())
+    }
+
     fun element(): TypeDesc = type
 }
 
@@ -196,10 +200,6 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
 
     fun offset(index: Int): Int {
         return index * type.size()
-    }
-
-    fun asPointer(): CPointer {
-        return CPointer(type.cType())
     }
 
     fun maxAlignment(): Int {
