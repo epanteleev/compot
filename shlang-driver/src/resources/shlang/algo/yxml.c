@@ -1277,7 +1277,7 @@ static void y_printstring(const char *str) {
 static void y_printtoken(yxml_t *x, const char *str) {
     puts("");
     if(verbose)
-        printf("t%03"PRIu64" l%03"PRIu32" b%03"PRIu64": ", x->total, x->line, x->byte);
+        printf("t%03" PRIu64" l%03" PRIu32" b%03" PRIu64": ", x->total, x->line, x->byte);
     printf("%s", str);
 }
 

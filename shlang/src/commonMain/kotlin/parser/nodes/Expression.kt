@@ -213,13 +213,25 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
         if (eTrue is StringNode) {
             return@memoize CPointer(CHAR)
         }
-        val typeTrue   = eTrue.resolveType(typeHolder) as CPrimitive
-        val typeFalse  = eFalse.resolveType(typeHolder) as CPrimitive
+        val typeTrue   = eTrue.resolveType(typeHolder)
+        val typeFalse  = eFalse.resolveType(typeHolder)
         if (typeTrue == typeFalse && typeTrue == VOID) {
             return@memoize VOID
         }
 
-        return@memoize typeTrue.interfere(typeHolder, typeFalse)
+        val cvtTypeTrue = when (typeTrue) {
+            is CPrimitive     -> typeTrue
+            is CStringLiteral -> typeTrue.asPointer()
+            else -> throw TypeResolutionException("Conditional true branch with non-primitive type: $typeTrue")
+        }
+
+        val cvtTypeFalse = when (typeFalse) {
+            is CPrimitive     -> typeFalse
+            is CStringLiteral -> typeFalse.asPointer()
+            else -> throw TypeResolutionException("Conditional false branch with non-primitive type: $typeFalse")
+        }
+
+        return@memoize cvtTypeTrue.interfere(typeHolder, cvtTypeFalse)
     }
 }
 

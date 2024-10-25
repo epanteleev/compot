@@ -131,7 +131,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     protected fun generateGlobalAssignmentDeclarator(declarator: InitDeclarator): AnyGlobalValue {
         val cType = declarator.cType()
-        val lValueType = mb.toIRType<NonTrivialType>(typeHolder, cType.type.cType())
+        val lValueType = mb.toIRLVType<NonTrivialType>(typeHolder, cType.type.cType())
 
         if (cType.storageClass == StorageClass.EXTERN) {
             val extern = mb.addExternValue(declarator.name(), lValueType)

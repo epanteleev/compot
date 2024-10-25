@@ -22,6 +22,12 @@ abstract class ConstantTests: CommonCTest() {
         val result = runCTest("shlang/constant/bit_invert1", listOf(), options())
         assertEquals("inverted = 0\n", result.output)
     }
+
+    @Test
+    fun test3() {
+        val result = runCTest("shlang/constant/select_str", listOf(), options())
+        assertEquals("Success\n", result.output)
+    }
 }
 
 class ConstantTestsO0: ConstantTests() {
