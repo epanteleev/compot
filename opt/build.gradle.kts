@@ -25,6 +25,16 @@ kotlin {
         }
     }
 
+    targets.all {
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    allWarningsAsErrors.set(true)
+                }
+            }
+        }
+    }
+
     sourceSets {
         commonMain {
             dependencies {

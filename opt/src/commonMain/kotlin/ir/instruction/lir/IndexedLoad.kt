@@ -13,7 +13,7 @@ import ir.value.asType
 
 class IndexedLoad private constructor(id: Identity, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value):
     ValueInstruction(id, owner, loadedType, arrayOf(origin, index)) {
-    private inline fun checkedGet(index: Int): Value {
+    private fun checkedGet(index: Int): Value {
         assertion(operands.size == 2) {
             "size should be 1 in $this instruction"
         }

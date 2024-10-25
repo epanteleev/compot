@@ -10,6 +10,7 @@ class CommonConstEvalContext<T: Number>(val typeHolder: TypeHolder, val enumerat
     override fun getVariable(name: CToken): T? {
         val value = enumerationValues[name.str()] ?: typeHolder.findEnumByEnumerator(name.str())
         if (value != null) {
+            @Suppress("UNCHECKED_CAST")
             return value as T //TODO
         }
         return null

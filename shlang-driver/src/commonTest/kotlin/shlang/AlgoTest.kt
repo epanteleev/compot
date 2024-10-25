@@ -226,7 +226,6 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testAes128() {
         val result = runCTest("shlang/algo/aes", listOf(), options() + "-DAES128")
         val expected = """
@@ -256,15 +255,15 @@ abstract class AlgoTests: CommonCTest() {
             |43b1cd7f598ece23881b00e3ed030688
             |7b0c785e27e8ad3f8223207104725dd4
             |
+            |
         """.trimMargin()
         assertEquals(expected, result.output)
         assertReturnCode(result, 0)
     }
 
     @Test
-    @Ignore
-    fun testAes192() {
-        val result = runCTest("shlang/algo/aes", listOf(), options() + "-DAES196")
+    fun testAes192() { // Note: The test contains of UB
+        val result = runCTest("shlang/algo/aes", listOf(), options() + "-DAES192")
         val expected = """
             |
             |Testing AES192
@@ -275,22 +274,6 @@ abstract class AlgoTests: CommonCTest() {
             |CTR decrypt: SUCCESS!
             |ECB decrypt: SUCCESS!
             |ECB encrypt: SUCCESS!
-            |ECB encrypt verbose:
-            |
-            |plain text:
-            |6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c
-            |ae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411
-            |30c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17
-            |f69f2445df4f9b17ad2b417be66c37102b7e151628aed2a6
-            |
-            |key:
-            |2b7e151628aed2a6abf7158809cf4f3c62f8ead2522c6b7b
-            |
-            |ciphertext:
-            |16619bc42a9e84415ee930269f320ad2ae2d8a571e03ac9c
-            |2445f1b8e2e249162d4e09de91288cce30c81c46a35ce411
-            |bc07eeb48e11a30e062d6385b586aee0f69f2445df4f9b17
-            |3355eb8444018a6638cc78be03256d812b7e151628aed2a6
             |
         """.trimMargin()
         assertEquals(expected, result.output)
@@ -298,7 +281,7 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
-    fun testAes256() {
+    fun testAes256() { // Note: The test contains of UB
         val result = runCTest("shlang/algo/aes", listOf(), options() + "-DAES256")
         val expected = """
             |
@@ -310,22 +293,6 @@ abstract class AlgoTests: CommonCTest() {
             |CTR decrypt: SUCCESS!
             |ECB decrypt: SUCCESS!
             |ECB encrypt: SUCCESS!
-            |ECB encrypt verbose:
-            |
-            |plain text:
-            |6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
-            |ae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52ef
-            |30c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710
-            |f69f2445df4f9b17ad2b417be66c37102b7e151628aed2a6abf7158809cf4f3c
-            |
-            |key:
-            |2b7e151628aed2a6abf7158809cf4f3cb006a9eeff7f0000608cc5c000000004
-            |
-            |ciphertext:
-            |701a25438727336a94312fd9728f8308ae2d8a571e03ac9c9eb76fac45af8e51
-            |de55e1df5dbf9903f3b4e48acb7ba38a30c81c46a35ce411e5fbc1191a0a52ef
-            |6869718bec0a5e8d93b11b121b81c4e2f69f2445df4f9b17ad2b417be66c3710
-            |67c52ea7c1ffeddee7607557bd26a3922b7e151628aed2a6abf7158809cf4f3c
             |
         """.trimMargin()
         assertEquals(expected, result.output)

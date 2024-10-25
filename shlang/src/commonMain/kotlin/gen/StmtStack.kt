@@ -28,12 +28,12 @@ class StmtStack {
         return stack[stack.size - 1]
     }
 
-    fun topLoop(): LoopStmtInfo? {
-        return stack.findLast { it is LoopStmtInfo } as LoopStmtInfo?
+    fun topLoop(): AnyLoopStmtInfo? {
+        return stack.findLast { it is AnyLoopStmtInfo } as AnyLoopStmtInfo?
     }
 
     fun topSwitchOrLoop(): StmtInfo? {
-        return stack.findLast { it is LoopStmtInfo || it is SwitchStmtInfo }
+        return stack.findLast { it is AnyLoopStmtInfo || it is SwitchStmtInfo }
     }
 }
 
@@ -69,7 +69,7 @@ class SwitchStmtInfo(val conditionType: IntegerType, val table: MutableList<Labe
     }
 }
 
-class LoopStmtInfo : StmtInfo() {
+sealed class AnyLoopStmtInfo : StmtInfo() {
     private var conditionBB: Label? = null
 
     fun resolveCondition(ir: FunctionDataBuilder): Label {
@@ -78,5 +78,23 @@ class LoopStmtInfo : StmtInfo() {
         }
 
         return conditionBB as Label
+    }
+}
+
+class LoopStmtInfo : AnyLoopStmtInfo()
+
+class ForLoopStmtInfo : AnyLoopStmtInfo() {
+    private var updateBB: Label? = null
+
+    fun resolveUpdate(ir: FunctionDataBuilder): Label {
+        if (updateBB == null) {
+            updateBB = ir.createLabel()
+        }
+
+        return updateBB as Label
+    }
+
+    fun update(): Label? {
+        return updateBB
     }
 }

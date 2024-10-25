@@ -17,7 +17,7 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
         return "$NAME ${source().type()} ${destination()}: ${index()}, ${source()}"
     }
 
-    private inline fun getOperand(idx: Int): Value {
+    private fun getOperand(idx: Int): Value {
         assertion(operands.size == 3) {
             "size should be 2 in $this instruction"
         }

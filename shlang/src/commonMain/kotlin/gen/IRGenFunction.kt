@@ -925,7 +925,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return Constant.of(Type.I32, enumValue)
         }
 
-        throw IRCodeGenError("Variable '$name' not found")
+        throw IRCodeGenError("Variable '$name' not found: ${varNode.position()}")
     }
 
     private fun visitParameters(parameters: List<String>,
@@ -1114,8 +1114,11 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return
         }
 
-        val loopInfo = stmtStack.topLoop() ?: throw IRCodeGenError("Continue statement outside of loop")
-        ir.branch(loopInfo.resolveCondition(ir))
+        when (val loopInfo = stmtStack.topLoop()) {
+            is ForLoopStmtInfo -> ir.branch(loopInfo.resolveUpdate(ir))
+            is LoopStmtInfo -> ir.branch(loopInfo.resolveCondition(ir))
+            else -> throw IRCodeGenError("Continue statement outside of loop")
+        }
     }
 
     override fun visit(breakStatement: BreakStatement) {
@@ -1309,7 +1312,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return@scoped
         }
         val bodyBlock = ir.createLabel()
-        stmtStack.scoped(LoopStmtInfo()) { loopStmtInfo ->
+        stmtStack.scoped(ForLoopStmtInfo()) { loopStmtInfo ->
             visitInit(forStatement.init)
 
             val conditionBlock = loopStmtInfo.resolveCondition(ir)
@@ -1323,16 +1326,20 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val endBlock = loopStmtInfo.resolveExit(ir)
                 ir.branchCond(condition, bodyBlock, endBlock)
             }
+
+            if (ir.last() !is TerminateInstruction) {
+                ir.branch(conditionBlock)
+            }
             ir.switchLabel(bodyBlock)
             visitStatement(forStatement.body)
             if (ir.last() !is TerminateInstruction) {
-                val updateBlock = ir.createLabel()
-                ir.branch(updateBlock)
-                ir.switchLabel(updateBlock)
+                ir.branch(loopStmtInfo.resolveUpdate(ir))
+            }
+            val updateBB = loopStmtInfo.update()
+            if (updateBB != null) {
+                ir.switchLabel(updateBB)
                 visitUpdate(forStatement.update)
-                if (ir.last() !is TerminateInstruction) {
-                    ir.branch(conditionBlock)
-                }
+                ir.branch(conditionBlock)
             }
             val endBlock = loopStmtInfo.resolveExit(ir)
             ir.switchLabel(endBlock)

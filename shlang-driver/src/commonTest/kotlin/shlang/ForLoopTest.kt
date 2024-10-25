@@ -37,6 +37,13 @@ abstract class ForLoopTests: CommonCTest() {
     }
 
     @Test
+    fun testForLoop3() {
+        val result = runCTest("shlang/loop/forLoop3", listOf("runtime/runtime.c"), options())
+        assertEquals("Done", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
     fun testMemset1() {
         val result = runCTest("shlang/loop/memset1", listOf("runtime/runtime.c"), options())
         assert(result, "0 0 0 0 0 0 0 0 0 0 \n")

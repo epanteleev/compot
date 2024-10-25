@@ -6,6 +6,7 @@ import tokenizer.tokens.*
 import gen.IRCodeGenError
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.*
+import tokenizer.Position
 
 
 enum class BinaryOpType {
@@ -353,6 +354,8 @@ data class VarNode(private val str: Identifier) : Expression() {
     fun name(): String = str.str()
     fun nameIdent(): Identifier = str
 
+    fun position(): Position = str.position()
+
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -391,7 +394,7 @@ data class CharNode(val char: CharLiteral) : Expression() {
     }
 
     fun toInt(): Int {
-        return char.data.toInt()
+        return char.data.code.toInt()
     }
 }
 

@@ -34,19 +34,19 @@ class Load private constructor(id: Identity, owner: Block, loadedType: Primitive
 
         fun make(id: Identity, owner: Block, loadedType: PrimitiveType, operand: Value): Load {
             val type = operand.type()
-            require(isAppropriateTypes(type, loadedType)) {
+            require(isAppropriateTypes(type)) {
                 "inconsistent types in '$id' type=${loadedType}, but operand=${operand}:$type"
             }
 
             return registerUser(Load(id, owner, loadedType, operand), operand)
         }
 
-        private fun isAppropriateTypes(tp: Type, loadedType: PrimitiveType): Boolean {
-            return tp is PointerType && loadedType !is FlagType
+        private fun isAppropriateTypes(tp: Type): Boolean {
+            return tp is PointerType
         }
 
         fun typeCheck(load: Load): Boolean {
-            return isAppropriateTypes(load.operand().type(), load.type())
+            return isAppropriateTypes(load.operand().type())
         }
     }
 }

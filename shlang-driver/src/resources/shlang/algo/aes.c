@@ -687,24 +687,17 @@ int main(void)
     exit = test_encrypt_cbc() + test_decrypt_cbc() +
 	test_encrypt_ctr() + test_decrypt_ctr() +
 	test_decrypt_ecb() + test_encrypt_ecb();
+#if defined(AES128)
     test_encrypt_ecb_verbose();
+#endif
 
     return exit;
 }
 
 
 // prints string as hex
-static void phex(uint8_t* str)
-{
-
-#if defined(AES256)
-    uint8_t len = 32;
-#elif defined(AES192)
-    uint8_t len = 24;
-#elif defined(AES128)
+static void phex(uint8_t* str) {
     uint8_t len = 16;
-#endif
-
     unsigned char i;
     for (i = 0; i < len; ++i)
         printf("%.2x", str[i]);

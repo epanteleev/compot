@@ -80,6 +80,6 @@ value class ArrayWrapper<T>(private val array: Array<T>): List<T> {
     }
 }
 
-inline fun<T> arrayWrapperOf(array: Array<T>): ArrayWrapper<T> {
+fun<T> arrayWrapperOf(array: Array<T>): ArrayWrapper<T> {
     return ArrayWrapper(array)
 }

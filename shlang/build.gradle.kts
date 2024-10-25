@@ -16,6 +16,16 @@ repositories {
 }
 
 kotlin {
+    targets.all {
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    allWarningsAsErrors.set(true)
+                }
+            }
+        }
+    }
+
     jvm()
     linuxX64 {
         binaries {
