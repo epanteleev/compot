@@ -1,6 +1,7 @@
 package shlang
 
 import common.CommonCTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 
@@ -207,6 +208,18 @@ abstract class FunTests: CommonCTest() {
     fun test34() {
         val result = runCTest("shlang/fun/34", listOf(), options())
         assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun test35() {
+        val result = runCTest("shlang/fun/35", listOf(), options())
+        assertReturnCode(result, 3)
+    }
+
+    @Test
+    fun test36() {
+        val result = runCTest("shlang/fun/36", listOf(), options())
+        assertReturnCode(result, 3)
     }
 }
 

@@ -13,6 +13,7 @@ sealed class CPrimitive: CType() {
         when (this) {
             CHAR -> {
                 return when (type2) {
+                    BOOL -> CHAR
                     INT -> INT
                     LONG -> LONG
                     ULONG -> ULONG
@@ -27,6 +28,7 @@ sealed class CPrimitive: CType() {
 
             UCHAR -> {
                 return when (type2) {
+                    BOOL -> UCHAR
                     INT -> INT
                     LONG -> LONG
                     CHAR -> UCHAR
@@ -40,6 +42,7 @@ sealed class CPrimitive: CType() {
             }
             SHORT -> {
                 return when (type2) {
+                    BOOL -> SHORT
                     INT -> INT
                     LONG -> LONG
                     CHAR -> SHORT
@@ -53,6 +56,7 @@ sealed class CPrimitive: CType() {
 
             INT -> {
                 return when (type2) {
+                    BOOL -> INT
                     CHAR -> INT
                     UCHAR -> INT
                     LONG -> LONG
@@ -70,6 +74,7 @@ sealed class CPrimitive: CType() {
 
             LONG -> {
                 return when (type2) {
+                    BOOL -> LONG
                     CHAR -> LONG
                     UCHAR -> LONG
                     INT -> LONG
@@ -86,6 +91,7 @@ sealed class CPrimitive: CType() {
 
             FLOAT -> {
                 return when (type2) {
+                    BOOL -> FLOAT
                     CHAR -> FLOAT
                     INT -> FLOAT
                     SHORT -> FLOAT
@@ -99,6 +105,7 @@ sealed class CPrimitive: CType() {
 
             DOUBLE -> {
                 return when (type2) {
+                    BOOL -> DOUBLE
                     CHAR -> DOUBLE
                     INT -> DOUBLE
                     SHORT -> DOUBLE
@@ -112,6 +119,7 @@ sealed class CPrimitive: CType() {
 
             USHORT -> {
                 return when (type2) {
+                    BOOL -> USHORT
                     INT -> INT
                     LONG -> LONG
                     ULONG -> ULONG
@@ -126,6 +134,7 @@ sealed class CPrimitive: CType() {
 
             UINT -> {
                 return when (type2) {
+                    BOOL -> UINT
                     CHAR -> UINT
                     UCHAR -> UINT
                     LONG -> LONG
@@ -142,6 +151,7 @@ sealed class CPrimitive: CType() {
 
             ULONG -> {
                 return when (type2) {
+                    BOOL -> ULONG
                     CHAR -> ULONG
                     UCHAR -> ULONG
                     INT -> ULONG

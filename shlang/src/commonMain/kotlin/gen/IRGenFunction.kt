@@ -1162,10 +1162,9 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             return
         }
         val value = visitExpression(expr, true)
-        val returnType = ir.prototype().returnType()
         when (val type = returnStatement.expr.resolveType(typeHolder)) {
-            is CPrimitive -> {
-                returnType as PrimitiveType
+            is CPrimitive, is CStringLiteral -> {
+                val returnType = ir.prototype().returnType() as PrimitiveType
                 val returnValue = ir.convertToType(value, returnType)
                 ir.store(returnValueAdr!!, returnValue)
             }
@@ -1174,7 +1173,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             else -> throw IRCodeGenError("Unknown return type, type=${returnStatement.expr.resolveType(typeHolder)}")
         }
-
         ir.branch(exitBlock)
     }
 
