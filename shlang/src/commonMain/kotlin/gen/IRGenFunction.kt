@@ -525,7 +525,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun makeAlgebraicBinary(binop: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
-        when (val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))) {
+        when (val commonType = mb.toIRLVType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))) {
             is PointerType -> {
                 val lvalue     = visitExpression(binop.left, true)
                 val lValueType = when (val l = binop.left.resolveType(typeHolder)) {

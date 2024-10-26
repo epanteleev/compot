@@ -1,5 +1,6 @@
 package gen
 
+import common.assertion
 import ir.types.Type
 import ir.Definitions.BYTE_SIZE
 import ir.Definitions.HWORD_SIZE
@@ -13,7 +14,7 @@ import types.CAggregateType
 
 
 object CallConvention {
-    fun coerceArgumentTypes(cType: CAggregateType): List<PrimitiveType>? = when (cType.size()) {
+    fun coerceArgumentTypes(cType: CAggregateType): List<PrimitiveType>? = when (val size = cType.size()) {
         BYTE_SIZE  -> arrayListOf(Type.I8)
         HWORD_SIZE -> arrayListOf(Type.I16)
         WORD_SIZE  -> {
@@ -42,6 +43,11 @@ object CallConvention {
             val type2 = if (cType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE * 2)) Type.F64 else Type.I64
             arrayListOf(type1, type2)
         }
-        else -> null
+        else -> {
+            assertion(size >= QWORD_SIZE * 2) {
+                "unsupported size=$size"
+            }
+            null
+        }
     }
 }
