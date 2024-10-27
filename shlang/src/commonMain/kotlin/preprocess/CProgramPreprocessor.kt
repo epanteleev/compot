@@ -230,7 +230,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
 
                 } else if (nameOrBracket.str() == "<") {
                     nameOrBracket as CToken
-                    if (!check<Identifier>()) {
+                    if (!check<CToken>()) {
                         throw PreprocessorException("Expected file name: but '${peak<AnyToken>()}'")
                     }
                     val headerName = readHeaderName()
