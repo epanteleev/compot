@@ -25,7 +25,11 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
         TODO("Not yet implemented")
     }
 
-    override fun visit(builtin: BuiltinExpression): Int? {
+    override fun visit(builtin: BuiltinVaArg): Int? {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(builtin: BuiltinVaStart): Int? {
         TODO("Not yet implemented")
     }
 
@@ -171,7 +175,11 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
         TODO("Not yet implemented")
     }
 
-    override fun visit(builtin: BuiltinExpression): Long? {
+    override fun visit(builtin: BuiltinVaArg): Long? {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(builtin: BuiltinVaStart): Long? {
         TODO("Not yet implemented")
     }
 
@@ -317,7 +325,11 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
         TODO("Not yet implemented")
     }
 
-    override fun visit(builtin: BuiltinExpression): Float? {
+    override fun visit(builtin: BuiltinVaArg): Float? {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(builtin: BuiltinVaStart): Float? {
         TODO("Not yet implemented")
     }
 
@@ -453,7 +465,11 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
         TODO("Not yet implemented")
     }
 
-    override fun visit(builtin: BuiltinExpression): Double? {
+    override fun visit(builtin: BuiltinVaArg): Double? {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(builtin: BuiltinVaStart): Double? {
         TODO("Not yet implemented")
     }
 

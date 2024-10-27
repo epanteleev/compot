@@ -3,6 +3,7 @@ package gen
 import ir.module.block.Label
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.types.IntegerType
+import ir.value.Value
 import ir.value.constant.IntegerConstant
 
 
@@ -26,6 +27,10 @@ class StmtStack {
 
     fun top(): StmtInfo {
         return stack[stack.size - 1]
+    }
+
+    fun root(): FunctionStmtInfo {
+        return stack[0] as FunctionStmtInfo
     }
 
     fun topLoop(): AnyLoopStmtInfo? {
@@ -96,5 +101,21 @@ class ForLoopStmtInfo : AnyLoopStmtInfo() {
 
     fun update(): Label? {
         return updateBB
+    }
+}
+
+class FunctionStmtInfo : StmtInfo() {
+    private var returnValueAdr: Value? = null
+
+    fun resolveReturnValueAdr(retValue: Value): Value {
+        if (returnValueAdr == null) {
+            returnValueAdr = retValue
+        }
+
+        return returnValueAdr as Value
+    }
+
+    fun returnValueAdr(): Value {
+        return returnValueAdr as Value
     }
 }

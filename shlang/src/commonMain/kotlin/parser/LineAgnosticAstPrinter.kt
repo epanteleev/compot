@@ -270,12 +270,21 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         singleInitializer.expr.accept(this)
     }
 
-    override fun visit(builtin: BuiltinExpression) {
-        buffer.append(builtin.name)
+    override fun visit(builtin: BuiltinVaArg) {
+        buffer.append("__builtin_va_arg")
         buffer.append('(')
         builtin.assign.accept(this)
         buffer.append(',')
         builtin.typeName.accept(this)
+        buffer.append(')')
+    }
+
+    override fun visit(builtin: BuiltinVaStart) {
+        buffer.append("__builtin_va_start")
+        buffer.append('(')
+        builtin.vaList.accept(this)
+        buffer.append(',')
+        builtin.param.accept(this)
         buffer.append(')')
     }
 

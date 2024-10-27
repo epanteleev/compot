@@ -5,7 +5,7 @@ import typedesc.TypeHolder
 import parser.nodes.visitors.*
 
 
-abstract class AnyParameter : Node() {
+sealed class AnyParameter : Node() {
     abstract fun resolveType(typeHolder: TypeHolder): TypeDesc
     abstract fun<T> accept(visitor: ParameterVisitor<T>): T
 }

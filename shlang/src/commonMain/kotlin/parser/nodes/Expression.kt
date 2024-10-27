@@ -523,10 +523,18 @@ data class IdentNode(private val str: Identifier) : Expression() {
     }
 }
 
-class BuiltinExpression(val name: String, val assign: Expression, val typeName: TypeName) : Expression() {
+class BuiltinVaArg(val assign: Expression, val typeName: TypeName) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         return@memoize typeName.specifyType(typeHolder, listOf()).type.cType()
+    }
+}
+
+class BuiltinVaStart(val vaList: Expression, val param: Node) : Expression() {
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        return@memoize VOID
     }
 }

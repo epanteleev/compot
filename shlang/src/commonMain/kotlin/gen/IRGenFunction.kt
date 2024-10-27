@@ -37,8 +37,6 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     StatementVisitor<Unit>,
     DeclaratorVisitor<Value> {
     private var currentFunction: FunctionDataBuilder? = null
-    private var returnValueAdr: Value? = null
-    private var exitBlock: Label = Label.entry //TODO late initialization
     private var stringTolabel = mutableMapOf<String, Label>()
     private val stmtStack = StmtStack()
     private val initializerContext = InitializerContext()
@@ -112,7 +110,12 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         is SingleInitializer -> visitSingleInitializer(expression)
         is InitializerList   -> visitSingleInitializer0(expression.initializers[0] as SingleInitializer)
         is CompoundLiteral   -> visitCompoundLiteral(expression)
+        is BuiltinVaStart    -> visitBuiltInVaStart(expression)
         else -> throw IRCodeGenError("Unknown expression: $expression")
+    }
+
+    private fun visitBuiltInVaStart(builtinVaStart: BuiltinVaStart): Value {
+        TODO()
     }
 
     private fun visitSingleInitializer0(singleInitializer: SingleInitializer): Value = when (val expr = singleInitializer.expr) {
@@ -666,11 +669,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
                     if (leftType.size() > QWORD_SIZE * 2) {
                         ir.memcpy(left, right, U64Value(leftType.size().toLong()))
                     } else {
-                        val list = CallConvention.coerceArgumentTypes(leftType)
-                        if (list == null) {
-                            ir.memcpy(left, right, U64Value(leftType.size().toLong()))
-                            return left
-                        }
+                        val list = CallConvention.coerceArgumentTypes(leftType) ?: throw IRCodeGenError("Internal error")
                         val structType = mb.toIRType<AggregateType>(typeHolder, leftType)
                         if (list.size == 1) {
                             val loadedRight = ir.load(list[0], right)
@@ -982,64 +981,46 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown type, type=$cType")
     }
 
-    private fun emitReturnType(retCType: TypeDesc, args: List<ArgumentValue>) {
-        exitBlock = ir.createLabel()
+    private fun emitReturnType(fnStmt: FunctionStmtInfo, retCType: TypeDesc, args: List<ArgumentValue>) {
+        val exitBlock = fnStmt.resolveExit(ir)
         when (val cType = retCType.cType()) {
             is VOID -> {
                 ir.switchLabel(exitBlock)
                 ir.retVoid()
             }
             is BOOL -> {
-                returnValueAdr = ir.alloc(Type.I8)
+                val returnValueAdr = fnStmt.resolveReturnValueAdr(ir.alloc(Type.I8))
                 ir.switchLabel(exitBlock)
-                emitReturn(retCType.cType(), returnValueAdr!!)
+                val ret = ir.load(Type.I8, returnValueAdr)
+                ir.ret(Type.I8, arrayOf(ret))
             }
             is CPrimitive -> {
                 val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType.cType())
-                returnValueAdr = ir.alloc(retType)
+                val returnValueAdr = fnStmt.resolveReturnValueAdr(ir.alloc(retType))
                 ir.switchLabel(exitBlock)
-                emitReturn(retCType.cType(), returnValueAdr!!)
+                val ret = ir.load(retType, returnValueAdr)
+                ir.ret(retType, arrayOf(ret))
             }
-            is CAggregateType -> {
+            is AnyCStructType -> {
                 if (cType.size() > QWORD_SIZE * 2) {
-                    returnValueAdr = args[0]
+                    fnStmt.resolveReturnValueAdr(args[0])
                     ir.switchLabel(exitBlock)
-                    emitReturn(retCType.cType(), returnValueAdr!!)
-                } else {
-                    returnValueAdr = ir.alloc(mb.toIRType<StructType>(typeHolder, cType))
-                    ir.switchLabel(exitBlock)
-                    emitReturn(retCType.cType(), returnValueAdr!!)
+                    ir.retVoid()
+                    return
                 }
-
-            }
-            else -> throw IRCodeGenError("Unknown return type, type=$cType")
-        }
-    }
-
-    private fun emitReturn(retCType: CType, value: Value) = when (retCType) {
-        is BOOL -> {
-            val ret = ir.load(Type.I8, value)
-            ir.ret(Type.I8, arrayOf(ret))
-        }
-        is CPrimitive -> {
-            val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType)
-            val ret = ir.load(retType, value)
-            ir.ret(retType, arrayOf(ret))
-        }
-        is CStructType -> {
-            val retTupleType = CallConvention.coerceArgumentTypes(retCType)
-            if (retTupleType != null) {
-                val retValues = ir.coerceArguments(retCType, value)
+                val alloc = ir.alloc(mb.toIRType<StructType>(typeHolder, cType))
+                val returnValueAdr = fnStmt.resolveReturnValueAdr(alloc)
+                ir.switchLabel(exitBlock)
+                val retTupleType = CallConvention.coerceArgumentTypes(cType) ?: throw IRCodeGenError("Unknown type, type=$cType")
+                val retValues = ir.coerceArguments(cType, returnValueAdr)
                 if (retTupleType.size == 1) {
                     ir.ret(retTupleType[0], retValues.toTypedArray())
                 } else {
                     ir.ret(TupleType(retTupleType.toTypedArray()), retValues.toTypedArray())
                 }
-            } else {
-                ir.retVoid()
             }
+            else -> throw IRCodeGenError("Unknown return type, type=$cType")
         }
-        else -> throw IRCodeGenError("Unknown return type, type=$retCType")
     }
 
     override fun visit(functionNode: FunctionNode): Value = scoped {
@@ -1047,20 +1028,22 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
         val retType    = fnType.retType()
         val irRetType  = irReturnType(retType)
-        val argTypes = argumentTypes(fnType.args(), retType)
+        val argTypes   = argumentTypes(fnType.args(), retType)
         currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes)
 
-        visitParameters(parameters, fnType.args(), ir.arguments()) { param, cType, args ->
-            visitParameter(param, cType, args)
-        }
+        stmtStack.scoped(FunctionStmtInfo()) { stmt ->
+            visitParameters(parameters, fnType.args(), ir.arguments()) { param, cType, args ->
+                visitParameter(param, cType, args)
+            }
 
-        emitReturnType(retType, ir.arguments())
+            emitReturnType(stmt, retType, ir.arguments())
 
-        ir.switchLabel(Label.entry)
-        visitStatement(functionNode.body)
+            ir.switchLabel(Label.entry)
+            visitStatement(functionNode.body)
 
-        if (ir.last() !is TerminateInstruction) {
-            ir.branch(exitBlock)
+            if (ir.last() !is TerminateInstruction) {
+                ir.branch(stmt.resolveExit(ir))
+            }
         }
         return@scoped ir.prototype()
     }
@@ -1156,9 +1139,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (ir.last() is TerminateInstruction) {
             return
         }
+        val fnStmt = stmtStack.root()
         val expr = returnStatement.expr
         if (expr is EmptyExpression) {
-            ir.branch(exitBlock)
+            ir.branch(fnStmt.resolveExit(ir))
             return
         }
         val value = visitExpression(expr, true)
@@ -1166,14 +1150,14 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             is CPrimitive, is CStringLiteral -> {
                 val returnType = ir.prototype().returnType() as PrimitiveType
                 val returnValue = ir.convertToType(value, returnType)
-                ir.store(returnValueAdr!!, returnValue)
+                ir.store(fnStmt.returnValueAdr(), returnValue)
             }
             is CStructType -> {
-                ir.memcpy(returnValueAdr!!, value, U64Value(type.size().toLong()))
+                ir.memcpy(fnStmt.returnValueAdr(), value, U64Value(type.size().toLong()))
             }
             else -> throw IRCodeGenError("Unknown return type, type=${returnStatement.expr.resolveType(typeHolder)}")
         }
-        ir.branch(exitBlock)
+        ir.branch(fnStmt.resolveExit(ir))
     }
 
     override fun visit(compoundStatement: CompoundStatement) = scoped {
