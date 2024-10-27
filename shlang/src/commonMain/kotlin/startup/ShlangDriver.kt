@@ -1,7 +1,7 @@
 package startup
 
 import common.pwd
-import gen.IRGen
+import codegen.IRGen
 import preprocess.*
 import ir.module.Module
 import okio.FileSystem

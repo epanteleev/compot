@@ -1,4 +1,4 @@
-package gen
+package codegen
 
 
 class NameGenerator(private var constantCounter: Int = 0) {

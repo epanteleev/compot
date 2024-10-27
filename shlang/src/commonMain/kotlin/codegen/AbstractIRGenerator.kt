@@ -1,17 +1,17 @@
-package gen
+package codegen
 
 import common.padTo
-import gen.TypeConverter.toIRLVType
+import codegen.TypeConverter.toIRLVType
 import types.*
 import ir.types.*
 import ir.value.*
 import typedesc.*
 import ir.global.*
 import parser.nodes.*
-import gen.consteval.*
+import codegen.consteval.*
 import ir.module.ExternFunction
 import ir.Definitions.QWORD_SIZE
-import gen.TypeConverter.toIRType
+import codegen.TypeConverter.toIRType
 import ir.attributes.GlobalValueAttribute
 import ir.module.builder.impl.ModuleBuilder
 import ir.value.constant.Constant

@@ -1,4 +1,4 @@
-package gen
+package codegen
 
 import common.assertion
 import ir.types.Type
@@ -6,10 +6,7 @@ import ir.Definitions.BYTE_SIZE
 import ir.Definitions.HWORD_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
-import ir.types.AggregateType
-import ir.types.NonTrivialType
 import ir.types.PrimitiveType
-import ir.types.StructType
 import types.CAggregateType
 
 

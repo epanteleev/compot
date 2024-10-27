@@ -1,27 +1,30 @@
-package gen
+package codegen
 
 import types.*
 import ir.types.*
 import ir.value.*
 import parser.nodes.*
 import common.assertion
-import gen.TypeConverter.coerceArguments
+import codegen.TypeConverter.coerceArguments
 import ir.instruction.*
 import ir.module.block.Label
-import gen.TypeConverter.convertToType
-import gen.TypeConverter.toIRLVType
-import gen.TypeConverter.toIRType
-import gen.TypeConverter.toIndexType
-import gen.consteval.CommonConstEvalContext
-import gen.consteval.ConstEvalExpression
-import gen.consteval.TryConstEvalExpressionInt
+import codegen.TypeConverter.convertToType
+import codegen.TypeConverter.toIRLVType
+import codegen.TypeConverter.toIRType
+import codegen.TypeConverter.toIndexType
+import codegen.consteval.CommonConstEvalContext
+import codegen.consteval.ConstEvalExpression
+import codegen.consteval.TryConstEvalExpressionInt
+import intrinsic.x64.VaInit
 import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
 import ir.global.StringLiteralGlobalConstant
+import ir.intrinsic.IntrinsicImplementor
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
+import ir.platform.MacroAssembler
 import ir.value.constant.*
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.DeclaratorVisitor
@@ -111,11 +114,41 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         is InitializerList   -> visitSingleInitializer0(expression.initializers[0] as SingleInitializer)
         is CompoundLiteral   -> visitCompoundLiteral(expression)
         is BuiltinVaStart    -> visitBuiltInVaStart(expression)
+        is BuiltinVaArg      -> visitBuiltInVaArg(expression)
         else -> throw IRCodeGenError("Unknown expression: $expression")
     }
 
     private fun visitBuiltInVaStart(builtinVaStart: BuiltinVaStart): Value {
-        TODO()
+        val vaList = visitExpression(builtinVaStart.vaList, true)
+        val vaListType = builtinVaStart.vaList.resolveType(typeHolder)
+        if (vaListType != VaInit.vaList) {
+            throw IRCodeGenError("va_list type expected, but got $vaListType")
+        }
+        val vaListIrType = mb.toIRType<StructType>(typeHolder, vaListType)
+
+        val vaInit = stmtStack.root().vaInit as Alloc
+        val vaInitAddr = ir.gfp(vaInit, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 0)))
+        val gpOffset = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 0)))
+        ir.store(gpOffset, vaInitAddr)
+        return Value.UNDEF
+    }
+
+    private fun visitBuiltInVaArg(builtinVaArg: BuiltinVaArg): Value {
+        val vaList = visitExpression(builtinVaArg.assign, true)
+        val vaListType = builtinVaArg.assign.resolveType(typeHolder)
+        if (vaListType != VaInit.vaList) {
+            throw IRCodeGenError("va_list type expected, but got $vaListType")
+        }
+        val vaListIrType = mb.toIRType<StructType>(typeHolder, vaListType)
+
+        val vaInit = stmtStack.root().vaInit as Alloc
+        val vaInitAddr = ir.gfp(vaInit, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 0)))
+        val gpOffset = ir.load(Type.I64, vaInitAddr)
+        val gpOffsetValue = ir.convertToType(gpOffset, Type.I64)
+        val gpOffsetValuePlus = ir.add(gpOffsetValue, Constant.valueOf(Type.I64, QWORD_SIZE))
+        val cvt = ir.convertToType(gpOffsetValuePlus, Type.Ptr)
+        ir.store(cvt, vaInitAddr)
+        return gpOffset
     }
 
     private fun visitSingleInitializer0(singleInitializer: SingleInitializer): Value = when (val expr = singleInitializer.expr) {
@@ -1023,13 +1056,25 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
+    private fun initializeVarArgs(fnType: CFunctionType, fnStmt: FunctionStmtInfo) {
+        if (!fnType.variadic()) {
+            return
+        }
+        val vaInitType = mb.toIRType<StructType>(typeHolder, VaInit.vaInit)
+        val vaInitInstance = ir.alloc(vaInitType)
+        fnStmt.vaInit = vaInitInstance
+        val cont = ir.createLabel()
+        ir.intrinsic(arrayListOf(vaInitInstance), VaInit(), cont)
+        ir.switchLabel(cont)
+    }
+
     override fun visit(functionNode: FunctionNode): Value = scoped {
         val parameters = functionNode.functionDeclarator().params()
         val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
         val retType    = fnType.retType()
         val irRetType  = irReturnType(retType)
         val argTypes   = argumentTypes(fnType.args(), retType)
-        currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes)
+        currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes, fnType.variadic())
 
         stmtStack.scoped(FunctionStmtInfo()) { stmt ->
             visitParameters(parameters, fnType.args(), ir.arguments()) { param, cType, args ->
@@ -1039,6 +1084,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             emitReturnType(stmt, retType, ir.arguments())
 
             ir.switchLabel(Label.entry)
+            initializeVarArgs(fnType, stmt)
             visitStatement(functionNode.body)
 
             if (ir.last() !is TerminateInstruction) {
@@ -1342,8 +1388,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.switch(condition, default, info.values, info.table)
 
             if (info.exit() != null) {
-                val endBlock = info.resolveExit(ir)
-                ir.switchLabel(endBlock)
+                ir.switchLabel(info.resolveExit(ir))
             }
         }
     }

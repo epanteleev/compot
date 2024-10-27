@@ -1,4 +1,4 @@
-package gen
+package codegen
 
 import common.assertion
 import types.*

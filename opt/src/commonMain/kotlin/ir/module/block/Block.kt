@@ -465,7 +465,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@dfANDcf addTerminate { Switch.make(it, this, value, default as Block, table.toTypedArray(), resolved) }
     }
 
-    override fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor<MacroAssembler>, target: Label): Intrinsic {
+    override fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor, target: Label): Intrinsic {
         return addTerminate { Intrinsic.make(it, this, inputs.toTypedArray(), implementor, target as Block) }
     }
 

@@ -2,7 +2,7 @@ package parser.nodes
 
 import types.*
 import typedesc.*
-import gen.consteval.*
+import codegen.consteval.*
 import tokenizer.tokens.Identifier
 import parser.nodes.visitors.DirectDeclaratorParamVisitor
 

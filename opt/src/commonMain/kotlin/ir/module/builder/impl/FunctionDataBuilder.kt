@@ -216,7 +216,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.switch(value, default, table, targets)
     }
 
-    override fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor<MacroAssembler>, target: Label): Intrinsic {
+    override fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor, target: Label): Intrinsic {
         return bb.intrinsic(inputs, implementor, target)
     }
 

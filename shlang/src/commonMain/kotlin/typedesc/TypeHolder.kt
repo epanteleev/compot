@@ -1,7 +1,7 @@
 package typedesc
 
 import types.*
-import gen.VarStack
+import codegen.VarStack
 
 
 class TypeHolder private constructor(): Scope {

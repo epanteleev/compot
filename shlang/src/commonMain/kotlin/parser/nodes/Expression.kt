@@ -3,7 +3,7 @@ package parser.nodes
 import types.*
 import typedesc.*
 import tokenizer.tokens.*
-import gen.IRCodeGenError
+import codegen.IRCodeGenError
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.*
 import tokenizer.Position

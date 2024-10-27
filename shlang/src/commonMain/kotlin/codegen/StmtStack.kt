@@ -1,5 +1,6 @@
-package gen
+package codegen
 
+import ir.instruction.Alloc
 import ir.module.block.Label
 import ir.module.builder.impl.FunctionDataBuilder
 import ir.types.IntegerType
@@ -106,6 +107,7 @@ class ForLoopStmtInfo : AnyLoopStmtInfo() {
 
 class FunctionStmtInfo : StmtInfo() {
     private var returnValueAdr: Value? = null
+    var vaInit: Alloc? = null
 
     fun resolveReturnValueAdr(retValue: Value): Value {
         if (returnValueAdr == null) {

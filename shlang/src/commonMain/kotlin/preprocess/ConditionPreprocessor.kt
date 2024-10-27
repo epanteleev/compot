@@ -3,8 +3,8 @@ package preprocess
 import tokenizer.*
 import tokenizer.tokens.*
 import parser.CProgramParser
-import gen.consteval.ConstEvalExpression
-import gen.consteval.TryConstEvalExpressionLong
+import codegen.consteval.ConstEvalExpression
+import codegen.consteval.TryConstEvalExpressionLong
 import preprocess.CProgramPreprocessor.Companion.create
 
 

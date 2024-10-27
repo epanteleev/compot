@@ -804,7 +804,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             return@rule TypeNode(tok)
         }
-        if (check("__builtin_va_list")) { //TODO hack
+        if (check("__builtin_va_list")) {
             val tok = peak<Identifier>()
             eat()
             return@rule TypeNode(tok)

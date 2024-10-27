@@ -1,4 +1,4 @@
-package gen
+package codegen
 
 import ir.value.Value
 import typedesc.TypeDesc

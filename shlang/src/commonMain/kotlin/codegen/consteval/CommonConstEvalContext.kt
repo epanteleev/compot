@@ -1,4 +1,4 @@
-package gen.consteval
+package codegen.consteval
 
 import parser.InvalidToken
 import parser.ParserException

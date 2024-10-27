@@ -1,4 +1,4 @@
-package gen.consteval
+package codegen.consteval
 
 import tokenizer.tokens.CToken
 import typedesc.TypeHolder

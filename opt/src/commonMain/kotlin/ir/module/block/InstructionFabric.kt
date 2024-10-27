@@ -58,7 +58,7 @@ interface InstructionFabric {
     fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy
     fun proj(tuple: Value, index: Int): Projection
     fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch
-    fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor<MacroAssembler>, target: Label): Intrinsic
+    fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor, target: Label): Intrinsic
 }
 
 interface InternalInstructionFabric {

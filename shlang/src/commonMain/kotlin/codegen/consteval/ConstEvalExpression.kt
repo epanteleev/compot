@@ -1,4 +1,4 @@
-package gen.consteval
+package codegen.consteval
 
 import types.*
 import parser.nodes.*

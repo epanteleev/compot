@@ -1,4 +1,4 @@
-package gen
+package codegen
 
 import parser.nodes.*
 import ir.module.Module

@@ -6,10 +6,9 @@ import ir.value.Value
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 import ir.intrinsic.IntrinsicImplementor
-import ir.platform.MacroAssembler
 
 
-class Intrinsic private constructor(id: Identity, owner: Block, private val inputs: Array<Value>, val implementor: IntrinsicImplementor<MacroAssembler>, cont: Block)
+class Intrinsic private constructor(id: Identity, owner: Block, private val inputs: Array<Value>, val implementor: IntrinsicImplementor, cont: Block)
     : TerminateInstruction(id, owner, inputs, arrayOf(cont)) {
     override fun dump(): String {
         val builder = StringBuilder()
@@ -33,7 +32,7 @@ class Intrinsic private constructor(id: Identity, owner: Block, private val inpu
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, inputs: Array<Value>, implementor: IntrinsicImplementor<MacroAssembler>, cont: Block): Intrinsic {
+        fun make(id: Identity, owner: Block, inputs: Array<Value>, implementor: IntrinsicImplementor, cont: Block): Intrinsic {
             return Intrinsic(id, owner, inputs, implementor, cont)
         }
 
