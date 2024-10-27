@@ -170,13 +170,13 @@ abstract class AlgoTests: CommonCTest() {
 
     @Test
     fun testIntToString() {
-        val result = runCTest("shlang/int_to_string", listOf(), options())
+        val result = runCTest("shlang/algo/int_to_string", listOf(), options())
         assertReturnCode(result, 0)
     }
 
     @Test
     fun testAtoiStrToInteger() {
-        val result = runCTest("shlang/c_atoi_str_to_integer", listOf(), options())
+        val result = runCTest("shlang/algo/c_atoi_str_to_integer", listOf(), options())
         assertEquals("<<<< TEST FUNCTION >>>>\n<<<< TEST DONE >>>>\n", result.output)
         assertReturnCode(result, 0)
     }
