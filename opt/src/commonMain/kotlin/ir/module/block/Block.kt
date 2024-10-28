@@ -499,7 +499,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@df withOutput { Copy.make(it, this, value) }
     }
 
-    override fun move(dst: Generate, fromValue: Value): Move = mc.df {
+    override fun move(dst: UsableValue, fromValue: Value): Move = mc.df {
         return@df withOutput { Move.make(it, this, dst, fromValue) }
     }
 

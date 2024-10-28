@@ -5,7 +5,6 @@ import common.CommonCTest
 
 sealed class GCCTorture : CommonCTest() {
     @Test
-    @Ignore
     fun test_20001122_1() {
         val result = runCTest("shlang/gcc-c-torture/ieee/20001122-1", listOf(), options())
         assertEquals(0, result.exitCode)

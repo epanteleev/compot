@@ -6,6 +6,7 @@ import ir.module.*
 import ir.value.constant.*
 import ir.instruction.*
 import ir.module.block.Block
+import ir.global.GlobalValue
 import ir.instruction.matching.*
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
 import ir.value.constant.Constant
@@ -13,21 +14,28 @@ import ir.value.constant.Constant
 
 class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceAllocLoadStores() {
-        fun transform(bb: Block, inst: Instruction): Instruction? = match(inst) {
-            store(generate(), gValue(anytype())) { store ->
+        fun transform(bb: Block, inst: Instruction): Instruction? {
+            inst.match(store(generate(), gValue(anytype()))) { store: Store ->
                 val toValue = store.pointer().asValue<Generate>()
                 val value = bb.insertBefore(store) { it.lea(store.value()) }
-                bb.replace(store) { it.move(toValue, value) }
+                return bb.replace(store) { it.move(toValue, value) }
             }
-            store(generate(), nop()) { store ->
+
+            inst.match(store(gValue(primitive()), value(primitive()))) { store: Store ->
+                val toValue = store.pointer().asValue<GlobalValue>()
+                return bb.replace(store) { it.move(toValue, store.value()) }
+            }
+
+            inst.match(store(generate(), nop())) { store: Store ->
                 val toValue = store.pointer().asValue<Generate>()
-                bb.replace(store) { it.move(toValue, store.value()) }
+                return bb.replace(store) { it.move(toValue, store.value()) }
             }
-            load(generate()) { load ->
+            inst.match(load(generate())) { load: Load ->
                 val fromValue = load.operand().asValue<Generate>()
-                bb.replace(load) { it.copy(fromValue) }
+                return bb.replace(load) { it.copy(fromValue) }
             }
-            default()
+
+            return inst
         }
 
         for (bb in cfg) {

@@ -7,6 +7,7 @@ import ir.intrinsic.IntrinsicImplementor
 import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.platform.MacroAssembler
+import ir.value.UsableValue
 import ir.value.constant.IntegerConstant
 import ir.value.constant.UnsignedIntegerConstant
 import ir.value.Value
@@ -66,7 +67,7 @@ interface InternalInstructionFabric {
     fun lea(source: Value): Lea
     fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi
     fun copy(value: Value): Copy
-    fun move(dst: Generate, fromValue: Value): Move
+    fun move(dst: UsableValue, fromValue: Value): Move
     fun move(dst: Value, index: Value, src: Value): MoveByIndex
     fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad
     fun storeOnStack(destination: Value, index: Value, source: Value): StoreOnStack
