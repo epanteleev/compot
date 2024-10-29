@@ -147,7 +147,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val varArgInStack = ir.createLabel()
         val cont = ir.createLabel()
 
-        val isReg = ir.icmp(gpOffset, IntPredicate.Le, Constant.valueOf(Type.I32, 48))
+        val isReg = ir.icmp(gpOffset, IntPredicate.Le, Constant.valueOf(Type.I32, 40))
         ir.branchCond(isReg, varArgInReg, varArgInStack)
 
         ir.switchLabel(varArgInReg)
