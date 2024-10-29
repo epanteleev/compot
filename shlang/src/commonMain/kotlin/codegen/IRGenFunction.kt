@@ -115,7 +115,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         is CompoundLiteral   -> visitCompoundLiteral(expression)
         is BuiltinVaStart    -> visitBuiltInVaStart(expression)
         is BuiltinVaArg      -> visitBuiltInVaArg(expression)
+        is BuiltinVaEnd      -> visitBuiltInVaEnd(expression)
         else -> throw IRCodeGenError("Unknown expression: $expression")
+    }
+
+    private fun visitBuiltInVaEnd(builtinVaEnd: BuiltinVaEnd): Value {
+        val vaListType = builtinVaEnd.vaList.resolveType(typeHolder)
+        if (vaListType != VaStart.vaList) {
+            throw IRCodeGenError("va_list type expected, but got $vaListType")
+        }
+        // Nothing to do
+        return Value.UNDEF
     }
 
     private fun visitBuiltInVaStart(builtinVaStart: BuiltinVaStart): Value {
@@ -140,33 +150,39 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         val vaListIrType = mb.toIRType<StructType>(typeHolder, vaListType)
 
-        val gpOffsetPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 0)))
+        val gpOffsetPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.GP_OFFSET_IDX)))
         val gpOffset = ir.load(Type.I32, gpOffsetPtr)
 
         val varArgInReg = ir.createLabel()
         val varArgInStack = ir.createLabel()
         val cont = ir.createLabel()
 
-        val isReg = ir.icmp(gpOffset, IntPredicate.Le, Constant.valueOf(Type.I32, 40))
+        val isReg = ir.icmp(gpOffset, IntPredicate.Le, Constant.valueOf(Type.I32, VaStart.REG_SAVE_AREA_SIZE))
         ir.branchCond(isReg, varArgInReg, varArgInStack)
 
-        ir.switchLabel(varArgInReg)
-        val regSaveAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 3)))
-        val regSaveArea = ir.load(Type.Ptr, regSaveAreaPtr)
-        val arg1InReg = ir.gep(regSaveArea, Type.I8, gpOffset)
-        val newGPOffset = ir.add(gpOffset, Constant.valueOf(Type.I32, 8))
-        ir.store(gpOffsetPtr, newGPOffset)
-        ir.branch(cont)
+        val argInReg = ir.switchLabel(varArgInReg).let {
+            val regSaveAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.REG_SAVE_AREA_IDX)))
+            val regSaveArea = ir.load(Type.Ptr, regSaveAreaPtr)
+            val argInReg = ir.gep(regSaveArea, Type.I8, gpOffset)
+            val newGPOffset = ir.add(gpOffset, Constant.valueOf(Type.I32, QWORD_SIZE))
+            ir.store(gpOffsetPtr, newGPOffset)
+            ir.branch(cont)
 
-        ir.switchLabel(varArgInStack)
-        val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 2)))
-        val arg1InMem = ir.load(Type.Ptr, overflowArgAreaPtr)
-        val inc = ir.gep(arg1InMem, Type.I8, I32Value(8))
-        ir.store(overflowArgAreaPtr, inc)
-        ir.branch(cont)
+            argInReg
+        }
+
+        val argInMem = ir.switchLabel(varArgInStack).let {
+            val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.OVERFLOW_ARG_AREA_IDX)))
+            val argInMem = ir.load(Type.Ptr, overflowArgAreaPtr)
+            val inc = ir.gep(argInMem, Type.I64, I32Value(1))
+            ir.store(overflowArgAreaPtr, inc)
+            ir.branch(cont)
+
+            argInMem
+        }
 
         ir.switchLabel(cont)
-        val argPtr = ir.phi(listOf(arg1InReg, arg1InMem), listOf(varArgInReg, varArgInStack))
+        val argPtr = ir.phi(listOf(argInReg, argInMem), listOf(varArgInReg, varArgInStack))
         val argType = mb.toIRType<PrimitiveType>(typeHolder, builtinVaArg.typeName.specifyType(typeHolder, listOf()).type.cType())
         return ir.load(argType, argPtr)
     }

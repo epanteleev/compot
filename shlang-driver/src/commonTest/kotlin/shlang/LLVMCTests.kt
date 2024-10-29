@@ -303,14 +303,15 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testSignedArgs() {
         val result = runCTest("shlang/llvm-c-tests/2003-07-09-SignedArgs", listOf(), options())
-        val expected = """getShort():	1 1 1 1 1 1
-        getShort():	-128 116 116 -3852 -31232 -1708916736
-        getUnknown():	-128 116 116 -3852 -31232 30556 -1708916736
-        -1708921160
-        """.trimIndent()
+        val expected = """
+            |getShort():	1 1 1 1 1 1
+            |getShort():	-128 116 116 -3852 -31232 -1708916736
+            |getUnknown():	-128 116 116 -3852 -31232 30556 -1708916736
+            |-1708921160
+            |
+        """.trimMargin()
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }

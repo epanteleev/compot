@@ -538,3 +538,11 @@ class BuiltinVaStart(val vaList: Expression, val param: Node) : Expression() {
         return@memoize VOID
     }
 }
+
+class BuiltinVaEnd(val vaList: Expression) : Expression() {
+    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        return@memoize VOID
+    }
+}

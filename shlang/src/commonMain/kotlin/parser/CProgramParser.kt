@@ -1823,6 +1823,19 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             return@rule BuiltinVaStart(expr, param)
         }
+        if (check("__builtin_va_end")) {
+            eat()
+            if (!check("(")) {
+                throw ParserException(InvalidToken("Expected '('", peak()))
+            }
+            eat()
+            val expr = assignment_expression()?: throw ParserException(InvalidToken("Expected assignment expression", peak()))
+            if (!check(")")) {
+                throw ParserException(InvalidToken("Expected ')'", peak()))
+            }
+            eat()
+            return@rule BuiltinVaEnd(expr)
+        }
         if (check<Identifier>() &&
             typeHolder.getTypedefOrNull(peak<Identifier>().str()) == null) {
             val ident = peak<Identifier>()

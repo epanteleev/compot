@@ -8,6 +8,7 @@ int my_printf(const char *fmt, ...) {
     int v2 = 55;
     int first = __builtin_va_arg(args, int);
     printf(fmt, first);
+    __builtin_va_end(args);
     return val + v2;
 }
 

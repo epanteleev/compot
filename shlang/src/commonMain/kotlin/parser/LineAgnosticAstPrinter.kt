@@ -288,6 +288,13 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(')')
     }
 
+    override fun visit(builtin: BuiltinVaEnd) {
+        buffer.append("__builtin_va_end")
+        buffer.append('(')
+        builtin.vaList.accept(this)
+        buffer.append(')')
+    }
+
     override fun visit(arrayDeclarator: ArrayDeclarator) {
         buffer.append('[')
         arrayDeclarator.constexpr.accept(this)

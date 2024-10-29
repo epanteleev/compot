@@ -47,6 +47,12 @@ class VaStart() : IntrinsicImplementor("va_start", listOf()) {
     }
 
     companion object {
+        const val REG_SAVE_AREA_SIZE = 40
+        const val GP_OFFSET_IDX = 0
+        const val FP_OFFSET_IDX = 1
+        const val OVERFLOW_ARG_AREA_IDX = 2
+        const val REG_SAVE_AREA_IDX = 3
+
         val vaList = CStructType("va_list", arrayListOf(
             FieldMember("gp_offset", TypeDesc.from(INT, listOf())),
             FieldMember("fp_offset", TypeDesc.from(INT, listOf())),
