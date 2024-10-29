@@ -13,6 +13,14 @@ class Intrinsic private constructor(id: Identity, owner: Block, private val inpu
     override fun dump(): String {
         val builder = StringBuilder()
         builder.append("intrinsic")
+        builder.append(" @${implementor.name}(")
+        inputs.forEachIndexed { index, value ->
+            builder.append("$value: ${value.type()}")
+            if (index != inputs.size - 1) {
+                builder.append(", ")
+            }
+        }
+        builder.append(")")
         return builder.toString()
     }
 
@@ -33,7 +41,7 @@ class Intrinsic private constructor(id: Identity, owner: Block, private val inpu
 
     companion object {
         fun make(id: Identity, owner: Block, inputs: Array<Value>, implementor: IntrinsicImplementor, cont: Block): Intrinsic {
-            return Intrinsic(id, owner, inputs, implementor, cont)
+            return registerUser(Intrinsic(id, owner, inputs, implementor, cont), *inputs)
         }
 
         fun typeCheck(intrinsic: Intrinsic): Boolean {

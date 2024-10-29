@@ -356,7 +356,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(intrinsic: Intrinsic) {
-        TODO("Not yet implemented")
+        val values = intrinsic.operands().map { registerAllocation.operand(it) }
+        intrinsic.implementor.implement(asm, values)
     }
 
     override fun visit(call: Call) {

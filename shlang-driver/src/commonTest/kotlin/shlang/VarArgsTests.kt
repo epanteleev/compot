@@ -1,17 +1,15 @@
 package shlang
 
 import common.CommonCTest
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
 abstract class VarArgsTests: CommonCTest() {
     @Test
-    @Ignore
     fun test1() {
         val result = runCTest("shlang/varArgs/varArgs1", listOf(), options())
-        assertEquals("1\n", result.output)
+        assertEquals("Number: 1\n", result.output)
     }
 }
 

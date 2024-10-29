@@ -3,6 +3,7 @@ package parser.nodes
 import types.*
 import codegen.consteval.*
 import intrinsic.x64.VaInit
+import intrinsic.x64.VaStart
 import tokenizer.tokens.*
 import tokenizer.tokens.CToken
 import parser.nodes.visitors.TypeNodeVisitor
@@ -128,7 +129,7 @@ data class TypeNode(private val name: CToken) : AnyTypeNode() {
             "signed"  -> INT
             "unsigned"-> UINT
             "_Bool"   -> BOOL
-            "__builtin_va_list" -> VaInit.vaList
+            "__builtin_va_list" -> VaStart.vaList
             else      -> typeHolder.getTypedef(name.str()).cType()
         }
     }

@@ -1,5 +1,6 @@
 package codegen
 
+import asm.x64.Imm32
 import types.*
 import ir.types.*
 import ir.value.*
@@ -16,15 +17,14 @@ import codegen.consteval.CommonConstEvalContext
 import codegen.consteval.ConstEvalExpression
 import codegen.consteval.TryConstEvalExpressionInt
 import intrinsic.x64.VaInit
+import intrinsic.x64.VaStart
 import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
 import ir.global.StringLiteralGlobalConstant
-import ir.intrinsic.IntrinsicImplementor
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
-import ir.platform.MacroAssembler
 import ir.value.constant.*
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.DeclaratorVisitor
@@ -121,34 +121,54 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitBuiltInVaStart(builtinVaStart: BuiltinVaStart): Value {
         val vaList = visitExpression(builtinVaStart.vaList, true)
         val vaListType = builtinVaStart.vaList.resolveType(typeHolder)
-        if (vaListType != VaInit.vaList) {
+        if (vaListType != VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType")
         }
-        val vaListIrType = mb.toIRType<StructType>(typeHolder, vaListType)
-
         val vaInit = stmtStack.root().vaInit as Alloc
-        val vaInitAddr = ir.gfp(vaInit, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 0)))
-        val gpOffset = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 0)))
-        ir.store(gpOffset, vaInitAddr)
+        val cont = ir.createLabel()
+        ir.intrinsic(arrayListOf(vaList, vaInit), VaStart(), cont)
+        ir.switchLabel(cont)
+
         return Value.UNDEF
     }
 
     private fun visitBuiltInVaArg(builtinVaArg: BuiltinVaArg): Value {
         val vaList = visitExpression(builtinVaArg.assign, true)
         val vaListType = builtinVaArg.assign.resolveType(typeHolder)
-        if (vaListType != VaInit.vaList) {
+        if (vaListType != VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType")
         }
         val vaListIrType = mb.toIRType<StructType>(typeHolder, vaListType)
 
-        val vaInit = stmtStack.root().vaInit as Alloc
-        val vaInitAddr = ir.gfp(vaInit, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 0)))
-        val gpOffset = ir.load(Type.I64, vaInitAddr)
-        val gpOffsetValue = ir.convertToType(gpOffset, Type.I64)
-        val gpOffsetValuePlus = ir.add(gpOffsetValue, Constant.valueOf(Type.I64, QWORD_SIZE))
-        val cvt = ir.convertToType(gpOffsetValuePlus, Type.Ptr)
-        ir.store(cvt, vaInitAddr)
-        return gpOffset
+        val gpOffsetPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 0)))
+        val gpOffset = ir.load(Type.I32, gpOffsetPtr)
+
+        val varArgInReg = ir.createLabel()
+        val varArgInStack = ir.createLabel()
+        val cont = ir.createLabel()
+
+        val isReg = ir.icmp(gpOffset, IntPredicate.Le, Constant.valueOf(Type.I32, 48))
+        ir.branchCond(isReg, varArgInReg, varArgInStack)
+
+        ir.switchLabel(varArgInReg)
+        val regSaveAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 3)))
+        val regSaveArea = ir.load(Type.Ptr, regSaveAreaPtr)
+        val arg1InReg = ir.gep(regSaveArea, Type.I8, gpOffset)
+        val newGPOffset = ir.add(gpOffset, Constant.valueOf(Type.I32, 8))
+        ir.store(gpOffsetPtr, newGPOffset)
+        ir.branch(cont)
+
+        ir.switchLabel(varArgInStack)
+        val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, 2)))
+        val arg1InMem = ir.load(Type.Ptr, overflowArgAreaPtr)
+        val inc = ir.gep(arg1InMem, Type.I8, I32Value(8))
+        ir.store(overflowArgAreaPtr, inc)
+        ir.branch(cont)
+
+        ir.switchLabel(cont)
+        val argPtr = ir.phi(listOf(arg1InReg, arg1InMem), listOf(varArgInReg, varArgInStack))
+        val argType = mb.toIRType<PrimitiveType>(typeHolder, builtinVaArg.typeName.specifyType(typeHolder, listOf()).type.cType())
+        return ir.load(argType, argPtr)
     }
 
     private fun visitSingleInitializer0(singleInitializer: SingleInitializer): Value = when (val expr = singleInitializer.expr) {
