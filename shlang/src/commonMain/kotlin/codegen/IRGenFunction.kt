@@ -1,6 +1,5 @@
 package codegen
 
-import asm.x64.Imm32
 import types.*
 import ir.types.*
 import ir.value.*
@@ -134,9 +133,10 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (vaListType != VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType")
         }
-        val vaInit = stmtStack.root().vaInit as Alloc
+        val fnStmt = stmtStack.root()
+        val vaInit = fnStmt.vaInit as Alloc
         val cont = ir.createLabel()
-        ir.intrinsic(arrayListOf(vaList, vaInit), VaStart(), cont)
+        ir.intrinsic(arrayListOf(vaList, vaInit), VaStart(fnStmt.numberOfArguments), cont)
         ir.switchLabel(cont)
 
         return Value.UNDEF
@@ -1112,7 +1112,7 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         val argTypes   = argumentTypes(fnType.args(), retType)
         currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes, fnType.variadic())
 
-        stmtStack.scoped(FunctionStmtInfo()) { stmt ->
+        stmtStack.scoped(FunctionStmtInfo(fnType.args().size)) { stmt ->
             visitParameters(parameters, fnType.args(), ir.arguments()) { param, cType, args ->
                 visitParameter(param, cType, args)
             }

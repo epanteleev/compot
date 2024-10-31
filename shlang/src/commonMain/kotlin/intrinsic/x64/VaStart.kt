@@ -8,6 +8,7 @@ import asm.x64.GPRegister.*
 import asm.x64.Imm32
 import common.assertion
 import ir.Definitions.POINTER_SIZE
+import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
 
 import ir.intrinsic.IntrinsicImplementor
@@ -16,7 +17,11 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import typedesc.TypeDesc
 
 
-class VaStart() : IntrinsicImplementor("va_start", listOf()) {
+class VaStart(private val numberOfArguments: Int) : IntrinsicImplementor("va_start", listOf()) {
+    init {
+        require(numberOfArguments >= 1) { "va_start must have 2 arguments" }
+    }
+
     override fun <Masm : MacroAssembler> implement(masm: Masm, inputs: List<Operand>) {
         assertion(masm is X64MacroAssembler) { "masm must be X64MacroAssembler" }
         masm as X64MacroAssembler
@@ -31,7 +36,7 @@ class VaStart() : IntrinsicImplementor("va_start", listOf()) {
         vaInit as Address2
 
         // vaStart.gp_offset = 8
-        masm.mov(WORD_SIZE, Imm32.of(8), vaStart)
+        masm.mov(WORD_SIZE, Imm32.of(numberOfArguments * QWORD_SIZE), vaStart)
 
         // vaStart.fp_offset = 48
         masm.mov(WORD_SIZE, Imm32.of(48), Address.from(vaStart.base, vaStart.offset + 4))
