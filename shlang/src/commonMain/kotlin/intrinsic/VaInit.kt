@@ -31,12 +31,11 @@ class VaInit(private val firstArgType: CType): IntrinsicProvider("va_init", list
     }
 
     private fun implementX64(masm: X64MacroAssembler, vaInit: Address2) {
+        val currentLabel = masm.currentLabel()
+        val gprBlock = masm.anonLabel()
+        masm.switchTo(currentLabel)
         masm.apply {
             test(Definitions.BYTE_SIZE, rax, rax)
-            val currentLabel = masm.currentLabel()
-            val gprBlock = masm.anonLabel()
-            switchTo(currentLabel)
-
             jcc(CondType.JE, gprBlock)
 
             val isGPOperand = isGPOperand(firstArgType)

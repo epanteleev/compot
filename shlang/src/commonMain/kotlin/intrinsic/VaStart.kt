@@ -36,7 +36,7 @@ class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_sta
 
         when (masm) {
             is X64MacroAssembler -> implementX64(masm, vaStart, vaInit)
-            else -> error("Unsupported assembler")
+            else -> error("Unsupported assembler: ${masm.platform()}")
         }
     }
 
@@ -48,32 +48,37 @@ class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_sta
             mov(WORD_SIZE, Imm32.of(numberOfGPArgs * QWORD_SIZE), vaStart)
 
             // vaStart.fp_offset = 48
-            mov(WORD_SIZE, Imm32.of(48 + numberOfFPArgs * QWORD_SIZE), Address.from(vaStart.base, vaStart.offset + 4))
+            mov(WORD_SIZE, Imm32.of(48 + numberOfFPArgs * QWORD_SIZE), Address.from(vaStart.base, vaStart.offset + FP_OFFSET_OFFSET))
 
             // vaStart.overflow_arg_area = lea [rbp + 16]
             // TODO correct only for -fno-omit-frame-pointer mode
             lea(POINTER_SIZE, Address.from(rbp, 16), rax)
-            mov(POINTER_SIZE, rax, Address.from(vaStart.base, vaStart.offset + 8))
+            mov(POINTER_SIZE, rax, Address.from(vaStart.base, vaStart.offset + OVERFLOW_ARG_AREA_OFFSET))
 
             // vaStart.reg_save_area = lea $vaInit
             lea(POINTER_SIZE, vaInit, rax) //TODO get register from inputs
-            mov(POINTER_SIZE, rax, Address.from(vaStart.base, vaStart.offset + 16))
+            mov(POINTER_SIZE, rax, Address.from(vaStart.base, vaStart.offset + REG_SAVE_AREA_OFFSET))
         }
     }
 
     companion object {
-        const val REG_SAVE_AREA_SIZE = 40
+        const val REG_SAVE_AREA_SIZE    = 40
         const val FP_REG_SAVE_AREA_SIZE = 56
-        const val GP_OFFSET_IDX = 0
-        const val FP_OFFSET_IDX = 1
+
+        const val GP_OFFSET_IDX         = 0
+        const val FP_OFFSET_IDX         = 1
         const val OVERFLOW_ARG_AREA_IDX = 2
-        const val REG_SAVE_AREA_IDX = 3
+        const val REG_SAVE_AREA_IDX     = 3
 
         val vaList = CStructType("va_list", arrayListOf(
-            FieldMember("gp_offset", TypeDesc.from(INT, listOf())),
-            FieldMember("fp_offset", TypeDesc.from(INT, listOf())),
+            FieldMember("gp_offset",         TypeDesc.from(INT, listOf())),
+            FieldMember("fp_offset",         TypeDesc.from(INT, listOf())),
             FieldMember("overflow_arg_area", TypeDesc.from(CPointer(CHAR), listOf())),
-            FieldMember("reg_save_area", TypeDesc.from(CPointer(CHAR), listOf())))
+            FieldMember("reg_save_area",     TypeDesc.from(CPointer(CHAR), listOf())))
         )
+
+        val FP_OFFSET_OFFSET         = vaList.offset(FP_OFFSET_IDX)
+        val OVERFLOW_ARG_AREA_OFFSET = vaList.offset(OVERFLOW_ARG_AREA_IDX)
+        val REG_SAVE_AREA_OFFSET     = vaList.offset(REG_SAVE_AREA_IDX)
     }
 }
