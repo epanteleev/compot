@@ -53,6 +53,7 @@ class VaStart(private val numberOfArguments: Int) : IntrinsicImplementor("va_sta
 
     companion object {
         const val REG_SAVE_AREA_SIZE = 40
+        const val FP_REG_SAVE_AREA_SIZE = 56
         const val GP_OFFSET_IDX = 0
         const val FP_OFFSET_IDX = 1
         const val OVERFLOW_ARG_AREA_IDX = 2

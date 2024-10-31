@@ -105,7 +105,7 @@ class ForLoopStmtInfo : AnyLoopStmtInfo() {
     }
 }
 
-class FunctionStmtInfo(val numberOfArguments: Int) : StmtInfo() {
+class FunctionStmtInfo() : StmtInfo() {
     private var returnValueAdr: Value? = null
     var vaInit: Alloc? = null
 

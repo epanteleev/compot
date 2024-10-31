@@ -35,13 +35,18 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     typeHolder: TypeHolder,
                     varStack: VarStack<Value>,
                     nameGenerator: NameGenerator,
-                    private val ir: FunctionDataBuilder) :
+                    private val ir: FunctionDataBuilder,
+                    private val functionType: CFunctionType) :
     AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator),
     StatementVisitor<Unit>,
     DeclaratorVisitor<Value> {
     private var stringTolabel = mutableMapOf<String, Label>()
     private val stmtStack = StmtStack()
     private val initializerContext = InitializerContext()
+
+    private val vaListIrType by lazy {
+        mb.toIRType<StructType>(typeHolder, VaStart.vaList)
+    }
 
     private inline fun<reified T> scoped(noinline block: () -> T): T {
         return typeHolder.scoped { varStack.scoped(block) }
@@ -133,28 +138,39 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val fnStmt = stmtStack.root()
         val vaInit = fnStmt.vaInit as Alloc
         val cont = ir.createLabel()
-        ir.intrinsic(arrayListOf(vaList, vaInit), VaStart(fnStmt.numberOfArguments), cont)
+        ir.intrinsic(arrayListOf(vaList, vaInit), VaStart(functionType.args().size), cont)
         ir.switchLabel(cont)
 
         return Value.UNDEF
     }
 
     private fun visitBuiltInVaArg(builtinVaArg: BuiltinVaArg): Value {
-        val vaList = visitExpression(builtinVaArg.assign, true)
         val vaListType = builtinVaArg.assign.resolveType(typeHolder)
         if (vaListType != VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType")
         }
-        val vaListIrType = mb.toIRType<StructType>(typeHolder, vaListType)
+        
+        val vaList = visitExpression(builtinVaArg.assign, true)
+        return when (val argType = builtinVaArg.resolveType(typeHolder)) {
+            is CHAR, is UCHAR, is SHORT, is USHORT, is INT, is UINT, is LONG, is ULONG -> {
+                emitBuiltInVaArg(vaList, argType, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
+            }
+            is DOUBLE, is FLOAT -> {
+                emitBuiltInVaArg(vaList, argType, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
+            }
+            else -> throw IRCodeGenError("Unknown type $argType")
+        }
+    }
 
-        val gpOffsetPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.GP_OFFSET_IDX)))
+    private fun emitBuiltInVaArg(vaList: Value, argType: CType, offsetIdx: Int, regSaveAreaIdx: Int): Value {
+        val gpOffsetPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, offsetIdx)))
         val gpOffset = ir.load(Type.I32, gpOffsetPtr)
 
         val varArgInReg = ir.createLabel()
         val varArgInStack = ir.createLabel()
         val cont = ir.createLabel()
 
-        val isReg = ir.icmp(gpOffset, IntPredicate.Le, Constant.valueOf(Type.I32, VaStart.REG_SAVE_AREA_SIZE))
+        val isReg = ir.icmp(gpOffset, IntPredicate.Le, Constant.valueOf(Type.I32, regSaveAreaIdx))
         ir.branchCond(isReg, varArgInReg, varArgInStack)
 
         val argInReg = ir.switchLabel(varArgInReg).let {
@@ -180,7 +196,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         ir.switchLabel(cont)
         val argPtr = ir.phi(listOf(argInReg, argInMem), listOf(varArgInReg, varArgInStack))
-        val argType = mb.toIRType<PrimitiveType>(typeHolder, builtinVaArg.typeName.specifyType(typeHolder, listOf()).type.cType())
+        val argType = mb.toIRType<PrimitiveType>(typeHolder, argType)
         return ir.load(argType, argPtr)
     }
 
@@ -1105,16 +1121,16 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         TODO()
     }
 
-    fun visitFun(parameters: List<String>, fnType: CFunctionType, functionNode: FunctionNode): Value = scoped {
-        stmtStack.scoped(FunctionStmtInfo(fnType.args().size)) { stmt ->
-            visitParameters(parameters, fnType.args(), ir.arguments()) { param, cType, args ->
+    fun visitFun(parameters: List<String>, functionNode: FunctionNode): Value = scoped {
+        stmtStack.scoped(FunctionStmtInfo()) { stmt ->
+            visitParameters(parameters, functionType.args(), ir.arguments()) { param, cType, args ->
                 visitParameter(param, cType, args)
             }
 
-            emitReturnType(stmt, fnType.retType(), ir.arguments())
+            emitReturnType(stmt, functionType.retType(), ir.arguments())
 
             ir.switchLabel(Label.entry)
-            initializeVarArgs(fnType, stmt)
+            initializeVarArgs(functionType, stmt)
             visitStatement(functionNode.body)
 
             if (ir.last() !is TerminateInstruction) {
@@ -1611,7 +1627,7 @@ class FunGenInitializer(moduleBuilder: ModuleBuilder,
         val argTypes   = argumentTypes(fnType)
 
         val currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes, fnType.variadic())
-        val funGen = IrGenFunction(mb, typeHolder, varStack, nameGenerator, currentFunction)
-        funGen.visitFun(parameters, fnType, functionNode)
+        val funGen = IrGenFunction(mb, typeHolder, varStack, nameGenerator, currentFunction, fnType)
+        funGen.visitFun(parameters, functionNode)
     }
 }
