@@ -238,7 +238,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (val type = varDesc.type.cType()) {
             is CFunctionType -> {
                 val abstrType = type.functionType
-                val argTypes  = argumentTypes(abstrType.argsTypes, abstrType.retType)
+                val argTypes  = argumentTypes(abstrType)
                 val returnType = irReturnType(abstrType.retType)
 
                 val isVararg = type.functionType.variadic
@@ -337,12 +337,13 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return InitializerListValue(lValueType, elements)
     }
 
-    protected fun argumentTypes(ctypes: List<TypeDesc>, retTypeDesc: TypeDesc): List<PrimitiveType> {
+    protected fun argumentTypes(functionType: AnyCFunctionType): List<PrimitiveType> {
         val types = arrayListOf<PrimitiveType>()
+        val retTypeDesc = functionType.retType()
         if (retTypeDesc.cType() is CAggregateType && retTypeDesc.cType().size() > QWORD_SIZE * 2) {
             types.add(Type.Ptr)
         }
-        for (type in ctypes) {
+        for (type in functionType.args()) {
             when (val ty = type.cType()) {
                 is AnyCStructType -> {
                     val parameters = CallConvention.coerceArgumentTypes(ty)
@@ -353,7 +354,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     }
                 }
                 is CArrayType, is CUncompletedArrayType -> types.add(Type.Ptr)
-                is CPointer -> types.add(Type.Ptr)
+                is CPointer    -> types.add(Type.Ptr)
                 is BOOL        -> types.add(Type.U8)
                 is CPrimitive  -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type.cType()))
                 else -> throw IRCodeGenError("Unknown type, type=$type")

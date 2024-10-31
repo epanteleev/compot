@@ -22,8 +22,8 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
     }
 
     private fun generateFunction(node: FunctionNode) = typeHolder.scoped {
-        val gen = IrGenFunction(mb, typeHolder, varStack, nameGenerator)
-        gen.visit(node)
+        val gen = FunGenInitializer(mb, typeHolder, varStack, nameGenerator)
+        gen.generate(node)
     }
 
     private fun generateDeclaration(node: Declaration) {

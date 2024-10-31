@@ -31,20 +31,17 @@ import parser.nodes.visitors.StatementVisitor
 import typedesc.*
 
 
-class IrGenFunction(moduleBuilder: ModuleBuilder,
+private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     typeHolder: TypeHolder,
                     varStack: VarStack<Value>,
-                    nameGenerator: NameGenerator):
+                    nameGenerator: NameGenerator,
+                    private val ir: FunctionDataBuilder) :
     AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator),
     StatementVisitor<Unit>,
     DeclaratorVisitor<Value> {
-    private var currentFunction: FunctionDataBuilder? = null
     private var stringTolabel = mutableMapOf<String, Label>()
     private val stmtStack = StmtStack()
     private val initializerContext = InitializerContext()
-
-    private val ir: FunctionDataBuilder
-        get() = currentFunction ?: throw IRCodeGenError("Function expected")
 
     private inline fun<reified T> scoped(noinline block: () -> T): T {
         return typeHolder.scoped { varStack.scoped(block) }
@@ -1104,20 +1101,17 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.switchLabel(cont)
     }
 
-    override fun visit(functionNode: FunctionNode): Value = scoped {
-        val parameters = functionNode.functionDeclarator().params()
-        val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
-        val retType    = fnType.retType()
-        val irRetType  = irReturnType(retType)
-        val argTypes   = argumentTypes(fnType.args(), retType)
-        currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes, fnType.variadic())
+    override fun visit(functionNode: FunctionNode): Value {
+        TODO()
+    }
 
+    fun visitFun(parameters: List<String>, fnType: CFunctionType, functionNode: FunctionNode): Value = scoped {
         stmtStack.scoped(FunctionStmtInfo(fnType.args().size)) { stmt ->
             visitParameters(parameters, fnType.args(), ir.arguments()) { param, cType, args ->
                 visitParameter(param, cType, args)
             }
 
-            emitReturnType(stmt, retType, ir.arguments())
+            emitReturnType(stmt, fnType.retType(), ir.arguments())
 
             ir.switchLabel(Label.entry)
             initializeVarArgs(fnType, stmt)
@@ -1603,5 +1597,21 @@ class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(directDeclarator: DirectDeclarator): Value {
         TODO("Not yet implemented")
+    }
+}
+
+class FunGenInitializer(moduleBuilder: ModuleBuilder,
+                        typeHolder: TypeHolder,
+                        varStack: VarStack<Value>,
+                        nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
+    fun generate(functionNode: FunctionNode) {
+        val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
+        val parameters = functionNode.functionDeclarator().params()
+        val irRetType  = irReturnType(fnType.retType())
+        val argTypes   = argumentTypes(fnType)
+
+        val currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes, fnType.variadic())
+        val funGen = IrGenFunction(mb, typeHolder, varStack, nameGenerator, currentFunction)
+        funGen.visitFun(parameters, fnType, functionNode)
     }
 }
