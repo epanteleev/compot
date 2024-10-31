@@ -1,3 +1,7 @@
 package ir.platform
 
-interface MacroAssembler
+import ir.platform.common.TargetPlatform
+
+interface MacroAssembler {
+    fun platform(): TargetPlatform
+}

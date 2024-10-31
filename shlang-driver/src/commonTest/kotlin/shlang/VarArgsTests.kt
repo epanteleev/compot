@@ -38,6 +38,12 @@ abstract class VarArgsTests: CommonCTest() {
         val result = runCTest("shlang/varArgs/varArgs5", listOf(), options())
         assertEquals("Number: 1.000000\n", result.output)
     }
+
+    @Test
+    fun test7() {
+        val result = runCTest("shlang/varArgs/varArgs6", listOf(), options())
+        assertEquals("Number: 1.000000\n", result.output)
+    }
 }
 
 class VarArgsTestsO0: VarArgsTests() {

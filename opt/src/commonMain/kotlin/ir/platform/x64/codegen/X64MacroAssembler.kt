@@ -10,23 +10,15 @@ import ir.Definitions.QWORD_SIZE
 import ir.instruction.*
 import ir.module.DirectFunctionPrototype
 import ir.platform.MacroAssembler
+import ir.platform.common.TargetPlatform
 import ir.types.*
 
 
 data class MacroAssemblerException(override val message: String): Exception(message)
 
 class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssembler {
-    /*** Move reminder from 'rdx' register to @param rem. */
-    fun moveRem(size: Int, rem: Operand) {
-        assertion(size == 1 || size == 2 || size == 4 || size == 8) {
-            "expects given operand size, but size=${size}"
-        }
-
-        when (rem) {
-            is GPRegister -> copy(size, rdx, rem)
-            is Address    -> mov(size, rdx, rem)
-            else -> throw MacroAssemblerException("rem=$rem")
-        }
+    override fun platform(): TargetPlatform {
+        return TargetPlatform.X64
     }
 
     private fun floatPredicateToSetCCType(jmpType: FloatPredicate): SetCCType = when (jmpType) {

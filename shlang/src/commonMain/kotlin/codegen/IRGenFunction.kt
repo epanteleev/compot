@@ -15,8 +15,8 @@ import codegen.TypeConverter.toIndexType
 import codegen.consteval.CommonConstEvalContext
 import codegen.consteval.ConstEvalExpression
 import codegen.consteval.TryConstEvalExpressionInt
-import intrinsic.x64.VaInit
-import intrinsic.x64.VaStart
+import intrinsic.VaInit
+import intrinsic.VaStart
 import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
 import ir.global.StringLiteralGlobalConstant
@@ -138,7 +138,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val fnStmt = stmtStack.root()
         val vaInit = fnStmt.vaInit as Alloc
         val cont = ir.createLabel()
-        ir.intrinsic(arrayListOf(vaList, vaInit), VaStart(functionType.args().size), cont)
+        ir.intrinsic(arrayListOf(vaList, vaInit), VaStart(functionType.args()), cont)
         ir.switchLabel(cont)
 
         return Value.UNDEF
@@ -149,10 +149,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (vaListType != VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType")
         }
-        
+
         val vaList = visitExpression(builtinVaArg.assign, true)
         return when (val argType = builtinVaArg.resolveType(typeHolder)) {
-            is CHAR, is UCHAR, is SHORT, is USHORT, is INT, is UINT, is LONG, is ULONG -> {
+            is CHAR, is UCHAR, is SHORT, is USHORT, is INT, is UINT, is LONG, is ULONG, is CPointer -> {
                 emitBuiltInVaArg(vaList, argType, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
             }
             is DOUBLE, is FLOAT -> {
@@ -1113,7 +1113,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val vaInitInstance = ir.alloc(vaInitType)
         fnStmt.vaInit = vaInitInstance
         val cont = ir.createLabel()
-        ir.intrinsic(arrayListOf(vaInitInstance), VaInit(), cont)
+        ir.intrinsic(arrayListOf(vaInitInstance), VaInit(fnType.args().first().cType()), cont)
         ir.switchLabel(cont)
     }
 

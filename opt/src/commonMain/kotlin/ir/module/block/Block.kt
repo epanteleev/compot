@@ -7,11 +7,10 @@ import common.assertion
 import ir.instruction.*
 import ir.instruction.lir.*
 import common.LeakedLinkedList
-import ir.intrinsic.IntrinsicImplementor
+import ir.intrinsic.IntrinsicProvider
 import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.ModificationCounter
-import ir.platform.MacroAssembler
 import ir.value.constant.IntegerConstant
 import ir.value.constant.UnsignedIntegerConstant
 
@@ -465,7 +464,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@dfANDcf addTerminate { Switch.make(it, this, value, default as Block, table.toTypedArray(), resolved) }
     }
 
-    override fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor, target: Label): Intrinsic {
+    override fun intrinsic(inputs: List<Value>, implementor: IntrinsicProvider, target: Label): Intrinsic {
         return addTerminate { Intrinsic.make(it, this, inputs.toTypedArray(), implementor, target as Block) }
     }
 

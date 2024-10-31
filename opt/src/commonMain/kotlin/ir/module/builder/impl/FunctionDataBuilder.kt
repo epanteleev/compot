@@ -5,12 +5,11 @@ import ir.value.*
 import ir.module.*
 import ir.value.Value
 import ir.instruction.*
-import ir.intrinsic.IntrinsicImplementor
+import ir.intrinsic.IntrinsicProvider
 import ir.module.block.Block
 import ir.module.block.Label
 import ir.module.block.InstructionFabric
 import ir.module.builder.AnyFunctionDataBuilder
-import ir.platform.MacroAssembler
 import ir.value.constant.IntegerConstant
 import ir.value.constant.UnsignedIntegerConstant
 
@@ -216,7 +215,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.switch(value, default, table, targets)
     }
 
-    override fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor, target: Label): Intrinsic {
+    override fun intrinsic(inputs: List<Value>, implementor: IntrinsicProvider, target: Label): Intrinsic {
         return bb.intrinsic(inputs, implementor, target)
     }
 

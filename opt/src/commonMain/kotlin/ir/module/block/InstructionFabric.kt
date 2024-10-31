@@ -3,10 +3,9 @@ package ir.module.block
 import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.*
-import ir.intrinsic.IntrinsicImplementor
+import ir.intrinsic.IntrinsicProvider
 import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
-import ir.platform.MacroAssembler
 import ir.value.UsableValue
 import ir.value.constant.IntegerConstant
 import ir.value.constant.UnsignedIntegerConstant
@@ -59,7 +58,7 @@ interface InstructionFabric {
     fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy
     fun proj(tuple: Value, index: Int): Projection
     fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch
-    fun intrinsic(inputs: List<Value>, implementor: IntrinsicImplementor, target: Label): Intrinsic
+    fun intrinsic(inputs: List<Value>, implementor: IntrinsicProvider, target: Label): Intrinsic
 }
 
 interface InternalInstructionFabric {
