@@ -754,110 +754,108 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         return ir.convertToType(cmp, Type.I8)
     }
 
-    private fun visitBinary(binop: BinaryOp, isRvalue: Boolean): Value {
-        return when (binop.opType) {
-            BinaryOpType.ADD -> makeAlgebraicBinary(binop, ir::add)
-            BinaryOpType.SUB -> makeAlgebraicBinary(binop, ir::sub)
-            BinaryOpType.ASSIGN -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
+    private fun visitAssignBinary(binop: BinaryOp): Value {
+        val right = visitExpression(binop.right, true)
+        val leftType = binop.left.resolveType(typeHolder)
 
-                if (leftType is AnyCStructType) {
-                    val left = visitExpression(binop.left, true)
-                    if (!leftType.isSmall()) {
-                        ir.memcpy(left, right, U64Value(leftType.size().toLong()))
-                    } else {
-                        val list = CallConvention.coerceArgumentTypes(leftType) ?: throw IRCodeGenError("Internal error")
-                        val structType = mb.toIRType<AggregateType>(typeHolder, leftType)
-                        if (list.size == 1) {
-                            val loadedRight = ir.load(list[0], right)
-                            val gep = ir.gep(left, structType, I64Value(0))
-                            ir.store(gep, loadedRight)
-                        } else {
-                            list.forEachIndexed { idx, arg ->
-                                val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
-                                val fieldPtr = ir.gep(left, arg,
-                                    Constant.valueOf(Type.I64, offset)
-                                )
-                                val proj = ir.proj(right, idx)
-                                ir.store(fieldPtr, proj)
-                            }
-                        }
-                    }
-                    right
-                } else {
-                    val leftIrType = mb.toIRLVType<PrimitiveType>(typeHolder, leftType)
-                    val rightCvt = ir.convertToType(right, leftIrType)
+        if (leftType !is AnyCStructType) {
+            val leftIrType = mb.toIRLVType<PrimitiveType>(typeHolder, leftType)
+            val rightCvt = ir.convertToType(right, leftIrType)
 
-                    val left = visitExpression(binop.left, false)
-                    ir.store(left, rightCvt)
-                    rightCvt //TODO test it
-                }
+            val left = visitExpression(binop.left, false)
+            ir.store(left, rightCvt)
+            return rightCvt //TODO test it
+        }
+
+        val left = visitExpression(binop.left, true)
+        if (!leftType.isSmall()) {
+            ir.memcpy(left, right, U64Value(leftType.size().toLong()))
+            return right
+        }
+        val list = CallConvention.coerceArgumentTypes(leftType) ?: throw IRCodeGenError("Internal error")
+        val structType = mb.toIRType<AggregateType>(typeHolder, leftType)
+        if (list.size == 1) {
+            val loadedRight = ir.load(list[0], right)
+            val gep = ir.gep(left, structType, I64Value(0))
+            ir.store(gep, loadedRight)
+        } else {
+            list.forEachIndexed { idx, arg ->
+                val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
+                val fieldPtr = ir.gep(left, arg, Constant.valueOf(Type.I64, offset))
+                val proj = ir.proj(right, idx)
+                ir.store(fieldPtr, proj)
             }
-            BinaryOpType.ADD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::add)
-            BinaryOpType.DIV_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ::divide)
-            BinaryOpType.MUL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::mul)
-            BinaryOpType.BIT_OR -> makeAlgebraicBinary(binop, ir::or)
-            BinaryOpType.MUL -> makeAlgebraicBinary(binop, ir::mul)
-            BinaryOpType.NE -> makeComparisonBinary(binop, ::ne, isRvalue)
-            BinaryOpType.GT -> makeComparisonBinary(binop, ::gt, isRvalue)
-            BinaryOpType.LT -> makeComparisonBinary(binop, ::lt, isRvalue)
-            BinaryOpType.LE -> makeComparisonBinary(binop, ::le, isRvalue)
-            BinaryOpType.AND -> {
-                val left = visitExpression(binop.left, true)
-                val convertedLeft = ir.convertToType(left, Type.U1)
+        }
+        return right
+    }
 
-                val bb = ir.createLabel()
-                val end = ir.createLabel()
-                val initialBB = ir.currentLabel()
-                ir.branchCond(convertedLeft, bb, end)
-                ir.switchLabel(bb)
+    private fun visitBinary(binop: BinaryOp, isRvalue: Boolean): Value = when (binop.opType) {
+        BinaryOpType.ADD -> makeAlgebraicBinary(binop, ir::add)
+        BinaryOpType.SUB -> makeAlgebraicBinary(binop, ir::sub)
+        BinaryOpType.ASSIGN -> visitAssignBinary(binop)
+        BinaryOpType.ADD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::add)
+        BinaryOpType.DIV_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ::divide)
+        BinaryOpType.MUL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::mul)
+        BinaryOpType.BIT_OR -> makeAlgebraicBinary(binop, ir::or)
+        BinaryOpType.MUL -> makeAlgebraicBinary(binop, ir::mul)
+        BinaryOpType.NE -> makeComparisonBinary(binop, ::ne, isRvalue)
+        BinaryOpType.GT -> makeComparisonBinary(binop, ::gt, isRvalue)
+        BinaryOpType.LT -> makeComparisonBinary(binop, ::lt, isRvalue)
+        BinaryOpType.LE -> makeComparisonBinary(binop, ::le, isRvalue)
+        BinaryOpType.AND -> {
+            val left = visitExpression(binop.left, true)
+            val convertedLeft = ir.convertToType(left, Type.U1)
 
-                val right = visitExpression(binop.right, true)
-                val convertedRight = ir.convertToType(right, Type.U8)
+            val bb = ir.createLabel()
+            val end = ir.createLabel()
+            val initialBB = ir.currentLabel()
+            ir.branchCond(convertedLeft, bb, end)
+            ir.switchLabel(bb)
 
-                val current = ir.currentLabel()
-                ir.branch(end)
-                ir.switchLabel(end)
-                ir.phi(listOf(U8Value(0), convertedRight), listOf(initialBB, current))
-            }
-            BinaryOpType.OR -> {
-                val left = visitExpression(binop.left, true)
-                val convertedLeft = ir.convertToType(left, Type.U1)
+            val right = visitExpression(binop.right, true)
+            val convertedRight = ir.convertToType(right, Type.U8) //TODO I8???
 
-                val initialBB = ir.currentLabel()
-                val bb = ir.createLabel()
-                val end = ir.createLabel()
-                ir.branchCond(convertedLeft, end, bb)
-                ir.switchLabel(bb)
+            val current = ir.currentLabel()
+            ir.branch(end)
+            ir.switchLabel(end)
+            ir.phi(listOf(U8Value(0), convertedRight), listOf(initialBB, current))
+        }
+        BinaryOpType.OR -> {
+            val left = visitExpression(binop.left, true)
+            val convertedLeft = ir.convertToType(left, Type.U1)
 
-                val right = visitExpression(binop.right, true)
-                val convertedRight = ir.convertToType(right, Type.U8)
+            val initialBB = ir.currentLabel()
+            val bb = ir.createLabel()
+            val end = ir.createLabel()
+            ir.branchCond(convertedLeft, end, bb)
+            ir.switchLabel(bb)
 
-                val current = ir.currentLabel()
-                ir.branch(end)
-                ir.switchLabel(end)
-                ir.phi(listOf(U8Value(1), convertedRight), listOf(initialBB, current))
-            }
-            BinaryOpType.SHR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::shr)
-            BinaryOpType.SHL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::shl)
-            BinaryOpType.BIT_XOR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::xor)
-            BinaryOpType.BIT_OR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::or)
-            BinaryOpType.GE  -> makeComparisonBinary(binop, ::ge, isRvalue)
-            BinaryOpType.EQ  -> makeComparisonBinary(binop, ::eq, isRvalue)
-            BinaryOpType.SHL -> makeAlgebraicBinary(binop, ir::shl)
-            BinaryOpType.SHR -> makeAlgebraicBinary(binop, ir::shr)
-            BinaryOpType.BIT_AND -> makeAlgebraicBinary(binop, ir::and)
-            BinaryOpType.BIT_XOR -> makeAlgebraicBinary(binop, ir::xor)
-            BinaryOpType.MOD -> makeAlgebraicBinary(binop, ::rem)
-            BinaryOpType.DIV -> makeAlgebraicBinary(binop, ::divide)
-            BinaryOpType.SUB_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::sub)
-            BinaryOpType.MOD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ::rem)
-            BinaryOpType.BIT_AND_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::and)
-            BinaryOpType.COMMA -> {
-                visitExpression(binop.left, false)
-                visitExpression(binop.right, false)
-            }
+            val right = visitExpression(binop.right, true)
+            val convertedRight = ir.convertToType(right, Type.U8) //TODO I8???
+
+            val current = ir.currentLabel()
+            ir.branch(end)
+            ir.switchLabel(end)
+            ir.phi(listOf(U8Value(1), convertedRight), listOf(initialBB, current))
+        }
+        BinaryOpType.SHR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::shr)
+        BinaryOpType.SHL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::shl)
+        BinaryOpType.BIT_XOR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::xor)
+        BinaryOpType.BIT_OR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::or)
+        BinaryOpType.GE  -> makeComparisonBinary(binop, ::ge, isRvalue)
+        BinaryOpType.EQ  -> makeComparisonBinary(binop, ::eq, isRvalue)
+        BinaryOpType.SHL -> makeAlgebraicBinary(binop, ir::shl)
+        BinaryOpType.SHR -> makeAlgebraicBinary(binop, ir::shr)
+        BinaryOpType.BIT_AND -> makeAlgebraicBinary(binop, ir::and)
+        BinaryOpType.BIT_XOR -> makeAlgebraicBinary(binop, ir::xor)
+        BinaryOpType.MOD -> makeAlgebraicBinary(binop, ::rem)
+        BinaryOpType.DIV -> makeAlgebraicBinary(binop, ::divide)
+        BinaryOpType.SUB_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::sub)
+        BinaryOpType.MOD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ::rem)
+        BinaryOpType.BIT_AND_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::and)
+        BinaryOpType.COMMA -> {
+            visitExpression(binop.left, false)
+            visitExpression(binop.right, false)
         }
     }
 
