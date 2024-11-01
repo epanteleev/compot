@@ -40,26 +40,26 @@ class VaInit(private val firstArgType: CType): IntrinsicProvider("va_init", list
 
             val isGPOperand = isGPOperand(firstArgType)
             if (isGPOperand) {
-                movf(QWORD_SIZE, xmm0, Address.Companion.from(vaInit.base, vaInit.offset + 6 * QWORD_SIZE))
+                movf(QWORD_SIZE, xmm0, Address.from(vaInit.base, vaInit.offset + 6 * QWORD_SIZE))
             }
 
-            movf(QWORD_SIZE, xmm1, Address.Companion.from(vaInit.base, vaInit.offset + 7 * QWORD_SIZE))
-            movf(QWORD_SIZE, xmm2, Address.Companion.from(vaInit.base, vaInit.offset + 8 * QWORD_SIZE))
-            movf(QWORD_SIZE, xmm3, Address.Companion.from(vaInit.base, vaInit.offset + 9 * QWORD_SIZE))
-            movf(QWORD_SIZE, xmm4, Address.Companion.from(vaInit.base, vaInit.offset + 10 * QWORD_SIZE))
-            movf(QWORD_SIZE, xmm5, Address.Companion.from(vaInit.base, vaInit.offset + 11 * QWORD_SIZE))
-            movf(QWORD_SIZE, xmm6, Address.Companion.from(vaInit.base, vaInit.offset + 12 * QWORD_SIZE))
-            movf(QWORD_SIZE, xmm7, Address.Companion.from(vaInit.base, vaInit.offset + 13 * QWORD_SIZE))
+            movf(QWORD_SIZE, xmm1, Address.from(vaInit.base, vaInit.offset + 7 * QWORD_SIZE))
+            movf(QWORD_SIZE, xmm2, Address.from(vaInit.base, vaInit.offset + 8 * QWORD_SIZE))
+            movf(QWORD_SIZE, xmm3, Address.from(vaInit.base, vaInit.offset + 9 * QWORD_SIZE))
+            movf(QWORD_SIZE, xmm4, Address.from(vaInit.base, vaInit.offset + 10 * QWORD_SIZE))
+            movf(QWORD_SIZE, xmm5, Address.from(vaInit.base, vaInit.offset + 11 * QWORD_SIZE))
+            movf(QWORD_SIZE, xmm6, Address.from(vaInit.base, vaInit.offset + 12 * QWORD_SIZE))
+            movf(QWORD_SIZE, xmm7, Address.from(vaInit.base, vaInit.offset + 13 * QWORD_SIZE))
 
             switchTo(gprBlock)
             if (!isGPOperand) {
-                mov(QWORD_SIZE, rdi, Address.Companion.from(vaInit.base, vaInit.offset))
+                mov(QWORD_SIZE, rdi, Address.from(vaInit.base, vaInit.offset))
             }
-            mov(QWORD_SIZE, rsi, Address.Companion.from(vaInit.base, vaInit.offset + QWORD_SIZE))
-            mov(QWORD_SIZE, rdx, Address.Companion.from(vaInit.base, vaInit.offset + 2 * QWORD_SIZE))
-            mov(QWORD_SIZE, rcx, Address.Companion.from(vaInit.base, vaInit.offset + 3 * QWORD_SIZE))
-            mov(QWORD_SIZE, r8, Address.Companion.from(vaInit.base, vaInit.offset + 4 * QWORD_SIZE))
-            mov(QWORD_SIZE, r9, Address.Companion.from(vaInit.base, vaInit.offset + 5 * QWORD_SIZE))
+            mov(QWORD_SIZE, rsi, Address.from(vaInit.base, vaInit.offset + QWORD_SIZE))
+            mov(QWORD_SIZE, rdx, Address.from(vaInit.base, vaInit.offset + 2 * QWORD_SIZE))
+            mov(QWORD_SIZE, rcx, Address.from(vaInit.base, vaInit.offset + 3 * QWORD_SIZE))
+            mov(QWORD_SIZE, r8, Address.from(vaInit.base, vaInit.offset + 4 * QWORD_SIZE))
+            mov(QWORD_SIZE, r9, Address.from(vaInit.base, vaInit.offset + 5 * QWORD_SIZE))
         }
     }
 

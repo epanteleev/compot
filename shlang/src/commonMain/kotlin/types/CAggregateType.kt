@@ -1,6 +1,7 @@
 package types
 
 import ir.Definitions
+import ir.Definitions.QWORD_SIZE
 import typedesc.TypeDesc
 
 
@@ -50,6 +51,10 @@ sealed class AnyCStructType(open val name: String, protected val fields: List<Me
 
     fun fields(): Collection<Member> {
         return fields
+    }
+
+    fun isSmall(): Boolean {
+        return size() <= QWORD_SIZE * 2
     }
 
     abstract fun offset(index: Int): Int

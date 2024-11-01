@@ -339,8 +339,8 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     protected fun argumentTypes(functionType: AnyCFunctionType): List<PrimitiveType> {
         val types = arrayListOf<PrimitiveType>()
-        val retTypeDesc = functionType.retType()
-        if (retTypeDesc.cType() is CAggregateType && retTypeDesc.cType().size() > QWORD_SIZE * 2) {
+        val cType = functionType.retType().cType()
+        if (cType is AnyCStructType && !cType.isSmall()) {
             types.add(Type.Ptr)
         }
         for (type in functionType.args()) {

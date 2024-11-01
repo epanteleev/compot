@@ -478,7 +478,7 @@ object TypeConverter {
             values
         }
         else -> {
-            assertion(sizeOf > QWORD_SIZE * 2) {
+            assertion(!argCType.isSmall()) {
                 "Cannot coerce arguments for size $sizeOf"
             }
             assertion(expr is Alloc) {

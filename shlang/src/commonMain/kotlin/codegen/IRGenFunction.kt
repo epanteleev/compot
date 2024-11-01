@@ -153,16 +153,33 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val vaList = visitExpression(builtinVaArg.assign, true)
         return when (val argType = builtinVaArg.resolveType(typeHolder)) {
             is CHAR, is UCHAR, is SHORT, is USHORT, is INT, is UINT, is LONG, is ULONG, is CPointer -> {
+                val argType = mb.toIRType<PrimitiveType>(typeHolder, argType)
                 emitBuiltInVaArg(vaList, argType, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
             }
             is DOUBLE, is FLOAT -> {
+                val argType = mb.toIRType<PrimitiveType>(typeHolder, argType)
                 emitBuiltInVaArg(vaList, argType, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
+            }
+            is CStructType -> {
+                if (argType.isSmall()) {
+                    val irType = mb.toIRType<StructType>(typeHolder, argType)
+                    val alloc = ir.alloc(irType)
+                    val values = CallConvention.coerceArgumentTypes(argType) ?: throw IRCodeGenError("Internal error")
+                    for ((idx, value) in values.withIndex()) {
+                        val fieldPtr = ir.gep(alloc, Type.I8, Constant.valueOf(Type.I64, value.sizeOf() * idx))
+                        val arg = emitBuiltInVaArg(vaList, value, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
+                        ir.store(fieldPtr, arg)
+                    }
+                    alloc
+                } else {
+                    emitBuiltInVaArg(vaList, Type.Ptr, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
+                }
             }
             else -> throw IRCodeGenError("Unknown type $argType")
         }
     }
 
-    private fun emitBuiltInVaArg(vaList: Value, argType: CType, offsetIdx: Int, regSaveAreaIdx: Int): Value {
+    private fun emitBuiltInVaArg(vaList: Value, argType: PrimitiveType, offsetIdx: Int, regSaveAreaIdx: Int): Value {
         val gpOffsetPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, offsetIdx)))
         val gpOffset = ir.load(Type.I32, gpOffsetPtr)
 
@@ -196,7 +213,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         ir.switchLabel(cont)
         val argPtr = ir.phi(listOf(argInReg, argInMem), listOf(varArgInReg, varArgInStack))
-        val argType = mb.toIRType<PrimitiveType>(typeHolder, argType)
         return ir.load(argType, argPtr)
     }
 
@@ -746,9 +762,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val right = visitExpression(binop.right, true)
                 val leftType = binop.left.resolveType(typeHolder)
 
-                if (leftType is CAggregateType) {
+                if (leftType is AnyCStructType) {
                     val left = visitExpression(binop.left, true)
-                    if (leftType.size() > QWORD_SIZE * 2) {
+                    if (!leftType.isSmall()) {
                         ir.memcpy(left, right, U64Value(leftType.size().toLong()))
                     } else {
                         val list = CallConvention.coerceArgumentTypes(leftType) ?: throw IRCodeGenError("Internal error")
@@ -1044,7 +1060,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             varStack[param] = rvalueAdr
         }
         is AnyCStructType -> {
-            if (cType.size() <= QWORD_SIZE * 2) {
+            if (cType.isSmall()) {
                 val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
                 val rvalueAdr = ir.alloc(irType)
                 args.forEachIndexed { idx, arg ->
@@ -1084,7 +1100,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.ret(retType, arrayOf(ret))
             }
             is AnyCStructType -> {
-                if (cType.size() > QWORD_SIZE * 2) {
+                if (!cType.isSmall()) {
                     fnStmt.resolveReturnValueAdr(args[0])
                     ir.switchLabel(exitBlock)
                     ir.retVoid()
@@ -1565,7 +1581,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 when (val functionType = rvalue.resolveType(typeHolder)) {
                     is CStructType -> {
-                        if (functionType.size() > QWORD_SIZE * 2) {
+                        if (!functionType.isSmall()) {
                             return lvalueAdr
                         }
                         val structType = mb.toIRType<StructType>(typeHolder, functionType)
