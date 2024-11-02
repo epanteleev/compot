@@ -35,34 +35,39 @@ abstract class VarArgsTests: CommonCTest() {
     }
 
     @Test
-    fun test6() {
+    fun test5() {
         val result = runCTest("shlang/varArgs/varArgs5", listOf(), options())
         assertEquals("Number: 1.000000\n", result.output)
     }
 
     @Test
-    fun test7() {
+    fun test6() {
         val result = runCTest("shlang/varArgs/varArgs6", listOf(), options())
         assertEquals("Number: 1.000000\n", result.output)
     }
 
     @Test
-    fun test8() {
+    fun test7() {
         val result = runCTest("shlang/varArgs/varArgs7", listOf(), options())
         assertEquals("Point: (1, 2)\n", result.output)
     }
 
     @Test
-    @Ignore
-    fun test9() {
+    fun test8() {
         val result = runCTest("shlang/varArgs/varArgs8", listOf(), options())
         assertEquals("Vector: (1, 2, 3)\n", result.output)
     }
 
     @Test
-    fun test10() {
+    fun test9() {
         val result = runCTest("shlang/varArgs/varArgs9", listOf(), options())
         assertEquals("Point: (1, 2)\n", result.output)
+    }
+
+    @Test
+    fun test10() {
+        val result = runCTest("shlang/varArgs/varArgs10", listOf(), options())
+        assertEquals("Point: (1.000000, 2.000000)\n", result.output)
     }
 }
 

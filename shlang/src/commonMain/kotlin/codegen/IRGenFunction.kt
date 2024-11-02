@@ -161,22 +161,35 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 emitBuiltInVaArg(vaList, argType, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
             }
             is CStructType -> {
+                val irType = mb.toIRType<StructType>(typeHolder, argType)
+                val alloc = ir.alloc(irType)
                 if (argType.isSmall()) {
-                    val irType = mb.toIRType<StructType>(typeHolder, argType)
-                    val alloc = ir.alloc(irType)
-                    val values = CallConvention.coerceArgumentTypes(argType) ?: throw IRCodeGenError("Internal error")
-                    for ((idx, value) in values.withIndex()) {
-                        val fieldPtr = ir.gep(alloc, Type.I8, Constant.valueOf(Type.I64, value.sizeOf() * idx))
-                        val arg = emitBuiltInVaArg(vaList, value, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
+                    val types = CallConvention.coerceArgumentTypes(argType) ?: throw IRCodeGenError("Internal error")
+                    for ((idx, type) in types.withIndex()) {
+                        val fieldPtr = ir.gep(alloc, Type.I8, Constant.valueOf(Type.I64, type.sizeOf() * idx))
+                        val arg = when(type) {
+                            is PointerType, is IntegerType -> emitBuiltInVaArg(vaList, type, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
+                            is FloatingPointType           -> emitBuiltInVaArg(vaList, type, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
+                            else -> throw IRCodeGenError("Unknown type $type")
+                        }
                         ir.store(fieldPtr, arg)
                     }
-                    alloc
                 } else {
-                    emitBuiltInVaArg(vaList, Type.Ptr, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
+                    emitBuiltInVarArgLargeStruct(vaList, alloc, irType)
                 }
+                alloc
             }
             else -> throw IRCodeGenError("Unknown type $argType")
         }
+    }
+
+    private fun emitBuiltInVarArgLargeStruct(vaList: Value, dst: Alloc, argType: StructType) {
+        val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.OVERFLOW_ARG_AREA_IDX)))
+        val argInMem = ir.load(Type.Ptr, overflowArgAreaPtr)
+        val inc = ir.gep(argInMem, Type.I8, I32Value(argType.sizeOf()))
+        ir.store(overflowArgAreaPtr, inc)
+
+        ir.memcpy(dst, argInMem, U64Value(argType.sizeOf().toLong()))
     }
 
     private fun emitBuiltInVaArg(vaList: Value, argType: PrimitiveType, offsetIdx: Int, regSaveAreaIdx: Int): Value {
@@ -930,7 +943,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitUnary(unaryOp: UnaryOp, isRvalue: Boolean): Value {
         return when (unaryOp.opType) {
             PrefixUnaryOpType.ADDRESS -> visitExpression(unaryOp.primary, false)
-
             PrefixUnaryOpType.DEREF -> {
                 val addr = visitExpression(unaryOp.primary, true)
                 if (!isRvalue) {
@@ -968,7 +980,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val converted = ir.convertToType(value, commonType)
                 ir.not(converted)
             }
-
             PrefixUnaryOpType.PLUS -> visitExpression(unaryOp.primary, isRvalue)
         }
     }

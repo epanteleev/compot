@@ -14,11 +14,11 @@ import ir.value.constant.Constant
 
 
 enum class EscapeState {
-    NoEscape, // NoEscape means the value does not escape the function
-    Field,    // Field means the value is a field of a local value
-    Argument, // Argument means the value is passed as an argument
-    Constant, // Constant means the value is a constant
-    Unknown;  // Unknown means the value is unknown
+    NoEscape,
+    Field,
+    Argument,
+    Constant,
+    Unknown;
 
     fun union(other: EscapeState): EscapeState {
         if (this == Unknown || other == Unknown) {
@@ -37,15 +37,6 @@ enum class EscapeState {
     }
 }
 
-// Escape analysis pass
-// A simple escape analysis pass that determines whether a value escapes the function
-// The pass is based on the following rules:
-// - If a value is allocated in the function, it is local
-// - If a value is stored in the function, it is local
-// - If a value is loaded in the function, it is local if the pointer is local
-// - If a value is passed as an argument, it is an argument
-// - If a value is a constant, it is a constant
-// - Otherwise, the value is unknown
 private class EscapeAnalysis(private val functionData: FunctionData): FunctionAnalysisPass<EscapeAnalysisResult>() {
     private val preorder = functionData.analysis(PreOrderFabric)
     private val escapeState = hashMapOf<Value, EscapeState>()
