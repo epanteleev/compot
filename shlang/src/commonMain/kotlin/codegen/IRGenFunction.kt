@@ -973,17 +973,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitNumNode(numNode: NumNode): Constant = when (val num = numNode.number.toNumberOrNull()) {
-        is Byte   -> I8Value(num.toByte())
-        is UByte  -> U8Value(num.toByte())
-        is Int    -> I32Value(num.toInt())
-        is UInt   -> U32Value(num.toInt())
-        is Long   -> I64Value(num.toLong())
-        is ULong  -> U64Value(num.toLong())
-        is Float  -> F32Value(num.toFloat())
-        is Double -> F64Value(num.toDouble())
-        else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}")
-    }
+    private fun visitNumNode(numNode: NumNode): Constant = makeConstant(numNode)
 
     private fun getVariableAddress(varNode: VarNode, rvalueAddr: Value, isRvalue: Boolean): Value {
         if (!isRvalue) {

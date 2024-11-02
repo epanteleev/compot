@@ -10,11 +10,10 @@ import ir.global.*
 import parser.nodes.*
 import codegen.consteval.*
 import ir.module.ExternFunction
-import ir.Definitions.QWORD_SIZE
 import codegen.TypeConverter.toIRType
 import ir.attributes.GlobalValueAttribute
 import ir.module.builder.impl.ModuleBuilder
-import ir.value.constant.Constant
+import ir.value.constant.*
 import ir.value.constant.InitializerListValue
 import ir.value.constant.IntegerConstant
 import ir.value.constant.NonTrivialConstant
@@ -63,22 +62,17 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         if (expr !is VarNode) {
             return null
         }
-        val name = expr.name()
-        val value = varStack[name] ?: return null
+        val value = varStack[expr.name()] ?: return null
         value as GlobalValue
         return PointerLiteral.of(value)
     }
 
     private fun defaultContEval(lValueType: NonTrivialType, expr: Expression): NonTrivialConstant? {
-        val result = constEvalExpression0(expr)
-        return if (result != null) {
-            NonTrivialConstant.of(lValueType, result)
-        } else {
-            null
-        }
+        val result = constEvalExpression0(expr) ?: return null
+        return NonTrivialConstant.of(lValueType, result)
     }
 
-    private fun staticInitializer(expr: Expression): Constant? = when (expr) {
+    private fun staticInitializer(expr: Expression): NonTrivialConstant? = when (expr) {
         is UnaryOp -> {
             val operand = staticInitializer(expr.primary) ?: throw IRCodeGenError("Unsupported: $expr")
             when (expr.opType) {
@@ -120,6 +114,12 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             val value = varStack[name] ?: throw IRCodeGenError("Variable not found: $name")
             PointerLiteral.of(value as GlobalValue)
         }
+        is Cast -> {
+            val toTypeCast = expr.typeName.specifyType(typeHolder, listOf())
+            val lValueType = mb.toIRType<NonTrivialType>(typeHolder, toTypeCast.cType())
+            constEvalExpression(lValueType, expr.cast) ?: throw IRCodeGenError("Unsupported: $expr")
+        }
+        is NumNode -> makeConstant(expr)
         else -> TODO()
     }
 
@@ -230,6 +230,18 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         varStack[name] = value
         return value
+    }
+
+    protected fun makeConstant(numNode: NumNode) = when (val num = numNode.number.toNumberOrNull()) {
+        is Byte   -> I8Value(num.toByte())
+        is UByte  -> U8Value(num.toByte())
+        is Int    -> I32Value(num.toInt())
+        is UInt   -> U32Value(num.toInt())
+        is Long   -> I64Value(num.toLong())
+        is ULong  -> U64Value(num.toLong())
+        is Float  -> F32Value(num.toFloat())
+        is Double -> F64Value(num.toDouble())
+        else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}")
     }
 
     protected fun generateGlobalDeclarator(declarator: Declarator): Value {

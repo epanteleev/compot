@@ -41,14 +41,13 @@ private class InterferenceGraphBuilder(functionData: FunctionData): FunctionAnal
     override fun run(): InterferenceGraph {
         val active = hashMapOf<LocalValue, LiveRange>()
         for ((v1, interval1) in liveIntervals) {
-            for ((v2, interval2) in active) {
-                if (interval1.intersect(interval2)) {
-                    interferenceGraph.addEdge(v1,v2)
-                }
-            }
-
             active.entries.retainAll { (_, interval) ->
                 interval1.end().to > interval.begin().from
+            }
+            for ((v2, interval2) in active) {
+                if (interval1.intersect(interval2)) {
+                    interferenceGraph.addEdge(v1, v2)
+                }
             }
             active[v1] = interval1
         }
