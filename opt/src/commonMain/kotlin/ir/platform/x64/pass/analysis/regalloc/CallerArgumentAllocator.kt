@@ -35,15 +35,23 @@ internal class CallerArgumentAllocator private constructor() {
         }
     }
 
+    private fun peakStructArgument(type: AggregateType): Operand {
+        val size = type.sizeOf()
+        val old = argumentSlotIndex
+        argumentSlotIndex += (size + QWORD_SIZE - 1) / QWORD_SIZE
+        return ArgumentSlot(rbp, old * QWORD_SIZE + ARGUMENTS_OFFSET)
+    }
+
     private fun pickArgument(type: NonTrivialType): Operand = when (type) {
         is IntegerType, is PointerType -> peakIntegerArgument()
         is FloatingPointType -> peakFPArgument()
-        else -> throw RuntimeException("type=$type")
+        is AggregateType -> peakStructArgument(type)
+        else -> throw IllegalArgumentException("not allowed for this type=$type")
     }
 
     fun allocate(arguments: List<ArgumentValue>): List<Operand> {
         return arguments.mapTo(arrayListOf()) {
-            pickArgument(it.type())
+            pickArgument(it.contentType())
         }
     }
 

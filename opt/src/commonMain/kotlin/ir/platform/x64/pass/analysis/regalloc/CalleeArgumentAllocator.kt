@@ -36,6 +36,9 @@ class CalleeArgumentAllocator private constructor(private val stackFrame: StackF
                 Memory(memSlots - 1)
             }
         }
+        is AggregateType -> {
+            TODO()
+        }
         is UndefType -> null
         else -> throw IllegalArgumentException("type=$type")
     }

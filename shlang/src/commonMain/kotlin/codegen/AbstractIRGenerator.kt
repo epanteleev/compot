@@ -349,8 +349,8 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return InitializerListValue(lValueType, elements)
     }
 
-    protected fun argumentTypes(functionType: AnyCFunctionType): List<PrimitiveType> {
-        val types = arrayListOf<PrimitiveType>()
+    protected fun argumentTypes(functionType: AnyCFunctionType): List<NonTrivialType> {
+        val types = arrayListOf<NonTrivialType>()
         val cType = functionType.retType().cType()
         if (cType is AnyCStructType && !cType.isSmall()) {
             types.add(Type.Ptr)
@@ -362,7 +362,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     if (parameters != null) {
                         types.addAll(parameters)
                     } else {
-                        types.add(Type.Ptr)
+                        types.add(mb.toIRType<StructType>(typeHolder, ty))
                     }
                 }
                 is CArrayType, is CUncompletedArrayType -> types.add(Type.Ptr)

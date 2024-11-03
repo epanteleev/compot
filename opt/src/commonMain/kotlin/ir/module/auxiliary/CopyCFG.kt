@@ -43,10 +43,6 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     private fun copyArguments(): List<ArgumentValue> {
         val newArgs = arrayListOf<ArgumentValue>()
         fd.arguments().forEachWith(fd.prototype.arguments()) { arg, type, i ->
-            if (type !is PrimitiveType) {
-                throw IllegalStateException("unexpected type for argument=$arg")
-            }
-
             val newArg = ArgumentValue(i, type)
             oldValuesToNew[arg] = newArg
             newArgs.add(newArg)

@@ -12,7 +12,13 @@ import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
 import ir.instruction.Copy
+import ir.instruction.Instruction
 import ir.instruction.Projection
+import ir.instruction.Shl
+import ir.instruction.Shr
+import ir.instruction.TupleDiv
+import ir.instruction.lir.Lea
+import ir.instruction.match
 import ir.instruction.matching.*
 import ir.module.Sensitivity
 import ir.module.block.Block
@@ -21,6 +27,7 @@ import ir.pass.analysis.intervals.LiveIntervalsFabric
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
+import ir.value.asValue
 
 
 class LinearScan internal constructor(private val data: FunctionData): FunctionAnalysisPass<RegisterAllocation>() {
@@ -62,30 +69,34 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
                 // Nothing to do. UB happens
                 return@forEachWith
             }
-            assertion(arg is LocalValue) { "arg=$arg" }
+            assertion(arg is Copy || arg is Lea) { "arg=$arg" }
 
             registerMap[arg as LocalValue] = operand
         }
     }
 
     private fun tryAllocFixedRegisters(bb: Block) {
-        for (inst in bb) {
-            match(inst) {
-                shl(nop(), constant().not()) { shl ->
-                    assertion(shl.rhs() is Copy) { "shl=$shl" }
-                    registerMap[shl.rhs() as Copy] = rcx
-                }
-                shr(nop(), constant().not()) { shr ->
-                    assertion(shr.rhs() is Copy) { "shr=$shr" }
-                    registerMap[shr.rhs() as Copy] = rcx
-                }
-                tupleDiv(nop(), nop()) { div ->
-                    val rem = div.remainder()
-                    assertion(rem != null) { "div=$div" }
-                    registerMap[rem as Projection] = rdx
-                }
+        fun visitor(inst: Instruction) {
+            inst.match(shl(nop(), constant().not())) { shl: Shl ->
+                assertion(shl.rhs() is Copy) { "shl=$shl" }
+                registerMap[shl.rhs().asValue()] = rcx
+                return
+            }
+
+            inst.match(shr(nop(), constant().not())) { shr: Shr ->
+                assertion(shr.rhs() is Copy) { "shr=$shr" }
+                registerMap[shr.rhs().asValue()] = rcx
+                return
+            }
+
+            inst.match(tupleDiv(nop(), nop())) { div: TupleDiv ->
+                val rem = div.remainder()
+                assertion(rem != null) { "div=$div" }
+                registerMap[rem as Projection] = rdx
+                return
             }
         }
+        bb.forEach { visitor(it) }
     }
 
     private fun allocFixedRegisters() {

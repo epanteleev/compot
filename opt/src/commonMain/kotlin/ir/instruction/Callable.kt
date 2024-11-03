@@ -5,6 +5,8 @@ import ir.value.Value
 import ir.types.Type
 import ir.module.AnyFunctionPrototype
 import ir.module.block.Block
+import ir.types.AggregateType
+import ir.types.PrimitiveType
 
 
 sealed interface Callable {
@@ -41,8 +43,17 @@ sealed interface Callable {
     companion object {
         internal fun isAppropriateTypes(func: AnyFunctionPrototype, args: List<Value>): Boolean {
             func.arguments().forEachWith(args) { expectedType, value ->
-                if (expectedType != value.type() && value.type() != Type.UNDEF) {
-                    return func.isVararg
+                when (expectedType) {
+                    is AggregateType -> {
+                        if (value.type() != Type.Ptr && value.type() != Type.UNDEF) {
+                            return false
+                        }
+                    }
+                    is PrimitiveType -> {
+                        if (expectedType != value.type() && value.type() != Type.UNDEF) {
+                            return false
+                        }
+                    }
                 }
             }
 

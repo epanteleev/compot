@@ -142,7 +142,7 @@ inline fun<reified T> Instruction.isa(matcher: (T) -> Boolean): Boolean {
     return matcher(this)
 }
 
-inline fun<reified T> Instruction.match(noinline matcher: (T) -> Boolean, action: (T) -> Instruction?) {
+inline fun<reified T> Instruction.match(noinline matcher: (T) -> Boolean, action: (T) -> Unit?) {
     if (this !is T) {
         return
     }

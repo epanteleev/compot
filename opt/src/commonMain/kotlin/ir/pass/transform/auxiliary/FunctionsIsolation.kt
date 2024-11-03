@@ -1,5 +1,6 @@
 package ir.pass.transform.auxiliary
 
+import ir.types.*
 import ir.instruction.*
 import ir.instruction.matching.*
 import ir.module.FunctionData
@@ -8,6 +9,7 @@ import ir.module.SSAModule
 import ir.module.block.Block
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.value.ArgumentValue
+import ir.value.constant.U64Value
 
 
 internal class FunctionsIsolation private constructor(private val cfg: FunctionData) {
@@ -100,8 +102,18 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             bb.insertBefore(call) { it.downStackFrame(call) }
 
             for ((i, arg) in call.arguments().withIndex()) {
-                val copy = bb.insertBefore(call) { it.copy(arg) }
-                bb.updateDF(call, i, copy)
+                when (val argType = arg.type()) {
+                    is PrimitiveType -> {
+                        val copy = bb.insertBefore(call) { it.copy(arg) }
+                        bb.updateDF(call, i, copy)
+                    }
+                    is AggregateType -> {
+                        val gen = bb.insertBefore(call) { it.gen(argType) }
+                        bb.insertAfter(gen) { it.memcpy(gen, arg, U64Value(argType.sizeOf().toLong())) }
+                        bb.updateDF(call, i, gen)
+                    }
+                    else -> throw IllegalStateException("Unexpected type: $argType")
+                }
             }
 
             call.target().prepend { it.upStackFrame(call) }

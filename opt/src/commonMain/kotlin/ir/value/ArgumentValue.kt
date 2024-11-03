@@ -10,7 +10,12 @@ class ArgumentValue(private val index: Int, private val tp: NonTrivialType): Loc
         return "arg$index"
     }
 
-    override fun type(): NonTrivialType = tp
+    override fun type(): NonTrivialType = when (tp) {
+        is AggregateType -> Type.Ptr
+        is PrimitiveType -> tp
+    }
+
+    fun contentType(): NonTrivialType = tp
 
     override fun hashCode(): Int = index
 
@@ -24,7 +29,8 @@ class ArgumentValue(private val index: Int, private val tp: NonTrivialType): Loc
         return index
     }
 
-    override fun toString(): String {
-        return "%$index"
+    override fun toString(): String = when (tp) {
+        is AggregateType -> "%${name()} !byval[$tp]"
+        is PrimitiveType -> "%${name()}"
     }
 }
