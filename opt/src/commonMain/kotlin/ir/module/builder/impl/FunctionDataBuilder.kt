@@ -233,7 +233,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
             return builder
         }
 
-        fun create(name: String, returnType: Type, argumentTypes: List<PrimitiveType>, isVararg: Boolean = false): FunctionDataBuilder {
+        fun create(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, isVararg: Boolean = false): FunctionDataBuilder {
             val argumentValues = arrayListOf<ArgumentValue>()
             for ((idx, arg) in argumentTypes.withIndex()) {
                 argumentValues.add(ArgumentValue(idx, arg))

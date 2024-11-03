@@ -10,7 +10,7 @@ import ir.Definitions.DOUBLE_SIZE
 import ir.platform.x64.CallConvention
 
 
-internal class CallerArgumentAllocator private constructor(){
+internal class CallerArgumentAllocator private constructor() {
     private var freeArgumentRegisters = CallConvention.gpArgumentRegisters.toMutableList().asReversed()
     private var freeXmmArgumentRegisters = CallConvention.xmmArgumentRegister.toMutableList().asReversed()
     private var argumentSlotIndex: Int = 0
@@ -35,7 +35,7 @@ internal class CallerArgumentAllocator private constructor(){
         }
     }
 
-    private fun pickArgument(type: PrimitiveType): Operand = when (type) {
+    private fun pickArgument(type: NonTrivialType): Operand = when (type) {
         is IntegerType, is PointerType -> peakIntegerArgument()
         is FloatingPointType -> peakFPArgument()
         else -> throw RuntimeException("type=$type")

@@ -19,7 +19,7 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
         return functions.find { it.prototype().name() == name }?.prototype() ?: findExternFunctionOrNull(name)
     }
 
-    fun createFunction(name: String, returnType: Type, argumentTypes: List<PrimitiveType>, isVararg: Boolean = false): FunctionDataBuilder {
+    fun createFunction(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, isVararg: Boolean = false): FunctionDataBuilder {
         val data = FunctionDataBuilder.create(name, returnType, argumentTypes, isVararg)
         functions.add(data)
         return data

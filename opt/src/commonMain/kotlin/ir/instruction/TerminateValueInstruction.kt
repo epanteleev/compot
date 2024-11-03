@@ -5,7 +5,7 @@ import ir.types.*
 import ir.module.block.Block
 
 
-abstract class TerminateValueInstruction(id: Identity, owner: Block,
+sealed class TerminateValueInstruction(id: Identity, owner: Block,
                                          protected val tp: Type,
                                          usages: Array<Value>,
                                          targets: Array<Block>):

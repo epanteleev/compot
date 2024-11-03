@@ -16,7 +16,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import typedesc.TypeDesc
 
 
-class VaInit(private val firstArgType: CType): IntrinsicProvider("va_init", listOf()) {
+class VaInit(private val firstArgType: CType): IntrinsicProvider("va_init") {
     override fun <Masm : MacroAssembler> implement(masm: Masm, inputs: List<Operand>) {
         assertion(inputs.size == 1) { "va_init must have 1 arguments" }
 

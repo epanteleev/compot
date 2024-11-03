@@ -7,7 +7,7 @@ import ir.module.AnyFunctionPrototype
 import ir.module.block.Block
 
 
-interface Callable {
+sealed interface Callable {
     fun arguments(): List<Value>
     fun prototype(): AnyFunctionPrototype
     fun shortName(): String {

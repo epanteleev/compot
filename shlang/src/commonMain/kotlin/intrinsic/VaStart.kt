@@ -18,7 +18,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import typedesc.TypeDesc
 
 
-class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_start", listOf()) {
+class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_start") {
     init {
         require(arguments.isNotEmpty()) { "va_start must have 2 arguments" }
     }
