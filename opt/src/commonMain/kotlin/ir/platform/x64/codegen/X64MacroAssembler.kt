@@ -7,6 +7,7 @@ import asm.x64.GPRegister.rax
 import common.assertion
 import ir.Definitions.BYTE_SIZE
 import ir.Definitions.QWORD_SIZE
+import ir.attributes.VarArgAttribute
 import ir.instruction.*
 import ir.module.DirectFunctionPrototype
 import ir.platform.MacroAssembler
@@ -148,7 +149,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
     }
 
     private fun emitFPVarargsCount(call: Callable) {
-        if (!call.prototype().isVararg) {
+        if (!call.prototype().attributes.contains(VarArgAttribute)) {
             return
         }
 

@@ -1,5 +1,7 @@
 package ir.pass.transform.auxiliary
 
+import common.assertion
+import ir.attributes.ByValue
 import ir.types.*
 import ir.instruction.*
 import ir.instruction.matching.*
@@ -101,18 +103,24 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             }
             bb.insertBefore(call) { it.downStackFrame(call) }
 
+            val byValueAttr = call.prototype().attributes.filterIsInstance<ByValue>()
             for ((i, arg) in call.arguments().withIndex()) {
-                when (val argType = arg.type()) {
-                    is PrimitiveType -> {
-                        val copy = bb.insertBefore(call) { it.copy(arg) }
-                        bb.updateDF(call, i, copy)
+                val isByValue = byValueAttr.find { it.argumentIndex == i } != null
+                if (!isByValue) {
+                    assertion(arg.type() is PrimitiveType) {
+                        "Unexpected type: ${arg.type()}"
                     }
-                    is AggregateType -> {
-                        val gen = bb.insertBefore(call) { it.gen(argType) }
-                        bb.insertAfter(gen) { it.memcpy(gen, arg, U64Value(argType.sizeOf().toLong())) }
-                        bb.updateDF(call, i, gen)
+                    val copy = bb.insertBefore(call) { it.copy(arg) }
+                    bb.updateDF(call, i, copy)
+                } else {
+                    assertion(arg is Alloc) {
+                        "Unexpected argument: $arg"
                     }
-                    else -> throw IllegalStateException("Unexpected type: $argType")
+                    val argType = arg as Alloc
+                    val gen = bb.insertBefore(call) { it.gen(argType.allocatedType) }
+                    val lea = bb.insertAfter(gen) { it.lea(gen) }
+                    bb.insertAfter(lea) { it.memcpy(lea, arg, U64Value(argType.allocatedType.sizeOf().toLong())) }
+                    bb.updateDF(call, i, gen)
                 }
             }
 

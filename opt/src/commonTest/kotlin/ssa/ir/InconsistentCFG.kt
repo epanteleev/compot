@@ -8,6 +8,7 @@ import kotlin.test.Test
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
 import ir.value.constant.*
+import kotlin.collections.hashSetOf
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
 
@@ -39,7 +40,7 @@ class InconsistentCFG {
     fun testCallF32() {
         val builder = ModuleBuilder.create()
         builder.createExternFunction("calc", Type.F32, arrayListOf(Type.F32))
-        val invalidPrototype = FunctionPrototype("calc", Type.I32, arrayListOf(Type.F32))
+        val invalidPrototype = FunctionPrototype("calc", Type.I32, arrayListOf(Type.F32), hashSetOf())
 
         builder.createFunction("main", Type.I32, arrayListOf()).apply {
             val cont = createLabel()

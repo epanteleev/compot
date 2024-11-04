@@ -19,6 +19,7 @@ import intrinsic.VaInit
 import intrinsic.VaStart
 import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
+import ir.attributes.VarArgAttribute
 import ir.global.StringLiteralGlobalConstant
 import ir.module.AnyFunctionPrototype
 import ir.module.IndirectFunctionPrototype
@@ -456,7 +457,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return ir.convertToType(expr, cvt)
         }
 
-        if (!function.isVararg) {
+        if (!function.attributes.contains(VarArgAttribute)) {
             throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'")
         }
         return when (expr.type()) {
@@ -527,7 +528,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val argTypes = functionType.args().map {
             mb.toIRType<NonTrivialType>(typeHolder, it.cType())
         }
-        val prototype = IndirectFunctionPrototype(irRetType, argTypes, functionType.variadic())
+        val attributes = if (functionType.variadic()) {
+            hashSetOf(VarArgAttribute)
+        } else {
+            emptySet()
+        }
+        val prototype = IndirectFunctionPrototype(irRetType, argTypes, attributes)
         val convertedArgs = convertFunctionArgs(prototype, funcPointerCall.args)
 
         val cont = ir.createLabel()
@@ -1639,9 +1645,12 @@ class FunGenInitializer(moduleBuilder: ModuleBuilder,
         val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
         val parameters = functionNode.functionDeclarator().params()
         val irRetType  = irReturnType(fnType.retType())
-        val argTypes   = argumentTypes(fnType)
+        val (argTypes, attributes) = argumentTypes(fnType)
 
-        val currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes, fnType.variadic())
+        if (fnType.variadic()) {
+            attributes.add(VarArgAttribute)
+        }
+        val currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes, attributes)
         val funGen = IrGenFunction(mb, typeHolder, varStack, nameGenerator, currentFunction, fnType)
         funGen.visitFun(parameters, functionNode)
     }

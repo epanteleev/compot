@@ -13,6 +13,7 @@ import asm.x64.GPRegister.*
 import common.assertion
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
+import ir.attributes.ByValue
 import ir.instruction.Add
 import ir.instruction.And
 import ir.instruction.Div
@@ -74,6 +75,15 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         }
         for (reg in calleeSaveRegisters) {
             asm.push(QWORD_SIZE, reg)
+        }
+
+        for (attr in data.prototype.attributes) {
+            if (attr !is ByValue) {
+                continue
+            }
+            val arg = data.arg(attr.argumentIndex)
+            val operand = registerAllocation.operand(arg) as GPRegister
+            asm.lea(POINTER_SIZE, Address.from(rbp, 16), operand) //TODO temporal solution
         }
     }
 

@@ -11,7 +11,10 @@ import parser.nodes.*
 import codegen.consteval.*
 import ir.module.ExternFunction
 import codegen.TypeConverter.toIRType
+import ir.attributes.ByValue
+import ir.attributes.FunctionAttribute
 import ir.attributes.GlobalValueAttribute
+import ir.attributes.VarArgAttribute
 import ir.module.builder.impl.ModuleBuilder
 import ir.value.constant.*
 import ir.value.constant.InitializerListValue
@@ -210,14 +213,13 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         throw IRCodeGenError("Unsupported declarator '$declarator'")
     }
 
-    private fun getExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false): ExternFunction {
+    private fun getExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>): ExternFunction {
         val externFunction = mb.findExternFunctionOrNull(name)
         if (externFunction != null) {
             println("Warning: extern function $name already exists") //TODO implement warning mechanism
             return externFunction
         }
-
-        return mb.createExternFunction(name, returnType, arguments, isVararg)
+        return mb.createExternFunction(name, returnType, arguments, attributes)
     }
 
     private fun makeGlobalValue(name: String, type: VarDescriptor): Value {
@@ -250,11 +252,13 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (val type = varDesc.type.cType()) {
             is CFunctionType -> {
                 val abstrType = type.functionType
-                val argTypes  = argumentTypes(abstrType)
+                val (argTypes, attr) = argumentTypes(abstrType)
                 val returnType = irReturnType(abstrType.retType)
 
-                val isVararg = type.functionType.variadic
-                val externFunc = getExternFunction(name, returnType, argTypes, isVararg)
+                if (type.functionType.variadic) {
+                    attr.add(VarArgAttribute)
+                }
+                val externFunc = getExternFunction(name, returnType, argTypes, attr)
                 varStack[name] = externFunc
                 return externFunc
             }
@@ -349,13 +353,14 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return InitializerListValue(lValueType, elements)
     }
 
-    protected fun argumentTypes(functionType: AnyCFunctionType): List<NonTrivialType> {
+    protected fun argumentTypes(functionType: AnyCFunctionType): Pair<List<NonTrivialType>, MutableSet<FunctionAttribute>> { //TODO remove pair
         val types = arrayListOf<NonTrivialType>()
+        val attributes = hashSetOf<FunctionAttribute>()
         val cType = functionType.retType().cType()
         if (cType is AnyCStructType && !cType.isSmall()) {
             types.add(Type.Ptr)
         }
-        for (type in functionType.args()) {
+        for ((idx, type) in functionType.args().withIndex()) {
             when (val ty = type.cType()) {
                 is AnyCStructType -> {
                     val parameters = CallConvention.coerceArgumentTypes(ty)
@@ -363,6 +368,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                         types.addAll(parameters)
                     } else {
                         types.add(mb.toIRType<StructType>(typeHolder, ty))
+                        attributes.add(ByValue(idx))
                     }
                 }
                 is CArrayType, is CUncompletedArrayType -> types.add(Type.Ptr)
@@ -372,7 +378,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 else -> throw IRCodeGenError("Unknown type, type=$type")
             }
         }
-        return types
+        return Pair(types, attributes)
     }
 
     protected fun irReturnType(retType: TypeDesc): Type = when (val ty = retType.cType()) {

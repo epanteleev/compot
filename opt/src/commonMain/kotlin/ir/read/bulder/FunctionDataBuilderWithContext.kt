@@ -9,6 +9,8 @@ import ir.read.tokens.*
 import ir.module.block.*
 import ir.module.builder.*
 import common.forEachWith
+import ir.attributes.ByValue
+import ir.attributes.VarArgAttribute
 import ir.value.constant.BoolValue
 import ir.value.constant.Constant
 import ir.value.constant.IntegerConstant
@@ -432,14 +434,22 @@ class FunctionDataBuilderWithContext private constructor(
 
     fun makePrototype(functionName: SymbolValue, returnType: Type, argTypes: List<TypeToken>): FunctionPrototype {
         val types = moduleBuilder.resolveArgumentType(argTypes)
-        val isVararg = argTypes.lastOrNull() is Vararg
-        return FunctionPrototype(functionName.name, returnType, types, isVararg)
+        val attributes = if (argTypes.lastOrNull() is Vararg) {
+            hashSetOf(VarArgAttribute)
+        } else {
+            emptySet()
+        }
+        return FunctionPrototype(functionName.name, returnType, types, attributes)
     }
 
     fun makePrototype(returnType: Type, argTypes: List<TypeToken>): IndirectFunctionPrototype {
         val types = moduleBuilder.resolveArgumentType(argTypes)
-        val isVararg = argTypes.lastOrNull() is Vararg
-        return IndirectFunctionPrototype(returnType, types, isVararg)
+        val attributes = if (argTypes.lastOrNull() is Vararg) {
+            hashSetOf(VarArgAttribute)
+        } else {
+            emptySet()
+        }
+        return IndirectFunctionPrototype(returnType, types, attributes)
     }
 
     companion object {
@@ -452,7 +462,13 @@ class FunctionDataBuilderWithContext private constructor(
                         continue
                     }
 
-                    argumentValues.add(ArgumentValue(idx, arg))
+                    val byValue = prototype.attributes.find { it is ByValue && it.argumentIndex == idx } // TODO: simplify!!???!
+                    val argAttr = if (byValue != null) {
+                        hashSetOf(byValue as ByValue)
+                    } else {
+                        hashSetOf()
+                    }
+                    argumentValues.add(ArgumentValue(idx, arg, argAttr))
                 }
 
                 return argumentValues

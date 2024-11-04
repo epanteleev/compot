@@ -12,6 +12,7 @@ import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
 import ir.instruction.Copy
+import ir.instruction.Generate
 import ir.instruction.Instruction
 import ir.instruction.Projection
 import ir.instruction.Shl
@@ -69,7 +70,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
                 // Nothing to do. UB happens
                 return@forEachWith
             }
-            assertion(arg is Copy || arg is Lea) { "arg=$arg" }
+            assertion(arg is Copy || arg is Lea || arg is Generate) { "arg=$arg" }
 
             registerMap[arg as LocalValue] = operand
         }

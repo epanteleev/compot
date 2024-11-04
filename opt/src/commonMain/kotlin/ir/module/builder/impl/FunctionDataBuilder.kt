@@ -1,5 +1,8 @@
 package ir.module.builder.impl
 
+import ir.attributes.ArgumentValueAttribute
+import ir.attributes.ByValue
+import ir.attributes.FunctionAttribute
 import ir.types.*
 import ir.value.*
 import ir.module.*
@@ -225,21 +228,26 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
             returnType: Type,
             arguments: List<NonTrivialType>,
             argumentValues: List<ArgumentValue>,
-            isVararg: Boolean = false
+            attributes: Set<FunctionAttribute>
         ): FunctionDataBuilder {
-            val prototype = FunctionPrototype(name, returnType, arguments, isVararg)
-
-            val builder = FunctionDataBuilder(prototype, argumentValues)
-            return builder
+            val prototype = FunctionPrototype(name, returnType, arguments, attributes)
+            return FunctionDataBuilder(prototype, argumentValues)
         }
 
-        fun create(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, isVararg: Boolean = false): FunctionDataBuilder {
+        fun create(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, attributes: Set<FunctionAttribute>): FunctionDataBuilder {
             val argumentValues = arrayListOf<ArgumentValue>()
-            for ((idx, arg) in argumentTypes.withIndex()) {
-                argumentValues.add(ArgumentValue(idx, arg))
+            val argAttributes = attributes.filterIsInstance<ArgumentValueAttribute>()
+            for ((idx, arg) in argumentTypes.withIndex()) { //TODO simplify!??
+                val byValue = argAttributes.find { it is ByValue && it.argumentIndex == idx }
+                val argAttr = if (byValue != null) {
+                    hashSetOf(byValue)
+                } else {
+                    hashSetOf()
+                }
+                argumentValues.add(ArgumentValue(idx, arg, argAttr))
             }
 
-            return create(name, returnType, argumentTypes, argumentValues, isVararg)
+            return create(name, returnType, argumentTypes, argumentValues, attributes)
         }
     }
 }

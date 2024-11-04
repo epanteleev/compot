@@ -13,10 +13,10 @@ import ir.types.NonTrivialType
 
 data class StackFrameException(override val message: String): Exception(message)
 
-interface StackFrame {
+sealed interface StackFrame {
     fun takeSlot(value: Value): Address
     fun returnSlot(slot: Address, size: Int)
-    fun takeArgument(index: Int, arg: Value): Address
+    fun takeArgument(index: Int, size: Int): Address
     fun size(): Int
 
     companion object {
@@ -32,11 +32,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
     private val freeStackSlots = linkedMapOf<Int, Address>()
 
     private fun getTypeSize(ty: NonTrivialType): Int {
-        return if (ty != Type.U1) {
-            ty.sizeOf()
-        } else {
-            1
-        }
+        return ty.sizeOf()
     }
 
     private fun withAlignment(alignment: Int, value: Int): Int {
@@ -84,7 +80,8 @@ private class BasePointerAddressedStackFrame : StackFrame {
         return frameSize
     }
 
-    override fun takeArgument(index: Int, arg: Value): Address {
+    override fun takeArgument(index: Int, size: Int): Address {
+        frameSize += size
         frameSize = withAlignment(QWORD_SIZE, frameSize)
         return ArgumentSlot(rsp, index * QWORD_SIZE)
     }

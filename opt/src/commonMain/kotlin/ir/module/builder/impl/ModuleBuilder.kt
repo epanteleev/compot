@@ -1,5 +1,6 @@
 package ir.module.builder.impl
 
+import ir.attributes.FunctionAttribute
 import ir.types.Type
 import ir.module.Module
 import ir.module.SSAModule
@@ -19,14 +20,14 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
         return functions.find { it.prototype().name() == name }?.prototype() ?: findExternFunctionOrNull(name)
     }
 
-    fun createFunction(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, isVararg: Boolean = false): FunctionDataBuilder {
-        val data = FunctionDataBuilder.create(name, returnType, argumentTypes, isVararg)
+    fun createFunction(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, attributes: Set<FunctionAttribute> = hashSetOf()): FunctionDataBuilder {
+        val data = FunctionDataBuilder.create(name, returnType, argumentTypes, attributes)
         functions.add(data)
         return data
     }
 
-    fun createFunction(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, argumentValues: List<ArgumentValue>, isVararg: Boolean = false): FunctionDataBuilder {
-        val data = FunctionDataBuilder.create(name, returnType, argumentTypes, argumentValues, isVararg)
+    fun createFunction(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, argumentValues: List<ArgumentValue>, attributes: Set<FunctionAttribute> = hashSetOf()): FunctionDataBuilder {
+        val data = FunctionDataBuilder.create(name, returnType, argumentTypes, argumentValues, attributes)
         functions.add(data)
         return data
     }

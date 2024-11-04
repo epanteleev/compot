@@ -1,11 +1,12 @@
 package ir.module
 
+import ir.attributes.FunctionAttribute
 import ir.types.Type
 import ir.global.FunctionSymbol
 import ir.types.NonTrivialType
 
 
-sealed class AnyFunctionPrototype(protected val returnType: Type, protected val arguments: List<NonTrivialType>, val isVararg: Boolean) {
+sealed class AnyFunctionPrototype(protected val returnType: Type, protected val arguments: List<NonTrivialType>, val attributes: Set<FunctionAttribute>) {
     fun arguments(): List<NonTrivialType> = arguments
     fun argument(index: Int): NonTrivialType {
         if (index < 0 || index >= arguments.size) {
@@ -18,13 +19,16 @@ sealed class AnyFunctionPrototype(protected val returnType: Type, protected val 
     abstract fun shortDescription(): String
 }
 
-sealed class DirectFunctionPrototype(val name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false):
-    AnyFunctionPrototype(returnType, arguments, isVararg), FunctionSymbol {
+sealed class DirectFunctionPrototype(val name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>):
+    AnyFunctionPrototype(returnType, arguments, attributes), FunctionSymbol {
     override fun shortDescription(): String {
         val builder = StringBuilder()
         builder.append("$returnType @$name(")
         arguments.joinTo(builder)
         builder.append(")")
+        attributes.forEach {
+            builder.append(" $it")
+        }
         return builder.toString()
     }
 
@@ -47,21 +51,24 @@ sealed class DirectFunctionPrototype(val name: String, returnType: Type, argumen
     final override fun name(): String = name
 }
 
-class FunctionPrototype(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false):
-   DirectFunctionPrototype(name, returnType, arguments, isVararg), FunctionSymbol {
+class FunctionPrototype(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>):
+   DirectFunctionPrototype(name, returnType, arguments, attributes), FunctionSymbol {
     override fun toString(): String {
         return "define ${shortDescription()}"
     }
 }
 
-class IndirectFunctionPrototype(returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean):
-    AnyFunctionPrototype(returnType, arguments, isVararg) {
+class IndirectFunctionPrototype(returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>):
+    AnyFunctionPrototype(returnType, arguments, attributes) {
 
     override fun shortDescription(): String {
         val builder = StringBuilder()
         builder.append("$returnType @<indirect>(")
         arguments.joinTo(builder)
         builder.append(")")
+        attributes.forEach {
+            builder.append(" $it")
+        }
         return builder.toString()
     }
 
@@ -84,9 +91,15 @@ class IndirectFunctionPrototype(returnType: Type, arguments: List<NonTrivialType
     }
 }
 
-class ExternFunction internal constructor(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean):
-    DirectFunctionPrototype(name, returnType, arguments, isVararg), FunctionSymbol {
+class ExternFunction internal constructor(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>):
+    DirectFunctionPrototype(name, returnType, arguments, attributes), FunctionSymbol {
     override fun toString(): String {
-        return "extern ${shortDescription()}"
+        val builder = StringBuilder()
+        builder.append("extern ")
+        builder.append(shortDescription())
+        attributes.forEach {
+            builder.append(" $it")
+        }
+        return builder.toString()
     }
 }

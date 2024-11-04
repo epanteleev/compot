@@ -45,8 +45,8 @@ sealed interface Callable {
             func.arguments().forEachWith(args) { expectedType, value ->
                 when (expectedType) {
                     is AggregateType -> {
-                        if (value.type() != Type.Ptr && value.type() != Type.UNDEF) {
-                            return false
+                        if (value.type() == Type.UNDEF) {
+                            return false //todo FULLY IMPLEMENT
                         }
                     }
                     is PrimitiveType -> {

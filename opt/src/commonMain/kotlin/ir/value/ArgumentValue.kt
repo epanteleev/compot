@@ -1,10 +1,11 @@
 package ir.value
 
+import ir.attributes.ArgumentValueAttribute
 import ir.types.*
 import ir.instruction.Instruction
 
 
-class ArgumentValue(private val index: Int, private val tp: NonTrivialType): LocalValue {
+class ArgumentValue(private val index: Int, private val tp: NonTrivialType, val attributes: Set<ArgumentValueAttribute>): LocalValue {
     override var usedIn: MutableList<Instruction> = arrayListOf()
     override fun name(): String {
         return "arg$index"
@@ -29,8 +30,5 @@ class ArgumentValue(private val index: Int, private val tp: NonTrivialType): Loc
         return index
     }
 
-    override fun toString(): String = when (tp) {
-        is AggregateType -> "%${name()} !byval[$tp]"
-        is PrimitiveType -> "%${name()}"
-    }
+    override fun toString(): String = "%${name()}"
 }

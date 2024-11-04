@@ -1,5 +1,6 @@
 package ir.module.builder
 
+import ir.attributes.FunctionAttribute
 import ir.types.*
 import ir.global.*
 import ir.module.*
@@ -57,8 +58,8 @@ abstract class AnyModuleBuilder {
         return structType
     }
 
-    fun createExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, isVararg: Boolean = false): ExternFunction {
-        val extern = ExternFunction(name, returnType, arguments, isVararg)
+    fun createExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute> = hashSetOf()): ExternFunction {
+        val extern = ExternFunction(name, returnType, arguments, attributes)
         val has = externFunctions.put(name, extern)
         if (has != null) {
             throw IllegalArgumentException("extern function with name='$name' already exists")

@@ -1,5 +1,6 @@
 package ir.read.bulder
 
+import ir.attributes.VarArgAttribute
 import ir.global.GlobalSymbol
 import ir.module.*
 import ir.read.tokens.*
@@ -15,8 +16,12 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
 
     fun createFunction(functionName: SymbolValue, returnType: TypeToken, argumentTypes: List<TypeToken>, argumentValues: List<LocalValueToken>): FunctionDataBuilderWithContext {
         val args      = resolveArgumentType(argumentTypes)
-        val isVararg  = argumentTypes.lastOrNull() is Vararg
-        val prototype = FunctionPrototype(functionName.name, returnType.type(this), args, isVararg)
+        val attributes = if (argumentTypes.lastOrNull() is Vararg) {
+            hashSetOf(VarArgAttribute)
+        } else {
+            emptySet()
+        }
+        val prototype = FunctionPrototype(functionName.name, returnType.type(this), args, attributes)
 
         val data = FunctionDataBuilderWithContext.create(this, prototype, argumentValues)
         functions.add(data)
@@ -29,8 +34,12 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
 
     fun createExternFunction(functionName: SymbolValue, returnType: TypeToken, arguments: List<TypeToken>): ExternFunction {
         val resolvedArguments = resolveArgumentType(arguments)
-        val isVararg          = arguments.lastOrNull() is Vararg
-        val extern            = ExternFunction(functionName.name, returnType.type(this), resolvedArguments, isVararg)
+        val attributes = if (arguments.lastOrNull() is Vararg) {
+            hashSetOf(VarArgAttribute)
+        } else {
+            emptySet()
+        }
+        val extern = ExternFunction(functionName.name, returnType.type(this), resolvedArguments, attributes)
         externFunctions[functionName.name] = extern
         return extern
     }
