@@ -27,11 +27,11 @@ class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_sta
         assertion(inputs.size == 2) { "va_start must have 2 arguments" }
 
         val vaStart = inputs[0]
-        assertion(vaStart is Address2) { "va_start must be Reg64" }
+        assertion(vaStart is Address2) { "va_start must be offset(%base)" }
         vaStart as Address2
 
         val vaInit = inputs[1]
-        assertion(vaInit is Address2) { "va_start must be Reg64" }
+        assertion(vaInit is Address2) { "va_start must be offset(%base)" }
         vaInit as Address2
 
         when (masm) {

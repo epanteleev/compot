@@ -21,7 +21,7 @@ class VaInit(private val firstArgType: CType): IntrinsicProvider("va_init") {
         assertion(inputs.size == 1) { "va_init must have 1 arguments" }
 
         val vaInit = inputs.first()
-        assertion(vaInit is Address2) { "va_init must be Reg64" }
+        assertion(vaInit is Address2) { "va_start must be offset(%base)" }
         vaInit as Address2
 
         when (masm) {
