@@ -44,7 +44,7 @@ class CalleeArgumentAllocator private constructor(private val stackFrame: StackF
             val size = value.type().sizeOf()
             val slot = memSlots
             memSlots += (size + QWORD_SIZE - 1) / QWORD_SIZE //TODO
-            Memory(slot, (memSlots - 1) * QWORD_SIZE)
+            Memory(slot, slot * QWORD_SIZE)
         }
         is UndefType -> null
         else -> throw IllegalArgumentException("type=$value")
