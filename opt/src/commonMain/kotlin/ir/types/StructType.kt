@@ -7,10 +7,11 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
     private val alignments = alignments()
     private var maxAlignment = Int.MIN_VALUE
 
-    override fun maxAlignment(): Int {
+    override fun alignmentOf(): Int {
         if (maxAlignment == Int.MIN_VALUE) {
             maxAlignment = alignments.maxOrNull() ?: 1
         }
+
         return maxAlignment
     }
 
@@ -28,11 +29,7 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
     }
 
     private fun align(alignment: Int, field: NonTrivialType): Int {
-        return if (field is AggregateType) {
-            maxOf(alignment, field.maxAlignment())
-        } else {
-            maxOf(alignment, field.sizeOf())
-        }
+        return maxOf(alignment, field.alignmentOf())
     }
 
     override fun offset(index: Int): Int {

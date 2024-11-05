@@ -24,7 +24,7 @@ sealed interface Address : Operand {
     }
 }
 
-class Address2 internal constructor(val base: GPRegister, val offset: Int) : Address {
+open class Address2 internal constructor(val base: GPRegister, val offset: Int) : Address { //TODO open!!????!??
     fun withOffset(index: GPRegister): Address {
         return Address4(base, offset, index, ScaleFactor.TIMES_1)
     }
@@ -88,7 +88,7 @@ class Address4 internal constructor(private val base: GPRegister?, private val o
     }
 }
 
-class ArgumentSlot(private val base: GPRegister, private val offset: Int) : Address {
+class ArgumentSlot(base: GPRegister, offset: Int) : Address2(base, offset) {
     override fun toString(): String {
         return toString(Int.MAX_VALUE)
     }

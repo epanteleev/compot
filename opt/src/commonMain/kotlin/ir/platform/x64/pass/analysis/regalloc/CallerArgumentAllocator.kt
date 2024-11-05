@@ -7,6 +7,7 @@ import asm.x64.GPRegister.rbp
 import ir.value.ArgumentValue
 import ir.Definitions.QWORD_SIZE
 import ir.Definitions.DOUBLE_SIZE
+import ir.Definitions.alignTo
 import ir.platform.x64.CallConvention
 
 
@@ -35,15 +36,24 @@ internal class CallerArgumentAllocator private constructor() {
         }
     }
 
+    private fun peakStructArgument(structType: StructType): Operand {
+        val size = structType.sizeOf()
+        val old = argumentSlotIndex
+        val offset = alignTo(argumentSlotIndex * QWORD_SIZE + ARGUMENTS_OFFSET + size, QWORD_SIZE)
+        argumentSlotIndex = argumentSlotIndex + offset / QWORD_SIZE
+        return ArgumentSlot(rbp, old * DOUBLE_SIZE + ARGUMENTS_OFFSET)
+    }
+
     private fun pickArgument(type: NonTrivialType): Operand = when (type) {
         is IntegerType, is PointerType -> peakIntegerArgument()
         is FloatingPointType -> peakFPArgument()
+        is StructType -> peakStructArgument(type)
         else -> throw IllegalArgumentException("not allowed for this type=$type")
     }
 
     fun allocate(arguments: List<ArgumentValue>): List<Operand> {
         return arguments.mapTo(arrayListOf()) {
-            pickArgument(it.type())
+            pickArgument(it.contentType())
         }
     }
 

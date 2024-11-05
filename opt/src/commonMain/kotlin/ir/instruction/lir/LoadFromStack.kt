@@ -57,7 +57,7 @@ class LoadFromStack private constructor(id: Identity, owner: Block, loadedType: 
         }
 
         private fun isAppropriateType(originType: Type, index: Type): Boolean {
-            return originType is AggregateType && index is ArithmeticType
+            return true // originType is AggregateType && index is ArithmeticType
         }
     }
 }

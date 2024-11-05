@@ -1,5 +1,6 @@
 package ir.instruction.matching
 
+import ir.attributes.ByValue
 import ir.global.ExternValue
 import ir.global.GlobalValue
 import ir.value.constant.Constant
@@ -11,6 +12,7 @@ import ir.types.IntegerType
 import ir.types.PrimitiveType
 import ir.types.StructType
 import ir.types.Type
+import ir.value.ArgumentValue
 
 typealias ValueMatcher = (Value) -> Boolean
 typealias InstructionMatcher = (Instruction) -> Boolean
@@ -209,6 +211,8 @@ inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()
 inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
     it is GlobalValue && type(it.contentType()) //TODO bug in type() method
 }
+
+fun argumentByValue(): ValueMatcher = { it is ArgumentValue && it.attributes.any { it is ByValue } }
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // Type matchers

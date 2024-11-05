@@ -7,14 +7,11 @@ data class ArrayType(private val type: NonTrivialType, val length: Int) : Aggreg
         require(length >= 0) { "Array size must be greater than 0, but: size=$length" }
     }
 
-    override fun maxAlignment(): Int {
+    override fun alignmentOf(): Int {
         if (maxAlignment == Int.MIN_VALUE) {
-            maxAlignment = if (type is AggregateType) {
-                type.maxAlignment()
-            } else {
-                type.sizeOf()
-            }
+            maxAlignment = type.alignmentOf()
         }
+
         return maxAlignment
     }
 
