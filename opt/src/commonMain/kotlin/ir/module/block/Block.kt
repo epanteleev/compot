@@ -7,6 +7,7 @@ import common.assertion
 import ir.instruction.*
 import ir.instruction.lir.*
 import common.LeakedLinkedList
+import ir.attributes.FunctionAttribute
 import ir.intrinsic.IntrinsicProvider
 import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
@@ -339,31 +340,31 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@df withOutput { Store.make(it,this, ptr, value) }
     }
 
-    override fun call(func: DirectFunctionPrototype, args: List<Value>, target: Label): Call = mc.dfANDcf {
+    override fun call(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): Call = mc.dfANDcf {
         require(func.returnType() != Type.Void)
-        return@dfANDcf addTerminate { Call.make(it, this, func, args, target as Block) }
+        return@dfANDcf addTerminate { Call.make(it, this, func, args, attributes, target as Block) }
     }
 
-    override fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, target: Label): TupleCall = mc.dfANDcf {
+    override fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): TupleCall = mc.dfANDcf {
         require(func.returnType() is TupleType) {
             "should be tuple type, but ty=${func.returnType()}"
         }
-        return@dfANDcf addTerminate { TupleCall.make(it, this, func, args, target as Block) }
+        return@dfANDcf addTerminate { TupleCall.make(it, this, func, attributes, args, target as Block) }
     }
 
-    override fun vcall(func: DirectFunctionPrototype, args: List<Value>, target: Label): VoidCall = mc.dfANDcf {
+    override fun vcall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): VoidCall = mc.dfANDcf {
         require(func.returnType() == Type.Void)
-        return@dfANDcf addTerminate { VoidCall.make(it, this, func, args, target as Block) }
+        return@dfANDcf addTerminate { VoidCall.make(it, this, func, attributes, args, target as Block) }
     }
 
-    override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionCall = mc.dfANDcf {
+    override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionCall = mc.dfANDcf {
         require(func.returnType() != Type.Void)
-        return@dfANDcf addTerminate { IndirectionCall.make(it, this, pointer, func, args, target as Block) }
+        return@dfANDcf addTerminate { IndirectionCall.make(it, this, pointer, func, attributes, args, target as Block) }
     }
 
-    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionVoidCall = mc.dfANDcf {
+    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionVoidCall = mc.dfANDcf {
         require(func.returnType() == Type.Void)
-        return@dfANDcf addTerminate { IndirectionVoidCall.make(it, this, pointer, func, args, target as Block) }
+        return@dfANDcf addTerminate { IndirectionVoidCall.make(it, this, pointer, func, attributes, args, target as Block) }
     }
 
     override fun branch(target: Block): Branch = mc.cf {

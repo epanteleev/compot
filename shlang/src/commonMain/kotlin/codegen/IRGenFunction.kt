@@ -19,6 +19,8 @@ import intrinsic.VaInit
 import intrinsic.VaStart
 import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
+import ir.attributes.ByValue
+import ir.attributes.FunctionAttribute
 import ir.attributes.VarArgAttribute
 import ir.global.StringLiteralGlobalConstant
 import ir.module.AnyFunctionPrototype
@@ -469,8 +471,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): List<Value> {
+    private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): Pair<List<Value>, Set<FunctionAttribute>> {
         val convertedArgs = mutableListOf<Value>()
+        val attributes = hashSetOf<FunctionAttribute>()
         var offset = 0
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
@@ -485,6 +488,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     convertedArgs.add(convertedArg)
                 }
                 is AnyCStructType -> {
+                    if (!argCType.isSmall()) {
+                        attributes.add(ByValue(idx))
+                    }
                     val argValues = ir.coerceArguments(argCType, expr)
                     convertedArgs.addAll(argValues)
                     offset += argValues.size - 1
@@ -492,7 +498,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 else -> throw IRCodeGenError("Unknown type, type=${argCType} in function call")
             }
         }
-        return convertedArgs
+        return Pair(convertedArgs, attributes)
     }
 
     private fun visitCast(cast: Cast): Value {
@@ -528,25 +534,27 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val argTypes = functionType.args().map {
             mb.toIRType<NonTrivialType>(typeHolder, it.cType())
         }
-        val attributes = if (functionType.variadic()) {
+        val prototypeAttributes = if (functionType.variadic()) {
             hashSetOf(VarArgAttribute)
         } else {
             emptySet()
         }
-        val prototype = IndirectFunctionPrototype(irRetType, argTypes, attributes)
-        val convertedArgs = convertFunctionArgs(prototype, funcPointerCall.args)
+        val prototype = IndirectFunctionPrototype(irRetType, argTypes, prototypeAttributes)
+        val (convertedArgs, attr) = convertFunctionArgs(prototype, funcPointerCall.args)
+
+        val attributes = prototypeAttributes + attr
 
         val cont = ir.createLabel()
         val ret = when (functionType.retType().cType()) {
             VOID -> {
-                ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, cont)
+                ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
                 Value.UNDEF
             }
-            is CPrimitive -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
+            is CPrimitive -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
             is CStructType -> when (prototype.returnType()) {
-                is PrimitiveType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
+                is PrimitiveType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
                 //is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
-                is StructType    -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, cont)
+                is StructType    -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
                 else -> throw IRCodeGenError("Unknown type ${functionType.retType()}")
             }
             else -> throw IRCodeGenError("Unknown type ${functionType.retType()}")
@@ -562,36 +570,36 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         val name = primary.name()
         val function = mb.findFunction(name) ?: return visitFunPointerCall(functionCall)
-        val convertedArgs = convertFunctionArgs(function, functionCall.args)
+        val (convertedArgs, attributes) = convertFunctionArgs(function, functionCall.args)
         val cont = ir.createLabel()
         return when (val functionType = functionCall.resolveType(typeHolder)) {
             VOID -> {
-                ir.vcall(function, convertedArgs, cont)
+                ir.vcall(function, convertedArgs, attributes, cont)
                 ir.switchLabel(cont)
                 Value.UNDEF
             }
             is CPrimitive -> {
-                val call = ir.call(function, convertedArgs, cont)
+                val call = ir.call(function, convertedArgs, attributes, cont)
                 ir.switchLabel(cont)
                 call
             }
             is CStructType -> when (val t = function.returnType()) {
                 is PrimitiveType -> {
                     val alloc = ir.alloc(t)
-                    val call = ir.call(function, convertedArgs, cont)
+                    val call = ir.call(function, convertedArgs, attributes, cont)
                     ir.switchLabel(cont)
                     ir.store(alloc, call)
                     alloc
                 }
                 is TupleType     -> {
-                    val tup = ir.tupleCall(function, convertedArgs, cont)
+                    val tup = ir.tupleCall(function, convertedArgs, attributes, cont)
                     ir.switchLabel(cont)
                     tup
                 }
                 is VoidType      -> {
                     val retType = mb.toIRType<StructType>(typeHolder, functionType)
                     val retValue = ir.alloc(retType)
-                    ir.vcall(function, arrayListOf(retValue) + convertedArgs, cont)
+                    ir.vcall(function, arrayListOf(retValue) + convertedArgs, attributes, cont)
                     ir.switchLabel(cont)
                     retValue
                 }
@@ -1569,15 +1577,15 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 val name = primary.name()
                 val function = mb.findFunction(name) ?: throw IRCodeGenError("Function '$name' not found")
-                val convertedArgs = convertFunctionArgs(function, rvalue.args)
+                val (convertedArgs, attributes) = convertFunctionArgs(function, rvalue.args)
 
                 val cont = ir.createLabel()
                 val call = when (function.returnType()) {
-                    is PrimitiveType -> ir.call(function, convertedArgs, cont)
-                    is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
-                    is StructType    -> ir.call(function, convertedArgs, cont)
+                    is PrimitiveType -> ir.call(function, convertedArgs, attributes, cont)
+                    is TupleType     -> ir.tupleCall(function, convertedArgs, attributes, cont)
+                    is StructType    -> ir.call(function, convertedArgs, attributes, cont)
                     is VoidType      -> {
-                        ir.vcall(function, arrayListOf(lvalueAdr) + convertedArgs, cont)
+                        ir.vcall(function, arrayListOf(lvalueAdr) + convertedArgs, attributes, cont)
                         lvalueAdr
                     }
                     else -> throw IRCodeGenError("Unknown type ${function.returnType()}")

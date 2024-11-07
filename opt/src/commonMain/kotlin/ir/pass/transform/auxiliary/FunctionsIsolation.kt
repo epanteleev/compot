@@ -103,7 +103,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             }
             bb.insertBefore(call) { it.downStackFrame(call) }
 
-            val byValueAttr = call.prototype().attributes.filterIsInstance<ByValue>()
+            val byValueAttr = call.attributes().filterIsInstance<ByValue>()
             for ((i, arg) in call.arguments().withIndex()) {
                 val isByValue = byValueAttr.find { it.argumentIndex == i } != null
                 if (!isByValue) {

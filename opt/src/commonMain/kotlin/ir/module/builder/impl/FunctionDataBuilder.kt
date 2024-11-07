@@ -98,24 +98,24 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.store(ptr, value)
     }
 
-    override fun call(func: DirectFunctionPrototype, args: List<Value>, target: Label): Call {
-        return bb.call(func, args, target as Block)
+    override fun call(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): Call {
+        return bb.call(func, args, attributes, target as Block)
     }
 
-    override fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, target: Label): TupleCall {
-        return bb.tupleCall(func, args, target)
+    override fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): TupleCall {
+        return bb.tupleCall(func, args, attributes, target)
     }
 
-    override fun vcall(func: DirectFunctionPrototype, args: List<Value>, target: Label): VoidCall {
-        return bb.vcall(func, args, target as Block)
+    override fun vcall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): VoidCall {
+        return bb.vcall(func, args, attributes, target as Block)
     }
 
-    override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionCall {
-        return bb.icall(pointer, func, args, target)
+    override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionCall {
+        return bb.icall(pointer, func, args, attributes, target)
     }
 
-    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionVoidCall {
-        return bb.ivcall(pointer, func, args, target)
+    override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionVoidCall {
+        return bb.ivcall(pointer, func, args, attributes, target)
     }
 
     fun branch(target: Label) {

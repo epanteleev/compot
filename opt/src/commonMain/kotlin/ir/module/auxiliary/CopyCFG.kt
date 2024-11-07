@@ -4,6 +4,7 @@ import common.arrayFrom
 import common.assertion
 import common.forEachWith
 import common.intMapOf
+import ir.attributes.FunctionAttribute
 import ir.global.GlobalSymbol
 import ir.instruction.*
 import ir.instruction.Copy
@@ -125,6 +126,10 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return oldToNewBlock[old]?: throw RuntimeException("cannot find new block, oldBlock=$old")
     }
 
+    private fun cloneAttributes(call: Callable): Set<FunctionAttribute> {
+        return call.attributes().mapTo(hashSetOf()) { it }
+    }
+
     override fun visit(alloc: Alloc): ValueInstruction {
         return bb.alloc(alloc.allocatedType)
     }
@@ -229,14 +234,14 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         val newUsages = mapArguments(call)
         val target    = mapBlock(call.target())
 
-        return bb.call(call.prototype(), newUsages, target)
+        return bb.call(call.prototype(), newUsages, cloneAttributes(call), target)
     }
 
     override fun visit(tupleCall: TupleCall): LocalValue {
         val newUsages = mapArguments(tupleCall)
         val target    = mapBlock(tupleCall.target())
 
-        return bb.tupleCall(tupleCall.prototype(), newUsages, target)
+        return bb.tupleCall(tupleCall.prototype(), newUsages, cloneAttributes(tupleCall), target)
     }
 
     override fun visit(bitcast: Bitcast): ValueInstruction {
@@ -363,7 +368,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         val pointer   = mapUsage<Value>(indirectionCall.pointer())
         val target    = mapBlock(indirectionCall.target())
 
-        return bb.icall(pointer, indirectionCall.prototype(), newUsages, target)
+        return bb.icall(pointer, indirectionCall.prototype(), newUsages, cloneAttributes(indirectionCall), target)
     }
 
     override fun visit(indirectionVoidCall: IndirectionVoidCall): ValueInstruction? {
@@ -371,7 +376,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         val pointer   = mapUsage<Value>(indirectionVoidCall.pointer())
         val target    = mapBlock(indirectionVoidCall.target())
 
-        bb.ivcall(pointer, indirectionVoidCall.prototype(), newUsages, target)
+        bb.ivcall(pointer, indirectionVoidCall.prototype(), newUsages, cloneAttributes(indirectionVoidCall), target)
         return null
     }
 
@@ -399,7 +404,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     override fun visit(voidCall: VoidCall): ValueInstruction? {
         val newUsages = mapArguments(voidCall)
         val target    = mapBlock(voidCall.target())
-        bb.vcall(voidCall.prototype(), newUsages, target)
+        bb.vcall(voidCall.prototype(), newUsages, cloneAttributes(voidCall), target)
         return null
     }
 

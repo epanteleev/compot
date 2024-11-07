@@ -31,7 +31,7 @@ class CodegenTest {
 
         val printInt = moduleBuilder.createExternFunction("printInt", Type.Void, arrayListOf(Type.U64))
         val cont = builder.createLabel()
-        builder.vcall(printInt, arrayListOf(add), cont)
+        builder.vcall(printInt, arrayListOf(add), hashSetOf(), cont)
         builder.switchLabel(cont)
 
         builder.store(retValue, add)

@@ -4,14 +4,18 @@ import common.arrayWith
 import common.arrayWrapperOf
 import common.assertion
 import common.toTypedArray
+import ir.attributes.FunctionAttribute
 import ir.value.Value
 import ir.types.Type
 import ir.module.IndirectFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
-class IndirectionVoidCall private constructor(id: Identity, owner: Block,
-                                              private val func: IndirectFunctionPrototype, usages: Array<Value>, target: Block):
+class IndirectionVoidCall private constructor(id: Identity,
+                                              owner: Block,
+                                              private val func: IndirectFunctionPrototype,
+                                              private val attributes: Set<FunctionAttribute>,
+                                              usages: Array<Value>, target: Block):
     TerminateInstruction(id, owner, usages, arrayOf(target)),
     Callable {
     init {
@@ -42,6 +46,8 @@ class IndirectionVoidCall private constructor(id: Identity, owner: Block,
         return func
     }
 
+    override fun attributes(): Set<FunctionAttribute> = attributes
+
     override fun type(): Type = Type.Void
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
@@ -60,14 +66,14 @@ class IndirectionVoidCall private constructor(id: Identity, owner: Block,
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, block: Block): IndirectionVoidCall {
+        fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, block: Block): IndirectionVoidCall {
             require(Callable.isAppropriateTypes(func, pointer, args)) {
                 args.joinToString(prefix = "inconsistent types: pointer=${pointer}:${pointer.type()}, prototype='${func.shortDescription()}', ")
                 { "$it: ${it.type()}" }
             }
 
             val operands = args.toTypedArray(pointer)
-            return registerUser(IndirectionVoidCall(id, owner, func, operands, block), operands.iterator())
+            return registerUser(IndirectionVoidCall(id, owner, func, attributes, operands, block), operands.iterator())
         }
     }
 }

@@ -1,5 +1,6 @@
 package ir.module.block
 
+import ir.attributes.FunctionAttribute
 import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.*
@@ -29,11 +30,11 @@ interface InstructionFabric {
     fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare
     fun load(loadedType: PrimitiveType, ptr: Value): Load
     fun store(ptr: Value, value: Value): Store
-    fun call(func: DirectFunctionPrototype, args: List<Value>, target: Label): Call
-    fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, target: Label): TupleCall
-    fun vcall(func: DirectFunctionPrototype, args: List<Value>, target: Label): VoidCall
-    fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionCall
-    fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Label): IndirectionVoidCall
+    fun call(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): Call
+    fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): TupleCall
+    fun vcall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): VoidCall
+    fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionCall
+    fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionVoidCall
     fun branch(target: Block): Branch
     fun branchCond(value: Value, onTrue: Label, onFalse: Label): BranchCond //TODO Labels
     fun alloc(ty: NonTrivialType): Alloc

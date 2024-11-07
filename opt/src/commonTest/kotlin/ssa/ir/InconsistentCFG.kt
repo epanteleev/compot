@@ -44,7 +44,7 @@ class InconsistentCFG {
 
         builder.createFunction("main", Type.I32, arrayListOf()).apply {
             val cont = createLabel()
-            call(invalidPrototype, arrayListOf(F32Value(0.0F)), cont)
+            call(invalidPrototype, arrayListOf(F32Value(0.0F)), hashSetOf(), cont)
             switchLabel(cont)
             ret(Type.I32, arrayOf(I32Value(0)))
         }

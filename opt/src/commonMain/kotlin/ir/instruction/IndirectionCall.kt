@@ -4,6 +4,7 @@ import common.arrayWith
 import common.arrayWrapperOf
 import common.assertion
 import common.toTypedArray
+import ir.attributes.FunctionAttribute
 import ir.value.Value
 import ir.types.Type
 import ir.module.IndirectFunctionPrototype
@@ -13,6 +14,7 @@ import ir.module.block.Block
 
 class IndirectionCall private constructor(id: Identity, owner: Block,
                                           private val func: IndirectFunctionPrototype,
+                                          private val attributes: Set<FunctionAttribute>,
                                           operands: Array<Value>,
                                           target: Block):
     TerminateValueInstruction(id, owner, func.returnType(), operands, arrayOf(target)),
@@ -45,6 +47,8 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
         return func
     }
 
+    override fun attributes(): Set<FunctionAttribute> = attributes
+
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
@@ -57,14 +61,14 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, target: Block): IndirectionCall {
+        fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): IndirectionCall {
             require(Callable.isAppropriateTypes(func, args)) {
                 args.joinToString(prefix = "inconsistent types in '$id', pointer=$pointer:${pointer.type()}, prototype='${func.shortDescription()}', ")
                 { "$it: ${it.type()}" }
             }
 
             val operands = args.toTypedArray(pointer)
-            return registerUser(IndirectionCall(id, owner, func, operands, target), operands.iterator())
+            return registerUser(IndirectionCall(id, owner, func, attributes, operands, target), operands.iterator())
         }
     }
 }

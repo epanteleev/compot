@@ -2,6 +2,7 @@ package ir.instruction
 
 import common.arrayWrapperOf
 import common.assertion
+import ir.attributes.FunctionAttribute
 import ir.value.Value
 import ir.types.Type
 import ir.module.AnyFunctionPrototype
@@ -12,7 +13,7 @@ import ir.types.PrimitiveType
 import ir.types.TupleType
 
 
-class Call private constructor(id: Identity, owner: Block, private val func: DirectFunctionPrototype, args: Array<Value>, target: Block):
+class Call private constructor(id: Identity, owner: Block, private val func: DirectFunctionPrototype, private val attributes: Set<FunctionAttribute>, args: Array<Value>, target: Block):
     TerminateValueInstruction(id, owner, func.returnType(), args, arrayOf(target)),
     Callable {
 
@@ -51,6 +52,8 @@ class Call private constructor(id: Identity, owner: Block, private val func: Dir
         return targets[0]
     }
 
+    override fun attributes(): Set<FunctionAttribute> = attributes
+
     fun proj(index: Int): Projection? {
         if (tp !is TupleType) {
             throw IllegalStateException("type must be TupleType, but $tp found")
@@ -67,16 +70,15 @@ class Call private constructor(id: Identity, owner: Block, private val func: Dir
     companion object {
         const val NAME = "call"
 
-        fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, args: List<Value>, target: Block): Call {
+        fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Block): Call {
             assertion(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
-
 
             require(Callable.isAppropriateTypes(func, args)) {
                 args.joinToString(prefix = "inconsistent types in '$id', prototype='${func.shortDescription()}', ")
                     { "$it: ${it.type()}" }
             }
 
-            return registerUser(Call(id, owner, func, args.toTypedArray(), target), args.iterator())
+            return registerUser(Call(id, owner, func, attributes, args.toTypedArray(), target), args.iterator())
         }
     }
 }

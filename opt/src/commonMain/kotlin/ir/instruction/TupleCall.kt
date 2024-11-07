@@ -4,6 +4,7 @@ import common.arrayWrapperOf
 import ir.types.*
 import ir.value.Value
 import common.assertion
+import ir.attributes.FunctionAttribute
 import ir.value.TupleValue
 import ir.module.block.Block
 import ir.module.AnyFunctionPrototype
@@ -11,7 +12,12 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.DirectFunctionPrototype
 
 
-class TupleCall private constructor(id: Identity, owner: Block, private val func: DirectFunctionPrototype, args: Array<Value>, target: Block):
+class TupleCall private constructor(id: Identity,
+                                    owner: Block,
+                                    private val func: DirectFunctionPrototype,
+                                    private val attributes: Set<FunctionAttribute>,
+                                    args: Array<Value>,
+                                    target: Block):
     TerminateTupleInstruction(id, owner, func.returnType() as TupleType, args, arrayOf(target)), TupleValue,
     Callable {
 
@@ -22,6 +28,8 @@ class TupleCall private constructor(id: Identity, owner: Block, private val func
     override fun prototype(): DirectFunctionPrototype {
         return func
     }
+
+    override fun attributes(): Set<FunctionAttribute> = attributes
 
     override fun type(): TupleType {
         return func.returnType() as TupleType
@@ -49,7 +57,7 @@ class TupleCall private constructor(id: Identity, owner: Block, private val func
     companion object {
         const val NAME = "call"
 
-        fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, args: List<Value>, target: Block): TupleCall {
+        fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): TupleCall {
             assertion(func.returnType() is TupleType) { "Must be non ${Type.Void}" }
 
 
@@ -58,7 +66,7 @@ class TupleCall private constructor(id: Identity, owner: Block, private val func
                 { "$it: ${it.type()}" }
             }
             val argsArray = args.toTypedArray()
-            return registerUser(TupleCall(id, owner, func, argsArray, target), args.iterator())
+            return registerUser(TupleCall(id, owner, func, attributes, argsArray, target), args.iterator())
         }
     }
 }

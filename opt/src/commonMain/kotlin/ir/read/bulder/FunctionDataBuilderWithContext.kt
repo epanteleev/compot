@@ -234,14 +234,14 @@ class FunctionDataBuilderWithContext private constructor(
     fun tupleCall(name: LocalValueToken, func: DirectFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage): TupleCall {
         val argumentValues = convertToValues(func.arguments(), args)
         val block          = getBlockOrCreate(target.labelName)
-        return memorize(name, bb.tupleCall(func, argumentValues, block))
+        return memorize(name, bb.tupleCall(func, argumentValues, hashSetOf(), block))
     }
 
     fun call(name: LocalValueToken, func: DirectFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): Value {
         require(func.returnType() !is VoidType)
         val argumentValues = convertToValues(func.arguments(), args)
         val block          = getBlockOrCreate(labelUsage.labelName)
-        return memorize(name, bb.call(func, argumentValues, block))
+        return memorize(name, bb.call(func, argumentValues, hashSetOf(), block))
     }
 
     fun vcall(func: DirectFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage) {
@@ -249,7 +249,7 @@ class FunctionDataBuilderWithContext private constructor(
 
         val argumentValues = convertToValues(func.arguments(), args)
         val block          = getBlockOrCreate(target.labelName)
-        bb.vcall(func, argumentValues, block)
+        bb.vcall(func, argumentValues, hashSetOf(), block)
     }
 
     fun icall(name: LocalValueToken, pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): Value {
@@ -258,7 +258,7 @@ class FunctionDataBuilderWithContext private constructor(
         val pointer        = getValue(pointerToken, Type.Ptr)
         val block          = getBlockOrCreate(labelUsage.labelName)
 
-        return memorize(name, bb.icall(pointer, func, argumentValues, block))
+        return memorize(name, bb.icall(pointer, func, argumentValues, hashSetOf(), block))
     }
 
     fun ivcall(pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage) {
@@ -266,7 +266,7 @@ class FunctionDataBuilderWithContext private constructor(
         val argumentValues = convertToValues(func.arguments(), args)
         val pointer = getValue(pointerToken, Type.Ptr)
         val output = getBlockOrCreate(target.labelName)
-        bb.ivcall(pointer, func, argumentValues, output)
+        bb.ivcall(pointer, func, argumentValues, hashSetOf(), output)
     }
 
     private fun getBlockOrCreate(name: String): Block {

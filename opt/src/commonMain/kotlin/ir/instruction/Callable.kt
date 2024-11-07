@@ -1,6 +1,7 @@
 package ir.instruction
 
 import common.forEachWith
+import ir.attributes.FunctionAttribute
 import ir.value.Value
 import ir.types.Type
 import ir.module.AnyFunctionPrototype
@@ -12,13 +13,11 @@ import ir.types.PrimitiveType
 sealed interface Callable {
     fun arguments(): List<Value>
     fun prototype(): AnyFunctionPrototype
-    fun shortName(): String {
-        return prototype().shortDescription()
-    }
-
+    fun shortName(): String = prototype().shortDescription()
     fun target(): Block
-
     fun type(): Type
+
+    fun attributes(): Set<FunctionAttribute>
 
     fun printArguments(builder: StringBuilder) {
         builder.append("(")
@@ -38,6 +37,7 @@ sealed interface Callable {
             }
         }
         builder.append(") bt label %${target()}")
+        attributes().forEach { builder.append(" $it") }
     }
 
     companion object {
