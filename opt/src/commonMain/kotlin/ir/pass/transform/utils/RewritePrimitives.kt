@@ -2,11 +2,9 @@ package ir.pass.transform.utils
 
 import common.intMapOf
 import ir.value.*
-import ir.types.Type
 import ir.instruction.*
 import ir.instruction.matching.alloc
 import ir.instruction.matching.load
-import ir.instruction.matching.nop
 import ir.instruction.matching.primitive
 import ir.instruction.matching.store
 import ir.instruction.matching.value
@@ -15,12 +13,11 @@ import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
 import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.pass.analysis.traverse.PreOrderFabric
-import ir.types.NonTrivialType
 import ir.types.PrimitiveType
 import ir.value.constant.PrimitiveConstant
 
 
-abstract class AbstractRewritePrimitives(private val dominatorTree: DominatorTree) {
+sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree) {
     protected fun rename(bb: Block, oldValue: Value): Value {
         val valueType = oldValue.type()
         if (valueType !is PrimitiveType) {
@@ -101,7 +98,7 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
                 continue
             }
 
-            if (instruction.isa(store(nop(), value(primitive()))) && escapeState.isNoEscape((instruction as Store).pointer())) {
+            if (instruction.isa(store(alloc(primitive()), value(primitive()))) && escapeState.isNoEscape((instruction as Store).pointer())) {
                 val actual = findActualValueOrNull(bb, instruction.value())
                 val pointer = instruction.pointer()
                 if (actual != null) {
@@ -118,7 +115,7 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
                 continue
             }
 
-            if (instruction.isa(load(primitive(), nop())) && escapeState.isNoEscape((instruction as Load).operand())) {
+            if (instruction.isa(load(primitive(), alloc(primitive()))) && escapeState.isNoEscape((instruction as Load).operand())) {
                 val actual = findActualValue(bb, instruction.operand())
                 valueMap[instruction] = actual
                 continue

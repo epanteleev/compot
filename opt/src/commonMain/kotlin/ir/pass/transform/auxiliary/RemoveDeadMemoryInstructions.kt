@@ -15,33 +15,33 @@ class RemoveDeadMemoryInstructions private constructor(private val cfg: Function
 
     private fun removeMemoryInstructions(bb: Block) {
         fun filter(instruction: Instruction): Instruction? {
-            when {
-                load(nop()) (instruction) -> { instruction as Load
-                    if (instruction.operand() == Value.UNDEF) {
-                        return bb.kill(instruction, Value.UNDEF)
-                    }
-                    if (escapeState.getEscapeState(instruction.operand()) != EscapeState.NoEscape) {
-                        return instruction
-                    }
+            instruction.match(load(nop())) { load: Load ->
+                if (load.operand() == Value.UNDEF) {
                     return bb.kill(instruction, Value.UNDEF)
                 }
-                store(nop(), nop()) (instruction) -> { instruction as Store
-                    if (instruction.pointer() == Value.UNDEF) {
-                        return bb.kill(instruction, Value.UNDEF)
-                    }
-                    if (escapeState.getEscapeState(instruction.pointer()) != EscapeState.NoEscape) {
-                        return instruction
-                    }
-                    return bb.kill(instruction, Value.UNDEF)
+                if (escapeState.getEscapeState(load.operand()) != EscapeState.NoEscape) {
+                    return load
                 }
-                alloc(primitive()) (instruction) -> { instruction as Alloc
-                    if (escapeState.getEscapeState(instruction) != EscapeState.NoEscape) {
-                        return instruction
-                    }
-                    return bb.kill(instruction, Value.UNDEF)
-                }
-                else -> return instruction
+                return bb.kill(load, Value.UNDEF)
             }
+
+            instruction.match(store(nop(), nop())) { store: Store ->
+                if (store.pointer() == Value.UNDEF) {
+                    return bb.kill(instruction, Value.UNDEF)
+                }
+                if (escapeState.getEscapeState(store.pointer()) != EscapeState.NoEscape) {
+                    return store
+                }
+                return bb.kill(store, Value.UNDEF)
+            }
+            instruction.match(alloc(primitive())) { alloc: Alloc ->
+                if (escapeState.getEscapeState(alloc) != EscapeState.NoEscape) {
+                    return instruction
+                }
+                return bb.kill(instruction, Value.UNDEF)
+            }
+
+            return instruction
         }
 
         bb.transform { filter(it) }

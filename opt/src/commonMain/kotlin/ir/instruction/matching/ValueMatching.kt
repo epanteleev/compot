@@ -192,13 +192,11 @@ fun generate(): ValueMatcher = {
     it is Generate
 }
 
-inline fun alloc(crossinline type: TypeMatcher): InstructionMatcher = {
+inline fun alloc(crossinline type: TypeMatcher): ValueMatcher = {
     it is Alloc && type(it.allocatedType)
 }
 
-fun alloc(): InstructionMatcher = {
-    it is Alloc
-}
+fun alloc(): ValueMatcher = { it is Alloc }
 
 fun nop(): ValueMatcher = { true }
 

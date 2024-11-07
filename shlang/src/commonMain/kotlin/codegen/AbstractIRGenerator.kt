@@ -252,8 +252,8 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (val type = varDesc.type.cType()) {
             is CFunctionType -> {
                 val abstrType = type.functionType
-                val (argTypes, attr) = argumentTypes(abstrType)
-                val returnType = irReturnType(abstrType.retType)
+                val (argTypes, attr) = argumentTypes(abstrType) //TODO: unify
+                val returnType = irReturnType(abstrType.retType) //TODO: unify
 
                 if (type.functionType.variadic) {
                     attr.add(VarArgAttribute)

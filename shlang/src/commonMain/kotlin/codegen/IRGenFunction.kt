@@ -530,14 +530,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val functionType = funcPointerCall.functionType(typeHolder)
         val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true)
 
-        val irRetType = mb.toIRType<Type>(typeHolder, functionType.retType().cType())
-        val argTypes = functionType.args().map {
-            mb.toIRType<NonTrivialType>(typeHolder, it.cType())
-        }
+        val irRetType = irReturnType(functionType.retType()) //TODO: unify
+        val (argTypes, argAttrs) = argumentTypes(functionType) //TODO: unify
         val prototypeAttributes = if (functionType.variadic()) {
-            hashSetOf(VarArgAttribute)
+            argAttrs + VarArgAttribute
         } else {
-            emptySet()
+            argAttrs
         }
         val prototype = IndirectFunctionPrototype(irRetType, argTypes, prototypeAttributes)
         val (convertedArgs, attr) = convertFunctionArgs(prototype, funcPointerCall.args)
@@ -800,10 +798,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return right
         }
         val list = CallConvention.coerceArgumentTypes(leftType) ?: throw IRCodeGenError("Internal error")
-        val structType = mb.toIRType<AggregateType>(typeHolder, leftType)
         if (list.size == 1) {
             val loadedRight = ir.load(list[0], right)
-            val gep = ir.gep(left, structType, I64Value(0))
+            val gep = ir.gep(left, list[0], I64Value(0))
             ir.store(gep, loadedRight)
         } else {
             list.forEachIndexed { idx, arg ->
@@ -1652,8 +1649,8 @@ class FunGenInitializer(moduleBuilder: ModuleBuilder,
     fun generate(functionNode: FunctionNode) {
         val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
         val parameters = functionNode.functionDeclarator().params()
-        val irRetType  = irReturnType(fnType.retType())
-        val (argTypes, attributes) = argumentTypes(fnType)
+        val irRetType  = irReturnType(fnType.retType()) //TODO: unify
+        val (argTypes, attributes) = argumentTypes(fnType) //TODO: unify
 
         if (fnType.variadic()) {
             attributes.add(VarArgAttribute)
