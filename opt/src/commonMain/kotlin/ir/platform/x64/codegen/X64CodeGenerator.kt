@@ -11,6 +11,7 @@ import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.assertion
+import ir.Definitions
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.attributes.ByValue
@@ -550,14 +551,25 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             asm.movf(8, arg, Address.from(rsp, -(QWORD_SIZE * idx + QWORD_SIZE)))
         }
 
-        var argumentsSlotsSize = 0 // TODO refactor
-        for (reg in registerAllocation.callArguments(call)) {
-            if (reg is Address) {
-                argumentsSlotsSize += POINTER_SIZE
+        var argumentsSlotsSize = 0
+        for ((idx, reg) in registerAllocation.callArguments(call).withIndex()) { // TODO refactor
+            if (reg !is Address) {
+                continue
             }
+            val prototype = call.prototype()
+            val byVal = prototype.byValue(idx)
+            if (byVal == null) {
+                argumentsSlotsSize += POINTER_SIZE
+                continue
+            }
+
+            val type = prototype.argument(idx)
+            assertion(type is AggregateType) { "type=$type" }
+
+            argumentsSlotsSize += Definitions.alignTo(type.sizeOf(), QWORD_SIZE)
         }
 
-        val size = context.adjustStackSize() + argumentsSlotsSize
+        val size = context.adjustStackSize(argumentsSlotsSize)
         if (size != 0) {
             asm.sub(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
         }
@@ -568,13 +580,24 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val context = getState(call)
 
         var argumentsSlotsSize = 0
-        for (reg in registerAllocation.callArguments(call)) { // TODO refactor
-            if (reg is Address) {
-                argumentsSlotsSize += POINTER_SIZE
+        for ((idx, reg) in registerAllocation.callArguments(call).withIndex()) { // TODO refactor
+            if (reg !is Address) {
+                continue
             }
+            val prototype = call.prototype()
+            val byVal = prototype.byValue(idx)
+            if (byVal == null) {
+                argumentsSlotsSize += POINTER_SIZE
+                continue
+            }
+
+            val type = prototype.argument(idx)
+            assertion(type is AggregateType) { "type=$type" }
+
+            argumentsSlotsSize += Definitions.alignTo(type.sizeOf(), QWORD_SIZE)
         }
 
-        val size = context.adjustStackSize() + argumentsSlotsSize
+        val size = context.adjustStackSize(argumentsSlotsSize)
         if (size != 0) {
             asm.add(POINTER_SIZE, Imm32.of(size.toLong()), rsp)
         }

@@ -1,5 +1,6 @@
 package ir.module
 
+import ir.attributes.ByValue
 import ir.attributes.FunctionAttribute
 import ir.types.Type
 import ir.global.FunctionSymbol
@@ -16,6 +17,11 @@ sealed class AnyFunctionPrototype(protected val returnType: Type, protected val 
         return arguments[index]
     }
     fun returnType(): Type = returnType
+
+    fun byValue(idx: Int): ByValue? {
+        return attributes.find { it is ByValue && it.argumentIndex == idx } as ByValue?
+    }
+
     abstract fun shortDescription(): String
 }
 
