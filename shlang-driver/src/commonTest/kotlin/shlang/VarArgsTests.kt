@@ -53,7 +53,6 @@ abstract class VarArgsTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun test8() {
         val result = runCTest("shlang/varArgs/varArgs8", listOf(), options())
         assertEquals("Vector: (1, 2, 3)\n", result.output)
