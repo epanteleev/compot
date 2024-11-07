@@ -189,6 +189,13 @@ abstract class StructTests: CommonCTest() {
     }
 
     @Test
+    fun testArgumentStruct6() {
+        val result = runCTest("shlang/struct/argument_struct6", listOf(), options())
+        assertEquals("x: 4, y: 2, z: 3\nx: 1, y: 2, z: 3\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
     fun testArgumentStructFloat() {
         val result = runCTest("shlang/struct/argument_struct_fp32", listOf(), options())
         assertEquals("x: 1.000000, y: 2.000000\n", result.output)

@@ -102,6 +102,12 @@ class Lowering private constructor(private val cfg: FunctionData) {
         }
 
         fun closure(bb: Block, inst: Instruction): Instruction? {
+            inst.match(store(gfpOrGep(argumentByValue(), nop()), nop())) { inst: Store ->
+                val pointer = inst.pointer().asValue<ValueInstruction>()
+                val st = bb.replace(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
+                killOnDemand(bb, pointer)
+                return st
+            }
             inst.match(store(gfpOrGep(generate().not(), nop()), generate())) { inst: Store ->
                 val pointer = inst.pointer().asValue<ValueInstruction>()
                 val move = bb.replace(inst) { it.move(getSource(pointer), getIndex(pointer), inst.value()) }

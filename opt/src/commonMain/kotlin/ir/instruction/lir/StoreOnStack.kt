@@ -1,12 +1,14 @@
 package ir.instruction.lir
 
 import common.assertion
+import ir.instruction.Generate
 import ir.value.Value
 import ir.types.*
 import ir.module.block.Block
 import ir.instruction.Identity
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
+import ir.value.ArgumentValue
 
 
 class StoreOnStack private constructor(id: Identity, owner: Block, destination: Value, index: Value, source: Value):
@@ -61,7 +63,11 @@ class StoreOnStack private constructor(id: Identity, owner: Block, destination: 
         }
 
         private fun isAppropriateType(toValue: Value, index: Value, fromValue: Value): Boolean {
-            return toValue.type() is AggregateType && index.type() is ArithmeticType && fromValue.type() is PrimitiveType
+            if (toValue is Generate || toValue is ArgumentValue) {
+                return index.type() is ArithmeticType && fromValue.type() is PrimitiveType
+            }
+
+            return false
         }
     }
 }

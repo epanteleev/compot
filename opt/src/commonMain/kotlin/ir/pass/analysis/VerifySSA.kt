@@ -40,10 +40,18 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     private fun validateArguments() {
-        for (arg in functionData.arguments()) {
+        val prototype = functionData.prototype
+        for ((idx, arg) in functionData.arguments().withIndex()) {
             for (user in arg.usedIn()) {
                 assert(user.containsOperand(arg)) {
                     "should be inst='${arg}', user='${user.dump()}', usedIn='${arg.usedIn()}'"
+                }
+            }
+
+            val byVal = prototype.byValue(idx)
+            if (byVal != null) {
+                assert(arg.attributes.contains(byVal)) {
+                    "Argument '${arg}' must have the same attributes as prototype argument '${byVal}'"
                 }
             }
         }
