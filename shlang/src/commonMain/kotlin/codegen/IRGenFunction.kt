@@ -418,8 +418,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitSizeOf(sizeOf: SizeOf): Value = when (val expr = sizeOf.expr) {
         is TypeName -> {
             val resolved = expr.specifyType(typeHolder, listOf())
-            val irType = mb.toIRType<NonTrivialType>(typeHolder, resolved.type.cType())
-            I64Value(irType.sizeOf().toLong())
+            when (val cType = resolved.type.cType()) {
+                is VOID -> I64Value(1)
+                else -> {
+                    val irType = mb.toIRType<NonTrivialType>(typeHolder, cType)
+                    I64Value(irType.sizeOf().toLong())
+                }
+            }
         }
         is Expression -> {
             val resolved = expr.resolveType(typeHolder)
@@ -799,16 +804,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         val list = CallConvention.coerceArgumentTypes(leftType) ?: throw IRCodeGenError("Internal error")
         if (list.size == 1) {
-            val loadedRight = ir.load(list[0], right)
-            val gep = ir.gep(left, list[0], I64Value(0))
+            val loadedType = list[0]
+            val loadedRight = ir.load(loadedType, right)
+            val gep = ir.gep(left, loadedType, I64Value(0))
             ir.store(gep, loadedRight)
-        } else {
-            list.forEachIndexed { idx, arg ->
-                val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
-                val fieldPtr = ir.gep(left, arg, Constant.valueOf(Type.I64, offset))
-                val proj = ir.proj(right, idx)
-                ir.store(fieldPtr, proj)
-            }
+            return right
+        }
+        for ((idx, arg) in list.withIndex()) {
+            val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
+            val fieldPtr = ir.gep(left, arg, I64Value(offset.toLong()))
+            val proj = ir.proj(right, idx)
+            ir.store(fieldPtr, proj)
         }
         return right
     }

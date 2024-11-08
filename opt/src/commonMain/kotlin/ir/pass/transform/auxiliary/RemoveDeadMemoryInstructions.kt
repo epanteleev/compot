@@ -17,7 +17,7 @@ class RemoveDeadMemoryInstructions private constructor(private val cfg: Function
         fun filter(instruction: Instruction): Instruction? {
             instruction.match(load(nop())) { load: Load ->
                 if (load.operand() == Value.UNDEF) {
-                    return bb.kill(instruction, Value.UNDEF)
+                    return bb.kill(load, Value.UNDEF)
                 }
                 if (escapeState.getEscapeState(load.operand()) != EscapeState.NoEscape) {
                     return load
@@ -27,7 +27,7 @@ class RemoveDeadMemoryInstructions private constructor(private val cfg: Function
 
             instruction.match(store(nop(), nop())) { store: Store ->
                 if (store.pointer() == Value.UNDEF) {
-                    return bb.kill(instruction, Value.UNDEF)
+                    return bb.kill(store, Value.UNDEF)
                 }
                 if (escapeState.getEscapeState(store.pointer()) != EscapeState.NoEscape) {
                     return store
@@ -36,9 +36,9 @@ class RemoveDeadMemoryInstructions private constructor(private val cfg: Function
             }
             instruction.match(alloc(primitive())) { alloc: Alloc ->
                 if (escapeState.getEscapeState(alloc) != EscapeState.NoEscape) {
-                    return instruction
+                    return alloc
                 }
-                return bb.kill(instruction, Value.UNDEF)
+                return bb.kill(alloc, Value.UNDEF)
             }
 
             return instruction
