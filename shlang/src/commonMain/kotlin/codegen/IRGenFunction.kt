@@ -172,7 +172,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 val types = CallConvention.coerceArgumentTypes(argType) ?: throw IRCodeGenError("Internal error")
                 for ((idx, type) in types.withIndex()) {
-                    val fieldPtr = ir.gep(alloc, Type.I8, Constant.valueOf(Type.I64, type.sizeOf() * idx))
+                    val fieldPtr = ir.gep(alloc, Type.I8, I64Value(type.sizeOf().toLong() * idx))
                     val arg = when (type) {
                         is PointerType, is IntegerType -> emitBuiltInVaArg(vaList, type, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
                         is FloatingPointType           -> emitBuiltInVaArg(vaList, type, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
@@ -180,7 +180,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     }
                     ir.store(fieldPtr, arg)
                 }
-                ir.gep(alloc, irType, I64Value(0)) //TODO simplify
+                alloc
             }
             else -> throw IRCodeGenError("Unknown type $argType")
         }
@@ -594,12 +594,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     ir.store(alloc, call)
                     alloc
                 }
-                is TupleType     -> {
-                    val tup = ir.tupleCall(function, convertedArgs, attributes, cont)
+                is TupleType -> {
+                    val call = ir.tupleCall(function, convertedArgs, attributes, cont)
                     ir.switchLabel(cont)
-                    tup
+                    call
                 }
-                is VoidType      -> {
+                is VoidType -> {
                     val retType = mb.toIRType<StructType>(typeHolder, functionType)
                     val retValue = ir.alloc(retType)
                     ir.vcall(function, arrayListOf(retValue) + convertedArgs, attributes, cont)
@@ -613,6 +613,18 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
+    private fun copyTuple(dst: Value, src: Value, returnType: CAggregateType) {
+        assertion(src.type() is TupleType) { "is not TupleType, type=${dst.type()}" }
+        val argumentTypes = CallConvention.coerceArgumentTypes(returnType) ?: throw IRCodeGenError("Unknown type, type=$returnType")
+        assertion(argumentTypes.size > 1) { "Internal error" }
+        for ((idx, arg) in argumentTypes.withIndex()) {
+            val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
+            val fieldPtr = ir.gep(dst, arg, I64Value(offset.toLong()))
+            val proj = ir.proj(src, idx)
+            ir.store(fieldPtr, proj)
+        }
+    }
+
     private fun visitFuncCall0(lvalueAdr: Value, rvalue: FunctionCall) {
         val primary = rvalue.primary
         if (primary !is VarNode) {
@@ -623,42 +635,28 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val (convertedArgs, attributes) = convertFunctionArgs(function, rvalue.args)
 
         val cont = ir.createLabel()
-        val call = when (function.returnType()) {
-            is PrimitiveType -> ir.call(function, convertedArgs, attributes, cont)
-            is TupleType     -> ir.tupleCall(function, convertedArgs, attributes, cont)
-            is StructType    -> ir.call(function, convertedArgs, attributes, cont)
-            is VoidType      -> {
-                ir.vcall(function, arrayListOf(lvalueAdr) + convertedArgs, attributes, cont)
-                lvalueAdr
-            }
-            else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
-        }
-        ir.switchLabel(cont)
-
-        when (val functionType = rvalue.resolveType(typeHolder)) {
-            is CStructType -> {
-                if (!functionType.isSmall()) {
-                    return
-                }
-                val structType = mb.toIRType<StructType>(typeHolder, functionType)
-                val list = CallConvention.coerceArgumentTypes(functionType) ?: throw IRCodeGenError("Unknown type, type=$functionType")
-                if (list.size == 1) {
-                    val gep = ir.gep(lvalueAdr, structType,
-                        Constant.of(Type.I64, 0)
-                    )
+        when (val returnType = rvalue.resolveType(typeHolder)) {
+            is CStructType -> when (function.returnType()) {
+                is PrimitiveType -> {
+                    val call = ir.call(function, convertedArgs, attributes, cont)
+                    ir.switchLabel(cont)
+                    val gep = ir.gep(lvalueAdr, Type.I8, I64Value(0L))
                     ir.store(gep, call)
-                } else {
-                    list.forEachIndexed { idx, arg ->
-                        val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
-                        val fieldPtr = ir.gep(lvalueAdr, arg,
-                            Constant.valueOf(Type.I64, offset)
-                        )
-                        val proj = ir.proj(call, idx)
-                        ir.store(fieldPtr, proj)
-                    }
                 }
+                is TupleType -> {
+                    val call = ir.tupleCall(function, convertedArgs, attributes, cont)
+                    ir.switchLabel(cont)
+                    copyTuple(lvalueAdr, call, returnType)
+                }
+                is VoidType -> {
+                    assertion(!returnType.isSmall()) { "Small struct is not supported in this context" }
+                    ir.vcall(function, arrayListOf(lvalueAdr) + convertedArgs, attributes, cont)
+                    ir.switchLabel(cont)
+                    lvalueAdr
+                }
+                else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
             }
-            else -> throw IRCodeGenError("Unknown type, type=$functionType")
+            else -> throw IRCodeGenError("Unknown type, type=$returnType")
         }
     }
 
@@ -850,28 +848,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             val left = visitExpression(binop.left, false)
             ir.store(left, rightCvt)
-            return rightCvt //TODO test it
+            return rightCvt
         }
 
         val left = visitExpression(binop.left, true)
-        if (!leftType.isSmall()) {
-            ir.memcpy(left, right, U64Value(leftType.size().toLong()))
-            return right
-        }
-        val list = CallConvention.coerceArgumentTypes(leftType) ?: throw IRCodeGenError("Internal error")
-        if (list.size == 1) {
-            val loadedType = list[0]
-            val loadedRight = ir.load(loadedType, right)
-            val gep = ir.gep(left, loadedType, I64Value(0))
-            ir.store(gep, loadedRight)
-            return right
-        }
-        for ((idx, arg) in list.withIndex()) {
-            val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
-            val fieldPtr = ir.gep(left, arg, I64Value(offset.toLong()))
-            val proj = ir.proj(right, idx)
-            ir.store(fieldPtr, proj)
-        }
+        ir.memcpy(left, right, U64Value(leftType.size().toLong()))
         return right
     }
 
@@ -1159,35 +1140,44 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.retVoid()
             }
             is BOOL -> {
-                val returnValueAdr = fnStmt.resolveReturnValueAdr(ir.alloc(Type.I8))
+                val returnValueAdr = fnStmt.resolveReturnValueAdr { ir.alloc(Type.I8) }
                 ir.switchLabel(exitBlock)
                 val ret = ir.load(Type.I8, returnValueAdr)
                 ir.ret(Type.I8, arrayOf(ret))
             }
             is CPrimitive -> {
                 val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType.cType())
-                val returnValueAdr = fnStmt.resolveReturnValueAdr(ir.alloc(retType))
+                val returnValueAdr = fnStmt.resolveReturnValueAdr { ir.alloc(retType) }
                 ir.switchLabel(exitBlock)
                 val ret = ir.load(retType, returnValueAdr)
                 ir.ret(retType, arrayOf(ret))
             }
-            is AnyCStructType -> {
-                if (!cType.isSmall()) {
-                    fnStmt.resolveReturnValueAdr(args[0])
+            is AnyCStructType -> when (val irRetType = ir.prototype().returnType()) {
+                is PrimitiveType -> {
+                    val returnValueAdr = fnStmt.resolveReturnValueAdr {
+                        ir.alloc(mb.toIRType<StructType>(typeHolder, cType))
+                    }
+                    ir.switchLabel(exitBlock)
+
+                    ir.ret(irRetType, arrayOf(returnValueAdr))
+                }
+                is TupleType -> {
+                    val returnValueAdr = fnStmt.resolveReturnValueAdr {
+                        ir.alloc(mb.toIRType<StructType>(typeHolder, cType))
+                    }
+                    ir.switchLabel(exitBlock)
+
+                    val retValues = ir.coerceArguments(cType, returnValueAdr)
+                    assertion(retValues.size > 1) { "Internal error" }
+                    ir.ret(irRetType, retValues.toTypedArray())
+                }
+                is VoidType -> {
+                    assertion(!cType.isSmall()) { "Internal error" }
+                    fnStmt.resolveReturnValueAdr { args[0] }
                     ir.switchLabel(exitBlock)
                     ir.retVoid()
-                    return
                 }
-                val alloc = ir.alloc(mb.toIRType<StructType>(typeHolder, cType))
-                val returnValueAdr = fnStmt.resolveReturnValueAdr(alloc)
-                ir.switchLabel(exitBlock)
-                val retTupleType = CallConvention.coerceArgumentTypes(cType) ?: throw IRCodeGenError("Unknown type, type=$cType")
-                val retValues = ir.coerceArguments(cType, returnValueAdr)
-                if (retTupleType.size == 1) {
-                    ir.ret(retTupleType[0], retValues.toTypedArray())
-                } else {
-                    ir.ret(TupleType(retTupleType.toTypedArray()), retValues.toTypedArray())
-                }
+                else -> throw IRCodeGenError("Unknown type, type=$irRetType")
             }
             else -> throw IRCodeGenError("Unknown return type, type=$cType")
         }

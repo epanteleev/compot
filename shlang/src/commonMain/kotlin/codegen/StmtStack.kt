@@ -109,9 +109,9 @@ class FunctionStmtInfo() : StmtInfo() {
     private var returnValueAdr: Value? = null
     var vaInit: Alloc? = null
 
-    fun resolveReturnValueAdr(retValue: Value): Value {
+    fun resolveReturnValueAdr(retValue: () -> Value): Value {
         if (returnValueAdr == null) {
-            returnValueAdr = retValue
+            returnValueAdr = retValue()
         }
 
         return returnValueAdr as Value
