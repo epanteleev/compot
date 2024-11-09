@@ -26,11 +26,11 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 return bb.replace(store) { it.move(toValue, store.value()) }
             }
 
-            inst.match(store(generate(), nop())) { store: Store ->
+            inst.match(store(generate(primitive()), nop())) { store: Store ->
                 val toValue = store.pointer().asValue<Generate>()
                 return bb.replace(store) { it.move(toValue, store.value()) }
             }
-            inst.match(load(generate())) { load: Load ->
+            inst.match(load(generate(primitive()))) { load: Load ->
                 val fromValue = load.operand().asValue<Generate>()
                 return bb.replace(load) { it.copy(fromValue) }
             }

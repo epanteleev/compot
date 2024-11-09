@@ -5,7 +5,6 @@ import ir.value.Value
 import ir.instruction.*
 import ir.module.block.Block
 import ir.instruction.matching.*
-import ir.pass.analysis.EscapeState
 import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.pass.analysis.traverse.PreOrderFabric
 
@@ -14,28 +13,27 @@ class RemoveDeadMemoryInstructions private constructor(private val cfg: Function
     private val escapeState = cfg.analysis(EscapeAnalysisPassFabric)
 
     private fun removeMemoryInstructions(bb: Block) {
-        fun filter(instruction: Instruction): Instruction? {
+        fun transform(instruction: Instruction): Instruction? {
             instruction.match(load(nop())) { load: Load ->
                 if (load.operand() == Value.UNDEF) {
                     return bb.kill(load, Value.UNDEF)
                 }
-                if (escapeState.getEscapeState(load.operand()) != EscapeState.NoEscape) {
+                if (!escapeState.isNoEscape(load)) {
                     return load
                 }
                 return bb.kill(load, Value.UNDEF)
             }
-
             instruction.match(store(nop(), nop())) { store: Store ->
                 if (store.pointer() == Value.UNDEF) {
                     return bb.kill(store, Value.UNDEF)
                 }
-                if (escapeState.getEscapeState(store.pointer()) != EscapeState.NoEscape) {
+                if (!escapeState.isNoEscape(store.pointer())) {
                     return store
                 }
                 return bb.kill(store, Value.UNDEF)
             }
             instruction.match(alloc(primitive())) { alloc: Alloc ->
-                if (escapeState.getEscapeState(alloc) != EscapeState.NoEscape) {
+                if (!escapeState.isNoEscape(alloc)) {
                     return alloc
                 }
                 return bb.kill(alloc, Value.UNDEF)
@@ -44,7 +42,7 @@ class RemoveDeadMemoryInstructions private constructor(private val cfg: Function
             return instruction
         }
 
-        bb.transform { filter(it) }
+        bb.transform { transform(it) }
     }
 
     fun pass() {

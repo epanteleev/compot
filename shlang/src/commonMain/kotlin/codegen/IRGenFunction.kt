@@ -166,21 +166,21 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is CStructType -> {
                 val irType = mb.toIRType<StructType>(typeHolder, argType)
                 val alloc = ir.alloc(irType)
-                if (argType.isSmall()) {
-                    val types = CallConvention.coerceArgumentTypes(argType) ?: throw IRCodeGenError("Internal error")
-                    for ((idx, type) in types.withIndex()) {
-                        val fieldPtr = ir.gep(alloc, Type.I8, Constant.valueOf(Type.I64, type.sizeOf() * idx))
-                        val arg = when(type) {
-                            is PointerType, is IntegerType -> emitBuiltInVaArg(vaList, type, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
-                            is FloatingPointType           -> emitBuiltInVaArg(vaList, type, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
-                            else -> throw IRCodeGenError("Unknown type $type")
-                        }
-                        ir.store(fieldPtr, arg)
-                    }
-                } else {
+                if (!argType.isSmall()) {
                     emitBuiltInVarArgLargeStruct(vaList, alloc, irType)
+                    return alloc
                 }
-                alloc
+                val types = CallConvention.coerceArgumentTypes(argType) ?: throw IRCodeGenError("Internal error")
+                for ((idx, type) in types.withIndex()) {
+                    val fieldPtr = ir.gep(alloc, Type.I8, Constant.valueOf(Type.I64, type.sizeOf() * idx))
+                    val arg = when (type) {
+                        is PointerType, is IntegerType -> emitBuiltInVaArg(vaList, type, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
+                        is FloatingPointType           -> emitBuiltInVaArg(vaList, type, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
+                        else -> throw IRCodeGenError("Unknown type $type")
+                    }
+                    ir.store(fieldPtr, arg)
+                }
+                ir.gep(alloc, irType, I64Value(0)) //TODO simplify
             }
             else -> throw IRCodeGenError("Unknown type $argType")
         }
@@ -210,7 +210,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             val regSaveAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.REG_SAVE_AREA_IDX)))
             val regSaveArea = ir.load(Type.Ptr, regSaveAreaPtr)
             val argInReg = ir.gep(regSaveArea, Type.I8, gpOffset)
-            val newGPOffset = ir.add(gpOffset, Constant.valueOf(Type.I32, QWORD_SIZE))
+            val newGPOffset = ir.add(gpOffset, I32Value(QWORD_SIZE))
             ir.store(gpOffsetPtr, newGPOffset)
             ir.branch(cont)
 
@@ -613,6 +613,55 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
+    private fun visitFuncCall0(lvalueAdr: Value, rvalue: FunctionCall) {
+        val primary = rvalue.primary
+        if (primary !is VarNode) {
+            throw IRCodeGenError("Unknown function call, primary=$primary")
+        }
+        val name = primary.name()
+        val function = mb.findFunction(name) ?: throw IRCodeGenError("Function '$name' not found")
+        val (convertedArgs, attributes) = convertFunctionArgs(function, rvalue.args)
+
+        val cont = ir.createLabel()
+        val call = when (function.returnType()) {
+            is PrimitiveType -> ir.call(function, convertedArgs, attributes, cont)
+            is TupleType     -> ir.tupleCall(function, convertedArgs, attributes, cont)
+            is StructType    -> ir.call(function, convertedArgs, attributes, cont)
+            is VoidType      -> {
+                ir.vcall(function, arrayListOf(lvalueAdr) + convertedArgs, attributes, cont)
+                lvalueAdr
+            }
+            else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
+        }
+        ir.switchLabel(cont)
+
+        when (val functionType = rvalue.resolveType(typeHolder)) {
+            is CStructType -> {
+                if (!functionType.isSmall()) {
+                    return
+                }
+                val structType = mb.toIRType<StructType>(typeHolder, functionType)
+                val list = CallConvention.coerceArgumentTypes(functionType) ?: throw IRCodeGenError("Unknown type, type=$functionType")
+                if (list.size == 1) {
+                    val gep = ir.gep(lvalueAdr, structType,
+                        Constant.of(Type.I64, 0)
+                    )
+                    ir.store(gep, call)
+                } else {
+                    list.forEachIndexed { idx, arg ->
+                        val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
+                        val fieldPtr = ir.gep(lvalueAdr, arg,
+                            Constant.valueOf(Type.I64, offset)
+                        )
+                        val proj = ir.proj(call, idx)
+                        ir.store(fieldPtr, proj)
+                    }
+                }
+            }
+            else -> throw IRCodeGenError("Unknown type, type=$functionType")
+        }
+    }
+
     private fun eq(type: Type): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Eq
         is FloatingPointType -> FloatPredicate.Oeq
@@ -785,8 +834,15 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitAssignBinary(binop: BinaryOp): Value {
-        val right = visitExpression(binop.right, true)
+        val rightExpression = binop.right
         val leftType = binop.left.resolveType(typeHolder)
+        if (rightExpression is FunctionCall && leftType is AnyCStructType) {
+            val lvalueAdr = visitExpression(binop.left, false)
+            visitFuncCall0(lvalueAdr, rightExpression)
+            return lvalueAdr
+        }
+
+        val right = visitExpression(binop.right, true)
 
         if (leftType !is AnyCStructType) {
             val leftIrType = mb.toIRLVType<PrimitiveType>(typeHolder, leftType)
@@ -1569,66 +1625,15 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         val lvalueAdr = initDeclarator.declarator.accept(this)
         when (val rvalue = initDeclarator.rvalue) {
-            is InitializerList -> {
-                initializerContext.scope(lvalueAdr, varDesc.type) { visitInitializerList(rvalue) }
-                return lvalueAdr
-            }
-            is FunctionCall -> {
-                val primary = rvalue.primary
-                if (primary !is VarNode) {
-                    throw IRCodeGenError("Unknown function call, primary=$primary")
-                }
-                val name = primary.name()
-                val function = mb.findFunction(name) ?: throw IRCodeGenError("Function '$name' not found")
-                val (convertedArgs, attributes) = convertFunctionArgs(function, rvalue.args)
-
-                val cont = ir.createLabel()
-                val call = when (function.returnType()) {
-                    is PrimitiveType -> ir.call(function, convertedArgs, attributes, cont)
-                    is TupleType     -> ir.tupleCall(function, convertedArgs, attributes, cont)
-                    is StructType    -> ir.call(function, convertedArgs, attributes, cont)
-                    is VoidType      -> {
-                        ir.vcall(function, arrayListOf(lvalueAdr) + convertedArgs, attributes, cont)
-                        lvalueAdr
-                    }
-                    else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
-                }
-                ir.switchLabel(cont)
-
-                when (val functionType = rvalue.resolveType(typeHolder)) {
-                    is CStructType -> {
-                        if (!functionType.isSmall()) {
-                            return lvalueAdr
-                        }
-                        val structType = mb.toIRType<StructType>(typeHolder, functionType)
-                        val list = CallConvention.coerceArgumentTypes(functionType) ?: throw IRCodeGenError("Unknown type, type=$functionType")
-                        if (list.size == 1) {
-                            val gep = ir.gep(lvalueAdr, structType,
-                                Constant.of(Type.I64, 0)
-                            )
-                            ir.store(gep, call)
-                        } else {
-                            list.forEachIndexed { idx, arg ->
-                                val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
-                                val fieldPtr = ir.gep(lvalueAdr, arg,
-                                    Constant.valueOf(Type.I64, offset)
-                                )
-                                val proj = ir.proj(call, idx)
-                                ir.store(fieldPtr, proj)
-                            }
-                        }
-                        return lvalueAdr
-                    }
-                    else -> throw IRCodeGenError("Unknown type, type=$functionType")
-                }
-            }
+            is InitializerList -> initializerContext.scope(lvalueAdr, varDesc.type) { visitInitializerList(rvalue) }
+            is FunctionCall -> visitFuncCall0(lvalueAdr, rvalue)
             else -> {
                 val rvalue = visitExpression(initDeclarator.rvalue, true)
                 val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
                 ir.memcpy(lvalueAdr, rvalue, U64Value(commonType.sizeOf().toLong()))
-                return lvalueAdr
             }
         }
+        return lvalueAdr
     }
 
     override fun visit(arrayDeclarator: ArrayDeclarator): Value {
