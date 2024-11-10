@@ -1,77 +1,74 @@
 package ir.platform.x64.pass.analysis.regalloc
 
-import asm.Operand
-import common.assertion
-import ir.value.Value
-import ir.Definitions.QWORD_SIZE
-import ir.instruction.Generate
+import asm.x64.*
 import ir.types.*
+import asm.Operand
+import asm.x64.GPRegister.rbp
+import ir.value.ArgumentValue
+import ir.Definitions.QWORD_SIZE
+import ir.Definitions.DOUBLE_SIZE
+import ir.Definitions.alignTo
 import ir.platform.x64.CallConvention
 
 
-class CalleeArgumentAllocator private constructor(private val stackFrame: StackFrame, private val arguments: List<Value>) {
-    private sealed interface Place
-    private data class Memory(val index: Int, val size: Int): Place
-    private data class RealGPRegister(val registerIndex: Int): Place
-    private data class RealFpRegister(val registerIndex: Int): Place
-
+internal class CalleeArgumentAllocator private constructor() {
     private var gpRegPos = 0
     private var xmmRegPos = 0
-    private var memSlots = 0
+    private var argumentSlotIndex: Int = 0
 
-    private fun emit(value: Value): Place? = when (value.type()) {
-        is FloatingPointType -> {
-            if (xmmRegPos < fpRegisters.size) {
-                xmmRegPos += 1
-                RealFpRegister(xmmRegPos - 1)
-            } else {
-                memSlots += 1
-                Memory(memSlots - 1, (memSlots - 1) * QWORD_SIZE)
-            }
+    private fun peakIntegerArgument(): Operand {
+        if (gpRegPos < gpRegisters.size) {
+            gpRegPos += 1
+            return gpRegisters[gpRegPos - 1]
+        } else {
+            val old = argumentSlotIndex
+            argumentSlotIndex += 1
+            return ArgumentSlot(rbp, old * QWORD_SIZE + OVERFLOW_AREA_OFFSET)
         }
-        is IntegerType, is PointerType, is FlagType -> {
-            if (gpRegPos < gpRegisters.size) {
-                gpRegPos += 1
-                RealGPRegister(gpRegPos - 1)
-            } else {
-                memSlots += 1
-                Memory(memSlots - 1, (memSlots - 1) * QWORD_SIZE)
-            }
-        }
-        is AggregateType -> {
-            assertion(value is Generate) { "value=$value" }
-            value as Generate
-            val size = value.type().sizeOf()
-            val slot = memSlots
-            memSlots += (size + QWORD_SIZE - 1) / QWORD_SIZE //TODO
-            Memory(slot, slot * QWORD_SIZE)
-        }
-        is UndefType -> null
-        else -> throw IllegalArgumentException("type=$value")
     }
 
-
-    private fun calculate(): List<Operand?> {
-        val allocation = arrayListOf<Operand?>()
-        for (arg in arguments) {
-            val operand = when (val pos = emit(arg)) {
-                is RealGPRegister -> gpRegisters[pos.registerIndex]
-                is RealFpRegister -> fpRegisters[pos.registerIndex]
-                is Memory -> stackFrame.takeArgument(pos.index, pos.size)
-                null -> null
-            }
-            allocation.add(operand)
+    private fun peakFPArgument(): Operand {
+        if (xmmRegPos < fpRegisters.size) {
+            xmmRegPos += 1
+            return fpRegisters[xmmRegPos - 1]
+        } else {
+            val old = argumentSlotIndex
+            argumentSlotIndex += 1
+            return ArgumentSlot(rbp, old * DOUBLE_SIZE + OVERFLOW_AREA_OFFSET)
         }
+    }
 
-        return allocation
+    private fun peakStructArgument(structType: StructType): Operand {
+        val size = structType.sizeOf()
+        val old = argumentSlotIndex
+        val offset = alignTo(argumentSlotIndex * QWORD_SIZE + OVERFLOW_AREA_OFFSET + size, QWORD_SIZE)
+        argumentSlotIndex = argumentSlotIndex + offset / QWORD_SIZE
+        return ArgumentSlot(rbp, old * DOUBLE_SIZE + OVERFLOW_AREA_OFFSET)
+    }
+
+    private fun pickArgument(type: NonTrivialType): Operand = when (type) {
+        is IntegerType, is PointerType -> peakIntegerArgument()
+        is FloatingPointType           -> peakFPArgument()
+        is StructType                  -> peakStructArgument(type)
+        else -> throw IllegalArgumentException("not allowed for this type=$type")
+    }
+
+    private fun allocate(arguments: List<ArgumentValue>): List<Operand> {
+        return arguments.mapTo(arrayListOf()) {
+            pickArgument(it.contentType())
+        }
     }
 
     companion object {
+        private const val RETURN_ADDRESS_SIZE = QWORD_SIZE
+        private const val FRAME_POINTER_SIZE = QWORD_SIZE
+        const val OVERFLOW_AREA_OFFSET = RETURN_ADDRESS_SIZE + FRAME_POINTER_SIZE
+
         private val gpRegisters = CallConvention.gpArgumentRegisters
         private val fpRegisters = CallConvention.xmmArgumentRegister
 
-        fun alloc(stackFrame: StackFrame, arguments: List<Value>): List<Operand?> {
-            return CalleeArgumentAllocator(stackFrame, arguments).calculate()
+        fun allocate(arguments: List<ArgumentValue>): List<Operand> {
+            return CalleeArgumentAllocator().allocate(arguments)
         }
     }
 }

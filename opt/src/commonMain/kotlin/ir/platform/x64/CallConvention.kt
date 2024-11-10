@@ -126,8 +126,5 @@ object CallConvention {
     }
 
     const val CONSTANT_POOL_PREFIX = ".LCP_"
-    const val FLOAT_SUB_ZERO_SYMBOL = ".LCP_FLTSZ"
-    const val DOUBLE_SUB_ZERO_SYMBOL = ".LCP_DBLTSZ"
-
     const val STACK_ALIGNMENT = 16L
 }

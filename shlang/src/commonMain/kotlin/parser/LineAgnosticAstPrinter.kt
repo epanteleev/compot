@@ -295,6 +295,15 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(')')
     }
 
+    override fun visit(builtin: BuiltinVaCopy) {
+        buffer.append("__builtin_va_copy")
+        buffer.append('(')
+        builtin.dest.accept(this)
+        buffer.append(',')
+        builtin.src.accept(this)
+        buffer.append(')')
+    }
+
     override fun visit(arrayDeclarator: ArrayDeclarator) {
         buffer.append('[')
         arrayDeclarator.constexpr.accept(this)

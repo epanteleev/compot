@@ -1780,7 +1780,10 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
 
     // Reference: https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.cc#L11004
     // primary_expression
-    //	: __builtin_va_arg ( assignment-expression , type-name )
+    //  : __builtin_va_arg ( assignment-expression , type-name )
+    //	| __builtin_va_start ( assignment-expression , expression )
+    //  | __builtin_va_end ( assignment-expression )
+    //  | __builtin_va_copy ( assignment-expression , assignment-expression )
     //  | IDENTIFIER
     //	| CONSTANT
     //	| STRING_LITERAL
@@ -1835,6 +1838,24 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             return@rule BuiltinVaEnd(expr)
+        }
+        if (check("__builtin_va_copy")) {
+            eat()
+            if (!check("(")) {
+                throw ParserException(InvalidToken("Expected '('", peak()))
+            }
+            eat()
+            val expr1 = assignment_expression()?: throw ParserException(InvalidToken("Expected assignment expression", peak()))
+            if (!check(",")) {
+                throw ParserException(InvalidToken("Expected ','", peak()))
+            }
+            eat()
+            val expr2 = assignment_expression()?: throw ParserException(InvalidToken("Expected assignment expression", peak()))
+            if (!check(")")) {
+                throw ParserException(InvalidToken("Expected ')'", peak()))
+            }
+            eat()
+            return@rule BuiltinVaCopy(expr1, expr2)
         }
         if (check<Identifier>() &&
             typeHolder.getTypedefOrNull(peak<Identifier>().str()) == null) {

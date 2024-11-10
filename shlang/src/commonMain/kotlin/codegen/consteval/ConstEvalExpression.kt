@@ -7,7 +7,7 @@ import parser.nodes.visitors.ExpressionVisitor
 
 data class ConstEvalException(override val message: String): Exception(message)
 
-abstract class ConstEvalExpression<T>: ExpressionVisitor<T?> {
+sealed class ConstEvalExpression<T>: ExpressionVisitor<T?> {
     companion object {
         inline fun <reified T : Number?> eval(expression: Expression, ctx: ConstEvalExpression<T>): T? {
             return expression.accept(ctx)
@@ -34,6 +34,10 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(builtin: BuiltinVaStart): Int? {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(builtin: BuiltinVaCopy): Int? {
         TODO("Not yet implemented")
     }
 
@@ -191,6 +195,10 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
         TODO("Not yet implemented")
     }
 
+    override fun visit(builtin: BuiltinVaCopy): Long? {
+        TODO("Not yet implemented")
+    }
+
     override fun visit(unaryOp: UnaryOp): Long? {
         val primary = unaryOp.primary.accept(this) ?: return null
         return when (unaryOp.opType) {
@@ -345,6 +353,10 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
         TODO("Not yet implemented")
     }
 
+    override fun visit(builtin: BuiltinVaCopy): Float? {
+        TODO("Not yet implemented")
+    }
+
     override fun visit(unaryOp: UnaryOp): Float? {
         val primary = unaryOp.primary.accept(this) ?: return null
         return when (unaryOp.opType) {
@@ -486,6 +498,10 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
     }
 
     override fun visit(builtin: BuiltinVaEnd): Double? {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(builtin: BuiltinVaCopy): Double? {
         TODO("Not yet implemented")
     }
 

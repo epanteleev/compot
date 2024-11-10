@@ -78,8 +78,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         return when (val type = conditionExpr.type()) {
-            is IntegerType, PointerType -> ir.icmp(conditionExpr, IntPredicate.Ne, Constant.of(type.asType(), 0))
-            is FloatingPointType        -> ir.fcmp(conditionExpr, FloatPredicate.One, Constant.of(type, 0))
+            is IntegerType       -> ir.icmp(conditionExpr, IntPredicate.Ne, IntegerConstant.of(type.asType(), 0))
+            is PointerType       -> ir.icmp(conditionExpr, IntPredicate.Ne, NullValue.NULLPTR)
+            is FloatingPointType -> ir.fcmp(conditionExpr, FloatPredicate.One, FloatingPointConstant.of(type, 0))
             else -> throw IRCodeGenError("Unknown type")
         }
     }
@@ -120,7 +121,26 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         is BuiltinVaStart    -> visitBuiltInVaStart(expression)
         is BuiltinVaArg      -> visitBuiltInVaArg(expression)
         is BuiltinVaEnd      -> visitBuiltInVaEnd(expression)
+        is BuiltinVaCopy     -> visitBuiltInVaCopy(expression)
         else -> throw IRCodeGenError("Unknown expression: $expression")
+    }
+
+    private fun visitBuiltInVaCopy(builtinVaCopy: BuiltinVaCopy): Value {
+        val dest = visitExpression(builtinVaCopy.dest, true)
+        val dstType = builtinVaCopy.dest.resolveType(typeHolder)
+        if (dstType != VaStart.vaList) {
+            throw IRCodeGenError("va_list type expected, but got $dstType")
+        }
+        val src = visitExpression(builtinVaCopy.src, true)
+        val srcType = builtinVaCopy.src.resolveType(typeHolder)
+        if (srcType != VaStart.vaList) {
+            throw IRCodeGenError("va_list type expected, but got $srcType")
+        }
+        val irType = mb.toIRType<StructType>(typeHolder, srcType)
+        val destPtr = ir.gep(dest, irType, I64Value(0))
+        val srcPtr = ir.gep(src, irType, I64Value(0))
+        ir.memcpy(destPtr, srcPtr, U64Value(irType.sizeOf().toLong()))
+        return Value.UNDEF
     }
 
     private fun visitBuiltInVaEnd(builtinVaEnd: BuiltinVaEnd): Value {
@@ -348,8 +368,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val onFalse = constEvalExpression0(conditional.eFalse) ?:
                     return generateIfElsePattern(commonType, conditional)
 
-                val onTrueContant  = NonTrivialConstant.of(commonType, onTrue)
-                val onFalseContant = NonTrivialConstant.of(commonType, onFalse)
+                val onTrueContant  = IntegerConstant.of(commonType, onTrue)
+                val onFalseContant = IntegerConstant.of(commonType, onFalse)
                 val condition = makeConditionFromExpression(conditional.cond)
                 return ir.select(condition, commonType, onTrueContant, onFalseContant)
             }
@@ -880,12 +900,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.switchLabel(bb)
 
             val right = visitExpression(binop.right, true)
-            val convertedRight = ir.convertToType(right, Type.U8) //TODO I8???
+            val convertedRight = ir.convertToType(right, Type.I8)
 
             val current = ir.currentLabel()
             ir.branch(end)
             ir.switchLabel(end)
-            ir.phi(listOf(U8Value(0), convertedRight), listOf(initialBB, current))
+            ir.phi(listOf(I8Value(0), convertedRight), listOf(initialBB, current))
         }
         BinaryOpType.OR -> {
             val left = visitExpression(binop.left, true)
@@ -898,12 +918,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.switchLabel(bb)
 
             val right = visitExpression(binop.right, true)
-            val convertedRight = ir.convertToType(right, Type.U8) //TODO I8???
+            val convertedRight = ir.convertToType(right, Type.I8)
 
             val current = ir.currentLabel()
             ir.branch(end)
             ir.switchLabel(end)
-            ir.phi(listOf(U8Value(1), convertedRight), listOf(initialBB, current))
+            ir.phi(listOf(I8Value(1), convertedRight), listOf(initialBB, current))
         }
         BinaryOpType.SHR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::shr)
         BinaryOpType.SHL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::shl)
@@ -1065,7 +1085,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val enumValue = typeHolder.findEnumByEnumerator(name)
         if (enumValue != null) {
-            return Constant.of(Type.I32, enumValue)
+            return I32Value(enumValue)
         }
 
         throw IRCodeGenError("Variable '$name' not found: ${varNode.position()}")
@@ -1116,11 +1136,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             if (cType.isSmall()) {
                 val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
                 val rvalueAdr = ir.alloc(irType)
-                args.forEachIndexed { idx, arg ->
+                for ((idx, arg) in args.withIndex()) {
                     val offset   = (idx * QWORD_SIZE) / arg.type().sizeOf()
-                    val fieldPtr = ir.gep(rvalueAdr, arg.type(),
-                        Constant.valueOf(Type.I64, offset)
-                    )
+                    val fieldPtr = ir.gep(rvalueAdr, arg.type(), I64Value(offset.toLong()))
                     ir.store(fieldPtr, arg)
                 }
                 varStack[param] = rvalueAdr

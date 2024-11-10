@@ -62,7 +62,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     }
 
     private fun allocFunctionArguments(callable: Callable) {
-        val allocation = pool.calleeArgumentAllocate(callable.arguments())
+        val allocation = pool.callerArgumentAllocate(callable.arguments())
         callInfo[callable] = allocation
 
         allocation.forEachWith(callable.arguments()) { operand, arg ->

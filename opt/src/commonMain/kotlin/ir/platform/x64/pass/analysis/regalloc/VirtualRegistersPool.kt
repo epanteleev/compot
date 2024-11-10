@@ -50,13 +50,13 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
         return xmmRegisters.usedCalleeSaveRegisters()
     }
 
-    fun calleeArgumentAllocate(arguments: List<Value>): List<Operand?> {
-        return CalleeArgumentAllocator.alloc(frame, arguments)
+    fun callerArgumentAllocate(arguments: List<Value>): List<Operand?> {
+        return CallerArgumentAllocator.alloc(frame, arguments)
     }
 
     companion object {
         fun create(argumentValues: List<ArgumentValue>): VirtualRegistersPool {
-            return VirtualRegistersPool(CallerArgumentAllocator.allocate(argumentValues))
+            return VirtualRegistersPool(CalleeArgumentAllocator.allocate(argumentValues))
         }
     }
 }

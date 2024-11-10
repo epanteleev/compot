@@ -16,7 +16,7 @@ data class StackFrameException(override val message: String): Exception(message)
 sealed interface StackFrame {
     fun takeSlot(value: Value): Address
     fun returnSlot(slot: Address, size: Int)
-    fun takeArgument(index: Int, size: Int): Address
+    fun takeArgument(size: Int): Address
     fun size(): Int
 
     companion object {
@@ -80,9 +80,9 @@ private class BasePointerAddressedStackFrame : StackFrame {
         return frameSize
     }
 
-    override fun takeArgument(index: Int, size: Int): Address {
+    override fun takeArgument(size: Int): Address {
         frameSize += size
         frameSize = withAlignment(QWORD_SIZE, frameSize)
-        return ArgumentSlot(rsp, index * QWORD_SIZE)
+        return ArgumentSlot(rsp, size)
     }
 }

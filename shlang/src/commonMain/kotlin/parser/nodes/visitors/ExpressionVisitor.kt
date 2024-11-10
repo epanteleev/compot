@@ -26,4 +26,5 @@ interface ExpressionVisitor<T> {
     fun visit(builtin: BuiltinVaArg): T
     fun visit(builtin: BuiltinVaStart): T
     fun visit(builtin: BuiltinVaEnd): T
+    fun visit(builtin: BuiltinVaCopy): T
 }

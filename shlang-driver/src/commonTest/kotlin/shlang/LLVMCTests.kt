@@ -518,7 +518,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testVaCopy() {
         val result = runCTest("shlang/llvm-c-tests/2007-03-02-VaCopy", listOf(), options())
         assertEquals("string abc\n", result.output)
