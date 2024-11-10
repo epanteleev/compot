@@ -82,7 +82,13 @@ class LoadFromStackCodegen (val type: PrimitiveType, indexType: IntegerType, val
     override fun ari(dst: Address, first: GPRegister, second: Imm32) = default(dst, first, second)
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        when (first) {
+            is Address2 -> {
+                asm.mov(size, Address.from(first.base, first.offset + second.value().toInt() * size), temp1)
+                asm.mov(size, temp1, dst)
+            }
+            else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
+        }
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

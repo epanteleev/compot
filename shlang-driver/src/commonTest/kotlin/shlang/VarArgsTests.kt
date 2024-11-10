@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
-abstract class VarArgsTests: CommonCTest() {
+sealed class VarArgsTests: CommonCTest() {
     @Test
     fun test1() {
         val result = runCTest("shlang/varArgs/varArgs1", listOf(), options())
@@ -74,6 +74,13 @@ abstract class VarArgsTests: CommonCTest() {
     fun test11() {
         val result = runCTest("shlang/varArgs/varArgs11", listOf(), options())
         assertEquals("Point: (1, 2)\n", result.output)
+    }
+
+    @Test
+    @Ignore
+    fun test12() {
+        val result = runCTest("shlang/varArgs/varArgs12", listOf(), options())
+        assertEquals("Point: (1, 2), Vector: (3, 4, 5)\n", result.output)
     }
 }
 
