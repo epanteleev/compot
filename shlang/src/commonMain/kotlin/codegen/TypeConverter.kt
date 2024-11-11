@@ -414,6 +414,14 @@ object TypeConverter {
             val load           = load(Type.I16, fieldConverted)
             arrayListOf(load)
         }
+        BYTE_SIZE + HWORD_SIZE -> {
+            val fieldConverted = gep(expr, Type.I8, Constant.valueOf(Type.I64, 0))
+            val load           = load(Type.I8, fieldConverted)
+
+            val fieldConverted1 = gep(expr, Type.I16, Constant.valueOf(Type.I64, BYTE_SIZE))
+            val load1          = load(Type.I16, fieldConverted1)
+            arrayListOf(load, load1)
+        }
         WORD_SIZE -> {
             val loadedType = if (argCType.hasFloatOnly(0, WORD_SIZE)) Type.F32 else Type.I32
             val fieldConverted = gep(expr, loadedType, Constant.valueOf(Type.I64, 0))
