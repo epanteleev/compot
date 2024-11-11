@@ -194,27 +194,28 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testVarArgs() {
         val result = runCTest("shlang/llvm-c-tests/2003-05-07-VarArgs", listOf(), options())
-        val expected = """string abc
-        string def
-        int -123
-        char a
-        int 123
-        int 6
-        int 7
-        int 8
-        int 9
-        string 10 args done!
-        double 1.000000
-        double 2.000000
-        int 32764
-        long long 12345677823423
-        DWord { 18, a }
-        QuadWord { 19, 20.000000 }
-        LargeS { 21, 22.000000, 0x1, 23 }
-        """.trimIndent()
+        val expected = """
+            |string abc
+            |string def
+            |int -123
+            |char a
+            |int 123
+            |int 6
+            |int 7
+            |int 8
+            |int 9
+            |string 10 args done!
+            |double 1.000000
+            |double 2.000000
+            |int 32764
+            |long long 12345677823423
+            |DWord { 18, a }
+            |QuadWord { 19, 20.000000 }
+            |LargeS { 21, 22.000000, 0x1, 23 }
+            |
+        """.trimMargin()
         assertEquals(expected, result.output)
         assertEquals(0, result.exitCode)
     }

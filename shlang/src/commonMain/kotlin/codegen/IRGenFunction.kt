@@ -514,7 +514,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 is AnyCStructType -> {
                     if (!argCType.isSmall()) {
-                        attributes.add(ByValue(idx))
+                        attributes.add(ByValue(idx + offset))
                     }
                     val argValues = ir.coerceArguments(argCType, expr)
                     convertedArgs.addAll(argValues)
