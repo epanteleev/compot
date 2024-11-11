@@ -5,6 +5,7 @@ import ir.module.FunctionData
 import ir.module.FunctionPrototype
 import ir.module.block.Block
 import ir.pass.analysis.traverse.PreOrderFabric
+import ir.value.ArgumentValue
 import ir.value.Value
 
 
@@ -23,9 +24,9 @@ abstract class DumpFunctionData(protected val functionData: FunctionData) {
         builder.append('\n')
     }
 
-    protected open fun dumpPrototype(prototype: FunctionPrototype, argumentValues: List<Value>) {
+    protected open fun dumpPrototype(prototype: FunctionPrototype, argumentValues: List<ArgumentValue>) {
         builder.append("define ${prototype.returnType()} @${prototype.name}(")
-        argumentValues.joinTo(builder) { argumentValue -> "$argumentValue:${argumentValue.type()}" }
+        argumentValues.joinTo(builder) { argumentValue -> "$argumentValue:${argumentValue.contentType()}" }
         builder.append(") ")
         prototype.attributes.forEach { builder.append("$it ") }
     }

@@ -70,6 +70,10 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             return true
         }
 
+        if (arg.attributes.find { it is ByValue } != null) {
+            return false
+        }
+
         for (call in allCalls) {
             call as Callable
             if (liveness.liveOut(call).contains(arg)) {

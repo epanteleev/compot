@@ -81,6 +81,12 @@ sealed class VarArgsTests: CommonCTest() {
         val result = runCTest("shlang/varArgs/varArgs12", listOf(), options())
         assertEquals("Point: (1, 2), Vector: (3, 4, 5)\n", result.output)
     }
+
+    @Test
+    fun test13() {
+        val result = runCTest("shlang/varArgs/varArgs13", listOf(), options())
+        assertEquals("my_printf0: Point: (1, 2), Vector: (3, 4, 5)\n", result.output)
+    }
 }
 
 class VarArgsTestsO0: VarArgsTests() {

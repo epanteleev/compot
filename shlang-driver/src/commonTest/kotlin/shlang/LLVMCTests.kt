@@ -343,7 +343,6 @@ abstract class LLVMCTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testVaListArg() {
         val result = runCTest("shlang/llvm-c-tests/2003-08-11-VaListArg", listOf(), options())
         val expected = readExpectedOutput("shlang/llvm-c-tests/2003-08-11-VaListArg.reference_output")

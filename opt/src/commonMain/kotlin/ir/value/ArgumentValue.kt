@@ -12,7 +12,7 @@ class ArgumentValue(private val index: Int, private val tp: NonTrivialType, val 
     }
 
     override fun type(): NonTrivialType = when (tp) {
-        is AggregateType -> Type.Ptr
+        is AggregateType -> Type.Ptr //TODO might be simplified!!???!?!
         is PrimitiveType -> tp
     }
 
