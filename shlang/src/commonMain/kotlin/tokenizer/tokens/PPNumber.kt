@@ -25,7 +25,7 @@ class PPNumber(private val data: String, private val radix: Int, position: Posit
             data.endsWith("ll")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
             data.endsWith("UL")  -> data.substring(0, data.length - 2).toULongOrNull(radix)
             data.endsWith("ul")  -> data.substring(0, data.length - 2).toULongOrNull(radix)
-            data.endsWith("L")   -> data.substring(0, data.length - 1).toLongOrNull(radix)
+            data.endsWith("L")   -> data.substring(0, data.length - 1).toULongOrNull(radix)?.toLong()
             data.endsWith("l")   -> data.substring(0, data.length - 1).toLongOrNull(radix)
             data.endsWith("U")   -> data.substring(0, data.length - 1).toULongOrNull(radix)
             data.endsWith("u")   -> data.substring(0, data.length - 1).toULongOrNull(radix)

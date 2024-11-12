@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
-abstract class LACCTests : CommonCTest() {
+sealed class LACCTests : CommonCTest() {
     @Test
     fun testAddressDerefOffset() {
         val result = runCTest("shlang/lacc/address-deref-offset", listOf(), options())
@@ -116,7 +116,6 @@ abstract class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testBitwiseSignExtend() {
         val result = runCTest("shlang/lacc/bitwise-sign-extend", listOf(), options())
         val expect = "-7116886904016191872, 7116886904016191871, -1\n"
