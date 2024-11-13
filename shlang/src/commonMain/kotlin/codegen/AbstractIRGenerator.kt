@@ -11,10 +11,7 @@ import parser.nodes.*
 import codegen.consteval.*
 import ir.module.ExternFunction
 import codegen.TypeConverter.toIRType
-import ir.attributes.ByValue
-import ir.attributes.FunctionAttribute
 import ir.attributes.GlobalValueAttribute
-import ir.attributes.VarArgAttribute
 import ir.module.builder.impl.ModuleBuilder
 import ir.value.constant.*
 import ir.value.constant.InitializerListValue
@@ -213,13 +210,14 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         throw IRCodeGenError("Unsupported declarator '$declarator'")
     }
 
-    private fun getExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>): ExternFunction {
+    private fun getExternFunction(name: String, cPrototype: CFunctionPrototype): ExternFunction {
         val externFunction = mb.findExternFunctionOrNull(name)
         if (externFunction != null) {
             println("Warning: extern function $name already exists") //TODO implement warning mechanism
             return externFunction
         }
-        return mb.createExternFunction(name, returnType, arguments, attributes)
+
+        return mb.createExternFunction(name, cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
     }
 
     private fun makeGlobalValue(name: String, type: VarDescriptor): Value {
@@ -252,13 +250,8 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (val type = varDesc.type.cType()) {
             is CFunctionType -> {
                 val abstrType = type.functionType
-                val (argTypes, attr) = argumentTypes(abstrType) //TODO: unify
-                val returnType = irReturnType(abstrType.retType) //TODO: unify
-
-                if (type.functionType.variadic) {
-                    attr.add(VarArgAttribute)
-                }
-                val externFunc = getExternFunction(name, returnType, argTypes, attr)
+                val cPrototype = CFunctionPrototypeBuilder(abstrType, mb, typeHolder).build()
+                val externFunc = getExternFunction(name, cPrototype)
                 varStack[name] = externFunc
                 return externFunc
             }
@@ -351,49 +344,6 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
 
         return InitializerListValue(lValueType, elements)
-    }
-
-    protected fun argumentTypes(functionType: AnyCFunctionType): Pair<List<NonTrivialType>, MutableSet<FunctionAttribute>> { //TODO remove pair
-        val types = arrayListOf<NonTrivialType>()
-        val attributes = hashSetOf<FunctionAttribute>()
-        val cType = functionType.retType().cType()
-        if (cType is AnyCStructType && !cType.isSmall()) {
-            types.add(Type.Ptr)
-        }
-        for ((idx, type) in functionType.args().withIndex()) {
-            when (val ty = type.cType()) {
-                is AnyCStructType -> {
-                    val parameters = CallConvention.coerceArgumentTypes(ty)
-                    if (parameters != null) {
-                        types.addAll(parameters)
-                    } else {
-                        types.add(mb.toIRType<StructType>(typeHolder, ty))
-                        attributes.add(ByValue(idx))
-                    }
-                }
-                is CArrayType, is CUncompletedArrayType -> types.add(Type.Ptr)
-                is CPointer    -> types.add(Type.Ptr)
-                is BOOL        -> types.add(Type.U8)
-                is CPrimitive  -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type.cType()))
-                else -> throw IRCodeGenError("Unknown type, type=$type")
-            }
-        }
-        return Pair(types, attributes)
-    }
-
-    protected fun irReturnType(retType: TypeDesc): Type = when (val ty = retType.cType()) {
-        is VOID -> Type.Void
-        is BOOL -> Type.I8
-        is CPrimitive -> mb.toIRType<PrimitiveType>(typeHolder, retType.cType())
-        is CStructType -> {
-            val list = CallConvention.coerceArgumentTypes(ty) ?: return Type.Void
-            if (list.size == 1) {
-                list[0]
-            } else {
-                TupleType(list.toTypedArray())
-            }
-        }
-        else -> throw IRCodeGenError("Unknown return type, type=$retType")
     }
 
     protected fun createStringLiteralName(): String {

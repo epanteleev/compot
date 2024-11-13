@@ -34,6 +34,8 @@ import parser.nodes.visitors.StatementVisitor
 import typedesc.*
 
 
+private data class FunctionArgInfo(val args: List<Value>, val attributes: Set<FunctionAttribute>)
+
 private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     typeHolder: TypeHolder,
                     varStack: VarStack<Value>,
@@ -496,7 +498,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): Pair<List<Value>, Set<FunctionAttribute>> {
+    private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): FunctionArgInfo {
         val convertedArgs = mutableListOf<Value>()
         val attributes = hashSetOf<FunctionAttribute>()
         var offset = 0
@@ -523,7 +525,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 else -> throw IRCodeGenError("Unknown type, type=${argCType} in function call")
             }
         }
-        return Pair(convertedArgs, attributes)
+        return FunctionArgInfo(convertedArgs, attributes)
     }
 
     private fun visitCast(cast: Cast): Value {
@@ -555,17 +557,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val functionType = funcPointerCall.functionType(typeHolder)
         val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true)
 
-        val irRetType = irReturnType(functionType.retType()) //TODO: unify
-        val (argTypes, argAttrs) = argumentTypes(functionType) //TODO: unify
-        val prototypeAttributes = if (functionType.variadic()) {
-            argAttrs + VarArgAttribute
-        } else {
-            argAttrs
-        }
-        val prototype = IndirectFunctionPrototype(irRetType, argTypes, prototypeAttributes)
+        val cPrototype = CFunctionPrototypeBuilder(functionType, mb, typeHolder).build()
+
+        val prototype = IndirectFunctionPrototype(cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
         val (convertedArgs, attr) = convertFunctionArgs(prototype, funcPointerCall.args)
 
-        val attributes = prototypeAttributes + attr
+        val attributes = cPrototype.attributes + attr
 
         val cont = ir.createLabel()
         val ret = when (functionType.retType().cType()) {
@@ -1668,13 +1665,9 @@ class FunGenInitializer(moduleBuilder: ModuleBuilder,
     fun generate(functionNode: FunctionNode) {
         val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
         val parameters = functionNode.functionDeclarator().params()
-        val irRetType  = irReturnType(fnType.retType()) //TODO: unify
-        val (argTypes, attributes) = argumentTypes(fnType) //TODO: unify
+        val cPrototype = CFunctionPrototypeBuilder(fnType, mb, typeHolder).build()
 
-        if (fnType.variadic()) {
-            attributes.add(VarArgAttribute)
-        }
-        val currentFunction = mb.createFunction(functionNode.name(), irRetType, argTypes, attributes)
+        val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
         val funGen = IrGenFunction(mb, typeHolder, varStack, nameGenerator, currentFunction, fnType)
         funGen.visitFun(parameters, functionNode)
     }
