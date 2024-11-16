@@ -101,6 +101,8 @@ object CCLIParser {
                         parseDefine(commandLineArguments, define)
                     } else if (arg.startsWith("-dM")) {
                         commandLineArguments.setDumpDefines(true)
+                    } else if (UGNORED_OPTIONS.contains(arg)) {
+                        println("Ignoring option: $arg")
                     } else {
                         println("Unknown argument: $arg")
                         return null
@@ -147,4 +149,11 @@ object CCLIParser {
         println("  -h, --help                Print this help message")
         println("  -E                        Preprocess only; do not compile, assemble or link")
     }
+
+
+    val UGNORED_OPTIONS = hashSetOf(
+        "-Wall",
+        "-pedantic",
+        "-ansi",
+    )
 }
