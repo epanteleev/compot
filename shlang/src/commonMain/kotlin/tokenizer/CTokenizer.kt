@@ -71,6 +71,27 @@ class CTokenizer private constructor(private val filename: String, private val r
             throw IllegalStateException("Expected escape character")
         }
         reader.read()
+
+        val ch = when (reader.peek()) {
+            'n' -> '\n'
+            't' -> '\t'
+            'r' -> '\r'
+            '0' -> '\u0000'
+            '\'' -> '\''
+            '\\' -> '\\'
+            'v' -> '\u000B'
+            'f' -> '\u000C'
+            'b' -> '\b'
+            '"' -> '"'
+            'a' -> '\u0007'
+            else -> null
+        }
+
+        if (ch != null) {
+            reader.read()
+            return ch
+        }
+
         return when (val ch = reader.peek()) {
             'n' -> {
                 reader.read()
@@ -96,12 +117,32 @@ class CTokenizer private constructor(private val filename: String, private val r
                 reader.read()
                 '\\'
             }
+            'v' -> {
+                reader.read()
+                '\u000B'
+            }
+            'f' -> {
+                reader.read()
+                '\u000C'
+            }
+            'b' -> {
+                reader.read()
+                '\b'
+            }
+            '"' -> {
+                reader.read()
+                '"'
+            }
+            'a' -> {
+                reader.read()
+                '\u0007'
+            }
             'x' -> {
                 reader.read()
                 val hex = readHexNumber()
                 hex.toInt(16).toChar()
             }
-            else -> throw IllegalStateException("Unknown escape character: '$ch'")
+            else -> throw IllegalStateException("Unknown escape character: '$ch' in $line:$position")
         }
     }
 
