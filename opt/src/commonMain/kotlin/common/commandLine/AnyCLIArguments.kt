@@ -1,5 +1,6 @@
 package common.commandLine
 
+import common.Files
 import okio.Path.Companion.toPath
 
 abstract class AnyCLIArguments {
@@ -50,13 +51,7 @@ abstract class AnyCLIArguments {
         optimizationLevel = level
     }
 
-    private fun getName(name: String): String {
-        val fileName = name.toPath().name
-        val lastIndex = fileName.lastIndexOf('.')
-        if (lastIndex != -1) {
-            return fileName.substring(0, lastIndex)
-        }
-
-        return fileName
+    protected fun getName(name: String): String {
+        return Files.getBasename(name)
     }
 }

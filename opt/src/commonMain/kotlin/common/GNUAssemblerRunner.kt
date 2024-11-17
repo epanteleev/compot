@@ -2,8 +2,8 @@ package common
 
 
 object GNUAssemblerRunner {
-    fun run(filename: String, outputFileName: String) {
+    fun compileAsm(filename: String, outputFileName: String): ExecutionResult {
         val gnuAsCommandLine = listOf(filename, "-o", outputFileName)
-        runCommand("as", gnuAsCommandLine, null)
+        return runCommand("as", gnuAsCommandLine, null)
     }
 }

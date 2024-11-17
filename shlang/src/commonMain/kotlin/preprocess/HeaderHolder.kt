@@ -19,7 +19,7 @@ data class Header(val filename: String, val content: String, val includeType: He
     }
 }
 
-abstract class HeaderHolder(val includeDirectories: Set<String>) {
+sealed class HeaderHolder(val includeDirectories: Set<String>) {
     protected val headers = hashMapOf<String, Header>()
 
     abstract fun getHeader(name: String, includeType: HeaderType): Header?

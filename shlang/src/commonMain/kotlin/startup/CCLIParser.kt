@@ -1,5 +1,6 @@
 package startup
 
+import common.Files
 import common.commandLine.AnyCLIArguments
 
 
@@ -8,6 +9,7 @@ class ShlangCLIArguments : AnyCLIArguments() {
     private val defines = mutableMapOf<String, String>()
     private var preprocessOnly = false
     private var dumpDefines = false
+    private var executableFileName: String? = null
 
     fun setDumpDefines(dumpDefines: Boolean) {
         this.dumpDefines = dumpDefines
@@ -16,6 +18,14 @@ class ShlangCLIArguments : AnyCLIArguments() {
     fun setPreprocessOnly(preprocessOnly: Boolean) {
         this.preprocessOnly = preprocessOnly
     }
+
+    fun setExecutableFileName(executableFileName: String) {
+        this.executableFileName = executableFileName
+        setFilename(executableFileName)
+        setOutputFilename(Files.replaceExtension(executableFileName, ".o"))
+    }
+
+    fun getExecutableFileName(): String? = executableFileName
 
     fun isPreprocessOnly(): Boolean = preprocessOnly
     fun isDumpDefines(): Boolean = dumpDefines
@@ -101,11 +111,10 @@ object CCLIParser {
                         parseDefine(commandLineArguments, define)
                     } else if (arg.startsWith("-dM")) {
                         commandLineArguments.setDumpDefines(true)
-                    } else if (UGNORED_OPTIONS.contains(arg)) {
+                    } else if (IGNORED_OPTIONS.contains(arg)) {
                         println("Ignoring option: $arg")
                     } else {
-                        println("Unknown argument: $arg")
-                        return null
+                        commandLineArguments.setExecutableFileName(arg)
                     }
                 }
             }
@@ -151,7 +160,7 @@ object CCLIParser {
     }
 
 
-    val UGNORED_OPTIONS = hashSetOf(
+    val IGNORED_OPTIONS = hashSetOf(
         "-Wall",
         "-pedantic",
         "-ansi",
