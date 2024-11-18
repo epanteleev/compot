@@ -93,8 +93,8 @@ class WhileStatement(val condition: Expression, val body: Statement): Statement(
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-class ForStatement(val init: Node, val condition: Expression, val update: Expression, val body: Statement): Statement() {
-    override fun begin(): Position = init.begin()
+class ForStatement(val begin: Position, val init: Node?, val condition: Expression, val update: Expression, val body: Statement): Statement() {
+    override fun begin(): Position = begin
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 

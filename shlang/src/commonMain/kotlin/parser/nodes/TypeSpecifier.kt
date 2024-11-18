@@ -1,5 +1,6 @@
 package parser.nodes
 
+import common.assertion
 import types.*
 import parser.nodes.visitors.TypeSpecifierVisitor
 import tokenizer.Position
@@ -27,6 +28,10 @@ sealed class TypeSpecifier : Node() {
 
 data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier() {
     internal var isTypedef = false
+
+    init {
+        assertion(specifiers.isNotEmpty()) { "DeclarationSpecifier should have at least one specifier" }
+    }
 
     override fun begin(): Position = specifiers.first().begin()
 
@@ -71,5 +76,30 @@ data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: Abst
         }
 
         return VarDescriptor(abstractDecl.resolveType(specifierType.type, typeHolder), specifierType.storageClass)
+    }
+}
+
+data class Declaration(val declspec: DeclarationSpecifier, private val declarators: List<AnyDeclarator>): TypeSpecifier() {
+    override fun begin(): Position = declspec.begin()
+
+    fun nonTypedefDeclarators(): List<AnyDeclarator> {
+        if (declspec.isTypedef) {
+            return listOf()
+        }
+
+        return declarators
+    }
+
+    fun declarators(): List<AnyDeclarator> {
+        return declarators
+    }
+
+    override fun <T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
+
+    override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor {
+        for (it in declarators) {
+            it.declareType(declspec, typeHolder)
+        }
+        return declspec.specifyType(typeHolder, pointers)
     }
 }

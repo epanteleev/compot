@@ -259,12 +259,13 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
         }
         if (check("for")) {
-            eat()
+            val forKeyword = eat()
+            val begin = forKeyword.position()
             if (!check("(")) {
                 throw ParserException(InvalidToken("Expected '('", peak()))
             }
             eat()
-            val init = declaration() ?: expression_statement() ?: DummyNode
+            val init = declaration() ?: expression_statement()
 
             val condition = expression()
             if (!check(";")) {
@@ -277,7 +278,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val body = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule ForStatement(init, condition ?: EmptyExpression, update ?: EmptyExpression, body)
+            return@rule ForStatement(begin, init, condition ?: EmptyExpression, update ?: EmptyExpression, body)
         }
         return@rule null
     }
@@ -291,8 +292,9 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (!check("{")) {
             return@rule assignment_expression()
         }
-        eat()
-        val list = initializer_list() ?: InitializerList(listOf())
+        val brace = eat()
+        val begin = brace.position()
+        val list = initializer_list() ?: InitializerList(begin, listOf())
         if (check(",")) {
             eat()
         }
@@ -1052,9 +1054,10 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     fun pointer(): List<NodePointer>? = rule {
         val pointers = mutableListOf<NodePointer>()
         while (check("*")) {
-            eat()
+            val ptr = eat()
+            val position = ptr.position()
             val qualifiers = type_qualifier_list()
-            pointers.add(NodePointer(qualifiers))
+            pointers.add(NodePointer(position, qualifiers))
         }
 
         return@rule if (pointers.isEmpty()) {
@@ -1694,7 +1697,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                     if (initializers.isEmpty()) {
                         return@rule null
                     } else {
-                        return@rule InitializerList(initializers)
+                        return@rule InitializerList(initializers.first().begin(), initializers)
                     }
                 }
                 initializers.add(SingleInitializer(init))
@@ -1708,7 +1711,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (initializers.isEmpty()) {
             return@rule null
         } else {
-            return@rule InitializerList(initializers)
+            return@rule InitializerList(initializers.first().begin(), initializers)
         }
     }
 
@@ -1907,7 +1910,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val declaration = declaration()
         if (declaration != null) {
             // Early resolve type.
-            declaration.specifyType(typeHolder)
+            declaration.specifyType(typeHolder, listOf())
             return@rule declaration
         }
         return@rule function_definition()

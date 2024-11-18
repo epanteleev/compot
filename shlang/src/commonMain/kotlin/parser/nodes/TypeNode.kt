@@ -155,6 +155,11 @@ class StructDeclaration(name: Identifier) : AnyTypeNode(name) {
     }
 }
 
+class Enumerator(val ident: Identifier, val constExpr: Expression) {
+    fun begin(): Position = ident.position()
+    fun name() = ident.str()
+}
+
 class EnumSpecifier(name: Identifier, val enumerators: List<Enumerator>) : AnyTypeNode(name) {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 

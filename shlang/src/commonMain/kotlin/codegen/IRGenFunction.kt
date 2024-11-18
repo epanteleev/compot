@@ -66,7 +66,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitDeclaration(declaration: Declaration) {
-        declaration.specifyType(typeHolder)
+        declaration.specifyType(typeHolder, listOf())
 
         for (declarator in declaration.declarators()) {
             declarator.accept(this)
@@ -1452,10 +1452,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitInit(init: Node) = when (init) {
+    private fun visitInit(init: Any?) = when (init) {
         is Declaration -> visitDeclaration(init)
         is ExprStatement -> visit(init)
-        is EmptyStatement, is DummyNode -> {}
+        is EmptyStatement, null -> {}
         else -> throw IRCodeGenError("Unknown init statement, init=$init")
     }
 

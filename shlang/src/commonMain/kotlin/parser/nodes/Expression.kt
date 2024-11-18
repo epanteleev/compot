@@ -4,6 +4,7 @@ import types.*
 import typedesc.*
 import tokenizer.tokens.*
 import codegen.IRCodeGenError
+import common.assertion
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.*
 import tokenizer.Position
@@ -304,8 +305,8 @@ class DesignationInitializer(val designation: Designation, val initializer: Expr
     }
 }
 
-class InitializerList(val initializers: List<Initializer>) : Expression() {
-    override fun begin(): Position = initializers.first().begin()
+class InitializerList(val begin: Position, val initializers: List<Initializer>) : Expression() {
+    override fun begin(): Position = begin
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -382,6 +383,10 @@ data class VarNode(private val str: Identifier) : Expression() {
 }
 
 data class StringNode(val literals: List<StringLiteral>) : Expression() {
+    init {
+        assertion(literals.isNotEmpty()) { "Empty string node" }
+    }
+
     override fun begin(): Position = literals.first().position()
     private val data by lazy {
         if (literals.all { it.unquote().isEmpty() }) {

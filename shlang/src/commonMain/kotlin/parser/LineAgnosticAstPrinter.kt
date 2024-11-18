@@ -19,8 +19,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
-    override fun visit(dummyNode: DummyNode) {}
-
     override fun visit(identNode: IdentNode) {
         buffer.append(identNode.str())
     }
@@ -89,7 +87,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(declarator: Declarator) {
         joinTo(declarator.pointers, "") {
-            it.accept(this)
+            visit(it)
         }
 
         declarator.directDeclarator.accept(this)
@@ -142,7 +140,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(forStatement: ForStatement) {
         buffer.append("for(")
 
-        forStatement.init.accept(this)
+        forStatement.init?.accept(this)
         if (forStatement.init is EmptyStatement) {
             buffer.append(';')
         }
@@ -261,7 +259,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     override fun visit(designationInitializer: DesignationInitializer) {
-        designationInitializer.designation.accept(this)
+        visit(designationInitializer.designation)
         buffer.append(" = ")
         designationInitializer.initializer.accept(this)
     }
@@ -339,12 +337,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
-    override fun visit(programNode: ProgramNode) {
-        joinTo(programNode.nodes, " ") {
-            it.accept(this)
-        }
-    }
-
     override fun visit(functionCall: FunctionCall) {
         functionCall.primary.accept(this)
         buffer.append('(')
@@ -354,7 +346,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(')')
     }
 
-    override fun visit(structField: StructField) {
+    fun visit(structField: StructField) {
         structField.declspec.accept(this)
         buffer.append(' ')
         joinTo(structField.declarators, ", ") {
@@ -368,7 +360,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(structSpecifier.name())
         buffer.append(" {")
         joinTo(structSpecifier.fields, " ") {
-            it.accept(this)
+            visit(it)
         }
         buffer.append('}')
     }
@@ -385,7 +377,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
         buffer.append(" {")
         joinTo(unionSpecifier.fields, " ") {
-            it.accept(this)
+            visit(it)
         }
         buffer.append('}')
     }
@@ -405,7 +397,11 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(enumSpecifier.name())
         buffer.append(" {")
         joinTo(enumSpecifier.enumerators, ", ") {
-            it.accept(this)
+            buffer.append(it.ident.str())
+            if (it.constExpr !is EmptyExpression) {
+                buffer.append(" = ")
+                it.constExpr.accept(this)
+            }
         }
         buffer.append('}')
     }
@@ -418,14 +414,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(functionSpecifierNode: FunctionSpecifierNode) {
         buffer.append(functionSpecifierNode.name())
-    }
-
-    override fun visit(enumerator: Enumerator) {
-        buffer.append(enumerator.ident.str())
-        if (enumerator.constExpr !is EmptyExpression) {
-            buffer.append(" = ")
-            enumerator.constExpr.accept(this)
-        }
     }
 
     override fun visit(varNode: VarNode) {
@@ -449,19 +437,22 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
-    override fun visit(designation: Designation) {
+    fun visit(designation: Designation) {
         joinTo(designation.designators, "") {
-            it.accept(this)
+            when (it) {
+                is ArrayDesignator -> visit(it)
+                is MemberDesignator -> visit(it)
+            }
         }
     }
 
-    override fun visit(arrayDesignator: ArrayDesignator) {
+    fun visit(arrayDesignator: ArrayDesignator) {
         buffer.append('[')
         arrayDesignator.constExpression.accept(this)
         buffer.append(']')
     }
 
-    override fun visit(memberDesignator: MemberDesignator) {
+    fun visit(memberDesignator: MemberDesignator) {
         buffer.append('.')
         buffer.append(memberDesignator.name.str())
     }
@@ -507,7 +498,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
-    override fun visit(nodePointer: NodePointer) {
+    fun visit(nodePointer: NodePointer) {
         buffer.append('*')
         for (qualifier in nodePointer.qualifiers) {
             buffer.append(qualifier)
@@ -519,6 +510,17 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         fun print(expr: Node): String {
             val astPrinter = LineAgnosticAstPrinter()
             expr.accept(astPrinter)
+            return astPrinter.buffer.toString()
+        }
+
+        fun print(programNode: ProgramNode): String {
+            val astPrinter = LineAgnosticAstPrinter()
+            for ((idx, node) in programNode.nodes.withIndex()) {
+                node.accept(astPrinter)
+                if (idx != programNode.nodes.size - 1) {
+                    astPrinter.buffer.append(' ')
+                }
+            }
             return astPrinter.buffer.toString()
         }
     }

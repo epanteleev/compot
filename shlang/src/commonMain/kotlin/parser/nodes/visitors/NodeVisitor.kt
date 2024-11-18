@@ -7,7 +7,6 @@ interface NodeVisitor<T> : ExpressionVisitor<T>,
     DeclaratorVisitor<T>,
     StatementVisitor<T>,
     TypeNodeVisitor<T>,
-    UnclassifiedNodeVisitor<T>,
     TypeSpecifierVisitor<T>,
     ParameterVisitor<T>,
     DirectDeclaratorParamVisitor<T> {
@@ -17,11 +16,9 @@ interface NodeVisitor<T> : ExpressionVisitor<T>,
             is Expression       -> node.accept(this as ExpressionVisitor<T>)
             is Statement        -> node.accept(this as StatementVisitor<T>)
             is TypeSpecifier    -> node.accept(this as TypeSpecifierVisitor<T>)
-            is UnclassifiedNode -> node.accept(this as UnclassifiedNodeVisitor<T>)
             is AnyTypeNode      -> node.accept(this as TypeNodeVisitor<T>)
             is AnyParameter     -> node.accept(this as ParameterVisitor<T>)
             is DirectDeclaratorParam -> node.accept(this as DirectDeclaratorParamVisitor<T>)
-            else -> throw IllegalStateException("Unknown node $node")
         }
     }
 }
