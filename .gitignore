@@ -7,3 +7,5 @@ gradle
 build
 shlang-driver/test-results/
 opt-driver/test-results/
+*.o
+a.out
