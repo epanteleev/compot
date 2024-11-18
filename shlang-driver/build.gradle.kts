@@ -51,6 +51,10 @@ kotlin {
             dependencies {
                 implementation("junit:junit:4.13")
                 implementation("org.jetbrains.kotlin:kotlin-test-junit")
+
+                implementation("org.jetbrains.kotlin:kotlin-scripting-common")
+                implementation("org.jetbrains.kotlin:kotlin-scripting-jvm")
+                implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host")
             }
         }
     }
@@ -76,4 +80,17 @@ tasks.withType(Test::class.java).all {
         events = setOf(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT, TestLogEvent.STANDARD_ERROR)
         exceptionFormat = TestExceptionFormat.FULL
     }
+}
+
+tasks.create<Exec>("runtests") {
+    dependsOn("installDist")
+    project.logger.debug("Running tests")
+    workingDir = workingDir.resolve("scripts")
+    val shlangDriver = projectDir.resolve("build")
+        .resolve("install")
+        .resolve("shlang-driver")
+        .resolve("bin")
+        .resolve("shlang-driver")
+
+    commandLine("python3", "bfish.py", shlangDriver)
 }
