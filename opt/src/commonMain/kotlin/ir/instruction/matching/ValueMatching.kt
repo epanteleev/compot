@@ -1,99 +1,18 @@
 package ir.instruction.matching
 
+import ir.types.*
+import ir.value.Value
+import ir.instruction.*
 import ir.attributes.ByValue
 import ir.global.ExternValue
 import ir.global.GlobalValue
-import ir.value.constant.Constant
-import ir.value.Value
-import ir.instruction.*
-import ir.types.AggregateType
-import ir.types.ArrayType
-import ir.types.IntegerType
-import ir.types.PrimitiveType
-import ir.types.StructType
-import ir.types.Type
 import ir.value.ArgumentValue
+import ir.value.constant.Constant
+
 
 typealias ValueMatcher = (Value) -> Boolean
 typealias InstructionMatcher = (Instruction) -> Boolean
 typealias TypeMatcher = (Type) -> Boolean
-
-class Matcher(val inst: Instruction) {
-    var isEnd = false
-    var result: Any? = null
-
-    inline fun<reified U, reified T: Instruction, reified R> rule(matcher: (U) -> Boolean, block: (T) -> R?): R? {
-        if (isEnd) {
-            return result as R?
-        }
-        if (inst !is T) {
-            return result as R?
-        }
-        if (matcher(inst as U)) {
-            isEnd = true
-            result = block(inst as T)
-            return result as R?
-        } else {
-            return null
-        }
-    }
-
-    fun store(pointer: ValueMatcher, value: ValueMatcher, block: (Store) -> Instruction?): Instruction? {
-        return rule(store(pointer, value), block)
-    }
-
-    fun load(pointer: ValueMatcher, block: (Load) -> Instruction?): Instruction? {
-        return rule(load(pointer), block)
-    }
-
-    fun load(type: TypeMatcher, pointer: ValueMatcher, block: (Load) -> Instruction?): Instruction? {
-        return rule(load(type, pointer), block)
-    }
-
-    fun gep(source: ValueMatcher, idx: ValueMatcher, block: (GetElementPtr) -> Instruction?): Instruction? {
-        return rule(gep(source, idx), block)
-    }
-
-    fun gep(baseType: TypeMatcher, source: ValueMatcher, idx: ValueMatcher, block: (GetElementPtr) -> Instruction?): Instruction? {
-        return rule(gep(baseType, source, idx), block)
-    }
-
-    fun gfp(source: ValueMatcher, block: (GetFieldPtr) -> Instruction?): Instruction? {
-        return rule(gfp(source), block)
-    }
-
-    fun gfp(basicType: TypeMatcher, source: ValueMatcher, block: (GetFieldPtr) -> Instruction?): Instruction? {
-        return rule(gfp(basicType, source), block)
-    }
-
-    fun select(cond: ValueMatcher, onTrue: ValueMatcher, onFalse: ValueMatcher, block: (Select) -> Instruction?): Instruction? {
-        return rule(select(cond, onTrue, onFalse), block)
-    }
-
-    inline fun<reified R> shl(crossinline a: ValueMatcher, crossinline b: ValueMatcher, block: (Shl) -> R?): R? {
-        return rule(shl(a, b), block)
-    }
-
-    inline fun<reified R> shr(crossinline a: ValueMatcher, crossinline b: ValueMatcher, block: (Shr) -> R?): R? {
-        return rule(shr(a, b), block)
-    }
-
-    inline fun<reified R> tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher, block: (TupleDiv) -> R?): R? {
-        return rule(tupleDiv(a, b), block)
-    }
-
-    inline fun<reified R> uint2float(crossinline origin: ValueMatcher, block: (Unsigned2Float) -> R?): R? {
-        return rule(uint2float(origin), block)
-    }
-
-    fun default(): Instruction? {
-        return rule<Instruction, Instruction, Instruction> ({ true }, { it })
-    }
-}
-
-inline fun<reified R> match(instruction: Instruction, block: Matcher.() -> R?): R? {
-    return Matcher(instruction).block()
-}
 
 inline fun store(crossinline pointer: ValueMatcher, crossinline value: ValueMatcher): InstructionMatcher = {
     it is Store && pointer(it.pointer()) && value(it.value())

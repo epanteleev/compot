@@ -33,27 +33,31 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
 
     private fun isolateBinaryOp() {
         fun transform(bb: Block, inst: Instruction): Instruction {
-            match(inst) {
-                shl(nop(), constant().not()) { shl ->
-                    val copy = bb.insertBefore(inst) { it.copy(shl.rhs()) }
-                    bb.updateDF(inst, Shl.OFFSET, copy)
-                    isNeed4ArgIsolation = true
-                }
-                shr(nop(), constant().not()) { shr ->
-                    val copy = bb.insertBefore(inst) { it.copy(shr.rhs()) }
-                    bb.updateDF(inst, Shr.OFFSET, copy)
-                    isNeed4ArgIsolation = true
-                }
-                tupleDiv(nop(), nop()) { tupleDiv ->
-                    val rem = tupleDiv.remainder()
-                    if (rem == null) {
-                        bb.insertAfter(inst) { it.proj(tupleDiv, 1) }
-                    } else {
-                        bb.updateUsages(rem) { bb.insertAfter(rem) { it.copy(rem) } }
-                    }
-                    isNeed3ArgIsolation = true
-                }
+            inst.match(shl(nop(), constant().not())) { shl: Shl ->
+                val copy = bb.insertBefore(inst) { it.copy(shl.rhs()) }
+                bb.updateDF(inst, Shl.OFFSET, copy)
+                isNeed4ArgIsolation = true
+                return inst
             }
+
+            inst.match(shr(nop(), constant().not())) { shr: Shr ->
+                val copy = bb.insertBefore(inst) { it.copy(shr.rhs()) }
+                bb.updateDF(inst, Shr.OFFSET, copy)
+                isNeed4ArgIsolation = true
+                return inst
+            }
+
+            inst.match(tupleDiv(nop(), nop())) { tupleDiv: TupleDiv ->
+                val rem = tupleDiv.remainder()
+                if (rem == null) {
+                    bb.insertAfter(inst) { it.proj(tupleDiv, 1) }
+                } else {
+                    bb.updateUsages(rem) { bb.insertAfter(rem) { it.copy(rem) } }
+                }
+                isNeed3ArgIsolation = true
+                return inst
+            }
+
             return inst
         }
 

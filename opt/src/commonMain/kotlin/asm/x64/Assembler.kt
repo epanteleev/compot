@@ -151,7 +151,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
 
     // Convert Word to Doubleword/Convert Doubleword to Quadword
     fun cdq(size: Int) = when (size) {
-        8, 4, 2, 1 -> add(Convert(size))
+        8, 4, 2 -> add(Convert(size))
         else -> throw IllegalArgumentException("size=$size")
     }
 

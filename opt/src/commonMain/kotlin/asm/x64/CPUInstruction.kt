@@ -198,13 +198,11 @@ data class Idiv(val size: Int, val divider: Operand): Arithmetic {
 }
 
 data class Convert(val toSize: Int): CPUInstruction {
-    override fun toString(): String {
-        return when (toSize) {
-            2 -> "cwd"
-            4 -> "cdq"
-            8 -> "cqo"
-            else -> throw RuntimeException("Unknown size: $toSize")
-        }
+    override fun toString(): String = when (toSize) {
+        2 -> "cwd"
+        4 -> "cdq"
+        8 -> "cqo"
+        else -> throw RuntimeException("Unknown size: $toSize")
     }
 }
 

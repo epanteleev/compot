@@ -44,39 +44,40 @@ class Lowering private constructor(private val cfg: FunctionData) {
     }
 
     private fun replaceGepToLea() {
-        fun transform(bb: Block, inst: Instruction): Instruction? = match(inst) {
-            gep(primitive(), generate(), nop()) { gp ->
+        fun transform(bb: Block, inst: Instruction): Instruction? {
+            inst.match(gep(primitive(), generate(), nop())) { gp: GetElementPtr ->
                 val baseType = gp.basicType.asType<PrimitiveType>()
-                bb.replace(inst) { it.leaStack(gp.source(), baseType, gp.index()) }
+                return bb.replace(inst) { it.leaStack(gp.source(), baseType, gp.index()) }
             }
-            gep(aggregate(), generate(), nop()) { gp ->
+
+            inst.match(gep(aggregate(), generate(), nop())) { gp: GetElementPtr ->
                 val baseType = gp.basicType.asType<AggregateType>()
                 val index = gp.index()
                 val offset = bb.insertBefore(inst) {
                     it.mul(index, Constant.of(index.asType(), baseType.sizeOf()))
                 }
-                bb.replace(inst) { it.leaStack(gp.source(), Type.I8, offset) }
+                return bb.replace(inst) { it.leaStack(gp.source(), Type.I8, offset) }
             }
-            gfp(primitive(), generate()) { gf ->
-                val baseType = gf.basicType.asType<PrimitiveType>()
-                bb.replace(inst) { it.leaStack(gf.source(), baseType, gf.index(0)) }
-            }
-            gfp(struct(), generate()) { gf ->
+
+            inst.match(gfp(struct(), generate())) { gf: GetFieldPtr ->
                 val basicType = gf.basicType.asType<StructType>()
                 val index = Constant.of(Type.U32, basicType.offset(gf.index(0).toInt()))
-                bb.replace(inst) { it.leaStack(gf.source(), Type.U8, index) }
+                return bb.replace(inst) { it.leaStack(gf.source(), Type.U8, index) }
             }
-            gfp(array(primitive()), generate()) { gf ->
+
+            inst.match(gfp(array(primitive()), generate())) { gf: GetFieldPtr ->
                 val baseType = gf.basicType.asType<ArrayType>().elementType().asType<PrimitiveType>()
-                bb.replace(inst) { it.leaStack(gf.source(), baseType, gf.index(0)) }
+                return bb.replace(inst) { it.leaStack(gf.source(), baseType, gf.index(0)) }
             }
-            gfp(array(aggregate()), generate()) { gf ->
+
+            inst.match(gfp(array(aggregate()), generate())) { gf: GetFieldPtr ->
                 val tp = gf.basicType.asType<ArrayType>()
                 val index = gf.index(0).toInt()
                 val offset = tp.offset(index)
-                bb.replace(inst) { it.leaStack(gf.source(), Type.I8, Constant.of(Type.U32, offset)) }
+                return bb.replace(inst) { it.leaStack(gf.source(), Type.I8, Constant.of(Type.U32, offset)) }
             }
-            default()
+
+            return inst
         }
 
         for (bb in cfg) {
@@ -155,7 +156,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
         }
     }
 
-    private fun replaceByteArguments() {
+    private fun replaceByteOperands() {
         fun closure(bb: Block, inst: Instruction): Instruction? {
             inst.match(tupleDiv(value(i8()), value(i8()))) { tupleDiv: TupleDiv ->
                 // Before:
@@ -369,7 +370,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
     }
 
     private fun pass() {
-        replaceByteArguments()
+        replaceByteOperands()
         replaceEscaped()
         replaceAllocLoadStores()
         replaceGEPAndStore()
