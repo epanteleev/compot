@@ -3,6 +3,8 @@ package parser.nodes
 import typedesc.TypeDesc
 import typedesc.TypeHolder
 import parser.nodes.visitors.*
+import tokenizer.Position
+import tokenizer.tokens.Punctuator
 
 
 sealed class AnyParameter : Node() {
@@ -11,6 +13,7 @@ sealed class AnyParameter : Node() {
 }
 
 data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) : AnyParameter() {
+    override fun begin(): Position = declspec.begin()
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
 
     fun name(): String {
@@ -32,7 +35,8 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) :
     }
 }
 
-class ParameterVarArg: AnyParameter() {
+class ParameterVarArg(val punctuator: Punctuator): AnyParameter() {
+    override fun begin(): Position = punctuator.position()
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): TypeDesc {
         throw IllegalStateException("VarArg type is not resolved")

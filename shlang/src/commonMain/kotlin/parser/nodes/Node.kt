@@ -1,19 +1,16 @@
 package parser.nodes
 
-import types.*
-import common.assertion
+import typedesc.*
 import parser.nodes.visitors.*
+import tokenizer.Position
 import tokenizer.tokens.Identifier
-import typedesc.TypeDesc
-import typedesc.TypeHolder
-import typedesc.TypeQualifier
-import typedesc.VarDescriptor
 
 
 sealed class Node {
     fun<T> accept(visitor: NodeVisitor<T>): T {
         return visitor.visit(this)
     }
+    abstract fun begin(): Position
 }
 
 sealed class UnclassifiedNode : Node() {
@@ -21,6 +18,7 @@ sealed class UnclassifiedNode : Node() {
 }
 
 data class Declaration(val declspec: DeclarationSpecifier, private val declarators: List<AnyDeclarator>): UnclassifiedNode() {
+    override fun begin(): Position = declspec.begin()
     fun specifyType(typeHolder: TypeHolder) {
         for (it in declarators) {
             it.declareType(declspec, typeHolder)
@@ -43,6 +41,7 @@ data class Declaration(val declspec: DeclarationSpecifier, private val declarato
 }
 
 data class NodePointer(val qualifiers: List<TypeQualifierNode>) : UnclassifiedNode() {
+    override fun begin(): Position = qualifiers.first().begin()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 
     fun property(): List<TypeQualifier> {
@@ -51,18 +50,22 @@ data class NodePointer(val qualifiers: List<TypeQualifierNode>) : UnclassifiedNo
 }
 
 data class ProgramNode(val nodes: MutableList<Node>) : UnclassifiedNode() {
+    override fun begin(): Position = nodes.first().begin()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
-data class StructField(val declspec: DeclarationSpecifier, val declarators: List<StructDeclarator>): UnclassifiedNode(){
+data class StructField(val declspec: DeclarationSpecifier, val declarators: List<StructDeclarator>): UnclassifiedNode() {
+    override fun begin(): Position = declspec.begin()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
 class Enumerator(val ident: Identifier, val constExpr: Expression) : UnclassifiedNode() {
+    override fun begin(): Position = ident.position()
     fun name() = ident.str()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }
 
 data object DummyNode : UnclassifiedNode() {
+    override fun begin(): Position = Position.UNKNOWN
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T = visitor.visit(this)
 }

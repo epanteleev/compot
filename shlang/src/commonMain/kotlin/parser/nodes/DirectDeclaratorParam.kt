@@ -5,6 +5,7 @@ import typedesc.*
 import codegen.consteval.*
 import tokenizer.tokens.Identifier
 import parser.nodes.visitors.DirectDeclaratorParamVisitor
+import tokenizer.Position
 
 
 sealed class DirectDeclaratorParam: Node() {
@@ -13,6 +14,14 @@ sealed class DirectDeclaratorParam: Node() {
 }
 
 data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarators: List<DirectDeclaratorParam>?) : DirectDeclaratorParam() {   //TODO
+    override fun begin(): Position {
+        if (pointers.isEmpty()) {
+            return directAbstractDeclarators?.first()?.begin() ?: throw IllegalStateException("No pointers and no declarators")
+        }
+
+        return pointers.first().begin()
+    }
+
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T = visitor.visit(this)
 
     override fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc {
@@ -39,6 +48,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
 }
 
 data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() {
+    override fun begin(): Position = constexpr.begin()
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc {
@@ -56,6 +66,7 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
 }
 
 data class IdentifierList(val list: List<IdentNode>): DirectDeclaratorParam() {
+    override fun begin(): Position = list.first().begin()
     override fun <T> accept(visitor: DirectDeclaratorParamVisitor<T>): T = visitor.visit(this)
 
     override fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc {
@@ -64,6 +75,7 @@ data class IdentifierList(val list: List<IdentNode>): DirectDeclaratorParam() {
 }
 
 data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorParam() {
+    override fun begin(): Position = params.first().begin()
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc {
@@ -85,7 +97,6 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
             when (it) {
                 is Parameter -> it.name()
                 is ParameterVarArg -> "..."
-                else -> throw IllegalStateException("Unknown parameter $it")
             }
         }
     }
@@ -127,6 +138,7 @@ sealed class DirectDeclaratorFirstParam : DirectDeclaratorParam() {
 }
 
 data class FunctionPointerDeclarator(val declarator: Declarator): DirectDeclaratorFirstParam() {
+    override fun begin(): Position = declarator.begin()
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
 
     override fun name(): String = declarator.name()
@@ -142,6 +154,7 @@ data class FunctionPointerDeclarator(val declarator: Declarator): DirectDeclarat
 }
 
 data class DirectVarDeclarator(val ident: Identifier): DirectDeclaratorFirstParam() {
+    override fun begin(): Position = ident.position()
     override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
     override fun name(): String = ident.str()
 

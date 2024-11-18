@@ -28,15 +28,17 @@ sealed class AbstractCParser(val filename: String, tokens: TokenList) {
         }
     }
 
-    protected fun eat() {
+    protected fun eat(): CToken {
         skipSpaces()
         if (eof()) {
             throw ParserException(EndOfFile(filename))
         }
+        val token = current as CToken
         current = current!!.next()
+        return token
     }
 
-    protected inline fun <reified T : AnyToken> peak(): T {
+    protected inline fun <reified T : CToken> peak(): T {
         skipSpaces()
         if (eof()) {
             throw ParserException(EndOfFile(filename))

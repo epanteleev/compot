@@ -2,6 +2,7 @@ package parser.nodes
 
 import types.*
 import parser.nodes.visitors.TypeSpecifierVisitor
+import tokenizer.Position
 import typedesc.CTypeBuilder
 import typedesc.StorageClass
 import typedesc.TypeDesc
@@ -26,6 +27,8 @@ sealed class TypeSpecifier : Node() {
 
 data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier() {
     internal var isTypedef = false
+
+    override fun begin(): Position = specifiers.first().begin()
 
     private fun specifyType1(typeHolder: TypeHolder) = memoizeType {
         val typeBuilder = CTypeBuilder()
@@ -58,6 +61,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
 }
 
 data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: AbstractDeclarator?) : TypeSpecifier() {
+    override fun begin(): Position = specifiers.begin()
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 
     override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor {

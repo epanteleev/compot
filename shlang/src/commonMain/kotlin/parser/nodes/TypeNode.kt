@@ -6,6 +6,7 @@ import intrinsic.VaStart
 import tokenizer.tokens.*
 import tokenizer.tokens.CToken
 import parser.nodes.visitors.TypeNodeVisitor
+import tokenizer.Position
 import typedesc.CTypeBuilder
 import typedesc.FunctionSpecifier
 import typedesc.StorageClass
@@ -14,8 +15,10 @@ import typedesc.TypeProperty
 import typedesc.TypeQualifier
 
 
-sealed class AnyTypeNode : Node() {
-    abstract fun name(): String
+sealed class AnyTypeNode(val name: CToken) : Node() {
+    final override fun begin(): Position = name.position()
+    fun name(): String = name.str()
+
     abstract fun<T> accept(visitor: TypeNodeVisitor<T>): T
 
     abstract fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder): TypeProperty
@@ -27,7 +30,7 @@ sealed class AnyTypeNode : Node() {
     }
 }
 
-data class UnionSpecifier(val name: Identifier, val fields: List<StructField>) : AnyTypeNode() {
+class UnionSpecifier(name: Identifier, val fields: List<StructField>) : AnyTypeNode(name) {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
@@ -47,25 +50,17 @@ data class UnionSpecifier(val name: Identifier, val fields: List<StructField>) :
         name.let { typeHolder.addNewType(it.str(), structType) }
         return@addToBuilder structType
     }
-
-    override fun name(): String {
-        return name.str()
-    }
 }
 
-data class UnionDeclaration(val name: Identifier) : AnyTypeNode() { //TODO separate class
+class UnionDeclaration(name: Identifier) : AnyTypeNode(name) { //TODO separate class
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
         typeHolder.getTypeOrNull<CUnionType>(name.str()) ?: typeHolder.addNewType(name.str(), CUncompletedUnionType(name.str()))
     }
-
-    override fun name(): String = name.str()
 }
 
-data class TypeQualifierNode(private val name: Keyword): AnyTypeNode() {
-    override fun name(): String = name.str()
-
+class TypeQualifierNode(name: Keyword): AnyTypeNode(name) {
     override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
         return visitor.visit(this)
     }
@@ -84,9 +79,7 @@ data class TypeQualifierNode(private val name: Keyword): AnyTypeNode() {
     }
 }
 
-data class StorageClassSpecifier(private val name: Keyword): AnyTypeNode() {
-    override fun name(): String = name.str()
-
+class StorageClassSpecifier(name: Keyword): AnyTypeNode(name) {
     override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
         return visitor.visit(this)
     }
@@ -112,9 +105,8 @@ data class StorageClassSpecifier(private val name: Keyword): AnyTypeNode() {
     }
 }
 
-data class TypeNode(private val name: CToken) : AnyTypeNode() {
+class TypeNode(name: CToken) : AnyTypeNode(name) {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
-    override fun name(): String = name.str()
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
         when (name.str()) {
@@ -134,9 +126,8 @@ data class TypeNode(private val name: CToken) : AnyTypeNode() {
     }
 }
 
-data class StructSpecifier(private val name: Identifier, val fields: List<StructField>) : AnyTypeNode() {
+class StructSpecifier(name: Identifier, val fields: List<StructField>) : AnyTypeNode(name) {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
-    override fun name(): String = name.str()
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
         val members = arrayListOf<Member>()
@@ -156,16 +147,15 @@ data class StructSpecifier(private val name: Identifier, val fields: List<Struct
     }
 }
 
-data class StructDeclaration(private val name: Identifier) : AnyTypeNode() {
+class StructDeclaration(name: Identifier) : AnyTypeNode(name) {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
-    override fun name(): String = name.str()
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder<CType>(typeBuilder) {
         typeHolder.getTypeOrNull<CStructType>(name.str()) ?: typeHolder.addNewType(name.str(), CUncompletedStructType(name.str()))
     }
 }
 
-data class EnumSpecifier(private val name: Identifier, val enumerators: List<Enumerator>) : AnyTypeNode() {
+class EnumSpecifier(name: Identifier, val enumerators: List<Enumerator>) : AnyTypeNode(name) {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
@@ -187,25 +177,19 @@ data class EnumSpecifier(private val name: Identifier, val enumerators: List<Enu
 
         return@addToBuilder typeHolder.addNewType(name.str(), CEnumType(name.str(), enumeratorValues))
     }
-
-    override fun name(): String = name.str()
 }
 
-data class EnumDeclaration(private val name: Identifier) : AnyTypeNode() {
+class EnumDeclaration(name: Identifier) : AnyTypeNode(name) {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
         typeHolder.getTypeOrNull<CEnumType>(name.str()) ?: CUncompletedEnumType(name.str())
     }
-
-    override fun name(): String = name.str()
 }
 
 // 6.7.4 Function specifiers
 // https://port70.net/~nsz/c/c11/n1570.html#6.7.4
-data class FunctionSpecifierNode(private val name: Keyword) : AnyTypeNode() {
-    override fun name(): String = name.str()
-
+class FunctionSpecifierNode(name: Keyword) : AnyTypeNode(name) {
     override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
         return visitor.visit(this)
     }

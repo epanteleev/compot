@@ -3,6 +3,7 @@ package parser.nodes
 import types.*
 import common.assertion
 import parser.nodes.visitors.*
+import tokenizer.Position
 import typedesc.TypeDesc
 import typedesc.TypeHolder
 import typedesc.TypeResolutionException
@@ -34,6 +35,7 @@ sealed class AnyDeclarator: Node() {
 }
 
 data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
+    override fun begin(): Position = directDeclarator.begin()
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun name(): String {
@@ -62,7 +64,8 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
     }
 }
 
-data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): AnyDeclarator() { //TODO rename
+data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): AnyDeclarator() {
+    override fun begin(): Position = declarator.begin()
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun name(): String {
@@ -113,6 +116,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
 }
 
 data object EmptyDeclarator : AnyDeclarator() {
+    override fun begin(): Position = Position.UNKNOWN
     override fun name(): String = ""
 
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
@@ -123,6 +127,7 @@ data object EmptyDeclarator : AnyDeclarator() {
 }
 
 data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression): AnyDeclarator() {
+    override fun begin(): Position = declarator.begin()
     override fun <T> accept(visitor: DeclaratorVisitor<T>): T {
         return visitor.visit(this)
     }
@@ -141,6 +146,8 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
 data class FunctionNode(val specifier: DeclarationSpecifier,
                         val declarator: Declarator,
                         val body: Statement) : AnyDeclarator() {
+    override fun begin(): Position = specifier.begin()
+
     override fun name(): String {
         return declarator.directDeclarator.decl.name()
     }
@@ -170,6 +177,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
 }
 
 data class DirectDeclarator(val decl: DirectDeclaratorFirstParam, val directDeclaratorParams: List<DirectDeclaratorParam>): AnyDeclarator() {
+    override fun begin(): Position = decl.begin()
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder, ): VarDescriptor {
         TODO("Not yet implemented")

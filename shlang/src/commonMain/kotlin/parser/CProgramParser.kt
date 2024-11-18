@@ -87,18 +87,18 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
         if (check("continue")) {
-            eat()
+            val contKeyWord = eat() as Keyword
             if (check(";")) {
                 eat()
-                return@rule ContinueStatement
+                return@rule ContinueStatement(contKeyWord)
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
         if (check("break")) {
-            eat()
+            val breakKeyword = eat() as Keyword
             if (check(";")) {
                 eat()
-                return@rule BreakStatement
+                return@rule BreakStatement(breakKeyword)
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -504,11 +504,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         if (check(",")) {
             eat()
-            if (!check("...")) {
+            val varArg = peak<CToken>()
+            if (varArg.str() != "...") {
                 throw ParserException(InvalidToken("Expected '...'", peak()))
             }
             eat()
-            return@rule parameters + ParameterVarArg()
+            return@rule parameters + ParameterVarArg(varArg as Punctuator)
         }
         return@rule parameters
     }

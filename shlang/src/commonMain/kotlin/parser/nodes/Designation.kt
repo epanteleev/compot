@@ -4,9 +4,11 @@ import codegen.consteval.*
 import typedesc.TypeHolder
 import tokenizer.tokens.Identifier
 import parser.nodes.visitors.UnclassifiedNodeVisitor
+import tokenizer.Position
 
 
 class Designation(val designators: List<Designator>): UnclassifiedNode() {
+    override fun begin(): Position = designators.first().begin()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T {
         return visitor.visit(this)
     }
@@ -15,6 +17,7 @@ class Designation(val designators: List<Designator>): UnclassifiedNode() {
 sealed class Designator: UnclassifiedNode()
 
 class ArrayDesignator(val constExpression: Expression): Designator() {
+    override fun begin(): Position = constExpression.begin()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T {
         return visitor.visit(this)
     }
@@ -31,6 +34,7 @@ class ArrayDesignator(val constExpression: Expression): Designator() {
 }
 
 class MemberDesignator(val name: Identifier): Designator() {
+    override fun begin(): Position = name.position()
     override fun <T> accept(visitor: UnclassifiedNodeVisitor<T>): T {
         return visitor.visit(this)
     }

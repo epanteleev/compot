@@ -146,7 +146,6 @@ sealed class Expression : Node() {
     protected var type: CType? = null
 
     abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
-
     abstract fun resolveType(typeHolder: TypeHolder): CType
 
     protected inline fun<reified T: CType> memoize(closure: () -> T): T {
@@ -162,6 +161,7 @@ sealed class Expression : Node() {
 // 6.5.2.5 Compound literals
 class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerList) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
+    override fun begin(): Position = typeName.begin()
 
     fun typeDesc(typeHolder: TypeHolder): TypeDesc {
         return typeName.specifyType(typeHolder, listOf()).type
@@ -173,6 +173,7 @@ class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerLi
 }
 
 data class BinaryOp(val left: Expression, val right: Expression, val opType: BinaryOpType) : Expression() {
+    override fun begin(): Position = left.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -193,6 +194,7 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
 }
 
 data object EmptyExpression : Expression() {
+    override fun begin(): Position = Position.UNKNOWN
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
@@ -201,6 +203,7 @@ data object EmptyExpression : Expression() {
 }
 
 class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expression) : Expression() {
+    override fun begin(): Position = cond.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -230,6 +233,7 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
 }
 
 class FunctionCall(val primary: Expression, val args: List<Expression>) : Expression() {
+    override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     private fun resolveParams(typeHolder: TypeHolder){
@@ -283,6 +287,7 @@ class FunctionCall(val primary: Expression, val args: List<Expression>) : Expres
 sealed class Initializer : Expression()
 
 class SingleInitializer(val expr: Expression) : Initializer() {
+    override fun begin(): Position = expr.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -291,6 +296,7 @@ class SingleInitializer(val expr: Expression) : Initializer() {
 }
 
 class DesignationInitializer(val designation: Designation, val initializer: Expression) : Initializer() {
+    override fun begin(): Position = designation.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -299,6 +305,7 @@ class DesignationInitializer(val designation: Designation, val initializer: Expr
 }
 
 class InitializerList(val initializers: List<Initializer>) : Expression() {
+    override fun begin(): Position = initializers.first().begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -319,6 +326,7 @@ class InitializerList(val initializers: List<Initializer>) : Expression() {
 }
 
 class MemberAccess(val primary: Expression, val ident: Identifier) : Expression() {
+    override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     fun memberName(): String = ident.str()
@@ -334,6 +342,7 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
 }
 
 class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) : Expression() {
+    override fun begin(): Position = primary.begin()
     fun fieldName(): String = ident.str()
 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
@@ -354,6 +363,7 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
 }
 
 data class VarNode(private val str: Identifier) : Expression() {
+    override fun begin(): Position = str.position()
     fun name(): String = str.str()
     fun nameIdent(): Identifier = str
 
@@ -372,6 +382,7 @@ data class VarNode(private val str: Identifier) : Expression() {
 }
 
 data class StringNode(val literals: List<StringLiteral>) : Expression() {
+    override fun begin(): Position = literals.first().position()
     private val data by lazy {
         if (literals.all { it.unquote().isEmpty() }) {
             "\\0"
@@ -390,6 +401,7 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
 }
 
 data class CharNode(val char: CharLiteral) : Expression() {
+    override fun begin(): Position = char.position()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -402,6 +414,7 @@ data class CharNode(val char: CharLiteral) : Expression() {
 }
 
 data class NumNode(val number: PPNumber) : Expression() {
+    override fun begin(): Position = number.position()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -417,6 +430,7 @@ data class NumNode(val number: PPNumber) : Expression() {
 }
 
 data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expression() {
+    override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -441,24 +455,14 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 }
             }
             PrefixUnaryOpType.NEG -> {
-                if (primaryType is CPrimitive) {
-                    primaryType
-                } else {
-                    throw TypeResolutionException("Negation on non-primitive type: $primaryType")
-                }
+                primaryType as? CPrimitive ?: throw TypeResolutionException("Negation on non-primitive type: $primaryType")
             }
             PrefixUnaryOpType.INC,
             PrefixUnaryOpType.DEC,
             PrefixUnaryOpType.PLUS -> primaryType
             PrefixUnaryOpType.BIT_NOT -> {
-                if (primaryType is CPrimitive) {
-                    primaryType
-                } else {
-                    throw TypeResolutionException("Bitwise not on non-primitive type: $primaryType")
-                }
+                primaryType as? CPrimitive ?: throw TypeResolutionException("Bitwise not on non-primitive type: $primaryType")
             }
-
-            else -> TODO("$opType")
         }
 
         return@memoize resolvedType
@@ -466,6 +470,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
 }
 
 data class ArrayAccess(val primary: Expression, val expr: Expression) : Expression() {
+    override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -487,6 +492,7 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
 }
 
 data class SizeOf(val expr: Node) : Expression() {
+    override fun begin(): Position = expr.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -507,6 +513,7 @@ data class SizeOf(val expr: Node) : Expression() {
 }
 
 data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
+    override fun begin(): Position = typeName.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -515,6 +522,7 @@ data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
 }
 
 data class IdentNode(private val str: Identifier) : Expression() {
+    override fun begin(): Position = str.position()
     fun str(): String = str.str()
     override fun <T> accept(visitor: ExpressionVisitor<T>): T = visitor.visit(this)
 
@@ -524,6 +532,7 @@ data class IdentNode(private val str: Identifier) : Expression() {
 }
 
 class BuiltinVaArg(val assign: Expression, val typeName: TypeName) : Expression() {
+    override fun begin(): Position = assign.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -532,6 +541,7 @@ class BuiltinVaArg(val assign: Expression, val typeName: TypeName) : Expression(
 }
 
 class BuiltinVaStart(val vaList: Expression, val param: Node) : Expression() {
+    override fun begin(): Position = vaList.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -540,6 +550,7 @@ class BuiltinVaStart(val vaList: Expression, val param: Node) : Expression() {
 }
 
 class BuiltinVaEnd(val vaList: Expression) : Expression() {
+    override fun begin(): Position = vaList.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -548,6 +559,7 @@ class BuiltinVaEnd(val vaList: Expression) : Expression() {
 }
 
 class BuiltinVaCopy(val dest: Expression, val src: Expression) : Expression() {
+    override fun begin(): Position = dest.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {

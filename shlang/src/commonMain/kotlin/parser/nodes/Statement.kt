@@ -3,17 +3,23 @@ package parser.nodes
 import parser.LabelResolver
 import tokenizer.tokens.Identifier
 import parser.nodes.visitors.StatementVisitor
+import tokenizer.Position
+import tokenizer.tokens.Keyword
 
 
 sealed class Statement: Node() {
     abstract fun<T> accept(visitor: StatementVisitor<T>): T
 }
 
-data object EmptyStatement : Statement() {
+object EmptyStatement : Statement() {
+    override fun begin(): Position {
+        TODO("Not yet implemented")
+    }
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
 data class LabeledStatement(val label: Identifier, val stmt: Statement) : Statement() {
+    override fun begin(): Position = label.position()
     private var gotos = hashSetOf<GotoStatement>()
 
     fun name(): String = label.str()
@@ -24,6 +30,7 @@ data class LabeledStatement(val label: Identifier, val stmt: Statement) : Statem
 }
 
 data class GotoStatement(val id: Identifier) : Statement() {
+    override fun begin(): Position = id.position()
     private var label: LabeledStatement? = null
 
     fun label(): LabeledStatement? = label
@@ -36,50 +43,62 @@ data class GotoStatement(val id: Identifier) : Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data object ContinueStatement : Statement() {
+class ContinueStatement(val contKeyword: Keyword) : Statement() {
+    override fun begin(): Position = contKeyword.position()
     override fun <T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data object BreakStatement : Statement() {
+class BreakStatement(val breakKeyword: Keyword) : Statement() {
+    override fun begin(): Position = breakKeyword.position()
     override fun <T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
 class DefaultStatement(val stmt: Statement) : Statement() {
+    override fun begin(): Position = stmt.begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
 class CaseStatement(val constExpression: Expression, val stmt: Statement) : Statement() {
+    override fun begin(): Position = constExpression.begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class ReturnStatement(val expr: Expression): Statement() {
+class ReturnStatement(val expr: Expression): Statement() {
+    override fun begin(): Position = expr.begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class CompoundStatement(val statements: List<Node>): Statement() {
+class CompoundStatement(val statements: List<Node>): Statement() {
+    override fun begin(): Position = statements.first().begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class ExprStatement(val expr: Expression): Statement() {
+class ExprStatement(val expr: Expression): Statement() {
+    override fun begin(): Position = expr.begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class IfStatement(val condition: Expression, val then: Statement, val elseNode: Statement): Statement() {
+class IfStatement(val condition: Expression, val then: Statement, val elseNode: Statement): Statement() {
+    override fun begin(): Position = condition.begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class DoWhileStatement(val body: Statement, val condition: Expression): Statement() {
+class DoWhileStatement(val body: Statement, val condition: Expression): Statement() {
+    override fun begin(): Position = body.begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class WhileStatement(val condition: Expression, val body: Statement): Statement() {
+class WhileStatement(val condition: Expression, val body: Statement): Statement() {
+    override fun begin(): Position = condition.begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class ForStatement(val init: Node, val condition: Expression, val update: Expression, val body: Statement): Statement() {
+class ForStatement(val init: Node, val condition: Expression, val update: Expression, val body: Statement): Statement() {
+    override fun begin(): Position = init.begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class SwitchStatement(val condition: Expression, val body: Statement): Statement() {
+class SwitchStatement(val condition: Expression, val body: Statement): Statement() {
+    override fun begin(): Position = condition.begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
