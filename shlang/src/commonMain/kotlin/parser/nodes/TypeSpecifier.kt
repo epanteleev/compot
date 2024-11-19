@@ -100,6 +100,7 @@ data class Declaration(val declspec: DeclarationSpecifier, private val declarato
         for (it in declarators) {
             it.declareType(declspec, typeHolder)
         }
+
         return declspec.specifyType(typeHolder, pointers)
     }
 }

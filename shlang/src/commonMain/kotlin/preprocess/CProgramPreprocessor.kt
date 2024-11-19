@@ -190,7 +190,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
         val spaces = killSpaces()
         when (directive.str()) {
             "define" -> {
-                val name = peak<Identifier>()
+                val name = peak<CToken>()
                 kill()
                 if (check("(")) {
                     killSpaces()
@@ -209,10 +209,10 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                 }
             }
             "undef" -> {
-                if (!check<Identifier>()) {
+                if (!check<CToken>()) {
                     throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
                 }
-                val macrosName = peak<Identifier>()
+                val macrosName = peak<CToken>()
                 killWithSpaces()
                 ctx.undef(macrosName.str())
             }
@@ -246,10 +246,10 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                 ctx.exitInclude()
             }
             "ifdef" -> {
-                if (!check<Identifier>()) {
+                if (!check<CToken>()) {
                     throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
                 }
-                val name = peak<Identifier>()
+                val name = peak<CToken>()
                 killWithSpaces()
                 checkNewLine()
                 val macros = ctx.findMacros(name.str())
@@ -287,10 +287,10 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                 }
             }
             "ifndef" -> {
-                if (!check<Identifier>()) {
-                    throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
+                if (!check<CToken>()) {
+                    throw PreprocessorException("Expected identifier: but '${peak<CToken>()}'")
                 }
-                val macros = peak<Identifier>()
+                val macros = peak<CToken>()
                 killWithSpaces()
                 checkNewLine()
                 val hasDef = ctx.findMacros(macros.str()) != null

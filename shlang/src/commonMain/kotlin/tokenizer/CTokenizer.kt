@@ -189,6 +189,7 @@ class CTokenizer private constructor(private val filename: String, private val r
 
         if (reader.check('.') && (reader.eof(1) ||
                     reader.peekOffset(1).isWhitespace() ||
+                    isSeparator(reader.peekOffset(1)) ||
                     reader.peekOffset(1).isDigit() ||
                     reader.peekOffset(1) == 'f' ||
                     reader.peekOffset(1) == 'F')) {

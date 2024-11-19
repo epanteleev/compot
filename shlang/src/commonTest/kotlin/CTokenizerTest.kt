@@ -187,4 +187,12 @@ class CTokenizerTest {
         assertTrue { tokens[0] is CharLiteral }
         tokens[0].isEqual(1, 1, "';'")
     }
+
+    @Test
+    fun testLibPngBug() {
+        val input = "-2147483647.)"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[1] is PPNumber }
+        tokens[1].isEqual(1, 2, "2147483647.")
+    }
 }
