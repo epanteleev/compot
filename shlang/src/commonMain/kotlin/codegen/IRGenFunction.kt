@@ -1333,12 +1333,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val value = visitExpression(expr, true)
         when (val type = returnStatement.expr.resolveType(typeHolder)) {
             is CPrimitive, is CStringLiteral -> {
-                val returnType = ir.prototype().returnType() as PrimitiveType
+                val returnType = ir.prototype().returnType().asType<PrimitiveType>()
                 val returnValue = ir.convertToType(value, returnType)
                 ir.store(fnStmt.returnValueAdr(), returnValue)
             }
             is CStructType -> {
                 ir.memcpy(fnStmt.returnValueAdr(), value, U64Value(type.size().toLong()))
+            }
+            is AnyCArrayType -> {
+                val returnType = ir.prototype().returnType().asType<PointerType>()
+                val returnValue = ir.convertToType(value, returnType)
+                ir.store(fnStmt.returnValueAdr(), returnValue)
             }
             else -> throw IRCodeGenError("Unknown return type, type=${returnStatement.expr.resolveType(typeHolder)}")
         }
