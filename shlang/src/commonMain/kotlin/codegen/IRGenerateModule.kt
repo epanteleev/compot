@@ -5,10 +5,11 @@ import ir.module.Module
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
 import ir.value.Value
+import tokenizer.Position
 import typedesc.TypeHolder
 
 
-data class IRCodeGenError(override val message: String) : Exception(message)
+data class IRCodeGenError(override val message: String, val position: Position) : Exception(message)
 
 class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack<Value>(), NameGenerator()) {
     fun visit(programNode: ProgramNode) = varStack.scoped {
@@ -16,7 +17,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             when (node) {
                 is FunctionNode -> generateFunction(node)
                 is Declaration  -> generateDeclaration(node)
-                else -> throw IRCodeGenError("Function expected")
+                else -> throw IRCodeGenError("Function expected", node.begin())
             }
         }
     }
@@ -31,7 +32,7 @@ class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(Mod
             when (declarator) {
                 is Declarator     -> generateGlobalDeclarator(declarator)
                 is InitDeclarator -> generateGlobalAssignmentDeclarator(declarator)
-                else -> throw IRCodeGenError("Unsupported declarator $declarator")
+                else -> throw IRCodeGenError("Unsupported declarator $declarator", node.begin())
             }
         }
     }

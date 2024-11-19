@@ -31,6 +31,7 @@ import ir.value.constant.*
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.DeclaratorVisitor
 import parser.nodes.visitors.StatementVisitor
+import tokenizer.Position
 import typedesc.*
 
 
@@ -83,14 +84,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is IntegerType       -> ir.icmp(conditionExpr, IntPredicate.Ne, IntegerConstant.of(type.asType(), 0))
             is PointerType       -> ir.icmp(conditionExpr, IntPredicate.Ne, NullValue.NULLPTR)
             is FloatingPointType -> ir.fcmp(conditionExpr, FloatPredicate.One, FloatingPointConstant.of(type, 0))
-            else -> throw IRCodeGenError("Unknown type")
+            else -> throw RuntimeException("Unknown type: type=$type")
         }
     }
 
-    private inline fun<reified T: AnyPredicateType> makeCondition(a: Value, predicate: T, b: Value): Value = when (a.type()) {
+    private inline fun<reified T: AnyPredicateType> makeCondition(a: Value, predicate: T, b: Value): Value = when (val type = a.type()) {
         is IntegerType, PointerType -> ir.icmp(a, predicate as IntPredicate, b)
         is FloatingPointType        -> ir.fcmp(a, predicate as FloatPredicate, b)
-        else -> throw IRCodeGenError("Unknown type")
+        else -> throw RuntimeException("Unknown type: type=$type")
     }
 
     private fun visitCompoundLiteral(compoundLiteral: CompoundLiteral): Value {
@@ -124,19 +125,19 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         is BuiltinVaArg      -> visitBuiltInVaArg(expression)
         is BuiltinVaEnd      -> visitBuiltInVaEnd(expression)
         is BuiltinVaCopy     -> visitBuiltInVaCopy(expression)
-        else -> throw IRCodeGenError("Unknown expression: $expression")
+        else -> throw RuntimeException("Unknown expression: $expression")
     }
 
     private fun visitBuiltInVaCopy(builtinVaCopy: BuiltinVaCopy): Value {
         val dest = visitExpression(builtinVaCopy.dest, true)
         val dstType = builtinVaCopy.dest.resolveType(typeHolder)
         if (dstType != VaStart.vaList) {
-            throw IRCodeGenError("va_list type expected, but got $dstType")
+            throw IRCodeGenError("va_list type expected, but got $dstType", builtinVaCopy.begin())
         }
         val src = visitExpression(builtinVaCopy.src, true)
         val srcType = builtinVaCopy.src.resolveType(typeHolder)
         if (srcType != VaStart.vaList) {
-            throw IRCodeGenError("va_list type expected, but got $srcType")
+            throw IRCodeGenError("va_list type expected, but got $srcType", builtinVaCopy.begin())
         }
         val irType = mb.toIRType<StructType>(typeHolder, srcType)
         val destPtr = ir.gep(dest, irType, I64Value(0))
@@ -148,7 +149,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitBuiltInVaEnd(builtinVaEnd: BuiltinVaEnd): Value {
         val vaListType = builtinVaEnd.vaList.resolveType(typeHolder)
         if (vaListType != VaStart.vaList) {
-            throw IRCodeGenError("va_list type expected, but got $vaListType")
+            throw IRCodeGenError("va_list type expected, but got $vaListType", builtinVaEnd.begin())
         }
         // Nothing to do
         return Value.UNDEF
@@ -158,7 +159,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val vaList = visitExpression(builtinVaStart.vaList, true)
         val vaListType = builtinVaStart.vaList.resolveType(typeHolder)
         if (vaListType != VaStart.vaList) {
-            throw IRCodeGenError("va_list type expected, but got $vaListType")
+            throw IRCodeGenError("va_list type expected, but got $vaListType", builtinVaStart.begin())
         }
         val fnStmt = stmtStack.root()
         val vaInit = fnStmt.vaInit as Alloc
@@ -172,7 +173,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitBuiltInVaArg(builtinVaArg: BuiltinVaArg): Value {
         val vaListType = builtinVaArg.assign.resolveType(typeHolder)
         if (vaListType != VaStart.vaList) {
-            throw IRCodeGenError("va_list type expected, but got $vaListType")
+            throw IRCodeGenError("va_list type expected, but got $vaListType", builtinVaArg.begin())
         }
 
         val vaList = visitExpression(builtinVaArg.assign, true)
@@ -192,19 +193,19 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     emitBuiltInVarArgLargeStruct(vaList, alloc, irType)
                     return alloc
                 }
-                val types = CallConvention.coerceArgumentTypes(argType) ?: throw IRCodeGenError("Internal error")
+                val types = CallConvention.coerceArgumentTypes(argType) ?: throw RuntimeException("Internal error")
                 for ((idx, type) in types.withIndex()) {
                     val fieldPtr = ir.gep(alloc, Type.I8, I64Value(type.sizeOf().toLong() * idx))
                     val arg = when (type) {
                         is PointerType, is IntegerType -> emitBuiltInVaArg(vaList, type, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
                         is FloatingPointType           -> emitBuiltInVaArg(vaList, type, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
-                        else -> throw IRCodeGenError("Unknown type $type")
+                        else -> throw IRCodeGenError("Unknown type $type", builtinVaArg.begin())
                     }
                     ir.store(fieldPtr, arg)
                 }
                 alloc
             }
-            else -> throw IRCodeGenError("Unknown type $argType")
+            else -> throw IRCodeGenError("Unknown type $argType", builtinVaArg.begin())
         }
     }
 
@@ -272,16 +273,16 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
                 }
                 is CStructType -> {
-                    val t = type.fieldIndex(idx) ?: throw IRCodeGenError("Field not found")
+                    val t = type.fieldIndex(idx) ?: throw IRCodeGenError("Field '$idx' not found", expr.begin())
                     val irType = mb.toIRType<AggregateType>(typeHolder, t.cType())
                     val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(Constant.valueOf(Type.I64, idx)))
                     initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
                 }
-                else -> throw IRCodeGenError("Unknown type")
+                else -> throw RuntimeException("Unknown type: type=$type")
             }
             is StringNode -> {
                 if (type !is CArrayType) {
-                    throw IRCodeGenError("Expect array type, but type=$type")
+                    throw IRCodeGenError("Expect array type, but type=$type", expr.begin())
                 }
                 when (val type = type.element().cType()) {
                     is CHAR, is UCHAR -> {
@@ -297,7 +298,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         )
                         ir.store(fieldPtr, stringPtr)
                     }
-                    else -> throw IRCodeGenError("Unknown type $type")
+                    else -> throw IRCodeGenError("Unknown type $type", expr.begin())
                 }
             }
             else -> {
@@ -376,7 +377,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 return ir.select(condition, commonType, onTrueContant, onFalseContant)
             }
             is NonTrivialType -> return generateIfElsePattern(commonType, conditional)
-            else -> throw IRCodeGenError("Unknown type: $commonType")
+            else -> throw RuntimeException("Unknown type: $commonType")
         }
     }
 
@@ -385,17 +386,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val cPointer = when (val ty = arrowMemberAccess.primary.resolveType(typeHolder)) {
             is AnyCArrayType -> ty.asPointer()
             is CPointer      -> ty
-            else -> throw IRCodeGenError("Pointer type expected, but got $ty")
+            else -> throw IRCodeGenError("Pointer type expected, but got $ty", arrowMemberAccess.begin())
         }
         val cStructType = cPointer.dereference(typeHolder)
         val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
 
         if (cStructType !is AnyCStructType) {
-            throw IRCodeGenError("Struct type expected, but got '$cStructType'")
+            throw IRCodeGenError("Struct type expected, but got '$cStructType'", arrowMemberAccess.begin())
         }
         val fieldName = arrowMemberAccess.fieldName()
         val member = cStructType.fieldIndex(fieldName) ?: let {
-            throw IRCodeGenError("Field not found: $fieldName")
+            throw IRCodeGenError("Field not found: $fieldName", arrowMemberAccess.begin())
         }
 
         val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, member))
@@ -404,7 +405,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return gep
         }
 
-        val memberType = cStructType.field(fieldName) ?: throw IRCodeGenError("Field not found: $fieldName")
+        val memberType = cStructType.field(fieldName) ?: throw IRCodeGenError("Field not found: $fieldName", arrowMemberAccess.begin())
         if (memberType is CAggregateType) {
             return gep
         }
@@ -416,19 +417,21 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val struct = visitExpression(memberAccess.primary, false) //TODO isRvalue???
         val structType = memberAccess.primary.resolveType(typeHolder)
         if (structType !is AnyCStructType) {
-            throw IRCodeGenError("Struct type expected, but got '$structType'")
+            throw IRCodeGenError("Struct type expected, but got '$structType'", memberAccess.begin())
         }
         val structIRType = mb.toIRType<StructType>(typeHolder, structType)
 
         val fieldName = memberAccess.memberName()
-        val member = structType.fieldIndex(fieldName) ?: throw IRCodeGenError("Field not found: $fieldName")
+        val member = structType.fieldIndex(fieldName) ?:
+            throw IRCodeGenError("Field not found: $fieldName", memberAccess.begin())
 
         val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, member))
         val gep = ir.gfp(struct, structIRType, indexes)
         if (!isRvalue) {
             return gep
         }
-        val memberType = structType.field(fieldName) ?: throw IRCodeGenError("Field not found: $fieldName")
+        val memberType = structType.field(fieldName) ?:
+            throw IRCodeGenError("Field not found: $fieldName", memberAccess.begin())
         if (memberType is CAggregateType) {
             return gep
         }
@@ -453,7 +456,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             val irType = mb.toIRType<NonTrivialType>(typeHolder, resolved)
             I64Value(irType.sizeOf().toLong())
         }
-        else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
+        else -> throw IRCodeGenError("Unknown sizeof expression, expr=$expr", sizeOf.begin())
     }
 
     private fun visitStringNode(stringNode: StringNode): Value {
@@ -487,7 +490,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         if (!function.attributes.contains(VarArgAttribute)) {
-            throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'")
+            throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'", Position.UNKNOWN) //TODO correct position
         }
         return when (expr.type()) {
             Type.F32          -> ir.convertToType(expr, Type.F64)
@@ -522,7 +525,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     convertedArgs.addAll(argValues)
                     offset += argValues.size - 1
                 }
-                else -> throw IRCodeGenError("Unknown type, type=${argCType} in function call")
+                else -> throw IRCodeGenError("Unknown type, type=${argCType} in function call", argValue.begin())
             }
         }
         return FunctionArgInfo(convertedArgs, attributes)
@@ -545,7 +548,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         ir.gep(value, irType, I64Value(0))
                     }
                     is CPrimitive, is CFunctionType, is CStringLiteral -> value
-                    else -> throw IRCodeGenError("Cannon cast to pointer from type $fromType")
+                    else -> throw IRCodeGenError("Cannon cast to pointer from type $fromType", cast.begin())
                 }
                 ir.convertToType(baseAddr, Type.Ptr)
             }
@@ -557,7 +560,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val functionType = funcPointerCall.functionType(typeHolder)
         val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true)
 
-        val cPrototype = CFunctionPrototypeBuilder(functionType, mb, typeHolder).build()
+        val cPrototype = CFunctionPrototypeBuilder(funcPointerCall.begin(), functionType, mb, typeHolder).build()
 
         val prototype = IndirectFunctionPrototype(cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
         val (convertedArgs, attr) = convertFunctionArgs(prototype, funcPointerCall.args)
@@ -575,9 +578,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is PrimitiveType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
                 //is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
                 is StructType    -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
-                else -> throw IRCodeGenError("Unknown type ${functionType.retType()}")
+                else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
             }
-            else -> throw IRCodeGenError("Unknown type ${functionType.retType()}")
+            else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
         }
         ir.switchLabel(cont)
         return ret
@@ -623,7 +626,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     ir.switchLabel(cont)
                     retValue
                 }
-                else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
+                else -> throw IRCodeGenError("Unknown type ${function.returnType()}", functionCall.begin())
             }
 
             else -> TODO("$functionType")
@@ -632,7 +635,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun copyTuple(dst: Value, src: Value, returnType: CAggregateType) {
         assertion(src.type() is TupleType) { "is not TupleType, type=${dst.type()}" }
-        val argumentTypes = CallConvention.coerceArgumentTypes(returnType) ?: throw IRCodeGenError("Unknown type, type=$returnType")
+        val argumentTypes = CallConvention.coerceArgumentTypes(returnType) ?: throw RuntimeException("Unknown type, type=$returnType")
         assertion(argumentTypes.size > 1) { "Internal error" }
         for ((idx, arg) in argumentTypes.withIndex()) {
             val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
@@ -645,10 +648,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitFuncCall0(lvalueAdr: Value, rvalue: FunctionCall) {
         val primary = rvalue.primary
         if (primary !is VarNode) {
-            throw IRCodeGenError("Unknown function call, primary=$primary")
+            throw IRCodeGenError("Unknown function call, primary=$primary", rvalue.begin()) //TODO incorrect code
         }
         val name = primary.name()
-        val function = mb.findFunction(name) ?: throw IRCodeGenError("Function '$name' not found")
+        val function = mb.findFunction(name) ?: throw IRCodeGenError("Function '$name' not found", rvalue.begin())
         val (convertedArgs, attributes) = convertFunctionArgs(function, rvalue.args)
 
         val cont = ir.createLabel()
@@ -671,9 +674,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     ir.switchLabel(cont)
                     lvalueAdr
                 }
-                else -> throw IRCodeGenError("Unknown type ${function.returnType()}")
+                else -> throw IRCodeGenError("Unknown type ${function.returnType()}", rvalue.begin())
             }
-            else -> throw IRCodeGenError("Unknown type, type=$returnType")
+            else -> throw IRCodeGenError("Unknown type, type=$returnType", rvalue.begin())
         }
     }
 
@@ -681,42 +684,42 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         is IntegerType       -> IntPredicate.Eq
         is FloatingPointType -> FloatPredicate.Oeq
         is PointerType       -> IntPredicate.Eq
-        else -> throw IRCodeGenError("Unknown type")
+        else -> throw RuntimeException("Unknown type: type=$type")
     }
 
     private fun ne(type: Type): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Ne
         is FloatingPointType -> FloatPredicate.One
         is PointerType       -> IntPredicate.Ne
-        else -> throw IRCodeGenError("Unknown type")
+        else -> throw RuntimeException("Unknown type: type=$type")
     }
 
     private fun gt(type: Type): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Gt
         is FloatingPointType -> FloatPredicate.Ogt
         is PointerType       -> IntPredicate.Gt
-        else -> throw IRCodeGenError("Unknown type")
+        else -> throw RuntimeException("Unknown type: type=$type")
     }
 
     private fun lt(type: Type): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Lt
         is FloatingPointType -> FloatPredicate.Olt
         is PointerType       -> IntPredicate.Lt
-        else -> throw IRCodeGenError("Unknown type")
+        else -> throw RuntimeException("Unknown type: type=$type")
     }
 
     private fun le(type: Type): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Le
         is FloatingPointType -> FloatPredicate.Ole
         is PointerType       -> IntPredicate.Le
-        else -> throw IRCodeGenError("Unknown type")
+        else -> throw RuntimeException("Unknown type: type=$type")
     }
 
     private fun ge(type: Type): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Ge
         is FloatingPointType -> FloatPredicate.Oge
         is PointerType       -> IntPredicate.Ge
-        else -> throw IRCodeGenError("Unknown type")
+        else -> throw RuntimeException("Unknown type: type=$type")
     }
 
     private fun makeAlgebraicBinary(binop: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
@@ -726,14 +729,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val lValueType = when (val l = binop.left.resolveType(typeHolder)) {
                     is AnyCArrayType -> l.asPointer()
                     is CPointer      -> l
-                    else -> throw IRCodeGenError("Pointer type expected, but got $l")
+                    else -> throw IRCodeGenError("Pointer type expected, but got $l", binop.begin())
                 }
                 val convertedLValue = ir.convertToType(lvalue, Type.U64)
 
                 val rvalue = visitExpression(binop.right, true)
                 when (val r = binop.right.resolveType(typeHolder)) {
                     is AnyCArrayType, is CPrimitive -> {}
-                    else -> throw IRCodeGenError("Primitive type expected, but got $r")
+                    else -> throw IRCodeGenError("Primitive type expected, but got $r", binop.begin())
                 }
                 val convertedRValue = ir.convertToType(rvalue, Type.U64)
 
@@ -765,7 +768,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 return op(leftConverted, rightConverted)
             }
-            else -> throw IRCodeGenError("Unknown type")
+            else -> throw RuntimeException("Unknown type: type=$commonType")
         }
     }
 
@@ -775,7 +778,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val rvalue     = visitExpression(binop.right, true)
                 val rValueType = binop.right.resolveType(typeHolder)
                 if (rValueType !is CPrimitive) {
-                    throw IRCodeGenError("Primitive type expected")
+                    throw IRCodeGenError("Primitive type expected, but got $rValueType", binop.begin())
                 }
                 val convertedRValue = ir.convertToType(rvalue, Type.U64)
 
@@ -785,7 +788,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val ptr2intLValue = ir.ptr2int(lvalue, Type.U64)
 
                 if (lValueType !is CPointer) {
-                    throw IRCodeGenError("Pointer type expected")
+                    throw IRCodeGenError("Pointer type expected, but got $lValueType", binop.begin())
                 }
                 val convertedLValue = ir.convertToType(ptr2intLValue, Type.U64)
 
@@ -829,7 +832,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.store(left, sumCvt)
                 return sum
             }
-            else -> throw IRCodeGenError("Unknown type")
+            else -> throw RuntimeException("Unknown type: type=$commonType")
         }
     }
 
@@ -943,21 +946,21 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun divide(a: Value, b: Value): Value = when (a.type()) {
+    private fun divide(a: Value, b: Value): Value = when (val type = a.type()) {
         is IntegerType -> {
             val tupleDiv = ir.tupleDiv(a, b)
             ir.proj(tupleDiv, 0)
         }
         is FloatingPointType -> ir.div(a, b)
-        else -> throw IRCodeGenError("Unknown type")
+        else -> throw RuntimeException("Unknown type: type=$type")
     }
 
-    private fun rem(a: Value, b: Value): Value = when (a.type()) {
+    private fun rem(a: Value, b: Value): Value = when (val type = a.type()) {
         is IntegerType -> {
             val tupleDiv = ir.tupleDiv(a, b)
             ir.proj(tupleDiv, 1)
         }
-        else -> throw IRCodeGenError("Unknown type")
+        else -> throw RuntimeException("Unknown type: type=$type")
     }
 
     private fun visitIncOrDec(unaryOp: UnaryOp, op: (a: Value, b: Value) -> LocalValue): Value {
@@ -979,7 +982,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val inc = op(loaded, Constant.of(loaded.type(), 1))
                 ir.store(addr, ir.convertToType(inc, type))
             }
-            else -> throw IRCodeGenError("Unknown type")
+            else -> throw IRCodeGenError("Unknown type: $ctype", unaryOp.begin())
         }
         return loaded
     }
@@ -1007,7 +1010,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.store(addr, ir.convertToType(inc, type))
                 return inc
             }
-            else -> throw IRCodeGenError("Unknown type")
+            else -> throw IRCodeGenError("Unknown type: $ctype", unaryOp.begin())
         }
     }
 
@@ -1085,7 +1088,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return I32Value(enumValue)
         }
 
-        throw IRCodeGenError("Variable '$name' not found: ${varNode.position()}")
+        throw IRCodeGenError("Variable '$name' not found", varNode.begin())
     }
 
     private fun visitParameters(parameters: List<String>,
@@ -1110,7 +1113,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is AnyCArrayType -> {
                     closure(parameters[currentArg], cType, listOf(arguments[argumentIdx]))
                 }
-                else -> throw IRCodeGenError("Unknown type, type=$cType")
+                else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
             }
             argumentIdx++
         }
@@ -1144,7 +1147,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 varStack[param] = args[0]
             }
         }
-        else -> throw IRCodeGenError("Unknown type, type=$cType")
+        else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
     }
 
     private fun emitReturnType(fnStmt: FunctionStmtInfo, retCType: TypeDesc, args: List<ArgumentValue>) {
@@ -1192,9 +1195,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     ir.switchLabel(exitBlock)
                     ir.retVoid()
                 }
-                else -> throw IRCodeGenError("Unknown type, type=$irRetType")
+                else -> throw RuntimeException("Unknown type, type=$irRetType")
             }
-            else -> throw IRCodeGenError("Unknown return type, type=$cType")
+            else -> throw RuntimeException("Unknown return type, type=$cType")
         }
     }
 
@@ -1263,7 +1266,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return
         }
         if (gotoStatement.label() == null) {
-            throw IRCodeGenError("Goto statement outside of labeled statement")
+            throw IRCodeGenError("Goto statement outside of labeled statement", gotoStatement.begin())
         }
 
         val label = seekOrAddLabel(gotoStatement.id.str())
@@ -1278,7 +1281,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (val loopInfo = stmtStack.topLoop()) {
             is ForLoopStmtInfo -> ir.branch(loopInfo.resolveUpdate(ir))
             is LoopStmtInfo -> ir.branch(loopInfo.resolveCondition(ir))
-            else -> throw IRCodeGenError("Continue statement outside of loop")
+            else -> throw IRCodeGenError("Continue statement outside of loop", continueStatement.begin())
         }
     }
 
@@ -1287,7 +1290,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return
         }
 
-        val loopInfo = stmtStack.topSwitchOrLoop() ?: throw IRCodeGenError("Break statement outside of loop or switch")
+        val loopInfo = stmtStack.topSwitchOrLoop() ?:
+            throw IRCodeGenError("Break statement outside of loop or switch", breakStatement.begin())
         ir.branch(loopInfo.resolveExit(ir))
     }
 
@@ -1303,7 +1307,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val ctx = CommonConstEvalContext<Int>(typeHolder)
         val constant = ConstEvalExpression.eval(caseStatement.constExpression, TryConstEvalExpressionInt(ctx))
         if (constant == null) {
-            throw IRCodeGenError("Case statement with non-constant expression: ${LineAgnosticAstPrinter.print(caseStatement.constExpression)}")
+            throw IRCodeGenError("Case statement with non-constant expression: ${LineAgnosticAstPrinter.print(caseStatement.constExpression)}", caseStatement.begin())
         }
 
         val caseValueConverted = Constant.of(switchInfo.conditionType.asType(), constant)
@@ -1345,7 +1349,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val returnValue = ir.convertToType(value, returnType)
                 ir.store(fnStmt.returnValueAdr(), returnValue)
             }
-            else -> throw IRCodeGenError("Unknown return type, type=${returnStatement.expr.resolveType(typeHolder)}")
+            else -> throw IRCodeGenError("Unknown return type, type=$type", returnStatement.begin())
         }
         ir.branch(fnStmt.resolveExit(ir))
     }
@@ -1358,7 +1362,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             when (node) {
                 is Declaration -> visitDeclaration(node)
                 is Statement   -> visitStatement(node)
-                else -> throw IRCodeGenError("Statement expected")
+                else -> throw IRCodeGenError("Statement or declaration expected, but got $node", node.begin())
             }
         }
     }
@@ -1457,11 +1461,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitInit(init: Any?) = when (init) {
+    private fun visitInit(init: Node?) = when (init) {
         is Declaration -> visitDeclaration(init)
         is ExprStatement -> visit(init)
         is EmptyStatement, null -> {}
-        else -> throw IRCodeGenError("Unknown init statement, init=$init")
+        else -> throw IRCodeGenError("Unknown init statement, init=$init", init.begin())
     }
 
     private fun visitUpdate(update: Expression) {
@@ -1546,7 +1550,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val irType = when (val cType = type.type.cType()) {
             is CPrimitive     -> mb.toIRLVType<PrimitiveType>(typeHolder, cType)
             is CAggregateType -> mb.toIRType<NonTrivialType>(typeHolder, cType)
-            else -> throw IRCodeGenError("Unknown type, type=$cType")
+            else -> throw IRCodeGenError("Unknown type, type=$cType", declarator.begin())
         }
 
         val rvalueAdr = ir.alloc(irType)
@@ -1576,7 +1580,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     ir.store(elementAdr, Constant.valueOf(irElementType.asType(), 0))
                 }
             }
-            else -> throw IRCodeGenError("Unknown type, type=$type")
+            else -> throw IRCodeGenError("Unknown type, type=$type", initializerList.begin())
         }
     }
 
@@ -1609,7 +1613,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     type as CStructType
                     val fieldType = mb.toIRType<StructType>(typeHolder, type)
                     val expression = visitExpression(designationInitializer.initializer, true)
-                    val index = type.fieldIndex(designator.name()) ?: throw IRCodeGenError("Unknown field, field=${designator.name()}")
+                    val index = type.fieldIndex(designator.name()) ?:
+                        throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
+
                     val converted = ir.convertToType(expression, fieldType.field(index))
                     val fieldAdr = ir.gfp(value, fieldType, arrayOf(Constant.valueOf(Type.I64, index)))
                     ir.store(fieldAdr, converted)
@@ -1670,7 +1676,7 @@ class FunGenInitializer(moduleBuilder: ModuleBuilder,
     fun generate(functionNode: FunctionNode) {
         val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
         val parameters = functionNode.functionDeclarator().params()
-        val cPrototype = CFunctionPrototypeBuilder(fnType, mb, typeHolder).build()
+        val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder).build()
 
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
         val funGen = IrGenFunction(mb, typeHolder, varStack, nameGenerator, currentFunction, fnType)

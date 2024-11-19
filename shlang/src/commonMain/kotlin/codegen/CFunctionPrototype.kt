@@ -8,11 +8,12 @@ import codegen.TypeConverter.toIRType
 import ir.attributes.FunctionAttribute
 import ir.attributes.VarArgAttribute
 import ir.module.builder.impl.ModuleBuilder
+import tokenizer.Position
 
 
 class CFunctionPrototype(val returnType: Type, val argumentTypes: List<NonTrivialType>, val attributes: Set<FunctionAttribute>)
 
-internal class CFunctionPrototypeBuilder(val functionType: AnyCFunctionType, val mb: ModuleBuilder, val typeHolder: TypeHolder) {
+internal class CFunctionPrototypeBuilder(val begin: Position, val functionType: AnyCFunctionType, val mb: ModuleBuilder, val typeHolder: TypeHolder) {
     private val returnType = irReturnType()
     private val types = arrayListOf<NonTrivialType>()
     private val attributes = hashSetOf<FunctionAttribute>()
@@ -31,7 +32,7 @@ internal class CFunctionPrototypeBuilder(val functionType: AnyCFunctionType, val
                     TupleType(list.toTypedArray())
                 }
             }
-            else -> throw IRCodeGenError("Unknown return type, type=$retType")
+            else -> throw IRCodeGenError("Unknown return type, type=$retType", begin)
         }
     }
 
@@ -55,7 +56,7 @@ internal class CFunctionPrototypeBuilder(val functionType: AnyCFunctionType, val
                 is CPointer    -> types.add(Type.Ptr)
                 is BOOL        -> types.add(Type.U8)
                 is CPrimitive  -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type.cType()))
-                else -> throw IRCodeGenError("Unknown type, type=$type")
+                else -> throw IRCodeGenError("Unknown type, type=$type", begin) //FIXME argument positions!!!
             }
         }
         return Pair(types, attributes)

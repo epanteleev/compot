@@ -31,13 +31,13 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         is InitializerList -> when (lValueType) {
             is IntegerType -> {
                 if (expr.initializers.size != 1) {
-                    throw IRCodeGenError("Unsupported initializer list size ${expr.initializers.size}")
+                    throw IRCodeGenError("Unsupported initializer list size ${expr.initializers.size}", expr.begin())
                 }
                 constEvalExpression(lValueType, expr.initializers[0])
             }
             is ArrayType  -> constEvalInitializers(lValueType, expr)
             is StructType -> constEvalInitializers(lValueType, expr)
-            else -> throw IRCodeGenError("Unsupported type $lValueType")
+            else -> throw IRCodeGenError("Unsupported type $lValueType", expr.begin())
         }
         is UnaryOp -> when (expr.opType) {
             is PrefixUnaryOpType -> when (expr.opType) {
@@ -74,13 +74,13 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     private fun staticInitializer(expr: Expression): NonTrivialConstant? = when (expr) {
         is UnaryOp -> {
-            val operand = staticInitializer(expr.primary) ?: throw IRCodeGenError("Unsupported: $expr")
+            val operand = staticInitializer(expr.primary) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
             when (expr.opType) {
                 is PrefixUnaryOpType -> when (expr.opType) {
                     PrefixUnaryOpType.ADDRESS -> operand
-                    else -> throw IRCodeGenError("Unsupported unary operator ${expr.opType}")
+                    else -> throw IRCodeGenError("Unsupported unary operator ${expr.opType}", expr.begin())
                 }
-                else -> throw IRCodeGenError("Unsupported unary operator ${expr.opType}")
+                else -> throw IRCodeGenError("Unsupported unary operator ${expr.opType}", expr.begin())
             }
         }
         is CompoundLiteral -> {
@@ -95,15 +95,15 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 is CStructType -> {
                     StructGlobalConstant(createGlobalConstantName(), constant)
                 }
-                else -> throw IRCodeGenError("Unsupported type '$cType', expr='${LineAgnosticAstPrinter.print(expr)}'")
+                else -> throw IRCodeGenError("Unsupported type '$cType', expr='${LineAgnosticAstPrinter.print(expr)}'", expr.begin())
             }
             PointerLiteral.of(mb.addConstant(gConstant))
         }
         is ArrayAccess -> {
             val indexType = expr.expr.resolveType(typeHolder)
             val irType = mb.toIRType<IntegerType>(typeHolder, indexType)
-            val index = constEvalExpression(irType, expr.expr) ?: throw IRCodeGenError("Unsupported: $expr")
-            val array = staticInitializer(expr.primary) ?: throw IRCodeGenError("Unsupported: $expr")
+            val index = constEvalExpression(irType, expr.expr) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
+            val array = staticInitializer(expr.primary) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
             array as PointerLiteral
             val gConstant = array.gConstant as GlobalValue
             index as IntegerConstant
@@ -111,13 +111,13 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         is VarNode -> {
             val name = expr.name()
-            val value = varStack[name] ?: throw IRCodeGenError("Variable not found: $name")
+            val value = varStack[name] ?: throw IRCodeGenError("Variable not found: $name", expr.begin())
             PointerLiteral.of(value as GlobalValue)
         }
         is Cast -> {
             val toTypeCast = expr.typeName.specifyType(typeHolder, listOf())
             val lValueType = mb.toIRType<NonTrivialType>(typeHolder, toTypeCast.cType())
-            constEvalExpression(lValueType, expr.cast) ?: throw IRCodeGenError("Unsupported: $expr")
+            constEvalExpression(lValueType, expr.cast) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
         }
         is NumNode -> makeConstant(expr)
         else -> TODO()
@@ -148,7 +148,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     val gc = constant.gConstant as GlobalConstant
                     val constant = gc.constant()
                     if (constant.type() != lValueType) {
-                        throw IRCodeGenError("Type mismatch: ${gc.constant().type()} != $lValueType")
+                        throw IRCodeGenError("Type mismatch: ${gc.constant().type()} != $lValueType", declarator.begin())
                     }
                     val global = mb.addGlobal(declarator.name(), constant, attr)
                     varStack[declarator.name()] = global
@@ -156,42 +156,40 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 }
                 is PointerType -> {
                     if (lValueType != constant.type()) {
-                        throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType")
+                        throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType", declarator.begin())
                     }
                     val global = mb.addGlobal(declarator.name(), constant, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
-                else -> throw IRCodeGenError("Unsupported type $lValueType")
+                else -> throw IRCodeGenError("Unsupported type $lValueType", declarator.begin())
             }
             is PrimitiveConstant -> {
                 if (lValueType != constant.type()) {
-                    throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType")
+                    throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType", declarator.begin())
                 }
                 val g = mb.addGlobal(declarator.name(), constant, attr)
                 varStack[declarator.name()] = g
                 return g
             }
-            is InitializerListValue -> {
-                when (lValueType) {
-                    is ArrayType -> {
-                        if (lValueType != constant.type()) {
-                            throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType")
-                        }
-                        val global = mb.addGlobal(declarator.name(), constant, attr)
-                        varStack[declarator.name()] = global
-                        return global
+            is InitializerListValue -> when (lValueType) {
+                is ArrayType -> {
+                    if (lValueType != constant.type()) {
+                        throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType", declarator.begin())
                     }
-                    is StructType -> {
-                        if (lValueType != constant.type()) {
-                            throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType")
-                        }
-                        val global = mb.addGlobal(declarator.name(), constant, attr)
-                        varStack[declarator.name()] = global
-                        return global
-                    }
-                    else -> throw IRCodeGenError("Unsupported type $lValueType")
+                    val global = mb.addGlobal(declarator.name(), constant, attr)
+                    varStack[declarator.name()] = global
+                    return global
                 }
+                is StructType -> {
+                    if (lValueType != constant.type()) {
+                        throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType", declarator.begin())
+                    }
+                    val global = mb.addGlobal(declarator.name(), constant, attr)
+                    varStack[declarator.name()] = global
+                    return global
+                }
+                else -> throw IRCodeGenError("Unsupported type $lValueType", declarator.begin())
             }
             is StringLiteralConstant -> {
                 val cArrayType = cType.type.cType() as CArrayType
@@ -207,7 +205,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
             else -> TODO("$constant")
         }
-        throw IRCodeGenError("Unsupported declarator '$declarator'")
+        throw IRCodeGenError("Unsupported declarator '$declarator'", declarator.begin())
     }
 
     private fun getExternFunction(name: String, cPrototype: CFunctionPrototype): ExternFunction {
@@ -241,7 +239,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         is ULong  -> U64Value(num.toLong())
         is Float  -> F32Value(num.toFloat())
         is Double -> F64Value(num.toDouble())
-        else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}")
+        else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}", numNode.begin())
     }
 
     protected fun generateGlobalDeclarator(declarator: Declarator): Value {
@@ -250,7 +248,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (val type = varDesc.type.cType()) {
             is CFunctionType -> {
                 val abstrType = type.functionType
-                val cPrototype = CFunctionPrototypeBuilder(abstrType, mb, typeHolder).build()
+                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), abstrType, mb, typeHolder).build()
                 val externFunc = getExternFunction(name, cPrototype)
                 varStack[name] = externFunc
                 return externFunc
@@ -294,9 +292,9 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             is CUncompletedArrayType -> {
                 return Value.UNDEF //TODO
             }
-            else -> throw IRCodeGenError("Function or struct expected, but was '$type'")
+            else -> throw IRCodeGenError("Function or struct expected, but was '$type'", declarator.begin())
         }
-        throw IRCodeGenError("Unsupported declarator $declarator")
+        throw IRCodeGenError("Unsupported declarator $declarator", declarator.begin())
     }
 
     protected fun constEvalExpression0(expr: Expression): Number? = when (val ty = expr.resolveType(typeHolder)) {
@@ -322,13 +320,13 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     private fun constEvalInitializers(lValueType: ArrayType, expr: InitializerList): NonTrivialConstant {
         if (expr.initializers.size == 1) {
             return constEvalExpression(lValueType, expr.initializers[0]) ?:
-                throw IRCodeGenError("Unsupported type $lValueType, expr=${LineAgnosticAstPrinter.print(expr)}")
+                throw IRCodeGenError("Unsupported type $lValueType, expr=${LineAgnosticAstPrinter.print(expr)}", expr.begin())
         }
 
         val elements = expr.initializers.mapIndexed { index, initializer ->
             val elementLValueType = lValueType.field(index)
             constEvalExpression(elementLValueType, initializer) ?: let {
-                throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}")
+                throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
             }
         }
 
@@ -339,7 +337,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         val elements = expr.initializers.mapIndexed { index, initializer ->
             val elementLValueType = lValueType.field(index)
             constEvalExpression(elementLValueType, initializer) ?: let {
-                throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}")
+                throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
             }
         }
 

@@ -29,7 +29,7 @@ object TypeConverter {
     inline fun <reified T : Type> ModuleBuilder.toIRType(typeHolder: TypeHolder, type: CType): T {
         val converted = toIRTypeUnchecked(typeHolder, type)
         if (converted !is T) {
-            throw IRCodeGenError("Cannot convert '$type' to ${T::class}")
+            throw RuntimeException("Cannot convert '$type' to ${T::class}")
         }
 
         return converted
@@ -57,7 +57,7 @@ object TypeConverter {
         is CPointer -> Type.Ptr
         is CEnumType -> Type.I32
         is CFunctionType, is CUncompletedArrayType, is AbstractCFunction -> Type.Ptr
-        else -> throw IRCodeGenError("Unknown type, type=$type, class=${type::class}")
+        else -> throw RuntimeException("Unknown type, type=$type, class=${type::class}")
     }
 
     private fun ModuleBuilder.convertStructType(typeHolder: TypeHolder, type: AnyCStructType): Type {
@@ -130,7 +130,7 @@ object TypeConverter {
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
                     Type.Ptr -> ptr2int(value, toType)
-                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                    else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
@@ -157,7 +157,7 @@ object TypeConverter {
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
                     Type.Ptr -> ptr2int(value, toType)
-                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                    else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
@@ -189,7 +189,7 @@ object TypeConverter {
                         trunc(tmp, toType)
                     }
                     Type.Ptr -> ptr2int(value, toType)
-                    else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $toType")
+                    else -> throw RuntimeException("Cannot convert $value:${value.type()} to $toType")
                 }
             }
 
@@ -219,7 +219,7 @@ object TypeConverter {
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
                     Type.Ptr -> ptr2int(value, toType)
-                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                    else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
@@ -246,7 +246,7 @@ object TypeConverter {
                     Type.F32 -> fp2Int(value, Type.U8)
                     Type.F64 -> fp2Int(value, Type.U8)
                     Type.Ptr -> ptr2int(value, toType)
-                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                    else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
@@ -280,7 +280,7 @@ object TypeConverter {
 
                     Type.F64 -> fp2Int(value, Type.U16)
                     Type.Ptr -> ptr2int(value, toType)
-                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                    else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
@@ -310,7 +310,7 @@ object TypeConverter {
                         trunc(tmp, toType)
                     }
                     Type.Ptr -> ptr2int(value, toType)
-                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                    else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
@@ -337,7 +337,7 @@ object TypeConverter {
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
                     Type.Ptr -> ptr2int(value, toType)
-                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                    else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
@@ -354,7 +354,7 @@ object TypeConverter {
                     Type.U32 -> uint2fp(value, toType)
                     Type.U64 -> int2fp(value, toType)
                     Type.F64 -> fptrunc(value, toType)
-                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                    else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
@@ -371,7 +371,7 @@ object TypeConverter {
                     Type.U32 -> uint2fp(value, toType)
                     Type.U64 -> uint2fp(value, toType)
                     Type.F32 -> fpext(value, toType)
-                    else -> throw IRCodeGenError("Cannot convert $value to $toType")
+                    else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
@@ -381,7 +381,7 @@ object TypeConverter {
                 if (valueType is IntegerType) {
                     return int2ptr(value)
                 } else {
-                    throw IRCodeGenError("Cannot convert $value:${valueType} to $toType")
+                    throw RuntimeException("Cannot convert $value:${valueType} to $toType")
                 }
             }
 
@@ -396,10 +396,10 @@ object TypeConverter {
                     Type.U32 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U32, 0))
                     Type.U64 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U64, 0))
                     Type.Ptr -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.Ptr, 0))
-                    else -> throw IRCodeGenError("Cannot convert $value:$vType to $toType")
+                    else -> throw RuntimeException("Cannot convert $value:$vType to $toType")
                 }
             }
-            else -> throw IRCodeGenError("Cannot convert $value:${value.type()} to $toType")
+            else -> throw RuntimeException("Cannot convert $value:${value.type()} to $toType")
         }
     }
 
@@ -537,8 +537,8 @@ object TypeConverter {
                 0 -> BoolValue.FALSE
                 else -> BoolValue.TRUE
             }
-            else -> throw IRCodeGenError("Cannot convert $value to $type")
+            else -> throw RuntimeException("Cannot convert $value to $type")
         }
-        else -> throw IRCodeGenError("Cannot convert $value to $type")
+        else -> throw RuntimeException("Cannot convert $value to $type")
     }
 }

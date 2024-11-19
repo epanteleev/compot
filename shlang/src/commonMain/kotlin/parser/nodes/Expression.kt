@@ -305,7 +305,7 @@ class DesignationInitializer(val designation: Designation, val initializer: Expr
     }
 }
 
-class InitializerList(val begin: Position, val initializers: List<Initializer>) : Expression() {
+class InitializerList(private val begin: Position, val initializers: List<Initializer>) : Expression() {
     override fun begin(): Position = begin
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -514,7 +514,7 @@ data class SizeOf(val expr: Node) : Expression() {
             val resolved = expr.resolveType(typeHolder)
             resolved.size()
         }
-        else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}")
+        else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}", expr.begin())
     }
 }
 
