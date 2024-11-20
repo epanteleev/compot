@@ -29,7 +29,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val nameGenerator: NameGenerator) {
     protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): NonTrivialConstant? = when (expr) {
         is InitializerList -> when (lValueType) {
-            is IntegerType -> {
+            is PrimitiveType -> {
                 if (expr.initializers.size != 1) {
                     throw IRCodeGenError("Unsupported initializer list size ${expr.initializers.size}", expr.begin())
                 }
@@ -37,7 +37,6 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
             is ArrayType  -> constEvalInitializers(lValueType, expr)
             is StructType -> constEvalInitializers(lValueType, expr)
-            else -> throw IRCodeGenError("Unsupported type $lValueType", expr.begin())
         }
         is UnaryOp -> when (expr.opType) {
             is PrefixUnaryOpType -> when (expr.opType) {

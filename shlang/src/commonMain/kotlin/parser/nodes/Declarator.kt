@@ -102,6 +102,10 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                         val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerType.dimension), listOf())
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
+                    is CPointer -> {
+                        val rvalueType = baseType.element()
+                        return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
+                    }
                     else -> throw TypeResolutionException("Array size is not specified: type=$initializerType")
                 }
             }

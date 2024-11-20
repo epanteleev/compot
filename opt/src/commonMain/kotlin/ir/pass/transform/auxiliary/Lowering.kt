@@ -30,6 +30,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val toValue = store.pointer().asValue<Generate>()
                 return bb.replace(store) { it.move(toValue, store.value()) }
             }
+
             inst.match(load(generate(primitive()))) { load: Load ->
                 val fromValue = load.operand().asValue<Generate>()
                 return bb.replace(load) { it.copy(fromValue) }
