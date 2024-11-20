@@ -23,10 +23,15 @@ class StringReader(val str: String, var pos: Int = 0) {
     }
 
     fun isSpace(): Boolean {
-        if (eof) {
+        return isSpace(0)
+    }
+
+    fun isSpace(offset: Int): Boolean {
+        if (eof(offset)) {
             return false
         }
-        return peek() == ' ' || peek() == '\t' || peek() == '\r'
+        val ch = peekOffset(offset)
+        return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\u000C' || ch == '\u000B'
     }
 
     fun check(char: Char): Boolean {

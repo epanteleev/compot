@@ -171,6 +171,10 @@ class CTokenizer private constructor(private val filename: String, private val r
         return reader.str.substring(start, reader.pos)
     }
 
+    private fun isSpace(ch: Char): Boolean {
+        return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\u000C' || ch == '\u000B'
+    }
+
     private fun readPPNumber(): Pair<String, Int>? = tryRead {
         val start = reader.pos
         if (reader.check("0x") || reader.check("0X")) {
@@ -188,7 +192,7 @@ class CTokenizer private constructor(private val filename: String, private val r
         } while (!reader.eof && (ch.isDigit() || ch == 'e' || ch == 'E' || ch == 'p' || ch == 'P'))
 
         if (reader.check('.') && (reader.eof(1) ||
-                    reader.peekOffset(1).isWhitespace() ||
+                    reader.isSpace(1) ||
                     isSeparator(reader.peekOffset(1)) ||
                     reader.peekOffset(1).isDigit() ||
                     reader.peekOffset(1) == 'f' ||
