@@ -9,18 +9,20 @@ class CTypeBuilder {
     private val baseTypes = mutableListOf<CType>()
     private var storageClass: StorageClass? = null
 
-    fun add(property: TypeProperty) = when (property) {
-        is CType -> baseTypes.add(property)
-        is StorageClass -> {
-            assertion(storageClass == null) {
-                "Multiple storage classes are not allowed: $storageClass, $property"
+    fun add(property: TypeProperty) {
+        when (property) {
+            is CType -> baseTypes.add(property)
+            is StorageClass -> {
+                assertion(storageClass == null) {
+                    "Multiple storage classes are not allowed: $storageClass, $property"
+                }
+                storageClass = property
             }
-            storageClass = property
-        }
 
-        is TypeQualifier -> typeProperties.add(property)
-        is FunctionSpecifier -> TODO()
-        else -> throw IllegalArgumentException("Unknown property: $property")
+            is TypeQualifier -> typeProperties.add(property)
+            is FunctionSpecifier -> TODO()
+            else -> throw IllegalArgumentException("Unknown property: $property")
+        }
     }
 
     private fun check(baseTypes: List<CType>, vararg types: CPrimitive): Boolean {

@@ -93,7 +93,7 @@ class StorageClassSpecifier(name: Keyword): AnyTypeNode(name) {
         return storageClass
     }
 
-    fun storageClass(): StorageClass {
+    private fun storageClass(): StorageClass {
         return when (name.str()) {
             "typedef"  -> StorageClass.TYPEDEF
             "extern"   -> StorageClass.EXTERN
