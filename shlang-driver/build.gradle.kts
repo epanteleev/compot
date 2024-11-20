@@ -93,4 +93,5 @@ tasks.create<Exec>("runtests") {
         .resolve("shlang-driver")
 
     commandLine("python3", "bfish.py", shlangDriver)
+    commandLine("python3", "chibicc.py", shlangDriver)
 }

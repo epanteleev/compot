@@ -21,7 +21,7 @@ def run():
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("Usage: python3 bfish.py <url> <compiler>")
+        print("Usage: python3 bfish.py <compiler>")
         sys.exit(1)
 
     cc = sys.argv[1]
