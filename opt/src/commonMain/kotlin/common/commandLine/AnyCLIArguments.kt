@@ -1,7 +1,6 @@
 package common.commandLine
 
 import common.Files
-import okio.Path.Companion.toPath
 
 abstract class AnyCLIArguments {
     protected var dumpIrDirectoryOutput: String? = null

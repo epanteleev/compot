@@ -54,6 +54,14 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 PointerLiteral.of(mb.addConstant(stringLiteral))
             }
         }
+        is Cast -> {
+            val type = expr.resolveType(typeHolder)
+            if (type is CPointer) {
+                constEvalExpression(lValueType, expr.cast) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
+            } else {
+                defaultContEval(lValueType, expr)
+            }
+        }
         else -> defaultContEval(lValueType, expr)
     }
 
@@ -204,7 +212,6 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
             else -> TODO("$constant")
         }
-        throw IRCodeGenError("Unsupported declarator '$declarator'", declarator.begin())
     }
 
     private fun getExternFunction(name: String, cPrototype: CFunctionPrototype): ExternFunction {
@@ -293,7 +300,6 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
             else -> throw IRCodeGenError("Function or struct expected, but was '$type'", declarator.begin())
         }
-        throw IRCodeGenError("Unsupported declarator $declarator", declarator.begin())
     }
 
     protected fun constEvalExpression0(expr: Expression): Number? = when (val ty = expr.resolveType(typeHolder)) {
@@ -317,7 +323,8 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     private fun constEvalInitializers(lValueType: ArrayType, expr: InitializerList): NonTrivialConstant {
-        if (expr.initializers.size == 1) {
+        val type = expr.resolveType(typeHolder)
+        if (expr.initializers.size == 1 && type is CStringLiteral) {
             return constEvalExpression(lValueType, expr.initializers[0]) ?:
                 throw IRCodeGenError("Unsupported type $lValueType, expr=${LineAgnosticAstPrinter.print(expr)}", expr.begin())
         }

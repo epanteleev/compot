@@ -316,8 +316,8 @@ class InitializerList(private val begin: Position, val initializers: List<Initia
         for (i in initializers.indices) {
             baseTypes.add(types[i])
         }
-        if (baseTypes.size == 1) {
-            return@memoize baseTypes[0]
+        if (baseTypes.size == 1 && baseTypes[0] is CStringLiteral) {
+            return@memoize baseTypes[0] //TODO is it needed?
         } else {
             return@memoize InitializerType(baseTypes)
         }
