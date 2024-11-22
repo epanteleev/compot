@@ -67,23 +67,20 @@ class CTokenizer private constructor(private val filename: String, private val r
     }
 
     private fun readEscapedChar(): Char {
-        if (reader.peek() != '\\') {
-            throw IllegalStateException("Expected escape character")
-        }
         reader.read()
 
         val ch = when (reader.peek()) {
-            'n' -> '\n'
+            'a' -> '\u0007'
+            'b' -> '\b'
             't' -> '\t'
+            'n' -> '\n'
+            'v' -> '\u000B'
+            'f' -> '\u000C'
             'r' -> '\r'
             '0' -> '\u0000'
             '\'' -> '\''
             '\\' -> '\\'
-            'v' -> '\u000B'
-            'f' -> '\u000C'
-            'b' -> '\b'
             '"' -> '"'
-            'a' -> '\u0007'
             else -> null
         }
 
@@ -92,30 +89,24 @@ class CTokenizer private constructor(private val filename: String, private val r
             return ch
         }
 
-        if (reader.peek() == 'x') {
-            reader.read()
-            val hex = readHexNumber()
-            return hex.toInt(16).toChar()
+        if (reader.check('x')) {
+            return readHexChar()
         }
         return reader.read()
     }
 
     private fun readCharLiteral(): Char {
-        if (reader.peek() == '\\') {
-            val ch = readEscapedChar()
-            if (reader.peek() != '\'') {
-                throw IllegalStateException("Expected closing quote in line $line")
-            }
-            reader.read()
-            return ch
+        val ch = if (reader.check('\\')) {
+            readEscapedChar()
         } else {
-            val ch = reader.read()
-            if (reader.peek() != '\'') {
-                throw IllegalStateException("Expected closing quote: '${reader.peek()}' in line $line")
-            }
             reader.read()
-            return ch
         }
+
+        if (!reader.check('\'')) {
+            throw IllegalStateException("Expected closing quote in line $line")
+        }
+        reader.read()
+        return ch
     }
 
     private fun tryGetSuffix(start: Int): String? {
@@ -159,16 +150,14 @@ class CTokenizer private constructor(private val filename: String, private val r
         return result
     }
 
-    private fun readHexNumber(): String {
-        val start = reader.pos
-        while (!reader.eof && (reader.peek().isDigit() || reader.peek().lowercaseChar() in 'a'..'f')) {
-            reader.read()
+    private fun readHexChar(): Char {
+        reader.read()
+        var c = 0
+        while (reader.isHexDigit()) {
+            val ch = reader.read()
+            c = c * 16 + ch.digitToInt(16)
         }
-        val withPostfix = tryGetSuffix(start)
-        if (withPostfix != null) {
-            return withPostfix
-        }
-        return reader.str.substring(start, reader.pos)
+        return c.toChar()
     }
 
     private fun readPPNumber(): Pair<String, Int>? = tryRead {
@@ -190,8 +179,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             if (reader.eof) {
                 return@tryRead Pair(reader.str.substring(start, reader.pos), base)
             }
-            val ch = reader.peek()
-        } while (!reader.eof && (ch.isDigit() || (ch.lowercaseChar() in 'a'..'f')))
+        } while (reader.isHexDigit())
 
         if (reader.check('.')) {
             //Floating point value

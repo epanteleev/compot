@@ -11,7 +11,7 @@ class StringReader(val str: String, var pos: Int = 0) {
     private val available
         get() = size - pos
 
-    fun eof(offset: Int): Boolean {
+    private fun eof(offset: Int): Boolean {
         return pos + offset >= size
     }
 
@@ -32,6 +32,14 @@ class StringReader(val str: String, var pos: Int = 0) {
         }
         val ch = peek()
         return ch.isLetter() || ch == '_'
+    }
+
+    fun isHexDigit(): Boolean {
+        if (eof) {
+            return false
+        }
+        val ch = peek()
+        return ch.isDigit() || (ch in 'a'..'f') || (ch in 'A'..'F')
     }
 
     private fun isSpace(offset: Int): Boolean {
