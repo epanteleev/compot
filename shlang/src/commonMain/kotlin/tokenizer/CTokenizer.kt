@@ -202,7 +202,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             val result = tryGetSuffix(start) ?: reader.str.substring(start, reader.pos)
             return@tryRead Pair(result, base)
         }
-        if (!reader.peek().isLetter() && reader.peek() != '_') {
+        if (!reader.isLetter()) {
             // Integer
             val result = tryGetSuffix(start) ?: reader.str.substring(start, reader.pos)
             return@tryRead Pair(result, base)
@@ -217,7 +217,7 @@ class CTokenizer private constructor(private val filename: String, private val r
 
     private fun readIdentifier(): String {
         val startPos = reader.pos
-        while (!reader.eof && (reader.peek().isLetter() || reader.peek().isDigit() || reader.check('_'))) {
+        while (!reader.eof && (reader.isLetter() || reader.peek().isDigit())) {
             reader.read()
         }
         return reader.str.substring(startPos, reader.pos)
@@ -280,12 +280,16 @@ class CTokenizer private constructor(private val filename: String, private val r
                 append(Indent.of(spaces))
                 continue
             }
+
+            // Character literals
             if (reader.check('\'')) {
                 reader.read()
                 val literal = readCharLiteral()
                 append(CharLiteral(literal, OriginalPosition(line, position, filename)))
                 continue
             }
+
+            // String literals
             if (reader.check('"')) {
                 val start = reader.pos
                 val literal = readLiteral(reader.peek())
@@ -314,6 +318,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
+            // Numbers
             if (reader.peek().isDigit() || (reader.check('.') && reader.peekOffset(1).isDigit())) {
                 val saved = reader.pos
                 val v = reader.peek()
@@ -325,7 +330,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
-            // Punctuations and operators (or indentifiers)
+            // Punctuations
             if (tryPunct(reader.peek())) {
                 val v = reader.peek()
                 position += 1
@@ -350,8 +355,8 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
-            val v = reader.peek()
-            if (v == '_' || v.isLetter()) {
+            // Keywords or identifiers
+            if (reader.isLetter()) {
                 val identifier = readIdentifier()
                 position += identifier.length
 
@@ -363,7 +368,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
-            error("Unknown symbol: '$v' in '$filename' at $line:$position")
+            error("Unknown symbol: '${reader.peek()}' in '$filename' at $line:$position")
         }
     }
 

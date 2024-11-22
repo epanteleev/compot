@@ -149,11 +149,8 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
         }
     }
 
-    override fun visit(numNode: NumNode): Int? {
+    override fun visit(numNode: NumNode): Int {
         val number = numNode.number.toNumberOrNull() ?: throw ConstEvalException("Cannot evaluate number ${numNode.number}")
-        if (number !is Number) {
-            return null
-        }
         return number.toInt()
     }
 
@@ -306,17 +303,11 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
 
     override fun visit(numNode: NumNode): Long? {
         val num = numNode.number.toNumberOrNull() ?: return null
-        if (num !is Number) {
-            println("warning num=${num}")
-            return (num as ULong).toLong()
-        }
-
         return num.toLong()
     }
 
     override fun visit(varNode: VarNode): Long? {
-        val variable = ctx.getVariable(varNode.nameIdent()) ?: return null
-        return variable.toLong()
+        return ctx.getVariable(varNode.nameIdent())
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess): Long {
@@ -591,7 +582,7 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
 
     override fun visit(varNode: VarNode): Double? {
         val variable = ctx.getVariable(varNode.nameIdent()) ?: return null
-        return variable.toDouble()
+        return variable
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess): Double {

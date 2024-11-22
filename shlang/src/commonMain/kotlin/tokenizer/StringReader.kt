@@ -26,7 +26,15 @@ class StringReader(val str: String, var pos: Int = 0) {
         return isSpace(0)
     }
 
-    fun isSpace(offset: Int): Boolean {
+    fun isLetter(): Boolean {
+        if (eof) {
+            return false
+        }
+        val ch = peek()
+        return ch.isLetter() || ch == '_'
+    }
+
+    private fun isSpace(offset: Int): Boolean {
         if (eof(offset)) {
             return false
         }

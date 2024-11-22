@@ -426,7 +426,6 @@ data class NumNode(val number: PPNumber) : Expression() {
         when (number.toNumberOrNull()) {
             is Int, is Byte -> INT
             is Long   -> LONG
-            is ULong  -> ULONG
             is Float  -> FLOAT
             is Double -> DOUBLE
             else      -> throw TypeResolutionException("Unknown number type, but got ${number.str()}")
