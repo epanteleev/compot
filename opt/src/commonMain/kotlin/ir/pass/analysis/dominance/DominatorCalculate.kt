@@ -9,7 +9,7 @@ import ir.pass.common.AnalysisResult
 import ir.pass.common.FunctionAnalysisPass
 
 
-abstract class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
+sealed class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
     private fun initializeDominator(length: Int): MutableMap<Int, Int> {
         val dominators = intMapOf<Int, Int>(length) { it }
 

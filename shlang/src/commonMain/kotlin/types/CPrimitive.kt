@@ -9,8 +9,8 @@ import typedesc.TypeQualifier
 
 sealed class CPrimitive: CType() {
     fun interfere(typeHolder: TypeHolder, type2: CType): CType {
-        if (this == type2) return this
         when (this) {
+            type2 -> return this
             CHAR -> {
                 return when (type2) {
                     BOOL -> CHAR
@@ -205,7 +205,6 @@ sealed class CPrimitive: CType() {
 
             else -> throw RuntimeException("Unknown type $this, $type2")
         }
-        throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
     }
 }
 

@@ -50,13 +50,11 @@ class ConditionPreprocessor(filename: String, condition: TokenList, val ctx: Pre
 
         val parser = CProgramParser.build(filename, preprocessed)
         val constexpr = parser.constant_expression() ?:
-        throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(preprocessed)}'")
+            throw PreprocessorException("Cannot parse expression: '${TokenPrinter.print(preprocessed)}'")
 
         val evaluationContext = ConditionEvaluationContext(ctx)
-        val constExpr = ConstEvalExpression.eval(constexpr, TryConstEvalExpressionLong(evaluationContext))
-        if (constExpr == null) {
+        val constExpr = ConstEvalExpression.eval(constexpr, TryConstEvalExpressionLong(evaluationContext)) ?:
             throw PreprocessorException("Cannot evaluate expression: '${TokenPrinter.print(preprocessed)}'")
-        }
         return constExpr
     }
 }

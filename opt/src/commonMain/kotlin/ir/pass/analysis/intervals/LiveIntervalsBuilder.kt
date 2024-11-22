@@ -6,13 +6,10 @@ import ir.value.LocalValue
 import ir.module.FunctionData
 import ir.instruction.Instruction
 import ir.instruction.Phi
-import ir.instruction.matching.aggregate
-import ir.instruction.matching.gValue
 import ir.instruction.matching.lea
 import ir.instruction.matching.nop
 import ir.module.Sensitivity
 import ir.module.block.Block
-import ir.module.block.Label
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.traverse.LinearScanOrderFabric

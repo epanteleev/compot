@@ -13,7 +13,7 @@ import tokenizer.Position
 
 class CFunctionPrototype(val returnType: Type, val argumentTypes: List<NonTrivialType>, val attributes: Set<FunctionAttribute>)
 
-internal class CFunctionPrototypeBuilder(val begin: Position, val functionType: AnyCFunctionType, val mb: ModuleBuilder, val typeHolder: TypeHolder) {
+internal class CFunctionPrototypeBuilder(val begin: Position, private val functionType: AnyCFunctionType, private val mb: ModuleBuilder, val typeHolder: TypeHolder) {
     private val returnType = irReturnType()
     private val types = arrayListOf<NonTrivialType>()
     private val attributes = hashSetOf<FunctionAttribute>()

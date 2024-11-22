@@ -27,7 +27,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val typeHolder: TypeHolder,
                                    protected val varStack: VarStack<Value>,
                                    protected val nameGenerator: NameGenerator) {
-    protected fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): NonTrivialConstant? = when (expr) {
+    private fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): NonTrivialConstant? = when (expr) {
         is InitializerList -> when (lValueType) {
             is PrimitiveType -> {
                 if (expr.initializers.size != 1) {
@@ -79,7 +79,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return NonTrivialConstant.of(lValueType, result)
     }
 
-    private fun staticInitializer(expr: Expression): NonTrivialConstant? = when (expr) {
+    private fun staticInitializer(expr: Expression): NonTrivialConstant = when (expr) {
         is UnaryOp -> {
             val operand = staticInitializer(expr.primary) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
             when (expr.opType) {
@@ -148,11 +148,11 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
         val attr = toIrAttribute(cType.storageClass)!!
 
-        val constant = constEvalExpression(lValueType, declarator.rvalue) ?: staticInitializer(declarator.rvalue)
-        when (constant) {
+        val constEvalResult = constEvalExpression(lValueType, declarator.rvalue) ?: staticInitializer(declarator.rvalue)
+        when (constEvalResult) {
             is PointerLiteral -> when (lValueType) {
                 is ArrayType -> {
-                    val gc = constant.gConstant as GlobalConstant
+                    val gc = constEvalResult.gConstant as GlobalConstant
                     val constant = gc.constant()
                     if (constant.type() != lValueType) {
                         throw IRCodeGenError("Type mismatch: ${gc.constant().type()} != $lValueType", declarator.begin())
@@ -162,37 +162,37 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     return global
                 }
                 is PointerType -> {
-                    if (lValueType != constant.type()) {
-                        throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType", declarator.begin())
+                    if (lValueType != constEvalResult.type()) {
+                        throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                     }
-                    val global = mb.addGlobal(declarator.name(), constant, attr)
+                    val global = mb.addGlobal(declarator.name(), constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
                 else -> throw IRCodeGenError("Unsupported type $lValueType", declarator.begin())
             }
             is PrimitiveConstant -> {
-                if (lValueType != constant.type()) {
-                    throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType", declarator.begin())
+                if (lValueType != constEvalResult.type()) {
+                    throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                 }
-                val g = mb.addGlobal(declarator.name(), constant, attr)
+                val g = mb.addGlobal(declarator.name(), constEvalResult, attr)
                 varStack[declarator.name()] = g
                 return g
             }
             is InitializerListValue -> when (lValueType) {
                 is ArrayType -> {
-                    if (lValueType != constant.type()) {
-                        throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType", declarator.begin())
+                    if (lValueType != constEvalResult.type()) {
+                        throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                     }
-                    val global = mb.addGlobal(declarator.name(), constant, attr)
+                    val global = mb.addGlobal(declarator.name(), constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
                 is StructType -> {
-                    if (lValueType != constant.type()) {
-                        throw IRCodeGenError("Type mismatch: ${constant.type()} != $lValueType", declarator.begin())
+                    if (lValueType != constEvalResult.type()) {
+                        throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                     }
-                    val global = mb.addGlobal(declarator.name(), constant, attr)
+                    val global = mb.addGlobal(declarator.name(), constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
@@ -200,17 +200,17 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
             is StringLiteralConstant -> {
                 val cArrayType = cType.type.cType() as CArrayType
-                val newConstant = if (cArrayType.dimension > constant.data().length.toLong()) {
-                    val content = constant.content.padTo(cArrayType.dimension.toInt(), "\\0")
+                val newConstant = if (cArrayType.dimension > constEvalResult.data().length.toLong()) {
+                    val content = constEvalResult.content.padTo(cArrayType.dimension.toInt(), "\\0")
                     StringLiteralConstant(ArrayType(Type.I8, cArrayType.dimension.toInt()), content)
                 } else {
-                    constant
+                    constEvalResult
                 }
                 val global = mb.addGlobal(declarator.name(), newConstant, attr)
                 varStack[declarator.name()] = global
                 return global
             }
-            else -> TODO("$constant")
+            else -> TODO("$constEvalResult")
         }
     }
 
@@ -323,8 +323,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     private fun constEvalInitializers(lValueType: ArrayType, expr: InitializerList): NonTrivialConstant {
-        val type = expr.resolveType(typeHolder)
-        if (expr.initializers.size == 1 && type is CStringLiteral) {
+        if (expr.initializers.size == 1) {
             return constEvalExpression(lValueType, expr.initializers[0]) ?:
                 throw IRCodeGenError("Unsupported type $lValueType, expr=${LineAgnosticAstPrinter.print(expr)}", expr.begin())
         }
@@ -354,7 +353,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return nameGenerator.createStringLiteralName()
     }
 
-    protected fun createGlobalConstantName(): String {
+    private fun createGlobalConstantName(): String {
         return nameGenerator.createGlobalConstantName()
     }
 }

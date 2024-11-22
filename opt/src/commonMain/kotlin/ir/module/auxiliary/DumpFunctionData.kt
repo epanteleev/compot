@@ -60,6 +60,4 @@ abstract class DumpFunctionData(protected val functionData: FunctionData) {
     }
 }
 
-class DumpSSAFunctionData(functionData: FunctionData): DumpFunctionData(functionData) {
-
-}
+class DumpSSAFunctionData(functionData: FunctionData): DumpFunctionData(functionData)

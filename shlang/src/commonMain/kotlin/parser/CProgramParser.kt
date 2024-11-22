@@ -520,26 +520,26 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	: parameter_declaration
     //	| parameter_list ',' parameter_declaration
     //	;
-    fun parameter_list(): List<AnyParameter>? = rule {
+    fun parameter_list(): List<AnyParameter>? = rule globalRule@ {
         val parameters = mutableListOf<AnyParameter>()
         val param = parameter_declaration()
         if (param != null) {
             parameters.add(param)
         }
-        while (true) {
-            val param = rule  {
+        while (!eof()) {
+            val paramDecl = rule {
                 if (!check(",")) {
                     return@rule null
                 }
                 eat()
                 parameter_declaration()
             }
-            if (param == null) {
-                return@rule parameters
+            if (paramDecl == null) {
+                return@globalRule parameters
             }
-            parameters.add(param)
+            parameters.add(paramDecl)
         }
-        return@rule parameters
+        return@globalRule parameters
     }
 
     // struct_declarator
@@ -1592,7 +1592,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         } else {
             throw ParserException(InvalidToken("Expected initializer list", peak()))
         }
-        return@rule null
     }
 
     // postfix_expression

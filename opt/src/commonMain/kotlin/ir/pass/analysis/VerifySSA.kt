@@ -504,9 +504,9 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
-    override fun visit(copy: IndexedLoad) {
-        assert(IndexedLoad.typeCheck(copy)) {
-            "Instruction '${copy.dump()}' has inconsistent types."
+    override fun visit(indexedLoad: IndexedLoad) {
+        assert(IndexedLoad.typeCheck(indexedLoad)) {
+            "Instruction '${indexedLoad.dump()}' has inconsistent types."
         }
     }
 

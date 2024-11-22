@@ -8,7 +8,7 @@ sealed class Member {
     abstract fun size(): Int
 }
 
-class AnonMember(val typeDesc: TypeDesc): Member() {
+class AnonMember(private val typeDesc: TypeDesc): Member() {
     override fun cType(): AnyCStructType = typeDesc.cType() as AnyCStructType
     override fun typeDesc(): TypeDesc   = typeDesc
     override fun size(): Int            = typeDesc.size()

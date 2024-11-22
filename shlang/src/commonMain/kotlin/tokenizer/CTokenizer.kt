@@ -171,48 +171,46 @@ class CTokenizer private constructor(private val filename: String, private val r
         return reader.str.substring(start, reader.pos)
     }
 
-    private fun isSpace(ch: Char): Boolean {
-        return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\u000C' || ch == '\u000B'
-    }
-
     private fun readPPNumber(): Pair<String, Int>? = tryRead {
-        val start = reader.pos
+        var base = 10
         if (reader.check("0x") || reader.check("0X")) {
             reader.read(2)
-            val hexString = readHexNumber()
-            return@tryRead Pair(hexString, 16)
+            base = 16
+        } else if (reader.check("0b") || reader.check("0B")) {
+            reader.read(2)
+            base = 2
+        } else if (reader.check("0") && reader.peekOffset(1).isDigit()) {
+            reader.read()
+            base = 8
         }
+        val start = reader.pos
 
         do {
             reader.read()
             if (reader.eof) {
-                return@tryRead Pair(reader.str.substring(start, reader.pos), 10)
+                return@tryRead Pair(reader.str.substring(start, reader.pos), base)
             }
             val ch = reader.peek()
-        } while (!reader.eof && (ch.isDigit() || ch == 'e' || ch == 'E' || ch == 'p' || ch == 'P'))
+        } while (!reader.eof && (ch.isDigit() || (ch.lowercaseChar() in 'a'..'f')))
 
-        if (reader.check('.') && (reader.eof(1) ||
-                    reader.isSpace(1) ||
-                    isSeparator(reader.peekOffset(1)) ||
-                    reader.peekOffset(1).isDigit() ||
-                    reader.peekOffset(1) == 'f' ||
-                    reader.peekOffset(1) == 'F')) {
+        if (reader.check('.')) {
             //Floating point value
             reader.read()
             while (!reader.eof && !isSeparator(reader.peek())) {
                 reader.read()
             }
             val result = tryGetSuffix(start) ?: reader.str.substring(start, reader.pos)
-            return@tryRead Pair(result, 10)
-        } else if (!reader.peek().isLetter() && reader.peek() != '_') {
+            return@tryRead Pair(result, base)
+        }
+        if (!reader.peek().isLetter() && reader.peek() != '_') {
             // Integer
             val result = tryGetSuffix(start) ?: reader.str.substring(start, reader.pos)
-            return@tryRead Pair(result, 10)
+            return@tryRead Pair(result, base)
         }
 
         val postfix = tryGetSuffix(start)
         if (postfix != null) {
-            return@tryRead Pair(postfix, 10)
+            return@tryRead Pair(postfix, base)
         }
         return@tryRead null
     }
@@ -316,13 +314,14 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
-            if (reader.check('.') && reader.peekOffset(1).isDigit()) {
-                val pair = readPPNumber()
-                if (pair != null) {
-                    val diff = reader.pos
-                    position += diff
-                    append(PPNumber(pair.first, pair.second, OriginalPosition(line, position - diff, filename)))
-                }
+            if (reader.peek().isDigit() || (reader.check('.') && reader.peekOffset(1).isDigit())) {
+                val saved = reader.pos
+                val v = reader.peek()
+                val pair = readPPNumber() ?: error("Unknown symbol: '$v' in '$filename' at $line:$position")
+
+                val diff = reader.pos - saved
+                position += diff
+                append(PPNumber(pair.first,pair.second, OriginalPosition(line, position - diff, filename)))
                 continue
             }
 
@@ -364,12 +363,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
-            val saved = reader.pos
-            val pair = readPPNumber() ?: error("Unknown symbol: '$v' in '$filename' at $line:$position")
-
-            val diff = reader.pos - saved
-            position += diff
-            append(PPNumber(pair.first,pair.second, OriginalPosition(line, position - diff, filename)))
+            error("Unknown symbol: '$v' in '$filename' at $line:$position")
         }
     }
 

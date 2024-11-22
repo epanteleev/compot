@@ -195,4 +195,14 @@ class CTokenizerTest {
         assertTrue { tokens[1] is PPNumber }
         tokens[1].isEqual(1, 2, "2147483647.")
     }
+
+    @Test
+    fun testBinaryLiteral() {
+        val input = "0b101010"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is PPNumber }
+        tokens[0].isEqual(1, 1, "101010")
+        val num = tokens[0] as PPNumber
+        assertEquals("42".toByte(), num.toNumberOrNull())
+    }
 }

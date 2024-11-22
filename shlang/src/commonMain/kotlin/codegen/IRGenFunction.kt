@@ -177,23 +177,23 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val vaList = visitExpression(builtinVaArg.assign, true)
-        return when (val argType = builtinVaArg.resolveType(typeHolder)) {
+        return when (val argCType = builtinVaArg.resolveType(typeHolder)) {
             is CHAR, is UCHAR, is SHORT, is USHORT, is INT, is UINT, is LONG, is ULONG, is CPointer -> {
-                val argType = mb.toIRType<PrimitiveType>(typeHolder, argType)
+                val argType = mb.toIRType<PrimitiveType>(typeHolder, argCType)
                 emitBuiltInVaArg(vaList, argType, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
             }
             is DOUBLE, is FLOAT -> {
-                val argType = mb.toIRType<PrimitiveType>(typeHolder, argType)
+                val argType = mb.toIRType<PrimitiveType>(typeHolder, argCType)
                 emitBuiltInVaArg(vaList, argType, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
             }
             is CStructType -> {
-                val irType = mb.toIRType<StructType>(typeHolder, argType)
+                val irType = mb.toIRType<StructType>(typeHolder, argCType)
                 val alloc = ir.alloc(irType)
-                if (!argType.isSmall()) {
+                if (!argCType.isSmall()) {
                     emitBuiltInVarArgLargeStruct(vaList, alloc, irType)
                     return alloc
                 }
-                val types = CallConvention.coerceArgumentTypes(argType) ?: throw RuntimeException("Internal error")
+                val types = CallConvention.coerceArgumentTypes(argCType) ?: throw RuntimeException("Internal error")
                 for ((idx, type) in types.withIndex()) {
                     val fieldPtr = ir.gep(alloc, Type.I8, I64Value(type.sizeOf().toLong() * idx))
                     val arg = when (type) {
@@ -205,7 +205,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 alloc
             }
-            else -> throw IRCodeGenError("Unknown type $argType", builtinVaArg.begin())
+            else -> throw IRCodeGenError("Unknown type $argCType", builtinVaArg.begin())
         }
     }
 
@@ -672,7 +672,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     assertion(!returnType.isSmall()) { "Small struct is not supported in this context" }
                     ir.vcall(function, arrayListOf(lvalueAdr) + convertedArgs, attributes, cont)
                     ir.switchLabel(cont)
-                    lvalueAdr
                 }
                 else -> throw IRCodeGenError("Unknown type ${function.returnType()}", rvalue.begin())
             }
@@ -1306,9 +1305,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val ctx = CommonConstEvalContext<Int>(typeHolder)
         val constant = ConstEvalExpression.eval(caseStatement.constExpression, TryConstEvalExpressionInt(ctx))
-        if (constant == null) {
-            throw IRCodeGenError("Case statement with non-constant expression: ${LineAgnosticAstPrinter.print(caseStatement.constExpression)}", caseStatement.begin())
-        }
+            ?: throw IRCodeGenError("Case statement with non-constant expression: ${LineAgnosticAstPrinter.print(caseStatement.constExpression)}", caseStatement.begin())
 
         val caseValueConverted = Constant.of(switchInfo.conditionType.asType(), constant)
         val caseBlock = ir.createLabel()
@@ -1644,9 +1641,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is InitializerList -> initializerContext.scope(lvalueAdr, varDesc.type) { visitInitializerList(rvalue) }
             is FunctionCall -> visitFuncCall0(lvalueAdr, rvalue)
             else -> {
-                val rvalue = visitExpression(initDeclarator.rvalue, true)
+                val rvalueResult = visitExpression(initDeclarator.rvalue, true)
                 val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
-                ir.memcpy(lvalueAdr, rvalue, U64Value(commonType.sizeOf().toLong()))
+                ir.memcpy(lvalueAdr, rvalueResult, U64Value(commonType.sizeOf().toLong()))
             }
         }
         return lvalueAdr
