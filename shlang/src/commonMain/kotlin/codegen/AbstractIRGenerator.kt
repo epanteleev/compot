@@ -62,6 +62,19 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 defaultContEval(lValueType, expr)
             }
         }
+        is VarNode -> {
+            val name = expr.name()
+            val value = varStack[name]
+                ?: typeHolder.findEnumByEnumerator(name)
+                ?: throw IRCodeGenError("Variable not found: $name", expr.begin())
+
+            val cType = expr.resolveType(typeHolder)
+            if (cType is CPointer) {
+                PointerLiteral.of(value as GlobalValue)
+            } else {
+                defaultContEval(lValueType, expr)
+            }
+        }
         else -> defaultContEval(lValueType, expr)
     }
 
@@ -152,12 +165,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (constEvalResult) {
             is PointerLiteral -> when (lValueType) {
                 is ArrayType -> {
-                    val gc = constEvalResult.gConstant as GlobalConstant
-                    val constant = gc.constant()
-                    if (constant.type() != lValueType) {
-                        throw IRCodeGenError("Type mismatch: ${gc.constant().type()} != $lValueType", declarator.begin())
-                    }
-                    val global = mb.addGlobal(declarator.name(), constant, attr)
+                    val global = mb.addGlobal(declarator.name(), constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }

@@ -455,3 +455,6 @@ extern StringArray include_paths;
 extern bool opt_fpic;
 extern bool opt_fcommon;
 extern char *base_file;
+
+bool in_range(uint32_t *range, uint32_t c);
+uint32_t decode_utf8(char **new_pos, char *p);

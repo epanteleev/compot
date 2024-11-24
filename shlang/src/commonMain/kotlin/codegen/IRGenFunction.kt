@@ -1558,7 +1558,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun zeroingMemory(initializerList: InitializerList) {
         val value = initializerContext.peekValue()
         when (val type = initializerContext.peekType().cType()) {
-            is CStructType -> {
+            is AnyCStructType -> {
                 for (i in initializerList.initializers.size until type.fields().size) {
                     val converted = mb.toIRType<StructType>(typeHolder, type)
                     val elementType = converted.field(i)

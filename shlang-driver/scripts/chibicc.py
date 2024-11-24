@@ -7,7 +7,11 @@ import subprocess as sp
 
 def build(compiler):
     os.chdir("chibicc")
-    sp.run(["CC={} make".format(compiler), "chibicc"], shell=True)
+    sp.run(["make", "clean"])
+    sp.run(["CC=gcc make", "chibicc"], shell=True)
+    sp.run([compiler, "-c", "unicode.c", "-o", "unicode.o"])
+    sp.run(["CC=gcc make", "chibicc"], shell=True)
+    sp.run(["make", "test"])
 
 
 if __name__ == '__main__':
