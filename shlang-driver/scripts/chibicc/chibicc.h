@@ -456,5 +456,17 @@ extern bool opt_fpic;
 extern bool opt_fcommon;
 extern char *base_file;
 
-bool in_range(uint32_t *range, uint32_t c);
-uint32_t decode_utf8(char **new_pos, char *p);
+// Initial hash bucket size
+#define INIT_SIZE 16
+
+// Rehash if the usage exceeds 70%.
+#define HIGH_WATERMARK 70
+
+// We'll keep the usage below 50% after rehashing.
+#define LOW_WATERMARK 50
+
+// Represents a deleted hash entry
+#define TOMBSTONE ((void *)-1)
+
+uint64_t fnv_hash(char *s, int len);
+bool match(HashEntry *ent, char *key, int keylen);

@@ -273,7 +273,16 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(int2ptr: Int2Pointer) {
         val dst = registerAllocation.operand(int2ptr)
         val src = registerAllocation.operand(int2ptr.value())
-        CopyCodegen(int2ptr.type(), asm)(dst, src)
+        when (val type = int2ptr.value().asType<IntegerType>()) {
+            is SignedIntType -> {
+                if (type.sizeOf() == QWORD_SIZE) {
+                    CopyCodegen(int2ptr.type(), asm)(dst, src)
+                } else {
+                    SignExtendCodegen(type, Type.I64, asm)(dst, src)
+                }
+            }
+            is UnsignedIntType -> CopyCodegen(int2ptr.type(), asm)(dst, src)
+        }
     }
 
     override fun visit(ptr2Int: Pointer2Int) {

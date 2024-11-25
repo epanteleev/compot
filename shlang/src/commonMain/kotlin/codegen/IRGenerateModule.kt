@@ -5,6 +5,7 @@ import ir.module.Module
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
 import ir.value.Value
+import parser.LineAgnosticAstPrinter
 import tokenizer.Position
 import typedesc.TypeHolder
 
