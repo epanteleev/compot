@@ -9,8 +9,8 @@ def build(compiler):
     os.chdir("chibicc")
     sp.run(["make", "clean"])
     sp.run(["CC=gcc make", "chibicc"], shell=True)
-    sp.run([compiler, "-c", "unicode.c", "-o", "unicode.o"])
-    sp.run([compiler, "-c", "hashmap.c", "-o", "hashmap.o", "--dump-ir", "."])
+    sp.run([compiler, "-c", "unicode.c", "-o", "unicode.o", "-O1"])
+    sp.run([compiler, "-c", "hashmap.c", "-o", "hashmap.o", "-O1"])
     sp.run(["CC=gcc make", "chibicc"], shell=True)
     sp.run(["make", "test"])
 
