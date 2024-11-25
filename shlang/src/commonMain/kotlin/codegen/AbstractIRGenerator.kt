@@ -94,7 +94,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     private fun staticInitializer(expr: Expression): NonTrivialConstant = when (expr) {
         is UnaryOp -> {
-            val operand = staticInitializer(expr.primary) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
+            val operand = staticInitializer(expr.primary)
             when (expr.opType) {
                 is PrefixUnaryOpType -> when (expr.opType) {
                     PrefixUnaryOpType.ADDRESS -> operand
@@ -123,7 +123,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             val indexType = expr.expr.resolveType(typeHolder)
             val irType = mb.toIRType<IntegerType>(typeHolder, indexType)
             val index = constEvalExpression(irType, expr.expr) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
-            val array = staticInitializer(expr.primary) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
+            val array = staticInitializer(expr.primary)
             array as PointerLiteral
             val gConstant = array.gConstant as GlobalValue
             index as IntegerConstant
@@ -152,9 +152,9 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     protected fun generateGlobalAssignmentDeclarator(declarator: InitDeclarator): AnyGlobalValue {
         val cType = declarator.cType()
         val lValueType = mb.toIRLVType<NonTrivialType>(typeHolder, cType.type.cType())
-
+        val manglingName = generateName(declarator, cType)
         if (cType.storageClass == StorageClass.EXTERN) {
-            val extern = mb.addExternValue(declarator.name(), lValueType)
+            val extern = mb.addExternValue(manglingName, lValueType)
             varStack[declarator.name()] = extern
             return extern
         }
@@ -165,7 +165,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (constEvalResult) {
             is PointerLiteral -> when (lValueType) {
                 is ArrayType -> {
-                    val global = mb.addGlobal(declarator.name(), constEvalResult, attr)
+                    val global = mb.addGlobal(manglingName, constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
@@ -173,7 +173,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     if (lValueType != constEvalResult.type()) {
                         throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                     }
-                    val global = mb.addGlobal(declarator.name(), constEvalResult, attr)
+                    val global = mb.addGlobal(manglingName, constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
@@ -183,7 +183,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 if (lValueType != constEvalResult.type()) {
                     throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                 }
-                val g = mb.addGlobal(declarator.name(), constEvalResult, attr)
+                val g = mb.addGlobal(manglingName, constEvalResult, attr)
                 varStack[declarator.name()] = g
                 return g
             }
@@ -192,7 +192,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     if (lValueType != constEvalResult.type()) {
                         throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                     }
-                    val global = mb.addGlobal(declarator.name(), constEvalResult, attr)
+                    val global = mb.addGlobal(manglingName, constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
@@ -200,7 +200,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     if (lValueType != constEvalResult.type()) {
                         throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                     }
-                    val global = mb.addGlobal(declarator.name(), constEvalResult, attr)
+                    val global = mb.addGlobal(manglingName, constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
@@ -214,11 +214,10 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 } else {
                     constEvalResult
                 }
-                val global = mb.addGlobal(declarator.name(), newConstant, attr)
+                val global = mb.addGlobal(manglingName, newConstant, attr)
                 varStack[declarator.name()] = global
                 return global
             }
-            else -> TODO("$constEvalResult")
         }
     }
 
@@ -232,15 +231,15 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return mb.createExternFunction(name, cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
     }
 
-    private fun makeGlobalValue(name: String, type: VarDescriptor): Value {
+    private fun makeGlobalValue(realName: String, manglingName: String, type: VarDescriptor): Value {
         val irType = mb.toIRLVType<NonTrivialType>(typeHolder, type.type.cType())
         val value = if (type.storageClass == StorageClass.EXTERN) {
-            mb.addExternValue(name, irType)
+            mb.addExternValue(manglingName, irType)
         } else {
             val constant = Constant.of(irType, 0)
-            mb.addGlobal(name, constant)
+            mb.addGlobal(manglingName, constant)
         }
-        varStack[name] = value
+        varStack[realName] = value
         return value
     }
 
@@ -253,40 +252,48 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}", numNode.begin())
     }
 
+    private fun generateName(declarator: AnyDeclarator, typeDesc: VarDescriptor): String {
+        return if (typeDesc.storageClass == StorageClass.STATIC) {
+            nameGenerator.createStaticVariableName(declarator.name())
+        } else {
+            declarator.name()
+        }
+    }
+
     protected fun generateGlobalDeclarator(declarator: Declarator): Value {
-        val name = declarator.name()
+        val type = declarator.cType()
+        val manglingName = generateName(declarator, type)
         val varDesc = declarator.cType()
         when (val type = varDesc.type.cType()) {
             is CFunctionType -> {
-                val abstrType = type.functionType
-                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), abstrType, mb, typeHolder).build()
-                val externFunc = getExternFunction(name, cPrototype)
-                varStack[name] = externFunc
+                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), type.functionType, mb, typeHolder).build()
+                val externFunc = getExternFunction(declarator.name(), cPrototype)
+                varStack[declarator.name()] = externFunc
                 return externFunc
             }
             is CPrimitive -> {
-                return makeGlobalValue(name, varDesc)
+                return makeGlobalValue(declarator.name(), manglingName, varDesc)
             }
             is CArrayType -> {
                 val irType = mb.toIRType<ArrayType>(typeHolder, type)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
-                    val externValue = mb.addExternValue(name, irType)
-                    varStack[name] = externValue
+                    val externValue = mb.addExternValue(manglingName, irType)
+                    varStack[declarator.name()] = externValue
                     return externValue
                 }
                 val attr = toIrAttribute(varDesc.storageClass)!!
                 val zero = NonTrivialConstant.of(irType.elementType(), 0)
                 val elements = generateSequence { zero }.take(irType.length).toList()
                 val constant = InitializerListValue(irType, elements)
-                val global = mb.addGlobal(name, constant, attr)
-                varStack[name] = global
+                val global = mb.addGlobal(manglingName, constant, attr)
+                varStack[declarator.name()] = global
                 return global
             }
             is CStructType -> {
                 val irType = mb.toIRType<StructType>(typeHolder, type)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
-                    val externValue = mb.addExternValue(name, irType)
-                    varStack[name] = externValue
+                    val externValue = mb.addExternValue(manglingName, irType)
+                    varStack[declarator.name()] = externValue
                     return externValue
                 }
                 val elements = arrayListOf<NonTrivialConstant>()
@@ -296,13 +303,11 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     elements.add(zero)
                 }
                 val constant = InitializerListValue(irType, elements)
-                val global = mb.addGlobal(name, constant)
-                varStack[name] = global
+                val global = mb.addGlobal(manglingName, constant)
+                varStack[declarator.name()] = global
                 return global
             }
-            is CUncompletedArrayType -> {
-                return Value.UNDEF //TODO
-            }
+            is CUncompletedArrayType -> return Value.UNDEF //TODO
             else -> throw IRCodeGenError("Function or struct expected, but was '$type'", declarator.begin())
         }
     }

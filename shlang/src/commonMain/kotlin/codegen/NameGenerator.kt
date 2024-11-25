@@ -9,4 +9,8 @@ class NameGenerator(private var constantCounter: Int = 0) {
     fun createGlobalConstantName(): String {
         return ".v${constantCounter++}"
     }
+
+    fun createStaticVariableName(prefix: String): String {
+        return ".$prefix.static${constantCounter++}"
+    }
 }
