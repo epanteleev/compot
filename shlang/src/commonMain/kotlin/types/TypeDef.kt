@@ -7,4 +7,5 @@ class TypeDef(val name: String, val baseType: TypeDesc): CType() {
     override fun typename(): String = name
     override fun size(): Int = baseType.size()
     override fun toString(): String = baseType.toString()
+    override fun alignmentOf(): Int = baseType.cType().alignmentOf()
 }

@@ -11,6 +11,7 @@ sealed interface AnyCFunctionType {
 
 class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): CAggregateType(), AnyCFunctionType {
     override fun size(): Int = throw RuntimeException("Function type has no size")
+    override fun alignmentOf(): Int = throw RuntimeException("Function type has no alignment")
 
     override fun typename(): String = buildString {
         append(retType)
@@ -56,6 +57,7 @@ class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, va
 
 class CFunctionType(val name: String, val functionType: AbstractCFunction): CAggregateType(), AnyCFunctionType {
     override fun size(): Int = throw RuntimeException("Function type has no size")
+    override fun alignmentOf(): Int = throw RuntimeException("Function type has no alignment")
 
     override fun retType(): TypeDesc = functionType.retType
     override fun args(): List<TypeDesc> = functionType.argsTypes

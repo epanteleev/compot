@@ -96,4 +96,10 @@ class StructTypeTest {
         assertEquals(5, structType.sizeOf())
         assertEquals(2, structType.offset(2))
     }
+
+    @Test
+    fun test13() {
+        val structType = StructType("HashMap", arrayListOf(Type.Ptr, Type.I32, Type.I32))
+        assertEquals(16, structType.sizeOf())
+    }
 }

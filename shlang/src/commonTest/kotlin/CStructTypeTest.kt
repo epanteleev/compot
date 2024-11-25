@@ -88,4 +88,15 @@ class CStructTypeTest {
         assertFalse { structType.hasFloatOnly(0, 8) }
         assertFalse { structType.hasFloatOnly(0, 4) }
     }
+
+    @Test
+    fun test8() {
+        val members = arrayListOf(
+            FieldMember("buckets", TypeDesc.from(CPointer(CHAR))),
+            FieldMember("size", TypeDesc.from(INT)),
+            FieldMember("capacity", TypeDesc.from(INT))
+        )
+        val structType = CStructType("Point", members)
+        assertEquals(16, structType.size())
+    }
 }

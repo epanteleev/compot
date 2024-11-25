@@ -470,3 +470,6 @@ extern char *base_file;
 
 uint64_t fnv_hash(char *s, int len);
 bool match(HashEntry *ent, char *key, int keylen);
+
+HashEntry *get_entry(HashMap *map, char *key, int keylen);
+void rehash(HashMap *map);

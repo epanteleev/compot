@@ -8,6 +8,7 @@ import typedesc.TypeQualifier
 
 
 sealed class CPrimitive: CType() {
+    final override fun alignmentOf(): Int = size()
     fun interfere(typeHolder: TypeHolder, type2: CType): CType {
         when (this) {
             type2 -> return this
@@ -277,6 +278,8 @@ class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(
     override fun size(): Int {
         return type.size() * dimension.toInt()
     }
+
+    override fun alignmentOf(): Int = type.cType().alignmentOf()
 }
 
 class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : CPrimitive() {

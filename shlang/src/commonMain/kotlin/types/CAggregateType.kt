@@ -4,7 +4,7 @@ import ir.Definitions
 import ir.Definitions.QWORD_SIZE
 import typedesc.TypeDesc
 
-
+// TODO MANY CODE DUPLICATES iN THIS FILE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 sealed class CAggregateType: CType() {
     fun hasFloatOnly(lo: Int, hi: Int): Boolean {
         return hasFloat(this, lo, hi, 0)
@@ -58,12 +58,18 @@ sealed class AnyCStructType(open val name: String, protected val fields: List<Me
     }
 
     abstract fun offset(index: Int): Int
-    abstract fun maxAlignment(): Int
 }
 
 class CStructType(override val name: String, fields: List<Member>): AnyCStructType(name, fields) {
     private val alignments = alignments()
     private var maxAlignment = Int.MIN_VALUE
+
+    override fun alignmentOf(): Int {
+        if (maxAlignment == Int.MIN_VALUE) {
+            maxAlignment = alignments.maxOrNull() ?: 1
+        }
+        return maxAlignment
+    }
 
     override fun fieldIndex(name: String): Int? {
         var offset = 0
@@ -95,21 +101,13 @@ class CStructType(override val name: String, fields: List<Member>): AnyCStructTy
         return null
     }
 
-    override fun maxAlignment(): Int {
-        if (maxAlignment == Int.MIN_VALUE) {
-            maxAlignment = alignments.maxOrNull() ?: 1
-        }
-        return maxAlignment
-    }
-
     private fun alignments(): IntArray {
         var current = 0
-        var alignment = 1
         val result = IntArray(fields.size)
         for (i in fields.indices) {
             val field = fields[i]
-            alignment = align(alignment, field.cType())
-            current = Definitions.alignTo(current + field.size(), alignment)
+            val alignment = field.cType().alignmentOf()
+            current = Definitions.alignTo(current + field.cType().size(), alignment)
             result[i] = alignment
         }
         return result
@@ -121,15 +119,9 @@ class CStructType(override val name: String, fields: List<Member>): AnyCStructTy
         }
         var offset = 0
         for (idx in fields.indices) {
-            offset = Definitions.alignTo(offset + fields[idx].typeDesc().size(), alignments[idx])
+            offset = Definitions.alignTo(offset + fields[idx].size(), alignments[idx])
         }
-        return offset
-    }
-
-    private fun align(alignment: Int, field: CType): Int = when (field) {
-        is AnyCStructType -> maxOf(alignment, field.maxAlignment())
-        is CArrayType    -> maxOf(alignment, field.maxAlignment())
-        else -> maxOf(alignment, field.size())
+        return Definitions.alignTo(offset, alignmentOf())
     }
 
     override fun offset(index: Int): Int {
@@ -174,7 +166,7 @@ class CUnionType(override val name: String, fields: List<Member>): AnyCStructTyp
         return 0
     }
 
-    override fun maxAlignment(): Int {
+    override fun alignmentOf(): Int {
         return fields.maxOf { it.cType().size() }
     }
 }
@@ -203,18 +195,10 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
         append(type)
     }
 
-    fun offset(index: Int): Int {
-        return index * type.size()
-    }
-
-    fun maxAlignment(): Int {
+    override fun alignmentOf(): Int {
         if (maxAlignment == Int.MIN_VALUE) {
             val cType = type.cType()
-            maxAlignment = when (cType) {
-                is CArrayType    -> cType.maxAlignment()
-                is AnyCStructType -> cType.maxAlignment()
-                else -> cType.size()
-            }
+            maxAlignment = cType.alignmentOf()
         }
         return maxAlignment
     }

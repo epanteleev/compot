@@ -11,4 +11,5 @@ class InitializerType(private val initializer: List<CType>): CType() {
     }
 
     override fun size(): Int = initializer.fold(0) { acc, type -> acc + type.size() }
+    override fun alignmentOf(): Int = initializer.fold(1) { acc, type -> maxOf(acc, type.alignmentOf()) } //TODO check this
 }

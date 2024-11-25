@@ -17,19 +17,14 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
 
     private fun alignments(): IntArray {
         var current = 0
-        var alignment = 1
         val result = IntArray(fields.size)
         for (i in fields.indices) {
             val field = fields[i]
-            alignment = align(alignment, field)
+            val alignment = field.alignmentOf()
             current = Definitions.alignTo(current + field.sizeOf(), alignment)
             result[i] = alignment
         }
         return result
-    }
-
-    private fun align(alignment: Int, field: NonTrivialType): Int {
-        return maxOf(alignment, field.alignmentOf())
     }
 
     override fun offset(index: Int): Int {
@@ -54,7 +49,7 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
         for (idx in fields.indices) {
             offset = Definitions.alignTo(offset + fields[idx].sizeOf(), alignments[idx])
         }
-        return offset
+        return Definitions.alignTo(offset, alignmentOf())
     }
 
     override fun toString(): String = "$$name"
