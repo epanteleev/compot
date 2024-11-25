@@ -40,7 +40,7 @@ class InitializerListValue(private val type: AggregateType, val elements: List<N
         fun zero(type: AggregateType): InitializerListValue {
             fun makeConstantForField(fieldType: NonTrivialType): NonTrivialConstant = when (fieldType) {
                 is AggregateType -> zero(fieldType)
-                else -> NonTrivialConstant.of(fieldType, 0)
+                is PrimitiveType -> NonTrivialConstant.of(fieldType, 0)
             }
             return InitializerListValue(type, type.fields().map { makeConstantForField(it) })
         }

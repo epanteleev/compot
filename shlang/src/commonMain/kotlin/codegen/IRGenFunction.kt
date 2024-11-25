@@ -119,7 +119,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         is Conditional       -> visitConditional(expression)
         is CharNode          -> visitCharNode(expression)
         is SingleInitializer -> visitSingleInitializer(expression)
-        is InitializerList   -> visitSingleInitializer0(expression.initializers[0] as SingleInitializer)
+        is InitializerList   -> {
+            assertion(expression.initializers.size == 1) { "InitializerList size must be 1" }
+            visitSingleInitializer0(expression.initializers[0] as SingleInitializer)
+        }
         is CompoundLiteral   -> visitCompoundLiteral(expression)
         is BuiltinVaStart    -> visitBuiltInVaStart(expression)
         is BuiltinVaArg      -> visitBuiltInVaArg(expression)

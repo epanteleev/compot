@@ -63,6 +63,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
         }
         is VarNode -> {
+            // TODO Code duplication!!!
             val name = expr.name()
             val value = varStack[name]
                 ?: typeHolder.findEnumByEnumerator(name)
@@ -130,6 +131,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             PointerLiteral.of(gConstant, index.toInt())
         }
         is VarNode -> {
+            // TODO Code duplication!!!
             val name = expr.name()
             val value = varStack[name] ?: throw IRCodeGenError("Variable not found: $name", expr.begin())
             PointerLiteral.of(value as GlobalValue)
@@ -252,7 +254,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}", numNode.begin())
     }
 
-    private fun generateName(declarator: AnyDeclarator, typeDesc: VarDescriptor): String {
+    private fun generateName(declarator: AnyDeclarator, typeDesc: VarDescriptor): String { //TODO generateName in VarDescriptor class
         return if (typeDesc.storageClass == StorageClass.STATIC) {
             nameGenerator.createStaticVariableName(declarator.name())
         } else {
