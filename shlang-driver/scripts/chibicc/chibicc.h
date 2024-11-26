@@ -455,3 +455,8 @@ extern StringArray include_paths;
 extern bool opt_fpic;
 extern bool opt_fcommon;
 extern char *base_file;
+
+Type *vla_of(Type *base, Node *len);
+Type *new_type(TypeKind kind, int size, int align);
+void usual_arith_conv(Node **lhs, Node **rhs);
+Type *get_common_type(Type *ty1, Type *ty2);
