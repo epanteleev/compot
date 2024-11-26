@@ -1,8 +1,8 @@
 extern int printf(const char *format, ...);
 
-int data[] = { 2, 3, 4, 5 };
+int data1[] = { 2, 3, 4, 5 };
 
 int main() {
-    printf("%d %d %d %d\n", data[0], data[1], data[2], data[3]);
+    printf("%d %d %d %d\n", data1[0], data1[1], data1[2], data1[3]);
     return 0;
 }

@@ -10,9 +10,9 @@ typedef struct Rectangle_ {
     Point p2;
 } Rectangle;
 
-Rectangle data = {{ 2, 3 }};
+Rectangle data1 = {{ 2, 3 }};
 
 int main() {
-    printf("%ld %ld %ld %ld\n", data.p1.a, data.p1.b, data.p2.a, data.p2.b);
+    printf("%ld %ld %ld %ld\n", data1.p1.a, data1.p1.b, data1.p2.a, data1.p2.b);
     return 0;
 }

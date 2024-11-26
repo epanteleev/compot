@@ -39,6 +39,8 @@ class GlobalValue private constructor(val name: String, private val init: Consta
         return name == other.name
     }
 
+    fun attribute(): GlobalValueAttribute = attribute
+
     companion object {
         fun create(name: String, initializer: Constant, attributes: GlobalValueAttribute): GlobalValue {
             return GlobalValue(name, initializer, attributes)

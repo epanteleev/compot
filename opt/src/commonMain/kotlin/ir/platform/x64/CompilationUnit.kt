@@ -1,6 +1,7 @@
 package ir.platform.x64
 
 import asm.x64.*
+import ir.attributes.GlobalValueAttribute
 import ir.types.*
 import ir.global.*
 import ir.value.constant.*
@@ -32,11 +33,15 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         is PrimitiveGlobalConstant -> makePrimitiveConstant(globalValue)
     }
 
-    fun makeGlobal(globalValue: AnyGlobalValue) {
-        if (globalValue is ExternValue) {
-            return
+    fun makeGlobal(globalValue: AnyGlobalValue) = when (globalValue) {
+        is GlobalValue -> {
+            if (globalValue.attribute() != GlobalValueAttribute.INTERNAL) {
+                global(globalValue.name())
+            }
+
+            convertGlobalValueToSymbolType(globalValue)
         }
-        convertGlobalValueToSymbolType(globalValue as GlobalValue)
+        is ExternValue -> {}
     }
 
     private fun makeStringLiteralConstant(globalValue: GlobalValue, type: ArrayType, constant: StringLiteralConstant): ObjLabel {
@@ -66,7 +71,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             val cvt = PrimitiveConstant.from(globalValue.contentType().asType(), initializer)
             primitive(this, cvt)
         }
-        else -> throw IllegalArgumentException("unsupported constant type: $initializer")
+        is BoolValue -> throw IllegalArgumentException("unsupported constant type: $initializer")
     }
 
     private fun convertGlobalValueToSymbolType(globalValue: GlobalValue) = when (val type = globalValue.contentType()) {
