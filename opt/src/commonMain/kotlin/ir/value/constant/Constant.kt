@@ -18,7 +18,6 @@ sealed interface Constant: Value {
                 else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
             }
             is AggregateType -> InitializerListValue(kind, arrayListOf(NonTrivialConstant.of(kind.field(0), value)))
-            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
         }
 
         inline fun<reified U: Constant> valueOf(kind: NonTrivialType, value: Number): U {
@@ -33,7 +32,6 @@ sealed interface Constant: Value {
         fun zero(kind: NonTrivialType): Constant = when (kind) {
             is PrimitiveType -> PrimitiveConstant.of(kind, 0)
             is AggregateType -> InitializerListValue.zero(kind)
-            else -> throw RuntimeException("Cannot create zero constant: kind=$kind")
         }
     }
 }

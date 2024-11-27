@@ -349,7 +349,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitConditional(conditional: Conditional): Value {
         when (val commonType = mb.toIRType<Type>(typeHolder, conditional.resolveType(typeHolder))) {
-            Type.Void -> {
+            VoidType -> {
                 val condition = makeConditionFromExpression(conditional.cond)
                 val thenBlock = ir.createLabel()
                 val elseBlock = ir.createLabel()
@@ -374,13 +374,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val onFalse = constEvalExpression0(conditional.eFalse) ?:
                     return generateIfElsePattern(commonType, conditional)
 
-                val onTrueContant  = IntegerConstant.of(commonType, onTrue)
-                val onFalseContant = IntegerConstant.of(commonType, onFalse)
+                val onTrueConstant  = IntegerConstant.of(commonType, onTrue)
+                val onFalseConstant = IntegerConstant.of(commonType, onFalse)
                 val condition = makeConditionFromExpression(conditional.cond)
-                return ir.select(condition, commonType, onTrueContant, onFalseContant)
+                return ir.select(condition, commonType, onTrueConstant, onFalseConstant)
             }
             is NonTrivialType -> return generateIfElsePattern(commonType, conditional)
-            else -> throw RuntimeException("Unknown type: $commonType")
+            is FlagType, is TupleType -> throw IRCodeGenError("Unsupported type: $commonType", conditional.begin())
         }
     }
 
@@ -725,7 +725,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun makeAlgebraicBinary(binop: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
-        when (val commonType = mb.toIRLVType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))) {
+        when (val commonType = mb.toIRLVType<PrimitiveType>(typeHolder, binop.resolveType(typeHolder))) {
             is PointerType -> {
                 val lvalue     = visitExpression(binop.left, true)
                 val lValueType = when (val l = binop.left.resolveType(typeHolder)) {
@@ -770,7 +770,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 return op(leftConverted, rightConverted)
             }
-            else -> throw RuntimeException("Unknown type: type=$commonType")
+            is UndefType -> throw IRCodeGenError("Undef type", binop.begin())
         }
     }
 
@@ -878,6 +878,19 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         return right
     }
 
+    private fun cvtToI8(right: Value): Value = when (val ty = right.type()) {
+        is FlagType -> ir.convertToType(right, Type.I8)
+        is IntegerType -> {
+            val cmp = ir.icmp(right, IntPredicate.Ne, IntegerConstant.of(ty, 0))
+            ir.convertToType(cmp, Type.I8)
+        }
+        is PointerType -> {
+            val cmp = ir.icmp(right, IntPredicate.Ne, NullValue.NULLPTR)
+            ir.convertToType(cmp, Type.I8)
+        }
+        else -> throw RuntimeException("Unknown type: type=$ty")
+    }
+
     private fun visitBinary(binop: BinaryOp, isRvalue: Boolean): Value = when (binop.opType) {
         BinaryOpType.ADD -> makeAlgebraicBinary(binop, ir::add)
         BinaryOpType.SUB -> makeAlgebraicBinary(binop, ir::sub)
@@ -902,8 +915,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.switchLabel(bb)
 
             val right = visitExpression(binop.right, true)
-            val convertedRight = ir.convertToType(right, Type.I8)
-
+            val convertedRight = cvtToI8(right)
             val current = ir.currentLabel()
             ir.branch(end)
             ir.switchLabel(end)
@@ -920,7 +932,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.switchLabel(bb)
 
             val right = visitExpression(binop.right, true)
-            val convertedRight = ir.convertToType(right, Type.I8)
+            val convertedRight = cvtToI8(right)
 
             val current = ir.currentLabel()
             ir.branch(end)
