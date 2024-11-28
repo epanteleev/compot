@@ -521,6 +521,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     convertedArgs.add(convertedArg)
                 }
                 is AnyCStructType -> {
+                    if (argCType === VaStart.vaList) {
+                        convertedArgs.add(expr)
+                        continue
+                    }
                     if (!argCType.isSmall()) {
                         attributes.add(ByValue(idx + offset))
                     }
@@ -891,21 +895,21 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> throw RuntimeException("Unknown type: type=$ty")
     }
 
-    private fun visitBinary(binop: BinaryOp, isRvalue: Boolean): Value = when (binop.opType) {
-        BinaryOpType.ADD -> makeAlgebraicBinary(binop, ir::add)
-        BinaryOpType.SUB -> makeAlgebraicBinary(binop, ir::sub)
-        BinaryOpType.ASSIGN -> visitAssignBinary(binop)
-        BinaryOpType.ADD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::add)
-        BinaryOpType.DIV_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ::divide)
-        BinaryOpType.MUL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::mul)
-        BinaryOpType.BIT_OR -> makeAlgebraicBinary(binop, ir::or)
-        BinaryOpType.MUL -> makeAlgebraicBinary(binop, ir::mul)
-        BinaryOpType.NE -> makeComparisonBinary(binop, ::ne, isRvalue)
-        BinaryOpType.GT -> makeComparisonBinary(binop, ::gt, isRvalue)
-        BinaryOpType.LT -> makeComparisonBinary(binop, ::lt, isRvalue)
-        BinaryOpType.LE -> makeComparisonBinary(binop, ::le, isRvalue)
+    private fun visitBinary(binOp: BinaryOp, isRvalue: Boolean): Value = when (binOp.opType) { // TODO can compile incorrect code
+        BinaryOpType.ADD -> makeAlgebraicBinary(binOp, ir::add)
+        BinaryOpType.SUB -> makeAlgebraicBinary(binOp, ir::sub)
+        BinaryOpType.ASSIGN -> visitAssignBinary(binOp)
+        BinaryOpType.ADD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::add)
+        BinaryOpType.DIV_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ::divide)
+        BinaryOpType.MUL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::mul)
+        BinaryOpType.BIT_OR -> makeAlgebraicBinary(binOp, ir::or)
+        BinaryOpType.MUL -> makeAlgebraicBinary(binOp, ir::mul)
+        BinaryOpType.NE -> makeComparisonBinary(binOp, ::ne, isRvalue)
+        BinaryOpType.GT -> makeComparisonBinary(binOp, ::gt, isRvalue)
+        BinaryOpType.LT -> makeComparisonBinary(binOp, ::lt, isRvalue)
+        BinaryOpType.LE -> makeComparisonBinary(binOp, ::le, isRvalue)
         BinaryOpType.AND -> {
-            val left = visitExpression(binop.left, true)
+            val left = visitExpression(binOp.left, true)
             val convertedLeft = ir.convertToType(left, Type.U1)
 
             val bb = ir.createLabel()
@@ -914,7 +918,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.branchCond(convertedLeft, bb, end)
             ir.switchLabel(bb)
 
-            val right = visitExpression(binop.right, true)
+            val right = visitExpression(binOp.right, true)
             val convertedRight = cvtToI8(right)
             val current = ir.currentLabel()
             ir.branch(end)
@@ -922,7 +926,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.phi(listOf(I8Value(0), convertedRight), listOf(initialBB, current))
         }
         BinaryOpType.OR -> {
-            val left = visitExpression(binop.left, true)
+            val left = visitExpression(binOp.left, true)
             val convertedLeft = ir.convertToType(left, Type.U1)
 
             val initialBB = ir.currentLabel()
@@ -931,7 +935,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.branchCond(convertedLeft, end, bb)
             ir.switchLabel(bb)
 
-            val right = visitExpression(binop.right, true)
+            val right = visitExpression(binOp.right, true)
             val convertedRight = cvtToI8(right)
 
             val current = ir.currentLabel()
@@ -939,24 +943,24 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.switchLabel(end)
             ir.phi(listOf(I8Value(1), convertedRight), listOf(initialBB, current))
         }
-        BinaryOpType.SHR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::shr)
-        BinaryOpType.SHL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::shl)
-        BinaryOpType.BIT_XOR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::xor)
-        BinaryOpType.BIT_OR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::or)
-        BinaryOpType.GE  -> makeComparisonBinary(binop, ::ge, isRvalue)
-        BinaryOpType.EQ  -> makeComparisonBinary(binop, ::eq, isRvalue)
-        BinaryOpType.SHL -> makeAlgebraicBinary(binop, ir::shl)
-        BinaryOpType.SHR -> makeAlgebraicBinary(binop, ir::shr)
-        BinaryOpType.BIT_AND -> makeAlgebraicBinary(binop, ir::and)
-        BinaryOpType.BIT_XOR -> makeAlgebraicBinary(binop, ir::xor)
-        BinaryOpType.MOD -> makeAlgebraicBinary(binop, ::rem)
-        BinaryOpType.DIV -> makeAlgebraicBinary(binop, ::divide)
-        BinaryOpType.SUB_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::sub)
-        BinaryOpType.MOD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ::rem)
-        BinaryOpType.BIT_AND_ASSIGN -> makeAlgebraicBinaryWithAssignment(binop, ir::and)
+        BinaryOpType.SHR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::shr)
+        BinaryOpType.SHL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::shl)
+        BinaryOpType.BIT_XOR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::xor)
+        BinaryOpType.BIT_OR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::or)
+        BinaryOpType.GE  -> makeComparisonBinary(binOp, ::ge, isRvalue)
+        BinaryOpType.EQ  -> makeComparisonBinary(binOp, ::eq, isRvalue)
+        BinaryOpType.SHL -> makeAlgebraicBinary(binOp, ir::shl)
+        BinaryOpType.SHR -> makeAlgebraicBinary(binOp, ir::shr)
+        BinaryOpType.BIT_AND -> makeAlgebraicBinary(binOp, ir::and)
+        BinaryOpType.BIT_XOR -> makeAlgebraicBinary(binOp, ir::xor)
+        BinaryOpType.MOD -> makeAlgebraicBinary(binOp, ::rem)
+        BinaryOpType.DIV -> makeAlgebraicBinary(binOp, ::divide)
+        BinaryOpType.SUB_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::sub)
+        BinaryOpType.MOD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ::rem)
+        BinaryOpType.BIT_AND_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::and)
         BinaryOpType.COMMA -> {
-            visitExpression(binop.left, false)
-            visitExpression(binop.right, false)
+            visitExpression(binOp.left, false)
+            visitExpression(binOp.right, false)
         }
     }
 
@@ -1133,21 +1137,27 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitParameter(param: String, cType: CType, args: List<ArgumentValue>) = when (cType) {
-        is AnyCArrayType -> {
-            assertion(args.size == 1) { "invariant" }
-            varStack[param] = args[0]
-        }
-        is CPrimitive -> {
-            assertion(args.size == 1) { "invariant" }
+    private fun visitParameter(param: String, cType: CType, args: List<ArgumentValue>) {
+        when (cType) {
+            is AnyCArrayType -> {
+                assertion(args.size == 1) { "invariant" }
+                varStack[param] = args[0]
+            }
+            is CPrimitive -> {
+                assertion(args.size == 1) { "invariant" }
 
-            val irType    = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
-            val rvalueAdr = ir.alloc(irType)
-            ir.store(rvalueAdr, ir.convertToType(args[0], irType))
-            varStack[param] = rvalueAdr
-        }
-        is AnyCStructType -> {
-            if (cType.isSmall()) {
+                val irType    = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
+                val rvalueAdr = ir.alloc(irType)
+                ir.store(rvalueAdr, ir.convertToType(args[0], irType))
+                varStack[param] = rvalueAdr
+            }
+            is AnyCStructType -> {
+                if (!cType.isSmall() || cType === VaStart.vaList) {
+                    assertion(args.size == 1) { "invariant" }
+                    varStack[param] = args[0]
+                    return
+                }
+
                 val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
                 val rvalueAdr = ir.alloc(irType)
                 for ((idx, arg) in args.withIndex()) {
@@ -1156,12 +1166,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     ir.store(fieldPtr, arg)
                 }
                 varStack[param] = rvalueAdr
-            } else {
-                assertion(args.size == 1) { "invariant" }
-                varStack[param] = args[0]
             }
+            else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
         }
-        else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
     }
 
     private fun emitReturnType(fnStmt: FunctionStmtInfo, retCType: TypeDesc, args: List<ArgumentValue>) {

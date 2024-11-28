@@ -89,10 +89,9 @@ sealed class VarArgsTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun test14() {
         val result = runCTest("shlang/varArgs/varArgs14", listOf(), options())
-        assertEquals("print\n", result.output)
+        assertEquals("print Hello\n", result.output)
     }
 }
 

@@ -5,6 +5,7 @@ import ir.types.*
 import typedesc.TypeHolder
 import ir.attributes.ByValue
 import codegen.TypeConverter.toIRType
+import intrinsic.VaStart
 import ir.attributes.FunctionAttribute
 import ir.attributes.VarArgAttribute
 import ir.module.builder.impl.ModuleBuilder
@@ -44,13 +45,17 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
         for ((idx, type) in functionType.args().withIndex()) {
             when (val ty = type.cType()) {
                 is AnyCStructType -> {
-                    val parameters = CallConvention.coerceArgumentTypes(ty)
-                    if (parameters != null) {
-                        types.addAll(parameters)
-                    } else {
+                    if (ty === VaStart.vaList) {
+                        types.add(Type.Ptr)
+                        continue
+                    }
+                    if (!ty.isSmall()) {
                         types.add(mb.toIRType<StructType>(typeHolder, ty))
                         attributes.add(ByValue(idx))
+                        continue
                     }
+                    val parameters = CallConvention.coerceArgumentTypes(ty) ?: throw RuntimeException("Unsupported type, type=$ty")
+                    types.addAll(parameters)
                 }
                 is CArrayType, is CUncompletedArrayType -> types.add(Type.Ptr)
                 is CPointer    -> types.add(Type.Ptr)

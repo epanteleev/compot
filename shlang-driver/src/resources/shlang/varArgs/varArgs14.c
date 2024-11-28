@@ -16,7 +16,7 @@ char *format(char *fmt, ...) {
 }
 
 int main() {
-    char* buf = format("print");
+    char* buf = format("print %s\n", "Hello");
     printf("%s", buf);
     return 0;
 }
