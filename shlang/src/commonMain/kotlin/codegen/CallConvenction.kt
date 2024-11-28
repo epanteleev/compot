@@ -7,11 +7,12 @@ import ir.Definitions.HWORD_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
 import ir.types.PrimitiveType
+import types.AnyCStructType
 import types.CAggregateType
 
 
 object CallConvention {
-    fun coerceArgumentTypes(cType: CAggregateType): List<PrimitiveType>? = when (val size = cType.size()) {
+    fun coerceArgumentTypes(cType: AnyCStructType): List<PrimitiveType>? = when (val size = cType.size()) {
         BYTE_SIZE  -> arrayListOf(Type.I8)
         HWORD_SIZE -> arrayListOf(Type.I16)
         BYTE_SIZE + HWORD_SIZE -> arrayListOf(Type.I32)
@@ -42,9 +43,7 @@ object CallConvention {
             arrayListOf(type1, type2)
         }
         else -> {
-            assertion(size >= QWORD_SIZE * 2) {
-                "unsupported size=$size"
-            }
+            assertion(!cType.isSmall()) { "unsupported size=$size" }
             null
         }
     }

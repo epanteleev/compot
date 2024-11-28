@@ -103,7 +103,7 @@ class IntMap<K, V>(private val valuesArray: Array<V?>, private val keysArray: Ar
 
     private fun checkBounds(idx: Int) {
         if (idx >= valuesArray.size || idx < 0) {
-            throw IndexOutOfBoundsException("Index $idx is out of bounds")
+            throw IndexOutOfBoundsException("Index $idx is out of bounds: [0, ${valuesArray.size})")
         }
     }
 

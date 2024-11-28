@@ -134,12 +134,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitBuiltInVaCopy(builtinVaCopy: BuiltinVaCopy): Value {
         val dest = visitExpression(builtinVaCopy.dest, true)
         val dstType = builtinVaCopy.dest.resolveType(typeHolder)
-        if (dstType != VaStart.vaList) {
+        if (dstType !== VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $dstType", builtinVaCopy.begin())
         }
         val src = visitExpression(builtinVaCopy.src, true)
         val srcType = builtinVaCopy.src.resolveType(typeHolder)
-        if (srcType != VaStart.vaList) {
+        if (srcType !== VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $srcType", builtinVaCopy.begin())
         }
         val irType = mb.toIRType<StructType>(typeHolder, srcType)
@@ -151,7 +151,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitBuiltInVaEnd(builtinVaEnd: BuiltinVaEnd): Value {
         val vaListType = builtinVaEnd.vaList.resolveType(typeHolder)
-        if (vaListType != VaStart.vaList) {
+        if (vaListType !== VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType", builtinVaEnd.begin())
         }
         // Nothing to do
@@ -161,7 +161,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitBuiltInVaStart(builtinVaStart: BuiltinVaStart): Value {
         val vaList = visitExpression(builtinVaStart.vaList, true)
         val vaListType = builtinVaStart.vaList.resolveType(typeHolder)
-        if (vaListType != VaStart.vaList) {
+        if (vaListType !== VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType", builtinVaStart.begin())
         }
         val fnStmt = stmtStack.root()
@@ -175,7 +175,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitBuiltInVaArg(builtinVaArg: BuiltinVaArg): Value {
         val vaListType = builtinVaArg.assign.resolveType(typeHolder)
-        if (vaListType != VaStart.vaList) {
+        if (vaListType !== VaStart.vaList) {
             throw IRCodeGenError("va_list type expected, but got $vaListType", builtinVaArg.begin())
         }
 
@@ -640,7 +640,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun copyTuple(dst: Value, src: Value, returnType: CAggregateType) {
+    private fun copyTuple(dst: Value, src: Value, returnType: AnyCStructType) {
         assertion(src.type() is TupleType) { "is not TupleType, type=${dst.type()}" }
         val argumentTypes = CallConvention.coerceArgumentTypes(returnType) ?: throw RuntimeException("Unknown type, type=$returnType")
         assertion(argumentTypes.size > 1) { "Internal error" }
@@ -1521,7 +1521,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.switchLabel(bodyBlock)
             visitStatement(forStatement.body)
             if (ir.last() !is TerminateInstruction) {
-                ir.branch(loopStmtInfo.resolveUpdate(ir))
+                if (forStatement.update is EmptyExpression) {
+                    ir.branch(conditionBlock)
+                } else {
+                    ir.branch(loopStmtInfo.resolveUpdate(ir))
+                }
             }
             val updateBB = loopStmtInfo.update()
             if (updateBB != null) {
@@ -1529,8 +1533,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 visitUpdate(forStatement.update)
                 ir.branch(conditionBlock)
             }
-            val endBlock = loopStmtInfo.resolveExit(ir)
-            ir.switchLabel(endBlock)
+            if (ir.last() !is TerminateInstruction || loopStmtInfo.exit() != null) {
+                val endBlock = loopStmtInfo.resolveExit(ir)
+                ir.switchLabel(endBlock)
+            }
         }
     }
 

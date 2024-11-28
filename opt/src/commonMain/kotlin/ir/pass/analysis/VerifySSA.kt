@@ -33,10 +33,22 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
     private fun pass() {
         validateArguments()
+        validateEdges()
         for (bb in functionData.analysis(PreOrderFabric)) {
             validateBlock(bb)
         }
         validateExitBlock()
+    }
+
+    private fun validateEdges() {
+        for (bb in functionData) {
+            if (bb.predecessors().isEmpty() && bb != Label.entry) {
+                throw ValidateSSAErrorException(functionData, "Block '$bb' has no predecessors.")
+            }
+            for (succ in bb.successors()) {
+                assert(succ.predecessors().contains(bb)) { "Block '$succ' doesn't have predecessor '$bb'" }
+            }
+        }
     }
 
     private fun validateArguments() {
@@ -589,8 +601,14 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     companion object {
         fun run(module: Module): Module {
             val prototypes = module.prototypes
-            module.functions.values.forEach { data ->
-                VerifySSA(data, prototypes).pass()
+            for (data in module.functions.values) {
+                try {
+                    VerifySSA(data, prototypes).pass()
+                } catch (e: ValidateSSAErrorException) {
+                    throw e
+                } catch (e: Exception) {
+                    throw ValidateSSAErrorException(data, e.message + e.stackTraceToString())
+                }
             }
 
             return module

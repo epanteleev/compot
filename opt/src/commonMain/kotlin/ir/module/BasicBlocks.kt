@@ -28,7 +28,7 @@ class BasicBlocks private constructor(): LabelResolver, Iterable<Block> {
     }
 
     internal fun begin(): Block {
-        assertion(basicBlocks.isNotEmpty() && basicBlocks.first().index == Label.entry.index) {
+        assertion(basicBlocks.isNotEmpty() && basicBlocks.first() == Label.entry) {
             "First block should be entry block, but got '${basicBlocks.first()}'"
         }
         return basicBlocks[0]
