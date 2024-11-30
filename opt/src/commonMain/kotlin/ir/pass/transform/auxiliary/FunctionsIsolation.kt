@@ -2,6 +2,7 @@ package ir.pass.transform.auxiliary
 
 import common.assertion
 import ir.attributes.ByValue
+import ir.global.GlobalValue
 import ir.types.*
 import ir.instruction.*
 import ir.instruction.matching.*
@@ -11,6 +12,7 @@ import ir.module.SSAModule
 import ir.module.block.Block
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.value.ArgumentValue
+import ir.value.Value
 import ir.value.constant.U64Value
 
 
@@ -104,40 +106,58 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         }
     }
 
-    private fun isolateCall() {
-        fun insertCopies(bb: Block, call: Instruction): Instruction {
-            if (call !is Callable) {
-                return call
-            }
-            bb.insertBefore(call) { it.downStackFrame(call) }
+    private fun isolateByValueArgument(bb: Block, call: Instruction, i: Int, arg: Value) {
+        assertion(arg is Alloc) {
+            "Unexpected argument: $arg"
+        }
+        val argType = arg as Alloc
+        val gen = bb.insertBefore(call) { it.gen(argType.allocatedType) }
+        val lea = bb.insertAfter(gen) { it.lea(gen) }
+        bb.insertAfter(lea) { it.memcpy(lea, arg, U64Value(argType.allocatedType.sizeOf().toLong())) }
+        bb.updateDF(call, i, gen)
+    }
 
-            val byValueAttr = call.attributes().filterIsInstance<ByValue>()
-            for ((i, arg) in call.arguments().withIndex()) {
-                val isByValue = byValueAttr.find { it.argumentIndex == i } != null
-                if (!isByValue) {
-                    assertion(arg.type() is PrimitiveType) {
-                        "Unexpected type: ${arg.type()}"
-                    }
+    private fun insertCopies(bb: Block, call: Instruction) {
+        call as Callable
+        val byValueAttr = call.attributes().filterIsInstance<ByValue>()
+        for ((i, arg) in call.arguments().withIndex()) {
+            when (val ty = arg.type()) {
+                is FloatingPointType, is IntegerType -> {
                     val copy = bb.insertBefore(call) { it.copy(arg) }
                     bb.updateDF(call, i, copy)
-                } else {
-                    assertion(arg is Alloc) {
-                        "Unexpected argument: $arg"
-                    }
-                    val argType = arg as Alloc
-                    val gen = bb.insertBefore(call) { it.gen(argType.allocatedType) }
-                    val lea = bb.insertAfter(gen) { it.lea(gen) }
-                    bb.insertAfter(lea) { it.memcpy(lea, arg, U64Value(argType.allocatedType.sizeOf().toLong())) }
-                    bb.updateDF(call, i, gen)
                 }
-            }
+                is PointerType -> {
+                    val isByValue = byValueAttr.find { it.argumentIndex == i } != null
+                    if (isByValue) {
+                        isolateByValueArgument(bb, call, i, arg)
+                        continue
+                    }
 
-            call.target().prepend { it.upStackFrame(call) }
+                    val copyOrLea = if (arg is GlobalValue) {
+                        bb.insertBefore(call) { it.lea(arg) }
+                    } else {
+                        bb.insertBefore(call) { it.copy(arg) }
+                    }
+                    bb.updateDF(call, i, copyOrLea)
+                }
+                else -> throw IllegalArgumentException("Unexpected type: $ty")
+            }
+        }
+    }
+
+    private fun wrapCallInstruction(bb: Block, call: Instruction): Instruction {
+        if (call !is Callable) {
             return call
         }
+        bb.insertBefore(call) { it.downStackFrame(call) }
+        insertCopies(bb, call)
+        call.target().prepend { it.upStackFrame(call) }
+        return call
+    }
 
+    private fun isolateCall() {
         for (bb in cfg) {
-            bb.transform { inst -> insertCopies(bb, inst) }
+            bb.transform { inst -> wrapCallInstruction(bb, inst) }
         }
     }
 

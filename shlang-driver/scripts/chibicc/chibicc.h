@@ -287,7 +287,7 @@ struct Node {
 
   // Numeric literal
   int64_t val;
-  long double fval;
+  double fval;
 };
 
 Node *new_cast(Node *expr, Type *ty);
@@ -460,3 +460,17 @@ Token *read_string_literal(char *start, char *quote);
 char *string_literal_end(char *p);
 Token *new_token(TokenKind kind, char *start, char *end);
 int read_escaped_char(char **new_pos, char *p);
+void convert_pp_number(Token *tok);
+bool convert_pp_int(Token *tok);
+bool startswith(char *p, char *q);
+int from_hex(char c);
+char *string_literal_end(char *p);
+Token *read_utf16_string_literal(char *start, char *quote);
+Token *read_utf32_string_literal(char *start, char *quote, Type *ty);
+void convert_universal_chars(char *p);
+void remove_backslash_newline(char *p);
+char *read_file(char *path);
+Token *tokenize_string_literal(Token *tok, Type *basety);
+Token *read_char_literal(char *start, char *quote, Type *ty);
+int read_punct(char *p);
+bool is_keyword(Token *tok);

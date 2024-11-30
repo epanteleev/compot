@@ -58,7 +58,10 @@ class CTypeBuilder {
             check(baseTypes, INT, SHORT)            -> return SHORT
             check(baseTypes, LONG, INT)             -> return LONG
             check(baseTypes, USHORT, INT)           -> return USHORT
-            check(baseTypes, LONG, DOUBLE)          -> return DOUBLE
+            check(baseTypes, LONG, DOUBLE)          -> {
+                println("Warning: long double is not supported, using double instead")
+                return DOUBLE
+            }
         }
         assertion(baseTypes.size == 1) {
             "Unknown type '$baseTypes'"

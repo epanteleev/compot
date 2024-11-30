@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
-abstract class GlobalVar: CommonCTest() {
+sealed class GlobalVar: CommonCTest() {
     @Test
     fun testGlobalVar() {
         val result = runCTest("shlang/global_var/global_var0", listOf(), options())
@@ -147,6 +147,20 @@ abstract class GlobalVar: CommonCTest() {
     @Test
     fun testGlobalVar14() {
         val result = runCTest("shlang/global_var/global_var14", listOf("runtime/runtime.c"), options())
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testGlobalVar15() {
+        val result = runCTest("shlang/global_var/global_var15", listOf(), options())
+        assertEquals("100", result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
+    fun testGlobalVar16() {
+        val result = runCTest("shlang/global_var/global_var16", listOf(), options())
+        assertEquals("2", result.output)
         assertReturnCode(result, 0)
     }
 }

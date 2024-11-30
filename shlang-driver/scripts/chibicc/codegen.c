@@ -710,7 +710,7 @@ static void gen_expr(Node *node) {
       return;
     }
     case TY_LDOUBLE: {
-      union { long double f80; uint64_t u64[2]; } u;
+      union { double f80; uint64_t u64[2]; } u;
       memset(&u, 0, sizeof(u));
       u.f80 = node->fval;
       println("  mov $%lu, %%rax  # long double %Lf", u.u64[0], node->fval);
