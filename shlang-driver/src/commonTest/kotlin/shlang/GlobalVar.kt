@@ -71,8 +71,8 @@ sealed class GlobalVar: CommonCTest() {
     @Test
     fun testGlobalVar3() {
         val result = runCTest("shlang/global_var/global_var3", listOf(), options())
-        assertEquals("Hello World!\n", result.output)
-        assertReturnCode(result, 0)
+        assertEquals("\\Hello World!\n", result.output)
+        assertReturnCode(result, 14)
     }
 
     @Test

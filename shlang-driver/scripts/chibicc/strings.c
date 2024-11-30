@@ -1,5 +1,17 @@
 #include "chibicc.h"
 
+// Input file
+extern File *current_file;
+
+// A list of all input files.
+extern File **input_files;
+
+// True if the current position is at the beginning of a line
+extern bool at_bol;
+
+// True if the current position follows a space character
+extern bool has_space;
+
 void strarray_push(StringArray *arr, char *s) {
   if (!arr->data) {
     arr->data = calloc(8, sizeof(char *));
@@ -274,28 +286,6 @@ Token *read_utf16_string_literal(char *start, char *quote) {
   return tok;
 }
 
-// Read a UTF-8-encoded string literal and transcode it in UTF-32.
-//
-// UTF-32 is a fixed-width encoding for Unicode. Each code point is
-// encoded in 4 bytes.
-Token *read_utf32_string_literal(char *start, char *quote, Type *ty) {
-  char *end = string_literal_end(quote + 1);
-  uint32_t *buf = calloc(4, end - quote);
-  int len = 0;
-
-  for (char *p = quote + 1; p < end;) {
-    if (*p == '\\')
-      buf[len++] = read_escaped_char(&p, p + 1);
-    else
-      buf[len++] = decode_utf8(&p, p);
-  }
-
-  Token *tok = new_token(TK_STR, start, end + 1);
-  tok->ty = array_of(ty, len + 1);
-  tok->str = (char *)buf;
-  return tok;
-}
-
 static uint32_t read_universal_char(char *p, int len) {
   uint32_t c = 0;
   for (int i = 0; i < len; i++) {
@@ -469,4 +459,258 @@ bool is_keyword(Token *tok) {
   }
 
   return hashmap_get2(&map, tok->loc, tok->len);
+}
+
+// Replaces \r or \r\n with \n.
+void canonicalize_newline(char *p) {
+  int i = 0, j = 0;
+
+  while (p[i]) {
+    if (p[i] == '\r' && p[i + 1] == '\n') {
+      i += 2;
+      p[j++] = '\n';
+    } else if (p[i] == '\r') {
+      i++;
+      p[j++] = '\n';
+    } else {
+      p[j++] = p[i++];
+    }
+  }
+
+  p[j] = '\0';
+}
+
+void convert_pp_tokens(Token *tok) {
+  for (Token *t = tok; t->kind != TK_EOF; t = t->next) {
+    if (is_keyword(t))
+      t->kind = TK_KEYWORD;
+    else if (t->kind == TK_PP_NUM)
+      convert_pp_number(t);
+  }
+}
+
+// Read an identifier and returns the length of it.
+// If p does not point to a valid identifier, 0 is returned.
+int read_ident(char *start) {
+  char *p = start;
+  uint32_t c = decode_utf8(&p, p);
+  if (!is_ident1(c))
+    return 0;
+
+  for (;;) {
+    char *q;
+    c = decode_utf8(&q, p);
+    if (!is_ident2(c))
+      return p - start;
+    p = q;
+  }
+}
+
+// Consumes the current token if it matches `op`.
+bool equal(Token *tok, char *op) {
+  return memcmp(tok->loc, op, tok->len) == 0 && op[tok->len] == '\0';
+}
+
+// Initialize line info for all tokens.
+void add_line_numbers(Token *tok) {
+  char *p = current_file->contents;
+  int n = 1;
+
+  do {
+    if (p == tok->loc) {
+      tok->line_no = n;
+      tok = tok->next;
+    }
+    if (*p == '\n')
+      n++;
+  } while (*p++);
+}
+
+// Ensure that the current token is `op`.
+Token *skip(Token *tok, char *op) {
+  if (!equal(tok, op))
+    error_tok(tok, "expected '%s'", op);
+  return tok->next;
+}
+
+bool consume(Token **rest, Token *tok, char *str) {
+  if (equal(tok, str)) {
+    *rest = tok->next;
+    return true;
+  }
+  *rest = tok;
+  return false;
+}
+
+// Create a new token.
+Token *new_token(TokenKind kind, char *start, char *end) {
+  Token *tok = calloc(1, sizeof(Token));
+  tok->kind = kind;
+  tok->loc = start;
+  tok->len = end - start;
+  tok->file = current_file;
+  tok->filename = current_file->display_name;
+  tok->at_bol = at_bol;
+  tok->has_space = has_space;
+
+  at_bol = has_space = false;
+  return tok;
+}
+
+File **get_input_files(void) {
+  return input_files;
+}
+
+File *new_file(char *name, int file_no, char *contents) {
+  File *file = calloc(1, sizeof(File));
+  file->name = name;
+  file->display_name = name;
+  file->file_no = file_no;
+  file->contents = contents;
+  return file;
+}
+
+// Tokenize a given string and returns new tokens.
+Token *tokenize(File *file) {
+  current_file = file;
+
+  char *p = file->contents;
+  Token head = {};
+  Token *cur = &head;
+
+  at_bol = true;
+  has_space = false;
+
+  while (*p) {
+    // Skip line comments.
+    if (startswith(p, "//")) {
+      p += 2;
+      while (*p != '\n')
+        p++;
+      has_space = true;
+      continue;
+    }
+
+    // Skip block comments.
+    if (startswith(p, "/*")) {
+      char *q = strstr(p + 2, "*/");
+      if (!q)
+        error_at(p, "unclosed block comment");
+      p = q + 2;
+      has_space = true;
+      continue;
+    }
+
+    // Skip newline.
+    if (*p == '\n') {
+      p++;
+      at_bol = true;
+      has_space = false;
+      continue;
+    }
+
+    // Skip whitespace characters.
+    if (isspace(*p)) {
+      p++;
+      has_space = true;
+      continue;
+    }
+
+    // Numeric literal
+    if (isdigit(*p) || (*p == '.' && isdigit(p[1]))) {
+      char *q = p++;
+
+      p = num_lit(p);
+
+      cur = cur->next = new_token(TK_PP_NUM, q, p);
+      continue;
+    }
+
+    // String literal
+    if (*p == '"') {
+      cur = cur->next = read_string_literal(p, p);
+      p += cur->len;
+      continue;
+    }
+
+    // UTF-8 string literal
+    if (startswith(p, "u8\"")) {
+      cur = cur->next = read_string_literal(p, p + 2);
+      p += cur->len;
+      continue;
+    }
+
+    // UTF-16 string literal
+    if (startswith(p, "u\"")) {
+      cur = cur->next = read_utf16_string_literal(p, p + 1);
+      p += cur->len;
+      continue;
+    }
+
+    // Wide string literal
+    if (startswith(p, "L\"")) {
+      cur = cur->next = read_utf32_string_literal(p, p + 1, ty_int);
+      p += cur->len;
+      continue;
+    }
+
+    // UTF-32 string literal
+    if (startswith(p, "U\"")) {
+      cur = cur->next = read_utf32_string_literal(p, p + 1, ty_uint);
+      p += cur->len;
+      continue;
+    }
+
+    // Character literal
+    if (*p == '\'') {
+      cur = cur->next = read_char_literal(p, p, ty_int);
+      cur->val = (char)cur->val;
+      p += cur->len;
+      continue;
+    }
+
+    // UTF-16 character literal
+    if (startswith(p, "u'")) {
+      cur = cur->next = read_char_literal(p, p + 1, ty_ushort);
+      cur->val &= 0xffff;
+      p += cur->len;
+      continue;
+    }
+
+    // Wide character literal
+    if (startswith(p, "L'")) {
+      cur = cur->next = read_char_literal(p, p + 1, ty_int);
+      p += cur->len;
+      continue;
+    }
+
+    // UTF-32 character literal
+    if (startswith(p, "U'")) {
+      cur = cur->next = read_char_literal(p, p + 1, ty_uint);
+      p += cur->len;
+      continue;
+    }
+
+    // Identifier or keyword
+    int ident_len = read_ident(p);
+    if (ident_len) {
+      cur = cur->next = new_token(TK_IDENT, p, p + ident_len);
+      p += cur->len;
+      continue;
+    }
+
+    // Punctuators
+    int punct_len = read_punct(p);
+    if (punct_len) {
+      cur = cur->next = new_token(TK_PUNCT, p, p + punct_len);
+      p += cur->len;
+      continue;
+    }
+
+    error_at(p, "invalid token");
+  }
+
+  cur = cur->next = new_token(TK_EOF, p, p);
+  add_line_numbers(head.next);
+  return head.next;
 }

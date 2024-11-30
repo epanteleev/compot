@@ -53,6 +53,10 @@ object TypeConverter {
             val elementType = toIRType<NonTrivialType>(typeHolder, type.type.cType())
             ArrayType(elementType, type.dimension.toInt())
         }
+        is CStringLiteral -> {
+            val elementType = toIRType<NonTrivialType>(typeHolder, type.type.cType())
+            ArrayType(elementType, type.dimension.toInt())
+        }
         is CUnionType -> convertUnionType(typeHolder, type)
         is CPointer -> Type.Ptr
         is CEnumType -> Type.I32
