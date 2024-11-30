@@ -97,7 +97,7 @@ bool consume(Token **rest, Token *tok, char *str) {
 }
 
 // Create a new token.
-static Token *new_token(TokenKind kind, char *start, char *end) {
+Token *new_token(TokenKind kind, char *start, char *end) {
   Token *tok = calloc(1, sizeof(Token));
   tok->kind = kind;
   tok->loc = start;
@@ -177,7 +177,7 @@ static bool is_keyword(Token *tok) {
   return hashmap_get2(&map, tok->loc, tok->len);
 }
 
-static int read_escaped_char(char **new_pos, char *p) {
+int read_escaped_char(char **new_pos, char *p) {
   if ('0' <= *p && *p <= '7') {
     // Read an octal number.
     int c = *p++ - '0';
@@ -231,7 +231,7 @@ static int read_escaped_char(char **new_pos, char *p) {
 }
 
 // Find a closing double-quote.
-static char *string_literal_end(char *p) {
+char *string_literal_end(char *p) {
   char *start = p;
   for (; *p != '"'; p++) {
     if (*p == '\n' || *p == '\0')
@@ -242,24 +242,6 @@ static char *string_literal_end(char *p) {
   return p;
 }
 
-static Token *read_string_literal(char *start, char *quote) {
-  char *end = string_literal_end(quote + 1);
-  char *buf = calloc(1, end - quote);
-  int len = 0;
-
-  for (char *p = quote + 1; p < end;) {
-    if (*p == '\\')
-      buf[len++] = read_escaped_char(&p, p + 1);
-    else
-      buf[len++] = *p++;
-  }
-
-  Token *tok = new_token(TK_STR, start, end + 1);
-  tok->ty = array_of(ty_char, len + 1);
-  tok->str = buf;
-  return tok;
-}
-
 // Read a UTF-8-encoded string literal and transcode it in UTF-16.
 //
 // UTF-16 is yet another variable-width encoding for Unicode. Code
@@ -267,7 +249,7 @@ static Token *read_string_literal(char *start, char *quote) {
 // equal to or larger than that are encoded in 4 bytes. Each 2 bytes
 // in the 4 byte sequence is called "surrogate", and a 4 byte sequence
 // is called a "surrogate pair".
-static Token *read_utf16_string_literal(char *start, char *quote) {
+Token *read_utf16_string_literal(char *start, char *quote) {
   char *end = string_literal_end(quote + 1);
   uint16_t *buf = calloc(2, end - start);
   int len = 0;

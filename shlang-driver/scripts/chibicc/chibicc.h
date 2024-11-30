@@ -75,7 +75,7 @@ struct Token {
   TokenKind kind;   // Token kind
   Token *next;      // Next token
   int64_t val;      // If kind is TK_NUM, its value
-  long double fval; // If kind is TK_NUM, its value
+  double fval; // If kind is TK_NUM, its value
   char *loc;        // Token location
   int len;          // Token length
   Type *ty;         // Used if TK_NUM or TK_STR
@@ -455,3 +455,8 @@ extern StringArray include_paths;
 extern bool opt_fpic;
 extern bool opt_fcommon;
 extern char *base_file;
+
+Token *read_string_literal(char *start, char *quote);
+char *string_literal_end(char *p);
+Token *new_token(TokenKind kind, char *start, char *end);
+int read_escaped_char(char **new_pos, char *p);

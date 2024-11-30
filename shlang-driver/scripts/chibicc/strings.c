@@ -29,3 +29,21 @@ char *format(char *fmt, ...) {
   fclose(out);
   return buf;
 }
+
+Token *read_string_literal(char *start, char *quote) {
+  char *end = string_literal_end(quote + 1);
+  char *buf = calloc(1, end - quote);
+  int len = 0;
+
+  for (char *p = quote + 1; p < end;) {
+    if (*p == '\\')
+      buf[len++] = read_escaped_char(&p, p + 1);
+    else
+      buf[len++] = *p++;
+  }
+
+  Token *tok = new_token(TK_STR, start, end + 1);
+  tok->ty = array_of(ty_char, len + 1);
+  tok->str = buf;
+  return tok;
+}

@@ -18,10 +18,14 @@ data class SubCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOper
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         when {
             (first == dst) -> asm.sub(size, second, dst)
-            else -> {
+            (second == dst) -> {
                 asm.copy(size, first, temp1)
                 asm.sub(size, second, temp1)
                 asm.copy(size, temp1, dst)
+            }
+            else -> {
+                asm.copy(size, first, dst)
+                asm.sub(size, second, dst)
             }
         }
     }
