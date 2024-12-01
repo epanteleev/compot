@@ -1,9 +1,8 @@
-
-
 rootProject.name = "ssa-construction"
 
 dependencyResolutionManagement {
     repositories {
+        mavenLocal()
         mavenCentral()
     }
 }
@@ -17,19 +16,11 @@ pluginManagement {
             if (requested.id.id == "kotlin-multiplatform") {
                 useModule("org.jetbrains.kotlin:kotlin-klib-commonizer-embeddable:${requested.version}")
             }
-            if (requested.id.id == "kotlinx-serialization") {
-                useModule("org.jetbrains.kotlin:kotlin-serialization:${requested.version}")
-            }
         }
     }
 
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-
     plugins {
-        kotlin("multiplatform") version "2.0.0"
+        kotlin("multiplatform") version "2.1.0"
         id("org.jetbrains.dokka") version "1.9.20"
     }
 }

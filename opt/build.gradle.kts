@@ -2,7 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    kotlin("multiplatform") version "2.0.0"
+    kotlin("multiplatform") version "2.1.0"
     id("org.jetbrains.dokka") version "1.9.20"
     distribution
 }
@@ -64,8 +64,4 @@ tasks.withType(Test::class.java).all {
         events = setOf(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT, TestLogEvent.STANDARD_ERROR)
         exceptionFormat = TestExceptionFormat.FULL
     }
-}
-
-tasks.named<Jar>("jvmJar") {
-    dependsOn.add(tasks.findByName("jvmTest"))
 }

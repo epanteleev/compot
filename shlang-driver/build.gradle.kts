@@ -1,8 +1,9 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.tasks.KotlinTest
 
 plugins {
-    kotlin("multiplatform") version "2.0.0"
+    kotlin("multiplatform") version "2.1.0"
     id("org.jetbrains.dokka") version "1.9.20"
     application
 }
@@ -60,10 +61,6 @@ kotlin {
     }
 }
 
-tasks.named<Jar>("jvmJar") {
-    dependsOn.add(tasks.findByName("jvmTest"))
-}
-
 tasks.named<Jar>("jar") {
     from({
         configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
@@ -72,6 +69,9 @@ tasks.named<Jar>("jar") {
 }
 
 tasks.withType(Test::class.java).all {
+    dependsOn(":shlang:jvmTest")
+    dependsOn(":opt-driver:jvmTest")
+
     jvmArgs("-ea")
     mkdir("test-results")
     environment("TEST_RESULT_DIR", "test-results")
