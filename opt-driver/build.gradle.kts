@@ -2,18 +2,11 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    kotlin("multiplatform") version "2.1.0"
-    id("org.jetbrains.dokka") version "1.9.20"
-    application
+    id("kotlin-application")
 }
 
 group = "org.ssa"
 version = "1.0"
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
 
 application {
     mainClass.set("OptStartupKt")
@@ -23,35 +16,11 @@ kotlin {
     jvm {
         withJava()
     }
-    linuxX64 {
-        binaries {
-            executable {
-                baseName = "OptStartup"
-            }
-        }
-    }
 
     sourceSets {
-        commonTest {
-            dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-test-common")
-                implementation("org.jetbrains.kotlin:kotlin-test-annotations-common")
-            }
-        }
-        jvmMain {
-            dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-compiler")
-            }
-        }
         commonMain {
             dependencies {
                 implementation(project(":opt"))
-            }
-        }
-        jvmTest {
-            dependencies {
-                implementation("junit:junit:4.13")
-                implementation("org.jetbrains.kotlin:kotlin-test-junit")
             }
         }
     }

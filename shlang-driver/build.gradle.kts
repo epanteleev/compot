@@ -1,20 +1,13 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.kotlin.gradle.tasks.KotlinTest
 
 plugins {
-    kotlin("multiplatform") version "2.1.0"
-    id("org.jetbrains.dokka") version "1.9.20"
+    id("kotlin-common")
     application
 }
 
 group = "org.shlang"
 version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
 
 application {
     mainClass.set("ShlangStartupKt")
@@ -23,13 +16,6 @@ application {
 kotlin {
     jvm {
         withJava()
-    }
-    linuxX64 {
-        binaries {
-            executable {
-                baseName = "ShlangStartup"
-            }
-        }
     }
 
     sourceSets {
@@ -83,7 +69,9 @@ tasks.withType(Test::class.java).all {
 }
 
 tasks.create<Exec>("runtests") {
+    dependsOn("test")
     dependsOn("installDist")
+
     project.logger.debug("Running tests")
     workingDir = workingDir.resolve("scripts")
     val shlangDriver = projectDir.resolve("build")
