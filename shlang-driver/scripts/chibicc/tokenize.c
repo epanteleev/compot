@@ -137,3 +137,11 @@ Token *read_utf32_string_literal(char *start, char *quote, Type *ty) {
   tok->str = (char *)buf;
   return tok;
 }
+
+int isSpace(int c) {
+  return isspace(c);
+}
+
+int isDigit( int ch ) {
+    return isdigit(ch);
+}

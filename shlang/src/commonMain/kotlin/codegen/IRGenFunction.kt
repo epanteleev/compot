@@ -993,7 +993,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (ctype) {
             is CPointer -> {
                 val converted = ir.convertToType(loaded, Type.I64)
-                val inc = op(converted, Constant.of(Type.I64, ctype.dereference(typeHolder).size()))
+                val inc = op(converted, I64Value(ctype.dereference(typeHolder).size().toLong()))
                 ir.store(addr, ir.convertToType(inc, type))
             }
             is CPrimitive -> {
@@ -1010,25 +1010,24 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             "Unknown operation, op=${unaryOp.opType}"
         }
 
-        val ctype = unaryOp.resolveType(typeHolder)
-
-        val addr = visitExpression(unaryOp.primary, false)
-        val type = mb.toIRType<PrimitiveType>(typeHolder, ctype)
-        val loaded = ir.load(type, addr)
-
-        when (ctype) {
+        val address = visitExpression(unaryOp.primary, false)
+        when (val cType = unaryOp.resolveType(typeHolder)) {
             is CPointer -> {
+                val loaded    = ir.load(Type.Ptr, address)
                 val converted = ir.convertToType(loaded, Type.I64)
-                val inc = op(converted, Constant.of(Type.I64, ctype.dereference(typeHolder).size()))
-                ir.store(addr, ir.convertToType(inc, type))
-                return inc
+                val inc       = op(converted, I64Value(cType.dereference(typeHolder).size().toLong()))
+                val incPtr    = ir.convertToType(inc, Type.Ptr)
+                ir.store(address, incPtr)
+                return incPtr
             }
             is CPrimitive -> {
-                val inc = op(loaded, Constant.of(loaded.type(), 1))
-                ir.store(addr, ir.convertToType(inc, type))
+                val type   = mb.toIRType<PrimitiveType>(typeHolder, cType)
+                val loaded = ir.load(type, address)
+                val inc    = op(loaded, PrimitiveConstant.of(loaded.type(), 1))
+                ir.store(address, ir.convertToType(inc, type))
                 return inc
             }
-            else -> throw IRCodeGenError("Unknown type: $ctype", unaryOp.begin())
+            else -> throw IRCodeGenError("Unknown type: $cType", unaryOp.begin())
         }
     }
 

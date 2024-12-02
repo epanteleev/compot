@@ -570,6 +570,9 @@ File *new_file(char *name, int file_no, char *contents) {
   return file;
 }
 
+int isSpace(int c);
+int isDigit( int ch );
+
 // Tokenize a given string and returns new tokens.
 Token *tokenize(File *file) {
   current_file = file;
@@ -610,14 +613,14 @@ Token *tokenize(File *file) {
     }
 
     // Skip whitespace characters.
-    if (isspace(*p)) {
+    if (isSpace(*p)) {
       p++;
       has_space = true;
       continue;
     }
 
     // Numeric literal
-    if (isdigit(*p) || (*p == '.' && isdigit(p[1]))) {
+    if (isDigit(*p) || (*p == '.' && isDigit(p[1]))) {
       char *q = p++;
 
       p = num_lit(p);

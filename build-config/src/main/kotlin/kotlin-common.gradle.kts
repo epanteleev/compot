@@ -12,13 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
                 implementation("com.squareup.okio:okio:3.9.0")
-            }
-        }
-        jvmMain {
-            dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-compiler")
             }
         }
         commonTest {
@@ -39,6 +33,7 @@ kotlin {
         compilations.all {
             compileTaskProvider.configure {
                 compilerOptions {
+                    progressiveMode = true
                     allWarningsAsErrors.set(true)
                 }
             }
