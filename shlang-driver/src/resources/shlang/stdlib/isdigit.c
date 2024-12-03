@@ -6,9 +6,11 @@
 
 int main() {
     char* p = "1u'Hello, world!\"";
+    char* copy = p;
     if (isdigit(*p)) {
         printf("isdigit\n");
         return 0;
     }
+
     return 1;
 }

@@ -153,6 +153,8 @@ data class U64Value(val u64: Long): UnsignedIntegerConstant {
 }
 
 data class I64Value(val i64: Long): SignedIntegerConstant {
+    constructor(i64: Int): this(i64.toLong())
+
     override fun type(): SignedIntType {
         return Type.I64
     }

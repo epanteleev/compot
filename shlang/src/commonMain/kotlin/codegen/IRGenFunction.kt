@@ -215,7 +215,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun emitBuiltInVarArgLargeStruct(vaList: Value, dst: Alloc, argType: StructType) {
         val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.OVERFLOW_ARG_AREA_IDX)))
         val argInMem = ir.load(Type.Ptr, overflowArgAreaPtr)
-        val inc = ir.gep(argInMem, Type.I8, I32Value(argType.sizeOf()))
+        val inc = ir.gep(argInMem, Type.I8, I64Value(argType.sizeOf().toLong()))
         ir.store(overflowArgAreaPtr, inc)
 
         ir.memcpy(dst, argInMem, U64Value(argType.sizeOf().toLong()))
@@ -224,20 +224,22 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun emitBuiltInVaArg(vaList: Value, argType: PrimitiveType, offsetIdx: Int, regSaveAreaIdx: Int): Value {
         val gpOffsetPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, offsetIdx)))
         val gpOffset = ir.load(Type.I32, gpOffsetPtr)
+        val gpOffsetCvt = ir.convertToType(gpOffset, Type.I64)
 
         val varArgInReg = ir.createLabel()
         val varArgInStack = ir.createLabel()
         val cont = ir.createLabel()
 
-        val isReg = ir.icmp(gpOffset, IntPredicate.Le, Constant.valueOf(Type.I32, regSaveAreaIdx))
+        val isReg = ir.icmp(gpOffsetCvt, IntPredicate.Le, Constant.valueOf(Type.I64, regSaveAreaIdx))
         ir.branchCond(isReg, varArgInReg, varArgInStack)
 
         val argInReg = ir.switchLabel(varArgInReg).let {
             val regSaveAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.REG_SAVE_AREA_IDX)))
             val regSaveArea = ir.load(Type.Ptr, regSaveAreaPtr)
-            val argInReg = ir.gep(regSaveArea, Type.I8, gpOffset)
-            val newGPOffset = ir.add(gpOffset, I32Value(QWORD_SIZE))
-            ir.store(gpOffsetPtr, newGPOffset)
+            val argInReg = ir.gep(regSaveArea, Type.I8, gpOffsetCvt)
+            val newGPOffset = ir.add(gpOffsetCvt, I64Value(QWORD_SIZE))
+            val asI32 = ir.trunc(newGPOffset, Type.I32)
+            ir.store(gpOffsetPtr, asI32)
             ir.branch(cont)
 
             argInReg
@@ -246,7 +248,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val argInMem = ir.switchLabel(varArgInStack).let {
             val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.OVERFLOW_ARG_AREA_IDX)))
             val argInMem = ir.load(Type.Ptr, overflowArgAreaPtr)
-            val inc = ir.gep(argInMem, Type.I64, I32Value(1))
+            val inc = ir.gep(argInMem, Type.I64, I64Value(1))
             ir.store(overflowArgAreaPtr, inc)
             ir.branch(cont)
 

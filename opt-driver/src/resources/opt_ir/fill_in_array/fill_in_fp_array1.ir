@@ -4,17 +4,17 @@ define i32 @main() {
 entry:
   %retVal = alloc i32
   %array = alloc <f32 x 5>
-  %zero = gep f32, ptr %array, i32 0
+  %zero = gep f32, ptr %array, i64 0
   store ptr %zero, f32 0
-  %first = gep f32, ptr %array, i32 1
+  %first = gep f32, ptr %array, i64 1
   store ptr %first, f32 1
-  %second = gep f32, ptr %array, i32 2
+  %second = gep f32, ptr %array, i64 2
   store ptr %second, f32 2
-  %third = gep f32, ptr %array, i32 3
+  %third = gep f32, ptr %array, i64 3
   store ptr %third, f32 3
-  %forth = gep f32, ptr %array, i32 4
+  %forth = gep f32, ptr %array, i64 4
   store ptr %forth, f32 4
-  %begin = gep f32, ptr %array, i32 0
+  %begin = gep f32, ptr %array, i64 0
   store ptr %retVal, i32 154
   %ret = load i32 %retVal
   call void @printFloatArray(%begin: ptr, 5: i32) br label %exit

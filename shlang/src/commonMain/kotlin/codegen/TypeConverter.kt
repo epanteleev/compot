@@ -98,9 +98,7 @@ object TypeConverter {
         if (value.type() == Type.U1) {
             return convertToType(value, Type.I64)
         }
-        if (value.asType<NonTrivialType>().sizeOf() >= WORD_SIZE) {
-            return value
-        }
+
         return convertToType(value, Type.I64)
     }
 

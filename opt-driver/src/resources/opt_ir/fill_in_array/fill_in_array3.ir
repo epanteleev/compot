@@ -36,7 +36,8 @@ forCond:
 
 forBody:
   %1 = load i32 %i
-  %arrayidx = gep i32, ptr %array, i32 %1
+  %cvt = sext i32 %1 to i64
+  %arrayidx = gep i32, ptr %array, i64 %cvt
   store ptr %arrayidx, i32 %1
   br label %forInc
 
@@ -47,7 +48,7 @@ forInc:
   br label %forCond
 
 forEnd:
-  %arraydecay = gep i32, ptr %array, i32 0
+  %arraydecay = gep i32, ptr %array, i64 0
   call void @printIntArray(%arraydecay: ptr, %len: i32) br label %ret
 
 ret:

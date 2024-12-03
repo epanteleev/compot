@@ -5,7 +5,7 @@ extern void @printByteArray(ptr, i32)
 define i32 @main() {
 entry:
   %adr = alloc <i8 x 12>
-  %first = gep i8, ptr %adr, i32 0
+  %first = gep i8, ptr %adr, i64 0
   memcpy ptr %first, ptr @str, u32 4
   call void @printByteArray(%first: ptr, 4: i32) br label %exit
 

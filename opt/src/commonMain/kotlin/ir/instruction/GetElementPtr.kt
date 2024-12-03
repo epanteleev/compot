@@ -1,6 +1,7 @@
 package ir.instruction
 
 import common.assertion
+import ir.Definitions.QWORD_SIZE
 import ir.value.Value
 import ir.types.*
 import ir.instruction.utils.IRInstructionVisitor
@@ -54,6 +55,9 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
 
         private fun isAppropriateType(sourceType: Type, indexType: Type): Boolean {
             if (indexType !is IntegerType) {
+                return false
+            }
+            if (indexType.sizeOf() != QWORD_SIZE) {
                 return false
             }
             if (sourceType !is PointerType) {

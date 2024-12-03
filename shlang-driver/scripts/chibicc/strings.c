@@ -613,14 +613,14 @@ Token *tokenize(File *file) {
     }
 
     // Skip whitespace characters.
-    if (isSpace(*p)) {
+    if (isspace(*p)) {
       p++;
       has_space = true;
       continue;
     }
 
     // Numeric literal
-    if (isDigit(*p) || (*p == '.' && isDigit(p[1]))) {
+    if (isdigit(*p) || (*p == '.' && isdigit(p[1]))) {
       char *q = p++;
 
       p = num_lit(p);

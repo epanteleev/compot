@@ -34,7 +34,7 @@ entry:
   call void @swap(%i1: ptr, %j2: ptr) br label %cont
 
 cont:
-  %start = gep i32, ptr %p, i8 0
+  %start = gep i32, ptr %p, i64 0
   call void @printIntArrayWithSpaces(%start: ptr, 2: i32) br label %end
 
 end:
