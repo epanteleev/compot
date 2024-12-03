@@ -14,7 +14,7 @@ import ir.value.constant.Constant
 
 class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceAllocLoadStores() {
-        fun transform(bb: Block, inst: Instruction): Instruction? {
+        fun transform(bb: Block, inst: Instruction): Instruction {
             inst.match(store(generate(), gValue(anytype()))) { store: Store ->
                 val toValue = store.pointer().asValue<Generate>()
                 val value = bb.insertBefore(store) { it.lea(store.value()) }
@@ -45,7 +45,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
     }
 
     private fun replaceGepToLea() {
-        fun transform(bb: Block, inst: Instruction): Instruction? {
+        fun transform(bb: Block, inst: Instruction): Instruction {
             inst.match(gep(primitive(), generate(), nop())) { gp: GetElementPtr ->
                 val baseType = gp.basicType.asType<PrimitiveType>()
                 return bb.replace(inst) { it.leaStack(gp.source(), baseType, gp.index()) }
@@ -103,42 +103,42 @@ class Lowering private constructor(private val cfg: FunctionData) {
             else -> throw IllegalArgumentException("Expected GEP or GFP")
         }
 
-        fun closure(bb: Block, inst: Instruction): Instruction? {
-            inst.match(store(gfpOrGep(argumentByValue(), nop()), nop())) { inst: Store ->
-                val pointer = inst.pointer().asValue<ValueInstruction>()
-                val st = bb.replace(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
+        fun closure(bb: Block, inst: Instruction): Instruction {
+            inst.match(store(gfpOrGep(argumentByValue(), nop()), nop())) { store: Store ->
+                val pointer = store.pointer().asValue<ValueInstruction>()
+                val st = bb.replace(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), store.value()) }
                 killOnDemand(pointer.owner(), pointer)
                 return st
             }
-            inst.match(store(gfpOrGep(generate().not(), nop()), generate())) { inst: Store ->
-                val pointer = inst.pointer().asValue<ValueInstruction>()
-                val move = bb.replace(inst) { it.move(getSource(pointer), getIndex(pointer), inst.value()) }
+            inst.match(store(gfpOrGep(generate().not(), nop()), generate())) { store: Store ->
+                val pointer = store.pointer().asValue<ValueInstruction>()
+                val move = bb.replace(inst) { it.move(getSource(pointer), getIndex(pointer), store.value()) }
                 killOnDemand(bb, pointer)
                 return move
             }
-            inst.match(store(gfpOrGep(generate(), nop()), generate())) { inst: Store ->
-                val pointer = inst.pointer().asValue<ValueInstruction>()
-                val st = bb.replace(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), inst.value()) }
+            inst.match(store(gfpOrGep(generate(), nop()), generate())) { store: Store ->
+                val pointer = store.pointer().asValue<ValueInstruction>()
+                val st = bb.replace(inst) { it.storeOnStack(getSource(pointer), getIndex(pointer), store.value()) }
                 killOnDemand(bb, pointer)
                 return st
             }
-            inst.match(load(gfpOrGep(argumentByValue(), nop()))) { inst: Load ->
-                val pointer = inst.operand().asValue<ValueInstruction>()
+            inst.match(load(gfpOrGep(argumentByValue(), nop()))) { load: Load ->
+                val pointer = load.operand().asValue<ValueInstruction>()
                 val index = getIndex(pointer)
-                val copy = bb.replace(inst) { it.loadFromStack(getSource(pointer), inst.type(), index) }
+                val copy = bb.replace(inst) { it.loadFromStack(getSource(pointer), load.type(), index) }
                 killOnDemand(pointer.owner(), pointer)
                 return copy
             }
-            inst.match(load(gfpOrGep(generate().not(), nop()))) { inst: Load ->
-                val pointer = inst.operand().asValue<ValueInstruction>()
-                val copy = bb.replace(inst) { it.indexedLoad(getSource(pointer), inst.type(), getIndex(pointer)) }
+            inst.match(load(gfpOrGep(generate().not(), nop()))) { load: Load ->
+                val pointer = load.operand().asValue<ValueInstruction>()
+                val copy = bb.replace(inst) { it.indexedLoad(getSource(pointer), load.type(), getIndex(pointer)) }
                 killOnDemand(bb, pointer)
                 return copy
             }
-            inst.match(load(gfpOrGep(generate(), nop()))) { inst: Load ->
-                val pointer = inst.operand().asValue<ValueInstruction>()
+            inst.match(load(gfpOrGep(generate(), nop()))) { load: Load ->
+                val pointer = load.operand().asValue<ValueInstruction>()
                 val index = getIndex(pointer)
-                val copy = bb.replace(inst) { it.loadFromStack(getSource(pointer), inst.type(), index) }
+                val copy = bb.replace(inst) { it.loadFromStack(getSource(pointer), load.type(), index) }
                 killOnDemand(pointer.owner(), pointer)
                 return copy
             }
@@ -158,7 +158,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
     }
 
     private fun replaceByteOperands() {
-        fun closure(bb: Block, inst: Instruction): Instruction? {
+        fun closure(bb: Block, inst: Instruction): Instruction {
             inst.match(tupleDiv(value(i8()), value(i8()))) { tupleDiv: TupleDiv ->
                 // Before:
                 //  %resANDrem = div i8 %a, %b
@@ -175,16 +175,13 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val extFirst  = bb.insertBefore(inst) { it.sext(tupleDiv .first(), Type.I16) }
                 val extSecond = bb.insertBefore(inst) { it.sext(tupleDiv.second(), Type.I16) }
                 val newDiv    = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
-                var last: Instruction = newDiv
+
 
                 val divProj = tupleDiv.quotient()
                 if (divProj != null) {
-                    val proj     = bb.insertBefore(inst) { it.proj(newDiv, 0) }
-                    val truncate = bb.updateUsages(divProj) {
-                        bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
-                    }
+                    val proj = bb.insertBefore(inst) { it.proj(newDiv, 0) }
+                    bb.updateUsages(divProj) { bb.insertBefore(inst) { it.trunc(proj, Type.I8) } }
                     killOnDemand(bb, divProj)
-                    last = truncate
                 }
 
                 val remProj  = tupleDiv.remainder() ?: throw IllegalStateException("Remainder projection is missing")
@@ -193,10 +190,9 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
                 }
                 killOnDemand(bb, remProj)
-                last = truncate
 
                 killOnDemand(bb, tupleDiv)
-                return last
+                return truncate
             }
             inst.match(tupleDiv(value(u8()), value(u8()))) { tupleDiv: TupleDiv ->
                 // Before:
@@ -214,28 +210,22 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val extFirst  = bb.insertBefore(inst) { it.zext(tupleDiv.first(), Type.U16) }
                 val extSecond = bb.insertBefore(inst) { it.zext(tupleDiv.second(), Type.U16) }
                 val newDiv    = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
-                var last: Instruction = newDiv
 
                 val divProj = tupleDiv.proj(0)
                 if (divProj != null) {
-                    val proj     = bb.insertBefore(inst) { it.proj(newDiv, 0) }
-                    val truncate = bb.updateUsages(divProj) {
-                        bb.insertBefore(inst) { it.trunc(proj, Type.U8) }
-                    }
+                    val proj = bb.insertBefore(inst) { it.proj(newDiv, 0) }
+                    bb.updateUsages(divProj) { bb.insertBefore(inst) { it.trunc(proj, Type.U8) } }
                     killOnDemand(bb, divProj)
-                    last = truncate
                 }
 
-                val remProj = tupleDiv.remainder() ?: throw IllegalStateException("Remainder projection is missing")
+                val remProj  = tupleDiv.remainder() ?: throw IllegalStateException("Remainder projection is missing")
                 val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
                 val truncate = bb.updateUsages(remProj) {
                     bb.insertBefore(inst) { it.trunc(proj, Type.U8) }
                 }
                 killOnDemand(bb, remProj)
-                last = truncate
-
                 killOnDemand(bb, tupleDiv)
-                return last
+                return truncate
             }
             inst.match(tupleDiv(constant().not(), nop())) { tupleDiv: TupleDiv ->
                 // TODO temporal
@@ -256,10 +246,9 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 //  %newSelect = select i1 %cond, i16 %extOnTrue, i16 %extOnFalse
                 //  %res = trunc %newSelect to i8
 
-                val insertPos = if (select.condition() is CompareInstruction) {
-                    select.condition() as CompareInstruction
-                } else {
-                    inst
+                val insertPos = when(val selectCond = select.condition()) {
+                    is CompareInstruction -> selectCond
+                    else                  -> inst
                 }
 
                 val extOnTrue  = bb.insertBefore(insertPos) { it.sext(select.onTrue(), Type.I16) }
@@ -279,10 +268,9 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 //  %newSelect = select i1 %cond, u16 %extOnTrue, u16 %extOnFalse
                 //  %res = trunc %newSelect to u8
 
-                val insertPos = if (select.condition() is CompareInstruction) {
-                    select.condition() as CompareInstruction
-                } else {
-                    inst
+                val insertPos = when(val selectCond = select.condition()) {
+                    is CompareInstruction -> selectCond
+                    else                  -> inst
                 }
 
                 val extOnTrue  = bb.insertBefore(insertPos) { it.zext(select.onTrue(), Type.U16) }

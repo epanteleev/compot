@@ -9,7 +9,7 @@ import ir.pass.analysis.EscapeAnalysisPassFabric
 import ir.pass.analysis.traverse.PreOrderFabric
 
 
-class RemoveDeadMemoryInstructions private constructor(private val cfg: FunctionData) {
+internal class RemoveDeadMemoryInstructions private constructor(private val cfg: FunctionData) {
     private val escapeState = cfg.analysis(EscapeAnalysisPassFabric)
 
     private fun removeMemoryInstructions(bb: Block) {
