@@ -1,28 +1,18 @@
 package ir.instruction
 
-import common.assertion
-import ir.value.Value
 import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
+import ir.value.Value
 import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class IntCompare private constructor(id: Identity, owner: Block, a: Value, private val predicate: IntPredicate, b: Value) :
-    CompareInstruction(id, owner, a, b) {
+class IntCompare private constructor(id: Identity, owner: Block, operandsType: PrimitiveType, a: Value, private val predicate: IntPredicate, b: Value) :
+    CompareInstruction(id, owner, operandsType, a, b) {
     override fun dump(): String {
-        return "%${name()} = $NAME $predicate ${first().type()} ${first()}, ${second()}"
+        return "%${name()} = $NAME $predicate $operandsType ${first()}, ${second()}"
     }
 
     override fun predicate(): IntPredicate = predicate
-
-    override fun operandsType(): PrimitiveType {
-        val opType = first().type()
-        assertion(opType is IntegerType || opType is PointerType) {
-            "should be, but opType=$opType"
-        }
-
-        return opType as PrimitiveType
-    }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -30,6 +20,8 @@ class IntCompare private constructor(id: Identity, owner: Block, a: Value, priva
 
     companion object {
         const val NAME = "icmp"
+        const val FIRST = 0
+        const val SECOND = 1
 
         fun make(id: Identity, owner: Block, a: Value, predicate: IntPredicate, b: Value): IntCompare {
             val aType = a.type()
@@ -38,7 +30,7 @@ class IntCompare private constructor(id: Identity, owner: Block, a: Value, priva
                 "should be the same integer or pointer types in '$id', but a=$a:$aType, b=$b:$bType"
             }
 
-            return registerUser(IntCompare(id, owner, a, predicate, b), a, b)
+            return registerUser(IntCompare(id, owner, aType.asType(), a, predicate, b), a, b)
         }
 
         private fun isAppropriateType(aType: Type, bType: Type): Boolean {

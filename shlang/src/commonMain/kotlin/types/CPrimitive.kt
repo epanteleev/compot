@@ -9,7 +9,7 @@ import typedesc.TypeQualifier
 
 sealed class CPrimitive: CType() {
     final override fun alignmentOf(): Int = size()
-    fun interfere(typeHolder: TypeHolder, type2: CType): CType {
+    fun interfere(typeHolder: TypeHolder, type2: CType): CType? {
         when (this) {
             type2 -> return this
             CHAR -> {
@@ -23,7 +23,7 @@ sealed class CPrimitive: CType() {
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     is CEnumType -> INT
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> null
                 }
             }
 
@@ -38,7 +38,7 @@ sealed class CPrimitive: CType() {
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     is CEnumType -> INT
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> null
                 }
             }
             SHORT -> {
@@ -51,7 +51,7 @@ sealed class CPrimitive: CType() {
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     is CEnumType -> INT
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> null
                 }
             }
 
@@ -69,7 +69,7 @@ sealed class CPrimitive: CType() {
                     FLOAT -> FLOAT
                     is CEnumType -> INT
                     is CPointer -> type2
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> null
                 }
             }
 
@@ -86,7 +86,7 @@ sealed class CPrimitive: CType() {
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     is CEnumType -> LONG
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> null
                 }
             }
 
@@ -100,7 +100,7 @@ sealed class CPrimitive: CType() {
                     DOUBLE -> DOUBLE
                     LONG -> DOUBLE
                     is CEnumType -> FLOAT
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> null
                 }
             }
 
@@ -114,7 +114,7 @@ sealed class CPrimitive: CType() {
                     FLOAT -> DOUBLE
                     LONG -> DOUBLE
                     is CEnumType -> DOUBLE
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> null
                 }
             }
 
@@ -122,6 +122,7 @@ sealed class CPrimitive: CType() {
                 return when (type2) {
                     BOOL -> USHORT
                     INT -> INT
+                    SHORT -> USHORT
                     LONG -> LONG
                     ULONG -> ULONG
                     CHAR -> USHORT
@@ -129,7 +130,7 @@ sealed class CPrimitive: CType() {
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     is CEnumType -> INT
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> null
                 }
             }
 
@@ -146,7 +147,7 @@ sealed class CPrimitive: CType() {
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     is CEnumType -> UINT
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> null
                 }
             }
 
@@ -163,7 +164,7 @@ sealed class CPrimitive: CType() {
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     is CEnumType -> ULONG
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> null
                 }
             }
 
@@ -182,10 +183,10 @@ sealed class CPrimitive: CType() {
                         if (deref1 == deref2) return this
                         if (deref1 == VOID) return this
                         if (deref2 == VOID) return type2
-                        throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                        return null
                     }
                     ULONG -> return this
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> return null
                 }
             }
             is CEnumType -> {
@@ -200,11 +201,25 @@ sealed class CPrimitive: CType() {
                     ULONG -> ULONG
                     FLOAT -> FLOAT
                     DOUBLE -> DOUBLE
-                    else -> throw TypeInferenceException("Can't interfere types '$this' and '$type2'")
+                    else -> return null
                 }
             }
-
-            else -> throw RuntimeException("Unknown type $this, $type2")
+            is BOOL -> {
+                return when (type2) {
+                    CHAR -> CHAR
+                    UCHAR -> UCHAR
+                    SHORT -> SHORT
+                    USHORT -> USHORT
+                    INT -> INT
+                    UINT -> UINT
+                    LONG -> LONG
+                    ULONG -> ULONG
+                    FLOAT -> FLOAT
+                    DOUBLE -> DOUBLE
+                    else -> return null
+                }
+            }
+            else -> return null
         }
     }
 }

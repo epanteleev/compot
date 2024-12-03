@@ -190,7 +190,9 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
             else -> throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(right)}'")
         }
 
-        return@memoize leftType.interfere(typeHolder, rightType)
+        val resultType = leftType.interfere(typeHolder, rightType) ?:
+            throw TypeResolutionException("Binary operation on incompatible types: $leftType and $rightType in ${left.begin()}'")
+        return@memoize resultType
     }
 }
 
@@ -229,7 +231,9 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
             else -> throw TypeResolutionException("Conditional false branch with non-primitive type: $typeFalse")
         }
 
-        return@memoize cvtTypeTrue.interfere(typeHolder, cvtTypeFalse)
+        val resultType = cvtTypeTrue.interfere(typeHolder, cvtTypeFalse) ?:
+            throw TypeResolutionException("Conditional with incompatible types: $cvtTypeTrue and $cvtTypeFalse: '${LineAgnosticAstPrinter.print(this)}'")
+        return@memoize resultType
     }
 }
 
@@ -489,7 +493,7 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
                     is CPointer -> e
                     else -> throw TypeResolutionException("Array access with non-pointer type: $e")
                 }
-                primaryType.interfere(typeHolder, exprType)
+                primaryType.interfere(typeHolder, exprType) ?: throw TypeResolutionException("Array access with incompatible types: $primaryType and $exprType")
             }
             else -> throw TypeResolutionException("Array access on non-array type: $primaryType")
         }

@@ -1580,17 +1580,16 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (!check("{")) {
             return@rule null
         }
-        eat()
+        val start = eat()
         val initList = initializer_list()
+        if (!check("}")) {
+            throw ParserException(InvalidToken("Expected '}'", peak()))
+        }
+        eat()
         if (initList != null) {
-            if (check("}")) {
-                eat()
-                return@rule CompoundLiteral(type, initList)
-            } else {
-                throw ParserException(InvalidToken("Expected '}'", peak()))
-            }
+            return@rule CompoundLiteral(type, initList)
         } else {
-            throw ParserException(InvalidToken("Expected initializer list", peak()))
+            return@rule CompoundLiteral(type, InitializerList(start.position(), listOf()))
         }
     }
 

@@ -66,22 +66,13 @@ enum class FloatPredicate: AnyPredicateType {
     };
 }
 
-class FloatCompare private constructor(id: Identity, owner: Block, a: Value, private val predicate: FloatPredicate, b: Value) :
-    CompareInstruction(id, owner, a, b) {
+class FloatCompare private constructor(id: Identity, owner: Block, operandsType: PrimitiveType, a: Value, private val predicate: FloatPredicate, b: Value) :
+    CompareInstruction(id, owner, operandsType, a, b) {
     override fun dump(): String {
-        return "%${name()} = $NAME $predicate ${first().type()} ${first()}, ${second()}"
+        return "%${name()} = $NAME $predicate $operandsType ${first()}, ${second()}"
     }
 
     override fun predicate(): FloatPredicate = predicate
-
-    override fun operandsType(): FloatingPointType {
-        val opType = first().type()
-        assertion(opType is FloatingPointType) {
-            "should be, but opType=$opType"
-        }
-
-        return first().type() as FloatingPointType
-    }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -97,7 +88,7 @@ class FloatCompare private constructor(id: Identity, owner: Block, a: Value, pri
                 "should be the same types, but a=$a:$aType, b=$b:$bType"
             }
 
-            return registerUser(FloatCompare(id, owner, a, predicate, b), a, b)
+            return registerUser(FloatCompare(id, owner, aType.asType(), a, predicate, b), a, b)
         }
 
         private fun isAppropriateType(aType: Type, bType: Type): Boolean {

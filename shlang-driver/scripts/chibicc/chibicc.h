@@ -287,7 +287,7 @@ struct Node {
 
   // Numeric literal
   int64_t val;
-  long double fval;
+  double fval;
 };
 
 Node *new_cast(Node *expr, Type *ty);

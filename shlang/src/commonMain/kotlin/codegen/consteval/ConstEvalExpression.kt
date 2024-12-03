@@ -162,12 +162,12 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
         return null
     }
 
-    override fun visit(memberAccess: MemberAccess): Int {
-        TODO("Not yet implemented")
+    override fun visit(memberAccess: MemberAccess): Int? {
+        return null
     }
 
-    override fun visit(emptyExpression: EmptyExpression): Int {
-        TODO("Not yet implemented")
+    override fun visit(emptyExpression: EmptyExpression): Int? {
+        return null
     }
 }
 
@@ -310,8 +310,8 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
         return ctx.getVariable(varNode.nameIdent())
     }
 
-    override fun visit(arrowMemberAccess: ArrowMemberAccess): Long {
-        TODO("Not yet implemented")
+    override fun visit(arrowMemberAccess: ArrowMemberAccess): Long? {
+        return null
     }
 
     override fun visit(memberAccess: MemberAccess): Long {

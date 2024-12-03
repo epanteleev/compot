@@ -7,6 +7,7 @@ import ir.attributes.ByValue
 import ir.global.ExternValue
 import ir.global.GlobalValue
 import ir.value.ArgumentValue
+import ir.value.asType
 import ir.value.constant.Constant
 
 
@@ -74,6 +75,10 @@ inline fun memcpy(crossinline dst: ValueMatcher, crossinline src: ValueMatcher, 
     it is Memcpy && dst(it.destination()) && src(it.source()) && length(it.length())
 }
 
+inline fun icmp(crossinline lhs: ValueMatcher, crossinline typeMatcher: TypeMatcher, crossinline rhs: ValueMatcher): InstructionMatcher = {
+    it is IntCompare && lhs(it.first()) && typeMatcher(it.operandsType()) && rhs(it.second())
+}
+
 inline fun gep(crossinline src: ValueMatcher, crossinline idx: ValueMatcher): ValueMatcher = {
     it is GetElementPtr && src(it.source()) && idx(it.index())
 }
@@ -139,6 +144,8 @@ fun anytype(): TypeMatcher = { true }
 fun primitive(): TypeMatcher = { it is PrimitiveType }
 
 fun int(): TypeMatcher = { it is IntegerType }
+
+fun ptr(): TypeMatcher = { it is PointerType }
 
 fun aggregate(): TypeMatcher = { it is AggregateType }
 

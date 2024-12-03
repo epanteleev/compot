@@ -289,12 +289,25 @@ class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceEscaped() {
         fun closure(bb: Block, inst: Instruction): Instruction? {
             inst.match(alloc()) { alloc: Alloc ->
+                // Before:
+                //  %res = alloc %type
+                //
+                // After:
+                //  %res = gen %type
+
                 return bb.replace(inst) { it.gen(alloc.allocatedType) }
             }
             inst.match(store(nop(), generate())) { store: Store ->
+                // Before:
+                //  store %ptr, %val
+                //
+                // After:
+                //  %res = lea %ptr
+                //  store %res, %val
+
                 val lea = bb.insertBefore(inst) { it.lea(store.value().asValue()) }
                 bb.updateDF(inst, Store.VALUE, lea)
-                return inst
+                return lea
             }
             inst.match(store(gValue(primitive()), nop())) { store: Store ->
                 // Before:
@@ -333,23 +346,78 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 return lea
             }
             inst.match(copy(generate())) { copy: Copy ->
+                // Before:
+                //  %res = copy %gen
+                //
+                // After:
+                //  %lea = lea %gen
+                //  %res = copy %lea
+
                 return bb.replace(inst) { it.lea(copy.origin().asValue()) }
             }
             inst.match(ptr2int(generate())) { ptr2int: Pointer2Int ->
+                // Before:
+                //  %res = ptr2int %gen
+                //
+                // After:
+                //  %lea = lea %gen
+                //  %res = ptr2int %lea
+
                 val lea = bb.insertBefore(inst) { it.lea(ptr2int.value().asValue()) }
                 bb.updateDF(inst, Pointer2Int.SOURCE, lea)
-                return inst
+                return lea
             }
             inst.match(memcpy(nop(), generate(), nop())) { memcpy: Memcpy ->
+                // Before:
+                //  memcpy %src, %dst
+                //
+                // After:
+                //  %srcLea = lea %src
+                //  memcpy %srcLea, %dst
+
                 val src = bb.insertBefore(inst) { it.lea(memcpy.source().asValue<Generate>()) }
                 bb.updateDF(inst, Memcpy.SOURCE, src)
                 return bb.idom(inst)
             }
             inst.match(memcpy(generate(), nop(), nop())) { memcpy: Memcpy ->
+                // Before:
+                //  memcpy %src, %dst
+                //
+                // After:
+                //  %dstLea = lea %dst
+                //  memcpy %src, %dstLea
+
                 val dst = bb.insertBefore(inst) { it.lea(memcpy.destination().asValue<Generate>()) }
                 bb.updateDF(inst, Memcpy.DESTINATION, dst)
                 return bb.idom(inst)
             }
+
+            inst.match(icmp(nop(), ptr(), generate())) { icmp: IntCompare ->
+                // Before:
+                //  %res = icmp %pred, %gen
+                //
+                // After:
+                //  %lea = lea %gen
+                //  %res = icmp %pred, %lea
+
+                val lea = bb.insertBefore(inst) { it.lea(icmp.second()) }
+                bb.updateDF(inst, IntCompare.SECOND, lea)
+                return lea
+            }
+
+            inst.match(icmp(generate(), ptr(), nop())) { icmp: IntCompare ->
+                // Before:
+                //  %res = icmp %pred, %gen
+                //
+                // After:
+                //  %lea = lea %gen
+                //  %res = icmp %pred, %lea
+
+                val lea = bb.insertBefore(inst) { it.lea(icmp.first()) }
+                bb.updateDF(inst, IntCompare.FIRST, lea)
+                return lea
+            }
+
             return inst
         }
 
