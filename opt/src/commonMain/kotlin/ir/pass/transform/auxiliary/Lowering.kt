@@ -13,37 +13,6 @@ import ir.value.constant.Constant
 
 
 class Lowering private constructor(private val cfg: FunctionData) {
-    private fun replaceAllocLoadStores() {
-        fun transform(bb: Block, inst: Instruction): Instruction {
-            inst.match(store(generate(), gValue(anytype()))) { store: Store ->
-                val toValue = store.pointer().asValue<Generate>()
-                val value = bb.insertBefore(store) { it.lea(store.value()) }
-                return bb.replace(store) { it.move(toValue, value) }
-            }
-
-            inst.match(store(gValue(primitive()), value(primitive()))) { store: Store ->
-                val toValue = store.pointer().asValue<GlobalValue>()
-                return bb.replace(store) { it.move(toValue, store.value()) }
-            }
-
-            inst.match(store(generate(primitive()), nop())) { store: Store ->
-                val toValue = store.pointer().asValue<Generate>()
-                return bb.replace(store) { it.move(toValue, store.value()) }
-            }
-
-            inst.match(load(generate(primitive()))) { load: Load ->
-                val fromValue = load.operand().asValue<Generate>()
-                return bb.replace(load) { it.copy(fromValue) }
-            }
-
-            return inst
-        }
-
-        for (bb in cfg) {
-            bb.transform { inst -> transform(bb, inst) }
-        }
-    }
-
     private fun replaceGepToLea() {
         fun transform(bb: Block, inst: Instruction): Instruction {
             inst.match(gep(primitive(), generate(), nop())) { gp: GetElementPtr ->
@@ -86,23 +55,23 @@ class Lowering private constructor(private val cfg: FunctionData) {
         }
     }
 
+    private fun getSource(inst: Instruction): Value = when (inst) {
+        is GetElementPtr -> inst.source()
+        is GetFieldPtr   -> inst.source()
+        else             -> throw IllegalArgumentException("Expected GEP or GFP")
+    }
+
+    private fun getIndex(inst: Instruction): Value = when (inst) {
+        is GetElementPtr -> inst.index()
+        is GetFieldPtr -> {
+            val index = inst.index(0).toInt()
+            val field = inst.basicType.field(index)
+            U64Value(inst.basicType.offset(index).toLong() / field.sizeOf())
+        }
+        else -> throw IllegalArgumentException("Expected GEP or GFP")
+    }
+
     private fun replaceGEPAndStore() {
-        fun getSource(inst: Instruction): Value = when (inst) {
-            is GetElementPtr -> inst.source()
-            is GetFieldPtr   -> inst.source()
-            else             -> throw IllegalArgumentException("Expected GEP or GFP")
-        }
-
-        fun getIndex(inst: Instruction): Value = when (inst) {
-            is GetElementPtr -> inst.index()
-            is GetFieldPtr -> {
-                val index = inst.index(0).toInt()
-                val field = inst.basicType.field(index)
-                U64Value(inst.basicType.offset(index).toLong() / field.sizeOf())
-            }
-            else -> throw IllegalArgumentException("Expected GEP or GFP")
-        }
-
         fun closure(bb: Block, inst: Instruction): Instruction {
             inst.match(store(gfpOrGep(argumentByValue(), nop()), nop())) { store: Store ->
                 val pointer = store.pointer().asValue<ValueInstruction>()
@@ -172,7 +141,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 //  %res = trunc %projDiv to i8
                 //  %rem = trunc %projRem to i8
 
-                val extFirst  = bb.insertBefore(inst) { it.sext(tupleDiv .first(), Type.I16) }
+                val extFirst  = bb.insertBefore(inst) { it.sext(tupleDiv.first(), Type.I16) }
                 val extSecond = bb.insertBefore(inst) { it.sext(tupleDiv.second(), Type.I16) }
                 val newDiv    = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
 
@@ -418,6 +387,51 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 return lea
             }
 
+            inst.match(store(generate(), gValue(anytype()))) { store: Store ->
+                // Before:
+                //  store %gen, @global
+                //
+                // After:
+                //  %lea = lea @global
+                //  move %gen, %lea
+
+                val toValue = store.pointer().asValue<Generate>()
+                val value = bb.insertBefore(store) { it.lea(store.value()) }
+                return bb.replace(store) { it.move(toValue, value) }
+            }
+
+            inst.match(store(gValue(primitive()), value(primitive()))) { store: Store ->
+                // Before:
+                //  store @global, %val
+                //
+                // After:
+                //  move @global, %val
+
+                val toValue = store.pointer().asValue<GlobalValue>()
+                return bb.replace(store) { it.move(toValue, store.value()) }
+            }
+
+            inst.match(store(generate(primitive()), nop())) { store: Store ->
+                // Before:
+                //  store %gen, %ptr
+                //
+                // After:
+                //  move %gen, %ptr
+
+                val toValue = store.pointer().asValue<Generate>()
+                return bb.replace(store) { it.move(toValue, store.value()) }
+            }
+
+            inst.match(load(generate(primitive()))) { load: Load ->
+                // Before:
+                //  %res = load %gen
+                //
+                // After:
+                //  %lea = copy %gen
+
+                return bb.replace(load) { it.copy(load.operand()) }
+            }
+
             return inst
         }
 
@@ -429,7 +443,6 @@ class Lowering private constructor(private val cfg: FunctionData) {
     private fun pass() {
         replaceByteOperands()
         replaceEscaped()
-        replaceAllocLoadStores()
         replaceGEPAndStore()
         replaceGepToLea()
     }
