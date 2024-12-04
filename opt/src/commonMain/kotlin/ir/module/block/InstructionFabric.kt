@@ -41,11 +41,11 @@ interface InstructionFabric {
     fun ret(returnType: Type, values: Array<Value>): Return
     fun retVoid(): ReturnVoid
     fun gep(source: Value, elementType: NonTrivialType, index: Value): GetElementPtr
-    fun gfp(source: Value, ty: AggregateType, indexes: Array<IntegerConstant>): GetFieldPtr
+    fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr
     fun flag2int(value: Value, ty: IntegerType): Flag2Int
     fun int2fp(value: Value, ty: FloatingPointType): Int2Float
     fun uint2fp(value: Value, ty: FloatingPointType): Unsigned2Float
-    fun bitcast(value: Value, ty: PrimitiveType): Bitcast
+    fun bitcast(value: Value, ty: IntegerType): Bitcast
     fun zext(value: Value, toType: UnsignedIntType): ZeroExtend
     fun sext(value: Value, toType: SignedIntType): SignExtend
     fun trunc(value: Value, toType: IntegerType): Truncate

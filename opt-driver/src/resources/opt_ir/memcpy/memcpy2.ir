@@ -11,15 +11,15 @@ extern void @printInt(i32)
 define i32 @main() {
 entry:
   %adr = alloc $Point
-  %first = gfp $Point, ptr %adr, i32 0
+  %first = gfp $Point, ptr %adr, i64 0
   memcpy ptr %first, ptr @str, u32 8
 
-  %x1 = gfp $Point, ptr %adr, i32 0
+  %x1 = gfp $Point, ptr %adr, i64 0
   %x1v = load i32 %x1
   call void @printInt(%x1v: i32) br label %next
 
 next:
-  %y1 = gfp $Point, ptr %adr, i32 1
+  %y1 = gfp $Point, ptr %adr, i64 1
   %y1v = load i8 %y1
   call void @printByte(%y1v: i8) br label %exit
 exit:

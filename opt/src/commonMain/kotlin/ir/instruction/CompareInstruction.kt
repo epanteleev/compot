@@ -1,9 +1,10 @@
 package ir.instruction
 
-import common.assertion
-import ir.value.Value
-import ir.module.block.Block
 import ir.types.*
+import ir.value.Value
+import common.assertion
+import ir.module.block.Block
+
 
 sealed interface AnyPredicateType {
     fun invert(): AnyPredicateType
@@ -38,7 +39,7 @@ enum class IntPredicate: AnyPredicateType {
 
 
 sealed class CompareInstruction(id: Identity, owner: Block, val operandsType: PrimitiveType, first: Value, second: Value) :
-    ValueInstruction(id, owner, Type.U1, arrayOf(first, second)) {
+    ValueInstruction(id, owner, arrayOf(first, second)) {
     fun operandsType(): PrimitiveType = operandsType
     abstract fun predicate(): AnyPredicateType
 
@@ -58,5 +59,5 @@ sealed class CompareInstruction(id: Identity, owner: Block, val operandsType: Pr
         return operands[1]
     }
 
-    override fun type(): FlagType = tp as FlagType
+    override fun type(): FlagType = Type.U1
 }

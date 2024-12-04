@@ -1,24 +1,19 @@
 package ir.instruction
 
+import ir.types.*
+import ir.value.*
 import common.assertion
-import ir.value.Value
-import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
-import ir.types.ArithmeticType
-import ir.types.TupleType
-import ir.types.Type
-import ir.value.TupleValue
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class TupleDiv private constructor(id: Identity, owner: Block, tp: TupleType, a: Value, b: Value) :
-    ValueInstruction(id, owner, tp, arrayOf(a, b)), TupleValue {
+class TupleDiv private constructor(id: Identity, owner: Block, private val tp: TupleType, a: Value, b: Value) :
+    ValueInstruction(id, owner, arrayOf(a, b)), TupleValue {
     override fun dump(): String {
         return "%${name()} = $NAME $tp, ${first().type()} ${first()}, ${second().type()} ${second()}"
     }
 
-    override fun type(): TupleType {
-        return tp as TupleType
-    }
+    override fun type(): TupleType = tp
 
     fun first(): Value {
         assertion(operands.size == 2) {

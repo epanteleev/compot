@@ -46,8 +46,8 @@ entry:
   %arrayidx9 = gep i32, ptr %arr, i64 9
   store ptr %arrayidx9, i32 23
 
-  %v0 = gfp <i32 x 10>, ptr %arr, i8 8
-  %v1 = gfp <i32 x 10>, ptr %arr, i8 9
+  %v0 = gfp <i32 x 10>, ptr %arr, i64 8
+  %v1 = gfp <i32 x 10>, ptr %arr, i64 9
   call void @swap(%v0: ptr, %v1: ptr) br label %cont
 
 cont:

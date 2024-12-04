@@ -391,8 +391,8 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return@df withOutput { GetElementPtr.make(it, this, elementType, source, index) }
     }
 
-    override fun gfp(source: Value, ty: AggregateType, indexes: Array<IntegerConstant>): GetFieldPtr = mc.df {
-        return@df withOutput { GetFieldPtr.make(it, this, ty, source, indexes) }
+    override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr = mc.df {
+        return@df withOutput { GetFieldPtr.make(it, this, ty, source, index) }
     }
 
     override fun flag2int(value: Value, ty: IntegerType): Flag2Int = mc.df {
@@ -407,7 +407,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return withOutput { Unsigned2Float.make(it, this, ty, value) }
     }
 
-    override fun bitcast(value: Value, ty: PrimitiveType): Bitcast = mc.df {
+    override fun bitcast(value: Value, ty: IntegerType): Bitcast = mc.df {
         return@df withOutput { Bitcast.make(it, this, ty, value) }
     }
 

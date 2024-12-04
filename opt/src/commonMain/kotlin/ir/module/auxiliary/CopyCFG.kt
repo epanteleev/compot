@@ -320,7 +320,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
 
     override fun visit(gfp: GetFieldPtr): ValueInstruction {
         val source = mapUsage<Value>(gfp.source())
-        return bb.gfp(source, gfp.basicType, gfp.indexes().copyOf())
+        return bb.gfp(source, gfp.basicType, gfp.index())
     }
 
     override fun visit(icmp: IntCompare): ValueInstruction {

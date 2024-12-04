@@ -1,24 +1,22 @@
 package ir.instruction
 
-import common.assertion
-import ir.value.constant.UndefinedValue
-import ir.value.Value
-import ir.value.asType
 import ir.types.Type
-import ir.types.PrimitiveType
-import ir.instruction.utils.IRInstructionVisitor
+import ir.value.Value
+import ir.types.asType
+import common.assertion
 import ir.module.block.Block
+import ir.types.PrimitiveType
+import ir.value.constant.UndefinedValue
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class Copy private constructor(id: Identity, owner: Block, origin: Value):
-    ValueInstruction(id, owner, origin.asType(), arrayOf(origin)) {
+class Copy private constructor(id: Identity, owner: Block, private val type: PrimitiveType, origin: Value):
+    ValueInstruction(id, owner, arrayOf(origin)) {
 
-    override fun type(): PrimitiveType {
-        return tp as PrimitiveType
-    }
+    override fun type(): PrimitiveType = type
 
     override fun dump(): String {
-        return "%${name()} = $NAME $tp ${origin()}"
+        return "%${name()} = $NAME $type ${origin()}"
     }
 
     fun origin(): Value {
@@ -42,7 +40,7 @@ class Copy private constructor(id: Identity, owner: Block, origin: Value):
                 "should not be $originType, but origin=$origin:$originType"
             }
 
-            return registerUser(Copy(id, owner, origin), origin)
+            return registerUser(Copy(id, owner, originType.asType(), origin), origin)
         }
 
         fun typeCheck(copy: Copy): Boolean {

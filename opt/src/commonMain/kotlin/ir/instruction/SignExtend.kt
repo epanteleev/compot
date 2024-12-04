@@ -1,14 +1,14 @@
 package ir.instruction
 
-import common.assertion
-import ir.value.Value
 import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
+import ir.value.Value
+import common.assertion
 import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class SignExtend private constructor(id: Identity, owner: Block, toType: SignedIntType, value: Value):
-    ValueInstruction(id, owner, toType, arrayOf(value)) {
+class SignExtend private constructor(id: Identity, owner: Block, private val toType: SignedIntType, value: Value):
+    ValueInstruction(id, owner, arrayOf(value)) {
     override fun dump(): String {
         return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
     }
@@ -21,9 +21,7 @@ class SignExtend private constructor(id: Identity, owner: Block, toType: SignedI
         return operands[0]
     }
 
-    override fun type(): SignedIntType {
-        return tp as SignedIntType
-    }
+    override fun type(): SignedIntType = toType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

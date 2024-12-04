@@ -1,27 +1,23 @@
 package ir.instruction.lir
 
-import common.assertion
-import ir.value.Value
 import ir.types.*
+import ir.global.*
+import ir.value.Value
+import common.assertion
+import ir.module.block.Block
+import ir.instruction.Identity
 import ir.instruction.Generate
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
-import ir.global.FunctionSymbol
-import ir.global.GlobalConstant
-import ir.global.GlobalValue
-import ir.instruction.Identity
-import ir.module.block.Block
 
 
 class Lea private constructor(id: Identity, owner: Block, value: Value):
-    ValueInstruction(id, owner, Type.Ptr, arrayOf(value)) {
+    ValueInstruction(id, owner, arrayOf(value)) {
 
-    override fun type(): PointerType {
-        return Type.Ptr
-    }
+    override fun type(): PointerType = Type.Ptr
 
     override fun dump(): String {
-        return "%${name()} = $NAME $tp ${operand()}"
+        return "%${name()} = $NAME ${type()} ${operand()}"
     }
 
     fun operand(): Value {
@@ -45,7 +41,7 @@ class Lea private constructor(id: Identity, owner: Block, value: Value):
                 "inconsistent type '$id' generate=$value:$originType"
             }
             require(value is Generate || value is GlobalConstant || value is FunctionSymbol || value is GlobalValue) {
-                "should be '${NAME}' or global constant, but '$value'"
+                "should be '$NAME' or global constant, but '$value'"
             }
 
             return registerUser(Lea(id, owner, value), value)

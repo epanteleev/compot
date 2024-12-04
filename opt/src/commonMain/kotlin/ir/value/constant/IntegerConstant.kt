@@ -4,6 +4,7 @@ import ir.types.IntegerType
 import ir.types.SignedIntType
 import ir.types.Type
 import ir.types.UnsignedIntType
+import ir.value.constant.I64Value
 
 
 sealed interface IntegerConstant: PrimitiveConstant {
@@ -137,6 +138,8 @@ data class I32Value(val i32: Int): SignedIntegerConstant {
 }
 
 data class U64Value(val u64: Long): UnsignedIntegerConstant {
+    constructor(i64: Int): this(i64.toLong())
+
     override fun type(): UnsignedIntType {
         return Type.U64
     }

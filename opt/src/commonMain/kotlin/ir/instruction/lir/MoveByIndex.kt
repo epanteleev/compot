@@ -1,6 +1,7 @@
 package ir.instruction.lir
 
 import common.assertion
+import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
 import ir.types.*
 import ir.value.Value
@@ -61,7 +62,7 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
             if (type !is IntegerType) {
                 return false
             }
-            return type.sizeOf() >= WORD_SIZE
+            return type.sizeOf() == QWORD_SIZE
         }
     }
 }

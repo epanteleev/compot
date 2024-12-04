@@ -1,18 +1,18 @@
 package ir.instruction
 
-import common.arrayWith
-import ir.value.Value
 import ir.types.*
-import ir.module.block.Block
+import ir.value.Value
+import common.arrayWith
 import common.forEachWith
+import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, private var incoming: MutableList<Block>, incomingValue: Array<Value>):
-    ValueInstruction(id, owner, ty, incomingValue) {
+class Phi private constructor(id: Identity, owner: Block, private val ty: PrimitiveType, private var incoming: MutableList<Block>, incomingValue: Array<Value>):
+    ValueInstruction(id, owner, incomingValue) {
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%${name()} = phi $tp [")
+        builder.append("%${name()} = phi $ty [")
         zipWithIndex { value, bb, idx ->
             builder.append("$bb: $value")
             if (idx != incoming.size - 1) {
@@ -23,9 +23,7 @@ class Phi private constructor(id: Identity, owner: Block, ty: PrimitiveType, pri
         return builder.toString()
     }
 
-    override fun type(): PrimitiveType {
-        return tp as PrimitiveType
-    }
+    override fun type(): PrimitiveType = ty
 
     fun incoming(): List<Block> = incoming
 

@@ -1,31 +1,27 @@
 package ir.instruction
 
-import common.assertion
-import ir.value.Value
 import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
+import ir.value.Value
+import common.assertion
 import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class Truncate private constructor(id: Identity, owner: Block, toType: IntegerType, value: Value):
-    ValueInstruction(id, owner, toType, arrayOf(value)) {
-    private fun checkedGet(index: Int): Value {
-        assertion(operands.size == 1) {
-            "size should be 1 in $this instruction"
-        }
-
-        return operands[index]
-    }
-
+class Truncate private constructor(id: Identity, owner: Block, private val toType: IntegerType, value: Value):
+    ValueInstruction(id, owner, arrayOf(value)) {
     override fun dump(): String {
         return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
     }
 
-    fun value(): Value = checkedGet(0)
+    fun value(): Value {
+        assertion(operands.size == 1) {
+            "size should be 1 in $this instruction"
+        }
 
-    override fun type(): IntegerType {
-        return tp as IntegerType
+        return operands[OPERAND]
     }
+
+    override fun type(): IntegerType = toType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -33,6 +29,7 @@ class Truncate private constructor(id: Identity, owner: Block, toType: IntegerTy
 
     companion object {
         const val NAME = "trunc"
+        const val OPERAND = 0
 
         fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Truncate {
             val valueType = value.type()

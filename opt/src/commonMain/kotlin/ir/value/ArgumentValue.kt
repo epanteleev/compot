@@ -11,10 +11,7 @@ class ArgumentValue(private val index: Int, private val tp: NonTrivialType, val 
         return "arg$index"
     }
 
-    override fun type(): NonTrivialType = when (tp) {
-        is AggregateType -> Type.Ptr //TODO might be simplified!!???!?!
-        is PrimitiveType -> tp
-    }
+    override fun type(): NonTrivialType = tp
 
     fun contentType(): NonTrivialType = tp
 

@@ -6,20 +6,20 @@ extern void @printInt(i32)
 define i32 @main() {
 entry:
   %point = alloc $Line
-  %x = gfp $Line, ptr %point, i32 0
-  %x.x = gfp $Point, ptr %x, i32 0
+  %x = gfp $Line, ptr %point, i64 0
+  %x.x = gfp $Point, ptr %x, i64 0
   store ptr %x.x, i32 6
 
 
-  %y = gfp $Line, ptr %point, i32 1
-  %y.x = gfp $Point, ptr %y, i32 0
+  %y = gfp $Line, ptr %point, i64 1
+  %y.x = gfp $Point, ptr %y, i64 0
   store ptr %y.x, i32 10
 
 
-  %x0 = gfp $Line, ptr %point, i32 0
-  %x0.x = gfp $Point, ptr %x0, i32 0
-  %y0 = gfp $Line, ptr %point, i32 1
-  %y0.x = gfp $Point, ptr %y0, i32 0
+  %x0 = gfp $Line, ptr %point, i64 0
+  %x0.x = gfp $Point, ptr %x0, i64 0
+  %y0 = gfp $Line, ptr %point, i64 1
+  %y0.x = gfp $Point, ptr %y0, i64 0
 
   %s = load i32 %x0.x
   %f = load i32 %y0.x

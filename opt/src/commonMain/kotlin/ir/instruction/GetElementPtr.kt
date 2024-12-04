@@ -9,14 +9,12 @@ import ir.module.block.Block
 
 
 class GetElementPtr private constructor(id: Identity, owner: Block, val basicType: NonTrivialType, source: Value, index: Value):
-    ValueInstruction(id, owner, Type.Ptr, arrayOf(source, index)) {
+    ValueInstruction(id, owner, arrayOf(source, index)) {
     override fun dump(): String {
         return "%${name()} = $NAME $basicType, ptr ${source()}, ${index().type()} ${index()}"
     }
 
-    override fun type(): PointerType {
-        return tp as PointerType
-    }
+    override fun type(): PointerType = Type.Ptr
 
     fun source(): Value {
         assertion(operands.size == 2) {

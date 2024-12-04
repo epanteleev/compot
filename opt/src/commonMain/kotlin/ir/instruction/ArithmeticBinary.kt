@@ -1,13 +1,13 @@
 package ir.instruction
 
-import common.assertion
 import ir.value.Value
+import common.assertion
 import ir.module.block.Block
 import ir.types.ArithmeticType
 
 
-abstract class ArithmeticBinary(id: Identity, owner: Block, tp: ArithmeticType, a: Value, b: Value) :
-    ValueInstruction(id, owner, tp, arrayOf(a, b)) {
+sealed class ArithmeticBinary(id: Identity, owner: Block, protected val tp: ArithmeticType, a: Value, b: Value) :
+    ValueInstruction(id, owner, arrayOf(a, b)) {
 
     fun lhs(): Value {
         check()

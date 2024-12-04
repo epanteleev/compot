@@ -1,23 +1,20 @@
 package ir.instruction
 
-import common.assertion
-import ir.*
 import ir.types.*
-import ir.module.block.Block
-import ir.instruction.utils.IRInstructionVisitor
 import ir.value.Value
 import ir.value.asType
+import common.assertion
+import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class Projection private constructor(id: Identity, owner: Block, type: NonTrivialType, tuple: Value, private val index: Int):
-    ValueInstruction(id, owner, type, arrayOf(tuple)) {
+class Projection private constructor(id: Identity, owner: Block, private val type: PrimitiveType, tuple: Value, private val index: Int):
+    ValueInstruction(id, owner, arrayOf(tuple)) {
 
-    override fun type(): PrimitiveType {
-        return tp as PrimitiveType
-    }
+    override fun type(): PrimitiveType = type
 
     override fun dump(): String {
-        return "%${name()} = $NAME $tp ${tuple()}, ${index()}"
+        return "%${name()} = $NAME $type ${tuple()}, ${index()}"
     }
 
     fun tuple(): Value {

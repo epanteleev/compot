@@ -18,7 +18,7 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
     }
 
     fun returnValue(index: Int): Value {
-        if (index >= operands.size && index < 0) {
+        if (index >= operands.size || index < 0) {
             throw IndexOutOfBoundsException("index=$index, operands=${operands.joinToString { it.toString() }}")
         }
 
@@ -51,7 +51,7 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
                 return false
             }
             if (retType is TupleType) {
-                val array = arrayFrom(values) { it.asType<NonTrivialType>() }
+                val array = arrayFrom(values) { it.asType<PrimitiveType>() }
                 return retType == TupleType(array)
             }
             return true

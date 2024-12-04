@@ -31,18 +31,18 @@ class Lowering private constructor(private val cfg: FunctionData) {
 
             inst.match(gfp(struct(), generate())) { gf: GetFieldPtr ->
                 val basicType = gf.basicType.asType<StructType>()
-                val index = Constant.of(Type.U32, basicType.offset(gf.index(0).toInt()))
+                val index = U64Value(basicType.offset(gf.index().toInt()))
                 return bb.replace(inst) { it.leaStack(gf.source(), Type.U8, index) }
             }
 
             inst.match(gfp(array(primitive()), generate())) { gf: GetFieldPtr ->
                 val baseType = gf.basicType.asType<ArrayType>().elementType().asType<PrimitiveType>()
-                return bb.replace(inst) { it.leaStack(gf.source(), baseType, gf.index(0)) }
+                return bb.replace(inst) { it.leaStack(gf.source(), baseType, gf.index()) }
             }
 
             inst.match(gfp(array(aggregate()), generate())) { gf: GetFieldPtr ->
                 val tp = gf.basicType.asType<ArrayType>()
-                val index = gf.index(0).toInt()
+                val index = gf.index().toInt()
                 val offset = tp.offset(index)
                 return bb.replace(inst) { it.leaStack(gf.source(), Type.I8, Constant.of(Type.U32, offset)) }
             }
@@ -64,7 +64,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
     private fun getIndex(inst: Instruction): Value = when (inst) {
         is GetElementPtr -> inst.index()
         is GetFieldPtr -> {
-            val index = inst.index(0).toInt()
+            val index = inst.index().toInt()
             val field = inst.basicType.field(index)
             U64Value(inst.basicType.offset(index).toLong() / field.sizeOf())
         }

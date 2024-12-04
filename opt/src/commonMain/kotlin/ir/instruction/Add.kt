@@ -10,7 +10,7 @@ import ir.instruction.utils.IRInstructionVisitor
 class Add private constructor(id: Identity, owner: Block, tp: ArithmeticType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {
     override fun dump(): String = "%${name()} = $NAME $tp ${lhs()}, ${rhs()}"
 
-    override fun type(): ArithmeticType = tp as ArithmeticType
+    override fun type(): ArithmeticType = tp
 
     override fun <T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

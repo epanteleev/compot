@@ -118,7 +118,7 @@ data class VoidTypeToken(override val line: Int, override val pos: Int) : TypeTo
 
 data class TupleTypeToken(val types: List<TypeToken>, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
     override fun type(resolver: TypeResolver): TupleType {
-        val types = arrayFrom(types) { it.asType<NonTrivialType>(resolver) }
+        val types = arrayFrom(types) { it.asType<PrimitiveType>(resolver) }
         return TupleType(types)
     }
 

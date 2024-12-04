@@ -213,7 +213,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun emitBuiltInVarArgLargeStruct(vaList: Value, dst: Alloc, argType: StructType) {
-        val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.OVERFLOW_ARG_AREA_IDX)))
+        val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, Constant.valueOf(Type.I64, VaStart.OVERFLOW_ARG_AREA_IDX))
         val argInMem = ir.load(Type.Ptr, overflowArgAreaPtr)
         val inc = ir.gep(argInMem, Type.I8, I64Value(argType.sizeOf().toLong()))
         ir.store(overflowArgAreaPtr, inc)
@@ -222,7 +222,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun emitBuiltInVaArg(vaList: Value, argType: PrimitiveType, offsetIdx: Int, regSaveAreaIdx: Int): Value {
-        val gpOffsetPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, offsetIdx)))
+        val gpOffsetPtr = ir.gfp(vaList, vaListIrType, Constant.valueOf(Type.I64, offsetIdx))
         val gpOffset = ir.load(Type.I32, gpOffsetPtr)
         val gpOffsetCvt = ir.convertToType(gpOffset, Type.I64)
 
@@ -234,7 +234,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branchCond(isReg, varArgInReg, varArgInStack)
 
         val argInReg = ir.switchLabel(varArgInReg).let {
-            val regSaveAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.REG_SAVE_AREA_IDX)))
+            val regSaveAreaPtr = ir.gfp(vaList, vaListIrType, Constant.valueOf(Type.I64, VaStart.REG_SAVE_AREA_IDX))
             val regSaveArea = ir.load(Type.Ptr, regSaveAreaPtr)
             val argInReg = ir.gep(regSaveArea, Type.I8, gpOffsetCvt)
             val newGPOffset = ir.add(gpOffsetCvt, I64Value(QWORD_SIZE))
@@ -246,7 +246,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val argInMem = ir.switchLabel(varArgInStack).let {
-            val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, arrayOf(Constant.valueOf(Type.I64, VaStart.OVERFLOW_ARG_AREA_IDX)))
+            val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, Constant.valueOf(Type.I64, VaStart.OVERFLOW_ARG_AREA_IDX))
             val argInMem = ir.load(Type.Ptr, overflowArgAreaPtr)
             val inc = ir.gep(argInMem, Type.I64, I64Value(1))
             ir.store(overflowArgAreaPtr, inc)
@@ -280,7 +280,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is CStructType -> {
                     val t = type.fieldIndex(idx) ?: throw IRCodeGenError("Field '$idx' not found", expr.begin())
                     val irType = mb.toIRType<AggregateType>(typeHolder, t.cType())
-                    val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(Constant.valueOf(Type.I64, idx)))
+                    val fieldPtr = ir.gfp(lvalueAdr, irType, Constant.valueOf(Type.I64, idx))
                     initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
                 }
                 else -> throw RuntimeException("Unknown type: type=$type")
@@ -311,7 +311,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val irType = mb.toIRType<AggregateType>(typeHolder, type)
                 val fieldType = irType.field(idx)
                 val converted = ir.convertToType(rvalue, fieldType)
-                val fieldPtr = ir.gfp(lvalueAdr, irType, arrayOf(Constant.valueOf(Type.I64, idx)))
+                val fieldPtr = ir.gfp(lvalueAdr, irType, Constant.valueOf(Type.I64, idx))
                 ir.store(fieldPtr, converted)
             }
         }
@@ -404,7 +404,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Field not found: $fieldName", arrowMemberAccess.begin())
         }
 
-        val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, member))
+        val indexes = Constant.valueOf<IntegerConstant>(Type.I64, member)
         val gep = ir.gfp(struct, structIRType, indexes)
         if (!isRvalue) {
             return gep
@@ -430,7 +430,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val member = structType.fieldIndex(fieldName) ?:
             throw IRCodeGenError("Field not found: $fieldName", memberAccess.begin())
 
-        val indexes = arrayOf(Constant.valueOf<IntegerConstant>(Type.I64, member))
+        val indexes = Constant.valueOf<IntegerConstant>(Type.I64, member)
         val gep = ir.gfp(struct, structIRType, indexes)
         if (!isRvalue) {
             return gep
@@ -1591,7 +1591,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 for (i in initializerList.initializers.size until type.fields().size) {
                     val converted = mb.toIRType<StructType>(typeHolder, type)
                     val elementType = converted.field(i)
-                    val elementAdr = ir.gfp(value, converted, arrayOf(Constant.valueOf(Type.I64, i)))
+                    val elementAdr = ir.gfp(value, converted, Constant.valueOf(Type.I64, i))
                     ir.store(elementAdr, Constant.valueOf(elementType.asType(), 0))
                 }
             }
@@ -1643,7 +1643,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
 
                     val converted = ir.convertToType(expression, fieldType.field(index))
-                    val fieldAdr = ir.gfp(value, fieldType, arrayOf(Constant.valueOf(Type.I64, index)))
+                    val fieldAdr = ir.gfp(value, fieldType, Constant.valueOf(Type.I64, index))
                     ir.store(fieldAdr, converted)
                 }
             }

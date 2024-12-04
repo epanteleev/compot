@@ -5,15 +5,13 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Generate private constructor(id: Identity, owner: Block, allocatedType: NonTrivialType):
-    ValueInstruction(id, owner, allocatedType, arrayOf()) {
+class Generate private constructor(id: Identity, owner: Block, private val allocatedType: NonTrivialType):
+    ValueInstruction(id, owner, arrayOf()) {
     override fun dump(): String {
         return "%${name()} = $NAME ${type()}"
     }
 
-    override fun type(): NonTrivialType {
-        return tp as NonTrivialType
-    }
+    override fun type(): NonTrivialType = allocatedType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

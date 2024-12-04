@@ -4,41 +4,30 @@ import ir.types.*
 import ir.value.*
 import common.assertion
 import ir.module.block.Block
-import ir.instruction.utils.IRInstructionVisitor
+import ir.Definitions.QWORD_SIZE
 import ir.value.constant.IntegerConstant
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType: AggregateType, source: Value, private val index: Array<IntegerConstant>):
-    ValueInstruction(id, owner, Type.Ptr, arrayOf(source)) {
-    private fun getOperand(index: Int): Value {
+class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType: AggregateType, source: Value, private val index: IntegerConstant):
+    ValueInstruction(id, owner, arrayOf(source)) {
+    override fun dump(): String {
+        val stringBuilder = StringBuilder("%${name()} = $NAME $basicType, ptr ${source()}, ")
+        stringBuilder.append("${index.type()} $index")
+        return stringBuilder.toString()
+    }
+
+    override fun type(): PointerType = Type.Ptr
+
+    fun source(): Value {
         assertion(operands.size == 1) {
             "size should be 2 in $this instruction"
         }
 
-        return operands[index]
+        return operands[SOURCE]
     }
 
-    override fun dump(): String {
-        val stringBuilder = StringBuilder("%${name()} = $NAME $basicType, ptr ${source()}, ")
-        index.forEachIndexed { index, value ->
-            stringBuilder.append("${value.type()} $value")
-            if (index != this.index.size - 1) {
-                stringBuilder.append(", ")
-            }
-        }
-
-        return stringBuilder.toString()
-    }
-
-    override fun type(): PointerType {
-        return tp as PointerType
-    }
-
-    fun source(): Value = getOperand(SOURCE)
-
-    fun index(number: Int): IntegerConstant = index[number]
-
-    fun indexes(): Array<IntegerConstant> = index
+    fun index(): IntegerConstant = index
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -48,22 +37,26 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
         const val SOURCE = 0
         const val NAME = "gfp"
 
-        fun make(id: Identity, owner: Block, type: AggregateType, source: Value, indexes: Array<IntegerConstant>): GetFieldPtr {
+        fun make(id: Identity, owner: Block, type: AggregateType, source: Value, index: IntegerConstant): GetFieldPtr {
             val sourceType = source.type()
-            val indexType  = indexes[0].type()
-            require(isAppropriateType(sourceType)) {
-                "inconsistent types in '$id' type=$type, source=$source:$sourceType, index=${indexes[0]}:$indexType"
+            val indexType  = index.type()
+            require(isAppropriateType(sourceType, index)) {
+                "inconsistent types in '$id' type=$type, source=$source:$sourceType, index=$index:$indexType"
             }
 
-            return registerUser(GetFieldPtr(id, owner, type, source, indexes), source)
+            return registerUser(GetFieldPtr(id, owner, type, source, index), source)
         }
 
-        private fun isAppropriateType(sourceType: Type): Boolean {
-            return sourceType is PointerType
+        private fun isAppropriateType(sourceType: Type, index: IntegerConstant): Boolean {
+            if (index.type().sizeOf() != QWORD_SIZE) {
+                return false
+            }
+
+            return sourceType is PointerType || sourceType is AggregateType
         }
 
         fun typeCheck(gep: GetFieldPtr): Boolean {
-            return isAppropriateType(gep.source().type())
+            return isAppropriateType(gep.source().type(), gep.index())
         }
     }
 }

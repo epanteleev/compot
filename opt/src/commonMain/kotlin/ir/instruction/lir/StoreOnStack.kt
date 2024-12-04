@@ -1,6 +1,7 @@
 package ir.instruction.lir
 
 import common.assertion
+import ir.Definitions.QWORD_SIZE
 import ir.instruction.Generate
 import ir.value.Value
 import ir.types.*
@@ -64,7 +65,8 @@ class StoreOnStack private constructor(id: Identity, owner: Block, destination: 
 
         private fun isAppropriateType(toValue: Value, index: Value, fromValue: Value): Boolean {
             if (toValue is Generate || toValue is ArgumentValue) {
-                return index.type() is ArithmeticType && fromValue.type() is PrimitiveType
+                val idxType = index.type()
+                return idxType is ArithmeticType && fromValue.type() is PrimitiveType && idxType.sizeOf() == QWORD_SIZE
             }
 
             return false

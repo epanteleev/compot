@@ -1,23 +1,22 @@
 package ir.instruction.lir
 
-import common.assertion
-import ir.value.Value
-import ir.instruction.Identity
 import ir.types.*
+import ir.value.Value
+import common.assertion
+import ir.module.block.Block
+import ir.instruction.Identity
+import ir.Definitions.QWORD_SIZE
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
-import ir.module.block.Block
 
 
-class LoadFromStack private constructor(id: Identity, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value):
-    ValueInstruction(id, owner, loadedType, arrayOf(origin, index)) {
+class LoadFromStack private constructor(id: Identity, owner: Block, private val loadedType: PrimitiveType, origin: Value, index: Value):
+    ValueInstruction(id, owner, arrayOf(origin, index)) {
 
-    override fun type(): PrimitiveType {
-        return tp as PrimitiveType
-    }
+    override fun type(): PrimitiveType = loadedType
 
     override fun dump(): String {
-        return "%${name()} = $NAME $tp ${origin()}, ${index().type()} ${index()}"
+        return "%${name()} = $NAME $loadedType ${origin()}, ${index().type()} ${index()}"
     }
 
     fun origin(): Value {
@@ -57,7 +56,11 @@ class LoadFromStack private constructor(id: Identity, owner: Block, loadedType: 
         }
 
         private fun isAppropriateType(originType: Type, index: Type): Boolean {
-            return true // originType is AggregateType && index is ArithmeticType
+            if (index !is ArithmeticType) {
+                return false
+            }
+
+            return index.sizeOf() == QWORD_SIZE && (originType is PointerType || originType is AggregateType)
         }
     }
 }

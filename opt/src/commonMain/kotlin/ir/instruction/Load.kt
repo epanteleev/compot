@@ -1,16 +1,17 @@
 package ir.instruction
 
-import common.assertion
-import ir.value.Value
 import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
+import ir.value.Value
+import common.assertion
 import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class Load private constructor(id: Identity, owner: Block, loadedType: PrimitiveType, ptr: Value):
-    ValueInstruction(id, owner, loadedType, arrayOf(ptr)) {
+
+class Load private constructor(id: Identity, owner: Block, private val loadedType: PrimitiveType, ptr: Value):
+    ValueInstruction(id, owner, arrayOf(ptr)) {
     override fun dump(): String {
-        return "%${name()} = $NAME $tp ${operand()}"
+        return "%${name()} = $NAME $loadedType ${operand()}"
     }
 
     fun operand(): Value {
@@ -21,9 +22,7 @@ class Load private constructor(id: Identity, owner: Block, loadedType: Primitive
         return operands[0]
     }
 
-    override fun type(): PrimitiveType {
-        return tp as PrimitiveType
-    }
+    override fun type(): PrimitiveType = loadedType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

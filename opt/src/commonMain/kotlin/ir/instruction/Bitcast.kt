@@ -1,16 +1,16 @@
 package ir.instruction
 
-import common.assertion
-import ir.value.Value
 import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
+import ir.value.Value
+import common.assertion
 import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
-class Bitcast private constructor(id: Identity, owner: Block, toType: NonTrivialType, value: Value):
-    ValueInstruction(id, owner, toType, arrayOf(value)) {
+class Bitcast private constructor(id: Identity, owner: Block, val toType: IntegerType, value: Value):
+    ValueInstruction(id, owner, arrayOf(value)) {
     override fun dump(): String {
-        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
+        return "%${name()} = $NAME ${value().type()} ${value()} to $toType"
     }
 
     fun value(): Value {
@@ -21,9 +21,7 @@ class Bitcast private constructor(id: Identity, owner: Block, toType: NonTrivial
         return operands[0]
     }
 
-    override fun type(): PrimitiveType {
-        return tp as PrimitiveType
-    }
+    override fun type(): IntegerType = toType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -32,7 +30,7 @@ class Bitcast private constructor(id: Identity, owner: Block, toType: NonTrivial
     companion object {
         const val NAME = "bitcast"
 
-        fun make(id: Identity, owner: Block, toType: PrimitiveType, value: Value): Bitcast {
+        fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Bitcast {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
                 "inconsistent types in '$id': ty=$toType, value=$value:$valueType"

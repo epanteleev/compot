@@ -1,14 +1,14 @@
 package ir.instruction
 
-import common.assertion
-import ir.value.Value
 import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
+import ir.value.Value
+import common.assertion
 import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Int2Pointer private constructor(id: Identity, owner: Block, value: Value):
-    ValueInstruction(id, owner, Type.Ptr, arrayOf(value)) {
+    ValueInstruction(id, owner, arrayOf(value)) {
     override fun dump(): String {
         return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
     }
@@ -21,9 +21,7 @@ class Int2Pointer private constructor(id: Identity, owner: Block, value: Value):
         return operands[0]
     }
 
-    override fun type(): PointerType {
-        return tp as PointerType
-    }
+    override fun type(): PointerType = Type.Ptr
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

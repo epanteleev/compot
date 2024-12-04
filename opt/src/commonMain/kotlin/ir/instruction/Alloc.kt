@@ -6,14 +6,12 @@ import ir.module.block.Block
 
 
 class Alloc private constructor(id: Identity, owner: Block, val allocatedType: NonTrivialType):
-    ValueInstruction(id, owner, Type.Ptr, arrayOf()) {
+    ValueInstruction(id, owner, arrayOf()) {
     override fun dump(): String {
         return "%${name()} = $NAME $allocatedType"
     }
 
-    override fun type(): PointerType {
-        return tp as PointerType
-    }
+    override fun type(): PointerType = Type.Ptr
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

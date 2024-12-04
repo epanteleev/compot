@@ -7,9 +7,9 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Select private constructor(id: Identity, owner: Block, ty: IntegerType, cond: Value, onTrue: Value, onFalse: Value) :
-    ValueInstruction(id, owner, ty, arrayOf(cond, onTrue, onFalse)) {
-    override fun type(): IntegerType = tp as IntegerType
+class Select private constructor(id: Identity, owner: Block, private val ty: IntegerType, cond: Value, onTrue: Value, onFalse: Value) :
+    ValueInstruction(id, owner, arrayOf(cond, onTrue, onFalse)) {
+    override fun type(): IntegerType = ty
 
     override fun dump(): String {
         return "%${name()} = $NAME ${Type.U1} ${condition()}, ${onTrue().type()} ${onTrue()}, ${onFalse().type()} ${onFalse()}"

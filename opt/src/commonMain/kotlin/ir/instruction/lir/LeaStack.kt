@@ -1,23 +1,22 @@
 package ir.instruction.lir
 
-import common.assertion
-import ir.value.Value
-import ir.instruction.Identity
 import ir.types.*
+import ir.value.Value
+import common.assertion
+import ir.module.block.Block
+import ir.instruction.Identity
+import ir.Definitions.QWORD_SIZE
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
-import ir.module.block.Block
 
 
 class LeaStack private constructor(id: Identity, owner: Block, val loadedType: PrimitiveType, origin: Value, index: Value):
-    ValueInstruction(id, owner, Type.Ptr, arrayOf(origin, index)) {
+    ValueInstruction(id, owner, arrayOf(origin, index)) {
 
-    override fun type(): PrimitiveType {
-        return tp as PrimitiveType
-    }
+    override fun type(): PointerType = Type.Ptr
 
     override fun dump(): String {
-        return "%${name()} = $NAME $loadedType, $tp ${origin()}, ${index().type()} ${index()}"
+        return "%${name()} = $NAME $loadedType, ${type()} ${origin()}, ${index().type()} ${index()}"
     }
 
     fun origin(): Value {
@@ -57,7 +56,11 @@ class LeaStack private constructor(id: Identity, owner: Block, val loadedType: P
         }
 
         private fun isAppropriateType(originType: Type, index: Type): Boolean {
-            return originType is AggregateType && index is ArithmeticType
+            if (index !is ArithmeticType) {
+                return false
+            }
+
+            return index.sizeOf() == QWORD_SIZE && originType is AggregateType
         }
     }
 }

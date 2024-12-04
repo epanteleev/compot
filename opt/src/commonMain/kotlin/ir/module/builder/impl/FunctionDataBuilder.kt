@@ -146,8 +146,8 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.gep(source, elementType, index)
     }
 
-    override fun gfp(source: Value, ty: AggregateType, indexes: Array<IntegerConstant>): GetFieldPtr {
-        return bb.gfp(source, ty, indexes)
+    override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr {
+        return bb.gfp(source, ty, index)
     }
 
     override fun flag2int(value: Value, ty: IntegerType): Flag2Int {
@@ -162,7 +162,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.uint2fp(value, ty)
     }
 
-    override fun bitcast(value: Value, ty: PrimitiveType): Bitcast {
+    override fun bitcast(value: Value, ty: IntegerType): Bitcast {
         return bb.bitcast(value, ty)
     }
 
