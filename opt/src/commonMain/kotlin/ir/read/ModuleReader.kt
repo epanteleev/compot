@@ -188,10 +188,7 @@ class ModuleReader(string: String) {
             }
         } while (true)
 
-        return when (type) {
-            is StructDefinition, is ArrayTypeToken -> InitializerListValue(type.type(moduleBuilder), fields)
-            else -> throw ParseErrorException("struct or array", type)
-        }
+        return InitializerListValue(type.type(moduleBuilder), fields)
     }
 
     private fun parseAggregateInitializer(name: String, type: AggregateTypeToken): GlobalConstant {
@@ -228,7 +225,6 @@ class ModuleReader(string: String) {
         return when (type) {
             is StructDefinition -> StructGlobalConstant(name, type.type(moduleBuilder), fields)
             is ArrayTypeToken -> ArrayGlobalConstant(name, type.type(moduleBuilder), fields)
-            else -> throw ParseErrorException("struct or array", type)
         }
     }
 

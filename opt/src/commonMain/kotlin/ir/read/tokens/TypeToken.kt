@@ -18,7 +18,7 @@ sealed class TypeToken(override val line: Int, override val pos: Int) : Token(li
     }
 }
 
-abstract class PrimitiveTypeToken(protected open val type: NonTrivialType, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+sealed class PrimitiveTypeToken(protected open val type: NonTrivialType, override val line: Int, override val pos: Int) : TypeToken(line, pos) {
     override fun type(resolver: TypeResolver): NonTrivialType {
         return type
     }
@@ -54,11 +54,11 @@ data class BooleanTypeToken(override val line: Int, override val pos: Int) : Typ
     }
 }
 
-interface ArithmeticTypeToken: AnyToken {
+sealed interface ArithmeticTypeToken: AnyToken {
     fun type(resolver: TypeResolver): NonTrivialType
 }
 
-abstract class IntegerTypeToken(override val type: IntegerType, override val line: Int, override val pos: Int)
+sealed class IntegerTypeToken(override val type: IntegerType, override val line: Int, override val pos: Int)
     : PrimitiveTypeToken(type, line, pos), ArithmeticTypeToken {
     abstract override fun type(): IntegerType
 }
@@ -78,7 +78,7 @@ data class FloatTypeToken(override val type: FloatingPointType, override val lin
     override fun type(): FloatingPointType = type
 }
 
-abstract class AggregateTypeToken(override val line: Int, override val pos: Int) : TypeToken(line, pos) {
+sealed class AggregateTypeToken(override val line: Int, override val pos: Int) : TypeToken(line, pos) {
     abstract override fun type(resolver: TypeResolver): AggregateType
 }
 

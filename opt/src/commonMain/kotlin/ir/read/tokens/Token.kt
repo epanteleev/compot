@@ -1,7 +1,7 @@
 package ir.read.tokens
 
 
-interface AnyToken {
+sealed interface AnyToken {
     fun message(): String
 }
 
@@ -122,18 +122,6 @@ data class OpenSquareBracket(override val line: Int, override val pos: Int): Tok
 data class CloseSquareBracket(override val line: Int, override val pos: Int): Token(line, pos) {
     override fun message(): String {
         return "']'"
-    }
-}
-
-data class OpenTriangleBracket(override val line: Int, override val pos: Int): Token(line, pos) {
-    override fun message(): String {
-        return "'<'"
-    }
-}
-
-data class CloseTriangleBracket(override val line: Int, override val pos: Int): Token(line, pos) {
-    override fun message(): String {
-        return "'>'"
     }
 }
 

@@ -1,15 +1,14 @@
 package ir.read.tokens
 
-import ir.types.NonTrivialType
 import ir.types.PrimitiveType
 import ir.value.constant.NullValue
 import ir.value.constant.NonTrivialConstant
 import ir.value.constant.PrimitiveConstant
 
 
-abstract class AnyValueToken(override val line: Int, override val pos: Int): Token(line, pos)
+sealed class AnyValueToken(override val line: Int, override val pos: Int): Token(line, pos)
 
-abstract class LiteralValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
+sealed class LiteralValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos) {
     fun toConstant(ty: PrimitiveType): NonTrivialConstant = when (this) {
         is IntValue       -> PrimitiveConstant.of(ty, int)
         is FloatValue     -> PrimitiveConstant.of(ty, fp)
@@ -34,7 +33,7 @@ data class NULLValueToken(override val line: Int, override val pos: Int): Litera
     override fun message(): String = "null"
 }
 
-abstract class ValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos)
+sealed class ValueToken(override val line: Int, override val pos: Int): AnyValueToken(line, pos)
 
 data class LocalValueToken(val name: String, override val line: Int, override val pos: Int): ValueToken(line, pos) {
     override fun message(): String = "value '%$name'"
