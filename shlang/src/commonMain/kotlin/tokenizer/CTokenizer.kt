@@ -37,6 +37,21 @@ class CTokenizer private constructor(private val filename: String, private val r
         tokens.add(next)
     }
 
+    private fun asControlChar(ch: Char): Char? = when (ch) {
+        'a' -> '\u0007'
+        'b' -> '\b'
+        't' -> '\t'
+        'n' -> '\n'
+        'v' -> '\u000B'
+        'f' -> '\u000C'
+        'r' -> '\r'
+        '0' -> '\u0000'
+        '\'' -> '\''
+        '\\' -> '\\'
+        '"' -> '"'
+        else -> null
+    }
+
     private fun readLiteral(quote: Char): String {
         eat()
         val builder = StringBuilder()
@@ -59,21 +74,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
             if (reader.check('\\')) {
                 eat()
-                val ch = when (reader.peek()) {
-                    'a' -> '\u0007'
-                    'b' -> '\b'
-                    't' -> '\t'
-                    'n' -> '\n'
-                    'v' -> '\u000B'
-                    'f' -> '\u000C'
-                    'r' -> '\r'
-                    '0' -> '\u0000'
-                    '\'' -> '\''
-                    '\\' -> '\\'
-                    '"' -> '"'
-                    else -> null
-                }
-
+                val ch = asControlChar(reader.peek())
                 if (ch != null) {
                     builder.append(ch)
                     eat()
@@ -105,75 +106,61 @@ class CTokenizer private constructor(private val filename: String, private val r
     }
 
     private fun readEscapedChar(): Char {
-        reader.read()
+        eat()
 
-        val ch = when (reader.peek()) {
-            'a' -> '\u0007'
-            'b' -> '\b'
-            't' -> '\t'
-            'n' -> '\n'
-            'v' -> '\u000B'
-            'f' -> '\u000C'
-            'r' -> '\r'
-            '0' -> '\u0000'
-            '\'' -> '\''
-            '\\' -> '\\'
-            '"' -> '"'
-            else -> null
-        }
-
+        val ch = asControlChar(reader.peek())
         if (ch != null) {
-            reader.read()
+            eat()
             return ch
         }
 
         if (reader.check('x')) {
             return readHexChar()
         }
-        return reader.read()
+        return eat()
     }
 
     private fun readCharLiteral(): Char {
         val ch = if (reader.check('\\')) {
             readEscapedChar()
         } else {
-            reader.read()
+            eat()
         }
 
         if (!reader.check('\'')) {
             throw IllegalStateException("Expected closing quote in line $line")
         }
-        reader.read()
+        eat()
         return ch
     }
 
     private fun tryGetSuffix(start: Int): String? {
         if (reader.check("LLU") || reader.check("llu")) {
-            reader.read(3)
+            eat(3)
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("ULL") || reader.check("ull")) {
-            reader.read(3)
+            eat(3)
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("ll") || reader.check("LL")) {
-            reader.read(2)
+            eat(2)
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("LU") || reader.check("lu")) {
-            reader.read(2)
+            eat(2)
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("UL") || reader.check("ul")) {
-            reader.read(2)
+            eat(2)
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("U") || reader.check("u")) {
-            reader.read()
+            eat()
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("L") || reader.check("l")) {
-            reader.read()
+            eat()
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("F") || reader.check("f")) {
-            reader.read()
+            eat()
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("D") || reader.check("d")) {
-            reader.read()
+            eat()
             return reader.str.substring(start, reader.pos)
         }
         return null
@@ -189,10 +176,10 @@ class CTokenizer private constructor(private val filename: String, private val r
     }
 
     private fun readHexChar(): Char {
-        reader.read()
+        eat()
         var c = 0
         while (reader.isHexDigit()) {
-            val ch = reader.read()
+            val ch = eat()
             c = c * 16 + ch.digitToInt(16)
         }
         return c.toChar()
@@ -201,19 +188,19 @@ class CTokenizer private constructor(private val filename: String, private val r
     private fun readPPNumber(): Pair<String, Int>? = tryRead {
         var base = 10
         if (reader.check("0x") || reader.check("0X")) {
-            reader.read(2)
+            eat(2)
             base = 16
         } else if (reader.check("0b") || reader.check("0B")) {
             reader.read(2)
             base = 2
         } else if (reader.check("0") && reader.peekOffset(1).isDigit()) {
-            reader.read()
+            eat()
             base = 8
         }
         val start = reader.pos
 
         do {
-            reader.read()
+            eat()
             if (reader.eof) {
                 return@tryRead Pair(reader.str.substring(start, reader.pos), base)
             }
@@ -221,9 +208,9 @@ class CTokenizer private constructor(private val filename: String, private val r
 
         if (reader.check('.')) {
             //Floating point value
-            reader.read()
+            eat()
             while (!reader.eof && !isSeparator(reader.peek())) {
-                reader.read()
+                eat()
             }
             val result = tryGetSuffix(start) ?: reader.str.substring(start, reader.pos)
             return@tryRead Pair(result, base)
@@ -244,7 +231,7 @@ class CTokenizer private constructor(private val filename: String, private val r
     private fun readIdentifier(): String {
         val startPos = reader.pos
         while (!reader.eof && (reader.isLetter() || reader.peek().isDigit())) {
-            reader.read()
+            eat()
         }
         return reader.str.substring(startPos, reader.pos)
     }
@@ -309,18 +296,18 @@ class CTokenizer private constructor(private val filename: String, private val r
 
             // Character literals
             if (reader.check('\'')) {
-                reader.read()
+                val start = position
+                eat()
                 val literal = readCharLiteral()
-                append(CharLiteral(literal, OriginalPosition(line, position, filename)))
+                append(CharLiteral(literal, OriginalPosition(line, start, filename)))
                 continue
             }
 
             // String literals
             if (reader.check('"')) {
-                val start = reader.pos
+                val start = position
                 val literal = readLiteral(reader.peek())
-                val diff = reader.pos - start
-                append(StringLiteral(literal, OriginalPosition(line, position - diff, filename)))
+                append(StringLiteral(literal, OriginalPosition(line, start, filename)))
                 continue
             }
 
@@ -346,50 +333,45 @@ class CTokenizer private constructor(private val filename: String, private val r
 
             // Numbers
             if (reader.peek().isDigit() || (reader.check('.') && reader.peekOffset(1).isDigit())) {
-                val saved = reader.pos
+                val saved = position
                 val v = reader.peek()
                 val pair = readPPNumber() ?: error("Unknown symbol: '$v' in '$filename' at $line:$position")
 
-                val diff = reader.pos - saved
-                position += diff
-                append(PPNumber(pair.first,pair.second, OriginalPosition(line, position - diff, filename)))
+                append(PPNumber(pair.first, pair.second, OriginalPosition(line, saved, filename)))
                 continue
             }
 
             // Punctuations
             if (tryPunct(reader.peek())) {
                 val v = reader.peek()
-                position += 1
+                val saved = position
                 if (reader.inRange(2) &&
                     isOperator3(v, reader.peekOffset(1), reader.peekOffset(2))) {
                     val operator = reader.peek(3)
-                    reader.read(3)
-                    position += 2
-                    append(Punctuator(operator, OriginalPosition(line, position - 3, filename)))
+                    eat(3)
+                    append(Punctuator(operator, OriginalPosition(line, saved, filename)))
                 } else if (reader.inRange(1) && isOperator2(v, reader.peekOffset(1))) {
                     val operator = reader.peek(2)
-                    reader.read(2)
-                    position += 1
-                    append(Punctuator(operator, OriginalPosition(line, position - 2, filename)))
+                    eat(2)
+                    append(Punctuator(operator, OriginalPosition(line, saved, filename)))
                 } else if (reader.check("\\\n")) {
-                    reader.read(2)
-                    position += 1
+                    eat(2)
                     incrementLine()
                 } else {
-                    append(Punctuator(reader.read().toString(), OriginalPosition(line, position - 1, filename)))
+                    val s = eat()
+                    append(Punctuator(s.toString(), OriginalPosition(line, saved, filename)))
                 }
                 continue
             }
 
             // Keywords or identifiers
             if (reader.isLetter()) {
+                val saved = position
                 val identifier = readIdentifier()
-                position += identifier.length
-
                 if (keywords.contains(identifier)) {
-                    append(Keyword(identifier, OriginalPosition(line, position - identifier.length, filename)))
+                    append(Keyword(identifier, OriginalPosition(line, saved, filename)))
                 } else {
-                    append(Identifier(identifier, OriginalPosition(line, position - identifier.length, filename)))
+                    append(Identifier(identifier, OriginalPosition(line, saved, filename)))
                 }
                 continue
             }
