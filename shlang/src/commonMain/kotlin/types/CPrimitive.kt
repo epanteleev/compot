@@ -226,7 +226,7 @@ sealed class CPrimitive: CType() {
 
 object VOID: CPrimitive() {
     override fun typename(): String = "void"
-    override fun size(): Int = -1
+    override fun size(): Int = 1
 }
 
 object CHAR: CPrimitive() {

@@ -289,15 +289,29 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 if (type !is CArrayType) {
                     throw IRCodeGenError("Expect array type, but type=$type", expr.begin())
                 }
-                when (val type = type.element().cType()) {
-                    is CHAR, is UCHAR -> {
-                        val string = expr.data()
-                        ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value(string.length.toLong()))
+                when (type.element().cType()) {
+                    is CHAR -> {
+                        if (expr.data().isNotEmpty()) {
+                            ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value(expr.length()))
+                            val gep = ir.gep(lvalueAdr, Type.I8, I64Value(expr.length()))
+                            ir.store(gep, I8Value(0))
+                        } else {
+                            val gep = ir.gep(lvalueAdr, Type.I8, I64Value(0))
+                            ir.store(gep, I8Value(0))
+                        }
+                    }
+                    is UCHAR -> {
+                        if (expr.data().isNotEmpty()) {
+                            ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value(expr.length()))
+                            val gep = ir.gep(lvalueAdr, Type.I8, I64Value(expr.length()))
+                            ir.store(gep, U8Value(0))
+                        } else {
+                            val gep = ir.gep(lvalueAdr, Type.I8, I64Value(0))
+                            ir.store(gep, U8Value(0))
+                        }
                     }
                     is CPointer -> {
-                        val string = expr.data()
-                        val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.I8, string.length), string)
-                        val stringPtr = mb.addConstant(stringLiteral)
+                        val stringPtr = visitStringNode(expr)
                         val fieldPtr = ir.gep(lvalueAdr, Type.I64,
                             Constant.valueOf(Type.I64, idx)
                         )
@@ -465,8 +479,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitStringNode(stringNode: StringNode): Value {
-        val string = stringNode.data()
-        val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.I8, string.length), string)
+        val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.I8, stringNode.length()), stringNode.data())
         return mb.addConstant(stringLiteral)
     }
 

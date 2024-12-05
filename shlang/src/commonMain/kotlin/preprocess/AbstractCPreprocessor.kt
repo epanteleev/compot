@@ -15,7 +15,7 @@ data class PreprocessorException(val info: String, val position: Position? = nul
     }
 }
 
-abstract class AbstractCPreprocessor(val filename: String, protected val tokens: TokenList) {
+sealed class AbstractCPreprocessor(val filename: String, protected val tokens: TokenList) {
     protected var current: AnyToken? = tokens.firstOrNull()
 
     protected fun eof(): Boolean {

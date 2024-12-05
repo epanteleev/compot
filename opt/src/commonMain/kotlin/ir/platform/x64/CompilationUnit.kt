@@ -33,15 +33,17 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         is PrimitiveGlobalConstant -> makePrimitiveConstant(globalValue)
     }
 
-    fun makeGlobal(globalValue: AnyGlobalValue) = when (globalValue) {
-        is GlobalValue -> {
-            if (globalValue.attribute() != GlobalValueAttribute.INTERNAL) {
-                global(globalValue.name())
-            }
+    fun makeGlobal(globalValue: AnyGlobalValue) {
+        when (globalValue) {
+            is GlobalValue -> {
+                if (globalValue.attribute() != GlobalValueAttribute.INTERNAL) {
+                    global(globalValue.name())
+                }
 
-            convertGlobalValueToSymbolType(globalValue)
+                convertGlobalValueToSymbolType(globalValue)
+            }
+            is ExternValue -> {}
         }
-        is ExternValue -> {}
     }
 
     private fun makeStringLiteralConstant(globalValue: GlobalValue, type: ArrayType, constant: StringLiteralConstant): ObjLabel {

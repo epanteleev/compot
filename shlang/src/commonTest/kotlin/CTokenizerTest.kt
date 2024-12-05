@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 
 
 class CTokenizerTest {
-    fun TokenList.toCTokenList(): MutableList<AnyToken> {
+    private fun TokenList.toCTokenList(): MutableList<AnyToken> {
         val result = mutableListOf<AnyToken>()
         for (token in this) {
             if (token is AnySpaceToken) {
@@ -19,7 +19,7 @@ class CTokenizerTest {
         return result
     }
 
-    fun AnyToken.isEqual(l: Int, p: Int, string: String) {
+    private fun AnyToken.isEqual(l: Int, p: Int, string: String) {
         this as CToken
         assertEquals(l, line())
         assertEquals(p, pos())
@@ -177,7 +177,7 @@ class CTokenizerTest {
         val input = "\"\\\"Hello, World!\\\"\""
         val tokens = CTokenizer.apply(input).toCTokenList()
         assertTrue { tokens[0] is StringLiteral }
-        tokens[0].isEqual(1, 1, "\"\"Hello, World!\"\"")
+        tokens[0].isEqual(1, 1, "\"\\\"Hello, World!\\\"\"")
     }
 
     @Test

@@ -99,7 +99,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
                     is CStringLiteral -> {
-                        val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerType.dimension), listOf())
+                        val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerType.dimension + 1), listOf())
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
                     is CPointer -> {

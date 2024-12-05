@@ -391,20 +391,27 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
         assertion(literals.isNotEmpty()) { "Empty string node" }
     }
 
-    override fun begin(): Position = literals.first().position()
     private val data by lazy {
         if (literals.all { it.unquote().isEmpty() }) {
-            "\\0"
+            ""
         } else {
-            literals.joinToString("", postfix = "\\0") { it.unquote() }
+            literals.joinToString("", postfix = "") { it.unquote() }
         }
     }
+
+    override fun begin(): Position = literals.first().position()
 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CStringLiteral = memoize {
-        return@memoize CStringLiteral(TypeDesc.from(CHAR), data().length.toLong()) //ToDO restrict?????
+        if (data.isEmpty()) {
+            return@memoize CStringLiteral(TypeDesc.from(CHAR), 1)
+        }
+
+        return@memoize CStringLiteral(TypeDesc.from(CHAR), length().toLong())
     }
+
+    fun length(): Int = data.length + 1
 
     fun data(): String = data
 }
@@ -418,7 +425,7 @@ data class CharNode(val char: CharLiteral) : Expression() {
     }
 
     fun toInt(): Int {
-        return char.data.code.toInt()
+        return char.data.code
     }
 }
 

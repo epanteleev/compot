@@ -47,10 +47,10 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
         is StringNode        -> when (lValueType) {
-            is ArrayType -> StringLiteralConstant(ArrayType(Type.I8, expr.data().length) ,expr.data())
+            is ArrayType -> StringLiteralConstant(ArrayType(Type.I8, expr.length()) ,expr.data())
             else -> {
                 val constant = expr.data()
-                val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.U8, constant.length), constant.toString())
+                val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.U8, expr.length()), constant)
                 PointerLiteral.of(mb.addConstant(stringLiteral))
             }
         }

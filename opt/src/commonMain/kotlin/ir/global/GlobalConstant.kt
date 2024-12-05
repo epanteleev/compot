@@ -1,5 +1,6 @@
 package ir.global
 
+import common.assertion
 import ir.types.*
 import ir.value.constant.*
 
@@ -160,6 +161,10 @@ sealed class AnyAggregateGlobalConstant(override val name: String): GlobalConsta
 }
 
 class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, val string: String): AnyAggregateGlobalConstant(name) {
+    init {
+        assertion(tp.length > 0) { "string length should be greater than 0" }
+    }
+
     override fun data(): String {
         return "\"$string\""
     }

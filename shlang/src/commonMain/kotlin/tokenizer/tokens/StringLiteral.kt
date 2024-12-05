@@ -4,10 +4,30 @@ import tokenizer.Position
 
 
 class StringLiteral(private val data: String, position: Position): CToken(position) {
-    override fun str(): String = "\"$data\""
+    override fun str(): String = quote()
 
     override fun hashCode(): Int {
         return data.hashCode()
+    }
+
+    private fun quote(): String {
+        val stringBuilder = StringBuilder("\"")
+        for (element in data) {
+            when (element) {
+                '\n' -> stringBuilder.append("\\n")
+                '\t' -> stringBuilder.append("\\t")
+                '\r' -> stringBuilder.append("\\r")
+                '\b' -> stringBuilder.append("\\b")
+                '\u000C' -> stringBuilder.append("\\f")
+                '\u0007' -> stringBuilder.append("\\a")
+                '\u0000' -> stringBuilder.append("\\0")
+                '\\' -> stringBuilder.append("\\\\")
+                '"'  -> stringBuilder.append("\\\"")
+                else -> stringBuilder.append(element)
+            }
+        }
+        stringBuilder.append("\"")
+        return stringBuilder.toString()
     }
 
     override fun equals(other: Any?): Boolean {

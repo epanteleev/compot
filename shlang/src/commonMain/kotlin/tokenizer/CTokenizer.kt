@@ -57,6 +57,37 @@ class CTokenizer private constructor(private val filename: String, private val r
                 builder.append(eat())
                 continue
             }
+            if (reader.check('\\')) {
+                eat()
+                val ch = when (reader.peek()) {
+                    'a' -> '\u0007'
+                    'b' -> '\b'
+                    't' -> '\t'
+                    'n' -> '\n'
+                    'v' -> '\u000B'
+                    'f' -> '\u000C'
+                    'r' -> '\r'
+                    '0' -> '\u0000'
+                    '\'' -> '\''
+                    '\\' -> '\\'
+                    '"' -> '"'
+                    else -> null
+                }
+
+                if (ch != null) {
+                    builder.append(ch)
+                    eat()
+                    continue
+                }
+
+                if (reader.check('x')) {
+                    builder.append("\\")
+                    eatHexChar(builder)
+                    continue
+                }
+                throw IllegalStateException("Unknown escape sequence in line $line")
+            }
+
             builder.append(eat())
         }
 
@@ -64,6 +95,13 @@ class CTokenizer private constructor(private val filename: String, private val r
             eat()
         }
         return builder.toString()
+    }
+
+    private fun eatHexChar(builder: java.lang.StringBuilder) {
+        builder.append(eat())
+        while (reader.isHexDigit()) {
+            builder.append(eat())
+        }
     }
 
     private fun readEscapedChar(): Char {
