@@ -8,5 +8,5 @@ static char *table[][2] = {
 
 int main() {
     printf("%s", *table[0]);
-    return (long)*table[0];
+    return 0;
 }

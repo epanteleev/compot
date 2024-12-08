@@ -11,6 +11,7 @@ import parser.nodes.*
 import codegen.consteval.*
 import ir.module.ExternFunction
 import codegen.TypeConverter.toIRType
+import common.assertion
 import ir.attributes.GlobalValueAttribute
 import ir.module.builder.impl.ModuleBuilder
 import ir.value.constant.*
@@ -29,14 +30,9 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val nameGenerator: NameGenerator) {
     private fun constEvalExpression(lValueType: NonTrivialType, expr: Expression): NonTrivialConstant? = when (expr) {
         is InitializerList -> when (lValueType) {
-            is PrimitiveType -> {
-                if (expr.initializers.size != 1) {
-                    throw IRCodeGenError("Unsupported initializer list size ${expr.initializers.size}", expr.begin())
-                }
-                constEvalExpression(lValueType, expr.initializers[0])
-            }
             is ArrayType  -> constEvalInitializers(lValueType, expr)
             is StructType -> constEvalInitializers(lValueType, expr)
+            else -> throw IRCodeGenError("Unsupported initializer list size ${expr.initializers.size}", expr.begin())
         }
         is UnaryOp -> when (expr.opType) {
             is PrefixUnaryOpType -> when (expr.opType) {
@@ -70,7 +66,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 ?: throw IRCodeGenError("Variable not found: $name", expr.begin())
 
             val cType = expr.resolveType(typeHolder)
-            if (cType is CPointer) {
+            if (cType is CPointer || cType is CStringLiteral) {
                 PointerLiteral.of(value as GlobalValue)
             } else {
                 defaultContEval(lValueType, expr)
@@ -155,26 +151,13 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         val cType = declarator.cType()
         val lValueType = mb.toIRLVType<NonTrivialType>(typeHolder, cType.type.cType())
         val manglingName = generateName(declarator, cType)
-        if (cType.storageClass == StorageClass.EXTERN) {
-            val extern = mb.addExternValue(manglingName, lValueType)
-            varStack[declarator.name()] = extern
-            return extern
-        }
-
+        assertion(cType.storageClass != StorageClass.EXTERN) { "invariant: cType=$cType" }
         val attr = toIrAttribute(cType.storageClass)!!
 
         val constEvalResult = constEvalExpression(lValueType, declarator.rvalue) ?: staticInitializer(declarator.rvalue)
         when (constEvalResult) {
             is PointerLiteral -> when (lValueType) {
-                is ArrayType -> {
-                    val global = mb.addGlobal(manglingName, constEvalResult, attr)
-                    varStack[declarator.name()] = global
-                    return global
-                }
-                is PointerType -> {
-                    if (lValueType != constEvalResult.type()) {
-                        throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
-                    }
+                is ArrayType, is PointerType -> {
                     val global = mb.addGlobal(manglingName, constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
@@ -209,10 +192,14 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 else -> throw IRCodeGenError("Unsupported type $lValueType", declarator.begin())
             }
             is StringLiteralConstant -> {
-                val cArrayType = cType.type.cType() as CArrayType
-                val newConstant = if (cArrayType.dimension > constEvalResult.data().length.toLong()) {
-                    val content = constEvalResult.content.padTo(cArrayType.dimension.toInt(), "\\0")
-                    StringLiteralConstant(ArrayType(Type.I8, cArrayType.dimension.toInt()), content)
+                val dimension = when (val cArrayType = cType.type.cType() as AnyCArrayType) {
+                    is CArrayType -> cArrayType.dimension
+                    is CStringLiteral -> cArrayType.dimension
+                    else -> throw IRCodeGenError("Unsupported type $lValueType", declarator.begin())
+                }
+                val newConstant = if (dimension > constEvalResult.data().length.toLong()) {
+                    val content = constEvalResult.content.padTo(dimension.toInt(), "\\0")
+                    StringLiteralConstant(ArrayType(Type.I8, dimension.toInt()), content)
                 } else {
                     constEvalResult
                 }
@@ -238,7 +225,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         val value = if (type.storageClass == StorageClass.EXTERN) {
             mb.addExternValue(manglingName, irType)
         } else {
-            val constant = Constant.of(irType, 0)
+            val constant = NonTrivialConstant.of(irType, 0)
             mb.addGlobal(manglingName, constant)
         }
         varStack[realName] = value
@@ -263,12 +250,11 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     protected fun generateGlobalDeclarator(declarator: Declarator): Value {
-        val type = declarator.cType()
-        val manglingName = generateName(declarator, type)
-        val varDesc = declarator.cType()
-        when (val type = varDesc.type.cType()) {
+        val  varDesc = declarator.cType()
+        val manglingName = generateName(declarator,  varDesc)
+        when (val cType = varDesc.type.cType()) {
             is CFunctionType -> {
-                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), type.functionType, mb, typeHolder).build()
+                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder).build()
                 val externFunc = getExternFunction(declarator.name(), cPrototype)
                 varStack[declarator.name()] = externFunc
                 return externFunc
@@ -277,7 +263,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 return makeGlobalValue(declarator.name(), manglingName, varDesc)
             }
             is CArrayType -> {
-                val irType = mb.toIRType<ArrayType>(typeHolder, type)
+                val irType = mb.toIRType<ArrayType>(typeHolder, cType)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
                     val externValue = mb.addExternValue(manglingName, irType)
                     varStack[declarator.name()] = externValue
@@ -292,16 +278,16 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 return global
             }
             is CStructType -> {
-                val irType = mb.toIRType<StructType>(typeHolder, type)
+                val irType = mb.toIRType<StructType>(typeHolder, cType)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
                     val externValue = mb.addExternValue(manglingName, irType)
                     varStack[declarator.name()] = externValue
                     return externValue
                 }
                 val elements = arrayListOf<NonTrivialConstant>()
-                for (field in type.fields()) {
-                    val irType = mb.toIRType<NonTrivialType>(typeHolder, field.cType())
-                    val zero = NonTrivialConstant.of(irType, 0)
+                for (field in cType.fields()) {
+                    val irFieldType = mb.toIRType<NonTrivialType>(typeHolder, field.cType())
+                    val zero = NonTrivialConstant.of(irFieldType, 0)
                     elements.add(zero)
                 }
                 val constant = InitializerListValue(irType, elements)
@@ -310,11 +296,11 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 return global
             }
             is CUncompletedArrayType -> return Value.UNDEF //TODO
-            else -> throw IRCodeGenError("Function or struct expected, but was '$type'", declarator.begin())
+            else -> throw IRCodeGenError("Function or struct expected, but was '$cType'", declarator.begin())
         }
     }
 
-    protected fun constEvalExpression0(expr: Expression): Number? = when (val ty = expr.resolveType(typeHolder)) {
+    protected fun constEvalExpression0(expr: Expression): Number? = when (expr.resolveType(typeHolder)) {
         INT, SHORT, CHAR, UINT, USHORT, UCHAR, is CEnumType -> {
             val ctx = CommonConstEvalContext<Int>(typeHolder)
             ConstEvalExpression.eval(expr, TryConstEvalExpressionInt(ctx))

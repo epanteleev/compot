@@ -643,4 +643,20 @@ class TypeResolutionTest {
         val typeHolder = parser.typeHolder()
         assertEquals(StorageClass.STATIC, typeHolder["a"].storageClass)
     }
+
+    @Test
+    fun testArrayOfPointers() {
+        val input = """
+            const char ptr0[] = "b";
+            const char ptr[] = "a";
+            static char* table[][2] = {{ ptr0, ptr }};
+        """.trimIndent()
+
+        val tokens = CTokenizer.apply(input)
+        val parser = CProgramParser.build(tokens)
+
+        parser.translation_unit()
+        val typeHolder = parser.typeHolder()
+        println(typeHolder)
+    }
 }

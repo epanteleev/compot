@@ -112,7 +112,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
             is StringNode -> {
                 // Special case for string initialization like:
                 // char a[] = "hello";
-                return@memoizeType typeHolder.addVar(name(), VarDescriptor(TypeDesc.from(CPointer(CHAR)), declspecType.storageClass))
+                return@memoizeType typeHolder.addVar(name(), VarDescriptor(TypeDesc.from(rvalue.resolveType(typeHolder)), declspecType.storageClass))
             }
             else -> throw TypeResolutionException("Array size is not specified")
         }

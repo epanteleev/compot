@@ -94,6 +94,13 @@ abstract class InitializerListTest: CommonCTest() {
         assertEquals("text1: \n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun test14() {
+        val result = runCTest("shlang/initializerList/initializerList14", listOf(), options())
+        assertEquals("b", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class InitializerListTestsO0: InitializerListTest() {
