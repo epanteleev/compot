@@ -884,12 +884,16 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val right = visitExpression(binop.right, true)
 
         if (leftType !is AnyCStructType) {
-            val leftIrType = mb.toIRLVType<PrimitiveType>(typeHolder, leftType)
+            val leftIrType = mb.toIRType<Type>(typeHolder, leftType)
             val rightCvt = ir.convertToType(right, leftIrType)
+            val cvt = when (leftIrType) {
+                Type.U1 -> ir.flag2int(rightCvt, Type.I8)
+                else    -> rightCvt
+            }
 
             val left = visitExpression(binop.left, false)
-            ir.store(left, rightCvt)
-            return rightCvt
+            ir.store(left, cvt)
+            return cvt
         }
 
         val left = visitExpression(binop.left, true)
@@ -1367,12 +1371,22 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.branch(fnStmt.resolveExit(ir))
             return
         }
+
         val value = visitExpression(expr, true)
         when (val type = returnStatement.expr.resolveType(typeHolder)) {
-            is CPrimitive, is CStringLiteral -> {
-                val returnType = ir.prototype().returnType().asType<PrimitiveType>()
-                val returnValue = ir.convertToType(value, returnType)
-                ir.store(fnStmt.returnValueAdr(), returnValue)
+            is CPrimitive, is CStringLiteral -> when (functionType.retType().cType()) {
+                is BOOL -> {
+                    val returnType = ir.prototype().returnType().asType<PrimitiveType>()
+                    val returnValue = ir.convertToType(value, Type.U1)
+                    val cvt = ir.convertToType(returnValue, returnType)
+                    ir.store(fnStmt.returnValueAdr(), cvt)
+                }
+                is CPrimitive -> {
+                    val returnType = ir.prototype().returnType().asType<PrimitiveType>()
+                    val returnValue = ir.convertToType(value, returnType)
+                    ir.store(fnStmt.returnValueAdr(), returnValue)
+                }
+                else -> throw RuntimeException("internal error")
             }
             is CStructType -> {
                 ir.memcpy(fnStmt.returnValueAdr(), value, U64Value(type.size().toLong()))
@@ -1671,12 +1685,16 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val type = varDesc.type.cType()
         if (type !is CAggregateType) {
             val rvalue = visitExpression(initDeclarator.rvalue, true)
-            val commonType = mb.toIRLVType<PrimitiveType>(typeHolder, type)
+            val commonType      = mb.toIRType<Type>(typeHolder, type)
             val convertedRvalue = ir.convertToType(rvalue, commonType)
+            val cvt = when (commonType) {
+                Type.U1 -> ir.flag2int(convertedRvalue, Type.I8)
+                else    -> convertedRvalue
+            }
 
             val lvalueAdr = visit(initDeclarator.declarator)
-            ir.store(lvalueAdr, convertedRvalue)
-            return convertedRvalue
+            ir.store(lvalueAdr, cvt)
+            return cvt
         }
         val lvalueAdr = initDeclarator.declarator.accept(this)
         when (val rvalue = initDeclarator.rvalue) {

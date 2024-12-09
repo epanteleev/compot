@@ -389,15 +389,15 @@ object TypeConverter {
 
             Type.U1 -> {
                 when (val vType = value.type()) {
-                    Type.I8  -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I8, 0))
-                    Type.I16 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I16, 0))
+                    Type.I8  -> icmp(value, IntPredicate.Ne, I8Value(0))
+                    Type.I16 -> icmp(value, IntPredicate.Ne, I16Value(0))
                     Type.I32 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I32, 0))
                     Type.I64 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.I64, 0))
                     Type.U8  -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U8, 0))
                     Type.U16 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U16, 0))
                     Type.U32 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U32, 0))
                     Type.U64 -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.U64, 0))
-                    Type.Ptr -> icmp(value, IntPredicate.Ne, Constant.valueOf(Type.Ptr, 0))
+                    Type.Ptr -> icmp(value, IntPredicate.Ne, NullValue.NULLPTR)
                     else -> throw RuntimeException("Cannot convert $value:$vType to $toType")
                 }
             }
