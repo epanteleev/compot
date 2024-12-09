@@ -12,6 +12,13 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("isdigit\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testAlignedAlloc() {
+        val result = runCTest("shlang/stdlib/aligned_alloc", listOf(), options())
+        assertEquals("Done\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {
