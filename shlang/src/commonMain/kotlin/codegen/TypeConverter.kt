@@ -47,7 +47,7 @@ object TypeConverter {
         ULONG  -> Type.U64
         FLOAT  -> Type.F32
         DOUBLE -> Type.F64
-        VOID   -> Type.Void // TODO handle case '(void) 0'
+        VOID   -> Type.Void
         is CStructType -> convertStructType(typeHolder, type)
         is CArrayType -> {
             val elementType = toIRType<NonTrivialType>(typeHolder, type.type.cType())
@@ -100,6 +100,14 @@ object TypeConverter {
         }
 
         return convertToType(value, Type.I64)
+    }
+
+    fun FunctionDataBuilder.convertRVToType(value: Value, toType: Type, cvtType: IntegerType = Type.I8): Value {
+        val rightCvt = convertToType(value, toType)
+        return when (toType) {
+            Type.U1 -> flag2int(rightCvt, cvtType)
+            else    -> rightCvt
+        }
     }
 
     fun FunctionDataBuilder.convertToType(value: Value, toType: Type): Value {

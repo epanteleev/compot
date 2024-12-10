@@ -6,6 +6,7 @@ import ir.value.*
 import parser.nodes.*
 import common.assertion
 import codegen.TypeConverter.coerceArguments
+import codegen.TypeConverter.convertRVToType
 import ir.instruction.*
 import ir.module.block.Label
 import codegen.TypeConverter.convertToType
@@ -701,50 +702,50 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun eq(type: Type): AnyPredicateType = when (type) {
+    private fun eq(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Eq
         is FloatingPointType -> FloatPredicate.Oeq
         is PointerType       -> IntPredicate.Eq
-        else -> throw RuntimeException("Unknown type: type=$type")
+        is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
-    private fun ne(type: Type): AnyPredicateType = when (type) {
+    private fun ne(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Ne
         is FloatingPointType -> FloatPredicate.One
         is PointerType       -> IntPredicate.Ne
-        else -> throw RuntimeException("Unknown type: type=$type")
+        is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
-    private fun gt(type: Type): AnyPredicateType = when (type) {
+    private fun gt(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Gt
         is FloatingPointType -> FloatPredicate.Ogt
         is PointerType       -> IntPredicate.Gt
-        else -> throw RuntimeException("Unknown type: type=$type")
+        is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
-    private fun lt(type: Type): AnyPredicateType = when (type) {
+    private fun lt(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Lt
         is FloatingPointType -> FloatPredicate.Olt
         is PointerType       -> IntPredicate.Lt
-        else -> throw RuntimeException("Unknown type: type=$type")
+        is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
-    private fun le(type: Type): AnyPredicateType = when (type) {
+    private fun le(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Le
         is FloatingPointType -> FloatPredicate.Ole
         is PointerType       -> IntPredicate.Le
-        else -> throw RuntimeException("Unknown type: type=$type")
+        is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
-    private fun ge(type: Type): AnyPredicateType = when (type) {
+    private fun ge(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Ge
         is FloatingPointType -> FloatPredicate.Oge
         is PointerType       -> IntPredicate.Ge
-        else -> throw RuntimeException("Unknown type: type=$type")
+        is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
     private fun makeAlgebraicBinary(binop: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
-        when (val commonType = mb.toIRLVType<PrimitiveType>(typeHolder, binop.resolveType(typeHolder))) {
+        when (val commonType = mb.toIRType<Type>(typeHolder, binop.resolveType(typeHolder))) {
             is PointerType -> {
                 val lvalue     = visitExpression(binop.left, true)
                 val lValueType = when (val l = binop.left.resolveType(typeHolder)) {
@@ -765,21 +766,22 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val mul = ir.mul(convertedRValue, U64Value(size.toLong()))
 
                 val result = op(convertedLValue, mul)
-                return ir.convertToType(result, commonType)
+                return ir.convertRVToType(result, commonType)
             }
             is FloatingPointType -> {
                 val left = visitExpression(binop.left, true)
-                val leftConverted = ir.convertToType(left, commonType)
+                val leftConverted = ir.convertRVToType(left, commonType)
 
                 val right = visitExpression(binop.right, true)
-                val rightConverted = ir.convertToType(right, commonType)
+                val rightConverted = ir.convertRVToType(right, commonType)
 
                 return op(leftConverted, rightConverted)
             }
             is IntegerType -> {
                 val cvtType = when (commonType) {
-                    is SignedIntType -> if (commonType.sizeOf() < WORD_SIZE) Type.I32 else commonType
+                    is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) Type.I32 else commonType
                     is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) Type.U32 else commonType
+                    else -> throw IRCodeGenError("Unexpected type: $commonType", binop.begin())
                 }
                 val left = visitExpression(binop.left, true)
                 val leftConverted = ir.convertToType(left, cvtType)
@@ -789,7 +791,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 return op(leftConverted, rightConverted)
             }
+            is FlagType -> {
+                val left = visitExpression(binop.left, true)
+                val leftConverted = ir.convertToType(left, Type.I32)
+
+                val right = visitExpression(binop.right, true)
+                val rightConverted = ir.convertToType(right, Type.I32)
+
+                return op(leftConverted, rightConverted)
+            }
             is UndefType -> throw IRCodeGenError("Undef type", binop.begin())
+            else -> throw IRCodeGenError("Unexpected type: $commonType", binop.begin())
         }
     }
 
@@ -857,15 +869,21 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private inline fun makeComparisonBinary(binop: BinaryOp, crossinline predicate: (NonTrivialType) -> AnyPredicateType, isRvalue: Boolean): Value {
-        val commonType = mb.toIRLVType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))
+    private inline fun makeComparisonBinary(binop: BinaryOp, crossinline predicate: (PrimitiveType) -> AnyPredicateType, isRvalue: Boolean): Value {
+        val commonType = mb.toIRType<Type>(typeHolder, binop.resolveType(typeHolder))
         val left = visitExpression(binop.left, true)
-        val leftConverted = ir.convertToType(left, commonType)
+        val leftConverted = ir.convertRVToType(left, commonType)
 
         val right = visitExpression(binop.right, true)
-        val rightConverted = ir.convertToType(right, commonType)
+        val rightConverted = ir.convertRVToType(right, commonType)
 
-        val cmp = makeCondition(leftConverted, predicate(commonType), rightConverted)
+        val predicateType = when (commonType) {
+            Type.U1          -> Type.I8
+            is PrimitiveType -> commonType
+            else -> throw RuntimeException("Unknown type: type=$commonType")
+        }
+
+        val cmp = makeCondition(leftConverted, predicate(predicateType), rightConverted)
         if (isRvalue) {
             return cmp
         }
@@ -885,15 +903,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         if (leftType !is AnyCStructType) {
             val leftIrType = mb.toIRType<Type>(typeHolder, leftType)
-            val rightCvt = ir.convertToType(right, leftIrType)
-            val cvt = when (leftIrType) {
-                Type.U1 -> ir.flag2int(rightCvt, Type.I8)
-                else    -> rightCvt
-            }
+            val rightCvt = ir.convertRVToType(right, leftIrType)
 
             val left = visitExpression(binop.left, false)
-            ir.store(left, cvt)
-            return cvt
+            ir.store(left, rightCvt)
+            return rightCvt
         }
 
         val left = visitExpression(binop.left, true)
@@ -1079,9 +1093,16 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             PrefixUnaryOpType.NOT -> {
                 val value = visitExpression(unaryOp.primary, true)
                 val type = unaryOp.resolveType(typeHolder)
-                val commonType = mb.toIRLVType<PrimitiveType>(typeHolder, type)
-                val converted = ir.convertToType(value, commonType) //TODO do we need this?
-                makeCondition(converted, eq(commonType), Constant.of(converted.asType(), 0))
+                val commonType = mb.toIRType<Type>(typeHolder, type)
+                val converted = ir.convertRVToType(value, commonType) //TODO do we need this?
+
+                val eqType = when (commonType) {
+                    Type.U1          -> Type.I8
+                    is PrimitiveType -> commonType
+                    else -> throw IRCodeGenError("Unknown type: $commonType", unaryOp.begin())
+                }
+
+                makeCondition(converted, eq(eqType), PrimitiveConstant.of(converted.asType(), 0))
             }
             PrefixUnaryOpType.BIT_NOT -> {
                 val value = visitExpression(unaryOp.primary, true)
@@ -1601,8 +1622,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val irType = when (val cType = type.type.cType()) {
-            is CPrimitive     -> mb.toIRLVType<PrimitiveType>(typeHolder, cType)
-            is CAggregateType -> mb.toIRType<NonTrivialType>(typeHolder, cType)
+            is BOOL                          -> Type.I8
+            is CAggregateType, is CPrimitive -> mb.toIRType<NonTrivialType>(typeHolder, cType)
             else -> throw IRCodeGenError("Unknown type, type=$cType", declarator.begin())
         }
 
@@ -1686,15 +1707,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (type !is CAggregateType) {
             val rvalue = visitExpression(initDeclarator.rvalue, true)
             val commonType      = mb.toIRType<Type>(typeHolder, type)
-            val convertedRvalue = ir.convertToType(rvalue, commonType)
-            val cvt = when (commonType) {
-                Type.U1 -> ir.flag2int(convertedRvalue, Type.I8)
-                else    -> convertedRvalue
-            }
+            val convertedRvalue = ir.convertRVToType(rvalue, commonType)
 
             val lvalueAdr = visit(initDeclarator.declarator)
-            ir.store(lvalueAdr, cvt)
-            return cvt
+            ir.store(lvalueAdr, convertedRvalue)
+            return convertedRvalue
         }
         val lvalueAdr = initDeclarator.declarator.accept(this)
         when (val rvalue = initDeclarator.rvalue) {
