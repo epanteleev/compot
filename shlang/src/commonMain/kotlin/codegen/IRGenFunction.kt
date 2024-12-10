@@ -583,7 +583,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val functionType = funcPointerCall.functionType(typeHolder)
         val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true)
 
-        val cPrototype = CFunctionPrototypeBuilder(funcPointerCall.begin(), functionType, mb, typeHolder).build()
+        val cPrototype = CFunctionPrototypeBuilder(funcPointerCall.begin(), functionType, mb, typeHolder, StorageClass.AUTO).build()
 
         val prototype = IndirectFunctionPrototype(cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
         val (convertedArgs, attr) = convertFunctionArgs(prototype, funcPointerCall.args)
@@ -1761,9 +1761,11 @@ class FunGenInitializer(moduleBuilder: ModuleBuilder,
                         varStack: VarStack<Value>,
                         nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
     fun generate(functionNode: FunctionNode) {
-        val fnType     = functionNode.declareType(functionNode.specifier, typeHolder).type.asType<CFunctionType>()
+        val varDesc     = functionNode.declareType(functionNode.specifier, typeHolder)
+        val fnType = varDesc.type.asType<CFunctionType>()
+
         val parameters = functionNode.functionDeclarator().params()
-        val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder).build()
+        val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder, varDesc.storageClass).build()
 
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
         val funGen = IrGenFunction(mb, typeHolder, varStack, nameGenerator, currentFunction, fnType)

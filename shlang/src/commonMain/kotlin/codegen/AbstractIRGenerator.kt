@@ -254,8 +254,8 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         val manglingName = generateName(declarator,  varDesc)
         when (val cType = varDesc.type.cType()) {
             is CFunctionType -> {
-                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder).build()
-                val externFunc = getExternFunction(declarator.name(), cPrototype)
+                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass).build()
+                val externFunc = getExternFunction(declarator.name(), cPrototype) //TODO extern not everytime
                 varStack[declarator.name()] = externFunc
                 return externFunc
             }

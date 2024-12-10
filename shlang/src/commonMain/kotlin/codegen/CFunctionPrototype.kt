@@ -7,17 +7,28 @@ import ir.attributes.ByValue
 import codegen.TypeConverter.toIRType
 import intrinsic.VaStart
 import ir.attributes.FunctionAttribute
+import ir.attributes.GlobalValueAttribute
 import ir.attributes.VarArgAttribute
 import ir.module.builder.impl.ModuleBuilder
 import tokenizer.Position
+import typedesc.StorageClass
 
 
 class CFunctionPrototype(val returnType: Type, val argumentTypes: List<NonTrivialType>, val attributes: Set<FunctionAttribute>)
 
-internal class CFunctionPrototypeBuilder(val begin: Position, private val functionType: AnyCFunctionType, private val mb: ModuleBuilder, val typeHolder: TypeHolder) {
+internal class CFunctionPrototypeBuilder(val begin: Position, private val functionType: AnyCFunctionType, private val mb: ModuleBuilder, val typeHolder: TypeHolder, val storageClass: StorageClass?) {
     private val returnType = irReturnType()
     private val types = arrayListOf<NonTrivialType>()
     private val attributes = hashSetOf<FunctionAttribute>()
+
+    private fun handleStorageClass() {
+        val attribute = when (storageClass) {
+            StorageClass.STATIC -> GlobalValueAttribute.INTERNAL
+            else -> GlobalValueAttribute.DEFAULT
+        }
+
+        attributes.add(attribute)
+    }
 
     private fun irReturnType(): Type {
         val retType = functionType.retType()
@@ -69,6 +80,7 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
 
     fun build(): CFunctionPrototype {
         argumentTypes()
+        handleStorageClass()
         if (functionType.variadic()) {
             attributes.add(VarArgAttribute)
         }
