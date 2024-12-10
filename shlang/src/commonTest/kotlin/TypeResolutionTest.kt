@@ -421,8 +421,8 @@ class TypeResolutionTest {
         val unionType = typeHolder.getVarTypeOrNull("b") ?: error("Cannot find union type")
         assertEquals("union B {int a;struct struct.0 {int b;char c;}}", unionType.toString())
         val ty = unionType.type.cType() as CUnionType
-        assertEquals(0, ty.fieldIndex("a"))
-        assertEquals(0, ty.fieldIndex("b"))
+        assertEquals(0, ty.fieldByIndexOrNull("a"))
+        assertEquals(0, ty.fieldByIndexOrNull("b"))
         //assertEquals(2, ty.fieldIndex("c")) TODO
     }
 
@@ -446,9 +446,9 @@ class TypeResolutionTest {
         val structType = typeHolder.getVarTypeOrNull("a") ?: error("Cannot find struct type")
         assertEquals("struct A {int a;union union.0 {int b;char c;}}", structType.toString())
         val ty = structType.type.cType() as CStructType
-        assertEquals(0, ty.fieldIndex("a"))
-        assertEquals(1, ty.fieldIndex("b"))
-        assertEquals(1, ty.fieldIndex("c"))
+        assertEquals(0, ty.fieldByIndexOrNull("a"))
+        assertEquals(1, ty.fieldByIndexOrNull("b"))
+        assertEquals(1, ty.fieldByIndexOrNull("c"))
     }
 
     @Test
@@ -475,11 +475,11 @@ class TypeResolutionTest {
         val structType = typeHolder.getVarTypeOrNull("c") ?: error("Cannot find struct type")
         assertEquals("struct C {union <unknown> {struct <unknown> {int i;int j;}struct <unknown> {long k;long l;} w;}int m;}", structType.toString())
         val ty = structType.type.cType() as CStructType
-        val idx = ty.fieldIndex("w") ?: error("Cannot find field w")
+        val idx = ty.fieldByIndexOrNull("w") ?: error("Cannot find field w")
         assertEquals(0, idx)
-        val unionType = ty.fieldIndex(0)!!.cType() as CUnionType
-        assertEquals(0, unionType.fieldIndex("k"))
-        assertEquals(1, unionType.fieldIndex("l"))
+        val unionType = ty.fieldByIndexOrNull(0)!!.cType() as CUnionType
+        assertEquals(0, unionType.fieldByIndexOrNull("k"))
+        assertEquals(1, unionType.fieldByIndexOrNull("l"))
     }
 
     @Test

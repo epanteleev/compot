@@ -15,7 +15,7 @@ class AnonMember(private val typeDesc: TypeDesc): Member() {
     override fun toString(): String     = typeDesc.toString()
 }
 
-class FieldMember(val name: String, val typeDesc: TypeDesc): Member() {
+class FieldMember(val name: String, private val typeDesc: TypeDesc): Member() {
     override fun cType(): CType       = typeDesc.cType()
     override fun typeDesc(): TypeDesc = typeDesc
     override fun size(): Int          = typeDesc.size()

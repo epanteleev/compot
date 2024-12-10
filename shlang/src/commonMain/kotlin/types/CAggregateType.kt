@@ -35,13 +35,19 @@ sealed class CAggregateType: CType() {
 sealed class AnyCStructType(open val name: String, protected val fields: List<Member>): CAggregateType() {
     override fun typename(): String = name
 
-    abstract fun fieldIndex(name: String): Int?
+    abstract fun fieldByIndexOrNull(name: String): Int?
 
-    fun fieldIndex(index: Int): TypeDesc? {
+    fun fieldByIndexOrNull(index: Int): TypeDesc? {
         if (index < 0 || index >= fields.size) {
             return null
         }
+
         return fields[index].typeDesc()
+    }
+
+    fun fieldByIndex(index: Int): TypeDesc {
+        return fieldByIndexOrNull(index) ?:
+            throw RuntimeException("Cannon find field by index: index=$index, { name=$name, $fields }")
     }
 
     fun field(name: String): CType? {
@@ -71,7 +77,7 @@ class CStructType(override val name: String, fields: List<Member>): AnyCStructTy
         return maxAlignment
     }
 
-    override fun fieldIndex(name: String): Int? {
+    override fun fieldByIndexOrNull(name: String): Int? {
         var offset = 0
         for ((idx, field) in fields.withIndex()) {
             when (field) {
@@ -82,14 +88,14 @@ class CStructType(override val name: String, fields: List<Member>): AnyCStructTy
                 }
                 is AnonMember -> when (val cType = field.cType()) {
                     is CUnionType -> {
-                        val i = cType.fieldIndex(name)
+                        val i = cType.fieldByIndexOrNull(name)
                         if (i != null) {
                             return idx + offset
                         }
                         offset += cType.fields().size
                     }
                     is CStructType -> {
-                        val i = cType.fieldIndex(name)
+                        val i = cType.fieldByIndexOrNull(name)
                         if (i != null) {
                             return idx + i + offset
                         }
@@ -141,7 +147,7 @@ class CStructType(override val name: String, fields: List<Member>): AnyCStructTy
 }
 
 class CUnionType(override val name: String, fields: List<Member>): AnyCStructType(name, fields) {
-    override fun fieldIndex(name: String): Int? {
+    override fun fieldByIndexOrNull(name: String): Int? {
         if (fields.isEmpty()) {
             return null
         }

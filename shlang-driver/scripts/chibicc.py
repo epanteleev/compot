@@ -17,7 +17,7 @@ def build(compiler):
     sp.run([compiler, "-c", "main.c", "-o", "main.o", "-O1"])
     sp.run([compiler, "-c", "parse.c", "-o", "parse.o", "-O1"])
     sp.run([compiler, "-c", "preprocess.c", "-o", "preprocess.o", "-O1"])
-    #sp.run([compiler, "-c", "codegen.c", "-o", "codegen.o", "-O1"])
+    sp.run([compiler, "-c", "codegen.c", "-o", "codegen.o", "-O1"])
     sp.run(["CC=gcc make", "chibicc"], shell=True)
     sp.run(["make", "test"])
 

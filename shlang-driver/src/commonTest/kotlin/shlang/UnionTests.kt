@@ -24,6 +24,19 @@ sealed class UnionTests : CommonCTest() {
         assertEquals("1.000000\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testUnion3() {
+        val result = runCTest("shlang/union/union3", listOf("runtime/runtime.c"), options())
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testUnion4() {
+        val result = runCTest("shlang/union/union4", listOf("runtime/runtime.c"), options())
+        assertEquals(1, result.exitCode)
+    }
+
 }
 
 class UnionTestsO0: UnionTests() {
