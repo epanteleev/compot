@@ -15,6 +15,8 @@ import ir.Definitions
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.attributes.ByValue
+import ir.attributes.FunctionAttribute
+import ir.attributes.GlobalValueAttribute
 import ir.instruction.Add
 import ir.instruction.And
 import ir.instruction.Div
@@ -759,6 +761,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             val unit = CompilationUnit()
 
             for (data in module.functions()) {
+                if (data.prototype.attributes.contains(GlobalValueAttribute.INTERNAL)) {
+                    continue
+                }
                 unit.global(data.prototype.name)
             }
 

@@ -1,6 +1,6 @@
 package ir.attributes
 
-enum class GlobalValueAttribute : AnyAttribute {
+enum class GlobalValueAttribute : AnyAttribute, FunctionAttribute {
     INTERNAL {
         override fun toString(): String = "internal"
     },

@@ -82,7 +82,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         val module = compile() ?: return
         OptDriver(cli.makeOptCLIArguments()).compile(module)
 
-        val exec = cli.getExecutableFileName() ?: return
+        cli.getExecutableFileName() ?: return
         val result = GNULdRunner("a.out")
             .libs(libs)
             .objs(objModules + cli.getOutputFilename())

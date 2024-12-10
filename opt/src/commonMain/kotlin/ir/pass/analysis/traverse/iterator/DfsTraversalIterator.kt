@@ -17,7 +17,7 @@ sealed class DfsTraversalIterator(countOfBlocks: Int) : BasicBlocksIterator(coun
         while (stack.isNotEmpty()) {
             val bb = stack.removeLast()
 
-            val last = bb.last()
+            val last = bb.lastOrNull()
             if (last is Return) {
                 exitBlock = bb
                 continue

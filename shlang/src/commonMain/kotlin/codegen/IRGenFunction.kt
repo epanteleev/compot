@@ -1368,7 +1368,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val constant = ConstEvalExpression.eval(caseStatement.constExpression, TryConstEvalExpressionInt(ctx))
             ?: throw IRCodeGenError("Case statement with non-constant expression: ${LineAgnosticAstPrinter.print(caseStatement.constExpression)}", caseStatement.begin())
 
-        val caseValueConverted = Constant.of(switchInfo.conditionType.asType(), constant)
+        val caseValueConverted = IntegerConstant.of(switchInfo.conditionType.asType(), constant)
         val caseBlock = ir.createLabel()
         if (switchInfo.table.isNotEmpty() && ir.last() !is TerminateInstruction) {
             // fall through
@@ -1376,7 +1376,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         switchInfo.table.add(caseBlock)
-        switchInfo.values.add(caseValueConverted as IntegerConstant)
+        switchInfo.values.add(caseValueConverted)
 
         ir.switchLabel(caseBlock)
         visitStatement(caseStatement.stmt)
@@ -1598,6 +1598,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         stmtStack.scoped(SwitchStmtInfo(condition.type().asType(), arrayListOf(), arrayListOf())) { info ->
             visitStatement(switchStatement.body)
+            if (ir.last() !is TerminateInstruction) {
+                ir.branch(info.resolveExit(ir))
+            }
+
             if (info.exit() != null) {
                 val endBlock = info.resolveExit(ir)
                 if (ir.last() !is TerminateInstruction) {

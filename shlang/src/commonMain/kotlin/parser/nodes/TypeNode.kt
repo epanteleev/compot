@@ -1,18 +1,13 @@
 package parser.nodes
 
 import types.*
+import typedesc.*
 import codegen.consteval.*
 import intrinsic.VaStart
 import tokenizer.tokens.*
 import tokenizer.tokens.CToken
 import parser.nodes.visitors.TypeNodeVisitor
 import tokenizer.Position
-import typedesc.CTypeBuilder
-import typedesc.FunctionSpecifier
-import typedesc.StorageClass
-import typedesc.TypeHolder
-import typedesc.TypeProperty
-import typedesc.TypeQualifier
 
 
 sealed class AnyTypeNode(val name: CToken) : Node() {
@@ -22,6 +17,23 @@ sealed class AnyTypeNode(val name: CToken) : Node() {
     abstract fun<T> accept(visitor: TypeNodeVisitor<T>): T
 
     abstract fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder): TypeProperty
+
+    protected fun resolveFieldTypes(typeHolder: TypeHolder, fields: List<StructField>): List<Member> {
+        val members = arrayListOf<Member>()
+        for (field in fields) {
+            val type = field.declspec.specifyType(typeHolder, listOf()).type
+            if (field.declarators.isEmpty()) {
+                members.add(AnonMember(type))
+                continue
+            }
+            for (declarator in field.declarators) {
+                val resolved = declarator.declareType(field.declspec, typeHolder).type
+                members.add(FieldMember(declarator.name(), resolved))
+            }
+        }
+
+        return members
+    }
 
     protected inline fun<reified T: TypeProperty> addToBuilder(typeBuilder: CTypeBuilder, closure: () -> T): T {
         val property = closure()
@@ -34,21 +46,8 @@ class UnionSpecifier(name: Identifier, val fields: List<StructField>) : AnyTypeN
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        val members = arrayListOf<Member>()
-        for (field in fields) {
-            val type = field.declspec.specifyType(typeHolder, listOf()).type
-            if (field.declarators.isEmpty()) {
-                members.add(AnonMember(type))
-                continue
-            }
-            for (declarator in field.declarators) {
-                members.add(FieldMember(declarator.name(), type))
-            }
-        }
-
-        val structType = CUnionType(name(), members)
-        name.let { typeHolder.addNewType(it.str(), structType) }
-        return@addToBuilder structType
+        val structType = CUnionType(name(), resolveFieldTypes(typeHolder, fields))
+        return@addToBuilder typeHolder.addNewType(name.str(), structType)
     }
 }
 
@@ -69,13 +68,11 @@ class TypeQualifierNode(name: Keyword): AnyTypeNode(name) {
         qualifier()
     }
 
-    fun qualifier(): TypeQualifier {
-        return when (name.str()) {
-            "const"    -> TypeQualifier.CONST
-            "volatile" -> TypeQualifier.VOLATILE
-            "restrict" -> TypeQualifier.RESTRICT
-            else       -> TypeQualifier.EMPTY
-        }
+    fun qualifier(): TypeQualifier = when (name.str()) {
+        "const"    -> TypeQualifier.CONST
+        "volatile" -> TypeQualifier.VOLATILE
+        "restrict" -> TypeQualifier.RESTRICT
+        else       -> TypeQualifier.EMPTY
     }
 }
 
@@ -93,15 +90,13 @@ class StorageClassSpecifier(name: Keyword): AnyTypeNode(name) {
         return storageClass
     }
 
-    private fun storageClass(): StorageClass {
-        return when (name.str()) {
-            "typedef"  -> StorageClass.TYPEDEF
-            "extern"   -> StorageClass.EXTERN
-            "static"   -> StorageClass.STATIC
-            "register" -> StorageClass.REGISTER
-            "auto"     -> StorageClass.AUTO
-            else       -> throw IllegalStateException("Unknown storage class $name")
-        }
+    private fun storageClass(): StorageClass = when (name.str()) {
+        "typedef"  -> StorageClass.TYPEDEF
+        "extern"   -> StorageClass.EXTERN
+        "static"   -> StorageClass.STATIC
+        "register" -> StorageClass.REGISTER
+        "auto"     -> StorageClass.AUTO
+        else       -> throw IllegalStateException("Unknown storage class $name")
     }
 }
 
@@ -130,19 +125,7 @@ class StructSpecifier(name: Identifier, val fields: List<StructField>) : AnyType
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        val members = arrayListOf<Member>()
-        for (field in fields) {
-            val type = field.declspec.specifyType(typeHolder, listOf()) //TODo
-            if (field.declarators.isEmpty()) {
-                members.add(AnonMember(type.type))
-                continue
-            }
-            for (declarator in field.declarators) {
-                val resolved = declarator.declareType(field.declspec, typeHolder).type
-                members.add(FieldMember(declarator.name(), resolved))
-            }
-        }
-        val structType = CStructType(name.str(), members)
+        val structType = CStructType(name.str(), resolveFieldTypes(typeHolder, fields))
         return@addToBuilder typeHolder.addNewType(name.str(), structType)
     }
 }
@@ -171,9 +154,7 @@ class EnumSpecifier(name: Identifier, val enumerators: List<Enumerator>) : AnyTy
             if (constExpression !is EmptyExpression) {
                 val ctx = CommonConstEvalContext<Int>(typeHolder, enumeratorValues)
                 val constExpr = ConstEvalExpression.eval(constExpression, TryConstEvalExpressionInt(ctx))
-                if (constExpr == null) {
-                    throw IllegalStateException("Cannot evaluate enum value")
-                }
+                    ?: throw IllegalStateException("Cannot evaluate enum value")
                 enumValue = constExpr
             }
             enumeratorValues[field.name()] = enumValue
@@ -199,11 +180,9 @@ class FunctionSpecifierNode(name: Keyword) : AnyTypeNode(name) {
         return visitor.visit(this)
     }
 
-    override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder): TypeProperty {
-        return when (name.str()) {
-            "inline"   -> FunctionSpecifier.INLINE
-            "noreturn" -> FunctionSpecifier.NORETURN
-            else -> throw IllegalStateException("Unknown function specifier $name")
-        }
+    override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder): TypeProperty = when (name.str()) {
+        "inline"   -> FunctionSpecifier.INLINE
+        "noreturn" -> FunctionSpecifier.NORETURN
+        else -> throw IllegalStateException("Unknown function specifier $name")
     }
 }

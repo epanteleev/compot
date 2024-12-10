@@ -54,7 +54,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
 
     override fun last(): TerminateInstruction {
         return lastOrNull() ?:
-            throw RuntimeException("Last instruction is not terminate: bb=$this, last=${instructions.lastOrNull()}")
+            throw IllegalStateException("Last instruction is not terminate: bb=$this, last=${instructions.lastOrNull()}")
     }
 
     fun lastOrNull(): TerminateInstruction? {

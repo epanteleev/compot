@@ -12,7 +12,7 @@ import ir.value.Value
 abstract class DumpFunctionData(protected val functionData: FunctionData) {
     protected val builder = StringBuilder()
 
-    protected fun dumpFunctionData() {
+    private fun dumpFunctionData() {
         dumpPrototype(functionData.prototype, functionData.arguments())
         builder.append("{\n")
 
@@ -56,7 +56,11 @@ abstract class DumpFunctionData(protected val functionData: FunctionData) {
     }
 
     override fun toString(): String {
-        return builder().toString()
+        try {
+            return builder().toString()
+        } catch (e: Exception) {
+            throw IllegalStateException("In function: ${functionData.prototype}:\n" + e.stackTraceToString())
+        }
     }
 }
 
