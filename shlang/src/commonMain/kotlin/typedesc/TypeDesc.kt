@@ -1,11 +1,9 @@
 package typedesc
 
+import tokenizer.Position
 import types.CType
 
-
-data class TypeInferenceException(override val message: String) : Exception(message)
-
-data class TypeResolutionException(override val message: String) : Exception(message)
+data class TypeResolutionException(override val message: String, private val position: Position) : Exception(message)
 
 class TypeDesc(private val baseType: CType, private val properties: List<TypeQualifier>) {
     fun qualifiers(): List<TypeQualifier> = properties
@@ -18,7 +16,7 @@ class TypeDesc(private val baseType: CType, private val properties: List<TypeQua
     inline fun<reified T: CType> asType(): T {
         val cTy = cType()
         if (cTy !is T) {
-            throw TypeResolutionException("Type $cTy is not of type ${T::class.simpleName}")
+            throw TypeResolutionException("Type $cTy is not of type ${T::class.simpleName}", Position.UNKNOWN) // TODO unknown pos???
         }
 
         return cTy

@@ -12,7 +12,7 @@ import typedesc.TypeHolder
 
 data class IRCodeGenError(override val message: String, val position: Position) : Exception(message)
 
-class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack<Value>(), NameGenerator()) {
+class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack(), NameGenerator()) {
     fun visit(programNode: ProgramNode) = varStack.scoped {
         for (node in programNode.nodes) {
             when (node) {

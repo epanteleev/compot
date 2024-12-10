@@ -3,7 +3,6 @@ package types
 import ir.Definitions.POINTER_SIZE
 import typedesc.TypeDesc
 import typedesc.TypeHolder
-import typedesc.TypeInferenceException
 import typedesc.TypeQualifier
 
 

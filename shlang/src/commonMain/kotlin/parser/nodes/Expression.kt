@@ -181,17 +181,17 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
         val leftType  = when (val l = left.resolveType(typeHolder)) {
             is AnyCArrayType -> l.asPointer()
             is CPrimitive    -> l
-            else -> throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(left)}'")
+            else -> throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(left)}'", begin())
         }
 
         val rightType = when (val r = right.resolveType(typeHolder)) {
             is AnyCArrayType -> r.asPointer()
             is CPrimitive    -> r
-            else -> throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(right)}'")
+            else -> throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(right)}'", begin())
         }
 
         val resultType = leftType.interfere(typeHolder, rightType) ?:
-            throw TypeResolutionException("Binary operation on incompatible types: $leftType and $rightType in ${left.begin()}'")
+            throw TypeResolutionException("Binary operation on incompatible types: $leftType and $rightType in ${left.begin()}'", begin())
         return@memoize resultType
     }
 }
@@ -222,17 +222,17 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
         val cvtTypeTrue = when (typeTrue) {
             is CPrimitive     -> typeTrue
             is CStringLiteral -> typeTrue.asPointer()
-            else -> throw TypeResolutionException("Conditional true branch with non-primitive type: $typeTrue")
+            else -> throw TypeResolutionException("Conditional true branch with non-primitive type: $typeTrue", begin())
         }
 
         val cvtTypeFalse = when (typeFalse) {
             is CPrimitive     -> typeFalse
             is CStringLiteral -> typeFalse.asPointer()
-            else -> throw TypeResolutionException("Conditional false branch with non-primitive type: $typeFalse")
+            else -> throw TypeResolutionException("Conditional false branch with non-primitive type: $typeFalse", begin())
         }
 
         val resultType = cvtTypeTrue.interfere(typeHolder, cvtTypeFalse) ?:
-            throw TypeResolutionException("Conditional with incompatible types: $cvtTypeTrue and $cvtTypeFalse: '${LineAgnosticAstPrinter.print(this)}'")
+            throw TypeResolutionException("Conditional with incompatible types: $cvtTypeTrue and $cvtTypeFalse: '${LineAgnosticAstPrinter.print(this)}'", begin())
         return@memoize resultType
     }
 }
@@ -244,7 +244,7 @@ class FunctionCall(val primary: Expression, val args: List<Expression>) : Expres
     private fun resolveParams(typeHolder: TypeHolder){
         val params = args.map { it.resolveType(typeHolder) }
         if (params.size != args.size) {
-            throw TypeResolutionException("Function call of '${LineAgnosticAstPrinter.print(primary)}' with unresolved types")
+            throw TypeResolutionException("Function call of '${LineAgnosticAstPrinter.print(primary)}' with unresolved types", begin())
         }
 
         for (i in args.indices) {
@@ -252,7 +252,7 @@ class FunctionCall(val primary: Expression, val args: List<Expression>) : Expres
             if (argType == params[i]) {
                 continue
             }
-            throw TypeResolutionException("Function call of '${LineAgnosticAstPrinter.print(primary)}' with wrong argument types")
+            throw TypeResolutionException("Function call of '${LineAgnosticAstPrinter.print(primary)}' with wrong argument types", begin())
         }
     }
 
@@ -262,7 +262,7 @@ class FunctionCall(val primary: Expression, val args: List<Expression>) : Expres
             return CPointer(functionType, setOf())
         }
         if (functionType !is CPointer) {
-            throw TypeResolutionException("Function call with non-function type: $functionType")
+            throw TypeResolutionException("Function call with non-function type: $functionType", begin())
         }
         return functionType
     }
@@ -278,7 +278,7 @@ class FunctionCall(val primary: Expression, val args: List<Expression>) : Expres
             return functionType.dereference(typeHolder) as AbstractCFunction
         }
         if (functionType !is CFunctionType) {
-            throw TypeResolutionException("Function call of '' with non-function type")
+            throw TypeResolutionException("Function call of '' with non-function type", begin())
         }
 
         return functionType
@@ -339,10 +339,10 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val structType = primary.resolveType(typeHolder)
         if (structType !is AnyCStructType) {
-            throw TypeResolutionException("Member access on non-struct type, but got $structType")
+            throw TypeResolutionException("Member access on non-struct type, but got $structType", begin())
         }
 
-        return@memoize structType.field(ident.str()) ?: throw TypeResolutionException("Field $ident not found in struct $structType")
+        return@memoize structType.field(ident.str()) ?: throw TypeResolutionException("Field $ident not found in struct $structType", begin())
     }
 }
 
@@ -356,14 +356,14 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
         val structType = when(val ty = primary.resolveType(typeHolder)) {
             is AnyCArrayType -> ty.asPointer()
             is CPointer      -> ty
-            else -> throw TypeResolutionException("Arrow member access on non-pointer type, but got $ty")
+            else -> throw TypeResolutionException("Arrow member access on non-pointer type, but got $ty", begin())
         }
         val baseType = structType.dereference(typeHolder)
         if (baseType !is AnyCStructType) {
-            throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType")
+            throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType", begin())
         }
 
-        return@memoize baseType.field(ident.str()) ?: throw TypeResolutionException("Field $ident not found in struct $baseType")
+        return@memoize baseType.field(ident.str()) ?: throw TypeResolutionException("Field $ident not found in struct $baseType", begin())
     }
 }
 
@@ -382,7 +382,7 @@ data class VarNode(private val str: Identifier) : Expression() {
             return@memoize varType.type.cType()
         }
 
-        return@memoize typeHolder.findEnum(str.str()) ?: throw TypeResolutionException("Variable '$str' not found")
+        return@memoize typeHolder.findEnum(str.str()) ?: throw TypeResolutionException("Variable '$str' not found", begin())
     }
 }
 
@@ -439,7 +439,7 @@ data class NumNode(val number: PPNumber) : Expression() {
             is Long   -> LONG
             is Float  -> FLOAT
             is Double -> DOUBLE
-            else      -> throw TypeResolutionException("Unknown number type, but got ${number.str()}")
+            else      -> throw TypeResolutionException("Unknown number type, but got ${number.str()}", begin())
         }
     }
 }
@@ -459,7 +459,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 is CPointer              -> primaryType.dereference(typeHolder)
                 is CArrayType            -> primaryType.type.cType()
                 is CUncompletedArrayType -> primaryType.elementType.cType()
-                else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType")
+                else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType", begin())
             }
             PrefixUnaryOpType.ADDRESS -> CPointer(primaryType)
             PrefixUnaryOpType.NOT -> {
@@ -470,13 +470,13 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 }
             }
             PrefixUnaryOpType.NEG -> {
-                primaryType as? CPrimitive ?: throw TypeResolutionException("Negation on non-primitive type: $primaryType")
+                primaryType as? CPrimitive ?: throw TypeResolutionException("Negation on non-primitive type: $primaryType", begin())
             }
             PrefixUnaryOpType.INC,
             PrefixUnaryOpType.DEC,
             PrefixUnaryOpType.PLUS -> primaryType
             PrefixUnaryOpType.BIT_NOT -> {
-                primaryType as? CPrimitive ?: throw TypeResolutionException("Bitwise not on non-primitive type: $primaryType")
+                primaryType as? CPrimitive ?: throw TypeResolutionException("Bitwise not on non-primitive type: $primaryType", begin())
             }
         }
 
@@ -498,11 +498,11 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
                 val exprType = when (val e = expr.resolveType(typeHolder)) {
                     is AnyCArrayType -> e.asPointer()
                     is CPointer -> e
-                    else -> throw TypeResolutionException("Array access with non-pointer type: $e")
+                    else -> throw TypeResolutionException("Array access with non-pointer type: $e", begin())
                 }
-                primaryType.interfere(typeHolder, exprType) ?: throw TypeResolutionException("Array access with incompatible types: $primaryType and $exprType")
+                primaryType.interfere(typeHolder, exprType) ?: throw TypeResolutionException("Array access with incompatible types: $primaryType and $exprType", begin())
             }
-            else -> throw TypeResolutionException("Array access on non-array type: $primaryType")
+            else -> throw TypeResolutionException("Array access on non-array type: $primaryType", begin())
         }
     }
 }

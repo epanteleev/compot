@@ -106,7 +106,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                         val rvalueType = baseType.element()
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
-                    else -> throw TypeResolutionException("Array size is not specified: type=$initializerType")
+                    else -> throw TypeResolutionException("Array size is not specified: type=$initializerType", declarator.begin())
                 }
             }
             is StringNode -> {
@@ -114,7 +114,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                 // char a[] = "hello";
                 return@memoizeType typeHolder.addVar(name(), VarDescriptor(TypeDesc.from(rvalue.resolveType(typeHolder)), declspecType.storageClass))
             }
-            else -> throw TypeResolutionException("Array size is not specified")
+            else -> throw TypeResolutionException("Array size is not specified", declarator.begin())
         }
     }
 }
@@ -126,7 +126,7 @@ data object EmptyDeclarator : AnyDeclarator() {
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor {
-        throw TypeResolutionException("Empty declarator is not supported")
+        throw TypeResolutionException("Empty declarator is not supported", begin())
     }
 }
 
