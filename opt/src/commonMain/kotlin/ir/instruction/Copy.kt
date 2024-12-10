@@ -6,7 +6,7 @@ import ir.types.asType
 import common.assertion
 import ir.module.block.Block
 import ir.types.PrimitiveType
-import ir.value.constant.UndefinedValue
+import ir.value.constant.UndefValue
 import ir.instruction.utils.IRInstructionVisitor
 
 
@@ -48,7 +48,7 @@ class Copy private constructor(id: Identity, owner: Block, private val type: Pri
         }
 
         private fun isAppropriateType(originType: Type, origin: Value): Boolean {
-            if (origin is UndefinedValue) {
+            if (origin is UndefValue) {
                 // Copy instruction can copy UndefinedValue
                 return true
             }

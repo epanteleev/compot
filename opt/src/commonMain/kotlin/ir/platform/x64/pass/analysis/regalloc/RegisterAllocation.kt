@@ -82,7 +82,7 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
         is ExternValue -> Address.external(value.name())
         is GlobalValue -> Address.internal(value.name())
         is NullValue -> Imm64.of(0)
-        is UndefinedValue -> {
+        is UndefValue -> {
             println("Warning: undefined behaviour\n") //TODO: remove this
             GPRegister.rax
         }

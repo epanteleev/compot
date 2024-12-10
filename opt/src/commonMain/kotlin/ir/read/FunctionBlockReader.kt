@@ -478,7 +478,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
         val lengthType = iterator.expect<UnsignedIntegerTypeToken>("length type")
         val length = iterator.expect<IntValue>("length value")
-        val constant = Constant.valueOf<UnsignedIntegerConstant>(lengthType.type(), length.int)
+        val constant = UnsignedIntegerConstant.of(lengthType.type(), length.int)
         builder.memcpy(dst, dstType, src, srcType, constant)
     }
 

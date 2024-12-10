@@ -13,6 +13,7 @@ import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.ModificationCounter
 import ir.value.constant.IntegerConstant
+import ir.value.constant.UndefValue
 import ir.value.constant.UnsignedIntegerConstant
 
 
@@ -143,7 +144,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
             }
             updateUsages(instruction) { newInstruction as UsableValue }
         }
-        kill(instruction, Value.UNDEF)
+        kill(instruction, UndefValue)
         return newInstruction
     }
 

@@ -1,10 +1,6 @@
 package ir.value.constant
 
-import ir.types.IntegerType
-import ir.types.SignedIntType
-import ir.types.Type
-import ir.types.UnsignedIntType
-import ir.value.constant.I64Value
+import ir.types.*
 
 
 sealed interface IntegerConstant: PrimitiveConstant {
@@ -15,30 +11,38 @@ sealed interface IntegerConstant: PrimitiveConstant {
 
     companion object {
         fun of(kind: IntegerType, value: Number): IntegerConstant = when (kind) {
-            is UnsignedIntType -> when (kind) {
-                Type.U8  -> U8Value(value.toByte())
-                Type.U16 -> U16Value(value.toShort())
-                Type.U32 -> U32Value(value.toInt())
-                Type.U64 -> U64Value(value.toLong())
-                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
-            }
-            is SignedIntType -> when (kind) {
-                Type.I8  -> I8Value(value.toByte())
-                Type.I16 -> I16Value(value.toShort())
-                Type.I32 -> I32Value(value.toInt())
-                Type.I64 -> I64Value(value.toLong())
-                else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
-            }
+            is UnsignedIntType -> UnsignedIntegerConstant.of(kind, value)
+            is SignedIntType -> SignedIntegerConstant.of(kind, value)
         }
     }
 }
 
 sealed interface SignedIntegerConstant: IntegerConstant {
     fun value(): Long
+
+    companion object {
+        fun of(kind: IntegerType, value: Number): SignedIntegerConstant = when (kind) {
+            Type.I8  -> I8Value(value.toByte())
+            Type.I16 -> I16Value(value.toShort())
+            Type.I32 -> I32Value(value.toInt())
+            Type.I64 -> I64Value(value.toLong())
+            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+        }
+    }
 }
 
 sealed interface UnsignedIntegerConstant: IntegerConstant {
     fun value(): ULong
+
+    companion object {
+        fun of(kind: UnsignedIntType, value: Number): UnsignedIntegerConstant = when (kind) {
+            Type.U8  -> U8Value(value.toByte())
+            Type.U16 -> U16Value(value.toShort())
+            Type.U32 -> U32Value(value.toInt())
+            Type.U64 -> U64Value(value.toLong())
+            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+        }
+    }
 }
 
 data class U8Value(val u8: Byte): UnsignedIntegerConstant {

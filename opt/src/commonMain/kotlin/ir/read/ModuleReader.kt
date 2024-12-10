@@ -63,51 +63,48 @@ class ModuleReader(string: String) {
         moduleBuilder.structType(struct.name, resolvedFieldTypes)
     }
 
-    private fun makeConstant0(type: TypeToken): Constant {
-        val global = when (val data = tokenIterator.next()) {
-            is IntValue -> {
-                if (type !is IntegerTypeToken) {
-                    throw throw ParseErrorException("expect integer type, but: type=${type}")
-                }
-                when (val tp = type.type()) {
-                    Type.I8 -> I8Value(data.int.toByte())
-                    Type.U8 -> U8Value(data.int.toByte())
-                    Type.I16 -> I16Value(data.int.toShort())
-                    Type.U16 -> U16Value(data.int.toShort())
-                    Type.I32 -> I32Value(data.int.toInt())
-                    Type.U32 -> U32Value(data.int.toInt())
-                    Type.I64 -> I64Value(data.int)
-                    Type.U64 -> U64Value(data.int)
-                    else -> throw ParseErrorException("unsupported: type=$tp, data=${data.int}")
-                }
+    private fun makeConstant0(type: TypeToken): NonTrivialConstant = when (val data = tokenIterator.next()) {
+        is IntValue -> {
+            if (type !is IntegerTypeToken) {
+                throw throw ParseErrorException("expect integer type, but: type=${type}")
             }
-            is FloatValue -> {
-                if (type !is FloatTypeToken) {
-                    throw throw ParseErrorException("expect float type, but: type=${type}")
-                }
-                when (val tp = type.type()) {
-                    Type.F32 -> F32Value(data.fp.toFloat())
-                    Type.F64 -> F64Value(data.fp)
-                    else -> throw ParseErrorException("unsupported: type=$tp, data=${data.fp}")
-                }
+            when (val tp = type.type()) {
+                Type.I8 -> I8Value(data.int.toByte())
+                Type.U8 -> U8Value(data.int.toByte())
+                Type.I16 -> I16Value(data.int.toShort())
+                Type.U16 -> U16Value(data.int.toShort())
+                Type.I32 -> I32Value(data.int.toInt())
+                Type.U32 -> U32Value(data.int.toInt())
+                Type.I64 -> I64Value(data.int)
+                Type.U64 -> U64Value(data.int)
+                else -> throw ParseErrorException("unsupported: type=$tp, data=${data.int}")
             }
-            is StringLiteralToken -> {
-                if (type !is ArrayTypeToken) {
-                    throw throw ParseErrorException("expect float type, but: type=${type}")
-                }
-
-                StringLiteralConstant(ArrayType(Type.I8, data.string.length), data.string)
-            }
-            is OpenBrace -> {
-                if (type !is AggregateTypeToken) {
-                    throw ParseErrorException("expect aggregate type, but: type=${type}")
-                }
-                parseInitializerListValue(type)
-            }
-
-            else -> throw ParseErrorException("unsupported: data=$data")
         }
-        return global
+        is FloatValue -> {
+            if (type !is FloatTypeToken) {
+                throw throw ParseErrorException("expect float type, but: type=${type}")
+            }
+            when (val tp = type.type()) {
+                Type.F32 -> F32Value(data.fp.toFloat())
+                Type.F64 -> F64Value(data.fp)
+                else -> throw ParseErrorException("unsupported: type=$tp, data=${data.fp}")
+            }
+        }
+        is StringLiteralToken -> {
+            if (type !is ArrayTypeToken) {
+                throw throw ParseErrorException("expect float type, but: type=${type}")
+            }
+
+            StringLiteralConstant(ArrayType(Type.I8, data.string.length), data.string)
+        }
+        is OpenBrace -> {
+            if (type !is AggregateTypeToken) {
+                throw ParseErrorException("expect aggregate type, but: type=${type}")
+            }
+            parseInitializerListValue(type)
+        }
+
+        else -> throw ParseErrorException("unsupported: data=$data")
     }
 
     private fun makeConstant(type: TypeToken, name: String): GlobalConstant {
@@ -158,7 +155,7 @@ class ModuleReader(string: String) {
     }
 
     // TODO copy paste from makeConstant
-    private fun parseInitializerListValue(type: AggregateTypeToken): Constant {
+    private fun parseInitializerListValue(type: AggregateTypeToken): NonTrivialConstant {
         val fields = arrayListOf<NonTrivialConstant>()
         do {
             val field = tokenIterator.next("field")
@@ -241,7 +238,7 @@ class ModuleReader(string: String) {
                 if (constant.type() != type) {
                     throw ParseErrorException("type mismatch: expected $type, but got ${constant.type()}")
                 }
-                moduleBuilder.addGlobal(name.name, constant)
+                moduleBuilder.addGlobalValue(name.name, constant)
             }
             else -> throw ParseErrorException("constant or global", keyword)
         }

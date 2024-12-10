@@ -14,8 +14,6 @@ import common.assertion
 import ir.Definitions
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
-import ir.attributes.ByValue
-import ir.attributes.FunctionAttribute
 import ir.attributes.GlobalValueAttribute
 import ir.instruction.Add
 import ir.instruction.And
@@ -40,7 +38,7 @@ import ir.platform.x64.pass.analysis.regalloc.LinearScanFabric
 import ir.platform.x64.pass.analysis.regalloc.SavedContext
 import ir.value.*
 import ir.value.constant.BoolValue
-import ir.value.constant.UndefinedValue
+import ir.value.constant.UndefValue
 
 
 internal data class CodegenException(override val message: String): Exception(message)
@@ -506,7 +504,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(copy: Copy) {
-        if (copy.origin() is UndefinedValue) {
+        if (copy.origin() is UndefValue) {
             // Do nothing. UB is UB
             return
         }

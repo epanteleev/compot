@@ -7,10 +7,10 @@ import ir.instruction.Instruction
 import ir.attributes.GlobalValueAttribute
 
 
-class GlobalValue private constructor(val name: String, private val init: Constant, private val attribute: GlobalValueAttribute): AnyGlobalValue, UsableValue {
+class GlobalValue private constructor(val name: String, private val init: NonTrivialConstant, private val attribute: GlobalValueAttribute): AnyGlobalValue, UsableValue {
     override var usedIn: MutableList<Instruction> = mutableListOf()
 
-    fun initializer(): Constant = init
+    fun initializer(): NonTrivialConstant = init
 
     override fun name(): String = name
 
@@ -42,7 +42,7 @@ class GlobalValue private constructor(val name: String, private val init: Consta
     fun attribute(): GlobalValueAttribute = attribute
 
     companion object {
-        fun create(name: String, initializer: Constant, attributes: GlobalValueAttribute): GlobalValue {
+        fun create(name: String, initializer: NonTrivialConstant, attributes: GlobalValueAttribute): GlobalValue {
             return GlobalValue(name, initializer, attributes)
         }
     }

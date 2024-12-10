@@ -24,7 +24,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val baseType = gp.basicType.asType<AggregateType>()
                 val index = gp.index()
                 val offset = bb.insertBefore(inst) {
-                    it.mul(index, Constant.of(index.asType(), baseType.sizeOf()))
+                    it.mul(index, NonTrivialConstant.of(index.asType(), baseType.sizeOf()))
                 }
                 return bb.replace(inst) { it.leaStack(gp.source(), Type.I8, offset) }
             }
@@ -44,7 +44,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val tp = gf.basicType.asType<ArrayType>()
                 val index = gf.index().toInt()
                 val offset = tp.offset(index)
-                return bb.replace(inst) { it.leaStack(gf.source(), Type.I8, Constant.of(Type.U32, offset)) }
+                return bb.replace(inst) { it.leaStack(gf.source(), Type.I8, U32Value(offset)) }
             }
 
             return inst
@@ -122,7 +122,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
     private fun killOnDemand(bb: Block, instruction: LocalValue) {
         instruction as Instruction
         if (instruction.usedIn().isEmpty()) { //TODO Need DCE
-            bb.kill(instruction, Value.UNDEF) // TODO bb may not contain pointer
+            bb.kill(instruction, UndefValue) // TODO bb may not contain pointer
         }
     }
 

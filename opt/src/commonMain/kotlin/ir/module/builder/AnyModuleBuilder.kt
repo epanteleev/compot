@@ -1,12 +1,12 @@
 package ir.module.builder
 
-import ir.attributes.FunctionAttribute
 import ir.types.*
 import ir.global.*
 import ir.module.*
-import ir.value.constant.Constant
-import ir.attributes.GlobalValueAttribute
 import ir.value.UsableValue
+import ir.attributes.FunctionAttribute
+import ir.attributes.GlobalValueAttribute
+import ir.value.constant.NonTrivialConstant
 
 
 abstract class AnyModuleBuilder {
@@ -15,7 +15,7 @@ abstract class AnyModuleBuilder {
     protected val structs = hashMapOf<String, StructType>()
     protected val externFunctions = hashMapOf<String, ExternFunction>()
 
-    fun addGlobal(name: String, initializer: Constant, attributes: GlobalValueAttribute): GlobalValue {
+    fun addGlobalValue(name: String, initializer: NonTrivialConstant, attributes: GlobalValueAttribute): GlobalValue {
         val global = GlobalValue.create(name, initializer, attributes)
         val has = globals.put(name, global)
         if (has != null) {
@@ -25,8 +25,8 @@ abstract class AnyModuleBuilder {
         return global
     }
 
-    fun addGlobal(name: String, data: Constant): GlobalValue {
-        return addGlobal(name, data, GlobalValueAttribute.DEFAULT)
+    fun addGlobalValue(name: String, data: NonTrivialConstant): GlobalValue {
+        return addGlobalValue(name, data, GlobalValueAttribute.DEFAULT)
     }
 
     fun addExternValue(name: String, type: NonTrivialType): ExternValue {

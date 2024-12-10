@@ -2,7 +2,6 @@ package ir.value.constant
 
 import ir.types.*
 import ir.global.GlobalSymbol
-import ir.global.GlobalValue
 
 
 object NullValue : PrimitiveConstant { //TODO remove it

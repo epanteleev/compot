@@ -12,8 +12,9 @@ import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PostOrderFabric
 import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
-import ir.types.PrimitiveType
+import ir.types.asType
 import ir.value.Value
+import ir.value.constant.UndefValue
 
 
 class Mem2Reg internal constructor(module: Module): TransformPass(module) {
@@ -40,7 +41,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
         val insertedPhis = hashSetOf<Phi>()
         for ((bb, vSet) in joinSet) { bb as Block
             for (v in vSet) {
-                val phi = bb.prepend { it.uncompletedPhi(v.allocatedType as PrimitiveType, v) }
+                val phi = bb.prepend { it.uncompletedPhi(v.allocatedType.asType(), v) }
                 insertedPhis.add(phi)
             }
         }
@@ -49,12 +50,12 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
     }
 
     private fun completePhis(bbToMapValues: RewritePrimitives, insertedPhis: Set<Phi>) {
-        fun renameValues(block: Block, v: Value, expectedType: PrimitiveType): Value {
-            return bbToMapValues.tryRename(block, v, expectedType)?: Value.UNDEF
+        fun renameValues(block: Block, v: Value): Value {
+            return bbToMapValues.tryRename(block, v)?: UndefValue
         }
 
         for (phi in insertedPhis) {
-            phi.owner().updateDF(phi) { l, v -> renameValues(l, v, phi.type()) }
+            phi.owner().updateDF(phi) { l, v -> renameValues(l, v) }
         }
     }
 
@@ -68,7 +69,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
 
             if (instruction.usedIn().isEmpty() || deadPool.containsAll(instruction.usedIn())) {
                 deadPool.add(instruction)
-                return bb.kill(instruction, Value.UNDEF)
+                return bb.kill(instruction, UndefValue)
             }
 
             return instruction

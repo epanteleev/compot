@@ -70,10 +70,8 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             }
         }
         is PrimitiveConstant -> label(globalValue.name()) {
-            val cvt = PrimitiveConstant.from(globalValue.contentType().asType(), initializer)
-            primitive(this, cvt)
+            primitive(this, initializer)
         }
-        is BoolValue -> throw IllegalArgumentException("unsupported constant type: $initializer")
     }
 
     private fun convertGlobalValueToSymbolType(globalValue: GlobalValue) = when (val type = globalValue.contentType()) {

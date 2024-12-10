@@ -158,7 +158,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (constEvalResult) {
             is PointerLiteral -> when (lValueType) {
                 is ArrayType, is PointerType -> {
-                    val global = mb.addGlobal(manglingName, constEvalResult, attr)
+                    val global = mb.addGlobalValue(manglingName, constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
@@ -168,7 +168,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 if (lValueType != constEvalResult.type()) {
                     throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                 }
-                val g = mb.addGlobal(manglingName, constEvalResult, attr)
+                val g = mb.addGlobalValue(manglingName, constEvalResult, attr)
                 varStack[declarator.name()] = g
                 return g
             }
@@ -177,7 +177,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     if (lValueType != constEvalResult.type()) {
                         throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                     }
-                    val global = mb.addGlobal(manglingName, constEvalResult, attr)
+                    val global = mb.addGlobalValue(manglingName, constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
@@ -185,7 +185,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     if (lValueType != constEvalResult.type()) {
                         throw IRCodeGenError("Type mismatch: ${constEvalResult.type()} != $lValueType", declarator.begin())
                     }
-                    val global = mb.addGlobal(manglingName, constEvalResult, attr)
+                    val global = mb.addGlobalValue(manglingName, constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global
                 }
@@ -203,7 +203,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 } else {
                     constEvalResult
                 }
-                val global = mb.addGlobal(manglingName, newConstant, attr)
+                val global = mb.addGlobalValue(manglingName, newConstant, attr)
                 varStack[declarator.name()] = global
                 return global
             }
@@ -226,7 +226,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             mb.addExternValue(manglingName, irType)
         } else {
             val constant = NonTrivialConstant.of(irType, 0)
-            mb.addGlobal(manglingName, constant)
+            mb.addGlobalValue(manglingName, constant)
         }
         varStack[realName] = value
         return value
@@ -273,7 +273,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 val zero = NonTrivialConstant.of(irType.elementType(), 0)
                 val elements = generateSequence { zero }.take(irType.length).toList()
                 val constant = InitializerListValue(irType, elements)
-                val global = mb.addGlobal(manglingName, constant, attr)
+                val global = mb.addGlobalValue(manglingName, constant, attr)
                 varStack[declarator.name()] = global
                 return global
             }
@@ -291,11 +291,11 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     elements.add(zero)
                 }
                 val constant = InitializerListValue(irType, elements)
-                val global = mb.addGlobal(manglingName, constant)
+                val global = mb.addGlobalValue(manglingName, constant)
                 varStack[declarator.name()] = global
                 return global
             }
-            is CUncompletedArrayType -> return Value.UNDEF //TODO
+            is CUncompletedArrayType -> return UndefValue //TODO
             else -> throw IRCodeGenError("Function or struct expected, but was '$cType'", declarator.begin())
         }
     }

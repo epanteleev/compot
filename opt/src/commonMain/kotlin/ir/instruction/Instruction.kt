@@ -11,6 +11,7 @@ import ir.value.LocalValue
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.value.UsableValue
+import ir.value.constant.UndefValue
 
 
 typealias Identity = Int
@@ -86,7 +87,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
                 op.killUser(this)
             }
 
-            operands[idx] = Value.UNDEF
+            operands[idx] = UndefValue
         }
     }
 

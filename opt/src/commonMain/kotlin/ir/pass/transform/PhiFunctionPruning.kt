@@ -1,12 +1,11 @@
 package ir.pass.transform
 
-import common.assertion
 import ir.module.*
+import common.assertion
 import ir.instruction.Phi
 import ir.module.block.Block
+import ir.value.constant.UndefValue
 import ir.pass.analysis.traverse.PreOrderFabric
-import ir.pass.analysis.traverse.iterator.PreorderIterator
-import ir.value.Value
 
 
 class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
@@ -76,7 +75,7 @@ class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
                 "phi value is used in non phi instruction"
             }
 
-            bb.kill(phi, Value.UNDEF)
+            bb.kill(phi, UndefValue)
         }
 
         usefull.forEachUseless { phi, bb -> removePhi(phi, bb) }
@@ -112,10 +111,6 @@ private class UsefulnessMap {
 
     fun isUseful(phi: Phi, bb: Block): Boolean {
         return usefull[Pair(phi, bb)]!!
-    }
-
-    fun isUseless(phi: Phi, bb: Block): Boolean {
-        return !isUseful(phi, bb)
     }
 
     fun forEachUseless(closure: (Phi, Block) -> Unit) {

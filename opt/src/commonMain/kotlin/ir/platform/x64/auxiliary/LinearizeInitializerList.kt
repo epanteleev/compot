@@ -1,15 +1,14 @@
 package ir.platform.x64.auxiliary
 
 import ir.types.*
-import ir.value.constant.Constant
-import ir.value.constant.InitializerListValue
+import ir.value.constant.*
 
 
 object LinearizeInitializerList {
     private fun fillIn(constants: MutableList<Constant>, structSize: Int, initializerListSizeOf: Int) {
         val diff = structSize - initializerListSizeOf
         for (i in 0 until diff) {
-            constants.add(Constant.Companion.zero(Type.I8))
+            constants.add(I8Value(0))
         }
     }
 

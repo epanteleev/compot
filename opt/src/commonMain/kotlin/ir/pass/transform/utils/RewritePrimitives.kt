@@ -1,20 +1,16 @@
 package ir.pass.transform.utils
 
-import common.intMapOf
 import ir.value.*
+import common.intMapOf
 import ir.instruction.*
-import ir.instruction.matching.alloc
-import ir.instruction.matching.load
-import ir.instruction.matching.primitive
-import ir.instruction.matching.store
-import ir.instruction.matching.value
 import ir.module.block.*
-import ir.pass.analysis.dominance.DominatorTree
 import ir.module.FunctionData
-import ir.pass.analysis.EscapeAnalysisPassFabric
-import ir.pass.analysis.traverse.PreOrderFabric
 import ir.types.PrimitiveType
-import ir.value.constant.PrimitiveConstant
+import ir.instruction.matching.*
+import ir.pass.analysis.dominance.DominatorTree
+import ir.pass.analysis.traverse.PreOrderFabric
+import ir.pass.analysis.EscapeAnalysisPassFabric
+import ir.value.constant.UndefValue
 
 
 sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree) {
@@ -24,23 +20,23 @@ sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree)
             return oldValue
         }
 
-        return tryRename(bb, oldValue, valueType)?: oldValue
+        return tryRename(bb, oldValue)?: oldValue
     }
 
-    fun tryRename(bb: Block, oldValue: Value, expectedType: PrimitiveType): Value? {
+    fun tryRename(bb: Block, oldValue: Value): Value? {
         if (oldValue !is LocalValue) {
             return oldValue
         }
 
         val newValue = findActualValueOrNull(bb, oldValue)
             ?: return null
-        return RewritePrimitivesUtil.convertOrSkip(expectedType, newValue)
+        return newValue
     }
 
     protected fun findActualValue(bb: Label, value: Value): Value {
         return findActualValueOrNull(bb, value) ?: let {
             println("Warning: use uninitialized value: bb=$bb, value=$value")//TODO remove it in future
-            Value.UNDEF
+            UndefValue
         }
     }
 
@@ -111,7 +107,7 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
             }
 
             if (instruction.isa(alloc(primitive())) && escapeState.isNoEscape(instruction as Alloc)) {
-                valueMap[instruction] = Value.UNDEF
+                valueMap[instruction] = UndefValue
                 continue
             }
 
@@ -139,14 +135,6 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
     }
 
     companion object {
-        internal fun convertOrSkip(type: PrimitiveType, value: Value): Value {
-            if (value !is PrimitiveConstant) {
-                return value
-            }
-
-            return PrimitiveConstant.from(type, value)
-        }
-
         fun run(cfg: FunctionData, insertedPhis: Set<Phi>, dominatorTree: DominatorTree): RewritePrimitives {
             val ana = RewritePrimitivesUtil(cfg, insertedPhis, dominatorTree)
             return RewritePrimitives(ana.bbToMapValues, dominatorTree)

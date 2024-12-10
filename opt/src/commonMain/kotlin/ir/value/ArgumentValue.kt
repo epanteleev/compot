@@ -1,8 +1,8 @@
 package ir.value
 
-import ir.attributes.ArgumentValueAttribute
 import ir.types.*
 import ir.instruction.Instruction
+import ir.attributes.ArgumentValueAttribute
 
 
 class ArgumentValue(private val index: Int, private val tp: NonTrivialType, val attributes: Set<ArgumentValueAttribute>): LocalValue {

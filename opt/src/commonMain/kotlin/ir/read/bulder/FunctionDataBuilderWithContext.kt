@@ -11,11 +11,7 @@ import ir.module.builder.*
 import common.forEachWith
 import ir.attributes.ByValue
 import ir.attributes.VarArgAttribute
-import ir.value.constant.BoolValue
-import ir.value.constant.Constant
-import ir.value.constant.IntegerConstant
-import ir.value.constant.NullValue
-import ir.value.constant.UnsignedIntegerConstant
+import ir.value.constant.*
 
 
 class ParseErrorException(message: String): Exception(message) {
@@ -32,51 +28,37 @@ class FunctionDataBuilderWithContext private constructor(
     private val nameToLabel = hashMapOf("entry" to bb)
     private val incompletePhis = arrayListOf<PhiContext>()
 
-    private fun getValue(token: AnyValueToken, ty: Type): Value {
-        return when (token) {
-            is LiteralValueToken -> when (token) {
-                is IntValue -> {
-                    ty as NonTrivialType
-                    Constant.of(ty, token.int)
-                }
-                is FloatValue -> {
-                    ty as NonTrivialType
-                    Constant.of(ty, token.fp)
-                }
-                is BoolValueToken -> BoolValue.of(token.bool)
-                is NULLValueToken -> NullValue.NULLPTR
-                else -> throw RuntimeException("unexpected literal value: $this")
-            }
-            is LocalValueToken -> {
-                val operand = nameMap[token.name]
-                    ?: throw ParseErrorException("in ${token.position()} undefined value '${token.value()}'")
+    private fun getValue(token: AnyValueToken, ty: Type): Value = when (token) {
+        is LiteralValueToken -> when (token) {
+            is IntValue       -> NonTrivialConstant.of(ty.asType(), token.int)
+            is FloatValue     -> FloatingPointConstant.of(ty.asType(), token.fp)
+            is BoolValueToken -> BoolValue.of(token.bool)
+            is NULLValueToken -> NullValue.NULLPTR
+        }
+        is LocalValueToken -> {
+            val operand = nameMap[token.name]
+                ?: throw ParseErrorException("in ${token.position()} undefined value '${token.value()}'")
 
-                if (operand.type() != ty && operand.type() !is PointerType) {
-                    throw ParseErrorException("must be the same type: in_file=$ty, find=${operand.type()} in ${token.position()}")
-                }
-
-                operand
+            if (operand.type() != ty && operand.type() !is PointerType) {
+                throw ParseErrorException("must be the same type: in_file=$ty, find=${operand.type()} in ${token.position()}")
             }
 
-            is SymbolValue -> {
-                moduleBuilder.findConstantOrNull(token.name) ?:
-                    moduleBuilder.findGlobalOrNull(token.name) ?:
-                        moduleBuilder.findFunctionOrNull(token.name) ?:
-                        throw ParseErrorException("constant or global value", token)
-            }
-            else -> throw ParseErrorException("constant or value", token)
+            operand
+        }
+
+        is SymbolValue -> {
+            moduleBuilder.findConstantOrNull(token.name) ?:
+                moduleBuilder.findGlobalOrNull(token.name) ?:
+                    moduleBuilder.findFunctionOrNull(token.name) ?:
+                    throw ParseErrorException("constant or global value", token)
         }
     }
 
-    private fun getConstant(token: AnyValueToken, ty: NonTrivialType): Value {
-        return token.let {
-            when (it) {
-                is IntValue        -> Constant.of(ty, it.int)
-                is FloatValue      -> Constant.of(ty, it.fp)
-                is LocalValueToken -> Value.UNDEF
-                else -> throw ParseErrorException("constant or value", it)
-            }
-        }
+    private fun getConstant(token: AnyValueToken, ty: NonTrivialType): Value = when (token) {
+        is IntValue        -> NonTrivialConstant.of(ty, token.int)
+        is FloatValue      -> NonTrivialConstant.of(ty, token.fp)
+        is LocalValueToken -> UndefValue
+        else -> throw ParseErrorException("constant or value", token)
     }
 
     private inline fun<reified T: LocalValue> memorize(name: LocalValueToken, value: T): T {
@@ -398,9 +380,7 @@ class FunctionDataBuilderWithContext private constructor(
         val value = getValue(valueTok, integerType.type())
 
         val targetBlocks  = targets.mapTo(arrayListOf()) { getBlockOrCreate(it.name) }
-        val tableConstant = table.mapTo(arrayListOf()) {
-            Constant.valueOf<IntegerConstant>(integerType.type(), it.int)
-        }
+        val tableConstant = table.mapTo(arrayListOf()) { IntegerConstant.of(integerType.type(), it.int) }
 
         val defaultLabelResolved = getBlockOrCreate(defaultLabel.labelName)
         bb.switch(value, defaultLabelResolved, tableConstant, targetBlocks)
