@@ -7,7 +7,6 @@ import ir.attributes.ByValue
 import ir.global.ExternValue
 import ir.global.GlobalValue
 import ir.value.ArgumentValue
-import ir.value.asType
 import ir.value.constant.Constant
 
 
@@ -131,7 +130,7 @@ fun extern(): ValueMatcher = { it is ExternValue }
 inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()) }
 
 inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
-    it is GlobalValue && type(it.contentType()) //TODO bug in type() method
+    it is GlobalValue && type(it.contentType())
 }
 
 fun argumentByValue(): ValueMatcher = { it is ArgumentValue && it.attributes.any { it is ByValue } }

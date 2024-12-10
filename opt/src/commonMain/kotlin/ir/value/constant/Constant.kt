@@ -5,6 +5,5 @@ import ir.value.Value
 
 
 sealed interface Constant: Value {
-    fun data(): String
     override fun type(): Type
 }

@@ -15,12 +15,6 @@ import common.assertion
 import ir.attributes.GlobalValueAttribute
 import ir.module.builder.impl.ModuleBuilder
 import ir.value.constant.*
-import ir.value.constant.InitializerListValue
-import ir.value.constant.IntegerConstant
-import ir.value.constant.NonTrivialConstant
-import ir.value.constant.PointerLiteral
-import ir.value.constant.PrimitiveConstant
-import ir.value.constant.StringLiteralConstant
 import parser.LineAgnosticAstPrinter
 
 
@@ -193,11 +187,11 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
             is StringLiteralConstant -> {
                 val dimension = when (val cArrayType = cType.type.cType() as AnyCArrayType) {
-                    is CArrayType -> cArrayType.dimension
+                    is CArrayType     -> cArrayType.dimension
                     is CStringLiteral -> cArrayType.dimension
                     else -> throw IRCodeGenError("Unsupported type $lValueType", declarator.begin())
                 }
-                val newConstant = if (dimension > constEvalResult.data().length.toLong()) {
+                val newConstant = if (dimension > constEvalResult.toString().length.toLong()) {
                     val content = constEvalResult.content.padTo(dimension.toInt(), "\\0")
                     StringLiteralConstant(ArrayType(Type.I8, dimension.toInt()), content)
                 } else {

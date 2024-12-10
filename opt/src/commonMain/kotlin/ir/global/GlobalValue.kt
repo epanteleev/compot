@@ -15,7 +15,7 @@ class GlobalValue private constructor(val name: String, private val init: NonTri
     override fun name(): String = name
 
     override fun dump(): String {
-        return "@$name = global ${contentType()} ${init.data()} !$attribute"
+        return "@$name = global ${contentType()} $init !$attribute"
     }
 
     fun contentType(): NonTrivialType = init.type() as NonTrivialType

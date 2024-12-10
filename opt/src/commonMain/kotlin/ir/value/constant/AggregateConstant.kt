@@ -10,12 +10,8 @@ class StringLiteralConstant(val ty: ArrayType, val content: String): AggregateCo
         return ty
     }
 
-    override fun data(): String {
-        return "\"$content\""
-    }
-
     override fun toString(): String {
-        return content
+        return "\"$content\""
     }
 }
 
@@ -23,8 +19,6 @@ class InitializerListValue(private val type: AggregateType, val elements: List<N
     override fun type(): NonTrivialType {
         return type
     }
-
-    override fun data(): String = toString()
 
     fun size(): Int = elements.size
 

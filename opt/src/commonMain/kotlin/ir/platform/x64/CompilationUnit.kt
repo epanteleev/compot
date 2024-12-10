@@ -51,7 +51,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             "type mismatch: ${globalValue.contentType()} != $type"
         }
         return label(globalValue.name()) {
-            string(constant.data())
+            string(constant.toString())
         }
     }
 
@@ -63,7 +63,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         }
         is StringLiteralConstant -> {
             val initConstant = anonConstant {
-                string(initializer.data())
+                string(initializer.toString())
             }
             label(globalValue.name()) {
                 quad(initConstant)
@@ -103,7 +103,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             builder.quad(findLabel(gConstant.name()), data.index)
         }
         is NullValue -> builder.quad(0)
-        is StringLiteralConstant -> builder.string(data.data())
+        is StringLiteralConstant -> builder.string(data.toString())
         else -> throw IllegalArgumentException("unsupported constant type: $data")
     }
 

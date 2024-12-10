@@ -50,8 +50,6 @@ data class U8Value(val u8: Byte): UnsignedIntegerConstant {
         return Type.U8
     }
 
-    override fun data(): String = toString()
-
     override fun value(): ULong {
         return u8.toUByte().toULong()
     }
@@ -65,8 +63,6 @@ data class I8Value(val i8: Byte): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I8
     }
-
-    override fun data(): String = toString()
 
     override fun value(): Long {
         return i8.toLong()
@@ -82,8 +78,6 @@ data class U16Value(val u16: Short): UnsignedIntegerConstant {
         return Type.U16
     }
 
-    override fun data(): String = toString()
-
     override fun value(): ULong {
         return u16.toUShort().toULong()
     }
@@ -97,8 +91,6 @@ data class I16Value(val i16: Short): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I16
     }
-
-    override fun data(): String = toString()
 
     override fun value(): Long {
         return i16.toLong()
@@ -114,8 +106,6 @@ data class U32Value(val u32: Int): UnsignedIntegerConstant {
         return Type.U32
     }
 
-    override fun data(): String = toString()
-
     override fun value(): ULong {
         return u32.toUInt().toULong()
     }
@@ -129,8 +119,6 @@ data class I32Value(val i32: Int): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I32
     }
-
-    override fun data(): String = toString()
 
     override fun value(): Long {
         return i32.toLong()
@@ -148,8 +136,6 @@ data class U64Value(val u64: Long): UnsignedIntegerConstant {
         return Type.U64
     }
 
-    override fun data(): String = toString()
-
     override fun value(): ULong {
         return u64.toULong()
     }
@@ -165,8 +151,6 @@ data class I64Value(val i64: Long): SignedIntegerConstant {
     override fun type(): SignedIntType {
         return Type.I64
     }
-
-    override fun data(): String = toString()
 
     override fun value(): Long {
         return i64

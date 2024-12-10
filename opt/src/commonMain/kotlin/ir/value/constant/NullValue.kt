@@ -9,8 +9,6 @@ object NullValue : PrimitiveConstant { //TODO remove it
         return Type.Ptr
     }
 
-    override fun data(): String = "0"
-
     override fun toString(): String {
         return "null"
     }
@@ -19,7 +17,6 @@ object NullValue : PrimitiveConstant { //TODO remove it
 }
 
 class PointerLiteral private constructor(val gConstant: GlobalSymbol, val index: Int = 0): PrimitiveConstant {
-    override fun data(): String = toString()
     override fun toString(): String = if (index == 0) {
         gConstant.name()
     } else {

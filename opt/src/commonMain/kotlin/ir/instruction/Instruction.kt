@@ -4,10 +4,6 @@ import ir.value.Value
 import common.LListNode
 import common.arrayWrapperOf
 import common.assertion
-import ir.instruction.matching.InstructionMatcher
-import ir.instruction.matching.TypeMatcher
-import ir.instruction.matching.ValueMatcher
-import ir.value.LocalValue
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.value.UsableValue
@@ -17,8 +13,8 @@ import ir.value.constant.UndefValue
 typealias Identity = Int
 
 abstract class Instruction(protected val id: Identity, protected val owner: Block, protected val operands: Array<Value>): LListNode() {
-    override fun next(): Instruction? = next as Instruction?
-    override fun prev(): Instruction? = prev as Instruction?
+    final override fun next(): Instruction? = next as Instruction?
+    final override fun prev(): Instruction? = prev as Instruction?
 
     fun owner(): Block = owner
     fun identity(): Identity = id
@@ -110,15 +106,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
 
     companion object {
         internal fun<T: Instruction> registerUser(user: T, vararg operands: Value): T {
-            for (i in operands) {
-                if (i !is UsableValue) {
-                    continue
-                }
-
-                i.addUser(user)
-            }
-
-            return user
+            return registerUser(user, operands.iterator())
         }
 
         internal fun<T: Instruction> registerUser(user: T, operands: Iterator<Value>): T {

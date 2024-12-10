@@ -12,9 +12,9 @@ sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
         "@$name = constant ${type()} ${data()}"
     }
 
-    override fun toString(): String = "@$name"
+    final override fun toString(): String = "@$name"
 
-    override fun name(): String {
+    final override fun name(): String {
         return name
     }
 

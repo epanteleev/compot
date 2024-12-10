@@ -8,8 +8,6 @@ object UndefValue: Constant, PrimitiveConstant {
         return toString()
     }
 
-    override fun data(): String = toString()
-
     override fun type(): UndefType = Type.UNDEF
 
     override fun toString(): String {
@@ -17,7 +15,7 @@ object UndefValue: Constant, PrimitiveConstant {
     }
 
     override fun hashCode(): Int {
-        return -1
+        return UndefType::class.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {

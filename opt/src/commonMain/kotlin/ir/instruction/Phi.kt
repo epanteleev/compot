@@ -49,6 +49,8 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
     }
 
     companion object {
+        const val NAME = "phi"
+
         fun make(id: Identity, owner: Block, ty: PrimitiveType): Phi {
             return Phi(id, owner, ty, arrayListOf(), arrayOf())
         }

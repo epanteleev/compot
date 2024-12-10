@@ -68,7 +68,7 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
             }
 
             val operands = args.toTypedArray(pointer)
-            return registerUser(IndirectionCall(id, owner, func, attributes, operands, target), operands.iterator())
+            return registerUser(IndirectionCall(id, owner, func, attributes, operands, target), *operands)
         }
     }
 }
