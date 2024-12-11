@@ -15,4 +15,8 @@ sealed class AnyToken: LListNode() {
     override fun next(): AnyToken? {
         return super.next() as AnyToken?
     }
+
+    abstract override fun hashCode(): Int
+
+    abstract override fun equals(other: Any?): Boolean
 }

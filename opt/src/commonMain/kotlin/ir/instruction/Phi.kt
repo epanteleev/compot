@@ -71,7 +71,7 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
 
         private fun isAppropriateTypes(type: PrimitiveType, incomingValue: Array<Value>): Boolean {
             for (use in incomingValue) {
-                if (type != use.type() && use.type() != Type.UNDEF) {
+                if (type != use.type() && use.type() != UndefType) {
                     return false
                 }
             }

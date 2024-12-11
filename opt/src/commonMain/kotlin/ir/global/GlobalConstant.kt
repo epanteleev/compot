@@ -1,7 +1,7 @@
 package ir.global
 
-import common.assertion
 import ir.types.*
+import common.assertion
 import ir.value.constant.*
 
 

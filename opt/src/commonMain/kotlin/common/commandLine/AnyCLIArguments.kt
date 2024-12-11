@@ -41,16 +41,12 @@ abstract class AnyCLIArguments {
     fun getFilename(): String = inputFilename
     fun getBasename(): String = getName(inputFilename)
 
-    fun setFilename(name: String) {
-        inputFilename = name
-    }
-
     fun getOptLevel(): Int = optimizationLevel
     fun setOptLevel(level: Int) {
         optimizationLevel = level
     }
 
-    protected fun getName(name: String): String {
+    private fun getName(name: String): String {
         return Files.getBasename(name)
     }
 }

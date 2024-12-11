@@ -2,7 +2,11 @@ package startup
 
 import common.commandLine.AnyCLIArguments
 
-class OptCLIArguments : AnyCLIArguments()
+class OptCLIArguments : AnyCLIArguments() {
+    fun setFilename(name: String) {
+        inputFilename = name
+    }
+}
 
 
 object CliParser {

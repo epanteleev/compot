@@ -32,4 +32,20 @@ class PredefinedMacros(name: String, private val callback: (Position) -> TokenLi
 
         return token.toNumberOrNull() as Long
     }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+        if (!super.equals(other)) return false
+
+        other as PredefinedMacros
+
+        return callback == other.callback
+    }
+
+
 }

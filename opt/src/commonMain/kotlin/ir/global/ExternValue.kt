@@ -1,8 +1,6 @@
 package ir.global
 
-import ir.types.Type
-import ir.types.PointerType
-import ir.types.NonTrivialType
+import ir.types.*
 
 
 class ExternValue internal constructor(val name: String, val type: NonTrivialType): AnyGlobalValue {
@@ -13,14 +11,8 @@ class ExternValue internal constructor(val name: String, val type: NonTrivialTyp
     }
 
     override fun type(): PointerType = Type.Ptr
-
-    override fun toString(): String {
-        return "@$name"
-    }
-
-    override fun hashCode(): Int {
-        return name.hashCode()
-    }
+    override fun toString(): String  = "@$name"
+    override fun hashCode(): Int     = name.hashCode()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

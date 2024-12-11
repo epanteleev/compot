@@ -5,6 +5,7 @@ import ir.value.Value
 import ir.module.block.Block
 import ir.types.FloatingPointType
 import ir.instruction.utils.IRInstructionVisitor
+import ir.types.asType
 
 
 class Div private constructor(id: Identity, owner: Block, tp: FloatingPointType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {
@@ -28,7 +29,7 @@ class Div private constructor(id: Identity, owner: Block, tp: FloatingPointType,
                 "incorrect types in '$id' a=$a:$aType, b=$b:$bType"
             }
 
-            return registerUser(Div(id, owner, aType as FloatingPointType, a, b), a, b)
+            return registerUser(Div(id, owner, aType.asType(), a, b), a, b)
         }
 
         private fun isAppropriateTypes(tp: Type, aType: Type, bType: Type): Boolean {

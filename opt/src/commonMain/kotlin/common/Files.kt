@@ -26,4 +26,14 @@ object Files {
 
         return fileName + newExtension
     }
+
+    fun getExtension(name: String): String? {
+        val fileName = name.toPath().name
+        val lastIndex = fileName.lastIndexOf('.')
+        return if (lastIndex != -1) {
+            fileName.substring(lastIndex, fileName.length)
+        } else {
+            null
+        }
+    }
 }

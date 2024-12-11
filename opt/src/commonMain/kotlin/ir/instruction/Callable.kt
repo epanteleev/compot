@@ -8,6 +8,7 @@ import ir.module.AnyFunctionPrototype
 import ir.module.block.Block
 import ir.types.AggregateType
 import ir.types.PrimitiveType
+import ir.types.UndefType
 
 
 sealed interface Callable {
@@ -45,12 +46,12 @@ sealed interface Callable {
             func.arguments().forEachWith(args) { expectedType, value ->
                 when (expectedType) {
                     is AggregateType -> {
-                        if (value.type() == Type.UNDEF) {
+                        if (value.type() == UndefType) {
                             return false //todo FULLY IMPLEMENT
                         }
                     }
                     is PrimitiveType -> {
-                        if (expectedType != value.type() && value.type() != Type.UNDEF) {
+                        if (expectedType != value.type() && value.type() != UndefType) {
                             return false
                         }
                     }

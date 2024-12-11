@@ -10,6 +10,19 @@ class EnterIncludeGuard(filename: String, includeLevel: Int, line: Int): Preproc
     override fun cloneWith(pos: Position): AnyToken {
         return this
     }
+
+    override fun hashCode(): Int {
+        return filename.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as EnterIncludeGuard
+
+        return filename == other.filename && includeLevel == other.includeLevel && line == other.line
+    }
 }
 
 class ExitIncludeGuard(filename: String, includeLevel: Int, line: Int): PreprocessorGuard(filename, includeLevel, line) {
@@ -17,5 +30,18 @@ class ExitIncludeGuard(filename: String, includeLevel: Int, line: Int): Preproce
 
     override fun cloneWith(pos: Position): AnyToken {
         return this
+    }
+
+    override fun hashCode(): Int {
+        return filename.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as ExitIncludeGuard
+
+        return filename == other.filename && includeLevel == other.includeLevel && line == other.line
     }
 }

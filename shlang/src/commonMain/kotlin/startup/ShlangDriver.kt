@@ -8,7 +8,6 @@ import preprocess.*
 import ir.module.Module
 import okio.FileSystem
 import okio.Path.Companion.toPath
-import okio.SYSTEM
 import tokenizer.CTokenizer
 import parser.CProgramParser
 import preprocess.macros.MacroReplacement
@@ -29,10 +28,9 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
     }
 
     private fun initializePreprocessorContext(filename: String): PreprocessorContext {
-        val pwd = pwd()
         val includeDirectories = cli.getIncludeDirectories() + USR_INCLUDE_PATH + USR_INCLUDE_GNU_LINUX_PATH
         val workingDirectory   = Files.getDirName(filename)
-        val headerHolder       = FileHeaderHolder(pwd, includeDirectories + workingDirectory)
+        val headerHolder       = FileHeaderHolder(pwd(), includeDirectories + workingDirectory)
 
         val ctx = PreprocessorContext.empty(headerHolder)
         definedMacros(ctx)
@@ -82,7 +80,10 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         val module = compile() ?: return
         OptDriver(cli.makeOptCLIArguments()).compile(module)
 
-        cli.getExecutableFileName() ?: return
+        if (cli.getOutputFilename().endsWith(".o")) {
+            return
+        }
+
         val result = GNULdRunner("a.out")
             .libs(libs)
             .objs(objModules + cli.getOutputFilename())
@@ -98,15 +99,22 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         const val USR_INCLUDE_PATH = "/usr/include" // Manjaro
         const val USR_INCLUDE_GNU_LINUX_PATH = "/usr/include/x86_64-linux-gnu" // Ubuntu
 
-        private val libs = arrayListOf(
+        private val libs = arrayListOf( // Manjaro
             "-L/usr/lib/x86_64-linux-gnu",
             "-L/usr/lib64",
             "-lc",
         )
+
+        //private val objModules = arrayListOf( // Manjaro
+        //    "/usr/lib64/crti.o",
+        //    "/usr/lib64/crt1.o",
+        //    "/usr/lib64/crtn.o"
+        // )
+
         private val objModules = arrayListOf(
-            "/usr/lib64/crti.o",
-            "/usr/lib64/crt1.o",
-            "/usr/lib64/crtn.o"
+            "/usr/lib/x86_64-linux-gnu/crti.o",
+            "/usr/lib/x86_64-linux-gnu/crt1.o",
+            "/usr/lib/x86_64-linux-gnu/crtn.o"
         )
 
         private const val dynamicLinker = "/lib64/ld-linux-x86-64.so.2"

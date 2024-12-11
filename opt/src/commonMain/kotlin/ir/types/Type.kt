@@ -30,7 +30,6 @@ sealed interface Type {
         val Ptr = PointerType
 
         val Void  = VoidType
-        val UNDEF = UndefType
     }
 }
 

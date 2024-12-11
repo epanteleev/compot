@@ -2,7 +2,6 @@ package common
 
 import okio.FileSystem
 import okio.Path.Companion.toPath
-import okio.SYSTEM
 import startup.ShlangDriver
 import startup.CCLIParser
 
@@ -12,7 +11,7 @@ abstract class CommonCTest: CommonTest() {
 
     protected fun runCTest(filename: String, runtimeLib: List<String>, opts: List<String>): Result {
         val basename = filename.substringAfterLast("/").substringBeforeLast(".")
-        compileExecutable(filename, basename, opts, runtimeLib)
+        compileObject(filename, basename, opts, runtimeLib)
 
         val testResult = runCommand("./$TEST_OUTPUT_DIR/$basename.out", listOf(), null)
         return Result(basename, testResult.output, testResult.error, testResult.exitCode)
@@ -36,7 +35,7 @@ abstract class CommonCTest: CommonTest() {
         }
     }
 
-    private fun compileExecutable(filename: String, basename: String, optOptions: List<String>, runtimeLib: List<String>) {
+    private fun compileObject(filename: String, basename: String, optOptions: List<String>, runtimeLib: List<String>) {
         val output = "$TEST_OUTPUT_DIR/$basename"
         val args = arrayOf("-c", "$TESTCASES_DIR/$filename.c", "--dump-ir", TEST_OUTPUT_DIR, "-I$TESTCASES_DIR") +
                 optOptions +

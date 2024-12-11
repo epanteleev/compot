@@ -333,7 +333,7 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
             @Suppress("UNCHECKED_CAST")
             current = current.next as T?
             @Suppress("UNCHECKED_CAST")
-            otherCurrent = otherCurrent!!.next as T?
+            otherCurrent = otherCurrent.next as T?
         }
         return true
     }

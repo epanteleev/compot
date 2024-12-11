@@ -4,15 +4,11 @@ import ir.types.*
 
 
 object UndefValue: Constant, PrimitiveConstant {
-    fun name(): String {
-        return toString()
-    }
+    fun name(): String = toString()
 
-    override fun type(): UndefType = Type.UNDEF
+    override fun type(): UndefType = UndefType
 
-    override fun toString(): String {
-        return "undef"
-    }
+    override fun toString(): String = "undef"
 
     override fun hashCode(): Int {
         return UndefType::class.hashCode()

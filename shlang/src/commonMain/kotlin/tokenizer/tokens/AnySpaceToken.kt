@@ -1,6 +1,7 @@
 package tokenizer.tokens
 
 import common.assertion
+import preprocess.macros.Macros
 import tokenizer.Position
 
 sealed class AnySpaceToken: AnyToken()
@@ -13,6 +14,20 @@ class Indent private constructor(private val spaces: Int): AnySpaceToken() {
     override fun cloneWith(pos: Position): AnyToken {
         return of(spaces)
     }
+
+    override fun hashCode(): Int {
+        return Indent::class.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Indent
+
+        return spaces == other.spaces
+    }
+
 
     companion object {
         fun of(spaces: Int): Indent {
@@ -32,6 +47,19 @@ class NewLine private constructor(private val spaces: Int): AnySpaceToken() {
 
     override fun cloneWith(pos: Position): AnyToken {
         return of(spaces)
+    }
+
+    override fun hashCode(): Int {
+        return NewLine::class.hashCode() xor spaces
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as NewLine
+
+        return spaces == other.spaces
     }
 
     companion object {

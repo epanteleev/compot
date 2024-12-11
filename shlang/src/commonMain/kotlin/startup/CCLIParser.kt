@@ -1,69 +1,8 @@
 package startup
 
-import common.Files
-import common.commandLine.AnyCLIArguments
-
-
-class ShlangCLIArguments : AnyCLIArguments() {
-    private val includeDirectories = mutableSetOf<String>()
-    private val defines = mutableMapOf<String, String>()
-    private var preprocessOnly = false
-    private var dumpDefines = false
-    private var executableFileName: String? = null
-
-    fun setDumpDefines(dumpDefines: Boolean) {
-        this.dumpDefines = dumpDefines
-    }
-
-    fun setPreprocessOnly(preprocessOnly: Boolean) {
-        this.preprocessOnly = preprocessOnly
-    }
-
-    fun setExecutableFileName(executableFileName: String) {
-        this.executableFileName = executableFileName
-        setFilename(executableFileName)
-        setOutputFilename(Files.replaceExtension(executableFileName, ".o"))
-    }
-
-    fun getExecutableFileName(): String? = executableFileName
-
-    fun isPreprocessOnly(): Boolean = preprocessOnly
-    fun isDumpDefines(): Boolean = dumpDefines
-
-    fun addIncludeDirectory(directory: String) {
-        includeDirectories.add(directory)
-    }
-
-    fun addDefine(name: String, value: String) {
-        defines[name] = value
-    }
-
-    fun getDefines(): Map<String, String> = defines
-
-    fun getIncludeDirectories(): Set<String> = includeDirectories
-
-    fun makeOptCLIArguments(): OptCLIArguments {
-        val optCLIArguments = OptCLIArguments()
-        optCLIArguments.setFilename(inputFilename)
-        optCLIArguments.setOptLevel(optimizationLevel)
-        if (isDumpIr()) {
-            optCLIArguments.setDumpIrDirectory(dumpIrDirectoryOutput!!)
-        }
-        if (outFilename != null) {
-            optCLIArguments.setOutputFilename(outFilename!!)
-        }
-        return optCLIArguments
-    }
-}
-
 
 object CCLIParser {
-    fun parse(args: Array<String>): ShlangCLIArguments? {
-        if (args.isEmpty()) {
-            printHelp()
-            return null
-        }
-
+    private fun loop(args: Array<String>): ShlangCLIArguments? {
         var cursor = 0
 
         val commandLineArguments = ShlangCLIArguments()
@@ -73,14 +12,7 @@ object CCLIParser {
                     printHelp()
                     return null
                 }
-                "-c", "--compile" -> {
-                    if (cursor + 1 >= args.size) {
-                        println("Expected input filename after -o")
-                            return null
-                    }
-                    cursor++
-                    commandLineArguments.setFilename(args[cursor])
-                }
+                "-c" -> commandLineArguments.setIsCompile(true)
                 "-O0" -> commandLineArguments.setOptLevel(0)
                 "-O1" -> commandLineArguments.setOptLevel(1)
                 "--dump-ir" -> {
@@ -114,7 +46,7 @@ object CCLIParser {
                     } else if (IGNORED_OPTIONS.contains(arg)) {
                         println("Ignoring option: $arg")
                     } else {
-                        commandLineArguments.setExecutableFileName(arg)
+                        commandLineArguments.setInputFileName(arg)
                     }
                 }
             }
@@ -122,6 +54,15 @@ object CCLIParser {
         }
 
         return commandLineArguments
+    }
+
+    fun parse(args: Array<String>): ShlangCLIArguments? {
+        if (args.isEmpty()) {
+            printHelp()
+            return null
+        }
+
+        return loop(args)
     }
 
     private fun parseDefine(shlangCLIArguments: ShlangCLIArguments, define: String) {
@@ -160,7 +101,7 @@ object CCLIParser {
     }
 
 
-    val IGNORED_OPTIONS = hashSetOf(
+    private val IGNORED_OPTIONS = hashSetOf(
         "-Wall",
         "-pedantic",
         "-ansi",

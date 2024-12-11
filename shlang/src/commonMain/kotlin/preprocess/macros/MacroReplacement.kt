@@ -36,8 +36,6 @@ class MacroReplacement(name: String, val value: TokenList): Macros(name) {
     }
 
     override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + value.hashCode()
-        return result
+        return name.hashCode()
     }
 }
