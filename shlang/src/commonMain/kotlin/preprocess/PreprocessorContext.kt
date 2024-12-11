@@ -63,7 +63,7 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         return findMacroDefinition(name) != null
     }
 
-    fun findMacroDefinition(name: String): MacroDefinition? {
+    private fun findMacroDefinition(name: String): MacroDefinition? {
         return macroDefinitions[name]
     }
 

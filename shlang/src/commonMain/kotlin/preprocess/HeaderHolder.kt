@@ -1,6 +1,5 @@
 package preprocess
 
-import okio.SYSTEM
 import common.getInclude
 import okio.FileSystem
 import tokenizer.CTokenizer

@@ -9,7 +9,15 @@ class MacroFunction(name: String, internal val argNames: CTokenList, internal va
     }
 
     override fun tokenString(): String {
-        return "#define $name(${argNames.joinToString(", ") { it.str() }}) ${value.joinToString(" ") { it.str() }}"
+        val builder = StringBuilder("#define ")
+        builder.append(name)
+            .append('(')
+
+        argNames.joinTo(builder, ",") { it.str() }
+        builder.append(')')
+
+        value.joinTo(builder, " ") { it.str() }
+        return builder.toString()
     }
 
     override fun hashCode(): Int {
@@ -23,7 +31,7 @@ class MacroFunction(name: String, internal val argNames: CTokenList, internal va
 
         other as MacroFunction
 
-        if (argNames != other.argNames) return false
+        if (name != other.name) return false
         if (value != other.value) return false
 
         return true

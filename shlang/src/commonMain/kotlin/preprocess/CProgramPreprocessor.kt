@@ -137,9 +137,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
         val value = takeTokensInLine()
         val macroFunction = MacroFunction(name.str(), args, value)
         val old = ctx.define(macroFunction)
-        if (old != null && old != macroFunction) {
-            warning("macro $name already defined")
-        }
+        warnRedefinedMacros(old, macroFunction)
     }
 
     private fun checkNewLine() {
@@ -204,11 +202,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                 }
                 val macroReplacement = MacroReplacement(name.str(), macros)
                 val old = ctx.define(macroReplacement)
-                if (old != null && old != macroReplacement) {
-                    warning("macro $name already defined in ${old.first().position()}")
-                    println(macroReplacement.tokenString())
-                    println(old.tokenString())
-                }
+                warnRedefinedMacros(old, macroReplacement)
             }
             "undef" -> {
                 if (!check<CToken>()) {
@@ -405,6 +399,12 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
         preprocess0()
         trimSpacesAtEnding()
         return tokens
+    }
+
+    private fun warnRedefinedMacros(old: Macros?, new: Macros) {
+        if (old != null && old != new) {
+            warning("macro ${new.name} already defined in ${old.first().position()}")
+        }
     }
 
     companion object {

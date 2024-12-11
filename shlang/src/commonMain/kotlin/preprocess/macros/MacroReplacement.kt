@@ -11,7 +11,12 @@ class MacroReplacement(name: String, val value: TokenList): Macros(name) {
     }
 
     override fun tokenString(): String {
-        return "#define $name ${value.joinToString("") { it.str() }}"
+        val builder = StringBuilder("#define ")
+        builder.append(name)
+            .append(' ')
+        value.joinTo(builder) { it.str() }
+
+        return builder.toString()
     }
 
     fun substitute(macrosNamePos: Position): TokenList {

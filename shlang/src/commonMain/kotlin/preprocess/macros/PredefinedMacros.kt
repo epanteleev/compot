@@ -12,12 +12,18 @@ class PredefinedMacros(name: String, private val callback: (Position) -> TokenLi
     }
 
     override fun tokenString(): String {
-        return "#define $name ${callback(Position.UNKNOWN).joinToString("") { it.str() }}"
+        val builder = StringBuilder("#define ")
+        builder.append(name)
+            .append(' ')
+
+        val result = callback(Position.UNKNOWN)
+        result.joinTo(builder) { it.str() }
+
+        return builder.toString()
     }
 
     fun cloneContentWith(macrosNamePos: Position): TokenList {
         val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, OriginalPosition.UNKNOWN)
-
         return callback(preprocessedPosition)
     }
 
