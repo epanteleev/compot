@@ -15,7 +15,7 @@ internal object CallConvention {
     fun coerceArgumentTypes(cType: AnyCStructType): List<PrimitiveType>? = when (val size = cType.size()) {
         BYTE_SIZE  -> arrayListOf(Type.I8)
         HWORD_SIZE -> arrayListOf(Type.I16)
-        BYTE_SIZE + HWORD_SIZE -> arrayListOf(Type.I32)
+        HWORD_SIZE + BYTE_SIZE -> arrayListOf(Type.I32)
         WORD_SIZE -> {
             val type = if (cType.hasFloatOnly(0, WORD_SIZE)) Type.F32 else Type.I32
             arrayListOf(type)

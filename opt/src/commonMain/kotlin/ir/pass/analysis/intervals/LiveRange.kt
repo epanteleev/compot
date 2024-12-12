@@ -37,7 +37,7 @@ abstract class LiveRange internal constructor(protected var locations: MutableMa
     }
 }
 
-class LiveRangeImpl internal constructor(val creationBlock: Block, creation: Location): LiveRange(hashMapOf(Pair(creationBlock, creation))) {
+class LiveRangeImpl internal constructor(private val creationBlock: Block, creation: Location): LiveRange(hashMapOf(Pair(creationBlock, creation))) {
     fun merge(other: LiveRangeImpl) {
         for ((block, location) in other.locations) {
             val loc = locations[block]

@@ -37,7 +37,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
 
     private val registerMap = hashMapOf<LocalValue, Operand>()
     private val callInfo    = hashMapOf<Callable, List<Operand?>>()
-    private val active      = hashMapOf<LocalValue, Operand>()
+    private val active      = linkedMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
 
     init {
@@ -128,14 +128,14 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
             }
             val reg = registerMap[value]
             if (reg != null) {
-                // Found fixed register. Skip it
-                // Register allocation for fixed registers is already done
+                // Found value with fixed register. Skip it
+                // Register allocation for such instructions is already done
                 active[value] = reg
                 continue
             }
 
             active.entries.retainAll { (local, operand) ->
-                if (liveRanges[local].end().to <= range.begin().from) {
+                if (!liveRanges[local].intersect(range)) {
                     val size = local.asType<NonTrivialType>().sizeOf()
                     pool.free(operand, size)
                     return@retainAll false

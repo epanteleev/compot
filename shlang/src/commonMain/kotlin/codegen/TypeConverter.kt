@@ -425,6 +425,19 @@ object TypeConverter {
                 val field = gep(dst, Type.I16, I64Value(0))
                 store(field, args[0])
             }
+            HWORD_SIZE + BYTE_SIZE -> {
+                assertion(args.size == 1) { "invariant: args=$args" }
+                assertion(args[0].type() == Type.I32) { "invariant: args=$args" }
+
+                val second = trunc(args[0], Type.I16)
+                val field1 = gep(dst, Type.I16, I64Value(0))
+                store(field1, second)
+
+                val shr    = shr(args[0], I32Value(HWORD_SIZE * 8))
+                val first  = trunc(shr, Type.I8)
+                val field2 = gep(dst, Type.I8, I64Value(HWORD_SIZE))
+                store(field2, first)
+            }
             WORD_SIZE -> {
                 assertion(args.size == 1) { "invariant: args=$args" }
                 val loadedType = if (structType.hasFloatOnly(0, WORD_SIZE)) Type.F32 else Type.I32
@@ -433,13 +446,14 @@ object TypeConverter {
             }
             WORD_SIZE + BYTE_SIZE -> {
                 assertion(args.size == 1) { "invariant: args=$args" }
-                val second = trunc(args[0], Type.I32)
-                val shr    = shr(args[0], I64Value(WORD_SIZE * 8))
-                val first  = trunc(shr, Type.I8)
+                assertion(args[0].type() == Type.I64) { "invariant: args=$args" }
 
+                val second = trunc(args[0], Type.I32)
                 val field1 = gep(dst, Type.I32, I64Value(0))
                 store(field1, second)
 
+                val shr    = shr(args[0], I64Value(WORD_SIZE * 8))
+                val first  = trunc(shr, Type.I8)
                 val field2 = gep(dst, Type.I8, I64Value(WORD_SIZE))
                 store(field2, first)
             }
@@ -511,17 +525,16 @@ object TypeConverter {
             arrayListOf(load)
         }
         HWORD_SIZE + BYTE_SIZE -> {
-            val fieldConverted = gep(structPtr, Type.I8, I64Value(0))
-            val load           = load(Type.I8, fieldConverted)
+            val field  = gep(structPtr, Type.I16, I64Value(0))
+            val load   = load(Type.I16, field)
+            val toInt1 = sext(load, Type.I32)
 
-            val fieldConverted1 = gep(structPtr, Type.I16, I64Value(BYTE_SIZE))
-            val load1           = load(Type.I16, fieldConverted1)
+            val field1 = gep(structPtr, Type.I8, I64Value(HWORD_SIZE))
+            val load1  = load(Type.I8, field1)
+            val toInt2 = sext(load1, Type.I32)
 
-
-            val toInt1          = sext(load, Type.I32)
-            val shr             = shl(toInt1, I32Value(HWORD_SIZE * 8))
-            val toInt2          = sext(load1, Type.I32)
-            val or              = or(toInt2, shr)
+            val shr = shl(toInt2, I32Value(HWORD_SIZE * 8))
+            val or  = or(shr, toInt1)
             arrayListOf(or)
         }
         WORD_SIZE -> {
@@ -540,7 +553,6 @@ object TypeConverter {
             val sext2  = sext(load2, Type.I64)
 
             val shl    = shl(sext2, I64Value(WORD_SIZE * 8))
-
             val and    = or(shl, sext1)
             arrayListOf(and)
         }
