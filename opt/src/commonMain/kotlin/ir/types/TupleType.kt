@@ -1,12 +1,18 @@
 package ir.types
 
+import common.ArrayWrapper
 
-class TupleType(val tuple: Array<PrimitiveType>): TrivialType {
+
+class TupleType(private val tuple: Array<PrimitiveType>): TrivialType {
     override fun toString(): String {
         return "|${tuple.joinToString()}|"
     }
 
-    fun innerType(index: Int): PrimitiveType{
+    fun innerTypes(): List<PrimitiveType> {
+        return ArrayWrapper(tuple)
+    }
+
+    fun innerType(index: Int): PrimitiveType {
         if (index < 0 || index >= tuple.size) {
             throw RuntimeException("index out of bounds: $index, type='${tuple.joinToString { it.toString() }}'")
         }

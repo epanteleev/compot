@@ -1,7 +1,6 @@
 package shlang
 
 import common.CommonCTest
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -92,6 +91,12 @@ sealed class VarArgsTests: CommonCTest() {
     fun test14() {
         val result = runCTest("shlang/varArgs/varArgs14", listOf(), options())
         assertEquals("print Hello\n", result.output)
+    }
+
+    @Test
+    fun test15() {
+        val result = runCTest("shlang/varArgs/varArgs15", listOf(), options())
+        assertEquals("x: 1 y: 2 z: 3 w: 4 v: 5\n", result.output)
     }
 }
 

@@ -11,7 +11,7 @@ import types.AnyCStructType
 import types.CAggregateType
 
 
-object CallConvention {
+internal object CallConvention {
     fun coerceArgumentTypes(cType: AnyCStructType): List<PrimitiveType>? = when (val size = cType.size()) {
         BYTE_SIZE  -> arrayListOf(Type.I8)
         HWORD_SIZE -> arrayListOf(Type.I16)

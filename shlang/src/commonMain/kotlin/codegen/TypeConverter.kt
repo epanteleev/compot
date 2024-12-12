@@ -413,78 +413,87 @@ object TypeConverter {
         }
     }
 
-    fun FunctionDataBuilder.storeCoerceArguments(argCType: AnyCStructType, structPtr: Value, args: List<Value>) {
-        when (val sizeOf = argCType.size()) {
+    fun FunctionDataBuilder.storeCoerceArguments(structType: AnyCStructType, dst: Value, args: List<Value>) {
+        when (val sizeOf = structType.size()) {
             BYTE_SIZE -> {
-                val field = gep(structPtr, Type.I8, I64Value(0))
+                assertion(args.size == 1) { "invariant: args=$args" }
+                val field = gep(dst, Type.I8, I64Value(0))
                 store(field, args[0])
             }
             HWORD_SIZE -> {
-                val field = gep(structPtr, Type.I16, I64Value(0))
+                assertion(args.size == 1) { "invariant: args=$args" }
+                val field = gep(dst, Type.I16, I64Value(0))
                 store(field, args[0])
             }
             WORD_SIZE -> {
-                val loadedType = if (argCType.hasFloatOnly(0, WORD_SIZE)) Type.F32 else Type.I32
-                val field = gep(structPtr, loadedType, I64Value(0))
+                assertion(args.size == 1) { "invariant: args=$args" }
+                val loadedType = if (structType.hasFloatOnly(0, WORD_SIZE)) Type.F32 else Type.I32
+                val field = gep(dst, loadedType, I64Value(0))
                 store(field, args[0])
             }
             WORD_SIZE + BYTE_SIZE -> {
+                assertion(args.size == 1) { "invariant: args=$args" }
                 val second = trunc(args[0], Type.I32)
                 val shr    = shr(args[0], I64Value(WORD_SIZE * 8))
                 val first  = trunc(shr, Type.I8)
 
-                val field1 = gep(structPtr, Type.I32, I64Value(0))
+                val field1 = gep(dst, Type.I32, I64Value(0))
                 store(field1, second)
 
-                val field2 = gep(structPtr, Type.I8, I64Value(WORD_SIZE))
+                val field2 = gep(dst, Type.I8, I64Value(WORD_SIZE))
                 store(field2, first)
             }
             QWORD_SIZE -> {
-                val loadedType = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
-                val field = gep(structPtr, loadedType, I64Value( 0))
+                assertion(args.size == 1) { "invariant: args=$args" }
+                val loadedType = if (structType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                val field = gep(dst, loadedType, I64Value( 0))
                 store(field, args[0])
             }
             QWORD_SIZE + BYTE_SIZE -> {
-                val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                assertion(args.size == 2) { "invariant: args=$args" }
+                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
 
-                val field = gep(structPtr, loadedType1, I64Value(0))
+                val field = gep(dst, loadedType1, I64Value(0))
                 store(field, args[0])
 
-                val field1 = gep(structPtr, Type.I8, I64Value(QWORD_SIZE))
+                val field1 = gep(dst, Type.I8, I64Value(QWORD_SIZE))
                 store(field1, args[1])
             }
             QWORD_SIZE + HWORD_SIZE -> {
-                val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
-                val fieldConverted = gep(structPtr, loadedType1, I64Value(0))
+                assertion(args.size == 2) { "invariant: args=$args" }
+                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                val fieldConverted = gep(dst, loadedType1, I64Value(0))
                 store(fieldConverted, args[0])
 
-                val fieldConverted1 = gep(structPtr, Type.I16, I64Value(QWORD_SIZE / Type.I16.sizeOf()))
+                val fieldConverted1 = gep(dst, Type.I16, I64Value(QWORD_SIZE / Type.I16.sizeOf()))
                 store(fieldConverted1, args[1])
             }
             QWORD_SIZE + WORD_SIZE -> {
-                val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
-                val fieldConverted = gep(structPtr, loadedType1, I64Value(0))
+                assertion(args.size == 2) { "invariant: args=$args" }
+                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                val fieldConverted = gep(dst, loadedType1, I64Value(0))
                 store(fieldConverted, args[0])
 
-                val loadedType2 = if (argCType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE + WORD_SIZE)) Type.F32 else Type.I32
-                val fieldConverted1 = gep(structPtr, loadedType2, I64Value(QWORD_SIZE / Type.I32.sizeOf()))
+                val loadedType2 = if (structType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE + WORD_SIZE)) Type.F32 else Type.I32
+                val fieldConverted1 = gep(dst, loadedType2, I64Value(QWORD_SIZE / Type.I32.sizeOf()))
                 store(fieldConverted1, args[1])
             }
             QWORD_SIZE * 2 -> {
-                val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
-                val fieldConverted = gep(structPtr, loadedType1, I64Value(0))
-                store(fieldConverted, args[0])
+                assertion(args.size == 2) { "invariant: args=$args" }
+                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                val field = gep(dst, loadedType1, I64Value(0))
+                store(field, args[0])
 
-                val loadedType2 = if (argCType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE * 2)) Type.F64 else Type.I64
-                val fieldConverted1 = gep(structPtr, loadedType2, I64Value(1))
-                store(fieldConverted1, args[1])
+                val loadedType2 = if (structType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE * 2)) Type.F64 else Type.I64
+                val field1 = gep(dst, loadedType2, I64Value(1))
+                store(field1, args[1])
             }
             else -> {
-                assertion(!argCType.isSmall()) {
+                assertion(!structType.isSmall()) {
                     "Cannot coerce arguments for size $sizeOf"
                 }
-                assertion(structPtr is Alloc) {
-                    "Expected Alloc, but got $structPtr"
+                assertion(dst is Alloc) {
+                    "Expected Alloc, but got $dst"
                 }
             }
         }

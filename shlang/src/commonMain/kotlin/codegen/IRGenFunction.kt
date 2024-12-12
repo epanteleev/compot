@@ -654,16 +654,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun copyTuple(dst: Value, src: Value, returnType: AnyCStructType) {
-        assertion(src.type() is TupleType) { "is not TupleType, type=${dst.type()}" }
-        val argumentTypes = CallConvention.coerceArgumentTypes(returnType) ?: throw RuntimeException("Unknown type, type=$returnType")
-        assertion(argumentTypes.size > 1) { "Internal error" }
-        for ((idx, arg) in argumentTypes.withIndex()) {
-            val offset   = (idx * QWORD_SIZE) / arg.sizeOf()
-            val fieldPtr = ir.gep(dst, arg, I64Value(offset.toLong()))
-            val proj = ir.proj(src, idx)
-            ir.store(fieldPtr, proj)
+    private fun copyTuple(dst: Value, src: TupleValue, returnType: AnyCStructType) {
+        val projs = arrayListOf<Projection>()
+        for ((idx, _) in src.type().innerTypes().withIndex()) {
+            val p = ir.proj(src, idx)
+            projs.add(p)
         }
+
+        ir.storeCoerceArguments(returnType, dst, projs)
     }
 
     private fun visitFuncCall0(lvalueAdr: Value, rvalue: FunctionCall) {
