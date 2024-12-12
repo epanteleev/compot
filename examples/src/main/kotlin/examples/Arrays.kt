@@ -1,17 +1,16 @@
 package examples
 
 import ir.types.*
-import I32Value
-import U64Value
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.analysis.VerifySSA
 import ir.pass.transform.Mem2RegFabric
+import ir.value.constant.*
 
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val proto = builder.createExternFunction("printIntArray", Type.Void, arrayListOf(Type.Ptr, Type.I32))
+    val proto = builder.createExternFunction("printIntArray", VoidType, arrayListOf(PtrType, Type.I32))
 
     builder.createFunction("main", Type.U64, arrayListOf()).apply {
         val array = alloc(ArrayType(Type.I32, 5))
@@ -32,7 +31,7 @@ fun main() {
 
         val arrPtr = gep(array, Type.I32, I32Value(0))
         val cont = createLabel()
-        vcall(proto, arrayListOf(arrPtr, I32Value(5)), cont)
+        vcall(proto, arrayListOf(arrPtr, I32Value(5)), setOf(), cont)
         switchLabel(cont)
         ret(Type.U64, arrayOf(U64Value(0)))
     }

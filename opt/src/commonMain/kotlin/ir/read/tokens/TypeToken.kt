@@ -40,18 +40,14 @@ sealed class PrimitiveTypeToken(protected open val type: NonTrivialType, overrid
 }
 
 data class PointerTypeToken(override val line: Int, override val pos: Int)
-    : PrimitiveTypeToken(Type.Ptr, line, pos)  {
-    override fun type(): PointerType = Type.Ptr
+    : PrimitiveTypeToken(PtrType, line, pos)  {
+    override fun type(): PtrType = PtrType
 }
 
 data class BooleanTypeToken(override val line: Int, override val pos: Int) : TypeToken(line, pos)  {
-    override fun type(resolver: TypeResolver): Type {
-        return Type.U1
-    }
+    override fun type(resolver: TypeResolver): FlagType = FlagType
 
-    override fun message(): String {
-        return "type '${Type.U1}'"
-    }
+    override fun message(): String = "type '$FlagType'"
 }
 
 sealed interface ArithmeticTypeToken: AnyToken {
@@ -65,12 +61,12 @@ sealed class IntegerTypeToken(override val type: IntegerType, override val line:
 
 data class SignedIntegerTypeToken(override val type: SignedIntType, override val line: Int, override val pos: Int)
     : IntegerTypeToken(type, line, pos), ArithmeticTypeToken {
-    override fun type(): SignedIntType =  type
+    override fun type(): SignedIntType = type
 }
 
 data class UnsignedIntegerTypeToken(override val type: UnsignedIntType, override val line: Int, override val pos: Int)
     : IntegerTypeToken(type, line, pos), ArithmeticTypeToken {
-    override fun type(): UnsignedIntType =  type
+    override fun type(): UnsignedIntType = type
 }
 
 data class FloatTypeToken(override val type: FloatingPointType, override val line: Int, override val pos: Int)
@@ -108,12 +104,10 @@ data class StructDefinition(val name: String, override val line: Int, override v
 }
 
 data class VoidTypeToken(override val line: Int, override val pos: Int) : TypeToken(line, pos) {
-    override fun type(resolver: TypeResolver): Type {
-        return Type.Void
-    }
+    override fun type(resolver: TypeResolver): VoidType = VoidType
 
-    override fun message(): String = "type '${Type.Void}'"
-    fun type(): Type = Type.Void
+    override fun message(): String = "type '$VoidType'"
+    fun type(): Type = VoidType
 }
 
 data class TupleTypeToken(val types: List<TypeToken>, override val line: Int, override val pos: Int) : TypeToken(line, pos) {

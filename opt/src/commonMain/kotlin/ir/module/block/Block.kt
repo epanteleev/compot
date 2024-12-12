@@ -342,7 +342,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun call(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): Call = mc.dfANDcf {
-        require(func.returnType() != Type.Void)
+        require(func.returnType() != VoidType)
         return@dfANDcf addTerminate { Call.make(it, this, func, args, attributes, target as Block) }
     }
 
@@ -354,17 +354,17 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun vcall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): VoidCall = mc.dfANDcf {
-        require(func.returnType() == Type.Void)
+        require(func.returnType() == VoidType)
         return@dfANDcf addTerminate { VoidCall.make(it, this, func, attributes, args, target as Block) }
     }
 
     override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionCall = mc.dfANDcf {
-        require(func.returnType() != Type.Void)
+        require(func.returnType() != VoidType)
         return@dfANDcf addTerminate { IndirectionCall.make(it, this, pointer, func, attributes, args, target as Block) }
     }
 
     override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionVoidCall = mc.dfANDcf {
-        require(func.returnType() == Type.Void)
+        require(func.returnType() == VoidType)
         return@dfANDcf addTerminate { IndirectionVoidCall.make(it, this, pointer, func, attributes, args, target as Block) }
     }
 

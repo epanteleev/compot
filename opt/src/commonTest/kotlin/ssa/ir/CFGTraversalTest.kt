@@ -9,6 +9,7 @@ import ir.pass.analysis.VerifySSA
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PostOrderFabric
 import ir.pass.analysis.traverse.PreOrderFabric
+import ir.types.PtrType
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,7 +19,7 @@ class CFGTraversalTest {
 
     private fun withBasicBlocks(): FunctionData {
         val moduleBuilder = ModuleBuilder.create()
-        val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(Type.Ptr, Type.Ptr, Type.Ptr))
+        val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(PtrType, PtrType, PtrType))
         val arg1 = builder.argument(0)
         val arg2 = builder.argument(1)
         val arg3 = builder.argument(2)

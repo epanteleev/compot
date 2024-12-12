@@ -1,12 +1,10 @@
 package ir.value.constant
 
-import ir.types.Type
+import ir.types.FlagType
 
 
 class BoolValue private constructor(val bool: Boolean): Constant {
-    override fun type(): Type {
-        return Type.U1
-    }
+    override fun type(): FlagType = FlagType
 
     override fun toString(): String {
         return bool.toString()

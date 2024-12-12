@@ -12,6 +12,7 @@ import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PreOrderFabric
+import ir.types.VoidType
 import ir.value.ArgumentValue
 import ir.value.UsableValue
 import ir.value.constant.BoolValue
@@ -452,7 +453,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
     override fun visit(returnVoid: ReturnVoid) {
         val retType = functionData.prototype.returnType()
-        assert(Type.Void == retType) {
+        assert(VoidType == retType) {
             "Inconsistent return type: '${returnVoid.dump()}', but expected '${retType}'"
         }
 

@@ -1,12 +1,12 @@
 package examples
 
 import ir.types.Type
+import ir.types.VoidType
 import ir.module.builder.impl.ModuleBuilder
-
 
 fun main() {
     val moduleBuilder = ModuleBuilder.create()
-    val printInt = moduleBuilder.createExternFunction("printInt", Type.Void, arrayListOf(Type.U64))
+    val printInt = moduleBuilder.createExternFunction("printInt", VoidType, arrayListOf(Type.U64))
     val argumentTypes = arrayListOf(Type.U64, Type.U64, Type.U64, Type.U64, Type.U64, Type.U64, Type.U64, Type.U64)
 
     val builder = moduleBuilder.createFunction("sum8", Type.U64, argumentTypes)

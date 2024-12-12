@@ -19,7 +19,7 @@ import typedesc.TypeHolder
 object TypeConverter {
     inline fun <reified T : NonTrivialType> ModuleBuilder.toIRLVType(typeHolder: TypeHolder, type: CType): T {
         val converted = toIRType<Type>(typeHolder, type)
-        return if (converted == Type.U1) {
+        return if (converted == FlagType) {
             Type.I8 as T
         } else {
             converted as T
@@ -36,7 +36,7 @@ object TypeConverter {
     }
 
     fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type = when (type) {
-        BOOL   -> Type.U1
+        BOOL   -> FlagType
         CHAR   -> Type.I8
         UCHAR  -> Type.U8
         SHORT  -> Type.I16
@@ -47,7 +47,7 @@ object TypeConverter {
         ULONG  -> Type.U64
         FLOAT  -> Type.F32
         DOUBLE -> Type.F64
-        VOID   -> Type.Void
+        VOID   -> VoidType
         is CStructType -> convertStructType(typeHolder, type)
         is CArrayType -> {
             val elementType = toIRType<NonTrivialType>(typeHolder, type.type.cType())
@@ -58,9 +58,9 @@ object TypeConverter {
             ArrayType(elementType, type.dimension.toInt())
         }
         is CUnionType -> convertUnionType(typeHolder, type)
-        is CPointer -> Type.Ptr
-        is CEnumType -> Type.I32
-        is CFunctionType, is CUncompletedArrayType, is AbstractCFunction -> Type.Ptr
+        is CPointer   -> PtrType
+        is CEnumType  -> Type.I32
+        is CFunctionType, is CUncompletedArrayType, is AbstractCFunction -> PtrType
         else -> throw RuntimeException("Unknown type, type=$type, class=${type::class}")
     }
 
@@ -94,19 +94,13 @@ object TypeConverter {
         }
     }
 
-    fun FunctionDataBuilder.toIndexType(value: Value): Value {
-        if (value.type() == Type.U1) {
-            return convertToType(value, Type.I64)
-        }
-
-        return convertToType(value, Type.I64)
-    }
+    fun FunctionDataBuilder.toIndexType(value: Value): Value = convertToType(value, Type.I64)
 
     fun FunctionDataBuilder.convertRVToType(value: Value, toType: Type, cvtType: IntegerType = Type.I8): Value {
         val rightCvt = convertToType(value, toType)
         return when (toType) {
-            Type.U1 -> flag2int(rightCvt, cvtType)
-            else    -> rightCvt
+            FlagType -> flag2int(rightCvt, cvtType)
+            else     -> rightCvt
         }
     }
 
@@ -114,7 +108,7 @@ object TypeConverter {
         if (value.type() == toType) {
             return value
         }
-        if (value is PrimitiveConstant && toType !is PointerType) {
+        if (value is PrimitiveConstant && toType !is PtrType) {
             // Opt IR does not support pointer constants.
             return convertConstant(value, toType)
         }
@@ -123,7 +117,7 @@ object TypeConverter {
             Type.I8 -> {
                 toType as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, toType)
+                    FlagType -> flag2int(value, toType)
                     Type.I16 -> trunc(value, toType)
                     Type.I32 -> trunc(value, toType)
                     Type.I64 -> trunc(value, toType)
@@ -139,7 +133,7 @@ object TypeConverter {
                     }
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
-                    Type.Ptr -> ptr2int(value, toType)
+                    PtrType -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
@@ -147,11 +141,11 @@ object TypeConverter {
             Type.I16 -> {
                 toType as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, toType)
-                    Type.I8 -> sext(value, toType)
+                    FlagType -> flag2int(value, toType)
+                    Type.I8  -> sext(value, toType)
                     Type.I32 -> trunc(value, toType)
                     Type.I64 -> trunc(value, toType)
-                    Type.U8 ->  {
+                    Type.U8  -> {
                         val zext = zext(value, Type.U16)
                         bitcast(zext, toType)
                     }
@@ -166,7 +160,7 @@ object TypeConverter {
                     }
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
-                    Type.Ptr -> ptr2int(value, toType)
+                    PtrType -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
@@ -174,7 +168,7 @@ object TypeConverter {
             Type.I32 -> {
                 toType as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, toType)
+                    FlagType -> flag2int(value, toType)
                     Type.I8 -> sext(value, toType)
                     Type.I16 -> sext(value, toType)
                     Type.I64 -> trunc(value, toType)
@@ -198,7 +192,7 @@ object TypeConverter {
                         val tmp = fp2Int(value, Type.I64)
                         trunc(tmp, toType)
                     }
-                    Type.Ptr -> ptr2int(value, toType)
+                    PtrType -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value:${value.type()} to $toType")
                 }
             }
@@ -206,7 +200,7 @@ object TypeConverter {
             Type.I64 -> {
                 toType as SignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, toType)
+                    FlagType -> flag2int(value, toType)
                     Type.I8 -> sext(value, toType)
                     Type.I16 -> sext(value, toType)
                     Type.I32 -> sext(value, toType)
@@ -228,7 +222,7 @@ object TypeConverter {
                     Type.U64 -> bitcast(value, toType)
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
-                    Type.Ptr -> ptr2int(value, toType)
+                    PtrType  -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
@@ -236,7 +230,7 @@ object TypeConverter {
             Type.U8 -> {
                 toType as UnsignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, toType)
+                    FlagType -> flag2int(value, toType)
                     Type.I8 -> bitcast(value, toType)
                     Type.I16 -> {
                         val bitcast = bitcast(value, Type.U16)
@@ -255,7 +249,7 @@ object TypeConverter {
                     Type.U64 -> trunc(value, toType)
                     Type.F32 -> fp2Int(value, Type.U8)
                     Type.F64 -> fp2Int(value, Type.U8)
-                    Type.Ptr -> ptr2int(value, toType)
+                    PtrType  -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
@@ -263,7 +257,7 @@ object TypeConverter {
             Type.U16 -> {
                 toType as UnsignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, toType)
+                    FlagType -> flag2int(value, toType)
                     Type.I8 -> {
                         val sext = sext(value, Type.I16)
                         bitcast(sext, toType)
@@ -289,7 +283,7 @@ object TypeConverter {
                     }
 
                     Type.F64 -> fp2Int(value, Type.U16)
-                    Type.Ptr -> ptr2int(value, toType)
+                    PtrType -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
@@ -297,7 +291,7 @@ object TypeConverter {
             Type.U32 -> {
                 toType as UnsignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, toType)
+                    FlagType -> flag2int(value, toType)
                     Type.I8 -> {
                         val sext = sext(value, Type.I32)
                         bitcast(sext, toType)
@@ -319,7 +313,7 @@ object TypeConverter {
                         val tmp = fp2Int(value, Type.U64)
                         trunc(tmp, toType)
                     }
-                    Type.Ptr -> ptr2int(value, toType)
+                    PtrType -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
@@ -327,7 +321,7 @@ object TypeConverter {
             Type.U64 -> {
                 toType as UnsignedIntType
                 when (value.type()) {
-                    Type.U1 -> flag2int(value, toType)
+                    FlagType -> flag2int(value, toType)
                     Type.I8 -> {
                         val sext = sext(value, Type.I64)
                         bitcast(sext, toType)
@@ -346,7 +340,7 @@ object TypeConverter {
                     Type.U32 -> zext(value, toType)
                     Type.F32 -> fp2Int(value, toType)
                     Type.F64 -> fp2Int(value, toType)
-                    Type.Ptr -> ptr2int(value, toType)
+                    PtrType -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
@@ -354,12 +348,12 @@ object TypeConverter {
             Type.F32 -> {
                 toType as FloatingPointType
                 when (value.type()) {
-                    Type.U1 -> int2fp(value, toType)
-                    Type.I8 -> int2fp(value, toType)
+                    FlagType -> int2fp(value, toType)
+                    Type.I8  -> int2fp(value, toType)
                     Type.I16 -> int2fp(value, toType)
                     Type.I32 -> int2fp(value, toType)
                     Type.I64 -> int2fp(value, toType)
-                    Type.U8 -> int2fp(value, toType)
+                    Type.U8  -> int2fp(value, toType)
                     Type.U16 -> uint2fp(value, toType)
                     Type.U32 -> uint2fp(value, toType)
                     Type.U64 -> int2fp(value, toType)
@@ -371,7 +365,7 @@ object TypeConverter {
             Type.F64 -> {
                 toType as FloatingPointType
                 when (value.type()) {
-                    Type.U1  -> int2fp(value, toType)
+                    FlagType -> int2fp(value, toType)
                     Type.I8  -> int2fp(value, toType)
                     Type.I16 -> int2fp(value, toType)
                     Type.I32 -> int2fp(value, toType)
@@ -385,8 +379,8 @@ object TypeConverter {
                 }
             }
 
-            Type.Ptr -> {
-                toType as PointerType
+            PtrType -> {
+                toType as PtrType
                 val valueType = value.type()
                 if (valueType is IntegerType) {
                     return int2ptr(value)
@@ -395,7 +389,7 @@ object TypeConverter {
                 }
             }
 
-            Type.U1 -> {
+            FlagType -> {
                 when (val vType = value.type()) {
                     Type.I8  -> icmp(value, IntPredicate.Ne, I8Value(0))
                     Type.I16 -> icmp(value, IntPredicate.Ne, I16Value(0))
@@ -405,7 +399,7 @@ object TypeConverter {
                     Type.U16 -> icmp(value, IntPredicate.Ne, U16Value(0))
                     Type.U32 -> icmp(value, IntPredicate.Ne, U32Value(0))
                     Type.U64 -> icmp(value, IntPredicate.Ne, U64Value(0))
-                    Type.Ptr -> icmp(value, IntPredicate.Ne, NullValue.NULLPTR)
+                    PtrType -> icmp(value, IntPredicate.Ne, NullValue)
                     else -> throw RuntimeException("Cannot convert $value:$vType to $toType")
                 }
             }

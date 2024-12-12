@@ -41,7 +41,7 @@ class Load private constructor(id: Identity, owner: Block, private val loadedTyp
         }
 
         private fun isAppropriateTypes(tp: Type): Boolean {
-            return tp is PointerType
+            return tp is PtrType
         }
 
         fun typeCheck(load: Load): Boolean {

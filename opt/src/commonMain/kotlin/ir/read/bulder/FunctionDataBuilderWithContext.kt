@@ -33,13 +33,13 @@ class FunctionDataBuilderWithContext private constructor(
             is IntValue       -> NonTrivialConstant.of(ty.asType(), token.int)
             is FloatValue     -> FloatingPointConstant.of(ty.asType(), token.fp)
             is BoolValueToken -> BoolValue.of(token.bool)
-            is NULLValueToken -> NullValue.NULLPTR
+            is NULLValueToken -> NullValue
         }
         is LocalValueToken -> {
             val operand = nameMap[token.name]
                 ?: throw ParseErrorException("in ${token.position()} undefined value '${token.value()}'")
 
-            if (operand.type() != ty && operand.type() !is PointerType) {
+            if (operand.type() != ty && operand.type() !is PtrType) {
                 throw ParseErrorException("must be the same type: in_file=$ty, find=${operand.type()} in ${token.position()}")
             }
 
@@ -195,7 +195,7 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun load(name: LocalValueToken, ptr: AnyValueToken, expectedType: PrimitiveTypeToken): Load {
-        val pointer = getValue(ptr, Type.Ptr)
+        val pointer = getValue(ptr, PtrType)
         return memorize(name, bb.load(expectedType.asType<PrimitiveType>(),pointer))
     }
 
@@ -237,7 +237,7 @@ class FunctionDataBuilderWithContext private constructor(
     fun icall(name: LocalValueToken, pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>, labelUsage: LabelUsage): Value {
         require(func.returnType() !is VoidType)
         val argumentValues = convertToValues(func.arguments(), args)
-        val pointer        = getValue(pointerToken, Type.Ptr)
+        val pointer        = getValue(pointerToken, PtrType)
         val block          = getBlockOrCreate(labelUsage.labelName)
 
         return memorize(name, bb.icall(pointer, func, argumentValues, hashSetOf(), block))
@@ -246,7 +246,7 @@ class FunctionDataBuilderWithContext private constructor(
     fun ivcall(pointerToken: ValueToken, func: IndirectFunctionPrototype, args: ArrayList<AnyValueToken>, target: LabelUsage) {
         require(func.returnType() is VoidType)
         val argumentValues = convertToValues(func.arguments(), args)
-        val pointer = getValue(pointerToken, Type.Ptr)
+        val pointer = getValue(pointerToken, PtrType)
         val output = getBlockOrCreate(target.labelName)
         bb.ivcall(pointer, func, argumentValues, hashSetOf(), output)
     }
@@ -271,7 +271,7 @@ class FunctionDataBuilderWithContext private constructor(
         val onTrue  = getBlockOrCreate(onTrueName.labelName)
         val onFalse = getBlockOrCreate(onFalseName.labelName)
 
-        val value = getValue(valueTok, Type.U1)
+        val value = getValue(valueTok, FlagType)
         bb.branchCond(value, onTrue, onFalse)
     }
 
@@ -338,7 +338,7 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun select(name: LocalValueToken, condTok: AnyValueToken, onTrueTok: AnyValueToken, onFalseTok: AnyValueToken, selectType: IntegerTypeToken): Value {
-        val cond    = getValue(condTok, Type.U1)
+        val cond    = getValue(condTok, FlagType)
         val onTrue  = getValue(onTrueTok, selectType.type())
         val onFalse = getValue(onFalseTok, selectType.type())
 
@@ -346,7 +346,7 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun flag2int(name: LocalValueToken, valueTok: AnyValueToken, expectedType: IntegerTypeToken): Flag2Int {
-        val value = getValue(valueTok, Type.U1)
+        val value = getValue(valueTok, FlagType)
         return memorize(name, bb.flag2int(value, expectedType.type()))
     }
 

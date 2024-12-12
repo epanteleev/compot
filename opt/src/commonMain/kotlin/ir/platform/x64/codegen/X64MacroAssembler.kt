@@ -2,7 +2,6 @@ package ir.platform.x64.codegen
 
 import asm.Operand
 import asm.x64.*
-import asm.x64.GPRegister.rdx
 import asm.x64.GPRegister.rax
 import common.assertion
 import ir.Definitions.BYTE_SIZE
@@ -78,7 +77,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
                 IntPredicate.Le -> CondType.JLE
                 else -> throw CodegenException("unknown conversion type: convType=$convType")
             }
-            is UnsignedIntType, PointerType -> when (convType) {
+            is UnsignedIntType, PtrType -> when (convType) {
                 IntPredicate.Eq -> CondType.JE
                 IntPredicate.Ne -> CondType.JNE
                 IntPredicate.Gt -> CondType.JA

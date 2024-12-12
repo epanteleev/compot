@@ -14,7 +14,7 @@ data class BitcastCodegen (val type: PrimitiveType, val asm: X64MacroAssembler):
 
     operator fun invoke(dst: Operand, src: Operand) {
         when (type) {
-            is IntegerType, is PointerType -> GPOperandsVisitorUnaryOp.apply(dst, src, this)
+            is IntegerType, is PtrType -> GPOperandsVisitorUnaryOp.apply(dst, src, this)
             else -> throw RuntimeException("Unknown '${Bitcast.NAME}' type=$type, dst=$dst, src=$src")
         }
     }

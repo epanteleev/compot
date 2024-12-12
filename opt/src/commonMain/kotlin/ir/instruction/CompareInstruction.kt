@@ -59,5 +59,5 @@ sealed class CompareInstruction(id: Identity, owner: Block, val operandsType: Pr
         return operands[1]
     }
 
-    override fun type(): FlagType = Type.U1
+    override fun type(): FlagType = FlagType
 }

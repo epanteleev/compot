@@ -34,7 +34,7 @@ class IntCompare private constructor(id: Identity, owner: Block, operandsType: P
         }
 
         private fun isAppropriateType(aType: Type, bType: Type): Boolean {
-            return aType == bType && (aType is IntegerType || aType is PointerType)
+            return aType == bType && (aType is IntegerType || aType is PtrType)
         }
 
         fun typeCheck(icmp: IntCompare): Boolean {

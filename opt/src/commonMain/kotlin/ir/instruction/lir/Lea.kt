@@ -14,7 +14,7 @@ import ir.instruction.utils.IRInstructionVisitor
 class Lea private constructor(id: Identity, owner: Block, value: Value):
     ValueInstruction(id, owner, arrayOf(value)) {
 
-    override fun type(): PointerType = Type.Ptr
+    override fun type(): PtrType = PtrType
 
     override fun dump(): String {
         return "%${name()} = $NAME ${type()} ${operand()}"

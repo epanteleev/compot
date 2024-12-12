@@ -6,9 +6,9 @@ import ir.attributes.FunctionAttribute
 import ir.value.Value
 import ir.types.Type
 import ir.module.block.Block
-import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.DirectFunctionPrototype
+import ir.types.VoidType
 
 
 class VoidCall private constructor(id: Identity,
@@ -19,7 +19,7 @@ class VoidCall private constructor(id: Identity,
                                    target: Block):
     TerminateInstruction(id, owner, args, arrayOf(target)), Callable {
     init {
-        assertion(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
+        assertion(func.returnType() == VoidType) { "Must be $VoidType" }
     }
 
     override fun arguments(): List<Value> {
@@ -42,12 +42,10 @@ class VoidCall private constructor(id: Identity,
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("call ${Type.Void} @${func.name}")
+        builder.append("call $VoidType @${func.name}")
         printArguments(builder)
         return builder.toString()
     }
-
-    override fun type(): Type = Type.Void
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

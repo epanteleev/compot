@@ -52,7 +52,7 @@ class StructTypeTest {
 
     @Test
     fun test7() {
-        val structType = StructType("Point", arrayListOf(Type.I32, Type.Ptr))
+        val structType = StructType("Point", arrayListOf(Type.I32, PtrType))
         assertEquals(16, structType.sizeOf())
         assertEquals(0, structType.offset(0))
         assertEquals(8, structType.offset(1))
@@ -99,7 +99,7 @@ class StructTypeTest {
 
     @Test
     fun test13() {
-        val structType = StructType("HashMap", arrayListOf(Type.Ptr, Type.I32, Type.I32))
+        val structType = StructType("HashMap", arrayListOf(PtrType, Type.I32, Type.I32))
         assertEquals(16, structType.sizeOf())
     }
 }

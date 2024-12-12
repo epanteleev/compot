@@ -157,7 +157,7 @@ class F64ConstantValue(override val name: String, val f64: Double): PrimitiveGlo
 
 sealed class AnyAggregateGlobalConstant(override val name: String): GlobalConstant(name) {
     abstract fun contentType(): NonTrivialType
-    override fun type(): NonTrivialType = Type.Ptr
+    override fun type(): NonTrivialType = PtrType
 }
 
 class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, val string: String): AnyAggregateGlobalConstant(name) {

@@ -13,7 +13,7 @@ import ir.instruction.utils.IRInstructionVisitor
 class LeaStack private constructor(id: Identity, owner: Block, val loadedType: PrimitiveType, origin: Value, index: Value):
     ValueInstruction(id, owner, arrayOf(origin, index)) {
 
-    override fun type(): PointerType = Type.Ptr
+    override fun type(): PtrType = PtrType
 
     override fun dump(): String {
         return "%${name()} = $NAME $loadedType, ${type()} ${origin()}, ${index().type()} ${index()}"

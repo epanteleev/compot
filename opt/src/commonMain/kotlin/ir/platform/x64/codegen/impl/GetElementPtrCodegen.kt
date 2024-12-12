@@ -10,7 +10,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class GetElementPtrCodegen(val type: PointerType, private val secondOpSize: Int, basicType: NonTrivialType, val asm: X64MacroAssembler) :
+class GetElementPtrCodegen(val type: PtrType, private val secondOpSize: Int, basicType: NonTrivialType, val asm: X64MacroAssembler) :
     GPOperandsVisitorBinaryOp {
     private val size: Int = basicType.sizeOf()
 

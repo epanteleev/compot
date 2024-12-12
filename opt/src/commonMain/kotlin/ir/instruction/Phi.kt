@@ -61,7 +61,7 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
 
         fun makeUncompleted(id: Identity, owner: Block, type: PrimitiveType, incoming: Value, predecessors: MutableList<Block>): Phi {
             val incomingType = incoming.type()
-            require(incomingType is PointerType) {
+            require(incomingType is PtrType) {
                 "should be pointer type in '$id', type=$type, but incoming=$incoming:$incomingType"
             }
 

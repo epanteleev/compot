@@ -12,8 +12,6 @@ data class TypeErrorException(override val message: String) : Exception(message)
 
 sealed interface Type {
     companion object {
-        val U1  = FlagType
-
         val U8  = UnsignedIntType(BYTE_SIZE)
         val U16 = UnsignedIntType(HWORD_SIZE)
         val U32 = UnsignedIntType(WORD_SIZE)
@@ -26,10 +24,6 @@ sealed interface Type {
 
         val F32 = FloatingPointType(FLOAT_SIZE)
         val F64 = FloatingPointType(DOUBLE_SIZE)
-
-        val Ptr = PointerType
-
-        val Void  = VoidType
     }
 }
 

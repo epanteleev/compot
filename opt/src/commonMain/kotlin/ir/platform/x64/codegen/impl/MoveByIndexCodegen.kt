@@ -32,7 +32,7 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
                     default(dst, source, index)
                 }
             }
-            is IntegerType, is PointerType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
+            is IntegerType, is PtrType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }
     }

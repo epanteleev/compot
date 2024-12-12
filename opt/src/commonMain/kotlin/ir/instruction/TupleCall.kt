@@ -58,7 +58,7 @@ class TupleCall private constructor(id: Identity,
         const val NAME = "call"
 
         fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): TupleCall {
-            assertion(func.returnType() is TupleType) { "Must be non ${Type.Void}" }
+            assertion(func.returnType() is TupleType) { "Must be non $VoidType" }
 
 
             require(Callable.isAppropriateTypes(func, args)) {

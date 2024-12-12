@@ -5,6 +5,7 @@ import ir.attributes.FunctionAttribute
 import ir.types.Type
 import ir.global.FunctionSymbol
 import ir.types.NonTrivialType
+import ir.types.PtrType
 
 
 sealed class AnyFunctionPrototype(protected val returnType: Type, protected val arguments: List<NonTrivialType>, val attributes: Set<FunctionAttribute>) {
@@ -53,7 +54,7 @@ sealed class DirectFunctionPrototype(val name: String, returnType: Type, argumen
     }
 
     final override fun dump(): String = toString()
-    final override fun type(): NonTrivialType = Type.Ptr
+    final override fun type(): NonTrivialType = PtrType
     final override fun name(): String = name
 }
 

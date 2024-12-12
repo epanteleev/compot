@@ -25,8 +25,8 @@ sealed interface PrimitiveConstant: NonTrivialConstant {
     companion object {
         fun of(kind: PrimitiveType, value: Number): PrimitiveConstant = when (kind) {
             is IntegerType -> IntegerConstant.of(kind, value)
-            is PointerType -> when (value.toLong()) {
-                0L -> NullValue.NULLPTR
+            is PtrType -> when (value.toLong()) {
+                0L -> NullValue
                 else -> throw IllegalArgumentException("Cannot create constant: kind=$kind, value=$value")
             }
             is FloatingPointType -> FloatingPointConstant.of(kind, value)

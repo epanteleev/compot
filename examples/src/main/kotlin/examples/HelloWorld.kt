@@ -12,7 +12,7 @@ import I32Value
 fun main() {
     val builder = ModuleBuilder.create()
     val helloStr = builder.addConstant(StringLiteralGlobalConstant("str", ArrayType(Type.I8, 11),"Hello world"))
-    val printf = builder.createExternFunction("printf", Type.I32, arrayListOf(Type.Ptr))
+    val printf = builder.createExternFunction("printf", Type.I32, arrayListOf(PtrType))
     builder.createFunction("main", Type.I32, arrayListOf()).apply {
         val cont = createLabel()
         call(printf, arrayListOf(helloStr), cont)

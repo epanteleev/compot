@@ -71,7 +71,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseLoad(resultName: LocalValueToken) {
         val typeToken    = iterator.expect<PrimitiveTypeToken>("loaded type")
-        val pointerToken = iterator.expect<ValueToken>("type '${Type.Ptr}'")
+        val pointerToken = iterator.expect<ValueToken>("type '$PtrType'")
 
         builder.load(resultName, pointerToken, typeToken)
     }
@@ -98,7 +98,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseRet() {
         val retType = iterator.expect<TypeToken>("return type")
-        if (retType.type(moduleBuilder) == Type.Void) {
+        if (retType.type(moduleBuilder) == VoidType) {
             builder.retVoid()
             return
         }
@@ -361,7 +361,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         val type = iterator.expect<PrimitiveTypeToken>("primitive type")
         iterator.expect<Comma>("comma")
 
-        val sourceType = iterator.expect<PointerTypeToken>("type ${Type.Ptr}")
+        val sourceType = iterator.expect<PointerTypeToken>("type $PtrType")
         val source     = iterator.expect<ValueToken>("source value")
         iterator.expect<Comma>("comma")
         val indexType  = iterator.expect<IntegerTypeToken>("index type")
@@ -375,7 +375,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         val type = iterator.expect<AggregateTypeToken>("aggregate type")
         iterator.expect<Comma>("comma")
 
-        val sourceType = iterator.expect<PointerTypeToken>("type ${Type.Ptr}")
+        val sourceType = iterator.expect<PointerTypeToken>("type $PtrType")
         val source     = iterator.expect<LocalValueToken>("source value")
         iterator.expect<Comma>("comma")
         val indexType  = iterator.expect<IntegerTypeToken>("index type")
@@ -400,7 +400,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
 
     private fun parseSelect(currentTok: LocalValueToken) {
         // %$identifier = select u1 <v0>, <t1> <v1>, <t2> <v2>
-        iterator.expect<BooleanTypeToken>("'${Type.U1}' type")
+        iterator.expect<BooleanTypeToken>("'$FlagType' type")
         val v0 = iterator.expect<AnyValueToken>("condition value")
         iterator.expect<Comma>("','")
 

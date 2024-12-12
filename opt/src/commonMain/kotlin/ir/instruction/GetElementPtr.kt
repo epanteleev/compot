@@ -14,7 +14,7 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
         return "%${name()} = $NAME $basicType, ptr ${source()}, ${index().type()} ${index()}"
     }
 
-    override fun type(): PointerType = Type.Ptr
+    override fun type(): PtrType = PtrType
 
     fun source(): Value {
         assertion(operands.size == 2) {
@@ -58,7 +58,7 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
             if (indexType.sizeOf() != QWORD_SIZE) {
                 return false
             }
-            if (sourceType !is PointerType) {
+            if (sourceType !is PtrType) {
                 return false
             }
 

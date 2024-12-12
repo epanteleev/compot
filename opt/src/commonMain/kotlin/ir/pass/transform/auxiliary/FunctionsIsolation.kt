@@ -126,7 +126,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                     val copy = bb.insertBefore(call) { it.copy(arg) }
                     bb.updateDF(call, i, copy)
                 }
-                is PointerType -> {
+                is PtrType -> {
                     val isByValue = byValueAttr.find { it.argumentIndex == i } != null
                     if (isByValue) {
                         isolateByValueArgument(bb, call, i, arg)

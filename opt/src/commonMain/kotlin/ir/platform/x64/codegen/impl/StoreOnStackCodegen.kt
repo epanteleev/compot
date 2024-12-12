@@ -10,8 +10,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 import ir.types.FloatingPointType
 import ir.types.IntegerType
-import ir.types.PointerType
-import ir.types.Type
+import ir.types.PtrType
 
 
 class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
@@ -40,7 +39,7 @@ class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, 
                     }
                 }
             }
-            is IntegerType, is PointerType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
+            is IntegerType, is PtrType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }
     }

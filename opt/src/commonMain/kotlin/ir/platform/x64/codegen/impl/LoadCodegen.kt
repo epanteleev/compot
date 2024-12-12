@@ -15,7 +15,7 @@ data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsV
 
     operator fun invoke(value: Operand, pointer: Operand) = when (type) {
         is FloatingPointType           -> XmmOperandsVisitorUnaryOp.apply(value, pointer, this)
-        is IntegerType, is PointerType -> GPOperandsVisitorUnaryOp.apply(value, pointer, this)
+        is IntegerType, is PtrType -> GPOperandsVisitorUnaryOp.apply(value, pointer, this)
         else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
     }
 

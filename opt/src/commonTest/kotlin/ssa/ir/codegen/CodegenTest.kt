@@ -5,6 +5,7 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.Mem2RegFabric
 import ir.platform.x64.pass.analysis.regalloc.VirtualRegistersPool
 import ir.types.Type
+import ir.types.VoidType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -29,7 +30,7 @@ class CodegenTest {
         val b = builder.load(Type.U64, arg2Alloc)
         val add = builder.add(a, b)
 
-        val printInt = moduleBuilder.createExternFunction("printInt", Type.Void, arrayListOf(Type.U64))
+        val printInt = moduleBuilder.createExternFunction("printInt", VoidType, arrayListOf(Type.U64))
         val cont = builder.createLabel()
         builder.vcall(printInt, arrayListOf(add), hashSetOf(), cont)
         builder.switchLabel(cont)

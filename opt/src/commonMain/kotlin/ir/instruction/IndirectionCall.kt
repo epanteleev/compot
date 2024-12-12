@@ -10,6 +10,7 @@ import ir.types.Type
 import ir.module.IndirectFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
+import ir.types.VoidType
 
 
 class IndirectionCall private constructor(id: Identity, owner: Block,
@@ -20,7 +21,7 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
     TerminateValueInstruction(id, owner, func.returnType(), operands, arrayOf(target)),
     Callable {
     init {
-        assertion(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
+        assertion(func.returnType() != VoidType) { "Must be non $VoidType" }
     }
 
     override fun target(): Block {

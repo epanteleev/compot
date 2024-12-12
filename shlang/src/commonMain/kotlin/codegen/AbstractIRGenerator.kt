@@ -151,7 +151,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         val constEvalResult = constEvalExpression(lValueType, declarator.rvalue) ?: staticInitializer(declarator.rvalue)
         when (constEvalResult) {
             is PointerLiteral -> when (lValueType) {
-                is ArrayType, is PointerType -> {
+                is ArrayType, is PtrType -> {
                     val global = mb.addGlobalValue(manglingName, constEvalResult, attr)
                     varStack[declarator.name()] = global
                     return global

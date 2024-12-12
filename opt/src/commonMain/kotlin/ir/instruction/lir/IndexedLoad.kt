@@ -51,7 +51,7 @@ class IndexedLoad private constructor(id: Identity, owner: Block, private val lo
         }
 
         private fun isAppropriateType(origin: Value, index: Value): Boolean {
-            if (origin.type() !is PointerType) {
+            if (origin.type() !is PtrType) {
                 return false
             }
             val idxType = index.type()

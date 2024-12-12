@@ -18,7 +18,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
         is Generate   -> frame.takeSlot(value)
         is LocalValue -> when (val tp = value.type()) {
             is FloatingPointType -> xmmRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)
-            is IntegerType, is PointerType -> gpRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)
+            is IntegerType, is PtrType -> gpRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)
             else -> throw IllegalArgumentException("not allowed for this type=$tp")
         }
         else -> throw IllegalArgumentException("not allowed for this value=$value")

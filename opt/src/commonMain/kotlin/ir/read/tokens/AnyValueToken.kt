@@ -12,7 +12,7 @@ sealed class LiteralValueToken(override val line: Int, override val pos: Int): A
     fun toConstant(ty: PrimitiveType): NonTrivialConstant = when (this) {
         is IntValue       -> PrimitiveConstant.of(ty, int)
         is FloatValue     -> PrimitiveConstant.of(ty, fp)
-        is NULLValueToken -> NullValue.NULLPTR
+        is NULLValueToken -> NullValue
         else -> throw RuntimeException("unexpected literal value: $this")
     }
 }

@@ -1,25 +1,22 @@
 package ir.instruction
 
-import common.arrayWith
-import common.arrayWrapperOf
-import common.assertion
-import common.toTypedArray
-import ir.attributes.FunctionAttribute
+import common.*
 import ir.value.Value
-import ir.types.Type
+import ir.types.VoidType
+import ir.module.block.Block
+import ir.attributes.FunctionAttribute
 import ir.module.IndirectFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
-import ir.module.block.Block
+
 
 class IndirectionVoidCall private constructor(id: Identity,
                                               owner: Block,
                                               private val func: IndirectFunctionPrototype,
                                               private val attributes: Set<FunctionAttribute>,
                                               usages: Array<Value>, target: Block):
-    TerminateInstruction(id, owner, usages, arrayOf(target)),
-    Callable {
+    TerminateInstruction(id, owner, usages, arrayOf(target)), Callable {
     init {
-        assertion(func.returnType() == Type.Void) { "Must be ${Type.Void}" }
+        assertion(func.returnType() == VoidType) { "Must be $VoidType" }
     }
 
     override fun target(): Block {
@@ -48,15 +45,13 @@ class IndirectionVoidCall private constructor(id: Identity,
 
     override fun attributes(): Set<FunctionAttribute> = attributes
 
-    override fun type(): Type = Type.Void
-
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("call ${type()} ${pointer()}(")
+        builder.append("call $VoidType ${pointer()}(")
         arguments().joinTo(builder) {
             "$it:${it.type()}"
         }

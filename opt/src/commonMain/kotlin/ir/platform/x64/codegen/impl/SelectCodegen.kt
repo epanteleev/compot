@@ -26,7 +26,7 @@ class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: X
             IntPredicate.Lt -> CMoveFlag.CMOVL
             IntPredicate.Le -> CMoveFlag.CMOVLE
         }
-        is UnsignedIntType, PointerType -> when (condition.predicate()) {
+        is UnsignedIntType, PtrType -> when (condition.predicate()) {
             IntPredicate.Eq -> CMoveFlag.CMOVE
             IntPredicate.Ne -> CMoveFlag.CMOVNE
             IntPredicate.Gt -> CMoveFlag.CMOVA

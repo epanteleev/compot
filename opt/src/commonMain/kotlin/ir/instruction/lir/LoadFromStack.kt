@@ -60,7 +60,7 @@ class LoadFromStack private constructor(id: Identity, owner: Block, private val 
                 return false
             }
 
-            return index.sizeOf() == QWORD_SIZE && (originType is PointerType || originType is AggregateType)
+            return index.sizeOf() == QWORD_SIZE && (originType is PtrType || originType is AggregateType)
         }
     }
 }

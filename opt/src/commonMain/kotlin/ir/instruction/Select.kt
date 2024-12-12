@@ -12,7 +12,7 @@ class Select private constructor(id: Identity, owner: Block, private val ty: Int
     override fun type(): IntegerType = ty
 
     override fun dump(): String {
-        return "%${name()} = $NAME ${Type.U1} ${condition()}, ${onTrue().type()} ${onTrue()}, ${onFalse().type()} ${onFalse()}"
+        return "%${name()} = $NAME $FlagType ${condition()}, ${onTrue().type()} ${onTrue()}, ${onFalse().type()} ${onFalse()}"
     }
 
     fun condition(): Value {

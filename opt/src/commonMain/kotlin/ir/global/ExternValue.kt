@@ -10,7 +10,7 @@ class ExternValue internal constructor(val name: String, val type: NonTrivialTyp
         return "@$name = extern global $type"
     }
 
-    override fun type(): PointerType = Type.Ptr
+    override fun type(): PtrType = PtrType
     override fun toString(): String  = "@$name"
     override fun hashCode(): Int     = name.hashCode()
 

@@ -144,7 +144,7 @@ fun primitive(): TypeMatcher = { it is PrimitiveType }
 
 fun int(): TypeMatcher = { it is IntegerType }
 
-fun ptr(): TypeMatcher = { it is PointerType }
+fun ptr(): TypeMatcher = { it is PtrType }
 
 fun aggregate(): TypeMatcher = { it is AggregateType }
 

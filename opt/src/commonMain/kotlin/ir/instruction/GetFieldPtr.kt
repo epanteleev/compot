@@ -17,7 +17,7 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
         return stringBuilder.toString()
     }
 
-    override fun type(): PointerType = Type.Ptr
+    override fun type(): PtrType = PtrType
 
     fun source(): Value {
         assertion(operands.size == 1) {
@@ -52,7 +52,7 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
                 return false
             }
 
-            return sourceType is PointerType || sourceType is AggregateType
+            return sourceType is PtrType || sourceType is AggregateType
         }
 
         fun typeCheck(gep: GetFieldPtr): Boolean {

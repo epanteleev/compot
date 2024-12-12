@@ -5,13 +5,14 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
+import ir.types.VoidType
 import ir.value.constant.F32Value
-import I32Value
+import ir.value.constant.I32Value
 
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val printFloat = builder.createExternFunction("printFloat", Type.Void, arrayListOf(Type.F32))
+    val printFloat = builder.createExternFunction("printFloat", VoidType, arrayListOf(Type.F32))
     builder.createFunction("main", Type.I32, arrayListOf()).apply {
         val first = alloc(Type.F32)
         store(first, F32Value(4f))

@@ -33,11 +33,11 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
     private fun irReturnType(): Type {
         val retType = functionType.retType()
         return when (val ty = retType.cType()) {
-            is VOID -> Type.Void
+            is VOID -> VoidType
             is BOOL -> Type.I8
             is CPrimitive -> mb.toIRType<PrimitiveType>(typeHolder, retType.cType())
             is CStructType -> {
-                val list = CallConvention.coerceArgumentTypes(ty) ?: return Type.Void
+                val list = CallConvention.coerceArgumentTypes(ty) ?: return VoidType
                 if (list.size == 1) {
                     list[0]
                 } else {
@@ -51,13 +51,13 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
     private fun argumentTypes(): Pair<List<NonTrivialType>, MutableSet<FunctionAttribute>> { //TODO remove pair
         val cType = functionType.retType().cType()
         if (cType is AnyCStructType && !cType.isSmall()) {
-            types.add(Type.Ptr)
+            types.add(PtrType)
         }
         for ((idx, type) in functionType.args().withIndex()) {
             when (val ty = type.cType()) {
                 is AnyCStructType -> {
                     if (ty === VaStart.vaList) {
-                        types.add(Type.Ptr)
+                        types.add(PtrType)
                         continue
                     }
                     if (!ty.isSmall()) {
@@ -68,8 +68,8 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
                     val parameters = CallConvention.coerceArgumentTypes(ty) ?: throw RuntimeException("Unsupported type, type=$ty")
                     types.addAll(parameters)
                 }
-                is CArrayType, is CUncompletedArrayType -> types.add(Type.Ptr)
-                is CPointer    -> types.add(Type.Ptr)
+                is CArrayType, is CUncompletedArrayType -> types.add(PtrType)
+                is CPointer    -> types.add(PtrType)
                 is BOOL        -> types.add(Type.U8)
                 is CPrimitive  -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type.cType()))
                 else -> throw IRCodeGenError("Unknown type, type=$type", begin) //FIXME argument positions!!!

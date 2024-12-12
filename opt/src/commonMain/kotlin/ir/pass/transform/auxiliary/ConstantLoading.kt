@@ -5,6 +5,7 @@ import ir.instruction.Instruction
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
+import ir.types.PtrType
 import ir.types.Type
 
 
@@ -18,7 +19,7 @@ internal class ConstantLoading private constructor(private val cfg: FunctionData
                         bb.updateDF(inst, i, lea)
                     }
                     is ExternValue -> {
-                        val lea = bb.insertBefore(inst) { it.load(Type.Ptr, use) }
+                        val lea = bb.insertBefore(inst) { it.load(PtrType, use) }
                         bb.updateDF(inst, i, lea)
                     }
                 }

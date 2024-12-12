@@ -11,7 +11,7 @@ class Alloc private constructor(id: Identity, owner: Block, val allocatedType: N
         return "%${name()} = $NAME $allocatedType"
     }
 
-    override fun type(): PointerType = Type.Ptr
+    override fun type(): PtrType = PtrType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

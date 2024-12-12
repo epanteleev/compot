@@ -21,7 +21,7 @@ class Int2Pointer private constructor(id: Identity, owner: Block, value: Value):
         return operands[0]
     }
 
-    override fun type(): PointerType = Type.Ptr
+    override fun type(): PtrType = PtrType
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -33,7 +33,7 @@ class Int2Pointer private constructor(id: Identity, owner: Block, value: Value):
         fun make(id: Identity, owner: Block, value: Value): Int2Pointer {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
-                "inconsistent types in '$id': ty=${Type.Ptr}, value=$value:$valueType"
+                "inconsistent types in '$id': ty=$PtrType, value=$value:$valueType"
             }
 
             return registerUser(Int2Pointer(id, owner, value), value)

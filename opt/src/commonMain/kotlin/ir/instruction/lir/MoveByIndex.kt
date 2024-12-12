@@ -2,7 +2,6 @@ package ir.instruction.lir
 
 import common.assertion
 import ir.Definitions.QWORD_SIZE
-import ir.Definitions.WORD_SIZE
 import ir.types.*
 import ir.value.Value
 import ir.instruction.Identity
@@ -52,7 +51,7 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
         }
 
         private fun isAppropriateType(toValue: Value, index: Value, src: Value): Boolean {
-            if (toValue.type() !is PointerType) {
+            if (toValue.type() !is PtrType) {
                 return false
             }
             if (src.type() !is PrimitiveType) {

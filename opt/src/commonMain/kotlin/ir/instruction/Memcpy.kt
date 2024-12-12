@@ -4,7 +4,7 @@ import common.assertion
 import ir.value.Value
 import ir.value.constant.UnsignedIntegerConstant
 import ir.types.Type
-import ir.types.PointerType
+import ir.types.PtrType
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
@@ -61,7 +61,7 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
             if (length.value() == 0UL) {
                 return false
             }
-            return dstType == srcType && dstType is PointerType
+            return dstType == srcType && dstType is PtrType
         }
 
         fun typeCheck(memcpy: Memcpy): Boolean {

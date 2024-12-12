@@ -41,7 +41,7 @@ class Pointer2Int private constructor(id: Identity, owner: Block, private val to
         }
 
         private fun isAppropriateType(valueType: Type): Boolean {
-            return valueType is PointerType
+            return valueType is PtrType
         }
 
         fun typeCheck(ptr2int: Pointer2Int): Boolean {

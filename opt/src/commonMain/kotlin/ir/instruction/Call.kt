@@ -11,6 +11,7 @@ import ir.module.DirectFunctionPrototype
 import ir.module.block.Block
 import ir.types.PrimitiveType
 import ir.types.TupleType
+import ir.types.VoidType
 
 
 class Call private constructor(id: Identity, owner: Block, private val func: DirectFunctionPrototype, private val attributes: Set<FunctionAttribute>, args: Array<Value>, target: Block):
@@ -18,7 +19,7 @@ class Call private constructor(id: Identity, owner: Block, private val func: Dir
     Callable {
 
     init {
-        assertion(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
+        assertion(func.returnType() != VoidType) { "Must be non $VoidType" }
     }
 
     override fun type(): PrimitiveType {
@@ -71,7 +72,7 @@ class Call private constructor(id: Identity, owner: Block, private val func: Dir
         const val NAME = "call"
 
         fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Block): Call {
-            assertion(func.returnType() != Type.Void) { "Must be non ${Type.Void}" }
+            assertion(func.returnType() != VoidType) { "Must be non $VoidType" }
 
             require(Callable.isAppropriateTypes(func, args)) {
                 args.joinToString(prefix = "inconsistent types in '$id', prototype='${func.shortDescription()}', ")

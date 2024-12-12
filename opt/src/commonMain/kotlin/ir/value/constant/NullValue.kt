@@ -5,15 +5,9 @@ import ir.global.GlobalSymbol
 
 
 object NullValue : PrimitiveConstant { //TODO remove it
-    override fun type(): PointerType {
-        return Type.Ptr
-    }
+    override fun type(): PtrType = PtrType
 
-    override fun toString(): String {
-        return "null"
-    }
-
-    val NULLPTR = NullValue //TODO remove it
+    override fun toString(): String = "null"
 }
 
 class PointerLiteral private constructor(val gConstant: GlobalSymbol, val index: Int = 0): PrimitiveConstant {
@@ -23,7 +17,7 @@ class PointerLiteral private constructor(val gConstant: GlobalSymbol, val index:
         "gep ${gConstant.name()}, $index"
     }
 
-    override fun type(): PointerType = Type.Ptr
+    override fun type(): PtrType = PtrType
 
     companion object {
         fun of(gConstant: GlobalSymbol): PointerLiteral {

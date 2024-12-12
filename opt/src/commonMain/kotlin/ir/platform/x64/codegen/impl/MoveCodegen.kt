@@ -16,7 +16,7 @@ data class MoveCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsV
     operator fun invoke(dst: Operand, value: Operand) {
         when (type) {
             is FloatingPointType           -> XmmOperandsVisitorUnaryOp.apply(dst, value, this)
-            is IntegerType, is PointerType -> GPOperandsVisitorUnaryOp.apply(dst, value, this)
+            is IntegerType, is PtrType -> GPOperandsVisitorUnaryOp.apply(dst, value, this)
             else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$dst")
         }
     }

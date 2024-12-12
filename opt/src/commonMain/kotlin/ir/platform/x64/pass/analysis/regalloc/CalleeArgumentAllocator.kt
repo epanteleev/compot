@@ -47,7 +47,7 @@ internal class CalleeArgumentAllocator private constructor() {
     }
 
     private fun pickArgument(type: NonTrivialType): Operand = when (type) {
-        is IntegerType, is PointerType -> peakIntegerArgument()
+        is IntegerType, is PtrType -> peakIntegerArgument()
         is FloatingPointType           -> peakFPArgument()
         is StructType                  -> peakStructArgument(type)
         else -> throw IllegalArgumentException("not allowed for this type=$type")

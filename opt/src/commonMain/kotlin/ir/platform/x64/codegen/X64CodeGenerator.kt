@@ -179,7 +179,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     private fun emitRetValue(retInstType: PrimitiveType, returnOperand: Operand, returnRegister: Register) = when (retInstType) {
-        is IntegerType, is PointerType -> {
+        is IntegerType, is PtrType -> {
             ReturnIntCodegen(retInstType, asm)(returnRegister as GPRegister, returnOperand)
         }
         is FloatingPointType -> {
@@ -191,18 +191,18 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(returnValue: ReturnValue) {
         val value = registerAllocation.operand(returnValue.returnValue(0))
         when (val returnType = returnValue.type()) {
-            is IntegerType, is PointerType -> emitRetValue(returnType, value, retReg)
+            is IntegerType, is PtrType -> emitRetValue(returnType, value, retReg)
             is FloatingPointType -> emitRetValue(returnType, value, fpRet)
             is TupleType -> {
                 when (val first = returnType.asInnerType<PrimitiveType>(0)) {
-                    is IntegerType, is PointerType -> ReturnIntCodegen(first, asm)(retReg, value)
+                    is IntegerType, is PtrType -> ReturnIntCodegen(first, asm)(retReg, value)
                     is FloatingPointType -> ReturnFloatCodegen(first, asm)(fpRet, value)
                     else -> throw CodegenException("unknown type=$first")
                 }
 
                 val value1 = registerAllocation.operand(returnValue.returnValue(1))
                 when (val second = returnType.asInnerType<PrimitiveType>(1)) {
-                    is IntegerType, is PointerType -> ReturnIntCodegen(second, asm)(rdx, value1)
+                    is IntegerType, is PtrType -> ReturnIntCodegen(second, asm)(rdx, value1)
                     is FloatingPointType -> ReturnFloatCodegen(second, asm)(XmmRegister.xmm1, value1)
                     else -> throw CodegenException("unknown type=$second")
                 }
@@ -247,7 +247,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         if (firstProj != null) {
             val first  = retType.asInnerType<PrimitiveType>(0)
             val value = registerAllocation.operand(firstProj)
-            if (first is IntegerType || first is PointerType) {
+            if (first is IntegerType || first is PtrType) {
                 CallIntCodegen(first, asm)(value, retReg)
             } else if (first is FloatingPointType) {
                 CallFloatCodegen(first, asm)(value, fpRet)
@@ -260,7 +260,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         if (secondProj != null) {
             val second = retType.asInnerType<PrimitiveType>(1)
             val value1 = registerAllocation.operand(secondProj)
-            if (second is IntegerType || second is PointerType) {
+            if (second is IntegerType || second is PtrType) {
                 CallIntCodegen(second, asm)(value1, rdx)
             } else if (second is FloatingPointType) {
                 CallFloatCodegen(second, asm)(value1, XmmRegister.xmm1)
@@ -325,7 +325,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val index         = registerAllocation.operand(leaStack.index())
         val dest          = registerAllocation.operand(leaStack)
 
-        LeaStackCodegen(Type.Ptr, leaStack.loadedType, asm)(dest, sourceOperand, index)
+        LeaStackCodegen(PtrType, leaStack.loadedType, asm)(dest, sourceOperand, index)
     }
 
     override fun visit(binary: TupleDiv) {
@@ -375,7 +375,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         asm.callFunction(call, call.prototype())
 
         when (val retType = call.type()) {
-            is IntegerType, is PointerType -> {
+            is IntegerType, is PtrType -> {
                 CallIntCodegen(retType, asm)(registerAllocation.operand(call), retReg)
             }
             is FloatingPointType -> {
@@ -419,7 +419,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         asm.indirectCall(indirectionCall, pointer)
 
         when (val retType = indirectionCall.type()) {
-            is IntegerType, is PointerType -> {
+            is IntegerType, is PtrType -> {
                 CallIntCodegen(retType, asm)(registerAllocation.operand(indirectionCall), retReg)
             }
             is FloatingPointType -> {
