@@ -68,26 +68,24 @@ class ModuleReader(string: String) {
             if (type !is IntegerTypeToken) {
                 throw throw ParseErrorException("expect integer type, but: type=${type}")
             }
-            when (val tp = type.type()) {
-                Type.I8 -> I8Value(data.int.toByte())
-                Type.U8 -> U8Value(data.int.toByte())
-                Type.I16 -> I16Value(data.int.toShort())
-                Type.U16 -> U16Value(data.int.toShort())
-                Type.I32 -> I32Value(data.int.toInt())
-                Type.U32 -> U32Value(data.int.toInt())
-                Type.I64 -> I64Value(data.int)
-                Type.U64 -> U64Value(data.int)
-                else -> throw ParseErrorException("unsupported: type=$tp, data=${data.int}")
+            when (type.type()) {
+                I8Type  -> I8Value(data.int.toByte())
+                U8Type  -> U8Value(data.int.toByte())
+                I16Type -> I16Value(data.int.toShort())
+                U16Type -> U16Value(data.int.toShort())
+                I32Type -> I32Value(data.int.toInt())
+                U32Type -> U32Value(data.int.toInt())
+                I64Type -> I64Value(data.int)
+                U64Type -> U64Value(data.int)
             }
         }
         is FloatValue -> {
             if (type !is FloatTypeToken) {
                 throw throw ParseErrorException("expect float type, but: type=${type}")
             }
-            when (val tp = type.type()) {
-                Type.F32 -> F32Value(data.fp.toFloat())
-                Type.F64 -> F64Value(data.fp)
-                else -> throw ParseErrorException("unsupported: type=$tp, data=${data.fp}")
+            when (type.type()) {
+                F32Type -> F32Value(data.fp.toFloat())
+                F64Type -> F64Value(data.fp)
             }
         }
         is StringLiteralToken -> {
@@ -95,7 +93,7 @@ class ModuleReader(string: String) {
                 throw throw ParseErrorException("expect float type, but: type=${type}")
             }
 
-            StringLiteralConstant(ArrayType(Type.I8, data.string.length), data.string)
+            StringLiteralConstant(ArrayType(I8Type, data.string.length), data.string)
         }
         is OpenBrace -> {
             if (type !is AggregateTypeToken) {
@@ -113,26 +111,24 @@ class ModuleReader(string: String) {
                 if (type !is IntegerTypeToken) {
                     throw throw ParseErrorException("expect integer type, but: type=${type}")
                 }
-                when (val tp = type.type()) {
-                    Type.I8 -> I8ConstantValue(name, data.int.toByte())
-                    Type.U8 -> U8ConstantValue(name, data.int.toUByte())
-                    Type.I16 -> I16ConstantValue(name, data.int.toShort())
-                    Type.U16 -> U16ConstantValue(name, data.int.toUShort())
-                    Type.I32 -> I32ConstantValue(name, data.int.toInt())
-                    Type.U32 -> U32ConstantValue(name, data.int.toUInt())
-                    Type.I64 -> I64ConstantValue(name, data.int)
-                    Type.U64 -> U64ConstantValue(name, data.int.toULong())
-                    else -> throw ParseErrorException("unsupported: type=$tp, data=${data.int}")
+                when (type.type()) {
+                    I8Type   -> I8ConstantValue(name, data.int.toByte())
+                    U8Type   -> U8ConstantValue(name, data.int.toUByte())
+                    I16Type -> I16ConstantValue(name, data.int.toShort())
+                    U16Type  -> U16ConstantValue(name, data.int.toUShort())
+                    I32Type -> I32ConstantValue(name, data.int.toInt())
+                    U32Type  -> U32ConstantValue(name, data.int.toUInt())
+                    I64Type -> I64ConstantValue(name, data.int)
+                    U64Type -> U64ConstantValue(name, data.int.toULong())
                 }
             }
             is FloatValue -> {
                 if (type !is FloatTypeToken) {
                     throw throw ParseErrorException("expect float type, but: type=${type}")
                 }
-                when (val tp = type.type()) {
-                    Type.F32 -> F32ConstantValue(name, data.fp.toFloat())
-                    Type.F64 -> F64ConstantValue(name, data.fp)
-                    else -> throw ParseErrorException("unsupported: type=$tp, data=${data.fp}")
+                when (type.type()) {
+                    F32Type -> F32ConstantValue(name, data.fp.toFloat())
+                    F64Type -> F64ConstantValue(name, data.fp)
                 }
             }
             is StringLiteralToken -> {

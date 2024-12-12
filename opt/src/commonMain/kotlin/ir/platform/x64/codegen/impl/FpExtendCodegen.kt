@@ -14,7 +14,7 @@ data class FpExtendCodegen(val toType: FloatingPointType, val asm: Assembler):
     private val toSize = toType.sizeOf()
 
     init {
-        assertion(toType == Type.F64) {
+        assertion(toType == F64Type) {
             "expect this, but toType=$toType"
         }
     }

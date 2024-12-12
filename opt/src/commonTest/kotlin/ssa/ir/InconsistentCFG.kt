@@ -3,10 +3,10 @@ package ssa.ir
 import ir.instruction.IntPredicate
 import ir.value.constant.F32Value
 import ir.module.FunctionPrototype
-import ir.types.Type
 import kotlin.test.Test
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
+import ir.types.*
 import ir.value.constant.*
 import kotlin.collections.hashSetOf
 import kotlin.test.assertFails
@@ -17,8 +17,8 @@ class InconsistentCFG {
     @Test
     fun testInconsistentReturn() {
         val builder = ModuleBuilder.create()
-        builder.createFunction("main", Type.I64, arrayListOf()).apply {
-            ret(Type.I32, arrayOf(I32Value(0)))
+        builder.createFunction("main", I64Type, arrayListOf()).apply {
+            ret(I32Type, arrayOf(I32Value(0)))
         }
 
         val throwable = assertFails { builder.build() }
@@ -28,7 +28,7 @@ class InconsistentCFG {
     @Test
     fun testReturnVoid() {
         val builder = ModuleBuilder.create()
-        builder.createFunction("main", Type.I32, arrayListOf()).apply {
+        builder.createFunction("main", I32Type, arrayListOf()).apply {
             retVoid()
         }
 
@@ -39,14 +39,14 @@ class InconsistentCFG {
     @Test
     fun testCallF32() {
         val builder = ModuleBuilder.create()
-        builder.createExternFunction("calc", Type.F32, arrayListOf(Type.F32))
-        val invalidPrototype = FunctionPrototype("calc", Type.I32, arrayListOf(Type.F32), hashSetOf())
+        builder.createExternFunction("calc", F32Type, arrayListOf(F32Type))
+        val invalidPrototype = FunctionPrototype("calc", I32Type, arrayListOf(F32Type), hashSetOf())
 
-        builder.createFunction("main", Type.I32, arrayListOf()).apply {
+        builder.createFunction("main", I32Type, arrayListOf()).apply {
             val cont = createLabel()
             call(invalidPrototype, arrayListOf(F32Value(0.0F)), hashSetOf(), cont)
             switchLabel(cont)
-            ret(Type.I32, arrayOf(I32Value(0)))
+            ret(I32Type, arrayOf(I32Value(0)))
         }
 
         val throwable = assertFails { builder.build() }
@@ -58,7 +58,7 @@ class InconsistentCFG {
         val builder = ModuleBuilder.create()
 
         val throwable = assertFails {
-            builder.createFunction("main", Type.I32, arrayListOf()).apply {
+            builder.createFunction("main", I32Type, arrayListOf()).apply {
                 val header = currentLabel().let {
                     val header = createLabel()
                     branch(header)
@@ -69,7 +69,7 @@ class InconsistentCFG {
                     switchLabel(header)
                     val label = createLabel()
                     branch(label)
-                    ret(Type.I32, arrayOf(I32Value(0)))
+                    ret(I32Type, arrayOf(I32Value(0)))
                     label
                 }
 
@@ -87,12 +87,12 @@ class InconsistentCFG {
     fun testMultiplyProjections() {
         val builder = ModuleBuilder.create()
 
-        builder.createFunction("main", Type.U32, arrayListOf()).apply {
+        builder.createFunction("main", U32Type, arrayListOf()).apply {
             val tuple = tupleDiv(U32Value(100), U32Value(20))
 
             proj(tuple, 0)
             val proj1 = proj(tuple, 0)
-            ret(Type.U32, arrayOf(proj1))
+            ret(U32Type, arrayOf(proj1))
         }
 
         val throwable = assertFails { builder.build() }
@@ -103,7 +103,7 @@ class InconsistentCFG {
     fun testInconsistentCondBranch() {
         val builder = ModuleBuilder.create()
 
-        builder.createFunction("main", Type.I32, arrayListOf(Type.I32)).apply {
+        builder.createFunction("main", I32Type, arrayListOf(I32Type)).apply {
             val arg = argument(0)
             val cmp = icmp(I32Value(0), IntPredicate.Eq, arg)
             val add = add(I32Value(0), arg)
@@ -114,7 +114,7 @@ class InconsistentCFG {
                 branch(cont)
             }
             switchLabel(cont).let {
-                ret(Type.I32, arrayOf(add))
+                ret(I32Type, arrayOf(add))
             }
         }
 
@@ -126,12 +126,12 @@ class InconsistentCFG {
     fun testInconsistentFlagToInt() {
         val builder = ModuleBuilder.create()
 
-        builder.createFunction("main", Type.I32, arrayListOf(Type.I32)).apply {
+        builder.createFunction("main", I32Type, arrayListOf(I32Type)).apply {
             val arg = argument(0)
             val cmp = icmp(I32Value(0), IntPredicate.Eq, arg)
             val add = add(I32Value(0), arg)
-            val i = flag2int(cmp, Type.I32)
-            ret(Type.I32, arrayOf(i))
+            val i = flag2int(cmp, I32Type)
+            ret(I32Type, arrayOf(i))
         }
 
         val throwable = assertFails { builder.build() }
@@ -142,12 +142,12 @@ class InconsistentCFG {
     fun testInconsistentSelect() {
         val builder = ModuleBuilder.create()
 
-        builder.createFunction("main", Type.I32, arrayListOf(Type.I32)).apply {
+        builder.createFunction("main", I32Type, arrayListOf(I32Type)).apply {
             val arg = argument(0)
             val cmp = icmp(I32Value(0), IntPredicate.Eq, arg)
             val add = add(I32Value(0), arg)
-            val i = select(cmp, Type.I32, I32Value(0), add)
-            ret(Type.I32, arrayOf(i))
+            val i = select(cmp, I32Type, I32Value(0), add)
+            ret(I32Type, arrayOf(i))
         }
 
         val throwable = assertFails { builder.build() }

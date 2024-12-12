@@ -21,11 +21,11 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     }
 
     override fun rx(dst: XmmRegister, src: GPRegister) = when (fromType) {
-        Type.U64 -> cvtU64(dst, src)
-        Type.U32 -> {
+        U64Type -> cvtU64(dst, src)
+        U32Type -> {
             asm.cvtint2fp(QWORD_SIZE, toSize, src, dst)
         }
-        Type.U16, Type.U8 -> {
+        U16Type, U8Type -> {
             asm.movzext(fromSize, TEMP_SIZE, src, temp1)
             asm.cvtint2fp(TEMP_SIZE, toSize, temp1, dst)
         }
@@ -33,13 +33,13 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     }
 
     override fun ax(dst: XmmRegister, src: Address) = when (fromType) {
-        Type.U64 -> cvtU64(dst, src)
-        Type.U32 -> {
+        U64Type -> cvtU64(dst, src)
+        U32Type -> {
             TODO("untested")
             asm.mov(fromSize, src, temp1)
             asm.cvtint2fp(QWORD_SIZE, toSize, temp1, dst)
         }
-        Type.U16, Type.U8 -> {
+        U16Type, U8Type -> {
             asm.movzext(fromSize, TEMP_SIZE, src, temp1)
             asm.cvtint2fp(TEMP_SIZE, toSize, temp1, dst)
         }
@@ -47,12 +47,12 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     }
 
     override fun ar(dst: Address, src: GPRegister) = when (fromType) {
-        Type.U64 -> cvtU64(dst, src)
-        Type.U32 -> {
+        U64Type -> cvtU64(dst, src)
+        U32Type -> {
             asm.cvtint2fp(QWORD_SIZE, toSize, src, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
         }
-        Type.U16, Type.U8 -> {
+        U16Type, U8Type -> {
             asm.movzext(fromSize, TEMP_SIZE, src, temp1)
             asm.cvtint2fp(TEMP_SIZE, toSize, temp1, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
@@ -61,14 +61,14 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     }
 
     override fun aa(dst: Address, src: Address) = when (fromType) {
-        Type.U64 -> cvtU64(dst, src)
-        Type.U32 -> {
+        U64Type -> cvtU64(dst, src)
+        U32Type -> {
             TODO("untested")
             asm.mov(fromSize, src, temp1)
             asm.cvtint2fp(QWORD_SIZE, toSize, temp1, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
         }
-        Type.U16, Type.U8 -> {
+        U16Type, U8Type -> {
             asm.movzext(fromSize, TEMP_SIZE, src, temp1)
             asm.cvtint2fp(TEMP_SIZE, toSize, temp1, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
@@ -142,6 +142,6 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
     }
 
     companion object {
-        private val TEMP_SIZE = Type.I32.sizeOf()
+        private val TEMP_SIZE = I32Type.sizeOf()
     }
 }

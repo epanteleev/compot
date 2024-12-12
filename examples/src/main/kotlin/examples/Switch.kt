@@ -12,7 +12,7 @@ import U8Value
 
 fun main() {
     val builder = ModuleBuilder.create()
-    builder.createFunction("func", Type.I32, arrayListOf(Type.I32), true).apply {
+    builder.createFunction("func", I32Type, arrayListOf(I32Type), true).apply {
         val default = createLabel()
         val b1 = createLabel()
         val b2 = createLabel()
@@ -41,7 +41,7 @@ fun main() {
         }
 
         switchLabel(exit).let {
-            ret(Type.I32, arrayOf(I32Value(0)))
+            ret(I32Type, arrayOf(I32Value(0)))
         }
     }
 

@@ -3,13 +3,14 @@ package examples
 import ir.types.Type
 import ir.types.VoidType
 import ir.module.builder.impl.ModuleBuilder
+import ir.types.U64Type
 
 fun main() {
     val moduleBuilder = ModuleBuilder.create()
-    val printInt = moduleBuilder.createExternFunction("printInt", VoidType, arrayListOf(Type.U64))
-    val argumentTypes = arrayListOf(Type.U64, Type.U64, Type.U64, Type.U64, Type.U64, Type.U64, Type.U64, Type.U64)
+    val printInt = moduleBuilder.createExternFunction("printInt", VoidType, arrayListOf(U64Type))
+    val argumentTypes = arrayListOf(U64Type, U64Type, U64Type, U64Type, U64Type, U64Type, U64Type, U64Type)
 
-    val builder = moduleBuilder.createFunction("sum8", Type.U64, argumentTypes)
+    val builder = moduleBuilder.createFunction("sum8", U64Type, argumentTypes)
     val arg1 = builder.argument(0)
     val arg2 = builder.argument(1)
     val arg3 = builder.argument(2)
@@ -19,16 +20,16 @@ fun main() {
     val arg7 = builder.argument(6)
     val arg8 = builder.argument(7)
 
-    val regValue = builder.alloc(Type.U64)
+    val regValue = builder.alloc(U64Type)
 
-    val arg1Alloc = builder.alloc(Type.U64)
-    val arg2Alloc = builder.alloc(Type.U64)
-    val arg3Alloc = builder.alloc(Type.U64)
-    val arg4Alloc = builder.alloc(Type.U64)
-    val arg5Alloc = builder.alloc(Type.U64)
-    val arg6Alloc = builder.alloc(Type.U64)
-    val arg7Alloc = builder.alloc(Type.U64)
-    val arg8Alloc = builder.alloc(Type.U64)
+    val arg1Alloc = builder.alloc(U64Type)
+    val arg2Alloc = builder.alloc(U64Type)
+    val arg3Alloc = builder.alloc(U64Type)
+    val arg4Alloc = builder.alloc(U64Type)
+    val arg5Alloc = builder.alloc(U64Type)
+    val arg6Alloc = builder.alloc(U64Type)
+    val arg7Alloc = builder.alloc(U64Type)
+    val arg8Alloc = builder.alloc(U64Type)
 
     builder.store(arg1Alloc, arg1)
     builder.store(arg2Alloc, arg2)
@@ -39,34 +40,34 @@ fun main() {
     builder.store(arg7Alloc, arg7)
     builder.store(arg8Alloc, arg8)
 
-    val a = builder.load(Type.U64, arg1Alloc)
-    val b = builder.load(Type.U64, arg2Alloc)
+    val a = builder.load(U64Type, arg1Alloc)
+    val b = builder.load(U64Type, arg2Alloc)
     val add1 = builder.add(a, b)
 
-    val c = builder.load(Type.U64, arg3Alloc)
+    val c = builder.load(U64Type, arg3Alloc)
     val add2 = builder.add(add1, c)
 
-    val d = builder.load(Type.U64, arg4Alloc)
+    val d = builder.load(U64Type, arg4Alloc)
     val add3 = builder.add(add2, d)
 
-    val e = builder.load(Type.U64, arg5Alloc)
+    val e = builder.load(U64Type, arg5Alloc)
     val add4 = builder.add(add3, e)
 
-    val f = builder.load(Type.U64, arg6Alloc)
+    val f = builder.load(U64Type, arg6Alloc)
     val add5 = builder.add(add4, f)
 
-    val f1 = builder.load(Type.U64, arg7Alloc)
+    val f1 = builder.load(U64Type, arg7Alloc)
     val add6 = builder.add(add5, f1)
 
-    val f2 = builder.load(Type.U64, arg8Alloc)
+    val f2 = builder.load(U64Type, arg8Alloc)
     val add7 = builder.add(add6, f2)
 
     val cont = builder.createLabel()
     builder.vcall(printInt, arrayListOf(add7), cont)
     builder.switchLabel(cont)
     builder.store(regValue, add7)
-    val ret = builder.load(Type.U64, regValue)
-    builder.ret(Type.U64, arrayOf(ret))
+    val ret = builder.load(U64Type, regValue)
+    builder.ret(U64Type, arrayOf(ret))
 
     moduleBuilder.build()
 }

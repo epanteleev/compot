@@ -7,17 +7,18 @@ import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
 import I32Value
+import ir.value.constant.I32Value
 
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val helloStr = builder.addConstant(StringLiteralGlobalConstant("str", ArrayType(Type.I8, 11),"Hello world"))
-    val printf = builder.createExternFunction("printf", Type.I32, arrayListOf(PtrType))
-    builder.createFunction("main", Type.I32, arrayListOf()).apply {
+    val helloStr = builder.addConstant(StringLiteralGlobalConstant("str", ArrayType(I8Type, 11),"Hello world"))
+    val printf = builder.createExternFunction("printf", I32Type, arrayListOf(PtrType))
+    builder.createFunction("main", I32Type, arrayListOf()).apply {
         val cont = createLabel()
         call(printf, arrayListOf(helloStr), cont)
         switchLabel(cont)
-        ret(Type.I32, arrayOf(I32Value(0)))
+        ret(I32Type, arrayOf(I32Value(0)))
     }
 
     val module = builder.build()

@@ -9,8 +9,7 @@ import ir.pass.analysis.VerifySSA
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PostOrderFabric
 import ir.pass.analysis.traverse.PreOrderFabric
-import ir.types.PtrType
-import ir.types.Type
+import ir.types.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -19,12 +18,12 @@ class CFGTraversalTest {
 
     private fun withBasicBlocks(): FunctionData {
         val moduleBuilder = ModuleBuilder.create()
-        val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(PtrType, PtrType, PtrType))
+        val builder = moduleBuilder.createFunction("hello", U16Type, arrayListOf(PtrType, PtrType, PtrType))
         val arg1 = builder.argument(0)
         val arg2 = builder.argument(1)
         val arg3 = builder.argument(2)
-        val v1 = builder.load(Type.I16, arg1)
-        val ttt  = builder.sext(v1, Type.I64)
+        val v1 = builder.load(I16Type, arg1)
+        val ttt  = builder.sext(v1, I64Type)
         val res  = builder.icmp(I64Value(32), IntPredicate.Gt, ttt)
 
         val trueLabel = builder.createLabel()
@@ -42,7 +41,7 @@ class CFGTraversalTest {
 
         builder.switchLabel(mergeLabel)
         val arithm = builder.sub(U16Value(1337), U16Value(64))
-        builder.ret(Type.U16, arrayOf(arithm))
+        builder.ret(U16Type, arrayOf(arithm))
 
         val module = moduleBuilder.build()
         VerifySSA.run(module)

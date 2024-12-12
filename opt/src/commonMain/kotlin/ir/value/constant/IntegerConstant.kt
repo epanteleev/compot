@@ -21,12 +21,11 @@ sealed interface SignedIntegerConstant: IntegerConstant {
     fun value(): Long
 
     companion object {
-        fun of(kind: IntegerType, value: Number): SignedIntegerConstant = when (kind) {
-            Type.I8  -> I8Value(value.toByte())
-            Type.I16 -> I16Value(value.toShort())
-            Type.I32 -> I32Value(value.toInt())
-            Type.I64 -> I64Value(value.toLong())
-            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+        fun of(kind: SignedIntType, value: Number): SignedIntegerConstant = when (kind) {
+            I8Type  -> I8Value(value.toByte())
+            I16Type -> I16Value(value.toShort())
+            I32Type -> I32Value(value.toInt())
+            I64Type -> I64Value(value.toLong())
         }
     }
 }
@@ -36,19 +35,16 @@ sealed interface UnsignedIntegerConstant: IntegerConstant {
 
     companion object {
         fun of(kind: UnsignedIntType, value: Number): UnsignedIntegerConstant = when (kind) {
-            Type.U8  -> U8Value(value.toByte())
-            Type.U16 -> U16Value(value.toShort())
-            Type.U32 -> U32Value(value.toInt())
-            Type.U64 -> U64Value(value.toLong())
-            else -> throw RuntimeException("Cannot create constant: kind=$kind, value=$value")
+            U8Type  -> U8Value(value.toByte())
+            U16Type -> U16Value(value.toShort())
+            U32Type -> U32Value(value.toInt())
+            U64Type -> U64Value(value.toLong())
         }
     }
 }
 
 data class U8Value(val u8: Byte): UnsignedIntegerConstant {
-    override fun type(): UnsignedIntType {
-        return Type.U8
-    }
+    override fun type(): U8Type = U8Type
 
     override fun value(): ULong {
         return u8.toUByte().toULong()
@@ -60,8 +56,8 @@ data class U8Value(val u8: Byte): UnsignedIntegerConstant {
 }
 
 data class I8Value(val i8: Byte): SignedIntegerConstant {
-    override fun type(): SignedIntType {
-        return Type.I8
+    override fun type(): I8Type {
+        return I8Type
     }
 
     override fun value(): Long {
@@ -74,9 +70,7 @@ data class I8Value(val i8: Byte): SignedIntegerConstant {
 }
 
 data class U16Value(val u16: Short): UnsignedIntegerConstant {
-    override fun type(): UnsignedIntType {
-        return Type.U16
-    }
+    override fun type(): U16Type = U16Type
 
     override fun value(): ULong {
         return u16.toUShort().toULong()
@@ -89,7 +83,7 @@ data class U16Value(val u16: Short): UnsignedIntegerConstant {
 
 data class I16Value(val i16: Short): SignedIntegerConstant {
     override fun type(): SignedIntType {
-        return Type.I16
+        return I16Type
     }
 
     override fun value(): Long {
@@ -102,9 +96,7 @@ data class I16Value(val i16: Short): SignedIntegerConstant {
 }
 
 data class U32Value(val u32: Int): UnsignedIntegerConstant {
-    override fun type(): UnsignedIntType {
-        return Type.U32
-    }
+    override fun type(): U32Type = U32Type
 
     override fun value(): ULong {
         return u32.toUInt().toULong()
@@ -117,7 +109,7 @@ data class U32Value(val u32: Int): UnsignedIntegerConstant {
 
 data class I32Value(val i32: Int): SignedIntegerConstant {
     override fun type(): SignedIntType {
-        return Type.I32
+        return I32Type
     }
 
     override fun value(): Long {
@@ -133,7 +125,7 @@ data class U64Value(val u64: Long): UnsignedIntegerConstant {
     constructor(i64: Int): this(i64.toLong())
 
     override fun type(): UnsignedIntType {
-        return Type.U64
+        return U64Type
     }
 
     override fun value(): ULong {
@@ -149,7 +141,7 @@ data class I64Value(val i64: Long): SignedIntegerConstant {
     constructor(i64: Int): this(i64.toLong())
 
     override fun type(): SignedIntType {
-        return Type.I64
+        return I64Type
     }
 
     override fun value(): Long {

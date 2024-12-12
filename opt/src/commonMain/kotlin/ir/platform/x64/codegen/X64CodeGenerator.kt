@@ -278,7 +278,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                 if (type.sizeOf() == QWORD_SIZE) {
                     CopyCodegen(int2ptr.type(), asm)(dst, src)
                 } else {
-                    SignExtendCodegen(type, Type.I64, asm)(dst, src)
+                    SignExtendCodegen(type, I64Type, asm)(dst, src)
                 }
             }
             is UnsignedIntType -> CopyCodegen(int2ptr.type(), asm)(dst, src)

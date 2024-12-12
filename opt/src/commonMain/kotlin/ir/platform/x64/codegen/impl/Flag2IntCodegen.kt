@@ -6,6 +6,7 @@ import ir.types.Type
 import ir.instruction.Flag2Int
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
+import ir.types.U8Type
 
 
 class Flag2IntCodegen(private val toSize: Int, private val asm: Assembler): GPOperandsVisitorUnaryOp {
@@ -46,6 +47,6 @@ class Flag2IntCodegen(private val toSize: Int, private val asm: Assembler): GPOp
     }
 
     companion object {
-        private val fromSize = Type.U8.sizeOf()
+        private val fromSize = U8Type.sizeOf()
     }
 }

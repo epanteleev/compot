@@ -46,7 +46,7 @@ class U8ConstantValue(override val name: String, val u8: UByte): PrimitiveGlobal
         return u8.toString()
     }
 
-    override fun type(): NonTrivialType = Type.U8
+    override fun type(): U8Type = U8Type
     override fun content(): String = data()
 
     override fun constant(): Constant = U8Value(u8.toByte())
@@ -57,7 +57,7 @@ class I8ConstantValue(override val name: String, val i8: Byte): PrimitiveGlobalC
         return i8.toString()
     }
 
-    override fun type(): NonTrivialType = Type.I8
+    override fun type(): I8Type = I8Type
     override fun content(): String = data()
 
     override fun constant(): Constant = I8Value(i8)
@@ -68,7 +68,7 @@ class U16ConstantValue(override val name: String, val u16: UShort): PrimitiveGlo
         return u16.toString()
     }
 
-    override fun type(): NonTrivialType = Type.U16
+    override fun type(): U16Type = U16Type
     override fun content(): String = data()
     override fun constant(): Constant = U16Value(u16.toShort())
 }
@@ -79,7 +79,7 @@ class I16ConstantValue(override val name: String, val i16: Short): PrimitiveGlob
         return i16.toString()
     }
 
-    override fun type(): NonTrivialType = Type.I16
+    override fun type(): NonTrivialType = I16Type
     override fun content(): String = data()
 
     override fun constant(): Constant = I16Value(i16)
@@ -90,7 +90,7 @@ class U32ConstantValue(override val name: String, val u32: UInt): PrimitiveGloba
         return u32.toString()
     }
 
-    override fun type(): NonTrivialType = Type.U32
+    override fun type(): U32Type = U32Type
     override fun content(): String = data()
     override fun constant(): Constant {
         return U32Value(u32.toInt())
@@ -102,7 +102,7 @@ class I32ConstantValue(override val name: String, val i32: Int): PrimitiveGlobal
         return i32.toString()
     }
 
-    override fun type(): NonTrivialType = Type.I32
+    override fun type(): NonTrivialType = I32Type
     override fun content(): String = data()
     override fun constant(): Constant {
         return I32Value(i32)
@@ -114,7 +114,7 @@ class U64ConstantValue(override val name: String, val u64: ULong): PrimitiveGlob
         return u64.toString()
     }
 
-    override fun type(): NonTrivialType = Type.U64
+    override fun type(): NonTrivialType = U64Type
     override fun content(): String = data()
     override fun constant(): Constant {
         return U64Value(u64.toLong())
@@ -126,7 +126,7 @@ class I64ConstantValue(override val name: String, val i64: Long): PrimitiveGloba
         return i64.toString()
     }
 
-    override fun type(): NonTrivialType = Type.I64
+    override fun type(): NonTrivialType = I64Type
     override fun content(): String = data()
     override fun constant(): Constant {
         return I64Value(i64)
@@ -138,7 +138,7 @@ class F32ConstantValue(override val name: String, val f32: Float): PrimitiveGlob
         return f32.toBits().toString()
     }
 
-    override fun type(): NonTrivialType = Type.F32
+    override fun type(): NonTrivialType = F32Type
     override fun content(): String = f32.toString()
     override fun constant(): Constant {
         return F32Value(f32)
@@ -150,7 +150,7 @@ class F64ConstantValue(override val name: String, val f64: Double): PrimitiveGlo
         return f64.toBits().toString()
     }
 
-    override fun type(): NonTrivialType = Type.F64
+    override fun type(): NonTrivialType = F64Type
     override fun content(): String = f64.toString()
     override fun constant(): Constant = F64Value(f64)
 }
@@ -170,7 +170,7 @@ class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, 
     }
 
     override fun content(): String = data()
-    override fun contentType(): NonTrivialType = ArrayType(Type.I8, string.length)
+    override fun contentType(): NonTrivialType = ArrayType(I8Type, string.length)
     override fun constant(): Constant = StringLiteralConstant(tp, string)
 }
 

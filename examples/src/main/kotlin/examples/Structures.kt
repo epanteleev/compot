@@ -10,13 +10,13 @@ import I32Value
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val pointStruct = builder.structType("point", arrayListOf(Type.I32, Type.I32))
+    val pointStruct = builder.structType("point", arrayListOf(I32Type, I32Type))
 
-    builder.createFunction("main", Type.I32, arrayListOf()).apply {
+    builder.createFunction("main", I32Type, arrayListOf()).apply {
         val first = alloc(pointStruct)
-        val firstField = gep(first, Type.I32, I32Value(0))
+        val firstField = gep(first, I32Type, I32Value(0))
         store(firstField, I32Value(4))
-        ret(Type.I32, arrayOf(I32Value(0)))
+        ret(I32Type, arrayOf(I32Value(0)))
     }
 
     val module = builder.build()

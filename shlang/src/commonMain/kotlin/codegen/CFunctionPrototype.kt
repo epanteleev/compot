@@ -34,7 +34,7 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
         val retType = functionType.retType()
         return when (val ty = retType.cType()) {
             is VOID -> VoidType
-            is BOOL -> Type.I8
+            is BOOL -> I8Type
             is CPrimitive -> mb.toIRType<PrimitiveType>(typeHolder, retType.cType())
             is CStructType -> {
                 val list = CallConvention.coerceArgumentTypes(ty) ?: return VoidType
@@ -70,7 +70,7 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
                 }
                 is CArrayType, is CUncompletedArrayType -> types.add(PtrType)
                 is CPointer    -> types.add(PtrType)
-                is BOOL        -> types.add(Type.U8)
+                is BOOL        -> types.add(U8Type)
                 is CPrimitive  -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type.cType()))
                 else -> throw IRCodeGenError("Unknown type, type=$type", begin) //FIXME argument positions!!!
             }

@@ -26,13 +26,13 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val offset = bb.insertBefore(inst) {
                     it.mul(index, NonTrivialConstant.of(index.asType(), baseType.sizeOf()))
                 }
-                return bb.replace(inst) { it.leaStack(gp.source(), Type.I8, offset) }
+                return bb.replace(inst) { it.leaStack(gp.source(), I8Type, offset) }
             }
 
             inst.match(gfp(struct(), generate())) { gf: GetFieldPtr ->
                 val basicType = gf.basicType.asType<StructType>()
                 val index = U64Value(basicType.offset(gf.index().toInt()))
-                return bb.replace(inst) { it.leaStack(gf.source(), Type.U8, index) }
+                return bb.replace(inst) { it.leaStack(gf.source(), U8Type, index) }
             }
 
             inst.match(gfp(array(primitive()), generate())) { gf: GetFieldPtr ->
@@ -44,7 +44,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val tp = gf.basicType.asType<ArrayType>()
                 val index = gf.index().toInt()
                 val offset = tp.offset(index)
-                return bb.replace(inst) { it.leaStack(gf.source(), Type.I8, U32Value(offset)) }
+                return bb.replace(inst) { it.leaStack(gf.source(), I8Type, U32Value(offset)) }
             }
 
             return inst
@@ -141,22 +141,22 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 //  %res = trunc %projDiv to i8
                 //  %rem = trunc %projRem to i8
 
-                val extFirst  = bb.insertBefore(inst) { it.sext(tupleDiv.first(), Type.I16) }
-                val extSecond = bb.insertBefore(inst) { it.sext(tupleDiv.second(), Type.I16) }
+                val extFirst  = bb.insertBefore(inst) { it.sext(tupleDiv.first(), I16Type) }
+                val extSecond = bb.insertBefore(inst) { it.sext(tupleDiv.second(), I16Type) }
                 val newDiv    = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
 
 
                 val divProj = tupleDiv.quotient()
                 if (divProj != null) {
                     val proj = bb.insertBefore(inst) { it.proj(newDiv, 0) }
-                    bb.updateUsages(divProj) { bb.insertBefore(inst) { it.trunc(proj, Type.I8) } }
+                    bb.updateUsages(divProj) { bb.insertBefore(inst) { it.trunc(proj, I8Type) } }
                     killOnDemand(bb, divProj)
                 }
 
                 val remProj  = tupleDiv.remainder() ?: throw IllegalStateException("Remainder projection is missing")
                 val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
                 val truncate = bb.updateUsages(remProj) {
-                    bb.insertBefore(inst) { it.trunc(proj, Type.I8) }
+                    bb.insertBefore(inst) { it.trunc(proj, I8Type) }
                 }
                 killOnDemand(bb, remProj)
 
@@ -176,21 +176,21 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 //  %res = trunc %projDiv to u8
                 //  %rem = trunc %projRem to u8
 
-                val extFirst  = bb.insertBefore(inst) { it.zext(tupleDiv.first(), Type.U16) }
-                val extSecond = bb.insertBefore(inst) { it.zext(tupleDiv.second(), Type.U16) }
+                val extFirst  = bb.insertBefore(inst) { it.zext(tupleDiv.first(), U16Type) }
+                val extSecond = bb.insertBefore(inst) { it.zext(tupleDiv.second(), U16Type) }
                 val newDiv    = bb.insertBefore(inst) { it.tupleDiv(extFirst, extSecond) }
 
                 val divProj = tupleDiv.proj(0)
                 if (divProj != null) {
                     val proj = bb.insertBefore(inst) { it.proj(newDiv, 0) }
-                    bb.updateUsages(divProj) { bb.insertBefore(inst) { it.trunc(proj, Type.U8) } }
+                    bb.updateUsages(divProj) { bb.insertBefore(inst) { it.trunc(proj, U8Type) } }
                     killOnDemand(bb, divProj)
                 }
 
                 val remProj  = tupleDiv.remainder() ?: throw IllegalStateException("Remainder projection is missing")
                 val proj     = bb.insertBefore(inst) { it.proj(newDiv, 1) }
                 val truncate = bb.updateUsages(remProj) {
-                    bb.insertBefore(inst) { it.trunc(proj, Type.U8) }
+                    bb.insertBefore(inst) { it.trunc(proj, U8Type) }
                 }
                 killOnDemand(bb, remProj)
                 killOnDemand(bb, tupleDiv)
@@ -220,10 +220,10 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     else                  -> inst
                 }
 
-                val extOnTrue  = bb.insertBefore(insertPos) { it.sext(select.onTrue(), Type.I16) }
-                val extOnFalse = bb.insertBefore(insertPos) { it.sext(select.onFalse(), Type.I16) }
-                val newSelect  = bb.insertBefore(inst) { it.select(select.condition(), Type.I16, extOnTrue, extOnFalse) }
-                return bb.replace(inst) { it.trunc(newSelect, Type.I8) }
+                val extOnTrue  = bb.insertBefore(insertPos) { it.sext(select.onTrue(), I16Type) }
+                val extOnFalse = bb.insertBefore(insertPos) { it.sext(select.onFalse(), I16Type) }
+                val newSelect  = bb.insertBefore(inst) { it.select(select.condition(), I16Type, extOnTrue, extOnFalse) }
+                return bb.replace(inst) { it.trunc(newSelect, I8Type) }
             }
             inst.match(select(nop(), value(u8()), value(u8()))) { select: Select ->
                 // Before:
@@ -242,10 +242,10 @@ class Lowering private constructor(private val cfg: FunctionData) {
                     else                  -> inst
                 }
 
-                val extOnTrue  = bb.insertBefore(insertPos) { it.zext(select.onTrue(), Type.U16) }
-                val extOnFalse = bb.insertBefore(insertPos) { it.zext(select.onFalse(), Type.U16) }
-                val newSelect  = bb.insertBefore(inst) { it.select(select.condition(), Type.U16, extOnTrue, extOnFalse) }
-                return bb.replace(inst) { it.trunc(newSelect, Type.U8) }
+                val extOnTrue  = bb.insertBefore(insertPos) { it.zext(select.onTrue(), U16Type) }
+                val extOnFalse = bb.insertBefore(insertPos) { it.zext(select.onFalse(), U16Type) }
+                val newSelect  = bb.insertBefore(inst) { it.select(select.condition(), U16Type, extOnTrue, extOnFalse) }
+                return bb.replace(inst) { it.trunc(newSelect, U8Type) }
             }
             return inst
         }

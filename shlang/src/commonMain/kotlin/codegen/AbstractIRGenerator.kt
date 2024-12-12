@@ -37,10 +37,10 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
         is StringNode        -> when (lValueType) {
-            is ArrayType -> StringLiteralConstant(ArrayType(Type.I8, expr.length()) ,expr.data())
+            is ArrayType -> StringLiteralConstant(ArrayType(I8Type, expr.length()) ,expr.data())
             else -> {
                 val constant = expr.data()
-                val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.U8, expr.length()), constant)
+                val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(U8Type, expr.length()), constant)
                 PointerLiteral.of(mb.addConstant(stringLiteral))
             }
         }
@@ -193,7 +193,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 }
                 val newConstant = if (dimension > constEvalResult.toString().length.toLong()) {
                     val content = constEvalResult.content.padTo(dimension.toInt(), "\\0")
-                    StringLiteralConstant(ArrayType(Type.I8, dimension.toInt()), content)
+                    StringLiteralConstant(ArrayType(I8Type, dimension.toInt()), content)
                 } else {
                     constEvalResult
                 }

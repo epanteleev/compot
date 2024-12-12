@@ -198,7 +198,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 val types = CallConvention.coerceArgumentTypes(argCType) ?: throw RuntimeException("Internal error")
                 for ((idx, type) in types.withIndex()) {
-                    val fieldPtr = ir.gep(alloc, Type.I8, I64Value(type.sizeOf().toLong() * idx))
+                    val fieldPtr = ir.gep(alloc, I8Type, I64Value(type.sizeOf().toLong() * idx))
                     val arg = when (type) {
                         is PtrType, is IntegerType -> emitBuiltInVaArg(vaList, type, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
                         is FloatingPointType           -> emitBuiltInVaArg(vaList, type, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
@@ -215,7 +215,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun emitBuiltInVarArgLargeStruct(vaList: Value, dst: Alloc, argType: StructType) {
         val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, I64Value(VaStart.OVERFLOW_ARG_AREA_IDX))
         val argInMem = ir.load(PtrType, overflowArgAreaPtr)
-        val inc = ir.gep(argInMem, Type.I8, I64Value(argType.sizeOf().toLong()))
+        val inc = ir.gep(argInMem, I8Type, I64Value(argType.sizeOf().toLong()))
         ir.store(overflowArgAreaPtr, inc)
 
         ir.memcpy(dst, argInMem, U64Value(argType.sizeOf().toLong()))
@@ -223,8 +223,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun emitBuiltInVaArg(vaList: Value, argType: PrimitiveType, offsetIdx: Int, regSaveAreaIdx: Int): Value {
         val gpOffsetPtr = ir.gfp(vaList, vaListIrType, I64Value(offsetIdx))
-        val gpOffset = ir.load(Type.I32, gpOffsetPtr)
-        val gpOffsetCvt = ir.convertToType(gpOffset, Type.I64)
+        val gpOffset = ir.load(I32Type, gpOffsetPtr)
+        val gpOffsetCvt = ir.convertToType(gpOffset, I64Type)
 
         val varArgInReg = ir.createLabel()
         val varArgInStack = ir.createLabel()
@@ -236,9 +236,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val argInReg = ir.switchLabel(varArgInReg).let {
             val regSaveAreaPtr = ir.gfp(vaList, vaListIrType, I64Value(VaStart.REG_SAVE_AREA_IDX))
             val regSaveArea = ir.load(PtrType, regSaveAreaPtr)
-            val argInReg = ir.gep(regSaveArea, Type.I8, gpOffsetCvt)
+            val argInReg = ir.gep(regSaveArea, I8Type, gpOffsetCvt)
             val newGPOffset = ir.add(gpOffsetCvt, I64Value(QWORD_SIZE))
-            val asI32 = ir.trunc(newGPOffset, Type.I32)
+            val asI32 = ir.trunc(newGPOffset, I32Type)
             ir.store(gpOffsetPtr, asI32)
             ir.branch(cont)
 
@@ -248,7 +248,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val argInMem = ir.switchLabel(varArgInStack).let {
             val overflowArgAreaPtr = ir.gfp(vaList, vaListIrType, I64Value(VaStart.OVERFLOW_ARG_AREA_IDX))
             val argInMem = ir.load(PtrType, overflowArgAreaPtr)
-            val inc = ir.gep(argInMem, Type.I64, I64Value(1))
+            val inc = ir.gep(argInMem, I64Type, I64Value(1))
             ir.store(overflowArgAreaPtr, inc)
             ir.branch(cont)
 
@@ -293,26 +293,26 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     is CHAR -> {
                         if (expr.data().isNotEmpty()) {
                             ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value(expr.length()))
-                            val gep = ir.gep(lvalueAdr, Type.I8, I64Value(expr.length()))
+                            val gep = ir.gep(lvalueAdr, I8Type, I64Value(expr.length()))
                             ir.store(gep, I8Value(0))
                         } else {
-                            val gep = ir.gep(lvalueAdr, Type.I8, I64Value(0))
+                            val gep = ir.gep(lvalueAdr, I8Type, I64Value(0))
                             ir.store(gep, I8Value(0))
                         }
                     }
                     is UCHAR -> {
                         if (expr.data().isNotEmpty()) {
                             ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value(expr.length()))
-                            val gep = ir.gep(lvalueAdr, Type.I8, I64Value(expr.length()))
+                            val gep = ir.gep(lvalueAdr, I8Type, I64Value(expr.length()))
                             ir.store(gep, U8Value(0))
                         } else {
-                            val gep = ir.gep(lvalueAdr, Type.I8, I64Value(0))
+                            val gep = ir.gep(lvalueAdr, I8Type, I64Value(0))
                             ir.store(gep, U8Value(0))
                         }
                     }
                     is CPointer -> {
                         val stringPtr = visitStringNode(expr)
-                        val fieldPtr = ir.gep(lvalueAdr, Type.I64, I64Value(idx))
+                        val fieldPtr = ir.gep(lvalueAdr, I64Type, I64Value(idx))
                         ir.store(fieldPtr, stringPtr)
                     }
                     else -> throw IRCodeGenError("Unknown type $type", expr.begin())
@@ -476,7 +476,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitStringNode(stringNode: StringNode): Value {
-        val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(Type.I8, stringNode.length()), stringNode.data())
+        val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(I8Type, stringNode.length()), stringNode.data())
         return mb.addConstant(stringLiteral)
     }
 
@@ -508,10 +508,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'", Position.UNKNOWN) //TODO correct position
         }
         return when (expr.type()) {
-            Type.F32          -> ir.convertToType(expr, Type.F64)
-            Type.I8, Type.I16 -> ir.convertToType(expr, Type.I32)
-            Type.U8, Type.U16 -> ir.convertToType(expr, Type.U32)
-            FlagType          -> ir.convertToType(expr, Type.I32)
+            F32Type          -> ir.convertToType(expr, F64Type)
+            I8Type, I16Type -> ir.convertToType(expr, I32Type)
+            U8Type, U16Type   -> ir.convertToType(expr, U32Type)
+            FlagType          -> ir.convertToType(expr, I32Type)
             else -> expr
         }
     }
@@ -677,7 +677,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is PrimitiveType -> {
                     val call = ir.call(function, convertedArgs, attributes, cont)
                     ir.switchLabel(cont)
-                    val gep = ir.gep(lvalueAdr, Type.I8, I64Value(0L))
+                    val gep = ir.gep(lvalueAdr, I8Type, I64Value(0L))
                     ir.store(gep, call)
                 }
                 is TupleType -> {
@@ -747,14 +747,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     is CPointer      -> l
                     else -> throw IRCodeGenError("Pointer type expected, but got $l", binop.begin())
                 }
-                val convertedLValue = ir.convertToType(lvalue, Type.U64)
+                val convertedLValue = ir.convertToType(lvalue, U64Type)
 
                 val rvalue = visitExpression(binop.right, true)
                 when (val r = binop.right.resolveType(typeHolder)) {
                     is AnyCArrayType, is CPrimitive -> {}
                     else -> throw IRCodeGenError("Primitive type expected, but got $r", binop.begin())
                 }
-                val convertedRValue = ir.convertToType(rvalue, Type.U64)
+                val convertedRValue = ir.convertToType(rvalue, U64Type)
 
                 val size = lValueType.dereference(typeHolder).size()
                 val mul = ir.mul(convertedRValue, U64Value(size.toLong()))
@@ -773,8 +773,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             is IntegerType -> {
                 val cvtType = when (commonType) {
-                    is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) Type.I32 else commonType
-                    is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) Type.U32 else commonType
+                    is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) I32Type else commonType
+                    is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) U32Type else commonType
                     else -> throw IRCodeGenError("Unexpected type: $commonType", binop.begin())
                 }
                 val left = visitExpression(binop.left, true)
@@ -787,10 +787,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             is FlagType -> {
                 val left = visitExpression(binop.left, true)
-                val leftConverted = ir.convertToType(left, Type.I32)
+                val leftConverted = ir.convertToType(left, I32Type)
 
                 val right = visitExpression(binop.right, true)
-                val rightConverted = ir.convertToType(right, Type.I32)
+                val rightConverted = ir.convertToType(right, I32Type)
 
                 return op(leftConverted, rightConverted)
             }
@@ -807,17 +807,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 if (rValueType !is CPrimitive) {
                     throw IRCodeGenError("Primitive type expected, but got $rValueType", binop.begin())
                 }
-                val convertedRValue = ir.convertToType(rvalue, Type.U64)
+                val convertedRValue = ir.convertToType(rvalue, U64Type)
 
                 val lvalueAddress = visitExpression(binop.left, false)
                 val lValueType    = binop.left.resolveType(typeHolder)
                 val lvalue        = ir.load(PtrType, lvalueAddress)
-                val ptr2intLValue = ir.ptr2int(lvalue, Type.U64)
+                val ptr2intLValue = ir.ptr2int(lvalue, U64Type)
 
                 if (lValueType !is CPointer) {
                     throw IRCodeGenError("Pointer type expected, but got $lValueType", binop.begin())
                 }
-                val convertedLValue = ir.convertToType(ptr2intLValue, Type.U64)
+                val convertedLValue = ir.convertToType(ptr2intLValue, U64Type)
 
                 val size = lValueType.dereference(typeHolder).size()
                 val mul = ir.mul(convertedRValue, U64Value(size.toLong()))
@@ -845,8 +845,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val leftType = binop.left.resolveType(typeHolder)
                 val originalIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
                 val leftIrType = when (originalIrType) {
-                    is SignedIntType -> if (originalIrType.sizeOf() < WORD_SIZE) Type.I32 else originalIrType
-                    is UnsignedIntType -> if (originalIrType.sizeOf() < WORD_SIZE) Type.U32 else originalIrType
+                    is SignedIntType -> if (originalIrType.sizeOf() < WORD_SIZE) I32Type else originalIrType
+                    is UnsignedIntType -> if (originalIrType.sizeOf() < WORD_SIZE) U32Type else originalIrType
                 }
                 val rightConverted = ir.convertToType(right, leftIrType)
 
@@ -872,7 +872,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val rightConverted = ir.convertRVToType(right, commonType)
 
         val predicateType = when (commonType) {
-            is FlagType      -> Type.I8
+            is FlagType      -> I8Type
             is PrimitiveType -> commonType
             else -> throw RuntimeException("Unknown type: type=$commonType")
         }
@@ -881,7 +881,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (isRvalue) {
             return cmp
         }
-        return ir.convertToType(cmp, Type.I8)
+        return ir.convertToType(cmp, I8Type)
     }
 
     private fun visitAssignBinary(binop: BinaryOp): Value {
@@ -910,14 +910,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun cvtToI8(right: Value): Value = when (val ty = right.type()) {
-        is FlagType -> ir.convertToType(right, Type.I8)
+        is FlagType -> ir.convertToType(right, I8Type)
         is IntegerType -> {
             val cmp = ir.icmp(right, IntPredicate.Ne, IntegerConstant.of(ty, 0))
-            ir.convertToType(cmp, Type.I8)
+            ir.convertToType(cmp, I8Type)
         }
         is PtrType -> {
             val cmp = ir.icmp(right, IntPredicate.Ne, NullValue)
-            ir.convertToType(cmp, Type.I8)
+            ir.convertToType(cmp, I8Type)
         }
         else -> throw RuntimeException("Unknown type: type=$ty")
     }
@@ -1019,7 +1019,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val loaded = ir.load(type, addr)
         when (ctype) {
             is CPointer -> {
-                val converted = ir.convertToType(loaded, Type.I64)
+                val converted = ir.convertToType(loaded, I64Type)
                 val inc = op(converted, I64Value(ctype.dereference(typeHolder).size().toLong()))
                 ir.store(addr, ir.convertToType(inc, type))
             }
@@ -1041,7 +1041,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (val cType = unaryOp.resolveType(typeHolder)) {
             is CPointer -> {
                 val loaded    = ir.load(PtrType, address)
-                val converted = ir.convertToType(loaded, Type.I64)
+                val converted = ir.convertToType(loaded, I64Type)
                 val inc       = op(converted, I64Value(cType.dereference(typeHolder).size().toLong()))
                 val incPtr    = ir.convertToType(inc, PtrType)
                 ir.store(address, incPtr)
@@ -1091,7 +1091,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val converted = ir.convertRVToType(value, commonType) //TODO do we need this?
 
                 val eqType = when (commonType) {
-                    is FlagType      -> Type.I8
+                    is FlagType      -> I8Type
                     is PrimitiveType -> commonType
                     else -> throw IRCodeGenError("Unknown type: $commonType", unaryOp.begin())
                 }
@@ -1208,10 +1208,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.retVoid()
             }
             is BOOL -> {
-                val returnValueAdr = fnStmt.resolveReturnValueAdr { ir.alloc(Type.I8) }
+                val returnValueAdr = fnStmt.resolveReturnValueAdr { ir.alloc(I8Type) }
                 ir.switchLabel(exitBlock)
-                val ret = ir.load(Type.I8, returnValueAdr)
-                ir.ret(Type.I8, arrayOf(ret))
+                val ret = ir.load(I8Type, returnValueAdr)
+                ir.ret(I8Type, arrayOf(ret))
             }
             is CPrimitive -> {
                 val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType.cType())
@@ -1616,7 +1616,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val irType = when (val cType = type.type.cType()) {
-            is BOOL                          -> Type.I8
+            is BOOL                          -> I8Type
             is CAggregateType, is CPrimitive -> mb.toIRType<NonTrivialType>(typeHolder, cType)
             else -> throw IRCodeGenError("Unknown type, type=$cType", declarator.begin())
         }

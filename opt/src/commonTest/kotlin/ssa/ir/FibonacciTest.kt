@@ -13,6 +13,7 @@ import ir.pass.PassPipeline
 import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.pass.analysis.LoopDetectionPassFabric
 import ir.pass.analysis.dominance.DominatorTreeFabric
+import ir.types.I32Type
 import ir.types.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,22 +24,22 @@ import kotlin.test.assertTrue
 class FibonacciTest {
     private fun withBasicBlocks(): Module {
         val moduleBuilder = ModuleBuilder.create()
-        val builder = moduleBuilder.createFunction("fib", Type.I32, arrayListOf(Type.I32))
+        val builder = moduleBuilder.createFunction("fib", I32Type, arrayListOf(I32Type))
 
         val n = builder.argument(0)
 
-        val retVal = builder.alloc(Type.I32)
-        val nAddr  = builder.alloc(Type.I32)
+        val retVal = builder.alloc(I32Type)
+        val nAddr  = builder.alloc(I32Type)
 
-        val a = builder.alloc(Type.I32)
-        val b = builder.alloc(Type.I32)
-        val c = builder.alloc(Type.I32)
-        val i = builder.alloc(Type.I32)
+        val a = builder.alloc(I32Type)
+        val b = builder.alloc(I32Type)
+        val c = builder.alloc(I32Type)
+        val i = builder.alloc(I32Type)
 
         builder.store(nAddr, n)
         builder.store(a, I32Value(0))
         builder.store(b, I32Value(1))
-        val v0 = builder.load(Type.I32, nAddr)
+        val v0 = builder.load(I32Type, nAddr)
         val cmp = builder.icmp(v0, IntPredicate.Eq, I32Value(0))
 
         val ifThen = builder.createLabel()
@@ -53,7 +54,7 @@ class FibonacciTest {
 
         builder.switchLabel(ifThen)
 
-        val v1 = builder.load(Type.I32, a)
+        val v1 = builder.load(I32Type, a)
         builder.store(retVal, v1)
         builder.branch(ret)
 
@@ -62,37 +63,37 @@ class FibonacciTest {
         builder.branch(forCond)
 
         builder.switchLabel(forCond)
-        val v2 = builder.load(Type.I32, i)
-        val v3 = builder.load(Type.I32, nAddr)
+        val v2 = builder.load(I32Type, i)
+        val v3 = builder.load(I32Type, nAddr)
         val cmp1 = builder.icmp(v2, IntPredicate.Le, v3)
         builder.branchCond(cmp1, forBody, forEnd)
 
         builder.switchLabel(forBody)
-        val v4 = builder.load(Type.I32, a)
-        val v5 = builder.load(Type.I32, b)
+        val v4 = builder.load(I32Type, a)
+        val v5 = builder.load(I32Type, b)
         val add = builder.add(v4, v5)
         builder.store(c, add)
-        val v6 = builder.load(Type.I32, b)
+        val v6 = builder.load(I32Type, b)
         builder.store(a, v6)
-        val v7 = builder.load(Type.I32, c)
+        val v7 = builder.load(I32Type, c)
         builder.store(b, v7)
         builder.branch(forInc)
 
         builder.switchLabel(forInc)
-        val v8 = builder.load(Type.I32, i)
+        val v8 = builder.load(I32Type, i)
         val inc = builder.add(v8, I32Value(1))
         builder.store(i, inc)
 
         builder.branch(forCond)
 
         builder.switchLabel(forEnd)
-        val v9 = builder.load(Type.I32, b)
+        val v9 = builder.load(I32Type, b)
         builder.store(retVal, v9)
         builder.branch(ret)
 
         builder.switchLabel(ret)
-        val v10 = builder.load(Type.I32, retVal)
-        builder.ret(Type.I32, arrayOf(v10))
+        val v10 = builder.load(I32Type, retVal)
+        builder.ret(I32Type, arrayOf(v10))
 
         val module = moduleBuilder.build()
         VerifySSA.run(module)

@@ -62,7 +62,7 @@ class Int2FloatCodegen(toType: FloatingPointType, fromType: SignedIntType, val a
     }
 
     private fun convertOnDemand(src: GPRegister): GPRegister? {
-        if (fromSize == Type.I32.sizeOf() || fromSize == Type.I64.sizeOf()) {
+        if (fromSize == I32Type.sizeOf() || fromSize == I64Type.sizeOf()) {
             return null
         }
 
@@ -71,7 +71,7 @@ class Int2FloatCodegen(toType: FloatingPointType, fromType: SignedIntType, val a
     }
 
     private fun convertOnDemand(src: Address): GPRegister? { //todo code duplication
-        if (fromSize == Type.I32.sizeOf() || fromSize == Type.I64.sizeOf()) {
+        if (fromSize == I32Type.sizeOf() || fromSize == I64Type.sizeOf()) {
             return null
         }
 
@@ -80,6 +80,6 @@ class Int2FloatCodegen(toType: FloatingPointType, fromType: SignedIntType, val a
     }
 
     companion object {
-        private val TEMP_SIZE = Type.I32.sizeOf()
+        private val TEMP_SIZE = I32Type.sizeOf()
     }
 }

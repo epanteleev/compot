@@ -10,6 +10,7 @@ import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.transform.Mem2RegFabric
 import ir.types.PtrType
 import ir.types.Type
+import ir.types.U16Type
 import ir.value.constant.I32Value
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,7 +19,7 @@ import kotlin.test.assertTrue
 class DominatorTreeTest {
     private fun withBasicBlocks(): Module {
         val moduleBuilder = ModuleBuilder.create()
-        val builder = moduleBuilder.createFunction("hello", Type.U16, arrayListOf(PtrType))
+        val builder = moduleBuilder.createFunction("hello", U16Type, arrayListOf(PtrType))
         val b1 = builder.createLabel()
         builder.branch(b1)
 
@@ -54,7 +55,7 @@ class DominatorTreeTest {
         builder.branch(exit)
 
         builder.switchLabel(exit)
-        builder.ret(Type.U16, arrayOf(U16Value(0)))
+        builder.ret(U16Type, arrayOf(U16Value(0)))
 
         return moduleBuilder.build()
     }

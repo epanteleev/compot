@@ -20,7 +20,7 @@ object TypeConverter {
     inline fun <reified T : NonTrivialType> ModuleBuilder.toIRLVType(typeHolder: TypeHolder, type: CType): T {
         val converted = toIRType<Type>(typeHolder, type)
         return if (converted == FlagType) {
-            Type.I8 as T
+            I8Type as T
         } else {
             converted as T
         }
@@ -37,16 +37,16 @@ object TypeConverter {
 
     fun ModuleBuilder.toIRTypeUnchecked(typeHolder: TypeHolder, type: CType): Type = when (type) {
         BOOL   -> FlagType
-        CHAR   -> Type.I8
-        UCHAR  -> Type.U8
-        SHORT  -> Type.I16
-        USHORT -> Type.U16
-        INT    -> Type.I32
-        UINT   -> Type.U32
-        LONG   -> Type.I64
-        ULONG  -> Type.U64
-        FLOAT  -> Type.F32
-        DOUBLE -> Type.F64
+        CHAR   -> I8Type
+        UCHAR  -> U8Type
+        SHORT  -> I16Type
+        USHORT -> U16Type
+        INT    -> I32Type
+        UINT   -> U32Type
+        LONG   -> I64Type
+        ULONG  -> U64Type
+        FLOAT  -> F32Type
+        DOUBLE -> F64Type
         VOID   -> VoidType
         is CStructType -> convertStructType(typeHolder, type)
         is CArrayType -> {
@@ -59,7 +59,7 @@ object TypeConverter {
         }
         is CUnionType -> convertUnionType(typeHolder, type)
         is CPointer   -> PtrType
-        is CEnumType  -> Type.I32
+        is CEnumType  -> I32Type
         is CFunctionType, is CUncompletedArrayType, is AbstractCFunction -> PtrType
         else -> throw RuntimeException("Unknown type, type=$type, class=${type::class}")
     }
@@ -94,9 +94,9 @@ object TypeConverter {
         }
     }
 
-    fun FunctionDataBuilder.toIndexType(value: Value): Value = convertToType(value, Type.I64)
+    fun FunctionDataBuilder.toIndexType(value: Value): Value = convertToType(value, I64Type)
 
-    fun FunctionDataBuilder.convertRVToType(value: Value, toType: Type, cvtType: IntegerType = Type.I8): Value {
+    fun FunctionDataBuilder.convertRVToType(value: Value, toType: Type, cvtType: IntegerType = I8Type): Value {
         val rightCvt = convertToType(value, toType)
         return when (toType) {
             FlagType -> flag2int(rightCvt, cvtType)
@@ -114,82 +114,82 @@ object TypeConverter {
         }
 
         return when (toType) {
-            Type.I8 -> {
+            I8Type -> {
                 toType as SignedIntType
                 when (value.type()) {
                     FlagType -> flag2int(value, toType)
-                    Type.I16 -> trunc(value, toType)
-                    Type.I32 -> trunc(value, toType)
-                    Type.I64 -> trunc(value, toType)
-                    Type.U8 ->  bitcast(value, toType)
-                    Type.U16 -> trunc(value, toType)
-                    Type.U32 -> {
-                        val trunc = trunc(value, Type.U8)
+                    I16Type -> trunc(value, toType)
+                    I32Type -> trunc(value, toType)
+                    I64Type -> trunc(value, toType)
+                    U8Type   ->  bitcast(value, toType)
+                    U16Type  -> trunc(value, toType)
+                    U32Type  -> {
+                        val trunc = trunc(value, U8Type)
                         bitcast(trunc, toType)
                     }
-                    Type.U64 -> {
-                        val bitcast = bitcast(value, Type.I64)
+                    U64Type -> {
+                        val bitcast = bitcast(value, I64Type)
                         trunc(bitcast, toType)
                     }
-                    Type.F32 -> fp2Int(value, toType)
-                    Type.F64 -> fp2Int(value, toType)
+                    F32Type -> fp2Int(value, toType)
+                    F64Type -> fp2Int(value, toType)
                     PtrType -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
-            Type.I16 -> {
+            I16Type -> {
                 toType as SignedIntType
                 when (value.type()) {
                     FlagType -> flag2int(value, toType)
-                    Type.I8  -> sext(value, toType)
-                    Type.I32 -> trunc(value, toType)
-                    Type.I64 -> trunc(value, toType)
-                    Type.U8  -> {
-                        val zext = zext(value, Type.U16)
+                    I8Type  -> sext(value, toType)
+                    I32Type -> trunc(value, toType)
+                    I64Type -> trunc(value, toType)
+                    U8Type  -> {
+                        val zext = zext(value, U16Type)
                         bitcast(zext, toType)
                     }
-                    Type.U16 -> bitcast(value, toType)
-                    Type.U32 -> {
-                        val bitcast = bitcast(value, Type.I32)
+                    U16Type  -> bitcast(value, toType)
+                    U32Type  -> {
+                        val bitcast = bitcast(value, I32Type)
                         trunc(bitcast, toType)
                     }
-                    Type.U64 -> {
-                        val bitcast = bitcast(value, Type.I64)
+                    U64Type -> {
+                        val bitcast = bitcast(value, I64Type)
                         trunc(bitcast, toType)
                     }
-                    Type.F32 -> fp2Int(value, toType)
-                    Type.F64 -> fp2Int(value, toType)
+                    F32Type -> fp2Int(value, toType)
+                    F64Type -> fp2Int(value, toType)
                     PtrType -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
-            Type.I32 -> {
+            I32Type -> {
                 toType as SignedIntType
                 when (value.type()) {
                     FlagType -> flag2int(value, toType)
-                    Type.I8 -> sext(value, toType)
-                    Type.I16 -> sext(value, toType)
-                    Type.I64 -> trunc(value, toType)
-                    Type.U8 -> {
-                        val zext = zext(value, Type.U32)
-                        bitcast(zext, Type.I32)
+                    I8Type -> sext(value, toType)
+                    I16Type -> sext(value, toType)
+                    I64Type -> trunc(value, toType)
+                    U8Type -> {
+                        val zext = zext(value, U32Type)
+                        bitcast(zext, I32Type)
                     }
 
-                    Type.U16 -> {
-                        val zext = zext(value, Type.U32)
+                    U16Type  -> {
+                        val zext = zext(value, U32Type)
                         bitcast(zext, toType)
                     }
 
-                    Type.U32 -> bitcast(value, toType)
-                    Type.U64 -> {
-                        val bitcast = bitcast(value, Type.I64)
+                    U32Type -> bitcast(value, toType)
+                    U64Type -> {
+                        val bitcast = bitcast(value, I64Type)
                         trunc(bitcast, toType)
                     }
-                    Type.F32 -> fp2Int(value, toType)
-                    Type.F64 -> {
-                        val tmp = fp2Int(value, Type.I64)
+                    F32Type -> fp2Int(value, toType)
+                    F64Type -> {
+                        val tmp = fp2Int(value, I64Type)
                         trunc(tmp, toType)
                     }
                     PtrType -> ptr2int(value, toType)
@@ -197,120 +197,120 @@ object TypeConverter {
                 }
             }
 
-            Type.I64 -> {
+            I64Type -> {
                 toType as SignedIntType
                 when (value.type()) {
                     FlagType -> flag2int(value, toType)
-                    Type.I8 -> sext(value, toType)
-                    Type.I16 -> sext(value, toType)
-                    Type.I32 -> sext(value, toType)
-                    Type.U8 -> {
-                        val zext = zext(value, Type.U64)
+                    I8Type -> sext(value, toType)
+                    I16Type -> sext(value, toType)
+                    I32Type -> sext(value, toType)
+                    U8Type -> {
+                        val zext = zext(value, U64Type)
                         bitcast(zext, toType)
                     }
 
-                    Type.U16 -> {
-                        val tmp = zext(value, Type.U64)
+                    U16Type  -> {
+                        val tmp = zext(value, U64Type)
                         bitcast(tmp, toType)
                     }
 
-                    Type.U32 -> {
-                        val tmp = zext(value, Type.U64)
+                    U32Type -> {
+                        val tmp = zext(value, U64Type)
                         bitcast(tmp, toType)
                     }
 
-                    Type.U64 -> bitcast(value, toType)
-                    Type.F32 -> fp2Int(value, toType)
-                    Type.F64 -> fp2Int(value, toType)
+                    U64Type -> bitcast(value, toType)
+                    F32Type -> fp2Int(value, toType)
+                    F64Type -> fp2Int(value, toType)
                     PtrType  -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
-            Type.U8 -> {
+            U8Type -> {
                 toType as UnsignedIntType
                 when (value.type()) {
                     FlagType -> flag2int(value, toType)
-                    Type.I8 -> bitcast(value, toType)
-                    Type.I16 -> {
-                        val bitcast = bitcast(value, Type.U16)
+                    I8Type -> bitcast(value, toType)
+                    I16Type -> {
+                        val bitcast = bitcast(value, U16Type)
                         trunc(bitcast, toType)
                     }
-                    Type.I32 -> {
-                        val trunc = trunc(value, Type.I8)
-                        bitcast(trunc, Type.U8)
+                    I32Type -> {
+                        val trunc = trunc(value, I8Type)
+                        bitcast(trunc, U8Type)
                     }
-                    Type.I64 -> {
-                        val trunc = trunc(value, Type.I8)
+                    I64Type -> {
+                        val trunc = trunc(value, I8Type)
                         bitcast(trunc, toType)
                     }
-                    Type.U16 -> trunc(value, toType)
-                    Type.U32 -> trunc(value, toType)
-                    Type.U64 -> trunc(value, toType)
-                    Type.F32 -> fp2Int(value, Type.U8)
-                    Type.F64 -> fp2Int(value, Type.U8)
+                    U16Type  -> trunc(value, toType)
+                    U32Type  -> trunc(value, toType)
+                    U64Type -> trunc(value, toType)
+                    F32Type -> fp2Int(value, U8Type)
+                    F64Type -> fp2Int(value, U8Type)
                     PtrType  -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
-            Type.U16 -> {
+            U16Type -> {
                 toType as UnsignedIntType
                 when (value.type()) {
                     FlagType -> flag2int(value, toType)
-                    Type.I8 -> {
-                        val sext = sext(value, Type.I16)
+                    I8Type -> {
+                        val sext = sext(value, I16Type)
                         bitcast(sext, toType)
                     }
-                    Type.I16 -> bitcast(value, toType)
-                    Type.I32 -> {
-                        val bitcast = bitcast(value, Type.U32)
+                    I16Type -> bitcast(value, toType)
+                    I32Type -> {
+                        val bitcast = bitcast(value, U32Type)
                         trunc(bitcast, toType)
                     }
 
-                    Type.I64 -> {
-                        val bitcast = bitcast(value, Type.U64)
+                    I64Type -> {
+                        val bitcast = bitcast(value, U64Type)
                         trunc(bitcast, toType)
                     }
-                    Type.U8 -> {
+                    U8Type -> {
                         zext(value, toType)
                     }
-                    Type.U32 -> trunc(value, toType)
-                    Type.U64 -> trunc(value, toType)
-                    Type.F32 -> {
-                        val tmp = fp2Int(value, Type.I32)
+                    U32Type -> trunc(value, toType)
+                    U64Type -> trunc(value, toType)
+                    F32Type -> {
+                        val tmp = fp2Int(value, I32Type)
                         trunc(tmp, toType)
                     }
 
-                    Type.F64 -> fp2Int(value, Type.U16)
+                    F64Type -> fp2Int(value, U16Type)
                     PtrType -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
-            Type.U32 -> {
+            U32Type -> {
                 toType as UnsignedIntType
                 when (value.type()) {
                     FlagType -> flag2int(value, toType)
-                    Type.I8 -> {
-                        val sext = sext(value, Type.I32)
+                    I8Type -> {
+                        val sext = sext(value, I32Type)
                         bitcast(sext, toType)
                     }
-                    Type.I16 -> {
-                        val sext = sext(value, Type.I32)
+                    I16Type -> {
+                        val sext = sext(value, I32Type)
                         bitcast(sext, toType)
                     }
-                    Type.I32 -> bitcast(value, toType)
-                    Type.I64 -> {
-                        val bitcast = bitcast(value, Type.U64)
-                        trunc(bitcast, Type.U32)
+                    I32Type -> bitcast(value, toType)
+                    I64Type -> {
+                        val bitcast = bitcast(value, U64Type)
+                        trunc(bitcast, U32Type)
                     }
-                    Type.U8  -> zext(value, toType)
-                    Type.U16 -> zext(value, toType)
-                    Type.U64 -> trunc(value, toType)
-                    Type.F32 -> fp2Int(value, toType)
-                    Type.F64 -> {
-                        val tmp = fp2Int(value, Type.U64)
+                    U8Type   -> zext(value, toType)
+                    U16Type  -> zext(value, toType)
+                    U64Type -> trunc(value, toType)
+                    F32Type -> fp2Int(value, toType)
+                    F64Type -> {
+                        val tmp = fp2Int(value, U64Type)
                         trunc(tmp, toType)
                     }
                     PtrType -> ptr2int(value, toType)
@@ -318,63 +318,63 @@ object TypeConverter {
                 }
             }
 
-            Type.U64 -> {
+            U64Type -> {
                 toType as UnsignedIntType
                 when (value.type()) {
                     FlagType -> flag2int(value, toType)
-                    Type.I8 -> {
-                        val sext = sext(value, Type.I64)
+                    I8Type -> {
+                        val sext = sext(value, I64Type)
                         bitcast(sext, toType)
                     }
-                    Type.I16 -> {
-                        val sext = sext(value, Type.I64)
+                    I16Type -> {
+                        val sext = sext(value, I64Type)
                         bitcast(sext, toType)
                     }
-                    Type.I32 -> {
-                        val tmp = sext(value, Type.I64)
+                    I32Type -> {
+                        val tmp = sext(value, I64Type)
                         bitcast(tmp, toType)
                     }
-                    Type.I64 -> bitcast(value, toType)
-                    Type.U8 -> zext(value, toType)
-                    Type.U16 -> zext(value, toType)
-                    Type.U32 -> zext(value, toType)
-                    Type.F32 -> fp2Int(value, toType)
-                    Type.F64 -> fp2Int(value, toType)
+                    I64Type -> bitcast(value, toType)
+                    U8Type   -> zext(value, toType)
+                    U16Type  -> zext(value, toType)
+                    U32Type  -> zext(value, toType)
+                    F32Type -> fp2Int(value, toType)
+                    F64Type -> fp2Int(value, toType)
                     PtrType -> ptr2int(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
-            Type.F32 -> {
+            F32Type -> {
                 toType as FloatingPointType
                 when (value.type()) {
                     FlagType -> int2fp(value, toType)
-                    Type.I8  -> int2fp(value, toType)
-                    Type.I16 -> int2fp(value, toType)
-                    Type.I32 -> int2fp(value, toType)
-                    Type.I64 -> int2fp(value, toType)
-                    Type.U8  -> int2fp(value, toType)
-                    Type.U16 -> uint2fp(value, toType)
-                    Type.U32 -> uint2fp(value, toType)
-                    Type.U64 -> int2fp(value, toType)
-                    Type.F64 -> fptrunc(value, toType)
+                    I8Type  -> int2fp(value, toType)
+                    I16Type -> int2fp(value, toType)
+                    I32Type -> int2fp(value, toType)
+                    I64Type -> int2fp(value, toType)
+                    U8Type   -> int2fp(value, toType)
+                    U16Type  -> uint2fp(value, toType)
+                    U32Type  -> uint2fp(value, toType)
+                    U64Type -> int2fp(value, toType)
+                    F64Type -> fptrunc(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
 
-            Type.F64 -> {
+            F64Type -> {
                 toType as FloatingPointType
                 when (value.type()) {
                     FlagType -> int2fp(value, toType)
-                    Type.I8  -> int2fp(value, toType)
-                    Type.I16 -> int2fp(value, toType)
-                    Type.I32 -> int2fp(value, toType)
-                    Type.I64 -> int2fp(value, toType)
-                    Type.U8  -> uint2fp(value, toType)
-                    Type.U16 -> uint2fp(value, toType)
-                    Type.U32 -> uint2fp(value, toType)
-                    Type.U64 -> uint2fp(value, toType)
-                    Type.F32 -> fpext(value, toType)
+                    I8Type  -> int2fp(value, toType)
+                    I16Type -> int2fp(value, toType)
+                    I32Type -> int2fp(value, toType)
+                    I64Type -> int2fp(value, toType)
+                    U8Type   -> uint2fp(value, toType)
+                    U16Type  -> uint2fp(value, toType)
+                    U32Type  -> uint2fp(value, toType)
+                    U64Type -> uint2fp(value, toType)
+                    F32Type -> fpext(value, toType)
                     else -> throw RuntimeException("Cannot convert $value to $toType")
                 }
             }
@@ -391,14 +391,14 @@ object TypeConverter {
 
             FlagType -> {
                 when (val vType = value.type()) {
-                    Type.I8  -> icmp(value, IntPredicate.Ne, I8Value(0))
-                    Type.I16 -> icmp(value, IntPredicate.Ne, I16Value(0))
-                    Type.I32 -> icmp(value, IntPredicate.Ne, I32Value(0))
-                    Type.I64 -> icmp(value, IntPredicate.Ne, I64Value(0))
-                    Type.U8  -> icmp(value, IntPredicate.Ne, U8Value(0))
-                    Type.U16 -> icmp(value, IntPredicate.Ne, U16Value(0))
-                    Type.U32 -> icmp(value, IntPredicate.Ne, U32Value(0))
-                    Type.U64 -> icmp(value, IntPredicate.Ne, U64Value(0))
+                    I8Type  -> icmp(value, IntPredicate.Ne, I8Value(0))
+                    I16Type -> icmp(value, IntPredicate.Ne, I16Value(0))
+                    I32Type -> icmp(value, IntPredicate.Ne, I32Value(0))
+                    I64Type -> icmp(value, IntPredicate.Ne, I64Value(0))
+                    U8Type   -> icmp(value, IntPredicate.Ne, U8Value(0))
+                    U16Type  -> icmp(value, IntPredicate.Ne, U16Value(0))
+                    U32Type  -> icmp(value, IntPredicate.Ne, U32Value(0))
+                    U64Type -> icmp(value, IntPredicate.Ne, U64Value(0))
                     PtrType -> icmp(value, IntPredicate.Ne, NullValue)
                     else -> throw RuntimeException("Cannot convert $value:$vType to $toType")
                 }
@@ -411,88 +411,88 @@ object TypeConverter {
         when (val sizeOf = structType.size()) {
             BYTE_SIZE -> {
                 assertion(args.size == 1) { "invariant: args=$args" }
-                val field = gep(dst, Type.I8, I64Value(0))
+                val field = gep(dst, I8Type, I64Value(0))
                 store(field, args[0])
             }
             HWORD_SIZE -> {
                 assertion(args.size == 1) { "invariant: args=$args" }
-                val field = gep(dst, Type.I16, I64Value(0))
+                val field = gep(dst, I16Type, I64Value(0))
                 store(field, args[0])
             }
             HWORD_SIZE + BYTE_SIZE -> {
                 assertion(args.size == 1) { "invariant: args=$args" }
-                assertion(args[0].type() == Type.I32) { "invariant: args=$args" }
+                assertion(args[0].type() == I32Type) { "invariant: args=$args" }
 
-                val second = trunc(args[0], Type.I16)
-                val field1 = gep(dst, Type.I16, I64Value(0))
+                val second = trunc(args[0], I16Type)
+                val field1 = gep(dst, I16Type, I64Value(0))
                 store(field1, second)
 
                 val shr    = shr(args[0], I32Value(HWORD_SIZE * 8))
-                val first  = trunc(shr, Type.I8)
-                val field2 = gep(dst, Type.I8, I64Value(HWORD_SIZE))
+                val first  = trunc(shr, I8Type)
+                val field2 = gep(dst, I8Type, I64Value(HWORD_SIZE))
                 store(field2, first)
             }
             WORD_SIZE -> {
                 assertion(args.size == 1) { "invariant: args=$args" }
-                val loadedType = if (structType.hasFloatOnly(0, WORD_SIZE)) Type.F32 else Type.I32
+                val loadedType = if (structType.hasFloatOnly(0, WORD_SIZE)) F32Type else I32Type
                 val field = gep(dst, loadedType, I64Value(0))
                 store(field, args[0])
             }
             WORD_SIZE + BYTE_SIZE -> {
                 assertion(args.size == 1) { "invariant: args=$args" }
-                assertion(args[0].type() == Type.I64) { "invariant: args=$args" }
+                assertion(args[0].type() == I64Type) { "invariant: args=$args" }
 
-                val second = trunc(args[0], Type.I32)
-                val field1 = gep(dst, Type.I32, I64Value(0))
+                val second = trunc(args[0], I32Type)
+                val field1 = gep(dst, I32Type, I64Value(0))
                 store(field1, second)
 
                 val shr    = shr(args[0], I64Value(WORD_SIZE * 8))
-                val first  = trunc(shr, Type.I8)
-                val field2 = gep(dst, Type.I8, I64Value(WORD_SIZE))
+                val first  = trunc(shr, I8Type)
+                val field2 = gep(dst, I8Type, I64Value(WORD_SIZE))
                 store(field2, first)
             }
             QWORD_SIZE -> {
                 assertion(args.size == 1) { "invariant: args=$args" }
-                val loadedType = if (structType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                val loadedType = if (structType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
                 val field = gep(dst, loadedType, I64Value( 0))
                 store(field, args[0])
             }
             QWORD_SIZE + BYTE_SIZE -> {
                 assertion(args.size == 2) { "invariant: args=$args" }
-                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
 
                 val field = gep(dst, loadedType1, I64Value(0))
                 store(field, args[0])
 
-                val field1 = gep(dst, Type.I8, I64Value(QWORD_SIZE))
+                val field1 = gep(dst, I8Type, I64Value(QWORD_SIZE))
                 store(field1, args[1])
             }
             QWORD_SIZE + HWORD_SIZE -> {
                 assertion(args.size == 2) { "invariant: args=$args" }
-                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
                 val fieldConverted = gep(dst, loadedType1, I64Value(0))
                 store(fieldConverted, args[0])
 
-                val fieldConverted1 = gep(dst, Type.I16, I64Value(QWORD_SIZE / Type.I16.sizeOf()))
+                val fieldConverted1 = gep(dst, I16Type, I64Value(QWORD_SIZE / I16Type.sizeOf()))
                 store(fieldConverted1, args[1])
             }
             QWORD_SIZE + WORD_SIZE -> {
                 assertion(args.size == 2) { "invariant: args=$args" }
-                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
                 val fieldConverted = gep(dst, loadedType1, I64Value(0))
                 store(fieldConverted, args[0])
 
-                val loadedType2 = if (structType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE + WORD_SIZE)) Type.F32 else Type.I32
-                val fieldConverted1 = gep(dst, loadedType2, I64Value(QWORD_SIZE / Type.I32.sizeOf()))
+                val loadedType2 = if (structType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE + WORD_SIZE)) F32Type else I32Type
+                val fieldConverted1 = gep(dst, loadedType2, I64Value(QWORD_SIZE / I32Type.sizeOf()))
                 store(fieldConverted1, args[1])
             }
             QWORD_SIZE * 2 -> {
                 assertion(args.size == 2) { "invariant: args=$args" }
-                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+                val loadedType1 = if (structType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
                 val field = gep(dst, loadedType1, I64Value(0))
                 store(field, args[0])
 
-                val loadedType2 = if (structType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE * 2)) Type.F64 else Type.I64
+                val loadedType2 = if (structType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE * 2)) F64Type else I64Type
                 val field1 = gep(dst, loadedType2, I64Value(1))
                 store(field1, args[1])
             }
@@ -509,99 +509,99 @@ object TypeConverter {
 
     fun FunctionDataBuilder.loadCoerceArguments(argCType: AnyCStructType, structPtr: Value): List<Value> = when (val sizeOf = argCType.size()) {
         BYTE_SIZE -> {
-            val fieldConverted = gep(structPtr, Type.I8, I64Value(0))
-            val load           = load(Type.I8, fieldConverted)
+            val fieldConverted = gep(structPtr, I8Type, I64Value(0))
+            val load           = load(I8Type, fieldConverted)
             arrayListOf(load)
         }
         HWORD_SIZE -> {
-            val fieldConverted = gep(structPtr, Type.I16, I64Value(0))
-            val load           = load(Type.I16, fieldConverted)
+            val fieldConverted = gep(structPtr, I16Type, I64Value(0))
+            val load           = load(I16Type, fieldConverted)
             arrayListOf(load)
         }
         HWORD_SIZE + BYTE_SIZE -> {
-            val field  = gep(structPtr, Type.I16, I64Value(0))
-            val load   = load(Type.I16, field)
-            val toInt1 = sext(load, Type.I32)
+            val field  = gep(structPtr, I16Type, I64Value(0))
+            val load   = load(I16Type, field)
+            val toInt1 = sext(load, I32Type)
 
-            val field1 = gep(structPtr, Type.I8, I64Value(HWORD_SIZE))
-            val load1  = load(Type.I8, field1)
-            val toInt2 = sext(load1, Type.I32)
+            val field1 = gep(structPtr, I8Type, I64Value(HWORD_SIZE))
+            val load1  = load(I8Type, field1)
+            val toInt2 = sext(load1, I32Type)
 
             val shr = shl(toInt2, I32Value(HWORD_SIZE * 8))
             val or  = or(shr, toInt1)
             arrayListOf(or)
         }
         WORD_SIZE -> {
-            val loadedType = if (argCType.hasFloatOnly(0, WORD_SIZE)) Type.F32 else Type.I32
+            val loadedType = if (argCType.hasFloatOnly(0, WORD_SIZE)) F32Type else I32Type
             val fieldConverted = gep(structPtr, loadedType, I64Value(0))
             val load           = load(loadedType, fieldConverted)
             arrayListOf(load)
         }
         WORD_SIZE + BYTE_SIZE -> {
-            val field1 = gep(structPtr, Type.I32, I64Value(0))
-            val load1  = load(Type.I32, field1)
-            val sext1  = sext(load1, Type.I64)
+            val field1 = gep(structPtr, I32Type, I64Value(0))
+            val load1  = load(I32Type, field1)
+            val sext1  = sext(load1, I64Type)
 
-            val field2 = gep(structPtr, Type.I8, I64Value(WORD_SIZE))
-            val load2  = load(Type.I8, field2)
-            val sext2  = sext(load2, Type.I64)
+            val field2 = gep(structPtr, I8Type, I64Value(WORD_SIZE))
+            val load2  = load(I8Type, field2)
+            val sext2  = sext(load2, I64Type)
 
             val shl    = shl(sext2, I64Value(WORD_SIZE * 8))
             val and    = or(shl, sext1)
             arrayListOf(and)
         }
         QWORD_SIZE -> {
-            val loadedType = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+            val loadedType = if (argCType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
 
             val fieldConverted = gep(structPtr, loadedType, I64Value( 0))
             val load           = load(loadedType, fieldConverted)
             arrayListOf(load)
         }
         QWORD_SIZE + BYTE_SIZE -> {
-            val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+            val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
 
             val fieldConverted = gep(structPtr, loadedType1, I64Value(0))
             val load           = load(loadedType1, fieldConverted)
             val values = arrayListOf(load)
 
-            val fieldConverted1 = gep(structPtr, Type.I8, I64Value(QWORD_SIZE))
-            val load1           = load(Type.I8, fieldConverted1)
+            val fieldConverted1 = gep(structPtr, I8Type, I64Value(QWORD_SIZE))
+            val load1           = load(I8Type, fieldConverted1)
             values.add(load1)
             values
         }
         QWORD_SIZE + HWORD_SIZE -> {
-            val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+            val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
 
             val fieldConverted = gep(structPtr, loadedType1, I64Value(0))
             val load           = load(loadedType1, fieldConverted)
             val values = arrayListOf(load)
 
-            val fieldConverted1 = gep(structPtr, Type.I16, I64Value(QWORD_SIZE / Type.I16.sizeOf()))
-            val load1           = load(Type.I16, fieldConverted1)
+            val fieldConverted1 = gep(structPtr, I16Type, I64Value(QWORD_SIZE / I16Type.sizeOf()))
+            val load1           = load(I16Type, fieldConverted1)
             values.add(load1)
             values
         }
         QWORD_SIZE + WORD_SIZE -> {
-            val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+            val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
 
             val fieldConverted = gep(structPtr, loadedType1, I64Value(0))
             val load           = load(loadedType1, fieldConverted)
             val values = arrayListOf(load)
 
-            val loadedType2 = if (argCType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE + WORD_SIZE)) Type.F32 else Type.I32
+            val loadedType2 = if (argCType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE + WORD_SIZE)) F32Type else I32Type
 
-            val fieldConverted1 = gep(structPtr, loadedType2, I64Value(QWORD_SIZE / Type.I32.sizeOf()))
+            val fieldConverted1 = gep(structPtr, loadedType2, I64Value(QWORD_SIZE / I32Type.sizeOf()))
             val load1           = load(loadedType2, fieldConverted1)
             values.add(load1)
             values
         }
         QWORD_SIZE * 2 -> {
-            val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
+            val loadedType1 = if (argCType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
             val fieldConverted = gep(structPtr, loadedType1, I64Value(0))
             val load           = load(loadedType1, fieldConverted)
             val values = arrayListOf(load)
 
-            val loadedType2 = if (argCType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE * 2)) Type.F64 else Type.I64
+            val loadedType2 = if (argCType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE * 2)) F64Type else I64Type
             val fieldConverted1 = gep(structPtr, loadedType2, I64Value(1))
             val load1           = load(loadedType2, fieldConverted1)
             values.add(load1)

@@ -6,23 +6,23 @@ import ir.Definitions.QWORD_SIZE
 import ir.Definitions.WORD_SIZE
 
 
-sealed class UnsignedIntType(private val size: Int) : IntegerType {
+sealed class SignedIntType(private val size: Int) : IntegerType {
     override fun sizeOf(): Int {
         return size
     }
 
     override fun toString(): String {
         return when (size) {
-            1 -> "u8"
-            2 -> "u16"
-            4 -> "u32"
-            8 -> "u64"
+            1 -> "i8"
+            2 -> "i16"
+            4 -> "i32"
+            8 -> "i64"
             else -> throw TypeErrorException("unsupported size=$size")
         }
     }
 }
 
-object U8Type : UnsignedIntType(BYTE_SIZE)
-object U16Type : UnsignedIntType(HWORD_SIZE)
-object U32Type : UnsignedIntType(WORD_SIZE)
-object U64Type : UnsignedIntType(QWORD_SIZE)
+object I8Type : SignedIntType(BYTE_SIZE)
+object I16Type : SignedIntType(HWORD_SIZE)
+object I32Type : SignedIntType(WORD_SIZE)
+object I64Type : SignedIntType(QWORD_SIZE)

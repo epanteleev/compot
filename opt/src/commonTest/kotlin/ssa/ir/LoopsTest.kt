@@ -6,6 +6,7 @@ import ir.module.block.BlockViewer
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.traverse.LinearScanOrderFabric
 import ir.pass.analysis.LoopDetectionPassFabric
+import ir.types.I64Type
 import ir.types.Type
 import ir.value.constant.I32Value
 import ir.value.constant.I64Value
@@ -17,7 +18,7 @@ import kotlin.test.assertTrue
 class LoopsTest {
     private fun makeLoop(): Module {
         val moduleBuilder = ModuleBuilder.create()
-        val builder = moduleBuilder.createFunction("test", Type.I64, arrayListOf())
+        val builder = moduleBuilder.createFunction("test", I64Type, arrayListOf())
 
         val b1 = builder.createLabel()
         val b2 = builder.createLabel()
@@ -46,7 +47,7 @@ class LoopsTest {
         builder.branchCond(cmp2, b5, b4)
 
         builder.switchLabel(b5)
-        builder.ret(Type.I64, arrayOf(I64Value(0)))
+        builder.ret(I64Type, arrayOf(I64Value(0)))
 
         builder.switchLabel(b4)
         val cmp3 = builder.icmp(

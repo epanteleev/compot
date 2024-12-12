@@ -1,31 +1,29 @@
 package examples
 
-import ir.types.Type
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
-import ir.types.VoidType
-import ir.value.constant.F32Value
-import ir.value.constant.I32Value
+import ir.types.*
+import ir.value.constant.*
 
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val printFloat = builder.createExternFunction("printFloat", VoidType, arrayListOf(Type.F32))
-    builder.createFunction("main", Type.I32, arrayListOf()).apply {
-        val first = alloc(Type.F32)
+    val printFloat = builder.createExternFunction("printFloat", VoidType, arrayListOf(F32Type))
+    builder.createFunction("main", I32Type, arrayListOf()).apply {
+        val first = alloc(F32Type)
         store(first, F32Value(4f))
-        val second = alloc(Type.F32)
+        val second = alloc(F32Type)
         store(second, F32Value(8f))
 
-        load(Type.F32, first)
-        val s = load(Type.F32, second)
+        load(F32Type, first)
+        val s = load(F32Type, second)
         val res = add(s, s)
         val cont = createLabel()
         vcall(printFloat, arrayListOf(res), cont)
         switchLabel(cont)
-        ret(Type.U32, arrayOf(I32Value(0)))
+        ret(U32Type, arrayOf(I32Value(0)))
     }
 
     val module = builder.build()

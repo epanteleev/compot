@@ -1,7 +1,7 @@
 package ir.read
 
 import ir.read.tokens.*
-import ir.types.Type
+import ir.types.*
 
 class EOFException(message: String): Exception(message)
 class TokenizerException(message: String): Exception(message)
@@ -176,16 +176,16 @@ class Tokenizer(val data: String) {
         val start = pos - typeName.length
         return when (typeName) {
             "u1"  -> BooleanTypeToken(line, start)
-            "u8"  -> UnsignedIntegerTypeToken(Type.U8, line, start)
-            "u16" -> UnsignedIntegerTypeToken(Type.U16, line, start)
-            "u32" -> UnsignedIntegerTypeToken(Type.U32, line, start)
-            "u64" -> UnsignedIntegerTypeToken(Type.U64, line, start)
-            "i8"  -> SignedIntegerTypeToken(Type.I8, line, start)
-            "i16" -> SignedIntegerTypeToken(Type.I16, line, start)
-            "i32" -> SignedIntegerTypeToken(Type.I32, line, start)
-            "i64" -> SignedIntegerTypeToken(Type.I64, line, start)
-            "f32" -> FloatTypeToken(Type.F32, line, start)
-            "f64" -> FloatTypeToken(Type.F64, line, start)
+            "u8"  -> UnsignedIntegerTypeToken(U8Type, line, start)
+            "u16" -> UnsignedIntegerTypeToken(U16Type, line, start)
+            "u32" -> UnsignedIntegerTypeToken(U32Type, line, start)
+            "u64" -> UnsignedIntegerTypeToken(U64Type, line, start)
+            "i8"  -> SignedIntegerTypeToken(I8Type, line, start)
+            "i16" -> SignedIntegerTypeToken(I16Type, line, start)
+            "i32" -> SignedIntegerTypeToken(I32Type, line, start)
+            "i64" -> SignedIntegerTypeToken(I64Type, line, start)
+            "f32" -> FloatTypeToken(F32Type, line, start)
+            "f64" -> FloatTypeToken(F64Type, line, start)
             else -> throw TokenizerException("$line:$pos unknown type: '$typeName'")
         }
     }

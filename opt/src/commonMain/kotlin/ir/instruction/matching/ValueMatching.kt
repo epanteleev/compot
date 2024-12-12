@@ -152,10 +152,10 @@ fun array(elementType: TypeMatcher): TypeMatcher = { it is ArrayType && elementT
 
 fun struct(): TypeMatcher = { it is StructType }
 
-fun i8(): TypeMatcher = { it == Type.I8 }
+fun i8(): TypeMatcher = { it == I8Type }
 
-fun u8(): TypeMatcher = { it == Type.U8 }
+fun u8(): TypeMatcher = { it == U8Type }
 
-fun u64(): TypeMatcher = { it == Type.U64 }
+fun u64(): TypeMatcher = { it == U64Type }
 
 fun it_is(value: Value): ValueMatcher = { it == value }

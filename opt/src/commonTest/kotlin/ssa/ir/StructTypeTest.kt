@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 class StructTypeTest {
     @Test
     fun test1() {
-        val structType = StructType("Point", arrayListOf(Type.I32, Type.I32))
+        val structType = StructType("Point", arrayListOf(I32Type, I32Type))
         assertEquals(8, structType.sizeOf())
         assertEquals(0, structType.offset(0))
         assertEquals(4, structType.offset(1))
@@ -16,16 +16,16 @@ class StructTypeTest {
 
     @Test
     fun test2() {
-        val structType = StructType("Point", arrayListOf(Type.I32, Type.I64))
+        val structType = StructType("Point", arrayListOf(I32Type, I64Type))
         assertEquals(16, structType.sizeOf())
     }
 
     @Test
     fun test3() {
-        val pointType = StructType("Point", arrayListOf(Type.I32, Type.I64))
+        val pointType = StructType("Point", arrayListOf(I32Type, I64Type))
         val structType1 = StructType("Rect", arrayListOf(pointType, pointType))
-        val structType2 = StructType("Rect", arrayListOf(pointType, Type.I64))
-        val structType3 = StructType("Rect", arrayListOf(Type.I64, pointType))
+        val structType2 = StructType("Rect", arrayListOf(pointType, I64Type))
+        val structType3 = StructType("Rect", arrayListOf(I64Type, pointType))
         assertEquals(32, structType1.sizeOf())
         assertEquals(24, structType2.sizeOf())
         assertEquals( 24, structType3.sizeOf())
@@ -33,26 +33,26 @@ class StructTypeTest {
 
     @Test
     fun test4() {
-        val structType = StructType("Point", arrayListOf(Type.I32, Type.I8))
+        val structType = StructType("Point", arrayListOf(I32Type, I8Type))
         assertEquals(8, structType.sizeOf())
     }
 
     @Test
     fun test5() {
-        val structType = StructType("Point", arrayListOf(Type.I8, Type.I32))
+        val structType = StructType("Point", arrayListOf(I8Type, I32Type))
         assertEquals(8, structType.sizeOf())
     }
 
     @Test
     fun test6() {
-        val structType = StructType("Point", arrayListOf(Type.I32, Type.I8))
+        val structType = StructType("Point", arrayListOf(I32Type, I8Type))
         assertEquals(0, structType.offset(0))
         assertEquals(4, structType.offset(1))
     }
 
     @Test
     fun test7() {
-        val structType = StructType("Point", arrayListOf(Type.I32, PtrType))
+        val structType = StructType("Point", arrayListOf(I32Type, PtrType))
         assertEquals(16, structType.sizeOf())
         assertEquals(0, structType.offset(0))
         assertEquals(8, structType.offset(1))
@@ -60,7 +60,7 @@ class StructTypeTest {
 
     @Test
     fun test8() {
-        val structType = StructType("Vect", arrayListOf(Type.F32, Type.F32, Type.F32))
+        val structType = StructType("Vect", arrayListOf(F32Type, F32Type, F32Type))
         assertEquals(12, structType.sizeOf())
         assertEquals(0, structType.offset(0))
         assertEquals(4, structType.offset(1))
@@ -69,7 +69,7 @@ class StructTypeTest {
 
     @Test
     fun test9() {
-        val structType = StructType("Point", arrayListOf(Type.I32, Type.F32))
+        val structType = StructType("Point", arrayListOf(I32Type, F32Type))
         assertEquals(8, structType.sizeOf())
         assertEquals(0, structType.offset(0))
         assertEquals(4, structType.offset(1))
@@ -77,14 +77,14 @@ class StructTypeTest {
 
     @Test
     fun test10() {
-        val pointType = StructType("Point", arrayListOf(Type.I32, Type.F64))
+        val pointType = StructType("Point", arrayListOf(I32Type, F64Type))
         val structType1 = StructType("Rect", arrayListOf(pointType, pointType))
         assertEquals(32, structType1.sizeOf())
     }
 
     @Test
     fun test11() {
-        val structType = StructType("Point", arrayListOf(Type.I64, Type.I32))
+        val structType = StructType("Point", arrayListOf(I64Type, I32Type))
         assertEquals(16, structType.sizeOf())
         assertEquals(0, structType.offset(0))
         assertEquals(8, structType.offset(1))
@@ -92,14 +92,14 @@ class StructTypeTest {
 
     @Test
     fun test12() {
-        val structType = StructType("Point", arrayListOf(Type.I8, Type.I8, ArrayType(Type.I8, 3)))
+        val structType = StructType("Point", arrayListOf(I8Type, I8Type, ArrayType(I8Type, 3)))
         assertEquals(5, structType.sizeOf())
         assertEquals(2, structType.offset(2))
     }
 
     @Test
     fun test13() {
-        val structType = StructType("HashMap", arrayListOf(PtrType, Type.I32, Type.I32))
+        val structType = StructType("HashMap", arrayListOf(PtrType, I32Type, I32Type))
         assertEquals(16, structType.sizeOf())
     }
 }

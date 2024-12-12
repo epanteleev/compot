@@ -3,6 +3,7 @@ package ssa.read
 import ir.read.*
 import ir.read.tokens.*
 import ir.types.Type
+import ir.types.U64Type
 import kotlin.test.*
 
 
@@ -14,7 +15,7 @@ class TokenizerTest {
         assertEquals(Identifier("abs", 1,0), iterator.next())
         assertEquals(Equal(1, 4), iterator.next())
         assertEquals(Identifier("add", 1, 6), iterator.next())
-        assertEquals(UnsignedIntegerTypeToken(Type.U64, 1,10), iterator.next())
+        assertEquals(UnsignedIntegerTypeToken(U64Type, 1,10), iterator.next())
         assertEquals(IntValue(3, 1, 14), iterator.next())
         assertEquals(Comma(1, 15), iterator.next())
         assertEquals(LocalValueToken("1", 1, 17), iterator.next())

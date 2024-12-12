@@ -11,13 +11,13 @@ import ir.value.constant.I32Value
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val helloStr = builder.addConstant(StringLiteralGlobalConstant("str", ArrayType(Type.I8, 10), "Hello world"))
-    val printf = builder.createExternFunction("printf", Type.I32, arrayListOf(PtrType), true)
-    builder.createFunction("main", Type.I32, arrayListOf(Type.I32), true).apply {
+    val helloStr = builder.addConstant(StringLiteralGlobalConstant("str", ArrayType(I8Type, 10), "Hello world"))
+    val printf = builder.createExternFunction("printf", I32Type, arrayListOf(PtrType), true)
+    builder.createFunction("main", I32Type, arrayListOf(I32Type), true).apply {
         val cont = createLabel()
         call(printf, arrayListOf(helloStr, I32Value(0)), cont)
         switchLabel(cont)
-        ret(Type.I32, arrayOf(I32Value(0)))
+        ret(I32Type, arrayOf(I32Value(0)))
     }
 
     val module = builder.build()
