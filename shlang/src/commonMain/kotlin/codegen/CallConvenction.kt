@@ -16,8 +16,12 @@ object CallConvention {
         BYTE_SIZE  -> arrayListOf(Type.I8)
         HWORD_SIZE -> arrayListOf(Type.I16)
         BYTE_SIZE + HWORD_SIZE -> arrayListOf(Type.I32)
-        WORD_SIZE  -> {
+        WORD_SIZE -> {
             val type = if (cType.hasFloatOnly(0, WORD_SIZE)) Type.F32 else Type.I32
+            arrayListOf(type)
+        }
+        WORD_SIZE + BYTE_SIZE -> {
+            val type = if (cType.hasFloatOnly(0, QWORD_SIZE)) Type.F64 else Type.I64
             arrayListOf(type)
         }
         QWORD_SIZE -> {

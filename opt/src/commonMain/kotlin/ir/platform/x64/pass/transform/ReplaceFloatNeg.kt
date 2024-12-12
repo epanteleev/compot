@@ -12,12 +12,10 @@ import ir.value.constant.F64Value
 
 
 class ReplaceFloatNeg private constructor(val functions: Map<String, FunctionData>) {
-    private fun minusZero(tp: FloatingPointType): Constant {
-        return when (tp) {
-            Type.F32 -> F32Value(-0.0f)
-            Type.F64 -> F64Value(-0.0)
-            else -> TODO()
-        }
+    private fun minusZero(tp: FloatingPointType): Constant = when (tp) {
+        Type.F32 -> F32Value(-0.0f)
+        Type.F64 -> F64Value(-0.0)
+        else -> TODO()
     }
 
     private fun run() {

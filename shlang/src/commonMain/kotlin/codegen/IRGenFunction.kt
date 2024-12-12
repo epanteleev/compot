@@ -5,11 +5,12 @@ import ir.types.*
 import ir.value.*
 import parser.nodes.*
 import common.assertion
-import codegen.TypeConverter.coerceArguments
+import codegen.TypeConverter.loadCoerceArguments
 import codegen.TypeConverter.convertRVToType
 import ir.instruction.*
 import ir.module.block.Label
 import codegen.TypeConverter.convertToType
+import codegen.TypeConverter.storeCoerceArguments
 import codegen.TypeConverter.toIRLVType
 import codegen.TypeConverter.toIRType
 import codegen.TypeConverter.toIndexType
@@ -541,7 +542,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     if (!argCType.isSmall()) {
                         attributes.add(ByValue(idx + offset))
                     }
-                    val argValues = ir.coerceArguments(argCType, expr)
+                    val argValues = ir.loadCoerceArguments(argCType, expr)
                     convertedArgs.addAll(argValues)
                     offset += argValues.size - 1
                 }
@@ -1196,11 +1197,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
                 val rvalueAdr = ir.alloc(irType)
-                for ((idx, arg) in args.withIndex()) {
-                    val offset   = (idx * QWORD_SIZE) / arg.type().sizeOf()
-                    val fieldPtr = ir.gep(rvalueAdr, arg.type(), I64Value(offset.toLong()))
-                    ir.store(fieldPtr, arg)
-                }
+                ir.storeCoerceArguments(cType, rvalueAdr, args)
                 varStack[param] = rvalueAdr
             }
             else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
@@ -1242,7 +1239,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     }
                     ir.switchLabel(exitBlock)
 
-                    val retValues = ir.coerceArguments(cType, returnValueAdr)
+                    val retValues = ir.loadCoerceArguments(cType, returnValueAdr)
                     assertion(retValues.size > 1) { "Internal error" }
                     ir.ret(irRetType, retValues.toTypedArray())
                 }
