@@ -27,7 +27,7 @@ class And private constructor(id: Identity, owner: Block, tp: IntegerType, a: Va
                 "incorrect types in '$id' a=$a:$aType, b=$b:$bType"
             }
 
-            return registerUser(And(id, owner, aType as IntegerType, a, b), a, b)
+            return registerUser(And(id, owner, aType.asType(), a, b), a, b)
         }
 
         private fun isAppropriateTypes(tp: Type, aType: Type, bType: Type): Boolean {

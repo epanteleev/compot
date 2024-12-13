@@ -1,8 +1,8 @@
 package ir.read.tokens
 
+import ir.types.*
 import common.arrayFrom
 import ir.read.bulder.TypeResolver
-import ir.types.*
 
 
 sealed class TypeToken(override val line: Int, override val pos: Int) : Token(line, pos) {

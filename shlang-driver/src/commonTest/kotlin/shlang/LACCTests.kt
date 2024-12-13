@@ -66,12 +66,12 @@ sealed class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testArrayZeroLength() {
         val result = runCTest("shlang/lacc/array-zero-length", listOf(), options())
         val expect = """
             |{3, 2, 1}
-            |size: 0, 3""".trimMargin()
+            |size: 0, 3
+            |""".trimMargin()
         assertEquals(expect, result.output)
         assertEquals(11, result.exitCode)
     }
