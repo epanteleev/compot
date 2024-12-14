@@ -1,5 +1,8 @@
-package ir.instruction
+package ir.instruction.lir
 
+import ir.instruction.Identity
+import ir.instruction.InstBuilder
+import ir.instruction.ValueInstruction
 import ir.types.*
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
@@ -20,7 +23,11 @@ class Generate private constructor(id: Identity, owner: Block, private val alloc
     companion object {
         const val NAME = "gen"
 
-        fun make(id: Identity, owner: Block, ty: NonTrivialType): Generate {
+        fun gen(ty: NonTrivialType): InstBuilder<Generate> = { id: Identity, owner: Block ->
+            make(id, owner, ty)
+        }
+
+        private fun make(id: Identity, owner: Block, ty: NonTrivialType): Generate {
             require(isAppropriateType(ty)) {
                 "should not be $ty in '$id', but expected a primitive type"
             }

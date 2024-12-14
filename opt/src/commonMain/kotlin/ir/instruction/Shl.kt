@@ -20,7 +20,11 @@ class Shl private constructor(id: Identity, owner: Block, tp: IntegerType, a: Va
         const val FIRST = 0
         const val OFFSET = 1
 
-        fun make(id: Identity, owner: Block, a: Value, b: Value): Shl {
+        fun shl(a: Value, b: Value): InstBuilder<Shl> = { id: Identity, owner: Block ->
+            make(id, owner, a, b)
+        }
+
+        private fun make(id: Identity, owner: Block, a: Value, b: Value): Shl {
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateTypes(aType, aType, bType)) {

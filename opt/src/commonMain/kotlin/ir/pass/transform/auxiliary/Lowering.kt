@@ -7,9 +7,9 @@ import ir.value.constant.*
 import ir.instruction.*
 import ir.module.block.Block
 import ir.global.GlobalValue
+import ir.instruction.lir.Generate
 import ir.instruction.matching.*
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
-import ir.value.constant.Constant
 
 
 class Lowering private constructor(private val cfg: FunctionData) {

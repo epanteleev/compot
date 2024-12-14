@@ -31,7 +31,11 @@ class Truncate private constructor(id: Identity, owner: Block, private val toTyp
         const val NAME = "trunc"
         const val OPERAND = 0
 
-        fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Truncate {
+        fun trunc(toType: IntegerType, value: Value): InstBuilder<Truncate> = { id: Identity, owner: Block ->
+            make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Truncate {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
                 "inconsistent types in '$id' type=$toType, value=$value:$valueType"

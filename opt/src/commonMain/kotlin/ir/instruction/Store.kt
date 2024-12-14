@@ -1,11 +1,11 @@
 package ir.instruction
 
-import common.assertion
+import ir.types.*
 import ir.value.Value
 import ir.value.asType
-import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
+import common.assertion
 import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Store private constructor(id: Identity, owner: Block, pointer: Value, value: Value, private val valueType: NonTrivialType):
@@ -39,10 +39,13 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
     companion object {
         const val DESTINATION = 0
         const val VALUE = 1
-
         const val NAME = "store"
 
-        fun make(id: Identity, owner: Block, pointer: Value, value: Value): Store {
+        fun store(pointer: Value, value: Value): InstBuilder<Store> = { id: Identity, owner: Block ->
+            make(id, owner, pointer, value)
+        }
+
+        private fun make(id: Identity, owner: Block, pointer: Value, value: Value): Store {
             val pointerType = pointer.type()
             val valueType   = value.type()
             require(isAppropriateTypes(pointerType, valueType)) {

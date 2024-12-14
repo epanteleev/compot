@@ -20,7 +20,11 @@ class Alloc private constructor(id: Identity, owner: Block, val allocatedType: N
     companion object {
         const val NAME = "alloc"
 
-        fun make(id: Identity, owner: Block, ty: NonTrivialType): Alloc {
+        fun alloc(ty: NonTrivialType): InstBuilder<Alloc> = {
+            id: Identity, owner: Block -> make(id, owner, ty)
+        }
+
+        private fun make(id: Identity, owner: Block, ty: NonTrivialType): Alloc {
             require(isAppropriateType(ty)) {
                 "should not be $ty, but type=$ty"
             }
@@ -37,3 +41,4 @@ class Alloc private constructor(id: Identity, owner: Block, val allocatedType: N
         }
     }
 }
+

@@ -23,7 +23,11 @@ class IntCompare private constructor(id: Identity, owner: Block, operandsType: P
         const val FIRST = 0
         const val SECOND = 1
 
-        fun make(id: Identity, owner: Block, a: Value, predicate: IntPredicate, b: Value): IntCompare {
+        fun icmp(a: Value, predicate: IntPredicate, b: Value): InstBuilder<IntCompare> = { id: Identity, owner: Block ->
+            make(id, owner, a, predicate, b)
+        }
+
+        private fun make(id: Identity, owner: Block, a: Value, predicate: IntPredicate, b: Value): IntCompare {
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateType(aType, bType)) {

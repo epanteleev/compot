@@ -22,7 +22,11 @@ class Or private constructor(id: Identity, owner: Block, tp: IntegerType, a: Val
         const val FIRST = 0
         const val SECOND = 1
 
-        fun make(id: Identity, owner: Block, a: Value, b: Value): Or {
+        fun or(a: Value, b: Value): InstBuilder<Or> = { id: Identity, owner: Block ->
+            make(id, owner, a, b)
+        }
+
+        private fun make(id: Identity, owner: Block, a: Value, b: Value): Or {
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateTypes(aType, aType, bType)) {

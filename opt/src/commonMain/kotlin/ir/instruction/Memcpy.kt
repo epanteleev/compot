@@ -49,7 +49,11 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
         const val SOURCE = 1
         const val LENGTH = 2
 
-        fun make(id: Identity, owner: Block, dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy {
+        fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant): InstBuilder<Memcpy> = {
+            id: Identity, owner: Block -> make(id, owner, dst, src, length)
+        }
+
+        private fun make(id: Identity, owner: Block, dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy {
             require(isAppropriateTypes(dst.type(), src.type(), length)) {
                 "inconsistent types: dst=$dst:${dst.type()}, src=$src:${src.type()}"
             }

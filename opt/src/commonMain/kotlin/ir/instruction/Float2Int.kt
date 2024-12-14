@@ -7,7 +7,7 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class FloatToInt private constructor(id: Identity, owner: Block, private val toType: IntegerType, value: Value):
+class Float2Int private constructor(id: Identity, owner: Block, private val toType: IntegerType, value: Value):
     ValueInstruction(id, owner, arrayOf(value)) {
     override fun dump(): String {
         return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
@@ -30,20 +30,24 @@ class FloatToInt private constructor(id: Identity, owner: Block, private val toT
     companion object {
         const val NAME = "fp2int"
 
-        fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): FloatToInt {
+        fun fp2int(toType: IntegerType, value: Value): InstBuilder<Float2Int> = {
+            id: Identity, owner: Block -> make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Float2Int {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
                 "inconsistent types in '$id': ty=$toType, value=$value:$valueType"
             }
 
-            return registerUser(FloatToInt(id, owner, toType, value), value)
+            return registerUser(Float2Int(id, owner, toType, value), value)
         }
 
         private fun isAppropriateType(valueType: Type): Boolean {
             return valueType is FloatingPointType
         }
 
-        fun typeCheck(fpext: FloatToInt): Boolean {
+        fun typeCheck(fpext: Float2Int): Boolean {
             return isAppropriateType(fpext.value().type())
         }
     }

@@ -30,7 +30,11 @@ class FpExtend private constructor(id: Identity, owner: Block, private val toTyp
     companion object {
         const val NAME = "fpext"
 
-        fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): FpExtend {
+        fun fpext(toType: FloatingPointType, value: Value): InstBuilder<FpExtend> = {
+            id: Identity, owner: Block -> make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): FpExtend {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
                 "inconsistent types in '$id': ty=$toType, value=$value:$valueType"

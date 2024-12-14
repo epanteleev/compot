@@ -6,6 +6,7 @@ import ir.types.Type
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 import ir.types.ArithmeticType
+import ir.types.asType
 
 
 class Neg private constructor(id: Identity, owner: Block, tp: ArithmeticType, value: Value):
@@ -33,21 +34,17 @@ class Neg private constructor(id: Identity, owner: Block, tp: ArithmeticType, va
     companion object {
         const val NAME = "neg"
 
-        fun make(id: Identity, owner: Block, type: ArithmeticType, value: Value): Neg {
-            val valueType = value.type()
-            require(isAppropriateTypes(type, valueType)) {
-                "should be the same type, but type=$type, value=$value:$valueType"
-            }
-
-            return registerUser(Neg(id, owner, type, value), value)
+        fun neg(value: Value): InstBuilder<Neg> = { id: Identity, owner: Block ->
+            make(id, owner, value)
         }
 
-        private fun isAppropriateTypes(tp: ArithmeticType, argType: Type): Boolean {
-            return tp == argType
+        private fun make(id: Identity, owner: Block, value: Value): Neg {
+            val valueType = value.type()
+            return registerUser(Neg(id, owner, valueType.asType(), value), value)
         }
 
         fun typeCheck(unary: Neg): Boolean {
-            return isAppropriateTypes(unary.type(), unary.operand().type())
+            return true
         }
     }
 }

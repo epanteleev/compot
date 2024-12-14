@@ -30,7 +30,11 @@ class SignExtend private constructor(id: Identity, owner: Block, private val toT
     companion object {
         const val NAME = "sext"
 
-        fun make(id: Identity, owner: Block, toType: SignedIntType, value: Value): SignExtend {
+        fun sext(toType: SignedIntType, value: Value): InstBuilder<SignExtend> = { id: Identity, owner: Block ->
+            make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: SignedIntType, value: Value): SignExtend {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
                 "inconsistent types in '$id' type=$toType, value=$value:$valueType"

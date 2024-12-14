@@ -57,7 +57,11 @@ class TupleCall private constructor(id: Identity,
     companion object {
         const val NAME = "call"
 
-        fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): TupleCall {
+        fun call(func: DirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): InstBuilder<TupleCall> = {
+                id: Identity, owner: Block -> make(id, owner, func, attributes, args, target)
+        }
+
+        private fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): TupleCall {
             assertion(func.returnType() is TupleType) { "Must be non $VoidType" }
 
 

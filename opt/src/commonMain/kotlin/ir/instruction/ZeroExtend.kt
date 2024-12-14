@@ -30,7 +30,11 @@ class ZeroExtend private constructor(id: Identity, owner: Block, private val toT
     companion object {
         const val NAME = "zext"
 
-        fun make(id: Identity, owner: Block, toType: UnsignedIntType, value: Value): ZeroExtend {
+        fun zext(toType: UnsignedIntType, value: Value): InstBuilder<ZeroExtend> = { id: Identity, owner: Block ->
+            make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: UnsignedIntType, value: Value): ZeroExtend {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
                 "inconsistent types in '$id': type=$toType, value=$value:$valueType"

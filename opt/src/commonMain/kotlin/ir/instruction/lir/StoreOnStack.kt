@@ -2,7 +2,6 @@ package ir.instruction.lir
 
 import common.assertion
 import ir.Definitions.QWORD_SIZE
-import ir.instruction.Generate
 import ir.value.Value
 import ir.types.*
 import ir.module.block.Block

@@ -12,7 +12,7 @@ import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.Callable
 import ir.instruction.Copy
-import ir.instruction.Generate
+import ir.instruction.lir.Generate
 import ir.instruction.Instruction
 import ir.instruction.Projection
 import ir.instruction.Shl

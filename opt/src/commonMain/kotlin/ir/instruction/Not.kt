@@ -6,6 +6,7 @@ import ir.types.Type
 import ir.types.IntegerType
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
+import ir.types.asType
 
 
 class Not private constructor(id: Identity, owner: Block, tp: IntegerType, value: Value):
@@ -33,21 +34,18 @@ class Not private constructor(id: Identity, owner: Block, tp: IntegerType, value
     companion object {
         const val NAME = "not"
 
-        fun make(id: Identity, owner: Block, type: IntegerType, value: Value): Not {
+        fun not(value: Value): InstBuilder<Not> = { id: Identity, owner: Block ->
+            make(id, owner, value)
+        }
+
+        private fun make(id: Identity, owner: Block, value: Value): Not {
             val valueType = value.type()
-            require(isAppropriateTypes(type, valueType)) {
-                "inconsistent type in '$id', but type=$type, value=$value:$valueType"
-            }
-
-            return registerUser(Not(id, owner, type, value), value)
+            return registerUser(Not(id, owner, valueType.asType(), value), value)
         }
 
-        private fun isAppropriateTypes(tp: IntegerType, argType: Type): Boolean {
-            return tp == argType
-        }
 
         fun typeCheck(unary: Not): Boolean {
-            return isAppropriateTypes(unary.type(), unary.operand().type())
+            return true
         }
     }
 }

@@ -273,7 +273,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
         val operandType = iterator.expect<FloatTypeToken>("value type")
         val operand     = iterator.expect<LocalValueToken>("value to cast")
         iterator.expect<To>("'to' keyword")
-        val castValueToken = iterator.expect<IntegerTypeToken>("${FloatToInt.NAME} type")
+        val castValueToken = iterator.expect<IntegerTypeToken>("${Float2Int.NAME} type")
 
         builder.fp2int(resultName, operand, operandType, castValueToken)
     }
@@ -507,7 +507,7 @@ class FunctionBlockReader private constructor(private val iterator: TokenIterato
                 Bitcast.NAME        -> parseBitcast(currentTok)
                 FpTruncate.NAME     -> parseFptrunc(currentTok)
                 FpExtend.NAME       -> parseFpext(currentTok)
-                FloatToInt.NAME     -> parseFloat2Int(currentTok)
+                Float2Int.NAME     -> parseFloat2Int(currentTok)
                 Int2Pointer.NAME    -> parseInt2Pointer(currentTok)
                 Pointer2Int.NAME    -> parsePointer2Int(currentTok)
                 Alloc.NAME          -> parseStackAlloc(currentTok)

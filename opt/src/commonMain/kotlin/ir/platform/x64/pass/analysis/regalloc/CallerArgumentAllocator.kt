@@ -5,7 +5,7 @@ import common.assertion
 import ir.Definitions
 import ir.value.Value
 import ir.Definitions.QWORD_SIZE
-import ir.instruction.Generate
+import ir.instruction.lir.Generate
 import ir.types.*
 import ir.platform.x64.CallConvention
 

@@ -30,7 +30,11 @@ class Bitcast private constructor(id: Identity, owner: Block, val toType: Intege
     companion object {
         const val NAME = "bitcast"
 
-        fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Bitcast {
+        fun bitcast(toType: IntegerType, value: Value): InstBuilder<Bitcast> = {
+            id: Identity, owner: Block -> make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Bitcast {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
                 "inconsistent types in '$id': ty=$toType, value=$value:$valueType"

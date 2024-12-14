@@ -12,4 +12,10 @@ class UpStackFrame(id: Identity, owner: Block, callable: Callable): AdjustStackF
     override fun dump(): String {
         return "upstackframe [${callable.shortName()}]"
     }
+
+    companion object {
+        fun usf(callable: Callable): InstBuilder<UpStackFrame> = { id: Identity, owner: Block ->
+            UpStackFrame(id, owner, callable)
+        }
+    }
 }

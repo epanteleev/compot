@@ -37,7 +37,11 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
         const val SOURCE = 0
         const val NAME = "gfp"
 
-        fun make(id: Identity, owner: Block, type: AggregateType, source: Value, index: IntegerConstant): GetFieldPtr {
+        fun gfp(type: AggregateType, source: Value, index: IntegerConstant): InstBuilder<GetFieldPtr> = {
+            id: Identity, owner: Block -> make(id, owner, type, source, index)
+        }
+
+        private fun make(id: Identity, owner: Block, type: AggregateType, source: Value, index: IntegerConstant): GetFieldPtr {
             val sourceType = source.type()
             val indexType  = index.type()
             require(isAppropriateType(sourceType, index)) {

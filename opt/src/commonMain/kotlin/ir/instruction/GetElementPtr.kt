@@ -41,7 +41,11 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
         const val INDEX  = 1
         const val NAME = "gep"
 
-        fun make(id: Identity, owner: Block, elementType: NonTrivialType, source: Value, index: Value): GetElementPtr {
+        fun gep(elementType: NonTrivialType, source: Value, index: Value): InstBuilder<GetElementPtr> = {
+            id: Identity, owner: Block -> make(id, owner, elementType, source, index)
+        }
+
+        private fun make(id: Identity, owner: Block, elementType: NonTrivialType, source: Value, index: Value): GetElementPtr {
             val sourceType = source.type()
             val indexType  = index.type()
             require(isAppropriateType(sourceType, indexType)) {

@@ -13,7 +13,6 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.pass.analysis.traverse.PreOrderFabric
-import ir.types.PrimitiveType
 import ir.value.*
 import ir.value.constant.Constant
 
@@ -131,7 +130,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     override fun visit(alloc: Alloc): ValueInstruction {
-        return bb.alloc(alloc.allocatedType)
+        return bb.put(Alloc.alloc(alloc.allocatedType))
     }
 
     override fun visit(generate: Generate): ValueInstruction {
@@ -289,7 +288,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return bb.fpext(operand, fpext.type())
     }
 
-    override fun visit(fptosi: FloatToInt): ValueInstruction {
+    override fun visit(fptosi: Float2Int): ValueInstruction {
         val operand = mapUsage<Value>(fptosi.value())
         return bb.fp2Int(operand, fptosi.type())
     }

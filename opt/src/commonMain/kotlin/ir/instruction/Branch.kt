@@ -1,8 +1,11 @@
 package ir.instruction
 
 import common.assertion
+import ir.instruction.Bitcast.Companion
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
+import ir.types.IntegerType
+import ir.value.Value
 
 
 class Branch private constructor(id: Identity, owner: Block, target: Block):
@@ -26,7 +29,11 @@ class Branch private constructor(id: Identity, owner: Block, target: Block):
     companion object {
         const val NAME = "br"
 
-        fun make(id: Identity, owner: Block, target: Block): Branch {
+        fun br(target: Block): InstBuilder<Branch> = { id: Identity, owner: Block ->
+            make(id, owner, target)
+        }
+
+        private fun make(id: Identity, owner: Block, target: Block): Branch {
             return Branch(id, owner, target)
         }
     }

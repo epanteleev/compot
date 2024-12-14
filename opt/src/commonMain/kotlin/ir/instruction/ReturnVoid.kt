@@ -12,6 +12,8 @@ class ReturnVoid private constructor(id: Identity, owner: Block): Return(id, own
     }
 
     companion object {
-        fun make(id: Identity, owner: Block): ReturnVoid = ReturnVoid(id, owner)
+        fun ret(): InstBuilder<ReturnVoid> = { id: Identity, owner: Block ->
+            ReturnVoid(id, owner)
+        }
     }
 }

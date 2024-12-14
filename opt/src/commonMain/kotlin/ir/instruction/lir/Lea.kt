@@ -6,7 +6,6 @@ import ir.value.Value
 import common.assertion
 import ir.module.block.Block
 import ir.instruction.Identity
-import ir.instruction.Generate
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
 

@@ -12,7 +12,7 @@ class Intrinsic private constructor(id: Identity, owner: Block, private val inpu
     : TerminateInstruction(id, owner, inputs, arrayOf(cont)) {
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("intrinsic")
+        builder.append(NAME)
         builder.append(" @${implementor.name}(")
         inputs.forEachIndexed { index, value ->
             builder.append("$value: ${value.type()}")
@@ -40,7 +40,13 @@ class Intrinsic private constructor(id: Identity, owner: Block, private val inpu
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, inputs: Array<Value>, implementor: IntrinsicProvider, cont: Block): Intrinsic {
+        const val NAME = "intrinsic"
+
+        fun intrinsic(inputs: Array<Value>, implementor: IntrinsicProvider, cont: Block): InstBuilder<Intrinsic> = {
+                id: Identity, owner: Block -> make(id, owner, inputs, implementor, cont)
+        }
+
+        private fun make(id: Identity, owner: Block, inputs: Array<Value>, implementor: IntrinsicProvider, cont: Block): Intrinsic {
             return registerUser(Intrinsic(id, owner, inputs, implementor, cont), *inputs)
         }
 

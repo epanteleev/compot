@@ -5,8 +5,8 @@ import asm.Register
 import asm.x64.*
 import ir.types.*
 import ir.value.*
-import ir.instruction.*
 import ir.Definitions.QWORD_SIZE
+import ir.instruction.lir.Generate
 
 
 class VirtualRegistersPool private constructor(private val argumentSlots: List<Operand>) {
@@ -15,7 +15,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
     private val xmmRegisters = XmmRegisterList(argumentSlots.filterIsInstance<XmmRegister>()) //TODO
 
     fun allocSlot(value: Value, excludeIf: (Register) -> Boolean): Operand = when (value) {
-        is Generate   -> frame.takeSlot(value)
+        is Generate -> frame.takeSlot(value)
         is LocalValue -> when (val tp = value.type()) {
             is FloatingPointType -> xmmRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)
             is IntegerType, is PtrType -> gpRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)

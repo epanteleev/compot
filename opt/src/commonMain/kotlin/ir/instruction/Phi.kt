@@ -51,15 +51,19 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
     companion object {
         const val NAME = "phi"
 
-        fun make(id: Identity, owner: Block, ty: PrimitiveType): Phi {
-            return Phi(id, owner, ty, arrayListOf(), arrayOf())
+        fun phi(ty: PrimitiveType, incoming: MutableList<Block>, incomingValue: Array<Value>): InstBuilder<Phi> = {
+            id: Identity, owner: Block -> make(id, owner, ty, incoming, incomingValue)
         }
 
-        fun make(id: Identity, owner: Block, ty: PrimitiveType, incoming: MutableList<Block>, incomingValue: Array<Value>): Phi {
+        fun phiUncompleted(type: PrimitiveType, incoming: Value, predecessors: MutableList<Block>): InstBuilder<Phi> = {
+            id: Identity, owner: Block -> makeUncompleted(id, owner, type, incoming, predecessors)
+        }
+
+        private fun make(id: Identity, owner: Block, ty: PrimitiveType, incoming: MutableList<Block>, incomingValue: Array<Value>): Phi {
             return registerUser(Phi(id, owner, ty, incoming, incomingValue), incomingValue.iterator())
         }
 
-        fun makeUncompleted(id: Identity, owner: Block, type: PrimitiveType, incoming: Value, predecessors: MutableList<Block>): Phi {
+        private fun makeUncompleted(id: Identity, owner: Block, type: PrimitiveType, incoming: Value, predecessors: MutableList<Block>): Phi {
             val incomingType = incoming.type()
             require(incomingType is PtrType) {
                 "should be pointer type in '$id', type=$type, but incoming=$incoming:$incomingType"

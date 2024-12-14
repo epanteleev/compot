@@ -71,7 +71,11 @@ class Call private constructor(id: Identity, owner: Block, private val func: Dir
     companion object {
         const val NAME = "call"
 
-        fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Block): Call {
+        fun call(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Block): InstBuilder<Call> = {
+            id: Identity, owner: Block -> make(id, owner, func, args, attributes, target)
+        }
+
+        private fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Block): Call {
             assertion(func.returnType() != VoidType) { "Must be non $VoidType" }
 
             require(Callable.isAppropriateTypes(func, args)) {

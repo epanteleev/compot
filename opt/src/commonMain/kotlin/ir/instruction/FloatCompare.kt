@@ -1,6 +1,5 @@
 package ir.instruction
 
-import common.assertion
 import ir.value.Value
 import ir.types.*
 import ir.instruction.utils.IRInstructionVisitor
@@ -81,7 +80,11 @@ class FloatCompare private constructor(id: Identity, owner: Block, operandsType:
     companion object {
         const val NAME = "fcmp"
 
-        fun make(id: Identity, owner: Block, a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
+        fun fcmp(a: Value, predicate: FloatPredicate, b: Value): InstBuilder<FloatCompare> = {
+            id: Identity, owner: Block -> make(id, owner, a, predicate, b)
+        }
+
+        private fun make(id: Identity, owner: Block, a: Value, predicate: FloatPredicate, b: Value): FloatCompare {
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateType(aType, bType)) {

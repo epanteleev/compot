@@ -51,7 +51,7 @@ interface InstructionFabric {
     fun trunc(value: Value, toType: IntegerType): Truncate
     fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate
     fun fpext(value: Value, toType: FloatingPointType): FpExtend
-    fun fp2Int(value: Value, toType: IntegerType): FloatToInt
+    fun fp2Int(value: Value, toType: IntegerType): Float2Int
     fun select(cond: Value, type: IntegerType, onTrue: Value, onFalse: Value): Select
     fun phi(incoming: List<Value>, labels: List<Label>): Phi
     fun int2ptr(value: Value): Int2Pointer

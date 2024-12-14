@@ -263,121 +263,102 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun not(value: Value): Not = mc.df {
-        val valueType = value.type()
-        require(valueType is IntegerType) {
-            "should be integer type, but ty=$valueType"
-        }
-
-        return@df withOutput { Not.make(it, this, valueType, value) }
+        return@df put(Not.not(value))
     }
 
     override fun neg(value: Value): Neg = mc.df {
-        val valueType = value.type()
-        require(valueType is ArithmeticType) {
-            "should be integer type, but ty=$valueType"
-        }
-
-        return@df withOutput { Neg.make(it, this, valueType, value) }
+        return@df put(Neg.neg(value))
     }
 
     override fun add(a: Value, b: Value): Add {
-        return withOutput { Add.make(it, this, a, b) }
+        return put(Add.add(a, b))
     }
 
     override fun and(a: Value, b: Value): And {
-        return withOutput { And.make(it, this, a, b) }
+        return put(And.and(a, b))
     }
 
     override fun or(a: Value, b: Value): Or {
-        return withOutput { Or.make(it, this, a, b) }
+        return put(Or.or(a, b))
     }
 
     override fun shl(a: Value, b: Value): Shl {
-        return withOutput { Shl.make(it, this, a, b) }
+        return put(Shl.shl(a, b))
     }
 
     override fun shr(a: Value, b: Value): Shr {
-        return withOutput { Shr.make(it, this, a, b) }
+        return put(Shr.shr(a, b))
     }
 
     override fun div(a: Value, b: Value): Div {
-        return withOutput { Div.make(it, this, a, b) }
+        return put(Div.div(a, b))
     }
 
     override fun sub(a: Value, b: Value): Sub {
-        return withOutput { Sub.make(it, this, a, b) }
+        return put(Sub.sub(a, b))
     }
 
     override fun xor(a: Value, b: Value): Xor {
-        return withOutput { Xor.make(it, this, a, b) }
+        return put(Xor.xor(a, b))
     }
 
     override fun mul(a: Value, b: Value): Mul {
-        return withOutput { Mul.make(it, this, a, b) }
+        return put(Mul.mul(a, b))
     }
 
     override fun tupleDiv(a: Value, b: Value): TupleDiv = mc.df {
-        val ty = a.type()
-        require(ty is ArithmeticType) {
-            "should be arithmetic type, but ty=$ty"
-        }
-
-        return@df withOutput { TupleDiv.make(it, this, ty, a, b) }
+        return@df put(TupleDiv.div(a, b))
     }
 
     override fun icmp(a: Value, predicate: IntPredicate, b: Value): IntCompare = mc.df {
-        return@df withOutput { IntCompare.make(it, this, a, predicate, b) }
+        return@df put(IntCompare.icmp(a, predicate, b))
     }
 
     override fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare = mc.df {
-        return@df withOutput { FloatCompare.make(it, this, a, predicate, b) }
+        return@df put(FloatCompare.fcmp(a, predicate, b))
     }
 
     override fun load(loadedType: PrimitiveType, ptr: Value): Load = mc.df {
-        return@df withOutput { Load.make(it, this, loadedType, ptr) }
+        return@df put(Load.load(loadedType, ptr))
     }
 
     override fun store(ptr: Value, value: Value): Store = mc.df {
-        return@df withOutput { Store.make(it,this, ptr, value) }
+        return@df put(Store.store(ptr, value))
     }
 
     override fun call(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): Call = mc.dfANDcf {
-        require(func.returnType() != VoidType)
-        return@dfANDcf addTerminate { Call.make(it, this, func, args, attributes, target as Block) }
+        return@dfANDcf put(Call.call(func, args, attributes, target as Block))
     }
 
     override fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): TupleCall = mc.dfANDcf {
-        require(func.returnType() is TupleType) {
-            "should be tuple type, but ty=${func.returnType()}"
-        }
-        return@dfANDcf addTerminate { TupleCall.make(it, this, func, attributes, args, target as Block) }
+        return@dfANDcf put(TupleCall.call(func, attributes, args, target as Block))
     }
 
     override fun vcall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): VoidCall = mc.dfANDcf {
         require(func.returnType() == VoidType)
-        return@dfANDcf addTerminate { VoidCall.make(it, this, func, attributes, args, target as Block) }
+        return@dfANDcf put(VoidCall.call(func, attributes, args, target as Block))
     }
 
     override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionCall = mc.dfANDcf {
         require(func.returnType() != VoidType)
-        return@dfANDcf addTerminate { IndirectionCall.make(it, this, pointer, func, attributes, args, target as Block) }
+        return@dfANDcf put(IndirectionCall.call(pointer, func, attributes, args, target as Block))
     }
 
     override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionVoidCall = mc.dfANDcf {
         require(func.returnType() == VoidType)
-        return@dfANDcf addTerminate { IndirectionVoidCall.make(it, this, pointer, func, attributes, args, target as Block) }
+        return@dfANDcf put(IndirectionVoidCall.call(pointer, func, attributes, args, target as Block))
     }
 
     override fun branch(target: Block): Branch = mc.cf {
-        return@cf addTerminate { Branch.make(it, this, target) }
+        return@cf put(Branch.br(target))
     }
 
     override fun branchCond(value: Value, onTrue: Label, onFalse: Label): BranchCond = mc.dfANDcf {
-        return@dfANDcf addTerminate { BranchCond.make(it, this, value, onTrue as Block, onFalse as Block) }
+        return@dfANDcf put(BranchCond.br(value, onTrue as Block, onFalse as Block))
     }
 
     override fun alloc(ty: NonTrivialType): Alloc = mc.df {
-        return@df withOutput { it: Int -> Alloc.make(it, this, ty) }
+        return@df put(Alloc.alloc(ty))
     }
 
     override fun ret(returnType: Type, values: Array<Value>): Return = mc.dfANDcf {
@@ -385,93 +366,93 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun retVoid(): ReturnVoid = mc.cf {
-        return@cf addTerminate{ ReturnVoid.make(it, this) }
+        return@cf put(ReturnVoid.ret())
     }
 
     override fun gep(source: Value, elementType: NonTrivialType, index: Value): GetElementPtr = mc.df {
-        return@df withOutput { GetElementPtr.make(it, this, elementType, source, index) }
+        return@df put(GetElementPtr.gep(elementType, source, index))
     }
 
     override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr = mc.df {
-        return@df withOutput { GetFieldPtr.make(it, this, ty, source, index) }
+        return@df put(GetFieldPtr.gfp(ty, source, index))
     }
 
     override fun flag2int(value: Value, ty: IntegerType): Flag2Int = mc.df {
-        return@df withOutput { Flag2Int.make(it, this, ty, value) }
+        return@df put(Flag2Int.flag2int(ty, value))
     }
 
     override fun int2fp(value: Value, ty: FloatingPointType): Int2Float = mc.df {
-        return@df withOutput { Int2Float.make(it, this, ty, value) }
+        return@df put(Int2Float.int2fp(ty, value))
     }
 
     override fun uint2fp(value: Value, ty: FloatingPointType): Unsigned2Float {
-        return withOutput { Unsigned2Float.make(it, this, ty, value) }
+        return put(Unsigned2Float.uint2fp(ty, value))
     }
 
     override fun bitcast(value: Value, ty: IntegerType): Bitcast = mc.df {
-        return@df withOutput { Bitcast.make(it, this, ty, value) }
+        return@df put(Bitcast.bitcast(ty, value))
     }
 
     override fun zext(value: Value, toType: UnsignedIntType): ZeroExtend = mc.df {
-        return@df withOutput { ZeroExtend.make(it, this, toType, value) }
+        return@df put(ZeroExtend.zext(toType, value))
     }
 
     override fun sext(value: Value, toType: SignedIntType): SignExtend = mc.df {
-        return@df withOutput { SignExtend.make(it, this, toType, value) }
+        return@df put(SignExtend.sext(toType, value))
     }
 
     override fun trunc(value: Value, toType: IntegerType): Truncate = mc.df {
-        return@df withOutput { Truncate.make(it, this, toType, value) }
+        return@df put(Truncate.trunc(toType, value))
     }
 
     override fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate = mc.df {
-        return@df withOutput { FpTruncate.make(it, this, toType, value) }
+        return@df put(FpTruncate.fptrunc(toType, value))
     }
 
     override fun fpext(value: Value, toType: FloatingPointType): FpExtend = mc.df {
-        return@df withOutput { FpExtend.make(it, this, toType, value) }
+        return@df put(FpExtend.fpext(toType, value))
     }
 
-    override fun fp2Int(value: Value, toType: IntegerType): FloatToInt = mc.df {
-        return@df withOutput { FloatToInt.make(it,  this, toType, value) }
+    override fun fp2Int(value: Value, toType: IntegerType): Float2Int = mc.df {
+        return@df put(Float2Int.fp2int(toType, value))
     }
 
     override fun select(cond: Value, type: IntegerType, onTrue: Value, onFalse: Value): Select = mc.df {
-        return@df withOutput { Select.make(it, this, type, cond, onTrue, onFalse) }
+        return@df put(Select.select(type, cond, onTrue, onFalse))
     }
 
     override fun phi(incoming: List<Value>, labels: List<Label>): Phi = mc.df {
         val bbs = labels.mapTo(arrayListOf()) { it as Block }
-        return@df withOutput { Phi.make(it, this, incoming[0].type() as PrimitiveType, bbs, incoming.toTypedArray()) }
+        return@df put(Phi.phi(incoming[0].type() as PrimitiveType, bbs, incoming.toTypedArray()))
     }
 
     override fun int2ptr(value: Value): Int2Pointer = mc.df {
-        return@df withOutput { Int2Pointer.make(it, this, value) }
+        return@df put(Int2Pointer.int2ptr(value))
     }
 
     override fun ptr2int(value: Value, toType: IntegerType): Pointer2Int = mc.df {
-        return@df withOutput { Pointer2Int.make(it, this, toType, value) }
+        return@df put(Pointer2Int.ptr2int(toType, value))
     }
 
     override fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy = mc.df {
-        return@df withOutput { Memcpy.make(it, this, dst, src, length) }
+        return@df put(Memcpy.memcpy(dst, src, length))
     }
 
     override fun proj(tuple: Value, index: Int): Projection = mc.df {
-        return@df withOutput { Projection.make(it, this, tuple, index) }
+        return@df put(Projection.proj(tuple, index))
     }
 
     override fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch = mc.dfANDcf {
         val resolved = arrayFrom(targets) { bb -> bb as Block }
-        return@dfANDcf addTerminate { Switch.make(it, this, value, default as Block, table.toTypedArray(), resolved) }
+        return@dfANDcf put(Switch.switch(value, default as Block, table.toTypedArray(), resolved))
     }
 
     override fun intrinsic(inputs: List<Value>, implementor: IntrinsicProvider, target: Label): Intrinsic {
-        return addTerminate { Intrinsic.make(it, this, inputs.toTypedArray(), implementor, target as Block) }
+        return put(Intrinsic.intrinsic(inputs.toTypedArray(), implementor, target as Block))
     }
 
     override fun downStackFrame(callable: Callable): DownStackFrame = mc.df {
-        return@df withOutput { DownStackFrame(it, this, callable) }
+        return@df put(DownStackFrame.dsf(callable))
     }
 
     override fun upStackFrame(callable: Callable): UpStackFrame = mc.df {
@@ -480,11 +461,11 @@ class Block private constructor(private val mc: ModificationCounter, override va
 
     override fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi = mc.df {
         val blocks = predecessors().mapTo(arrayListOf()) { it }
-        return@df withOutput { Phi.makeUncompleted(it, this, ty, incoming, blocks) } //TODO separate instruction
+        return@df put(Phi.phiUncompleted(ty, incoming, blocks))
     }
 
     override fun gen(ty: NonTrivialType): Generate = mc.df {
-        return@df withOutput { Generate.make(it, this, ty) }
+        return@df put(Generate.gen(ty))
     }
 
     override fun lea(source: Value): Lea = mc.df {
@@ -493,11 +474,11 @@ class Block private constructor(private val mc: ModificationCounter, override va
 
     fun uncompletedPhi(incomingType: PrimitiveType, incoming: List<Value>, labels: List<Block>): Phi = mc.df {
         val blocks = labels.mapTo(arrayListOf()) { it }
-        return@df withOutput { Phi.make(it, this, incomingType, blocks, incoming.toTypedArray()) }
+        return@df put(Phi.phi(incomingType, blocks, incoming.toTypedArray()))
     }
 
     override fun copy(value: Value): Copy = mc.df {
-        return@df withOutput { Copy.make(it, this, value) }
+        return@df put(Copy.copy(value))
     }
 
     override fun move(dst: UsableValue, fromValue: Value): Move = mc.df {
@@ -568,6 +549,18 @@ class Block private constructor(private val mc: ModificationCounter, override va
     private inline fun<reified T: Instruction> withOutput(f: (Int) -> T): T {
         val value = allocateValue()
         val instruction = f(value)
+
+        append(instruction)
+        return instruction
+    }
+
+    fun<T: Instruction> put(f: InstBuilder<T>): T {
+        val value = allocateValue()
+        val instruction = f(value, this)
+
+        if (instruction is TerminateInstruction) {
+            instruction.targets().forEach { makeEdge(it) }
+        }
 
         append(instruction)
         return instruction

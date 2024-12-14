@@ -1,7 +1,6 @@
 package ir.pass.analysis
 
 import ir.value.LocalValue
-import ir.types.Type
 import ir.module.Module
 import ir.instruction.*
 import ir.instruction.lir.*
@@ -349,8 +348,8 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
-    override fun visit(fptosi: FloatToInt) {
-        assert(FloatToInt.typeCheck(fptosi)) {
+    override fun visit(fptosi: Float2Int) {
+        assert(Float2Int.typeCheck(fptosi)) {
             "Instruction '${fptosi.dump()}' has inconsistent types."
         }
     }

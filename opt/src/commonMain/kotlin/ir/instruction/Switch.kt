@@ -57,7 +57,11 @@ class Switch private constructor(id: Identity, owner: Block,
     companion object {
         const val NAME = "switch"
 
-        fun make(id: Identity, owner: Block, value: Value, default: Block, table: Array<IntegerConstant>, targets: Array<Block>): Switch {
+        fun switch(value: Value, default: Block, table: Array<IntegerConstant>, targets: Array<Block>): InstBuilder<Switch> = {
+            id: Identity, owner: Block -> make(id, owner, value, default, table, targets)
+        }
+
+        private fun make(id: Identity, owner: Block, value: Value, default: Block, table: Array<IntegerConstant>, targets: Array<Block>): Switch {
             require(isAppropriateType(value)) {
                 "inconsistent types in '$id': value='${value}:${value.type()}', table='${table.joinToString { it.type().toString() }}'"
             }

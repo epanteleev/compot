@@ -22,7 +22,11 @@ class Div private constructor(id: Identity, owner: Block, tp: FloatingPointType,
         const val FIRST = 0
         const val SECOND = 1
 
-        fun make(id: Identity, owner: Block, a: Value, b: Value): Div {
+        fun div(a: Value, b: Value): InstBuilder<Div> = {
+            id: Identity, owner: Block -> make(id, owner, a, b)
+        }
+
+        private fun make(id: Identity, owner: Block, a: Value, b: Value): Div {
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateTypes(aType, aType, bType)) {

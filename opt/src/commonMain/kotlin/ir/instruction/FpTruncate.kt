@@ -30,7 +30,11 @@ class FpTruncate private constructor(id: Identity, owner: Block, private val toT
     companion object {
         const val NAME = "fptrunc"
 
-        fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): FpTruncate {
+        fun fptrunc(toType: FloatingPointType, value: Value): InstBuilder<FpTruncate> = {
+            id: Identity, owner: Block -> make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): FpTruncate {
             val valueType = value.type()
             require(isAppropriateType(toType, valueType)) {
                 "inconsistent types in '$id': ty=$toType, value=$value:$valueType"

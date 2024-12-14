@@ -31,7 +31,11 @@ class Load private constructor(id: Identity, owner: Block, private val loadedTyp
     companion object {
         const val NAME = "load"
 
-        fun make(id: Identity, owner: Block, loadedType: PrimitiveType, operand: Value): Load {
+        fun load(loadedType: PrimitiveType, operand: Value): InstBuilder<Load> = { id: Identity, owner: Block ->
+            make(id, owner, loadedType, operand)
+        }
+
+        private fun make(id: Identity, owner: Block, loadedType: PrimitiveType, operand: Value): Load {
             val type = operand.type()
             require(isAppropriateTypes(type)) {
                 "inconsistent types in '$id' type=${loadedType}, but operand=${operand}:$type"

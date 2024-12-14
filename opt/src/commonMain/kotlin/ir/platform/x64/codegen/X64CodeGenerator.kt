@@ -682,7 +682,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         FpExtendCodegen(fpext.type(), asm)(dst, src)
     }
 
-    override fun visit(fptosi: FloatToInt) {
+    override fun visit(fptosi: Float2Int) {
         val dst = registerAllocation.operand(fptosi)
         val src = registerAllocation.operand(fptosi.value())
         FloatToSignedCodegen(fptosi.type(), fptosi.value().asType(), asm)(dst, src)

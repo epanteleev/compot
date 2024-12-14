@@ -42,7 +42,11 @@ class BranchCond private constructor(id: Identity, owner: Block, value: Value, o
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, value: Value, onTrue: Block, onFalse: Block): BranchCond {
+        fun br(value: Value, onTrue: Block, onFalse: Block): InstBuilder<BranchCond> = {
+            id: Identity, owner: Block -> make(id, owner, value, onTrue, onFalse)
+        }
+
+        private fun make(id: Identity, owner: Block, value: Value, onTrue: Block, onFalse: Block): BranchCond {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
                 "should be boolean type, but value=$value:$valueType"

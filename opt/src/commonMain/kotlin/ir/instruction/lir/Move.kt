@@ -3,7 +3,6 @@ package ir.instruction.lir
 import common.assertion
 import ir.global.GlobalValue
 import ir.value.Value
-import ir.instruction.Generate
 import ir.instruction.Identity
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor

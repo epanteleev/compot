@@ -32,7 +32,7 @@ abstract class IRInstructionVisitor<T> {
     abstract fun visit(trunc: Truncate): T
     abstract fun visit(fptruncate: FpTruncate): T
     abstract fun visit(fpext: FpExtend): T
-    abstract fun visit(fptosi: FloatToInt): T
+    abstract fun visit(fptosi: Float2Int): T
     abstract fun visit(copy: Copy): T
     abstract fun visit(move: Move): T
     abstract fun visit(move: MoveByIndex): T

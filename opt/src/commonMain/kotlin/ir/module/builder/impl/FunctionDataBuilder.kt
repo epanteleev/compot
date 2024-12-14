@@ -190,7 +190,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.fpext(value, toType)
     }
 
-    override fun fp2Int(value: Value, toType: IntegerType): FloatToInt {
+    override fun fp2Int(value: Value, toType: IntegerType): Float2Int {
         return bb.fp2Int(value, toType)
     }
 

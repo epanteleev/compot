@@ -30,7 +30,11 @@ class Flag2Int private constructor(id: Identity, owner: Block, private val toTyp
     companion object {
         const val NAME = "flag2int"
 
-        fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Flag2Int {
+        fun flag2int(toType: IntegerType, value: Value): InstBuilder<Flag2Int> = {
+            id: Identity, owner: Block -> make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Flag2Int {
             require(isAppropriateType(value.type())) {
                 "inconsistent types in '$id': type=${value.type()}"
             }

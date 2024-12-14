@@ -11,6 +11,7 @@ import ir.value.constant.UndefValue
 
 
 typealias Identity = Int
+typealias InstBuilder<T> = (Identity, Block) -> T
 
 abstract class Instruction(protected val id: Identity, protected val owner: Block, protected val operands: Array<Value>): LListNode() {
     final override fun next(): Instruction? = next as Instruction?

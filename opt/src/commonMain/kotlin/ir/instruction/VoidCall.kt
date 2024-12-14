@@ -4,7 +4,6 @@ import common.arrayWrapperOf
 import common.assertion
 import ir.attributes.FunctionAttribute
 import ir.value.Value
-import ir.types.Type
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.DirectFunctionPrototype
@@ -52,7 +51,11 @@ class VoidCall private constructor(id: Identity,
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): VoidCall {
+        fun call(func: DirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): InstBuilder<VoidCall> = {
+            id: Identity, owner: Block -> make(id, owner, func, attributes, args, target)
+        }
+
+        private fun make(id: Identity, owner: Block, func: DirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): VoidCall {
             require(Callable.isAppropriateTypes(func, args)) {
                 args.joinToString(prefix = "inconsistent types, prototype='${func.shortDescription()}', ")
                 { "$it: ${it.type()}" }

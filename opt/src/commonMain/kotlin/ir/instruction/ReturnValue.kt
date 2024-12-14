@@ -32,6 +32,10 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
     }
 
     companion object {
+        fun ret(returnType: Type, values: Array<Value>): InstBuilder<Return> = { id: Identity, owner: Block ->
+            make(id, owner, returnType, values)
+        }
+
         fun make(id: Identity, owner: Block, returnType: Type, values: Array<Value>): Return {
             require(isAppropriateType(returnType, values)) {
                 "cannot be $returnType, but values=${values.joinToString { it.toString() }}"

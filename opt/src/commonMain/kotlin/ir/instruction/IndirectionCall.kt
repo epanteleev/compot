@@ -62,7 +62,12 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
     }
 
     companion object {
-        fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): IndirectionCall {
+
+        fun call(pointer: Value, func: IndirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): InstBuilder<IndirectionCall> = {
+            id: Identity, owner: Block -> make(id, owner, pointer, func, attributes, args, target)
+        }
+
+        private fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): IndirectionCall {
             require(Callable.isAppropriateTypes(func, args)) {
                 args.joinToString(prefix = "inconsistent types in '$id', pointer=$pointer:${pointer.type()}, prototype='${func.shortDescription()}', ")
                 { "$it: ${it.type()}" }

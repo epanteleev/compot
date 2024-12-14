@@ -3,7 +3,7 @@ package ir.platform.x64.codegen.impl
 import asm.Operand
 import asm.x64.*
 import ir.types.FloatingPointType
-import ir.instruction.FloatToInt
+import ir.instruction.Float2Int
 import ir.platform.x64.codegen.visitors.*
 import ir.types.IntegerType
 
@@ -41,6 +41,6 @@ class FloatToSignedCodegen(val toType: IntegerType, fromType: FloatingPointType,
     }
 
     override fun default(dst: Operand, src: Operand) {
-        throw RuntimeException("Internal error: '${FloatToInt.NAME}' dst=$dst, src=$$src")
+        throw RuntimeException("Internal error: '${Float2Int.NAME}' dst=$dst, src=$$src")
     }
 }

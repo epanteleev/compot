@@ -34,7 +34,11 @@ class Projection private constructor(id: Identity, owner: Block, private val typ
     companion object {
         const val NAME = "proj"
 
-        fun make(id: Identity, owner: Block, tuple: Value, index: Int): Projection {
+        fun proj(tuple: Value, index: Int): InstBuilder<Projection> = { id: Identity, owner: Block ->
+            make(id, owner, tuple, index)
+        }
+
+        private fun make(id: Identity, owner: Block, tuple: Value, index: Int): Projection {
             val tupleType = tuple.asType<TupleType>()
             val retType = tupleType.innerType(index)
             return registerUser(Projection(id, owner, retType, tuple, index), tuple) // TODO

@@ -34,7 +34,11 @@ class Copy private constructor(id: Identity, owner: Block, private val type: Pri
     companion object {
         const val NAME = "copy"
 
-        fun make(id: Identity, owner: Block, origin: Value): Copy {
+        fun copy(origin: Value): InstBuilder<Copy> = { id: Identity, owner: Block ->
+            make(id, owner, origin)
+        }
+
+        private fun make(id: Identity, owner: Block, origin: Value): Copy {
             val originType = origin.type()
             require(isAppropriateType(originType, origin)) {
                 "should not be $originType, but origin=$origin:$originType"

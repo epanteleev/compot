@@ -6,6 +6,7 @@ import ir.instruction.*
 import ir.attributes.ByValue
 import ir.global.ExternValue
 import ir.global.GlobalValue
+import ir.instruction.lir.Generate
 import ir.value.ArgumentValue
 import ir.value.constant.Constant
 

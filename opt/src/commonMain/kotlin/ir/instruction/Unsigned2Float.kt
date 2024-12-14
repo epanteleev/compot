@@ -36,7 +36,11 @@ class Unsigned2Float private constructor(id: Identity, owner: Block, private val
         const val NAME = "uint2fp"
         const val VALUE = 0
 
-        fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): Unsigned2Float {
+        fun uint2fp(toType: FloatingPointType, value: Value): InstBuilder<Unsigned2Float> = {
+            id: Identity, owner: Block -> make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): Unsigned2Float {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
                 "inconsistent types in '$id': ty=$toType, value=$value:$valueType"

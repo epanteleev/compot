@@ -46,7 +46,11 @@ class Select private constructor(id: Identity, owner: Block, private val ty: Int
     companion object {
         const val NAME = "select"
 
-        fun make(id: Identity, owner: Block, ty: IntegerType, cond: Value, onTrue: Value, onFalse: Value): Select {
+        fun select(ty: IntegerType, cond: Value, onTrue: Value, onFalse: Value): InstBuilder<Select> = {
+                id: Identity, owner: Block -> make(id, owner, ty, cond, onTrue, onFalse)
+        }
+
+        private fun make(id: Identity, owner: Block, ty: IntegerType, cond: Value, onTrue: Value, onFalse: Value): Select {
             val onTrueType = onTrue.type()
             val onFalseType = onFalse.type()
             val condType = cond.type()

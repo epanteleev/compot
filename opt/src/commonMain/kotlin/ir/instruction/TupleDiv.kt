@@ -48,12 +48,16 @@ class TupleDiv private constructor(id: Identity, owner: Block, private val tp: T
         const val FIRST = 0
         const val SECOND = 1
 
-        fun make(id: Identity, owner: Block, type: ArithmeticType, a: Value, b: Value): TupleDiv {
-            val aType = a.type()
+        fun div(a: Value, b: Value): InstBuilder<TupleDiv> = {
+            id: Identity, owner: Block -> make(id, owner, a, b)
+        }
+
+        private fun make(id: Identity, owner: Block, a: Value, b: Value): TupleDiv {
+            val aType = a.type().asType<ArithmeticType>()
             val bType = b.type()
-            val tp = TupleType(arrayOf(type, type))
+            val tp = TupleType(arrayOf(aType, aType))
             require(isAppropriateTypes(tp, aType, bType)) {
-                "incorrect types in '$id' but type=$type, a=$a:$aType, b=$b:$bType"
+                "incorrect types in '$id' but a=$a:$aType, b=$b:$bType"
             }
 
             return registerUser(TupleDiv(id, owner, tp, a, b), a, b)

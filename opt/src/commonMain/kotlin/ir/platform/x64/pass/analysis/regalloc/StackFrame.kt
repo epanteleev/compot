@@ -1,13 +1,12 @@
 package ir.platform.x64.pass.analysis.regalloc
 
 import ir.value.*
-import ir.types.Type
 import asm.x64.Address
 import asm.x64.ArgumentSlot
 import asm.x64.GPRegister.*
 import common.assertion
 import ir.Definitions.QWORD_SIZE
-import ir.instruction.Generate
+import ir.instruction.lir.Generate
 import ir.types.NonTrivialType
 
 
@@ -63,7 +62,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
     }
 
     override fun takeSlot(value: Value): Address = when (value) {
-        is Generate   -> stackSlotAlloc(value)
+        is Generate -> stackSlotAlloc(value)
         is LocalValue -> valueInstructionAlloc(value)
         else -> throw StackFrameException("Cannot alloc slot for this value=$value")
     }

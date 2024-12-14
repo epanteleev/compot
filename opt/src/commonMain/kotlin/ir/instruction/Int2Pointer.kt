@@ -30,7 +30,11 @@ class Int2Pointer private constructor(id: Identity, owner: Block, value: Value):
     companion object {
         const val NAME = "int2ptr"
 
-        fun make(id: Identity, owner: Block, value: Value): Int2Pointer {
+        fun int2ptr(value: Value): InstBuilder<Int2Pointer> = { id: Identity, owner: Block ->
+            make(id, owner, value)
+        }
+
+        private fun make(id: Identity, owner: Block, value: Value): Int2Pointer {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
                 "inconsistent types in '$id': ty=$PtrType, value=$value:$valueType"

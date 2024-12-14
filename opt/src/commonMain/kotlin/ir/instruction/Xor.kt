@@ -22,7 +22,11 @@ class Xor private constructor(id: Identity, owner: Block, tp: ArithmeticType, a:
         const val FIRST = 0
         const val SECOND = 1
 
-        fun make(id: Identity, owner: Block, a: Value, b: Value): Xor {
+        fun xor(a: Value, b: Value): InstBuilder<Xor> = { id: Identity, owner: Block ->
+            make(id, owner, a, b)
+        }
+
+        private fun make(id: Identity, owner: Block, a: Value, b: Value): Xor {
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateTypes(aType, aType, bType)) {

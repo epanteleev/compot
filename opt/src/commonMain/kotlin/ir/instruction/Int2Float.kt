@@ -34,7 +34,11 @@ class Int2Float private constructor(id: Identity, owner: Block, private val toTy
     companion object {
         const val NAME = "int2fp"
 
-        fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): Int2Float {
+        fun int2fp(toType: FloatingPointType, value: Value): InstBuilder<Int2Float> = {
+                id: Identity, owner: Block -> make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): Int2Float {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
                 "inconsistent types in '$id': ty=$toType, value=$value:$valueType"

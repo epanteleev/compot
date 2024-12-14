@@ -20,7 +20,11 @@ class And private constructor(id: Identity, owner: Block, tp: IntegerType, a: Va
         const val FIRST = 0
         const val SECOND = 1
 
-        fun make(id: Identity, owner: Block, a: Value, b: Value): And {
+        fun and(a: Value, b: Value): InstBuilder<And> = {
+            id: Identity, owner: Block -> make(id, owner, a, b)
+        }
+
+        private fun make(id: Identity, owner: Block, a: Value, b: Value): And {
             val aType = a.type()
             val bType = b.type()
             require(isAppropriateTypes(aType, aType, bType)) {

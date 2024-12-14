@@ -31,7 +31,11 @@ class Pointer2Int private constructor(id: Identity, owner: Block, private val to
         const val NAME = "ptr2int"
         const val SOURCE = 0
 
-        fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Pointer2Int {
+        fun ptr2int(toType: IntegerType, value: Value): InstBuilder<Pointer2Int> = {
+                id: Identity, owner: Block -> make(id, owner, toType, value)
+        }
+
+        private fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Pointer2Int {
             val valueType = value.type()
             require(isAppropriateType(valueType)) {
                 "inconsistent types in '$id': ty=$toType, value=$value:$valueType"

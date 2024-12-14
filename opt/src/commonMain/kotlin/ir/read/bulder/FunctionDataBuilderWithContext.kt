@@ -332,7 +332,7 @@ class FunctionDataBuilderWithContext private constructor(
         return memorize(name, bb.fpext(value, resultType.type()))
     }
 
-    fun fp2int(name: LocalValueToken, operandToken: AnyValueToken, operandType: FloatTypeToken, resultType: IntegerTypeToken): FloatToInt {
+    fun fp2int(name: LocalValueToken, operandToken: AnyValueToken, operandType: FloatTypeToken, resultType: IntegerTypeToken): Float2Int {
         val value = getValue(operandToken, operandType.type())
         return memorize(name, bb.fp2Int(value, resultType.type()))
     }

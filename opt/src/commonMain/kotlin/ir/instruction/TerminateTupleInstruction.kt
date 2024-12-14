@@ -8,7 +8,7 @@ import ir.value.TupleValue
 import ir.value.Value
 
 
-abstract class TerminateTupleInstruction(id: Identity,
+sealed class TerminateTupleInstruction(id: Identity,
                                          owner: Block,
                                          tp: TrivialType,
                                          operands: Array<Value>,
