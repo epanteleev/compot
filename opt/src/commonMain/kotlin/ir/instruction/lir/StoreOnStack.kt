@@ -6,6 +6,7 @@ import ir.value.Value
 import ir.types.*
 import ir.module.block.Block
 import ir.instruction.Identity
+import ir.instruction.InstBuilder
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.value.ArgumentValue
@@ -50,7 +51,11 @@ class StoreOnStack private constructor(id: Identity, owner: Block, destination: 
     companion object {
         const val NAME = "movst"
 
-        fun make(id: Identity, owner: Block, dst: Value, index: Value, src: Value): StoreOnStack {
+        fun store(dst: Value, index: Value, src: Value): InstBuilder<StoreOnStack> = { id: Identity, owner: Block ->
+            make(id, owner, dst, index, src)
+        }
+
+        private fun make(id: Identity, owner: Block, dst: Value, index: Value, src: Value): StoreOnStack {
             require(isAppropriateType(dst, index, src)) {
                 "inconsistent types: toValue=$dst:${dst.type()}, base=$src:${src.type()}"
             }

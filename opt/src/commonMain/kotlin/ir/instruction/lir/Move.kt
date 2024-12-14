@@ -4,6 +4,7 @@ import common.assertion
 import ir.global.GlobalValue
 import ir.value.Value
 import ir.instruction.Identity
+import ir.instruction.InstBuilder
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
@@ -41,7 +42,11 @@ class Move private constructor(id: Identity, owner: Block, destination: Value, s
     companion object {
         const val NAME = "move"
 
-        fun make(id: Identity, owner: Block, dst: UsableValue, src: Value): Move {
+        fun move(dst: UsableValue, src: Value): InstBuilder<Move> = { id: Identity, owner: Block ->
+            make(id, owner, dst, src)
+        }
+
+        private fun make(id: Identity, owner: Block, dst: UsableValue, src: Value): Move {
             require(isAppropriateType(dst, src)) {
                 "inconsistent types: toValue=$dst:${dst.type()}, fromValue=$src:${src.type()}"
             }

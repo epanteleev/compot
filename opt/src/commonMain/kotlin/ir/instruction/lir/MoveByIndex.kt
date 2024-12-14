@@ -5,6 +5,7 @@ import ir.Definitions.QWORD_SIZE
 import ir.types.*
 import ir.value.Value
 import ir.instruction.Identity
+import ir.instruction.InstBuilder
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
@@ -38,7 +39,11 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
     companion object {
         const val NAME = "move"
 
-        fun make(id: Identity, owner: Block, dst: Value, index: Value, src: Value): MoveByIndex {
+        fun move(dst: Value, index: Value, src: Value): InstBuilder<MoveByIndex> = { id: Identity, owner: Block ->
+            make(id, owner, dst, index, src)
+        }
+
+        private fun make(id: Identity, owner: Block, dst: Value, index: Value, src: Value): MoveByIndex {
             require(isAppropriateType(dst, index, src)) {
                 "inconsistent types: dst=$dst:${dst.type()}, index=$index:${index.type()}, src=$src:${src.type()}"
             }

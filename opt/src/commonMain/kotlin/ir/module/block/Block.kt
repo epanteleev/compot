@@ -23,27 +23,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
     private val predecessors = arrayListOf<Block>()
     private val successors   = arrayListOf<Block>()
 
-    private var insertionStrategy: InsertionStrategy = InsertAfter(null)
     private var instructionIndex: Int = 0
-
-    abstract inner class InsertionStrategy {
-        abstract fun insert(instruction: Instruction);
-    }
-
-    inner class InsertBefore(private val before: Instruction?) : InsertionStrategy() {
-        override fun insert(instruction: Instruction) {
-            instructions.addBefore(before, instruction)
-        }
-    }
-
-    inner class InsertAfter(private val after: Instruction?) : InsertionStrategy() {
-        override fun insert(instruction: Instruction) {
-            if (after is TerminateInstruction) {
-                throw IllegalStateException("Trying to insert instruction after terminate: bb=${after.owner()}, last='${instructions.lastOrNull()?.dump()}'")
-            }
-            instructions.addAfter(after, instruction)
-        }
-    }
 
     override fun predecessors(): List<Block> {
         return predecessors
@@ -107,45 +87,6 @@ class Block private constructor(private val mc: ModificationCounter, override va
 
     fun transform(fn: (Instruction) -> Instruction?) {
         instructions.transform { fn(it) }
-    }
-
-    fun<T> prepend(builder: (AnyInstructionFabric) -> T): T {
-        insertionStrategy = InsertBefore(null)
-        return builder(this)
-    }
-
-    fun<T> insertAfter(after: Instruction, builder: (AnyInstructionFabric) -> T): T {
-        assertion(after.owner() === this) {
-            "after=$after is not in bb=$this"
-        }
-
-        insertionStrategy = InsertAfter(after)
-        return builder(this)
-    }
-
-    fun<T> insertBefore(before: Instruction, builder: (AnyInstructionFabric) -> T): T {
-        assertion(before.owner() === this) {
-            "before=$before is not in bb=$this"
-        }
-
-        insertionStrategy = InsertBefore(before)
-        return builder(this)
-    }
-
-    inline fun<reified T: Instruction> replace(instruction: Instruction, crossinline builder: (AnyInstructionFabric) -> T): T {
-        assertion(instruction.owner() === this) {
-            "instruction=$instruction is not in bb=$this"
-        }
-
-        val newInstruction = insertBefore(instruction) { builder(it) }
-        if (instruction is UsableValue) {
-            assertion(newInstruction is UsableValue) {
-                "should be local value, but newInstruction=$newInstruction"
-            }
-            updateUsages(instruction) { newInstruction as UsableValue }
-        }
-        kill(instruction, UndefValue)
-        return newInstruction
     }
 
     fun<V: Value> updateUsages(localValue: UsableValue, replacement: () -> V): V = mc.df {
@@ -331,22 +272,20 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun tupleCall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): TupleCall = mc.dfANDcf {
-        return@dfANDcf put(TupleCall.call(func, attributes, args, target as Block))
+        return@dfANDcf put(TupleCall.call(func, args, attributes, target as Block))
     }
 
     override fun vcall(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): VoidCall = mc.dfANDcf {
-        require(func.returnType() == VoidType)
-        return@dfANDcf put(VoidCall.call(func, attributes, args, target as Block))
+        return@dfANDcf put(VoidCall.call(func, args, attributes, target as Block))
     }
 
     override fun icall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionCall = mc.dfANDcf {
         require(func.returnType() != VoidType)
-        return@dfANDcf put(IndirectionCall.call(pointer, func, attributes, args, target as Block))
+        return@dfANDcf put(IndirectionCall.call(pointer, func, args, attributes, target as Block))
     }
 
     override fun ivcall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionVoidCall = mc.dfANDcf {
-        require(func.returnType() == VoidType)
-        return@dfANDcf put(IndirectionVoidCall.call(pointer, func, attributes, args, target as Block))
+        return@dfANDcf put(IndirectionVoidCall.call(pointer, func, args, attributes, target as Block))
     }
 
     override fun branch(target: Block): Branch = mc.cf {
@@ -362,7 +301,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun ret(returnType: Type, values: Array<Value>): Return = mc.dfANDcf {
-        return@dfANDcf addTerminate { ReturnValue.make(it, this, returnType, values) }
+        return@dfANDcf put(ReturnValue.ret(returnType, values))
     }
 
     override fun retVoid(): ReturnVoid = mc.cf {
@@ -394,15 +333,15 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun zext(value: Value, toType: UnsignedIntType): ZeroExtend = mc.df {
-        return@df put(ZeroExtend.zext(toType, value))
+        return@df put(ZeroExtend.zext(value, toType))
     }
 
     override fun sext(value: Value, toType: SignedIntType): SignExtend = mc.df {
-        return@df put(SignExtend.sext(toType, value))
+        return@df put(SignExtend.sext(value, toType))
     }
 
     override fun trunc(value: Value, toType: IntegerType): Truncate = mc.df {
-        return@df put(Truncate.trunc(toType, value))
+        return@df put(Truncate.trunc(value, toType))
     }
 
     override fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate = mc.df {
@@ -418,12 +357,12 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun select(cond: Value, type: IntegerType, onTrue: Value, onFalse: Value): Select = mc.df {
-        return@df put(Select.select(type, cond, onTrue, onFalse))
+        return@df put(Select.select(cond, type, onTrue, onFalse))
     }
 
     override fun phi(incoming: List<Value>, labels: List<Label>): Phi = mc.df {
         val bbs = labels.mapTo(arrayListOf()) { it as Block }
-        return@df put(Phi.phi(incoming[0].type() as PrimitiveType, bbs, incoming.toTypedArray()))
+        return@df put(Phi.phi(bbs, incoming.toTypedArray()))
     }
 
     override fun int2ptr(value: Value): Int2Pointer = mc.df {
@@ -456,7 +395,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun upStackFrame(callable: Callable): UpStackFrame = mc.df {
-        return@df withOutput { UpStackFrame(it, this, callable) }
+        return@df put(UpStackFrame.usf(callable))
     }
 
     override fun uncompletedPhi(ty: PrimitiveType, incoming: Value): Phi = mc.df {
@@ -469,12 +408,12 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun lea(source: Value): Lea = mc.df {
-        return@df withOutput { Lea.make(it, this, source) }
+        return@df put(Lea.lea(source))
     }
 
-    fun uncompletedPhi(incomingType: PrimitiveType, incoming: List<Value>, labels: List<Block>): Phi = mc.df {
+    fun uncompletedPhi(incoming: List<Value>, labels: List<Block>): Phi = mc.df {
         val blocks = labels.mapTo(arrayListOf()) { it }
-        return@df put(Phi.phi(incomingType, blocks, incoming.toTypedArray()))
+        return@df put(Phi.phi(blocks, incoming.toTypedArray()))
     }
 
     override fun copy(value: Value): Copy = mc.df {
@@ -482,27 +421,27 @@ class Block private constructor(private val mc: ModificationCounter, override va
     }
 
     override fun move(dst: UsableValue, fromValue: Value): Move = mc.df {
-        return@df withOutput { Move.make(it, this, dst, fromValue) }
+        return@df put(Move.move(dst, fromValue))
     }
 
     override fun move(dst: Value, index: Value, src: Value): MoveByIndex = mc.df {
-        return@df withOutput { MoveByIndex.make(it, this, dst, index, src) }
+        return@df put(MoveByIndex.move(dst, index, src))
     }
 
     override fun indexedLoad(origin: Value, loadedType: PrimitiveType, index: Value): IndexedLoad = mc.df {
-        return@df withOutput { IndexedLoad.make(it, this, loadedType, origin, index) }
+        return@df put(IndexedLoad.load(loadedType, origin, index))
     }
 
     override fun storeOnStack(destination: Value, index: Value, source: Value): StoreOnStack = mc.df {
-        return@df withOutput { StoreOnStack.make(it, this, destination, index, source) }
+        return@df put(StoreOnStack.store(destination, index, source))
     }
 
     override fun loadFromStack(origin: Value, loadedType: PrimitiveType, index: Value): LoadFromStack = mc.df {
-        return@df withOutput { LoadFromStack.make(it, this, loadedType, origin, index) }
+        return@df put(LoadFromStack.load(loadedType, origin, index))
     }
 
     override fun leaStack(origin: Value, loadedType: PrimitiveType, index: Value): LeaStack = mc.df {
-        return@df withOutput { LeaStack.make(it, this, loadedType, origin, index) }
+        return@df put(LeaStack.lea(origin, loadedType, index))
     }
 
     fun idom(instruction: Instruction): Instruction? {
@@ -531,44 +470,75 @@ class Block private constructor(private val mc: ModificationCounter, override va
         to.predecessors.remove(this)
     }
 
-    private inline fun<reified T: TerminateInstruction> addTerminate(f: (Int) -> T): T {
-        val value = allocateValue()
-        val instruction = f(value)
-
-        instruction.targets().forEach { makeEdge(it) }
-        append(instruction)
-        return instruction
-    }
-
     private fun allocateValue(): Int {
         val currentValue = instructionIndex
         instructionIndex += 1
         return currentValue
     }
 
-    private inline fun<reified T: Instruction> withOutput(f: (Int) -> T): T {
-        val value = allocateValue()
-        val instruction = f(value)
-
-        append(instruction)
-        return instruction
-    }
-
     fun<T: Instruction> put(f: InstBuilder<T>): T {
         val value = allocateValue()
         val instruction = f(value, this)
-
         if (instruction is TerminateInstruction) {
             instruction.targets().forEach { makeEdge(it) }
         }
 
-        append(instruction)
+        instructions.addAfter(null, instruction)
         return instruction
     }
 
-    private fun append(instruction: Instruction) {
-        insertionStrategy.insert(instruction)
-        insertionStrategy = InsertAfter(instructions.last())
+    fun<T: Instruction> putAfter(after: Instruction, f: InstBuilder<T>): T {
+        assertion(after.owner() === this) {
+            "after=$after is not in bb=$this"
+        }
+
+        val instruction = f(allocateValue(), this)
+        if (instruction is TerminateInstruction) {
+            instruction.targets().forEach { makeEdge(it) }
+        }
+
+        instructions.addAfter(after, instruction)
+        return instruction
+    }
+
+    fun<T: Instruction> putBefore(before: Instruction, f: InstBuilder<T>): T {
+        assertion(before.owner() === this) {
+            "before=$before is not in bb=$this"
+        }
+
+        val instruction = f(allocateValue(), this)
+        if (instruction is TerminateInstruction) {
+            instruction.targets().forEach { makeEdge(it) }
+        }
+
+        instructions.addBefore(before, instruction)
+        return instruction
+    }
+
+    fun<T: Instruction> prepend(f: InstBuilder<T>): T {
+        val instruction = f(allocateValue(), this)
+        if (instruction is TerminateInstruction) {
+            instruction.targets().forEach { makeEdge(it) }
+        }
+
+        instructions.addBefore(null, instruction)
+        return instruction
+    }
+
+    inline fun<reified T: Instruction> replace(instruction: Instruction, noinline builder: InstBuilder<T>): T {
+        assertion(instruction.owner() === this) {
+            "instruction=$instruction is not in bb=$this"
+        }
+
+        val newInstruction = putBefore(instruction, builder)
+        if (instruction is UsableValue) {
+            assertion(newInstruction is UsableValue) {
+                "should be local value, but newInstruction=$newInstruction"
+            }
+            updateUsages(instruction) { newInstruction as UsableValue }
+        }
+        kill(instruction, UndefValue)
+        return newInstruction
     }
 
     override fun toString(): String {

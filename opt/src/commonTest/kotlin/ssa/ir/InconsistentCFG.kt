@@ -80,7 +80,7 @@ class InconsistentCFG {
             }
             builder.build()
         }
-        assertTrue { throwable is IllegalStateException }
+        assertTrue { throwable is ValidateSSAErrorException }
     }
 
     @Test

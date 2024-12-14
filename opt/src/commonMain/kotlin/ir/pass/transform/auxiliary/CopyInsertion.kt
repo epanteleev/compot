@@ -2,6 +2,7 @@ package ir.pass.transform.auxiliary
 
 import common.assertion
 import ir.instruction.*
+import ir.instruction.lir.Lea
 import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
@@ -22,14 +23,14 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
 
             val last = incoming.last()
             val copy = if (operand.isa(gValue(anytype()))) {
-                incoming.insertBefore(last) { it.lea(operand) }
+                incoming.putBefore(last, Lea.lea(operand))
             } else {
-                incoming.insertBefore(last) { it.copy(operand) }
+                incoming.putBefore(last, Copy.copy(operand))
             }
             bb.updateDF(phi, idx, copy)
         }
 
-        return bb.updateUsages(phi) { bb.insertAfter(phi) { it.copy(phi) } }
+        return bb.updateUsages(phi) { bb.putAfter(phi, Copy.copy(phi)) }
     }
 
     fun pass() {

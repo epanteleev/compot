@@ -6,6 +6,7 @@ import common.assertion
 import ir.module.block.Block
 import ir.instruction.Identity
 import ir.Definitions.QWORD_SIZE
+import ir.instruction.InstBuilder
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
 
@@ -37,7 +38,11 @@ class IndexedLoad private constructor(id: Identity, owner: Block, private val lo
     companion object {
         const val NAME = "indexedLoad"
 
-        fun make(id: Identity, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value): IndexedLoad {
+        fun load(loadedType: PrimitiveType, origin: Value, index: Value): InstBuilder<IndexedLoad> = {
+            id: Identity, owner: Block -> make(id, owner, loadedType, origin, index)
+        }
+
+        private fun make(id: Identity, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value): IndexedLoad {
             val originType = origin.type()
             require(isAppropriateType(origin, index)) {
                 "should not be $originType, but origin=$origin:$originType"

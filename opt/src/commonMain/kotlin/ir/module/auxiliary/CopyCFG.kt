@@ -207,12 +207,12 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
 
     override fun visit(neg: Neg): ValueInstruction {
         val operand = mapUsage<Value>(neg.operand())
-        return bb.neg(operand)
+        return bb.put(Neg.neg(operand))
     }
 
     override fun visit(not: Not): ValueInstruction {
         val operand = mapUsage<Value>(not.operand())
-        return bb.not(operand)
+        return bb.put(Not.not(operand))
     }
 
     override fun visit(branch: Branch): ValueInstruction? {
@@ -348,7 +348,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         }
         val newIncoming = phi.incoming().mapTo(arrayListOf()) { mapBlock(it) } //TODO
 
-        return bb.uncompletedPhi(phi.type(), newUsages, newIncoming) //TODO
+        return bb.uncompletedPhi(newUsages, newIncoming) //TODO
     }
 
     override fun visit(returnValue: ReturnValue): ValueInstruction? {
@@ -414,7 +414,8 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
 
     override fun visit(ptr2Int: Pointer2Int): ValueInstruction {
         val operand = mapUsage<Value>(ptr2Int.value())
-        return bb.ptr2int(operand, ptr2Int.type())
+        val ptr2int = Pointer2Int.ptr2int(ptr2Int.type(), operand)
+        return bb.put(ptr2int)
     }
 
     override fun visit(indexedLoad: IndexedLoad): ValueInstruction {

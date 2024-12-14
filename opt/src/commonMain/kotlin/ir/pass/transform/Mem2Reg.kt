@@ -40,8 +40,9 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
     private fun insertPhis(): Set<Phi> {
         val insertedPhis = hashSetOf<Phi>()
         for ((bb, vSet) in joinSet) { bb as Block
+            val blocks = bb.predecessors().mapTo(arrayListOf()) { it }
             for (v in vSet) {
-                val phi = bb.prepend { it.uncompletedPhi(v.allocatedType.asType(), v) }
+                val phi = bb.prepend(Phi.phiUncompleted(v.allocatedType.asType(), v, blocks))
                 insertedPhis.add(phi)
             }
         }

@@ -51,15 +51,16 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
     companion object {
         const val NAME = "phi"
 
-        fun phi(ty: PrimitiveType, incoming: MutableList<Block>, incomingValue: Array<Value>): InstBuilder<Phi> = {
-            id: Identity, owner: Block -> make(id, owner, ty, incoming, incomingValue)
+        fun phi(incoming: MutableList<Block>, incomingValue: Array<Value>): InstBuilder<Phi> = {
+            id: Identity, owner: Block -> make(id, owner, incoming, incomingValue)
         }
 
         fun phiUncompleted(type: PrimitiveType, incoming: Value, predecessors: MutableList<Block>): InstBuilder<Phi> = {
             id: Identity, owner: Block -> makeUncompleted(id, owner, type, incoming, predecessors)
         }
 
-        private fun make(id: Identity, owner: Block, ty: PrimitiveType, incoming: MutableList<Block>, incomingValue: Array<Value>): Phi {
+        private fun make(id: Identity, owner: Block, incoming: MutableList<Block>, incomingValue: Array<Value>): Phi {
+            val ty = incomingValue[0].type() as PrimitiveType
             return registerUser(Phi(id, owner, ty, incoming, incomingValue), incomingValue.iterator())
         }
 

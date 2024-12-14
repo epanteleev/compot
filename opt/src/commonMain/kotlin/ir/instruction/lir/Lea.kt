@@ -6,6 +6,7 @@ import ir.value.Value
 import common.assertion
 import ir.module.block.Block
 import ir.instruction.Identity
+import ir.instruction.InstBuilder
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
 
@@ -34,7 +35,11 @@ class Lea private constructor(id: Identity, owner: Block, value: Value):
     companion object {
         const val NAME = "lea"
 
-        fun make(id: Identity, owner: Block, value: Value): Lea {
+        fun lea(value: Value): InstBuilder<Lea> = { id: Identity, owner: Block ->
+            make(id, owner, value)
+        }
+
+        private fun make(id: Identity, owner: Block, value: Value): Lea {
             val originType = value.type()
             require(isAppropriateType(originType)) {
                 "inconsistent type '$id' generate=$value:$originType"

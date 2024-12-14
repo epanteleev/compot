@@ -57,7 +57,7 @@ class TupleCall private constructor(id: Identity,
     companion object {
         const val NAME = "call"
 
-        fun call(func: DirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): InstBuilder<TupleCall> = {
+        fun call(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Block): InstBuilder<TupleCall> = {
                 id: Identity, owner: Block -> make(id, owner, func, attributes, args, target)
         }
 

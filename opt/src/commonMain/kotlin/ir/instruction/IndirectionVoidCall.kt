@@ -61,7 +61,7 @@ class IndirectionVoidCall private constructor(id: Identity,
     }
 
     companion object {
-        fun call(pointer: Value, func: IndirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, block: Block): InstBuilder<IndirectionVoidCall> = {
+        fun call(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, block: Block): InstBuilder<IndirectionVoidCall> = {
             id: Identity, owner: Block -> make(id, owner, pointer, func, attributes, args, block)
         }
 

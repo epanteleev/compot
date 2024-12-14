@@ -5,6 +5,8 @@ import ir.attributes.ByValue
 import ir.global.GlobalValue
 import ir.types.*
 import ir.instruction.*
+import ir.instruction.lir.Generate
+import ir.instruction.lir.Lea
 import ir.instruction.matching.*
 import ir.module.FunctionData
 import ir.module.Module
@@ -36,14 +38,14 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     private fun isolateBinaryOp() {
         fun transform(bb: Block, inst: Instruction): Instruction {
             inst.match(shl(nop(), constant().not())) { shl: Shl ->
-                val copy = bb.insertBefore(inst) { it.copy(shl.rhs()) }
+                val copy = bb.putBefore(inst, Copy.copy(shl.rhs()))
                 bb.updateDF(inst, Shl.OFFSET, copy)
                 isNeed4ArgIsolation = true
                 return inst
             }
 
             inst.match(shr(nop(), constant().not())) { shr: Shr ->
-                val copy = bb.insertBefore(inst) { it.copy(shr.rhs()) }
+                val copy = bb.putBefore(inst, Copy.copy(shr.rhs()))
                 bb.updateDF(inst, Shr.OFFSET, copy)
                 isNeed4ArgIsolation = true
                 return inst
@@ -52,9 +54,9 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             inst.match(tupleDiv(nop(), nop())) { tupleDiv: TupleDiv ->
                 val rem = tupleDiv.remainder()
                 if (rem == null) {
-                    bb.insertAfter(inst) { it.proj(tupleDiv, 1) }
+                    bb.putAfter(inst, Projection.proj(tupleDiv, 1))
                 } else {
-                    bb.updateUsages(rem) { bb.insertAfter(rem) { it.copy(rem) } }
+                    bb.updateUsages(rem) { bb.putAfter(rem, Copy.copy(rem)) }
                 }
                 isNeed3ArgIsolation = true
                 return inst
@@ -102,7 +104,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                 continue
             }
 
-            begin.updateUsages(arg) { begin.prepend { it.copy(arg) } }
+            begin.updateUsages(arg) { begin.prepend(Copy.copy(arg)) }
         }
     }
 
@@ -111,9 +113,9 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             "Unexpected argument: $arg"
         }
         val argType = arg as Alloc
-        val gen = bb.insertBefore(call) { it.gen(argType.allocatedType) }
-        val lea = bb.insertAfter(gen) { it.lea(gen) }
-        bb.insertAfter(lea) { it.memcpy(lea, arg, U64Value(argType.allocatedType.sizeOf().toLong())) }
+        val gen = bb.putBefore(call, Generate.gen(argType.allocatedType))
+        val lea = bb.putAfter(gen, Lea.lea(gen))
+        bb.putAfter(lea, Memcpy.memcpy(lea, arg, U64Value(argType.allocatedType.sizeOf().toLong())))
         bb.updateDF(call, i, gen)
     }
 
@@ -123,7 +125,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         for ((i, arg) in call.arguments().withIndex()) {
             when (val ty = arg.type()) {
                 is FloatingPointType, is IntegerType -> {
-                    val copy = bb.insertBefore(call) { it.copy(arg) }
+                    val copy = bb.putBefore(call, Copy.copy(arg))
                     bb.updateDF(call, i, copy)
                 }
                 is PtrType -> {
@@ -134,9 +136,9 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                     }
 
                     val copyOrLea = if (arg is GlobalValue) {
-                        bb.insertBefore(call) { it.lea(arg) }
+                        bb.putBefore(call, Lea.lea(arg))
                     } else {
-                        bb.insertBefore(call) { it.copy(arg) }
+                        bb.putBefore(call, Copy.copy(arg))
                     }
                     bb.updateDF(call, i, copyOrLea)
                 }
@@ -149,9 +151,9 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         if (call !is Callable) {
             return call
         }
-        bb.insertBefore(call) { it.downStackFrame(call) }
+        bb.putBefore(call, DownStackFrame.dsf(call))
         insertCopies(bb, call)
-        call.target().prepend { it.upStackFrame(call) }
+        call.target().prepend(UpStackFrame.usf(call))
         return call
     }
 

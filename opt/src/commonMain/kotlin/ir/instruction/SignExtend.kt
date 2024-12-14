@@ -30,7 +30,7 @@ class SignExtend private constructor(id: Identity, owner: Block, private val toT
     companion object {
         const val NAME = "sext"
 
-        fun sext(toType: SignedIntType, value: Value): InstBuilder<SignExtend> = { id: Identity, owner: Block ->
+        fun sext(value: Value, toType: SignedIntType): InstBuilder<SignExtend> = { id: Identity, owner: Block ->
             make(id, owner, toType, value)
         }
 

@@ -2,6 +2,8 @@ package ir.pass.transform.auxiliary
 
 import ir.global.*
 import ir.instruction.Instruction
+import ir.instruction.Load
+import ir.instruction.lir.Lea
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.block.Block
@@ -15,11 +17,11 @@ internal class ConstantLoading private constructor(private val cfg: FunctionData
             for ((i ,use) in inst.operands().withIndex()) {
                 when (use) {
                     is AnyAggregateGlobalConstant, is FunctionSymbol -> {
-                        val lea = bb.insertBefore(inst) { it.lea(use) }
+                        val lea = bb.putBefore(inst, Lea.lea(use))
                         bb.updateDF(inst, i, lea)
                     }
                     is ExternValue -> {
-                        val lea = bb.insertBefore(inst) { it.load(PtrType, use) }
+                        val lea = bb.putBefore(inst, Load.load(PtrType, use))
                         bb.updateDF(inst, i, lea)
                     }
                 }

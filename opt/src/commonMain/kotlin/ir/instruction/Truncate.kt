@@ -31,7 +31,7 @@ class Truncate private constructor(id: Identity, owner: Block, private val toTyp
         const val NAME = "trunc"
         const val OPERAND = 0
 
-        fun trunc(toType: IntegerType, value: Value): InstBuilder<Truncate> = { id: Identity, owner: Block ->
+        fun trunc(value: Value, toType: IntegerType): InstBuilder<Truncate> = { id: Identity, owner: Block ->
             make(id, owner, toType, value)
         }
 

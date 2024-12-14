@@ -30,7 +30,7 @@ class ZeroExtend private constructor(id: Identity, owner: Block, private val toT
     companion object {
         const val NAME = "zext"
 
-        fun zext(toType: UnsignedIntType, value: Value): InstBuilder<ZeroExtend> = { id: Identity, owner: Block ->
+        fun zext(value: Value, toType: UnsignedIntType): InstBuilder<ZeroExtend> = { id: Identity, owner: Block ->
             make(id, owner, toType, value)
         }
 

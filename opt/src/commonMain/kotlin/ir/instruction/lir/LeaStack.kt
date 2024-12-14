@@ -6,6 +6,7 @@ import common.assertion
 import ir.module.block.Block
 import ir.instruction.Identity
 import ir.Definitions.QWORD_SIZE
+import ir.instruction.InstBuilder
 import ir.instruction.ValueInstruction
 import ir.instruction.utils.IRInstructionVisitor
 
@@ -42,7 +43,11 @@ class LeaStack private constructor(id: Identity, owner: Block, val loadedType: P
     companion object {
         const val NAME = "leastv"
 
-        fun make(id: Identity, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value): LeaStack {
+        fun lea(origin: Value, loadedType: PrimitiveType, index: Value): InstBuilder<LeaStack> = {
+            id: Identity, owner: Block -> make(id, owner, loadedType, origin, index)
+        }
+
+        private fun make(id: Identity, owner: Block, loadedType: PrimitiveType, origin: Value, index: Value): LeaStack {
             val originType = origin.type()
             require(isAppropriateType(originType, index.type())) {
                 "should not be $originType, but origin=$origin:$originType"

@@ -87,55 +87,55 @@ class FunctionDataBuilderWithContext private constructor(
 
     fun neg(name: LocalValueToken, valueTok: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticUnary {
         val value = getValue(valueTok, expectedType.type(moduleBuilder))
-        return memorize(name, bb.neg(value))
+        return memorize(name, bb.put(Neg.neg(value)))
     }
 
     fun not(name: LocalValueToken, valueTok: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticUnary {
         val value  = getValue(valueTok, expectedType.type())
-        return memorize(name, bb.not(value))
+        return memorize(name, bb.put(Not.not(value)))
     }
 
-    private fun arithmeticBinary(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken, op: (Value, Value) -> ArithmeticBinary): ArithmeticBinary {
+    private fun arithmeticBinary(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken, op: (Value, Value) -> InstBuilder<ArithmeticBinary>): ArithmeticBinary {
         val first  = getValue(a, expectedType.type(moduleBuilder))
         val second = getValue(b, expectedType.type(moduleBuilder))
-        val result = op(first, second)
+        val result = bb.put(op(first, second))
         return memorize(name, result)
     }
 
     fun add(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
-        return arithmeticBinary(name, a, b, expectedType, bb::add)
+        return arithmeticBinary(name, a, b, expectedType, Add::add)
     }
 
     fun sub(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
-        return arithmeticBinary(name, a, b, expectedType, bb::sub)
+        return arithmeticBinary(name, a, b, expectedType, Sub::sub)
     }
 
     fun mul(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
-        return arithmeticBinary(name, a, b, expectedType, bb::mul)
+        return arithmeticBinary(name, a, b, expectedType, Mul::mul)
     }
 
     fun div(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: FloatTypeToken): ArithmeticBinary {
-        return arithmeticBinary(name, a, b, expectedType, bb::div)
+        return arithmeticBinary(name, a, b, expectedType, Div::div)
     }
 
     fun shl(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticBinary {
-        return arithmeticBinary(name, a, b, expectedType, bb::shl)
+        return arithmeticBinary(name, a, b, expectedType, Shl::shl)
     }
 
     fun shr(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticBinary {
-        return arithmeticBinary(name, a, b, expectedType, bb::shr)
+        return arithmeticBinary(name, a, b, expectedType, Shr::shr)
     }
 
     fun and(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticBinary {
-        return arithmeticBinary(name, a, b, expectedType, bb::and)
+        return arithmeticBinary(name, a, b, expectedType, And::and)
     }
 
     fun or(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
-        return arithmeticBinary(name, a, b, expectedType, bb::or)
+        return arithmeticBinary(name, a, b, expectedType, Or::or)
     }
 
     fun xor(name: LocalValueToken, a: AnyValueToken, b: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticBinary {
-        return arithmeticBinary(name, a, b, expectedType, bb::xor)
+        return arithmeticBinary(name, a, b, expectedType, Xor::xor)
     }
 
     fun tupleDiv(name: LocalValueToken, resultType: TupleTypeToken, a: AnyValueToken, b: AnyValueToken, expectedType: IntegerTypeToken): TupleDiv {
@@ -398,7 +398,7 @@ class FunctionDataBuilderWithContext private constructor(
             values.add(getConstant(tok, type))
         }
 
-        val phi = bb.uncompletedPhi(type, values, blocks)
+        val phi = bb.uncompletedPhi(values, blocks)
         incompletePhis.add(PhiContext(phi, incomingTok, type))
         return memorize(name, phi)
     }

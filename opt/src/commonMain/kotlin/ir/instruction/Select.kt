@@ -46,7 +46,7 @@ class Select private constructor(id: Identity, owner: Block, private val ty: Int
     companion object {
         const val NAME = "select"
 
-        fun select(ty: IntegerType, cond: Value, onTrue: Value, onFalse: Value): InstBuilder<Select> = {
+        fun select(cond: Value, ty: IntegerType, onTrue: Value, onFalse: Value): InstBuilder<Select> = {
                 id: Identity, owner: Block -> make(id, owner, ty, cond, onTrue, onFalse)
         }
 

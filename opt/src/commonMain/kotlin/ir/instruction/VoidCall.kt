@@ -51,7 +51,7 @@ class VoidCall private constructor(id: Identity,
     }
 
     companion object {
-        fun call(func: DirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): InstBuilder<VoidCall> = {
+        fun call(func: DirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Block): InstBuilder<VoidCall> = {
             id: Identity, owner: Block -> make(id, owner, func, attributes, args, target)
         }
 
