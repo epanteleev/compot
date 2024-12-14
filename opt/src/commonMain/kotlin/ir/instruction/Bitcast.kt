@@ -30,7 +30,7 @@ class Bitcast private constructor(id: Identity, owner: Block, val toType: Intege
     companion object {
         const val NAME = "bitcast"
 
-        fun bitcast(toType: IntegerType, value: Value): InstBuilder<Bitcast> = {
+        fun bitcast(value: Value, toType: IntegerType): InstBuilder<Bitcast> = {
             id: Identity, owner: Block -> make(id, owner, toType, value)
         }
 

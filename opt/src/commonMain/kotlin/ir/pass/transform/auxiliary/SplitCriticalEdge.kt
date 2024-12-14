@@ -1,5 +1,6 @@
 package ir.pass.transform.auxiliary
 
+import ir.instruction.Branch
 import ir.module.Module
 import ir.module.FunctionData
 import ir.module.block.Block
@@ -24,9 +25,9 @@ internal class SplitCriticalEdge private constructor(private val functionData: F
     }
 
     private fun insertBasicBlock(bb: Block, p: Block) {
-        val newBlock = functionData.blocks.createBlock().apply {
-            branch(bb)
-        }
+        val newBlock = functionData.blocks.createBlock()
+        newBlock.put(Branch.br(bb))
+
         p.updateCF(bb, newBlock)
     }
 

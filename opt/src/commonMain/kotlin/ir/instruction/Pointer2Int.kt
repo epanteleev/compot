@@ -31,8 +31,8 @@ class Pointer2Int private constructor(id: Identity, owner: Block, private val to
         const val NAME = "ptr2int"
         const val SOURCE = 0
 
-        fun ptr2int(toType: IntegerType, value: Value): InstBuilder<Pointer2Int> = {
-                id: Identity, owner: Block -> make(id, owner, toType, value)
+        fun ptr2int(value: Value, toType: IntegerType): InstBuilder<Pointer2Int> = { id: Identity, owner: Block ->
+            make(id, owner, toType, value)
         }
 
         private fun make(id: Identity, owner: Block, toType: IntegerType, value: Value): Pointer2Int {

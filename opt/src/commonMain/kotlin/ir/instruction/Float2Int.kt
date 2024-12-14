@@ -30,7 +30,7 @@ class Float2Int private constructor(id: Identity, owner: Block, private val toTy
     companion object {
         const val NAME = "fp2int"
 
-        fun fp2int(toType: IntegerType, value: Value): InstBuilder<Float2Int> = {
+        fun fp2int(value: Value, toType: IntegerType): InstBuilder<Float2Int> = {
             id: Identity, owner: Block -> make(id, owner, toType, value)
         }
 

@@ -95,20 +95,20 @@ class Lowering private constructor(private val cfg: FunctionData) {
             inst.match(load(gfpOrGep(argumentByValue(), nop()))) { load: Load ->
                 val pointer = load.operand().asValue<ValueInstruction>()
                 val index = getIndex(pointer)
-                val copy = bb.replace(inst, LoadFromStack.load(load.type(), getSource(pointer), index))
+                val copy = bb.replace(inst, LoadFromStack.load(getSource(pointer), load.type(), index))
                 killOnDemand(pointer.owner(), pointer)
                 return copy
             }
             inst.match(load(gfpOrGep(generate().not(), nop()))) { load: Load ->
                 val pointer = load.operand().asValue<ValueInstruction>()
-                val copy = bb.replace(inst, IndexedLoad.load(load.type(), getSource(pointer), getIndex(pointer)))
+                val copy = bb.replace(inst, IndexedLoad.load(getSource(pointer), load.type(), getIndex(pointer)))
                 killOnDemand(bb, pointer)
                 return copy
             }
             inst.match(load(gfpOrGep(generate(), nop()))) { load: Load ->
                 val pointer = load.operand().asValue<ValueInstruction>()
                 val index = getIndex(pointer)
-                val copy = bb.replace(inst, LoadFromStack.load(load.type(), getSource(pointer), index))
+                val copy = bb.replace(inst, LoadFromStack.load(getSource(pointer), load.type(), index))
                 killOnDemand(pointer.owner(), pointer)
                 return copy
             }

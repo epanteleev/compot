@@ -43,7 +43,7 @@ class LoadFromStack private constructor(id: Identity, owner: Block, private val 
     companion object {
         const val NAME = "loadst"
 
-        fun load(loadedType: PrimitiveType, origin: Value, index: Value): InstBuilder<LoadFromStack> = {
+        fun load(origin: Value, loadedType: PrimitiveType, index: Value): InstBuilder<LoadFromStack> = {
                 id: Identity, owner: Block -> make(id, owner, loadedType, origin, index)
         }
 

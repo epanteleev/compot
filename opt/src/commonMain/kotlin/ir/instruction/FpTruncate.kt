@@ -30,7 +30,7 @@ class FpTruncate private constructor(id: Identity, owner: Block, private val toT
     companion object {
         const val NAME = "fptrunc"
 
-        fun fptrunc(toType: FloatingPointType, value: Value): InstBuilder<FpTruncate> = {
+        fun fptrunc(value: Value, toType: FloatingPointType): InstBuilder<FpTruncate> = {
             id: Identity, owner: Block -> make(id, owner, toType, value)
         }
 

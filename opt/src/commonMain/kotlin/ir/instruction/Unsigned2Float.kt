@@ -36,7 +36,7 @@ class Unsigned2Float private constructor(id: Identity, owner: Block, private val
         const val NAME = "uint2fp"
         const val VALUE = 0
 
-        fun uint2fp(toType: FloatingPointType, value: Value): InstBuilder<Unsigned2Float> = {
+        fun uint2fp(value: Value, toType: FloatingPointType): InstBuilder<Unsigned2Float> = {
             id: Identity, owner: Block -> make(id, owner, toType, value)
         }
 

@@ -34,8 +34,8 @@ class Int2Float private constructor(id: Identity, owner: Block, private val toTy
     companion object {
         const val NAME = "int2fp"
 
-        fun int2fp(toType: FloatingPointType, value: Value): InstBuilder<Int2Float> = {
-                id: Identity, owner: Block -> make(id, owner, toType, value)
+        fun int2fp(value: Value, toType: FloatingPointType): InstBuilder<Int2Float> = { id: Identity, owner: Block ->
+            make(id, owner, toType, value)
         }
 
         private fun make(id: Identity, owner: Block, toType: FloatingPointType, value: Value): Int2Float {

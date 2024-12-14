@@ -30,7 +30,7 @@ class FpExtend private constructor(id: Identity, owner: Block, private val toTyp
     companion object {
         const val NAME = "fpext"
 
-        fun fpext(toType: FloatingPointType, value: Value): InstBuilder<FpExtend> = {
+        fun fpext(value: Value, toType: FloatingPointType): InstBuilder<FpExtend> = {
             id: Identity, owner: Block -> make(id, owner, toType, value)
         }
 

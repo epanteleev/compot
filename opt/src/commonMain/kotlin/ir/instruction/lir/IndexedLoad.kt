@@ -38,7 +38,7 @@ class IndexedLoad private constructor(id: Identity, owner: Block, private val lo
     companion object {
         const val NAME = "indexedLoad"
 
-        fun load(loadedType: PrimitiveType, origin: Value, index: Value): InstBuilder<IndexedLoad> = {
+        fun load(origin: Value, loadedType: PrimitiveType, index: Value): InstBuilder<IndexedLoad> = {
             id: Identity, owner: Block -> make(id, owner, loadedType, origin, index)
         }
 

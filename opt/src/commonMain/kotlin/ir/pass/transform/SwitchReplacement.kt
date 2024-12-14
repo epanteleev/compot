@@ -1,10 +1,7 @@
 package ir.pass.transform
 
 import common.forEachWith
-import ir.instruction.BranchCond
-import ir.instruction.IntCompare
-import ir.instruction.IntPredicate
-import ir.instruction.Switch
+import ir.instruction.*
 import ir.module.BasicBlocks
 import ir.module.Module
 import ir.pass.common.TransformPassFabric
@@ -63,13 +60,13 @@ private class SwitchReplacementImpl(val cfg: BasicBlocks) {
                 current.replace(current.last(), br)
 
             } else {
-                val inst = current.icmp(selector, IntPredicate.Eq, value)
-                current.branchCond(inst, target, newBB)
+                val inst = current.put(IntCompare.icmp(selector, IntPredicate.Eq, value))
+                current.put(BranchCond.br(inst, target, newBB))
             }
             current = newBB
         }
 
-        current.branch(default)
+        current.put(Branch.br(default))
     }
 
     fun run() {

@@ -13,11 +13,12 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.pass.analysis.traverse.PreOrderFabric
+import ir.types.asType
 import ir.value.*
 import ir.value.constant.Constant
 
 
-class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<LocalValue?>() {
+class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<InstBuilder<Instruction>>() {
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
     private val newCFG         = FunctionData.create(fd.prototype, copyArguments())
     private val oldToNewBlock  = setupNewBasicBlock()
@@ -71,12 +72,14 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     private fun newInst(inst: Instruction): LocalValue? {
-        val newInstruction = inst.visit(this)
+        val builder = inst.visit(this)
+        val newInstruction = bb.put(builder)
         if (inst is LocalValue) {
             oldValuesToNew[inst] = newInstruction as LocalValue
+            return newInstruction
+        } else {
+            return null
         }
-
-        return newInstruction
     }
 
     private fun updatePhis() {
@@ -129,373 +132,349 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return call.attributes().mapTo(hashSetOf()) { it }
     }
 
-    override fun visit(alloc: Alloc): ValueInstruction {
-        return bb.put(Alloc.alloc(alloc.allocatedType))
+    override fun visit(alloc: Alloc): InstBuilder<Instruction> {
+        return Alloc.alloc(alloc.allocatedType)
     }
 
-    override fun visit(generate: Generate): ValueInstruction {
-        return bb.gen(generate.type())
+    override fun visit(generate: Generate): InstBuilder<Instruction> {
+        return Generate.gen(generate.type())
     }
 
-    override fun visit(lea: Lea): ValueInstruction {
+    override fun visit(lea: Lea): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(lea.operand())
-        return bb.lea(operand)
+        return Lea.lea(operand)
     }
 
-    override fun visit(add: Add): LocalValue {
+    override fun visit(add: Add): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(add.lhs())
         val second = mapUsage<Value>(add.rhs())
 
-        return bb.add(first, second)
+        return Add.add(first, second)
     }
 
-    override fun visit(and: And): LocalValue {
+    override fun visit(and: And): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(and.lhs())
         val second = mapUsage<Value>(and.rhs())
 
-        return bb.and(first, second)
+        return And.and(first, second)
     }
 
-    override fun visit(div: Div): LocalValue {
+    override fun visit(div: Div): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(div.lhs())
         val second = mapUsage<Value>(div.rhs())
 
-        return bb.div(first, second)
+        return Div.div(first, second)
     }
 
-    override fun visit(mul: Mul): LocalValue {
+    override fun visit(mul: Mul): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(mul.lhs())
         val second = mapUsage<Value>(mul.rhs())
 
-        return bb.mul(first, second)
+        return Mul.mul(first, second)
     }
 
-    override fun visit(or: Or): LocalValue {
+    override fun visit(or: Or): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(or.lhs())
         val second = mapUsage<Value>(or.rhs())
 
-        return bb.or(first, second)
+        return Or.or(first, second)
     }
 
-    override fun visit(shl: Shl): LocalValue {
+    override fun visit(shl: Shl): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(shl.lhs())
         val second = mapUsage<Value>(shl.rhs())
 
-        return bb.shl(first, second)
+        return Shl.shl(first, second)
     }
 
-    override fun visit(shr: Shr): LocalValue {
+    override fun visit(shr: Shr): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(shr.lhs())
         val second = mapUsage<Value>(shr.rhs())
 
-        return bb.shr(first, second)
+        return Shr.shr(first, second)
     }
 
-    override fun visit(sub: Sub): LocalValue {
+    override fun visit(sub: Sub): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(sub.lhs())
         val second = mapUsage<Value>(sub.rhs())
 
-        return bb.sub(first, second)
+        return Sub.sub(first, second)
     }
 
-    override fun visit(xor: Xor): LocalValue {
+    override fun visit(xor: Xor): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(xor.lhs())
         val second = mapUsage<Value>(xor.rhs())
 
-        return bb.xor(first, second)
+        return Xor.xor(first, second)
     }
 
-    override fun visit(neg: Neg): ValueInstruction {
+    override fun visit(neg: Neg): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(neg.operand())
-        return bb.put(Neg.neg(operand))
+        return Neg.neg(operand)
     }
 
-    override fun visit(not: Not): ValueInstruction {
+    override fun visit(not: Not): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(not.operand())
-        return bb.put(Not.not(operand))
+        return Not.not(operand)
     }
 
-    override fun visit(branch: Branch): ValueInstruction? {
-        bb.branch(mapBlock(branch.target()))
-        return null
+    override fun visit(branch: Branch): InstBuilder<Instruction> {
+        return Branch.br(mapBlock(branch.target()))
     }
 
-    override fun visit(branchCond: BranchCond): ValueInstruction? {
+    override fun visit(branchCond: BranchCond): InstBuilder<Instruction> {
         val condition = mapUsage<Value>(branchCond.condition())
         val onTrue    = mapBlock(branchCond.onTrue())
         val onFalse   = mapBlock(branchCond.onFalse())
-        bb.branchCond(condition, onTrue, onFalse)
-
-        return null
+        return BranchCond.br(condition, onTrue, onFalse)
     }
 
-    override fun visit(call: Call): LocalValue {
+    override fun visit(call: Call): InstBuilder<Instruction> {
         val newUsages = mapArguments(call)
         val target    = mapBlock(call.target())
 
-        return bb.call(call.prototype(), newUsages, cloneAttributes(call), target)
+        return Call.call(call.prototype(), newUsages, cloneAttributes(call), target)
     }
 
-    override fun visit(tupleCall: TupleCall): LocalValue {
+    override fun visit(tupleCall: TupleCall): InstBuilder<Instruction> {
         val newUsages = mapArguments(tupleCall)
         val target    = mapBlock(tupleCall.target())
 
-        return bb.tupleCall(tupleCall.prototype(), newUsages, cloneAttributes(tupleCall), target)
+        return TupleCall.call(tupleCall.prototype(), newUsages, cloneAttributes(tupleCall), target)
     }
 
-    override fun visit(bitcast: Bitcast): ValueInstruction {
+    override fun visit(bitcast: Bitcast): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(bitcast.value())
-        return bb.bitcast(operand, bitcast.type())
+        return Bitcast.bitcast(operand, bitcast.type())
     }
 
-    override fun visit(flag2Int: Flag2Int): ValueInstruction {
+    override fun visit(flag2Int: Flag2Int): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(flag2Int.value())
-        return bb.flag2int(operand, flag2Int.type())
+        return Flag2Int.flag2int(operand, flag2Int.type())
     }
 
-    override fun visit(zext: ZeroExtend): ValueInstruction {
+    override fun visit(zext: ZeroExtend): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(zext.value())
-        return bb.zext(operand, zext.type())
+        return ZeroExtend.zext(operand, zext.type())
     }
 
-    override fun visit(itofp: Int2Float): ValueInstruction {
+    override fun visit(itofp: Int2Float): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(itofp.value())
-        return bb.int2fp(operand, itofp.type())
+        return Int2Float.int2fp(operand, itofp.type())
     }
 
-    override fun visit(utofp: Unsigned2Float): LocalValue {
+    override fun visit(utofp: Unsigned2Float): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(utofp.value())
-        return bb.uint2fp(operand, utofp.type())
+        return Unsigned2Float.uint2fp(operand, utofp.type())
     }
 
-    override fun visit(sext: SignExtend): ValueInstruction {
+    override fun visit(sext: SignExtend): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(sext.value())
-        return bb.sext(operand, sext.type())
+        return SignExtend.sext(operand, sext.type())
     }
 
-    override fun visit(trunc: Truncate): ValueInstruction {
+    override fun visit(trunc: Truncate): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(trunc.value())
-        return bb.trunc(operand, trunc.type())
+        return Truncate.trunc(operand, trunc.type())
     }
 
-    override fun visit(fptruncate: FpTruncate): ValueInstruction {
+    override fun visit(fptruncate: FpTruncate): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(fptruncate.value())
-        return bb.fptrunc(operand, fptruncate.type())
+        return FpTruncate.fptrunc(operand, fptruncate.type())
     }
 
-    override fun visit(fpext: FpExtend): ValueInstruction {
+    override fun visit(fpext: FpExtend): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(fpext.value())
-        return bb.fpext(operand, fpext.type())
+        return FpExtend.fpext(operand, fpext.type())
     }
 
-    override fun visit(fptosi: Float2Int): ValueInstruction {
+    override fun visit(fptosi: Float2Int): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(fptosi.value())
-        return bb.fp2Int(operand, fptosi.type())
+        return Float2Int.fp2int(operand, fptosi.type())
     }
 
-    override fun visit(copy: Copy): ValueInstruction {
+    override fun visit(copy: Copy): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(copy.origin())
-        return bb.copy(operand)
+        return Copy.copy(operand)
     }
 
-    override fun visit(move: Move): ValueInstruction? {
+    override fun visit(move: Move): InstBuilder<Instruction> {
         val fromValue = mapUsage<Value>(move.source())
         val toValue   = mapUsage<Generate>(move.destination())
-        bb.move(toValue, fromValue)
-        return null
+        return Move.move(toValue, fromValue)
     }
 
-    override fun visit(downStackFrame: DownStackFrame): ValueInstruction? {
-        bb.downStackFrame(downStackFrame.call())
-        return null
+    override fun visit(downStackFrame: DownStackFrame): InstBuilder<Instruction> {
+        return DownStackFrame.dsf(downStackFrame.call())
     }
 
-    override fun visit(gep: GetElementPtr): ValueInstruction {
+    override fun visit(gep: GetElementPtr): InstBuilder<Instruction> {
         val source = mapUsage<Value>(gep.source())
         val index  = mapUsage<Value>(gep.index())
 
-        return bb.gep(source, gep.basicType, index)
+        return GetElementPtr.gep(source, gep.basicType, index)
     }
 
-    override fun visit(gfp: GetFieldPtr): ValueInstruction {
+    override fun visit(gfp: GetFieldPtr): InstBuilder<Instruction> {
         val source = mapUsage<Value>(gfp.source())
-        return bb.gfp(source, gfp.basicType, gfp.index())
+        return GetFieldPtr.gfp(source, gfp.basicType, gfp.index())
     }
 
-    override fun visit(icmp: IntCompare): ValueInstruction {
+    override fun visit(icmp: IntCompare): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(icmp.first())
         val second = mapUsage<Value>(icmp.second())
 
-        return bb.icmp(first, icmp.predicate(), second)
+        return IntCompare.icmp(first, icmp.predicate(), second)
     }
 
-    override fun visit(fcmp: FloatCompare): ValueInstruction {
+    override fun visit(fcmp: FloatCompare): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(fcmp.first())
         val second = mapUsage<Value>(fcmp.second())
 
-        return bb.fcmp(first, fcmp.predicate(), second)
+        return FloatCompare.fcmp(first, fcmp.predicate(), second)
     }
 
-    override fun visit(load: Load): ValueInstruction {
+    override fun visit(load: Load): InstBuilder<Instruction> {
         val pointer = mapUsage<Value>(load.operand())
-        return bb.load(load.type(), pointer)
+        return Load.load(load.type(), pointer)
     }
 
-    override fun visit(phi: Phi): ValueInstruction {
-        val newUsages = arrayListOf<Value>()
-        phi.operands {
-            newUsages.add(it)
-        }
+    override fun visit(phi: Phi): InstBuilder<Instruction> {
+        val newUsages = arrayFrom(phi.operands()) { it -> it }
         val newIncoming = phi.incoming().mapTo(arrayListOf()) { mapBlock(it) } //TODO
-
-        return bb.uncompletedPhi(newUsages, newIncoming) //TODO
+        return Phi.phi(newIncoming, newUsages) //TODO
     }
 
-    override fun visit(returnValue: ReturnValue): ValueInstruction? {
+    override fun visit(returnValue: ReturnValue): InstBuilder<Instruction> {
         val value = arrayFrom(mapOperands(returnValue))
-        bb.ret(returnValue.type(), value)
-        return null
+        return ReturnValue.ret(returnValue.type(), value)
     }
 
-    override fun visit(returnVoid: ReturnVoid): ValueInstruction? {
-        bb.retVoid()
-        return null
+    override fun visit(returnVoid: ReturnVoid): InstBuilder<Instruction> {
+        return ReturnVoid.ret()
     }
 
-    override fun visit(indirectionCall: IndirectionCall): LocalValue {
+    override fun visit(indirectionCall: IndirectionCall): InstBuilder<Instruction> {
         val newUsages = mapArguments(indirectionCall)
         val pointer   = mapUsage<Value>(indirectionCall.pointer())
         val target    = mapBlock(indirectionCall.target())
 
-        return bb.icall(pointer, indirectionCall.prototype(), newUsages, cloneAttributes(indirectionCall), target)
+        return IndirectionCall.call(pointer, indirectionCall.prototype(), newUsages, cloneAttributes(indirectionCall), target)
     }
 
-    override fun visit(indirectionVoidCall: IndirectionVoidCall): ValueInstruction? {
+    override fun visit(indirectionVoidCall: IndirectionVoidCall): InstBuilder<Instruction> {
         val newUsages = mapArguments(indirectionVoidCall)
         val pointer   = mapUsage<Value>(indirectionVoidCall.pointer())
         val target    = mapBlock(indirectionVoidCall.target())
 
-        bb.ivcall(pointer, indirectionVoidCall.prototype(), newUsages, cloneAttributes(indirectionVoidCall), target)
-        return null
+        return IndirectionVoidCall.call(pointer, indirectionVoidCall.prototype(), newUsages, cloneAttributes(indirectionVoidCall), target)
     }
 
-    override fun visit(select: Select): ValueInstruction {
+    override fun visit(select: Select): InstBuilder<Instruction> {
         val condition = mapUsage<Value>(select.condition())
         val onTrue    = mapUsage<Value>(select.onTrue())
         val onFalse   = mapUsage<Value>(select.onFalse())
 
-        return bb.select(condition, select.type(), onTrue, onFalse)
+        return Select.select(condition, select.type(), onTrue, onFalse)
     }
 
-    override fun visit(store: Store): ValueInstruction? {
+    override fun visit(store: Store): InstBuilder<Instruction> {
         val pointer = mapUsage<Value>(store.pointer())
         val value   = mapUsage<Value>(store.value())
 
-        bb.store(pointer, value)
-        return null
+        return Store.store(pointer, value)
     }
 
-    override fun visit(upStackFrame: UpStackFrame): ValueInstruction? {
-        bb.upStackFrame(upStackFrame.call())
-        return null
+    override fun visit(upStackFrame: UpStackFrame): InstBuilder<Instruction> {
+        return UpStackFrame.usf(upStackFrame.call())
     }
 
-    override fun visit(voidCall: VoidCall): ValueInstruction? {
+    override fun visit(voidCall: VoidCall): InstBuilder<Instruction> {
         val newUsages = mapArguments(voidCall)
         val target    = mapBlock(voidCall.target())
-        bb.vcall(voidCall.prototype(), newUsages, cloneAttributes(voidCall), target)
-        return null
+        return VoidCall.call(voidCall.prototype(), newUsages, cloneAttributes(voidCall), target)
     }
 
-    override fun visit(int2ptr: Int2Pointer): ValueInstruction {
+    override fun visit(int2ptr: Int2Pointer): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(int2ptr.value())
-        return bb.int2ptr(operand)
+        return Int2Pointer.int2ptr(operand)
     }
 
-    override fun visit(ptr2Int: Pointer2Int): ValueInstruction {
+    override fun visit(ptr2Int: Pointer2Int): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(ptr2Int.value())
-        val ptr2int = Pointer2Int.ptr2int(ptr2Int.type(), operand)
-        return bb.put(ptr2int)
+        return Pointer2Int.ptr2int(operand, ptr2Int.type())
     }
 
-    override fun visit(indexedLoad: IndexedLoad): ValueInstruction {
+    override fun visit(indexedLoad: IndexedLoad): InstBuilder<Instruction> {
         val fromValue = mapUsage<Value>(indexedLoad.origin())
         val toValue   = mapUsage<Value>(indexedLoad.index())
 
-        return bb.indexedLoad(fromValue, indexedLoad.type(), toValue)
+        return IndexedLoad.load(fromValue, indexedLoad.type(), toValue)
     }
 
-    override fun visit(store: StoreOnStack): ValueInstruction? {
+    override fun visit(store: StoreOnStack): InstBuilder<Instruction> {
         val source = mapUsage<Value>(store.source())
         val index  = mapUsage<Value>(store.index())
         val dest   = mapUsage<Value>(store.destination())
 
-        bb.storeOnStack(dest, index, source)
-        return null
+        return StoreOnStack.store(dest, index, source)
     }
 
-    override fun visit(loadst: LoadFromStack): ValueInstruction {
+    override fun visit(loadst: LoadFromStack): InstBuilder<Instruction> {
         val origin = mapUsage<Value>(loadst.origin())
         val index  = mapUsage<Value>(loadst.index())
 
-        return bb.loadFromStack(origin, loadst.type(), index)
+        return LoadFromStack.load(origin, loadst.type(), index)
     }
 
-    override fun visit(leaStack: LeaStack): ValueInstruction {
+    override fun visit(leaStack: LeaStack): InstBuilder<Instruction> {
         val origin = mapUsage<Value>(leaStack.origin())
         val index  = mapUsage<Value>(leaStack.index())
 
-        return bb.leaStack(origin, leaStack.type(), index)
+        return LeaStack.lea(origin, leaStack.type(), index)
     }
 
-    override fun visit(binary: TupleDiv): LocalValue {
+    override fun visit(binary: TupleDiv): InstBuilder<Instruction> {
         val first  = mapUsage<Value>(binary.first())
         val second = mapUsage<Value>(binary.second())
 
-        return bb.tupleDiv(first,  second)
+        return TupleDiv.div(first,  second)
     }
 
-    override fun visit(proj: Projection): LocalValue {
+    override fun visit(proj: Projection): InstBuilder<Instruction> {
         val origin = mapUsage<Value>(proj.tuple())
-        return bb.proj(origin, proj.index())
+        return Projection.proj(origin, proj.index())
     }
 
-    override fun visit(switch: Switch): LocalValue? {
+    override fun visit(switch: Switch): InstBuilder<Instruction> {
         val newValue   = mapUsage<Value>(switch.value())
         val newDefault = mapBlock(switch.default())
-        val newTargets = switch.targets().mapTo(arrayListOf()) { mapBlock(it) }
-        val newTable   = switch.table().mapTo(arrayListOf()) { it }
+        val newTargets = arrayFrom(switch.targets()) { mapBlock(it) }
+        val newTable   = arrayFrom(switch.table()) { it }
 
-        bb.switch(newValue, newDefault, newTable, newTargets)
-        return null
+        return Switch.switch(newValue, newDefault, newTable, newTargets)
     }
 
-    override fun visit(intrinsic: Intrinsic): LocalValue? {
-        val newUsages = arrayListOf<Value>()
-        intrinsic.inputs().forEach {
-            newUsages.add(mapUsage<Value>(it))
-        }
+    override fun visit(intrinsic: Intrinsic): InstBuilder<Instruction> {
+        val newUsages = arrayFrom(intrinsic.inputs()) {it -> mapUsage<Value>(it) }
 
         val target = mapBlock(intrinsic.target())
-        bb.intrinsic(newUsages, intrinsic.implementor, target)
-        return null
+        return Intrinsic.intrinsic(newUsages, intrinsic.implementor, target)
     }
 
-    override fun visit(memcpy: Memcpy): ValueInstruction? {
+    override fun visit(memcpy: Memcpy): InstBuilder<Instruction> {
         val dst = mapUsage<Value>(memcpy.destination())
         val src = mapUsage<Value>(memcpy.source())
 
-        bb.memcpy(dst, src, memcpy.length())
-        return null
+        return Memcpy.memcpy(dst, src, memcpy.length())
     }
 
-    override fun visit(move: MoveByIndex): ValueInstruction? {
+    override fun visit(move: MoveByIndex): InstBuilder<Instruction> {
         val index   = mapUsage<Value>(move.index())
         val toValue = mapUsage<Value>(move.destination())
         val source  = mapUsage<Value>(move.source())
 
-        bb.move(toValue, index, source)
-        return null
+        return MoveByIndex.move(toValue, index, source)
     }
 
     companion object {

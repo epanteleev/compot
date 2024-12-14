@@ -37,7 +37,7 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
         const val SOURCE = 0
         const val NAME = "gfp"
 
-        fun gfp(type: AggregateType, source: Value, index: IntegerConstant): InstBuilder<GetFieldPtr> = {
+        fun gfp(source: Value, type: AggregateType, index: IntegerConstant): InstBuilder<GetFieldPtr> = {
             id: Identity, owner: Block -> make(id, owner, type, source, index)
         }
 

@@ -150,32 +150,32 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
     }
 
     override fun gep(source: Value, elementType: NonTrivialType, index: Value): GetElementPtr {
-        val gep = GetElementPtr.gep(elementType, source, index)
+        val gep = GetElementPtr.gep(source, elementType, index)
         return bb.put(gep)
     }
 
     override fun gfp(source: Value, ty: AggregateType, index: IntegerConstant): GetFieldPtr {
-        val gfp = GetFieldPtr.gfp(ty, source, index)
+        val gfp = GetFieldPtr.gfp(source, ty, index)
         return bb.put(gfp)
     }
 
     override fun flag2int(value: Value, ty: IntegerType): Flag2Int {
-        val flag2Int = Flag2Int.flag2int(ty, value)
+        val flag2Int = Flag2Int.flag2int(value, ty)
         return bb.put(flag2Int)
     }
 
     override fun int2fp(value: Value, ty: FloatingPointType): Int2Float {
-        val int2fp = Int2Float.int2fp(ty, value)
+        val int2fp = Int2Float.int2fp(value, ty)
         return bb.put(int2fp)
     }
 
     override fun uint2fp(value: Value, ty: FloatingPointType): Unsigned2Float {
-        val uint2fp = Unsigned2Float.uint2fp(ty, value)
+        val uint2fp = Unsigned2Float.uint2fp(value, ty)
         return bb.put(uint2fp)
     }
 
     override fun bitcast(value: Value, ty: IntegerType): Bitcast {
-        val bitcast = Bitcast.bitcast(ty, value)
+        val bitcast = Bitcast.bitcast(value, ty)
         return bb.put(bitcast)
     }
 
@@ -200,17 +200,17 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
     }
 
     override fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate {
-        val fptrunc = FpTruncate.fptrunc(toType, value)
+        val fptrunc = FpTruncate.fptrunc(value, toType)
         return bb.put(fptrunc)
     }
 
     override fun fpext(value: Value, toType: FloatingPointType): FpExtend {
-        val fpext = FpExtend.fpext(toType, value)
+        val fpext = FpExtend.fpext(value, toType)
         return bb.put(fpext)
     }
 
     override fun fp2Int(value: Value, toType: IntegerType): Float2Int {
-        val fp2Int = Float2Int.fp2int(toType, value)
+        val fp2Int = Float2Int.fp2int(value, toType)
         return bb.put(fp2Int)
     }
 
@@ -224,7 +224,7 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
     }
 
     override fun ptr2int(value: Value, toType: IntegerType): Pointer2Int {
-        val ptr2int = Pointer2Int.ptr2int(toType, value)
+        val ptr2int = Pointer2Int.ptr2int(value, toType)
         return bb.put(ptr2int)
     }
 
