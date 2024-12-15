@@ -76,4 +76,6 @@ class CFunctionType(val name: String, val functionType: AbstractCFunction): CAgg
         if (functionType.variadic) append(", ...")
         append(")")
     }
+
+    fun asPointer(): CPointer = CPointer(this)
 }

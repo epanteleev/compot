@@ -100,7 +100,12 @@ enum class BinaryOpType {
     },
     SHR {
         override fun toString(): String = ">>"
-    },
+    };
+
+    fun isBoolean(): Boolean = when (this) {
+        OR, AND -> true
+        else -> false
+    }
 }
 
 
@@ -178,6 +183,9 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+        if (opType.isBoolean()) {
+            return@memoize BOOL
+        }
         val leftType  = when (val l = left.resolveType(typeHolder)) {
             is AnyCArrayType -> l.asPointer()
             is CPrimitive    -> l
@@ -209,6 +217,13 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     override fun begin(): Position = cond.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
+    private fun convert(type: CType) = when (type) {
+        is CPrimitive     -> type
+        is CStringLiteral -> type.asPointer()
+        is CFunctionType  -> type.asPointer()
+        else -> throw TypeResolutionException("Conditional true branch with non-primitive type: $type", begin())
+    }
+
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         if (eTrue is StringNode) {
             return@memoize CPointer(CHAR)
@@ -219,17 +234,8 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
             return@memoize VOID
         }
 
-        val cvtTypeTrue = when (typeTrue) {
-            is CPrimitive     -> typeTrue
-            is CStringLiteral -> typeTrue.asPointer()
-            else -> throw TypeResolutionException("Conditional true branch with non-primitive type: $typeTrue", begin())
-        }
-
-        val cvtTypeFalse = when (typeFalse) {
-            is CPrimitive     -> typeFalse
-            is CStringLiteral -> typeFalse.asPointer()
-            else -> throw TypeResolutionException("Conditional false branch with non-primitive type: $typeFalse", begin())
-        }
+        val cvtTypeTrue  = convert(typeTrue)
+        val cvtTypeFalse = convert(typeFalse)
 
         val resultType = cvtTypeTrue.interfere(typeHolder, cvtTypeFalse) ?:
             throw TypeResolutionException("Conditional with incompatible types: $cvtTypeTrue and $cvtTypeFalse: '${LineAgnosticAstPrinter.print(this)}'", begin())

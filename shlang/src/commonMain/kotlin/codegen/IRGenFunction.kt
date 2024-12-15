@@ -361,7 +361,20 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         return ir.phi(listOf(convertedRight, convertedLeft), listOf(trueBBCurrent, falseBBCurrent))
     }
 
-    private fun visitConditional(conditional: Conditional): Value {
+    private fun generateSelectPattern(conditional: Conditional, commonType: IntegerType): Value {
+        val onTrue = constEvalExpression0(conditional.eTrue) ?:
+        return generateIfElsePattern(commonType, conditional)
+
+        val onFalse = constEvalExpression0(conditional.eFalse) ?:
+        return generateIfElsePattern(commonType, conditional)
+
+        val onTrueConstant  = IntegerConstant.of(commonType, onTrue)
+        val onFalseConstant = IntegerConstant.of(commonType, onFalse)
+        val condition = makeConditionFromExpression(conditional.cond)
+        return ir.select(condition, commonType, onTrueConstant, onFalseConstant)
+    }
+
+    private fun visitConditional(conditional: Conditional): Value =
         when (val commonType = mb.toIRType<Type>(typeHolder, conditional.resolveType(typeHolder))) {
             VoidType -> {
                 val condition = makeConditionFromExpression(conditional.cond)
@@ -379,24 +392,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.branch(exitBlock)
 
                 ir.switchLabel(exitBlock)
-                return UndefValue
+                UndefValue
             }
-            is IntegerType -> { // TODO: pointer type also can be here
-                val onTrue = constEvalExpression0(conditional.eTrue) ?:
-                    return generateIfElsePattern(commonType, conditional)
-
-                val onFalse = constEvalExpression0(conditional.eFalse) ?:
-                    return generateIfElsePattern(commonType, conditional)
-
-                val onTrueConstant  = IntegerConstant.of(commonType, onTrue)
-                val onFalseConstant = IntegerConstant.of(commonType, onFalse)
-                val condition = makeConditionFromExpression(conditional.cond)
-                return ir.select(condition, commonType, onTrueConstant, onFalseConstant)
-            }
-            is NonTrivialType -> return generateIfElsePattern(commonType, conditional)
-            is FlagType, is TupleType -> throw IRCodeGenError("Unsupported type: $commonType", conditional.begin())
+            is IntegerType    -> generateSelectPattern(conditional, commonType)
+            is NonTrivialType -> generateIfElsePattern(commonType, conditional)
+            is FlagType       -> generateSelectPattern(conditional, U8Type)
+            is TupleType      -> throw IRCodeGenError("Unsupported type: $commonType", conditional.begin())
         }
-    }
 
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
         val struct   = visitExpression(arrowMemberAccess.primary, true)
@@ -508,10 +510,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'", Position.UNKNOWN) //TODO correct position
         }
         return when (expr.type()) {
-            F32Type          -> ir.convertToType(expr, F64Type)
+            F32Type         -> ir.convertToType(expr, F64Type)
             I8Type, I16Type -> ir.convertToType(expr, I32Type)
-            U8Type, U16Type   -> ir.convertToType(expr, U32Type)
-            FlagType          -> ir.convertToType(expr, I32Type)
+            U8Type, U16Type -> ir.convertToType(expr, U32Type)
+            FlagType        -> ir.convertToType(expr, I32Type)
             else -> expr
         }
     }
@@ -699,42 +701,42 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun eq(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Eq
         is FloatingPointType -> FloatPredicate.Oeq
-        is PtrType       -> IntPredicate.Eq
+        is PtrType           -> IntPredicate.Eq
         is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
     private fun ne(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Ne
         is FloatingPointType -> FloatPredicate.One
-        is PtrType       -> IntPredicate.Ne
+        is PtrType           -> IntPredicate.Ne
         is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
     private fun gt(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Gt
         is FloatingPointType -> FloatPredicate.Ogt
-        is PtrType       -> IntPredicate.Gt
+        is PtrType           -> IntPredicate.Gt
         is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
     private fun lt(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Lt
         is FloatingPointType -> FloatPredicate.Olt
-        is PtrType       -> IntPredicate.Lt
+        is PtrType           -> IntPredicate.Lt
         is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
     private fun le(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Le
         is FloatingPointType -> FloatPredicate.Ole
-        is PtrType       -> IntPredicate.Le
+        is PtrType           -> IntPredicate.Le
         is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
     private fun ge(type: PrimitiveType): AnyPredicateType = when (type) {
         is IntegerType       -> IntPredicate.Ge
         is FloatingPointType -> FloatPredicate.Oge
-        is PtrType       -> IntPredicate.Ge
+        is PtrType           -> IntPredicate.Ge
         is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 

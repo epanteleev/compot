@@ -16,9 +16,8 @@ class CommonConstEvalContext<T: Number>(val typeHolder: TypeHolder, val enumerat
         return null
     }
 
-    override fun callFunction(name: CToken, args: List<T>): T {
-        val error = InvalidToken("Cannot consteval expression: found function", name)
-        throw ParserException(error)
+    override fun callFunction(name: CToken, args: List<T>): T? {
+        return null
     }
 
     override fun typeHolder(): TypeHolder {
