@@ -56,11 +56,9 @@ data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam() 
             return TypeDesc.from(CUncompletedArrayType(typeDesc))
         }
 
-        val ctx = CommonConstEvalContext<Long>(typeHolder)
+        val ctx = ArraySizeConstEvalContext(typeHolder)
         val size = ConstEvalExpression.eval(constexpr, TryConstEvalExpressionLong(ctx))
-        if (size == null) {
-            return TypeDesc.from(CUncompletedArrayType(typeDesc))
-        }
+            ?: return TypeDesc.from(CUncompletedArrayType(typeDesc))
         return TypeDesc.from(CArrayType(typeDesc, size))
     }
 }

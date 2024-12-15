@@ -6,6 +6,7 @@ import ir.types.ArithmeticType
 import ir.types.Type
 import ir.value.Value
 
+
 class Sub private constructor(id: Identity, owner: Block, tp: ArithmeticType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {
     override fun dump(): String = "%${name()} = $NAME $tp ${lhs()}, ${rhs()}"
 

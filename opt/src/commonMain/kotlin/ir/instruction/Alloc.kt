@@ -1,8 +1,8 @@
 package ir.instruction
 
 import ir.types.*
-import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Alloc private constructor(id: Identity, owner: Block, val allocatedType: NonTrivialType):

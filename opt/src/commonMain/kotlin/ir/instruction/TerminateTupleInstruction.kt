@@ -1,11 +1,8 @@
 package ir.instruction
 
+import ir.types.*
+import ir.value.*
 import ir.module.block.Block
-import ir.types.TrivialType
-import ir.types.TupleType
-import ir.value.LocalValue
-import ir.value.TupleValue
-import ir.value.Value
 
 
 sealed class TerminateTupleInstruction(id: Identity,

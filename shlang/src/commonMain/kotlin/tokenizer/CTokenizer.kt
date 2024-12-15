@@ -282,6 +282,12 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
 
+            if (reader.check("\\\r\n")) { //todo normalize strings
+                eat(3)
+                incrementLine()
+                continue
+            }
+
             if (reader.check('\n')) {
                 eat()
                 incrementLine()

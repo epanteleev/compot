@@ -7,7 +7,6 @@ import common.assertion
 import ir.attributes.FunctionAttribute
 import ir.value.TupleValue
 import ir.module.block.Block
-import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.DirectFunctionPrototype
 
