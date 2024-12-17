@@ -18,14 +18,12 @@ sealed class GCCTorture : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun test_20011123_1() {
         val result = runCTest("shlang/gcc-c-torture/ieee/20011123-1", listOf(), options())
         assertEquals(0, result.exitCode)
     }
 
     @Test
-    @Ignore
     fun test_acc1() {
         val result = runCTest("shlang/gcc-c-torture/ieee/acc1", listOf(), options())
         assertEquals(0, result.exitCode)

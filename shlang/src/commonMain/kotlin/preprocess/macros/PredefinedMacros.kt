@@ -36,7 +36,7 @@ class PredefinedMacros(name: String, private val callback: (Position) -> TokenLi
             throw PreprocessorException("Predefined macro '$name' is not a number")
         }
 
-        return token.toNumberOrNull() as Long
+        return token.toNumberOrNull().toLong()
     }
 
     override fun hashCode(): Int {

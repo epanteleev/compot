@@ -34,12 +34,37 @@ class StringReader(val str: String, var pos: Int = 0) {
         return ch.isLetter() || ch == '_'
     }
 
+    fun isOneFrom(vararg char: Char): Boolean {
+        if (eof) {
+            return false
+        }
+        val ch = peek()
+        return char.contains(ch)
+    }
+
+    fun isOneFrom(offset: Int, vararg char: Char): Boolean {
+        if (eof(offset)) {
+            return false
+        }
+        val ch = peekOffset(offset)
+        return char.contains(ch)
+    }
+
     fun isHexDigit(): Boolean {
         if (eof) {
             return false
         }
         val ch = peek()
         return ch.isDigit() || (ch in 'a'..'f') || (ch in 'A'..'F')
+    }
+
+    fun isDigit(offset: Int = 0): Boolean {
+        if (eof(offset)) {
+            return false
+        }
+
+        val ch = peekOffset(offset)
+        return ch.isDigit()
     }
 
     private fun isSpace(offset: Int): Boolean {

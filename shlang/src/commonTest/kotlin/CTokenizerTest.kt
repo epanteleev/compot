@@ -97,7 +97,7 @@ class CTokenizerTest {
         val input = "0x88"
         val tokens = CTokenizer.apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
-        tokens[0].isEqual(1, 1, "88") //TODO print hex??
+        tokens[0].isEqual(1, 1, "0x88") //TODO print hex??
     }
 
     @Test
@@ -112,7 +112,7 @@ class CTokenizerTest {
         val input = "0x88ull"
         val tokens = CTokenizer.apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
-        tokens[0].isEqual(1, 1, "88ull")
+        tokens[0].isEqual(1, 1, "0x88ull")
     }
 
     @Test
@@ -120,7 +120,7 @@ class CTokenizerTest {
         val input = "0xff"
         val tokens = CTokenizer.apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
-        tokens[0].isEqual(1, 1, "ff")
+        tokens[0].isEqual(1, 1, "0xff")
         val tok = tokens[0] as PPNumber
         assertEquals(255, tok.toNumberOrNull())
     }
@@ -167,7 +167,7 @@ class CTokenizerTest {
         val input = "0xffff000000000000LL"
         val tokens = CTokenizer.apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
-        tokens[0].isEqual(1, 1, "ffff000000000000LL")
+        tokens[0].isEqual(1, 1, "0xffff000000000000LL")
         val num = tokens[0] as PPNumber
         assertEquals("FFFF000000000000".toULong(16).toLong(), num.toNumberOrNull())
     }
@@ -201,7 +201,7 @@ class CTokenizerTest {
         val input = "0b101010"
         val tokens = CTokenizer.apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
-        tokens[0].isEqual(1, 1, "101010")
+        tokens[0].isEqual(1, 1, "0b101010")
         val num = tokens[0] as PPNumber
         assertEquals("42".toByte(), num.toNumberOrNull())
     }

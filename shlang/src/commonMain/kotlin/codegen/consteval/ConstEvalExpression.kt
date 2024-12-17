@@ -150,7 +150,7 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(numNode: NumNode): Int {
-        val number = numNode.number.toNumberOrNull() ?: throw ConstEvalException("Cannot evaluate number ${numNode.number}")
+        val number = numNode.number.toNumberOrNull()
         return number.toInt()
     }
 
@@ -302,7 +302,7 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
     }
 
     override fun visit(numNode: NumNode): Long? {
-        val num = numNode.number.toNumberOrNull() ?: return null
+        val num = numNode.number.toNumberOrNull()
         return num.toLong()
     }
 

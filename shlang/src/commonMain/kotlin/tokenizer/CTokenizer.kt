@@ -6,6 +6,7 @@ import tokenizer.LexicalElements.isOperator2
 import tokenizer.LexicalElements.isOperator3
 import tokenizer.StringReader.Companion.isSeparator
 import tokenizer.StringReader.Companion.tryPunct
+import kotlin.math.pow
 
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
@@ -134,46 +135,64 @@ class CTokenizer private constructor(private val filename: String, private val r
         return ch
     }
 
-    private fun tryGetSuffix(start: Int): String? {
+    private fun tryGetIntegerSuffix(reader: StringReader, start: Int): String? {
         if (reader.check("LLU") || reader.check("llu")) {
-            eat(3)
+            reader.read(3)
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("ULL") || reader.check("ull")) {
-            eat(3)
+            reader.read(3)
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("ll") || reader.check("LL")) {
-            eat(2)
+            reader.read(2)
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("LU") || reader.check("lu")) {
-            eat(2)
+            reader.read(2)
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("UL") || reader.check("ul")) {
-            eat(2)
+            reader.read(2)
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("U") || reader.check("u")) {
-            eat()
+            reader.read()
             return reader.str.substring(start, reader.pos)
         } else if (reader.check("L") || reader.check("l")) {
-            eat()
-            return reader.str.substring(start, reader.pos)
-        } else if (reader.check("F") || reader.check("f")) {
-            eat()
-            return reader.str.substring(start, reader.pos)
-        } else if (reader.check("D") || reader.check("d")) {
-            eat()
+            reader.read()
             return reader.str.substring(start, reader.pos)
         }
         return null
     }
 
-    private inline fun <T> tryRead(callback: () -> T?): T? {
-        val old = reader.pos
-        val result = callback()
-        if (result == null) {
-            reader.pos = old
+    private fun tryGetFPSuffix(reader: StringReader, start: Int, end: Int): String? {
+        if (reader.check("F") || reader.check("f")) {
+            reader.read()
+            return reader.str.substring(start, end)
+        } else if (reader.check("D") || reader.check("d")) {
+            reader.read()
+            return reader.str.substring(start, end)
         }
-        return result
+        return null
     }
+
+    private fun tryGetSuffix0(data: String, radix: Int): Number? = when {
+        data.endsWith("ULL") -> data.substring(0, data.length - 3).toULongOrNull(radix)?.toLong()
+        data.endsWith("ull") -> data.substring(0, data.length - 3).toULongOrNull(radix)?.toLong()
+        data.endsWith("LL")  -> data.substring(0, data.length - 2).toULongOrNull(radix)?.toLong()
+        data.endsWith("ll")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
+        data.endsWith("LL")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
+        data.endsWith("ll")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
+        data.endsWith("UL")  -> data.substring(0, data.length - 2).toULongOrNull(radix)?.toLong()
+        data.endsWith("ul")  -> data.substring(0, data.length - 2).toULongOrNull(radix)?.toLong()
+        data.endsWith("L")   -> data.substring(0, data.length - 1).toULongOrNull(radix)?.toLong()
+        data.endsWith("l")   -> data.substring(0, data.length - 1).toLongOrNull(radix)
+        data.endsWith("U")   -> data.substring(0, data.length - 1).toULongOrNull(radix)?.toLong()
+        data.endsWith("u")   -> data.substring(0, data.length - 1).toULongOrNull(radix)?.toLong()
+        else -> toNumberDefault(data, radix)
+    }
+
+    private fun toNumberDefault(data: String, radix: Int): Number? = data.toByteOrNull(radix)
+        ?: data.toIntOrNull(radix)
+        ?: data.toLongOrNull(radix)
+        ?: data.toULongOrNull(radix)?.toLong()
+        ?: data.toDoubleOrNull()
 
     private fun readHexChar(): Char {
         eat()
@@ -185,52 +204,91 @@ class CTokenizer private constructor(private val filename: String, private val r
         return c.toChar()
     }
 
-    private fun readPPNumber(): Pair<String, Int>? = tryRead {
+    private fun tryParseExp(reader: StringReader): Long? {
+        if (reader.check('e') || reader.check('E')) {
+            reader.read()
+            if (reader.check('+') || reader.check('-')) {
+                reader.read()
+            }
+            val start = reader.pos
+            while (reader.isDigit()) {
+                reader.read()
+            }
+            val exp = reader.str.substring(start, reader.pos)
+            return exp.toLongOrNull()
+        }
+        return null
+    }
+
+    private fun tryParsePower(reader: StringReader): Long? {
+        if (reader.check('p') || reader.check('P')) {
+            reader.read()
+            if (reader.check('+') || reader.check('-')) {
+                reader.read()
+            }
+            val start = reader.pos
+            while (reader.isDigit()) {
+                reader.read()
+            }
+            val exp = reader.str.substring(start, reader.pos)
+            return exp.toLongOrNull()
+        }
+        return null
+    }
+
+    private fun readPPNumber(string: String): Number? {
+        val reader = StringReader(string)
         var base = 10
         if (reader.check("0x") || reader.check("0X")) {
-            eat(2)
+            reader.read(2)
             base = 16
         } else if (reader.check("0b") || reader.check("0B")) {
             reader.read(2)
             base = 2
-        } else if (reader.check("0") && reader.peekOffset(1).isDigit()) {
-            eat()
+        } else if (reader.check("0") && reader.isDigit(1)) {
+            reader.read()
             base = 8
         }
         val start = reader.pos
 
         do {
-            eat()
-            if (reader.eof) {
-                return@tryRead Pair(reader.str.substring(start, reader.pos), base)
-            }
+            reader.read()
         } while (reader.isHexDigit())
+
+        if (reader.eof) {
+            return toNumberDefault(reader.str.substring(start, reader.pos), base)
+        }
 
         if (reader.check('.')) {
             //Floating point value
-            eat()
-            while (!reader.eof && !isSeparator(reader.peek())) {
-                eat()
+            reader.read()
+            while (!reader.eof && reader.isDigit()) {
+                reader.read()
             }
-            val result = tryGetSuffix(start) ?: reader.str.substring(start, reader.pos)
-            return@tryRead Pair(result, base)
-        }
-        if (!reader.isLetter()) {
-            // Integer
-            val result = tryGetSuffix(start) ?: reader.str.substring(start, reader.pos)
-            return@tryRead Pair(result, base)
+            val end = reader.pos
+
+            val exponent = tryParseExp(reader)
+            val result = tryGetFPSuffix(reader, start, end) ?: reader.str.substring(start, reader.pos)
+            val fp = result.toDoubleOrNull() ?: return null //TODO return null is problem
+            if (exponent != null) {
+                return exponent + fp
+            }
+
+            return fp
         }
 
-        val postfix = tryGetSuffix(start)
-        if (postfix != null) {
-            return@tryRead Pair(postfix, base)
+        val power = tryParsePower(reader)
+        val postfix = tryGetIntegerSuffix(reader, start)?: tryGetFPSuffix(reader, start, reader.pos) ?: return null
+        val num = tryGetSuffix0(postfix, base) ?: return null
+        if (power != null) {
+            return num.toDouble() * 2.0.pow(power.toDouble())
         }
-        return@tryRead null
+        return num
     }
 
     private fun readIdentifier(): String {
         val startPos = reader.pos
-        while (!reader.eof && (reader.isLetter() || reader.peek().isDigit())) {
+        while (!reader.eof && (reader.isLetter() || reader.isDigit())) {
             eat()
         }
         return reader.str.substring(startPos, reader.pos)
@@ -338,12 +396,37 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
 
             // Numbers
-            if (reader.peek().isDigit() || (reader.check('.') && reader.peekOffset(1).isDigit())) {
+            if (reader.isDigit() || ((reader.check('.') && reader.isDigit(1)))) {
                 val saved = position
-                val v = reader.peek()
-                val pair = readPPNumber() ?: error("Unknown symbol: '$v' in '$filename' at $line:$position")
+                val numberStringBuilder = StringBuilder()
+                numberStringBuilder.append(eat())
 
-                append(PPNumber(pair.first, pair.second, OriginalPosition(line, saved, filename)))
+                while (true) {
+                    if (reader.isDigit()) {
+                        numberStringBuilder.append(eat())
+                    } else if (reader.isOneFrom('e', 'E') && reader.isOneFrom(1, '+', '-')) {
+                        numberStringBuilder.append(eat())
+                        numberStringBuilder.append(eat())
+                    } else if (reader.isOneFrom('p', 'P') && reader.isOneFrom(1, '+', '-')) {
+                        numberStringBuilder.append(eat())
+                        numberStringBuilder.append(eat())
+                    } else if (reader.check('.')) {
+                        numberStringBuilder.append(eat())
+                    } else if (reader.isLetter()) {
+                        numberStringBuilder.append(eat())
+                    } else {
+                        break
+                    }
+                }
+
+                val numberString = numberStringBuilder.toString()
+                val pair = readPPNumber(numberString)
+                if (pair == null) {
+                    append(Identifier(numberString, OriginalPosition(line, saved, filename)))
+                    continue
+                }
+
+                append(PPNumber(numberString, pair, OriginalPosition(line, saved, filename)))
                 continue
             }
 
