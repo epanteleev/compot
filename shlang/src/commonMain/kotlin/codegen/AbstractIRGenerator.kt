@@ -28,12 +28,16 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             is StructType -> constEvalInitializers(lValueType, expr)
             else -> throw IRCodeGenError("Unsupported initializer list size ${expr.initializers.size}", expr.begin())
         }
-        is UnaryOp -> when (expr.opType) {
-            is PrefixUnaryOpType -> when (expr.opType) {
-                PrefixUnaryOpType.ADDRESS -> staticAddressOf(expr.primary) ?: defaultContEval(lValueType, expr)
-                else -> defaultContEval(lValueType, expr)
+        is UnaryOp -> {
+            if (expr.opType == PrefixUnaryOpType.ADDRESS) {
+                val nonTrivialType = expr.primary.resolveType(typeHolder)
+                val irType         = mb.toIRType<NonTrivialType>(typeHolder, nonTrivialType)
+
+                staticAddressOf(expr.primary) ?: constEvalExpression(irType, expr.primary)
+                    ?: throw IRCodeGenError("cannon evaluate", expr.primary.begin())
+            } else {
+                defaultContEval(lValueType, expr)
             }
-            else -> defaultContEval(lValueType, expr)
         }
         is SingleInitializer -> constEvalExpression(lValueType, expr.expr)
         is StringNode        -> when (lValueType) {
@@ -52,12 +56,42 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 defaultContEval(lValueType, expr)
             }
         }
-        is VarNode -> when(expr.resolveType(typeHolder)) {
-            is CPointer, is CStringLiteral -> {
+        is VarNode -> when (expr.resolveType(typeHolder)) {
+            is CAggregateType -> {
                 val value = getRValueVariable(expr)
                 PointerLiteral.of(value.asValue())
             }
             else -> defaultContEval(lValueType, expr)
+        }
+        is CompoundLiteral -> {
+            val varDesc = expr.typeName.specifyType(typeHolder, listOf())
+            val cType = varDesc.type.cType()
+            val typenameType = mb.toIRType<AggregateType>(typeHolder, cType)
+            val constant = constEvalExpression(typenameType, expr.initializerList) as InitializerListValue
+            val gConstant = when (cType) {
+                is CArrayType -> {
+                    ArrayGlobalConstant(createGlobalConstantName(), constant)
+                }
+                is CStructType -> {
+                    StructGlobalConstant(createGlobalConstantName(), constant)
+                }
+                else -> throw IRCodeGenError("Unsupported type '$cType', expr='${LineAgnosticAstPrinter.print(expr)}'", expr.begin())
+            }
+            PointerLiteral.of(mb.addConstant(gConstant))
+        }
+        is ArrayAccess -> {
+            val indexType = expr.expr.resolveType(typeHolder)
+            val irType = mb.toIRType<IntegerType>(typeHolder, indexType)
+            val index = constEvalExpression(irType, expr.expr) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
+
+            val primaryCType = expr.primary.resolveType(typeHolder)
+            val primaryIrType = mb.toIRType<NonTrivialType>(typeHolder, primaryCType)
+
+            val array = constEvalExpression(primaryIrType, expr.primary)
+            array as PointerLiteral
+            val gConstant = array.gConstant as GlobalValue
+            index as IntegerConstant
+            PointerLiteral.of(gConstant, index.toInt())
         }
         else -> defaultContEval(lValueType, expr)
     }
@@ -94,56 +128,6 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return NonTrivialConstant.of(lValueType, result)
     }
 
-    private fun staticInitializer(expr: Expression): NonTrivialConstant = when (expr) {
-        is UnaryOp -> {
-            val operand = staticInitializer(expr.primary)
-            when (expr.opType) {
-                is PrefixUnaryOpType -> when (expr.opType) {
-                    PrefixUnaryOpType.ADDRESS -> operand
-                    else -> throw IRCodeGenError("Unsupported unary operator ${expr.opType}", expr.begin())
-                }
-                else -> throw IRCodeGenError("Unsupported unary operator ${expr.opType}", expr.begin())
-            }
-        }
-        is CompoundLiteral -> {
-            val varDesc = expr.typeName.specifyType(typeHolder, listOf())
-            val cType = varDesc.type.cType()
-            val lValueType = mb.toIRType<AggregateType>(typeHolder,cType)
-            val constant = constEvalExpression(lValueType, expr.initializerList) as InitializerListValue
-            val gConstant = when (cType) {
-                is CArrayType -> {
-                    ArrayGlobalConstant(createGlobalConstantName(), constant)
-                }
-                is CStructType -> {
-                    StructGlobalConstant(createGlobalConstantName(), constant)
-                }
-                else -> throw IRCodeGenError("Unsupported type '$cType', expr='${LineAgnosticAstPrinter.print(expr)}'", expr.begin())
-            }
-            PointerLiteral.of(mb.addConstant(gConstant))
-        }
-        is ArrayAccess -> {
-            val indexType = expr.expr.resolveType(typeHolder)
-            val irType = mb.toIRType<IntegerType>(typeHolder, indexType)
-            val index = constEvalExpression(irType, expr.expr) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
-            val array = staticInitializer(expr.primary)
-            array as PointerLiteral
-            val gConstant = array.gConstant as GlobalValue
-            index as IntegerConstant
-            PointerLiteral.of(gConstant, index.toInt())
-        }
-        is VarNode -> {
-            val value = getRValueVariable(expr)
-            PointerLiteral.of(value.asValue())
-        }
-        is Cast -> {
-            val toTypeCast = expr.typeName.specifyType(typeHolder, listOf())
-            val lValueType = mb.toIRType<NonTrivialType>(typeHolder, toTypeCast.cType())
-            constEvalExpression(lValueType, expr.cast) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
-        }
-        is NumNode -> makeConstant(expr)
-        else -> TODO()
-    }
-
     private fun toIrAttribute(storageClass: StorageClass?): GlobalValueAttribute? = when (storageClass) {
         StorageClass.STATIC -> GlobalValueAttribute.INTERNAL
         StorageClass.EXTERN -> null
@@ -157,7 +141,9 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         assertion(cType.storageClass != StorageClass.EXTERN) { "invariant: cType=$cType" }
         val attr = toIrAttribute(cType.storageClass)!!
 
-        val constEvalResult = constEvalExpression(lValueType, declarator.rvalue) ?: staticInitializer(declarator.rvalue)
+        val constEvalResult = constEvalExpression(lValueType, declarator.rvalue)
+            ?: throw IRCodeGenError("Cannon evaluate expression", declarator.rvalue.begin())
+
         when (constEvalResult) {
             is PointerLiteral -> when (lValueType) {
                 is ArrayType, is PtrType -> {
