@@ -11,7 +11,6 @@ sealed class GCCTorture : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun test_20010226_1() {
         val result = runCTest("shlang/gcc-c-torture/ieee/20010226-1", listOf(), options())
         assertEquals(0, result.exitCode)

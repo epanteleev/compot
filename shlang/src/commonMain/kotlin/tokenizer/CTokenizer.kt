@@ -135,57 +135,41 @@ class CTokenizer private constructor(private val filename: String, private val r
         return ch
     }
 
-    private fun tryGetIntegerSuffix(reader: StringReader, start: Int): String? {
+    private fun tryGetIntegerSuffix(reader: StringReader, radix: Int, start: Int, end: Int): Number? {
         if (reader.check("LLU") || reader.check("llu")) {
             reader.read(3)
-            return reader.str.substring(start, reader.pos)
+            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
         } else if (reader.check("ULL") || reader.check("ull")) {
             reader.read(3)
-            return reader.str.substring(start, reader.pos)
+            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
         } else if (reader.check("ll") || reader.check("LL")) {
             reader.read(2)
-            return reader.str.substring(start, reader.pos)
+            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
         } else if (reader.check("LU") || reader.check("lu")) {
             reader.read(2)
-            return reader.str.substring(start, reader.pos)
+            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
         } else if (reader.check("UL") || reader.check("ul")) {
             reader.read(2)
-            return reader.str.substring(start, reader.pos)
+            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
         } else if (reader.check("U") || reader.check("u")) {
             reader.read()
-            return reader.str.substring(start, reader.pos)
+            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
         } else if (reader.check("L") || reader.check("l")) {
             reader.read()
-            return reader.str.substring(start, reader.pos)
+            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
         }
-        return null
+        return reader.str.substring(start, end).toInt()
     }
 
-    private fun tryGetFPSuffix(reader: StringReader, start: Int, end: Int): String? {
+    private fun tryGetFPSuffix(reader: StringReader, start: Int, end: Int): Double? {
         if (reader.check("F") || reader.check("f")) {
             reader.read()
-            return reader.str.substring(start, end)
+            return reader.str.substring(start, end).toDoubleOrNull()
         } else if (reader.check("D") || reader.check("d")) {
             reader.read()
-            return reader.str.substring(start, end)
+            return reader.str.substring(start, end).toDoubleOrNull()
         }
-        return null
-    }
-
-    private fun tryGetSuffix0(data: String, radix: Int): Number? = when {
-        data.endsWith("ULL") -> data.substring(0, data.length - 3).toULongOrNull(radix)?.toLong()
-        data.endsWith("ull") -> data.substring(0, data.length - 3).toULongOrNull(radix)?.toLong()
-        data.endsWith("LL")  -> data.substring(0, data.length - 2).toULongOrNull(radix)?.toLong()
-        data.endsWith("ll")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
-        data.endsWith("LL")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
-        data.endsWith("ll")  -> data.substring(0, data.length - 2).toLongOrNull(radix)
-        data.endsWith("UL")  -> data.substring(0, data.length - 2).toULongOrNull(radix)?.toLong()
-        data.endsWith("ul")  -> data.substring(0, data.length - 2).toULongOrNull(radix)?.toLong()
-        data.endsWith("L")   -> data.substring(0, data.length - 1).toULongOrNull(radix)?.toLong()
-        data.endsWith("l")   -> data.substring(0, data.length - 1).toLongOrNull(radix)
-        data.endsWith("U")   -> data.substring(0, data.length - 1).toULongOrNull(radix)?.toLong()
-        data.endsWith("u")   -> data.substring(0, data.length - 1).toULongOrNull(radix)?.toLong()
-        else -> toNumberDefault(data, radix)
+        return reader.str.substring(start, end).toDoubleOrNull()
     }
 
     private fun toNumberDefault(data: String, radix: Int): Number? = data.toByteOrNull(radix)
@@ -268,8 +252,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             val end = reader.pos
 
             val exponent = tryParseExp(reader)
-            val result = tryGetFPSuffix(reader, start, end) ?: reader.str.substring(start, reader.pos)
-            val fp = result.toDoubleOrNull() ?: return null //TODO return null is problem
+            val fp = tryGetFPSuffix(reader, start, end) ?: return null //TODO return null is problem
             if (exponent != null) {
                 return exponent + fp
             }
@@ -277,9 +260,9 @@ class CTokenizer private constructor(private val filename: String, private val r
             return fp
         }
 
+        val end = reader.pos
         val power = tryParsePower(reader)
-        val postfix = tryGetIntegerSuffix(reader, start)?: tryGetFPSuffix(reader, start, reader.pos) ?: return null
-        val num = tryGetSuffix0(postfix, base) ?: return null
+        val num = tryGetIntegerSuffix(reader, base, start, end)?: tryGetFPSuffix(reader, start, reader.pos) ?: return null
         if (power != null) {
             return num.toDouble() * 2.0.pow(power.toDouble())
         }
