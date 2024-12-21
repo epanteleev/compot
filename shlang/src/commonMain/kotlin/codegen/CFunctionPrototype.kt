@@ -14,7 +14,7 @@ import tokenizer.Position
 import typedesc.StorageClass
 
 
-class CFunctionPrototype(val returnType: Type, val argumentTypes: List<NonTrivialType>, val attributes: Set<FunctionAttribute>)
+internal class CFunctionPrototype(val returnType: Type, val argumentTypes: List<NonTrivialType>, val attributes: Set<FunctionAttribute>)
 
 internal class CFunctionPrototypeBuilder(val begin: Position, private val functionType: AnyCFunctionType, private val mb: ModuleBuilder, val typeHolder: TypeHolder, val storageClass: StorageClass?) {
     private val returnType = irReturnType()

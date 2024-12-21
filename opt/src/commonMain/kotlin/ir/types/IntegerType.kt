@@ -1,4 +1,4 @@
 package ir.types
 
 
-sealed interface IntegerType: ArithmeticType
+sealed class IntegerType: ArithmeticType()

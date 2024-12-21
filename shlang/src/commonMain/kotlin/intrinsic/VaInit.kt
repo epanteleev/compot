@@ -75,20 +75,20 @@ class VaInit(private val firstArgType: CType): IntrinsicProvider("va_init") {
         }
 
         val vaInit = CStructType("va_init", arrayListOf(
-                FieldMember("xmm0", TypeDesc.Companion.from(DOUBLE, listOf())),
-                FieldMember("xmm1", TypeDesc.Companion.from(DOUBLE, listOf())),
-                FieldMember("xmm2", TypeDesc.Companion.from(DOUBLE, listOf())),
-                FieldMember("xmm3", TypeDesc.Companion.from(DOUBLE, listOf())),
-                FieldMember("xmm4", TypeDesc.Companion.from(DOUBLE, listOf())),
-                FieldMember("xmm5", TypeDesc.Companion.from(DOUBLE, listOf())),
-                FieldMember("xmm6", TypeDesc.Companion.from(DOUBLE, listOf())),
-                FieldMember("xmm7", TypeDesc.Companion.from(DOUBLE, listOf())),
-                FieldMember("rdi", TypeDesc.Companion.from(LONG, listOf())),
-                FieldMember("rsi", TypeDesc.Companion.from(LONG, listOf())),
-                FieldMember("rdx", TypeDesc.Companion.from(LONG, listOf())),
-                FieldMember("rcx", TypeDesc.Companion.from(LONG, listOf())),
-                FieldMember("r8", TypeDesc.Companion.from(LONG, listOf())),
-                FieldMember("r9", TypeDesc.Companion.from(LONG, listOf())),
+                FieldMember("xmm0", TypeDesc.from(DOUBLE, listOf())),
+                FieldMember("xmm1", TypeDesc.from(DOUBLE, listOf())),
+                FieldMember("xmm2", TypeDesc.from(DOUBLE, listOf())),
+                FieldMember("xmm3", TypeDesc.from(DOUBLE, listOf())),
+                FieldMember("xmm4", TypeDesc.from(DOUBLE, listOf())),
+                FieldMember("xmm5", TypeDesc.from(DOUBLE, listOf())),
+                FieldMember("xmm6", TypeDesc.from(DOUBLE, listOf())),
+                FieldMember("xmm7", TypeDesc.from(DOUBLE, listOf())),
+                FieldMember("rdi", TypeDesc.from(LONG, listOf())),
+                FieldMember("rsi", TypeDesc.from(LONG, listOf())),
+                FieldMember("rdx", TypeDesc.from(LONG, listOf())),
+                FieldMember("rcx", TypeDesc.from(LONG, listOf())),
+                FieldMember("r8", TypeDesc.from(LONG, listOf())),
+                FieldMember("r9", TypeDesc.from(LONG, listOf())),
             )
         )
     }

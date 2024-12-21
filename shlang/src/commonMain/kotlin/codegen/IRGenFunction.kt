@@ -81,7 +81,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         return when (val type = conditionExpr.type()) {
             is IntegerType       -> ir.icmp(conditionExpr, IntPredicate.Ne, IntegerConstant.of(type.asType(), 0))
-            is PtrType       -> ir.icmp(conditionExpr, IntPredicate.Ne, NullValue)
+            is PtrType           -> ir.icmp(conditionExpr, IntPredicate.Ne, NullValue)
             is FloatingPointType -> ir.fcmp(conditionExpr, FloatPredicate.One, FloatingPointConstant.of(type, 0))
             is FlagType          -> conditionExpr
             else -> throw RuntimeException("Unknown type: type=$type")
@@ -90,7 +90,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private inline fun<reified T: AnyPredicateType> makeCondition(a: Value, predicate: T, b: Value): Value = when (val type = a.type()) {
         is IntegerType, PtrType -> ir.icmp(a, predicate as IntPredicate, b)
-        is FloatingPointType        -> ir.fcmp(a, predicate as FloatPredicate, b)
+        is FloatingPointType    -> ir.fcmp(a, predicate as FloatPredicate, b)
         else -> throw RuntimeException("Unknown type: type=$type")
     }
 
