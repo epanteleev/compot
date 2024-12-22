@@ -30,7 +30,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
 
             inst.match(gfp(struct(), generate())) { gf: GetFieldPtr ->
                 val basicType = gf.basicType.asType<StructType>()
-                val index = U64Value(basicType.offset(gf.index().toInt()))
+                val index = U64Value.of(basicType.offset(gf.index().toInt()))
                 return bb.replace(inst, LeaStack.lea(gf.source(), U8Type, index))
             }
 
@@ -43,7 +43,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val tp = gf.basicType.asType<ArrayType>()
                 val index = gf.index().toInt()
                 val offset = tp.offset(index)
-                return bb.replace(inst, LeaStack.lea(gf.source(), I8Type, U32Value(offset)))
+                return bb.replace(inst, LeaStack.lea(gf.source(), I8Type, U64Value.of(offset)))
             }
 
             return inst

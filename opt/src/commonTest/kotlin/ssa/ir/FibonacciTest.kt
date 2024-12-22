@@ -37,10 +37,10 @@ class FibonacciTest {
         val i = builder.alloc(I32Type)
 
         builder.store(nAddr, n)
-        builder.store(a, I32Value(0))
-        builder.store(b, I32Value(1))
+        builder.store(a, I32Value.of(0))
+        builder.store(b, I32Value.of(1))
         val v0 = builder.load(I32Type, nAddr)
-        val cmp = builder.icmp(v0, IntPredicate.Eq, I32Value(0))
+        val cmp = builder.icmp(v0, IntPredicate.Eq, I32Value.of(0))
 
         val ifThen = builder.createLabel()
         val ifEnd = builder.createLabel()
@@ -59,7 +59,7 @@ class FibonacciTest {
         builder.branch(ret)
 
         builder.switchLabel(ifEnd)
-        builder.store(i, I32Value(2))
+        builder.store(i, I32Value.of(2))
         builder.branch(forCond)
 
         builder.switchLabel(forCond)
@@ -81,7 +81,7 @@ class FibonacciTest {
 
         builder.switchLabel(forInc)
         val v8 = builder.load(I32Type, i)
-        val inc = builder.add(v8, I32Value(1))
+        val inc = builder.add(v8, I32Value.of(1))
         builder.store(i, inc)
 
         builder.branch(forCond)

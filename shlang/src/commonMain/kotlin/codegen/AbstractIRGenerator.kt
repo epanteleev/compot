@@ -109,7 +109,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
         val enumValue = typeHolder.findEnumByEnumerator(name)
         if (enumValue != null) {
-            return I32Value(enumValue)
+            return I32Value.of(enumValue)
         }
 
         throw IRCodeGenError("Variable '$name' not found", varNode.begin())
@@ -200,9 +200,9 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     protected fun makeConstant(numNode: NumNode) = when (val num = numNode.number.toNumberOrNull()) {
-        is Byte   -> I8Value(num.toByte())
-        is Int    -> I32Value(num.toInt())
-        is Long   -> I64Value(num.toLong())
+        is Byte   -> I8Value.of(num.toByte())
+        is Int    -> I32Value.of(num.toInt())
+        is Long   -> I64Value.of(num.toLong())
         is Float  -> F32Value(num.toFloat())
         is Double -> F64Value(num.toDouble())
         else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}", numNode.begin())

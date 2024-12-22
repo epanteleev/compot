@@ -27,7 +27,7 @@ class DominatorTreeTest {
 
         val b2 = builder.createLabel()
         val b3 = builder.createLabel()
-        val cmp1 = builder.icmp(I32Value(12), IntPredicate.Ne, I32Value(43))
+        val cmp1 = builder.icmp(I32Value.of(12), IntPredicate.Ne, I32Value.of(43))
         builder.branchCond(cmp1, b2, b3)
 
         builder.switchLabel(b3)
@@ -40,8 +40,8 @@ class DominatorTreeTest {
         builder.branch(b4)
         builder.switchLabel(b4)
         val cmp4 = builder.icmp(
-            I32Value(152), IntPredicate.Ne,
-            I32Value(443)
+            I32Value.of(152), IntPredicate.Ne,
+            I32Value.of(443)
         )
         builder.branchCond(cmp4, b6, b5)
 
@@ -55,7 +55,7 @@ class DominatorTreeTest {
         builder.branch(exit)
 
         builder.switchLabel(exit)
-        builder.ret(U16Type, arrayOf(U16Value(0)))
+        builder.ret(U16Type, arrayOf(U16Value.of(0)))
 
         return moduleBuilder.build()
     }

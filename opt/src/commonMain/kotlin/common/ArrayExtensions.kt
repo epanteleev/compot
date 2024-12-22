@@ -65,3 +65,14 @@ inline fun <reified T> Collection<T>.toTypedArray(appended: T): Array<T> {
     @Suppress("UNCHECKED_CAST")
     return result as Array<T>
 }
+
+inline fun <T> Array<T?>.getOrSet(index: Int, defaultValue: (Int) -> T): T {
+    val v = get(index)
+    if (v != null) {
+        return v
+    }
+
+    val newValue = defaultValue(index)
+    set(index, newValue)
+    return newValue
+}

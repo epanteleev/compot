@@ -68,25 +68,13 @@ class ModuleReader(string: String) {
             if (type !is IntegerTypeToken) {
                 throw throw ParseErrorException("expect integer type, but: type=${type}")
             }
-            when (type.type()) {
-                I8Type  -> I8Value(data.int.toByte())
-                U8Type  -> U8Value(data.int.toByte())
-                I16Type -> I16Value(data.int.toShort())
-                U16Type -> U16Value(data.int.toShort())
-                I32Type -> I32Value(data.int.toInt())
-                U32Type -> U32Value(data.int.toInt())
-                I64Type -> I64Value(data.int)
-                U64Type -> U64Value(data.int)
-            }
+            IntegerConstant.of(type.type(), data.int)
         }
         is FloatValue -> {
             if (type !is FloatTypeToken) {
                 throw throw ParseErrorException("expect float type, but: type=${type}")
             }
-            when (type.type()) {
-                F32Type -> F32Value(data.fp.toFloat())
-                F64Type -> F64Value(data.fp)
-            }
+            FloatingPointConstant.of(type.type(), data.fp)
         }
         is StringLiteralToken -> {
             if (type !is ArrayTypeToken) {
@@ -111,6 +99,7 @@ class ModuleReader(string: String) {
                 if (type !is IntegerTypeToken) {
                     throw throw ParseErrorException("expect integer type, but: type=${type}")
                 }
+
                 when (type.type()) {
                     I8Type   -> I8ConstantValue(name, data.int.toByte())
                     U8Type   -> U8ConstantValue(name, data.int.toUByte())

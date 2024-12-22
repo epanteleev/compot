@@ -8,7 +8,7 @@ object LinearizeInitializerList {
     private fun fillIn(constants: MutableList<Constant>, structSize: Int, initializerListSizeOf: Int) {
         val diff = structSize - initializerListSizeOf
         for (i in 0 until diff) {
-            constants.add(I8Value(0))
+            constants.add(I8Value.of(0))
         }
     }
 

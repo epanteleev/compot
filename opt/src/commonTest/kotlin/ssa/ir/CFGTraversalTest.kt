@@ -24,7 +24,7 @@ class CFGTraversalTest {
         val arg3 = builder.argument(2)
         val v1 = builder.load(I16Type, arg1)
         val ttt  = builder.sext(v1, I64Type)
-        val res  = builder.icmp(I64Value(32), IntPredicate.Gt, ttt)
+        val res  = builder.icmp(I64Value.of(32), IntPredicate.Gt, ttt)
 
         val trueLabel = builder.createLabel()
         val falseLabel = builder.createLabel()
@@ -32,15 +32,15 @@ class CFGTraversalTest {
         builder.branchCond(res, trueLabel, falseLabel)
 
         builder.switchLabel(trueLabel)
-        builder.store(arg3, I64Value(12))
+        builder.store(arg3, I64Value.of(12))
         builder.branch(mergeLabel)
 
         builder.switchLabel(falseLabel)
-        builder.store(arg2, I64Value(19))
+        builder.store(arg2, I64Value.of(19))
         builder.branch(mergeLabel)
 
         builder.switchLabel(mergeLabel)
-        val arithm = builder.sub(U16Value(1337), U16Value(64))
+        val arithm = builder.sub(U16Value.of(1337), U16Value.of(64))
         builder.ret(U16Type, arrayOf(arithm))
 
         val module = moduleBuilder.build()

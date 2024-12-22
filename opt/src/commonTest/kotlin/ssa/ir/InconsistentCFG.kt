@@ -18,7 +18,7 @@ class InconsistentCFG {
     fun testInconsistentReturn() {
         val builder = ModuleBuilder.create()
         builder.createFunction("main", I64Type, arrayListOf()).apply {
-            ret(I32Type, arrayOf(I32Value(0)))
+            ret(I32Type, arrayOf(I32Value.of(0)))
         }
 
         val throwable = assertFails { builder.build() }
@@ -46,7 +46,7 @@ class InconsistentCFG {
             val cont = createLabel()
             call(invalidPrototype, arrayListOf(F32Value(0.0F)), hashSetOf(), cont)
             switchLabel(cont)
-            ret(I32Type, arrayOf(I32Value(0)))
+            ret(I32Type, arrayOf(I32Value.of(0)))
         }
 
         val throwable = assertFails { builder.build() }
@@ -69,7 +69,7 @@ class InconsistentCFG {
                     switchLabel(header)
                     val label = createLabel()
                     branch(label)
-                    ret(I32Type, arrayOf(I32Value(0)))
+                    ret(I32Type, arrayOf(I32Value.of(0)))
                     label
                 }
 
@@ -88,7 +88,7 @@ class InconsistentCFG {
         val builder = ModuleBuilder.create()
 
         builder.createFunction("main", U32Type, arrayListOf()).apply {
-            val tuple = tupleDiv(U32Value(100), U32Value(20))
+            val tuple = tupleDiv(U32Value.of(100), U32Value.of(20))
 
             proj(tuple, 0)
             val proj1 = proj(tuple, 0)
@@ -105,8 +105,8 @@ class InconsistentCFG {
 
         builder.createFunction("main", I32Type, arrayListOf(I32Type)).apply {
             val arg = argument(0)
-            val cmp = icmp(I32Value(0), IntPredicate.Eq, arg)
-            val add = add(I32Value(0), arg)
+            val cmp = icmp(I32Value.of(0), IntPredicate.Eq, arg)
+            val add = add(I32Value.of(0), arg)
             val cont = createLabel()
             val then = createLabel()
             branchCond(cmp, then, cont)
@@ -128,8 +128,8 @@ class InconsistentCFG {
 
         builder.createFunction("main", I32Type, arrayListOf(I32Type)).apply {
             val arg = argument(0)
-            val cmp = icmp(I32Value(0), IntPredicate.Eq, arg)
-            val add = add(I32Value(0), arg)
+            val cmp = icmp(I32Value.of(0), IntPredicate.Eq, arg)
+            val add = add(I32Value.of(0), arg)
             val i = flag2int(cmp, I32Type)
             ret(I32Type, arrayOf(i))
         }
@@ -144,9 +144,9 @@ class InconsistentCFG {
 
         builder.createFunction("main", I32Type, arrayListOf(I32Type)).apply {
             val arg = argument(0)
-            val cmp = icmp(I32Value(0), IntPredicate.Eq, arg)
-            val add = add(I32Value(0), arg)
-            val i = select(cmp, I32Type, I32Value(0), add)
+            val cmp = icmp(I32Value.of(0), IntPredicate.Eq, arg)
+            val add = add(I32Value.of(0), arg)
+            val i = select(cmp, I32Type, I32Value.of(0), add)
             ret(I32Type, arrayOf(i))
         }
 
