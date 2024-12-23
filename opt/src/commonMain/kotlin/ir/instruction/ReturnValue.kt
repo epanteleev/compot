@@ -9,7 +9,7 @@ import ir.instruction.utils.IRInstructionVisitor
 
 class ReturnValue private constructor(id: Identity, owner: Block, val returnType: Type, values: Array<Value>): Return(id, owner, values) {
     override fun dump(): String {
-        val stringBuilder = StringBuilder("ret ${type()}")
+        val stringBuilder = StringBuilder("$NAME ${type()}")
         for (value in operands) {
             stringBuilder.append(" ")
             stringBuilder.append(value)
@@ -32,6 +32,9 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
     }
 
     companion object {
+        const val NAME = "ret"
+        const val RET_VALUE = 0
+
         fun ret(returnType: Type, values: Array<Value>): InstBuilder<Return> = { id: Identity, owner: Block ->
             make(id, owner, returnType, values)
         }

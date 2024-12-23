@@ -58,7 +58,6 @@ class GetFieldPtrCodegen(val type: PtrType, val basicType: AggregateType, val as
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("untested")
         val disp = basicType.offset(second.value().toInt())
         asm.mov(POINTER_SIZE, first, temp1)
         asm.lea(POINTER_SIZE, Address.from(temp1, disp), temp1)

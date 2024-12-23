@@ -15,6 +15,10 @@ typealias ValueMatcher = (Value) -> Boolean
 typealias InstructionMatcher = (Instruction) -> Boolean
 typealias TypeMatcher = (Type) -> Boolean
 
+inline fun ret(crossinline value: ValueMatcher): InstructionMatcher = {
+    it is ReturnValue && value(it.returnValue(0))
+}
+
 inline fun store(crossinline pointer: ValueMatcher, crossinline value: ValueMatcher): InstructionMatcher = {
     it is Store && pointer(it.pointer()) && value(it.value())
 }

@@ -53,7 +53,12 @@ data class LeaStackCodegen (val type: PtrType, val basicType: NonTrivialType, va
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        val address = when (first) {
+            is Address2 -> Address.from(first.base, first.offset, second, ScaleFactor.from(size))
+            else -> TODO()
+        }
+        asm.lea(POINTER_SIZE, address, temp1)
+        asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {

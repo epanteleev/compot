@@ -3,6 +3,7 @@ package startup
 import common.ExecutionResult
 import common.GNUAssemblerRunner
 import ir.module.Module
+import ir.pass.CompileContext
 import ir.pass.PassPipeline
 import ir.read.ModuleReader
 import ir.pass.CompileContextBuilder
@@ -15,7 +16,7 @@ import okio.SYSTEM
 
 
 class OptDriver(private val commandLineArguments: OptCLIArguments) {
-    private fun runCompiler(suffix: String, asmFile: String, module: Module): ExecutionResult {
+    private fun runCompiler(suffix: String, asmFile: String, module: Module, pipeline: (CompileContext) -> PassPipeline): ExecutionResult {
         val builder = CompileContextBuilder(commandLineArguments.getBasename())
             .setSuffix(suffix)
 
@@ -24,7 +25,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         }
 
         val ctx                   = builder.construct()
-        val unoptimizedIr         = PassPipeline.base(ctx).run(module)
+        val unoptimizedIr         = pipeline(ctx).run(module)
         val codeGenerationFactory = CodeGenerationFactory()
             .setContext(ctx)
             .setTarget(TargetPlatform.X64)
@@ -66,9 +67,9 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
     fun compile(module: Module) {
         removeOrCreateDir()
         val result = if (commandLineArguments.getOptLevel() == 0) {
-            runCompiler(".base", BASE, module)
+            runCompiler(".base", BASE, module, PassPipeline::base)
         } else if (commandLineArguments.getOptLevel() == 1) {
-            runCompiler(".opt", OPT, module)
+            runCompiler(".opt", OPT, module, PassPipeline::opt)
         } else {
             println("Invalid optimization level: ${commandLineArguments.getOptLevel()}")
             return

@@ -142,6 +142,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                     }
                     bb.updateDF(call, i, copyOrLea)
                 }
+                is UndefType -> {}
                 else -> throw IllegalArgumentException("Unexpected type: $ty")
             }
         }

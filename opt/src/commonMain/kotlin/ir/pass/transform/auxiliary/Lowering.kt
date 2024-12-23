@@ -414,6 +414,20 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 return bb.replace(store, Move.move(toValue, store.value()))
             }
 
+            inst.match(ret(gValue(anytype()))) { ret: ReturnValue ->
+                // Before:
+                //  ret @global
+                //
+                // After:
+                //  %lea = lea @global
+                //  ret %lea
+
+                val toValue = ret.returnValue(0).asValue<GlobalValue>()
+                val lea = bb.putBefore(inst, Lea.lea(toValue))
+                bb.updateDF(inst, ReturnValue.RET_VALUE, lea)
+                return lea
+            }
+
             inst.match(store(generate(primitive()), nop())) { store: Store ->
                 // Before:
                 //  store %gen, %ptr

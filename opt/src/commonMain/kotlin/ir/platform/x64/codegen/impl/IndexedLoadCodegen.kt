@@ -106,14 +106,12 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, indexType: Primi
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("untested")
         asm.mov(indexSize, first, temp1)
         asm.mov(size, Address.from(temp1, second.value().toInt() * size), temp1)
         asm.mov(size, temp1, dst)
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("untested")
         asm.mov(indexSize, first, temp1)
         asm.mov(size, Address.from(temp1, 0, second, ScaleFactor.from(size)), temp1)
         asm.mov(size, temp1, dst)
