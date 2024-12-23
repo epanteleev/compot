@@ -155,10 +155,6 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         val numberOfFp = call.arguments().count { it.type() is FloatingPointType }
         assertion(numberOfFp < 255) { "numberOfFp=$numberOfFp" }
 
-        if (numberOfFp == 0) {
-            xor(BYTE_SIZE, rax, rax)
-        } else {
-            mov(BYTE_SIZE, Imm32.of(numberOfFp.toLong()), rax)
-        }
+        copy(BYTE_SIZE, Imm32.of(numberOfFp.toLong()), rax)
     }
 }

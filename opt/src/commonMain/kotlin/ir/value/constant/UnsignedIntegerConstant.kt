@@ -13,7 +13,7 @@ sealed interface UnsignedIntegerConstant: IntegerConstant {
             U8Type  -> U8Value.of(value.toByte())
             U16Type -> U16Value.of(value.toShort())
             U32Type -> U32Value.of(value.toInt())
-            U64Type -> U64Value(value.toLong())
+            U64Type -> U64Value.of(value.toLong())
         }
     }
 }
@@ -54,7 +54,7 @@ class U32Value private constructor(val u32: Int): UnsignedIntegerConstant {
     }
 }
 
-data class U64Value(val u64: Long): UnsignedIntegerConstant {
+class U64Value private constructor(val u64: Long): UnsignedIntegerConstant {
     override fun type(): UnsignedIntType = U64Type
 
     override fun value(): ULong = u64.toULong()

@@ -20,6 +20,4 @@ sealed class TerminateValueInstruction(id: Identity, owner: Block,
     override fun toString(): String {
         return "%${name()}"
     }
-
-    override fun type(): Type = tp
 }

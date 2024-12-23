@@ -14,8 +14,8 @@ fun main() {
 
     builder.createFunction("main", U64Type, arrayListOf()).apply {
         val array = alloc(ArrayType(I32Type, 5))
-        val e0 = gep(array, I32Type, I32Value(0))
-        store(e0, I32Value(0))
+        val e0 = gep(array, I32Type, I32Value.of(0))
+        store(e0, I32Value.of(0))
 
         val e1 = gep(array, I32Type, I32Value(1))
         store(e1, I32Value(1))

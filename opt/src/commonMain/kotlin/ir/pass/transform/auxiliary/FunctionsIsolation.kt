@@ -115,7 +115,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         val argType = arg as Alloc
         val gen = bb.putBefore(call, Generate.gen(argType.allocatedType))
         val lea = bb.putAfter(gen, Lea.lea(gen))
-        bb.putAfter(lea, Memcpy.memcpy(lea, arg, U64Value(argType.allocatedType.sizeOf().toLong())))
+        bb.putAfter(lea, Memcpy.memcpy(lea, arg, U64Value.of(argType.allocatedType.sizeOf().toLong())))
         bb.updateDF(call, i, gen)
     }
 

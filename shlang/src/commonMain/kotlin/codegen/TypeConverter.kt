@@ -398,7 +398,7 @@ object TypeConverter {
                     U8Type  -> icmp(value, IntPredicate.Ne, U8Value.of(0))
                     U16Type -> icmp(value, IntPredicate.Ne, U16Value.of(0))
                     U32Type -> icmp(value, IntPredicate.Ne, U32Value.of(0))
-                    U64Type -> icmp(value, IntPredicate.Ne, U64Value(0))
+                    U64Type -> icmp(value, IntPredicate.Ne, U64Value.of(0))
                     PtrType -> icmp(value, IntPredicate.Ne, NullValue)
                     else -> throw RuntimeException("Cannot convert $value:$vType to $toType")
                 }

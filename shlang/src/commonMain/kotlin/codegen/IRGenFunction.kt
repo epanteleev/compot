@@ -145,7 +145,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val irType = mb.toIRType<StructType>(typeHolder, srcType)
         val destPtr = ir.gep(dest, irType, I64Value.of(0))
         val srcPtr = ir.gep(src, irType, I64Value.of(0))
-        ir.memcpy(destPtr, srcPtr, U64Value(irType.sizeOf().toLong()))
+        ir.memcpy(destPtr, srcPtr, U64Value.of(irType.sizeOf().toLong()))
         return UndefValue
     }
 
@@ -218,7 +218,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val inc = ir.gep(argInMem, I8Type, I64Value.of(argType.sizeOf().toLong()))
         ir.store(overflowArgAreaPtr, inc)
 
-        ir.memcpy(dst, argInMem, U64Value(argType.sizeOf().toLong()))
+        ir.memcpy(dst, argInMem, U64Value.of(argType.sizeOf().toLong()))
     }
 
     private fun emitBuiltInVaArg(vaList: Value, argType: PrimitiveType, offsetIdx: Int, regSaveAreaIdx: Int): Value {
@@ -423,7 +423,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return gep
         }
 
-        val memberType = cStructType.field(fieldName) ?: throw IRCodeGenError("Field not found: $fieldName", arrowMemberAccess.begin())
+        val memberType = cStructType.field(fieldName) ?: throw IRCodeGenError("Field not found: '$fieldName'", arrowMemberAccess.begin())
         if (memberType is CAggregateType) {
             return gep
         }
@@ -441,14 +441,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val fieldName = memberAccess.memberName()
         val member = structType.fieldByIndexOrNull(fieldName) ?:
-            throw IRCodeGenError("Field not found: $fieldName", memberAccess.begin())
+            throw IRCodeGenError("Field not found: '$fieldName'", memberAccess.begin())
 
         val gep = ir.gfp(struct, structIRType, I64Value.of(member))
         if (!isRvalue) {
             return gep
         }
         val memberType = structType.field(fieldName) ?:
-            throw IRCodeGenError("Field not found: $fieldName", memberAccess.begin())
+            throw IRCodeGenError("Field not found: '$fieldName'", memberAccess.begin())
         if (memberType is CAggregateType) {
             return gep
         }
@@ -758,7 +758,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedRValue = ir.convertToType(rvalue, U64Type)
 
                 val size = lValueType.dereference(typeHolder).size()
-                val mul = ir.mul(convertedRValue, U64Value(size.toLong()))
+                val mul = ir.mul(convertedRValue, U64Value.of(size.toLong()))
 
                 val result = op(convertedLValue, mul)
                 return ir.convertRVToType(result, commonType)
@@ -821,7 +821,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedLValue = ir.convertToType(ptr2intLValue, U64Type)
 
                 val size = lValueType.dereference(typeHolder).size()
-                val mul = ir.mul(convertedRValue, U64Value(size.toLong()))
+                val mul = ir.mul(convertedRValue, U64Value.of(size.toLong()))
 
                 val result = op(convertedLValue, mul)
                 val res = ir.convertToType(result, commonType)
@@ -906,7 +906,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val left = visitExpression(binop.left, true)
-        ir.memcpy(left, right, U64Value(leftType.size().toLong()))
+        ir.memcpy(left, right, U64Value.of(leftType.size().toLong()))
         return right
     }
 
@@ -1401,7 +1401,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 else -> throw RuntimeException("internal error")
             }
             is CStructType -> {
-                ir.memcpy(fnStmt.returnValueAdr(), value, U64Value(type.size().toLong()))
+                ir.memcpy(fnStmt.returnValueAdr(), value, U64Value.of(type.size().toLong()))
             }
             is AnyCArrayType -> {
                 val returnType = ir.prototype().returnType().asType<PtrType>()
@@ -1642,20 +1642,21 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val converted = mb.toIRType<StructType>(typeHolder, type)
                 for (i in initializerList.initializers.size until 1) {
                     val elementType = type.fieldByIndex(i).cType()
-                    val cvt = mb.toIRType<NonTrivialType>(typeHolder, elementType)
+                    val cvt = mb.toIRType<PrimitiveType>(typeHolder, elementType)
                     val elementAdr = ir.gfp(value, converted, I64Value.of(i))
-                    ir.store(elementAdr, NonTrivialConstant.of(cvt.asType(), 0))
+                    ir.store(elementAdr, PrimitiveConstant.of(cvt.asType(), 0))
                 }
             }
             is CArrayType -> {
                 if (initializerList.resolveType(typeHolder) is CStringLiteral) {
                     return
                 }
+                val elementType = type.element()
+                val irElementType = mb.toIRType<NonTrivialType>(typeHolder, elementType.cType())
+
                 for (i in initializerList.initializers.size until type.dimension) {
-                    val elementType = type.element()
-                    val irElementType = mb.toIRType<NonTrivialType>(typeHolder, elementType.cType())
                     val elementAdr = ir.gep(value, irElementType, I64Value.of(i))
-                    ir.store(elementAdr, NonTrivialConstant.of(irElementType.asType(), 0))
+                    ir.store(elementAdr, PrimitiveConstant.of(irElementType.asType(), 0))
                 }
             }
             else -> throw IRCodeGenError("Unknown type, type=$type", initializerList.begin())
@@ -1724,7 +1725,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             else -> {
                 val rvalueResult = visitExpression(initDeclarator.rvalue, true)
                 val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)
-                ir.memcpy(lvalueAdr, rvalueResult, U64Value(commonType.sizeOf().toLong()))
+                ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(commonType.sizeOf().toLong()))
             }
         }
         return lvalueAdr

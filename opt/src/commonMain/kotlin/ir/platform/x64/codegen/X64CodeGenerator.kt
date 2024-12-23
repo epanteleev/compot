@@ -53,11 +53,9 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     private val registerAllocation by lazy { data.analysis(LinearScanFabric) }
     private val liveness by lazy { data.analysis(LivenessAnalysisPassFabric) }
     private val  asm = unit.function(data.prototype.name)
-    private var previous: Block? = null
     private var next: Block? = null
 
     fun next(): Block = next?: throw RuntimeException("next block is null")
-    fun previous(): Block = previous?: throw RuntimeException("previous block is null")
 
     private fun makeLabel(bb: Block) = unit.nameAssistant().newLocalLabel(asm, bb.index)
 
@@ -178,12 +176,12 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         }
     }
 
-    private fun emitRetValue(retInstType: PrimitiveType, returnOperand: Operand, returnRegister: Register) = when (retInstType) {
+    private fun emitRetValue(retInstType: PrimitiveType, returnOperand: Operand) = when (retInstType) {
         is IntegerType, is PtrType -> {
-            ReturnIntCodegen(retInstType, asm)(returnRegister as GPRegister, returnOperand)
+            ReturnIntCodegen(retInstType, asm)(retReg, returnOperand)
         }
         is FloatingPointType -> {
-            ReturnFloatCodegen(retInstType, asm)(returnRegister as XmmRegister, returnOperand)
+            ReturnFloatCodegen(retInstType, asm)(fpRet, returnOperand)
         }
         else -> throw CodegenException("unknown type=$retInstType")
     }
@@ -191,8 +189,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(returnValue: ReturnValue) {
         val value = registerAllocation.operand(returnValue.returnValue(0))
         when (val returnType = returnValue.type()) {
-            is IntegerType, is PtrType -> emitRetValue(returnType, value, retReg)
-            is FloatingPointType -> emitRetValue(returnType, value, fpRet)
+            is PrimitiveType -> emitRetValue(returnType, value)
             is TupleType -> {
                 when (val first = returnType.asInnerType<PrimitiveType>(0)) {
                     is IntegerType, is PtrType -> ReturnIntCodegen(first, asm)(retReg, value)
@@ -425,7 +422,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             is FloatingPointType -> {
                 CallFloatCodegen(retType, asm)(registerAllocation.operand(indirectionCall), fpRet)
             }
-            else -> throw RuntimeException("unknown value type=$retType")
+            is UndefType -> throw RuntimeException("unknown value type=$retType")
         }
     }
 
@@ -441,7 +438,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val value          = registerAllocation.operand(store.value())
         val type = store.value().type()
 
-        StoreCodegen(type as PrimitiveType, asm)(value, pointerOperand)
+        StoreCodegen(type.asType(), asm)(value, pointerOperand)
     }
 
     override fun visit(load: Load) {
@@ -583,7 +580,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             asm.movf(8, arg, Address.from(rsp, -(QWORD_SIZE * idx + QWORD_SIZE)))
         }
 
-        var argumentsSlotsSize = overflowAreaSize(call)
+        val argumentsSlotsSize = overflowAreaSize(call)
 
         val size = context.adjustStackSize(argumentsSlotsSize)
         if (size != 0) {
@@ -595,7 +592,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val call = upStackFrame.call()
         val context = getState(call)
 
-        var argumentsSlotsSize = overflowAreaSize(call)
+        val argumentsSlotsSize = overflowAreaSize(call)
 
         val size = context.adjustStackSize(argumentsSlotsSize)
         if (size != 0) {
@@ -612,8 +609,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(gep: GetElementPtr) {
-        val source = gep.source()
-        val sourceOperand = registerAllocation.operand(source)
+        val sourceOperand = registerAllocation.operand(gep.source())
         val index         = registerAllocation.operand(gep.index())
         val dest          = registerAllocation.operand(gep)
 
@@ -622,8 +618,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(gfp: GetFieldPtr) {
-        val source = gfp.source()
-        val sourceOperand = registerAllocation.operand(source)
+        val sourceOperand = registerAllocation.operand(gfp.source())
         val index         = registerAllocation.operand(gfp.index())
         val dest          = registerAllocation.operand(gfp)
 
@@ -728,11 +723,6 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             val bb = order[idx]
             next = if (idx + 1 < order.size) {
                 order[idx + 1]
-            } else {
-                null
-            }
-            previous = if (idx - 1 >= 0) {
-                order[idx - 1]
             } else {
                 null
             }

@@ -10,6 +10,7 @@ import ir.types.Type
 import ir.module.IndirectFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
+import ir.types.PrimitiveType
 import ir.types.VoidType
 
 
@@ -23,6 +24,8 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
     init {
         assertion(func.returnType() != VoidType) { "Must be non $VoidType" }
     }
+
+    override fun type(): PrimitiveType = tp as PrimitiveType
 
     override fun target(): Block {
         assertion(targets.size == 1) {

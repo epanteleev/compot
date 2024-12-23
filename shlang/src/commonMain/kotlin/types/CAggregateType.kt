@@ -151,7 +151,31 @@ class CUnionType(override val name: String, fields: List<Member>): AnyCStructTyp
         if (fields.isEmpty()) {
             return null
         }
-        return 0
+
+        for (field in fields) {
+            when (field) {
+                is FieldMember -> {
+                    if (field.name == name) {
+                        return 0
+                    }
+                }
+                is AnonMember -> when (val cType = field.cType()) {
+                    is CUnionType -> {
+                        val i = cType.fieldByIndexOrNull(name)
+                        if (i != null) {
+                            return 0
+                        }
+                    }
+                    is CStructType -> {
+                        val i = cType.fieldByIndexOrNull(name)
+                        if (i != null) {
+                            return i
+                        }
+                    }
+                }
+            }
+        }
+        return null
     }
 
     override fun size(): Int {

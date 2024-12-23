@@ -2,7 +2,6 @@ package ir.pass
 
 import okio.FileSystem
 import okio.Path.Companion.toPath
-import okio.SYSTEM
 
 
 class CompileContext(private val filename: String, private val suffix: String, private val outputDir: String?) {

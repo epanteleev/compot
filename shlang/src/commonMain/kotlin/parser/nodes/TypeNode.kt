@@ -72,7 +72,7 @@ class TypeQualifierNode(name: Keyword): AnyTypeNode(name) {
         "const"    -> TypeQualifier.CONST
         "volatile" -> TypeQualifier.VOLATILE
         "restrict" -> TypeQualifier.RESTRICT
-        else       -> TypeQualifier.EMPTY
+        else       -> throw IllegalStateException("Unknown type qualifier '$name'")
     }
 }
 

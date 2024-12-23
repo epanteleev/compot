@@ -55,7 +55,7 @@ internal class CalleeArgumentAllocator private constructor() {
 
     private fun allocate(arguments: List<ArgumentValue>): List<Operand> {
         return arguments.mapTo(arrayListOf()) {
-            pickArgument(it.contentType())
+            pickArgument(it.type())
         }
     }
 

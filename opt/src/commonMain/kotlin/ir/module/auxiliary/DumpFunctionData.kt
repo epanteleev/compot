@@ -26,7 +26,7 @@ abstract class DumpFunctionData(protected val functionData: FunctionData) {
 
     protected open fun dumpPrototype(prototype: FunctionPrototype, argumentValues: List<ArgumentValue>) {
         builder.append("define ${prototype.returnType()} @${prototype.name}(")
-        argumentValues.joinTo(builder) { argumentValue -> "$argumentValue:${argumentValue.contentType()}" }
+        argumentValues.joinTo(builder) { argumentValue -> "$argumentValue:${argumentValue.type()}" }
         builder.append(") ")
         prototype.attributes.forEach { builder.append("$it ") }
     }

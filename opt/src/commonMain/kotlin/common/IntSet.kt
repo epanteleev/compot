@@ -5,7 +5,7 @@ class IntSet<E>(private val bitmask: BooleanArray, val values: Array<E>, val clo
     override val size: Int
         get() = bitmask.count { it }
 
-    override fun isEmpty(): Boolean = bitmask.isEmpty()
+    override fun isEmpty(): Boolean = values.all { it == null }
 
     override fun containsAll(elements: Collection<E>): Boolean {
         for (elem in elements) {
