@@ -59,7 +59,7 @@ sealed class StmtInfo {
     }
 }
 
-class SwitchStmtInfo(val conditionType: IntegerType, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo() {
+class SwitchStmtInfo(val conditionType: IntegerType, val condBlock: Label, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo() {
     private var default: Label? = null
 
     fun resolveDefault(ir: FunctionDataBuilder): Label {

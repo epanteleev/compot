@@ -91,7 +91,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
             val predecessors = block.predecessors()
             assert(predecessors.isEmpty()) { "Begin block must not have predecessors: $predecessors" }
         }
-        assert(!block.isEmpty()) { "Block '$block' must not be empty" }
+        assert(block.lastOrNull() is TerminateInstruction) { "Block '$block' must have a terminator." }
         bb = block
         validateInstructions(block)
     }

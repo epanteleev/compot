@@ -69,7 +69,8 @@ class OrCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVi
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
+        val or = first.value() or second.value()
+        asm.copy(size, Imm64.of(or), dst)
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
