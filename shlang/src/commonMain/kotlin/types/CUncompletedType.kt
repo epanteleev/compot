@@ -1,26 +1,8 @@
 package types
 
-import ir.Definitions.BYTE_SIZE
-import typedesc.TypeDesc
+sealed class CUncompletedType: CType()
 
-sealed interface CUncompletedType
-
-data class CUncompletedArrayType(val elementType: TypeDesc) : AnyCArrayType(elementType){
-    override fun typename(): String {
-        return toString()
-    }
-
-    override fun size(): Int = BYTE_SIZE
-
-    override fun alignmentOf(): Int = BYTE_SIZE
-
-    override fun toString(): String = buildString {
-        append("[]")
-        append(elementType)
-    }
-}
-
-data class CUncompletedStructType(val name: String): CUncompletedType, CType() {
+data class CUncompletedStructType(val name: String): CUncompletedType() {
     override fun typename(): String = name
 
     override fun size(): Int = throw Exception("Uncompleted type '$name'")
@@ -30,7 +12,7 @@ data class CUncompletedStructType(val name: String): CUncompletedType, CType() {
     }
 }
 
-data class CUncompletedUnionType(val name: String): CUncompletedType, CType() {
+data class CUncompletedUnionType(val name: String): CUncompletedType() {
     override fun typename(): String = name
 
     override fun size(): Int = throw Exception("Uncompleted type")
@@ -41,8 +23,11 @@ data class CUncompletedUnionType(val name: String): CUncompletedType, CType() {
     }
 }
 
-data class CUncompletedEnumType(val name: String): CUncompletedType, CPrimitive() {
+data class CUncompletedEnumType(val name: String): CUncompletedType() {
     override fun typename(): String = "enum $name"
 
     override fun size(): Int = throw Exception("Uncompleted type") //TODO remove this
+    override fun alignmentOf(): Int {
+        TODO("Not yet implemented")
+    }
 }

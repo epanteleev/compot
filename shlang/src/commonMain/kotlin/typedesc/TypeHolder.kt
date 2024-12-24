@@ -6,7 +6,7 @@ import codegen.VarStack
 
 class TypeHolder private constructor(): Scope {
     private val valueMap = VarStack<VarDescriptor>()
-    val enumTypeMap = VarStack<CPrimitive>()
+    val enumTypeMap = VarStack<CType>()
     val structTypeMap = VarStack<CType>()
     val unionTypeMap = VarStack<CType>()
 

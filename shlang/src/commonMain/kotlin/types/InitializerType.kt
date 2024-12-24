@@ -1,6 +1,6 @@
 package types
 
-class InitializerType(private val initializer: List<CType>): CType() {
+class InitializerType(private val initializer: List<CType>): CAggregateType() {
     override fun typename(): String = buildString {
         append("{")
         initializer.forEachIndexed { index, type ->

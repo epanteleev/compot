@@ -423,7 +423,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val memberType = member.cType()
-        if (memberType is CAggregateType) {
+        if (memberType is CAggregateType || memberType is AnyCFunctionType) {
             return gep
         }
         val memberIRType = mb.toIRLVType<PrimitiveType>(typeHolder, memberType)
@@ -447,7 +447,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return gep
         }
         val memberType = member.cType()
-        if (memberType is CAggregateType) {
+        if (memberType is CAggregateType || memberType is AnyCFunctionType) {
             return gep
         }
 
@@ -491,7 +491,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (!isRvalue) {
             return adr
         }
-        if (arrayType is CAggregateType) {
+        if (arrayType is CAggregateType || arrayType is AnyCFunctionType) {
             return adr
         }
         return ir.load(elementType.asType(), adr)
@@ -1066,7 +1066,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     return addr
                 }
                 val type = unaryOp.resolveType(typeHolder)
-                if (type is CAggregateType) {
+                if (type is CAggregateType || type is AnyCFunctionType) {
                     return addr
                 }
                 val loadedType = mb.toIRLVType<PrimitiveType>(typeHolder, type)
@@ -1115,7 +1115,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return rvalueAddr
         }
         val type = varNode.resolveType(typeHolder)
-        if (type is CAggregateType) {
+        if (type is CAggregateType || type is AnyCFunctionType) {
             return rvalueAddr
         }
         val converted = mb.toIRLVType<PrimitiveType>(typeHolder, type)
@@ -1715,7 +1715,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return generateGlobalAssignmentDeclarator(initDeclarator)
         }
         val type = varDesc.type.cType()
-        if (type !is CAggregateType) {
+        if (type is CPrimitive) {
             val rvalue = visitExpression(initDeclarator.rvalue, true)
             val commonType      = mb.toIRType<Type>(typeHolder, type)
             val convertedRvalue = ir.convertRVToType(rvalue, commonType)

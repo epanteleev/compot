@@ -283,19 +283,6 @@ object BOOL: CPrimitive() {
     override fun size(): Int = 1
 }
 
-class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(elementType) {
-    override fun typename(): String = buildString {
-        append(type)
-        append("[$dimension]")
-    }
-
-    override fun size(): Int {
-        return type.size() * dimension.toInt()
-    }
-
-    override fun alignmentOf(): Int = type.cType().alignmentOf()
-}
-
 class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : CPrimitive() {
     override fun size(): Int = POINTER_SIZE
 

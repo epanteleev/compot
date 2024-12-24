@@ -176,7 +176,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 val dimension = when (val cArrayType = cType.type.cType() as AnyCArrayType) {
                     is CArrayType     -> cArrayType.dimension
                     is CStringLiteral -> cArrayType.dimension
-                    else -> throw IRCodeGenError("Unsupported type $lValueType", declarator.begin())
+                    is CUncompletedArrayType -> throw IRCodeGenError("Uncompleted array type", declarator.begin())
                 }
                 val newConstant = if (dimension > constEvalResult.toString().length.toLong()) {
                     val content = constEvalResult.content.padTo(dimension.toInt(), "\\0")
