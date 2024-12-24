@@ -6,7 +6,6 @@ import parser.nodes.*
 import tokenizer.CTokenizer
 import typedesc.StorageClass
 import typedesc.TypeHolder
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -421,8 +420,8 @@ class TypeResolutionTest {
         val unionType = typeHolder.getVarTypeOrNull("b") ?: error("Cannot find union type")
         assertEquals("union B {int a;struct struct.0 {int b;char c;}}", unionType.toString())
         val ty = unionType.type.cType() as CUnionType
-        assertEquals(0, ty.fieldByIndexOrNull("a"))
-        assertEquals(0, ty.fieldByIndexOrNull("b"))
+        assertEquals(0, ty.fieldByIndexOrNull("a")?.index)
+        assertEquals(0, ty.fieldByIndexOrNull("b")?.index)
         //assertEquals(2, ty.fieldIndex("c")) TODO
     }
 
@@ -446,9 +445,9 @@ class TypeResolutionTest {
         val structType = typeHolder.getVarTypeOrNull("a") ?: error("Cannot find struct type")
         assertEquals("struct A {int a;union union.0 {int b;char c;}}", structType.toString())
         val ty = structType.type.cType() as CStructType
-        assertEquals(0, ty.fieldByIndexOrNull("a"))
-        assertEquals(1, ty.fieldByIndexOrNull("b"))
-        assertEquals(1, ty.fieldByIndexOrNull("c"))
+        assertEquals(0, ty.fieldByIndex("a").index)
+        assertEquals(1, ty.fieldByIndex("b").index)
+        assertEquals(1, ty.fieldByIndex("c").index)
     }
 
     @Test
@@ -474,12 +473,12 @@ class TypeResolutionTest {
         val structType = typeHolder.getVarTypeOrNull("c") ?: error("Cannot find struct type")
         assertEquals("struct C {union union.2 {struct struct.0 {int i;int j;}struct struct.1 {long k;long l;} w;}int m;}", structType.toString())
         val ty = structType.type.cType() as CStructType
-        val idx = ty.fieldByIndexOrNull("w") ?: error("Cannot find field w")
-        assertEquals(0, idx)
+        val desc = ty.fieldByIndex("w")
+        assertEquals(0, desc.index)
         val unionType = ty.fieldByIndexOrNull(0)!!.cType() as CUnionType
-        assertEquals(0, unionType.fieldByIndexOrNull("i"))
-        assertEquals(1, unionType.fieldByIndexOrNull("j"))
-        assertEquals(0, unionType.fieldByIndexOrNull("w"))
+        assertEquals(0, unionType.fieldByIndex("i").index)
+        assertEquals(1, unionType.fieldByIndex("j").index)
+        assertEquals(0, unionType.fieldByIndex("w").index)
     }
 
     @Test

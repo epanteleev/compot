@@ -247,7 +247,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(memberAccess: MemberAccess) {
         memberAccess.primary.accept(this)
         buffer.append('.')
-        buffer.append(memberAccess.ident.str())
+        buffer.append(memberAccess.fieldName.str())
     }
 
     override fun visit(initializerList: InitializerList) {

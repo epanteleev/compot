@@ -266,7 +266,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 }
 
                 val elements = arrayListOf<NonTrivialConstant>()
-                for (field in cType.fields()) {
+                for (field in cType.members()) {
                     val irFieldType = mb.toIRType<NonTrivialType>(typeHolder, field.cType())
                     val zero = NonTrivialConstant.of(irFieldType, 0)
                     elements.add(zero)

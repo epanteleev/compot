@@ -74,8 +74,8 @@ class Lowering private constructor(private val cfg: FunctionData) {
         fun closure(bb: Block, inst: Instruction): Instruction {
             inst.match(store(gfpOrGep(argumentByValue(), nop()), nop())) { store: Store ->
                 val pointer = store.pointer().asValue<ValueInstruction>()
-                val store = StoreOnStack.store(getSource(pointer), getIndex(pointer), store.value())
-                val st = bb.replace(inst, store)
+                val storeOnSt = StoreOnStack.store(getSource(pointer), getIndex(pointer), store.value())
+                val st = bb.replace(inst, storeOnSt)
                 killOnDemand(pointer.owner(), pointer)
                 return st
             }
@@ -422,7 +422,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 //  %lea = lea @global
                 //  ret %lea
 
-                val toValue = ret.returnValue(0).asValue<GlobalValue>()
+                val toValue = ret.returnValue(0)
                 val lea = bb.putBefore(inst, Lea.lea(toValue))
                 bb.updateDF(inst, ReturnValue.RET_VALUE, lea)
                 return lea

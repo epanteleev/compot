@@ -4,7 +4,9 @@ import types.*
 import typedesc.*
 import tokenizer.tokens.*
 import codegen.IRCodeGenError
+import codegen.TypeConverter.toIRType
 import common.assertion
+import ir.types.NonTrivialType
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.*
 import tokenizer.Position
@@ -336,11 +338,11 @@ class InitializerList(private val begin: Position, val initializers: List<Initia
     fun length(): Int = initializers.size
 }
 
-class MemberAccess(val primary: Expression, val ident: Identifier) : Expression() {
+class MemberAccess(val primary: Expression, val fieldName: Identifier) : Expression() {
     override fun begin(): Position = primary.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    fun memberName(): String = ident.str()
+    fun memberName(): String = fieldName.str()
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val structType = primary.resolveType(typeHolder)
@@ -348,7 +350,8 @@ class MemberAccess(val primary: Expression, val ident: Identifier) : Expression(
             throw TypeResolutionException("Member access on non-struct type, but got $structType", begin())
         }
 
-        return@memoize structType.field(ident.str()) ?: throw TypeResolutionException("Field $ident not found in struct $structType", begin())
+        val fieldDesc = structType.fieldByIndexOrNull(memberName()) ?: throw TypeResolutionException("Field $fieldName not found in struct $structType", begin())
+        return@memoize fieldDesc.cType(memberName())
     }
 }
 
@@ -369,7 +372,8 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
             throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType", begin())
         }
 
-        return@memoize baseType.field(ident.str()) ?: throw TypeResolutionException("Field $ident not found in struct $baseType", begin())
+        val fieldDesc = baseType.fieldByIndexOrNull(fieldName()) ?: throw TypeResolutionException("Field $ident not found in struct $baseType", begin())
+        return@memoize fieldDesc.cType(fieldName())
     }
 }
 
@@ -499,11 +503,11 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
             is CArrayType            -> primaryType.type.cType()
             is CStringLiteral        -> CHAR
             is CUncompletedArrayType -> primaryType.elementType.cType()
-            is CPointer     -> primaryType.dereference(typeHolder)
-            is CPrimitive   -> {
+            is CPointer              -> primaryType.dereference(typeHolder)
+            is CPrimitive -> {
                 val exprType = when (val e = expr.resolveType(typeHolder)) {
                     is AnyCArrayType -> e.asPointer()
-                    is CPointer -> e
+                    is CPointer      -> e
                     else -> throw TypeResolutionException("Array access with non-pointer type: $e", begin())
                 }
                 primaryType.interfere(typeHolder, exprType) ?: throw TypeResolutionException("Array access with incompatible types: $primaryType and $exprType", begin())

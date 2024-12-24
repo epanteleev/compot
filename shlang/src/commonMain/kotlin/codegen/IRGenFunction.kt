@@ -13,7 +13,6 @@ import codegen.TypeConverter.convertToType
 import codegen.TypeConverter.storeCoerceArguments
 import codegen.TypeConverter.toIRLVType
 import codegen.TypeConverter.toIRType
-import codegen.TypeConverter.toIndexType
 import codegen.consteval.CommonConstEvalContext
 import codegen.consteval.ConstEvalExpression
 import codegen.consteval.TryConstEvalExpressionInt
@@ -418,12 +417,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Field not found: $fieldName", arrowMemberAccess.begin())
         }
 
-        val gep = ir.gfp(struct, structIRType, I64Value.of(member))
+        val gep = ir.gfp(struct, structIRType, I64Value.of(member.index))
         if (!isRvalue) {
             return gep
         }
 
-        val memberType = cStructType.field(fieldName) ?: throw IRCodeGenError("Field not found: '$fieldName'", arrowMemberAccess.begin())
+        val memberType = member.cType(fieldName)
         if (memberType is CAggregateType) {
             return gep
         }
@@ -443,12 +442,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val member = structType.fieldByIndexOrNull(fieldName) ?:
             throw IRCodeGenError("Field not found: '$fieldName'", memberAccess.begin())
 
-        val gep = ir.gfp(struct, structIRType, I64Value.of(member))
+        val gep = ir.gfp(struct, structIRType, I64Value.of(member.index))
         if (!isRvalue) {
             return gep
         }
-        val memberType = structType.field(fieldName) ?:
-            throw IRCodeGenError("Field not found: '$fieldName'", memberAccess.begin())
+        val memberType = member.cType(fieldName)
         if (memberType is CAggregateType) {
             return gep
         }
@@ -483,7 +481,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitArrayAccess(arrayAccess: ArrayAccess, isRvalue: Boolean): Value {
         val index = visitExpression(arrayAccess.expr, true)
-        val convertedIndex = ir.toIndexType(index)
+        val convertedIndex = ir.convertToType(index, I64Type)
         val array = visitExpression(arrayAccess.primary, true)
 
         val arrayType = arrayAccess.resolveType(typeHolder)
@@ -496,7 +494,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (arrayType is CAggregateType) {
             return adr
         }
-        return ir.load(elementType as PrimitiveType, adr)
+        return ir.load(elementType.asType(), adr)
     }
 
     private fun convertArg(function: AnyFunctionPrototype, argIdx: Int, expr: Value): Value {
@@ -1632,7 +1630,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (val type = initializerContext.peekType().cType()) {
             is CStructType -> {
                 val converted = mb.toIRType<StructType>(typeHolder, type)
-                for (i in initializerList.initializers.size until type.fields().size) {
+                for (i in initializerList.initializers.size until type.members().size) {
                     val elementType = converted.field(i)
                     val elementAdr = ir.gfp(value, converted, I64Value.of(i))
                     ir.store(elementAdr, NonTrivialConstant.of(elementType.asType(), 0))
@@ -1679,8 +1677,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         for (designator in designationInitializer.designation.designators) {
             when (designator) {
                 is ArrayDesignator -> {
-                    val arrayType = type as CArrayType
-                    val elementType = arrayType.element()
+                    type as CArrayType
+                    val elementType = type.element()
                     val converted = mb.toIRType<NonTrivialType>(typeHolder, elementType.cType())
                     val expression = visitExpression(designationInitializer.initializer, true)
                     val index = designator.constEval(typeHolder)
@@ -1692,11 +1690,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     type as CStructType
                     val fieldType = mb.toIRType<StructType>(typeHolder, type)
                     val expression = visitExpression(designationInitializer.initializer, true)
-                    val index = type.fieldByIndexOrNull(designator.name()) ?:
+                    val member = type.fieldByIndexOrNull(designator.name()) ?:
                         throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
 
-                    val converted = ir.convertToType(expression, fieldType.field(index))
-                    val fieldAdr = ir.gfp(value, fieldType, I64Value.of(index))
+                    val elementType = mb.toIRType<NonTrivialType>(typeHolder, member.cType(designator.name()))
+
+                    val converted = ir.convertToType(expression, elementType)
+                    val fieldAdr = ir.gfp(value, fieldType, I64Value.of(member.index))
                     ir.store(fieldAdr, converted)
                 }
             }
