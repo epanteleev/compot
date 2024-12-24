@@ -485,7 +485,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val array = visitExpression(arrayAccess.primary, true)
 
         val arrayType = arrayAccess.resolveType(typeHolder)
-        val elementType = mb.toIRType<NonTrivialType>(typeHolder, arrayType)
+        val elementType = mb.toIRLVType<NonTrivialType>(typeHolder, arrayType)
 
         val adr = ir.gep(array, elementType, convertedIndex)
         if (!isRvalue) {
@@ -1069,7 +1069,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 if (type is CAggregateType) {
                     return addr
                 }
-                val loadedType = mb.toIRType<PrimitiveType>(typeHolder, type)
+                val loadedType = mb.toIRLVType<PrimitiveType>(typeHolder, type)
                 ir.load(loadedType, addr)
             }
             PostfixUnaryOpType.INC -> visitIncOrDec(unaryOp, ir::add)
@@ -1693,7 +1693,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     ir.store(elementAdr, convertedRvalue)
                 }
                 is MemberDesignator -> {
-                    type as CStructType
+                    type as AnyCStructType
                     val fieldType = mb.toIRType<StructType>(typeHolder, type)
                     val expression = visitExpression(designationInitializer.initializer, true)
                     val member = type.fieldByIndexOrNull(designator.name()) ?:

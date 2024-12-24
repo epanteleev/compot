@@ -31,7 +31,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         is UnaryOp -> {
             if (expr.opType == PrefixUnaryOpType.ADDRESS) {
                 val nonTrivialType = expr.primary.resolveType(typeHolder)
-                val irType         = mb.toIRType<NonTrivialType>(typeHolder, nonTrivialType)
+                val irType         = mb.toIRLVType<NonTrivialType>(typeHolder, nonTrivialType)
 
                 staticAddressOf(expr.primary) ?: constEvalExpression(irType, expr.primary)
                     ?: throw IRCodeGenError("cannon evaluate", expr.primary.begin())
