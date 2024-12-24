@@ -422,7 +422,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return gep
         }
 
-        val memberType = member.cType(fieldName)
+        val memberType = member.cType()
         if (memberType is CAggregateType) {
             return gep
         }
@@ -446,7 +446,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (!isRvalue) {
             return gep
         }
-        val memberType = member.cType(fieldName)
+        val memberType = member.cType()
         if (memberType is CAggregateType) {
             return gep
         }
@@ -1693,7 +1693,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val member = type.fieldByIndexOrNull(designator.name()) ?:
                         throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
 
-                    val elementType = mb.toIRType<NonTrivialType>(typeHolder, member.cType(designator.name()))
+                    val elementType = mb.toIRType<NonTrivialType>(typeHolder, member.cType())
 
                     val converted = ir.convertToType(expression, elementType)
                     val fieldAdr = ir.gfp(value, fieldType, I64Value.of(member.index))

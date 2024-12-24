@@ -351,7 +351,7 @@ class MemberAccess(val primary: Expression, val fieldName: Identifier) : Express
         }
 
         val fieldDesc = structType.fieldByIndexOrNull(memberName()) ?: throw TypeResolutionException("Field $fieldName not found in struct $structType", begin())
-        return@memoize fieldDesc.cType(memberName())
+        return@memoize fieldDesc.cType()
     }
 }
 
@@ -373,7 +373,7 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
         }
 
         val fieldDesc = baseType.fieldByIndexOrNull(fieldName()) ?: throw TypeResolutionException("Field $ident not found in struct $baseType", begin())
-        return@memoize fieldDesc.cType(fieldName())
+        return@memoize fieldDesc.cType()
     }
 }
 

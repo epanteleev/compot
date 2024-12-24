@@ -5,15 +5,9 @@ import ir.Definitions
 
 class StructType internal constructor(val name: String, val fields: List<NonTrivialType>): AggregateType {
     private val alignments = alignments()
-    private var maxAlignment = Int.MIN_VALUE
+    private val maxAlignment by lazy { alignments.maxOrNull() ?: 1 }
 
-    override fun alignmentOf(): Int {
-        if (maxAlignment == Int.MIN_VALUE) {
-            maxAlignment = alignments.maxOrNull() ?: 1
-        }
-
-        return maxAlignment
-    }
+    override fun alignmentOf(): Int = maxAlignment
 
     private fun alignments(): IntArray {
         var current = 0

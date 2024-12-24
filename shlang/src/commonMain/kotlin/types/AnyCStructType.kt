@@ -41,14 +41,9 @@ sealed class AnyCStructType(open val name: String, protected val fields: List<Me
 
 class CStructType(override val name: String, fields: List<Member>): AnyCStructType(name, fields) {
     private val alignments = alignments()
-    private var maxAlignment = Int.MIN_VALUE
+    private val maxAlignment by lazy { alignments.maxOrNull() ?: 1 }
 
-    override fun alignmentOf(): Int {
-        if (maxAlignment == Int.MIN_VALUE) {
-            maxAlignment = alignments.maxOrNull() ?: 1
-        }
-        return maxAlignment
-    }
+    override fun alignmentOf(): Int = maxAlignment
 
     override fun fieldByIndexOrNull(name: String): FieldDesc? {
         var offset = 0
@@ -56,20 +51,20 @@ class CStructType(override val name: String, fields: List<Member>): AnyCStructTy
             when (field) {
                 is FieldMember -> {
                     if (field.name == name) {
-                        return FieldDesc(idx + offset, field)
+                        return FieldDesc(name, idx + offset, field)
                     }
                 }
                 is AnonMember -> when (val cType = field.cType()) {
                     is CUnionType -> {
                         val i = cType.fieldByIndexOrNull(name)
                         if (i != null) {
-                            return FieldDesc(idx + offset, field)
+                            return FieldDesc(name, idx + offset, field)
                         }
                     }
                     is CStructType -> {
                         val fieldDesc = cType.fieldByIndexOrNull(name)
                         if (fieldDesc != null) {
-                            return FieldDesc(idx + fieldDesc.index + offset, field)
+                            return FieldDesc(name, idx + fieldDesc.index + offset, field)
                         }
                         offset += cType.members().size
                     }
@@ -128,26 +123,30 @@ class CUnionType(override val name: String, fields: List<Member>): AnyCStructTyp
             when (field) {
                 is FieldMember -> {
                     if (field.name == name) {
-                        return FieldDesc(0, field)
+                        return FieldDesc(name, 0, field)
                     }
                 }
-                is AnonMember -> when (val cType = field.cType()) {
-                    is CUnionType -> {
-                        val i = cType.fieldByIndexOrNull(name)
-                        if (i != null) {
-                            return FieldDesc(0, field)
-                        }
-                    }
-                    is CStructType -> {
-                        val i = cType.fieldByIndexOrNull(name)
-                        if (i != null) {
-                            return i
-                        }
+                is AnonMember -> {
+                    val fieldDescOrNull = findInsideAnonMember(field, name)
+                    if (fieldDescOrNull != null) {
+                        return fieldDescOrNull
                     }
                 }
             }
         }
         return null
+    }
+
+    private fun findInsideAnonMember(field: AnonMember, name: String): FieldDesc? = when (val cType = field.cType()) {
+        is CUnionType -> {
+            val fieldDesc = cType.fieldByIndexOrNull(name)
+            if (fieldDesc != null) {
+                FieldDesc(name, 0, field)
+            } else {
+                null
+            }
+        }
+        is CStructType -> cType.fieldByIndexOrNull(name)
     }
 
     override fun size(): Int {
