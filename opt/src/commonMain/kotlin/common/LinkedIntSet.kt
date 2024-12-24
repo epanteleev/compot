@@ -1,37 +1,54 @@
 package common
 
-class LinkedIntSet<E>(private val bitmask: BooleanArray, private val values: Array<Node<E>?>, val closure: (E) -> Int): Set<E> {
+
+class LinkedIntSet<E>(val fwdClosure: (E) -> Int): Set<E> {
+    private val values = arrayListOf<Node<E>?>()
+    private var pos = 0
+    private var head: Node<E>? = null
+    private var tail: Node<E>? = null
+
     override val size: Int
-        get() = bitmask.count { it }
+        get() = pos
 
     fun clear() {
-        values.fill(null)
-        bitmask.fill(false)
+        values.clear()
     }
 
     fun addAll(elements: Collection<E>): Boolean {
         var changed = false
         for (elem in elements) {
-            val idx = closure(elem)
-            if (!bitmask[idx]) {
-                bitmask[idx] = true
-                values[idx] = Node(null, null, elem)
-                changed = true
-            }
+            changed = add(elem) || changed
         }
 
         return changed
     }
 
     fun add(element: E): Boolean {
-        TODO("Not yet implemented")
+        construct { element }
+        return true
+    }
+
+    fun construct(fn: (Int) -> E): E {
+        val idx = pos
+        pos++
+        val elem = fn(idx)
+        val node = Node(tail, null, elem)
+        values.add(node)
+        link(tail, node)
+        tail = node
+        return elem
+    }
+
+    private fun link(previous: Node<E>?, next: Node<E>) {
+        previous?.next = next
+        next.prev = previous
     }
 
     override fun isEmpty(): Boolean = values.all { it == null }
 
     override fun containsAll(elements: Collection<E>): Boolean {
         for (elem in elements) {
-            if (!bitmask[closure(elem)]) {
+            if (values[fwdClosure(elem)] == null) {
                 return false
             }
         }
@@ -40,15 +57,16 @@ class LinkedIntSet<E>(private val bitmask: BooleanArray, private val values: Arr
     }
 
     override fun contains(element: E): Boolean {
-        val idx = closure(element)
-        return bitmask[idx] && values[idx] == element
+        val idx = fwdClosure(element)
+        return values[idx]?.data == element
     }
 
     override fun hashCode(): Int {
-        return bitmask.hashCode()
+        return values.hashCode()
     }
 
     override fun iterator(): MutableIterator<E> = TODO()
+
     fun retainAll(elements: Collection<E>): Boolean {
         TODO("Not yet implemented")
     }
@@ -67,12 +85,20 @@ class LinkedIntSet<E>(private val bitmask: BooleanArray, private val values: Arr
 
         other as LinkedIntSet<*>
 
-        if (!bitmask.contentEquals(other.bitmask)) return false
-        if (values.contentEquals(other.values)) return false
-        if (closure != other.closure) return false
+        if (values != other.values) return false
+        if (fwdClosure != other.fwdClosure) return false
 
         return true
     }
 
     class Node<E>(var prev: Node<E>?, var next: Node<E>?, var data: E)
+}
+
+inline fun <reified E> linkedIntSetOf(values: Collection<E>, noinline closure: (E) -> Int): LinkedIntSet<E> {
+    val set = LinkedIntSet(closure)
+    for (v in values) {
+        set.add(v)
+    }
+
+    return set
 }
