@@ -12,3 +12,11 @@ sealed class CToken(private val position: Position): AnyToken() {
         return "'${str()}' in $position'"
     }
 }
+
+inline fun<reified T: CToken> CToken.asToken(): T {
+    if (this !is T) {
+        throw IllegalArgumentException("Expected ${T::class.simpleName}, but got ${this::class.simpleName}")
+    }
+
+    return this
+}

@@ -3,7 +3,7 @@ package common
 
 class MutableIntSet<E>(private val bitmask: BooleanArray, val values: Array<E?>, val closure: (E) -> Int): MutableSet<E> {
     override val size: Int
-        get() = bitmask.size
+        get() = bitmask.count { it }
 
     override fun clear() {
         bitmask.fill(false)

@@ -95,7 +95,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
         if (check("break")) {
-            val breakKeyword = eat() as Keyword
+            val breakKeyword = eat().asToken<Keyword>()
             if (check(";")) {
                 eat()
                 return@rule BreakStatement(breakKeyword)
@@ -103,11 +103,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
         if (check("return")) {
-            eat()
+            val retKeyword = eat()
             val expr = expression()
             if (check(";")) {
                 eat()
-                return@rule ReturnStatement(expr ?: EmptyExpression)
+                return@rule ReturnStatement(retKeyword.asToken(), expr ?: EmptyExpression)
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -131,23 +131,23 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             return@rule labelResolver.addLabel(LabeledStatement(ident, stmt))
         }
         if (check("case")) {
-            eat()
+            val caseKeyword = eat()
             val expr = constant_expression() ?: throw ParserException(InvalidToken("Expected constant expression", peak()))
             if (!check(":")) {
                 throw ParserException(InvalidToken("Expected ':'", peak()))
             }
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule CaseStatement(expr, stmt)
+            return@rule CaseStatement(caseKeyword.asToken(), expr, stmt)
         }
         if (check("default")) {
-            eat()
+            val defaultKeyword = eat()
             if (!check(":")) {
                 throw ParserException(InvalidToken("Expected ':'", peak()))
             }
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule DefaultStatement(stmt)
+            return@rule DefaultStatement(defaultKeyword.asToken(), stmt)
         }
         return@rule null
     }
@@ -176,7 +176,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //                        | switch ( <expression> ) <statement>
     fun selection_statement(): Statement? = rule {
         if (check("if")) {
-            eat()
+            val ifKeyword = eat()
             if (!check("(")) {
                 throw ParserException(InvalidToken("Expected '('", peak()))
             }
@@ -188,14 +188,14 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val then = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
             if (!check("else")) {
-                return@rule IfStatement(expr, then, EmptyStatement)
+                return@rule IfStatement(ifKeyword.asToken(), expr, then, EmptyStatement)
             }
             eat()
             val els = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule IfStatement(expr, then, els)
+            return@rule IfStatement(ifKeyword.asToken(), expr, then, els)
         }
         if (check("switch")) {
-            eat()
+            val switchKeyword = eat()
             if (!check("(")) {
                 throw ParserException(InvalidToken("Expected '('", peak()))
             }
@@ -206,7 +206,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule SwitchStatement(expr, stmt)
+            return@rule SwitchStatement(switchKeyword.asToken(), expr, stmt)
         }
         return@rule null
     }
@@ -219,7 +219,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //                        ;
     fun iteration_statement(): Statement? = rule {
         if (check("while")) {
-            eat()
+            val whileKeyword = eat()
             if (!check("(")) {
                 throw ParserException(InvalidToken("Expected '('", peak()))
             }
@@ -232,10 +232,10 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val body = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return WhileStatement(condition, body)
+            return WhileStatement(whileKeyword.asToken(), condition, body)
         }
         if (check("do")) {
-            eat()
+            val doKeyword = eat()
             val body = statement()?: throw ParserException(InvalidToken("Expected statement", peak()))
             if (!check("while")) {
                 throw ParserException(InvalidToken("Expected 'while'", peak()))
@@ -251,34 +251,32 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
             eat()
-            if (check(";")) {
-                eat()
-                return DoWhileStatement(body, condition)
-            } else {
+            if (!check(";")) {
                 throw ParserException(InvalidToken("Expected ';'", peak()))
             }
+            eat()
+            return DoWhileStatement(doKeyword.asToken(), body, condition)
         }
         if (check("for")) {
             val forKeyword = eat()
-            val begin = forKeyword.position()
             if (!check("(")) {
                 throw ParserException(InvalidToken("Expected '('", peak()))
             }
             eat()
             val init = declaration() ?: expression_statement()
 
-            val condition = expression()
+            val condition = expression() ?: EmptyExpression
             if (!check(";")) {
                 throw ParserException(InvalidToken("Expected ';'", peak()))
             }
             eat()
-            val update = expression()
+            val update = expression() ?: EmptyExpression
             if (!check(")")) {
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
             eat()
             val body = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule ForStatement(begin, init, condition ?: EmptyExpression, update ?: EmptyExpression, body)
+            return@rule ForStatement(forKeyword.asToken(), init, condition, update, body)
         }
         return@rule null
     }
