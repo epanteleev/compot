@@ -73,7 +73,7 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver, listOf())
-        assertEquals(INT, typeResolver["a"].type.cType())
+        assertEquals(INT, typeResolver["a"].typeDesc.cType())
     }
 
     @Test
@@ -85,8 +85,8 @@ class TypeResolutionTest {
         println(expr)
         val typeResolver = TypeHolder.default()
         expr.specifyType(typeResolver, listOf())
-        assertEquals(INT, typeResolver["a"].type.cType())
-        assertEquals(INT, typeResolver["v"].type.cType())
+        assertEquals(INT, typeResolver["a"].typeDesc.cType())
+        assertEquals(INT, typeResolver["v"].typeDesc.cType())
     }
 
     @Test
@@ -102,9 +102,9 @@ class TypeResolutionTest {
         assertTrue { typeResolver.containsVar("a") }
         assertTrue { typeResolver.containsVar("v") }
         assertTrue { typeResolver.containsVar("p") }
-        assertEquals(INT, typeResolver["a"].type.cType())
-        assertEquals(INT, typeResolver["v"].type.cType())
-        assertEquals(CPointer(INT), typeResolver["p"].type.cType())
+        assertEquals(INT, typeResolver["a"].typeDesc.cType())
+        assertEquals(INT, typeResolver["v"].typeDesc.cType())
+        assertEquals(CPointer(INT), typeResolver["p"].typeDesc.cType())
     }
 
     @Test
@@ -143,8 +143,8 @@ class TypeResolutionTest {
         val fnType = expr.resolveType(typeResolver)
 
         assertEquals("int add(int, int)", fnType.toString())
-        assertEquals(INT, typeResolver["a"].type.cType())
-        assertEquals(INT, typeResolver["b"].type.cType())
+        assertEquals(INT, typeResolver["a"].typeDesc.cType())
+        assertEquals(INT, typeResolver["b"].typeDesc.cType())
     }
 
     @Test
@@ -168,7 +168,7 @@ class TypeResolutionTest {
 
         assertEquals("int add(int(int, int)*, int)", fnType.toString())
         assertEquals("int(int, int)*", typeResolver["a"].toString())
-        assertEquals(INT, typeResolver["b"].type.cType())
+        assertEquals(INT, typeResolver["b"].typeDesc.cType())
     }
 
     @Test
@@ -342,7 +342,7 @@ class TypeResolutionTest {
         expr.specifyType(typeResolver, listOf())
 
         val a = typeResolver["a"]
-        assertEquals(UINT, a.type.cType())
+        assertEquals(UINT, a.typeDesc.cType())
     }
 
     // https://port70.net/~nsz/c/c11/n1570.html#6.7.2.3p11
@@ -419,7 +419,7 @@ class TypeResolutionTest {
         val typeHolder = parser.typeHolder()
         val unionType = typeHolder.getVarTypeOrNull("b") ?: error("Cannot find union type")
         assertEquals("union B {int a;struct struct.0 {int b;char c;}}", unionType.toString())
-        val ty = unionType.type.cType() as CUnionType
+        val ty = unionType.typeDesc.cType() as CUnionType
         assertEquals(0, ty.fieldByIndexOrNull("a")?.index)
         assertEquals(0, ty.fieldByIndexOrNull("b")?.index)
         //assertEquals(2, ty.fieldIndex("c")) TODO
@@ -444,7 +444,7 @@ class TypeResolutionTest {
         val typeHolder = parser.typeHolder()
         val structType = typeHolder.getVarTypeOrNull("a") ?: error("Cannot find struct type")
         assertEquals("struct A {int a;union union.0 {int b;char c;}}", structType.toString())
-        val ty = structType.type.cType() as CStructType
+        val ty = structType.typeDesc.cType() as CStructType
         assertEquals(0, ty.fieldByIndex("a").index)
         assertEquals(1, ty.fieldByIndex("b").index)
         assertEquals(1, ty.fieldByIndex("c").index)
@@ -472,7 +472,7 @@ class TypeResolutionTest {
         val typeHolder = parser.typeHolder()
         val structType = typeHolder.getVarTypeOrNull("c") ?: error("Cannot find struct type")
         assertEquals("struct C {union union.2 {struct struct.0 {int i;int j;}struct struct.1 {long k;long l;} w;}int m;}", structType.toString())
-        val ty = structType.type.cType() as CStructType
+        val ty = structType.typeDesc.cType() as CStructType
         val desc = ty.fieldByIndex("w")
         assertEquals(0, desc.index)
         val unionType = ty.fieldByIndexOrNull(0)!!.cType() as CUnionType

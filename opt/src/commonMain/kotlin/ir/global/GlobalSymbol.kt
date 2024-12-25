@@ -1,7 +1,9 @@
 package ir.global
 
+import ir.instruction.Instruction
 import ir.value.Value
 import ir.types.NonTrivialType
+import ir.value.UsableValue
 
 
 sealed interface GlobalSymbol: Value {
@@ -12,4 +14,6 @@ sealed interface GlobalSymbol: Value {
 
 interface FunctionSymbol: GlobalSymbol
 
-sealed interface AnyGlobalValue: GlobalSymbol
+sealed class AnyGlobalValue: GlobalSymbol, UsableValue {
+    final override var usedIn: MutableList<Instruction> = mutableListOf()
+}

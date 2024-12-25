@@ -458,7 +458,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitSizeOf(sizeOf: SizeOf): Value = when (val expr = sizeOf.expr) {
         is TypeName -> {
             val resolved = expr.specifyType(typeHolder, listOf())
-            when (val cType = resolved.type.cType()) {
+            when (val cType = resolved.typeDesc.cType()) {
                 is VOID -> I64Value.of(1)
                 else -> {
                     val irType = mb.toIRType<NonTrivialType>(typeHolder, cType)
@@ -1620,7 +1620,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return generateGlobalDeclarator(declarator)
         }
 
-        val irType = when (val cType = type.type.cType()) {
+        val irType = when (val cType = type.typeDesc.cType()) {
             is BOOL                          -> I8Type
             is CAggregateType, is CPrimitive -> mb.toIRType<NonTrivialType>(typeHolder, cType)
             else -> throw IRCodeGenError("Unknown type, type=$cType", declarator.begin())
@@ -1714,7 +1714,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (varDesc.storageClass == StorageClass.STATIC) {
             return generateGlobalAssignmentDeclarator(initDeclarator)
         }
-        val type = varDesc.type.cType()
+        val type = varDesc.typeDesc.cType()
         if (type is CPrimitive) {
             val rvalue = visitExpression(initDeclarator.rvalue, true)
             val commonType      = mb.toIRType<Type>(typeHolder, type)
@@ -1726,7 +1726,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         val lvalueAdr = initDeclarator.declarator.accept(this)
         when (val rvalue = initDeclarator.rvalue) {
-            is InitializerList -> initializerContext.scope(lvalueAdr, varDesc.type) { visitInitializerList(rvalue) }
+            is InitializerList -> initializerContext.scope(lvalueAdr, varDesc.typeDesc) { visitInitializerList(rvalue) }
             is FunctionCall -> visitFuncCall0(lvalueAdr, rvalue)
             else -> {
                 val rvalueResult = visitExpression(initDeclarator.rvalue, true)
@@ -1760,7 +1760,7 @@ class FunGenInitializer(moduleBuilder: ModuleBuilder,
                         nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
     fun generate(functionNode: FunctionNode) {
         val varDesc     = functionNode.declareType(functionNode.specifier, typeHolder)
-        val fnType = varDesc.type.asType<CFunctionType>()
+        val fnType = varDesc.typeDesc.asType<CFunctionType>()
 
         val parameters = functionNode.functionDeclarator().params()
         val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder, varDesc.storageClass).build()

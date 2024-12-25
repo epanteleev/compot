@@ -2,14 +2,10 @@ package ir.global
 
 import ir.types.*
 import ir.value.constant.*
-import ir.value.UsableValue
-import ir.instruction.Instruction
 import ir.attributes.GlobalValueAttribute
 
 
-class GlobalValue private constructor(val name: String, private val init: NonTrivialConstant, private val attribute: GlobalValueAttribute): AnyGlobalValue, UsableValue {
-    override var usedIn: MutableList<Instruction> = mutableListOf()
-
+class GlobalValue private constructor(val name: String, private val init: NonTrivialConstant, private val attribute: GlobalValueAttribute): AnyGlobalValue() {
     fun initializer(): NonTrivialConstant = init
 
     override fun name(): String = name

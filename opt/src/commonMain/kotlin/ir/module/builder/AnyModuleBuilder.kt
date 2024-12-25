@@ -6,6 +6,7 @@ import ir.module.*
 import ir.value.UsableValue
 import ir.attributes.FunctionAttribute
 import ir.attributes.GlobalValueAttribute
+import ir.value.asValue
 import ir.value.constant.NonTrivialConstant
 
 
@@ -19,8 +20,17 @@ abstract class AnyModuleBuilder {
         val global = GlobalValue.create(name, initializer, attributes)
         val has = globals.put(name, global)
         if (has != null) {
-            UsableValue.updateUsages(global) { has }
+            throw IllegalArgumentException("global with name='$name' already exists")
         }
+
+        return global
+    }
+
+    fun redefineGlobalValue(oldGlobalValue: AnyGlobalValue, name: String, initializer: NonTrivialConstant, attributes: GlobalValueAttribute): GlobalValue {
+        val removed = globals.remove(oldGlobalValue.name()) ?: throw IllegalArgumentException("global with name='${oldGlobalValue.name()}' not found")
+        val global = GlobalValue.create(name, initializer, attributes)
+        globals[name] = global
+        UsableValue.updateUsages(removed.asValue()) { global }
 
         return global
     }

@@ -3,7 +3,7 @@ package ir.global
 import ir.types.*
 
 
-class ExternValue internal constructor(val name: String, val type: NonTrivialType): AnyGlobalValue {
+class ExternValue internal constructor(val name: String, val type: NonTrivialType): AnyGlobalValue() {
     override fun name(): String = name
 
     override fun dump(): String {
@@ -11,8 +11,8 @@ class ExternValue internal constructor(val name: String, val type: NonTrivialTyp
     }
 
     override fun type(): PtrType = PtrType
-    override fun toString(): String  = "@$name"
-    override fun hashCode(): Int     = name.hashCode()
+    override fun toString(): String = "@$name"
+    override fun hashCode(): Int    = name.hashCode()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

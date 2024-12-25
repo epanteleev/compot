@@ -4,9 +4,7 @@ import types.*
 import typedesc.*
 import tokenizer.tokens.*
 import codegen.IRCodeGenError
-import codegen.TypeConverter.toIRType
 import common.assertion
-import ir.types.NonTrivialType
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.*
 import tokenizer.Position
@@ -172,7 +170,7 @@ class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerLi
     override fun begin(): Position = typeName.begin()
 
     fun typeDesc(typeHolder: TypeHolder): TypeDesc {
-        return typeName.specifyType(typeHolder, listOf()).type
+        return typeName.specifyType(typeHolder, listOf()).typeDesc
     }
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
@@ -280,7 +278,7 @@ class FunctionCall(val primary: Expression, val args: List<Expression>) : Expres
         val functionType = if (primary !is VarNode) {
             resolveFunctionType0(typeHolder)
         } else {
-            typeHolder.getFunctionType(primary.name()).type.cType()
+            typeHolder.getFunctionType(primary.name()).typeDesc.cType()
         }
         if (functionType is CPointer) {
             return functionType.dereference(typeHolder) as AbstractCFunction
@@ -389,7 +387,7 @@ data class VarNode(private val str: Identifier) : Expression() {
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val varType = typeHolder.getVarTypeOrNull(str.str())
         if (varType != null) {
-            return@memoize varType.type.cType()
+            return@memoize varType.typeDesc.cType()
         }
 
         return@memoize typeHolder.findEnum(str.str()) ?: throw TypeResolutionException("Variable '$str' not found", begin())
@@ -525,7 +523,7 @@ data class SizeOf(val expr: Node) : Expression() {
 
     fun constEval(typeHolder: TypeHolder): Int = when (expr) {
         is TypeName -> {
-            val resolved = expr.specifyType(typeHolder, listOf()).type
+            val resolved = expr.specifyType(typeHolder, listOf()).typeDesc
             resolved.size()
         }
         is VarNode -> {
@@ -541,7 +539,7 @@ data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize typeName.specifyType(typeHolder, listOf()).type.cType()
+        return@memoize typeName.specifyType(typeHolder, listOf()).typeDesc.cType()
     }
 }
 
@@ -560,7 +558,7 @@ class BuiltinVaArg(val assign: Expression, val typeName: TypeName) : Expression(
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize typeName.specifyType(typeHolder, listOf()).type.cType()
+        return@memoize typeName.specifyType(typeHolder, listOf()).typeDesc.cType()
     }
 }
 

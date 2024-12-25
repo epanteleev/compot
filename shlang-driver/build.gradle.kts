@@ -68,7 +68,23 @@ tasks.withType(Test::class.java).all {
     }
 }
 
-tasks.create<Exec>("runtests") {
+
+tasks.create<Exec>("runChibicc") {
+    dependsOn("test")
+    dependsOn("installDist")
+
+    project.logger.debug("Running tests")
+    workingDir = workingDir.resolve("scripts")
+    val shlangDriver = projectDir.resolve("build")
+        .resolve("install")
+        .resolve("shlang-driver")
+        .resolve("bin")
+        .resolve("shlang-driver")
+
+    commandLine("python3", "chibicc.py", shlangDriver)
+}
+
+tasks.create<Exec>("runBfish") {
     dependsOn("test")
     dependsOn("installDist")
 
@@ -81,5 +97,9 @@ tasks.create<Exec>("runtests") {
         .resolve("shlang-driver")
 
     commandLine("python3", "bfish.py", shlangDriver)
-    commandLine("python3", "chibicc.py", shlangDriver)
+}
+
+tasks.create("runtests") {
+    dependsOn("runChibicc")
+    dependsOn("runBfish")
 }

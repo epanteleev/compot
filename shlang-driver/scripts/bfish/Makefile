@@ -1,5 +1,5 @@
 
-CFLAGS+=-Wall -pedantic -ansi
+CFLAGS+=-fsanitize=address -Wall -pedantic -ansi
 
 bftest: test/bftest.c
 	$(CC) -o $@ $(CFLAGS) $^

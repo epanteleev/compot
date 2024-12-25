@@ -17,7 +17,7 @@ sealed class AnyDeclarator: Node() {
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
     internal abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor
 
-    fun cType(): VarDescriptor {
+    fun varDescriptor(): VarDescriptor {
         if (cachedType == null) {
             throw IllegalStateException("type is not resolved")
         }
@@ -44,7 +44,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
 
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor = memoizeType {
         val declspecType = declspec.specifyType(typeHolder, pointers)
-        val type = directDeclarator.resolveType(declspecType.type, typeHolder)
+        val type = directDeclarator.resolveType(declspecType.typeDesc, typeHolder)
         if (declspec.isTypedef) {
             assertion(declspecType.storageClass == null) { "typedef with storage class is not supported" }
 
@@ -75,7 +75,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor = memoizeType {
         val declspecType = declspec.specifyType(typeHolder, declarator.pointers)
 
-        val type = declarator.directDeclarator.resolveType(declspecType.type, typeHolder)
+        val type = declarator.directDeclarator.resolveType(declspecType.typeDesc, typeHolder)
         assertion (!declspec.isTypedef) { "typedef is not supported here" }
 
         val baseType = type.cType()
@@ -165,7 +165,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
 
         val declspecType = declspec.specifyType(typeHolder, declarator.pointers)
 
-        val type = declarator.directDeclarator.resolveType(declspecType.type, typeHolder)
+        val type = declarator.directDeclarator.resolveType(declspecType.typeDesc, typeHolder)
         assertion(!declspec.isTypedef) { "typedef is not supported here" }
 
         val baseType = type.cType()
@@ -174,7 +174,7 @@ data class FunctionNode(val specifier: DeclarationSpecifier,
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
-        return declareType(specifier, typeHolder).type.cType() as CFunctionType
+        return declareType(specifier, typeHolder).typeDesc.cType() as CFunctionType
     }
 
     override fun <T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)

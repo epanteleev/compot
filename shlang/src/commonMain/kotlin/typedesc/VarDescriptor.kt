@@ -2,16 +2,16 @@ package typedesc
 
 import types.CType
 
-class VarDescriptor(val type: TypeDesc, val storageClass: StorageClass?) {
+class VarDescriptor(val typeDesc: TypeDesc, val storageClass: StorageClass?) {
     fun cType(): CType {
-        return type.cType()
+        return typeDesc.cType()
     }
 
     override fun toString(): String {
         return if (storageClass == null) {
-            type.toString()
+            typeDesc.toString()
         } else {
-            "$storageClass $type"
+            "$storageClass $typeDesc"
         }
     }
 }

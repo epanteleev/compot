@@ -21,13 +21,13 @@ sealed class AnyTypeNode(val name: CToken) : Node() {
     protected fun resolveFieldTypes(typeHolder: TypeHolder, fields: List<StructField>): List<Member> {
         val members = arrayListOf<Member>()
         for (field in fields) {
-            val type = field.declspec.specifyType(typeHolder, listOf()).type
+            val type = field.declspec.specifyType(typeHolder, listOf()).typeDesc
             if (field.declarators.isEmpty()) {
                 members.add(AnonMember(type))
                 continue
             }
             for (declarator in field.declarators) {
-                val resolved = declarator.declareType(field.declspec, typeHolder).type
+                val resolved = declarator.declareType(field.declspec, typeHolder).typeDesc
                 members.add(FieldMember(declarator.name(), resolved))
             }
         }

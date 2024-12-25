@@ -30,9 +30,8 @@ inline fun<reified T> Value.asType(): T {
 }
 
 inline fun<reified T: Value> Value.asValue(): T {
-    val isValue = this is T
-    if (!isValue) {
-        throw TypeCastException("Cannot cast $this to ${T::class}")
+    if (this !is T) {
+        throw TypeCastException("Cannot cast ${this::class} to ${T::class}")
     }
 
     return this
