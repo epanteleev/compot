@@ -13,7 +13,7 @@ sealed class AnyCArrayType(val type: TypeDesc): CAggregateType() {
 }
 
 class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(elementType) {
-    override fun typename(): String = buildString {
+    override fun toString(): String = buildString {
         append(type)
         append("[$dimension]")
     }
@@ -27,10 +27,6 @@ class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(
 
 class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     private var maxAlignment = Int.MIN_VALUE
-
-    override fun typename(): String {
-        return toString()
-    }
 
     override fun size(): Int {
         return type.size() * dimension.toInt() //TODO
@@ -51,10 +47,6 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
 }
 
 data class CUncompletedArrayType(val elementType: TypeDesc) : AnyCArrayType(elementType) {
-    override fun typename(): String {
-        return toString()
-    }
-
     override fun size(): Int = BYTE_SIZE
     override fun alignmentOf(): Int = BYTE_SIZE
 

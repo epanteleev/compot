@@ -6,7 +6,7 @@ import typedesc.TypeDesc
 
 
 sealed class AnyCStructType(open val name: String, protected val fields: List<Member>): CAggregateType() {
-    override fun typename(): String = name
+    override fun toString(): String = name
 
     abstract fun fieldByIndexOrNull(name: String): FieldDesc?
 

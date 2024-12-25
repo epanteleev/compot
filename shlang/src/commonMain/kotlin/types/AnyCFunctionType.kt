@@ -13,7 +13,7 @@ class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, va
     override fun size(): Int = throw RuntimeException("Function type has no size")
     override fun alignmentOf(): Int = throw RuntimeException("Function type has no alignment")
 
-    override fun typename(): String = buildString {
+    override fun toString(): String = buildString {
         append(retType)
         append("(")
         argsTypes.forEachIndexed { index, type ->
@@ -66,7 +66,7 @@ class CFunctionType(val name: String, val functionType: AbstractCFunction): AnyC
         return functionType.variadic
     }
 
-    override fun typename(): String = buildString {
+    override fun toString(): String = buildString {
         append(functionType.retType)
         append(" $name(")
         functionType.argsTypes.forEachIndexed { index, type ->

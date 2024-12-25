@@ -1906,6 +1906,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val declaration = declaration()
         if (declaration != null) {
             // Early resolve type.
+            // TODO this step should be skipped if the declaration doesn't have 'typedef' storage class specifier.
             declaration.specifyType(typeHolder, listOf())
             return@rule declaration
         }

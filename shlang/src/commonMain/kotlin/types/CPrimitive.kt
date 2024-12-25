@@ -1,9 +1,8 @@
 package types
 
-import ir.Definitions.POINTER_SIZE
-import typedesc.TypeDesc
 import typedesc.TypeHolder
 import typedesc.TypeQualifier
+import ir.Definitions.POINTER_SIZE
 
 
 sealed class CPrimitive: CType() {
@@ -224,62 +223,62 @@ sealed class CPrimitive: CType() {
 }
 
 object VOID: CPrimitive() {
-    override fun typename(): String = "void"
+    override fun toString(): String = "void"
     override fun size(): Int = 1
 }
 
 object CHAR: CPrimitive() {
-    override fun typename(): String = "char"
+    override fun toString(): String = "char"
     override fun size(): Int = 1
 }
 
 object SHORT: CPrimitive() {
-    override fun typename(): String = "short"
+    override fun toString(): String = "short"
     override fun size(): Int = 2
 }
 
 object INT: CPrimitive() {
-    override fun typename(): String = "int"
+    override fun toString(): String = "int"
     override fun size(): Int = 4
 }
 
 object LONG: CPrimitive() {
-    override fun typename(): String = "long"
+    override fun toString(): String = "long"
     override fun size(): Int = 8
 }
 
 object FLOAT: CPrimitive() {
-    override fun typename(): String = "float"
+    override fun toString(): String = "float"
     override fun size(): Int = 4
 }
 
 object DOUBLE: CPrimitive() {
-    override fun typename(): String = "double"
+    override fun toString(): String = "double"
     override fun size(): Int = 8
 }
 
 object UCHAR: CPrimitive() {
-    override fun typename(): String = "unsigned char"
+    override fun toString(): String = "unsigned char"
     override fun size(): Int = 1
 }
 
 object USHORT: CPrimitive() {
-    override fun typename(): String = "unsigned short"
+    override fun toString(): String = "unsigned short"
     override fun size(): Int = 2
 }
 
 object UINT: CPrimitive() {
-    override fun typename(): String = "unsigned int"
+    override fun toString(): String = "unsigned int"
     override fun size(): Int = 4
 }
 
 object ULONG: CPrimitive() {
-    override fun typename(): String = "unsigned long"
+    override fun toString(): String = "unsigned long"
     override fun size(): Int = 8
 }
 
 object BOOL: CPrimitive() {
-    override fun typename(): String = "_Bool"
+    override fun toString(): String = "_Bool"
     override fun size(): Int = 1
 }
 
@@ -307,7 +306,7 @@ class CPointer(val type: CType, private val properties: Set<TypeQualifier> = set
         return type.hashCode()
     }
 
-    override fun typename(): String = buildString {
+    override fun toString(): String = buildString {
         properties.forEach { append(it) }
         append(type)
         append("*")
@@ -315,7 +314,7 @@ class CPointer(val type: CType, private val properties: Set<TypeQualifier> = set
 }
 
 data class CEnumType(val name: String, private val enumerators: Map<String, Int>): CPrimitive() {
-    override fun typename(): String = name
+    override fun toString(): String = name
 
     override fun size(): Int {
         return INT.size()
