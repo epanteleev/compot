@@ -526,7 +526,7 @@ data class SizeOf(val expr: Node) : Expression() {
             val resolved = expr.specifyType(typeHolder, listOf()).typeDesc
             resolved.size()
         }
-        is VarNode -> {
+        is Expression -> {
             val resolved = expr.resolveType(typeHolder)
             resolved.size()
         }

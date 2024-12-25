@@ -4,7 +4,7 @@ import parser.nodes.*
 import tokenizer.tokens.Identifier
 
 
-class LabelResolver private constructor(private val labels: MutableMap<String, LabeledStatement>, private val gotos: MutableSet<GotoStatement>) {
+class LabelResolver private constructor(private val labels: MutableMap<String, LabeledStatement>, private val gotos: ArrayList<GotoStatement>) {
     fun addLabel(label: LabeledStatement): LabeledStatement {
         labels[label.name()] = label
         return label
@@ -36,7 +36,7 @@ class LabelResolver private constructor(private val labels: MutableMap<String, L
 
     companion object {
         fun default(): LabelResolver {
-            return LabelResolver(hashMapOf(), hashSetOf())
+            return LabelResolver(hashMapOf(), arrayListOf())
         }
     }
 }

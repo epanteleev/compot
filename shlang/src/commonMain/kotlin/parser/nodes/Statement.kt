@@ -16,7 +16,7 @@ data object EmptyStatement : Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class LabeledStatement(val label: Identifier, val stmt: Statement) : Statement() {
+class LabeledStatement(val label: Identifier, val stmt: Statement) : Statement() {
     override fun begin(): Position = label.position()
     private var gotos = hashSetOf<GotoStatement>()
 
@@ -27,11 +27,24 @@ data class LabeledStatement(val label: Identifier, val stmt: Statement) : Statem
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-data class GotoStatement(val id: Identifier) : Statement() {
+class GotoStatement(val id: Identifier) : Statement() {
     override fun begin(): Position = id.position()
     private var label: LabeledStatement? = null
 
     fun label(): LabeledStatement? = label
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as GotoStatement
+
+        return id == other.id
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
 
     internal fun resolve(resolver: LabelResolver): LabeledStatement? {
         label = resolver.resolve(id)
