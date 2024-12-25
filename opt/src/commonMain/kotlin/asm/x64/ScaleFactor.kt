@@ -33,8 +33,9 @@ enum class ScaleFactor {
             else -> throw IllegalArgumentException("Invalid scale factor: $value")
         }
 
-        fun isScaleFactor(scale: Int): Boolean {
-            return scale == 1 || scale == 2 || scale == 4 || scale == 8
+        fun isScaleFactor(scale: Int): Boolean = when (scale) {
+            1, 2, 4, 8 -> true
+            else -> false
         }
     }
 }

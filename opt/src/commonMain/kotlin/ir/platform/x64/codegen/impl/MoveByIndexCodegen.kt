@@ -26,8 +26,8 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
                     asm.movf(size, source, xmmTemp1)
                     asm.movf(size, xmmTemp1, Address.from(dst, index.value().toInt() * size))
                 } else if (dst is Address && source is XmmRegister && index is ImmInt) {
-                    TODO("untested")
-                   // asm.movf(size, source, dst.withOffset(index.value().toInt() * size))
+                    asm.mov(size, dst, temp1)
+                    asm.movf(size, source, Address.from(temp1, index.value().toInt() * size))
                 } else {
                     default(dst, source, index)
                 }
@@ -75,7 +75,8 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(indexSize, second, temp1)
+        asm.mov(size, first, Address.from(dst, 0, temp1, ScaleFactor.from(size)))
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
@@ -103,11 +104,14 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO()
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.mov(size, first, Address.from(temp1, second.value().toInt() * size))
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.mov(size, first, temp2)
+        asm.mov(size, temp2, Address.from(temp1, second.value().toInt() * size))
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

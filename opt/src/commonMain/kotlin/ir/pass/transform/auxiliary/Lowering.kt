@@ -12,7 +12,7 @@ import ir.instruction.matching.*
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
 
 
-class Lowering private constructor(private val cfg: FunctionData) {
+internal class Lowering private constructor(private val cfg: FunctionData) {
     private fun replaceGepToLea() {
         fun transform(bb: Block, inst: Instruction): Instruction {
             inst.match(gep(primitive(), generate(), nop())) { gp: GetElementPtr ->
@@ -43,7 +43,7 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val tp = gf.basicType.asType<ArrayType>()
                 val index = gf.index().toInt()
                 val offset = tp.offset(index)
-                return bb.replace(inst, LeaStack.lea(gf.source(), I8Type, U64Value.of(offset)))
+                return bb.replace(inst, LeaStack.lea(gf.source(), U8Type, U64Value.of(offset)))
             }
 
             return inst
@@ -76,40 +76,40 @@ class Lowering private constructor(private val cfg: FunctionData) {
                 val pointer = store.pointer().asValue<ValueInstruction>()
                 val storeOnSt = StoreOnStack.store(getSource(pointer), getIndex(pointer), store.value())
                 val st = bb.replace(inst, storeOnSt)
-                killOnDemand(pointer.owner(), pointer)
+                killOnDemand(pointer)
                 return st
             }
-            inst.match(store(gfpOrGep(generate().not(), nop()), generate())) { store: Store ->
+            inst.match(store(gfpOrGep(generate().not(), nop()), nop())) { store: Store ->
                 val pointer = store.pointer().asValue<ValueInstruction>()
                 val moveBy = MoveByIndex.move(getSource(pointer), getIndex(pointer), store.value())
                 val move = bb.replace(inst, moveBy)
-                killOnDemand(bb, pointer)
+                killOnDemand(pointer)
                 return move
             }
             inst.match(store(gfpOrGep(generate(), nop()), generate())) { store: Store ->
                 val pointer = store.pointer().asValue<ValueInstruction>()
                 val st = bb.replace(inst, StoreOnStack.store(getSource(pointer), getIndex(pointer), store.value()))
-                killOnDemand(bb, pointer)
+                killOnDemand(pointer)
                 return st
             }
             inst.match(load(gfpOrGep(argumentByValue(), nop()))) { load: Load ->
                 val pointer = load.operand().asValue<ValueInstruction>()
                 val index = getIndex(pointer)
                 val copy = bb.replace(inst, LoadFromStack.load(getSource(pointer), load.type(), index))
-                killOnDemand(pointer.owner(), pointer)
+                killOnDemand(pointer)
                 return copy
             }
             inst.match(load(gfpOrGep(generate().not(), nop()))) { load: Load ->
                 val pointer = load.operand().asValue<ValueInstruction>()
                 val copy = bb.replace(inst, IndexedLoad.load(getSource(pointer), load.type(), getIndex(pointer)))
-                killOnDemand(bb, pointer)
+                killOnDemand(pointer)
                 return copy
             }
             inst.match(load(gfpOrGep(generate(), nop()))) { load: Load ->
                 val pointer = load.operand().asValue<ValueInstruction>()
                 val index = getIndex(pointer)
                 val copy = bb.replace(inst, LoadFromStack.load(getSource(pointer), load.type(), index))
-                killOnDemand(pointer.owner(), pointer)
+                killOnDemand(pointer)
                 return copy
             }
             return inst
@@ -120,141 +120,10 @@ class Lowering private constructor(private val cfg: FunctionData) {
         }
     }
 
-    private fun killOnDemand(bb: Block, instruction: LocalValue) {
+    private fun killOnDemand(instruction: LocalValue) {
         instruction as Instruction
         if (instruction.usedIn().isEmpty()) { //TODO Need DCE
-            bb.kill(instruction, UndefValue) // TODO bb may not contain pointer
-        }
-    }
-
-    private fun replaceByteOperands() {
-        fun closure(bb: Block, inst: Instruction): Instruction {
-            inst.match(tupleDiv(value(i8()), value(i8()))) { tupleDiv: TupleDiv ->
-                // Before:
-                //  %resANDrem = div i8 %a, %b
-                //
-                // After:
-                //  %extFirst  = sext %a to i16
-                //  %extSecond = sext %b to i16
-                //  %newDiv = div i16 %extFirst, %extSecond
-                //  %projDiv = proj %newDiv, 0
-                //  %projRem = proj %newDiv, 1
-                //  %res = trunc %projDiv to i8
-                //  %rem = trunc %projRem to i8
-
-                val extFirst  = bb.putBefore(inst, SignExtend.sext(tupleDiv.first(), I16Type))
-                val extSecond = bb.putBefore(inst, SignExtend.sext(tupleDiv.second(), I16Type))
-                val newDiv    = bb.putBefore(inst, TupleDiv.div(extFirst, extSecond))
-
-
-                val divProj = tupleDiv.quotient()
-                if (divProj != null) {
-                    val proj = bb.putBefore(inst, Projection.proj(newDiv, 0))
-                    bb.updateUsages(divProj) {
-                        bb.putBefore(inst, Truncate.trunc(proj, I8Type))
-                    }
-                    killOnDemand(bb, divProj)
-                }
-
-                val remProj  = tupleDiv.remainder() ?: throw IllegalStateException("Remainder projection is missing")
-                val proj     = bb.putBefore(inst, Projection.proj(newDiv, 1))
-                val truncate = bb.updateUsages(remProj) {
-                    bb.putBefore(inst, Truncate.trunc(proj, I8Type))
-                }
-                killOnDemand(bb, remProj)
-
-                killOnDemand(bb, tupleDiv)
-                return truncate
-            }
-            inst.match(tupleDiv(value(u8()), value(u8()))) { tupleDiv: TupleDiv ->
-                // Before:
-                //  %resANDrem = div u8 %a, %b
-                //
-                // After:
-                //  %extFirst  = zext %a to u16
-                //  %extSecond = zext %b to u16
-                //  %newDiv = div u16 %extFirst, %extSecond
-                //  %projDiv = proj %newDiv, 0
-                //  %projRem = proj %newDiv, 1
-                //  %res = trunc %projDiv to u8
-                //  %rem = trunc %projRem to u8
-
-                val extFirst  = bb.putBefore(inst, ZeroExtend.zext(tupleDiv.first(), U16Type))
-                val extSecond = bb.putBefore(inst, ZeroExtend.zext(tupleDiv.second(), U16Type))
-                val newDiv    = bb.putBefore(inst, TupleDiv.div(extFirst, extSecond))
-
-                val divProj = tupleDiv.proj(0)
-                if (divProj != null) {
-                    val proj = bb.putBefore(inst, Projection.proj(newDiv, 0))
-                    bb.updateUsages(divProj) { bb.putBefore(inst, Truncate.trunc(proj, U8Type)) }
-                    killOnDemand(bb, divProj)
-                }
-
-                val remProj  = tupleDiv.remainder() ?: throw IllegalStateException("Remainder projection is missing")
-                val proj     = bb.putBefore(inst, Projection.proj(newDiv, 1))
-                val truncate = bb.updateUsages(remProj) {
-                    bb.putBefore(inst, Truncate.trunc(proj, U8Type))
-                }
-                killOnDemand(bb, remProj)
-                killOnDemand(bb, tupleDiv)
-                return truncate
-            }
-            inst.match(tupleDiv(constant().not(), nop())) { tupleDiv: TupleDiv ->
-                // TODO temporal
-                val second = tupleDiv.second()
-                val copy = bb.putBefore(inst, Copy.copy(second))
-                bb.updateDF(inst, TupleDiv.SECOND, copy)
-                return inst
-            }
-            inst.match(select(nop(), value(i8()), value(i8()))) { select: Select ->
-                // Before:
-                //  %cond = icmp <predicate> i8 %a, %b
-                //  %res = select i1 %cond, i8 %onTrue, i8 %onFalse
-                //
-                // After:
-                //  %extOnTrue  = sext %onTrue to i16
-                //  %extOnFalse = sext %onFalse to i16
-                //  %cond = icmp <predicate> i8 %a, %b
-                //  %newSelect = select i1 %cond, i16 %extOnTrue, i16 %extOnFalse
-                //  %res = trunc %newSelect to i8
-
-                val insertPos = when(val selectCond = select.condition()) {
-                    is CompareInstruction -> selectCond
-                    else                  -> inst
-                }
-
-                val extOnTrue  = bb.putBefore(insertPos, SignExtend.sext(select.onTrue(), I16Type))
-                val extOnFalse = bb.putBefore(insertPos, SignExtend.sext(select.onFalse(), I16Type))
-                val newSelect  = bb.putBefore(inst, Select.select(select.condition(), I16Type, extOnTrue, extOnFalse))
-                return bb.replace(inst, Truncate.trunc(newSelect, I8Type))
-            }
-            inst.match(select(nop(), value(u8()), value(u8()))) { select: Select ->
-                // Before:
-                //  %cond = icmp <predicate> u8 %a, %b
-                //  %res = select i1 %cond, u8 %onTrue, u8 %onFalse
-                //
-                // After:
-                //  %extOnTrue  = zext %onTrue to u16
-                //  %extOnFalse = zext %onFalse to u16
-                //  %cond = icmp <predicate> u8 %a, %b
-                //  %newSelect = select i1 %cond, u16 %extOnTrue, u16 %extOnFalse
-                //  %res = trunc %newSelect to u8
-
-                val insertPos = when(val selectCond = select.condition()) {
-                    is CompareInstruction -> selectCond
-                    else                  -> inst
-                }
-
-                val extOnTrue  = bb.putBefore(insertPos, ZeroExtend.zext(select.onTrue(), U16Type))
-                val extOnFalse = bb.putBefore(insertPos, ZeroExtend.zext(select.onFalse(), U16Type))
-                val newSelect  = bb.putBefore(inst, Select.select(select.condition(), U16Type, extOnTrue, extOnFalse))
-                return bb.replace(inst, Truncate.trunc(newSelect, U8Type))
-            }
-            return inst
-        }
-
-        for (bb in cfg) {
-            bb.transform { inst -> closure(bb, inst) }
+            instruction.owner().kill(instruction, UndefValue) // TODO bb may not contain pointer
         }
     }
 
@@ -458,7 +327,6 @@ class Lowering private constructor(private val cfg: FunctionData) {
     }
 
     private fun pass() {
-        replaceByteOperands()
         replaceEscaped()
         replaceGEPAndStore()
         replaceGepToLea()

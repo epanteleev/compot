@@ -464,7 +464,7 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
             return@memoize primaryType
         }
 
-        val resolvedType = when (opType) {
+        return@memoize when (opType) {
             PrefixUnaryOpType.DEREF -> when (primaryType) {
                 is CPointer              -> primaryType.dereference(typeHolder)
                 is CArrayType            -> primaryType.type.cType()
@@ -489,8 +489,6 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 primaryType as? CPrimitive ?: throw TypeResolutionException("Bitwise not on non-primitive type: $primaryType", begin())
             }
         }
-
-        return@memoize resolvedType
     }
 }
 

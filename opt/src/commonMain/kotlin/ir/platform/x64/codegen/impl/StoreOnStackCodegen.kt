@@ -120,13 +120,12 @@ class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, 
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
-    override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("untested")
-        if (dst !is Address2) {
-            throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
+    override fun aai(dst: Address, first: Address, second: Imm32) = when (dst) {
+        is Address2 -> {
+            asm.mov(size, first, temp1)
+            asm.mov(size, temp1, Address.from(dst.base, dst.offset + second.value().toInt() * size))
         }
-       // asm.mov(size, first, temp1)
-       // asm.mov(size, temp1, Address.from(dst.base, dst.offset + second.value().toInt() * size))
+        else -> throw RuntimeException("Unknown type=$type, dst=$dst, first=$first, second=$second")
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

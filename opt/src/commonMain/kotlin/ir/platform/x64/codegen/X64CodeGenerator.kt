@@ -618,6 +618,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(gfp: GetFieldPtr) {
+       // TODO(gfp.dump())
         val sourceOperand = registerAllocation.operand(gfp.source())
         val index         = registerAllocation.operand(gfp.index())
         val dest          = registerAllocation.operand(gfp)
