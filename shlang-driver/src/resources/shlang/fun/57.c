@@ -5,6 +5,6 @@ union Value {
 };
 
 int main() {
-    union Value a = {0};
-    return a.i;
+    union Value a[2] = {0};
+    return a[1].i;
 }

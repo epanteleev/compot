@@ -35,7 +35,7 @@ object CallConvention {
         r11
     ) { it.encoding() }
 
-    val xmmCallerSaveRegs: Array<XmmRegister> = arrayOf(
+    val xmmCallerSaveRegs: Set<XmmRegister> = intSetOf(GPRegister.NUMBER_OF_FP_REGISTERS,
         xmm0,
         xmm1,
         xmm2,
@@ -52,18 +52,18 @@ object CallConvention {
         xmm13,
         xmm14,
         xmm15
-    )
+    ) { it.encoding() }
 
     val xmmCalleeSaveRegs = arrayOf<XmmRegister>()
 
-    val gpCalleeSaveRegs: Array<GPRegister> = arrayOf(
+    val gpCalleeSaveRegs: Set<GPRegister> = intSetOf(GPRegister.NUMBER_OF_GP_REGISTERS,
         rbp,
         rbx,
         r12,
         r13,
         r14,
         r15
-    )
+    ) { it.encoding() }
 
     val xmmArgumentRegister: Array<XmmRegister> = arrayOf(
         xmm0,

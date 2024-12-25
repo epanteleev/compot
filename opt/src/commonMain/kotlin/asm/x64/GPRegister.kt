@@ -243,5 +243,6 @@ enum class GPRegister : Register {
 
     companion object {
         const val NUMBER_OF_GP_REGISTERS = 16
+        const val NUMBER_OF_FP_REGISTERS = 16
     }
 }

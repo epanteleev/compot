@@ -42,6 +42,6 @@ internal class SplitCriticalEdge private constructor(private val functionData: F
     }
 }
 
-fun Block.hasCriticalEdgeFrom(predecessor: Block): Boolean {
+internal fun Block.hasCriticalEdgeFrom(predecessor: Block): Boolean {
     return predecessor.successors().size > 1 && predecessors().size > 1
 }
