@@ -13,6 +13,7 @@ import ir.platform.common.TargetPlatform
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.SYSTEM
+import kotlin.random.Random
 
 
 class OptDriver(private val commandLineArguments: OptCLIArguments) {
@@ -35,7 +36,7 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
     }
 
     private fun writeAsmFile(compiledModule: CompiledModule, asmFileName: String): ExecutionResult {
-        val temp = FileSystem.SYSTEM_TEMPORARY_DIRECTORY.resolve(OPT)
+        val temp = FileSystem.SYSTEM_TEMPORARY_DIRECTORY.resolve(OPT + Random.nextInt())
         val optimizedAsm = temp.toString()
         try {
             FileSystem.SYSTEM.write(temp) {

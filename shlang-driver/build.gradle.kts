@@ -55,6 +55,8 @@ tasks.named<Jar>("jar") {
 }
 
 tasks.withType(Test::class.java).all {
+    maxParallelForks = Runtime.getRuntime().availableProcessors() * 2 / 3
+
     dependsOn(":shlang:jvmTest")
     dependsOn(":opt-driver:jvmTest")
 

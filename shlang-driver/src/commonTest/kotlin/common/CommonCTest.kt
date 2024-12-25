@@ -4,13 +4,14 @@ import okio.FileSystem
 import okio.Path.Companion.toPath
 import startup.ShlangDriver
 import startup.CCLIParser
+import kotlin.random.Random
 
 
 abstract class CommonCTest: CommonTest() {
     abstract fun options(): List<String>
 
     protected fun runCTest(filename: String, runtimeLib: List<String>, opts: List<String>): Result {
-        val basename = filename.substringAfterLast("/").substringBeforeLast(".")
+        val basename = filename.substringAfterLast("/").substringBeforeLast(".") + Random.nextInt()
         compileObject(filename, basename, opts, runtimeLib)
 
         val testResult = runCommand("./$TEST_OUTPUT_DIR/$basename.out", listOf(), null)
