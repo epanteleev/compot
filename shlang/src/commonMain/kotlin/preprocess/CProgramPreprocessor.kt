@@ -300,7 +300,17 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                 throw PreprocessorException("#error ${TokenPrinter.print(message)}", directive.position())
             }
             "pragma" -> {
-                TODO("Implement #pragma directive")
+                val name = takeTokensInLine()
+                if (name.isEmpty()) {
+                    throw PreprocessorException("Expected pragma name", directive.position())
+                }
+                checkNewLine()
+
+                val first = name.first().asToken<CToken>()
+                when (first.str()) {
+                    "once" -> ctx.addPragmaOnce(filename)
+                    else -> warning("Unknown pragma: ${TokenPrinter.print(name)}", first.position())
+                }
             }
             "endif" -> {
                 if (conditions.isEmpty()) {
@@ -403,7 +413,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
 
     private fun warnRedefinedMacros(old: Macros?, new: Macros) {
         if (old != null && old != new) {
-            warning("macro ${new.name} already defined in ${old.first().position()}")
+            warning("macro ${new.name} already defined", old.first().position())
         }
     }
 
@@ -417,6 +427,10 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
         }
 
         private fun preprocessHeader(header: Header, line: Int, ctx: PreprocessorContext): TokenList {
+            if (ctx.isPragmaOnce(header.filename)) {
+                return TokenList()
+            }
+
             val includeTokens = create(header.filename, header.tokenize(), ctx).preprocess()
             includeTokens.addBefore(null, EnterIncludeGuard(header.filename, ctx.includeLevel(), line))
             includeTokens.addAfter(null, ExitIncludeGuard(header.filename, ctx.includeLevel(), line))

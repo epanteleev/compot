@@ -20,3 +20,11 @@ sealed class AnyToken: LListNode() {
 
     abstract override fun equals(other: Any?): Boolean
 }
+
+inline fun<reified T: AnyToken> AnyToken.asToken(): T {
+    if (this !is T) {
+        throw IllegalArgumentException("Expected ${T::class.simpleName}, but got ${this::class.simpleName}")
+    }
+
+    return this
+}

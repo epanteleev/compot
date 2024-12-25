@@ -90,10 +90,6 @@ abstract class AnyModuleBuilder {
         return globals[name]
     }
 
-    fun findStructType(name: String): StructType {
-        return findStructTypeOrNull(name) ?: throw NoSuchElementException("not found name=$name")
-    }
-
     fun findStructTypeOrNull(name: String): StructType? {
         return structs[name]
     }

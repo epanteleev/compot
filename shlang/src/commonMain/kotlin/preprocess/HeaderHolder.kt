@@ -20,6 +20,15 @@ data class Header(val filename: String, val content: String, val includeType: He
 
 sealed class HeaderHolder(val includeDirectories: Set<String>) {
     protected val headers = hashMapOf<String, Header>()
+    private val pragmaOnce = mutableSetOf<String>()
+
+    fun addPragmaOnce(name: String) {
+        pragmaOnce.add(name)
+    }
+
+    fun isPragmaOnce(name: String): Boolean {
+        return pragmaOnce.contains(name)
+    }
 
     abstract fun getHeader(name: String, includeType: HeaderType): Header?
 }

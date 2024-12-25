@@ -156,7 +156,7 @@ sealed class AbstractCPreprocessor(val filename: String, protected val tokens: T
         }
     }
 
-    protected fun warning(message: String) {
-        println("Warning: $message")
+    protected fun warning(message: String, position: Position) {
+        println("Warning: $message in $position")
     }
 }

@@ -31,10 +31,16 @@ class CProgramPreprocessorTest {
         |#endif
     """.trimMargin()
 
+    private val mathHeaderContent = """
+        |#pragma once
+        |int abs(int a);
+    """.trimMargin()
+
     private val headerHolder = PredefinedHeaderHolder(setOf())
         .addHeader(Header("test.h", testHeaderContent, HeaderType.USER))
         .addHeader(Header("stdio.h", stdioHeaderContent, HeaderType.SYSTEM))
         .addHeader(Header("std-32lib.h", stdlibHeaderContent, HeaderType.SYSTEM))
+        .addHeader(Header("math.h", mathHeaderContent, HeaderType.SYSTEM))
 
     @Test
     fun testEmpty() {
@@ -1271,6 +1277,26 @@ class CProgramPreprocessorTest {
         val expected = """
             |
             |;
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p.preprocess()))
+    }
+
+    @Test
+    fun testPragmaOnce() {
+        val data = """
+            |#include <math.h>
+            |#include <math.h>
+        """.trimMargin()
+
+        val tokens = CTokenizer.apply(data)
+        val ctx = PreprocessorContext.empty(headerHolder)
+        val p = CProgramPreprocessor.create(tokens, ctx)
+        val expected = """
+            |#enter[1] math.h in 1
+            |
+            |int abs(int a);
+            |#exit[1] math.h in 1
+            |
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p.preprocess()))
     }

@@ -2,9 +2,10 @@ package typedesc
 
 import types.*
 import common.assertion
+import tokenizer.Position
 
 
-class CTypeBuilder {
+class CTypeBuilder(private val position: Position) {
     private val typeProperties = mutableListOf<TypeQualifier>()
     private val baseTypes = mutableListOf<CType>()
     private var storageClass: StorageClass? = null
@@ -59,7 +60,7 @@ class CTypeBuilder {
             check(baseTypes, LONG, INT)             -> return LONG
             check(baseTypes, USHORT, INT)           -> return USHORT
             check(baseTypes, LONG, DOUBLE)          -> {
-                println("Warning: long double is not supported, using double instead")
+                println("Warning: long double is not supported, using double instead in $position")
                 return DOUBLE
             }
         }

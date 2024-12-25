@@ -23,7 +23,7 @@ class PredefinedMacros(name: String, private val callback: (Position) -> TokenLi
     }
 
     fun cloneContentWith(macrosNamePos: Position): TokenList {
-        val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, OriginalPosition.UNKNOWN)
+        val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, Position.UNKNOWN)
         return callback(preprocessedPosition)
     }
 

@@ -8,28 +8,26 @@ import ir.module.builder.AnyModuleBuilder
 import ir.types.StructType
 import ir.pass.analysis.VerifySSA
 import ir.types.NonTrivialType
-import ir.types.Type
 
 
 class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilderWithContext>()
 
     fun createFunction(functionName: SymbolValue, returnType: TypeToken, argumentTypes: List<TypeToken>, argumentValues: List<LocalValueToken>): FunctionDataBuilderWithContext {
-        val args      = resolveArgumentType(argumentTypes)
+        val args = resolveArgumentType(argumentTypes)
         val attributes = if (argumentTypes.lastOrNull() is Vararg) {
             hashSetOf(VarArgAttribute)
         } else {
             emptySet()
         }
         val prototype = FunctionPrototype(functionName.name, returnType.type(this), args, attributes)
-
         val data = FunctionDataBuilderWithContext.create(this, prototype, argumentValues)
         functions.add(data)
         return data
     }
 
     override fun resolve(name: String): StructType {
-        return findStructType(name)
+        return findStructTypeOrNull(name) ?: throw IllegalStateException("Struct type '$name' not found")
     }
 
     fun createExternFunction(functionName: SymbolValue, returnType: TypeToken, arguments: List<TypeToken>): ExternFunction {
