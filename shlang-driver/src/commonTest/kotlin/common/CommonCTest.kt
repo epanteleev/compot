@@ -18,7 +18,7 @@ abstract class CommonCTest: CommonTest() {
         return Result(basename, testResult.output, testResult.error, testResult.exitCode)
     }
 
-    protected fun compile(filename: String, basename: String, optOptions: List<String>, runtimeLib: List<String>): String {
+    protected fun compile(filename: String, basename: String, optOptions: List<String>): String {
         val output = "$TEST_OUTPUT_DIR/$basename"
 
         val args = arrayOf("-c", "$TESTCASES_DIR/$filename.c", "--dump-ir", TEST_OUTPUT_DIR, "-I$TESTCASES_DIR") +

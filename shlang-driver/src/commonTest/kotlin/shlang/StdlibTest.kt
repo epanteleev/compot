@@ -19,6 +19,13 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("Done\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testConcatStr() {
+        val result = runCTest("shlang/stdlib/concat_str", listOf(), options())
+        assertEquals("a=0; (function(x){a=x;})('hi'); a \"hi\"", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {

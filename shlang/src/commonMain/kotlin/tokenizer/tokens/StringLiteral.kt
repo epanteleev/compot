@@ -1,18 +1,15 @@
 package tokenizer.tokens
 
 import common.quoted
+import common.unquoted
 import tokenizer.Position
 
 
 class StringLiteral(private val data: String, position: Position): CToken(position) {
-    override fun str(): String = quote()
+    override fun str(): String = data.quoted()
 
     override fun hashCode(): Int {
         return data.hashCode()
-    }
-
-    private fun quote(): String {
-        return data.quoted()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -24,9 +21,7 @@ class StringLiteral(private val data: String, position: Position): CToken(positi
         return data == other.data
     }
 
-    fun unquote(): String {
-        return data()
-    }
+    fun unquote(): String = data.unquoted()
 
     fun data(): String {
         val stringBuilder = StringBuilder()

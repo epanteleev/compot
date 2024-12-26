@@ -15,8 +15,8 @@ abstract class CommonTest {
     }
 
     protected fun runGCC(out: String, extraFiles: List<String>) {
-        val insertedPath = extraFiles.map { "$TESTCASES_DIR/$it" }
-        val gccCommandLine = listOf("$out.o") + insertedPath + listOf("-o", "$out.out" , "-lm") //TODO link math library for all tests
+        val filesWithPath = extraFiles.map { "$TESTCASES_DIR/$it" }
+        val gccCommandLine = listOf("$out.o") + filesWithPath + listOf("-o", "$out.out" , "-lm") //TODO link math library for all tests
         checkedRunCommand("gcc", gccCommandLine, null)
     }
 

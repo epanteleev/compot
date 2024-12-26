@@ -262,10 +262,10 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
     }
 
     private val data by lazy {
-        if (literals.all { it.unquote().isEmpty() }) {
+        if (literals.all { it.data().isEmpty() }) {
             ""
         } else {
-            literals.joinToString("", postfix = "") { it.unquote() }
+            literals.joinToString("", postfix = "") { it.data() }
         }
     }
 
