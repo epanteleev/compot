@@ -32,8 +32,8 @@ fun String.quoted(): String {
 
 fun String.unquoted(): String {
     val stringBuilder = StringBuilder()
-    var i = 1
-    while (i < length - 1) {
+    var i = 0
+    while (i < length) {
         val ch = this[i]
         if (ch == '\\') {
             i++

@@ -300,6 +300,15 @@ abstract class AlgoTests: CommonCTest() {
     }
 
     @Test
+    fun testElk() {
+        val result = runCTest("shlang/algo/elk", listOf(), options())
+        val expected = "SUCCESS. All tests passed in\n"
+        println(result.error)
+        assertEquals(expected, result.output)
+        assertReturnCode(result, 0)
+    }
+
+    @Test
     @Ignore
     fun testYxml() {
         val result = runCTest("shlang/algo/yxml", listOf(), options())

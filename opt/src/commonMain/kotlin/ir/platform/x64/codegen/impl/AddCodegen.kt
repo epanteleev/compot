@@ -44,7 +44,8 @@ data class AddCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPO
         if (dst == second) {
             asm.add(size, first, dst)
         } else {
-            asm.lea(size, Address.from(second, first.value().toInt()), dst)
+            asm.mov(size, first, dst)
+            asm.add(size, second, dst)
         }
     }
 

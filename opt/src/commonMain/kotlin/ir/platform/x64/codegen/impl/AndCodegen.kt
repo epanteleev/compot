@@ -27,7 +27,8 @@ class AndCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsV
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.and(size, second, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
@@ -130,7 +131,13 @@ class AndCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsV
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
-        TODO("Not yet implemented")
+        if (first == dst) {
+            asm.and(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.and(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
