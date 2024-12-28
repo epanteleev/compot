@@ -394,37 +394,37 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun cvtss2sd(src: XmmRegister, dst: XmmRegister) = add(Cvtss2sd(src, dst))
     fun cvtss2sd(src: Address, dst: XmmRegister) = add(Cvtss2sd(src, dst))
 
-    // Convert Scalar Single Precision Floating-Point Value to Doubleword Integer
-    private fun cvtss2si(toSize: Int, src: XmmRegister, dst: GPRegister) = when (toSize) {
-        8, 4 -> add(Cvtss2si(toSize, src, dst))
+    // Convert With Truncation Scalar Single Precision Floating-Point Value to Integer
+    private fun cvttss2si(toSize: Int, src: XmmRegister, dst: GPRegister) = when (toSize) {
+        8, 4 -> add(Cvttss2si(toSize, src, dst))
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 
-    private fun cvtss2si(toSize: Int, src: Address, dst: GPRegister) = when (toSize) {
-        8, 4 -> add(Cvtss2si(toSize, src, dst))
+    private fun cvttss2si(toSize: Int, src: Address, dst: GPRegister) = when (toSize) {
+        8, 4 -> add(Cvttss2si(toSize, src, dst))
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 
-    // Convert Double Single Precision Floating-Point Value to Doubleword Integer
-    private fun cvtsd2si(toSize: Int, src: XmmRegister, dst: GPRegister) = when (toSize) {
-        8, 4 -> add(Cvtsd2si(toSize, src, dst))
+    // Convert With Truncation Scalar Double Precision Floating-Point Value to SignedInteger
+    private fun cvttsd2si(toSize: Int, src: XmmRegister, dst: GPRegister) = when (toSize) {
+        8, 4 -> add(Cvttsd2si(toSize, src, dst))
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 
-    private fun cvtsd2si(toSize: Int, src: Address, dst: GPRegister) = when (toSize) {
-        8, 4 -> add(Cvtsd2si(toSize, src, dst))
+    private fun cvttsd2si(toSize: Int, src: Address, dst: GPRegister) = when (toSize) {
+        8, 4 -> add(Cvttsd2si(toSize, src, dst))
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 
     fun cvtfp2int(toSize: Int, fromSize: Int, src: Address, dst: GPRegister) = when (fromSize) {
-        8 -> cvtsd2si(toSize, src, dst)
-        4 -> cvtss2si(toSize, src, dst)
+        8 -> cvttsd2si(toSize, src, dst)
+        4 -> cvttss2si(toSize, src, dst)
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 
     fun cvtfp2int(toSize: Int, fromSize: Int, src: XmmRegister, dst: GPRegister) = when (fromSize) {
-        8 -> cvtsd2si(toSize, src, dst)
-        4 -> cvtss2si(toSize, src, dst)
+        8 -> cvttsd2si(toSize, src, dst)
+        4 -> cvttss2si(toSize, src, dst)
         else -> throw IllegalArgumentException("toSize=$toSize, src=$src, dst=$dst")
     }
 

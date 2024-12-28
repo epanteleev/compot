@@ -244,12 +244,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         if (firstProj != null) {
             val first  = retType.asInnerType<PrimitiveType>(0)
             val value = registerAllocation.operand(firstProj)
-            if (first is IntegerType || first is PtrType) {
-                CallIntCodegen(first, asm)(value, retReg)
-            } else if (first is FloatingPointType) {
-                CallFloatCodegen(first, asm)(value, fpRet)
-            } else {
-                throw CodegenException("unknown type=$first")
+            when (first) {
+                is IntegerType, is PtrType -> CallIntCodegen(first, asm)(value, retReg)
+                is FloatingPointType -> CallFloatCodegen(first, asm)(value, fpRet)
+                else -> throw CodegenException("unknown type=$first")
             }
         }
 

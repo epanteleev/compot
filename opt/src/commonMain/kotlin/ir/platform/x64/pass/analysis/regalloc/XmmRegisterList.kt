@@ -2,6 +2,7 @@ package ir.platform.x64.pass.analysis.regalloc
 
 import asm.x64.*
 import ir.platform.x64.CallConvention
+import ir.platform.x64.CallConvention.fpRet
 
 
 internal class XmmRegisterList(usedArgumentRegisters: List<XmmRegister>) {
@@ -41,6 +42,9 @@ internal class XmmRegisterList(usedArgumentRegisters: List<XmmRegister>) {
 
     fun returnRegister(reg: XmmRegister) {
         if (freeRegisters.contains(reg)) {
+            return
+        }
+        if (reg == fpRet) {
             return
         }
 

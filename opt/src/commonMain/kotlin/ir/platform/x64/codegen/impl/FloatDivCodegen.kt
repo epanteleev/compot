@@ -36,8 +36,12 @@ class FloatDivCodegen(val type: ArithmeticType, val asm: Assembler): XmmOperands
     }
 
     override fun rra(dst: XmmRegister, first: XmmRegister, second: Address) {
-        asm.movf(size, first, dst)
-        asm.divf(size, second, dst)
+        if (dst == first) {
+            asm.divf(size, second, dst)
+        } else {
+            asm.movf(size, first, dst)
+            asm.divf(size, second, dst)
+        }
     }
 
     override fun raa(dst: XmmRegister, first: Address, second: Address) {
