@@ -3,6 +3,7 @@ package ir.global
 import ir.types.*
 import common.quoted
 import common.assertion
+import common.quotedEscapes
 import ir.value.constant.*
 
 
@@ -22,7 +23,7 @@ class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, 
     }
 
     override fun data(): String {
-        return "\"$string\"" //TOdo unify with String.quoted??
+        return string.quotedEscapes()
     }
 
     override fun contentType(): NonTrivialType = ArrayType(I8Type, string.length)

@@ -95,7 +95,7 @@ class QuadDirective(val value: String, val offset: Int): AnonymousDirective() {
 }
 
 class StringDirective(val value: String): AnonymousDirective() {
-    override fun toString(): String = ".asciz $value"
+    override fun toString(): String = ".string $value"
 }
 
 class CommSymbol(override val name: String, val size: Int): NamedDirective() {
