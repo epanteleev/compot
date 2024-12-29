@@ -15,6 +15,8 @@ struct Array new_array(int len) {
 
 int main() {
     struct Array a;
-    if ((a = new_array(10)).len != 0) {}
-    return a.len;
+    if (new_array(10).len != 0) {
+        return 0;
+    }
+    return 1;
 }

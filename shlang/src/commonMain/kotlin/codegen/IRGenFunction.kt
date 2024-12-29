@@ -633,9 +633,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     alloc
                 }
                 is TupleType -> {
+                    val retType = mb.toIRType<StructType>(typeHolder, functionType)
+                    val retValue = ir.alloc(retType)
                     val call = ir.tupleCall(function, convertedArgs, attributes, cont)
                     ir.switchLabel(cont)
-                    call
+                    copyTuple(retValue, call, functionType)
+                    retValue
                 }
                 is VoidType -> {
                     val retType = mb.toIRType<StructType>(typeHolder, functionType)
