@@ -1,0 +1,20 @@
+
+extern void* malloc(int);
+
+struct Array {
+    int* a;
+    int len;
+};
+
+struct Array new_array(int len) {
+    struct Array arr;
+    arr.a = (int*)malloc(len * sizeof(int));
+    arr.len = len;
+    return arr;
+}
+
+int main() {
+    struct Array a;
+    if ((a = new_array(10)).len != 0) {}
+    return a.len;
+}

@@ -222,62 +222,62 @@ sealed class CPrimitive: CType() {
     }
 }
 
-object VOID: CPrimitive() {
+data object VOID: CPrimitive() {
     override fun toString(): String = "void"
     override fun size(): Int = 1
 }
 
-object CHAR: CPrimitive() {
+data object CHAR: CPrimitive() {
     override fun toString(): String = "char"
     override fun size(): Int = 1
 }
 
-object SHORT: CPrimitive() {
+data object SHORT: CPrimitive() {
     override fun toString(): String = "short"
     override fun size(): Int = 2
 }
 
-object INT: CPrimitive() {
+data object INT: CPrimitive() {
     override fun toString(): String = "int"
     override fun size(): Int = 4
 }
 
-object LONG: CPrimitive() {
+data object LONG: CPrimitive() {
     override fun toString(): String = "long"
     override fun size(): Int = 8
 }
 
-object FLOAT: CPrimitive() {
+data object FLOAT: CPrimitive() {
     override fun toString(): String = "float"
     override fun size(): Int = 4
 }
 
-object DOUBLE: CPrimitive() {
+data object DOUBLE: CPrimitive() {
     override fun toString(): String = "double"
     override fun size(): Int = 8
 }
 
-object UCHAR: CPrimitive() {
+data object UCHAR: CPrimitive() {
     override fun toString(): String = "unsigned char"
     override fun size(): Int = 1
 }
 
-object USHORT: CPrimitive() {
+data object USHORT: CPrimitive() {
     override fun toString(): String = "unsigned short"
     override fun size(): Int = 2
 }
 
-object UINT: CPrimitive() {
+data object UINT: CPrimitive() {
     override fun toString(): String = "unsigned int"
     override fun size(): Int = 4
 }
 
-object ULONG: CPrimitive() {
+data object ULONG: CPrimitive() {
     override fun toString(): String = "unsigned long"
     override fun size(): Int = 8
 }
 
-object BOOL: CPrimitive() {
+data object BOOL: CPrimitive() {
     override fun toString(): String = "_Bool"
     override fun size(): Int = 1
 }

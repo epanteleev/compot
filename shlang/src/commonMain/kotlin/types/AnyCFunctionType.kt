@@ -78,4 +78,20 @@ class CFunctionType(val name: String, val functionType: AbstractCFunction): AnyC
     }
 
     fun asPointer(): CPointer = CPointer(this)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CFunctionType) return false
+
+        if (name != other.name) return false
+        if (functionType != other.functionType) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + functionType.hashCode()
+        return result
+    }
 }

@@ -12,4 +12,17 @@ class InitializerType(private val initializer: List<CType>): CAggregateType() {
 
     override fun size(): Int = initializer.fold(0) { acc, type -> acc + type.size() }
     override fun alignmentOf(): Int = initializer.fold(1) { acc, type -> maxOf(acc, type.alignmentOf()) } //TODO check this
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is InitializerType) return false
+
+        if (initializer != other.initializer) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return initializer.hashCode()
+    }
 }

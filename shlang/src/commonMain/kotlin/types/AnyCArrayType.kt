@@ -23,6 +23,22 @@ class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(
     }
 
     override fun alignmentOf(): Int = type.cType().alignmentOf()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CStringLiteral) return false
+
+        if (type != other.type) return false
+        if (dimension != other.dimension) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + dimension.hashCode()
+        return result
+    }
 }
 
 class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
@@ -43,6 +59,22 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
             maxAlignment = cType.alignmentOf()
         }
         return maxAlignment
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CArrayType) return false
+
+        if (type != other.type) return false
+        if (dimension != other.dimension) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + dimension.hashCode()
+        return result
     }
 }
 

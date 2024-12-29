@@ -37,6 +37,22 @@ sealed class AnyCStructType(open val name: String, protected val fields: List<Me
     }
 
     abstract fun offset(index: Int): Int
+
+    final override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AnyCStructType) return false
+
+        if (name != other.name) return false
+        if (fields != other.fields) return false
+
+        return true
+    }
+
+    final override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + fields.hashCode()
+        return result
+    }
 }
 
 class CStructType(override val name: String, fields: List<Member>): AnyCStructType(name, fields) {

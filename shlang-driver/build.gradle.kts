@@ -70,38 +70,41 @@ tasks.withType(Test::class.java).all {
     }
 }
 
-
-tasks.create<Exec>("runChibicc") {
-    dependsOn("test")
-    dependsOn("installDist")
-
-    project.logger.debug("Running tests")
-    workingDir = workingDir.resolve("scripts")
+private fun shlang(): String {
     val shlangDriver = projectDir.resolve("build")
         .resolve("install")
         .resolve("shlang-driver")
         .resolve("bin")
         .resolve("shlang-driver")
 
-    commandLine("python3", "chibicc.py", shlangDriver)
+    return shlangDriver.toString()
+}
+
+task("prepareTests") {
+    group = "verification"
+    dependsOn("test")
+    dependsOn("installDist")
+    project.logger.debug("Running tests")
+}
+
+tasks.create<Exec>("runChibicc") {
+    group = "verification"
+    dependsOn("prepareTests")
+    workingDir = workingDir.resolve("scripts")
+
+    commandLine("python3", "chibicc.py", shlang())
 }
 
 tasks.create<Exec>("runBfish") {
-    dependsOn("test")
-    dependsOn("installDist")
-
-    project.logger.debug("Running tests")
+    group = "verification"
+    dependsOn("prepareTests")
     workingDir = workingDir.resolve("scripts")
-    val shlangDriver = projectDir.resolve("build")
-        .resolve("install")
-        .resolve("shlang-driver")
-        .resolve("bin")
-        .resolve("shlang-driver")
 
-    commandLine("python3", "bfish.py", shlangDriver)
+    commandLine("python3", "bfish.py", shlang())
 }
 
 tasks.create("runtests") {
+    group = "verification"
     dependsOn("runChibicc")
     dependsOn("runBfish")
 }

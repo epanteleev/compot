@@ -1699,9 +1699,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val member = type.fieldByIndexOrNull(designator.name()) ?:
                         throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
 
-                    val elementType = mb.toIRType<NonTrivialType>(typeHolder, member.cType())
-
-                    val converted = ir.convertToType(expression, elementType)
+                    val elementType = mb.toIRType<Type>(typeHolder, member.cType())
+                    val converted = ir.convertRVToType(expression, elementType)
                     val fieldAdr = ir.gfp(value, fieldType, I64Value.of(member.index))
                     ir.store(fieldAdr, converted)
                 }
@@ -1759,7 +1758,7 @@ class FunGenInitializer(moduleBuilder: ModuleBuilder,
                         varStack: VarStack<Value>,
                         nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
     fun generate(functionNode: FunctionNode) {
-        val varDesc     = functionNode.declareType(functionNode.specifier, typeHolder)
+        val varDesc = functionNode.declareType(functionNode.specifier, typeHolder)
         val fnType = varDesc.typeDesc.asType<CFunctionType>()
 
         val parameters = functionNode.functionDeclarator().params()

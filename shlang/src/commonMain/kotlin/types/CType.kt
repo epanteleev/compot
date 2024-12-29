@@ -6,6 +6,8 @@ import typedesc.TypeProperty
 sealed class CType: TypeProperty {
     abstract fun size(): Int
     abstract fun alignmentOf(): Int
+    abstract override fun equals(other: Any?): Boolean
+    abstract override fun hashCode(): Int
 }
 
 inline fun<reified T: CType> CType.asType(): T {

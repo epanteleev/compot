@@ -48,16 +48,22 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
         if (opType.isBoolean()) {
             return@memoize BOOL
         }
-        val leftType  = when (val l = left.resolveType(typeHolder)) {
-            is AnyCArrayType -> l.asPointer()
-            is CPrimitive    -> l
-            else -> throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(left)}'", begin())
+        val l = left.resolveType(typeHolder)
+        val r = right.resolveType(typeHolder)
+        if (l == r) {
+            return@memoize l
         }
 
-        val rightType = when (val r = right.resolveType(typeHolder)) {
+        val leftType  = when (l) {
+            is AnyCArrayType -> l.asPointer()
+            is CPrimitive    -> l
+            else -> throw TypeResolutionException("Binary operation on non-primitive type '$l': '${LineAgnosticAstPrinter.print(left)}'", begin())
+        }
+
+        val rightType = when (r) {
             is AnyCArrayType -> r.asPointer()
             is CPrimitive    -> r
-            else -> throw TypeResolutionException("Binary operation on non-primitive type: '${LineAgnosticAstPrinter.print(right)}'", begin())
+            else -> throw TypeResolutionException("Binary operation on non-primitive type '$r': '${LineAgnosticAstPrinter.print(right)}'", begin())
         }
 
         val resultType = leftType.interfere(typeHolder, rightType) ?:
