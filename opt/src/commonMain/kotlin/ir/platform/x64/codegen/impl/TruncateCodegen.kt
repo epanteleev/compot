@@ -27,8 +27,7 @@ data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, v
     }
 
     override fun ar(dst: Address, src: GPRegister) {
-        asm.copy(fromSize, src, temp1)
-        asm.mov(toSize, temp1, dst)
+        asm.mov(toSize, src, dst)
     }
 
     override fun aa(dst: Address, src: Address) {

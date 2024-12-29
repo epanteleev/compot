@@ -1,5 +1,3 @@
-#include <time.h>
-#define JS_DUMP
 // Copyright (c) 2013-2022 Cesanta Software Limited
 // All rights reserved
 //
@@ -75,6 +73,7 @@ char *js_getstr(struct js *js, jsval_t val, size_t *len);  // Get string
 #ifdef __cplusplus
 }
 #endif
+
 
 #ifndef JS_EXPR_MAX
 #define JS_EXPR_MAX 20
@@ -1475,6 +1474,8 @@ void js_dump(struct js *js) {
 }
 #endif
 
+#include <time.h>
+#define JS_DUMP
 
 static bool ev(struct js *js, const char *expr, const char *expectation) {
   const char *result = js_str(js, js_eval(js, expr, strlen(expr)));
@@ -2082,6 +2083,6 @@ int main(void) {
   test_ternary();
   test_gc();
   double ms = (double) (clock() - a) * 1000 / CLOCKS_PER_SEC;
-  printf("SUCCESS. All tests passed in\n");
+  printf("SUCCESS. All tests passed\n");
   return EXIT_SUCCESS;
 }

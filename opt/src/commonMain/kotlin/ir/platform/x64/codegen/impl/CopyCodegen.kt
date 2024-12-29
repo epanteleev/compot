@@ -15,8 +15,8 @@ data class CopyCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): GPO
 
     operator fun invoke(dst: Operand, src: Operand) {
         when (type) {
-            is FloatingPointType            -> XmmOperandsVisitorUnaryOp.apply(dst, src, this)
-            is IntegerType, is PtrType  -> GPOperandsVisitorUnaryOp.apply(dst, src, this)
+            is FloatingPointType       -> XmmOperandsVisitorUnaryOp.apply(dst, src, this)
+            is IntegerType, is PtrType -> GPOperandsVisitorUnaryOp.apply(dst, src, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, src=$src")
         }
     }
