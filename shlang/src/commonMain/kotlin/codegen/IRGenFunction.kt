@@ -609,8 +609,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (primary !is VarNode) {
             return visitFunPointerCall(functionCall)
         }
-        val name = primary.name()
-        val function = mb.findFunction(name) ?: return visitFunPointerCall(functionCall)
+        val function = mb.findFunction(primary.name()) ?: return visitFunPointerCall(functionCall)
         val (convertedArgs, attributes) = convertFunctionArgs(function, functionCall.args)
         val cont = ir.createLabel()
         return when (val functionType = functionCall.resolveType(typeHolder)) {
@@ -624,30 +623,30 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.switchLabel(cont)
                 call
             }
-            is CStructType -> when (val t = function.returnType()) {
-                is PrimitiveType -> {
-                    val alloc = ir.alloc(t)
-                    val call = ir.call(function, convertedArgs, attributes, cont)
-                    ir.switchLabel(cont)
-                    ir.store(alloc, call)
-                    alloc
+            is CStructType -> {
+                val retType = mb.toIRType<NonTrivialType>(typeHolder, functionType)
+                val retValue = ir.alloc(retType)
+
+                when (function.returnType()) {
+                    is PrimitiveType -> {
+                        val call = ir.call(function, convertedArgs, attributes, cont)
+                        ir.switchLabel(cont)
+                        ir.store(retValue, call)
+                        retValue
+                    }
+                    is TupleType -> {
+                        val call = ir.tupleCall(function, convertedArgs, attributes, cont)
+                        ir.switchLabel(cont)
+                        copyTuple(retValue, call, functionType)
+                        retValue
+                    }
+                    is VoidType -> {
+                        ir.vcall(function, arrayListOf(retValue) + convertedArgs, attributes, cont)
+                        ir.switchLabel(cont)
+                        retValue
+                    }
+                    else -> throw IRCodeGenError("Unknown type ${function.returnType()}", functionCall.begin())
                 }
-                is TupleType -> {
-                    val retType = mb.toIRType<StructType>(typeHolder, functionType)
-                    val retValue = ir.alloc(retType)
-                    val call = ir.tupleCall(function, convertedArgs, attributes, cont)
-                    ir.switchLabel(cont)
-                    copyTuple(retValue, call, functionType)
-                    retValue
-                }
-                is VoidType -> {
-                    val retType = mb.toIRType<StructType>(typeHolder, functionType)
-                    val retValue = ir.alloc(retType)
-                    ir.vcall(function, arrayListOf(retValue) + convertedArgs, attributes, cont)
-                    ir.switchLabel(cont)
-                    retValue
-                }
-                else -> throw IRCodeGenError("Unknown type ${function.returnType()}", functionCall.begin())
             }
 
             else -> TODO("$functionType")
@@ -656,9 +655,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun copyTuple(dst: Value, src: TupleValue, returnType: AnyCStructType) {
         val projs = arrayListOf<Projection>()
-        for ((idx, _) in src.type().innerTypes().withIndex()) {
-            val p = ir.proj(src, idx)
-            projs.add(p)
+        for (idx in src.type().innerTypes().indices) {
+            projs.add(ir.proj(src, idx))
         }
 
         ir.storeCoerceArguments(returnType, dst, projs)
