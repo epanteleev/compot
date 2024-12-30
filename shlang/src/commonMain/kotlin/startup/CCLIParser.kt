@@ -32,9 +32,7 @@ object CCLIParser {
                     commandLineArguments.setOutputFilename(args[cursor])
                 }
 
-                "-E" -> {
-                    commandLineArguments.setPreprocessOnly(true)
-                }
+                "-E" -> commandLineArguments.setPreprocessOnly(true)
                 else -> {
                     if (arg.startsWith("-I")) {
                         commandLineArguments.addIncludeDirectory(arg.substring(2))

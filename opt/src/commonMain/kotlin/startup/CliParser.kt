@@ -3,6 +3,27 @@ package startup
 import common.commandLine.AnyCLIArguments
 
 class OptCLIArguments : AnyCLIArguments() {
+    private var inputFilename = "<input>"
+
+    fun getOutputFilename(): String {
+        if (outFilename != null) {
+            return outFilename!!
+        }
+
+        val name = getFilename()
+        val lastIndex = name.lastIndexOf('.')
+        val basename = if (lastIndex != -1) {
+            name.substring(0, lastIndex)
+        } else {
+            name
+        }
+
+        return "$basename.o"
+    }
+
+    fun getFilename(): String = inputFilename
+    fun getBasename(): String = getName(inputFilename)
+
     fun setFilename(name: String) {
         inputFilename = name
     }
