@@ -74,7 +74,7 @@ class VaInit(private val firstArgType: CType): IntrinsicProvider("va_init") {
             else -> false
         }
 
-        val vaInit = CStructType("va_init", arrayListOf(
+        val vaInit = CStructType.create("va_init", arrayListOf(
                 FieldMember("xmm0", TypeDesc.from(DOUBLE, listOf())),
                 FieldMember("xmm1", TypeDesc.from(DOUBLE, listOf())),
                 FieldMember("xmm2", TypeDesc.from(DOUBLE, listOf())),

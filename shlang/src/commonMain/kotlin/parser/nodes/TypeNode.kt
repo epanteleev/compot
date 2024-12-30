@@ -125,7 +125,7 @@ class StructSpecifier(name: Identifier, val fields: List<StructField>) : AnyType
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        val structType = CStructType(name.str(), resolveFieldTypes(typeHolder, fields))
+        val structType = CStructType.create(name.str(), resolveFieldTypes(typeHolder, fields))
         return@addToBuilder typeHolder.addNewType(name.str(), structType)
     }
 }

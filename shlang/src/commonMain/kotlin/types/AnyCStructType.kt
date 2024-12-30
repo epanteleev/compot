@@ -8,24 +8,11 @@ import typedesc.TypeDesc
 sealed class AnyCStructType(open val name: String, protected val fields: List<Member>): CAggregateType() {
     override fun toString(): String = name
 
-    abstract fun fieldByIndexOrNull(name: String): FieldDesc?
+    abstract fun fieldByNameOrNull(name: String): FieldDesc?
 
     fun fieldByIndex(name: String): FieldDesc {
-        return fieldByIndexOrNull(name) ?:
+        return fieldByNameOrNull(name) ?:
             throw RuntimeException("Cannon find field by name: name=$name, { name=$name, $fields }")
-    }
-
-    fun fieldByIndexOrNull(index: Int): TypeDesc? {
-        if (index < 0 || index >= fields.size) {
-            return null
-        }
-
-        return fields[index].typeDesc()
-    }
-
-    fun fieldByIndex(index: Int): TypeDesc {
-        return fieldByIndexOrNull(index) ?:
-            throw RuntimeException("Cannon find field by index: index=$index, { name=$name, $fields }")
     }
 
     fun members(): Collection<Member> {
@@ -55,13 +42,13 @@ sealed class AnyCStructType(open val name: String, protected val fields: List<Me
     }
 }
 
-class CStructType(override val name: String, fields: List<Member>): AnyCStructType(name, fields) {
-    private val alignments = alignments()
+class CStructType private constructor(name: String, fields: List<Member>,
+                                      private val alignments: IntArray): AnyCStructType(name, fields) {
     private val maxAlignment by lazy { alignments.maxOrNull() ?: 1 }
 
     override fun alignmentOf(): Int = maxAlignment
 
-    override fun fieldByIndexOrNull(name: String): FieldDesc? {
+    override fun fieldByNameOrNull(name: String): FieldDesc? {
         var offset = 0
         for ((idx, field) in fields.withIndex()) {
             when (field) {
@@ -72,13 +59,13 @@ class CStructType(override val name: String, fields: List<Member>): AnyCStructTy
                 }
                 is AnonMember -> when (val cType = field.cType()) {
                     is CUnionType -> {
-                        val i = cType.fieldByIndexOrNull(name)
+                        val i = cType.fieldByNameOrNull(name)
                         if (i != null) {
-                            return FieldDesc(name, idx + offset, field)
+                            return FieldDesc(name, idx + offset + i.index, field)
                         }
                     }
                     is CStructType -> {
-                        val fieldDesc = cType.fieldByIndexOrNull(name)
+                        val fieldDesc = cType.fieldByNameOrNull(name)
                         if (fieldDesc != null) {
                             return FieldDesc(name, idx + fieldDesc.index + offset, field)
                         }
@@ -88,18 +75,6 @@ class CStructType(override val name: String, fields: List<Member>): AnyCStructTy
             }
         }
         return null
-    }
-
-    private fun alignments(): IntArray {
-        var current = 0
-        val result = IntArray(fields.size)
-        for (i in fields.indices) {
-            val field = fields[i]
-            val alignment = field.cType().alignmentOf()
-            current = Definitions.alignTo(current + field.cType().size(), alignment)
-            result[i] = alignment
-        }
-        return result
     }
 
     override fun size(): Int {
@@ -127,10 +102,36 @@ class CStructType(override val name: String, fields: List<Member>): AnyCStructTy
         fields.joinTo(this, separator = "") { field -> field.toString() }
         append("}")
     }
+
+    fun fieldByNameOrNull(index: Int): TypeDesc? {
+        if (index < 0 || index >= fields.size) {
+            return null
+        }
+
+        return fields[index].typeDesc()
+    }
+    
+    companion object {
+        private fun alignments(fields: List<Member>): IntArray {
+            var current = 0
+            val result = IntArray(fields.size)
+            for (i in fields.indices) {
+                val field = fields[i]
+                val alignment = field.cType().alignmentOf()
+                current = Definitions.alignTo(current + field.cType().size(), alignment)
+                result[i] = alignment
+            }
+            return result
+        }
+
+        fun create(name: String, fields: List<Member>): CStructType {
+            return CStructType(name, fields, alignments(fields))
+        }
+    }
 }
 
 class CUnionType(override val name: String, fields: List<Member>): AnyCStructType(name, fields) {
-    override fun fieldByIndexOrNull(name: String): FieldDesc? {
+    override fun fieldByNameOrNull(name: String): FieldDesc? {
         if (fields.isEmpty()) {
             return null
         }
@@ -155,14 +156,14 @@ class CUnionType(override val name: String, fields: List<Member>): AnyCStructTyp
 
     private fun findInsideAnonMember(field: AnonMember, name: String): FieldDesc? = when (val cType = field.cType()) {
         is CUnionType -> {
-            val fieldDesc = cType.fieldByIndexOrNull(name)
+            val fieldDesc = cType.fieldByNameOrNull(name)
             if (fieldDesc != null) {
                 FieldDesc(name, 0, field)
             } else {
                 null
             }
         }
-        is CStructType -> cType.fieldByIndexOrNull(name)
+        is CStructType -> cType.fieldByNameOrNull(name)
     }
 
     override fun size(): Int {

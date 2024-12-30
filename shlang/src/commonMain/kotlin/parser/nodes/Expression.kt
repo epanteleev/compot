@@ -216,7 +216,7 @@ class MemberAccess(val primary: Expression, val fieldName: Identifier) : Express
             throw TypeResolutionException("Member access on non-struct type, but got $structType", begin())
         }
 
-        val fieldDesc = structType.fieldByIndexOrNull(memberName()) ?: throw TypeResolutionException("Field $fieldName not found in struct $structType", begin())
+        val fieldDesc = structType.fieldByNameOrNull(memberName()) ?: throw TypeResolutionException("Field $fieldName not found in struct $structType", begin())
         return@memoize fieldDesc.cType()
     }
 }
@@ -238,7 +238,7 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
             throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType", begin())
         }
 
-        val fieldDesc = baseType.fieldByIndexOrNull(fieldName()) ?: throw TypeResolutionException("Field $ident not found in struct $baseType", begin())
+        val fieldDesc = baseType.fieldByNameOrNull(fieldName()) ?: throw TypeResolutionException("Field $ident not found in struct $baseType", begin())
         return@memoize fieldDesc.cType()
     }
 }

@@ -70,7 +70,7 @@ class VaStart(private val arguments: List<TypeDesc>) : IntrinsicProvider("va_sta
         const val OVERFLOW_ARG_AREA_IDX = 2
         const val REG_SAVE_AREA_IDX     = 3
 
-        val vaList = CStructType("va_list", arrayListOf(
+        val vaList = CStructType.create("va_list", arrayListOf(
             FieldMember("gp_offset",         TypeDesc.from(INT, listOf())),
             FieldMember("fp_offset",         TypeDesc.from(INT, listOf())),
             FieldMember("overflow_arg_area", TypeDesc.from(CPointer(CHAR), listOf())),

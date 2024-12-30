@@ -10,7 +10,7 @@ class CStructTypeTest {
     @Test
     fun test1() {
         val members = arrayListOf(FieldMember("x", TypeDesc.from(INT)), FieldMember("y", TypeDesc.from(INT)))
-        val structType = CStructType("Point", members)
+        val structType = CStructType.create("Point", members)
         assertEquals(8, structType.size())
         assertEquals(0, structType.offset(0))
         assertEquals(4, structType.offset(1))
@@ -21,20 +21,20 @@ class CStructTypeTest {
     @Test
     fun test2() {
         val members = arrayListOf(FieldMember("x", TypeDesc.from(INT)), FieldMember("y", TypeDesc.from(LONG)))
-        val structType = CStructType("Point", members)
+        val structType = CStructType.create("Point", members)
         assertEquals(16, structType.size())
     }
 
     @Test
     fun test3() {
-        val pointType = CStructType("Point", arrayListOf(FieldMember("x", TypeDesc.from(INT)), FieldMember("y", TypeDesc.from(LONG))))
+        val pointType = CStructType.create("Point", arrayListOf(FieldMember("x", TypeDesc.from(INT)), FieldMember("y", TypeDesc.from(LONG))))
         val members1 = arrayListOf(FieldMember("p1", TypeDesc.from(pointType)), FieldMember("p2", TypeDesc.from(pointType)))
-        val structType1 = CStructType("Rect", members1)
+        val structType1 = CStructType.create("Rect", members1)
 
         val members2 = arrayListOf(FieldMember("p", TypeDesc.from(pointType)), FieldMember("y", TypeDesc.from(LONG)))
-        val structType2 = CStructType("Rect", members2)
+        val structType2 = CStructType.create("Rect", members2)
         val members3 = arrayListOf(FieldMember("x", TypeDesc.from(LONG)), FieldMember("p", TypeDesc.from(pointType)))
-        val structType3 = CStructType("Rect", members3)
+        val structType3 = CStructType.create("Rect", members3)
         assertEquals(32, structType1.size())
         assertEquals(24, structType2.size())
         assertEquals( 24, structType3.size())
@@ -43,7 +43,7 @@ class CStructTypeTest {
     @Test
     fun test4() {
         val members = arrayListOf(FieldMember("x", TypeDesc.from(INT)), FieldMember("y", TypeDesc.from(CHAR)))
-        val structType = CStructType("Point", members)
+        val structType = CStructType.create("Point", members)
         assertEquals(8, structType.size())
     }
 
@@ -54,7 +54,7 @@ class CStructTypeTest {
             FieldMember("y", TypeDesc.from(FLOAT)),
             FieldMember("z", TypeDesc.from(FLOAT))
         )
-        val structType = CStructType("Vect", members)
+        val structType = CStructType.create("Vect", members)
         assertEquals(12, structType.size())
         assertEquals(0, structType.offset(0))
         assertEquals(4, structType.offset(1))
@@ -70,7 +70,7 @@ class CStructTypeTest {
             FieldMember("y", TypeDesc.from(CHAR)),
             FieldMember("z", TypeDesc.from(CArrayType(TypeDesc.from(CHAR), 3)))
         )
-        val structType = CStructType("Point", members)
+        val structType = CStructType.create("Point", members)
         assertEquals(5, structType.size())
         assertEquals(2, structType.offset(2))
     }
@@ -81,7 +81,7 @@ class CStructTypeTest {
             FieldMember("x", TypeDesc.from(LONG)),
             FieldMember("y", TypeDesc.from(INT))
         )
-        val structType = CStructType("Point", members)
+        val structType = CStructType.create("Point", members)
         assertEquals(16, structType.size())
         assertEquals(0, structType.offset(0))
         assertEquals(8, structType.offset(1))
@@ -96,7 +96,7 @@ class CStructTypeTest {
             FieldMember("size", TypeDesc.from(INT)),
             FieldMember("capacity", TypeDesc.from(INT))
         )
-        val structType = CStructType("Point", members)
+        val structType = CStructType.create("Point", members)
         assertEquals(16, structType.size())
     }
 }
