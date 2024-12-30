@@ -242,9 +242,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
         val firstProj = tupleCall.proj(0)
         if (firstProj != null) {
-            val first  = retType.asInnerType<PrimitiveType>(0)
             val value = registerAllocation.operand(firstProj)
-            when (first) {
+            when (val first  = retType.asInnerType<PrimitiveType>(0)) {
                 is IntegerType, is PtrType -> CallIntCodegen(first, asm)(value, retReg)
                 is FloatingPointType -> CallFloatCodegen(first, asm)(value, fpRet)
                 else -> throw CodegenException("unknown type=$first")
@@ -253,14 +252,11 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
         val secondProj = tupleCall.proj(1)
         if (secondProj != null) {
-            val second = retType.asInnerType<PrimitiveType>(1)
             val value1 = registerAllocation.operand(secondProj)
-            if (second is IntegerType || second is PtrType) {
-                CallIntCodegen(second, asm)(value1, rdx)
-            } else if (second is FloatingPointType) {
-                CallFloatCodegen(second, asm)(value1, XmmRegister.xmm1)
-            } else {
-                throw CodegenException("unknown type=$second")
+            when (val second = retType.asInnerType<PrimitiveType>(1)) {
+                is IntegerType, is PtrType -> CallIntCodegen(second, asm)(value1, rdx)
+                is FloatingPointType -> CallFloatCodegen(second, asm)(value1, XmmRegister.xmm1)
+                else -> throw CodegenException("unknown type=$second")
             }
         }
     }

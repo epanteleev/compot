@@ -35,7 +35,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     private var isNeed3ArgIsolation: Boolean = false
     private var isNeed4ArgIsolation: Boolean = false
 
-    private fun isolateBinaryOp() {
+    private fun isolateSpecialInstructions() {
         fun transform(bb: Block, inst: Instruction): Instruction {
             inst.match(shl(nop(), constant().not())) { shl: Shl ->
                 val copy = bb.putBefore(inst, Copy.copy(shl.rhs()))
@@ -62,6 +62,11 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                 return inst
             }
 
+            inst.match(proj(int(), tupleCall(), 1)) {
+                isNeed3ArgIsolation = true
+                return inst
+            }
+
             return inst
         }
 
@@ -79,6 +84,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         }
 
         if (arg.attributes.find { it is ByValue } != null) {
+            // Argument is in overflow area
             return false
         }
 
@@ -165,7 +171,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     fun pass() {
-        isolateBinaryOp()
+        isolateSpecialInstructions()
         isolateArgumentValues()
         isolateCall()
     }

@@ -63,6 +63,12 @@ inline fun tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher): I
     it is TupleDiv && a(it.first()) && b(it.second())
 }
 
+inline fun proj(crossinline type: TypeMatcher, crossinline origin: ValueMatcher, idx: Int): InstructionMatcher = {
+    it is Projection && it.index() == idx && type(it.type()) && origin(it.tuple())
+}
+
+fun tupleCall(): ValueMatcher = { it is TupleCall }
+
 inline fun uint2float(crossinline origin: ValueMatcher): InstructionMatcher = {
     it is Unsigned2Float && origin(it.value())
 }

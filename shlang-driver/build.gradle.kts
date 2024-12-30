@@ -103,8 +103,17 @@ tasks.create<Exec>("runBfish") {
     commandLine("python3", "bfish.py", shlang())
 }
 
+tasks.create<Exec>("runUtf8") {
+    group = "verification"
+    dependsOn("prepareTests")
+    workingDir = workingDir.resolve("scripts")
+
+    commandLine("python3", "utf8.py", shlang())
+}
+
 tasks.create("runtests") {
     group = "verification"
+    dependsOn("runUtf8")
     dependsOn("runChibicc")
     dependsOn("runBfish")
 }

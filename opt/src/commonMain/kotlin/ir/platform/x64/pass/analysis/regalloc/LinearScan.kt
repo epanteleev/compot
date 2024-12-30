@@ -96,6 +96,12 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
                 registerMap[rem as Projection] = rdx
                 return
             }
+
+            inst.match(proj(int(), tupleCall(), 1)) { proj: Projection ->
+                val rem = proj.tuple().asValue<LocalValue>()
+                registerMap[rem] = rdx
+                return
+            }
         }
         bb.forEach { visitor(it) }
     }

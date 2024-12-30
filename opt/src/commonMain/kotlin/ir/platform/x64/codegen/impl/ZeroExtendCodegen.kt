@@ -19,7 +19,7 @@ class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: X64
 
     override fun rr(dst: GPRegister, src: GPRegister) {
         if (fromTypeSize == 4 && toTypeSize == 8) {
-            asm.copy(fromTypeSize, src, dst)
+            asm.copy(toTypeSize, src, dst)
         } else {
             asm.movzext(fromTypeSize, toTypeSize, src, dst)
         }
