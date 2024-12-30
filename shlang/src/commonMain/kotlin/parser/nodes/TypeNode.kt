@@ -46,7 +46,7 @@ class UnionSpecifier(name: Identifier, val fields: List<StructField>) : AnyTypeN
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        val structType = CUnionType(name(), resolveFieldTypes(typeHolder, fields))
+        val structType = CUnionType.create(name(), resolveFieldTypes(typeHolder, fields))
         return@addToBuilder typeHolder.addNewType(name.str(), structType)
     }
 }
