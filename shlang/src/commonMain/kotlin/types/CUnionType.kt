@@ -1,15 +1,17 @@
 package types
 
 
-class CUnionType private constructor(override val name: String,
-                                     fields: List<Member>,
-                                     fieldDescriptors: List<FieldDesc>,
-                                     nameToFieldDesc: Map<String, FieldDesc>): AnyCStructType(name, fields, fieldDescriptors, nameToFieldDesc) {
+class CUnionType private constructor(
+    override val name: String,
+    fields: List<Member>,
+    fieldDescriptors: List<FieldDesc>,
+    nameToFieldDesc: Map<String, FieldDesc>
+) : AnyCStructType(name, fields, fieldDescriptors, nameToFieldDesc) {
     override fun size(): Int {
-        if (fields.isEmpty()) {
+        if (fieldDescriptors.isEmpty()) {
             return 1
         }
-        return fields.maxOf { it.cType().size() }
+        return fieldDescriptors.maxOf { it.cType().size() }
     }
 
     override fun toString(): String = buildString {
@@ -24,7 +26,7 @@ class CUnionType private constructor(override val name: String,
     }
 
     override fun alignmentOf(): Int {
-        return fields.maxOf { it.cType().size() }
+        return fieldDescriptors.maxOf { it.cType().alignmentOf() }
     }
 
     companion object {

@@ -662,13 +662,42 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.storeCoerceArguments(returnType, dst, projs)
     }
 
+    private fun visitFunPointerCall0(lvalueAdr: Value, funcPointerCall: FunctionCall) {
+        val functionType = funcPointerCall.functionType(typeHolder)
+        val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true)
+
+        val cPrototype = CFunctionPrototypeBuilder(funcPointerCall.begin(), functionType, mb, typeHolder, StorageClass.AUTO).build()
+
+        val prototype = IndirectFunctionPrototype(cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
+        val (convertedArgs, attr) = convertFunctionArgs(prototype, funcPointerCall.args)
+
+        val attributes = cPrototype.attributes + attr
+
+        val cont = ir.createLabel()
+        when (functionType.retType().cType()) {
+            VOID -> {
+                ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                UndefValue
+            }
+            is CPrimitive -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+            is CStructType -> when (prototype.returnType()) {
+                is PrimitiveType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                //is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
+                is StructType    -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
+            }
+            else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
+        }
+        ir.switchLabel(cont)
+    }
+
     private fun visitFuncCall0(lvalueAdr: Value, rvalue: FunctionCall) {
         val primary = rvalue.primary
         if (primary !is VarNode) {
             throw IRCodeGenError("Unknown function call, primary=$primary", rvalue.begin()) //TODO incorrect code
         }
         val name = primary.name()
-        val function = mb.findFunction(name) ?: throw IRCodeGenError("Function '$name' not found", rvalue.begin())
+        val function = mb.findFunction(name) ?: return visitFunPointerCall0(lvalueAdr, rvalue)
         val (convertedArgs, attributes) = convertFunctionArgs(function, rvalue.args)
 
         val cont = ir.createLabel()

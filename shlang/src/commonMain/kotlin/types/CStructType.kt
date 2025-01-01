@@ -16,12 +16,12 @@ class CStructType private constructor(
     override fun alignmentOf(): Int = maxAlignment
 
     override fun size(): Int {
-        if (fields.isEmpty()) {
+        if (fieldDescriptors.isEmpty()) {
             return 1
         }
         var offset = 0
-        for (idx in fields.indices) {
-            offset = Definitions.alignTo(offset + fields[idx].size(), alignments[idx])
+        for (idx in fieldDescriptors.indices) {
+            offset = Definitions.alignTo(offset + fieldDescriptors[idx].size(), alignments[idx])
         }
         return Definitions.alignTo(offset, alignmentOf())
     }
@@ -29,7 +29,7 @@ class CStructType private constructor(
     override fun offset(index: Int): Int {
         var current = 0
         for (i in 0 until index) {
-            current = Definitions.alignTo(current + fields[i].size(), alignments[i])
+            current = Definitions.alignTo(current + fieldDescriptors[i].size(), alignments[i])
         }
         return Definitions.alignTo(current, alignments[index])
     }
@@ -42,7 +42,7 @@ class CStructType private constructor(
     }
 
     fun fieldByNameOrNull(index: Int): TypeDesc? {
-        if (index < 0 || index >= fields.size) {
+        if (index < 0 || index >= fieldDescriptors.size) {
             return null
         }
 
@@ -81,7 +81,7 @@ class CStructType private constructor(
             return fieldDescs
         }
 
-        private fun alignments(fields: List<Member>): IntArray {
+        private fun alignments(fields: List<FieldDesc>): IntArray {
             var current = 0
             val result = IntArray(fields.size)
             for (i in fields.indices) {
@@ -96,7 +96,7 @@ class CStructType private constructor(
         fun create(name: String, fields: List<Member>): CStructType {
             val fieldDescs = evaluateFieldDescriptors(fields)
             val nameToFieldDesc = fieldDescs.associateByTo(hashMapOf()) { it.name() }
-            return CStructType(name, fields, fieldDescs, nameToFieldDesc, alignments(fields))
+            return CStructType(name, fields, fieldDescs, nameToFieldDesc, alignments(fieldDescs))
         }
     }
 }
