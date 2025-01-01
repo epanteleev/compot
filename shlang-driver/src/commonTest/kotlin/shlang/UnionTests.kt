@@ -43,7 +43,6 @@ sealed class UnionTests : CommonCTest() {
         assertEquals("4607182418800017408\n", result.output)
         assertEquals(0, result.exitCode)
     }
-
 }
 
 class UnionTestsO0: UnionTests() {

@@ -3,23 +3,21 @@ package ir.instruction
 import common.*
 import ir.types.*
 import ir.value.Value
+import ir.module.block.Block
 import ir.attributes.FunctionAttribute
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.IndirectFunctionPrototype
-import ir.module.block.Block
 
 
-class IndirectionTupleCall private constructor(id: Identity, owner: Block,
-                                               private val func: IndirectFunctionPrototype,
-                                               private val attributes: Set<FunctionAttribute>,
-                                               operands: Array<Value>,
-                                               target: Block
-):
+class IndirectionTupleCall private constructor(
+    id: Identity, owner: Block,
+    private val func: IndirectFunctionPrototype,
+    private val attributes: Set<FunctionAttribute>,
+    operands: Array<Value>,
+    target: Block
+) :
     TerminateTupleInstruction(id, owner, func.returnType().asType(), operands, arrayOf(target)),
     Callable {
-    init {
-        assertion(func.returnType() != VoidType) { "Must be non $VoidType" }
-    }
 
     override fun type(): TupleType = tp.asType()
 
@@ -55,13 +53,13 @@ class IndirectionTupleCall private constructor(id: Identity, owner: Block,
 
     override fun dump(): String {
         val builder = StringBuilder()
-        builder.append("%${name()} = call $tp ${pointer()}(")
+        builder.append("%${name()} = $NAME $tp ${pointer()}(")
         printArguments(builder)
         return builder.toString()
     }
 
     companion object {
-        const val NAME = "call"
+        const val NAME = "icall"
 
         fun call(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Block): InstBuilder<IndirectionTupleCall> = {
                 id: Identity, owner: Block -> make(id, owner, pointer, func, attributes, args, target)

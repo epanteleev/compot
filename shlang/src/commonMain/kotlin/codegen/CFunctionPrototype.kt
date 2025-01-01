@@ -36,7 +36,7 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
             is VOID -> VoidType
             is BOOL -> I8Type
             is CPrimitive -> mb.toIRType<PrimitiveType>(typeHolder, retType.cType())
-            is CStructType -> {
+            is AnyCStructType -> {
                 val list = CallConvention.coerceArgumentTypes(ty) ?: return VoidType
                 if (list.size == 1) {
                     list[0]

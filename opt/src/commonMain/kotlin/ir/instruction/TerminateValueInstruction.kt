@@ -5,10 +5,12 @@ import ir.types.*
 import ir.module.block.Block
 
 
-sealed class TerminateValueInstruction(id: Identity, owner: Block,
-                                         protected val tp: Type,
-                                         usages: Array<Value>,
-                                         targets: Array<Block>):
+sealed class TerminateValueInstruction(
+    id: Identity, owner: Block,
+    protected val tp: Type,
+    usages: Array<Value>,
+    targets: Array<Block>
+) :
     TerminateInstruction(id, owner, usages, targets),
     LocalValue {
     override var usedIn: MutableList<Instruction> = arrayListOf()

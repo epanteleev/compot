@@ -675,7 +675,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val cont = ir.createLabel()
         when (val retType = functionType.retType().cType()) {
-            is CStructType -> when (prototype.returnType()) {
+            is AnyCStructType -> when (prototype.returnType()) {
                 is PrimitiveType -> {
                     val ret = ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
                     ir.switchLabel(cont)
@@ -695,7 +695,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
         }
-
     }
 
     private fun visitFuncCallForStructType(lvalueAdr: Value, rvalue: FunctionCall) {
@@ -709,7 +708,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val cont = ir.createLabel()
         when (val returnType = rvalue.resolveType(typeHolder)) {
-            is CStructType -> when (function.returnType()) {
+            is AnyCStructType -> when (function.returnType()) {
                 is PrimitiveType -> {
                     val call = ir.call(function, convertedArgs, attributes, cont)
                     ir.switchLabel(cont)
@@ -1440,7 +1439,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 else -> throw RuntimeException("internal error")
             }
-            is CStructType -> {
+            is AnyCStructType -> {
                 ir.memcpy(fnStmt.returnValueAdr(), value, U64Value.of(type.size().toLong()))
             }
             is AnyCArrayType -> {
