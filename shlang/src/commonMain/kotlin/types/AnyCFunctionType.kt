@@ -7,6 +7,7 @@ sealed class AnyCFunctionType: CType() {
     abstract fun retType(): TypeDesc
     abstract fun args(): List<TypeDesc>
     abstract fun variadic(): Boolean
+    fun asPointer(): CPointer = CPointer(this)
 }
 
 class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): AnyCFunctionType() {
@@ -76,8 +77,6 @@ class CFunctionType(val name: String, val functionType: AbstractCFunction): AnyC
         if (functionType.variadic) append(", ...")
         append(")")
     }
-
-    fun asPointer(): CPointer = CPointer(this)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

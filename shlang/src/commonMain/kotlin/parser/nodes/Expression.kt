@@ -16,6 +16,19 @@ sealed class Expression : Node() {
     abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
     abstract fun resolveType(typeHolder: TypeHolder): CType
 
+    protected fun convertToPrimitive(type: CType): CPrimitive? = when (type) {
+        is CPrimitive    -> type
+        is AnyCArrayType -> type.asPointer()
+        is AnyCFunctionType -> type.asPointer()
+        else -> null
+    }
+
+    protected fun convertToPointer(type: CType): CPointer? = when (type) {
+        is CPointer      -> type
+        is AnyCArrayType -> type.asPointer()
+        else -> null
+    }
+
     protected inline fun<reified T: CType> memoize(closure: () -> T): T {
         if (type != null) {
             return type as T
@@ -54,17 +67,11 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
             return@memoize l
         }
 
-        val leftType  = when (l) {
-            is AnyCArrayType -> l.asPointer()
-            is CPrimitive    -> l
-            else -> throw TypeResolutionException("Binary operation on non-primitive type '$l': '${LineAgnosticAstPrinter.print(left)}'", begin())
-        }
+        val leftType = convertToPrimitive(l)
+            ?: throw TypeResolutionException("Binary operation on non-primitive type '$l': '${LineAgnosticAstPrinter.print(left)}'", begin())
 
-        val rightType = when (r) {
-            is AnyCArrayType -> r.asPointer()
-            is CPrimitive    -> r
-            else -> throw TypeResolutionException("Binary operation on non-primitive type '$r': '${LineAgnosticAstPrinter.print(right)}'", begin())
-        }
+        val rightType = convertToPrimitive(r)
+            ?: throw TypeResolutionException("Binary operation on non-primitive type '$r': '${LineAgnosticAstPrinter.print(right)}'", begin())
 
         val resultType = leftType.interfere(typeHolder, rightType) ?:
             throw TypeResolutionException("Binary operation on incompatible types: $leftType and $rightType in ${left.begin()}'", begin())
@@ -85,25 +92,17 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     override fun begin(): Position = cond.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    private fun convert(type: CType) = when (type) {
-        is CPrimitive     -> type
-        is CStringLiteral -> type.asPointer()
-        is CFunctionType  -> type.asPointer()
-        else -> throw TypeResolutionException("Conditional true branch with non-primitive type: $type", begin())
-    }
-
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        if (eTrue is StringNode) {
-            return@memoize CPointer(CHAR)
-        }
-        val typeTrue   = eTrue.resolveType(typeHolder)
-        val typeFalse  = eFalse.resolveType(typeHolder)
-        if (typeTrue == typeFalse && typeTrue == VOID) {
-            return@memoize VOID
+        val typeTrue  = eTrue.resolveType(typeHolder)
+        val typeFalse = eFalse.resolveType(typeHolder)
+        if (typeTrue == typeFalse) {
+            return@memoize typeTrue
         }
 
-        val cvtTypeTrue  = convert(typeTrue)
-        val cvtTypeFalse = convert(typeFalse)
+        val cvtTypeTrue  = convertToPrimitive(typeTrue)
+            ?: throw TypeResolutionException("Conditional with non-primitive types: $typeTrue and $typeFalse", begin())
+        val cvtTypeFalse = convertToPrimitive(typeFalse)
+            ?: throw TypeResolutionException("Conditional with non-primitive types: $typeTrue and $typeFalse", begin())
 
         val resultType = cvtTypeTrue.interfere(typeHolder, cvtTypeFalse) ?:
             throw TypeResolutionException("Conditional with incompatible types: $cvtTypeTrue and $cvtTypeFalse: '${LineAgnosticAstPrinter.print(this)}'", begin())
@@ -228,11 +227,10 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        val structType = when(val ty = primary.resolveType(typeHolder)) {
-            is AnyCArrayType -> ty.asPointer()
-            is CPointer      -> ty
-            else -> throw TypeResolutionException("Arrow member access on non-pointer type, but got $ty", begin())
-        }
+        val ty = primary.resolveType(typeHolder)
+        val structType = convertToPointer(ty)
+            ?: throw TypeResolutionException("Arrow member access on non-pointer type, but got $ty", begin())
+
         val baseType = structType.dereference(typeHolder)
         if (baseType !is AnyCStructType) {
             throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType", begin())
@@ -369,11 +367,9 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
             is CUncompletedArrayType -> primaryType.elementType.cType()
             is CPointer              -> primaryType.dereference(typeHolder)
             is CPrimitive -> {
-                val exprType = when (val e = expr.resolveType(typeHolder)) {
-                    is AnyCArrayType -> e.asPointer()
-                    is CPointer      -> e
-                    else -> throw TypeResolutionException("Array access with non-pointer type: $e", begin())
-                }
+                val e = expr.resolveType(typeHolder)
+                val exprType = convertToPointer(e)
+                    ?: throw TypeResolutionException("Array access with non-pointer type: $e", begin())
                 primaryType.interfere(typeHolder, exprType) ?: throw TypeResolutionException("Array access with incompatible types: $primaryType and $exprType", begin())
             }
             else -> throw TypeResolutionException("Array access on non-array type: $primaryType", begin())
