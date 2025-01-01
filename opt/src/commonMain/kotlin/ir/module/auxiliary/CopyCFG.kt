@@ -455,6 +455,14 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return Switch.switch(newValue, newDefault, newTable, newTargets)
     }
 
+    override fun visit(tupleCall: IndirectionTupleCall): InstBuilder<Instruction> {
+        val newUsages = mapArguments(tupleCall)
+        val target    = mapBlock(tupleCall.target())
+        val pointer   = mapUsage<Value>(tupleCall.pointer())
+
+        return IndirectionTupleCall.call(pointer, tupleCall.prototype(), newUsages, cloneAttributes(tupleCall), target)
+    }
+
     override fun visit(intrinsic: Intrinsic): InstBuilder<Instruction> {
         val newUsages = arrayFrom(intrinsic.inputs()) {it -> mapUsage<Value>(it) }
 

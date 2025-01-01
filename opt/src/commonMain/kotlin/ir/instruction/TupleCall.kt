@@ -17,7 +17,7 @@ class TupleCall private constructor(id: Identity,
                                     private val attributes: Set<FunctionAttribute>,
                                     args: Array<Value>,
                                     target: Block):
-    TerminateTupleInstruction(id, owner, func.returnType() as TupleType, args, arrayOf(target)), TupleValue,
+    TerminateTupleInstruction(id, owner, func.returnType().asType(), args, arrayOf(target)), TupleValue,
     Callable {
 
     override fun arguments(): List<Value> {
@@ -31,7 +31,7 @@ class TupleCall private constructor(id: Identity,
     override fun attributes(): Set<FunctionAttribute> = attributes
 
     override fun type(): TupleType {
-        return func.returnType() as TupleType
+        return tp.asType()
     }
 
     override fun<T> visit(visitor: IRInstructionVisitor<T>): T {

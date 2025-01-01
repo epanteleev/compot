@@ -236,10 +236,8 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         }
     }
 
-    override fun visit(tupleCall: TupleCall) { //TODO not compatible with linux C calling convention
-        asm.callFunction(tupleCall, tupleCall.prototype())
+    private fun consumeTupleCallOutputs(tupleCall: TerminateTupleInstruction) {
         val retType = tupleCall.type()
-
         val firstProj = tupleCall.proj(0)
         if (firstProj != null) {
             val value = registerAllocation.operand(firstProj)
@@ -259,6 +257,11 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                 else -> throw CodegenException("unknown type=$second")
             }
         }
+    }
+
+    override fun visit(tupleCall: TupleCall) { //TODO not compatible with linux C calling convention
+        asm.callFunction(tupleCall, tupleCall.prototype())
+        consumeTupleCallOutputs(tupleCall)
     }
 
     override fun visit(int2ptr: Int2Pointer) {
@@ -355,6 +358,12 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     override fun visit(switch: Switch) {
         TODO("Not yet implemented")
+    }
+
+    override fun visit(tupleCall: IndirectionTupleCall) {
+        val pointer = registerAllocation.operand(tupleCall.pointer())
+        asm.indirectCall(tupleCall, pointer)
+        consumeTupleCallOutputs(tupleCall)
     }
 
     override fun visit(intrinsic: Intrinsic) {

@@ -1,5 +1,7 @@
 package types
 
+import ir.Definitions.BYTE_SIZE
+
 
 class CUnionType private constructor(
     override val name: String,
@@ -9,7 +11,7 @@ class CUnionType private constructor(
 ) : AnyCStructType(name, fields, fieldDescriptors, nameToFieldDesc) {
     override fun size(): Int {
         if (fieldDescriptors.isEmpty()) {
-            return 1
+            return BYTE_SIZE
         }
         return fieldDescriptors.maxOf { it.cType().size() }
     }

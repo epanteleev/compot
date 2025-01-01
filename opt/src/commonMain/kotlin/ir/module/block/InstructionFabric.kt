@@ -53,6 +53,7 @@ interface InstructionFabric {
     fun fpext(value: Value, toType: FloatingPointType): FpExtend
     fun fp2Int(value: Value, toType: IntegerType): Float2Int
     fun select(cond: Value, type: IntegerType, onTrue: Value, onFalse: Value): Select
+    fun itupleCall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionTupleCall
     fun phi(incoming: List<Value>, labels: List<Label>): Phi
     fun int2ptr(value: Value): Int2Pointer
     fun ptr2int(value: Value, toType: IntegerType): Pointer2Int

@@ -7,7 +7,7 @@ import ir.module.block.Block
 
 sealed class TerminateTupleInstruction(id: Identity,
                                          owner: Block,
-                                         tp: TrivialType,
+                                         tp: TupleType,
                                          operands: Array<Value>,
                                          targets: Array<Block>):
     TerminateValueInstruction(id, owner, tp, operands, targets), TupleValue {

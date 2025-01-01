@@ -586,6 +586,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    override fun visit(tupleCall: IndirectionTupleCall) {
+        assert(Callable.typeCheck(tupleCall)) {
+            "Call instruction '${tupleCall.dump()}' has inconsistent return types."
+        }
+    }
+
     override fun visit(intrinsic: Intrinsic) {
         assert(Intrinsic.typeCheck(intrinsic)) {
             "Instruction '${intrinsic.dump()}' has inconsistent types."

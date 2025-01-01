@@ -28,6 +28,7 @@ class FieldDesc(private val nameToAccess: String, val index: Int, val member: Me
         is FieldMember -> member.cType()
     }
 
+    fun typeDesc(): TypeDesc = member.typeDesc()
     fun size(): Int = member.size()
     fun name(): String = nameToAccess
 }

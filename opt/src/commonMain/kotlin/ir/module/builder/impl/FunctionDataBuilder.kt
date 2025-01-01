@@ -199,6 +199,11 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.put(sel)
     }
 
+    override fun itupleCall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionTupleCall {
+        val call = IndirectionTupleCall.call(pointer, func, args, attributes, target as Block)
+        return bb.put(call)
+    }
+
     override fun fptrunc(value: Value, toType: FloatingPointType): FpTruncate {
         val fptrunc = FpTruncate.fptrunc(value, toType)
         return bb.put(fptrunc)

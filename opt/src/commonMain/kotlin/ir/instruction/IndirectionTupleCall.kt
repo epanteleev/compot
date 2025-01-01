@@ -1,29 +1,27 @@
 package ir.instruction
 
-import common.arrayWith
-import common.arrayWrapperOf
-import common.assertion
-import common.toTypedArray
-import ir.attributes.FunctionAttribute
-import ir.value.Value
-import ir.module.IndirectFunctionPrototype
-import ir.instruction.utils.IRInstructionVisitor
-import ir.module.block.Block
+import common.*
 import ir.types.*
+import ir.value.Value
+import ir.attributes.FunctionAttribute
+import ir.instruction.utils.IRInstructionVisitor
+import ir.module.IndirectFunctionPrototype
+import ir.module.block.Block
 
 
-class IndirectionCall private constructor(id: Identity, owner: Block,
-                                          private val func: IndirectFunctionPrototype,
-                                          private val attributes: Set<FunctionAttribute>,
-                                          operands: Array<Value>,
-                                          target: Block):
-    TerminateValueInstruction(id, owner, func.returnType(), operands, arrayOf(target)),
+class IndirectionTupleCall private constructor(id: Identity, owner: Block,
+                                               private val func: IndirectFunctionPrototype,
+                                               private val attributes: Set<FunctionAttribute>,
+                                               operands: Array<Value>,
+                                               target: Block
+):
+    TerminateTupleInstruction(id, owner, func.returnType().asType(), operands, arrayOf(target)),
     Callable {
     init {
-        assertion(func.returnType() !is TrivialType) { "Must be non trivial type" }
+        assertion(func.returnType() != VoidType) { "Must be non $VoidType" }
     }
 
-    override fun type(): PrimitiveType = tp as PrimitiveType
+    override fun type(): TupleType = tp.asType()
 
     override fun target(): Block {
         assertion(targets.size == 1) {
@@ -63,18 +61,20 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
     }
 
     companion object {
-        fun call(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Block): InstBuilder<IndirectionCall> = {
-            id: Identity, owner: Block -> make(id, owner, pointer, func, attributes, args, target)
+        const val NAME = "call"
+
+        fun call(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Block): InstBuilder<IndirectionTupleCall> = {
+                id: Identity, owner: Block -> make(id, owner, pointer, func, attributes, args, target)
         }
 
-        private fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): IndirectionCall {
+        private fun make(id: Identity, owner: Block, pointer: Value, func: IndirectFunctionPrototype, attributes: Set<FunctionAttribute>, args: List<Value>, target: Block): IndirectionTupleCall {
             require(Callable.isAppropriateTypes(func, args)) {
                 args.joinToString(prefix = "inconsistent types in '$id', pointer=$pointer:${pointer.type()}, prototype='${func.shortDescription()}', ")
                 { "$it: ${it.type()}" }
             }
 
             val operands = args.toTypedArray(pointer)
-            return registerUser(IndirectionCall(id, owner, func, attributes, operands, target), *operands)
+            return registerUser(IndirectionTupleCall(id, owner, func, attributes, operands, target), *operands)
         }
     }
 }

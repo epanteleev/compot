@@ -57,10 +57,16 @@ abstract class ReturnStructTest: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testReturnStruct7() {
         val result = runCTest("shlang/return_struct/return_struct7", listOf(), options())
-        assertEquals("x: 1 y: 2 z: 3 w: 4 v: 5 u: 6\n", result.output)
+        assertEquals("x: 1, y: 2\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testReturnStruct8() {
+        val result = runCTest("shlang/return_struct/return_struct8", listOf(), options())
+        assertEquals("x: 1, y: 2\n", result.output)
         assertEquals(0, result.exitCode)
     }
 }

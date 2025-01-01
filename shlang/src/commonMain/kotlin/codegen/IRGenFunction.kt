@@ -662,7 +662,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.storeCoerceArguments(returnType, dst, projs)
     }
 
-    private fun visitFunPointerCall0(lvalueAdr: Value, funcPointerCall: FunctionCall) {
+    private fun visitFunPointerForStructType(lvalueAdr: Value, funcPointerCall: FunctionCall) {
         val functionType = funcPointerCall.functionType(typeHolder)
         val loadedFunctionPtr = visitExpression(funcPointerCall.primary, true)
 
@@ -674,30 +674,37 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val attributes = cPrototype.attributes + attr
 
         val cont = ir.createLabel()
-        when (functionType.retType().cType()) {
-            VOID -> {
-                ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
-                UndefValue
-            }
-            is CPrimitive -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+        when (val retType = functionType.retType().cType()) {
             is CStructType -> when (prototype.returnType()) {
-                is PrimitiveType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
-                //is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
-                is StructType    -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                is PrimitiveType -> {
+                    val ret = ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                    ir.switchLabel(cont)
+                    val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(0L))
+                    ir.store(gep, ret)
+                }
+                is TupleType -> {
+                    val args = ir.itupleCall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                    ir.switchLabel(cont)
+                    copyTuple(lvalueAdr, args, retType)
+                }
+                is VoidType -> {
+                    ir.ivcall(loadedFunctionPtr, prototype, arrayListOf(lvalueAdr) + convertedArgs, attributes, cont)
+                    ir.switchLabel(cont)
+                }
                 else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
             }
             else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
         }
-        ir.switchLabel(cont)
+
     }
 
-    private fun visitFuncCall0(lvalueAdr: Value, rvalue: FunctionCall) {
+    private fun visitFuncCallForStructType(lvalueAdr: Value, rvalue: FunctionCall) {
         val primary = rvalue.primary
         if (primary !is VarNode) {
             throw IRCodeGenError("Unknown function call, primary=$primary", rvalue.begin()) //TODO incorrect code
         }
         val name = primary.name()
-        val function = mb.findFunction(name) ?: return visitFunPointerCall0(lvalueAdr, rvalue)
+        val function = mb.findFunction(name) ?: return visitFunPointerForStructType(lvalueAdr, rvalue)
         val (convertedArgs, attributes) = convertFunctionArgs(function, rvalue.args)
 
         val cont = ir.createLabel()
@@ -916,14 +923,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitAssignBinary(binop: BinaryOp): Value {
         val rightExpression = binop.right
         val leftType = binop.left.resolveType(typeHolder)
-        if (rightExpression is FunctionCall && leftType is AnyCStructType) {
+        if (leftType is AnyCStructType && rightExpression is FunctionCall) {
             val lvalueAdr = visitExpression(binop.left, false)
-            visitFuncCall0(lvalueAdr, rightExpression)
+            visitFuncCallForStructType(lvalueAdr, rightExpression)
             return lvalueAdr
         }
 
         val right = visitExpression(binop.right, true)
-
         if (leftType !is AnyCStructType) {
             val leftIrType = mb.toIRType<Type>(typeHolder, leftType)
             val rightCvt = ir.convertRVToType(right, leftIrType)
@@ -1748,7 +1754,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val lvalueAdr = initDeclarator.declarator.accept(this)
         when (val rvalue = initDeclarator.rvalue) {
             is InitializerList -> initializerContext.scope(lvalueAdr, varDesc.typeDesc) { visitInitializerList(rvalue) }
-            is FunctionCall -> visitFuncCall0(lvalueAdr, rvalue)
+            is FunctionCall -> visitFuncCallForStructType(lvalueAdr, rvalue)
             else -> {
                 val rvalueResult = visitExpression(initDeclarator.rvalue, true)
                 val commonType = mb.toIRType<NonTrivialType>(typeHolder, type)

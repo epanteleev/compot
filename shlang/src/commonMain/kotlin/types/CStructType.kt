@@ -1,6 +1,7 @@
 package types
 
 import ir.Definitions
+import ir.Definitions.BYTE_SIZE
 import typedesc.TypeDesc
 
 
@@ -17,7 +18,7 @@ class CStructType private constructor(
 
     override fun size(): Int {
         if (fieldDescriptors.isEmpty()) {
-            return 1
+            return BYTE_SIZE
         }
         var offset = 0
         for (idx in fieldDescriptors.indices) {
@@ -46,7 +47,7 @@ class CStructType private constructor(
             return null
         }
 
-        return fieldDescriptors[index].member.typeDesc()
+        return fieldDescriptors[index].typeDesc()
     }
 
     companion object {
@@ -94,9 +95,9 @@ class CStructType private constructor(
         }
 
         fun create(name: String, fields: List<Member>): CStructType {
-            val fieldDescs = evaluateFieldDescriptors(fields)
-            val nameToFieldDesc = fieldDescs.associateByTo(hashMapOf()) { it.name() }
-            return CStructType(name, fields, fieldDescs, nameToFieldDesc, alignments(fieldDescs))
+            val fieldDescriptors = evaluateFieldDescriptors(fields)
+            val nameToFieldDesc = fieldDescriptors.associateByTo(hashMapOf()) { it.name() }
+            return CStructType(name, fields, fieldDescriptors, nameToFieldDesc, alignments(fieldDescriptors))
         }
     }
 }
