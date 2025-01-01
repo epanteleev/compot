@@ -10,9 +10,9 @@ import ir.types.PtrType
 
 sealed class AnyFunctionPrototype(protected val returnType: Type, protected val arguments: List<NonTrivialType>, val attributes: Set<FunctionAttribute>) {
     fun arguments(): List<NonTrivialType> = arguments
-    fun argument(index: Int): NonTrivialType {
+    fun argument(index: Int): NonTrivialType? {
         if (index < 0 || index >= arguments.size) {
-            throw IndexOutOfBoundsException("Index $index is out of bounds for arguments of size ${arguments.size}")
+            return null
         }
 
         return arguments[index]

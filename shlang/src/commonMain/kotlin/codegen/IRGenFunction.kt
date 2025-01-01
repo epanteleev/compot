@@ -498,7 +498,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun convertArg(function: AnyFunctionPrototype, argIdx: Int, expr: Value): Value {
         if (argIdx < function.arguments().size) {
-            val cvt = function.argument(argIdx)
+            val cvt = function.argument(argIdx) ?: throw RuntimeException("Internal error")
             return ir.convertToType(expr, cvt)
         }
 
@@ -517,7 +517,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): FunctionArgInfo {
         val convertedArgs = mutableListOf<Value>()
         val attributes = hashSetOf<FunctionAttribute>()
+
+        val cType = functionType.retType().cType()
         var offset = 0
+        if (cType is AnyCStructType && !cType.isSmall()) {
+            offset += 1
+        }
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
@@ -536,7 +541,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         continue
                     }
                     if (!argCType.isSmall()) {
-                        attributes.add(ByValue(idx + offset))
+                        val irType = mb.toIRType<StructType>(typeHolder, argCType)
+                        attributes.add(ByValue(idx + offset, irType))
                     }
                     val argValues = ir.loadCoerceArguments(argCType, expr)
                     convertedArgs.addAll(argValues)
@@ -697,7 +703,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return visitFunPointerForStructType(lvalueAdr, returnType, rvalue)
         }
         val functionPrototype = mb.findFunction(primary.name()) ?: return visitFunPointerForStructType(lvalueAdr, returnType, rvalue)
-        val (convertedArgs, attributes) = convertFunctionArgs(functionPrototype, rvalue.args)
+        val (convertedArgs, _) = convertFunctionArgs(functionPrototype, rvalue.args)
+        val attributes = functionPrototype.attributes
 
         val cont = ir.createLabel()
         when (functionPrototype.returnType()) {
@@ -1293,7 +1300,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     fun visitFun(parameters: List<String>, functionNode: FunctionNode): Value = scoped {
         stmtStack.scoped(FunctionStmtInfo()) { stmt ->
-            visitParameters(parameters, functionType.args(), ir.arguments()) { param, cType, args ->
+            val retType = functionNode.resolveType(typeHolder).retType().cType()
+            val arguments = if (retType is AnyCStructType && !retType.isSmall()) {
+                ir.arguments().takeLast(parameters.size)
+            } else {
+                ir.arguments()
+            }
+            visitParameters(parameters, functionType.args(), arguments) { param, cType, args ->
                 visitParameter(param, cType, args)
             }
 

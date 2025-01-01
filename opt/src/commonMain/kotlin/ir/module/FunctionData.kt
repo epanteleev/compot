@@ -19,8 +19,6 @@ class FunctionData private constructor(val prototype: FunctionPrototype, private
 
     fun arguments(): List<ArgumentValue> = argumentValues
 
-    fun arg(idx: Int): ArgumentValue = argumentValues[idx]
-
     fun copy(): FunctionData {
         return CopyCFG.copy(this)
     }

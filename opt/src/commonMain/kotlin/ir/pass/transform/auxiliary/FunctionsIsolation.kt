@@ -1,6 +1,5 @@
 package ir.pass.transform.auxiliary
 
-import common.assertion
 import ir.attributes.ByValue
 import ir.global.GlobalValue
 import ir.types.*
@@ -114,15 +113,11 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         }
     }
 
-    private fun isolateByValueArgument(bb: Block, call: Instruction, i: Int, arg: Value) {
-        assertion(arg is Alloc) {
-            "Unexpected argument: $arg"
-        }
-        val argType = arg as Alloc
-        val gen = bb.putBefore(call, Generate.gen(argType.allocatedType))
+    private fun isolateByValueArgument(bb: Block, call: Instruction, i: ByValue, arg: Value) {
+        val gen = bb.putBefore(call, Generate.gen(i.aggregateType))
         val lea = bb.putAfter(gen, Lea.lea(gen))
-        bb.putAfter(lea, Memcpy.memcpy(lea, arg, U64Value.of(argType.allocatedType.sizeOf().toLong())))
-        bb.updateDF(call, i, gen)
+        bb.putAfter(lea, Memcpy.memcpy(lea, arg, U64Value.of(i.aggregateType.sizeOf().toLong())))
+        bb.updateDF(call, i.argumentIndex, gen)
     }
 
     private fun insertCopies(bb: Block, call: Instruction) {
@@ -135,9 +130,9 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                     bb.updateDF(call, i, copy)
                 }
                 is PtrType -> {
-                    val isByValue = byValueAttr.find { it.argumentIndex == i } != null
-                    if (isByValue) {
-                        isolateByValueArgument(bb, call, i, arg)
+                    val byValue = byValueAttr.find { it.argumentIndex == i }
+                    if (byValue != null) {
+                        isolateByValueArgument(bb, call, byValue, arg)
                         continue
                     }
 

@@ -6,9 +6,13 @@ import asm.x64.GPRegister.rax
 import common.assertion
 import ir.Definitions.BYTE_SIZE
 import ir.Definitions.QWORD_SIZE
+import ir.attributes.FunctionAttribute
+import ir.attributes.GlobalValueAttribute
 import ir.attributes.VarArgAttribute
 import ir.instruction.*
 import ir.module.DirectFunctionPrototype
+import ir.module.ExternFunction
+import ir.module.FunctionPrototype
 import ir.platform.MacroAssembler
 import ir.platform.common.TargetPlatform
 import ir.types.*
@@ -144,7 +148,10 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
 
     fun callFunction(call: Callable, func: DirectFunctionPrototype) {
         emitFPVarargsCount(call)
-        call(func.name)
+        when (func) {
+            is ExternFunction    -> call(func.name + "@PLT")
+            is FunctionPrototype -> call(func.name)
+        }
     }
 
     private fun emitFPVarargsCount(call: Callable) {

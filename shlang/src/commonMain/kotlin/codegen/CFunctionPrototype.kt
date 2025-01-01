@@ -50,7 +50,9 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
 
     private fun argumentTypes(): Pair<List<NonTrivialType>, MutableSet<FunctionAttribute>> { //TODO remove pair
         val cType = functionType.retType().cType()
+        var offset = 0
         if (cType is AnyCStructType && !cType.isSmall()) {
+            offset += 1
             types.add(PtrType)
         }
         for ((idx, type) in functionType.args().withIndex()) {
@@ -61,12 +63,14 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
                         continue
                     }
                     if (!ty.isSmall()) {
-                        types.add(mb.toIRType<StructType>(typeHolder, ty))
-                        attributes.add(ByValue(idx))
+                        val irType = mb.toIRType<StructType>(typeHolder, ty)
+                        types.add(irType)
+                        attributes.add(ByValue(idx + offset, irType))
                         continue
                     }
                     val parameters = CallConvention.coerceArgumentTypes(ty) ?: throw RuntimeException("Unsupported type, type=$ty")
                     types.addAll(parameters)
+                    offset += parameters.size - 1
                 }
                 is CArrayType, is CUncompletedArrayType -> types.add(PtrType)
                 is CPointer    -> types.add(PtrType)

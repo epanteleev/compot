@@ -609,9 +609,6 @@ object TypeConverter {
             assertion(!argCType.isSmall()) {
                 "Cannot coerce arguments for size $sizeOf"
             }
-            assertion(structPtr is Alloc) {
-                "Expected Alloc, but got $structPtr"
-            }
             arrayListOf(structPtr)
         }
     }

@@ -208,7 +208,7 @@ internal class Lowering private constructor(private val cfg: FunctionData) {
                 bb.updateDF(inst, Pointer2Int.SOURCE, lea)
                 return lea
             }
-            inst.match(memcpy(nop(), generate(), nop())) { memcpy: Memcpy ->
+            inst.match(memcpy(nop(), generate() or argumentByValue(), nop())) { memcpy: Memcpy ->
                 // Before:
                 //  memcpy %src, %dst
                 //
@@ -216,11 +216,11 @@ internal class Lowering private constructor(private val cfg: FunctionData) {
                 //  %srcLea = lea %src
                 //  memcpy %srcLea, %dst
 
-                val src = bb.putBefore(inst, Lea.lea(memcpy.source().asValue<Generate>()))
+                val src = bb.putBefore(inst, Lea.lea(memcpy.source()))
                 bb.updateDF(inst, Memcpy.SOURCE, src)
                 return bb.idom(inst)
             }
-            inst.match(memcpy(generate(), nop(), nop())) { memcpy: Memcpy ->
+            inst.match(memcpy(generate() or argumentByValue(), nop(), nop())) { memcpy: Memcpy ->
                 // Before:
                 //  memcpy %src, %dst
                 //
@@ -228,7 +228,7 @@ internal class Lowering private constructor(private val cfg: FunctionData) {
                 //  %dstLea = lea %dst
                 //  memcpy %src, %dstLea
 
-                val dst = bb.putBefore(inst, Lea.lea(memcpy.destination().asValue<Generate>()))
+                val dst = bb.putBefore(inst, Lea.lea(memcpy.destination()))
                 bb.updateDF(inst, Memcpy.DESTINATION, dst)
                 return bb.idom(inst)
             }

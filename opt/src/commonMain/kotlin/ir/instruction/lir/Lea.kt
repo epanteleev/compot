@@ -4,11 +4,15 @@ import ir.types.*
 import ir.global.*
 import ir.value.Value
 import common.assertion
+import common.hasInstance
+import ir.attributes.ByValue
 import ir.module.block.Block
 import ir.instruction.Identity
 import ir.instruction.InstBuilder
 import ir.instruction.ValueInstruction
+import ir.instruction.matching.argumentByValue
 import ir.instruction.utils.IRInstructionVisitor
+import ir.value.ArgumentValue
 
 
 class Lea private constructor(id: Identity, owner: Block, value: Value):
@@ -44,7 +48,11 @@ class Lea private constructor(id: Identity, owner: Block, value: Value):
             require(isAppropriateType(originType)) {
                 "inconsistent type '$id' generate=$value:$originType"
             }
-            require(value is Generate || value is GlobalConstant || value is FunctionSymbol || value is GlobalValue) {
+            require(value is Generate ||
+                    value is GlobalConstant ||
+                    value is FunctionSymbol ||
+                    value is GlobalValue ||
+                    value.isa(argumentByValue())) {
                 "should be '$NAME' or global constant, but '$value'"
             }
 

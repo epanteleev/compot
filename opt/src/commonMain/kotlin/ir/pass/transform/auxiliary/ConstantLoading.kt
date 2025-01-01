@@ -4,7 +4,9 @@ import ir.global.*
 import ir.instruction.Instruction
 import ir.instruction.Load
 import ir.instruction.lir.Lea
+import ir.module.ExternFunction
 import ir.module.FunctionData
+import ir.module.FunctionPrototype
 import ir.module.Module
 import ir.module.block.Block
 import ir.types.PtrType
@@ -16,11 +18,11 @@ internal class ConstantLoading private constructor(private val cfg: FunctionData
         fun closure(bb: Block, inst: Instruction): Instruction {
             for ((i ,use) in inst.operands().withIndex()) {
                 when (use) {
-                    is AnyAggregateGlobalConstant, is FunctionSymbol -> {
+                    is AnyAggregateGlobalConstant, is FunctionPrototype -> {
                         val lea = bb.putBefore(inst, Lea.lea(use))
                         bb.updateDF(inst, i, lea)
                     }
-                    is ExternValue -> {
+                    is ExternValue, is ExternFunction -> {
                         val lea = bb.putBefore(inst, Load.load(PtrType, use))
                         bb.updateDF(inst, i, lea)
                     }

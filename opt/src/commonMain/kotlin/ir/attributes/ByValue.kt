@@ -1,6 +1,9 @@
 package ir.attributes
 
-class ByValue(val argumentIndex: Int): FunctionAttribute, ArgumentValueAttribute {
+import ir.types.StructType
+
+
+class ByValue(val argumentIndex: Int, val aggregateType: StructType): FunctionAttribute, ArgumentValueAttribute {
     override fun toString(): String = "!byval[$argumentIndex]"
 
     override fun hashCode(): Int {
@@ -10,6 +13,6 @@ class ByValue(val argumentIndex: Int): FunctionAttribute, ArgumentValueAttribute
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ByValue) return false
-        return argumentIndex == other.argumentIndex
+        return argumentIndex == other.argumentIndex && aggregateType == other.aggregateType
     }
 }

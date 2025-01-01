@@ -561,7 +561,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                 continue
             }
 
-            val type = prototype.argument(idx)
+            val type = prototype.argument(idx) ?: throw CodegenException("argument type is null")
             assertion(type is AggregateType) { "type=$type" }
 
             argumentsSlotsSize += Definitions.alignTo(type.sizeOf(), QWORD_SIZE)

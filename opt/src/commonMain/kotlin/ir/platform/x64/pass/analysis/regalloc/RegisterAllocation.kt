@@ -9,6 +9,8 @@ import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
 import ir.global.GlobalValue
 import ir.instruction.Callable
+import ir.module.ExternFunction
+import ir.module.FunctionPrototype
 import ir.module.MutationMarker
 import ir.pass.common.AnalysisResult
 import ir.platform.x64.CallConvention
@@ -78,7 +80,8 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
         is I64Value -> Imm64.of(value.i64)
         is U64Value -> Imm64.of(value.u64)
         is GlobalConstant -> Address.internal(value.name())
-        is FunctionSymbol -> Address.internal(value.name())
+        is FunctionPrototype -> Address.internal(value.name())
+        is ExternFunction -> Address.external(value.name())
         is ExternValue -> Address.external(value.name())
         is GlobalValue -> Address.internal(value.name())
         is NullValue -> Imm64.of(0)

@@ -50,3 +50,7 @@ inline fun <T, R, V> Array<T>.forEachWith(other: Array<R>, transform: (a: T, b: 
         transform(first.next(), second.next(), idx++)
     }
 }
+
+inline fun <reified R> Iterable<*>.hasInstance(): Boolean {
+    return any { it is R }
+}

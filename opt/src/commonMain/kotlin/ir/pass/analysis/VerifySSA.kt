@@ -11,6 +11,7 @@ import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PreOrderFabric
+import ir.types.AggregateType
 import ir.types.VoidType
 import ir.value.ArgumentValue
 import ir.value.UsableValue
@@ -60,11 +61,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
                 }
             }
 
-            val byVal = prototype.byValue(idx)
-            if (byVal != null) {
-                assert(arg.attributes.contains(byVal)) {
-                    "Argument '${arg}' must have the same attributes as prototype argument '${byVal}'"
-                }
+            val byVal = prototype.byValue(idx) ?: continue
+            assert(arg.attributes.contains(byVal)) {
+                "Argument '${arg}' must have the same attributes as prototype argument '$byVal'"
+            }
+            assert(arg.type() is AggregateType) {
+                "Argument '${arg}' must have a aggregate type, but found '${arg.type()}'"
             }
         }
     }
