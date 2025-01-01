@@ -10,16 +10,15 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
     private fun newConstantName() = nameAssistant.nextConstant()
 
     private inline fun<reified T: NamedDirective> addSymbol(objSymbol: T): T {
-        val has = namedDirectives.put(objSymbol.name, objSymbol)
-        if (has != null) {
-            throw IllegalArgumentException("symbol already exists: $objSymbol")
-        }
+        namedDirectives.putIfAbsent(objSymbol.name, objSymbol)
         symbols.add(objSymbol)
         return objSymbol
     }
 
     protected fun findLabel(name: String): ObjLabel {
-        val directive = namedDirectives[name] ?: throw IllegalArgumentException("label not found: $name")
+        val directive = namedDirectives.getOrPut(name) {
+            ObjLabel(name)
+        }
         if (directive !is ObjLabel) {
             throw IllegalArgumentException("label not found: $name")
         }

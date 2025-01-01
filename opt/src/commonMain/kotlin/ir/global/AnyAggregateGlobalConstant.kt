@@ -27,7 +27,7 @@ class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, 
     }
 
     override fun contentType(): NonTrivialType = ArrayType(I8Type, string.length)
-    override fun constant(): Constant = StringLiteralConstant(tp, string)
+    override fun constant(): StringLiteralConstant = StringLiteralConstant(tp, string)
 }
 
 sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivialType, protected val elements: InitializerListValue): AnyAggregateGlobalConstant(name) {
@@ -43,7 +43,7 @@ sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivi
         return elements.toString()
     }
 
-    final override fun constant(): Constant {
+    final override fun constant(): InitializerListValue {
         return elements
     }
 }
@@ -53,7 +53,7 @@ class ArrayGlobalConstant(name: String, elements: InitializerListValue): Aggrega
         InitializerListValue(tp, elements)
     )
 
-    override fun contentType(): ArrayType = tp as ArrayType
+    override fun contentType(): ArrayType = tp.asType()
 }
 
 class StructGlobalConstant(name: String, elements: InitializerListValue): AggregateGlobalConstant(name, elements.type(), elements) {
@@ -61,5 +61,5 @@ class StructGlobalConstant(name: String, elements: InitializerListValue): Aggreg
         InitializerListValue(tp, elements)
     )
 
-    override fun contentType(): StructType = tp as StructType
+    override fun contentType(): StructType = tp.asType()
 }

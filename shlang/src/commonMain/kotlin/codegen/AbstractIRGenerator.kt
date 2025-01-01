@@ -56,7 +56,7 @@ sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
         }
         is VarNode -> when (expr.resolveType(typeHolder)) {
-            is CAggregateType -> staticAddressOf(expr) ?: throw RuntimeException("internal error")
+            is CAggregateType, is AnyCFunctionType -> staticAddressOf(expr) ?: throw RuntimeException("internal error")
             else -> defaultContEval(lValueType, expr)
         }
         is CompoundLiteral -> {

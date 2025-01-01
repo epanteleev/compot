@@ -20,5 +20,5 @@ sealed class GlobalConstant(protected open val name: String): GlobalSymbol {
         return name == other.name
     }
 
-    abstract fun constant(): Constant
+    abstract fun constant(): NonTrivialConstant
 }

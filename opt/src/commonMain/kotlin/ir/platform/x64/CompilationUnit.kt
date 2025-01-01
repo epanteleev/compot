@@ -87,7 +87,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         is PrimitiveType -> makePrimitiveConstant(globalValue)
     }
 
-    private fun primitive(builder: ObjBuilder, data: Constant) = when (data) {
+    private fun primitive(builder: ObjBuilder, data: NonTrivialConstant) = when (data) {
         is I64Value -> builder.quad(data.i64)
         is U64Value -> builder.quad(data.u64)
         is I32Value -> builder.long(data.i32)

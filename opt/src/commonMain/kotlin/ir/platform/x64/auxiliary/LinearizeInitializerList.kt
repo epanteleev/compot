@@ -5,15 +5,15 @@ import ir.value.constant.*
 
 
 object LinearizeInitializerList {
-    private fun fillIn(constants: MutableList<Constant>, structSize: Int, initializerListSizeOf: Int) {
+    private fun fillIn(constants: MutableList<NonTrivialConstant>, structSize: Int, initializerListSizeOf: Int) {
         val diff = structSize - initializerListSizeOf
         for (i in 0 until diff) {
             constants.add(I8Value.of(0))
         }
     }
 
-    fun linearize(initializerListValue: InitializerListValue, aggregateType: AggregateType): List<Constant> {
-        val result = mutableListOf<Constant>()
+    fun linearize(initializerListValue: InitializerListValue, aggregateType: AggregateType): List<NonTrivialConstant> {
+        val result = mutableListOf<NonTrivialConstant>()
         var initializerListSizeOf = 0
         for ((idx, element) in initializerListValue.elements.withIndex()) {
             val structSize = aggregateType.offset(idx) + aggregateType.field(idx).sizeOf()

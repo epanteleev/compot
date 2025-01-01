@@ -1,6 +1,6 @@
 package asm.x64
 
-interface ObjBuilder {
+sealed interface ObjBuilder {
     fun byte(value: Byte)
     fun short(value: Short)
     fun long(value: Int)
