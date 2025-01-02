@@ -10,7 +10,6 @@ import ir.module.FunctionPrototype
 import ir.module.Module
 import ir.module.block.Block
 import ir.types.PtrType
-import ir.types.Type
 
 
 internal class ConstantLoading private constructor(private val cfg: FunctionData) {

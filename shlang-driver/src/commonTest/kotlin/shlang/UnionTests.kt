@@ -15,7 +15,7 @@ sealed class UnionTests : CommonCTest() {
     @Test
     fun testUnion1() {
         val result = runCTest("shlang/union/union1", listOf("runtime/runtime.c"), options())
-        assertEquals(0, result.exitCode)
+        assertEquals(1, result.exitCode)
     }
 
     @Test

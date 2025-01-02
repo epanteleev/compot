@@ -42,7 +42,7 @@ class CStructType private constructor(
         append("}")
     }
 
-    fun fieldByNameOrNull(index: Int): TypeDesc? {
+    fun fieldByIndexOrNull(index: Int): TypeDesc? {
         if (index < 0 || index >= fieldDescriptors.size) {
             return null
         }

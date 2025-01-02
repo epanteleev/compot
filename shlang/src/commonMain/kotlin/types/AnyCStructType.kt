@@ -6,15 +6,15 @@ import ir.Definitions.QWORD_SIZE
 sealed class AnyCStructType(open val name: String,
                             protected val fields: List<Member>,
                             protected val fieldDescriptors: List<FieldDesc>,
-                            protected val nameToFieldDesc: Map<String, FieldDesc>): CAggregateType() {
-    fun fieldByNameOrNull(name: String): FieldDesc? = nameToFieldDesc[name]
+                            private val nameToFieldDesc: Map<String, FieldDesc>): CAggregateType() {
+    fun fieldByIndexOrNull(name: String): FieldDesc? = nameToFieldDesc[name]
 
     fun descriptors(): List<FieldDesc> {
         return fieldDescriptors
     }
 
-    fun fieldByIndex(name: String): FieldDesc {
-        return fieldByNameOrNull(name) ?:
+    fun fieldByName(name: String): FieldDesc {
+        return fieldByIndexOrNull(name) ?:
             throw RuntimeException("Cannon find field by name: name=$name, { name=$name, $fields }")
     }
 

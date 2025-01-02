@@ -22,9 +22,9 @@ class FieldMember(val name: String, private val typeDesc: TypeDesc): Member() {
     override fun toString(): String   = "$typeDesc $name;"
 }
 
-class FieldDesc(private val nameToAccess: String, val index: Int, val member: Member) {
+class FieldDesc(private val nameToAccess: String, val index: Int, private val member: Member) {
     fun cType(): CType = when (member) {
-        is AnonMember  -> member.cType().fieldByIndex(nameToAccess).member.cType()
+        is AnonMember  -> member.cType().fieldByName(nameToAccess).member.cType()
         is FieldMember -> member.cType()
     }
 

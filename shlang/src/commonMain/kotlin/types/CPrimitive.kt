@@ -1,13 +1,13 @@
 package types
 
-import typedesc.TypeHolder
-import typedesc.TypeQualifier
-import ir.Definitions.POINTER_SIZE
+import typedesc.*
+import ir.Definitions.BYTE_SIZE
 
 
 sealed class CPrimitive: CType() {
     final override fun alignmentOf(): Int = size()
-    fun interfere(typeHolder: TypeHolder, type2: CType): CType? {
+
+    fun interfere(typeHolder: TypeHolder, type2: CType): CPrimitive? {
         when (this) {
             type2 -> return this
             CHAR -> {
@@ -222,109 +222,14 @@ sealed class CPrimitive: CType() {
     }
 }
 
+sealed class AnyCInteger: CPrimitive()
+
 data object VOID: CPrimitive() {
     override fun toString(): String = "void"
-    override fun size(): Int = 1
-}
-
-data object CHAR: CPrimitive() {
-    override fun toString(): String = "char"
-    override fun size(): Int = 1
-}
-
-data object SHORT: CPrimitive() {
-    override fun toString(): String = "short"
-    override fun size(): Int = 2
-}
-
-data object INT: CPrimitive() {
-    override fun toString(): String = "int"
-    override fun size(): Int = 4
-}
-
-data object LONG: CPrimitive() {
-    override fun toString(): String = "long"
-    override fun size(): Int = 8
-}
-
-data object FLOAT: CPrimitive() {
-    override fun toString(): String = "float"
-    override fun size(): Int = 4
-}
-
-data object DOUBLE: CPrimitive() {
-    override fun toString(): String = "double"
-    override fun size(): Int = 8
-}
-
-data object UCHAR: CPrimitive() {
-    override fun toString(): String = "unsigned char"
-    override fun size(): Int = 1
-}
-
-data object USHORT: CPrimitive() {
-    override fun toString(): String = "unsigned short"
-    override fun size(): Int = 2
-}
-
-data object UINT: CPrimitive() {
-    override fun toString(): String = "unsigned int"
-    override fun size(): Int = 4
-}
-
-data object ULONG: CPrimitive() {
-    override fun toString(): String = "unsigned long"
-    override fun size(): Int = 8
+    override fun size(): Int = BYTE_SIZE
 }
 
 data object BOOL: CPrimitive() {
     override fun toString(): String = "_Bool"
-    override fun size(): Int = 1
-}
-
-class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : CPrimitive() {
-    override fun size(): Int = POINTER_SIZE
-
-    fun dereference(typeHolder: TypeHolder): CType= when (type) {
-        is CFunctionType          -> type.functionType
-        is CUncompletedStructType -> typeHolder.getStructType<CStructType>(type.name)
-        is CUncompletedUnionType  -> typeHolder.getStructType<CUnionType>(type.name)
-        is CUncompletedEnumType   -> typeHolder.getStructType<CEnumType>(type.name)
-        else -> type
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is CPointer) return false
-
-        if (type != other.type) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return type.hashCode()
-    }
-
-    override fun toString(): String = buildString {
-        properties.forEach { append(it) }
-        append(type)
-        append("*")
-    }
-}
-
-data class CEnumType(val name: String, private val enumerators: Map<String, Int>): CPrimitive() {
-    override fun toString(): String = name
-
-    override fun size(): Int {
-        return INT.size()
-    }
-
-    fun hasEnumerator(name: String): Boolean {
-        return enumerators.contains(name)
-    }
-
-    fun enumerator(name: String): Int? {
-        return enumerators[name] //TODO temporal
-    }
+    override fun size(): Int = BYTE_SIZE
 }

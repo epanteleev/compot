@@ -264,11 +264,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         else -> visitExpression(expr, true)
     }
 
-    private fun visitSingleInitializer(singleInitializer: SingleInitializer): Value {
-        val lvalueAdr = initializerContext.peekValue()
-        val type = initializerContext.peekType().cType() as CAggregateType
-        val idx = initializerContext.peekIndex()
-        when (val expr = singleInitializer.expr) {
+    private fun visitSingleInitializer0(expr: Expression, lvalueAdr: Value, type: CAggregateType, idx: Int) {
+        when (expr) {
             is InitializerList -> when (type) {
                 is CArrayType -> {
                     val t = type.element()
@@ -277,7 +274,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
                 }
                 is CStructType -> {
-                    val t = type.fieldByNameOrNull(idx) ?: throw IRCodeGenError("Field '$idx' not found", expr.begin())
+                    val t = type.fieldByIndexOrNull(idx) ?: throw IRCodeGenError("Field '$idx' not found", expr.begin())
                     val irType = mb.toIRType<AggregateType>(typeHolder, t.cType())
                     val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
                     initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
@@ -318,13 +315,39 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
             }
             else -> {
-                val rvalue = visitExpression(expr, true)
-                val irType = mb.toIRType<AggregateType>(typeHolder, type)
-                val converted = ir.convertToType(rvalue, irType.field(idx))
-                val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
-                ir.store(fieldPtr, converted)
+                when (type) {
+                    is AnyCArrayType -> {
+                        val rvalue = visitExpression(expr, true)
+                        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+
+                        val field = when (val irFieldType = irType.field(idx)) {
+                            is PrimitiveType -> irFieldType
+                            is StructType    -> irFieldType.field(0)
+                            else -> throw IRCodeGenError("Unknown type $irFieldType", expr.begin())
+                        }
+                        val converted = ir.convertToType(rvalue, field)
+                        val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
+                        ir.store(fieldPtr, converted)
+                    }
+                    is AnyCStructType -> {
+                        val rvalue = visitExpression(expr, true)
+                        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+                        val irFieldType = irType.field(idx)
+                        val converted = ir.convertToType(rvalue, irFieldType)
+                        val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
+                        ir.store(fieldPtr, converted)
+                    }
+                    is InitializerType -> TODO()
+                }
             }
         }
+    }
+
+    private fun visitSingleInitializer(singleInitializer: SingleInitializer): Value {
+        val lvalueAdr = initializerContext.peekValue()
+        val type = initializerContext.peekType().cType() as CAggregateType
+        val idx = initializerContext.peekIndex()
+        visitSingleInitializer0(singleInitializer.expr, lvalueAdr, type, idx)
         return UndefValue
     }
 
@@ -373,8 +396,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitConditional(conditional: Conditional): Value =
-        when (val commonType = mb.toIRType<Type>(typeHolder, conditional.resolveType(typeHolder))) {
-            VoidType -> {
+        when (val cType = conditional.resolveType(typeHolder)) {
+            is VOID -> {
                 val condition = makeConditionFromExpression(conditional.cond)
                 val thenBlock = ir.createLabel()
                 val elseBlock = ir.createLabel()
@@ -392,10 +415,15 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.switchLabel(exitBlock)
                 UndefValue
             }
-            is IntegerType    -> generateSelectPattern(conditional, commonType)
-            is NonTrivialType -> generateIfElsePattern(commonType, conditional)
-            is FlagType       -> generateSelectPattern(conditional, U8Type)
-            is TupleType      -> throw IRCodeGenError("Unsupported type: $commonType", conditional.begin())
+            is AnyCInteger, is CEnumType -> {
+                val commonType = mb.toIRType<IntegerType>(typeHolder, cType)
+                generateSelectPattern(conditional, commonType)
+            }
+            is AnyCFloat, is CPointer -> {
+                val commonType = mb.toIRType<NonTrivialType>(typeHolder, cType)
+                generateIfElsePattern(commonType, conditional)
+            }
+            is BOOL -> generateSelectPattern(conditional, U8Type)
         }
 
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
@@ -412,7 +440,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Struct type expected, but got '$cStructType'", arrowMemberAccess.begin())
         }
         val fieldName = arrowMemberAccess.fieldName()
-        val member = cStructType.fieldByNameOrNull(fieldName) ?: let {
+        val member = cStructType.fieldByIndexOrNull(fieldName) ?: let {
             throw IRCodeGenError("Field not found: $fieldName", arrowMemberAccess.begin())
         }
 
@@ -438,7 +466,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val structIRType = mb.toIRType<StructType>(typeHolder, structType)
 
         val fieldName = memberAccess.memberName()
-        val member = structType.fieldByNameOrNull(fieldName) ?:
+        val member = structType.fieldByIndexOrNull(fieldName) ?:
             throw IRCodeGenError("Field not found: '$fieldName'", memberAccess.begin())
 
         val gep = ir.gfp(struct, structIRType, I64Value.of(member.index))
@@ -454,24 +482,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         return ir.load(memberIRType, gep)
     }
 
-    private fun visitSizeOf(sizeOf: SizeOf): Value = when (val expr = sizeOf.expr) {
-        is TypeName -> {
-            val resolved = expr.specifyType(typeHolder, listOf())
-            when (val cType = resolved.typeDesc.cType()) {
-                is VOID -> I64Value.of(1)
-                else -> {
-                    val irType = mb.toIRType<NonTrivialType>(typeHolder, cType)
-                    I64Value.of(irType.sizeOf().toLong())
-                }
-            }
-        }
-        is Expression -> {
-            val resolved = expr.resolveType(typeHolder)
-            val irType = mb.toIRType<NonTrivialType>(typeHolder, resolved)
-            I64Value.of(irType.sizeOf().toLong())
-        }
-        else -> throw IRCodeGenError("Unknown sizeof expression, expr=$expr", sizeOf.begin())
-    }
+    private fun visitSizeOf(sizeOf: SizeOf): Value = I64Value.of(sizeOf.constEval(typeHolder))
 
     private fun visitStringNode(stringNode: StringNode): Value {
         val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(I8Type, stringNode.length()), stringNode.data())
@@ -556,11 +567,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitCast(cast: Cast): Value {
         val value = visitExpression(cast.cast, true)
-        val castToType = cast.resolveType(typeHolder)
-        return when (val toType = mb.toIRType<Type>(typeHolder, castToType)) {
-            VoidType -> value
-            FlagType  -> ir.convertToType(value, FlagType)
-            PtrType  -> {
+        return when (val castToType = cast.resolveType(typeHolder)) {
+            is VOID -> value
+            is BOOL -> ir.convertToType(value, FlagType)
+            is CPointer  -> {
                 val baseAddr = when (val fromType = cast.cast.resolveType(typeHolder)) {
                     is CArrayType -> {
                         val irType = mb.toIRType<ArrayType>(typeHolder, fromType)
@@ -575,7 +585,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 ir.convertToType(baseAddr, PtrType)
             }
-            else -> ir.convertToType(value, toType)
+            else -> {
+                val toType = mb.toIRType<Type>(typeHolder, castToType)
+                ir.convertToType(value, toType)
+            }
         }
     }
 
@@ -591,22 +604,41 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val attributes = cPrototype.attributes + attr
 
         val cont = ir.createLabel()
-        val ret = when (functionType.retType().cType()) {
+        return when (val functionReturnType = functionType.retType().cType()) {
             VOID -> {
                 ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                ir.switchLabel(cont)
                 UndefValue
             }
-            is CPrimitive -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
-            is CStructType -> when (prototype.returnType()) {
-                is PrimitiveType -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
-                //is TupleType     -> ir.tupleCall(function, convertedArgs, cont)
-                is StructType    -> ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
-                else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
+            is CPrimitive -> {
+                val ret = ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                ir.switchLabel(cont)
+                ret
+            }
+            is CStructType -> {
+                val retType = mb.toIRType<NonTrivialType>(typeHolder, functionReturnType)
+                val retValue = ir.alloc(retType)
+                when (prototype.returnType()) {
+                    is PrimitiveType -> {
+                        val ret = ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                        ir.switchLabel(cont)
+                        ir.store(retValue, ret)
+                    }
+                    is TupleType -> {
+                        val tuple = ir.itupleCall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                        ir.switchLabel(cont)
+                        copyTuple(retValue, tuple, functionReturnType)
+                    }
+                    is StructType -> {
+                        ir.ivcall(loadedFunctionPtr, prototype, arrayListOf(retValue) + convertedArgs, attributes, cont)
+                        ir.switchLabel(cont)
+                    }
+                    else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
+                }
+                retValue
             }
             else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
         }
-        ir.switchLabel(cont)
-        return ret
     }
 
     private fun visitFunctionCall(functionCall: FunctionCall): Value {
@@ -1669,27 +1701,94 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         return rvalueAdr
     }
 
+    private fun zeroMemory(address: Value, type: ArrayType) {
+        for (i in 0 until type.length) {
+            val elementAdr = ir.gep(address, type.elementType(), I64Value.of(i))
+            when (val elementType = type.elementType()) {
+                is PrimitiveType -> ir.store(elementAdr, PrimitiveConstant.of(elementType, 0))
+                is ArrayType -> zeroMemory(elementAdr, elementType)
+                is StructType -> zeroMemory(elementAdr, elementType)
+            }
+        }
+    }
+    private fun zeroMemory(address: Value, type: StructType) {
+        for (i in type.fields.indices) {
+            val elementAdr = ir.gfp(address, type, I64Value.of(i))
+            when (val f = type.field(i)) {
+                is PrimitiveType -> ir.store(elementAdr, PrimitiveConstant.of(f, 0))
+                is StructType -> zeroMemory(elementAdr, f)
+                is ArrayType -> zeroMemory(elementAdr, f)
+            }
+        }
+    }
+
     private fun zeroingMemory(initializerList: InitializerList) {
         val value = initializerContext.peekValue()
         when (val type = initializerContext.peekType().cType()) {
             is CStructType -> {
-                val converted = mb.toIRType<StructType>(typeHolder, type)
+                val irElementType = mb.toIRType<StructType>(typeHolder, type)
                 for (i in initializerList.initializers.size until type.members().size) {
-                    val elementType = converted.field(i)
-                    val elementAdr = ir.gfp(value, converted, I64Value.of(i))
-                    ir.store(elementAdr, NonTrivialConstant.of(elementType.asType(), 0))
+                    val elementAdr = ir.gfp(value, irElementType, I64Value.of(i))
+                    val fieldDesc = type.fieldByIndexOrNull(i) ?:
+                    throw IRCodeGenError("Unknown field, field=$i", initializerList.begin())
+
+                    when (val f = mb.toIRLVType<NonTrivialType>(typeHolder, fieldDesc.cType())) {
+                        is PrimitiveType -> ir.store(elementAdr, PrimitiveConstant.of(f, 0))
+                        is ArrayType -> zeroMemory(elementAdr, f)
+                        is StructType -> zeroMemory(elementAdr, f)
+                    }
                 }
             }
             is CArrayType -> {
                 if (initializerList.resolveType(typeHolder) is CStringLiteral) {
                     return
                 }
-                val elementType = type.element()
-                val irElementType = mb.toIRType<NonTrivialType>(typeHolder, elementType.cType())
 
-                for (i in initializerList.initializers.size until type.dimension) {
-                    val elementAdr = ir.gep(value, irElementType, I64Value.of(i))
-                    ir.store(elementAdr, PrimitiveConstant.of(irElementType.asType(), 0))
+                when (val elementType = type.element().cType()) {
+                    is CPrimitive -> {
+                        val irElementType = mb.toIRType<PrimitiveType>(typeHolder, elementType)
+                        for (i in initializerList.initializers.size until type.dimension) {
+                            val elementAdr = ir.gep(value, irElementType, I64Value.of(i))
+                            ir.store(elementAdr, PrimitiveConstant.of(irElementType, 0))
+                        }
+                    }
+                    is AnyCArrayType -> {
+                        val irElementType = mb.toIRType<ArrayType>(typeHolder, elementType)
+                        for (i in initializerList.initializers.size until type.dimension) {
+                            val elementAdr = ir.gep(value, irElementType.elementType(), I64Value.of(i))
+                            when (val f = irElementType.elementType()) {
+                                is PrimitiveType -> ir.store(elementAdr, PrimitiveConstant.of(f, 0))
+                                is ArrayType -> zeroMemory(elementAdr, f)
+                                is StructType -> zeroMemory(elementAdr, f)
+                            }
+                        }
+                    }
+                    is CStructType -> {
+                        val irElementType = mb.toIRType<StructType>(typeHolder, elementType)
+                        for (i in initializerList.initializers.size until type.dimension) {
+                            val elementAdr = ir.gep(value, irElementType, I64Value.of(i))
+                            val fieldDesc = elementType.fieldByIndexOrNull(i.toInt()) ?:
+                                throw IRCodeGenError("Unknown field, field=$i", initializerList.begin())
+
+                            when (val f = mb.toIRType<NonTrivialType>(typeHolder, fieldDesc.cType())) {
+                                is PrimitiveType -> ir.store(elementAdr, PrimitiveConstant.of(f, 0))
+                                is ArrayType -> zeroMemory(elementAdr, f)
+                                is StructType -> zeroMemory(elementAdr, f)
+                            }
+                        }
+                    }
+                    is CUnionType -> {
+                        val irElementType = mb.toIRType<StructType>(typeHolder, elementType)
+                        for (i in initializerList.initializers.size until type.dimension) {
+                            val elementAdr = ir.gep(value, irElementType, I64Value.of(i))
+                            when (val f = irElementType.field(0)) {
+                                is PrimitiveType -> ir.store(elementAdr, PrimitiveConstant.of(f, 0))
+                                is ArrayType -> zeroMemory(elementAdr, f)
+                                is StructType -> zeroMemory(elementAdr, f)
+                            }
+                        }
+                    }
+                    else -> throw IRCodeGenError("Unknown type, type=$elementType", initializerList.begin())
                 }
             }
             is CUnionType -> {}
@@ -1726,7 +1825,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     type as AnyCStructType
                     val fieldType = mb.toIRType<StructType>(typeHolder, type)
                     val expression = visitExpression(designationInitializer.initializer, true)
-                    val member = type.fieldByNameOrNull(designator.name()) ?:
+                    val member = type.fieldByIndexOrNull(designator.name()) ?:
                         throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
 
                     val elementType = mb.toIRType<Type>(typeHolder, member.cType())
