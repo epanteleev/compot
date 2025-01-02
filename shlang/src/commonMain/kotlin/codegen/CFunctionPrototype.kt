@@ -48,7 +48,7 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
         }
     }
 
-    private fun argumentTypes(): Pair<List<NonTrivialType>, MutableSet<FunctionAttribute>> { //TODO remove pair
+    private fun argumentTypes() { //TODO remove pair
         val cType = functionType.retType().cType()
         var offset = 0
         if (cType is AnyCStructType && !cType.isSmall()) {
@@ -79,7 +79,6 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
                 else -> throw IRCodeGenError("Unknown type, type=$type", begin) //FIXME argument positions!!!
             }
         }
-        return Pair(types, attributes)
     }
 
     fun build(): CFunctionPrototype {
