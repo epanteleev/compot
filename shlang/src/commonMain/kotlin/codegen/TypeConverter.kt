@@ -584,7 +584,7 @@ object TypeConverter {
 
             val fieldConverted = gep(structPtr, loadedType1, I64Value.of(0))
             val load           = load(loadedType1, fieldConverted)
-            val values = arrayListOf(load)
+            val values         = arrayListOf(load)
 
             val loadedType2 = if (argCType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE + WORD_SIZE)) F32Type else I32Type
 

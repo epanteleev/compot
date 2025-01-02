@@ -1,13 +1,19 @@
 package types
 
-import typedesc.TypeHolder
-import typedesc.TypeQualifier
+import typedesc.*
+import ir.Definitions.BYTE_SIZE
+import ir.Definitions.DOUBLE_SIZE
+import ir.Definitions.FLOAT_SIZE
+import ir.Definitions.HWORD_SIZE
 import ir.Definitions.POINTER_SIZE
+import ir.Definitions.QWORD_SIZE
+import ir.Definitions.WORD_SIZE
 
 
 sealed class CPrimitive: CType() {
     final override fun alignmentOf(): Int = size()
-    fun interfere(typeHolder: TypeHolder, type2: CType): CType? {
+
+    fun interfere(typeHolder: TypeHolder, type2: CType): CPrimitive? {
         when (this) {
             type2 -> return this
             CHAR -> {
@@ -222,64 +228,72 @@ sealed class CPrimitive: CType() {
     }
 }
 
+sealed class AnyCInteger: CPrimitive()
+
+sealed class AnyCSigned: AnyCInteger()
+
 data object VOID: CPrimitive() {
     override fun toString(): String = "void"
-    override fun size(): Int = 1
+    override fun size(): Int = BYTE_SIZE
 }
 
-data object CHAR: CPrimitive() {
+data object CHAR: AnyCSigned() {
     override fun toString(): String = "char"
-    override fun size(): Int = 1
+    override fun size(): Int = BYTE_SIZE
 }
 
-data object SHORT: CPrimitive() {
+data object SHORT: AnyCSigned() {
     override fun toString(): String = "short"
-    override fun size(): Int = 2
+    override fun size(): Int = HWORD_SIZE
 }
 
-data object INT: CPrimitive() {
+data object INT: AnyCSigned() {
     override fun toString(): String = "int"
-    override fun size(): Int = 4
+    override fun size(): Int = WORD_SIZE
 }
 
-data object LONG: CPrimitive() {
+data object LONG: AnyCSigned() {
     override fun toString(): String = "long"
-    override fun size(): Int = 8
+    override fun size(): Int = QWORD_SIZE
 }
 
-data object FLOAT: CPrimitive() {
+sealed class AnyCFloat: CPrimitive()
+
+data object FLOAT: AnyCFloat() {
     override fun toString(): String = "float"
-    override fun size(): Int = 4
+    override fun size(): Int = FLOAT_SIZE
 }
 
-data object DOUBLE: CPrimitive() {
+data object DOUBLE: AnyCFloat() {
     override fun toString(): String = "double"
-    override fun size(): Int = 8
+    override fun size(): Int = DOUBLE_SIZE
 }
 
-data object UCHAR: CPrimitive() {
+sealed class AnyCUnsigned: AnyCInteger()
+
+data object UCHAR: AnyCUnsigned() {
     override fun toString(): String = "unsigned char"
-    override fun size(): Int = 1
+    override fun size(): Int = BYTE_SIZE
 }
 
-data object USHORT: CPrimitive() {
+data object USHORT: AnyCUnsigned() {
     override fun toString(): String = "unsigned short"
-    override fun size(): Int = 2
+    override fun size(): Int = HWORD_SIZE
 }
 
-data object UINT: CPrimitive() {
+data object UINT: AnyCUnsigned() {
     override fun toString(): String = "unsigned int"
-    override fun size(): Int = 4
+    override fun size(): Int = WORD_SIZE
 }
 
-data object ULONG: CPrimitive() {
+data object ULONG: AnyCUnsigned() {
     override fun toString(): String = "unsigned long"
-    override fun size(): Int = 8
+    override fun size(): Int = QWORD_SIZE
 }
 
 data object BOOL: CPrimitive() {
     override fun toString(): String = "_Bool"
-    override fun size(): Int = 1
+    override fun size(): Int = BYTE_SIZE
 }
 
 class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : CPrimitive() {
@@ -316,9 +330,7 @@ class CPointer(val type: CType, private val properties: Set<TypeQualifier> = set
 data class CEnumType(val name: String, private val enumerators: Map<String, Int>): CPrimitive() {
     override fun toString(): String = name
 
-    override fun size(): Int {
-        return INT.size()
-    }
+    override fun size(): Int = INT.size()
 
     fun hasEnumerator(name: String): Boolean {
         return enumerators.contains(name)

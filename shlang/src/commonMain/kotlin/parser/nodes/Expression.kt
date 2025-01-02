@@ -92,17 +92,18 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     override fun begin(): Position = cond.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+    override fun resolveType(typeHolder: TypeHolder): CPrimitive = memoize {
         val typeTrue  = eTrue.resolveType(typeHolder)
         val typeFalse = eFalse.resolveType(typeHolder)
-        if (typeTrue == typeFalse) {
-            return@memoize typeTrue
-        }
 
         val cvtTypeTrue  = convertToPrimitive(typeTrue)
             ?: throw TypeResolutionException("Conditional with non-primitive types: $typeTrue and $typeFalse", begin())
         val cvtTypeFalse = convertToPrimitive(typeFalse)
             ?: throw TypeResolutionException("Conditional with non-primitive types: $typeTrue and $typeFalse", begin())
+
+        if (cvtTypeTrue == cvtTypeFalse) {
+            return@memoize cvtTypeTrue
+        }
 
         val resultType = cvtTypeTrue.interfere(typeHolder, cvtTypeFalse) ?:
             throw TypeResolutionException("Conditional with incompatible types: $cvtTypeTrue and $cvtTypeFalse: '${LineAgnosticAstPrinter.print(this)}'", begin())
@@ -215,7 +216,7 @@ class MemberAccess(val primary: Expression, val fieldName: Identifier) : Express
             throw TypeResolutionException("Member access on non-struct type, but got $structType", begin())
         }
 
-        val fieldDesc = structType.fieldByNameOrNull(memberName()) ?: throw TypeResolutionException("Field $fieldName not found in struct $structType", begin())
+        val fieldDesc = structType.fieldByIndexOrNull(memberName()) ?: throw TypeResolutionException("Field $fieldName not found in struct $structType", begin())
         return@memoize fieldDesc.cType()
     }
 }
@@ -236,7 +237,7 @@ class ArrowMemberAccess(val primary: Expression, private val ident: Identifier) 
             throw TypeResolutionException("Arrow member access on non-struct type, but got $baseType", begin())
         }
 
-        val fieldDesc = baseType.fieldByNameOrNull(fieldName()) ?: throw TypeResolutionException("Field $ident not found in struct $baseType", begin())
+        val fieldDesc = baseType.fieldByIndexOrNull(fieldName()) ?: throw TypeResolutionException("Field $ident not found in struct $baseType", begin())
         return@memoize fieldDesc.cType()
     }
 }
