@@ -1,6 +1,7 @@
 package ir.types
 
 import ir.Definitions
+import ir.Definitions.BYTE_SIZE
 
 
 class StructType internal constructor(val name: String, val fields: List<NonTrivialType>): AggregateType {
@@ -37,7 +38,7 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
 
     override fun sizeOf(): Int {
         if (fields.isEmpty()) {
-            return 0
+            return BYTE_SIZE
         }
         var offset = 0
         for (idx in fields.indices) {
