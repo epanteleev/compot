@@ -25,6 +25,7 @@ import ir.attributes.FunctionAttribute
 import ir.attributes.VarArgAttribute
 import ir.global.StringLiteralGlobalConstant
 import ir.module.AnyFunctionPrototype
+import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.module.builder.impl.FunctionDataBuilder
@@ -525,13 +526,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun convertFunctionArgs(function: AnyFunctionPrototype, args: List<Expression>): FunctionArgInfo {
+    private fun convertFunctionArgs(function: AnyFunctionPrototype, returnType: CType, args: List<Expression>): FunctionArgInfo {
         val convertedArgs = mutableListOf<Value>()
         val attributes = hashSetOf<FunctionAttribute>()
 
-        val cType = functionType.retType().cType()
         var offset = 0
-        if (cType is AnyCStructType && !cType.isSmall()) {
+        if (returnType is AnyCStructType && !returnType.isSmall()) {
             offset += 1
         }
         for ((idx, argValue) in args.withIndex()) {
@@ -576,19 +576,46 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         val irType = mb.toIRType<ArrayType>(typeHolder, fromType)
                         ir.gep(value, irType.elementType(), I64Value.of(0))
                     }
-                    is CStructType -> {
+                    is AnyCStructType -> {
                         val irType = mb.toIRType<StructType>(typeHolder, fromType)
-                        ir.gep(value, irType, I64Value.of(0))
+                        ir.gfp(value, irType, I64Value.of(0))
                     }
-                    is CPrimitive, is CFunctionType, is CStringLiteral -> value
-                    else -> throw IRCodeGenError("Cannon cast to pointer from type $fromType", cast.begin())
+                    is CPrimitive, is AnyCFunctionType, is CStringLiteral -> value
+                    is CUncompletedArrayType -> TODO()
+                    is InitializerType -> TODO()
+                    is CUncompletedType -> TODO()
+                    is TypeDef -> TODO()
                 }
                 ir.convertToType(baseAddr, PtrType)
             }
-            else -> {
-                val toType = mb.toIRType<Type>(typeHolder, castToType)
+            is CPrimitive -> {
+                val toType = mb.toIRType<PrimitiveType>(typeHolder, castToType)
                 ir.convertToType(value, toType)
             }
+            else -> throw IRCodeGenError("Unknown type $castToType", cast.begin())
+        }
+    }
+
+    private fun icallFunctionForStructType(retValue: Value, loadedFunctionPtr: Value, returnType: AnyCStructType, function: IndirectFunctionPrototype, argInfo: FunctionArgInfo) {
+        val cont = ir.createLabel()
+        when (function.returnType()) {
+            is PrimitiveType -> {
+                val ret = ir.icall(loadedFunctionPtr, function, argInfo.args, argInfo.attributes, cont)
+                ir.switchLabel(cont)
+                val structType = mb.toIRType<StructType>(typeHolder, returnType)
+                val gep = ir.gfp(retValue, structType, I64Value.of(0L))
+                ir.store(gep, ret)
+            }
+            is TupleType -> {
+                val tuple = ir.itupleCall(loadedFunctionPtr, function, argInfo.args, argInfo.attributes, cont)
+                ir.switchLabel(cont)
+                copyTuple(retValue, tuple, returnType)
+            }
+            is VoidType -> {
+                ir.ivcall(loadedFunctionPtr, function, arrayListOf(retValue) + argInfo.args, argInfo.attributes, cont)
+                ir.switchLabel(cont)
+            }
+            else -> throw RuntimeException("Unknown type ${function.returnType()}")
         }
     }
 
@@ -599,45 +626,50 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val cPrototype = CFunctionPrototypeBuilder(funcPointerCall.begin(), functionType, mb, typeHolder, StorageClass.AUTO).build()
 
         val prototype = IndirectFunctionPrototype(cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
-        val (convertedArgs, attr) = convertFunctionArgs(prototype, funcPointerCall.args)
+        val argInfo = convertFunctionArgs(prototype, functionType.retType().cType(), funcPointerCall.args)
 
-        val attributes = cPrototype.attributes + attr
-
-        val cont = ir.createLabel()
         return when (val functionReturnType = functionType.retType().cType()) {
             VOID -> {
-                ir.ivcall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                val cont = ir.createLabel()
+                ir.ivcall(loadedFunctionPtr, prototype, argInfo.args, argInfo.attributes, cont)
                 ir.switchLabel(cont)
                 UndefValue
             }
             is CPrimitive -> {
-                val ret = ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
+                val cont = ir.createLabel()
+                val ret = ir.icall(loadedFunctionPtr, prototype, argInfo.args, argInfo.attributes, cont)
                 ir.switchLabel(cont)
                 ret
             }
             is CStructType -> {
                 val retType = mb.toIRType<NonTrivialType>(typeHolder, functionReturnType)
                 val retValue = ir.alloc(retType)
-                when (prototype.returnType()) {
-                    is PrimitiveType -> {
-                        val ret = ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
-                        ir.switchLabel(cont)
-                        ir.store(retValue, ret)
-                    }
-                    is TupleType -> {
-                        val tuple = ir.itupleCall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
-                        ir.switchLabel(cont)
-                        copyTuple(retValue, tuple, functionReturnType)
-                    }
-                    is StructType -> {
-                        ir.ivcall(loadedFunctionPtr, prototype, arrayListOf(retValue) + convertedArgs, attributes, cont)
-                        ir.switchLabel(cont)
-                    }
-                    else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
-                }
+                icallFunctionForStructType(retValue, loadedFunctionPtr, functionReturnType, prototype, argInfo)
                 retValue
             }
             else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
+        }
+    }
+
+    private fun callFunctionForStructType(lvalueAdr: Value, returnType: AnyCStructType, function: DirectFunctionPrototype, argInfo: FunctionArgInfo) {
+        val cont = ir.createLabel()
+        when (function.returnType()) {
+            is PrimitiveType -> {
+                val call = ir.call(function, argInfo.args, argInfo.attributes, cont)
+                ir.switchLabel(cont)
+                val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(0L))
+                ir.store(gep, call)
+            }
+            is TupleType -> {
+                val call = ir.tupleCall(function, argInfo.args, argInfo.attributes, cont)
+                ir.switchLabel(cont)
+                copyTuple(lvalueAdr, call, returnType)
+            }
+            is VoidType -> {
+                ir.vcall(function, arrayListOf(lvalueAdr) + argInfo.args, argInfo.attributes, cont)
+                ir.switchLabel(cont)
+            }
+            else -> throw RuntimeException("Unknown type ${function.returnType()}")
         }
     }
 
@@ -647,54 +679,39 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return visitFunPointerCall(functionCall)
         }
         val function = mb.findFunction(primary.name()) ?: return visitFunPointerCall(functionCall)
-        val (convertedArgs, attributes) = convertFunctionArgs(function, functionCall.args)
-        val cont = ir.createLabel()
+        val argInfo = convertFunctionArgs(function, functionType.retType().cType(), functionCall.args)
+
         return when (val functionType = functionCall.resolveType(typeHolder)) {
             VOID -> {
-                ir.vcall(function, convertedArgs, attributes, cont)
+                val cont = ir.createLabel()
+                ir.vcall(function, argInfo.args, argInfo.attributes, cont)
                 ir.switchLabel(cont)
                 UndefValue
             }
             is CPrimitive -> {
-                val call = ir.call(function, convertedArgs, attributes, cont)
+                val cont = ir.createLabel()
+                val call = ir.call(function, argInfo.args, argInfo.attributes, cont)
                 ir.switchLabel(cont)
                 call
             }
             is CStructType -> {
                 val retType = mb.toIRType<NonTrivialType>(typeHolder, functionType)
                 val retValue = ir.alloc(retType)
-
-                when (function.returnType()) {
-                    is PrimitiveType -> {
-                        val call = ir.call(function, convertedArgs, attributes, cont)
-                        ir.switchLabel(cont)
-                        ir.store(retValue, call)
-                    }
-                    is TupleType -> {
-                        val call = ir.tupleCall(function, convertedArgs, attributes, cont)
-                        ir.switchLabel(cont)
-                        copyTuple(retValue, call, functionType)
-                    }
-                    is VoidType -> {
-                        ir.vcall(function, arrayListOf(retValue) + convertedArgs, attributes, cont)
-                        ir.switchLabel(cont)
-                    }
-                    else -> throw IRCodeGenError("Unknown type ${function.returnType()}", functionCall.begin())
-                }
+                callFunctionForStructType(retValue, functionType, function, argInfo)
                 retValue
             }
 
-            else -> TODO("$functionType")
+            else -> throw IRCodeGenError("Unknown type $functionType", functionCall.begin())
         }
     }
 
     private fun copyTuple(dst: Value, src: TupleValue, returnType: AnyCStructType) {
-        val projs = arrayListOf<Projection>()
+        val projections = arrayListOf<Projection>()
         for (idx in src.type().innerTypes().indices) {
-            projs.add(ir.proj(src, idx))
+            projections.add(ir.proj(src, idx))
         }
 
-        ir.storeCoerceArguments(returnType, dst, projs)
+        ir.storeCoerceArguments(returnType, dst, projections)
     }
 
     private fun visitFunPointerForStructType(lvalueAdr: Value, returnType: AnyCStructType, funcPointerCall: FunctionCall) {
@@ -704,29 +721,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val cPrototype = CFunctionPrototypeBuilder(funcPointerCall.begin(), functionType, mb, typeHolder, StorageClass.AUTO).build()
 
         val prototype = IndirectFunctionPrototype(cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
-        val (convertedArgs, attr) = convertFunctionArgs(prototype, funcPointerCall.args)
+        val argInfo = convertFunctionArgs(prototype, functionType.retType().cType(), funcPointerCall.args)
 
-        val attributes = cPrototype.attributes + attr
-
-        val cont = ir.createLabel()
-        when (prototype.returnType()) {
-            is PrimitiveType -> {
-                val ret = ir.icall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
-                ir.switchLabel(cont)
-                val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(0L))
-                ir.store(gep, ret)
-            }
-            is TupleType -> {
-                val args = ir.itupleCall(loadedFunctionPtr, prototype, convertedArgs, attributes, cont)
-                ir.switchLabel(cont)
-                copyTuple(lvalueAdr, args, returnType)
-            }
-            is VoidType -> {
-                ir.ivcall(loadedFunctionPtr, prototype, arrayListOf(lvalueAdr) + convertedArgs, attributes, cont)
-                ir.switchLabel(cont)
-            }
-            else -> throw IRCodeGenError("Unknown type ${functionType.retType()}", funcPointerCall.begin())
-        }
+        icallFunctionForStructType(lvalueAdr, loadedFunctionPtr, returnType, prototype, argInfo)
     }
 
     private fun visitFuncCallForStructType(lvalueAdr: Value, returnType: AnyCStructType, rvalue: FunctionCall) {
@@ -735,29 +732,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return visitFunPointerForStructType(lvalueAdr, returnType, rvalue)
         }
         val functionPrototype = mb.findFunction(primary.name()) ?: return visitFunPointerForStructType(lvalueAdr, returnType, rvalue)
-        val (convertedArgs, _) = convertFunctionArgs(functionPrototype, rvalue.args)
-        val attributes = functionPrototype.attributes
+        val argInfo = convertFunctionArgs(functionPrototype, returnType, rvalue.args)
 
-        val cont = ir.createLabel()
-        when (functionPrototype.returnType()) {
-            is PrimitiveType -> {
-                val call = ir.call(functionPrototype, convertedArgs, attributes, cont)
-                ir.switchLabel(cont)
-                val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(0L))
-                ir.store(gep, call)
-            }
-            is TupleType -> {
-                val call = ir.tupleCall(functionPrototype, convertedArgs, attributes, cont)
-                ir.switchLabel(cont)
-                copyTuple(lvalueAdr, call, returnType)
-            }
-            is VoidType -> {
-                assertion(!returnType.isSmall()) { "Small struct is not supported in this context" }
-                ir.vcall(functionPrototype, arrayListOf(lvalueAdr) + convertedArgs, attributes, cont)
-                ir.switchLabel(cont)
-            }
-            else -> throw IRCodeGenError("Unknown type ${functionPrototype.returnType()}", rvalue.begin())
-        }
+        callFunctionForStructType(lvalueAdr, returnType, functionPrototype, argInfo)
     }
 
     private fun eq(type: PrimitiveType): AnyPredicateType = when (type) {
@@ -802,21 +779,21 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
-    private fun makeAlgebraicBinary(binop: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
-        when (val commonType = mb.toIRType<Type>(typeHolder, binop.resolveType(typeHolder))) {
+    private fun makeAlgebraicBinary(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
+        when (val commonType = mb.toIRType<Type>(typeHolder, binOp.resolveType(typeHolder))) {
             is PtrType -> {
-                val lvalue     = visitExpression(binop.left, true)
-                val lValueType = when (val l = binop.left.resolveType(typeHolder)) {
+                val lvalue     = visitExpression(binOp.left, true)
+                val lValueType = when (val l = binOp.left.resolveType(typeHolder)) {
                     is AnyCArrayType -> l.asPointer()
                     is CPointer      -> l
-                    else -> throw IRCodeGenError("Pointer type expected, but got $l", binop.begin())
+                    else -> throw IRCodeGenError("Pointer type expected, but got $l", binOp.begin())
                 }
                 val convertedLValue = ir.convertToType(lvalue, U64Type)
 
-                val rvalue = visitExpression(binop.right, true)
-                when (val r = binop.right.resolveType(typeHolder)) {
+                val rvalue = visitExpression(binOp.right, true)
+                when (val r = binOp.right.resolveType(typeHolder)) {
                     is AnyCArrayType, is CPrimitive -> {}
-                    else -> throw IRCodeGenError("Primitive type expected, but got $r", binop.begin())
+                    else -> throw IRCodeGenError("Primitive type expected, but got $r", binOp.begin())
                 }
                 val convertedRValue = ir.convertToType(rvalue, U64Type)
 
@@ -827,10 +804,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 return ir.convertRVToType(result, commonType)
             }
             is FloatingPointType -> {
-                val left = visitExpression(binop.left, true)
+                val left = visitExpression(binOp.left, true)
                 val leftConverted = ir.convertRVToType(left, commonType)
 
-                val right = visitExpression(binop.right, true)
+                val right = visitExpression(binOp.right, true)
                 val rightConverted = ir.convertRVToType(right, commonType)
 
                 return op(leftConverted, rightConverted)
@@ -839,47 +816,47 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val cvtType = when (commonType) {
                     is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) I32Type else commonType
                     is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) U32Type else commonType
-                    else -> throw IRCodeGenError("Unexpected type: $commonType", binop.begin())
+                    else -> throw IRCodeGenError("Unexpected type: $commonType", binOp.begin())
                 }
-                val left = visitExpression(binop.left, true)
+                val left = visitExpression(binOp.left, true)
                 val leftConverted = ir.convertToType(left, cvtType)
 
-                val right = visitExpression(binop.right, true)
+                val right = visitExpression(binOp.right, true)
                 val rightConverted = ir.convertToType(right, cvtType)
 
                 return op(leftConverted, rightConverted)
             }
             is FlagType -> {
-                val left = visitExpression(binop.left, true)
+                val left = visitExpression(binOp.left, true)
                 val leftConverted = ir.convertToType(left, I32Type)
 
-                val right = visitExpression(binop.right, true)
+                val right = visitExpression(binOp.right, true)
                 val rightConverted = ir.convertToType(right, I32Type)
 
                 return op(leftConverted, rightConverted)
             }
-            is UndefType -> throw IRCodeGenError("Undef type", binop.begin())
-            else -> throw IRCodeGenError("Unexpected type: $commonType", binop.begin())
+            is UndefType -> throw IRCodeGenError("Undef type", binOp.begin())
+            else -> throw IRCodeGenError("Unexpected type: $commonType", binOp.begin())
         }
     }
 
-    private fun makeAlgebraicBinaryWithAssignment(binop: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
-        when (val commonType = mb.toIRType<NonTrivialType>(typeHolder, binop.resolveType(typeHolder))) {
+    private fun makeAlgebraicBinaryWithAssignment(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
+        when (val commonType = mb.toIRType<NonTrivialType>(typeHolder, binOp.resolveType(typeHolder))) {
             is PtrType -> {
-                val rvalue     = visitExpression(binop.right, true)
-                val rValueType = binop.right.resolveType(typeHolder)
+                val rvalue     = visitExpression(binOp.right, true)
+                val rValueType = binOp.right.resolveType(typeHolder)
                 if (rValueType !is CPrimitive) {
-                    throw IRCodeGenError("Primitive type expected, but got $rValueType", binop.begin())
+                    throw IRCodeGenError("Primitive type expected, but got $rValueType", binOp.begin())
                 }
                 val convertedRValue = ir.convertToType(rvalue, U64Type)
 
-                val lvalueAddress = visitExpression(binop.left, false)
-                val lValueType    = binop.left.resolveType(typeHolder)
+                val lvalueAddress = visitExpression(binOp.left, false)
+                val lValueType    = binOp.left.resolveType(typeHolder)
                 val lvalue        = ir.load(PtrType, lvalueAddress)
                 val ptr2intLValue = ir.ptr2int(lvalue, U64Type)
 
                 if (lValueType !is CPointer) {
-                    throw IRCodeGenError("Pointer type expected, but got $lValueType", binop.begin())
+                    throw IRCodeGenError("Pointer type expected, but got $lValueType", binOp.begin())
                 }
                 val convertedLValue = ir.convertToType(ptr2intLValue, U64Type)
 
@@ -892,12 +869,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 return res
             }
             is FloatingPointType -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
+                val right = visitExpression(binOp.right, true)
+                val leftType = binOp.left.resolveType(typeHolder)
                 val leftIrType = mb.toIRType<PrimitiveType>(typeHolder, leftType)
                 val rightConverted = ir.convertToType(right, leftIrType)
 
-                val left = visitExpression(binop.left, false)
+                val left = visitExpression(binOp.left, false)
                 val loadedLeft = ir.load(leftIrType, left)
 
                 val sum = op(loadedLeft, rightConverted)
@@ -905,8 +882,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 return sum
             }
             is IntegerType -> {
-                val right = visitExpression(binop.right, true)
-                val leftType = binop.left.resolveType(typeHolder)
+                val right = visitExpression(binOp.right, true)
+                val leftType = binOp.left.resolveType(typeHolder)
                 val originalIrType = mb.toIRType<IntegerType>(typeHolder, leftType)
                 val leftIrType = when (originalIrType) {
                     is SignedIntType -> if (originalIrType.sizeOf() < WORD_SIZE) I32Type else originalIrType
@@ -914,7 +891,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 val rightConverted = ir.convertToType(right, leftIrType)
 
-                val left = visitExpression(binop.left, false)
+                val left = visitExpression(binOp.left, false)
                 val loadedLeft = ir.load(originalIrType, left)
                 val cvtLft = ir.convertToType(loadedLeft, leftIrType)
 
@@ -927,12 +904,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private inline fun makeComparisonBinary(binop: BinaryOp, crossinline predicate: (PrimitiveType) -> AnyPredicateType, isRvalue: Boolean): Value {
-        val commonType = mb.toIRType<Type>(typeHolder, binop.resolveType(typeHolder))
-        val left = visitExpression(binop.left, true)
+    private inline fun makeComparisonBinary(binOp: BinaryOp, crossinline predicate: (PrimitiveType) -> AnyPredicateType, isRvalue: Boolean): Value {
+        val commonType = mb.toIRType<Type>(typeHolder, binOp.resolveType(typeHolder))
+        val left = visitExpression(binOp.left, true)
         val leftConverted = ir.convertRVToType(left, commonType)
 
-        val right = visitExpression(binop.right, true)
+        val right = visitExpression(binOp.right, true)
         val rightConverted = ir.convertRVToType(right, commonType)
 
         val predicateType = when (commonType) {
