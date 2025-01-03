@@ -13,12 +13,10 @@ import ir.platform.x64.codegen.X64MacroAssembler
 data class CopyCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp, XmmOperandsVisitorUnaryOp {
     val size = type.sizeOf()
 
-    operator fun invoke(dst: Operand, src: Operand) {
-        when (type) {
-            is FloatingPointType       -> XmmOperandsVisitorUnaryOp.apply(dst, src, this)
-            is IntegerType, is PtrType -> GPOperandsVisitorUnaryOp.apply(dst, src, this)
-            else -> throw RuntimeException("Unknown type=$type, dst=$dst, src=$src")
-        }
+    operator fun invoke(dst: Operand, src: Operand) = when (type) {
+        is FloatingPointType       -> XmmOperandsVisitorUnaryOp.apply(dst, src, this)
+        is IntegerType, is PtrType -> GPOperandsVisitorUnaryOp.apply(dst, src, this)
+        is UndefType -> {}
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {

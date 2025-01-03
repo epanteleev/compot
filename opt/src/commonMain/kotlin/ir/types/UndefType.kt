@@ -1,6 +1,7 @@
 package ir.types
 
-object UndefType : TrivialType, NonTrivialType, PrimitiveType {
+
+object UndefType : TrivialType, NonTrivialType, PrimitiveType, ArithmeticType() {
     override fun sizeOf(): Int {
         return 0
     }

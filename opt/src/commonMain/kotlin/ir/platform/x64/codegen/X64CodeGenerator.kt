@@ -94,6 +94,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         when (val type = add.type()) {
             is IntegerType       -> AddCodegen(type, asm)(dst, first, second)
             is FloatingPointType -> FAddCodegen(type, asm)(dst, first, second)
+            is UndefType         -> {}
         }
     }
 
@@ -121,6 +122,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         when (val type = xor.type()) {
             is IntegerType       -> XorCodegen(type, asm)(dst, first, second)
             is FloatingPointType -> FXorCodegen(type, asm)(dst, first, second)
+            is UndefType         -> {}
         }
     }
 
@@ -132,6 +134,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         when (val type = mul.type()) {
             is IntegerType     -> IMulCodegen(type, asm)(dst, first, second)
             is FloatingPointType -> FMulCodegen(type, asm)(dst, first, second)
+            is UndefType       -> {}
         }
     }
 
@@ -173,6 +176,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         when (val type = sub.type()) {
             is IntegerType       -> SubCodegen(type, asm)(dst, first, second)
             is FloatingPointType -> FSubCodegen(type, asm)(dst, first, second)
+            is UndefType         -> {}
         }
     }
 
