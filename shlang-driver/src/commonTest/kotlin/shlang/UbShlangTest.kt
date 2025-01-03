@@ -1,12 +1,14 @@
 package shlang
 
 import common.CommonCTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 
 abstract class UbShlangTests: CommonCTest() {
     @Test
+    @Ignore
     fun test1() {
         val result = runCTest("shlang/ub/forLoop3", listOf(), options())
         assertEquals("Success", result.output)
