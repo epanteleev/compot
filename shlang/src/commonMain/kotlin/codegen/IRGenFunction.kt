@@ -50,7 +50,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     DeclaratorVisitor<Value> {
     private var stringTolabel = mutableMapOf<String, Label>()
     private val stmtStack = StmtStack()
-    private val initializerContext = InitializerContext()
 
     private val vaListIrType by lazy {
         mb.toIRType<StructType>(typeHolder, VaStart.vaList)
@@ -98,9 +97,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val type   = compoundLiteral.typeDesc(typeHolder)
         val irType = mb.toIRType<AggregateType>(typeHolder, type.cType())
         val adr    = ir.alloc(irType)
-        initializerContext.scope(adr, type) {
-            visitInitializerList(compoundLiteral.initializerList)
-        }
+        visitInitializerList(compoundLiteral.initializerList, adr, type.asType())
         return adr
     }
 
@@ -118,10 +115,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         is ArrowMemberAccess -> visitArrowMemberAccess(expression, isRvalue)
         is Conditional       -> visitConditional(expression)
         is CharNode          -> visitCharNode(expression)
-        is SingleInitializer -> visitSingleInitializer(expression)
         is InitializerList   -> {
             assertion(expression.initializers.size == 1) { "InitializerList size must be 1" }
-            visitSingleInitializer0(expression.initializers[0] as SingleInitializer)
+            visitInitializer(expression.initializers[0] as SingleInitializer)
         }
         is CompoundLiteral   -> visitCompoundLiteral(expression)
         is BuiltinVaStart    -> visitBuiltInVaStart(expression)
@@ -260,25 +256,25 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         return ir.load(argType, argPtr)
     }
 
-    private fun visitSingleInitializer0(singleInitializer: SingleInitializer): Value = when (val expr = singleInitializer.expr) {
-        is InitializerList -> visitSingleInitializer0(expr.initializers[0] as SingleInitializer)
+    private fun visitInitializer(singleInitializer: SingleInitializer): Value = when (val expr = singleInitializer.expr) {
+        is InitializerList -> visitInitializer(expr.initializers[0] as SingleInitializer)
         else -> visitExpression(expr, true)
     }
 
-    private fun visitSingleInitializer0(expr: Expression, lvalueAdr: Value, type: CAggregateType, idx: Int) {
+    private fun visitSingleInitializer(expr: Expression, lvalueAdr: Value, type: CAggregateType, idx: Int) {
         when (expr) {
             is InitializerList -> when (type) {
                 is CArrayType -> {
                     val t = type.element()
                     val irType = mb.toIRType<AggregateType>(typeHolder, t.cType())
                     val fieldPtr = ir.gep(lvalueAdr, irType, I64Value.of(idx))
-                    initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
+                    visitInitializerList(expr, fieldPtr, t.asType())
                 }
                 is CStructType -> {
                     val t = type.fieldByIndexOrNull(idx) ?: throw IRCodeGenError("Field '$idx' not found", expr.begin())
                     val irType = mb.toIRType<AggregateType>(typeHolder, t.cType())
                     val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
-                    initializerContext.scope(fieldPtr, t) { visitInitializerList(expr) }
+                    visitInitializerList(expr, fieldPtr, t.asType())
                 }
                 else -> throw RuntimeException("Unknown type: type=$type")
             }
@@ -287,7 +283,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     throw IRCodeGenError("Expect array type, but type=$type", expr.begin())
                 }
                 when (type.element().cType()) {
-                    is CHAR -> {
+                    is CHAR, is UCHAR -> {
                         if (expr.data().isNotEmpty()) {
                             ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value.of(expr.length()))
                             val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(expr.length()))
@@ -295,16 +291,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                         } else {
                             val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(0))
                             ir.store(gep, I8Value.of(0))
-                        }
-                    }
-                    is UCHAR -> {
-                        if (expr.data().isNotEmpty()) {
-                            ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value.of(expr.length()))
-                            val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(expr.length()))
-                            ir.store(gep, U8Value.of(0))
-                        } else {
-                            val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(0))
-                            ir.store(gep, U8Value.of(0))
                         }
                     }
                     is CPointer -> {
@@ -342,14 +328,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
             }
         }
-    }
-
-    private fun visitSingleInitializer(singleInitializer: SingleInitializer): Value {
-        val lvalueAdr = initializerContext.peekValue()
-        val type = initializerContext.peekType().cType() as CAggregateType
-        val idx = initializerContext.peekIndex()
-        visitSingleInitializer0(singleInitializer.expr, lvalueAdr, type, idx)
-        return UndefValue
     }
 
     private fun visitCharNode(charNode: CharNode): Value {
@@ -1699,9 +1677,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun zeroingMemory(initializerList: InitializerList) {
-        val value = initializerContext.peekValue()
-        when (val type = initializerContext.peekType().cType()) {
+    private fun zeroingMemory(initializerList: InitializerList, value: Value, type: CAggregateType) {
+        when (type) {
             is CStructType -> {
                 val irElementType = mb.toIRType<StructType>(typeHolder, type)
                 for (i in initializerList.initializers.size until type.members().size) {
@@ -1773,19 +1750,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitInitializerList(initializerList: InitializerList) {
+    private fun visitInitializerList(initializerList: InitializerList, lvalueAdr: Value, type: CAggregateType) {
         for ((idx, init) in initializerList.initializers.withIndex()) {
             when (init) {
-                is SingleInitializer -> initializerContext.withIndex(idx) { visitSingleInitializer(init) }
-                is DesignationInitializer -> initializerContext.withIndex(idx) { visitDesignationInitializer(init) }
+                is SingleInitializer -> visitSingleInitializer(init.expr, lvalueAdr, type, idx)
+                is DesignationInitializer -> visitDesignationInitializer(init, lvalueAdr, type)
             }
         }
-        zeroingMemory(initializerList)
+        zeroingMemory(initializerList, lvalueAdr, type)
     }
 
-    private fun visitDesignationInitializer(designationInitializer: DesignationInitializer) {
-        val type = initializerContext.peekType().cType()
-        val value = initializerContext.peekValue()
+    private fun visitDesignationInitializer(designationInitializer: DesignationInitializer, value: Value, type: CAggregateType) {
         for (designator in designationInitializer.designation.designators) {
             when (designator) {
                 is ArrayDesignator -> {
@@ -1831,7 +1806,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         val lvalueAdr = initDeclarator.declarator.accept(this)
         when (val rvalue = initDeclarator.rvalue) {
-            is InitializerList -> initializerContext.scope(lvalueAdr, varDesc.typeDesc) { visitInitializerList(rvalue) }
+            is InitializerList -> visitInitializerList(rvalue, lvalueAdr, varDesc.typeDesc.asType())
             is FunctionCall -> {
                 val rvalType = rvalue.resolveType(typeHolder)
                 if (rvalType !is AnyCStructType) {

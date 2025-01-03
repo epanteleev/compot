@@ -6,8 +6,6 @@ import asm.x64.GPRegister.rax
 import common.assertion
 import ir.Definitions.BYTE_SIZE
 import ir.Definitions.QWORD_SIZE
-import ir.attributes.FunctionAttribute
-import ir.attributes.GlobalValueAttribute
 import ir.attributes.VarArgAttribute
 import ir.instruction.*
 import ir.module.DirectFunctionPrototype
@@ -94,7 +92,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
                 FloatPredicate.Oeq -> CondType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
                 FloatPredicate.Ogt -> CondType.JA
                 FloatPredicate.Oge -> CondType.JAE
-                FloatPredicate.Olt -> TODO()
+                FloatPredicate.Olt -> CondType.JB
                 FloatPredicate.Ole -> CondType.JBE
                 FloatPredicate.One -> CondType.JNE // TODO Clang insert extra instruction 'jp ${labelName}"
                 FloatPredicate.Ord -> TODO()
@@ -107,7 +105,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
                 FloatPredicate.Une -> TODO()
                 else -> throw CodegenException("unknown conversion type: convType=$convType")
             }
-            UndefType -> TODO()
+            is UndefType -> TODO()
         }
     }
 

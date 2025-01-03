@@ -1,36 +1,19 @@
 package asm.x64
 
-data class ObjFunctionCreationException(override val message: String): Exception(message)
-
-private data class BuilderContext(var label: Label, var instructions: InstructionList)
-
-private class InstructionList: Iterable<CPUInstruction> {
-    private val list = arrayListOf<CPUInstruction>()
-
-    fun add(inst: CPUInstruction) = list.add(inst)
-
-    fun size() = list.size
-    override fun iterator(): Iterator<CPUInstruction> = list.iterator()
-}
-
 
 // X86 and amd64 instruction reference
 // https://www.felixcloutier.com/x86/
-abstract class Assembler(private val name: String, val id: Int): AnonymousDirective() {
-    private val codeBlocks: LinkedHashMap<Label, InstructionList> //TODO label resolution mechanism
+abstract class Assembler(functionName: String, val id: Int): AnonymousDirective() {
+    private val codeBlocks = linkedMapOf<Label, MutableList<CPUInstruction>>() //TODO label resolution mechanism
     private val activeContext: BuilderContext
     private var anonLabelCounter = 0
 
     init {
-        val label = Label(name)
-        val instructions = InstructionList()
+        val entryPoint = Label(functionName)
+        val instructions = arrayListOf<CPUInstruction>()
 
-        codeBlocks = linkedMapOf(Pair(label, instructions))
-        activeContext = BuilderContext(label, instructions)
-    }
-
-    fun name(): String {
-        return name
+        codeBlocks[entryPoint] = instructions
+        activeContext = BuilderContext(entryPoint, instructions)
     }
 
     private fun add(inst: CPUInstruction) {
@@ -40,10 +23,10 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun label(name: String): Label {
         val newLabel = Label(name)
         if (codeBlocks[newLabel] != null) {
-            throw ObjFunctionCreationException("Label with name '$name' already exist")
+            throw IllegalStateException("Label with name '$name' already exist")
         }
 
-        val newInstructions = InstructionList()
+        val newInstructions = arrayListOf<CPUInstruction>()
         codeBlocks[newLabel] = newInstructions
         activeContext.label = newLabel
         activeContext.instructions = newInstructions
@@ -51,12 +34,12 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     }
 
     fun switchTo(label: Label) {
-        val instructions = codeBlocks[label] ?: throw ObjFunctionCreationException("Label with name '${label.id}' not found")
+        val instructions = codeBlocks[label] ?: throw IllegalStateException("Label with name '${label.id}' not found")
         activeContext.label = label
         activeContext.instructions = instructions
     }
 
-    fun anonLabel(): Label {
+    fun anonLabel(): Label { //TODO not to switch to new label
         anonLabelCounter++
         return label(".L.anon.$id.$anonLabelCounter")
     }
@@ -68,12 +51,14 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     // Load Effective Address
     fun lea(size: Int, src: Address, dst: GPRegister) = add(Lea(size, src, dst))
 
+    // Add
     fun add(size: Int, first: GPRegister, destination: GPRegister) = add(Add(size, first, destination))
     fun add(size: Int, first: Imm32, destination: GPRegister)      = add(Add(size, first, destination))
     fun add(size: Int, first: GPRegister, destination: Address)    = add(Add(size, first, destination))
     fun add(size: Int, first: Address, destination: GPRegister)    = add(Add(size, first, destination))
     fun add(size: Int, first: Imm32, destination: Address)         = add(Add(size, first, destination))
 
+    // Subtract
     fun sub(size: Int, first: GPRegister, destination: GPRegister) = add(Sub(size, first, destination))
     fun sub(size: Int, first: Imm32, destination: GPRegister)      = add(Sub(size, first, destination))
     fun sub(size: Int, first: GPRegister, destination: Address)    = add(Sub(size, first, destination))
@@ -87,6 +72,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun imul(size: Int, src1: Imm32, src: GPRegister, dst: GPRegister) = add(iMull(size, src1, src, dst))
     fun imul(size: Int, src1: Imm32, src: Address, dst: GPRegister)    = add(iMull(size, src1, src, dst))
 
+    // Logical Exclusive OR
     fun xor(size: Int, src: Address, dst: GPRegister)    = add(Xor(size, src, dst))
     fun xor(size: Int, imm32: Imm32, dst: Address)       = add(Xor(size, imm32, dst))
     fun xor(size: Int, src: GPRegister, dst: GPRegister) = add(Xor(size, src, dst))
@@ -135,9 +121,11 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun sal(size: Int, src: Address, dst: GPRegister)    = add(Sal(size, src, dst))
     fun sal(size: Int, src: Imm32, dst: Address)         = add(Sal(size, src, dst))
 
+    // Two's Complement Negation
     fun neg(size: Int, dst: GPRegister) = add(Neg(size, dst))
     fun neg(size: Int, dst: Address)    = add(Neg(size, dst))
 
+    // One's Complement Negation
     fun not(size: Int, dst: GPRegister) = add(Not(size, dst))
     fun not(size: Int, dst: Address)    = add(Not(size, dst))
 
@@ -233,8 +221,11 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
     fun cmp(size: Int, first: GPRegister, second: Address)    = add(Cmp(size, first, second))
     fun cmp(size: Int, first: Address, second: GPRegister)    = add(Cmp(size, first, second))
 
+    // Jump if Condition Is Met
     fun jcc(jmpType: CondType, label: String) = add(Jcc(jmpType, label))
     fun jcc(jmpType: CondType, label: Label) = add(Jcc(jmpType, label.id))
+
+    // Jump
     fun jump(label: String) = add(Jump(label))
     fun jump(label: Label) = add(Jump(label.id))
 
@@ -459,7 +450,7 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
             }
             for ((idx, inst) in instructions.withIndex()) {
                 builder.append("    $inst")
-                if (idx < instructions.size() - 1) {
+                if (idx < instructions.size - 1) {
                     builder.append("\n")
                 }
             }
@@ -472,4 +463,6 @@ abstract class Assembler(private val name: String, val id: Int): AnonymousDirect
 
         return builder.toString()
     }
+
+    private data class BuilderContext(var label: Label, var instructions: MutableList<CPUInstruction>)
 }
