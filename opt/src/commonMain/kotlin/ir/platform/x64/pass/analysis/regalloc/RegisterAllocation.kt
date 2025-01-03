@@ -5,7 +5,6 @@ import asm.x64.*
 import ir.value.*
 import ir.Definitions.QWORD_SIZE
 import ir.global.ExternValue
-import ir.global.FunctionSymbol
 import ir.global.GlobalConstant
 import ir.global.GlobalValue
 import ir.instruction.Callable
@@ -15,7 +14,9 @@ import ir.module.MutationMarker
 import ir.pass.common.AnalysisResult
 import ir.platform.x64.CallConvention
 import ir.platform.x64.CallConvention.gpCallerSaveRegs
+import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmCallerSaveRegs
+import ir.types.UndefType
 import ir.value.constant.*
 
 
@@ -39,6 +40,10 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
         val registers = hashSetOf<GPRegister>()
         val xmmRegisters = hashSetOf<XmmRegister>()
         for (value in liveOutOperands) {
+            if (value.type() == UndefType) {
+                continue
+            }
+
             if (exclude.contains(value)) {
                 continue
             }
@@ -66,29 +71,29 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
     }
 
     fun operand(value: Value): Operand {
+        if (value.type() == UndefType) {
+            return temp1
+        }
+
         return operandOrNull(value) ?: throw IllegalArgumentException("cannot find operand for $value")
     }
 
     fun operandOrNull(value: Value): Operand? = when (value) {
         is LocalValue -> registerMap[value]
-        is U8Value -> Imm32.of(value.u8.toLong())
-        is I8Value -> Imm32.of(value.i8.toLong())
+        is U8Value  -> Imm32.of(value.u8.toLong())
+        is I8Value  -> Imm32.of(value.i8.toLong())
         is U16Value -> Imm32.of(value.u16.toLong())
         is I16Value -> Imm32.of(value.i16.toLong())
         is U32Value -> Imm32.of(value.u32.toLong())
         is I32Value -> Imm32.of(value.i32.toLong())
         is I64Value -> Imm64.of(value.i64)
         is U64Value -> Imm64.of(value.u64)
-        is GlobalConstant -> Address.internal(value.name())
+        is GlobalConstant    -> Address.internal(value.name())
         is FunctionPrototype -> Address.internal(value.name())
-        is ExternFunction -> Address.external(value.name())
+        is ExternFunction    -> Address.external(value.name())
         is ExternValue -> Address.external(value.name())
         is GlobalValue -> Address.internal(value.name())
-        is NullValue -> Imm64.of(0)
-        is UndefValue -> {
-            println("Warning: undefined behaviour\n") //TODO: remove this
-            GPRegister.rax
-        }
+        is NullValue   -> Imm64.of(0)
         else -> null
     }
 

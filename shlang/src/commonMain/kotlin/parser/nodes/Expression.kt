@@ -96,7 +96,7 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
         val typeTrue  = eTrue.resolveType(typeHolder)
         val typeFalse = eFalse.resolveType(typeHolder)
 
-        if (typeTrue == typeFalse) {
+        if (typeTrue is AnyCStructType && typeFalse is AnyCStructType && typeTrue == typeFalse) {
             return@memoize typeTrue
         }
 
@@ -109,9 +109,8 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
             return@memoize cvtTypeTrue
         }
 
-        val resultType = cvtTypeTrue.interfere(typeHolder, cvtTypeFalse) ?:
+        return@memoize cvtTypeTrue.interfere(typeHolder, cvtTypeFalse) ?:
             throw TypeResolutionException("Conditional with incompatible types: $cvtTypeTrue and $cvtTypeFalse: '${LineAgnosticAstPrinter.print(this)}'", begin())
-        return@memoize resultType
     }
 }
 
