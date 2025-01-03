@@ -92,9 +92,13 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     override fun begin(): Position = cond.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CPrimitive = memoize {
+    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val typeTrue  = eTrue.resolveType(typeHolder)
         val typeFalse = eFalse.resolveType(typeHolder)
+
+        if (typeTrue == typeFalse) {
+            return@memoize typeTrue
+        }
 
         val cvtTypeTrue  = convertToPrimitive(typeTrue)
             ?: throw TypeResolutionException("Conditional with non-primitive types: $typeTrue and $typeFalse", begin())
