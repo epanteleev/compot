@@ -1,6 +1,7 @@
 package shlang
 
 import common.CommonCTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -40,6 +41,20 @@ abstract class DesignationTest: CommonCTest() {
     fun test6() {
         val result = runCTest("shlang/designation/designation6", listOf(), options())
         assertEquals("arr[0]: 2, arr[1]: 1\n", result.output)
+    }
+
+    @Test
+    @Ignore
+    fun test7() {
+        val result = runCTest("shlang/designation/designation7", listOf(), options())
+        assertEquals("arr.data.ptr[0]: 1, arr.data.ptr[1]: 2\n", result.output)
+    }
+
+    @Test
+    @Ignore
+    fun test8() {
+        val result = runCTest("shlang/designation/designation8", listOf(), options())
+        assertEquals("arr.data.ptr[0]: 1, arr.data.ptr[1]: 2\n", result.output)
     }
 }
 
