@@ -105,17 +105,17 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
             "-lc",
         )
 
-        //private val objModules = arrayListOf( // Manjaro
-        //    "/usr/lib64/crti.o",
-        //    "/usr/lib64/crt1.o",
-        //    "/usr/lib64/crtn.o"
-        // )
+        private val objModules = arrayListOf( // Manjaro
+            "/usr/lib64/crti.o",
+            "/usr/lib64/crt1.o",
+            "/usr/lib64/crtn.o"
+         )
 
-        private val objModules = arrayListOf(
+        /*private val objModules = arrayListOf(
             "/usr/lib/x86_64-linux-gnu/crti.o",
             "/usr/lib/x86_64-linux-gnu/crt1.o",
             "/usr/lib/x86_64-linux-gnu/crtn.o"
-        )
+        )*/
 
         private const val dynamicLinker = "/lib64/ld-linux-x86-64.so.2"
     }

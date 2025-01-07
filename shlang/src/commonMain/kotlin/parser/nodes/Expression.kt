@@ -45,7 +45,13 @@ class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerLi
     override fun begin(): Position = typeName.begin()
 
     fun typeDesc(typeHolder: TypeHolder): TypeDesc {
-        return typeName.specifyType(typeHolder, listOf()).typeDesc
+        val type = typeName.specifyType(typeHolder, listOf()).typeDesc
+        val ctype = type.cType()
+        if (ctype is CUncompletedArrayType) {
+            return TypeDesc.from(CArrayType(ctype.elementType, initializerList.length().toLong()))
+        }
+
+        return type
     }
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {

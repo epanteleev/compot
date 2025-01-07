@@ -1772,10 +1772,15 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 is MemberDesignator -> {
                     type as AnyCStructType
                     val fieldType = mb.toIRType<StructType>(typeHolder, type)
-                    val expression = visitExpression(designationInitializer.initializer, true)
                     val member = type.fieldByIndexOrNull(designator.name()) ?:
                         throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
 
+                    if (designationInitializer.initializer is InitializerList) {
+                        val fieldAdr = ir.gfp(value, fieldType, I64Value.of(member.index))
+                        return visitInitializerList(designationInitializer.initializer, fieldAdr, member.cType().asType())
+                    }
+
+                    val expression = visitExpression(designationInitializer.initializer, true)
                     val elementType = mb.toIRType<Type>(typeHolder, member.cType())
                     val converted = ir.convertRVToType(expression, elementType)
                     val fieldAdr = ir.gfp(value, fieldType, I64Value.of(member.index))
@@ -1785,6 +1790,20 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
+    private fun generateInitDeclarationExpression(rValue: Expression): Value = when (rValue) {
+        is InitializerList -> {
+            if (rValue.initializers.size != 1) {
+                throw IRCodeGenError("Initializer list with more than one element", rValue.begin())
+            }
+            val initializer = rValue.initializers.first()
+            if (initializer !is SingleInitializer) {
+                throw IRCodeGenError("Unknown initializer, initializer=$initializer", rValue.begin())
+            }
+            visitInitializer(initializer)
+        }
+        else -> visitExpression(rValue, true)
+    }
+
     override fun visit(initDeclarator: InitDeclarator): Value {
         val varDesc = typeHolder[initDeclarator.name()]
         if (varDesc.storageClass == StorageClass.STATIC) {
@@ -1792,20 +1811,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         val type = varDesc.typeDesc.cType()
         if (type is CPrimitive) {
-            val rvalue = when (val rValue = initDeclarator.rvalue) {
-                is InitializerList -> {
-                    if (rValue.initializers.size != 1) {
-                        throw IRCodeGenError("Initializer list with more than one element", rValue.begin())
-                    }
-                    val initializer = rValue.initializers.first()
-                    if (initializer !is SingleInitializer) {
-                        throw IRCodeGenError("Unknown initializer, initializer=$initializer", rValue.begin())
-                    }
-                    visitInitializer(initializer)
-                }
-                else -> visitExpression(rValue, true)
-            }
-
+            val rvalue = generateInitDeclarationExpression(initDeclarator.rvalue)
             val commonType      = mb.toIRType<Type>(typeHolder, type)
             val convertedRvalue = ir.convertRVToType(rvalue, commonType)
 
