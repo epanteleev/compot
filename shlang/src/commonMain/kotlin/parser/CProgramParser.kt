@@ -28,7 +28,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             nodes.add(node)
         }
 
-        return ProgramNode(nodes)
+        return ProgramNode(filename, nodes)
     }
 
     //  function-definition:

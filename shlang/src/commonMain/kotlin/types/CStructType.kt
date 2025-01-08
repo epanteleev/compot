@@ -17,12 +17,12 @@ class CStructType private constructor(
     override fun alignmentOf(): Int = maxAlignment
 
     override fun size(): Int {
-        if (fieldDescriptors.isEmpty()) {
+        if (fields.isEmpty()) {
             return BYTE_SIZE
         }
         var offset = 0
-        for (idx in fieldDescriptors.indices) {
-            offset = Definitions.alignTo(offset + fieldDescriptors[idx].size(), alignments[idx])
+        for (idx in fields.indices) {
+            offset = Definitions.alignTo(offset + fields[idx].size(), alignments[idx])
         }
         return Definitions.alignTo(offset, alignmentOf())
     }
@@ -30,7 +30,7 @@ class CStructType private constructor(
     override fun offset(index: Int): Int {
         var current = 0
         for (i in 0 until index) {
-            current = Definitions.alignTo(current + fieldDescriptors[i].size(), alignments[i])
+            current = Definitions.alignTo(current + fields[i].size(), alignments[i])
         }
         return Definitions.alignTo(current, alignments[index])
     }
@@ -82,7 +82,7 @@ class CStructType private constructor(
             return fieldDescs
         }
 
-        private fun alignments(fields: List<FieldDesc>): IntArray {
+        private fun alignments(fields: List<Member>): IntArray {
             var current = 0
             val result = IntArray(fields.size)
             for (i in fields.indices) {
@@ -97,7 +97,7 @@ class CStructType private constructor(
         fun create(name: String, fields: List<Member>): CStructType {
             val fieldDescriptors = evaluateFieldDescriptors(fields)
             val nameToFieldDesc = fieldDescriptors.associateByTo(hashMapOf()) { it.name() }
-            return CStructType(name, fields, fieldDescriptors, nameToFieldDesc, alignments(fieldDescriptors))
+            return CStructType(name, fields, fieldDescriptors, nameToFieldDesc, alignments(fields))
         }
     }
 }

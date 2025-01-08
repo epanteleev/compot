@@ -1,6 +1,5 @@
 package types
 
-import ir.Definitions.BYTE_SIZE
 import typedesc.TypeDesc
 
 
@@ -42,8 +41,6 @@ class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(
 }
 
 class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
-    private var maxAlignment = Int.MIN_VALUE
-
     override fun size(): Int {
         return type.size() * dimension.toInt() //TODO
     }
@@ -54,11 +51,7 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     }
 
     override fun alignmentOf(): Int {
-        if (maxAlignment == Int.MIN_VALUE) {
-            val cType = type.cType()
-            maxAlignment = cType.alignmentOf()
-        }
-        return maxAlignment
+        return type.cType().alignmentOf()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -79,8 +72,8 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
 }
 
 data class CUncompletedArrayType(val elementType: TypeDesc) : AnyCArrayType(elementType) {
-    override fun size(): Int = BYTE_SIZE
-    override fun alignmentOf(): Int = BYTE_SIZE
+    override fun size(): Int = 0
+    override fun alignmentOf(): Int = 1
 
     override fun toString(): String = buildString {
         append("[]")
