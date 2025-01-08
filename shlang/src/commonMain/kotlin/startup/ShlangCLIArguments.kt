@@ -29,10 +29,6 @@ class ShlangCLIArguments {
         optimizationLevel = level
     }
 
-    protected fun getName(name: String): String {
-        return Files.getBasename(name)
-    }
-
     fun getOutputFilename(): String {
         if (outFilename != null) {
             return outFilename!!
@@ -50,7 +46,7 @@ class ShlangCLIArguments {
     }
 
     fun getFilename(): String = inputFilename
-    fun getBasename(): String = getName(inputFilename)
+    fun getBasename(): String = Files.getBasename(inputFilename)
 
     fun setDumpDefines(dumpDefines: Boolean) {
         this.dumpDefines = dumpDefines

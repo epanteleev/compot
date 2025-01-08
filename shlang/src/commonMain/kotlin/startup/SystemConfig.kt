@@ -18,12 +18,12 @@ object SystemConfig {
     }
 
     fun crtObjects(): List<String>? {
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
-            return crtObjects.mapTo(ArrayList()) { "$CRT_OBJECT_PATH/$it" }
-        }
-
         if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
             return crtObjects.mapTo(ArrayList()) { "$CRT_OBJECT_GNU_LINUX_PATH/$it" }
+        }
+
+        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
+            return crtObjects.mapTo(ArrayList()) { "$CRT_OBJECT_PATH/$it" }
         }
 
         return null
