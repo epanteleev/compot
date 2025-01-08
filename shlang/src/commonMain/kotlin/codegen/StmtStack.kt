@@ -8,7 +8,7 @@ import ir.value.Value
 import ir.value.constant.IntegerConstant
 
 
-class StmtStack {
+internal class StmtStack {
     private val stack = mutableListOf<StmtInfo>()
 
     private fun<T: StmtInfo> push(stmtInfo: T): T {
@@ -43,7 +43,7 @@ class StmtStack {
     }
 }
 
-sealed class StmtInfo {
+internal sealed class StmtInfo {
     private var exitBB: Label? = null
 
     fun exit(): Label? {
@@ -59,7 +59,7 @@ sealed class StmtInfo {
     }
 }
 
-class SwitchStmtInfo(val conditionType: IntegerType, val condBlock: Label, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo() {
+internal class SwitchStmtInfo(val conditionType: IntegerType, val condBlock: Label, val table: MutableList<Label>, val values: MutableList<IntegerConstant>) : StmtInfo() {
     private var default: Label? = null
 
     fun resolveDefault(ir: FunctionDataBuilder): Label {
@@ -75,7 +75,7 @@ class SwitchStmtInfo(val conditionType: IntegerType, val condBlock: Label, val t
     }
 }
 
-sealed class AnyLoopStmtInfo : StmtInfo() {
+internal sealed class AnyLoopStmtInfo : StmtInfo() {
     private var conditionBB: Label? = null
 
     fun resolveCondition(ir: FunctionDataBuilder): Label {
@@ -87,9 +87,9 @@ sealed class AnyLoopStmtInfo : StmtInfo() {
     }
 }
 
-class LoopStmtInfo : AnyLoopStmtInfo()
+internal class LoopStmtInfo : AnyLoopStmtInfo()
 
-class ForLoopStmtInfo : AnyLoopStmtInfo() {
+internal class ForLoopStmtInfo : AnyLoopStmtInfo() {
     private var updateBB: Label? = null
 
     fun resolveUpdate(ir: FunctionDataBuilder): Label {
@@ -105,7 +105,7 @@ class ForLoopStmtInfo : AnyLoopStmtInfo() {
     }
 }
 
-class FunctionStmtInfo() : StmtInfo() {
+internal class FunctionStmtInfo : StmtInfo() {
     private var returnValueAdr: Value? = null
     var vaInit: Alloc? = null
 

@@ -9,7 +9,7 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class GetFieldPtrCodegen(val type: PtrType, val basicType: AggregateType, val asm: Assembler):
+class GetFieldPtrCodegen(val type: PtrType, private val basicType: AggregateType, val asm: Assembler):
     GPOperandsVisitorBinaryOp {
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {

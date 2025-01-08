@@ -18,7 +18,7 @@ import ir.value.constant.*
 import parser.LineAgnosticAstPrinter
 
 
-sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
+internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val typeHolder: TypeHolder,
                                    protected val varStack: VarStack<Value>,
                                    protected val nameGenerator: NameGenerator) {

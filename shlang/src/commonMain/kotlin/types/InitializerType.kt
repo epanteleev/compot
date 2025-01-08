@@ -10,8 +10,8 @@ class InitializerType(private val initializer: List<CType>): CAggregateType() {
         append("}")
     }
 
-    override fun size(): Int = initializer.fold(0) { acc, type -> acc + type.size() }
-    override fun alignmentOf(): Int = initializer.fold(1) { acc, type -> maxOf(acc, type.alignmentOf()) } //TODO check this
+    override fun size(): Int = throw RuntimeException("Initializer type has no size")
+    override fun alignmentOf(): Int = throw RuntimeException("Initializer type has no alignment")
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

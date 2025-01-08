@@ -10,10 +10,11 @@ class CUnionType private constructor(
     nameToFieldDesc: Map<String, FieldDesc>
 ) : AnyCStructType(name, fields, fieldDescriptors, nameToFieldDesc) {
     override fun size(): Int {
-        if (fieldDescriptors.isEmpty()) {
+        if (fields.isEmpty()) {
             return BYTE_SIZE
         }
-        return fieldDescriptors.maxOf { it.cType().size() }
+
+        return fields.maxOf { it.cType().size() }
     }
 
     override fun toString(): String = buildString {
@@ -28,7 +29,7 @@ class CUnionType private constructor(
     }
 
     override fun alignmentOf(): Int {
-        return fieldDescriptors.maxOf { it.cType().alignmentOf() }
+        return fields.maxOf { it.cType().alignmentOf() }
     }
 
     companion object {

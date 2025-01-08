@@ -1,7 +1,7 @@
 package codegen
 
 
-class NameGenerator(private var constantCounter: Int = 0) {
+internal class NameGenerator(private var constantCounter: Int = 0) {
     fun createStringLiteralName(): String {
         return ".str${constantCounter++}"
     }
