@@ -44,15 +44,19 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
         private fun make(id: Identity, owner: Block, type: AggregateType, source: Value, index: IntegerConstant): GetFieldPtr {
             val sourceType = source.type()
             val indexType  = index.type()
-            require(isAppropriateType(sourceType, index)) {
+            require(isAppropriateType(sourceType, type, index)) {
                 "inconsistent types in '$id' type=$type, source=$source:$sourceType, index=$index:$indexType"
             }
 
             return registerUser(GetFieldPtr(id, owner, type, source, index), source)
         }
 
-        private fun isAppropriateType(sourceType: Type, index: IntegerConstant): Boolean {
+        private fun isAppropriateType(sourceType: Type, basicType: AggregateType, index: IntegerConstant): Boolean {
             if (index.type().sizeOf() != QWORD_SIZE) {
+                return false
+            }
+
+            if (basicType.fields().size <= index.toInt()) {
                 return false
             }
 
@@ -60,7 +64,7 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
         }
 
         fun typeCheck(gep: GetFieldPtr): Boolean {
-            return isAppropriateType(gep.source().type(), gep.index())
+            return isAppropriateType(gep.source().type(), gep.basicType, gep.index())
         }
     }
 }
