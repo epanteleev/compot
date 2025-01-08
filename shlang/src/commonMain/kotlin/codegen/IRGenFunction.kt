@@ -1757,37 +1757,43 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitDesignationInitializer(designationInitializer: DesignationInitializer, value: Value, type: CAggregateType) {
+        var address: Value = value
+        var innerType: CType = type
         for (designator in designationInitializer.designation.designators) {
             when (designator) {
                 is ArrayDesignator -> {
-                    type as CArrayType
-                    val elementType = type.element()
-                    val converted = mb.toIRType<NonTrivialType>(typeHolder, elementType.cType())
-                    val expression = visitExpression(designationInitializer.initializer, true)
-                    val index = designator.constEval(typeHolder)
-                    val convertedRvalue = ir.convertToType(expression, converted)
-                    val elementAdr = ir.gep(value, converted, I64Value.of(index))
-                    ir.store(elementAdr, convertedRvalue)
-                }
-                is MemberDesignator -> {
-                    type as AnyCStructType
-                    val fieldType = mb.toIRType<StructType>(typeHolder, type)
-                    val member = type.fieldByIndexOrNull(designator.name()) ?:
-                        throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
-
-                    if (designationInitializer.initializer is InitializerList) {
-                        val fieldAdr = ir.gfp(value, fieldType, I64Value.of(member.index))
-                        return visitInitializerList(designationInitializer.initializer, fieldAdr, member.cType().asType())
+                    if (innerType !is CArrayType) {
+                        throw IRCodeGenError("Unknown type, type=$innerType", designationInitializer.begin())
                     }
 
-                    val expression = visitExpression(designationInitializer.initializer, true)
-                    val elementType = mb.toIRType<Type>(typeHolder, member.cType())
-                    val converted = ir.convertRVToType(expression, elementType)
-                    val fieldAdr = ir.gfp(value, fieldType, I64Value.of(member.index))
-                    ir.store(fieldAdr, converted)
+                    val fieldType = mb.toIRType<ArrayType>(typeHolder, innerType)
+                    val index = designator.constEval(typeHolder)
+                    innerType = innerType.element().asType()
+                    address = ir.gfp(address, fieldType, I64Value.of(index))
+                }
+                is MemberDesignator -> {
+                    if (innerType !is AnyCStructType) {
+                        throw IRCodeGenError("Unknown type, type=$innerType", designationInitializer.begin())
+                    }
+
+                    val fieldType = mb.toIRType<StructType>(typeHolder, innerType)
+                    val member = innerType.fieldByIndexOrNull(designator.name()) ?:
+                        throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
+
+                    innerType = member.cType().asType()
+                    address = ir.gfp(address, fieldType, I64Value.of(member.index))
                 }
             }
         }
+
+        if (designationInitializer.initializer is InitializerList) {
+            return visitInitializerList(designationInitializer.initializer, address, innerType.asType())
+        }
+
+        val expression = visitExpression(designationInitializer.initializer, true)
+        val converted = mb.toIRType<Type>(typeHolder, innerType)
+        val convertedRvalue = ir.convertRVToType(expression, converted)
+        ir.store(address, convertedRvalue)
     }
 
     private fun generateInitDeclarationExpression(rValue: Expression): Value = when (rValue) {
