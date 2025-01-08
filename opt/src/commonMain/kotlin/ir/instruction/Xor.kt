@@ -40,6 +40,7 @@ class Xor private constructor(id: Identity, owner: Block, tp: ArithmeticType, a:
             if (tp !is ArithmeticType) {
                 return false
             }
+
             return aType == tp && bType == tp
         }
 
