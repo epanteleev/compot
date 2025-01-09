@@ -208,6 +208,24 @@ internal class Lowering private constructor(private val cfg: FunctionData) {
                 bb.updateDF(inst, Pointer2Int.SOURCE, lea)
                 return lea
             }
+
+            inst.match(memcpy(generate() or argumentByValue(), generate() or argumentByValue(), nop())) { memcpy: Memcpy ->
+                // Before:
+                //  memcpy %src, %dst
+                //
+                // After:
+                //  %srcLea = lea %src
+                //  %dstLea = lea %dst
+                //  memcpy %srcLea, %dstLea
+
+                val src = bb.putBefore(inst, Lea.lea(memcpy.source()))
+                bb.updateDF(inst, Memcpy.SOURCE, src)
+
+                val dst = bb.putBefore(inst, Lea.lea(memcpy.destination()))
+                bb.updateDF(inst, Memcpy.DESTINATION, dst)
+                return inst
+            }
+
             inst.match(memcpy(nop(), generate() or argumentByValue(), nop())) { memcpy: Memcpy ->
                 // Before:
                 //  memcpy %src, %dst
@@ -218,8 +236,12 @@ internal class Lowering private constructor(private val cfg: FunctionData) {
 
                 val src = bb.putBefore(inst, Lea.lea(memcpy.source()))
                 bb.updateDF(inst, Memcpy.SOURCE, src)
-                return bb.idom(inst)
+
+                val copyDst = bb.putBefore(inst, Copy.copy(memcpy.destination()))
+                bb.updateDF(inst, Memcpy.DESTINATION, copyDst)
+                return inst
             }
+
             inst.match(memcpy(generate() or argumentByValue(), nop(), nop())) { memcpy: Memcpy ->
                 // Before:
                 //  memcpy %src, %dst
@@ -228,9 +250,28 @@ internal class Lowering private constructor(private val cfg: FunctionData) {
                 //  %dstLea = lea %dst
                 //  memcpy %src, %dstLea
 
+                val copySrc = bb.putBefore(inst, Copy.copy(memcpy.source()))
+                bb.updateDF(inst, Memcpy.SOURCE, copySrc)
+
                 val dst = bb.putBefore(inst, Lea.lea(memcpy.destination()))
                 bb.updateDF(inst, Memcpy.DESTINATION, dst)
-                return bb.idom(inst)
+                return inst
+            }
+
+            inst.match(memcpy(nop(), nop(), nop())) { memcpy: Memcpy ->
+                // Before:
+                //  memcpy %src, %dst
+                //
+                // After:
+                //  %srcLea = copy %src
+                //  %dstLea = copy %dst
+                //  memcpy %srcLea, %dstLea
+
+                val copySrc = bb.putBefore(inst, Copy.copy(memcpy.source()))
+                val copyDst = bb.putBefore(inst, Copy.copy(memcpy.destination()))
+                bb.updateDF(inst, Memcpy.SOURCE, copySrc)
+                bb.updateDF(inst, Memcpy.DESTINATION, copyDst)
+                return inst
             }
 
             inst.match(icmp(nop(), ptr(), generate())) { icmp: IntCompare ->

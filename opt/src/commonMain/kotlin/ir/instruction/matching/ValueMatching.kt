@@ -31,7 +31,7 @@ inline fun load(crossinline type: TypeMatcher, crossinline pointer: ValueMatcher
     it is Load && type(it.type()) && pointer(it.operand())
 }
 
-inline fun lea(crossinline pointer: ValueMatcher): InstructionMatcher = {
+inline fun lea(crossinline pointer: ValueMatcher): ValueMatcher = {
     it is ir.instruction.lir.Lea && pointer(it.operand())
 }
 

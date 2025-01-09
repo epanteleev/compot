@@ -1,7 +1,5 @@
 package ir.pass.transform.auxiliary
 
-import asm.x64.GPRegister.rcx
-import asm.x64.GPRegister.rdx
 import ir.attributes.ByValue
 import ir.global.GlobalValue
 import ir.types.*
@@ -67,6 +65,12 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                 return inst
             }
 
+            inst.match(memcpy(nop(), nop(), nop())) {
+                isNeed3ArgIsolation = true
+                isNeed4ArgIsolation = true
+                return inst
+            }
+
             return inst
         }
 
@@ -121,6 +125,15 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         bb.updateDF(call, i.argumentIndex, gen)
     }
 
+    private fun isolateByValueArguments(bb: Block, call: Instruction) {
+        call as Callable
+        val byValueAttr = call.attributes().filterIsInstance<ByValue>()
+        for (byValue in byValueAttr) {
+            val arg = call.arguments()[byValue.argumentIndex]
+            isolateByValueArgument(bb, call, byValue, arg)
+        }
+    }
+
     private fun insertCopies(bb: Block, call: Instruction) {
         call as Callable
         val byValueAttr = call.attributes().filterIsInstance<ByValue>()
@@ -131,18 +144,18 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                     bb.updateDF(call, i, copy)
                 }
                 is PtrType -> {
-                    val byValue = byValueAttr.find { it.argumentIndex == i }
-                    if (byValue != null) {
-                        isolateByValueArgument(bb, call, byValue, arg)
-                        continue
-                    }
-
                     val copyOrLea = if (arg is GlobalValue) {
                         bb.putBefore(call, Lea.lea(arg))
                     } else {
                         bb.putBefore(call, Copy.copy(arg))
                     }
                     bb.updateDF(call, i, copyOrLea)
+                }
+                is AggregateType -> {
+                    val byValue = byValueAttr.find { it.argumentIndex == i }
+                    if (byValue == null) {
+                        throw IllegalStateException("ByValue attribute not found for argument $i")
+                    }
                 }
                 is UndefType -> {}
                 else -> throw IllegalArgumentException("Unexpected type: $ty")
@@ -155,6 +168,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             return call
         }
         bb.putBefore(call, DownStackFrame.dsf(call))
+        isolateByValueArguments(bb, call)
         insertCopies(bb, call)
         call.target().prepend(UpStackFrame.usf(call))
         return call

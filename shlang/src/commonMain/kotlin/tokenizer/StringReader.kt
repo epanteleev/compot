@@ -67,6 +67,24 @@ class StringReader(val str: String, var pos: Int = 0) {
         return ch.isDigit()
     }
 
+    fun isBinary(offset: Int = 0): Boolean {
+        if (eof(offset)) {
+            return false
+        }
+
+        val ch = peekOffset(offset)
+        return ch == '0' || ch == '1'
+    }
+
+    fun isOctal(offset: Int = 0): Boolean {
+        if (eof(offset)) {
+            return false
+        }
+
+        val ch = peekOffset(offset)
+        return ch in '0'..'7'
+    }
+
     private fun isSpace(offset: Int): Boolean {
         if (eof(offset)) {
             return false

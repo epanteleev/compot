@@ -191,10 +191,10 @@ class CTokenizer private constructor(private val filename: String, private val r
     private fun tryParseExp(reader: StringReader): Long? {
         if (reader.check('e') || reader.check('E')) {
             reader.read()
+            val start = reader.pos
             if (reader.check('+') || reader.check('-')) {
                 reader.read()
             }
-            val start = reader.pos
             while (reader.isDigit()) {
                 reader.read()
             }
@@ -223,21 +223,42 @@ class CTokenizer private constructor(private val filename: String, private val r
     private fun readPPNumber(string: String): Number? {
         val reader = StringReader(string)
         var base = 10
+
+        val start: Int
         if (reader.check("0x") || reader.check("0X")) {
             reader.read(2)
             base = 16
+
+            start = reader.pos
+            do {
+                reader.read()
+            } while (reader.isHexDigit())
+
         } else if (reader.check("0b") || reader.check("0B")) {
             reader.read(2)
             base = 2
+
+            start = reader.pos
+            do {
+                reader.read()
+            } while (reader.isBinary())
+
         } else if (reader.check("0") && reader.isDigit(1)) {
             reader.read()
             base = 8
-        }
-        val start = reader.pos
 
-        do {
-            reader.read()
-        } while (reader.isHexDigit())
+            start = reader.pos
+            do {
+                reader.read()
+            } while (reader.isOctal())
+
+        } else {
+
+            start = reader.pos
+            do {
+                reader.read()
+            } while (reader.isDigit())
+        }
 
         if (reader.eof) {
             return toNumberDefault(reader.str.substring(start, reader.pos), base)
@@ -254,13 +275,19 @@ class CTokenizer private constructor(private val filename: String, private val r
             val exponent = tryParseExp(reader)
             val fp = tryGetFPSuffix(reader, start, end) ?: return null //TODO return null is problem
             if (exponent != null) {
-                return exponent + fp
+                return 10.0.pow(exponent.toDouble()) * fp
             }
 
             return fp
         }
 
         val end = reader.pos
+        val exponent = tryParseExp(reader)
+        if (exponent != null) {
+            val fp = tryGetFPSuffix(reader, start, end) ?: return null //TODO return null is problem
+            return 10.0.pow(exponent.toDouble()) * fp
+        }
+
         val power = tryParsePower(reader)
         val num = tryGetIntegerSuffix(reader, base, start, end)?: tryGetFPSuffix(reader, start, reader.pos) ?: return null
         if (power != null) {
