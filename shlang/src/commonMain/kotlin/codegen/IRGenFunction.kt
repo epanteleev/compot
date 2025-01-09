@@ -401,6 +401,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             else -> throw IRCodeGenError("Unknown type $cType", conditional.begin())
         }
 
+    private fun getFieldAddress(struct: Value, cStructType: AnyCStructType, member: FieldDesc): Value {
+        val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
+        if (structIRType.fields().size <= member.index) {
+            val offset = cStructType.size() + member.size() * (member.index - cStructType.members().size)
+            return ir.gep(struct, structIRType, I64Value.of(offset))
+        }
+
+        return ir.gfp(struct, structIRType, I64Value.of(member.index))
+    }
+
+
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
         val struct   = visitExpression(arrowMemberAccess.primary, true)
         val cPointer = when (val ty = arrowMemberAccess.primary.resolveType(typeHolder)) {
@@ -409,7 +420,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             else -> throw IRCodeGenError("Pointer type expected, but got $ty", arrowMemberAccess.begin())
         }
         val cStructType = cPointer.dereference(typeHolder)
-        val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
 
         if (cStructType !is AnyCStructType) {
             throw IRCodeGenError("Struct type expected, but got '$cStructType'", arrowMemberAccess.begin())
@@ -419,7 +429,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Field not found: $fieldName", arrowMemberAccess.begin())
         }
 
-        val gep = ir.gfp(struct, structIRType, I64Value.of(member.index))
+        val gep = getFieldAddress(struct, cStructType, member)
         if (!isRvalue) {
             return gep
         }
@@ -438,13 +448,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (structType !is AnyCStructType) {
             throw IRCodeGenError("Struct type expected, but got '$structType'", memberAccess.begin())
         }
-        val structIRType = mb.toIRType<StructType>(typeHolder, structType)
 
         val fieldName = memberAccess.memberName()
         val member = structType.fieldByIndexOrNull(fieldName) ?:
             throw IRCodeGenError("Field not found: '$fieldName'", memberAccess.begin())
 
-        val gep = ir.gfp(struct, structIRType, I64Value.of(member.index))
+        val gep = getFieldAddress(struct, structType, member)
         if (!isRvalue) {
             return gep
         }

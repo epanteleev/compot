@@ -1,5 +1,7 @@
 package ir.pass.transform.auxiliary
 
+import asm.x64.GPRegister.rcx
+import asm.x64.GPRegister.rdx
 import ir.attributes.ByValue
 import ir.global.GlobalValue
 import ir.types.*
@@ -12,8 +14,7 @@ import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
 import ir.pass.analysis.LivenessAnalysisPassFabric
-import ir.value.ArgumentValue
-import ir.value.Value
+import ir.value.*
 import ir.value.constant.U64Value
 
 
