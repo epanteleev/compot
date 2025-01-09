@@ -130,9 +130,7 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
         return singleInitializer.expr.accept(this)
     }
 
-    override fun visit(designationInitializer: DesignationInitializer): Int {
-        TODO("Not yet implemented")
-    }
+    override fun visit(designationInitializer: DesignationInitializer): Int? = null
 
     override fun visit(sizeOf: SizeOf): Int {
         return sizeOf.constEval(ctx.typeHolder())

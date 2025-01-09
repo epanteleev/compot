@@ -95,6 +95,12 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
                 registerMap[rem] = rdx
                 return
             }
+
+            inst.match(memcpy(nop(), nop(), nop())) { memcpy: Memcpy ->
+                registerMap[memcpy.source().asValue()] = rcx
+                registerMap[memcpy.destination().asValue()] = rdx
+                return
+            }
         }
         bb.forEach { visitor(it) }
     }
