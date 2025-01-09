@@ -189,6 +189,7 @@ sealed class CPrimitive: CType() {
             }
             is CEnumType -> {
                 return when (type2) {
+                    BOOL -> INT
                     CHAR -> INT
                     UCHAR -> INT
                     SHORT -> INT
@@ -214,6 +215,7 @@ sealed class CPrimitive: CType() {
                     ULONG -> ULONG
                     FLOAT -> FLOAT
                     DOUBLE -> DOUBLE
+                    is CEnumType -> INT
                     else -> return null
                 }
             }
