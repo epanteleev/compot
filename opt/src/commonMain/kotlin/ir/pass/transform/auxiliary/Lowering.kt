@@ -1,13 +1,11 @@
 package ir.pass.transform.auxiliary
 
-import asm.x64.CondType
 import ir.types.*
 import ir.value.*
 import ir.module.Module
 import ir.instruction.*
 import ir.value.constant.*
 import ir.instruction.lir.*
-import ir.global.GlobalValue
 import ir.instruction.matching.*
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.FunctionData
@@ -17,7 +15,6 @@ import ir.pass.analysis.traverse.BfsOrderOrderFabric
 
 internal class Lowering private constructor(val cfg: FunctionData): IRInstructionVisitor<Instruction?>() {
     private var bb: Block = cfg.begin()
-
 
     private fun pass() {
         for (bb in cfg.analysis(BfsOrderOrderFabric)) {
@@ -69,10 +66,36 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(shl: Shl): Instruction {
+        shl.match(shl(any(), constant().not())) {
+            // Before:
+            //  %res = shl %a, %b
+            //
+            // After:
+            //  %copy = copy %b <-- rcx
+            //  %res = shl %a, %copy
+
+            val copy = bb.putBefore(shl, Copy.copy(shl.rhs()))
+            bb.updateDF(shl, Shl.OFFSET, copy)
+            return shl
+        }
+
         return shl
     }
 
     override fun visit(shr: Shr): Instruction {
+        shr.match(shr(any(), constant().not())) {
+            // Before:
+            //  %res = shr %a, %b
+            //
+            // After:
+            //  %copy = copy %b <-- rcx
+            //  %res = shr %a, %copy
+
+            val copy = bb.putBefore(shr, Copy.copy(shr.rhs()))
+            bb.updateDF(shr, Shr.OFFSET, copy)
+            return shr
+        }
+
         return shr
     }
 
@@ -80,10 +103,8 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return div
     }
 
-
-
     override fun visit(neg: Neg): Instruction {
-        neg.match(neg(fp(), nop())) {
+        neg.match(neg(fp(), any())) {
             val constant = when (neg.asType<FloatingPointType>()) {
                 F32Type -> F32_SUBZERO
                 F64Type -> F64_SUBZERO
@@ -183,7 +204,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(gep: GetElementPtr): Instruction {
-        gep.match(gep(gValue(anytype()), nop())) {
+        gep.match(gep(gValue(anytype()), any())) {
             // Before:
             //  %res = gep @global, %idx
             //
@@ -196,12 +217,12 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return lea
         }
 
-        gep.match(gep(primitive(), generate(), nop())) {
+        gep.match(gep(primitive(), generate(), any())) {
             val baseType = gep.basicType.asType<PrimitiveType>()
             return bb.replace(gep, LeaStack.lea(gep.source(), baseType, gep.index()))
         }
 
-        gep.match(gep(aggregate(), generate(), nop())) {
+        gep.match(gep(aggregate(), generate(), any())) {
             val baseType = gep.basicType.asType<AggregateType>()
             val index = gep.index()
             val mul = Mul.mul(index, NonTrivialConstant.of(index.asType(), baseType.sizeOf()))
@@ -242,7 +263,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(icmp: IntCompare): Instruction {
-        icmp.match(icmp(nop(), ptr(), generate())) {
+        icmp.match(icmp(any(), ptr(), generate())) {
             // Before:
             //  %res = icmp %pred, %gen
             //
@@ -255,7 +276,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return lea
         }
 
-        icmp.match(icmp(generate(), ptr(), nop())) {
+        icmp.match(icmp(generate(), ptr(), any())) {
             // Before:
             //  %res = icmp %pred, %gen
             //
@@ -286,14 +307,14 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return bb.replace(load, Copy.copy(load.operand()))
         }
 
-        load.match(load(gfpOrGep(argumentByValue() or generate(), nop()))) {
+        load.match(load(gfpOrGep(stackAlloc(), any()))) {
             val pointer = load.operand().asValue<ValueInstruction>()
             val index = getIndex(pointer)
             val copy = bb.replace(load, LoadFromStack.load(getSource(pointer), load.type(), index))
             killOnDemand(pointer)
             return copy
         }
-        load.match(load(gfpOrGep(generate().not(), nop()))) {
+        load.match(load(gfpOrGep(generate().not(), any()))) {
             val pointer = load.operand().asValue<ValueInstruction>()
             val copy = bb.replace(load, IndexedLoad.load(getSource(pointer), load.type(), getIndex(pointer)))
             killOnDemand(pointer)
@@ -338,7 +359,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(select: Select): Instruction {
-        select.match(select(nop(), value(i8()), value(i8()))) {
+        select.match(select(any(), value(i8()), value(i8()))) {
             // Before:
             //  %cond = icmp <predicate> i8 %a, %b
             //  %res = select i1 %cond, i8 %onTrue, i8 %onFalse
@@ -361,7 +382,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return bb.replace(select, Truncate.trunc(newSelect, I8Type))
         }
 
-        select.match(select(nop(), value(u8()), value(u8()))) {
+        select.match(select(any(), value(u8()), value(u8()))) {
             // Before:
             //  %cond = icmp <predicate> u8 %a, %b
             //  %res = select i1 %cond, u8 %onTrue, u8 %onFalse
@@ -411,7 +432,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(store: Store): Instruction {
-        store.match(store(nop(), generate())) {
+        store.match(store(any(), generate())) {
             // Before:
             //  store %ptr, %val
             //
@@ -423,7 +444,8 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             bb.updateDF(store, Store.VALUE, lea)
             return lea
         }
-        store.match(store(gValue(primitive()), nop())) {
+
+        store.match(store(gValue(primitive()), any())) {
             // Before:
             //  %res = store i8 @global, %ptr
             //
@@ -449,18 +471,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return bb.replace(store, Move.move(toValue, value))
         }
 
-        store.match(store(gValue(primitive()), value(primitive()))) {
-            // Before:
-            //  store @global, %val
-            //
-            // After:
-            //  move @global, %val
-
-            val toValue = store.pointer().asValue<GlobalValue>()
-            return bb.replace(store, Move.move(toValue, store.value()))
-        }
-
-        store.match(store(generate(primitive()), nop())) {
+        store.match(store(generate(primitive()), any())) {
             // Before:
             //  store %gen, %ptr
             //
@@ -471,25 +482,19 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return bb.replace(store, Move.move(toValue, store.value()))
         }
 
-        store.match(store(gfpOrGep(argumentByValue() or generate(), nop()), nop())) {
+        store.match(store(gfpOrGep(stackAlloc(), any()), any())) {
             val pointer = store.pointer().asValue<ValueInstruction>()
             val storeOnSt = StoreOnStack.store(getSource(pointer), getIndex(pointer), store.value())
             val st = bb.replace(store, storeOnSt)
             killOnDemand(pointer)
             return st
         }
-        store.match(store(gfpOrGep(generate().not(), nop()), nop())) {
+        store.match(store(gfpOrGep(generate().not(), any()), any())) {
             val pointer = store.pointer().asValue<ValueInstruction>()
             val moveBy = MoveByIndex.move(getSource(pointer), getIndex(pointer), store.value())
             val move = bb.replace(store, moveBy)
             killOnDemand(pointer)
             return move
-        }
-        store.match(store(gfpOrGep(generate(), nop()), generate())) {
-            val pointer = store.pointer().asValue<ValueInstruction>()
-            val st = bb.replace(store, StoreOnStack.store(getSource(pointer), getIndex(pointer), store.value()))
-            killOnDemand(pointer)
-            return st
         }
 
         return store
@@ -525,7 +530,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(memcpy: Memcpy): Instruction {
-        memcpy.match(memcpy(stackAlloc(), stackAlloc(), nop())) {
+        memcpy.match(memcpy(stackAlloc(), stackAlloc(), any())) {
             // Before:
             //  memcpy %src, %dst
             //
@@ -542,7 +547,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return memcpy
         }
 
-        memcpy.match(memcpy(nop(), stackAlloc(), nop())) {
+        memcpy.match(memcpy(any(), stackAlloc(), any())) {
             // Before:
             //  memcpy %src, %dst
             //
@@ -558,7 +563,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return memcpy
         }
 
-        memcpy.match(memcpy(stackAlloc(), nop(), nop())) {
+        memcpy.match(memcpy(stackAlloc(), any(), any())) {
             // Before:
             //  memcpy %src, %dst
             //
@@ -574,7 +579,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return memcpy
         }
 
-        memcpy.match(memcpy(nop(), nop(), nop())) {
+        memcpy.match(memcpy(any(), any(), any())) {
             // Before:
             //  memcpy %src, %dst
             //
@@ -634,6 +639,15 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return remainderTruncate
     }
 
+    private fun isolateReminder(tupleDiv: TupleDiv) {
+        val rem = tupleDiv.remainder()
+        if (rem == null) {
+            bb.putAfter(tupleDiv, Projection.proj(tupleDiv, 1))
+        } else {
+            bb.updateUsages(rem) { bb.putAfter(rem, Copy.copy(rem)) }
+        }
+    }
+
     override fun visit(tupleDiv: TupleDiv): Instruction {
         tupleDiv.match(tupleDiv(value(i8()), value(i8()))) {
             // Before:
@@ -673,11 +687,28 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             return truncateProjections(tupleDiv, newDiv, U8Type)
         }
-        tupleDiv.match(tupleDiv(constant().not(), nop())) {
+        tupleDiv.match(tupleDiv(constant().not(), any())) {
             // TODO temporal
-            val second = tupleDiv.second()
-            val copy = bb.putBefore(tupleDiv, Copy.copy(second))
+
+            val copy = bb.putBefore(tupleDiv, Copy.copy(tupleDiv.second()))
             bb.updateDF(tupleDiv, TupleDiv.SECOND, copy)
+            isolateReminder(tupleDiv)
+            return tupleDiv
+        }
+
+        tupleDiv.match(tupleDiv(any(), any())) { tupleDiv: TupleDiv ->
+            // Before:
+            //  %resANDrem = div %a, %b
+            //  %projDiv = proj %resANDrem, 0
+            //  %projRem = proj %resANDrem, 1
+            //
+            // After:
+            //  %resANDrem = div %a, %b
+            //  %projDiv = proj %resANDrem, 0
+            //  %projRem = proj %resANDrem, 1 <-- rdx
+            //  %res = copy %projRem
+
+            isolateReminder(tupleDiv)
             return tupleDiv
         }
 

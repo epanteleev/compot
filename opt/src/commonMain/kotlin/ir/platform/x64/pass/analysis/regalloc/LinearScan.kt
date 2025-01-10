@@ -13,20 +13,19 @@ import ir.value.asType
 import ir.module.FunctionData
 import ir.instruction.lir.Generate
 import ir.instruction.lir.Lea
-import ir.instruction.matching.*
 import ir.module.Sensitivity
-import ir.module.block.Block
 import ir.pass.analysis.InterferenceGraphFabric
 import ir.pass.analysis.intervals.LiveIntervalsFabric
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
-import ir.value.asValue
+import ir.platform.x64.pass.analysis.FixedRegisterInstructionsAnalysis
 
 
 class LinearScan internal constructor(private val data: FunctionData): FunctionAnalysisPass<RegisterAllocation>() {
     private val liveRanges = data.analysis(LiveIntervalsFabric)
     private val interferenceGraph = data.analysis(InterferenceGraphFabric)
+    private val fixedRegistersInfo = FixedRegisterInstructionsAnalysis.run(data)
 
     private val registerMap = hashMapOf<LocalValue, Operand>()
     private val callInfo    = hashMapOf<Callable, List<Operand?>>()
@@ -69,51 +68,21 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         }
     }
 
-    private fun tryAllocFixedRegisters(bb: Block) {
-        fun visitor(inst: Instruction) {
-            inst.match(shl(nop(), constant().not())) { shl: Shl ->
-                assertion(shl.rhs() is Copy) { "shl=$shl" }
-                registerMap[shl.rhs().asValue()] = rcx
-                return
-            }
-
-            inst.match(shr(nop(), constant().not())) { shr: Shr ->
-                assertion(shr.rhs() is Copy) { "shr=$shr" }
-                registerMap[shr.rhs().asValue()] = rcx
-                return
-            }
-
-            inst.match(tupleDiv(nop(), nop())) { div: TupleDiv ->
-                val rem = div.remainder()
-                assertion(rem != null) { "div=$div" }
-                registerMap[rem as Projection] = rdx
-                return
-            }
-
-            inst.match(proj(int(), tupleCall(), 1)) { proj: Projection ->
-                val rem = proj.tuple().asValue<LocalValue>()
-                registerMap[rem] = rdx
-                return
-            }
-
-            inst.match(memcpy(nop(), nop(), nop())) { memcpy: Memcpy ->
-                registerMap[memcpy.source().asValue()] = rcx
-                registerMap[memcpy.destination().asValue()] = rdx
-                return
+    private fun allocFixedRegisters() {
+        for (bb in data) {
+            val inst = bb.last()
+            if (inst is Callable) {
+                allocFunctionArguments(inst)
             }
         }
-        bb.forEach { visitor(it) }
-    }
 
-    private fun allocFixedRegisters() {
-       for (bb in data) {
-           val inst = bb.last()
-           if (inst is Callable) {
-               allocFunctionArguments(inst)
-           }
+        for (value in fixedRegistersInfo.rdxFixedReg) {
+            registerMap[value] = rdx
+        }
 
-           tryAllocFixedRegisters(bb)
-       }
+        for (value in fixedRegistersInfo.rcxFixedReg) {
+            registerMap[value] = rcx
+        }
     }
 
     private fun allocRegistersForLocalVariables() {

@@ -6,7 +6,6 @@ import ir.types.*
 import ir.instruction.*
 import ir.instruction.lir.Generate
 import ir.instruction.lir.Lea
-import ir.instruction.matching.*
 import ir.module.FunctionData
 import ir.module.Module
 import ir.module.SSAModule
@@ -30,76 +29,49 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
         calls
     }
 
-    private var isNeed3ArgIsolation: Boolean = false
-    private var isNeed4ArgIsolation: Boolean = false
-
-    private fun isolateSpecialInstructions() {
-        fun transform(bb: Block, inst: Instruction): Instruction {
-            inst.match(shl(nop(), constant().not())) { shl: Shl ->
-                val copy = bb.putBefore(inst, Copy.copy(shl.rhs()))
-                bb.updateDF(inst, Shl.OFFSET, copy)
-                isNeed4ArgIsolation = true
-                return inst
-            }
-
-            inst.match(shr(nop(), constant().not())) { shr: Shr ->
-                val copy = bb.putBefore(inst, Copy.copy(shr.rhs()))
-                bb.updateDF(inst, Shr.OFFSET, copy)
-                isNeed4ArgIsolation = true
-                return inst
-            }
-
-            inst.match(tupleDiv(nop(), nop())) { tupleDiv: TupleDiv ->
-                val rem = tupleDiv.remainder()
-                if (rem == null) {
-                    bb.putAfter(inst, Projection.proj(tupleDiv, 1))
-                } else {
-                    bb.updateUsages(rem) { bb.putAfter(rem, Copy.copy(rem)) }
-                }
-                isNeed3ArgIsolation = true
-                return inst
-            }
-
-            inst.match(proj(int(), tupleCall(), 1)) {
-                isNeed3ArgIsolation = true
-                return inst
-            }
-
-            inst.match(memcpy(nop(), nop(), nop())) {
-                isNeed3ArgIsolation = true
-                isNeed4ArgIsolation = true
-                return inst
-            }
-
-            return inst
+    private fun liveOut(liveOutWhat: Instruction, arg: ArgumentValue): Boolean {
+        if (liveness.liveOut(liveOutWhat.owner()).contains(arg)) {
+            // Argument is live out of the call
+            return true
+        }
+        if (liveOutWhat.operands().contains(arg)) {
+            // Argument is used in the call
+            return true
         }
 
-        for (bb in cfg)  {
-            bb.transform { inst -> transform(bb, inst) }
-        }
+        return false
     }
 
     private fun mustBeIsolated(arg: ArgumentValue, index: Int): Boolean {
-        if (index == 2 && isNeed3ArgIsolation) {
-            return true
-        }
-        if (index == 3 && isNeed4ArgIsolation) {
-            return true
-        }
-
         if (arg.attributes.find { it is ByValue } != null) {
             // Argument is in overflow area
             return false
         }
 
+        val argType = arg.type()
+        if (index == 2 && (argType is IntegerType || argType is PtrType)) {
+            /*for (rdxOp in RDXFixedReg) {
+                if (liveOut(rdxOp, arg)) {
+                    return true
+                }
+            }*/
+
+            return true
+        }
+
+        if (index == 3 && (argType is IntegerType || argType is PtrType)) {
+            /*for (rcxOp in RCXFixedReg) {
+                if (liveOut(rcxOp, arg)) {
+                    return true
+                }
+            }*/
+
+            return true
+        }
+
         for (call in allCalls) {
             call as Callable
-            if (liveness.liveOut(call).contains(arg)) {
-                // Argument is live out of the call
-                return true
-            }
-            if (call.operands().contains(arg)) {
-                // Argument is used in the call
+            if (liveOut(call, arg)) {
                 return true
             }
         }
@@ -181,7 +153,6 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     }
 
     fun pass() {
-        isolateSpecialInstructions()
         isolateArgumentValues()
         isolateCall()
     }
