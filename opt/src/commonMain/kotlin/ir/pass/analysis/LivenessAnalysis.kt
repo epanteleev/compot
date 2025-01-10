@@ -20,10 +20,6 @@ data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal var li
 }
 
 class LivenessAnalysisInfo(private val liveness: Map<Label, LiveInfo>, marker: MutationMarker): AnalysisResult(marker) {
-    fun liveOut(instruction: Instruction): Set<LocalValue> {
-        return liveOut(instruction.owner())
-    }
-
     fun liveOut(label: Label): Set<LocalValue> {
         return liveness[label]!!.liveOut()
     }

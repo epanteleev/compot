@@ -112,16 +112,6 @@ inline fun neg(crossinline type: TypeMatcher, crossinline value: ValueMatcher): 
 inline fun gfpOrGep(crossinline source: ValueMatcher, crossinline idx: ValueMatcher): ValueMatcher =
     gfp(source) or gep(source, idx)
 
-inline infix fun ValueMatcher.or(crossinline second: ValueMatcher): ValueMatcher = {
-    this(it) || second(it)
-}
-
-inline infix fun ValueMatcher.and(crossinline second: ValueMatcher): ValueMatcher = {
-    this(it) && second(it)
-}
-
-operator fun ValueMatcher.not(): ValueMatcher = { !this(it) }
-
 inline fun generate(crossinline type: TypeMatcher): ValueMatcher = {
     it is Generate && type(it.type())
 }
@@ -138,7 +128,7 @@ inline fun alloc(crossinline type: TypeMatcher): ValueMatcher = {
 
 fun alloc(): ValueMatcher = { it is Alloc }
 
-fun nop(): ValueMatcher = { true }
+fun any(): ValueMatcher = { true }
 
 fun constant(): ValueMatcher = { it is Constant }
 
@@ -178,3 +168,16 @@ fun u64(): TypeMatcher = { it == U64Type }
 fun fp(): TypeMatcher = { it is FloatingPointType }
 
 fun it_is(value: Value): ValueMatcher = { it == value }
+
+////////////////////////////////////////////////////////////////////////////////////////
+// Operations
+////////////////////////////////////////////////////////////////////////////////////////
+inline infix fun<reified Type> ((Type) -> Boolean).or(crossinline second: (Type) -> Boolean): (Type) -> Boolean = {
+    this(it) || second(it)
+}
+
+inline infix fun<reified Type> ((Type) -> Boolean).and(crossinline second: (Type) -> Boolean): (Type) -> Boolean = {
+    this(it) && second(it)
+}
+
+inline operator fun<reified Type> ((Type) -> Boolean).not(): (Type) -> Boolean = { !this(it) }

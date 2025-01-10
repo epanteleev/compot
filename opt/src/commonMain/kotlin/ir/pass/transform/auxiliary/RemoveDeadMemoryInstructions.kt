@@ -14,7 +14,7 @@ internal class RemoveDeadMemoryInstructions private constructor(private val cfg:
 
     private fun removeMemoryInstructions(bb: Block) {
         fun transform(instruction: Instruction): Instruction? {
-            instruction.match(load(nop())) { load: Load ->
+            instruction.match(load(any())) { load: Load ->
                 if (load.operand() == UndefValue) {
                     return bb.kill(load, UndefValue)
                 }
@@ -23,7 +23,7 @@ internal class RemoveDeadMemoryInstructions private constructor(private val cfg:
                 }
                 return bb.kill(load, UndefValue)
             }
-            instruction.match(store(nop(), nop())) { store: Store ->
+            instruction.match(store(any(), any())) { store: Store ->
                 if (store.pointer() == UndefValue) {
                     return bb.kill(store, UndefValue)
                 }
