@@ -196,6 +196,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    override fun visit(fadd: Fxor) {
+        assert(Fxor.typeCheck(fadd)) {
+            "Instruction '${fadd.dump()}' requires all operands to be of the same type: a=${fadd.lhs().type()}, b=${fadd.rhs().type()}"
+        }
+    }
+
     override fun visit(div: Div) {
         assert(Div.typeCheck(div)) {
             "Instruction '${div.dump()}' requires all operands to be of the same type: a=${div.lhs().type()}, b=${div.rhs().type()}"

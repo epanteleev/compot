@@ -105,6 +105,10 @@ inline fun gfp(crossinline type: TypeMatcher, crossinline src: ValueMatcher): Va
     it is GetFieldPtr && src(it.source()) && type(it.basicType)
 }
 
+inline fun neg(crossinline type: TypeMatcher, crossinline value: ValueMatcher): InstructionMatcher = {
+    it is Neg && type(it.type()) && value(it.operand())
+}
+
 inline fun gfpOrGep(crossinline source: ValueMatcher, crossinline idx: ValueMatcher): ValueMatcher =
     gfp(source) or gep(source, idx)
 
@@ -168,5 +172,7 @@ fun i8(): TypeMatcher = { it == I8Type }
 fun u8(): TypeMatcher = { it == U8Type }
 
 fun u64(): TypeMatcher = { it == U64Type }
+
+fun fp(): TypeMatcher = { it is FloatingPointType }
 
 fun it_is(value: Value): ValueMatcher = { it == value }

@@ -208,6 +208,13 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return Xor.xor(first, second)
     }
 
+    override fun visit(fadd: Fxor): InstBuilder<Instruction> {
+        val first  = mapUsage<Value>(fadd.lhs())
+        val second = mapUsage<Value>(fadd.rhs())
+
+        return Fxor.xor(first, second)
+    }
+
     override fun visit(neg: Neg): InstBuilder<Instruction> {
         val operand = mapUsage<Value>(neg.operand())
         return Neg.neg(operand)

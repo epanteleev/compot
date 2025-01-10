@@ -24,10 +24,10 @@ class MoveLargeConstants private constructor(val functions: Map<String, Function
 
     private fun makeConstantOrNull(operand: Constant): GlobalConstant? {
         val global = when {
-            operand is U64Value && !canBeImm32(operand.u64) -> U64ConstantValue("$prefix${constantIndex}", operand.u64.toULong())
-            operand is I64Value && !canBeImm32(operand.i64) -> I64ConstantValue("$prefix${constantIndex}", operand.i64)
-            operand is F32Value -> F32ConstantValue("$prefix${constantIndex}", operand.f32)
-            operand is F64Value -> F64ConstantValue("$prefix${constantIndex}", operand.f64)
+            operand is U64Value && !canBeImm32(operand.u64) -> U64ConstantValue("$PREFIX${constantIndex}", operand.u64.toULong())
+            operand is I64Value && !canBeImm32(operand.i64) -> I64ConstantValue("$PREFIX${constantIndex}", operand.i64)
+            operand is F32Value -> F32ConstantValue("$PREFIX${constantIndex}", operand.f32)
+            operand is F64Value -> F64ConstantValue("$PREFIX${constantIndex}", operand.f64)
             else -> null
         }
         constantIndex += 1
@@ -50,7 +50,7 @@ class MoveLargeConstants private constructor(val functions: Map<String, Function
     }
 
     companion object {
-        private const val prefix = CallConvention.CONSTANT_POOL_PREFIX
+        private const val PREFIX = CallConvention.CONSTANT_POOL_PREFIX
 
         fun run(module: Module): Module {
             val functions = module.functions.toMutableMap()
