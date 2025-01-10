@@ -45,7 +45,7 @@ interface GPOperandsVisitorBinaryOp {
                                 else -> closure.default(dst, first, second)
                             }
                         }
-                        is ImmInt-> {
+                        is ImmInt -> {
                             when (second) {
                                 is GPRegister -> closure.rir(dst, first.asImm32(), second)
                                 is Address    -> closure.ria(dst, first.asImm32(), second)

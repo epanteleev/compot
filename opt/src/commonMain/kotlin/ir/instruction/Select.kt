@@ -39,7 +39,7 @@ class Select private constructor(id: Identity, owner: Block, private val ty: Int
         return operands[2]
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

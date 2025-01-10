@@ -32,7 +32,7 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
 
     fun valueType(): NonTrivialType = valueType
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

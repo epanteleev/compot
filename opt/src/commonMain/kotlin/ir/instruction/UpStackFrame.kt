@@ -5,7 +5,7 @@ import ir.module.block.Block
 
 
 class UpStackFrame(id: Identity, owner: Block, callable: Callable): AdjustStackFrame(id, owner, callable) {
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

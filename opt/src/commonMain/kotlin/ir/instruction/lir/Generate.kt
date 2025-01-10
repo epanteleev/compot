@@ -16,7 +16,7 @@ class Generate private constructor(id: Identity, owner: Block, private val alloc
 
     override fun type(): NonTrivialType = allocatedType
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

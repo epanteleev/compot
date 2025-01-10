@@ -32,7 +32,7 @@ class MoveByIndex private constructor(id: Identity, owner: Block, destination: V
 
     fun source(): Value = getOperand(2)
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

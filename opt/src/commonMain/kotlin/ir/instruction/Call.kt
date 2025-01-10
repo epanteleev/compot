@@ -34,7 +34,7 @@ class Call private constructor(id: Identity, owner: Block, private val func: Dir
         return func
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

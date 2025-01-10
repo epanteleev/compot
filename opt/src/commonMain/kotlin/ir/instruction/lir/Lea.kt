@@ -13,6 +13,7 @@ import ir.instruction.ValueInstruction
 import ir.instruction.matching.argumentByValue
 import ir.instruction.utils.IRInstructionVisitor
 import ir.value.ArgumentValue
+import ir.value.isa
 
 
 class Lea private constructor(id: Identity, owner: Block, value: Value):
@@ -32,7 +33,7 @@ class Lea private constructor(id: Identity, owner: Block, value: Value):
         return operands[0]
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

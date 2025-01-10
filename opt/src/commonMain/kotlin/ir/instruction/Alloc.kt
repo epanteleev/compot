@@ -13,7 +13,7 @@ class Alloc private constructor(id: Identity, owner: Block, val allocatedType: N
 
     override fun type(): PtrType = PtrType
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

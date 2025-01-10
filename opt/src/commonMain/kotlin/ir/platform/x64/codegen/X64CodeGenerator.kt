@@ -745,7 +745,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
             bb.instructions { instruction ->
                 asm.comment(instruction.dump())
-                instruction.visit(this)
+                instruction.accept(this)
             }
         }
     }

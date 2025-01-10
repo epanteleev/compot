@@ -27,7 +27,7 @@ class Not private constructor(id: Identity, owner: Block, tp: IntegerType, value
         return operands[0]
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

@@ -35,7 +35,7 @@ class Move private constructor(id: Identity, owner: Block, destination: Value, s
         return operands[0] as UsableValue
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

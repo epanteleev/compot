@@ -50,7 +50,7 @@ class Switch private constructor(id: Identity, owner: Block,
     fun default(): Block = default
     fun table(): Array<IntegerConstant> = table
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

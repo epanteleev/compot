@@ -11,7 +11,7 @@ import ir.module.block.Block
 
 class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Value, length: UnsignedIntegerConstant):
     Instruction(id, owner, arrayOf(dst, src, length)) {
-    override fun <T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun <T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

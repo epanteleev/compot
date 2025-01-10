@@ -46,7 +46,7 @@ class VoidCall private constructor(id: Identity,
         return builder.toString()
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

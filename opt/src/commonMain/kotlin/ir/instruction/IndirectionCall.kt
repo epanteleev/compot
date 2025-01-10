@@ -51,7 +51,7 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
 
     override fun attributes(): Set<FunctionAttribute> = attributes
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

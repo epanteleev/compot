@@ -17,7 +17,7 @@ class Fxor private constructor(id: Identity, owner: Block, tp: ArithmeticType, a
 
     override fun type(): FloatingPointType = tp.asType()
 
-    override fun <T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun <T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

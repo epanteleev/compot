@@ -35,7 +35,7 @@ class Intrinsic private constructor(id: Identity, owner: Block, private val inpu
         return targets[0]
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

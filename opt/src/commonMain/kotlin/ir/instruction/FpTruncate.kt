@@ -23,7 +23,7 @@ class FpTruncate private constructor(id: Identity, owner: Block, private val toT
 
     override fun type(): FloatingPointType = toType
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

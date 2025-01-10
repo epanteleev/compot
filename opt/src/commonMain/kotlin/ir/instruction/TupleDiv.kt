@@ -39,7 +39,7 @@ class TupleDiv private constructor(id: Identity, owner: Block, private val tp: T
         return proj(1)
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

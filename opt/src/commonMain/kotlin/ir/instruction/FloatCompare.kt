@@ -73,7 +73,7 @@ class FloatCompare private constructor(id: Identity, owner: Block, operandsType:
 
     override fun predicate(): FloatPredicate = predicate
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 
