@@ -554,20 +554,20 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
-    override fun visit(binary: TupleDiv) {
-        assert(TupleDiv.typeCheck(binary)) {
-            "Instruction '${binary.dump()}' requires all operands to be of the same type: a=${binary.first().type()}, b=${binary.second().type()}"
+    override fun visit(tupleDiv: TupleDiv) {
+        assert(TupleDiv.typeCheck(tupleDiv)) {
+            "Instruction '${tupleDiv.dump()}' requires all operands to be of the same type: a=${tupleDiv.first().type()}, b=${tupleDiv.second().type()}"
         }
 
         val projSet = hashSetOf<Int>()
-        for (proj in binary.usedIn()) {
+        for (proj in tupleDiv.usedIn()) {
             assert(proj is Projection) {
                 "Operand '$proj' must be a '${Projection.NAME}'"
             }
             proj as Projection
             val unchanged = projSet.add(proj.index())
             assert(unchanged) {
-                "Projection '$proj' is duplicated in '${binary.dump()}'"
+                "Projection '$proj' is duplicated in '${tupleDiv.dump()}'"
             }
         }
     }

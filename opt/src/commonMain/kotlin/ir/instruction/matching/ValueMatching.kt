@@ -130,6 +130,8 @@ fun generate(): ValueMatcher = {
     it is Generate
 }
 
+fun stackAlloc(): ValueMatcher = generate() or argumentByValue()
+
 inline fun alloc(crossinline type: TypeMatcher): ValueMatcher = {
     it is Alloc && type(it.allocatedType)
 }

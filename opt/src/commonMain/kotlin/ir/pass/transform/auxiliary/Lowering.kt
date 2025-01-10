@@ -1,5 +1,6 @@
 package ir.pass.transform.auxiliary
 
+import asm.x64.CondType
 import ir.types.*
 import ir.value.*
 import ir.module.Module
@@ -79,7 +80,18 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return div
     }
 
+
+
     override fun visit(neg: Neg): Instruction {
+        neg.match(neg(fp(), nop())) {
+            val constant = when (neg.asType<FloatingPointType>()) {
+                F32Type -> F32_SUBZERO
+                F64Type -> F64_SUBZERO
+            }
+
+            return bb.replace(neg, Fxor.xor(neg.operand(), constant))
+        }
+
         return neg
     }
 
@@ -326,6 +338,52 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(select: Select): Instruction {
+        select.match(select(nop(), value(i8()), value(i8()))) {
+            // Before:
+            //  %cond = icmp <predicate> i8 %a, %b
+            //  %res = select i1 %cond, i8 %onTrue, i8 %onFalse
+            //
+            // After:
+            //  %extOnTrue  = sext %onTrue to i16
+            //  %extOnFalse = sext %onFalse to i16
+            //  %cond = icmp <predicate> i8 %a, %b
+            //  %newSelect = select i1 %cond, i16 %extOnTrue, i16 %extOnFalse
+            //  %res = trunc %newSelect to i8
+
+            val insertPos = when(val selectCond = select.condition()) {
+                is CompareInstruction -> selectCond
+                else                  -> select
+            }
+
+            val extOnTrue  = bb.putBefore(insertPos, SignExtend.sext(select.onTrue(), I16Type))
+            val extOnFalse = bb.putBefore(insertPos, SignExtend.sext(select.onFalse(), I16Type))
+            val newSelect  = bb.putBefore(select, Select.select(select.condition(), I16Type, extOnTrue, extOnFalse))
+            return bb.replace(select, Truncate.trunc(newSelect, I8Type))
+        }
+
+        select.match(select(nop(), value(u8()), value(u8()))) {
+            // Before:
+            //  %cond = icmp <predicate> u8 %a, %b
+            //  %res = select i1 %cond, u8 %onTrue, u8 %onFalse
+            //
+            // After:
+            //  %extOnTrue  = zext %onTrue to u16
+            //  %extOnFalse = zext %onFalse to u16
+            //  %cond = icmp <predicate> u8 %a, %b
+            //  %newSelect = select i1 %cond, u16 %extOnTrue, u16 %extOnFalse
+            //  %res = trunc %newSelect to u8
+
+            val insertPos = when(val selectCond = select.condition()) {
+                is CompareInstruction -> selectCond
+                else                  -> select
+            }
+
+            val extOnTrue  = bb.putBefore(insertPos, ZeroExtend.zext(select.onTrue(), U16Type))
+            val extOnFalse = bb.putBefore(insertPos, ZeroExtend.zext(select.onFalse(), U16Type))
+            val newSelect  = bb.putBefore(select, Select.select(select.condition(), U16Type, extOnTrue, extOnFalse))
+            return bb.replace(select, Truncate.trunc(newSelect, U8Type))
+        }
+
         return select
     }
 
@@ -467,7 +525,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(memcpy: Memcpy): Instruction {
-        memcpy.match(memcpy(generate() or argumentByValue(), generate() or argumentByValue(), nop())) {
+        memcpy.match(memcpy(stackAlloc(), stackAlloc(), nop())) {
             // Before:
             //  memcpy %src, %dst
             //
@@ -484,7 +542,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return memcpy
         }
 
-        memcpy.match(memcpy(nop(), generate() or argumentByValue(), nop())) {
+        memcpy.match(memcpy(nop(), stackAlloc(), nop())) {
             // Before:
             //  memcpy %src, %dst
             //
@@ -500,7 +558,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return memcpy
         }
 
-        memcpy.match(memcpy(generate() or argumentByValue(), nop(), nop())) {
+        memcpy.match(memcpy(stackAlloc(), nop(), nop())) {
             // Before:
             //  memcpy %src, %dst
             //
@@ -551,8 +609,79 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return leaStack
     }
 
-    override fun visit(binary: TupleDiv): Instruction {
-        return binary
+    private fun truncateProjections(tupleDiv: TupleDiv, newDiv: TupleDiv, type: IntegerType): Instruction {
+        //  %projDiv = proj %newDiv, 0
+        //  %projRem = proj %newDiv, 1
+        //  %res = trunc %projDiv to u8
+        //  %rem = trunc %projRem to u8
+
+        val divProj = tupleDiv.quotient()
+        val quotient = bb.putBefore(tupleDiv, Projection.proj(newDiv, 0))
+        val quotientTrunc = bb.putBefore(tupleDiv, Truncate.trunc(quotient, type))
+        if (divProj != null) {
+            bb.updateUsages(divProj) { quotientTrunc }
+            killOnDemand(divProj)
+        }
+
+        val remainder = tupleDiv.remainder()
+        val proj      = bb.putBefore(tupleDiv, Projection.proj(newDiv, 1))
+        val remainderTruncate = bb.putBefore(tupleDiv, Truncate.trunc(proj, type))
+        if (remainder != null) {
+            bb.updateUsages(remainder) { remainderTruncate }
+            killOnDemand(remainder)
+        }
+        killOnDemand(tupleDiv)
+        return remainderTruncate
+    }
+
+    override fun visit(tupleDiv: TupleDiv): Instruction {
+        tupleDiv.match(tupleDiv(value(i8()), value(i8()))) {
+            // Before:
+            //  %resANDrem = div i8 %a, %b
+            //
+            // After:
+            //  %extFirst  = sext %a to i16
+            //  %extSecond = sext %b to i16
+            //  %newDiv = div i16 %extFirst, %extSecond
+            //  %projDiv = proj %newDiv, 0
+            //  %projRem = proj %newDiv, 1
+            //  %res = trunc %projDiv to i8
+            //  %rem = trunc %projRem to i8
+
+            val extFirst  = bb.putBefore(tupleDiv, SignExtend.sext(tupleDiv.first(), I16Type))
+            val extSecond = bb.putBefore(tupleDiv, SignExtend.sext(tupleDiv.second(), I16Type))
+            val newDiv    = bb.putBefore(tupleDiv, TupleDiv.div(extFirst, extSecond))
+
+            return truncateProjections(tupleDiv, newDiv, I8Type)
+        }
+        tupleDiv.match(tupleDiv(value(u8()), value(u8()))) {
+            // Before:
+            //  %resANDrem = div u8 %a, %b
+            //
+            // After:
+            //  %extFirst  = zext %a to u16
+            //  %extSecond = zext %b to u16
+            //  %newDiv = div u16 %extFirst, %extSecond
+            //  %projDiv = proj %newDiv, 0
+            //  %projRem = proj %newDiv, 1
+            //  %res = trunc %projDiv to u8
+            //  %rem = trunc %projRem to u8
+
+            val extFirst  = bb.putBefore(tupleDiv, ZeroExtend.zext(tupleDiv.first(), U16Type))
+            val extSecond = bb.putBefore(tupleDiv, ZeroExtend.zext(tupleDiv.second(), U16Type))
+            val newDiv    = bb.putBefore(tupleDiv, TupleDiv.div(extFirst, extSecond))
+
+            return truncateProjections(tupleDiv, newDiv, U8Type)
+        }
+        tupleDiv.match(tupleDiv(constant().not(), nop())) {
+            // TODO temporal
+            val second = tupleDiv.second()
+            val copy = bb.putBefore(tupleDiv, Copy.copy(second))
+            bb.updateDF(tupleDiv, TupleDiv.SECOND, copy)
+            return tupleDiv
+        }
+
+        return tupleDiv
     }
 
     override fun visit(proj: Projection): Instruction {
@@ -572,6 +701,9 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     companion object {
+        private val F32_SUBZERO = F32Value(-0.0f)
+        private val F64_SUBZERO = F64Value(-0.0)
+
         fun run(module: Module): Module {
             for (fn in module.functions()) {
                 Lowering(fn).pass()

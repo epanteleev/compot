@@ -59,7 +59,7 @@ abstract class IRInstructionVisitor<T> {
     abstract fun visit(store: StoreOnStack): T
     abstract fun visit(loadst: LoadFromStack): T
     abstract fun visit(leaStack: LeaStack): T
-    abstract fun visit(binary: TupleDiv): T
+    abstract fun visit(tupleDiv: TupleDiv): T
     abstract fun visit(proj: Projection): T
     abstract fun visit(switch: Switch): T
     abstract fun visit(tupleCall: IndirectionTupleCall): T
