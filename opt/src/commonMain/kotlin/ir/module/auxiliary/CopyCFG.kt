@@ -440,9 +440,9 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return LeaStack.lea(origin, leaStack.type(), index)
     }
 
-    override fun visit(binary: TupleDiv): InstBuilder<Instruction> {
-        val first  = mapUsage<Value>(binary.first())
-        val second = mapUsage<Value>(binary.second())
+    override fun visit(tupleDiv: TupleDiv): InstBuilder<Instruction> {
+        val first  = mapUsage<Value>(tupleDiv.first())
+        val second = mapUsage<Value>(tupleDiv.second())
 
         return TupleDiv.div(first,  second)
     }

@@ -330,14 +330,14 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         LeaStackCodegen(PtrType, leaStack.loadedType, asm)(dest, sourceOperand, index)
     }
 
-    override fun visit(binary: TupleDiv) {
-        val divType = binary.type()
+    override fun visit(tupleDiv: TupleDiv) {
+        val divType = tupleDiv.type()
 
-        val first  = registerAllocation.operand(binary.first())
-        val second = registerAllocation.operand(binary.second())
+        val first  = registerAllocation.operand(tupleDiv.first())
+        val second = registerAllocation.operand(tupleDiv.second())
 
         val quotientOperand = run {
-            val quotient = binary.quotient()
+            val quotient = tupleDiv.quotient()
             if (quotient != null) {
                 registerAllocation.operand(quotient)
             } else {
@@ -345,7 +345,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             }
         }
 
-        val remainderOperand = binary.remainder()
+        val remainderOperand = tupleDiv.remainder()
         assertion(remainderOperand != null) {
             "remainder is null"
         }

@@ -3,6 +3,7 @@ package ir.pass.transform.auxiliary
 import ir.global.*
 import ir.instruction.Instruction
 import ir.instruction.Load
+import ir.instruction.Store
 import ir.instruction.lir.Lea
 import ir.module.ExternFunction
 import ir.module.FunctionData
