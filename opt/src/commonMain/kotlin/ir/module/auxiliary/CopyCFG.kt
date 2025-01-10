@@ -13,7 +13,6 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.FunctionData
 import ir.module.block.Block
 import ir.pass.analysis.traverse.PreOrderFabric
-import ir.types.asType
 import ir.value.*
 import ir.value.constant.Constant
 
@@ -72,7 +71,7 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
     }
 
     private fun newInst(inst: Instruction): LocalValue? {
-        val builder = inst.visit(this)
+        val builder = inst.accept(this)
         val newInstruction = bb.put(builder)
         if (inst is LocalValue) {
             oldValuesToNew[inst] = newInstruction as LocalValue

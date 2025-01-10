@@ -37,7 +37,7 @@ class BranchCond private constructor(id: Identity, owner: Block, value: Value, o
         return targets[1]
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

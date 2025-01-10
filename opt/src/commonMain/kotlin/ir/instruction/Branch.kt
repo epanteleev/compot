@@ -19,7 +19,7 @@ class Branch private constructor(id: Identity, owner: Block, target: Block):
         return targets[0]
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

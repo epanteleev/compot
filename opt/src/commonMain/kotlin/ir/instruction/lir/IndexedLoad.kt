@@ -31,7 +31,7 @@ class IndexedLoad private constructor(id: Identity, owner: Block, private val lo
 
     fun index(): Value = checkedGet(1)
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

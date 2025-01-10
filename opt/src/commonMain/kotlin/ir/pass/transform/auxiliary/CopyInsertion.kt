@@ -8,6 +8,7 @@ import ir.module.SSAModule
 import ir.module.block.Block
 import ir.module.FunctionData
 import ir.instruction.matching.*
+import ir.value.isa
 
 
 internal class CopyInsertion private constructor(private val cfg: FunctionData) {

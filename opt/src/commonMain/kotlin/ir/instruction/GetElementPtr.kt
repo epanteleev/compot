@@ -32,7 +32,7 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
         return operands[INDEX]
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

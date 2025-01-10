@@ -144,7 +144,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
                 }
             }
 
-            instruction.visit(this)
+            instruction.accept(this)
         }
     }
 

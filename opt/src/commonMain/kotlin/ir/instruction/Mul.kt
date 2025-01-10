@@ -11,7 +11,7 @@ class Mul private constructor(id: Identity, owner: Block, tp: ArithmeticType, a:
 
     override fun type(): ArithmeticType = tp
 
-    override fun <T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun <T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

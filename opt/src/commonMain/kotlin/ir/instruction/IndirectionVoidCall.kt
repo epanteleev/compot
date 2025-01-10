@@ -45,7 +45,7 @@ class IndirectionVoidCall private constructor(id: Identity,
 
     override fun attributes(): Set<FunctionAttribute> = attributes
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

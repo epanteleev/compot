@@ -13,7 +13,7 @@ class Or private constructor(id: Identity, owner: Block, tp: IntegerType, a: Val
 
     override fun type(): IntegerType = tp as IntegerType
 
-    override fun <T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun <T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

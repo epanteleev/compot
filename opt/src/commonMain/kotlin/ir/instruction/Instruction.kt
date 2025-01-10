@@ -88,7 +88,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
         }
     }
 
-    abstract fun<T> visit(visitor: IRInstructionVisitor<T>): T
+    abstract fun<T> accept(visitor: IRInstructionVisitor<T>): T
 
     final override fun equals(other: Any?): Boolean {
         if (this === other) return true

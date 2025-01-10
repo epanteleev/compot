@@ -27,7 +27,7 @@ class Int2Float private constructor(id: Identity, owner: Block, private val toTy
 
     override fun type(): FloatingPointType = toType
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

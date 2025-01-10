@@ -1,23 +1,18 @@
 package ir.value
 
 import ir.types.*
-import ir.instruction.matching.ValueMatcher
 
 
 interface Value {
     fun type(): Type
+}
 
-    fun isa(matcher: ValueMatcher): Boolean {
-        return matcher(this)
+inline fun<reified T> Value.isa(matcher: (T) -> Boolean): Boolean {
+    if (this !is T) {
+        return false
     }
 
-    fun match(matcher: ValueMatcher, action: (Value) -> Value?) {
-        if (!isa(matcher)) {
-            return
-        }
-
-        action(this)
-    }
+    return matcher(this)
 }
 
 inline fun<reified T> Value.asType(): T {

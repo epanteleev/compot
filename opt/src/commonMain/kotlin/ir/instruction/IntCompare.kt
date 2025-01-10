@@ -14,7 +14,7 @@ class IntCompare private constructor(id: Identity, owner: Block, operandsType: P
 
     override fun predicate(): IntPredicate = predicate
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

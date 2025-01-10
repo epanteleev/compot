@@ -13,7 +13,7 @@ class Div private constructor(id: Identity, owner: Block, tp: FloatingPointType,
 
     override fun type(): FloatingPointType = tp as FloatingPointType
 
-    override fun <T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun <T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 

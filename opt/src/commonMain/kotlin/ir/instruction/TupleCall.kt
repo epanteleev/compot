@@ -34,7 +34,7 @@ class TupleCall private constructor(id: Identity,
         return tp.asType()
     }
 
-    override fun<T> visit(visitor: IRInstructionVisitor<T>): T {
+    override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 
