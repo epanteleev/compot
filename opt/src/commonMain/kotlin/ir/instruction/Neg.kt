@@ -15,9 +15,7 @@ class Neg private constructor(id: Identity, owner: Block, tp: ArithmeticType, va
         return "%${name()} = $NAME $tp ${operand()}"
     }
 
-    override fun type(): ArithmeticType {
-        return tp as ArithmeticType
-    }
+    override fun type(): ArithmeticType = tp
 
     fun operand(): Value {
         assertion(operands.size == 1) {

@@ -4,7 +4,6 @@ import tokenizer.tokens.*
 import tokenizer.LexicalElements.keywords
 import tokenizer.LexicalElements.isOperator2
 import tokenizer.LexicalElements.isOperator3
-import tokenizer.StringReader.Companion.isSeparator
 import tokenizer.StringReader.Companion.tryPunct
 import kotlin.math.pow
 

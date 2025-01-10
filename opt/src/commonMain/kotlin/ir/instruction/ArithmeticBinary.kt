@@ -6,7 +6,7 @@ import ir.module.block.Block
 import ir.types.ArithmeticType
 
 
-sealed class ArithmeticBinary(id: Identity, owner: Block, protected val tp: ArithmeticType, a: Value, b: Value) :
+abstract class ArithmeticBinary(id: Identity, owner: Block, protected val tp: ArithmeticType, a: Value, b: Value) :
     ValueInstruction(id, owner, arrayOf(a, b)) {
 
     fun lhs(): Value {

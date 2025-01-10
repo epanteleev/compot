@@ -119,11 +119,15 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val second = registerAllocation.operand(xor.rhs())
         val dst    = registerAllocation.operand(xor)
 
-        when (val type = xor.type()) {
-            is IntegerType       -> XorCodegen(type, asm)(dst, first, second)
-            is FloatingPointType -> FXorCodegen(type, asm)(dst, first, second)
-            is UndefType         -> {}
-        }
+        XorCodegen(xor.type(), asm)(dst, first, second)
+    }
+
+    override fun visit(fadd: Fxor) {
+        val first  = registerAllocation.operand(fadd.lhs())
+        val second = registerAllocation.operand(fadd.rhs())
+        val dst    = registerAllocation.operand(fadd)
+
+        FXorCodegen(fadd.type(), asm)(dst, first, second)
     }
 
     override fun visit(mul: Mul) {

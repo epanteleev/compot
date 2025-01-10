@@ -14,6 +14,7 @@ abstract class IRInstructionVisitor<T> {
     abstract fun visit(mul: Mul): T
     abstract fun visit(or: Or): T
     abstract fun visit(xor: Xor): T
+    abstract fun visit(fadd: Fxor): T
     abstract fun visit(shl: Shl): T
     abstract fun visit(shr: Shr): T
     abstract fun visit(div: Div): T
