@@ -1,34 +1,6 @@
 package startup
 
-import common.Files
-
-enum class Extension(val value: String) {
-    C(".c"),
-    IR(".ir"),
-    ASM(".s"),
-    OBJ(".o"),
-    EXE(".exe")
-}
-
-data class ProcessedFile(val filename: String, val extension: Extension) {
-    fun basename(): String {
-        return Files.getBasename(filename)
-    }
-
-    companion object {
-        fun fromFilename(filename: String): ProcessedFile {
-            val extension = when {
-                filename.endsWith(Extension.C.value) -> Extension.C
-                filename.endsWith(Extension.IR.value) -> Extension.IR
-                filename.endsWith(Extension.ASM.value) -> Extension.ASM
-                filename.endsWith(Extension.OBJ.value) -> Extension.OBJ
-                else -> Extension.EXE
-            }
-
-            return ProcessedFile(filename, extension)
-        }
-    }
-}
+import common.ProcessedFile
 
 
 class ShlangCLIArguments {
@@ -41,7 +13,7 @@ class ShlangCLIArguments {
 
     private var dumpIrDirectoryOutput: String? = null
     private var optimizationLevel = 0
-    private var outFilename = ProcessedFile.fromFilename("a.out")
+    private var outFilename = ProcessedFile.create("a", common.Extension.EXE)
 
     fun inputs(): List<ProcessedFile> = inputs
 

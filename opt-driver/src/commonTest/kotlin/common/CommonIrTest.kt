@@ -1,5 +1,6 @@
 package common
 
+import ir.read.ModuleReader
 import startup.*
 
 
@@ -21,7 +22,8 @@ abstract class CommonIrTest: CommonTest() {
                 listOf("-o", "$output.o")
 
         val cli = CliParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
-        OptDriver(cli).compile()
+        val module = ModuleReader.read(cli.inputs().first().filename)
+        OptDriver.compile(cli, module)
 
         runGCC(output, extraFiles)
     }

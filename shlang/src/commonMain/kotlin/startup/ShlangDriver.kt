@@ -2,8 +2,10 @@ package startup
 
 import common.pwd
 import codegen.IRGen
+import common.Extension
 import common.Files
 import common.GNULdRunner
+import common.ProcessedFile
 import preprocess.*
 import ir.module.Module
 import okio.FileSystem
@@ -69,7 +71,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
 
     private fun makeOptCLIArguments(inputFilename: String): OptCLIArguments {
         val optCLIArguments = OptCLIArguments()
-        optCLIArguments.setFilename(inputFilename)
+        optCLIArguments.setFilename(ProcessedFile.create(inputFilename, Extension.IR))
         optCLIArguments.setOptLevel(cli.getOptLevel())
 
         val dumpIrDirectoryOutput = cli.getDumpIrDirectory()
@@ -78,7 +80,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         }
 
         val outFilename = cli.getOutputFilename()
-        optCLIArguments.setOutputFilename(outFilename.filename)
+        optCLIArguments.setOutputFilename(outFilename.withExtension(Extension.OBJ))
         return optCLIArguments
     }
 
@@ -92,9 +94,20 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
     }
 
     fun run() {
+        val compiledFiles = arrayListOf<ProcessedFile>()
         for (input in cli.inputs()) {
+            if (input.extension == Extension.OBJ) {
+                compiledFiles.add(input)
+                continue
+            }
+
+            if (input.extension != Extension.C) {
+                continue
+            }
+
             val module = compile(input.filename) ?: continue
-            OptDriver(makeOptCLIArguments(input.filename)).compile(module)
+            val cli = makeOptCLIArguments(input.filename)
+            compiledFiles.add(OptDriver.compile(cli, module))
         }
 
         val out = cli.getOutputFilename()
@@ -103,9 +116,10 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         }
 
         val objModules = SystemConfig.crtObjects() ?: throw IllegalStateException("Cannot find crt objects")
-        val result = GNULdRunner("a.out")
+        val result = GNULdRunner(out)
             .libs(SystemConfig.runtimeLibraries())
-            .objs(objModules + out.filename)
+            .libPaths(SystemConfig.runtimePathes())
+            .objs(objModules + compiledFiles.map { it.filename })
             .dynamicLinker(SystemConfig.dynamicLinker())
             .execute()
 

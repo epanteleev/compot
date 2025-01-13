@@ -1,14 +1,16 @@
 package ir.read
 
-import ir.global.*
 import ir.types.*
+import ir.global.*
+import okio.FileSystem
 import ir.module.Module
 import ir.read.bulder.*
 import ir.read.tokens.*
 import ir.value.constant.*
+import okio.Path.Companion.toPath
 
 
-class ModuleReader(string: String) {
+class ModuleReader private constructor(string: String) {
     private val tokenIterator = Tokenizer(string).iterator()
     private val moduleBuilder = ModuleBuilderWithContext.create()
 
@@ -292,8 +294,23 @@ class ModuleReader(string: String) {
         FunctionBlockReader.parse(tokenIterator, moduleBuilder, fn)
     }
 
-    fun read(): Module {
+    private fun read(): Module {
         parseModule()
         return moduleBuilder.build()
+    }
+
+    companion object {
+        fun read(name: String): Module {
+            val text = FileSystem.SYSTEM.read(name.toPath()) {
+                readUtf8()
+            }
+
+            try {
+                return ModuleReader(text).read()
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+                throw e
+            }
+        }
     }
 }

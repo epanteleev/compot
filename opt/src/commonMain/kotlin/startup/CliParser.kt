@@ -1,62 +1,6 @@
 package startup
 
-import common.Files
-
-
-class OptCLIArguments {
-    private var dumpIrDirectoryOutput: String? = null
-    private var optimizationLevel = 0
-    private var outFilename: String? = null
-
-    fun isDumpIr(): Boolean = dumpIrDirectoryOutput != null
-
-    fun getDumpIrDirectory(): String {
-        return dumpIrDirectoryOutput!!
-    }
-
-    fun setDumpIrDirectory(out: String) {
-        dumpIrDirectoryOutput = out
-    }
-
-    fun setOutputFilename(name: String) {
-        outFilename = name
-    }
-
-    fun getOptLevel(): Int = optimizationLevel
-    fun setOptLevel(level: Int) {
-        optimizationLevel = level
-    }
-
-    private fun getName(name: String): String {
-        return Files.getBasename(name)
-    }
-
-    private var inputFilename = "<input>"
-
-    fun getOutputFilename(): String {
-        if (outFilename != null) {
-            return outFilename!!
-        }
-
-        val name = getFilename()
-        val lastIndex = name.lastIndexOf('.')
-        val basename = if (lastIndex != -1) {
-            name.substring(0, lastIndex)
-        } else {
-            name
-        }
-
-        return "$basename.o"
-    }
-
-    fun getFilename(): String = inputFilename
-    fun getBasename(): String = getName(inputFilename)
-
-    fun setFilename(name: String) {
-        inputFilename = name
-    }
-}
-
+import common.ProcessedFile
 
 object CliParser {
     fun parse(args: Array<String>): OptCLIArguments? {
@@ -76,7 +20,8 @@ object CliParser {
                         return null
                     }
                     cursor++
-                    commandLineArguments.setFilename(args[cursor])
+                    val outputFilename = ProcessedFile.fromFilename(args[cursor])
+                    commandLineArguments.setFilename(outputFilename)
                 }
                 "-O1" -> {
                     commandLineArguments.setOptLevel(1)
@@ -95,7 +40,8 @@ object CliParser {
                         return null
                     }
                     cursor++
-                    commandLineArguments.setOutputFilename(args[cursor])
+                    val outputFilename = ProcessedFile.fromFilename(args[cursor])
+                    commandLineArguments.setOutputFilename(outputFilename)
                 }
                 "-h", "--help" -> {
                     printHelp()

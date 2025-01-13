@@ -1,23 +1,29 @@
 package startup
 
+import okio.FileSystem
+
+import kotlin.random.Random
 import common.ExecutionResult
+import common.Extension
 import common.GNUAssemblerRunner
+import common.ProcessedFile
 import ir.module.Module
 import ir.pass.CompileContext
 import ir.pass.PassPipeline
-import ir.read.ModuleReader
+import okio.Path.Companion.toPath
 import ir.pass.CompileContextBuilder
-import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.CompiledModule
 import ir.platform.common.TargetPlatform
-import okio.FileSystem
-import okio.Path.Companion.toPath
-import kotlin.random.Random
+import ir.platform.common.CodeGenerationFactory
 
 
-class OptDriver(private val commandLineArguments: OptCLIArguments) {
+class OptDriver private constructor(private val commandLineArguments: OptCLIArguments) {
+    private fun inputBasename(): String {
+        return commandLineArguments.inputs().first().basename()
+    }
+
     private fun runCompiler(suffix: String, asmFile: String, module: Module, pipeline: (CompileContext) -> PassPipeline): ExecutionResult {
-        val builder = CompileContextBuilder(commandLineArguments.getBasename())
+        val builder = CompileContextBuilder(inputBasename())
             .setSuffix(suffix)
 
         if (commandLineArguments.isDumpIr()) {
@@ -31,23 +37,24 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
             .setTarget(TargetPlatform.X64)
 
         val unoptimisedCode = codeGenerationFactory.build(unoptimizedIr)
-        return writeAsmFile(unoptimisedCode, asmFile)
+        return compileAsmFile(unoptimisedCode, asmFile)
     }
 
-    private fun writeAsmFile(compiledModule: CompiledModule, asmFileName: String): ExecutionResult {
-        val temp = FileSystem.SYSTEM_TEMPORARY_DIRECTORY.resolve(OPT + Random.nextInt())
-        val optimizedAsm = temp.toString()
+    private fun compileAsmFile(compiledModule: CompiledModule, asmFileName: String): ExecutionResult {
+        val tempDir = FileSystem.SYSTEM_TEMPORARY_DIRECTORY.resolve(OPT + Random.nextInt())
+        val optimizedAsm = tempDir.toString()
         try {
-            FileSystem.SYSTEM.write(temp) {
+            FileSystem.SYSTEM.write(tempDir) {
                 writeUtf8(compiledModule.toString())
             }
 
             if (commandLineArguments.isDumpIr()) {
-                val dst = "${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/$asmFileName".toPath()
-                FileSystem.SYSTEM.copy(temp, dst)
+                val dst = "${commandLineArguments.getDumpIrDirectory()}/${inputBasename()}/$asmFileName".toPath()
+                FileSystem.SYSTEM.copy(tempDir, dst)
             }
 
-            return GNUAssemblerRunner.compileAsm(optimizedAsm, commandLineArguments.getOutputFilename())
+            val output = commandLineArguments.getOutputFilename().withExtension(Extension.OBJ)
+            return GNUAssemblerRunner.compileAsm(optimizedAsm, output.filename)
         } finally {
             FileSystem.SYSTEM.delete(optimizedAsm.toPath())
         }
@@ -57,46 +64,36 @@ class OptDriver(private val commandLineArguments: OptCLIArguments) {
         if (!commandLineArguments.isDumpIr()) {
             return
         }
-        val directoryName = "${commandLineArguments.getDumpIrDirectory()}/${commandLineArguments.getBasename()}/".toPath()
+        val directoryName = "${commandLineArguments.getDumpIrDirectory()}/${inputBasename()}/".toPath()
 
         if (!FileSystem.SYSTEM.exists(directoryName)) {
             FileSystem.SYSTEM.createDirectories(directoryName)
         }
     }
 
-    fun compile(module: Module) {
+    private fun compile(module: Module): ProcessedFile {
         removeOrCreateDir()
         val result = if (commandLineArguments.getOptLevel() == 0) {
             runCompiler(".base", BASE, module, PassPipeline::base)
         } else if (commandLineArguments.getOptLevel() == 1) {
             runCompiler(".opt", OPT, module, PassPipeline::opt)
         } else {
-            println("Invalid optimization level: ${commandLineArguments.getOptLevel()}")
-            return
+            throw IllegalArgumentException("Invalid optimization level: ${commandLineArguments.getOptLevel()}")
         }
 
         if (result.exitCode != 0) {
-            println("Error: ${result.error}")
-        }
-    }
-
-    fun compile() {
-        val text = FileSystem.SYSTEM.read(commandLineArguments.getFilename().toPath()) {
-            readUtf8()
+            throw IllegalStateException("execution failed with code ${result.exitCode}:\n${result.error}")
         }
 
-        val module = try {
-            ModuleReader(text).read()
-        } catch (e: Exception) {
-            println("Error: ${e.message}")
-            throw e
-        }
-
-        compile(module)
+        return commandLineArguments.getOutputFilename().withExtension(Extension.OBJ)
     }
 
     companion object {
-        const val BASE = "base.S"
-        const val OPT = "opt.S"
+        private const val BASE = "base.S"
+        private const val OPT = "opt.S"
+
+        fun compile(cli: OptCLIArguments, module: Module): ProcessedFile {
+            return OptDriver(cli).compile(module)
+        }
     }
 }
