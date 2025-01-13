@@ -98,10 +98,16 @@ object CCLIParser {
         println("  -E                        Preprocess only; do not compile, assemble or link")
     }
 
-
     private val IGNORED_OPTIONS = hashSetOf(
         "-Wall",
         "-pedantic",
         "-ansi",
+        "-std=c11",
+        "-g",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wno-switch",
+        "-fno-common",
     )
 }

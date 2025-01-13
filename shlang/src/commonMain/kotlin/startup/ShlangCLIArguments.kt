@@ -2,6 +2,34 @@ package startup
 
 import common.Files
 
+enum class Extension(val value: String) {
+    C(".c"),
+    IR(".ir"),
+    ASM(".s"),
+    OBJ(".o"),
+    EXE(".exe")
+}
+
+data class ProcessedFile(val filename: String, val extension: Extension) {
+    fun basename(): String {
+        return Files.getBasename(filename)
+    }
+
+    companion object {
+        fun fromFilename(filename: String): ProcessedFile {
+            val extension = when {
+                filename.endsWith(Extension.C.value) -> Extension.C
+                filename.endsWith(Extension.IR.value) -> Extension.IR
+                filename.endsWith(Extension.ASM.value) -> Extension.ASM
+                filename.endsWith(Extension.OBJ.value) -> Extension.OBJ
+                else -> Extension.EXE
+            }
+
+            return ProcessedFile(filename, extension)
+        }
+    }
+}
+
 
 class ShlangCLIArguments {
     private val includeDirectories = hashSetOf<String>()
@@ -9,44 +37,31 @@ class ShlangCLIArguments {
     private var preprocessOnly = false
     private var dumpDefines = false
     private var optionC = false
-    private var inputFilename = "<input>"
+    private var inputs = arrayListOf<ProcessedFile>()
 
     private var dumpIrDirectoryOutput: String? = null
     private var optimizationLevel = 0
-    private var outFilename: String? = null
+    private var outFilename = ProcessedFile.fromFilename("a.out")
 
-    fun isDumpIr(): Boolean = dumpIrDirectoryOutput != null
+    fun inputs(): List<ProcessedFile> = inputs
 
     fun setDumpIrDirectory(out: String) {
         dumpIrDirectoryOutput = out
     }
 
+    fun getDumpIrDirectory(): String? = dumpIrDirectoryOutput
+
     fun setOutputFilename(name: String) {
-        outFilename = name
+        outFilename = ProcessedFile.fromFilename(name)
     }
 
     fun setOptLevel(level: Int) {
         optimizationLevel = level
     }
 
-    fun getOutputFilename(): String {
-        if (outFilename != null) {
-            return outFilename!!
-        }
+    fun getOptLevel(): Int = optimizationLevel
 
-        val name = getFilename()
-        val lastIndex = name.lastIndexOf('.')
-        val basename = if (lastIndex != -1) {
-            name.substring(0, lastIndex)
-        } else {
-            name
-        }
-
-        return "$basename.o"
-    }
-
-    fun getFilename(): String = inputFilename
-    fun getBasename(): String = Files.getBasename(inputFilename)
+    fun getOutputFilename(): ProcessedFile = outFilename
 
     fun setDumpDefines(dumpDefines: Boolean) {
         this.dumpDefines = dumpDefines
@@ -63,11 +78,7 @@ class ShlangCLIArguments {
     }
 
     fun setInputFileName(executableFileName: String) {
-        inputFilename = executableFileName
-
-        if (outFilename == null && Files.getExtension(executableFileName) == ".o") {
-            setOutputFilename(Files.replaceExtension(executableFileName, ".o"))
-        }
+        inputs.add(ProcessedFile.fromFilename(executableFileName))
     }
 
     fun isPreprocessOnly(): Boolean = preprocessOnly
@@ -84,17 +95,4 @@ class ShlangCLIArguments {
     fun getDefines(): Map<String, String> = defines
 
     fun getIncludeDirectories(): Set<String> = includeDirectories
-
-    fun makeOptCLIArguments(): OptCLIArguments {
-        val optCLIArguments = OptCLIArguments()
-        optCLIArguments.setFilename(inputFilename)
-        optCLIArguments.setOptLevel(optimizationLevel)
-        if (isDumpIr()) {
-            optCLIArguments.setDumpIrDirectory(dumpIrDirectoryOutput!!)
-        }
-        if (outFilename != null) {
-            optCLIArguments.setOutputFilename(outFilename!!)
-        }
-        return optCLIArguments
-    }
 }

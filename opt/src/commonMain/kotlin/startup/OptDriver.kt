@@ -12,7 +12,6 @@ import ir.platform.common.CompiledModule
 import ir.platform.common.TargetPlatform
 import okio.FileSystem
 import okio.Path.Companion.toPath
-import okio.SYSTEM
 import kotlin.random.Random
 
 

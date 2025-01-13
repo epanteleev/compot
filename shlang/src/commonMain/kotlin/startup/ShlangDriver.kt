@@ -38,8 +38,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         return ctx
     }
 
-    private fun preprocess(): TokenList? {
-        val filename = cli.getFilename()
+    private fun preprocess(filename: String): TokenList? {
         val source = FileSystem.SYSTEM.read(filename.toPath()) {
             readUtf8()
         }
@@ -68,27 +67,45 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         }
     }
 
-    private fun compile(): Module? {
-        val postProcessedTokens = preprocess()?: return null
+    private fun makeOptCLIArguments(inputFilename: String): OptCLIArguments {
+        val optCLIArguments = OptCLIArguments()
+        optCLIArguments.setFilename(inputFilename)
+        optCLIArguments.setOptLevel(cli.getOptLevel())
 
-        val parser     = CProgramParser.build(cli.getFilename(), postProcessedTokens)
+        val dumpIrDirectoryOutput = cli.getDumpIrDirectory()
+        if (dumpIrDirectoryOutput != null) {
+            optCLIArguments.setDumpIrDirectory(dumpIrDirectoryOutput)
+        }
+
+        val outFilename = cli.getOutputFilename()
+        optCLIArguments.setOutputFilename(outFilename.filename)
+        return optCLIArguments
+    }
+
+    private fun compile(filename: String): Module? {
+        val postProcessedTokens = preprocess(filename)?: return null
+
+        val parser     = CProgramParser.build(filename, postProcessedTokens)
         val program    = parser.translation_unit()
         val typeHolder = parser.typeHolder()
         return IRGen.apply(typeHolder, program)
     }
 
     fun run() {
-        val module = compile() ?: return
-        OptDriver(cli.makeOptCLIArguments()).compile(module)
+        for (input in cli.inputs()) {
+            val module = compile(input.filename) ?: continue
+            OptDriver(makeOptCLIArguments(input.filename)).compile(module)
+        }
 
-        if (cli.getOutputFilename().endsWith(".o")) {
+        val out = cli.getOutputFilename()
+        if (out.extension != Extension.EXE) {
             return
         }
 
         val objModules = SystemConfig.crtObjects() ?: throw IllegalStateException("Cannot find crt objects")
         val result = GNULdRunner("a.out")
             .libs(SystemConfig.runtimeLibraries())
-            .objs(objModules + cli.getOutputFilename())
+            .objs(objModules + out.filename)
             .dynamicLinker(SystemConfig.dynamicLinker())
             .execute()
 
