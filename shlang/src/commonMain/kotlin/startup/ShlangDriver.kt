@@ -115,11 +115,11 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
             return
         }
 
-        val objModules = SystemConfig.crtObjects() ?: throw IllegalStateException("Cannot find crt objects")
         val result = GNULdRunner(out)
             .libs(SystemConfig.runtimeLibraries())
             .libPaths(SystemConfig.runtimePathes())
-            .objs(objModules + compiledFiles.map { it.filename })
+            .crtObjects(SystemConfig.crtObjects())
+            .objs(compiledFiles.map { it.filename })
             .dynamicLinker(SystemConfig.dynamicLinker())
             .execute()
 
