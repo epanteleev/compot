@@ -2,6 +2,9 @@ package startup
 
 import okio.FileSystem
 import okio.Path.Companion.toPath
+import kotlin.io.path.Path
+import kotlin.io.path.listDirectoryEntries
+
 
 object SystemConfig {
     fun systemHeadersPaths(): List<String>? {
@@ -17,10 +20,14 @@ object SystemConfig {
         return paths.takeIf { it.isNotEmpty() }
     }
 
-    fun crtObjects(): List<String>? {
+    fun crtObjects(): List<String> {
+        val crtPath = Path(CRT_OBJECT_GCC)
+            .listDirectoryEntries()
+            .first()
+
         val objects = arrayListOf<String>()
         for (gccPath in crtGCCObjects) {
-            objects.add("$CRT_OBJECT_GCC$gccPath")
+            objects.add("$crtPath/$gccPath")
         }
 
         if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
@@ -31,7 +38,7 @@ object SystemConfig {
             return objects + crtObjects.mapTo(ArrayList()) { "$CRT_OBJECT_PATH$it" }
         }
 
-        return null
+        return objects
     }
 
     fun dynamicLinker(): String = "/lib64/ld-linux-x86-64.so.2"
@@ -41,7 +48,6 @@ object SystemConfig {
         "-L/lib64",
         "-L/usr/lib",
         "-L/lib",
-        "-lc",
     )
 
     fun runtimeLibraries(): List<String> = arrayListOf("-lc")
@@ -65,5 +71,5 @@ object SystemConfig {
     private const val USR_INCLUDE_GNU_LINUX_PATH = "/usr/include/x86_64-linux-gnu/"
     private const val CRT_OBJECT_GNU_LINUX_PATH = "/usr/lib/x86_64-linux-gnu/"
 
-    private const val CRT_OBJECT_GCC = "/usr/lib/gcc/x86_64-pc-linux-gnu/14.2.1/"
+    private const val CRT_OBJECT_GCC = "/usr/lib/gcc/x86_64-pc-linux-gnu/"
 }
