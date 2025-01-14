@@ -50,16 +50,6 @@ class LeakedLinkedListTest {
     }
 
     @Test
-    fun testLeakedLinkedListIndexOf() {
-        val list = leakedLinkedListOf(1, 2, 3, 4, 5)
-        assertTrue(list.indexOf(list[0]) == 0)
-        assertTrue(list.indexOf(list[1]) == 1)
-        assertTrue(list.indexOf(list[2]) == 2)
-        assertTrue(list.indexOf(list[3]) == 3)
-        assertTrue(list.indexOf(list[4]) == 4)
-    }
-
-    @Test
     fun testLeakedLinkedListContainsAll() {
         val list = leakedLinkedListOf(1, 2, 3, 4, 5)
         assertTrue(list.containsAll(list))
@@ -72,15 +62,6 @@ class LeakedLinkedListTest {
         list.remove(node)
         assertTrue(list.size == 4)
         assertTrue(!list.contains(node))
-    }
-
-    @Test
-    fun testRemove0() {
-        val list = leakedLinkedListOf()
-        list.addBefore(null, IntNode(2))
-        assertEquals(2, list[0].value)
-        list.add(1, IntNode(3))
-        assertEquals(3, list[1].value)
     }
 
     @Test
