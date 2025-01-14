@@ -38,20 +38,7 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
         return current as T
     }
 
-    fun indexOf(element: T): Int {
-        var current: LListNode? = head
-        var index = 0
-        while (current != null) {
-            if (current == element) {
-                return index
-            }
-            current = current.next
-            index++
-        }
-        return -1
-    }
-
-    fun add(index: Int, value: T) {
+    private fun add(index: Int, value: T) {
         checkInvariants(value)
         modificationCount++
         if (index == size) {
@@ -109,21 +96,6 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
             tail = value
         }
         size++
-    }
-
-    fun removeIf(predicate: (T) -> Boolean): Boolean {
-        var current: LListNode? = head
-        while (current != null) {
-            @Suppress("UNCHECKED_CAST")
-            if (predicate(current as T)) {
-                val next = current.next
-                remove(current)
-                current = next
-                continue
-            }
-            current = current.next
-        }
-        return false
     }
 
     fun removeLast(): T {
@@ -284,21 +256,6 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
                 return result!!
             }
         }
-    }
-
-
-    fun lastIndexOf(element: T): Int {
-        var current = tail
-        var index = size - 1
-        while (current != null) {
-            if (current == element) {
-                return index
-            }
-            @Suppress("UNCHECKED_CAST")
-            current = current.prev as T?
-            index--
-        }
-        return -1
     }
 
     override fun toString(): String {

@@ -20,10 +20,9 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
     private val allCalls = run { //TODO separate analysis pass
         val calls = arrayListOf<Instruction>()
         for (bb in cfg) {
-            for (inst in bb) {
-                if (inst is Callable) {
-                    calls.add(inst)
-                }
+            val last = bb.last()
+            if (last is Callable) {
+                calls.add(last)
             }
         }
         calls

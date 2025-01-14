@@ -9,7 +9,7 @@ TESTS=$(TEST_SRCS:.c=.exe)
 # Stage 1
 
 chibicc: $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) -O1 $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OBJS): chibicc.h
 
