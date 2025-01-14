@@ -16,27 +16,31 @@ class OptCLIArguments {
         return dumpIrDirectoryOutput!!
     }
 
-    fun setDumpIrDirectory(out: String) {
+    fun setDumpIrDirectory(out: String?): OptCLIArguments {
         dumpIrDirectoryOutput = out
+        return this
     }
 
-    fun setOutputFilename(output: ProcessedFile) {
+    fun setOutputFilename(output: ProcessedFile): OptCLIArguments {
         outFilename = output
+        return this
     }
 
     fun getOptLevel(): Int = optimizationLevel
-    fun setOptLevel(level: Int) {
+    fun setOptLevel(level: Int): OptCLIArguments {
         optimizationLevel = level
+        return this
     }
 
     fun getOutputFilename(): ProcessedFile = outFilename
 
-    fun setFilename(name: ProcessedFile) {
+    fun setFilename(name: ProcessedFile): OptCLIArguments {
         if (name.extension != Extension.IR) {
             throw IllegalArgumentException("Invalid file extension: ${name.extension}")
         }
 
         inputFilename.add(name)
+        return this
     }
 
     fun inputs(): List<ProcessedFile> = inputFilename

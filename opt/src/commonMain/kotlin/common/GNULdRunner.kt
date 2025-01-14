@@ -49,11 +49,6 @@ class GNULdRunner(val outputFileName: ProcessedFile) {
         }
         gnuLdCommandLine.addAll(libs)
 
-        for (lib in gnuLdCommandLine) {
-            print("$lib ")
-        }
-        println()
-
         return runCommand("ld", gnuLdCommandLine, null)
     }
 }

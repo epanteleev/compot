@@ -69,18 +69,19 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         }
     }
 
-    private fun makeOptCLIArguments(inputFilename: String): OptCLIArguments {
+    private fun makeOptCLIArguments(inputFilename: ProcessedFile): OptCLIArguments {
         val optCLIArguments = OptCLIArguments()
-        optCLIArguments.setFilename(ProcessedFile.create(inputFilename, Extension.IR))
-        optCLIArguments.setOptLevel(cli.getOptLevel())
-
-        val dumpIrDirectoryOutput = cli.getDumpIrDirectory()
-        if (dumpIrDirectoryOutput != null) {
-            optCLIArguments.setDumpIrDirectory(dumpIrDirectoryOutput)
-        }
+        optCLIArguments.setFilename(inputFilename.withExtension(Extension.IR))
+            .setOptLevel(cli.getOptLevel())
+            .setDumpIrDirectory(cli.getDumpIrDirectory())
 
         val outFilename = cli.getOutputFilename()
-        optCLIArguments.setOutputFilename(outFilename.withExtension(Extension.OBJ))
+        if (cli.isCompile() && outFilename == ShlangCLIArguments.DEFAULT_OUTPUT) {
+            optCLIArguments.setOutputFilename(inputFilename.withExtension(Extension.OBJ))
+        } else {
+            optCLIArguments.setOutputFilename(outFilename.withExtension(Extension.OBJ))
+        }
+
         return optCLIArguments
     }
 
@@ -106,8 +107,14 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
             }
 
             val module = compile(input.filename) ?: continue
-            val cli = makeOptCLIArguments(input.filename)
-            compiledFiles.add(OptDriver.compile(cli, module))
+            val cli = makeOptCLIArguments(input)
+            val objFile = OptDriver.compile(cli, module)
+            println("Compiled ${objFile.filename}")
+            compiledFiles.add(objFile)
+        }
+
+        if (cli.isCompile()) {
+            return
         }
 
         val out = cli.getOutputFilename()
@@ -115,6 +122,10 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
             return
         }
 
+        runLinker(out, compiledFiles)
+    }
+
+    private fun runLinker(out: ProcessedFile, compiledFiles: List<ProcessedFile>) {
         val result = GNULdRunner(out)
             .libs(SystemConfig.runtimeLibraries())
             .libPaths(SystemConfig.runtimePathes())
