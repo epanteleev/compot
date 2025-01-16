@@ -6,7 +6,6 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
-import I32Value
 import ir.value.constant.I32Value
 
 
@@ -16,9 +15,9 @@ fun main() {
     val printf = builder.createExternFunction("printf", I32Type, arrayListOf(PtrType))
     builder.createFunction("main", I32Type, arrayListOf()).apply {
         val cont = createLabel()
-        call(printf, arrayListOf(helloStr), cont)
+        call(printf, arrayListOf(helloStr), emptySet(), cont)
         switchLabel(cont)
-        ret(I32Type, arrayOf(I32Value(0)))
+        ret(I32Type, arrayOf(I32Value.of(0)))
     }
 
     val module = builder.build()

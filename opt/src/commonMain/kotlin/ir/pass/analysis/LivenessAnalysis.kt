@@ -20,6 +20,14 @@ data class LiveInfo(internal var liveIn: MutableSet<LocalValue>, internal var li
 }
 
 class LivenessAnalysisInfo(private val liveness: Map<Label, LiveInfo>, marker: MutationMarker): AnalysisResult(marker) {
+    override fun toString(): String = buildString {
+        for ((label, liveInfo) in liveness) {
+            append("Label: $label\n")
+            append("LiveIn: ${liveInfo.liveIn}\n")
+            append("LiveOut: ${liveInfo.liveOut}\n")
+        }
+    }
+
     fun liveOut(label: Label): Set<LocalValue> {
         return liveness[label]!!.liveOut()
     }

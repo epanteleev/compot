@@ -17,6 +17,13 @@ import ir.pass.common.AnalysisType
 
 class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock, MutableSet<Alloc>>, marker: MutationMarker) :
     AnalysisResult(marker) {
+    override fun toString(): String = buildString {
+        for ((block, allocs) in joinSet) {
+            append("Block: $block\n")
+            append("Allocs: $allocs\n")
+        }
+    }
+
     operator fun iterator(): Iterator<Map.Entry<AnyBlock, Set<Alloc>>> {
         return joinSet.iterator()
     }

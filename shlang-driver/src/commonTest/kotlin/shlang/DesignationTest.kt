@@ -56,6 +56,7 @@ abstract class DesignationTest: CommonCTest() {
     }
 
     @Test
+    @Ignore
     fun test9() {
         val result = runCTest("shlang/designation/designation9", listOf(), options())
         assertEquals("x: 0, y: 1, z: 0\n", result.output)

@@ -5,7 +5,7 @@ import ir.module.builder.impl.ModuleBuilder
 import ir.pass.transform.SSADestructionFabric
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.TargetPlatform
-import I32Value
+import ir.value.constant.*
 
 
 fun main() {
@@ -14,9 +14,9 @@ fun main() {
 
     builder.createFunction("main", I32Type, arrayListOf()).apply {
         val first = alloc(pointStruct)
-        val firstField = gep(first, I32Type, I32Value(0))
-        store(firstField, I32Value(4))
-        ret(I32Type, arrayOf(I32Value(0)))
+        val firstField = gep(first, I32Type, I32Value.of(0))
+        store(firstField, I32Value.of(4))
+        ret(I32Type, arrayOf(I32Value.of(0)))
     }
 
     val module = builder.build()

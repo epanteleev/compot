@@ -4,10 +4,19 @@ import ir.module.MutationMarker
 import ir.module.block.Label
 import ir.module.block.AnyBlock
 import ir.pass.common.AnalysisResult
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.iterator
 
 
 class PostDominatorTree internal constructor(private val ipdomMap: Map<AnyBlock, AnyBlock>, marker: MutationMarker): AnalysisResult(marker) {
     private val cachedPostDominators = hashMapOf<Label, List<Label>>()
+
+    override fun toString(): String = buildString {
+        for ((bb, ipdom) in ipdomMap) {
+            append("BB: '$bb' IpDom: '$ipdom'\n")
+        }
+    }
 
     private fun calculatePostDominators(target: Label): List<Label> {
         val dom = arrayListOf<Label>()

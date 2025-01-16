@@ -9,7 +9,7 @@ import ir.module.block.Block
 class Shl private constructor(id: Identity, owner: Block, tp: IntegerType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {
     override fun dump(): String = "%${name()} = $NAME $tp ${lhs()}, ${rhs()}"
 
-    override fun type(): IntegerType = tp as IntegerType
+    override fun type(): IntegerType = tp.asType()
 
     override fun <T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -31,7 +31,7 @@ class Shl private constructor(id: Identity, owner: Block, tp: IntegerType, a: Va
                 "incorrect types in '$id' a=$a:$aType, b=$b:$bType"
             }
 
-            return registerUser(Shl(id, owner, aType as IntegerType, a, b), a, b)
+            return registerUser(Shl(id, owner, aType.asType(), a, b), a, b)
         }
 
         private fun isAppropriateTypes(tp: Type, aType: Type, bType: Type): Boolean {

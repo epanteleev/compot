@@ -92,6 +92,12 @@ private class EscapeAnalysis(private val functionData: FunctionData): FunctionAn
 }
 
 class EscapeAnalysisResult(private val escapeState: Map<Value, EscapeState>, marker: MutationMarker): AnalysisResult(marker) {
+    override fun toString(): String = buildString {
+        for ((value, state) in escapeState) {
+            append("Value: $value: $state\n")
+        }
+    }
+
     fun getEscapeState(value: Value): EscapeState {
         if (value is Constant) {
             return EscapeState.Constant
