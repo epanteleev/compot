@@ -310,12 +310,28 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
 
         for ((index, initializer) in expr.initializers.withIndex()) {
-            val elementLValueType = lValueType.field(index)
-            val result = constEvalExpression(elementLValueType, initializer) ?: let {
-                throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
-            }
+            when (initializer) {
+                is SingleInitializer -> {
+                    val elementLValueType = lValueType.field(index)
+                    val result = constEvalExpression(elementLValueType, initializer) ?: let {
+                        throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
+                    }
 
-            elements[index] = result
+                    elements[index] = result
+                }
+                is DesignationInitializer -> {
+                    if (lValueType !is StructType) {
+                        throw IRCodeGenError("Unsupported type $lValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
+                    }
+
+                    val elementLValueType = lValueType.field(index)
+                    val result = constEvalExpression(elementLValueType, initializer) ?: let {
+                        throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
+                    }
+
+                    elements[index] = result
+                }
+            }
         }
 
         return InitializerListValue(lValueType, elements)
