@@ -799,7 +799,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val cvtType = when (commonType) {
                     is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) I32Type else commonType
                     is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) U32Type else commonType
-                    else -> throw IRCodeGenError("Unexpected type: $commonType", binOp.begin())
                 }
                 val left = visitExpression(binOp.left, true)
                 val leftConverted = ir.convertLVToType(left, cvtType)

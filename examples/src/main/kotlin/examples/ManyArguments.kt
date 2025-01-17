@@ -1,9 +1,9 @@
 package examples
 
-import ir.types.Type
 import ir.types.VoidType
 import ir.module.builder.impl.ModuleBuilder
 import ir.types.U64Type
+
 
 fun main() {
     val moduleBuilder = ModuleBuilder.create()
@@ -63,11 +63,12 @@ fun main() {
     val add7 = builder.add(add6, f2)
 
     val cont = builder.createLabel()
-    builder.vcall(printInt, arrayListOf(add7), cont)
+    builder.vcall(printInt, arrayListOf(add7), emptySet(), cont)
     builder.switchLabel(cont)
     builder.store(regValue, add7)
     val ret = builder.load(U64Type, regValue)
     builder.ret(U64Type, arrayOf(ret))
 
-    moduleBuilder.build()
+    val module = moduleBuilder.build()
+    println(module.toString())
 }

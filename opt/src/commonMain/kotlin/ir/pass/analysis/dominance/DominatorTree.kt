@@ -9,6 +9,12 @@ import ir.pass.common.AnalysisResult
 class DominatorTree internal constructor(private val idomMap: Map<AnyBlock, AnyBlock>, marker: MutationMarker): AnalysisResult(marker) {
     private val cachedDominators = hashMapOf<Label, List<Label>>()
 
+    override fun toString(): String = buildString {
+        for ((bb, idom) in idomMap) {
+            append("BB: '$bb' IDom: '$idom'\n")
+        }
+    }
+
     private fun calculateDominators(target: Label): List<Label> {
         val dom = arrayListOf<Label>()
         var current: Label? = target

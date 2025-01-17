@@ -4,6 +4,8 @@ import ir.module.MutationMarker
 
 
 abstract class AnalysisResult(protected val marker: MutationMarker) {
+    abstract override fun toString(): String
+
     fun marker(): MutationMarker {
         return marker
     }

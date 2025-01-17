@@ -13,7 +13,7 @@ class ShlangCLIArguments {
 
     private var dumpIrDirectoryOutput: String? = null
     private var optimizationLevel = 0
-    private var outFilename = ProcessedFile.create("a", common.Extension.EXE)
+    private var outFilename = DEFAULT_OUTPUT
 
     fun inputs(): List<ProcessedFile> = inputs
 
@@ -67,4 +67,8 @@ class ShlangCLIArguments {
     fun getDefines(): Map<String, String> = defines
 
     fun getIncludeDirectories(): Set<String> = includeDirectories
+
+    companion object {
+        val DEFAULT_OUTPUT = ProcessedFile.create("a", common.Extension.EXE)
+    }
 }

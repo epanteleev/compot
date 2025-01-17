@@ -10,6 +10,9 @@ Yet another compiler backend
 ## Usage
 See examples in `example` module.
 
+## Available optimizations
+- Mem2Reg
+
 ## References
 - [LLVM](https://llvm.org/)
 - [Poletto linear scan](https://dl.acm.org/doi/10.1145/237721.237727)

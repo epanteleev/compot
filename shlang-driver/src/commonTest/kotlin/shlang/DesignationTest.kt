@@ -54,6 +54,13 @@ abstract class DesignationTest: CommonCTest() {
         val result = runCTest("shlang/designation/designation8", listOf(), options())
         assertEquals("arr.data.ptr[0]: 1, arr.data.ptr[1]: 2\n", result.output)
     }
+
+    @Test
+    @Ignore
+    fun test9() {
+        val result = runCTest("shlang/designation/designation9", listOf(), options())
+        assertEquals("x: 0, y: 1, z: 0\n", result.output)
+    }
 }
 
 class DesignationTestO0: DesignationTest() {

@@ -13,6 +13,13 @@ import ir.value.LocalValue
 
 
 class InterferenceGraph(private val graph: MutableMap<LocalValue, MutableSet<LocalValue>>, marker: MutationMarker): AnalysisResult(marker) {
+    override fun toString(): String = buildString {
+        for ((value, neighbors) in graph) {
+            append("Value: $value\n")
+            append("Neighbors: $neighbors\n")
+        }
+    }
+
     internal fun addEdge(from: LocalValue, to: LocalValue) {
         val fromEdge = graph[from]
         if (fromEdge == null) {

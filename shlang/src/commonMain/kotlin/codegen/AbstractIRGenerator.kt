@@ -304,10 +304,33 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 throw IRCodeGenError("Unsupported type $lValueType, expr=${LineAgnosticAstPrinter.print(expr)}", expr.begin())
         }
 
-        val elements = expr.initializers.mapIndexed { index, initializer ->
-            val elementLValueType = lValueType.field(index)
-            constEvalExpression(elementLValueType, initializer) ?: let {
-                throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
+        val elements = arrayListOf<NonTrivialConstant>()
+        for (i in expr.initializers.indices) {
+            elements.add(NonTrivialConstant.of(lValueType.field(i), 0))
+        }
+
+        for ((index, initializer) in expr.initializers.withIndex()) {
+            when (initializer) {
+                is SingleInitializer -> {
+                    val elementLValueType = lValueType.field(index)
+                    val result = constEvalExpression(elementLValueType, initializer) ?: let {
+                        throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
+                    }
+
+                    elements[index] = result
+                }
+                is DesignationInitializer -> {
+                    if (lValueType !is StructType) {
+                        throw IRCodeGenError("Unsupported type $lValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
+                    }
+
+                    val elementLValueType = lValueType.field(index)
+                    val result = constEvalExpression(elementLValueType, initializer) ?: let {
+                        throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
+                    }
+
+                    elements[index] = result
+                }
             }
         }
 

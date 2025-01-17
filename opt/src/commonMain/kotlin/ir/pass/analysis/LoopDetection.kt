@@ -36,6 +36,15 @@ class LoopInfo(private val loopHeaders: Map<Block, List<LoopBlockData>>, marker:
         loopHeaders.values.fold(0) { acc, list -> acc + list.size }
     }
 
+    override fun toString(): String = buildString {
+        for ((header, loops) in loopHeaders) {
+            append("Header: $header\n")
+            for (loop in loops) {
+                append("Loop: $loop\n")
+            }
+        }
+    }
+
     operator fun get(bb: Label): List<LoopBlockData>? = loopHeaders[bb]
     fun headers(): Set<Block> = loopHeaders.keys
 }

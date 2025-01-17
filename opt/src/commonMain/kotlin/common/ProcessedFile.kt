@@ -13,12 +13,28 @@ class ProcessedFile private constructor(val filename: String, val extension: Ext
         return Files.getBasename(filename)
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ProcessedFile) return false
+
+        if (filename != other.filename) return false
+        if (extension != other.extension) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = filename.hashCode()
+        result = 31 * result + extension.hashCode()
+        return result
+    }
+
     fun withExtension(extension: Extension): ProcessedFile {
         if (this.extension == extension) {
             return this
         }
 
-        return create(filename, extension)
+        return create(basename(), extension)
     }
 
     companion object {

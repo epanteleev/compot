@@ -14,6 +14,13 @@ import ir.pass.common.FunctionAnalysisPassFabric
 
 class AllocAnalysisResult(private val storeInfo: Map<Alloc, Set<AnyBlock>>, marker: MutationMarker): AnalysisResult(marker),
     Iterable<Map.Entry<Alloc, Set<AnyBlock>>> {
+    override fun toString(): String = buildString {
+        for ((alloc, stores) in storeInfo) {
+            append("Alloc: $alloc\n")
+            append("Stores: $stores\n")
+        }
+    }
+
     override fun iterator(): Iterator<Map.Entry<Alloc, Set<AnyBlock>>> {
         return storeInfo.iterator()
     }

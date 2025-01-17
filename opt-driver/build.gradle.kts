@@ -35,6 +35,7 @@ tasks.named<Jar>("jar") {
 
 tasks.withType(Test::class).all {
     dependsOn(":opt:jvmTest")
+    dependsOn(":examples:build")
 
     jvmArgs("-ea")
     mkdir("test-results")

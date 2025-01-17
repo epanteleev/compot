@@ -21,9 +21,9 @@ fun main() {
         val s = load(F32Type, second)
         val res = add(s, s)
         val cont = createLabel()
-        vcall(printFloat, arrayListOf(res), cont)
+        vcall(printFloat, arrayListOf(res), emptySet(), cont)
         switchLabel(cont)
-        ret(U32Type, arrayOf(I32Value(0)))
+        ret(I32Type, arrayOf(I32Value.of(0)))
     }
 
     val module = builder.build()
