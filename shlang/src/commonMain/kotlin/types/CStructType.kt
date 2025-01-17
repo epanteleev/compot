@@ -50,6 +50,10 @@ class CStructType private constructor(
         return fieldDescriptors[index].typeDesc()
     }
 
+    fun fieldByIndex(index: Int): TypeDesc {
+        return fieldByIndexOrNull(index) ?: throw RuntimeException("Cannot find field by index: index=$index, { name=$name, $fields }")
+    }
+
     companion object {
         private fun evaluateFieldDescriptors(fields: List<Member>): List<FieldDesc> {
             val fieldDescs = arrayListOf<FieldDesc>()

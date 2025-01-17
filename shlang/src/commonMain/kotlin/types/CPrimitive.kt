@@ -184,6 +184,7 @@ sealed class CPrimitive: CType() {
                         return null
                     }
                     ULONG -> return this
+                    is CEnumType -> return this
                     else -> return null
                 }
             }
@@ -200,6 +201,7 @@ sealed class CPrimitive: CType() {
                     ULONG -> ULONG
                     FLOAT -> FLOAT
                     DOUBLE -> DOUBLE
+                    is CPointer -> type2
                     else -> return null
                 }
             }

@@ -7,14 +7,14 @@ sealed class AnyCStructType(open val name: String,
                             protected val fields: List<Member>,
                             protected val fieldDescriptors: List<FieldDesc>,
                             private val nameToFieldDesc: Map<String, FieldDesc>): CAggregateType() {
-    fun fieldByIndexOrNull(name: String): FieldDesc? = nameToFieldDesc[name]
+    fun fieldByNameOrNull(name: String): FieldDesc? = nameToFieldDesc[name]
 
     fun descriptors(): List<FieldDesc> {
         return fieldDescriptors
     }
 
     fun fieldByName(name: String): FieldDesc {
-        return fieldByIndexOrNull(name) ?:
+        return fieldByNameOrNull(name) ?:
             throw RuntimeException("Cannon find field by name: name=$name, { name=$name, $fields }")
     }
 

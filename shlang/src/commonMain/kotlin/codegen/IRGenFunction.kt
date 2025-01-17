@@ -425,7 +425,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Struct type expected, but got '$cStructType'", arrowMemberAccess.begin())
         }
         val fieldName = arrowMemberAccess.fieldName()
-        val member = cStructType.fieldByIndexOrNull(fieldName) ?: let {
+        val member = cStructType.fieldByNameOrNull(fieldName) ?: let {
             throw IRCodeGenError("Field not found: $fieldName", arrowMemberAccess.begin())
         }
 
@@ -450,7 +450,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val fieldName = memberAccess.memberName()
-        val member = structType.fieldByIndexOrNull(fieldName) ?:
+        val member = structType.fieldByNameOrNull(fieldName) ?:
             throw IRCodeGenError("Field not found: '$fieldName'", memberAccess.begin())
 
         val gep = getFieldAddress(struct, structType, member)
@@ -1785,7 +1785,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     }
 
                     val fieldType = mb.toIRType<StructType>(typeHolder, innerType)
-                    val member = innerType.fieldByIndexOrNull(designator.name()) ?:
+                    val member = innerType.fieldByNameOrNull(designator.name()) ?:
                         throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
 
                     innerType = member.cType().asType()

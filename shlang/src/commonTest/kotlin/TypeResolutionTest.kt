@@ -420,8 +420,8 @@ class TypeResolutionTest {
         val unionType = typeHolder.getVarTypeOrNull("b") ?: error("Cannot find union type")
         assertEquals("union B {int a;struct struct.0 {int b;char c;}}", unionType.toString())
         val ty = unionType.typeDesc.cType() as CUnionType
-        assertEquals(0, ty.fieldByIndexOrNull("a")?.index)
-        assertEquals(0, ty.fieldByIndexOrNull("b")?.index)
+        assertEquals(0, ty.fieldByNameOrNull("a")?.index)
+        assertEquals(0, ty.fieldByNameOrNull("b")?.index)
         //assertEquals(2, ty.fieldIndex("c")) TODO
     }
 
