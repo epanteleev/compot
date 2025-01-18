@@ -35,7 +35,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         val workingDirectory   = Files.getDirName(filename)
         val headerHolder       = FileHeaderHolder(pwd(), includeDirectories + workingDirectory)
 
-        val ctx = PreprocessorContext.empty(headerHolder)
+        val ctx = PreprocessorContext.create(headerHolder)
         definedMacros(ctx)
         return ctx
     }
@@ -109,7 +109,6 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
             val module = compile(input.filename) ?: continue
             val cli = makeOptCLIArguments(input)
             val objFile = OptDriver.compile(cli, module)
-            println("Compiled ${objFile.filename}")
             compiledFiles.add(objFile)
         }
 
