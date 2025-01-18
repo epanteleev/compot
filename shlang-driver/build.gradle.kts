@@ -31,6 +31,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(project(":opt"))
+                implementation(project(":opt-driver"))
                 implementation(project(":shlang"))
             }
         }

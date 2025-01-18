@@ -2,6 +2,6 @@ import startup.*
 
 
 fun main(args: Array<String>) {
-    val cli = CCLIParser.parse(args) ?: return
+    val cli = ShlangCommandLineParser.parse(args) ?: return
     ShlangDriver(cli).run()
 }

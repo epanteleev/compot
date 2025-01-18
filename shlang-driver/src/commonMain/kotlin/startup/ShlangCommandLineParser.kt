@@ -1,11 +1,11 @@
 package startup
 
 
-object CCLIParser {
-    private fun loop(args: Array<String>): ShlangCLIArguments? {
+object ShlangCommandLineParser {
+    private fun loop(args: Array<String>): ShlangArguments? {
         var cursor = 0
 
-        val commandLineArguments = ShlangCLIArguments()
+        val commandLineArguments = ShlangArguments()
         while (cursor < args.size) {
             when (val arg = args[cursor]) {
                 "-h", "--help" -> {
@@ -54,7 +54,7 @@ object CCLIParser {
         return commandLineArguments
     }
 
-    fun parse(args: Array<String>): ShlangCLIArguments? {
+    fun parse(args: Array<String>): ShlangArguments? {
         if (args.isEmpty()) {
             printHelp()
             return null
@@ -63,7 +63,7 @@ object CCLIParser {
         return loop(args)
     }
 
-    private fun parseDefine(shlangCLIArguments: ShlangCLIArguments, define: String) {
+    private fun parseDefine(shlangCLIArguments: ShlangArguments, define: String) {
         val parts = define.split('=')
         if (parts.size == 1) {
             shlangCLIArguments.addDefine(parts[0], "1")

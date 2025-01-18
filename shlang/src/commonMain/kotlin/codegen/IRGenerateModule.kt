@@ -4,15 +4,19 @@ import parser.nodes.*
 import ir.module.Module
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
-import ir.value.Value
-import parser.LineAgnosticAstPrinter
 import tokenizer.Position
 import typedesc.TypeHolder
 
 
 data class IRCodeGenError(override val message: String, val position: Position) : Exception(message)
 
-internal class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack(), NameGenerator()) {
+object GenerateIR {
+    fun apply(typeHolder: TypeHolder, node: ProgramNode): Module {
+        return IRGen.apply(typeHolder, node)
+    }
+}
+
+private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack(), NameGenerator()) {
     fun visit(programNode: ProgramNode) = varStack.scoped {
         for (node in programNode.nodes) {
             when (node) {

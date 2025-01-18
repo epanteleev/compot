@@ -3,7 +3,7 @@ package common
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import startup.ShlangDriver
-import startup.CCLIParser
+import startup.ShlangCommandLineParser
 import kotlin.random.Random
 
 
@@ -25,7 +25,7 @@ abstract class CommonCTest: CommonTest() {
                 optOptions +
                 listOf("-o", output)
 
-        val cli = CCLIParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
+        val cli = ShlangCommandLineParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         ShlangDriver(cli).run()
         return output
     }
@@ -42,7 +42,7 @@ abstract class CommonCTest: CommonTest() {
                 optOptions +
                 listOf("-o", "$output.o")
 
-        val cli = CCLIParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
+        val cli = ShlangCommandLineParser.parse(args) ?: throw RuntimeException("Failed to parse arguments: $args")
         ShlangDriver(cli).run()
 
         runGCC(output, runtimeLib)
