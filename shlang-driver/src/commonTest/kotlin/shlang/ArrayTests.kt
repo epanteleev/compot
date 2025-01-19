@@ -44,6 +44,12 @@ abstract class ArrayTests: CommonCTest() {
         assertEquals("startswith\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun test7() {
+        val result = runCTest("shlang/array/array7", listOf(), options())
+        assertEquals("/\n", result.output)
+    }
 }
 
 class ArrayTestsO0: ArrayTests() {

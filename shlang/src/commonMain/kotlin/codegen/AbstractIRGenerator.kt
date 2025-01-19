@@ -62,12 +62,8 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             val cType = varDesc.typeDesc.cType()
             val constant = constEvalExpression(cType, expr.initializerList) as InitializerListValue
             val gConstant = when (cType) {
-                is CArrayType -> {
-                    ArrayGlobalConstant(createGlobalConstantName(), constant)
-                }
-                is CStructType -> {
-                    StructGlobalConstant(createGlobalConstantName(), constant)
-                }
+                is CArrayType  -> ArrayGlobalConstant(createGlobalConstantName(), constant)
+                is CStructType -> StructGlobalConstant(createGlobalConstantName(), constant)
                 else -> throw IRCodeGenError("Unsupported type '$cType', expr='${LineAgnosticAstPrinter.print(expr)}'", expr.begin())
             }
             PointerLiteral.of(mb.addConstant(gConstant))
@@ -114,10 +110,10 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return PointerLiteral.of(value.asValue())
     }
 
-    private fun defaultContEval(lValueCType: CType, expr: Expression): PrimitiveConstant? {
+    private fun defaultContEval(lValueCType: CType, expr: Expression): NonTrivialConstant? {
         val result = constEvalExpression0(expr) ?: return null
-        val lValueType = mb.toIRLVType<PrimitiveType>(typeHolder, lValueCType)
-        return PrimitiveConstant.of(lValueType, result)
+        val lValueType = mb.toIRLVType<NonTrivialType>(typeHolder, lValueCType)
+        return NonTrivialConstant.of(lValueType, result)
     }
 
     private fun toIrAttribute(storageClass: StorageClass?): GlobalValueAttribute = when (storageClass) {
