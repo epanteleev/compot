@@ -1,0 +1,58 @@
+import (
+    "lex.um"
+    "ev.um"
+)
+
+
+type Parser* = struct {
+    lexer: lex::Lexer
+}
+
+
+fn (p: ^Parser) parse(): ^ev::Expr {    
+    // Parse list
+    if p.lexer.tok.kind == .LPar {
+        p.lexer.next() 
+       
+        var first, last: ^ev::Expr
+        for p.lexer.tok.kind == .Atom || p.lexer.tok.kind == .LPar {
+            e := ev::strExpr("")
+            e.car = p.parse()
+            
+            if first == null {
+                first = e
+                last = e
+            } else {
+                last.cdr = e
+                last = e
+            }            
+        }        
+        p.lexer.eat(.RPar)
+        return first
+    }
+    
+    // Parse atom  
+    p.lexer.check(.Atom)
+    res := &ev::Expr{p.lexer.tok.name, p.lexer.tok.val, null, null}
+    p.lexer.next()
+    return res
+
+}
+
+
+fn parseStr*(buf: str): ^ev::Expr {
+    var p: Parser
+    p.lexer.open(buf)
+    p.lexer.next()
+    return p.parse()
+}
+
+
+fn execStr*(buf: str): str {
+    e := parseStr(buf)
+    
+    // Convert expression to a fictitious function call: apply((lambda () e), nil)
+    lambda := ev::cons(ev::strExpr("lambda"), ev::cons(null, ev::cons(e, null)))
+    return ev::evalquote(lambda, null).toStr()
+}
+

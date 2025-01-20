@@ -89,6 +89,14 @@ tasks.create<Exec>("runChibicc") {
     commandLine("python3", "chibicc.py", shlang())
 }
 
+tasks.create<Exec>("runUmka") {
+    group = "verification"
+    dependsOn("prepareTests")
+    workingDir = workingDir.resolve("compilationTests")
+
+    commandLine("python3", "umka.py", shlang())
+}
+
 tasks.create<Exec>("runBfish") {
     group = "verification"
     dependsOn("prepareTests")
@@ -110,4 +118,5 @@ tasks.create("runtests") {
     dependsOn("runUtf8")
     dependsOn("runChibicc")
     dependsOn("runBfish")
+    dependsOn("runUmka")
 }

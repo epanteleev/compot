@@ -1,0 +1,90 @@
+import "std.um"
+
+fn g(q: ^int) {}   
+ 
+fn f(p: ^int) {
+    q := p
+    g(q)
+}
+
+type st = struct {
+    x: int
+    p: ^int
+    y: int
+    q: ^int
+}    
+
+fn h(s: st) {
+    s.y = 5
+    s.q = new(int)
+}
+
+fn f2() {
+    d := new([1000] int)
+    for i := 0; i < 10; i++ {
+        a := new([1000] int)
+        if i > 5 {return}
+    }
+}
+
+fn g2(): ^int {a := new(int); return a}
+
+fn h2(): ^st {
+    d := new(int)
+    return &st{x: 7, p: d, y: 5, q: d}
+}
+
+fn foo(): int { 
+    var p: ^int
+    {
+        a := new([2]int)
+        a[1] = 7
+        p = &a[1]
+    }
+    return p^
+}
+
+fn test*() {
+    r := foo()
+ 
+    a := new([1000] int)
+    b := a
+    c := &a[10]
+    b = new([1000] int)
+    f(&a[6])
+    e := new([3]real)
+    e[2] = 7
+    x := e[2]
+    
+    s := st {x: 2, p: new(int), y: 3, q: &a[11]}
+    h(s)
+    
+    for i := 0; i < 1000; i++ {
+        a := new([1000] int)
+        a[2] = 7
+        b := new(int)
+        if i > 10 {break}
+    }
+    
+    a = new([1000] int)
+    i := 0
+    for p := new([1000] int); i < 1000; i++ {
+        r := new([1000] int)
+        if i > 5 {continue}
+    }
+
+    f2()
+    
+    h2res := h2()
+    h2res.p^ = 17
+    
+    g2res := g2()
+    
+    new([1000000] int)
+
+    std::println("See any memory leak warnings?")
+}
+
+fn main() {
+    test()
+}

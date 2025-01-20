@@ -1,0 +1,13 @@
+import s = "std.um"
+
+std := 42
+imports3 := 43
+
+fn test*() {
+    s := "Hello"
+    printf("%v %v %v %v\n", std, imports3, s::argc(), s)
+}
+
+fn main() {
+    test()
+}

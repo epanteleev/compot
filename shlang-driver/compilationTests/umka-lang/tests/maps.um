@@ -1,0 +1,109 @@
+import "std.um"
+
+fn test1() {
+    printf("\nTest 1\n")
+
+    var populations: map[str]real
+    f, err := std::fopen("countries.dat", "r")
+    std::exitif(err)
+
+    for true {
+        var code, name, typ: str
+        var year: int
+        var pop: real
+        
+        num := fscanf(f, "%s %s %s %lld %lf\n", &code, &name, &typ, &year, &pop) 
+        if num != 5 {break}
+
+        populations[name] = pop
+    }
+
+    std::fclose(f)
+
+    russia2019 := populations["Russia"]
+    
+    populations["Russia"] = 146.748    
+    russia2020 := populations["Russia"]
+
+    printf("Population of Russia was %.2f million. Now it is %.2f million\n\n", russia2019, russia2020)
+    printf("%llv\n", populations)
+
+    printf("\nCountries and regions more populous than Russia:\n")
+    for country, pop in populations {
+        if pop > russia2020 {
+            printf("%40s: %.2f\n", country, pop)
+        }
+    }
+
+    if !validkey(populations, "Russia") {
+        exit(1,"Test failed")
+    }     
+
+    populations = delete(populations, "Russia")
+
+    if validkey(populations, "Russia") {
+        exit(1, "Test failed")
+    }     
+}
+
+fn test2() {
+    printf("\nTest 2\n")
+
+    type Pair = [2]int 
+    var writers: map[Pair]str
+
+    writers[Pair{1564, 1616}] = "Shakespeare"
+    writers[Pair{1799, 1837}] = "Pushkin"
+    writers[Pair{1828, 1910}] = "Tolstoy"
+    writers[Pair{1749, 1832}] = "Goethe"
+
+    pushkin := writers[Pair{1799, 1837}]
+    printf(pushkin + "\n\n")
+
+    if !validkey(writers, Pair{1799, 1837}) {
+        exit(1, "Test failed")
+    }    
+
+    for dates in writers {
+        printf(writers[dates] + '\n')
+    }
+
+    writers = delete(writers, Pair{1799, 1837})
+
+    if validkey(writers, Pair{1799, 1837}) {
+        exit(1, "Test failed")
+    }  
+
+    printf("%v\n", writers)
+}
+
+fn test3() {
+    printf("\nTest 3\n")
+
+    a := 42
+    b := 43
+
+    pointers := make(map[^int]int)
+
+    pointers[&a] = a
+    pointers[&b] = b
+
+    a1 := pointers[&a]
+    b1 := pointers[&b]
+
+    if a1 != a || b1 != b {
+        exit(1, "Test failed")
+    }
+
+    printf("Test passed\n")
+}
+
+fn test*() {
+    test1()
+    test2()
+    test3()
+}
+
+fn main() {
+    test()
+}

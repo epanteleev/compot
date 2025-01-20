@@ -1,0 +1,58 @@
+type (
+    P1 = ^S1
+    S1 = struct {
+      x: int
+      next: P1
+    }
+)
+
+type (
+    P2 = ^S2
+    S2 = struct {
+      x: int
+      next: P2
+    }
+)
+
+type (
+    P3 = ^S3
+    P4 = ^S4
+
+    S3 = struct {
+      x: int
+      next: P4
+    }
+
+    S4 = struct {
+      x: int
+      next: P3
+    }
+)
+
+fn test*() {
+    var (
+        s1: S1
+        s2: S2
+        s3: S3
+        s4: S4
+
+        p1: any = s1
+        p2: any = s2
+        p3: any = s3
+        p4: any = s4
+    )
+
+    if q1, q2 := P1(p1), P2(p1); q1 == null || q2 != null {
+        exit(1, "Test failed")
+    }
+
+    if q3, q4 := P3(p3), P4(p3); q3 == null || q4 != null {
+        exit(1, "Test failed")
+    }     
+
+    printf("    ...passed\n");
+}
+
+fn main() {
+    test()
+}

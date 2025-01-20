@@ -1,0 +1,79 @@
+type Button = enum {left; middle; right}
+
+type Mode = enum (uint8) {
+	draw = 74
+	select
+	remove = 8
+	edit
+}
+
+fn print(m: Mode) {
+	modeStr := map[Mode]str {
+		.draw:   		"Draw",
+		Mode.select: 	"Select",
+		.remove: 		"Remove",
+		Mode.edit:   	"Edit"
+	}
+
+	printf("%d: %s\n", m, modeStr[m])
+}
+
+fn print2(m: Mode) {
+	switch m {
+		case .draw:   		printf("%d: Draw\n", m)
+		case Mode.select: 	printf("%d: Select\n", m)
+		case .remove: 		printf("%d: Remove\n", m)
+		case .edit:   		printf("%d: Edit\n", m)
+		case Mode(23):    	printf("%d: Code %d\n", m, m)
+		default:		  	printf("%d: \n", m)
+	}
+}
+
+fn get(): (Mode, Button) {
+	return .select, .left
+}
+
+fn test*() {
+	print(.draw)
+	print(Mode.select)
+	print(Mode.remove)
+	print(.edit)
+	print(Mode(23))
+
+	printf("\n")
+
+	print2(Mode.draw)
+	print2(.select)
+	print2(.remove)
+	print2(Mode.edit)
+	print2(Mode(23))
+
+	printf("\n")
+
+	for _, m in []Mode{.draw, Mode.select, .remove, Mode.edit} {
+		print(m)
+	}
+
+	printf("\n")
+
+	for _, m in []Mode([]int{74, 75, 8, 9, 23, 42}) {
+		print2(m)
+	}
+
+	printf("\n")
+
+	lb := Button.left
+	var mb, rb: Button
+	mb, rb = .left, Button.right
+	mb = .middle
+	printf("%v %v %v\n", lb == mb, mb < rb, rb == Button(2))
+
+	printf("\n")	
+
+	m, b := get()
+	printf("%v %v\n", m == Mode.select, b == .left)
+}
+
+fn main() {
+	test()
+}

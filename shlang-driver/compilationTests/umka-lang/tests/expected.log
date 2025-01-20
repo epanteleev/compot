@@ -1,0 +1,1264 @@
+
+
+>>> Printing
+
+7 [42 43] 6.000000 {"Hello": 3.14 "World": 0.333333}
+7 [42 43] 6.000000 {"Hello": 3.14 "World": 0.333333}
+7 [42 43] 6.000000 {"Hello": 3.14 "World": 0.333333}
+
+
+>>> Binary file I/O
+
+Hello World
+
+
+>>> Dynamic arrays - 1
+
+a: 0 0
+a: 5 7
+a: 10 14
+a: 15 21
+a: 20 28
+a: 25 35
+a: 30 42
+a: 35 49
+a: 40 56
+a: 45 63
+Appending...
+a: 0 0
+a: 5 7
+a: 10 14
+a: 15 21
+a: 20 28
+a: 25 35
+a: 30 42
+a: 35 49
+a: 40 56
+a: 45 63
+a: 666 777
+b: 0 0
+b: 5 7
+b: 10 14
+b: 15 21
+b: 20 28
+b: 25 35
+b: 30 42
+b: 35 49
+b: 40 56
+b: 45 63
+b: 666 777
+Appending...
+e: 0 0
+e: 5 7
+e: 10 14
+e: 15 21
+e: 20 28
+e: 25 35
+e: 30 42
+e: 35 49
+e: 40 56
+e: 45 63
+e: 666 777
+e: 876 765
+Deleting #4...
+e: 0 0
+e: 5 7
+e: 10 14
+e: 15 21
+e: 25 35
+e: 30 42
+e: 35 49
+e: 40 56
+e: 45 63
+e: 666 777
+e: 876 765
+f: 0 0
+f: 5 7
+f: 10 14
+f: 15 21
+f: 20 28
+f: 25 35
+f: 30 42
+f: 35 49
+f: 40 56
+f: 45 63
+f: 666 777
+f: 876 765
+c: [3 4 5]
+Appending...
+c: [3 4 5 6 7]
+d: [[666 777] [888 999]]
+Appending...
+d: [[666 777] [888 999] [444 555]]
+Inserting...
+["Hello " "World"]
+["Hello " "My Wonderful" "World"]
+["Hello " ", " "My Wonderful" "World"]
+["Oh, " "Hello " ", " "My Wonderful" "World"]
+["Oh, " "Hello " ", " "My Wonderful" "World" "!"]
+[42 43]
+Slicing...
+["Hello World" "Hallo Welt" "Salut le Monde" "Privet Mir"]
+["Hello World" "Hallo Welt" "Salut le Monde"]
+["Hello World" "Hallo Welt"]
+["Hello World"]
+[]
+
+["Hallo Welt" "Salut le Monde" "Privet Mir"]
+["Salut le Monde" "Privet Mir"]
+["Privet Mir"]
+[]
+
+["Hallo Welt"]
+["Hallo Welt" "Salut le Monde"]
+["Hallo Welt" "Salut le Monde" "Privet Mir"]
+
+["Salut le Monde"]
+["Salut le Monde" "Privet Mir"]
+
+["Hallo Welt" "Salut le Monde"]
+["Hallo Welt"]
+[]
+
+["Hello World" "Hallo Welt" "Salut le Monde" "Privet Mir"]
+["Hallo Welt" "Salut le Monde" "Privet Mir"]
+["Salut le Monde" "Privet Mir"]
+["Privet Mir"]
+[]
+
+[]
+Copying...
+[[5 7] [10 12]] [[5 7] [9 11]]
+
+
+>>> Dynamic arrays - 2
+
+foo: ["Hello World" "Hallo Welt" "Salut le Monde"]
+foo: Hallo Welt = Hallo Welt : true
+foo: Salut le Monde = Salut le Monde : true
+bar: [[3 5] [4 6 -8] [9] [] []] = [[3 5] [4 6 -8] [9] [] []]
+[5 7 9 11 13 15 17]
+true false
+["Hello World" "Privet Mir" "Ha-ha" "Ho-ho"]
+
+
+>>> Dynamic arrays - 3
+
+[2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17]
+[2 3 4 5 6 7 8 9 10 11 12 13 14 15 16]
+[2 4 5 6 7 8 9 10 11 12 13 14 15 16]
+[2 4 5 6 7 8 9 10 11 12 13 14 15 16 22 23]
+[2 4 5 6 7 8 9 10 11 12 13 14 15 16 22 23 66 77 67 78 68 79 69 80 70 81 71 82 72 83 73 84 74 85 75 86]
+[[1 2 3] [4 5 6] [7 8.5]]
+['H' 'a' 'h' 'a' 'h' 'a' '-' 'H' 'o' 'h' 'o' 'h' 'o']
+['H' 'a' 'h' 'a' 'h' 'a']
+Vasiliy says Hello World 
+Umka says Meow Purr Meow 
+
+
+>>> Strings
+
+Left trimming
+"Hello World"
+"Hello World"
+"Hello World   "
+"Hello World   "
+""
+""
+Right trimming
+"Hello World"
+"  Hello World"
+"Hello World"
+" 	Hello World"
+""
+""
+Left & right trimming
+"Hello World"
+"Hello World"
+"Hello World"
+"Hello World"
+""
+""
+
+
+>>> Fibers
+
+Parent: i=0 b=0
+    Child: i=0 a=0 d=0
+        Grandchild: i=0 a=0 c=0
+    Child: i=0 a=0 d=0
+        Grandchild: i=1 a=0 c=19
+    Child: i=0 a=0 d=11
+        Grandchild: i=2 a=0 c=38
+    Child: i=0 a=0 d=22
+        Grandchild: i=3 a=0 c=57
+    Child: i=0 a=0 d=33
+        Grandchild: i=4 a=0 c=76
+    Child: i=0 a=0 d=44
+        Grandchild: i=5 a=0 c=95
+    Child: i=0 a=0 d=55
+        Grandchild: i=6 a=0 c=114
+    Child: i=0 a=0 d=66
+        Grandchild: i=7 a=0 c=133
+    Child: i=0 a=0 d=77
+        Grandchild: i=8 a=0 c=152
+    Child: i=0 a=0 d=88
+        Grandchild: i=9 a=0 c=171
+Parent: i=1 b=0
+    Child: i=1 a=7 d=99
+        Grandchild: i=10 a=7 c=0
+    Child: i=1 a=7 d=110
+        Grandchild: i=11 a=7 c=19
+    Child: i=1 a=7 d=121
+        Grandchild: i=12 a=7 c=38
+    Child: i=1 a=7 d=132
+    Child: i=1 a=7 d=132
+    Child: i=1 a=7 d=132
+    Child: i=1 a=7 d=132
+    Child: i=1 a=7 d=132
+    Child: i=1 a=7 d=132
+    Child: i=1 a=7 d=132
+Parent: i=2 b=3
+    Child: i=2 a=14 d=132
+    Child: i=2 a=14 d=132
+    Child: i=2 a=14 d=132
+    Child: i=2 a=14 d=132
+    Child: i=2 a=14 d=132
+    Child: i=2 a=14 d=132
+    Child: i=2 a=14 d=132
+    Child: i=2 a=14 d=132
+    Child: i=2 a=14 d=132
+    Child: i=2 a=14 d=132
+Parent: i=3 b=6
+    Child: i=3 a=21 d=132
+    Child: i=3 a=21 d=132
+    Child: i=3 a=21 d=132
+    Child: i=3 a=21 d=132
+    Child: i=3 a=21 d=132
+    Child: i=3 a=21 d=132
+    Child: i=3 a=21 d=132
+    Child: i=3 a=21 d=132
+    Child: i=3 a=21 d=132
+    Child: i=3 a=21 d=132
+Parent: i=4 b=9
+    Child: i=4 a=28 d=132
+    Child: i=4 a=28 d=132
+    Child: i=4 a=28 d=132
+    Child: i=4 a=28 d=132
+    Child: i=4 a=28 d=132
+    Child: i=4 a=28 d=132
+    Child: i=4 a=28 d=132
+    Child: i=4 a=28 d=132
+    Child: i=4 a=28 d=132
+    Child: i=4 a=28 d=132
+Parent: i=5 b=12
+Parent: i=6 b=12
+Parent: i=7 b=12
+Parent: i=8 b=12
+Parent: i=9 b=12
+
+
+>>> Functional tools
+
+Array = [3 7 1 -4 2 5]
+Sum of all squares less than 30 = 55 
+
+
+>>> Garbage collection - 1
+
+See any memory leak warnings?
+
+
+>>> Garbage collection - 2
+
+Ok
+
+>>> Interfaces - 1
+
+proc_fooable:
+   foo: 3, 5, 7
+proc_fooable_barable:
+   foo: 3, 5, 9
+   bar: 3, 5, 11
+proc_fooable:
+   foo: 3, 5, 7
+
+
+>>> Interfaces - 2
+
+["red" "green" "blue" "yellow" "gray" "brown" "black" "cyan" "magenta" "white"]
+["black" "blue" "brown" "cyan" "gray" "green" "magenta" "red" "white" "yellow"]
+
+
+>>> Interfaces - 3
+
+woof
+meow
+meow
+woof
+meow
+meow
+woof
+meow
+meow
+woof
+
+
+>>> Maps - 1
+
+
+Test 1
+Population of Russia was 146.73 million. Now it is 146.75 million
+
+{
+    "ASIA": 4625.93
+    "Chad": 16.877
+    "Cuba": 11.281
+    "Fiji": 0.896
+    "Guam": 0.175
+    "Iran": 84.15
+    "Iraq": 39.725
+    "Laos": 7.242
+    "Mali": 20.251
+    "Oman": 4.713
+    "Peru": 32.824
+    "Togo": 8.279
+    "Benin": 12.209
+    "Chile": 19.47
+    "China": 1402.38
+    "Congo": 5.518
+    "Egypt": 100.803
+    "Gabon": 2.231
+    "Ghana": 31.073
+    "Haiti": 11.403
+    "India": 1400.1
+    "Italy": 60.296
+    "Japan": 125.967
+    "Kenya": 53.528
+    "Libya": 6.891
+    "Malta": 0.522
+    "Nauru": 0.011
+    "Nepal": 29.996
+    "Niger": 24.189
+    "Palau": 0.018
+    "Qatar": 2.839
+    "Samoa": 0.2
+    "Spain": 47.635
+    "Sudan": 43.849
+    "Syria": 19.398
+    "Tonga": 0.099
+    "WORLD": 7772.85
+    "Yemen": 29.826
+    "AFRICA": 1337.92
+    "Angola": 32.522
+    "Belize": 0.419
+    "Bhutan": 0.73
+    "Brazil": 211.812
+    "Brunei": 0.469
+    "Canada": 38.19
+    "Cyprus": 1.207
+    "EUROPE": 746.622
+    "France": 64.94
+    "Gambia": 2.417
+    "Greece": 10.7
+    "Guinea": 12.56
+    "Guyana": 0.787
+    "Israel": 9.216
+    "Jordan": 10.679
+    "Kosovo": 1.791
+    "Kuwait": 4.691
+    "Latvia": 1.902
+    "Malawi": 19.13
+    "Mexico": 127.792
+    "Monaco": 0.038
+    "Norway": 5.387
+    "Panama": 4.283
+    "Poland": 38.368
+    "Russia": 146.748
+    "Rwanda": 12.952
+    "Serbia": 6.957
+    "Sweden": 10.377
+    "Taiwan": 23.61
+    "Turkey": 83.737
+    "Tuvalu": 0.01
+    "Uganda": 45.741
+    "Zambia": 18.384
+    "Albania": 2.838
+    "Algeria": 44.357
+    "Andorra": 0.082
+    "Armenia": 2.956
+    "Austria": 8.914
+    "Bahamas": 0.393
+    "Bahrain": 1.465
+    "Belarus": 9.375
+    "Belgium": 11.515
+    "Bolivia": 11.633
+    "Burundi": 11.866
+    "Comoros": 0.87
+    "Croatia": 4.02
+    "Curacao": 0.155
+    "Czechia": 10.716
+    "Denmark": 5.829
+    "Ecuador": 17.511
+    "Eritrea": 3.546
+    "Estonia": 1.331
+    "Finland": 5.529
+    "Georgia": 3.715
+    "Germany": 83.3
+    "Grenada": 0.113
+    "Hungary": 9.767
+    "Iceland": 0.368
+    "Ireland": 5.003
+    "Jamaica": 2.809
+    "Lebanon": 6.825
+    "Lesotho": 2.142
+    "Liberia": 5.058
+    "Mayotte": 0.284
+    "Moldova": 3.535
+    "Morocco": 35.952
+    "Myanmar": 54.704
+    "Namibia": 2.541
+    "Nigeria": 206.14
+    "OCEANIA": 43.155
+    "Reunion": 0.861
+    "Romania": 19.241
+    "Senegal": 16.744
+    "Somalia": 15.893
+    "Tunisia": 11.896
+    "Ukraine": 41.778
+    "Uruguay": 3.531
+    "Vanuatu": 0.321
+    "Vietnam": 96.209
+    "Barbados": 0.287
+    "Botswana": 2.317
+    "Bulgaria": 6.927
+    "Cambodia": 15.497
+    "Cameroon": 26.598
+    "Colombia": 49.444
+    "Djibouti": 0.988
+    "Dominica": 0.072
+    "Ethiopia": 114.916
+    "Honduras": 9.864
+    "Kiribati": 0.125
+    "Malaysia": 32.781
+    "Maldives": 0.541
+    "Mongolia": 3.361
+    "Pakistan": 220.94
+    "Paraguay": 7.255
+    "Portugal": 10.255
+    "Slovakia": 5.462
+    "Slovenia": 2.103
+    "Suriname": 0.605
+    "Tanzania": 59.734
+    "Thailand": 66.534
+    "Zimbabwe": 14.863
+    "eSwatini": 1.104
+    "Argentina": 45.377
+    "Australia": 25.754
+    "CARIBBEAN": 43.233
+    "EAST-ASIA": 1641.06
+    "Guatemala": 18.066
+    "Indonesia": 271.739
+    "Lithuania": 2.794
+    "Mauritius": 1.265
+    "Nicaragua": 6.596
+    "Singapore": 5.769
+    "Sri-Lanka": 21.937
+    "Venezuela": 28.645
+    "Azerbaijan": 10.108
+    "Bangladesh": 169.809
+    "Cape-Verde": 0.556
+    "Costa-Rica": 5.111
+    "Guadeloupe": 0.375
+    "Kazakhstan": 18.732
+    "Kyrgyzstan": 6.594
+    "Luxembourg": 0.632
+    "Madagascar": 27.691
+    "Martinique": 0.356
+    "Mauritania": 4.65
+    "Montenegro": 0.622
+    "Mozambique": 31.166
+    "SOUTH-ASIA": 1967.13
+    "San-Marino": 0.034
+    "Seychelles": 0.098
+    "Tajikistan": 9.429
+    "Uzbekistan": 34.174
+    "Afghanistan": 38.928
+    "El-Salvador": 6.481
+    "Korea-North": 25.779
+    "Korea-South": 51.781
+    "Netherlands": 17.467
+    "New-Zealand": 4.987
+    "Philippines": 109.581
+    "Puerto-Rico": 3.189
+    "Saint-Lucia": 0.182
+    "South-Sudan": 11.194
+    "Switzerland": 8.634
+    "Timor-Leste": 1.318
+    "Burkina-Faso": 20.903
+    "CENTRAL-ASIA": 74.961
+    "Saudi-Arabia": 35.041
+    "Sierra-Leone": 7.977
+    "South-Africa": 59.628
+    "Turkmenistan": 6.031
+    "WESTERN-ASIA": 280.927
+    "Cote-d'Ivoire": 26.175
+    "French-Guiana": 0.294
+    "Guinea-Bissau": 1.927
+    "Liechtenstein": 0.039
+    "MIDDLE-AFRICA": 179.757
+    "New-Caledonia": 0.295
+    "SOUTH-AMERICA": 429.191
+    "United-States": 329.878
+    "EASTERN-AFRICA": 444.97
+    "EASTERN-EUROPE": 291.902
+    "SOUTHEAST-ASIA": 661.845
+    "United-Kingdom": 67.16
+    "WESTERN-AFRICA": 401.115
+    "WESTERN-EUROPE": 195.479
+    "Western-Sahara": 0.597
+    "CENTRAL-AMERICA": 178.611
+    "Channel-Islands": 0.172
+    "China-Macao-SAR": 0.686
+    "Congo-Dem.-Rep.": 89.568
+    "NORTHERN-AFRICA": 244.344
+    "NORTHERN-EUROPE": 105.99
+    "North-Macedonia": 2.08
+    "SOUTHERN-AFRICA": 67.732
+    "SOUTHERN-EUROPE": 153.251
+    "Solomon-Islands": 0.715
+    "St.-Kitts-Nevis": 0.054
+    "French-Polynesia": 0.28
+    "Marshall-Islands": 0.057
+    "NORTHERN-AMERICA": 368.193
+    "Papua-New-Guinea": 8.95
+    "Equatorial-Guinea": 1.403
+    "Bosnia-Herzegovina": 3.281
+    "Dominican-Republic": 10.5
+    "Antigua-and-Barbuda": 0.098
+    "China-Hong-Kong-SAR": 7.494
+    "Trinidad-and-Tobago": 1.369
+    "United-Arab-Emirates": 9.778
+    "Palestinian-Territory": 5.008
+    "Sao-Tome-and-Principe": 0.21
+    "Central-African-Republic": 4.83
+    "Federated-States-of-Micronesia": 0.106
+    "St.-Vincent-and-the-Grenadines": 0.111
+    "LATIN-AMERICA-AND-THE-CARIBBEAN": 651.036
+}
+
+Countries and regions more populous than Russia:
+                                    ASIA: 4625.93
+                                   China: 1402.38
+                                   India: 1400.10
+                                   WORLD: 7772.85
+                                  AFRICA: 1337.92
+                                  Brazil: 211.81
+                                  EUROPE: 746.62
+                                 Nigeria: 206.14
+                                Pakistan: 220.94
+                               EAST-ASIA: 1641.06
+                               Indonesia: 271.74
+                              Bangladesh: 169.81
+                              SOUTH-ASIA: 1967.13
+                            WESTERN-ASIA: 280.93
+                           MIDDLE-AFRICA: 179.76
+                           SOUTH-AMERICA: 429.19
+                           United-States: 329.88
+                          EASTERN-AFRICA: 444.97
+                          EASTERN-EUROPE: 291.90
+                          SOUTHEAST-ASIA: 661.85
+                          WESTERN-AFRICA: 401.12
+                          WESTERN-EUROPE: 195.48
+                         CENTRAL-AMERICA: 178.61
+                         NORTHERN-AFRICA: 244.34
+                         SOUTHERN-EUROPE: 153.25
+                        NORTHERN-AMERICA: 368.19
+         LATIN-AMERICA-AND-THE-CARIBBEAN: 651.04
+
+Test 2
+Pushkin
+
+Pushkin
+Shakespeare
+Tolstoy
+Goethe
+{[1564 1616]: "Shakespeare" [1828 1910]: "Tolstoy" [1749 1832]: "Goethe"}
+
+Test 3
+Test passed
+
+
+>>> Maps - 2
+
+
+Test 1
+true
+false
+"English EN" "" ""
+["Privet Mir" "Hello World" "Salut le Monde"]
+true
+{"Privet Mir": "" "Hello World": "English EN" "Salut le Monde": ""}
+
+Test 2
+"Better" "" "Good"
+3 [{x: 5 y: 7} {x: 11 y: 12} {x: 42 y: 23}]
+{{x: 5 y: 7}: "Good" {x: 11 y: 12}: "" {x: 42 y: 23}: "Better"}
+"Better"
+
+Test 3
+false
+true 20
+{1915: 20}
+
+Test 4
+"OK"
+{[2 5]: "OK" [7 9]: "Also OK" [13 15]: "So-so" [57 89]: "Nice"}
+[2 5] "OK"
+[7 9] "Also OK"
+[13 15] "So-so"
+[57 89] "Nice"
+
+Test 5
+{17: 42 19: 53}
+
+Test 6
+{"e": [2.72 5.44] "pi": [3.14 6.28] "one": [1 2] "ten": [10 20]}
+{"e": [2.72 5.44] "pi": [3.14 6.28] "ten": [10 20]}
+{"e": [2.72 5.44] "one": [1 2] "ten": [10 20]}
+
+Test 7
+
+
+>>> Multiple returns
+
+-3 [6 9] true
+-4 [8 12] false
+[3 2] [7 6] [9 8]
+[9 8] [3 2] [7 6]
+[9 8] [3 2] [7 6]
+Hello World
+World Hello
+23 45.6 "Hello" 'z'
+['a' 'b'] ['c' 'd'] ['e' 'f']
+12 -3 17
+8.5 "43"
+
+
+>>> Error handling
+
+4
+Error: Empty string (code -2) from "foo":
+    foo: (5)
+    fooTest: (11)
+    test: (25)
+    main: (71)
+    <unknown>: (104)
+9
+
+
+>>> Language tour
+
+Arr: [2.3 -2.05 2.38]
+Got 42
+3 is odd
+1
+2
+4
+8
+16
+32
+64
+128
+len = 4
+4.680
+Arr: [0.5 0.7 0.9]
+Parent: i=0 buf=0
+Child : i=0 buf=0
+Parent: i=1 buf=0
+Child : i=1 buf=7
+Parent: i=2 buf=3
+Child : i=2 buf=14
+Parent: i=3 buf=6
+Child : i=3 buf=21
+Parent: i=4 buf=9
+Child : i=4 buf=28
+Parent: i=5 buf=12
+Parent: i=6 buf=35
+Parent: i=7 buf=42
+Parent: i=8 buf=49
+Parent: i=9 buf=56
+
+String representation:
+3
+2.38
+0.138015
+"Hello World"
+0
+"Hello World!"
+[2.3 -2.05 2.38]
+[[0 0 0 0 0] [0 0 0 0 0] [0 0 0 0 0] [10 20 30 40 50]]
+{"Hello Umka": 3.14}
+{q: [1 0 0 0] normalized: true}
+4.68
+'a'
+[0.5 0.7 0.9]
+
+
+>>> Type equivalence
+
+    ...passed
+
+
+>>> Constant folding
+
+-1.47906 2 true true
+
+
+>>> Item pointers
+
+15
+[[0 0] [1 2] [2 4] [3 6] [4 8] [5 10]]
+[0 0]
+[1 2]
+[2 4]
+[3 6]
+[4 8]
+[5 10]
+
+
+>>> Safe type casts
+
+false true false true false true
+42
+true false true false false true
+[42 13 0 0 0 0 0 0]
+[1 5 7 10]
+[1 4 7]
+Hey Hello
+['H' 'e' 'l' 'l' 0x00] Hell
+HellHell
+HellHell
+
+
+>>> Non-local scope
+
+86
+
+
+>>> Weak pointers - 1
+
+Test 1
+42
+it's null
+Test 2
+13 12
+true true
+
+
+>>> Weak pointers - 2
+
+42
+42
+666
+666
+2024
+
+[5 7]
+5 8
+[5 8]
+[2025 2026]
+
+{a: 5 b: 7}
+74
+
+5 8
+{a: 5 b: 8}
+{a: 2024 b: 2025}
+
+25
+
+
+
+>>> Byte conversions
+
+{x: 23 y: -6}
+[23 0 250 255]
+[23 0 251 255]
+{x: 23 y: -5}
+
+
+>>> UTF-8 - 1
+
+string: ▀€$¢
+bytes: 9
+characters: 4
+▀: U+2580
+€: U+20ac
+$: U+24
+¢: U+a2
+reconstructed string: ▀€$¢
+
+string: Привет, мир!
+bytes: 21
+characters: 12
+П: U+41f
+р: U+440
+и: U+438
+в: U+432
+е: U+435
+т: U+442
+,: U+2c
+ : U+20
+м: U+43c
+и: U+438
+р: U+440
+!: U+21
+reconstructed string: Привет, мир!
+
+string: Hello, 世界
+bytes: 13
+characters: 9
+H: U+48
+e: U+65
+l: U+6c
+l: U+6c
+o: U+6f
+,: U+2c
+ : U+20
+世: U+4e16
+界: U+754c
+reconstructed string: Hello, 世界
+
+
+
+>>> UTF-8 - 2
+
+Test passed
+
+
+>>> Imports - 1
+
+Utils from lib 1
+Utils from lib 2
+
+
+>>> Imports - 2
+
+Utils from lib 1
+Utils from lib 2
+
+
+>>> Imports - 3
+
+42 43 1 "Hello"
+
+
+>>> Imports - 4
+
+A name: a.um
+
+
+>>> Closures - 1
+
+running by_name_eq with name : Foo
+running by_name_eq with name : "Foo" and person : {
+    name: "Foo"
+    age: 24
+    sex: "M"
+}
+running by_name_eq with name : "Foo" and person : {
+    name: "Bar"
+    age: 23
+    sex: "M"
+}
+running by_name_eq with name : "Foo" and person : {
+    name: "FooBar"
+    age: 23
+    sex: "F"
+}
+[true false false]
+
+
+>>> Closures - 2
+
+8
+84
+   g: s = ["Hello" "World" "!"]
+45
+20
+30
+4
+8
+
+
+>>> Closures - 3
+
+Fibonacci number 1 = 1
+Fibonacci number 2 = 1
+Fibonacci number 3 = 2
+Fibonacci number 4 = 3
+Fibonacci number 5 = 5
+Fibonacci number 6 = 8
+Fibonacci number 7 = 13
+Fibonacci number 8 = 21
+Fibonacci number 9 = 34
+Fibonacci number 10 = 55
+
+
+>>> Null strings
+
+s2 = 
+"" "" "" "Hello "
+[]
+len = 0, 6
+Hello 
+true false true
+false true false
+
+[]
+len = 0  cap = 0
+
+[]
+len = 0  cap = 0
+
+["Hello" "World"]
+    Item #0 = "Hello"
+    Item #1 = "World"
+len = 2  cap = 6
+
+[]
+len = 0  cap = 0
+
+["Hello" "World"]
+    Item #0 = "Hello"
+    Item #1 = "World"
+len = 2  cap = 6
+
+["Hello" "World"]
+    Item #0 = "Hello"
+    Item #1 = "World"
+len = 2  cap = 6
+
+["World"]
+    Item #0 = "World"
+len = 1  cap = 2
+
+[]
+len = 0  cap = 2
+
+["" ""] ["Hello" "World"]
+""
+
+{}
+len = 0
+
+{"Haha": "Hoho" "Hehe": "Huhu"}
+    Item "Haha" = "Hoho"
+    Item "Hehe" = "Huhu"
+len = 2
+
+{"Hello": "World"}
+    Item "Hello" = "World"
+len = 1
+
+{"Bubu": "Bobo"}
+    Item "Bubu" = "Bobo"
+len = 1
+false true
+
+
+>>> Variadic functions
+
+>> expected  12 "Hello World" [true false true true] 
+>> should work with no values 
+Four averages: 5.23333 3.14 0 -1 
+Greeting {data: " Hello World"} {data: " Hello World Salut le Monde"} 
+
+
+>>> Default parameters
+
+foo: Hello
+foo: World
+2 3.14 true {x: 5 y: 7} [7 8] "foo: Hello"
+2 6.28 true {x: 5 y: 7} [7 8] "foo: Hello"
+2 6.28 false {x: 5 y: 7} [7 8] "foo: Hello"
+2 6.28 false {x: 42 y: 43} [7 8] "foo: Hello"
+2 6.28 false {x: 42 y: 43} [9 10] "foo: Hello"
+2 6.28 false {x: 42 y: 43} [9 10] "foo: Hello"
+
+
+>>> Date/time
+
+0
+2022-10-02 15:13:32
+
+
+>>> Untyped literals
+
+[2 4 -3.14]
+[[12 13] [44 47] [0 -6]]
+{w: 200 h: 100}
+{[3 7]: [] [5 7]: ["Hello" "World"] [11 3]: ["Psst!"]}
+[3 8 14]
+["Haha" "Hoho"]
+[2 4]
+true
+["Meow" "Moo"]
+{w: 300 h: 400}
+[42 9 11]
+[[3 6] [5 7]]
+
+
+>>> Ternary operator
+
+42 17
+42 17
+0: 5 6 7.000000 8.000000 9 10 
+1: 15 16 and nothing more
+2: 5 6 7.000000 8.000000 9 10 
+3: 15 16 and nothing more
+4: 5 6 7.000000 8.000000 9 10 
+5: 15 16 and nothing more
+6: 5 6 7.000000 8.000000 9 10 
+7: 15 16 and nothing more
+8: 5 6 7.000000 8.000000 9 10 
+9: 15 16 and nothing more
+0: [-4 12]
+1: [-4 12]
+2: [-4 12]
+3: [-4 12]
+4: [3 5.5 7]
+5: [3 5.5 7]
+6: [3 5.5 7]
+7: [-4 12]
+8: [-4 12]
+9: [-4 12]
+train! train!
+
+
+>>> Type switches
+
+int: 42 + 5 = 47
+str: 42 + 5 = 425
+[]real: [42] + [5] = [42 5]
+unknown: 42
+
+unknown: 42
+
+int: 47 + 5 = 52
+str: 425 + 5 = 4255
+[]real: [42 5] + [5] = [42 5 5]
+unknown: 42
+
+
+
+>>> Redeclarations
+
+f(): 42 "OK!" true
+g(): 43 "FAIL!" false
+f(): 42 "OK!" true
+"Merry Christmas!" true [5 7] 0.333
+"Merry Christmas!" false [5 7] 144 "Hmmm"
+
+
+>>> Iteration by pointer
+
+0 2 4 6 8 10 12 14 16 18 
+0 6 12 18 24 30 36 42 48 54 
+1 7 13 19 25 31 37 43 49 55 
+[1 7 13 19 25 31 37 43 49 55]
+[1 7 13 19 25 31 37 43 49 55]
+[100 700 1300 1900 2500 3100 3700 4300 4900 5500]
+
+0 2 4 6 8 10 12 14 16 18 
+0 6 12 18 24 30 36 42 48 54 
+1 7 13 19 25 31 37 43 49 55 
+[1 7 13 19 25 31 37 43 49 55]
+[1 7 13 19 25 31 37 43 49 55]
+[100 700 1300 1900 2500 3100 3700 4300 4900 5500]
+
+{"French": {x: 0.5 y: 0.6} "English": {x: 0.3 y: 0.4} "Russian": {x: 0.1 y: 0.2}}
+{"French": {x: 0.5 y: 0.6} "English": {x: 0.3 y: 0.4} "Russian": {x: 0.1 y: 0.2}}
+{"French": {x: 0.5 y: 0.51} "English": {x: 0.3 y: 0.31} "Russian": {x: 0.1 y: 0.11}}
+
+
+>>> Enumerations
+
+74: Draw
+75: Select
+8: Remove
+9: Edit
+23: 
+
+74: Draw
+75: Select
+8: Remove
+9: Edit
+23: Code 23
+
+74: Draw
+75: Select
+8: Remove
+9: Edit
+
+74: Draw
+75: Select
+8: Remove
+9: Edit
+23: Code 23
+42: 
+
+false true true
+
+true true
+
+
+>>> Forward declarations
+
+{
+    name: "node1"
+    children: [
+        {
+            name: "node11"
+            children: [
+                
+            ]
+        }
+        {
+            name: "node12"
+            children: [
+                {
+                    name: "node121"
+                    children: [
+                        
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+{
+    name: "node1"
+    children: {
+        "child1": {
+            name: "node11"
+            children: {
+                
+            }
+        }
+        "child2": {
+            name: "node12"
+            children: {
+                "child21": {
+                    name: "node121"
+                    children: {
+                        
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+>>> Sorting
+
+[15 7.6 2.3 0.4 -7.1 -11.8]
+
+[-11.8 -7.1 0.4 2.3 7.6 15]
+
+Sorting by name:
+[
+    {
+        "date": "1799"
+        "name": "Alexander"
+        "surname": "Pushkin"
+    }
+    {
+        "date": "1688"
+        "name": "Alexander"
+        "surname": "Pope"
+    }
+    {
+        "date": "1860"
+        "name": "Anton"
+        "surname": "Chekhov"
+    }
+    {
+        "date": "1828"
+        "name": "Leo"
+        "surname": "Tolstoy"
+    }
+]
+
+Sorting by surname:
+[
+    {
+        "date": "1860"
+        "name": "Anton"
+        "surname": "Chekhov"
+    }
+    {
+        "date": "1688"
+        "name": "Alexander"
+        "surname": "Pope"
+    }
+    {
+        "date": "1799"
+        "name": "Alexander"
+        "surname": "Pushkin"
+    }
+    {
+        "date": "1828"
+        "name": "Leo"
+        "surname": "Tolstoy"
+    }
+]
+
+Sorting by date:
+[
+    {
+        "date": "1688"
+        "name": "Alexander"
+        "surname": "Pope"
+    }
+    {
+        "date": "1799"
+        "name": "Alexander"
+        "surname": "Pushkin"
+    }
+    {
+        "date": "1828"
+        "name": "Leo"
+        "surname": "Tolstoy"
+    }
+    {
+        "date": "1860"
+        "name": "Anton"
+        "surname": "Chekhov"
+    }
+]
+
+[15 7.6 2.3 0.4 -7.1 -11.8]
+
+[-11.8 -7.1 0.4 2.3 7.6 15]
+
+["yellow" "white" "red" "magenta" "green" "gray" "cyan" "brown" "blue" "black"]
+
+["black" "blue" "brown" "cyan" "gray" "green" "magenta" "red" "white" "yellow"]
+
+["hi" "bye" "" "" "" "" "" "" "" ""]
+
+
+
+>>> Peephole optimizations
+
+true
+1
+
+
+>>> External libraries
+
+8.000000 true Hello

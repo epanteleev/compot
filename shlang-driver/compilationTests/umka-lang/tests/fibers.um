@@ -1,0 +1,39 @@
+fn test*() {
+    a := new(int)
+    b := new(int)
+    
+    child := make(fiber, |a, b| {
+
+        c := new(int)
+        d := new(int)
+    
+        grandchild := make(fiber, |a, c, d| {
+            for i := 0; i < 13; i++ {
+                printf("        Grandchild: i=%d a=%d c=%d\n", i, a^, c^)
+                d^ = i * 11
+                resume()
+            }
+        })
+    
+        for i := 0; i < 5; i++ {
+            for j := 0; j < 10; j++ {
+                printf("    Child: i=%d a=%d d=%d\n", i, a^, d^)
+                c^ = j * 19
+                resume(grandchild)
+            }
+
+            b^ = i * 3
+            resume()
+        }
+    })
+    
+    for i := 0; i < 10; i++ {
+        printf("Parent: i=%d b=%d\n", i, b^)
+        a^ = i * 7
+        resume(child)
+    }    
+}
+
+fn main() {
+    test()
+}

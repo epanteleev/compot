@@ -1,0 +1,139 @@
+import "std.um"
+
+// Constants
+const a = 3
+const b* = 2.38  // Exported identifier
+const (
+    c = sin(b) / 5
+    d = "Hello" + " World"
+)
+
+// Types
+type IntPtr = ^uint16
+type Arr = [a]real
+type (
+    MyMap = map[str]real
+    Quat = struct {
+        q: [4]real
+        normalized: bool
+    }
+    Printable = interface {
+        print(): int
+    }
+    ErrFn = fn(code: int)
+)        
+
+// Variables
+var e: int
+var f: str = d + '!'
+var (
+    g: Arr = [3]real{2.3, -4.1 / 2, b}
+    h: [][5]int  // Dynamic arrays require calling make()
+    m: MyMap
+)
+q := Quat{q: [4]real{1, 0, 0, 0}, normalized: true}
+
+// Functions
+fn tan(x: real): real {return sin(x) / cos(x)}
+fn getValue(): (int, bool) {return 42, true}
+
+// Methods
+fn (a: ^Arr) print(): int {
+    printf("Arr: %v\n", a^)
+    return 0
+}
+
+// Fibers
+fn fibers() {
+    a := new(int)
+    child := make(fiber, |a| {
+        for i := 0; i < 5; i++ {
+            std::println("Child : i=" + std::itoa(i) + " buf=" + std::itoa(a^))
+            a^ = i * 3
+            resume()
+        }
+    })
+    for i := 0; i < 10; i++ {
+        std::println("Parent: i=" + std::itoa(i) + " buf=" + std::itoa(a^))
+        a^ = i * 7
+        resume(child)
+    }    
+}   
+
+fn test*() {
+    // Assignment
+    h = make([][5]int, 3)
+    m = make(MyMap)
+    m["Hello Umka"] = 3.14
+    
+    // Declaration via assignment (with type inference)
+    sum := 0.0
+    
+    // Function call
+    y := tan(30 * std::pi / 180)
+    h = append(h, [5]int{10, 20, 30, 40, 50})
+    
+    // Method call
+    g.print()
+    
+    // Conditional
+    if x, ok := getValue(); ok {
+        printf("Got %v\n", x)
+    }
+    
+    // Switch
+    switch a {
+        case 1, 3, 5, 7: std::println(std::itoa(a) + " is odd")
+        case 2, 4, 6, 8: std::println(std::itoa(a) + " is even")
+        default:         std::println("I don't know")
+    }
+
+    // Loop
+    for k := 1; k <= 128; k *= 2 {
+        printf("%v\n", k)
+    }
+    
+    for i, x in g {
+        if fabs(x) > 1e12 {break}
+        if x < 0 {continue}
+        sum += x
+    }
+    
+        
+    std::println("len = " + std::itoa(len(h)))
+    std::println(std::ftoa(sum, 3))
+    
+    
+    // Interfaces
+    var printable: Printable = Arr{0.5, 0.7, 0.9}
+    printable.print()
+    
+    // Fibers
+    fibers()
+
+    // String representation
+    printf("\nString representation:\n")
+    printf("%v\n", a)
+    printf("%v\n", b)
+    printf("%v\n", c)
+    printf("%v\n", d)
+    printf("%v\n", e)
+    printf("%v\n", f)
+    printf("%v\n", g)
+    printf("%v\n", h)
+    printf("%v\n", m)
+    printf("%v\n", q)
+    printf("%v\n", sum)
+    printf("%v\n", 'a')
+    printf("%v\n", printable)
+    
+}
+
+fn main() {
+    test()
+}
+
+
+
+
+    

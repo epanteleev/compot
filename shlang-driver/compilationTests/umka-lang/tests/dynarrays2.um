@@ -1,0 +1,48 @@
+fn foo(s: [3]str) {
+    printf("foo: %v\n", s)
+
+    s1 := str([]char([100]char([]char(s[1]))))
+    s2 := str([]char(s[2]))
+
+    printf("foo: " + s[1] + " = " + s1 + " : " + sprintf("%v", s[1] == s1) + '\n')
+    printf("foo: " + s[2] + " = " + s2 + " : " + sprintf("%v", s[2] == s2) + '\n')
+}
+
+fn bar() {
+	var b: [5][]int
+    {
+        a := [][]int{[]int{3, 5}, []int{4, 6, 8}, []int{9}}
+        b = a        
+    }
+    b[1][2] = -8
+
+    b2 := [5][]int([][]int(b))
+
+    printf("bar: %v = %v\n", b, b2)
+}
+
+fn test1() {
+    foo([]str{"Hello " + "World", "Hallo " + "Welt", "Salut " + "le Monde"})
+    bar()
+}
+
+fn test2() {
+    a := []real([]int([]any([]int{5, 7, 9, 11, 13, 15, 17})))
+    printf("%v\n", a)
+
+    b := []any([]int{42, 43, 44})
+    printf("%v %v\n", []^int(b)[1] != null, []^real(b)[1] != null)
+
+    c := []str([][]char([]str{"Hello " + "World", "Privet " + "Mir", "Ha-" + "ha", "Ho-" + "ho"}))
+    printf("%v\n", c)
+}
+
+
+fn test*() {
+    test1()
+    test2()
+}
+
+fn main() {
+	test()
+}
