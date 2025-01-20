@@ -7,6 +7,13 @@ Shlang is a command line tool that pretends to be a GCC-like compiler. So that y
 bin/shlang -o out.o in.c
 ```
 
+## Building
+Open the project in IntelliJ IDEA and run the `installDist` task. It will create a distribution in the `build/install/shlang-driver` directory.
+Or you can use Docker to build the project:
+```shell
+docker run -ti --rm -v .:/app ghcr.io/epanteleev/ubuntu-gcc14 cd /app; gradle installDist
+```
+
 ## Options:
 - `-c` - Compile or assemble the source files, but do not link.
 - `-o` - Place the output into `<file>`.

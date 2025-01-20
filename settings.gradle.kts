@@ -1,4 +1,4 @@
-rootProject.name = "ssa-construction"
+rootProject.name = "shlang-root"
 
 pluginManagement {
     includeBuild("build-config")

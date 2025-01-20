@@ -97,33 +97,21 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
 
         // 3.7.2 Common Predefined Macros
         // https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
-        private val __SIZEOF_POINTER__ =
-            MacroReplacement("__SIZEOF_POINTER__", tokenListOf(PPNumber(8, Position.UNKNOWN)))
-        private val __SIZEOF_LONG__    =
-            MacroReplacement("__SIZEOF_LONG__", tokenListOf(PPNumber(8, Position.UNKNOWN)))
-        private val __SIZEOF_INT__     =
-            MacroReplacement("__SIZEOF_INT__", tokenListOf(PPNumber(4, Position.UNKNOWN)))
-        private val __SIZEOF_SHORT__   =
-            MacroReplacement("__SIZEOF_SHORT__", tokenListOf(PPNumber(2, Position.UNKNOWN)))
-        private val __SIZEOF_FLOAT__   =
-            MacroReplacement("__SIZEOF_FLOAT__", tokenListOf(PPNumber(4, Position.UNKNOWN)))
-        private val __SIZEOF_DOUBLE__  =
-            MacroReplacement("__SIZEOF_DOUBLE__", tokenListOf(PPNumber(8, Position.UNKNOWN)))
-        private val __INT32_MAX__      =
-            MacroReplacement("__INT32_MAX__", tokenListOf(PPNumber(2147483647, Position.UNKNOWN)))
-        private val __SIZE_TYPE__      = MacroReplacement(
-            "__SIZE_TYPE__",
-            tokenListOf(Keyword("unsigned", Position.UNKNOWN), Keyword("long", Position.UNKNOWN))
-        )
-
+        private val __SIZEOF_POINTER__ = MacroReplacement("__SIZEOF_POINTER__", tokenListOf(PPNumber(8, Position.UNKNOWN)))
+        private val __SIZEOF_LONG__    = MacroReplacement("__SIZEOF_LONG__", tokenListOf(PPNumber(8, Position.UNKNOWN)))
+        private val __SIZEOF_INT__     = MacroReplacement("__SIZEOF_INT__", tokenListOf(PPNumber(4, Position.UNKNOWN)))
+        private val __SIZEOF_SHORT__   = MacroReplacement("__SIZEOF_SHORT__", tokenListOf(PPNumber(2, Position.UNKNOWN)))
+        private val __SIZEOF_FLOAT__   = MacroReplacement("__SIZEOF_FLOAT__", tokenListOf(PPNumber(4, Position.UNKNOWN)))
+        private val __SIZEOF_DOUBLE__  = MacroReplacement("__SIZEOF_DOUBLE__", tokenListOf(PPNumber(8, Position.UNKNOWN)))
+        private val __INT32_MAX__      = MacroReplacement("__INT32_MAX__", tokenListOf(PPNumber(2147483647, Position.UNKNOWN)))
+        private val __SIZE_TYPE__      = MacroReplacement("__SIZE_TYPE__", tokenListOf(Keyword("unsigned", Position.UNKNOWN), Keyword("long", Position.UNKNOWN)))
 
         // Implementation-defined macros
         private val PLATFORM = MacroReplacement("__x86_64__", tokenListOf(PPNumber(1, Position.UNKNOWN)))
         private val LP64     = MacroReplacement("__LP64__", tokenListOf(PPNumber(1, Position.UNKNOWN)))
         private val LINUX    = MacroReplacement("__linux__", tokenListOf(PPNumber(1, Position.UNKNOWN)))
         private val UNIX     = MacroReplacement("__unix__", tokenListOf(PPNumber(1, Position.UNKNOWN)))
-        private val __func__ =
-            MacroReplacement("__func__", tokenListOf(StringLiteral("in function", Position.UNKNOWN)))
+        private val __func__ = MacroReplacement("__func__", tokenListOf(StringLiteral("in function", Position.UNKNOWN)))
 
         private val predefined = hashMapOf(
             "__LINE__" to LINE,
@@ -133,7 +121,7 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
             "__STDC__" to STDC,
         )
 
-        fun empty(headerHolder: HeaderHolder): PreprocessorContext {
+        fun create(headerHolder: HeaderHolder): PreprocessorContext {
             val macroReplacements = hashMapOf(
                 // 6.10.8.1 Mandatory macros
                 "__STDC_HOSTED__"  to STDC_HOSTED,

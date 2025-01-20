@@ -1,7 +1,7 @@
 package startup
 
+import codegen.GenerateIR
 import common.pwd
-import codegen.IRGen
 import common.Extension
 import common.Files
 import common.GNULdRunner
@@ -15,9 +15,10 @@ import parser.CProgramParser
 import preprocess.macros.MacroReplacement
 import tokenizer.TokenList
 import tokenizer.TokenPrinter
+import kotlin.collections.iterator
 
 
-class ShlangDriver(private val cli: ShlangCLIArguments) {
+class ShlangDriver(private val cli: ShlangArguments) {
     private fun definedMacros(ctx: PreprocessorContext) {
         if (cli.getDefines().isEmpty()) {
             return
@@ -35,7 +36,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         val workingDirectory   = Files.getDirName(filename)
         val headerHolder       = FileHeaderHolder(pwd(), includeDirectories + workingDirectory)
 
-        val ctx = PreprocessorContext.empty(headerHolder)
+        val ctx = PreprocessorContext.create(headerHolder)
         definedMacros(ctx)
         return ctx
     }
@@ -76,7 +77,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
             .setDumpIrDirectory(cli.getDumpIrDirectory())
 
         val outFilename = cli.getOutputFilename()
-        if (cli.isCompile() && outFilename == ShlangCLIArguments.DEFAULT_OUTPUT) {
+        if (cli.isCompile() && outFilename == ShlangArguments.DEFAULT_OUTPUT) {
             optCLIArguments.setOutputFilename(inputFilename.withExtension(Extension.OBJ))
         } else {
             optCLIArguments.setOutputFilename(outFilename.withExtension(Extension.OBJ))
@@ -91,7 +92,7 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
         val parser     = CProgramParser.build(filename, postProcessedTokens)
         val program    = parser.translation_unit()
         val typeHolder = parser.typeHolder()
-        return IRGen.apply(typeHolder, program)
+        return GenerateIR.apply(typeHolder, program)
     }
 
     fun run() {
@@ -109,7 +110,6 @@ class ShlangDriver(private val cli: ShlangCLIArguments) {
             val module = compile(input.filename) ?: continue
             val cli = makeOptCLIArguments(input)
             val objFile = OptDriver.compile(cli, module)
-            println("Compiled ${objFile.filename}")
             compiledFiles.add(objFile)
         }
 

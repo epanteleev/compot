@@ -31,6 +31,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(project(":opt"))
+                implementation(project(":opt-driver"))
                 implementation(project(":shlang"))
             }
         }
@@ -45,13 +46,6 @@ kotlin {
             }
         }
     }
-}
-
-tasks.named<Jar>("jar") {
-    from({
-        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
-        subprojects.flatMap { it.configurations.getByName("runtimeClasspath").files }
-    })
 }
 
 tasks.withType(Test::class.java).all {

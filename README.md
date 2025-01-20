@@ -1,5 +1,5 @@
 ![example workflow](https://github.com/epanteleev/ssa-construction/actions/workflows/gradle.yml/badge.svg)
-# ssa-construction
+# Shlang
 This repository contains of several subprojects:
 - [opt](opt/README.md) - Yet another compiler backend
 - [shlang](shlang/README.md) - C language compiler frontend, based on [opt](opt/README.md) IR

@@ -1,9 +1,10 @@
 package startup
 
+import common.Extension
 import common.ProcessedFile
 
 
-class ShlangCLIArguments {
+class ShlangArguments {
     private val includeDirectories = hashSetOf<String>()
     private val defines = hashMapOf<String, String>()
     private var preprocessOnly = false
@@ -69,6 +70,6 @@ class ShlangCLIArguments {
     fun getIncludeDirectories(): Set<String> = includeDirectories
 
     companion object {
-        val DEFAULT_OUTPUT = ProcessedFile.create("a", common.Extension.EXE)
+        val DEFAULT_OUTPUT = ProcessedFile.create("a", Extension.EXE)
     }
 }

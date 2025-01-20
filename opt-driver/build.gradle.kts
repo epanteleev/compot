@@ -26,13 +26,6 @@ kotlin {
     }
 }
 
-tasks.named<Jar>("jar") {
-    from({
-        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
-        subprojects.flatMap { it.configurations.getByName("runtimeClasspath").files }
-    })
-}
-
 tasks.withType(Test::class).all {
     dependsOn(":opt:jvmTest")
     dependsOn(":examples:build")
