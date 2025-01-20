@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #include "umka_compiler.h"
 #include "umka_api.h"
@@ -77,6 +78,7 @@ UMKA_API void *umkaAlloc(void)
 
 UMKA_API bool umkaInit(void *umka, const char *fileName, const char *sourceString, int stackSize, void *reserved, int argc, char **argv, bool fileSystemEnabled, bool implLibsEnabled, UmkaWarningCallback warningCallback)
 {
+    assert(sizeof(CodeGen) == 480);
     Compiler *comp = umka;
     memset(comp, 0, sizeof(Compiler));
 

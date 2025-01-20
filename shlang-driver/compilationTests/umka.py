@@ -9,7 +9,6 @@ def build(compiler):
     os.chdir("umka-lang")
     sp.run(["CC={} ./build_linux.sh".format(compiler)], shell=True)
     sp.run(["./test_linux.sh"], shell=True)
-    sp.run(["make", "test"], shell=True)
 
 
 if __name__ == '__main__':
