@@ -84,7 +84,7 @@ task("prepareTests") {
 tasks.create<Exec>("runChibicc") {
     group = "verification"
     dependsOn("prepareTests")
-    workingDir = workingDir.resolve("scripts")
+    workingDir = workingDir.resolve("compilationTests")
 
     commandLine("python3", "chibicc.py", shlang())
 }
@@ -92,7 +92,7 @@ tasks.create<Exec>("runChibicc") {
 tasks.create<Exec>("runBfish") {
     group = "verification"
     dependsOn("prepareTests")
-    workingDir = workingDir.resolve("scripts")
+    workingDir = workingDir.resolve("compilationTests")
 
     commandLine("python3", "bfish.py", shlang())
 }
@@ -100,7 +100,7 @@ tasks.create<Exec>("runBfish") {
 tasks.create<Exec>("runUtf8") {
     group = "verification"
     dependsOn("prepareTests")
-    workingDir = workingDir.resolve("scripts")
+    workingDir = workingDir.resolve("compilationTests")
 
     commandLine("python3", "utf8.py", shlang())
 }
