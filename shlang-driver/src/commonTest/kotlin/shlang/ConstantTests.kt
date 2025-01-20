@@ -28,6 +28,13 @@ abstract class ConstantTests: CommonCTest() {
         val result = runCTest("shlang/constant/select_str", listOf(), options())
         assertEquals("Success\n", result.output)
     }
+
+    @Test
+    fun test4() {
+        val result = runCTest("shlang/constant/float", listOf(), options())
+        assertEquals("3.000000", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class ConstantTestsO0: ConstantTests() {
