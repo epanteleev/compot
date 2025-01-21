@@ -173,6 +173,16 @@ class CTokenizerTest {
     }
 
     @Test
+    fun testPower() {
+        val input = "0x1.ffffp+3"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is PPNumber }
+        tokens[0].isEqual(1, 1, "0x1.ffffp+3")
+        val num = tokens[0] as PPNumber
+        assertEquals(15.9998779296875, num.toNumberOrNull())
+    }
+
+    @Test
     fun testLongLiteral() {
         val input = "0xffff000000000000LL"
         val tokens = CTokenizer.apply(input).toCTokenList()

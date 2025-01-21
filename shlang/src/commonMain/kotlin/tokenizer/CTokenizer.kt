@@ -160,20 +160,29 @@ class CTokenizer private constructor(private val filename: String, private val r
         return reader.str.substring(start, end).toInt()
     }
 
-    private fun tryGetFPSuffix(reader: StringReader, start: Int, end: Int): Double? {
-        if (reader.check("F") || reader.check("f")) {
-            reader.read()
-            return reader.str.substring(start, end).toDoubleOrNull()
-        } else if (reader.check("D") || reader.check("d")) {
-            reader.read()
-            return reader.str.substring(start, end).toDoubleOrNull()
+    private fun tryGetFPSuffix(string: String): Double? {
+        val str = if (string.endsWith("f") || string.endsWith("F")) {
+            string.substring(0, string.length - 1)
+        } else if (string.endsWith("d") || string.endsWith("D")) {
+            string.substring(0, string.length - 1)
+        } else {
+            string
         }
-        return reader.str.substring(start, end).toDoubleOrNull()
+
+        return try {
+            java.lang.Double.valueOf(str)
+        } catch (e: NumberFormatException) {
+            null
+        }
     }
 
     private fun toNumberDefault(data: String, radix: Int): Number? = data.toByteOrNull(radix)
         ?: data.toIntOrNull(radix)
         ?: data.toLongOrNull(radix)
+        ?: data.toULongOrNull(radix)?.toLong()
+        ?: data.toDoubleOrNull()
+
+    private fun toLongDefault(data: String, radix: Int): Number? = data.toLongOrNull(radix)
         ?: data.toULongOrNull(radix)?.toLong()
         ?: data.toDoubleOrNull()
 
@@ -220,79 +229,95 @@ class CTokenizer private constructor(private val filename: String, private val r
     }
 
     private fun readPPNumber(string: String): Number? {
-        val reader = StringReader(string)
         var base = 10
 
-        val start: Int
-        if (reader.check("0x") || reader.check("0X")) {
-            reader.read(2)
+        if (string.startsWith("0x") || string.startsWith("0X")) {
             base = 16
-
-            start = reader.pos
-            do {
-                reader.read()
-            } while (reader.isHexDigit())
-
-        } else if (reader.check("0b") || reader.check("0B")) {
-            reader.read(2)
+        } else if (string.startsWith("0b") || string.startsWith("0B")) {
             base = 2
-
-            start = reader.pos
-            do {
-                reader.read()
-            } while (reader.isBinary())
-
-        } else if (reader.check("0") && reader.isDigit(1)) {
-            reader.read()
+        } else if (string.startsWith("0") && string.getOrNull(1)?.isDigit() == true) {
             base = 8
-
-            start = reader.pos
-            do {
-                reader.read()
-            } while (reader.isOctal())
-
-        } else {
-
-            start = reader.pos
-            do {
-                reader.read()
-            } while (reader.isDigit())
         }
 
-        if (reader.eof) {
-            return toNumberDefault(reader.str.substring(start, reader.pos), base)
-        }
-
-        if (reader.check('.')) {
-            //Floating point value
-            reader.read()
-            while (!reader.eof && reader.isDigit()) {
-                reader.read()
-            }
-            val end = reader.pos
-
-            val exponent = tryParseExp(reader)
-            val fp = tryGetFPSuffix(reader, start, end) ?: return null //TODO return null is problem
-            if (exponent != null) {
-                return 10.0.pow(exponent.toDouble()) * fp
+        if (string.contains('.')) {
+            if (string.endsWith("f") || string.endsWith("F") || string.endsWith("d") || string.endsWith("D")) {
+                val substring = string.substring(0, string.length - 1)
+                return tryGetFPSuffix(substring)
             }
 
-            return fp
+            if (string.endsWith("u") || string.endsWith("U") || string.endsWith("l") || string.endsWith("L")) {
+                val substring = when (base) {
+                    16 -> string.substring(2, string.length - 1)
+                    10 -> string.substring(0, string.length - 1)
+                    8 -> string.substring(1, string.length - 1)
+                    2 -> string.substring(2, string.length - 1)
+                    else -> throw IllegalStateException("Unknown base")
+                }
+                return toLongDefault(substring, base)
+            }
+
+            return tryGetFPSuffix(string)
+        }
+        if (string.endsWith("llu") || string.endsWith("LLU") || string.endsWith("ull") || string.endsWith("ULL")) {
+            val substring = when (base) {
+                16 -> string.substring(2, string.length - 3)
+                10 -> string.substring(0, string.length - 3)
+                8 -> string.substring(1, string.length - 3)
+                2 -> string.substring(2, string.length - 3)
+                else -> throw IllegalStateException("Unknown base")
+            }
+            return toLongDefault(substring, base)
+        }
+        if (string.endsWith("ul") || string.endsWith("UL") || string.endsWith("lu") || string.endsWith("LU") || string.endsWith("ll") || string.endsWith("LL")) {
+            val substring = when (base) {
+                16 -> string.substring(2, string.length - 2)
+                10 -> string.substring(0, string.length - 2)
+                8 -> string.substring(1, string.length - 2)
+                2 -> string.substring(2, string.length - 2)
+                else -> throw IllegalStateException("Unknown base")
+            }
+            return toLongDefault(substring, base)
+        }
+        if (string.endsWith("u") || string.endsWith("U") || string.endsWith("l") || string.endsWith("L")) {
+            if (base == 10) {
+                if (string.contains('e') || string.contains('E')) {
+                    return java.lang.Double.valueOf(string.substring(0, string.length - 1))
+                }
+            }
+            if (base == 16) {
+                if (string.contains('p') || string.contains('P')) {
+                    return java.lang.Double.valueOf(string.substring(0, string.length - 1))
+                }
+            }
+            val substring = when (base) {
+                16 -> string.substring(2, string.length - 1)
+                10 -> string.substring(0, string.length - 1)
+                8 -> string.substring(1, string.length - 1)
+                2 -> string.substring(2, string.length - 1)
+                else -> throw IllegalStateException("Unknown base")
+            }
+            return toLongDefault(substring, base)
         }
 
-        val end = reader.pos
-        val exponent = tryParseExp(reader)
-        if (exponent != null) {
-            val fp = tryGetFPSuffix(reader, start, end) ?: return null //TODO return null is problem
-            return 10.0.pow(exponent.toDouble()) * fp
+        if (base == 10) {
+            if (string.contains('e') || string.contains('E')) {
+                return java.lang.Double.valueOf(string)
+            }
+        }
+        if (base == 16) {
+            if (string.contains('p') || string.contains('P')) {
+                return java.lang.Double.valueOf(string)
+            }
         }
 
-        val power = tryParsePower(reader)
-        val num = tryGetIntegerSuffix(reader, base, start, end)?: tryGetFPSuffix(reader, start, reader.pos) ?: return null
-        if (power != null) {
-            return num.toDouble() * 2.0.pow(power.toDouble())
+        val substring = when (base) {
+            16 -> string.substring(2, string.length)
+            10 -> string.substring(0, string.length)
+            8 -> string.substring(1, string.length)
+            2 -> string.substring(2, string.length)
+            else -> throw IllegalStateException("Unknown base")
         }
-        return num
+        return toNumberDefault(substring, base)
     }
 
     private fun readIdentifier(): String {
