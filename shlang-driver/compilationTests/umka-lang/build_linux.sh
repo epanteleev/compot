@@ -2,16 +2,16 @@
 
 gccwflags="-Wall -Wno-format-security"
 gccflags="-s -malign-double -fno-strict-aliasing -DUMKA_BUILD -DUMKA_EXT_LIBS $gccwflags"
-sourcefiles="safezone.c"
+sourcefiles="safezone.c umka_const.c umka_ident.c"
 
-sourcefiles_gcc="umka_api.c umka_common.c umka_compiler.c umka_const.c umka_decl.c umka_expr.c
-             umka_gen.c  umka_lexer.c  umka_ident.c umka_runtime.c umka_stmt.c umka_types.c umka_vm.c"
+sourcefiles_gcc="umka_api.c umka_common.c umka_compiler.c umka_decl.c umka_expr.c
+             umka_gen.c  umka_lexer.c umka_runtime.c umka_stmt.c umka_types.c umka_vm.c"
 
 rm umka_linux -rf && # remove previous build
 
 cd src &&
 
-$CC $gccflags -c $sourcefiles --dump-ir . && gcc $gccflags -c $sourcefiles_gcc &&
+$CC $gccflags -c $sourcefiles && gcc $gccflags -c $sourcefiles_gcc &&
 
 gcc $gccflags -c umka.c &&
 gcc *.o -o umka -static-libgcc -L$PWD -lm -Wl,-rpath,'$ORIGIN' &&

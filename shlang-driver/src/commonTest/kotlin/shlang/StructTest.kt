@@ -128,6 +128,13 @@ abstract class StructTests: CommonCTest() {
         val result = runCTest("shlang/struct/struct16", listOf(), options())
         assertEquals(10, result.exitCode)
     }
+
+    @Test
+    fun testStruct17() {
+        val result = runCTest("shlang/struct/struct17", listOf(), options())
+        assertEquals("a\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StructTestsO0: StructTests() {

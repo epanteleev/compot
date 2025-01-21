@@ -109,9 +109,6 @@ inline fun neg(crossinline type: TypeMatcher, crossinline value: ValueMatcher): 
     it is Neg && type(it.type()) && value(it.operand())
 }
 
-inline fun gfpOrGep(crossinline source: ValueMatcher, crossinline idx: ValueMatcher): ValueMatcher =
-    gfp(source) or gep(source, idx)
-
 inline fun generate(crossinline type: TypeMatcher): ValueMatcher = {
     it is Generate && type(it.type())
 }

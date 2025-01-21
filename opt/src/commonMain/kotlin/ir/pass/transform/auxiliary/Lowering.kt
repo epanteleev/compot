@@ -296,6 +296,11 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return fcmp
     }
 
+    private fun getGfpIndex(gfp: GetFieldPtr, type: NonTrivialType): Value {
+        val index = gfp.index().toInt()
+        return U64Value.of(gfp.basicType.offset(index).toLong() / type.sizeOf())
+    }
+
     override fun visit(load: Load): Instruction {
         load.match(load(generate(primitive()))) {
             // Before:
@@ -307,18 +312,34 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return bb.replace(load, Copy.copy(load.operand()))
         }
 
-        load.match(load(gfpOrGep(stackAlloc(), any()))) {
-            val pointer = load.operand().asValue<ValueInstruction>()
-            val index = getIndex(pointer)
-            val copy = bb.replace(load, LoadFromStack.load(getSource(pointer), load.type(), index))
+        load.match(load(gep(stackAlloc(), any()))) {
+            val pointer = load.operand().asValue<GetElementPtr>()
+            val loadFromStack = bb.replace(load, LoadFromStack.load(pointer.source(), load.type(), pointer.index()))
             killOnDemand(pointer)
-            return copy
+            return loadFromStack
         }
-        load.match(load(gfpOrGep(generate().not(), any()))) {
-            val pointer = load.operand().asValue<ValueInstruction>()
-            val copy = bb.replace(load, IndexedLoad.load(getSource(pointer), load.type(), getIndex(pointer)))
+
+        load.match(load(gfp(stackAlloc()))) {
+            val pointer = load.operand().asValue<GetFieldPtr>()
+            val index = getGfpIndex(pointer, load.type())
+            val loadFromStack = bb.replace(load, LoadFromStack.load(pointer.source(), load.type(), index))
             killOnDemand(pointer)
-            return copy
+            return loadFromStack
+        }
+
+        load.match(load(gep(stackAlloc().not(), any()))) {
+            val pointer = load.operand().asValue<GetElementPtr>()
+            val indexedLoad = bb.replace(load, IndexedLoad.load(pointer.source(), load.type(), pointer.index()))
+            killOnDemand(pointer)
+            return indexedLoad
+        }
+
+        load.match(load(gfp(stackAlloc().not()))) {
+            val pointer = load.operand().asValue<GetFieldPtr>()
+            val index = getGfpIndex(pointer, load.type())
+            val indexedLoad = bb.replace(load, IndexedLoad.load(pointer.source(), load.type(), index))
+            killOnDemand(pointer)
+            return indexedLoad
         }
 
         return load
@@ -408,22 +429,6 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return select
     }
 
-    private fun getSource(inst: Instruction): Value = when (inst) {
-        is GetElementPtr -> inst.source()
-        is GetFieldPtr   -> inst.source()
-        else             -> throw IllegalArgumentException("Expected GEP or GFP")
-    }
-
-    private fun getIndex(inst: Instruction): Value = when (inst) {
-        is GetElementPtr -> inst.index()
-        is GetFieldPtr -> {
-            val index = inst.index().toInt()
-            val field = inst.basicType.field(index)
-            U64Value.of(inst.basicType.offset(index).toLong() / field.sizeOf())
-        }
-        else -> throw IllegalArgumentException("Expected GEP or GFP")
-    }
-
     private fun killOnDemand(instruction: LocalValue) {
         instruction as Instruction
         if (instruction.usedIn().isEmpty()) { //TODO Need DCE
@@ -482,16 +487,63 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return bb.replace(store, Move.move(toValue, store.value()))
         }
 
-        store.match(store(gfpOrGep(stackAlloc(), any()), any())) {
-            val pointer = store.pointer().asValue<ValueInstruction>()
-            val storeOnSt = StoreOnStack.store(getSource(pointer), getIndex(pointer), store.value())
+        store.match(store(gep(stackAlloc(), any()), any())) {
+            // Before:
+            //  %gep = gep %stackAlloc, %idx
+            //  store %gep, %val
+            //
+            // After:
+            //  movst %gen, %idx, %val
+
+            val pointer = store.pointer().asValue<GetElementPtr>()
+            val storeOnSt = StoreOnStack.store(pointer.source(), pointer.index(), store.value())
             val st = bb.replace(store, storeOnSt)
             killOnDemand(pointer)
             return st
         }
-        store.match(store(gfpOrGep(generate().not(), any()), any())) {
-            val pointer = store.pointer().asValue<ValueInstruction>()
-            val moveBy = MoveByIndex.move(getSource(pointer), getIndex(pointer), store.value())
+
+        store.match(store(gfp(stackAlloc()), any())) {
+            // Before:
+            //  %gfp = gfp %stackAlloc, %idx
+            //  store %gfp, %val
+            //
+            // After:
+            //  movst %gen, %idx, %val
+
+            val pointer = store.pointer().asValue<GetFieldPtr>()
+            val index = getGfpIndex(pointer, store.value().asType())
+            val storeOnSt = StoreOnStack.store(pointer.source(), index, store.value())
+            val st = bb.replace(store, storeOnSt)
+            killOnDemand(pointer)
+            return st
+        }
+
+        store.match(store(gep(stackAlloc().not(), any()), any())) {
+            // Before:
+            //  %gep = gep %anyVal, %idx
+            //  store %gep, %val
+            //
+            // After:
+            //  move %gep, %idx, %val
+
+            val pointer = store.pointer().asValue<GetElementPtr>()
+            val moveBy = MoveByIndex.move(pointer.source(), pointer.index(), store.value())
+            val move = bb.replace(store, moveBy)
+            killOnDemand(pointer)
+            return move
+        }
+
+        store.match(store(gfp(stackAlloc().not()), any())) {
+            // Before:
+            //  %gfp = gfp %anyVal, %idx
+            //  store %gfp, %val
+            //
+            // After:
+            //  move %gfp, %idx, %val
+
+            val pointer = store.pointer().asValue<GetFieldPtr>()
+            val index = getGfpIndex(pointer, store.value().asType())
+            val moveBy = MoveByIndex.move(pointer.source(), index, store.value())
             val move = bb.replace(store, moveBy)
             killOnDemand(pointer)
             return move
