@@ -28,18 +28,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
             throw IllegalStateException("Last instruction is not terminate: bb=$this, last='${instructions.lastOrNull()?.dump()}'")
     }
 
-    fun lastOrNull(): TerminateInstruction? {
-        if (instructions.isEmpty()) {
-            return null
-        }
-
-        val last = instructions.last()
-        if (last !is TerminateInstruction) {
-            return null
-        }
-
-        return last
-    }
+    fun lastOrNull(): TerminateInstruction? = instructions.lastOrNull() as? TerminateInstruction
 
     override fun begin(): Instruction {
         assertion(instructions.isNotEmpty()) {

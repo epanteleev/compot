@@ -194,21 +194,25 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
 
     fun remove(node: T): T {
         modificationCount++
+
         if (node.prev != null) {
             node.prev!!.next = node.next
         } else {
             @Suppress("UNCHECKED_CAST")
             head = node.next as T?
         }
+
         if (node.next != null) {
             node.next!!.prev = node.prev
         } else {
             @Suppress("UNCHECKED_CAST")
             tail = node.prev as T?
         }
+
         size--
         node.next = null
         node.prev = null
+
         return node
     }
 
