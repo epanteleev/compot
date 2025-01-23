@@ -50,6 +50,12 @@ abstract class ArrayTests: CommonCTest() {
         val result = runCTest("shlang/array/array7", listOf(), options())
         assertEquals("/\n", result.output)
     }
+
+    @Test
+    fun test8() {
+        val result = runCTest("shlang/array/array8", listOf(), options())
+        assertEquals("Array is zeroed\n", result.output)
+    }
 }
 
 class ArrayTestsO0: ArrayTests() {

@@ -925,9 +925,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             ir.store(left, rightCvt)
             return rightCvt
         }
+        val rightType = binop.right.resolveType(typeHolder)
 
         val left = visitExpression(binop.left, true)
-        ir.memcpy(left, right, U64Value.of(leftType.size().toLong()))
+        ir.memcpy(left, right, U64Value.of(rightType.size().toLong()))
         return right
     }
 
@@ -1877,10 +1878,23 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 visitFuncCallForStructType(lvalueAdr, rValueType, rvalue)
             }
+            is StringNode -> {
+                // TODO impl special case for 'zero' string
+                val rvalueResult = visitStringNode(initDeclarator.rvalue)
+                val rvalueType = initDeclarator.rvalue.resolveType(typeHolder)
+                val irRvalueType = mb.toIRType<AggregateType>(typeHolder, rvalueType)
+                ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(irRvalueType.sizeOf().toLong()))
+
+                if (rvalueType.size() < type.size()) {
+                    val start = ir.gep(lvalueAdr, I8Type, U64Value.of(rvalueType.size().toLong()))
+                    zeroMemory(start, ArrayType(I8Type, type.size() - rvalueType.size()))
+                }
+            }
             else -> {
                 val rvalueResult = visitExpression(initDeclarator.rvalue, true)
-                val commonType = mb.toIRType<AggregateType>(typeHolder, type)
-                ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(commonType.sizeOf().toLong()))
+                val rvalueType = initDeclarator.rvalue.resolveType(typeHolder)
+                val irRvalueType = mb.toIRType<AggregateType>(typeHolder, rvalueType)
+                ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(irRvalueType.sizeOf().toLong()))
             }
         }
         return lvalueAdr
