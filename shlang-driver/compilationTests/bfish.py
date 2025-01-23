@@ -11,7 +11,7 @@ def build(compiler):
 
 
 def run():
-    completed_process = sp.run(["./a.out"])
+    completed_process = sp.run(["./bftest"])
     if completed_process.returncode == 0:
         print("AES encryption successful")
     else:

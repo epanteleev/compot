@@ -2,17 +2,14 @@ package ir.module
 
 import ir.value.ArgumentValue
 import ir.module.auxiliary.CopyCFG
-import ir.module.auxiliary.DumpFunctionData
 import ir.module.auxiliary.DumpSSAFunctionData
 import ir.module.block.Block
 import ir.pass.AnalysisPassCache
-import ir.pass.analysis.traverse.iterator.*
-import ir.pass.analysis.traverse.iterator.PostorderIterator
 import ir.pass.common.AnalysisResult
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
-class FunctionData private constructor(val prototype: FunctionPrototype, private var argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {
+class FunctionData private constructor(val prototype: FunctionPrototype, private val argumentValues: List<ArgumentValue>, val blocks: BasicBlocks) {
     private val cache = AnalysisPassCache()
 
     fun marker(): MutationMarker = blocks.marker()
