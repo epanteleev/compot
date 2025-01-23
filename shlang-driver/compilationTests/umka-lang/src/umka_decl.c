@@ -10,21 +10,6 @@
 #include "umka_decl.h"
 
 
-static int parseModule(Compiler *comp);
-
-
-// exportMark = ["*"].
-static bool parseExportMark(Compiler *comp)
-{
-    if (comp->lex.tok.kind == TOK_MUL)
-    {
-        lexNextForcedSemicolon(&comp->lex);
-        return true;
-    }
-    return false;
-}
-
-
 // identList = ident exportMark {"," ident exportMark}.
 static void parseIdentList(Compiler *comp, IdentName *names, bool *exported, int capacity, int *num)
 {
@@ -902,7 +887,7 @@ static void parseImport(Compiler *comp)
 
 
 // module = [import ";"] decls.
-static int parseModule(Compiler *comp)
+int parseModule(Compiler *comp)
 {
     comp->blocks.module = moduleAdd(&comp->modules, comp->lex.fileName);
 

@@ -11,7 +11,7 @@ rm umka_linux -rf && # remove previous build
 
 cd src &&
 
-$CC $gccflags -c $sourcefiles && gcc $gccflags -c $sourcefiles_gcc &&
+$CC $gccflags -c $sourcefiles --dump-ir . && gcc $gccflags -c $sourcefiles_gcc &&
 
 gcc $gccflags -c umka.c &&
 gcc *.o -o umka -static-libgcc -L$PWD -lm -Wl,-rpath,'$ORIGIN' &&
