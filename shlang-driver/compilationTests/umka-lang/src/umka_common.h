@@ -280,5 +280,9 @@ static inline DynArrayDimensions *getDims(const DynArray *array)
     return (DynArrayDimensions *)((char *)array->data - sizeof(DynArrayDimensions));
 }
 
+void *moduleLoadImplLib(const char *path);
+void moduleFreeImplLib(void *lib);
+const char *moduleImplLibSuffix();
+void *moduleLoadImplLibFunc(void *lib, const char *name);
 
 #endif // UMKA_COMMON_H_INCLUDED
