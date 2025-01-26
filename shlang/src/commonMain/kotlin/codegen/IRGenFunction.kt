@@ -971,6 +971,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             val right = visitExpression(binOp.right, true)
             val convertedRight = cvtToI8(right)
             val current = ir.currentLabel()
+
             ir.branch(end)
             ir.switchLabel(end)
             ir.phi(listOf(I8Value.of(0), convertedRight), listOf(initialBB, current))
@@ -979,16 +980,16 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             val left = visitExpression(binOp.left, true)
             val convertedLeft = ir.convertLVToType(left, FlagType)
 
-            val initialBB = ir.currentLabel()
             val bb = ir.createLabel()
             val end = ir.createLabel()
+            val initialBB = ir.currentLabel()
             ir.branchCond(convertedLeft, end, bb)
             ir.switchLabel(bb)
 
             val right = visitExpression(binOp.right, true)
             val convertedRight = cvtToI8(right)
-
             val current = ir.currentLabel()
+
             ir.branch(end)
             ir.switchLabel(end)
             ir.phi(listOf(I8Value.of(1), convertedRight), listOf(initialBB, current))

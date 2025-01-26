@@ -11,9 +11,7 @@
 #include "umka_decl.h"
 #include "umka_stmt.h"
 
-
 static void parseDynArrayLiteral(Compiler *comp, Type **type, Const *constant);
-
 
 void doPushConst(Compiler *comp, Type *type, Const *constant)
 {
@@ -31,7 +29,6 @@ void doPushConst(Compiler *comp, Type *type, Const *constant)
         comp->error.handler(comp->error.context, "Illegal type");
 }
 
-
 void doPushVarPtr(Compiler *comp, Ident *ident)
 {
     if (ident->block == 0)
@@ -40,8 +37,7 @@ void doPushVarPtr(Compiler *comp, Ident *ident)
         genPushLocalPtr(&comp->gen, ident->offset);
 }
 
-
-static void doPassParam(Compiler *comp, Type *formalParamType)
+void doPassParam(Compiler *comp, Type *formalParamType)
 {
     if (doTryRemoveCopyResultToTempVar(comp))
     {
@@ -58,7 +54,6 @@ static void doPassParam(Compiler *comp, Type *formalParamType)
     if (typeNarrow(formalParamType) || typeStructured(formalParamType))
         genAssignParam(&comp->gen, formalParamType->kind, typeSize(&comp->types, formalParamType));
 }
-
 
 void doCopyResultToTempVar(Compiler *comp, Type *type)
 {
@@ -83,8 +78,7 @@ bool doTryRemoveCopyResultToTempVar(Compiler *comp)
     return true;
 }
 
-
-static void doTryImplicitDeref(Compiler *comp, Type **type)
+void doTryImplicitDeref(Compiler *comp, Type **type)
 {
     if ((*type)->kind == TYPE_PTR && (*type)->base->kind == TYPE_PTR)
     {
@@ -99,8 +93,7 @@ static void doTryImplicitDeref(Compiler *comp, Type **type)
     }
 }
 
-
-static void doEscapeToHeap(Compiler *comp, Type *ptrType)
+void doEscapeToHeap(Compiler *comp, Type *ptrType)
 {
     // Allocate heap
     genPushIntConst(&comp->gen, typeSize(&comp->types, ptrType->base));
@@ -114,8 +107,7 @@ static void doEscapeToHeap(Compiler *comp, Type *ptrType)
     genPushReg(&comp->gen, REG_HEAP_COPY);
 }
 
-
-static void doOrdinalToOrdinalOrRealToRealConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doOrdinalToOrdinalOrRealToRealConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
     {
@@ -128,8 +120,7 @@ static void doOrdinalToOrdinalOrRealToRealConv(Compiler *comp, Type *dest, Type 
     *src = dest;
 }
 
-
-static void doIntToRealConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs)
+void doIntToRealConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs)
 {
     BuiltinFunc builtin = lhs ? BUILTIN_REAL_LHS : BUILTIN_REAL;
     if (constant)
@@ -140,8 +131,7 @@ static void doIntToRealConv(Compiler *comp, Type *dest, Type **src, Const *const
     *src = dest;
 }
 
-
-static void doCharToStrConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs)
+void doCharToStrConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs)
 {
     if (constant)
     {
@@ -172,8 +162,7 @@ static void doCharToStrConv(Compiler *comp, Type *dest, Type **src, Const *const
     *src = dest;
 }
 
-
-static void doDynArrayToStrConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs)
+void doDynArrayToStrConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs)
 {
     if (constant)
         comp->error.handler(comp->error.context, "Conversion to string is not allowed in constant expressions");
@@ -190,8 +179,7 @@ static void doDynArrayToStrConv(Compiler *comp, Type *dest, Type **src, Const *c
     *src = dest;
 }
 
-
-static void doStrToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doStrToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
     {
@@ -211,8 +199,7 @@ static void doStrToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const *c
     *src = dest;
 }
 
-
-static void doDynArrayToArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs)
+void doDynArrayToArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs)
 {
     if (constant)
         comp->error.handler(comp->error.context, "Conversion to array is not allowed in constant expressions");
@@ -231,8 +218,7 @@ static void doDynArrayToArrayConv(Compiler *comp, Type *dest, Type **src, Const 
     *src = dest;
 }
 
-
-static void doArrayToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doArrayToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
     {
@@ -253,8 +239,7 @@ static void doArrayToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const 
     *src = dest;
 }
 
-
-static void doDynArrayToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doDynArrayToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
         comp->error.handler(comp->error.context, "Conversion from dynamic array is not allowed in constant expressions");
@@ -336,8 +321,7 @@ static void doDynArrayToDynArrayConv(Compiler *comp, Type *dest, Type **src, Con
     *src = dest;
 }
 
-
-static void doPtrToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doPtrToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
     {
@@ -400,8 +384,7 @@ static void doPtrToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const *
     *src = dest;
 }
 
-
-static void doInterfaceToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doInterfaceToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
         comp->error.handler(comp->error.context, "Conversion to interface is not allowed in constant expressions");
@@ -452,8 +435,7 @@ static void doInterfaceToInterfaceConv(Compiler *comp, Type *dest, Type **src, C
     *src = dest;
 }
 
-
-static void doValueToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doValueToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
         comp->error.handler(comp->error.context, "Conversion to interface is not allowed in constant expressions");
@@ -463,8 +445,7 @@ static void doValueToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const
     doPtrToInterfaceConv(comp, dest, src, constant);
 }
 
-
-static void doInterfaceToPtrConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doInterfaceToPtrConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
         comp->error.handler(comp->error.context, "Conversion from interface is not allowed in constant expressions");
@@ -473,8 +454,7 @@ static void doInterfaceToPtrConv(Compiler *comp, Type *dest, Type **src, Const *
     *src = dest;
 }
 
-
-static void doInterfaceToValueConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doInterfaceToValueConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
         comp->error.handler(comp->error.context, "Conversion from interface is not allowed in constant expressions");
@@ -485,8 +465,7 @@ static void doInterfaceToValueConv(Compiler *comp, Type *dest, Type **src, Const
     *src = dest;
 }
 
-
-static void doPtrToWeakPtrConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doPtrToWeakPtrConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
         comp->error.handler(comp->error.context, "Conversion to weak pointer is not allowed in constant expressions");
@@ -496,8 +475,7 @@ static void doPtrToWeakPtrConv(Compiler *comp, Type *dest, Type **src, Const *co
     *src = dest;
 }
 
-
-static void doWeakPtrToPtrConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs)
+void doWeakPtrToPtrConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs)
 {
     if (constant)
         comp->error.handler(comp->error.context, "Conversion from weak pointer is not allowed in constant expressions");
@@ -513,8 +491,7 @@ static void doWeakPtrToPtrConv(Compiler *comp, Type *dest, Type **src, Const *co
     *src = dest;
 }
 
-
-static void doFnToClosureConv(Compiler *comp, Type *dest, Type **src, Const *constant)
+void doFnToClosureConv(Compiler *comp, Type *dest, Type **src, Const *constant)
 {
     if (constant)
         comp->error.handler(comp->error.context, "Conversion to closure is not allowed in constant expressions");
@@ -530,7 +507,6 @@ static void doFnToClosureConv(Compiler *comp, Type *dest, Type **src, Const *con
     genPushLocalPtr(&comp->gen, destOffset);
     *src = dest;
 }
-
 
 static void doImplicitTypeConvEx(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs, bool rhs)
 {
@@ -2546,7 +2522,7 @@ void parseDesignatorList(Compiler *comp, Type **type, Const *constant, bool *isV
 
 // factor = designator | intNumber | realNumber | charLiteral | stringLiteral |
 //          ("+" | "-" | "!" | "~" ) factor | "&" designator | "(" expr ")".
-static void parseFactor(Compiler *comp, Type **type, Const *constant)
+void parseFactor(Compiler *comp, Type **type, Const *constant)
 {
     switch (comp->lex.tok.kind)
     {
@@ -2687,30 +2663,6 @@ static void parseFactor(Compiler *comp, Type **type, Const *constant)
         }
 
         default: comp->error.handler(comp->error.context, "Illegal expression");
-    }
-}
-
-
-// term = factor {("*" | "/" | "%" | "<<" | ">>" | "&") factor}.
-static void parseTerm(Compiler *comp, Type **type, Const *constant)
-{
-    parseFactor(comp, type, constant);
-
-    while (comp->lex.tok.kind == TOK_MUL || comp->lex.tok.kind == TOK_DIV || comp->lex.tok.kind == TOK_MOD ||
-           comp->lex.tok.kind == TOK_SHL || comp->lex.tok.kind == TOK_SHR || comp->lex.tok.kind == TOK_AND)
-    {
-        TokenKind op = comp->lex.tok.kind;
-        lexNext(&comp->lex);
-
-        Const rightConstantBuf, *rightConstant;
-        if (constant)
-            rightConstant = &rightConstantBuf;
-        else
-            rightConstant = NULL;
-
-        Type *rightType = *type;
-        parseFactor(comp, &rightType, rightConstant);
-        doApplyOperator(comp, type, &rightType, constant, rightConstant, op, true, true);
     }
 }
 
