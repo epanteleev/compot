@@ -105,9 +105,9 @@ internal object TypeConverter {
             }
         }
         return if (field == null) {
-            structType(type.name, listOf())
+            structType(type.name, listOf(), type.alignmentOf())
         } else {
-            structType(type.name, listOf(field))
+            structType(type.name, listOf(field), type.alignmentOf())
         }
     }
 

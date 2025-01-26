@@ -22,11 +22,11 @@ abstract class DumpModule<T: Module> protected constructor(protected val module:
     abstract fun functionDump(functionData: FunctionData): StringBuilder
 
     private fun dumpExternFunctions() {
-        for (fn in module.externFunctions.values) {
+        for (fn in module.functionDeclarations.values) {
             builder.append(fn)
             builder.append('\n')
         }
-        if (module.externFunctions.isNotEmpty()) {
+        if (module.functionDeclarations.isNotEmpty()) {
             builder.append('\n')
         }
     }

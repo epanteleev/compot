@@ -7,7 +7,7 @@ import ir.platform.x64.auxiliary.DumpLModule
 
 
 class LModule(functions: Map<String, FunctionData>,
-              externFunctions: Map<String, ExternFunction>,
+              externFunctions: Map<String, DirectFunctionPrototype>,
               constantPool: Map<String, GlobalConstant>,
               globals: Map<String, AnyGlobalValue>,
               types: Map<String, StructType>):
@@ -18,7 +18,7 @@ class LModule(functions: Map<String, FunctionData>,
         for ((name, function) in functions) {
             newMap[name] = function.copy()
         }
-        return LModule(newMap, externFunctions, constantPool, globals, types) //TODO deep copy???
+        return LModule(newMap, functionDeclarations, constantPool, globals, types) //TODO deep copy???
     }
 
     override fun toString(): String {

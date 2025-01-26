@@ -1,5 +1,6 @@
 package types
 
+import ir.Definitions
 import ir.Definitions.BYTE_SIZE
 
 
@@ -14,7 +15,8 @@ class CUnionType private constructor(
             return BYTE_SIZE
         }
 
-        return fields.maxOf { it.cType().size() }
+        val unalignedSize = fields.maxOf { it.cType().size() }
+        return Definitions.alignTo(unalignedSize, alignmentOf())
     }
 
     override fun toString(): String = buildString {
@@ -29,6 +31,10 @@ class CUnionType private constructor(
     }
 
     override fun alignmentOf(): Int {
+        if (fields.isEmpty()) {
+            return BYTE_SIZE
+        }
+
         return fields.maxOf { it.cType().alignmentOf() }
     }
 

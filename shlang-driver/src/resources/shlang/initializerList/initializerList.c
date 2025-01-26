@@ -1,5 +1,5 @@
 
-void printf(const char* str, ...);
+extern void printf(const char* str, ...);
 
 int main() {
     int arr[3] = {1, 2, 3};

@@ -60,10 +60,7 @@ class CStructType private constructor(
             var offset = 0
             for ((idx, field) in fields.withIndex()) {
                 when (field) {
-                    is FieldMember -> {
-                        val fieldDesc = FieldDesc(field.name, idx + offset, field)
-                        fieldDescs.add(fieldDesc)
-                    }
+                    is FieldMember -> fieldDescs.add(FieldDesc(field.name, idx + offset, field))
                     is AnonMember -> when (val cType = field.cType()) {
                         is CUnionType -> {
                             for (fieldDesc in cType.descriptors()) {

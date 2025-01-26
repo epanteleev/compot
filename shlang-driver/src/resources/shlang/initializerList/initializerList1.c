@@ -4,7 +4,7 @@ typedef struct Point {
     float y;
 } Point;
 
-void printf(const char* str, ...);
+extern void printf(const char* str, ...);
 
 int main() {
     Point point = {1, 2};

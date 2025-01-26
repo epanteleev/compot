@@ -1,5 +1,5 @@
 
-void printf(char format[], ...);
+extern void printf(char format[], ...);
 
 int main() {
     int arr[] = { [0] = 1, [1] = 2 };

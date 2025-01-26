@@ -60,7 +60,7 @@ class MoveLargeConstants private constructor(val functions: Map<String, Function
             }
             MoveLargeConstants(functions, constants).run()
 
-            return SSAModule(functions, module.externFunctions, constants, module.globals, module.types)
+            return SSAModule(functions, module.functionDeclarations, constants, module.globals, module.types)
         }
     }
 }

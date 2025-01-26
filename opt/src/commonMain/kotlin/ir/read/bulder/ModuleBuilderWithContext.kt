@@ -38,14 +38,14 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
             emptySet()
         }
         val extern = ExternFunction(functionName.name, returnType.type(this), resolvedArguments, attributes)
-        externFunctions[functionName.name] = extern
+        functionDeclarations[functionName.name] = extern
         return extern
     }
 
     override fun build(): Module {
         val fns = functions.map { it.build() }.associateBy { it.name() }
 
-        val ssa = SSAModule(fns, externFunctions, constantPool, globals, structs)
+        val ssa = SSAModule(fns, functionDeclarations, constantPool, globals, structs)
         return VerifySSA.run(ssa)
     }
 
@@ -70,7 +70,7 @@ class ModuleBuilderWithContext private constructor(): TypeResolver, AnyModuleBui
     }
 
     fun findFunctionOrNull(name: String): GlobalSymbol? {
-        val externFunction = externFunctions[name]
+        val externFunction = functionDeclarations[name]
         if (externFunction != null) {
             return externFunction
         }

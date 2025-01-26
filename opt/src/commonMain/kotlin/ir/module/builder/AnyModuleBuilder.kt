@@ -14,7 +14,7 @@ abstract class AnyModuleBuilder {
     protected val constantPool = hashMapOf<String, GlobalConstant>()
     protected val globals = linkedMapOf<String, AnyGlobalValue>()
     protected val structs = hashMapOf<String, StructType>()
-    protected val externFunctions = hashMapOf<String, ExternFunction>()
+    protected val functionDeclarations = hashMapOf<String, DirectFunctionPrototype>()
 
     fun addGlobalValue(name: String, initializer: NonTrivialConstant, attributes: GlobalValueAttribute): GlobalValue {
         val global = GlobalValue.create(name, initializer, attributes)
@@ -58,28 +58,48 @@ abstract class AnyModuleBuilder {
         return global
     }
 
-    fun structType(name: String, fields: List<NonTrivialType>): StructType {
-        val structType = StructType(name, fields)
-        val has = structs.put(name, structType)
+    private fun addStructType(structType: StructType): StructType {
+        val has = structs.put(structType.name, structType)
         if (has != null) {
-            throw IllegalArgumentException("struct with name='$name' already exists")
+            throw IllegalArgumentException("struct with name='${structType.name}' already exists")
         }
 
         return structType
     }
 
-    fun createExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute> = hashSetOf()): ExternFunction {
-        val extern = ExternFunction(name, returnType, arguments, attributes)
-        val has = externFunctions.put(name, extern)
-        if (has != null) {
-            throw IllegalArgumentException("extern function with name='$name' already exists")
+    fun structType(name: String, fields: List<NonTrivialType>): StructType {
+        return addStructType(StructType.create(name, fields))
+    }
+
+    fun structType(name: String, fields: List<NonTrivialType>, alignOf: Int): StructType {
+        return addStructType(StructType.create(name, fields, alignOf))
+    }
+
+    private inline fun<reified T: DirectFunctionPrototype> registerFunction(prototype: T): T {
+        val old = functionDeclarations.put(prototype.name(), prototype)
+        if (old != null) {
+            throw IllegalArgumentException("function with name='${prototype.name()}' already exists")
         }
 
-        return extern
+        return prototype
+    }
+
+    fun createExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute> = hashSetOf()): ExternFunction {
+        val extern = ExternFunction(name, returnType, arguments, attributes)
+        return registerFunction(extern)
+    }
+
+    fun createFunctionDeclaration(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>): DirectFunctionPrototype {
+        val prototype = FunctionPrototype(name, returnType, arguments, attributes)
+        return registerFunction(prototype)
     }
 
     fun findExternFunctionOrNull(name: String): ExternFunction? {
-        return externFunctions[name]
+        return functionDeclarations[name] as? ExternFunction
+    }
+
+    fun findFunctionDeclarationOrNull(name: String): FunctionPrototype? {
+        return functionDeclarations[name] as? FunctionPrototype
     }
 
     fun findConstantOrNull(name: String): GlobalSymbol? {

@@ -4,23 +4,13 @@ import ir.Definitions
 import ir.Definitions.BYTE_SIZE
 
 
-class StructType internal constructor(val name: String, val fields: List<NonTrivialType>): AggregateType {
-    private val alignments = alignments()
-    private val maxAlignment by lazy { alignments.maxOrNull() ?: 1 }
-
+class StructType private constructor(
+    val name: String,
+    val fields: List<NonTrivialType>,
+    private val alignments: IntArray,
+    private val maxAlignment: Int
+) : AggregateType {
     override fun alignmentOf(): Int = maxAlignment
-
-    private fun alignments(): IntArray {
-        var current = 0
-        val result = IntArray(fields.size)
-        for (i in fields.indices) {
-            val field = fields[i]
-            val alignment = field.alignmentOf()
-            current = Definitions.alignTo(current + field.sizeOf(), alignment)
-            result[i] = alignment
-        }
-        return result
-    }
 
     override fun offset(index: Int): Int {
         var current = 0
@@ -51,5 +41,30 @@ class StructType internal constructor(val name: String, val fields: List<NonTriv
 
     fun dump(): String {
         return fields.joinToString(prefix = "$$name = type {", separator = ", ", postfix = "}")
+    }
+
+    companion object {
+        private fun alignments(fields: List<NonTrivialType>): IntArray {
+            var current = 0
+            val result = IntArray(fields.size)
+            for (i in fields.indices) {
+                val field = fields[i]
+                val alignment = field.alignmentOf()
+                current = Definitions.alignTo(current + field.sizeOf(), alignment)
+                result[i] = alignment
+            }
+            return result
+        }
+
+        fun create(name: String, fields: List<NonTrivialType>): StructType {
+            val alignments = alignments(fields)
+            val maxAlignment = alignments.maxOrNull() ?: BYTE_SIZE
+            return StructType(name, fields, alignments, maxAlignment)
+        }
+
+        fun create(name: String, fields: List<NonTrivialType>, alignOf: Int): StructType {
+            val alignments = alignments(fields)
+            return StructType(name, fields, alignments, alignOf)
+        }
     }
 }

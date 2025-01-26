@@ -60,6 +60,7 @@ class UnionDeclaration(name: Identifier) : AnyTypeNode(name) { //TODO separate c
 }
 
 class TypeQualifierNode(name: Keyword): AnyTypeNode(name) {
+    override fun toString(): String = name.str()
     override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
         return visitor.visit(this)
     }
@@ -77,6 +78,7 @@ class TypeQualifierNode(name: Keyword): AnyTypeNode(name) {
 }
 
 class StorageClassSpecifier(name: Keyword): AnyTypeNode(name) {
+    override fun toString(): String = name.str()
     override fun <T> accept(visitor: TypeNodeVisitor<T>): T {
         return visitor.visit(this)
     }
@@ -101,6 +103,7 @@ class StorageClassSpecifier(name: Keyword): AnyTypeNode(name) {
 }
 
 class TypeNode(name: CToken) : AnyTypeNode(name) {
+    override fun toString(): String = name.str()
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {

@@ -6,18 +6,16 @@ import ir.module.Module
 import ir.module.SSAModule
 import ir.pass.analysis.VerifySSA
 import ir.value.ArgumentValue
-import ir.module.AnyFunctionPrototype
 import ir.module.DirectFunctionPrototype
 import ir.module.builder.AnyModuleBuilder
 import ir.types.NonTrivialType
-import ir.types.PrimitiveType
 
 
 class ModuleBuilder private constructor(): AnyModuleBuilder() {
     private val functions = arrayListOf<FunctionDataBuilder>()
 
     fun findFunction(name: String): DirectFunctionPrototype? {
-        return functions.find { it.prototype().name() == name }?.prototype() ?: findExternFunctionOrNull(name)
+        return functions.find { it.prototype().name() == name }?.prototype() ?: functionDeclarations[name]
     }
 
     fun createFunction(name: String, returnType: Type, argumentTypes: List<NonTrivialType>, attributes: Set<FunctionAttribute> = hashSetOf()): FunctionDataBuilder {
@@ -33,9 +31,10 @@ class ModuleBuilder private constructor(): AnyModuleBuilder() {
     }
 
     override fun build(): Module {
-        val fns = functions.map { it.build() }.associateBy { it.name() }
+        val fns = functions.map { it.build() }
+            .associateBy { it.name() }
 
-        val module = SSAModule(fns, externFunctions, constantPool, globals, structs)
+        val module = SSAModule(fns, functionDeclarations, constantPool, globals, structs)
         return VerifySSA.run(module)
     }
 

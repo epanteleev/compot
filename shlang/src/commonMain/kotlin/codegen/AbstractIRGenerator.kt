@@ -210,9 +210,10 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         when (val cType = varDesc.typeDesc.cType()) {
             is CFunctionType -> {
                 val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass).build()
-                val externFunc = getExternFunction(declarator.name(), cPrototype) //TODO extern not everytime
-                varStack[declarator.name()] = externFunc
-                return externFunc
+                return when (varDesc.storageClass) {
+                    StorageClass.EXTERN -> getExternFunction(declarator.name(), cPrototype)
+                    else -> mb.createFunctionDeclaration(declarator.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
+                }
             }
             is CPrimitive -> {
                 val irType = mb.toIRLVType<NonTrivialType>(typeHolder, cType)
