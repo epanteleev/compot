@@ -39,5 +39,6 @@ void doWeakPtrToPtrConv(Compiler *comp, Type *dest, Type **src, Const *constant,
 void doFnToClosureConv(Compiler *comp, Type *dest, Type **src, Const *constant);
 void parseTerm(Compiler *comp, Type **type, Const *constant);
 void parseFactor(Compiler *comp, Type **type, Const *constant);
+void parseTerm0(Compiler *comp, Type **type, Const *constant);
 
 #endif // UMKA_EXPR_H_INCLUDED

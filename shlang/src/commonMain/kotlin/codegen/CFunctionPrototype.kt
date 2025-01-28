@@ -48,7 +48,7 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
         }
     }
 
-    private fun argumentTypes() { //TODO remove pair
+    private fun argumentTypes() {
         val cType = functionType.retType().cType()
         var offset = 0
         if (cType is AnyCStructType && !cType.isSmall()) {

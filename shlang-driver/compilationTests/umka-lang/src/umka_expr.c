@@ -11,6 +11,12 @@
 #include "umka_decl.h"
 #include "umka_stmt.h"
 
+bool isTermOp(Compiler *comp)
+{
+    return comp->lex.tok.kind == TOK_MUL || comp->lex.tok.kind == TOK_DIV || comp->lex.tok.kind == TOK_MOD ||
+                      comp->lex.tok.kind == TOK_SHL || comp->lex.tok.kind == TOK_SHR || comp->lex.tok.kind == TOK_AND;
+}
+
 static void parseDynArrayLiteral(Compiler *comp, Type **type, Const *constant);
 
 void doPushConst(Compiler *comp, Type *type, Const *constant)

@@ -13,3 +13,18 @@ long lived tree of depth 12 check: -1
 
 >>> N body problem
 
+-0.169075164
+-0.169079859
+
+
+>>> Matrix multiplication
+
+check: -122027500.000000
+
+
+>>> Maps (in order)
+
+
+
+>>> Maps (randomized)
+

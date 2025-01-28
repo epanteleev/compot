@@ -659,7 +659,7 @@ Error: Empty string (code -2) from "foo":
 
 >>> Language tour
 
-Arr: [2.3 -2.91328e-14 2.38]
+Arr: [2.3 -2.05 2.38]
 Got 42
 3 is odd
 1
@@ -692,11 +692,11 @@ Parent: i=9 buf=56
 String representation:
 3
 2.38
-4.90338e-15
+0.138015
 "Hello World"
 0
 "Hello World!"
-[2.3 -2.91328e-14 2.38]
+[2.3 -2.05 2.38]
 [[0 0 0 0 0] [0 0 0 0 0] [0 0 0 0 0] [10 20 30 40 50]]
 {"Hello Umka": 3.14}
 {q: [1 0 0 0] normalized: true}

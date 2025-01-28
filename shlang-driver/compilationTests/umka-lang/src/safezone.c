@@ -11,25 +11,22 @@
 #include "umka_decl.h"
 #include "umka_stmt.h"
 
-bool isTermOp(Compiler *comp)
-{
-    return comp->lex.tok.kind == TOK_MUL || comp->lex.tok.kind == TOK_DIV || comp->lex.tok.kind == TOK_MOD ||
-                      comp->lex.tok.kind == TOK_SHL || comp->lex.tok.kind == TOK_SHR || comp->lex.tok.kind == TOK_AND;
-}
+bool isTermOp(Compiler *comp);
 
 // term = factor {("*" | "/" | "%" | "<<" | ">>" | "&") factor}.
 void parseTerm(Compiler *comp, Type **type, Const *constant)
 {
     parseFactor(comp, type, constant);
 
-    TokenKind kind = comp->lex.tok.kind;
     while (comp->lex.tok.kind == TOK_MUL || comp->lex.tok.kind == TOK_DIV || comp->lex.tok.kind == TOK_MOD ||
            comp->lex.tok.kind == TOK_SHL || comp->lex.tok.kind == TOK_SHR || comp->lex.tok.kind == TOK_AND)
     {
         TokenKind op = comp->lex.tok.kind;
         lexNext(&comp->lex);
 
-        Const rightConstantBuf, *rightConstant;
+        Const rightConstantBuf;
+        long a;
+        Const *rightConstant;
         if (constant)
             rightConstant = &rightConstantBuf;
         else
@@ -38,12 +35,5 @@ void parseTerm(Compiler *comp, Type **type, Const *constant)
         Type *rightType = *type;
         parseFactor(comp, &rightType, rightConstant);
         doApplyOperator(comp, type, &rightType, constant, rightConstant, op, true, true);
-        kind = comp->lex.tok.kind;
-    }
-
-    if (isTermOp(comp)) {
-        printf("HERE\n");
-        printf("kind: %d\n", kind);
-        printf("comp->lex.tok.kind: %d\n", comp->lex.tok.kind);
     }
 }

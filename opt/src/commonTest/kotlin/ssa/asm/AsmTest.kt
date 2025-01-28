@@ -1,4 +1,4 @@
-package asm
+package ssa.asm
 
 import asm.x64.*
 import asm.x64.GPRegister.*

@@ -11,7 +11,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 
 
 data class CopyCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp, XmmOperandsVisitorUnaryOp {
-    val size = type.sizeOf()
+    private val size = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) = when (type) {
         is FloatingPointType       -> XmmOperandsVisitorUnaryOp.apply(dst, src, this)

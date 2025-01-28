@@ -26,7 +26,7 @@ internal object CallConvention {
             val type = if (cType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
             arrayListOf(type)
         }
-        QWORD_SIZE + BYTE_SIZE  -> {
+        QWORD_SIZE + BYTE_SIZE -> {
             val type1 = if (cType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
             arrayListOf(type1, I8Type)
         }
@@ -39,7 +39,7 @@ internal object CallConvention {
             val type2 = if (cType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE + WORD_SIZE)) F32Type else I32Type
             arrayListOf(type1, type2)
         }
-        QWORD_SIZE * 2          -> {
+        QWORD_SIZE * 2 -> {
             val type1 = if (cType.hasFloatOnly(0, QWORD_SIZE)) F64Type else I64Type
             val type2 = if (cType.hasFloatOnly(QWORD_SIZE, QWORD_SIZE * 2)) F64Type else I64Type
             arrayListOf(type1, type2)
