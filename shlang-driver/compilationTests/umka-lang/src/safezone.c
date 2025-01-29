@@ -25,8 +25,8 @@ void parseTerm(Compiler *comp, Type **type, Const *constant)
         lexNext(&comp->lex);
 
         Const rightConstantBuf;
-        long a;
         Const *rightConstant;
+
         if (constant)
             rightConstant = &rightConstantBuf;
         else

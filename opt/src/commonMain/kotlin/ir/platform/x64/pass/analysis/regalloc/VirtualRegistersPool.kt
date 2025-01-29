@@ -33,8 +33,8 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
     fun free(operand: Operand, size: Int) = when (operand) {
         is GPRegister   -> gpRegisters.returnRegister(operand)
         is XmmRegister  -> xmmRegisters.returnRegister(operand)
-        is ArgumentSlot -> Unit
-        is Address      -> frame.returnSlot(operand, size)
+        is Address      -> Unit
+        // is Address      -> frame.returnSlot(operand, size) TODO free slots????
         else            -> throw RuntimeException("unknown operand operand=$operand, size=$size")
     }
 
