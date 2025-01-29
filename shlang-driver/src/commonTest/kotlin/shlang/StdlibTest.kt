@@ -26,6 +26,13 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("a=0; (function(x){a=x;})('hi'); a \"hi\"", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testStdio() {
+        val result = runCTest("shlang/stdlib/stdio", listOf(), options())
+        assertEquals("done\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {
