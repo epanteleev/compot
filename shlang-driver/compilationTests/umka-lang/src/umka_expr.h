@@ -18,27 +18,5 @@ void parseDesignatorList            (Compiler *comp, Type **type, Const *constan
 void parseExpr                      (Compiler *comp, Type **type, Const *constant);
 void parseExprList                  (Compiler *comp, Type **type, Const *constant);
 
-void doPassParam(Compiler *comp, Type *formalParamType);
-void doTryImplicitDeref(Compiler *comp, Type **type);
-void doEscapeToHeap(Compiler *comp, Type *ptrType);
-void doOrdinalToOrdinalOrRealToRealConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void doIntToRealConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs);
-void doCharToStrConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs);
-void doDynArrayToStrConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs);
-void doStrToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void doDynArrayToArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs);
-void doArrayToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void doDynArrayToDynArrayConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void doPtrToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void doInterfaceToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void doValueToInterfaceConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void doInterfaceToPtrConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void doInterfaceToValueConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void doPtrToWeakPtrConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void doWeakPtrToPtrConv(Compiler *comp, Type *dest, Type **src, Const *constant, bool lhs);
-void doFnToClosureConv(Compiler *comp, Type *dest, Type **src, Const *constant);
-void parseTerm(Compiler *comp, Type **type, Const *constant);
-void parseFactor(Compiler *comp, Type **type, Const *constant);
-void parseTerm0(Compiler *comp, Type **type, Const *constant);
 
 #endif // UMKA_EXPR_H_INCLUDED

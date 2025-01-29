@@ -91,8 +91,8 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
-        //asm.mov(size, first, dst.withOffset(second.value().toInt() * size))
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.mov(size, first, Address.from(temp1, second.value().toInt() * size))
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {

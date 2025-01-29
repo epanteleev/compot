@@ -34,7 +34,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
         is GPRegister   -> gpRegisters.returnRegister(operand)
         is XmmRegister  -> xmmRegisters.returnRegister(operand)
         is Address      -> Unit
-        // is Address      -> frame.returnSlot(operand, size) TODO free slots????
+        // is Address      -> frame.returnSlot(operand, size) TODO free slot if it doesn't have 'lea' ????
         else            -> throw RuntimeException("unknown operand operand=$operand, size=$size")
     }
 
