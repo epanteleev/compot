@@ -287,4 +287,25 @@ void vmMakeDynArray             (VM *vm, DynArray *array, Type *type, int len);
 int64_t vmGetMemUsage           (VM *vm);
 const char *vmBuiltinSpelling   (BuiltinFunc builtin);
 
+void pageInit(HeapPages *pages, Fiber *fiber, Error *error);
+void pageFree(HeapPages *pages, bool warnLeak);
+HeapPage *pageAdd(HeapPages *pages, int numChunks, int chunkSize);
+void pageRemove(HeapPages *pages, HeapPage *page);
+HeapChunkHeader *pageGetChunkHeader(HeapPage *page, void *ptr);
+HeapPage *pageFindForAlloc(HeapPages *pages, int size);
+HeapPage *pageFind(HeapPages *pages, void *ptr, bool warnDangling);
+bool stackUnwind(Fiber *fiber, Slot **base, int *ip);
+HeapPage *pageFindById(HeapPages *pages, int id);
+void *chunkAlloc(HeapPages *pages, int64_t size, Type *type, ExternFunc onFree, bool isStack, Error *error);
+void stackChangeFrameRefCnt(Fiber *fiber, HeapPages *pages, void *ptr, int delta);
+int chunkChangeRefCnt(HeapPages *pages, HeapPage *page, void *ptr, int delta);
+void candidateReset(RefCntChangeCandidates *candidates);
+void candidateFree(RefCntChangeCandidates *candidates);
+void candidateInit(RefCntChangeCandidates *candidates);
+void candidatePush(RefCntChangeCandidates *candidates, void *ptr, Type *type);
+void candidatePushDeferred(RefCntChangeCandidates *candidates, void *ptr, Type *type, HeapPage *page);
+void candidatePop(RefCntChangeCandidates *candidates, void **ptr, Type **type, HeapPage **page);
+int fsgetc(bool string, void *stream, int *len);
+int fsnprintf(bool string, void *stream, int size, const char *format, ...);
+
 #endif // UMKA_VM_H_INCLUDED

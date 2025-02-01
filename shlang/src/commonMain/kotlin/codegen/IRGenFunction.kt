@@ -396,7 +396,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val commonType = mb.toIRType<PrimitiveType>(typeHolder, cType)
                 generateIfElsePattern(commonType, conditional)
             }
-            is BOOL -> generateSelectPattern(conditional, U8Type)
+            is BOOL -> generateSelectPattern(conditional, I8Type)
             is AnyCStructType -> generateIfElsePattern(PtrType, conditional)
             else -> throw IRCodeGenError("Unknown type $cType", conditional.begin())
         }
