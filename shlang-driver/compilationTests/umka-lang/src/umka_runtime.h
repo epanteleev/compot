@@ -53,7 +53,4 @@ void rtlsystem          (UmkaStackSlot *params, UmkaStackSlot *result);
 void rtlsystemSandbox   (UmkaStackSlot *params, UmkaStackSlot *result);
 void rtltrace           (UmkaStackSlot *params, UmkaStackSlot *result);
 
-void convToRTLDateTime(RTLDateTime *dest, const struct tm *src);
-void convFromRTLDateTime(struct tm *dest, const RTLDateTime *src);
-
 #endif // UMKA_RUNTIME_H_INCLUDED

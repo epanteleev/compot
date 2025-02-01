@@ -575,3 +575,690 @@ Countries and regions more populous than Russia:
                          SOUTHERN-EUROPE: 153.25
                         NORTHERN-AMERICA: 368.19
          LATIN-AMERICA-AND-THE-CARIBBEAN: 651.04
+
+Test 2
+Pushkin
+
+Pushkin
+Shakespeare
+Tolstoy
+Goethe
+{[1564 1616]: "Shakespeare" [1828 1910]: "Tolstoy" [1749 1832]: "Goethe"}
+
+Test 3
+Test passed
+
+
+>>> Maps - 2
+
+
+Test 1
+true
+false
+"English EN" "" ""
+["Privet Mir" "Hello World" "Salut le Monde"]
+true
+{"Privet Mir": "" "Hello World": "English EN" "Salut le Monde": ""}
+
+Test 2
+"Better" "" "Good"
+3 [{x: 5 y: 7} {x: 11 y: 12} {x: 42 y: 23}]
+{{x: 5 y: 7}: "Good" {x: 11 y: 12}: "" {x: 42 y: 23}: "Better"}
+"Better"
+
+Test 3
+false
+true 20
+{1915: 20}
+
+Test 4
+"OK"
+{[2 5]: "OK" [7 9]: "Also OK" [13 15]: "So-so" [57 89]: "Nice"}
+[2 5] "OK"
+[7 9] "Also OK"
+[13 15] "So-so"
+[57 89] "Nice"
+
+Test 5
+{17: 42 19: 53}
+
+Test 6
+{"e": [2.72 5.44] "pi": [3.14 6.28] "one": [1 2] "ten": [10 20]}
+{"e": [2.72 5.44] "pi": [3.14 6.28] "ten": [10 20]}
+{"e": [2.72 5.44] "one": [1 2] "ten": [10 20]}
+
+Test 7
+
+
+>>> Multiple returns
+
+-3 [6 9] true
+-4 [8 12] false
+[3 2] [7 6] [9 8]
+[9 8] [3 2] [7 6]
+[9 8] [3 2] [7 6]
+Hello World
+World Hello
+23 45.6 "Hello" 'z'
+['a' 'b'] ['c' 'd'] ['e' 'f']
+12 -3 17
+8.5 "43"
+
+
+>>> Error handling
+
+4
+Error: Empty string (code -2) from "foo":
+    foo: (5)
+    fooTest: (11)
+    test: (25)
+    main: (71)
+    <unknown>: (104)
+9
+
+
+>>> Language tour
+
+Arr: [2.3 -2.05 2.38]
+Got 42
+3 is odd
+1
+2
+4
+8
+16
+32
+64
+128
+len = 4
+4.680
+Arr: [0.5 0.7 0.9]
+Parent: i=0 buf=0
+Child : i=0 buf=0
+Parent: i=1 buf=0
+Child : i=1 buf=7
+Parent: i=2 buf=3
+Child : i=2 buf=14
+Parent: i=3 buf=6
+Child : i=3 buf=21
+Parent: i=4 buf=9
+Child : i=4 buf=28
+Parent: i=5 buf=12
+Parent: i=6 buf=35
+Parent: i=7 buf=42
+Parent: i=8 buf=49
+Parent: i=9 buf=56
+
+String representation:
+3
+2.38
+0.138015
+"Hello World"
+0
+"Hello World!"
+[2.3 -2.05 2.38]
+[[0 0 0 0 0] [0 0 0 0 0] [0 0 0 0 0] [10 20 30 40 50]]
+{"Hello Umka": 3.14}
+{q: [1 0 0 0] normalized: true}
+4.68
+'a'
+[0.5 0.7 0.9]
+
+
+>>> Type equivalence
+
+    ...passed
+
+
+>>> Constant folding
+
+-1.47906 2 true true
+
+
+>>> Item pointers
+
+15
+[[0 0] [1 2] [2 4] [3 6] [4 8] [5 10]]
+[0 0]
+[1 2]
+[2 4]
+[3 6]
+[4 8]
+[5 10]
+
+
+>>> Safe type casts
+
+false true false true false true
+42
+true false true false false true
+[42 13 0 0 0 0 0 0]
+[1 5 7 10]
+[1 4 7]
+Hey Hello
+['H' 'e' 'l' 'l' 0x00] Hell
+HellHell
+HellHell
+
+
+>>> Non-local scope
+
+86
+
+
+>>> Weak pointers - 1
+
+Test 1
+42
+it's null
+Test 2
+13 12
+true true
+
+
+>>> Weak pointers - 2
+
+42
+42
+666
+666
+2024
+
+[5 7]
+5 8
+[5 8]
+[2025 2026]
+
+{a: 5 b: 7}
+74
+
+5 8
+{a: 5 b: 8}
+{a: 2024 b: 2025}
+
+25
+
+
+
+>>> Byte conversions
+
+{x: 23 y: -6}
+[23 0 250 255]
+[23 0 251 255]
+{x: 23 y: -5}
+
+
+>>> UTF-8 - 1
+
+string: ▀€$¢
+bytes: 9
+characters: 4
+▀: U+2580
+€: U+20ac
+$: U+24
+¢: U+a2
+reconstructed string: ▀€$¢
+
+string: Привет, мир!
+bytes: 21
+characters: 12
+П: U+41f
+р: U+440
+и: U+438
+в: U+432
+е: U+435
+т: U+442
+,: U+2c
+ : U+20
+м: U+43c
+и: U+438
+р: U+440
+!: U+21
+reconstructed string: Привет, мир!
+
+string: Hello, 世界
+bytes: 13
+characters: 9
+H: U+48
+e: U+65
+l: U+6c
+l: U+6c
+o: U+6f
+,: U+2c
+ : U+20
+世: U+4e16
+界: U+754c
+reconstructed string: Hello, 世界
+
+
+
+>>> UTF-8 - 2
+
+Test passed
+
+
+>>> Imports - 1
+
+Utils from lib 1
+Utils from lib 2
+
+
+>>> Imports - 2
+
+Utils from lib 1
+Utils from lib 2
+
+
+>>> Imports - 3
+
+42 43 1 "Hello"
+
+
+>>> Imports - 4
+
+A name: a.um
+
+
+>>> Closures - 1
+
+running by_name_eq with name : Foo
+running by_name_eq with name : "Foo" and person : {
+    name: "Foo"
+    age: 24
+    sex: "M"
+}
+running by_name_eq with name : "Foo" and person : {
+    name: "Bar"
+    age: 23
+    sex: "M"
+}
+running by_name_eq with name : "Foo" and person : {
+    name: "FooBar"
+    age: 23
+    sex: "F"
+}
+[true false false]
+
+
+>>> Closures - 2
+
+8
+84
+   g: s = ["Hello" "World" "!"]
+45
+20
+30
+4
+8
+
+
+>>> Closures - 3
+
+Fibonacci number 1 = 1
+Fibonacci number 2 = 1
+Fibonacci number 3 = 2
+Fibonacci number 4 = 3
+Fibonacci number 5 = 5
+Fibonacci number 6 = 8
+Fibonacci number 7 = 13
+Fibonacci number 8 = 21
+Fibonacci number 9 = 34
+Fibonacci number 10 = 55
+
+
+>>> Null strings
+
+s2 = 
+"" "" "" "Hello "
+[]
+len = 0, 6
+Hello 
+true false true
+false true false
+
+[]
+len = 0  cap = 0
+
+[]
+len = 0  cap = 0
+
+["Hello" "World"]
+    Item #0 = "Hello"
+    Item #1 = "World"
+len = 2  cap = 6
+
+[]
+len = 0  cap = 0
+
+["Hello" "World"]
+    Item #0 = "Hello"
+    Item #1 = "World"
+len = 2  cap = 6
+
+["Hello" "World"]
+    Item #0 = "Hello"
+    Item #1 = "World"
+len = 2  cap = 6
+
+["World"]
+    Item #0 = "World"
+len = 1  cap = 2
+
+[]
+len = 0  cap = 2
+
+["" ""] ["Hello" "World"]
+""
+
+{}
+len = 0
+
+{"Haha": "Hoho" "Hehe": "Huhu"}
+    Item "Haha" = "Hoho"
+    Item "Hehe" = "Huhu"
+len = 2
+
+{"Hello": "World"}
+    Item "Hello" = "World"
+len = 1
+
+{"Bubu": "Bobo"}
+    Item "Bubu" = "Bobo"
+len = 1
+false true
+
+
+>>> Variadic functions
+
+>> expected  12 "Hello World" [true false true true] 
+>> should work with no values 
+Four averages: 5.23333 3.14 0 -1 
+Greeting {data: " Hello World"} {data: " Hello World Salut le Monde"} 
+
+
+>>> Default parameters
+
+foo: Hello
+foo: World
+2 3.14 true {x: 5 y: 7} [7 8] "foo: Hello"
+2 6.28 true {x: 5 y: 7} [7 8] "foo: Hello"
+2 6.28 false {x: 5 y: 7} [7 8] "foo: Hello"
+2 6.28 false {x: 42 y: 43} [7 8] "foo: Hello"
+2 6.28 false {x: 42 y: 43} [9 10] "foo: Hello"
+2 6.28 false {x: 42 y: 43} [9 10] "foo: Hello"
+
+
+>>> Date/time
+
+0
+2022-10-02 15:13:32
+
+
+>>> Untyped literals
+
+[2 4 -3.14]
+[[12 13] [44 47] [0 -6]]
+{w: 200 h: 100}
+{[3 7]: [] [5 7]: ["Hello" "World"] [11 3]: ["Psst!"]}
+[3 8 14]
+["Haha" "Hoho"]
+[2 4]
+true
+["Meow" "Moo"]
+{w: 300 h: 400}
+[42 9 11]
+[[3 6] [5 7]]
+
+
+>>> Ternary operator
+
+42 17
+42 17
+0: 5 6 7.000000 8.000000 9 10 
+1: 15 16 and nothing more
+2: 5 6 7.000000 8.000000 9 10 
+3: 15 16 and nothing more
+4: 5 6 7.000000 8.000000 9 10 
+5: 15 16 and nothing more
+6: 5 6 7.000000 8.000000 9 10 
+7: 15 16 and nothing more
+8: 5 6 7.000000 8.000000 9 10 
+9: 15 16 and nothing more
+0: [-4 12]
+1: [-4 12]
+2: [-4 12]
+3: [-4 12]
+4: [3 5.5 7]
+5: [3 5.5 7]
+6: [3 5.5 7]
+7: [-4 12]
+8: [-4 12]
+9: [-4 12]
+train! train!
+
+
+>>> Type switches
+
+int: 42 + 5 = 47
+str: 42 + 5 = 425
+[]real: [42] + [5] = [42 5]
+unknown: 42
+
+unknown: 42
+
+int: 47 + 5 = 52
+str: 425 + 5 = 4255
+[]real: [42 5] + [5] = [42 5 5]
+unknown: 42
+
+
+
+>>> Redeclarations
+
+f(): 42 "OK!" true
+g(): 43 "FAIL!" false
+f(): 42 "OK!" true
+"Merry Christmas!" true [5 7] 0.333
+"Merry Christmas!" false [5 7] 144 "Hmmm"
+
+
+>>> Iteration by pointer
+
+0 2 4 6 8 10 12 14 16 18 
+0 6 12 18 24 30 36 42 48 54 
+1 7 13 19 25 31 37 43 49 55 
+[1 7 13 19 25 31 37 43 49 55]
+[1 7 13 19 25 31 37 43 49 55]
+[100 700 1300 1900 2500 3100 3700 4300 4900 5500]
+
+0 2 4 6 8 10 12 14 16 18 
+0 6 12 18 24 30 36 42 48 54 
+1 7 13 19 25 31 37 43 49 55 
+[1 7 13 19 25 31 37 43 49 55]
+[1 7 13 19 25 31 37 43 49 55]
+[100 700 1300 1900 2500 3100 3700 4300 4900 5500]
+
+{"French": {x: 0.5 y: 0.6} "English": {x: 0.3 y: 0.4} "Russian": {x: 0.1 y: 0.2}}
+{"French": {x: 0.5 y: 0.6} "English": {x: 0.3 y: 0.4} "Russian": {x: 0.1 y: 0.2}}
+{"French": {x: 0.5 y: 0.51} "English": {x: 0.3 y: 0.31} "Russian": {x: 0.1 y: 0.11}}
+
+
+>>> Enumerations
+
+74: Draw
+75: Select
+8: Remove
+9: Edit
+23: 
+
+74: Draw
+75: Select
+8: Remove
+9: Edit
+23: Code 23
+
+74: Draw
+75: Select
+8: Remove
+9: Edit
+
+74: Draw
+75: Select
+8: Remove
+9: Edit
+23: Code 23
+42: 
+
+false true true
+
+true true
+
+
+>>> Forward declarations
+
+{
+    name: "node1"
+    children: [
+        {
+            name: "node11"
+            children: [
+                
+            ]
+        }
+        {
+            name: "node12"
+            children: [
+                {
+                    name: "node121"
+                    children: [
+                        
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+{
+    name: "node1"
+    children: {
+        "child1": {
+            name: "node11"
+            children: {
+                
+            }
+        }
+        "child2": {
+            name: "node12"
+            children: {
+                "child21": {
+                    name: "node121"
+                    children: {
+                        
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+>>> Sorting
+
+[15 7.6 2.3 0.4 -7.1 -11.8]
+
+[-11.8 -7.1 0.4 2.3 7.6 15]
+
+Sorting by name:
+[
+    {
+        "date": "1799"
+        "name": "Alexander"
+        "surname": "Pushkin"
+    }
+    {
+        "date": "1688"
+        "name": "Alexander"
+        "surname": "Pope"
+    }
+    {
+        "date": "1860"
+        "name": "Anton"
+        "surname": "Chekhov"
+    }
+    {
+        "date": "1828"
+        "name": "Leo"
+        "surname": "Tolstoy"
+    }
+]
+
+Sorting by surname:
+[
+    {
+        "date": "1860"
+        "name": "Anton"
+        "surname": "Chekhov"
+    }
+    {
+        "date": "1688"
+        "name": "Alexander"
+        "surname": "Pope"
+    }
+    {
+        "date": "1799"
+        "name": "Alexander"
+        "surname": "Pushkin"
+    }
+    {
+        "date": "1828"
+        "name": "Leo"
+        "surname": "Tolstoy"
+    }
+]
+
+Sorting by date:
+[
+    {
+        "date": "1688"
+        "name": "Alexander"
+        "surname": "Pope"
+    }
+    {
+        "date": "1799"
+        "name": "Alexander"
+        "surname": "Pushkin"
+    }
+    {
+        "date": "1828"
+        "name": "Leo"
+        "surname": "Tolstoy"
+    }
+    {
+        "date": "1860"
+        "name": "Anton"
+        "surname": "Chekhov"
+    }
+]
+
+[15 7.6 2.3 0.4 -7.1 -11.8]
+
+[-11.8 -7.1 0.4 2.3 7.6 15]
+
+["yellow" "white" "red" "magenta" "green" "gray" "cyan" "brown" "blue" "black"]
+
+["black" "blue" "brown" "cyan" "gray" "green" "magenta" "red" "white" "yellow"]
+
+["hi" "bye" "" "" "" "" "" "" "" ""]
+
+
+
+>>> Peephole optimizations
+
+true
+1
+
+
+>>> External libraries
+
+8.000000 true Hello

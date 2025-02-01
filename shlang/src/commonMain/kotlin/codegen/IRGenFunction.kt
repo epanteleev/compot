@@ -401,16 +401,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             else -> throw IRCodeGenError("Unknown type $cType", conditional.begin())
         }
 
-    private fun getFieldAddress(struct: Value, cStructType: AnyCStructType, member: FieldDesc): Value {
-        val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
-        if (structIRType.fields().size <= member.index) {
-            val offset = cStructType.size() + member.size() * (member.index - cStructType.members().size)
-            return ir.gep(struct, structIRType, I64Value.of(offset))
-        }
-
-        return ir.gfp(struct, structIRType, I64Value.of(member.index))
-    }
-
 
     private fun visitArrowMemberAccess(arrowMemberAccess: ArrowMemberAccess, isRvalue: Boolean): Value {
         val struct   = visitExpression(arrowMemberAccess.primary, true)
@@ -429,7 +419,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Field not found: $fieldName", arrowMemberAccess.begin())
         }
 
-        val gep = getFieldAddress(struct, cStructType, member)
+        val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
+        if (structIRType.fields().size <= member.index) {
+            val offset = cStructType.size() + member.size() * (member.index - cStructType.members().size)
+            return ir.gep(struct, I8Type, I64Value.of(offset))
+        }
+
+        val gep = ir.gfp(struct, structIRType, I64Value.of(member.index))
         if (!isRvalue) {
             return gep
         }
@@ -453,10 +449,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val member = structType.fieldByNameOrNull(fieldName) ?:
             throw IRCodeGenError("Field not found: '$fieldName'", memberAccess.begin())
 
-        val gep = getFieldAddress(struct, structType, member)
+        val structIRType = mb.toIRType<StructType>(typeHolder, structType)
+        if (structIRType.fields().size <= member.index) {
+            val offset = structType.size() + member.size() * (member.index - structType.members().size)
+            return ir.gep(struct, I8Type, I64Value.of(offset))
+        }
+
+        val gep = ir.gfp(struct, structIRType, I64Value.of(member.index))
         if (!isRvalue) {
             return gep
         }
+
         val memberType = member.cType()
         if (memberType is CAggregateType || memberType is AnyCFunctionType) {
             return gep
@@ -771,17 +774,17 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     is CPointer      -> l
                     else -> throw IRCodeGenError("Pointer type expected, but got $l", binOp.begin())
                 }
-                val convertedLValue = ir.convertLVToType(lvalue, U64Type)
+                val convertedLValue = ir.convertLVToType(lvalue, I64Type)
 
                 val rvalue = visitExpression(binOp.right, true)
                 when (val r = binOp.right.resolveType(typeHolder)) {
                     is AnyCArrayType, is CPrimitive -> {}
                     else -> throw IRCodeGenError("Primitive type expected, but got $r", binOp.begin())
                 }
-                val convertedRValue = ir.convertLVToType(rvalue, U64Type)
+                val convertedRValue = ir.convertLVToType(rvalue, I64Type)
 
                 val size = lValueType.dereference(typeHolder).size()
-                val mul = ir.mul(convertedRValue, U64Value.of(size.toLong()))
+                val mul = ir.mul(convertedRValue, I64Value.of(size.toLong()))
 
                 val result = op(convertedLValue, mul)
                 return ir.convertRVToType(result, commonType)
@@ -830,20 +833,20 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 if (rValueType !is CPrimitive) {
                     throw IRCodeGenError("Primitive type expected, but got $rValueType", binOp.begin())
                 }
-                val convertedRValue = ir.convertLVToType(rvalue, U64Type)
+                val convertedRValue = ir.convertLVToType(rvalue, I64Type)
 
                 val lvalueAddress = visitExpression(binOp.left, false)
                 val lValueType    = binOp.left.resolveType(typeHolder)
                 val lvalue        = ir.load(PtrType, lvalueAddress)
-                val ptr2intLValue = ir.ptr2int(lvalue, U64Type)
+                val ptr2intLValue = ir.ptr2int(lvalue, I64Type)
 
                 if (lValueType !is CPointer) {
                     throw IRCodeGenError("Pointer type expected, but got $lValueType", binOp.begin())
                 }
-                val convertedLValue = ir.convertLVToType(ptr2intLValue, U64Type)
+                val convertedLValue = ir.convertLVToType(ptr2intLValue, I64Type)
 
                 val size = lValueType.dereference(typeHolder).size()
-                val mul = ir.mul(convertedRValue, U64Value.of(size.toLong()))
+                val mul = ir.mul(convertedRValue, I64Value.of(size.toLong()))
 
                 val result = op(convertedLValue, mul)
                 val res = ir.convertLVToType(result, commonType)
