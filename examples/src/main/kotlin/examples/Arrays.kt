@@ -10,7 +10,7 @@ import ir.value.constant.*
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val proto = builder.createExternFunction("printIntArray", VoidType, arrayListOf(PtrType, I32Type))
+    val proto = builder.createExternFunction("printIntArray", VoidType, arrayListOf(PtrType, I32Type), setOf())
 
     builder.createFunction("main", U64Type, arrayListOf()).apply {
         val array = alloc(ArrayType(I32Type, 5))

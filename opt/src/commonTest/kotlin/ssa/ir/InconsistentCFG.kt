@@ -39,7 +39,7 @@ class InconsistentCFG {
     @Test
     fun testCallF32() {
         val builder = ModuleBuilder.create()
-        builder.createExternFunction("calc", F32Type, arrayListOf(F32Type))
+        builder.createExternFunction("calc", F32Type, arrayListOf(F32Type), setOf())
         val invalidPrototype = FunctionPrototype("calc", I32Type, arrayListOf(F32Type), hashSetOf())
 
         builder.createFunction("main", I32Type, arrayListOf()).apply {

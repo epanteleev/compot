@@ -307,5 +307,25 @@ void candidatePushDeferred(RefCntChangeCandidates *candidates, void *ptr, Type *
 void candidatePop(RefCntChangeCandidates *candidates, void **ptr, Type **type, HeapPage **page);
 int fsgetc(bool string, void *stream, int *len);
 int fsnprintf(bool string, void *stream, int size, const char *format, ...);
+int fsscanf(bool string, void *stream, const char *format, ...);
+char *fsscanfString(bool string, void *stream, int *len);
+void qsortSwap(void *a, void *b, void *temp, int itemSize);
+
+typedef int (*QSortCompareFn)(const void *a, const void *b, void *context);
+
+char *qsortPartition(char *first, char *last, int itemSize, QSortCompareFn compare, void *context, void *temp);
+void qsortEx(char *first, char *last, int itemSize, QSortCompareFn compare, void *context, void *temp);
+void vmLoop(VM *vm);
+void doCheckStr(const char *str, Error *error);
+void doHook(Fiber *fiber, HookFunc *hooks, HookEvent event);
+void doSwapImpl(Slot *slot);
+void doDerefImpl(Slot *slot, TypeKind typeKind, Error *error);
+void doAssignImpl(void *lhs, Slot rhs, TypeKind typeKind, int structSize, Error *error);
+void doAddPtrBaseRefCntCandidate(RefCntChangeCandidates *candidates, void *ptr, Type *type);
+void doAddArrayItemsRefCntCandidates(RefCntChangeCandidates *candidates, void *ptr, Type *type, int len);
+void doAddStructFieldsRefCntCandidates(RefCntChangeCandidates *candidates, void *ptr, Type *type);
+void doChangeRefCntImpl(Fiber *fiber, HeapPages *pages, void *ptr, Type *type, TokenKind tokKind);
+char *doAllocStr(HeapPages *pages, int64_t len, Error *error);
+char *doGetEmptyStr();
 
 #endif // UMKA_VM_H_INCLUDED

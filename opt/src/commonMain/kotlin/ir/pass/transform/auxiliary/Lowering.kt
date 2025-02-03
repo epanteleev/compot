@@ -565,7 +565,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(ptr2Int: Pointer2Int): Instruction {
-        ptr2Int.match(ptr2int(generate())) { ptr2int: Pointer2Int ->
+        ptr2Int.match(ptr2int(generate())) {
             // Before:
             //  %res = ptr2int %gen
             //
@@ -573,8 +573,21 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = lea %gen
             //  %res = ptr2int %lea
 
-            val lea = bb.putBefore(ptr2Int, Lea.lea(ptr2int.value().asValue()))
-            bb.updateDF(ptr2int, Pointer2Int.SOURCE, lea)
+            val lea = bb.putBefore(ptr2Int, Lea.lea(ptr2Int.value().asValue()))
+            bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
+            return lea
+        }
+
+        ptr2Int.match(ptr2int(gValue(anytype()))) {
+            // Before:
+            //  %res = ptr2int @global
+            //
+            // After:
+            //  %lea = lea @global
+            //  %res = ptr2int %lea
+
+            val lea = bb.putBefore(ptr2Int, Lea.lea(ptr2Int.value()))
+            bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
             return lea
         }
 

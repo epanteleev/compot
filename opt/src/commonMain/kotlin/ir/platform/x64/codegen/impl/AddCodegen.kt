@@ -77,7 +77,8 @@ data class AddCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPO
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.add(size, second, dst)
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
@@ -104,7 +105,13 @@ data class AddCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPO
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {
-        TODO("Not yet implemented")
+        if (dst == second) {
+            asm.add(size, first, dst)
+        } else {
+            asm.mov(size, second, temp1)
+            asm.add(size, first, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {

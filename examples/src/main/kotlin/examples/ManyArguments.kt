@@ -7,7 +7,7 @@ import ir.types.U64Type
 
 fun main() {
     val moduleBuilder = ModuleBuilder.create()
-    val printInt = moduleBuilder.createExternFunction("printInt", VoidType, arrayListOf(U64Type))
+    val printInt = moduleBuilder.createExternFunction("printInt", VoidType, arrayListOf(U64Type), setOf())
     val argumentTypes = arrayListOf(U64Type, U64Type, U64Type, U64Type, U64Type, U64Type, U64Type, U64Type)
 
     val builder = moduleBuilder.createFunction("sum8", U64Type, argumentTypes)

@@ -10,7 +10,7 @@ import ir.value.constant.*
 
 fun main() {
     val builder = ModuleBuilder.create()
-    val printFloat = builder.createExternFunction("printFloat", VoidType, arrayListOf(F32Type))
+    val printFloat = builder.createExternFunction("printFloat", VoidType, arrayListOf(F32Type), setOf())
     builder.createFunction("main", I32Type, arrayListOf()).apply {
         val first = alloc(F32Type)
         store(first, F32Value(4f))

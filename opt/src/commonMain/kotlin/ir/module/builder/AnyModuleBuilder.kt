@@ -84,7 +84,7 @@ abstract class AnyModuleBuilder {
         return prototype
     }
 
-    fun createExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute> = hashSetOf()): ExternFunction {
+    fun createExternFunction(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>): ExternFunction {
         val extern = ExternFunction(name, returnType, arguments, attributes)
         return registerFunction(extern)
     }

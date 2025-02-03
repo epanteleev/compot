@@ -96,7 +96,8 @@ class MoveByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        TODO()
+        asm.mov(POINTER_SIZE, dst, temp1)
+        asm.mov(size, first, Address.from(temp1, 0, second, ScaleFactor.from(size)))
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {
