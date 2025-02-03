@@ -65,12 +65,12 @@ class VaInit(private val firstArgType: CType): IntrinsicProvider("va_init") { //
 
     companion object {
         fun isGPOperand(type: CType): Boolean = when (type) {
-            is CHAR, is UCHAR, is SHORT, is USHORT, is INT, is UINT, is LONG, is ULONG, is CPointer -> true
+            is BOOL, is AnyCInteger, is CPointer, is CEnumType -> true
             else -> false
         }
 
         fun isFPOperand(type: CType): Boolean = when (type) {
-            is FLOAT, is DOUBLE -> true
+            is AnyCFloat -> true
             else -> false
         }
 

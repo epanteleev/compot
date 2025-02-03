@@ -193,7 +193,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val fieldPtr = ir.gep(alloc, I8Type, I64Value.of(type.sizeOf().toLong() * idx))
                     val arg = when (type) {
                         is PtrType, is IntegerType -> emitBuiltInVaArg(vaList, type, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
-                        is FloatingPointType           -> emitBuiltInVaArg(vaList, type, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
+                        is FloatingPointType       -> emitBuiltInVaArg(vaList, type, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
                         else -> throw IRCodeGenError("Unknown type $type", builtinVaArg.begin())
                     }
                     ir.store(fieldPtr, arg)
