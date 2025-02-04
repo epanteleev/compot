@@ -327,5 +327,39 @@ void doAddStructFieldsRefCntCandidates(RefCntChangeCandidates *candidates, void 
 void doChangeRefCntImpl(Fiber *fiber, HeapPages *pages, void *ptr, Type *type, TokenKind tokKind);
 char *doAllocStr(HeapPages *pages, int64_t len, Error *error);
 char *doGetEmptyStr();
+void doAllocDynArray(HeapPages *pages, DynArray *array, Type *type, int64_t len, Error *error);
+void doGetEmptyDynArray(DynArray *array, Type *type);
+void doAllocMap(HeapPages *pages, Map *map, Type *type, Error *error);
+void doGetMapKeyBytes(Slot key, Type *keyType, Error *error, char **keyBytes, int *keySize);
+void doRebalanceMapNodes(MapNode **nodeInParent);
+MapNode **doGetMapNode(Map *map, Slot key, bool createMissingNodes, HeapPages *pages, Error *error);
+MapNode *doCopyMapNode(Map *map, MapNode *node, Fiber *fiber, HeapPages *pages, Error *error);
+void doGetMapKeysRecursively(Map *map, MapNode *node, void *keys, int *numKeys, Error *error);
+void doGetMapKeys(Map *map, void *keys, Error *error);
+Fiber *doAllocFiber(Fiber *parent, Closure *childClosure, Type *childClosureType, HeapPages *pages, Error *error);
+int doPrintIndented(char *buf, int maxLen, int depth, bool pretty, char ch);
+int doFillReprBuf(Slot *slot, Type *type, char *buf, int maxLen, int depth, bool pretty, bool dereferenced, Error *error);
+
+typedef enum
+{
+    FORMAT_SIZE_SHORT_SHORT,
+    FORMAT_SIZE_SHORT,
+    FORMAT_SIZE_NORMAL,
+    FORMAT_SIZE_LONG,
+    FORMAT_SIZE_LONG_LONG
+} FormatStringTypeSize;
+
+void doCheckFormatString(const char *format, int *formatLen, int *typeLetterPos, TypeKind *typeKind, FormatStringTypeSize *size, Error *error);
+int doPrintSlot(bool string, void *stream, int maxLen, const char *format, Slot slot, TypeKind typeKind, Error *error);
+
+enum
+{
+    STACK_OFFSET_COUNT  = 3,
+    STACK_OFFSET_STREAM = 2,
+    STACK_OFFSET_FORMAT = 1,
+    STACK_OFFSET_VALUE  = 0
+};
+
+void doBuiltinPrintf(Fiber *fiber, HeapPages *pages, bool console, bool string, Error *error);
 
 #endif // UMKA_VM_H_INCLUDED

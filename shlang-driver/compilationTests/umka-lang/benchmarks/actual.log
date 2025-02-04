@@ -1,124 +1,30 @@
-here 2
-
 
 
 >>> Binary trees
 
-here 7
-
-stretch tree of depth 13here 7
-
- check: -1here 2
-
-
-here 7
-
-8192here 7
-
- trees of depth 4here 7
-
- check: -8192here 2
-
-
-here 7
-
-2048here 7
-
- trees of depth 6here 7
-
- check: -2048here 2
-
-
-here 7
-
-512here 7
-
- trees of depth 8here 7
-
- check: -512here 2
-
-
-here 7
-
-128here 7
-
- trees of depth 10here 7
-
- check: -128here 2
-
-
-here 7
-
-32here 7
-
- trees of depth 12here 7
-
- check: -32here 2
-
-
-here 7
-
-long lived tree of depth 12here 7
-
- check: -1here 2
-
-
-here 15
-
-here 2
-
-here 2
-
+stretch tree of depth 13 check: -1
+8192 trees of depth 4 check: -8192
+2048 trees of depth 6 check: -2048
+512 trees of depth 8 check: -512
+128 trees of depth 10 check: -128
+32 trees of depth 12 check: -32
+long lived tree of depth 12 check: -1
 
 
 >>> N body problem
 
-here 15
-
--0.169075164here 2
-
-
-here 15
-
--0.169079859here 2
-
-
-here 15
-
-here 2
-
-here 2
-
+-0.169075164
+-0.169079859
 
 
 >>> Matrix multiplication
 
-here 15
-
-check: -122027500.000000here 2
-
-
-here 15
-
-here 2
-
-here 2
-
+check: -122027500.000000
 
 
 >>> Maps (in order)
 
-here 15
-
-here 2
-
-here 2
-
 
 
 >>> Maps (randomized)
-
-here 15
-
-here 2
 

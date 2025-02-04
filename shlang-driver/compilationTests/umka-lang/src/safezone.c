@@ -1015,3 +1015,786 @@ char *doGetEmptyStr()
 
     return data;
 }
+
+void doAllocDynArray(HeapPages *pages, DynArray *array, Type *type, int64_t len, Error *error)
+{
+    array->type     = type;
+    array->itemSize = typeSizeNoCheck(array->type->base);
+
+    DynArrayDimensions dims = {.len = len, .capacity = 2 * (len + 1)};
+
+    char *dimsAndData = chunkAlloc(pages, sizeof(DynArrayDimensions) + dims.capacity * array->itemSize, array->type, NULL, false, error);
+    *(DynArrayDimensions *)dimsAndData = dims;
+
+    array->data = dimsAndData + sizeof(DynArrayDimensions);
+}
+
+void doGetEmptyDynArray(DynArray *array, Type *type)
+{
+    array->type     = type;
+    array->itemSize = typeSizeNoCheck(array->type->base);
+
+    static DynArrayDimensions dims = {.len = 0, .capacity = 0};
+    array->data = (char *)(&dims) + sizeof(DynArrayDimensions);
+}
+
+void doAllocMap(HeapPages *pages, Map *map, Type *type, Error *error)
+{
+    map->type      = type;
+    map->root      = chunkAlloc(pages, typeSizeNoCheck(type->base), type->base, NULL, false, error);
+    map->root->len = 0;
+}
+
+void doGetMapKeyBytes(Slot key, Type *keyType, Error *error, char **keyBytes, int *keySize)
+{
+    switch (keyType->kind)
+    {
+        case TYPE_INT8:
+        case TYPE_INT16:
+        case TYPE_INT32:
+        case TYPE_INT:
+        case TYPE_UINT8:
+        case TYPE_UINT16:
+        case TYPE_UINT32:
+        case TYPE_UINT:
+        case TYPE_BOOL:
+        case TYPE_CHAR:
+        case TYPE_REAL32:
+        case TYPE_REAL:
+        case TYPE_PTR:
+        case TYPE_WEAKPTR:
+        {
+            // keyBytes must point to a pre-allocated 8-byte buffer
+            doAssignImpl(*keyBytes, key, keyType->kind, 0, error);
+            *keySize = typeSizeNoCheck(keyType);
+            break;
+        }
+        case TYPE_STR:
+        {
+            doCheckStr((char *)key.ptrVal, error);
+            *keyBytes = key.ptrVal ? (char *)key.ptrVal : doGetEmptyStr();
+            *keySize = getStrDims(*keyBytes)->len + 1;
+            break;
+        }
+        case TYPE_ARRAY:
+        case TYPE_STRUCT:
+        {
+            *keyBytes = (char *)key.ptrVal;
+            *keySize = typeSizeNoCheck(keyType);
+            break;
+        }
+        default:
+        {
+            *keyBytes = NULL;
+            *keySize = 0;
+            break;
+        }
+    }
+}
+
+void doRebalanceMapNodes(MapNode **nodeInParent)
+{
+    // A naive tree rotation to prevent degeneration into a linked list
+    MapNode *node = *nodeInParent;
+
+    if (node && !node->left && node->right && !node->right->left && node->right->right)
+    {
+        *nodeInParent = node->right;
+        node->right = NULL;
+        (*nodeInParent)->left = node;
+    }
+
+    if (node && node->left && !node->right && node->left->left && !node->left->right)
+    {
+        *nodeInParent = node->left;
+        node->left = NULL;
+        (*nodeInParent)->right = node;
+    }
+}
+
+MapNode **doGetMapNode(Map *map, Slot key, bool createMissingNodes, HeapPages *pages, Error *error)
+{
+    if (!map || !map->root)
+        error->runtimeHandler(error->context, ERR_RUNTIME, "Map is null");
+
+    Slot keyBytesBuffer = {0};
+    char *keyBytes = (char *)&keyBytesBuffer;
+    int keySize = 0;
+
+    doGetMapKeyBytes(key, typeMapKey(map->type), error, &keyBytes, &keySize);
+
+    if (!keyBytes)
+        error->runtimeHandler(error->context, ERR_RUNTIME, "Map key is null");
+
+    if (keySize == 0)
+        error->runtimeHandler(error->context, ERR_RUNTIME, "Map key has zero length");
+
+    MapNode **node = &map->root;
+
+    while (*node)
+    {
+        Slot nodeKeyBytesBuffer = {0};
+        char *nodeKeyBytes = (char *)&nodeKeyBytesBuffer;
+        int nodeKeySize = 0;
+
+        if ((*node)->key)
+        {
+            Slot nodeKeySlot = {.ptrVal = (*node)->key};
+            doDerefImpl(&nodeKeySlot, typeMapKey(map->type)->kind, error);
+            doGetMapKeyBytes(nodeKeySlot, typeMapKey(map->type), error, &nodeKeyBytes, &nodeKeySize);
+        }
+
+        int keyDiff = 0;
+        if (keySize != nodeKeySize)
+            keyDiff = keySize - nodeKeySize;
+        else
+            keyDiff = memcmp(keyBytes, nodeKeyBytes, keySize);
+
+        if (keyDiff > 0)
+            node = &(*node)->right;
+        else if (keyDiff < 0)
+            node = &(*node)->left;
+        else
+            return node;
+
+        doRebalanceMapNodes(node);
+    }
+
+    if (createMissingNodes)
+    {
+        Type *nodeType = map->type->base;
+        *node = (MapNode *)chunkAlloc(pages, typeSizeNoCheck(nodeType), nodeType, NULL, false, error);
+    }
+
+    return node;
+}
+
+MapNode *doCopyMapNode(Map *map, MapNode *node, Fiber *fiber, HeapPages *pages, Error *error)
+{
+    if (!node)
+        return NULL;
+
+    Type *nodeType = map->type->base;
+    MapNode *result = (MapNode *)chunkAlloc(pages, typeSizeNoCheck(nodeType), nodeType, NULL, false, error);
+
+    result->len = node->len;
+
+    if (node->key)
+    {
+        Type *keyType = typeMapKey(map->type);
+        int keySize = typeSizeNoCheck(keyType);
+
+        Slot srcKey = {.ptrVal = node->key};
+        doDerefImpl(&srcKey, keyType->kind, error);
+
+        // When allocating dynamic arrays, we mark with type the data chunk, not the header chunk
+        result->key = chunkAlloc(pages, typeSizeNoCheck(keyType), keyType->kind == TYPE_DYNARRAY ? NULL : keyType, NULL, false, error);
+
+        if (typeGarbageCollected(keyType))
+            doChangeRefCntImpl(fiber, pages, srcKey.ptrVal, keyType, TOK_PLUSPLUS);
+
+        doAssignImpl(result->key, srcKey, keyType->kind, keySize, error);
+    }
+
+    if (node->data)
+    {
+        Type *itemType = typeMapItem(map->type);
+        int itemSize = typeSizeNoCheck(itemType);
+
+        Slot srcItem = {.ptrVal = node->data};
+        doDerefImpl(&srcItem, itemType->kind, error);
+
+        // When allocating dynamic arrays, we mark with type the data chunk, not the header chunk
+        result->data = chunkAlloc(pages, typeSizeNoCheck(itemType), itemType->kind == TYPE_DYNARRAY ? NULL : itemType, NULL, false, error);
+
+        if (typeGarbageCollected(itemType))
+            doChangeRefCntImpl(fiber, pages, srcItem.ptrVal, itemType, TOK_PLUSPLUS);
+
+        doAssignImpl(result->data, srcItem, itemType->kind, itemSize, error);
+    }
+
+    if (node->left)
+        result->left = doCopyMapNode(map, node->left, fiber, pages, error);
+
+    if (node->right)
+        result->right = doCopyMapNode(map, node->right, fiber, pages, error);
+
+    return result;
+}
+
+void doGetMapKeysRecursively(Map *map, MapNode *node, void *keys, int *numKeys, Error *error)
+{
+    if (node->left)
+        doGetMapKeysRecursively(map, node->left, keys, numKeys, error);
+
+    if (node->key)
+    {
+        Type *keyType = typeMapKey(map->type);
+        int keySize = typeSizeNoCheck(keyType);
+        void *destKey = (char *)keys + keySize * (*numKeys);
+
+        Slot srcKey = {.ptrVal = node->key};
+        doDerefImpl(&srcKey, keyType->kind, error);
+        doAssignImpl(destKey, srcKey, keyType->kind, keySize, error);
+
+        (*numKeys)++;
+    }
+
+    if (node->right)
+        doGetMapKeysRecursively(map, node->right, keys, numKeys, error);
+}
+
+void doGetMapKeys(Map *map, void *keys, Error *error)
+{
+    int numKeys = 0;
+    doGetMapKeysRecursively(map, map->root, keys, &numKeys, error);
+    if (numKeys != map->root->len)
+        error->runtimeHandler(error->context, ERR_RUNTIME, "Wrong number of map keys");
+}
+
+Fiber *doAllocFiber(Fiber *parent, Closure *childClosure, Type *childClosureType, HeapPages *pages, Error *error)
+{
+    if (!childClosure || childClosure->entryOffset <= 0)
+        error->runtimeHandler(error->context, ERR_RUNTIME, "Called function is not defined");
+
+    // Copy whole fiber context
+    Fiber *child = chunkAlloc(pages, sizeof(Fiber), NULL, NULL, false, error);
+
+    *child = *parent;
+    child->stack = chunkAlloc(pages, child->stackSize * sizeof(Slot), NULL, NULL, true, error);
+    child->top = child->base = child->stack + child->stackSize - 1;
+
+    child->parent = parent;
+
+    Signature *childClosureSig = &childClosureType->field[0]->type->sig;
+
+    // Push upvalues
+    child->top -= sizeof(Interface) / sizeof(Slot);
+    *(Interface *)child->top = childClosure->upvalue;
+    doChangeRefCntImpl(child, pages, child->top, childClosureSig->param[0]->type, TOK_PLUSPLUS);
+
+    // Push 'return from fiber' signal instead of return address
+    (--child->top)->intVal = RETURN_FROM_FIBER;
+
+     // Call child fiber closure
+    child->ip = childClosure->entryOffset;
+
+    return child;
+}
+
+int doPrintIndented(char *buf, int maxLen, int depth, bool pretty, char ch)
+{
+    enum {INDENT_WIDTH = 4};
+
+    int len = 0;
+
+    switch (ch)
+    {
+        case '(':
+        case '[':
+        case '{':
+        {
+            len += snprintf(buf + len, maxLen, "%c", ch);
+            if (pretty)
+                len += snprintf(buf + len, maxLen, "\n%*c", INDENT_WIDTH * (depth + 1), ' ');
+            break;
+        }
+
+        case ')':
+        case ']':
+        case '}':
+        {
+            if (pretty)
+            {
+                if (depth > 0)
+                    len += snprintf(buf + len, maxLen, "\n%*c", INDENT_WIDTH * depth, ' ');
+                else
+                    len += snprintf(buf + len, maxLen, "\n");
+            }
+            len += snprintf(buf + len, maxLen, "%c", ch);
+            break;
+        }
+
+        case ' ':
+        {
+            if (pretty)
+                len += snprintf(buf + len, maxLen, "\n%*c", INDENT_WIDTH * (depth + 1), ' ');
+            else
+                len += snprintf(buf + len, maxLen, " ");
+            break;
+        }
+
+        default: break;
+    }
+
+    return len;
+}
+
+int doFillReprBuf(Slot *slot, Type *type, char *buf, int maxLen, int depth, bool pretty, bool dereferenced, Error *error)
+{
+    enum {MAX_DEPTH = 20};
+
+    int len = 0;
+
+    if (depth == MAX_DEPTH)
+    {
+        len += snprintf(buf + len, maxLen, "...");
+        return len;
+    }
+
+    switch (type->kind)
+    {
+        case TYPE_VOID:     len += snprintf(buf + len, maxLen, "void");                                                             break;
+        case TYPE_INT8:
+        case TYPE_INT16:
+        case TYPE_INT32:
+        case TYPE_INT:
+        case TYPE_UINT8:
+        case TYPE_UINT16:
+        case TYPE_UINT32:   len += snprintf(buf + len, maxLen, "%lld", (long long int)slot->intVal);                                break;
+        case TYPE_UINT:     len += snprintf(buf + len, maxLen, "%llu", (unsigned long long int)slot->uintVal);                      break;
+        case TYPE_BOOL:     len += snprintf(buf + len, maxLen, slot->intVal ? "true" : "false");                                    break;
+        case TYPE_CHAR:
+        {
+            const char *format = (unsigned char)slot->intVal >= ' ' ? "'%c'" : "0x%02X";
+            len += snprintf(buf + len, maxLen, format, (unsigned char)slot->intVal);
+            break;
+        }
+        case TYPE_REAL32:
+        case TYPE_REAL:     len += snprintf(buf + len, maxLen, "%lg", slot->realVal);                                               break;
+        case TYPE_PTR:
+        {
+            len += snprintf(buf + len, maxLen, "%p", slot->ptrVal);
+
+            if (dereferenced && slot->ptrVal && type->base->kind != TYPE_VOID)
+            {
+                Slot dataSlot = {.ptrVal = slot->ptrVal};
+                doDerefImpl(&dataSlot, type->base->kind, error);
+
+                len += snprintf(buf + len, maxLen, " -> ");
+                len += doPrintIndented(buf + len, maxLen, depth, pretty, '(');
+                len += doFillReprBuf(&dataSlot, type->base, buf + len, maxLen, depth + 1, pretty, dereferenced, error);
+                len += doPrintIndented(buf + len, maxLen, depth, pretty, ')');
+            }
+            break;
+        }
+        case TYPE_WEAKPTR:  len += snprintf(buf + len, maxLen, "%llx", (unsigned long long int)slot->weakPtrVal);                   break;
+        case TYPE_STR:
+        {
+            doCheckStr((char *)slot->ptrVal, error);
+            len += snprintf(buf + len, maxLen, "\"%s\"", slot->ptrVal ? (char *)slot->ptrVal : "");
+            break;
+        }
+        case TYPE_ARRAY:
+        {
+            len += doPrintIndented(buf + len, maxLen, depth, pretty, '[');
+
+            char *itemPtr = (char *)slot->ptrVal;
+            int itemSize = typeSizeNoCheck(type->base);
+
+            for (int i = 0; i < type->numItems; i++)
+            {
+                Slot itemSlot = {.ptrVal = itemPtr};
+                doDerefImpl(&itemSlot, type->base->kind, error);
+                len += doFillReprBuf(&itemSlot, type->base, buf + len, maxLen, depth + 1, pretty, dereferenced, error);
+
+                if (i < type->numItems - 1)
+                    len += doPrintIndented(buf + len, maxLen, depth, pretty, ' ');
+
+                itemPtr += itemSize;
+            }
+
+            len += doPrintIndented(buf + len, maxLen, depth, pretty, ']');
+            break;
+        }
+
+        case TYPE_DYNARRAY:
+        {
+            len += doPrintIndented(buf + len, maxLen, depth, pretty, '[');
+
+            DynArray *array = (DynArray *)slot->ptrVal;
+            if (array && array->data)
+            {
+                char *itemPtr = array->data;
+                for (int i = 0; i < getDims(array)->len; i++)
+                {
+                    Slot itemSlot = {.ptrVal = itemPtr};
+                    doDerefImpl(&itemSlot, type->base->kind, error);
+                    len += doFillReprBuf(&itemSlot, type->base, buf + len, maxLen, depth + 1, pretty, dereferenced, error);
+
+                    if (i < getDims(array)->len - 1)
+                        len += doPrintIndented(buf + len, maxLen, depth, pretty, ' ');
+
+                    itemPtr += array->itemSize;
+                }
+            }
+
+            len += doPrintIndented(buf + len, maxLen, depth, pretty, ']');
+            break;
+        }
+
+        case TYPE_MAP:
+        {
+            len += doPrintIndented(buf + len, maxLen, depth, pretty, '{');
+
+            Map *map = (Map *)slot->ptrVal;
+            if (map && map->root)
+            {
+                Type *keyType = typeMapKey(map->type);
+                Type *itemType = typeMapItem(map->type);
+
+                int keySize = typeSizeNoCheck(keyType);
+                void *keys = malloc(map->root->len * keySize);
+
+                doGetMapKeys(map, keys, error);
+
+                char *keyPtr = (char *)keys;
+                for (int i = 0; i < map->root->len; i++)
+                {
+                    Slot keySlot = {.ptrVal = keyPtr};
+                    doDerefImpl(&keySlot, keyType->kind, error);
+                    len += doFillReprBuf(&keySlot, keyType, buf + len, maxLen, depth + 1, pretty, dereferenced, error);
+
+                    len += snprintf(buf + len, maxLen, ": ");
+
+                    MapNode *node = *doGetMapNode(map, keySlot, false, NULL, error);
+                    if (!node)
+                        error->runtimeHandler(error->context, ERR_RUNTIME, "Map node is null");
+
+                    Slot itemSlot = {.ptrVal = node->data};
+                    doDerefImpl(&itemSlot, itemType->kind, error);
+                    len += doFillReprBuf(&itemSlot, itemType, buf + len, maxLen, depth + 1, pretty, dereferenced, error);
+
+                    if (i < map->root->len - 1)
+                        len += doPrintIndented(buf + len, maxLen, depth, pretty, ' ');
+
+                    keyPtr += keySize;
+                }
+
+                free(keys);
+            }
+
+            len += doPrintIndented(buf + len, maxLen, depth, pretty, '}');
+            break;
+        }
+
+
+        case TYPE_STRUCT:
+        case TYPE_CLOSURE:
+        {
+            len += doPrintIndented(buf + len, maxLen, depth, pretty, '{');
+
+            bool skipNames = typeExprListStruct(type);
+
+            for (int i = 0; i < type->numItems; i++)
+            {
+                Slot fieldSlot = {.ptrVal = (char *)slot->ptrVal + type->field[i]->offset};
+                doDerefImpl(&fieldSlot, type->field[i]->type->kind, error);
+                if (!skipNames)
+                    len += snprintf(buf + len, maxLen, "%s: ", type->field[i]->name);
+                len += doFillReprBuf(&fieldSlot, type->field[i]->type, buf + len, maxLen, depth + 1, pretty, dereferenced, error);
+
+                if (i < type->numItems - 1)
+                    len += doPrintIndented(buf + len, maxLen, depth, pretty, ' ');
+            }
+
+            len += doPrintIndented(buf + len, maxLen, depth, pretty, '}');
+            break;
+        }
+
+        case TYPE_INTERFACE:
+        {
+            Interface *interface = (Interface *)slot->ptrVal;
+            if (interface->self)
+            {
+                Slot selfSlot = {.ptrVal = interface->self};
+                doDerefImpl(&selfSlot, interface->selfType->base->kind, error);
+
+                if (pretty)
+                {
+                    char selfTypeBuf[DEFAULT_STR_LEN + 1];
+                    len += snprintf(buf + len, maxLen, "%s", typeSpelling(interface->selfType->base, selfTypeBuf));
+                    len += doPrintIndented(buf + len, maxLen, depth, pretty, '(');
+                }
+
+                len += doFillReprBuf(&selfSlot, interface->selfType->base, buf + len, maxLen, depth + 1, pretty, dereferenced, error);
+
+                if (pretty)
+                    len += doPrintIndented(buf + len, maxLen, depth, pretty, ')');
+            }
+            else
+                len += snprintf(buf + len, maxLen, "null");
+            break;
+        }
+
+        case TYPE_FIBER:    len += snprintf(buf + len, maxLen, "fiber @ %p", slot->ptrVal);                break;
+        case TYPE_FN:       len += snprintf(buf + len, maxLen, "fn @ %lld", (long long int)slot->intVal);  break;
+        default:            break;
+    }
+
+    return len;
+}
+
+
+void doCheckFormatString(const char *format, int *formatLen, int *typeLetterPos, TypeKind *typeKind, FormatStringTypeSize *size, Error *error)
+{
+    *size = FORMAT_SIZE_NORMAL;
+    *typeKind = TYPE_VOID;
+    int i = 0;
+
+    while (format[i])
+    {
+        *size = FORMAT_SIZE_NORMAL;
+        *typeKind = TYPE_VOID;
+
+        while (format[i] && format[i] != '%')
+            i++;
+
+        // "%" [flags] [width] ["." precision] [length] type
+        // "%"
+        if (format[i] == '%')
+        {
+            i++;
+
+            // [flags]
+            while (format[i] == '+' || format[i] == '-'  || format[i] == ' ' ||
+                   format[i] == '0' || format[i] == '\'' || format[i] == '#')
+                i++;
+
+            // [width]
+            while (format[i] >= '0' && format[i] <= '9')
+                i++;
+
+            // [.precision]
+            if (format[i] == '.')
+            {
+                i++;
+                while (format[i] >= '0' && format[i] <= '9')
+                    i++;
+            }
+
+            // [length]
+            if (format[i] == 'h')
+            {
+                *size = FORMAT_SIZE_SHORT;
+                i++;
+
+                if (format[i] == 'h')
+                {
+                    *size = FORMAT_SIZE_SHORT_SHORT;
+                    i++;
+                }
+            }
+            else if (format[i] == 'l')
+            {
+                *size = FORMAT_SIZE_LONG;
+                i++;
+
+                if (format[i] == 'l')
+                {
+                    *size = FORMAT_SIZE_LONG_LONG;
+                    i++;
+                }
+            }
+
+            // type
+            *typeLetterPos = i;
+            switch (format[i])
+            {
+                case '%': i++; continue;
+                case 'd':
+                case 'i':
+                {
+                    switch (*size)
+                    {
+                        case FORMAT_SIZE_SHORT_SHORT:  *typeKind = TYPE_INT8;      break;
+                        case FORMAT_SIZE_SHORT:        *typeKind = TYPE_INT16;     break;
+                        case FORMAT_SIZE_NORMAL:
+                        case FORMAT_SIZE_LONG:         *typeKind = TYPE_INT32;     break;
+                        case FORMAT_SIZE_LONG_LONG:    *typeKind = TYPE_INT;       break;
+                    }
+                    break;
+                }
+                case 'u':
+                case 'x':
+                case 'X':
+                {
+                    switch (*size)
+                    {
+                        case FORMAT_SIZE_SHORT_SHORT:  *typeKind = TYPE_UINT8;      break;
+                        case FORMAT_SIZE_SHORT:        *typeKind = TYPE_UINT16;     break;
+                        case FORMAT_SIZE_NORMAL:
+                        case FORMAT_SIZE_LONG:         *typeKind = TYPE_UINT32;     break;
+                        case FORMAT_SIZE_LONG_LONG:    *typeKind = TYPE_UINT;       break;
+                    }
+                    break;
+                }
+                case 'f':
+                case 'F':
+                case 'e':
+                case 'E':
+                case 'g':
+                case 'G':
+                {
+                    switch (*size)
+                    {
+                        case FORMAT_SIZE_NORMAL:        *typeKind = TYPE_REAL32;    break;
+                        case FORMAT_SIZE_LONG:          *typeKind = TYPE_REAL;      break;
+                        default:                        error->runtimeHandler(error->context, ERR_RUNTIME, "Illegal size specifier"); break;
+                    }
+                    break;
+                }
+                case 's':
+                case 'c':
+                {
+                    *typeKind = format[i] == 's' ? TYPE_STR : TYPE_CHAR;
+                    if (*size != FORMAT_SIZE_NORMAL)
+                        error->runtimeHandler(error->context, ERR_RUNTIME, "Illegal size specifier");
+                    break;
+                }
+                case 'v': *typeKind = TYPE_INTERFACE;  /* Actually any type */      break;
+
+                default : error->runtimeHandler(error->context, ERR_RUNTIME, "Illegal type character %c in format string", format[i]);
+            }
+            i++;
+        }
+        break;
+    }
+    *formatLen = i;
+}
+
+
+void doBuiltinPrintf(Fiber *fiber, HeapPages *pages, bool console, bool string, Error *error)
+{
+    const int prevLen  = fiber->top[STACK_OFFSET_COUNT].intVal;
+    void *stream       = console ? stdout : fiber->top[STACK_OFFSET_STREAM].ptrVal;
+    const char *format = (const char *)fiber->top[STACK_OFFSET_FORMAT].ptrVal;
+    Slot value         = fiber->top[STACK_OFFSET_VALUE];
+
+    Type *type         = fiber->code[fiber->ip].type;
+    TypeKind typeKind  = type->kind;
+
+    if (!string && (!stream || (!fiber->fileSystemEnabled && !console)))
+        error->runtimeHandler(error->context, ERR_RUNTIME, "printf() destination is null");
+
+    if (!format)
+        format = doGetEmptyStr();
+
+    int formatLen = -1, typeLetterPos = -1;
+    TypeKind expectedTypeKind = TYPE_NONE;
+    FormatStringTypeSize formatStringTypeSize = FORMAT_SIZE_NORMAL;
+
+    doCheckFormatString(format, &formatLen, &typeLetterPos, &expectedTypeKind, &formatStringTypeSize, error);
+
+    const bool hasAnyTypeFormatter = expectedTypeKind == TYPE_INTERFACE && typeLetterPos >= 0 && typeLetterPos < formatLen;     // %v
+
+    if (type->kind != expectedTypeKind &&
+        !(type->kind != TYPE_VOID            && expectedTypeKind == TYPE_INTERFACE) &&
+        !(typeKindIntegerOrEnum(type->kind)  && typeKindIntegerOrEnum(expectedTypeKind)) &&
+        !(typeKindReal(type->kind)           && typeKindReal(expectedTypeKind)))
+    {
+        char typeBuf[DEFAULT_STR_LEN + 1];
+        error->runtimeHandler(error->context, ERR_RUNTIME, "Incompatible types %s and %s in printf()", typeKindSpelling(expectedTypeKind), typeSpelling(type, typeBuf));
+    }
+
+    // Check overflow
+    if (expectedTypeKind != TYPE_VOID)
+    {
+        Const arg;
+        if (typeKindReal(expectedTypeKind))
+            arg.realVal = value.realVal;
+        else
+            arg.intVal = value.intVal;
+
+        if (typeConvOverflow(expectedTypeKind, type->kind, arg))
+            error->runtimeHandler(error->context, ERR_RUNTIME, "Overflow of %s", typeKindSpelling(expectedTypeKind));
+    }
+
+    char curFormatBuf[DEFAULT_STR_LEN + 1];
+    bool isCurFormatBufInHeap = formatLen + 1 > sizeof(curFormatBuf);
+    char *curFormat = isCurFormatBufInHeap ? malloc(formatLen + 1) : &curFormatBuf;
+
+    memcpy(curFormat, format, formatLen);
+    curFormat[formatLen] = 0;
+
+    // Special case: %v formatter - convert argument of any type to its string representation
+    char reprBuf[sizeof(StrDimensions) + DEFAULT_STR_LEN + 1];
+    bool isReprBufInHeap = false;
+    char *dimsAndRepr = NULL;
+
+    if (hasAnyTypeFormatter)
+    {
+        // %hhv -> %  s
+        // %hv  -> % s
+        // %v   -> %s
+        // %lv  -> % s
+        // %llv -> %  s
+
+        curFormat[typeLetterPos] = 's';
+        if (formatStringTypeSize != FORMAT_SIZE_NORMAL && typeLetterPos - 1 >= 0)
+            curFormat[typeLetterPos - 1] = ' ';
+        if ((formatStringTypeSize == FORMAT_SIZE_LONG_LONG || formatStringTypeSize == FORMAT_SIZE_SHORT_SHORT) && typeLetterPos - 2 >= 0)
+            curFormat[typeLetterPos - 2] = ' ';
+
+        const bool pretty = formatStringTypeSize == FORMAT_SIZE_LONG_LONG;
+        const bool dereferenced = formatStringTypeSize == FORMAT_SIZE_LONG || formatStringTypeSize == FORMAT_SIZE_LONG_LONG;
+
+        const int reprLen = doFillReprBuf(&value, type, NULL, 0, 0, pretty, dereferenced, error);  // Predict buffer length
+
+        isReprBufInHeap = sizeof(StrDimensions) + reprLen + 1 > sizeof(reprBuf);
+        dimsAndRepr = isReprBufInHeap ? malloc(sizeof(StrDimensions) + reprLen + 1) : &reprBuf;
+
+        StrDimensions dims = {.len = reprLen, .capacity = reprLen + 1};
+        *(StrDimensions *)dimsAndRepr = dims;
+
+        char *repr = dimsAndRepr + sizeof(StrDimensions);
+        repr[reprLen] = 0;
+
+        doFillReprBuf(&value, type, repr, reprLen + 1, 0, pretty, dereferenced, error);            // Fill buffer
+
+        value.ptrVal = repr;
+        typeKind = TYPE_STR;
+    }
+
+    // Predict buffer length for sprintf() and reallocate it if needed
+    int len = 0;
+    if (string)
+    {
+        len = doPrintSlot(true, NULL, 0, curFormat, value, typeKind, error);
+
+        const bool inPlace = stream && getStrDims(stream)->capacity >= prevLen + len + 1;
+        if (inPlace)
+        {
+            getStrDims(stream)->len = prevLen + len;
+        }
+        else
+        {
+            char *newStream = doAllocStr(pages, prevLen + len, error);
+            if (stream)
+                memcpy(newStream, stream, prevLen);
+            newStream[prevLen] = 0;
+
+            // Decrease old string ref count
+            Type strType = {.kind = TYPE_STR};
+            doChangeRefCntImpl(fiber, pages, stream, &strType, TOK_MINUSMINUS);
+
+            stream = newStream;
+        }
+
+        len = doPrintSlot(true, (char *)stream + prevLen, len + 1, curFormat, value, typeKind, error);
+    }
+    else
+        len = doPrintSlot(false, stream, INT_MAX, curFormat, value, typeKind, error);
+
+    fiber->top[STACK_OFFSET_FORMAT].ptrVal = (char *)fiber->top[STACK_OFFSET_FORMAT].ptrVal + formatLen;
+    fiber->top[STACK_OFFSET_COUNT].intVal += len;
+    fiber->top[STACK_OFFSET_STREAM].ptrVal = stream;
+
+    fiber->top++;   // Remove value
+
+    if (isCurFormatBufInHeap)
+        free(curFormat);
+
+    if (isReprBufInHeap)
+        free(dimsAndRepr);
+}
