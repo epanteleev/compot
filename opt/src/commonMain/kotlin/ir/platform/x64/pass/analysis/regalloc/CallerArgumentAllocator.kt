@@ -45,10 +45,10 @@ internal class CallerArgumentAllocator private constructor(private val stackFram
     }
 
     private fun emit(value: Value): Operand? = when (value.type()) {
-        is FloatingPointType                        -> peakFPArgument()
-        is IntegerType, is PtrType, is FlagType -> peakGPArgument()
-        is AggregateType                            -> peakStructArgument(value)
-        is UndefType                                -> null
+        is FloatingPointType       -> peakFPArgument()
+        is IntegerType, is PtrType -> peakGPArgument()
+        is AggregateType           -> peakStructArgument(value)
+        is UndefType               -> null
         else -> throw IllegalArgumentException("type=$value")
     }
 

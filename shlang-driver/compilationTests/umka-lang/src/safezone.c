@@ -1669,6 +1669,7 @@ void doBuiltinPrintf(Fiber *fiber, HeapPages *pages, bool console, bool string, 
     const int prevLen  = fiber->top[STACK_OFFSET_COUNT].intVal;
     void *stream       = console ? stdout : fiber->top[STACK_OFFSET_STREAM].ptrVal;
     const char *format = (const char *)fiber->top[STACK_OFFSET_FORMAT].ptrVal;
+    printf("\nstream: %p, console: %d, string: %d, format: %s\n", stream, console, string, format);
     Slot value         = fiber->top[STACK_OFFSET_VALUE];
 
     Type *type         = fiber->code[fiber->ip].type;
@@ -1780,7 +1781,7 @@ void doBuiltinPrintf(Fiber *fiber, HeapPages *pages, bool console, bool string, 
 
             stream = newStream;
         }
-
+        printf("\nstream: %p, console: %d, string: %d\n", stream, console, string, format);
         len = doPrintSlot(true, (char *)stream + prevLen, len + 1, curFormat, value, typeKind, error);
     }
     else

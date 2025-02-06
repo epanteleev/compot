@@ -3,25 +3,25 @@ package ir.platform.x64.pass.analysis.regalloc
 import asm.Operand
 import asm.Register
 import asm.x64.*
+import ir.Definitions
 import ir.types.*
 import ir.value.*
 import ir.Definitions.QWORD_SIZE
 import ir.instruction.lir.Generate
 
 
-class VirtualRegistersPool private constructor(private val argumentSlots: List<Operand>) {
+internal class VirtualRegistersPool private constructor(private val argumentSlots: List<Operand>) {
     private val frame = StackFrame.create()
     private val gpRegisters = GPRegistersList(argumentSlots.filterIsInstance<GPRegister>()) //TODO
     private val xmmRegisters = XmmRegisterList(argumentSlots.filterIsInstance<XmmRegister>()) //TODO
 
-    fun allocSlot(value: Value, excludeIf: (Register) -> Boolean): Operand = when (value) {
+    fun allocSlot(value: LocalValue, excludeIf: (Register) -> Boolean): Operand = when (value) {
         is Generate -> frame.takeSlot(value)
-        is LocalValue -> when (val tp = value.type()) {
+        else -> when (val tp = value.type()) {
             is FloatingPointType -> xmmRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)
             is IntegerType, is PtrType -> gpRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)
             else -> throw IllegalArgumentException("not allowed for this type=$tp")
         }
-        else -> throw IllegalArgumentException("not allowed for this value=$value")
     }
 
     fun arguments(): List<Operand> = argumentSlots
@@ -39,7 +39,7 @@ class VirtualRegistersPool private constructor(private val argumentSlots: List<O
     }
 
     fun spilledLocalsAreaSize(): Int {
-        return ((frame.size() + (QWORD_SIZE - 1)) / QWORD_SIZE) * QWORD_SIZE
+        return Definitions.alignTo(frame.size(), QWORD_SIZE)
     }
 
     fun usedGPCalleeSaveRegisters(): List<GPRegister> {

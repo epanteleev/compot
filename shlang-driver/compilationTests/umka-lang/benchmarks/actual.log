@@ -1,30 +1,186 @@
 
+stream: 0x770d112045c0, console: 1, string: 0, format: 
 
 >>> Binary trees
 
-stretch tree of depth 13 check: -1
-8192 trees of depth 4 check: -8192
-2048 trees of depth 6 check: -2048
-512 trees of depth 8 check: -512
-128 trees of depth 10 check: -128
-32 trees of depth 12 check: -32
-long lived tree of depth 12 check: -1
+
+
+
+>>> Binary trees
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: stretch tree of depth %lld check: %lld
+
+stretch tree of depth 13
+stream: 0x770d112045c0, console: 1, string: 0, format:  check: %lld
+
+ check: -1
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: %lld trees of depth %lld check: %lld
+
+8192
+stream: 0x770d112045c0, console: 1, string: 0, format:  trees of depth %lld check: %lld
+
+ trees of depth 4
+stream: 0x770d112045c0, console: 1, string: 0, format:  check: %lld
+
+ check: -8192
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: %lld trees of depth %lld check: %lld
+
+2048
+stream: 0x770d112045c0, console: 1, string: 0, format:  trees of depth %lld check: %lld
+
+ trees of depth 6
+stream: 0x770d112045c0, console: 1, string: 0, format:  check: %lld
+
+ check: -2048
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: %lld trees of depth %lld check: %lld
+
+512
+stream: 0x770d112045c0, console: 1, string: 0, format:  trees of depth %lld check: %lld
+
+ trees of depth 8
+stream: 0x770d112045c0, console: 1, string: 0, format:  check: %lld
+
+ check: -512
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: %lld trees of depth %lld check: %lld
+
+128
+stream: 0x770d112045c0, console: 1, string: 0, format:  trees of depth %lld check: %lld
+
+ trees of depth 10
+stream: 0x770d112045c0, console: 1, string: 0, format:  check: %lld
+
+ check: -128
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: %lld trees of depth %lld check: %lld
+
+32
+stream: 0x770d112045c0, console: 1, string: 0, format:  trees of depth %lld check: %lld
+
+ trees of depth 12
+stream: 0x770d112045c0, console: 1, string: 0, format:  check: %lld
+
+ check: -32
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: long lived tree of depth %lld check: %lld
+
+long lived tree of depth 12
+stream: 0x770d112045c0, console: 1, string: 0, format:  check: %lld
+
+ check: -1
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+
+
+stream: 0x770d112044e0, console: 0, string: 0, format: Time elapsed: %.3f s
+
+
+stream: 0x770d112044e0, console: 0, string: 0, format:  s
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+>>> N body problem
+
+
 
 
 >>> N body problem
 
+
+stream: 0x770d112045c0, console: 1, string: 0, format: %.9f
+
 -0.169075164
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: %.9f
+
 -0.169079859
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+
+
+stream: 0x770d112044e0, console: 0, string: 0, format: Time elapsed: %.3f s
+
+
+stream: 0x770d112044e0, console: 0, string: 0, format:  s
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+>>> Matrix multiplication
+
+
 
 
 >>> Matrix multiplication
 
-check: -122027500.000000
 
+stream: 0x770d112045c0, console: 1, string: 0, format: check: %lf
+
+check: -122027500.000000
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
+
+
+stream: 0x770d112044e0, console: 0, string: 0, format: Time elapsed: %.3f s
+
+
+stream: 0x770d112044e0, console: 0, string: 0, format:  s
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: 
 
 >>> Maps (in order)
 
 
 
+
+>>> Maps (in order)
+
+
+stream: 0x770d112044e0, console: 0, string: 0, format: Time elapsed: %.3f s
+
+
+stream: 0x770d112044e0, console: 0, string: 0, format:  s
+
+
+stream: 0x770d112045c0, console: 1, string: 0, format: 
+
 >>> Maps (randomized)
+
+
+
+
+>>> Maps (randomized)
+
+
+stream: 0x770d112044e0, console: 0, string: 0, format: Time elapsed: %.3f s
+
+
+stream: 0x770d112044e0, console: 0, string: 0, format:  s
 

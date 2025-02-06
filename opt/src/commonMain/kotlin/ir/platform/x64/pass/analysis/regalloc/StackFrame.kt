@@ -5,17 +5,15 @@ import asm.x64.Address
 import asm.x64.ArgumentSlot
 import asm.x64.GPRegister.*
 import common.assertion
-import ir.Definitions.QWORD_SIZE
+import ir.Definitions
 import ir.instruction.lir.Generate
 import ir.types.NonTrivialType
 
 
-data class StackFrameException(override val message: String): Exception(message)
-
 sealed interface StackFrame {
-    fun takeSlot(value: Value): Address
+    fun takeSlot(value: LocalValue): Address
     fun returnSlot(slot: Address, size: Int)
-    fun takeArgument(size: Int): Address
+    fun takeArgument(offset: Int): Address
     fun size(): Int
 
     companion object {
@@ -28,43 +26,32 @@ sealed interface StackFrame {
 
 private class BasePointerAddressedStackFrame : StackFrame {
     private var frameSize: Int = 0
-    private val freeStackSlots = linkedMapOf<Int, Address>()
-
-    private fun getTypeSize(ty: NonTrivialType): Int {
-        return ty.sizeOf()
-    }
+    private val freeStackSlots = linkedMapOf<Int, Address>() // TODO this feature is disabled
 
     private fun withAlignment(alignment: Int, value: Int): Int {
         if (alignment == 0) {
             return value
         }
-        return ((value + (alignment * 2 - 1)) / alignment) * alignment
+
+        return Definitions.alignTo(value, alignment)
     }
 
     private fun stackSlotAlloc(value: Generate): Address {
-        val typeSize = getTypeSize(value.type())
-        frameSize = withAlignment(typeSize, frameSize)
+        val ty = value.type()
+        frameSize = withAlignment(ty.alignmentOf(), frameSize + ty.sizeOf())
         return Address.from(rbp, -frameSize)
     }
 
     /** Spilled value. */
     private fun valueInstructionAlloc(value: LocalValue): Address {
-        val typeSize = getTypeSize(value.asType())
-
-        val freeSlot = freeStackSlots[typeSize]
-        if (freeSlot != null) {
-            freeStackSlots.remove(typeSize)
-            return freeSlot
-        }
-
-        frameSize = withAlignment(typeSize, frameSize)
+        val ty = value.asType<NonTrivialType>()
+        frameSize = withAlignment(ty.alignmentOf(), frameSize + ty.sizeOf())
         return Address.from(rbp, -frameSize)
     }
 
-    override fun takeSlot(value: Value): Address = when (value) {
+    override fun takeSlot(value: LocalValue): Address = when (value) {
         is Generate -> stackSlotAlloc(value)
-        is LocalValue -> valueInstructionAlloc(value)
-        else -> throw StackFrameException("Cannot alloc slot for this value=$value")
+        else -> valueInstructionAlloc(value)
     }
 
     override fun returnSlot(slot: Address, size: Int) {
@@ -79,9 +66,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
         return frameSize
     }
 
-    override fun takeArgument(size: Int): Address {
-        frameSize += size
-        frameSize = withAlignment(QWORD_SIZE, frameSize)
-        return ArgumentSlot(rsp, size)
+    override fun takeArgument(offset: Int): Address {
+        return ArgumentSlot(rsp, offset)
     }
 }
