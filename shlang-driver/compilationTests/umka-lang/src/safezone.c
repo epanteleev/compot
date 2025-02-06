@@ -363,50 +363,6 @@ void stackChangeFrameRefCnt(Fiber *fiber, HeapPages *pages, void *ptr, int delta
     }
 }
 
-
-void *chunkAlloc(HeapPages *pages, int64_t size, Type *type, ExternFunc onFree, bool isStack, Error *error)
-{
-    // Page layout: header, data, footer (char), padding, header, data, footer (char), padding...
-    int64_t chunkSize = align(sizeof(HeapChunkHeader) + align(size + 1, sizeof(int64_t)), MEM_MIN_HEAP_CHUNK);
-
-    if (size < 0 || chunkSize > INT_MAX)
-        error->runtimeHandler(error->context, ERR_RUNTIME, "Illegal block size");
-
-    HeapPage *page = pageFindForAlloc(pages, chunkSize);
-    if (!page)
-    {
-        int numChunks = MEM_MIN_HEAP_PAGE / chunkSize;
-        if (numChunks == 0)
-            numChunks = 1;
-
-        page = pageAdd(pages, numChunks, chunkSize);
-        if (!page)
-            error->runtimeHandler(error->context, ERR_RUNTIME, "Out of memory");
-    }
-
-    HeapChunkHeader *chunk = (HeapChunkHeader *)((char *)page->ptr + page->numOccupiedChunks * page->chunkSize);
-
-    memset(chunk, 0, page->chunkSize);
-    chunk->refCnt = 1;
-    chunk->size = size;
-    chunk->type = type;
-    chunk->onFree = onFree;
-    chunk->ip = pages->fiber->ip;
-    chunk->isStack = isStack;
-
-    page->numOccupiedChunks++;
-    if (onFree)
-        page->numChunksWithOnFree++;
-
-    page->refCnt++;
-
-#ifdef UMKA_REF_CNT_DEBUG
-    printf("Add chunk at %p\n", (void *)chunk + sizeof(HeapChunkHeader));
-#endif
-
-    return (char *)chunk + sizeof(HeapChunkHeader);
-}
-
 int chunkChangeRefCnt(HeapPages *pages, HeapPage *page, void *ptr, int delta)
 {
     HeapChunkHeader *chunk = pageGetChunkHeader(page, ptr);
@@ -988,19 +944,6 @@ void doChangeRefCntImpl(Fiber *fiber, HeapPages *pages, void *ptr, Type *type, T
             default: break;
         }
     }
-}
-
-char *doAllocStr(HeapPages *pages, int64_t len, Error *error)
-{
-    StrDimensions dims = {.len = len, .capacity = 2 * (len + 1)};
-
-    char *dimsAndData = chunkAlloc(pages, sizeof(StrDimensions) + dims.capacity, NULL, NULL, false, error);
-    *(StrDimensions *)dimsAndData = dims;
-
-    char *data = dimsAndData + sizeof(StrDimensions);
-    data[len] = 0;
-
-    return data;
 }
 
 char *doGetEmptyStr()
@@ -1669,7 +1612,6 @@ void doBuiltinPrintf(Fiber *fiber, HeapPages *pages, bool console, bool string, 
     const int prevLen  = fiber->top[STACK_OFFSET_COUNT].intVal;
     void *stream       = console ? stdout : fiber->top[STACK_OFFSET_STREAM].ptrVal;
     const char *format = (const char *)fiber->top[STACK_OFFSET_FORMAT].ptrVal;
-    printf("\nstream: %p, console: %d, string: %d, format: %s\n", stream, console, string, format);
     Slot value         = fiber->top[STACK_OFFSET_VALUE];
 
     Type *type         = fiber->code[fiber->ip].type;
@@ -1776,12 +1718,11 @@ void doBuiltinPrintf(Fiber *fiber, HeapPages *pages, bool console, bool string, 
             newStream[prevLen] = 0;
 
             // Decrease old string ref count
-            Type strType = {.kind = TYPE_STR};
-            doChangeRefCntImpl(fiber, pages, stream, &strType, TOK_MINUSMINUS);
-
+            Type* strType = malloc(sizeof(Type));
+            strType->kind = TYPE_STR;
+            doChangeRefCntImpl(fiber, pages, stream, strType, TOK_MINUSMINUS);
             stream = newStream;
         }
-        printf("\nstream: %p, console: %d, string: %d\n", stream, console, string, format);
         len = doPrintSlot(true, (char *)stream + prevLen, len + 1, curFormat, value, typeKind, error);
     }
     else

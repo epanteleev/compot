@@ -2307,3 +2307,59 @@ int doPrintSlot(bool string, void *stream, int maxLen, const char *format, Slot 
 
     return len;
 }
+
+char *doAllocStr(HeapPages *pages, int64_t len, Error *error)
+{
+    StrDimensions dims = {.len = len, .capacity = 2 * (len + 1)};
+
+    char *dimsAndData = chunkAlloc(pages, sizeof(StrDimensions) + dims.capacity, NULL, NULL, false, error);
+    *(StrDimensions *)dimsAndData = dims;
+
+    char *data = dimsAndData + sizeof(StrDimensions);
+    data[len] = 0;
+
+    return data;
+}
+
+void *chunkAlloc(HeapPages *pages, int64_t size, Type *type, ExternFunc onFree, bool isStack, Error *error)
+{
+    // Page layout: header, data, footer (char), padding, header, data, footer (char), padding...
+    int64_t chunkSize = align(sizeof(HeapChunkHeader) + align(size + 1, sizeof(int64_t)), MEM_MIN_HEAP_CHUNK);
+
+    if (size < 0 || chunkSize > INT_MAX)
+        error->runtimeHandler(error->context, ERR_RUNTIME, "Illegal block size");
+
+    HeapPage *page = pageFindForAlloc(pages, chunkSize);
+    if (!page)
+    {
+        int numChunks = MEM_MIN_HEAP_PAGE / chunkSize;
+        if (numChunks == 0)
+            numChunks = 1;
+
+        page = pageAdd(pages, numChunks, chunkSize);
+        if (!page)
+            error->runtimeHandler(error->context, ERR_RUNTIME, "Out of memory");
+    }
+
+    HeapChunkHeader *chunk = (HeapChunkHeader *)((char *)page->ptr + page->numOccupiedChunks * page->chunkSize);
+
+    memset(chunk, 0, page->chunkSize);
+    chunk->refCnt = 1;
+    chunk->size = size;
+    chunk->type = type;
+    chunk->onFree = onFree;
+    chunk->ip = pages->fiber->ip;
+    chunk->isStack = isStack;
+
+    page->numOccupiedChunks++;
+    if (onFree)
+        page->numChunksWithOnFree++;
+
+    page->refCnt++;
+
+#ifdef UMKA_REF_CNT_DEBUG
+    printf("Add chunk at %p\n", (void *)chunk + sizeof(HeapChunkHeader));
+#endif
+
+    return (char *)chunk + sizeof(HeapChunkHeader);
+}
