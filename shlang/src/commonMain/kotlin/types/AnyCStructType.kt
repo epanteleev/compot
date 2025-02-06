@@ -22,6 +22,10 @@ sealed class AnyCStructType(open val name: String,
         return fields
     }
 
+    fun member(index: Int): Member {
+        return fields[index]
+    }
+
     fun isSmall(): Boolean {
         return size() <= QWORD_SIZE * 2
     }

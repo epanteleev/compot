@@ -1718,9 +1718,8 @@ void doBuiltinPrintf(Fiber *fiber, HeapPages *pages, bool console, bool string, 
             newStream[prevLen] = 0;
 
             // Decrease old string ref count
-            Type* strType = malloc(sizeof(Type));
-            strType->kind = TYPE_STR;
-            doChangeRefCntImpl(fiber, pages, stream, strType, TOK_MINUSMINUS);
+            Type strType = {.kind = TYPE_STR};
+            doChangeRefCntImpl(fiber, pages, stream, &strType, TOK_MINUSMINUS);
             stream = newStream;
         }
         len = doPrintSlot(true, (char *)stream + prevLen, len + 1, curFormat, value, typeKind, error);

@@ -1686,12 +1686,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun zeroingGapsInStruct(p1: Int, p2: Int, type: CStructType, value: Value, initializerList: InitializerList) {
+    private fun zeroingGapsInStruct(p1: Int, p2: Int, type: CStructType, value: Value) {
         val irElementType = mb.toIRType<StructType>(typeHolder, type)
         for (i in p1 + 1 until p2) {
             val elementAdr = ir.gfp(value, irElementType, I64Value.of(i))
-            val fieldDesc = type.fieldByIndexOrNull(i) ?:
-                throw IRCodeGenError("Unknown field, field=$i", initializerList.begin())
+            val fieldDesc = type.member(i)
 
             when (val f = mb.toIRLVType<NonTrivialType>(typeHolder, fieldDesc.cType())) {
                 is PrimitiveType -> ir.store(elementAdr, PrimitiveConstant.of(f, 0))
@@ -1724,12 +1723,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun zeroingGaps(initializerList: InitializerList, value: Value, type: CAggregateType, filledPositions: List<Int>) = when (type) {
+    private fun zeroingGaps(value: Value, type: CAggregateType, filledPositions: List<Int>, where: Position) = when (type) {
         is CStructType -> {
             for ((p1, p2) in filledPositions.windowed(2)) {
                 if (p2 - p1 == 1) continue
 
-                zeroingGapsInStruct(p1, p2, type, value, initializerList)
+                zeroingGapsInStruct(p1, p2, type, value)
             }
         }
         is CArrayType -> {
@@ -1740,7 +1739,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
         }
         is CUnionType -> {}
-        else -> throw IRCodeGenError("Unknown type, type=$type", initializerList.begin())
+        else -> throw IRCodeGenError("Unknown type, type=$type", where)
     }
 
     private fun visitInitializers(initializerList: InitializerList, lvalueAdr: Value, type: CAggregateType): List<Int> {
@@ -1780,7 +1779,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return
         }
 
-        zeroingGaps(initializerList, lvalueAdr, type, filledPositions)
+        zeroingGaps(lvalueAdr, type, filledPositions, initializerList.begin())
     }
 
     private fun visitDesignationInitializer(designationInitializer: DesignationInitializer, value: Value, type: CAggregateType): Int {
