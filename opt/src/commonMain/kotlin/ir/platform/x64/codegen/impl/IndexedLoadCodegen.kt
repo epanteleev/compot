@@ -14,12 +14,10 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, indexType: Primi
     private val size: Int = loadedType.sizeOf()
     private val indexSize: Int = indexType.sizeOf()
 
-    operator fun invoke(dst: Operand, operand: Operand, index: Operand) {
-        when (loadedType) {
-            is FloatingPointType -> handleXmm(dst, operand, index)
-            is IntegerType, is PtrType -> GPOperandsVisitorBinaryOp.apply(dst, operand, index, this)
-            else           -> default(dst, operand, index)
-        }
+    operator fun invoke(dst: Operand, operand: Operand, index: Operand) = when (loadedType) {
+        is FloatingPointType -> handleXmm(dst, operand, index)
+        is IntegerType, is PtrType -> GPOperandsVisitorBinaryOp.apply(dst, operand, index, this)
+        else -> default(dst, operand, index)
     }
 
     private fun handleXmm(dst: Operand, operand: Operand, index: Operand) {
@@ -31,8 +29,8 @@ class IndexedLoadCodegen(private val loadedType: PrimitiveType, indexType: Primi
             asm.mov(indexSize, index, temp1)
             asm.movf(size, Address.from(operand, 0, temp1, ScaleFactor.from(size)), dst)
         } else if (dst is XmmRegister && operand is Address && index is ImmInt) {
-            TODO("untested")
-            //asm.movf(size, operand.withOffset(index.value().toInt() * size), dst)
+            asm.mov(POINTER_SIZE, operand, temp1)
+            asm.movf(size, Address.from(temp1, index.value().toInt() * size), dst)
         } else {
             default(dst, operand, index)
         }

@@ -1,6 +1,6 @@
 package types
 
-class InitializerType(private val initializer: List<CType>): CAggregateType() {
+class InitializerType(private val initializer: List<CType>): CAggregateType() { //TODO remove it or stop inherit aggregate type ???
     override fun toString(): String = buildString {
         append("{")
         initializer.forEachIndexed { index, type ->

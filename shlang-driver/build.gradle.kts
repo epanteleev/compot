@@ -118,4 +118,5 @@ tasks.create("runtests") {
     dependsOn("runUtf8")
     dependsOn("runChibicc")
     dependsOn("runBfish")
+    dependsOn("runUmka")
 }

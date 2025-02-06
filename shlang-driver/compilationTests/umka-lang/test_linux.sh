@@ -11,7 +11,7 @@ cd ..
 cd .. 
 
 cd benchmarks
-../umka_linux/umka -warn allbench.um > actual.log
+../umka_linux/umka -warn allbench.um > actual.log 2>/dev/null
 ../umka_linux/umka -warn ../tests/compare.um actual.log expected.log
 cd ..
  

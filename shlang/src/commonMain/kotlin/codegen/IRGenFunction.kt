@@ -173,7 +173,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val vaList = visitExpression(builtinVaArg.assign, true)
         return when (val argCType = builtinVaArg.resolveType(typeHolder)) {
-            is CHAR, is UCHAR, is SHORT, is USHORT, is INT, is UINT, is LONG, is ULONG, is CPointer -> {
+            is AnyCInteger, is CPointer, is BOOL -> {
                 val argType = mb.toIRType<PrimitiveType>(typeHolder, argCType)
                 emitBuiltInVaArg(vaList, argType, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
             }
@@ -181,7 +181,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val argType = mb.toIRType<PrimitiveType>(typeHolder, argCType)
                 emitBuiltInVaArg(vaList, argType, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
             }
-            is CStructType -> {
+            is CStructType -> { //TODO add test for union
                 val irType = mb.toIRType<StructType>(typeHolder, argCType)
                 val alloc = ir.alloc(irType)
                 if (!argCType.isSmall()) {
@@ -1665,18 +1665,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         return rvalueAdr
     }
 
-    private fun zeroMemory(address: Value, type: ArrayType) {
-        for (i in 0 until type.length) {
-            val elementAdr = ir.gep(address, type.elementType(), I64Value.of(i))
-            when (val elementType = type.elementType()) {
-                is PrimitiveType -> ir.store(elementAdr, PrimitiveConstant.of(elementType, 0))
-                is ArrayType -> zeroMemory(elementAdr, elementType)
-                is StructType -> zeroMemory(elementAdr, elementType)
-            }
-        }
-    }
-    private fun zeroMemory(address: Value, type: StructType) {
-        for (i in type.fields.indices) {
+    private fun zeroMemory(address: Value, type: StructType, range: IntRange) {
+        for (i in range) {
             val elementAdr = ir.gfp(address, type, I64Value.of(i))
             when (val f = type.field(i)) {
                 is PrimitiveType -> ir.store(elementAdr, PrimitiveConstant.of(f, 0))
@@ -1686,60 +1676,50 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun zeroingGapsInStruct(p1: Int, p2: Int, type: CStructType, value: Value) {
-        val irElementType = mb.toIRType<StructType>(typeHolder, type)
-        for (i in p1 + 1 until p2) {
-            val elementAdr = ir.gfp(value, irElementType, I64Value.of(i))
-            val fieldDesc = type.member(i)
+    private fun zeroMemory(address: Value, type: StructType) {
+        zeroMemory(address, type, type.fields.indices)
+    }
 
-            when (val f = mb.toIRLVType<NonTrivialType>(typeHolder, fieldDesc.cType())) {
-                is PrimitiveType -> ir.store(elementAdr, PrimitiveConstant.of(f, 0))
-                is ArrayType     -> zeroMemory(elementAdr, f)
-                is StructType    -> zeroMemory(elementAdr, f)
+    private fun zeroMemory(address: Value, type: ArrayType, range: IntRange) = when (val elementType = type.elementType()) {
+        is PrimitiveType -> {
+            for (i in range) {
+                val elementAdr = ir.gep(address, elementType, I64Value.of(i))
+                ir.store(elementAdr, PrimitiveConstant.of(elementType, 0))
+            }
+        }
+        is ArrayType -> {
+            for (i in range) {
+                val elementAdr = ir.gep(address, elementType, I64Value.of(i))
+                zeroMemory(elementAdr, elementType)
+            }
+        }
+        is StructType -> {
+            for (i in range) {
+                val elementAdr = ir.gep(address, elementType, I64Value.of(i))
+                zeroMemory(elementAdr, elementType)
             }
         }
     }
 
-    private fun zeroingGapsInArray(p1: Int, p2: Int, type: CArrayType, value: Value) {
-        when (val irElementType = mb.toIRType<NonTrivialType>(typeHolder, type.element().cType())) {
-            is StructType -> {
-                for (i in p1 + 1 until p2) {
-                    val elementAdr = ir.gep(value, irElementType, I64Value.of(i))
-                    zeroMemory(elementAdr, irElementType)
-                }
-            }
-            is ArrayType -> {
-                for (i in p1 + 1 until p2) {
-                    val elementAdr = ir.gep(value, irElementType, I64Value.of(i))
-                    zeroMemory(elementAdr, irElementType)
-                }
-            }
-            is PrimitiveType -> {
-                for (i in p1 + 1 until p2) {
-                    val elementAdr = ir.gep(value, irElementType, I64Value.of(i))
-                    ir.store(elementAdr, PrimitiveConstant.of(irElementType, 0))
-                }
-            }
-        }
+    private fun zeroMemory(address: Value, type: ArrayType) {
+        zeroMemory(address, type, 0 until type.length.toInt())
     }
 
-    private fun zeroingGaps(value: Value, type: CAggregateType, filledPositions: List<Int>, where: Position) = when (type) {
-        is CStructType -> {
-            for ((p1, p2) in filledPositions.windowed(2)) {
-                if (p2 - p1 == 1) continue
+    private fun zeroingGaps(value: Value, type: AggregateType, filledPositions: List<Int>) = when (type) {
+        is StructType -> {
+            for ((left, right) in filledPositions.windowed(2)) {
+                if (right - left == 1) continue
 
-                zeroingGapsInStruct(p1, p2, type, value)
+                zeroMemory(value, type, left + 1 until right)
             }
         }
-        is CArrayType -> {
-            for ((p1, p2) in filledPositions.windowed(2)) {
-                if (p2 - p1 == 1) continue
+        is ArrayType -> {
+            for ((left, right) in filledPositions.windowed(2)) {
+                if (right - left == 1) continue
 
-                zeroingGapsInArray(p1, p2, type, value)
+                zeroMemory(value, type, left + 1 until right)
             }
         }
-        is CUnionType -> {}
-        else -> throw IRCodeGenError("Unknown type, type=$type", where)
     }
 
     private fun visitInitializers(initializerList: InitializerList, lvalueAdr: Value, type: CAggregateType): List<Int> {
@@ -1779,7 +1759,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return
         }
 
-        zeroingGaps(lvalueAdr, type, filledPositions, initializerList.begin())
+        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+        zeroingGaps(lvalueAdr, irType, filledPositions)
     }
 
     private fun visitDesignationInitializer(designationInitializer: DesignationInitializer, value: Value, type: CAggregateType): Int {
