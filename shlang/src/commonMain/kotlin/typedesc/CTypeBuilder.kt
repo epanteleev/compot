@@ -38,7 +38,7 @@ class CTypeBuilder(private val position: Position) {
         return true
     }
 
-    private fun foldCTypes(baseTypes: List<CType>): CType {
+    private fun foldCTypes(baseTypes: List<CType>): SizedType {
         when {
             check(baseTypes, UINT, LONG, LONG, INT) -> return ULONG
             check(baseTypes, UINT, LONG, LONG)      -> return ULONG
@@ -67,7 +67,7 @@ class CTypeBuilder(private val position: Position) {
         assertion(baseTypes.size == 1) {
             "Unknown type '$baseTypes'"
         }
-        return baseTypes[0]
+        return baseTypes[0].asType()
     }
 
     fun build(): VarDescriptor {

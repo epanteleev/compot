@@ -1,6 +1,6 @@
 package types
 
-class InitializerType(private val initializer: List<CType>): CAggregateType() { //TODO remove it or stop inherit aggregate type ???
+class InitializerType(private val initializer: List<CType>): CType() { //TODO remove it or stop inherit aggregate type ???
     override fun toString(): String = buildString {
         append("{")
         initializer.forEachIndexed { index, type ->
@@ -9,9 +9,6 @@ class InitializerType(private val initializer: List<CType>): CAggregateType() { 
         }
         append("}")
     }
-
-    override fun size(): Int = throw RuntimeException("Initializer type has no size")
-    override fun alignmentOf(): Int = throw RuntimeException("Initializer type has no alignment")
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

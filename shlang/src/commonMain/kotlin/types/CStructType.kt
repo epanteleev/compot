@@ -88,7 +88,7 @@ class CStructType private constructor(
             val result = IntArray(fields.size)
             for (i in fields.indices) {
                 val field = fields[i]
-                val alignment = field.cType().alignmentOf()
+                val alignment = field.alignmentOf()
                 current = Definitions.alignTo(current + field.cType().size(), alignment)
                 result[i] = alignment
             }

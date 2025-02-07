@@ -1,7 +1,7 @@
 package types
 
 // TODO MANY CODE DUPLICATES iN THIS FILE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-sealed class CAggregateType: CType() {
+sealed class CAggregateType: SizedType() {
     fun hasFloatOnly(lo: Int, hi: Int): Boolean {
         return hasFloat(this, lo, hi, 0)
     }
@@ -17,7 +17,7 @@ sealed class CAggregateType: CType() {
 
         } else if (ty is CArrayType) {
             for (i in 0 until ty.dimension.toInt()) {
-                if (!hasFloat(ty.type.cType(), lo, hi, offset + i * ty.type.cType().size())) {
+                if (!hasFloat(ty.type.cType(), lo, hi, offset + i * ty.type.asType<SizedType>().size())) {
                     return false
                 }
             }

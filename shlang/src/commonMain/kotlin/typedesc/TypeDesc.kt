@@ -8,7 +8,6 @@ data class TypeResolutionException(override val message: String, private val pos
 class TypeDesc(private val baseType: CType, private val properties: List<TypeQualifier>) {
     fun qualifiers(): List<TypeQualifier> = properties
     fun cType(): CType = baseType
-    fun size(): Int = baseType.size()
     fun copyWith(extraProperties: List<TypeQualifier>): TypeDesc {
         return TypeDesc(baseType, properties + extraProperties)
     }

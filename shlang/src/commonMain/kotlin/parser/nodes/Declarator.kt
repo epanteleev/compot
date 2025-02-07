@@ -94,16 +94,8 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                         val rvalueType = TypeDesc.from(CArrayType(baseType.element(), rvalue.length().toLong()), listOf())
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
-                    is CArrayType -> {
-                        val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerType.dimension), listOf())
-                        return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
-                    }
                     is CStringLiteral -> {
                         val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerType.dimension + 1), listOf())
-                        return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
-                    }
-                    is CPointer -> {
-                        val rvalueType = baseType.element()
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
                     else -> throw TypeResolutionException("Array size is not specified: type=$initializerType", declarator.begin())

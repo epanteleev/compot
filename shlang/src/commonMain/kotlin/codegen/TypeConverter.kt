@@ -80,7 +80,7 @@ internal object TypeConverter {
         val fields = arrayListOf<NonTrivialType>()
         for (member in type.members()) {
             val cType = member.cType()
-            if (cType is CUncompletedArrayType) {
+            if (cType is CUncompletedArrayType) { //TODO check that this is last member
                 continue
             }
 
@@ -97,7 +97,7 @@ internal object TypeConverter {
             return structType
         }
 
-        val field = type.members().maxByOrNull { it.size() }.let {
+        val field = type.members().maxByOrNull { it.cType().asType<SizedType>().size() }.let {
             if (it == null) {
                 null
             } else {

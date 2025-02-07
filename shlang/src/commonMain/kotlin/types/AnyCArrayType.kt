@@ -18,10 +18,10 @@ class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(
     }
 
     override fun size(): Int {
-        return type.size() * dimension.toInt()
+        return type.asType<SizedType>().size() * dimension.toInt()
     }
 
-    override fun alignmentOf(): Int = type.cType().alignmentOf()
+    override fun alignmentOf(): Int = type.asType<SizedType>().alignmentOf()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -42,7 +42,7 @@ class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(
 
 class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     override fun size(): Int {
-        return type.size() * dimension.toInt() //TODO
+        return type.asType<SizedType>().size() * dimension.toInt() //TODO
     }
 
     override fun toString(): String = buildString {
@@ -51,7 +51,7 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     }
 
     override fun alignmentOf(): Int {
-        return type.cType().alignmentOf()
+        return type.asType<SizedType>().alignmentOf()
     }
 
     override fun equals(other: Any?): Boolean {

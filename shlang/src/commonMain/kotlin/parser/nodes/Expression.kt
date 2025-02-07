@@ -3,7 +3,6 @@ package parser.nodes
 import types.*
 import typedesc.*
 import tokenizer.tokens.*
-import codegen.IRCodeGenError
 import common.assertion
 import parser.LineAgnosticAstPrinter
 import parser.nodes.visitors.*
@@ -397,14 +396,20 @@ data class SizeOf(val expr: Node) : Expression() {
 
     fun constEval(typeHolder: TypeHolder): Int = when (expr) {
         is TypeName -> {
-            val resolved = expr.specifyType(typeHolder, listOf()).typeDesc
+            val resolved = expr.specifyType(typeHolder, listOf()).typeDesc.cType()
+            if (resolved !is SizedType) {
+                throw TypeResolutionException("sizeof on uncompleted type: $resolved", expr.begin())
+            }
             resolved.size()
         }
         is Expression -> {
             val resolved = expr.resolveType(typeHolder)
+            if (resolved !is SizedType) {
+                throw TypeResolutionException("sizeof on uncompleted type: $resolved", expr.begin())
+            }
             resolved.size()
         }
-        else -> throw IRCodeGenError("Unknown sizeOf expression, expr=${expr}", expr.begin())
+        else -> throw TypeResolutionException("Unknown sizeOf expression, expr=${expr}", expr.begin())
     }
 }
 

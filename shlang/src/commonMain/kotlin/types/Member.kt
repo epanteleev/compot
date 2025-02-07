@@ -2,23 +2,20 @@ package types
 
 import typedesc.TypeDesc
 
-sealed class Member {
-    abstract fun cType(): CType
-    abstract fun typeDesc(): TypeDesc
-    abstract fun size(): Int
+sealed class Member(protected val typeDesc: TypeDesc) {
+    abstract fun cType(): SizedType
+    fun typeDesc(): TypeDesc   = typeDesc
+    fun size(): Int            = typeDesc.asType<SizedType>().size()
+    fun alignmentOf(): Int     = typeDesc.asType<SizedType>().alignmentOf()
 }
 
-class AnonMember(private val typeDesc: TypeDesc): Member() {
+class AnonMember(typeDesc: TypeDesc): Member(typeDesc) {
     override fun cType(): AnyCStructType = typeDesc.cType().asType()
-    override fun typeDesc(): TypeDesc   = typeDesc
-    override fun size(): Int            = typeDesc.size()
-    override fun toString(): String     = typeDesc.toString()
+    override fun toString(): String = typeDesc.toString()
 }
 
-class FieldMember(val name: String, private val typeDesc: TypeDesc): Member() {
-    override fun cType(): CType       = typeDesc.cType()
-    override fun typeDesc(): TypeDesc = typeDesc
-    override fun size(): Int          = typeDesc.size()
+class FieldMember(val name: String, typeDesc: TypeDesc): Member(typeDesc) {
+    override fun cType(): SizedType = typeDesc.cType().asType()
     override fun toString(): String   = "$typeDesc $name;"
 }
 

@@ -15,7 +15,7 @@ class CUnionType private constructor(
             return BYTE_SIZE
         }
 
-        val unalignedSize = fields.maxOf { it.cType().size() }
+        val unalignedSize = fields.maxOf { it.cType().asType<SizedType>().size() }
         return Definitions.alignTo(unalignedSize, alignmentOf())
     }
 
@@ -35,7 +35,7 @@ class CUnionType private constructor(
             return BYTE_SIZE
         }
 
-        return fields.maxOf { it.cType().alignmentOf() }
+        return fields.maxOf { it.cType().asType<SizedType>().alignmentOf() }
     }
 
     companion object {

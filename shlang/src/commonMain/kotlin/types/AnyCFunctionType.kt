@@ -1,9 +1,10 @@
 package types
 
+import ir.Definitions.BYTE_SIZE
 import typedesc.TypeDesc
 
 
-sealed class AnyCFunctionType: CType() {
+sealed class AnyCFunctionType: SizedType() {
     abstract fun retType(): TypeDesc
     abstract fun args(): List<TypeDesc>
     abstract fun variadic(): Boolean
@@ -11,8 +12,8 @@ sealed class AnyCFunctionType: CType() {
 }
 
 class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, var variadic: Boolean): AnyCFunctionType() {
-    override fun size(): Int = throw RuntimeException("Function type has no size")
-    override fun alignmentOf(): Int = throw RuntimeException("Function type has no alignment")
+    override fun size(): Int = BYTE_SIZE
+    override fun alignmentOf(): Int = BYTE_SIZE
 
     override fun toString(): String = buildString {
         append(retType)
@@ -57,8 +58,8 @@ class AbstractCFunction(val retType: TypeDesc, val argsTypes: List<TypeDesc>, va
 }
 
 class CFunctionType(val name: String, val functionType: AbstractCFunction): AnyCFunctionType() {
-    override fun size(): Int = throw RuntimeException("Function type has no size")
-    override fun alignmentOf(): Int = throw RuntimeException("Function type has no alignment")
+    override fun size(): Int = BYTE_SIZE
+    override fun alignmentOf(): Int = BYTE_SIZE
 
     override fun retType(): TypeDesc = functionType.retType
     override fun args(): List<TypeDesc> = functionType.argsTypes
