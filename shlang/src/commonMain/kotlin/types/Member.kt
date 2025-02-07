@@ -3,10 +3,10 @@ package types
 import typedesc.TypeDesc
 
 sealed class Member(protected val typeDesc: TypeDesc) {
-    abstract fun cType(): SizedType
+    abstract fun cType(): CompletedType
     fun typeDesc(): TypeDesc   = typeDesc
-    fun size(): Int            = typeDesc.asType<SizedType>().size()
-    fun alignmentOf(): Int     = typeDesc.asType<SizedType>().alignmentOf()
+    fun size(): Int            = typeDesc.asType<CompletedType>().size()
+    fun alignmentOf(): Int     = typeDesc.asType<CompletedType>().alignmentOf()
 }
 
 class AnonMember(typeDesc: TypeDesc): Member(typeDesc) {
@@ -15,7 +15,7 @@ class AnonMember(typeDesc: TypeDesc): Member(typeDesc) {
 }
 
 class FieldMember(val name: String, typeDesc: TypeDesc): Member(typeDesc) {
-    override fun cType(): SizedType = typeDesc.cType().asType()
+    override fun cType(): CompletedType = typeDesc.cType().asType()
     override fun toString(): String   = "$typeDesc $name;"
 }
 

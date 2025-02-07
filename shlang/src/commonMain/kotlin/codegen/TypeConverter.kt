@@ -97,7 +97,7 @@ internal object TypeConverter {
             return structType
         }
 
-        val field = type.members().maxByOrNull { it.cType().asType<SizedType>().size() }.let {
+        val field = type.members().maxByOrNull { it.cType().asType<CompletedType>().size() }.let {
             if (it == null) {
                 null
             } else {

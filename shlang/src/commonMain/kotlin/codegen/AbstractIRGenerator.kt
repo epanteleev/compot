@@ -134,10 +134,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
         return when (constEvalResult) {
             is PrimitiveConstant -> registerGlobal(declarator, constEvalResult, attr)
-            is InitializerListValue -> when (lValueCType) {
-                is CAggregateType -> registerGlobal(declarator, constEvalResult, attr)
-                else -> throw IRCodeGenError("Unsupported type $lValueCType", declarator.begin())
-            }
+            is InitializerListValue -> registerGlobal(declarator, constEvalResult, attr)
             is StringLiteralConstant -> {
                 val dimension = when (val cArrayType = varDescriptor.typeDesc.cType() as AnyCArrayType) {
                     is CArrayType     -> cArrayType.dimension
@@ -159,7 +156,6 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     private fun getExternFunction(name: String, cPrototype: CFunctionPrototype): ExternFunction {
         val externFunction = mb.findExternFunctionOrNull(name)
         if (externFunction != null) {
-            println("Warning: extern function $name already exists") //TODO implement warning mechanism
             return externFunction
         }
 
@@ -251,8 +247,8 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 val attr = toIrAttribute(varDesc.storageClass)
                 return registerGlobal(declarator, InitializerListValue(irType, elements), attr)
             }
-            is CUncompletedArrayType -> return UndefValue //TODO
-            else -> throw IRCodeGenError("Function or struct expected, but was '$cType'", declarator.begin())
+            is CUncompletedArrayType -> return UndefValue
+            else -> throw IRCodeGenError("Unsupported type $cType", declarator.begin())
         }
     }
 
@@ -301,7 +297,6 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                         is AnyCArrayType -> lValueCType.element().cType()
                         is CStructType -> lValueCType.fieldByIndex(index).cType()
                         is CUnionType -> lValueCType.descriptors().first().cType() // TODO check this
-                        else -> throw IRCodeGenError("Unsupported type $lValueCType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
                     }
                     val result = constEvalExpression(elementLValueType, initializer.expr) ?:
                         throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())

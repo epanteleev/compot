@@ -420,8 +420,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val structIRType = mb.toIRType<StructType>(typeHolder, cStructType)
         if (structIRType.fields().size <= member.index) {
-            val offset = cStructType.size() + member.cType().asType<SizedType>().size() * (member.index - cStructType.members().size)
-            return ir.gep(struct, I8Type, I64Value.of(offset))
+            return ir.gep(struct, I8Type, I64Value.of(cStructType.size()))
         }
 
         val gep = ir.gfp(struct, structIRType, I64Value.of(member.index))
@@ -450,8 +449,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val structIRType = mb.toIRType<StructType>(typeHolder, structType)
         if (structIRType.fields().size <= member.index) {
-            val offset = structType.size() + member.cType().asType<SizedType>().size() * (member.index - structType.members().size)
-            return ir.gep(struct, I8Type, I64Value.of(offset))
+            return ir.gep(struct, I8Type, I64Value.of(structType.size()))
         }
 
         val gep = ir.gfp(struct, structIRType, I64Value.of(member.index))
@@ -544,7 +542,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     convertedArgs.addAll(argValues)
                     offset += argValues.size - 1
                 }
-                else -> throw IRCodeGenError("Unknown type, type=${argCType} in function call", argValue.begin())
+                else -> throw IRCodeGenError("Unknown type, type=$argCType in function call", argValue.begin())
             }
         }
         return FunctionArgInfo(convertedArgs, attributes)
@@ -783,7 +781,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedRValue = ir.convertLVToType(rvalue, I64Type)
 
                 val dereferenced = lValueType.dereference(typeHolder)
-                if (dereferenced !is SizedType) {
+                if (dereferenced !is CompletedType) {
                     throw IRCodeGenError("unexpected uncompleted type: $dereferenced", binOp.begin())
                 }
                 val mul = ir.mul(convertedRValue, I64Value.of(dereferenced.size()))
@@ -848,7 +846,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedLValue = ir.convertLVToType(ptr2intLValue, I64Type)
 
                 val dereferenced = lValueType.dereference(typeHolder)
-                if (dereferenced !is SizedType) {
+                if (dereferenced !is CompletedType) {
                     throw IRCodeGenError("unexpected uncompleted type: $dereferenced", binOp.begin())
                 }
                 val mul = ir.mul(convertedRValue, I64Value.of(dereferenced.size()))
@@ -934,7 +932,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return rightCvt
         }
         val rightType = binop.right.resolveType(typeHolder)
-        if (rightType !is SizedType) {
+        if (rightType !is CompletedType) {
             throw IRCodeGenError("Uncompleted type: type=$rightType", binop.right.begin())
         }
 
@@ -1056,7 +1054,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is CPointer -> {
                 val converted = ir.convertLVToType(loaded, I64Type)
                 val dereferenced = ctype.dereference(typeHolder)
-                if (dereferenced !is SizedType) {
+                if (dereferenced !is CompletedType) {
                     throw IRCodeGenError("unexpected uncompleted type: $dereferenced", unaryOp.begin())
                 }
                 val inc = op(converted, I64Value.of(dereferenced.size()))
@@ -1082,7 +1080,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val loaded    = ir.load(PtrType, address)
                 val converted = ir.convertLVToType(loaded, I64Type)
                 val dereferenced = cType.dereference(typeHolder)
-                if (dereferenced !is SizedType) {
+                if (dereferenced !is CompletedType) {
                     throw IRCodeGenError("unexpected uncompleted type: $dereferenced", unaryOp.begin())
                 }
                 val inc       = op(converted, I64Value.of(dereferenced.size()))
@@ -1885,7 +1883,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val irRvalueType = mb.toIRType<AggregateType>(typeHolder, rvalueType)
                 ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(irRvalueType.sizeOf().toLong()))
 
-                if (type !is SizedType) {
+                if (type !is CompletedType) {
                     throw IRCodeGenError("Unknown type, type=$type", initDeclarator.begin())
                 }
                 if (rvalueType.size() < type.size()) {

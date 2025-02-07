@@ -397,14 +397,14 @@ data class SizeOf(val expr: Node) : Expression() {
     fun constEval(typeHolder: TypeHolder): Int = when (expr) {
         is TypeName -> {
             val resolved = expr.specifyType(typeHolder, listOf()).typeDesc.cType()
-            if (resolved !is SizedType) {
+            if (resolved !is CompletedType) {
                 throw TypeResolutionException("sizeof on uncompleted type: $resolved", expr.begin())
             }
             resolved.size()
         }
         is Expression -> {
             val resolved = expr.resolveType(typeHolder)
-            if (resolved !is SizedType) {
+            if (resolved !is CompletedType) {
                 throw TypeResolutionException("sizeof on uncompleted type: $resolved", expr.begin())
             }
             resolved.size()

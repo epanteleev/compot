@@ -4,7 +4,7 @@ import ir.Definitions.BYTE_SIZE
 import typedesc.TypeDesc
 
 
-sealed class AnyCFunctionType: SizedType() {
+sealed class AnyCFunctionType: CompletedType() {
     abstract fun retType(): TypeDesc
     abstract fun args(): List<TypeDesc>
     abstract fun variadic(): Boolean

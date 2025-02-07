@@ -1,6 +1,6 @@
 package types
 
-sealed class SizedType : CType() {
+sealed class CompletedType : CType() {
     abstract fun size(): Int
     abstract fun alignmentOf(): Int
 }

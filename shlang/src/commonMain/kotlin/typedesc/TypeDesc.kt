@@ -5,7 +5,7 @@ import types.CType
 
 data class TypeResolutionException(override val message: String, private val position: Position) : Exception(message)
 
-class TypeDesc(private val baseType: CType, private val properties: List<TypeQualifier>) {
+class TypeDesc private constructor(private val baseType: CType, private val properties: List<TypeQualifier>) {
     fun qualifiers(): List<TypeQualifier> = properties
     fun cType(): CType = baseType
     fun copyWith(extraProperties: List<TypeQualifier>): TypeDesc {

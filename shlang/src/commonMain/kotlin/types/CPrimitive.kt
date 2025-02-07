@@ -4,7 +4,7 @@ import typedesc.*
 import ir.Definitions.BYTE_SIZE
 
 
-sealed class CPrimitive: SizedType() {
+sealed class CPrimitive: CompletedType() {
     final override fun alignmentOf(): Int = size()
 
     fun interfere(typeHolder: TypeHolder, type2: CType): CPrimitive? {

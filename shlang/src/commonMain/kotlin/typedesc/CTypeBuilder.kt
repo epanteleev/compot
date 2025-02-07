@@ -38,7 +38,7 @@ class CTypeBuilder(private val position: Position) {
         return true
     }
 
-    private fun foldCTypes(baseTypes: List<CType>): SizedType {
+    private fun foldCTypes(baseTypes: List<CType>): CompletedType {
         when {
             check(baseTypes, UINT, LONG, LONG, INT) -> return ULONG
             check(baseTypes, UINT, LONG, LONG)      -> return ULONG
