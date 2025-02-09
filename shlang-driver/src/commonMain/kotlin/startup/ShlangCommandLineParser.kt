@@ -13,8 +13,7 @@ object ShlangCommandLineParser {
                     return null
                 }
                 "-c" -> commandLineArguments.setIsCompile(true)
-                "-O0" -> commandLineArguments.setOptLevel(0)
-                "-O1" -> commandLineArguments.setOptLevel(1)
+                "-shared" -> commandLineArguments.setSharedOption(true)
                 "--dump-ir" -> {
                     if (cursor + 1 >= args.size) {
                         println("Expected output directory after --dump-ir")
@@ -32,27 +31,45 @@ object ShlangCommandLineParser {
                     commandLineArguments.setOutputFilename(args[cursor])
                 }
                 "-E" -> commandLineArguments.setPreprocessOnly(true)
-                else -> {
-                    if (arg.startsWith("-I")) {
-                        commandLineArguments.addIncludeDirectory(arg.substring(2))
-                    } else if (arg.startsWith("-D")) {
-                        val define = arg.substring(2)
-                        parseDefine(commandLineArguments, define)
-                    } else if (arg.startsWith("-dM")) {
-                        commandLineArguments.setDumpDefines(true)
-                    } else if (arg.startsWith("-l")) {
-                        commandLineArguments.addLibrary(arg)
-                    } else if (IGNORED_OPTIONS.contains(arg)) {
-                        println("Ignoring option: $arg")
-                    } else {
-                        commandLineArguments.setInputFileName(arg)
-                    }
-                }
+                else -> parseOption(commandLineArguments, arg)
             }
             cursor++
         }
 
         return commandLineArguments
+    }
+
+    private fun parseOption(cli: ShlangArguments, arg: String) {
+        if (arg.startsWith("-I")) {
+            cli.addIncludeDirectory(arg.substring(2))
+
+        } else if (arg.startsWith("-O")) {
+            val level = arg.substring(2)
+            cli.setOptLevel(level.toInt())
+
+        } else if (arg.startsWith("-D")) {
+            val define = arg.substring(2)
+            parseDefine(cli, define)
+
+        } else if (arg.startsWith("-dM")) {
+            cli.setDumpDefines(true)
+
+        } else if (arg.startsWith("-l")) {
+            cli.addLibrary(arg)
+
+        } else if (IGNORED_OPTIONS.contains(arg)) {
+            ignoreOption(arg)
+
+        } else if (arg.startsWith("-fvisibility")) {
+            ignoreOption(arg)
+
+        } else {
+            cli.setInputFileName(arg)
+        }
+    }
+
+    private fun ignoreOption(arg: String) {
+        println("Ignoring option: $arg")
     }
 
     fun parse(args: Array<String>): ShlangArguments? {
@@ -64,10 +81,10 @@ object ShlangCommandLineParser {
         return loop(args)
     }
 
-    private fun parseDefine(shlangCLIArguments: ShlangArguments, define: String) {
+    private fun parseDefine(cli: ShlangArguments, define: String) {
         val parts = define.split('=')
         if (parts.size == 1) {
-            shlangCLIArguments.addDefine(parts[0], "1")
+            cli.addDefine(parts[0], "1")
             return
         }
         if (parts.size != 2) {
@@ -78,9 +95,9 @@ object ShlangCommandLineParser {
         val value = parts[1]
         if (value.startsWith('\'')) {
             val unquote = value.substring(1, value.length - 1)
-            shlangCLIArguments.addDefine(macro, unquote)
+            cli.addDefine(macro, unquote)
         } else {
-            shlangCLIArguments.addDefine(macro, value)
+            cli.addDefine(macro, value)
         }
     }
 

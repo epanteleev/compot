@@ -75,10 +75,10 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
         removeOrCreateDir()
         val result = if (commandLineArguments.getOptLevel() == 0) {
             runCompiler(".base", BASE, module, PassPipeline::base)
-        } else if (commandLineArguments.getOptLevel() == 1) {
+        } else if (commandLineArguments.getOptLevel() >= 1) {
             runCompiler(".opt", OPT, module, PassPipeline::opt)
         } else {
-            throw IllegalArgumentException("Invalid optimization level: ${commandLineArguments.getOptLevel()}")
+            throw IllegalArgumentException("Invalid optimization level: -O${commandLineArguments.getOptLevel()}")
         }
 
         if (result.exitCode != 0) {

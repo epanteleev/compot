@@ -10,6 +10,7 @@ class ShlangArguments {
     private var preprocessOnly = false
     private var dumpDefines = false
     private var optionC = false
+    private var sharedOption = false
     private val dynamicLibraries = hashSetOf<String>()
     private var inputs = arrayListOf<ProcessedFile>()
 
@@ -46,6 +47,12 @@ class ShlangArguments {
     }
 
     fun isCompile() = optionC
+
+    fun setSharedOption(flag: Boolean) {
+        sharedOption = flag
+    }
+
+    fun isSharedOption() = sharedOption
 
     fun setPreprocessOnly(preprocessOnly: Boolean) {
         this.preprocessOnly = preprocessOnly

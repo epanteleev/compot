@@ -124,10 +124,16 @@ class ShlangDriver(private val cli: ShlangArguments) {
     }
 
     private fun runLinker(out: ProcessedFile, compiledFiles: List<ProcessedFile>) {
+        val crtObjs = if (cli.isSharedOption()) {
+            SystemConfig.crtSharedObjects() + SystemConfig.crtCommonSharedObjects()
+        } else {
+            SystemConfig.crtStaticObjects() + SystemConfig.crtCommonStaticObjects()
+        }
+
         val result = GNULdRunner(out)
             .libs(SystemConfig.runtimeLibraries() + cli.getDynamicLibraries())
             .libPaths(SystemConfig.runtimePathes())
-            .crtObjects(SystemConfig.crtObjects())
+            .crtObjects(crtObjs)
             .objs(compiledFiles.map { it.filename })
             .dynamicLinker(SystemConfig.dynamicLinker())
             .execute()

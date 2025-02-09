@@ -6,7 +6,8 @@ import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
 
-
+// Mini FAQ about the misc libc/gcc crt files.
+// https://dev.gentoo.org/~vapier/crt.txt
 internal object SystemConfig {
     fun systemHeadersPaths(): List<String>? {
         val paths = arrayListOf<String>()
@@ -21,6 +22,52 @@ internal object SystemConfig {
         return paths.takeIf { it.isNotEmpty() }
     }
 
+    fun crtStaticObjects(): List<String> {
+        val crtPath = crtPath() ?: throw IllegalStateException("Cannot find crt path")
+
+        val objects = arrayListOf<String>()
+        for (crtObject in crtGCCObjects) {
+            objects.add("$crtPath/$crtObject")
+        }
+
+        return objects
+    }
+
+    fun crtSharedObjects(): List<String> {
+        val crtPath = crtPath() ?: throw IllegalStateException("Cannot find crt path")
+
+        val objects = arrayListOf<String>()
+        for (crtObject in crtSharedObjects) {
+            objects.add("$crtPath/$crtObject")
+        }
+
+        return objects
+    }
+
+    fun crtCommonStaticObjects(): List<String> {
+        if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
+            return crtCommonStaticObjects.mapTo(arrayListOf()) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
+        }
+
+        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
+            return crtCommonStaticObjects.mapTo(arrayListOf()) { "$CRT_OBJECT_PATH$it" }
+        }
+
+        return arrayListOf()
+    }
+
+    fun crtCommonSharedObjects(): List<String> {
+        if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
+            return crtCommonSharedObjects.mapTo(arrayListOf()) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
+        }
+
+        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
+            return crtCommonSharedObjects.mapTo(arrayListOf()) { "$CRT_OBJECT_PATH$it" }
+        }
+
+        return arrayListOf()
+    }
+
     fun crtObjects(): List<String> {
         val crtPath = crtPath() ?: throw IllegalStateException("Cannot find crt path")
 
@@ -30,11 +77,11 @@ internal object SystemConfig {
         }
 
         if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
-            return crtObjects.mapTo(objects) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
+            return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
         }
 
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
-            return crtObjects.mapTo(objects) { "$CRT_OBJECT_PATH$it" }
+        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PC_GCC.toPath())) {
+            return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_PATH$it" }
         }
 
         return objects
@@ -73,10 +120,19 @@ internal object SystemConfig {
 
     fun runtimeLibraries(): List<String> = arrayListOf("-lc")
 
-    private val crtObjects = listOf(
+    private val crtCommonStaticObjects = listOf(
         "crt1.o",
         "crti.o",
         "crtn.o",
+    )
+
+    private val crtCommonSharedObjects = listOf(
+        "crti.o",
+    )
+
+    private val crtSharedObjects = listOf(
+        "crtendS.o",
+        "crtbeginS.o",
     )
 
     private val crtGCCObjects = listOf(
