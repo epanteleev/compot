@@ -16,24 +16,4 @@ object Files {
     fun getDirName(name: String): String {
         return name.toPath().parent.toString()
     }
-
-    fun replaceExtension(name: String, newExtension: String): String {
-        val fileName = name.toPath().name
-        val lastIndex = fileName.lastIndexOf('.')
-        if (lastIndex != -1) {
-            return fileName.substring(0, lastIndex) + newExtension
-        }
-
-        return fileName + newExtension
-    }
-
-    fun getExtension(name: String): String? {
-        val fileName = name.toPath().name
-        val lastIndex = fileName.lastIndexOf('.')
-        return if (lastIndex != -1) {
-            fileName.substring(lastIndex, fileName.length)
-        } else {
-            null
-        }
-    }
 }

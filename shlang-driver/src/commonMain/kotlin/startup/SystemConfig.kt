@@ -9,7 +9,7 @@ import kotlin.io.path.listDirectoryEntries
 // Mini FAQ about the misc libc/gcc crt files.
 // https://dev.gentoo.org/~vapier/crt.txt
 internal object SystemConfig {
-    fun systemHeadersPaths(): List<String>? {
+    fun systemHeadersPaths(): List<String> {
         val paths = arrayListOf<String>()
         if (FileSystem.SYSTEM.exists(USR_INCLUDE_GNU_LINUX_PATH.toPath())) {
             paths.add(USR_INCLUDE_GNU_LINUX_PATH)
@@ -19,7 +19,7 @@ internal object SystemConfig {
             paths.add(USR_INCLUDE_PATH)
         }
 
-        return paths.takeIf { it.isNotEmpty() }
+        return paths
     }
 
     fun crtStaticObjects(): List<String> {

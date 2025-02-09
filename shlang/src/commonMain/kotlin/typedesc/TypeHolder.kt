@@ -26,6 +26,7 @@ class TypeHolder private constructor(): Scope {
     }
 
     fun findEnum(name: String): CEnumType? {
+        //TODO cache results
         for (enumType in enumTypeMap) {
             if (enumType !is CEnumType) {
                 continue
@@ -37,39 +38,48 @@ class TypeHolder private constructor(): Scope {
         return null
     }
 
-    inline fun<reified T: CType> getTypeOrNull(name: String): CType? = when (T::class) {
-        CEnumType::class, CUncompletedEnumType::class     -> enumTypeMap[name]
-        CStructType::class, CUncompletedStructType::class -> structTypeMap[name]
-        CUnionType::class, CUncompletedUnionType::class   -> unionTypeMap[name]
-        else -> null
+    fun getUnionTypeOrNull(name: String): CType? = unionTypeMap[name]
+    fun getStructTypeOrNull(name: String): CType? = structTypeMap[name]
+    fun getEnumTypeOrNull(name: String): CType? = enumTypeMap[name]
+
+    fun getStructType(name: String): CType {
+        return getStructTypeOrNull(name) ?: throw Exception("Type for struct $name not found")
+    }
+
+    fun getEnumType(name: String): CType {
+        return getEnumTypeOrNull(name) ?: throw Exception("Type for enum $name not found")
+    }
+
+    fun getUnionType(name: String): CType {
+        return getUnionTypeOrNull(name) ?: throw Exception("Type for union $name not found")
     }
 
     fun getTypedefOrNull(name: String): TypeDesc? {
         return typedefs[name]
     }
 
+    private fun addTypeDesc(name: String, structType: CType, qualifiers: List<TypeQualifier>): TypeDesc {
+        val typeDesc = TypeDesc.from(structType, qualifiers)
+        typedefs[name] = typeDesc
+        return typeDesc
+    }
+
     fun getTypedef(name: String): TypeDesc {
-        val t = getTypedefOrNull(name) ?: throw Exception("Type for 'typedef $name' not found")
-        when (val cType = t.cType()) {
+        val typeDesc = getTypedefOrNull(name) ?: throw Exception("Type for 'typedef $name' not found")
+        when (val cType = typeDesc.cType()) {
             is CUncompletedStructType -> {
-                val structType = structTypeMap[cType.name] ?: return t
-                val typeDesc = TypeDesc.from(structType, t.qualifiers())
-                typedefs[name] = typeDesc
-                return typeDesc
+                val structType = getStructTypeOrNull(cType.name) ?: return typeDesc
+                return addTypeDesc(name, structType, typeDesc.qualifiers())
             }
             is CUncompletedEnumType -> {
-                val enumType = enumTypeMap[cType.name] ?: return t
-                val typeDesc = TypeDesc.from(enumType, t.qualifiers())
-                typedefs[name] = typeDesc
-                return typeDesc
+                val enumType = getEnumTypeOrNull(cType.name) ?: return typeDesc
+                return addTypeDesc(name, enumType, typeDesc.qualifiers())
             }
             is CUncompletedUnionType -> {
-                val unionType = unionTypeMap[cType.name] ?: return t
-                val typeDesc = TypeDesc.from(unionType, t.qualifiers())
-                typedefs[name] = typeDesc
-                return typeDesc
+                val unionType = getUnionTypeOrNull(cType.name) ?: return typeDesc
+                return addTypeDesc(name, unionType, typeDesc.qualifiers())
             }
-            else -> return t
+            else -> return typeDesc
         }
     }
 
@@ -85,10 +95,6 @@ class TypeHolder private constructor(): Scope {
 
     fun containsVar(varName: String): Boolean {
         return valueMap.containsKey(varName)
-    }
-
-    inline fun<reified T: CType> getStructType(name: String): CType {
-        return getTypeOrNull<T>(name) ?: throw Exception("Type for struct $name not found")
     }
 
     inline fun <reified T : CType> addNewType(name: String, type: T): T {

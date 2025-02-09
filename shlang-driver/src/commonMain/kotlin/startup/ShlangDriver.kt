@@ -28,7 +28,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
     }
 
     private fun initializePreprocessorContext(filename: String): PreprocessorContext {
-        val usrDir = SystemConfig.systemHeadersPaths() ?: throw IllegalStateException("Cannot find system include directory")
+        val usrDir = SystemConfig.systemHeadersPaths()
         val includeDirectories = cli.getIncludeDirectories() + usrDir
         val workingDirectory   = Files.getDirName(filename)
         val headerHolder       = FileHeaderHolder(pwd(), includeDirectories + workingDirectory)
@@ -40,7 +40,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
 
     private fun preprocess(filename: String): TokenList? {
         val source = FileSystem.SYSTEM.read(filename.toPath()) {
-            readUtf8()
+            readUtf8() //TODO: stream reading
         }
         val ctx = initializePreprocessorContext(filename)
 

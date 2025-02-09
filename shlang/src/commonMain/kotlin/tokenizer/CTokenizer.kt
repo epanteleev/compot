@@ -5,7 +5,6 @@ import tokenizer.LexicalElements.keywords
 import tokenizer.LexicalElements.isOperator2
 import tokenizer.LexicalElements.isOperator3
 import tokenizer.StringReader.Companion.tryPunct
-import kotlin.math.pow
 
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
@@ -134,46 +133,10 @@ class CTokenizer private constructor(private val filename: String, private val r
         return ch
     }
 
-    private fun tryGetIntegerSuffix(reader: StringReader, radix: Int, start: Int, end: Int): Number? {
-        if (reader.check("LLU") || reader.check("llu")) {
-            reader.read(3)
-            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
-        } else if (reader.check("ULL") || reader.check("ull")) {
-            reader.read(3)
-            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
-        } else if (reader.check("ll") || reader.check("LL")) {
-            reader.read(2)
-            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
-        } else if (reader.check("LU") || reader.check("lu")) {
-            reader.read(2)
-            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
-        } else if (reader.check("UL") || reader.check("ul")) {
-            reader.read(2)
-            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
-        } else if (reader.check("U") || reader.check("u")) {
-            reader.read()
-            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
-        } else if (reader.check("L") || reader.check("l")) {
-            reader.read()
-            return reader.str.substring(start, end).toULongOrNull(radix)?.toLong()
-        }
-        return reader.str.substring(start, end).toInt()
-    }
-
-    private fun tryGetFPSuffix(string: String): Double? {
-        val str = if (string.endsWith("f") || string.endsWith("F")) {
-            string.substring(0, string.length - 1)
-        } else if (string.endsWith("d") || string.endsWith("D")) {
-            string.substring(0, string.length - 1)
-        } else {
-            string
-        }
-
-        return try {
-            java.lang.Double.valueOf(str)
-        } catch (e: NumberFormatException) {
-            null
-        }
+    private fun tryGetFPSuffix(str: String): Double? = try {
+        java.lang.Double.valueOf(str)
+    } catch (_: NumberFormatException) {
+        null
     }
 
     private fun toNumberDefault(data: String, radix: Int): Number? = data.toByteOrNull(radix)
@@ -196,36 +159,61 @@ class CTokenizer private constructor(private val filename: String, private val r
         return c.toChar()
     }
 
-    private fun tryParseExp(reader: StringReader): Long? {
-        if (reader.check('e') || reader.check('E')) {
-            reader.read()
-            val start = reader.pos
-            if (reader.check('+') || reader.check('-')) {
-                reader.read()
-            }
-            while (reader.isDigit()) {
-                reader.read()
-            }
-            val exp = reader.str.substring(start, reader.pos)
-            return exp.toLongOrNull()
+    private fun isFPSuffix(str: String): Boolean {
+        if (str.isEmpty()) {
+            return false
         }
-        return null
+        val last = str.last()
+        return when (last) {
+            'f', 'F', 'd', 'D' -> true
+            else -> false
+        }
     }
 
-    private fun tryParsePower(reader: StringReader): Long? {
-        if (reader.check('p') || reader.check('P')) {
-            reader.read()
-            if (reader.check('+') || reader.check('-')) {
-                reader.read()
-            }
-            val start = reader.pos
-            while (reader.isDigit()) {
-                reader.read()
-            }
-            val exp = reader.str.substring(start, reader.pos)
-            return exp.toLongOrNull()
+    private fun isLongSuffix1(str: String): Boolean {
+        if (str.isEmpty()) {
+            return false
         }
-        return null
+        val last = str.last()
+        return when (last) {
+            'u', 'U', 'l', 'L' -> true
+            else -> false
+        }
+    }
+
+    private fun isLongSuffix2(string: String): Boolean = string.endsWith("ul") ||
+        string.endsWith("UL") ||
+        string.endsWith("lu") ||
+        string.endsWith("LU") ||
+        string.endsWith("ll") ||
+        string.endsWith("LL")
+
+    private fun isLongSuffix3(string: String): Boolean = string.endsWith("ull") ||
+        string.endsWith("ULL") ||
+        string.endsWith("llu") ||
+        string.endsWith("LLU")
+
+    private fun numberSubstring(string: String, base: Int, last: Int): String = when (base) {
+        16 -> string.substring(2, string.length - last)
+        10 -> string.substring(0, string.length - last)
+        8 -> string.substring(1, string.length - last)
+        2 -> string.substring(2, string.length - last)
+        else -> throw IllegalStateException("Unknown base")
+    }
+
+    private fun numberWithPower(string: String, base: Int): Number? {
+        if (base == 10) {
+            if (string.contains('e') || string.contains('E')) {
+                return java.lang.Double.valueOf(string)
+            }
+        }
+        if (base == 16) {
+            if (string.contains('p') || string.contains('P')) {
+                return java.lang.Double.valueOf(string)
+            }
+        }
+        val substring = numberSubstring(string, base, 0)
+        return toLongDefault(substring, base)
     }
 
     private fun readPPNumber(string: String): Number? {
@@ -240,63 +228,32 @@ class CTokenizer private constructor(private val filename: String, private val r
         }
 
         if (string.contains('.')) {
-            if (string.endsWith("f") || string.endsWith("F") || string.endsWith("d") || string.endsWith("D")) {
+            if (isFPSuffix(string)) {
                 val substring = string.substring(0, string.length - 1)
                 return tryGetFPSuffix(substring)
             }
 
-            if (string.endsWith("u") || string.endsWith("U") || string.endsWith("l") || string.endsWith("L")) {
-                val substring = when (base) {
-                    16 -> string.substring(2, string.length - 1)
-                    10 -> string.substring(0, string.length - 1)
-                    8 -> string.substring(1, string.length - 1)
-                    2 -> string.substring(2, string.length - 1)
-                    else -> throw IllegalStateException("Unknown base")
-                }
+            if (isLongSuffix1(string)) {
+                val substring = numberSubstring(string, base, 1)
                 return toLongDefault(substring, base)
             }
 
             return tryGetFPSuffix(string)
         }
-        if (string.endsWith("llu") || string.endsWith("LLU") || string.endsWith("ull") || string.endsWith("ULL")) {
-            val substring = when (base) {
-                16 -> string.substring(2, string.length - 3)
-                10 -> string.substring(0, string.length - 3)
-                8 -> string.substring(1, string.length - 3)
-                2 -> string.substring(2, string.length - 3)
-                else -> throw IllegalStateException("Unknown base")
-            }
+
+        if (isLongSuffix3(string)) {
+            val substring = numberSubstring(string, base, 3)
             return toLongDefault(substring, base)
         }
-        if (string.endsWith("ul") || string.endsWith("UL") || string.endsWith("lu") || string.endsWith("LU") || string.endsWith("ll") || string.endsWith("LL")) {
-            val substring = when (base) {
-                16 -> string.substring(2, string.length - 2)
-                10 -> string.substring(0, string.length - 2)
-                8 -> string.substring(1, string.length - 2)
-                2 -> string.substring(2, string.length - 2)
-                else -> throw IllegalStateException("Unknown base")
-            }
+
+        if (isLongSuffix2(string)) {
+            val substring = numberSubstring(string, base, 2)
             return toLongDefault(substring, base)
         }
-        if (string.endsWith("u") || string.endsWith("U") || string.endsWith("l") || string.endsWith("L")) {
-            if (base == 10) {
-                if (string.contains('e') || string.contains('E')) {
-                    return java.lang.Double.valueOf(string.substring(0, string.length - 1))
-                }
-            }
-            if (base == 16) {
-                if (string.contains('p') || string.contains('P')) {
-                    return java.lang.Double.valueOf(string.substring(0, string.length - 1))
-                }
-            }
-            val substring = when (base) {
-                16 -> string.substring(2, string.length - 1)
-                10 -> string.substring(0, string.length - 1)
-                8 -> string.substring(1, string.length - 1)
-                2 -> string.substring(2, string.length - 1)
-                else -> throw IllegalStateException("Unknown base")
-            }
-            return toLongDefault(substring, base)
+
+        if (isLongSuffix1(string)) {
+            val substring = string.substring(0, string.length - 1)
+            return numberWithPower(substring, base)
         }
 
         if (base == 10) {
@@ -304,19 +261,14 @@ class CTokenizer private constructor(private val filename: String, private val r
                 return java.lang.Double.valueOf(string)
             }
         }
+
         if (base == 16) {
             if (string.contains('p') || string.contains('P')) {
                 return java.lang.Double.valueOf(string)
             }
         }
 
-        val substring = when (base) {
-            16 -> string.substring(2, string.length)
-            10 -> string.substring(0, string.length)
-            8 -> string.substring(1, string.length)
-            2 -> string.substring(2, string.length)
-            else -> throw IllegalStateException("Unknown base")
-        }
+        val substring = numberSubstring(string, base, 0)
         return toNumberDefault(substring, base)
     }
 

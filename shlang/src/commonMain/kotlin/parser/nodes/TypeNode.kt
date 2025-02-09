@@ -21,8 +21,8 @@ sealed class AnyTypeNode(val name: CToken) : Node() {
     protected fun resolveFieldTypes(typeHolder: TypeHolder, fields: List<StructField>): List<Member> {
         val members = arrayListOf<Member>()
         for (field in fields) {
-            val type = field.declspec.specifyType(typeHolder, listOf()).typeDesc
             if (field.declarators.isEmpty()) {
+                val type = field.declspec.specifyType(typeHolder, listOf()).typeDesc
                 members.add(AnonMember(type))
                 continue
             }
@@ -51,11 +51,11 @@ class UnionSpecifier(name: Identifier, val fields: List<StructField>) : AnyTypeN
     }
 }
 
-class UnionDeclaration(name: Identifier) : AnyTypeNode(name) { //TODO separate class
+class UnionDeclaration(name: Identifier) : AnyTypeNode(name) {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        typeHolder.getTypeOrNull<CUnionType>(name.str()) ?: typeHolder.addNewType(name.str(), CUncompletedUnionType(name.str()))
+        typeHolder.getUnionTypeOrNull(name.str()) ?: typeHolder.addNewType(name.str(), CUncompletedUnionType(name.str()))
     }
 }
 
@@ -137,7 +137,7 @@ class StructDeclaration(name: Identifier) : AnyTypeNode(name) {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder<CType>(typeBuilder) {
-        typeHolder.getTypeOrNull<CStructType>(name.str()) ?: typeHolder.addNewType(name.str(), CUncompletedStructType(name.str()))
+        typeHolder.getStructTypeOrNull(name.str()) ?: typeHolder.addNewType(name.str(), CUncompletedStructType(name.str()))
     }
 }
 
@@ -155,10 +155,7 @@ class EnumSpecifier(name: Identifier, val enumerators: List<Enumerator>) : AnyTy
         for (field in enumerators) {
             val constExpression = field.constExpr
             if (constExpression !is EmptyExpression) {
-                val ctx = CommonConstEvalContext<Int>(typeHolder, enumeratorValues)
-                val constExpr = ConstEvalExpression.eval(constExpression, TryConstEvalExpressionInt(ctx))
-                    ?: throw IllegalStateException("Cannot evaluate enum value")
-                enumValue = constExpr
+                enumValue = constEval(typeHolder, constExpression, enumeratorValues)
             }
             enumeratorValues[field.name()] = enumValue
             enumValue++
@@ -166,13 +163,21 @@ class EnumSpecifier(name: Identifier, val enumerators: List<Enumerator>) : AnyTy
 
         return@addToBuilder typeHolder.addNewType(name.str(), CEnumType(name.str(), enumeratorValues))
     }
+
+    private fun constEval(typeHolder: TypeHolder, expr: Expression, enumeratorValues: Map<String, Int>): Int {
+        val ctx = CommonConstEvalContext<Int>(typeHolder, enumeratorValues)
+        val constExpr = ConstEvalExpression.eval(expr, TryConstEvalExpressionInt(ctx))
+            ?: throw IllegalStateException("Cannot evaluate enum value")
+
+        return constExpr
+    }
 }
 
 class EnumDeclaration(name: Identifier) : AnyTypeNode(name) {
     override fun<T> accept(visitor: TypeNodeVisitor<T>) = visitor.visit(this)
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder) = addToBuilder(typeBuilder) {
-        typeHolder.getTypeOrNull<CEnumType>(name.str()) ?: CUncompletedEnumType(name.str())
+        typeHolder.getEnumTypeOrNull(name.str()) ?: CUncompletedEnumType(name.str())
     }
 }
 
