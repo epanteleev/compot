@@ -14,7 +14,7 @@ class Projection private constructor(id: Identity, owner: Block, private val typ
     override fun type(): PrimitiveType = type
 
     override fun dump(): String {
-        return "%${name()} = $NAME $type ${tuple()}, ${index()}"
+        return "%${name()} = $NAME ${tuple().type()} ${tuple()}, ${index()}"
     }
 
     fun tuple(): Value {

@@ -35,7 +35,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
         map
     }
 
-    private val liveness        = data.analysis(LivenessAnalysisPassFabric)
+    private val liveness = data.analysis(LivenessAnalysisPassFabric)
 
     private fun setupArguments() {
         val arguments = data.arguments()
@@ -68,9 +68,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
                 return@operands
             }
 
-            val liveRange = intervals[usage] ?: let {
-                throw LiveIntervalsException("in $usage")
-            }
+            val liveRange = intervals[usage] ?: throw LiveIntervalsException("in $usage")
             liveRange.registerUsage(bb, dominatorTree, linearScanOrder, instructionLocation)
         }
     }

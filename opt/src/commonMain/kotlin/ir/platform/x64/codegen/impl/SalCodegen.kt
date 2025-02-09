@@ -75,7 +75,8 @@ class SalCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperan
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.sal(size, second, dst)
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {

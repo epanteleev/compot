@@ -75,7 +75,10 @@ data class IntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): 
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
-        TODO("Not yet implemented")
+        asm.copy(size, first, rax)
+        asm.cdq(size)
+        asm.idiv(size, second)
+        asm.mov(size, rax, dst)
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {

@@ -1,10 +1,10 @@
 package ir.platform.x64.pass.analysis
 
+import ir.value.*
 import ir.instruction.*
-import ir.instruction.matching.*
 import ir.module.FunctionData
-import ir.value.LocalValue
-import ir.value.asValue
+import ir.instruction.matching.*
+
 
 class FixedRegisterInstructionsAnalysisResult(val rdxFixedReg: List<LocalValue>, val rcxFixedReg: List<LocalValue>)
 
