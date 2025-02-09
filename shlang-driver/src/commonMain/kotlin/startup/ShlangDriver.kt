@@ -96,21 +96,19 @@ class ShlangDriver(private val cli: ShlangArguments) {
     }
 
     fun run() {
-        val compiledFiles = arrayListOf<ProcessedFile>()
+        val processedFiles = arrayListOf<ProcessedFile>()
         for (input in cli.inputs()) {
-            if (input.extension == Extension.OBJ) {
-                compiledFiles.add(input)
-                continue
+            when (input.extension) {
+                Extension.AR -> processedFiles.add(input)
+                Extension.OBJ -> processedFiles.add(input)
+                Extension.C -> {
+                    val module = compile(input.filename) ?: continue
+                    val cli = makeOptCLIArguments(input)
+                    val objFile = OptDriver.compile(cli, module)
+                    processedFiles.add(objFile)
+                }
+                else -> throw IllegalStateException("Invalid input file: $input")
             }
-
-            if (input.extension != Extension.C) {
-                continue
-            }
-
-            val module = compile(input.filename) ?: continue
-            val cli = makeOptCLIArguments(input)
-            val objFile = OptDriver.compile(cli, module)
-            compiledFiles.add(objFile)
         }
 
         if (cli.isCompile()) {
@@ -122,12 +120,12 @@ class ShlangDriver(private val cli: ShlangArguments) {
             return
         }
 
-        runLinker(out, compiledFiles)
+        runLinker(out, processedFiles)
     }
 
     private fun runLinker(out: ProcessedFile, compiledFiles: List<ProcessedFile>) {
         val result = GNULdRunner(out)
-            .libs(SystemConfig.runtimeLibraries())
+            .libs(SystemConfig.runtimeLibraries() + cli.getDynamicLibraries())
             .libPaths(SystemConfig.runtimePathes())
             .crtObjects(SystemConfig.crtObjects())
             .objs(compiledFiles.map { it.filename })

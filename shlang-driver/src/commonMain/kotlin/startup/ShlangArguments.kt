@@ -10,6 +10,7 @@ class ShlangArguments {
     private var preprocessOnly = false
     private var dumpDefines = false
     private var optionC = false
+    private val dynamicLibraries = hashSetOf<String>()
     private var inputs = arrayListOf<ProcessedFile>()
 
     private var dumpIrDirectoryOutput: String? = null
@@ -68,6 +69,12 @@ class ShlangArguments {
     fun getDefines(): Map<String, String> = defines
 
     fun getIncludeDirectories(): Set<String> = includeDirectories
+
+    fun addLibrary(library: String) {
+        dynamicLibraries.add(library)
+    }
+
+    fun getDynamicLibraries(): Set<String> = dynamicLibraries
 
     companion object {
         val DEFAULT_OUTPUT = ProcessedFile.create("a", Extension.EXE)

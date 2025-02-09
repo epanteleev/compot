@@ -31,7 +31,6 @@ object ShlangCommandLineParser {
                     cursor++
                     commandLineArguments.setOutputFilename(args[cursor])
                 }
-
                 "-E" -> commandLineArguments.setPreprocessOnly(true)
                 else -> {
                     if (arg.startsWith("-I")) {
@@ -41,6 +40,8 @@ object ShlangCommandLineParser {
                         parseDefine(commandLineArguments, define)
                     } else if (arg.startsWith("-dM")) {
                         commandLineArguments.setDumpDefines(true)
+                    } else if (arg.startsWith("-l")) {
+                        commandLineArguments.addLibrary(arg)
                     } else if (IGNORED_OPTIONS.contains(arg)) {
                         println("Ignoring option: $arg")
                     } else {
@@ -104,6 +105,11 @@ object ShlangCommandLineParser {
         "-ansi",
         "-std=c11",
         "-g",
+        "-s",
+        "-malign-double",
+        "-fno-strict-aliasing",
+        "-Wno-format-security",
+        "-fPIC",
         "-Wall",
         "-Wextra",
         "-Werror",

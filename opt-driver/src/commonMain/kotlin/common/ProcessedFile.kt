@@ -3,6 +3,7 @@ package common
 enum class Extension(val value: String) {
     C(".c"),
     IR(".ir"),
+    AR(".a"),
     ASM(".s"),
     OBJ(".o"),
     EXE(".out")
@@ -29,6 +30,8 @@ class ProcessedFile private constructor(val filename: String, val extension: Ext
         return result
     }
 
+    override fun toString(): String = filename
+
     fun withExtension(extension: Extension): ProcessedFile {
         if (this.extension == extension) {
             return this
@@ -42,6 +45,7 @@ class ProcessedFile private constructor(val filename: String, val extension: Ext
             val extension = when {
                 filename.endsWith(Extension.C.value) -> Extension.C
                 filename.endsWith(Extension.IR.value) -> Extension.IR
+                filename.endsWith(Extension.AR.value) -> Extension.AR
                 filename.endsWith(Extension.ASM.value) -> Extension.ASM
                 filename.endsWith(Extension.OBJ.value) -> Extension.OBJ
                 else -> Extension.EXE
