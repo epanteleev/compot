@@ -23,71 +23,44 @@ internal object SystemConfig {
     }
 
     fun crtStaticObjects(): List<String> {
-        val crtPath = crtPath() ?: throw IllegalStateException("Cannot find crt path")
+        val crtPath = crtPath()
 
         val objects = arrayListOf<String>()
         for (crtObject in crtGCCObjects) {
             objects.add("$crtPath/$crtObject")
         }
 
-        return objects
-    }
-
-    fun crtSharedObjects(): List<String> {
-        val crtPath = crtPath() ?: throw IllegalStateException("Cannot find crt path")
-
-        val objects = arrayListOf<String>()
-        for (crtObject in crtSharedObjects) {
-            objects.add("$crtPath/$crtObject")
-        }
-
-        return objects
-    }
-
-    fun crtCommonStaticObjects(): List<String> {
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
-            return crtCommonStaticObjects.mapTo(arrayListOf()) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
-        }
-
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
-            return crtCommonStaticObjects.mapTo(arrayListOf()) { "$CRT_OBJECT_PATH$it" }
-        }
-
-        return arrayListOf()
-    }
-
-    fun crtCommonSharedObjects(): List<String> {
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
-            return crtCommonSharedObjects.mapTo(arrayListOf()) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
-        }
-
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
-            return crtCommonSharedObjects.mapTo(arrayListOf()) { "$CRT_OBJECT_PATH$it" }
-        }
-
-        return arrayListOf()
-    }
-
-    fun crtObjects(): List<String> {
-        val crtPath = crtPath() ?: throw IllegalStateException("Cannot find crt path")
-
-        val objects = arrayListOf<String>()
-        for (gccPath in crtGCCObjects) {
-            objects.add("$crtPath/$gccPath")
-        }
-
         if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
             return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
         }
 
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PC_GCC.toPath())) {
+        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
             return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_PATH$it" }
         }
 
         return objects
     }
 
-    private fun crtPath(): String? {
+    fun crtSharedObjects(): List<String> {
+        val crtPath = crtPath()
+
+        val objects = arrayListOf<String>()
+        for (crtObject in crtSharedObjects) {
+            objects.add("$crtPath/$crtObject")
+        }
+
+        if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
+            return crtCommonSharedObjects.mapTo(objects) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
+        }
+
+        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
+            return crtCommonSharedObjects.mapTo(objects) { "$CRT_OBJECT_PATH$it" }
+        }
+
+        return objects
+    }
+
+    private fun crtPath(): String {
         val crtPathGccPc = Path(CRT_OBJECT_PC_GCC)
         if (crtPathGccPc.exists()) {
             val crtPath = Path(CRT_OBJECT_PC_GCC)
@@ -106,7 +79,7 @@ internal object SystemConfig {
             return crtPath.toString()
         }
 
-        return null
+        throw IllegalStateException("Cannot find appropriate GCC toolchain")
     }
 
     fun dynamicLinker(): String = "/lib64/ld-linux-x86-64.so.2"

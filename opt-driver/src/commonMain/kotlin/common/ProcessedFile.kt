@@ -4,6 +4,7 @@ enum class Extension(val value: String) {
     C(".c"),
     IR(".ir"),
     AR(".a"),
+    SO(".so"),
     ASM(".s"),
     OBJ(".o"),
     EXE(".out")
@@ -48,6 +49,7 @@ class ProcessedFile private constructor(val filename: String, val extension: Ext
                 filename.endsWith(Extension.AR.value) -> Extension.AR
                 filename.endsWith(Extension.ASM.value) -> Extension.ASM
                 filename.endsWith(Extension.OBJ.value) -> Extension.OBJ
+                filename.endsWith(Extension.SO.value) -> Extension.SO
                 else -> Extension.EXE
             }
 

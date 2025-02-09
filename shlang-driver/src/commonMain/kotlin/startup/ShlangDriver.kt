@@ -20,9 +20,6 @@ import kotlin.collections.iterator
 
 class ShlangDriver(private val cli: ShlangArguments) {
     private fun definedMacros(ctx: PreprocessorContext) {
-        if (cli.getDefines().isEmpty()) {
-            return
-        }
         for ((name, value) in cli.getDefines()) {
             val tokens      = CTokenizer.apply(value)
             val replacement = MacroReplacement(name, tokens)
@@ -95,7 +92,21 @@ class ShlangDriver(private val cli: ShlangArguments) {
         return GenerateIR.apply(typeHolder, program)
     }
 
-    fun run() {
+    private fun runLD(out: ProcessedFile, compiledFiles: List<ProcessedFile>, crtObjs: List<String>) {
+        val result = GNULdRunner(out)
+            .libs(SystemConfig.runtimeLibraries() + cli.getDynamicLibraries())
+            .libPaths(SystemConfig.runtimePathes())
+            .crtObjects(crtObjs)
+            .objs(compiledFiles.map { it.filename })
+            .dynamicLinker(SystemConfig.dynamicLinker())
+            .execute()
+
+        if (result.exitCode != 0) {
+            println("Error: ${result.error}")
+        }
+    }
+
+    fun run() { //TODo: move some actions to separate class LDDriver
         val processedFiles = arrayListOf<ProcessedFile>()
         for (input in cli.inputs()) {
             when (input.extension) {
@@ -116,30 +127,21 @@ class ShlangDriver(private val cli: ShlangArguments) {
         }
 
         val out = cli.getOutputFilename()
-        if (out.extension != Extension.EXE) {
-            return
-        }
+        when (out.extension) {
+            Extension.EXE -> {
+                if (cli.isSharedOption()) {
+                    throw IllegalStateException("Cannot create executable for shared object")
+                }
+                runLD(out, processedFiles, SystemConfig.crtStaticObjects())
+            }
+            Extension.SO -> {
+                if (!cli.isSharedOption()) {
+                    throw IllegalStateException("Cannot create shared object for executable")
+                }
 
-        runLinker(out, processedFiles)
-    }
-
-    private fun runLinker(out: ProcessedFile, compiledFiles: List<ProcessedFile>) {
-        val crtObjs = if (cli.isSharedOption()) {
-            SystemConfig.crtSharedObjects() + SystemConfig.crtCommonSharedObjects()
-        } else {
-            SystemConfig.crtStaticObjects() + SystemConfig.crtCommonStaticObjects()
-        }
-
-        val result = GNULdRunner(out)
-            .libs(SystemConfig.runtimeLibraries() + cli.getDynamicLibraries())
-            .libPaths(SystemConfig.runtimePathes())
-            .crtObjects(crtObjs)
-            .objs(compiledFiles.map { it.filename })
-            .dynamicLinker(SystemConfig.dynamicLinker())
-            .execute()
-
-        if (result.exitCode != 0) {
-            println("Error: ${result.error}")
+                runLD(out, processedFiles, SystemConfig.crtSharedObjects())
+            }
+            else -> throw IllegalStateException("Invalid output file extension: $out")
         }
     }
 }
