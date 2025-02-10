@@ -8,20 +8,23 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class SalCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class SalCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
-    override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        when (dst) {
-            first -> asm.sal(size, second, dst)
-            else -> {
-                asm.copy(size, first, dst)
-                asm.sal(size, second, dst)
-            }
+    override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) = when (dst) {
+        first -> asm.sal(size, second, dst)
+        second -> {
+            asm.copy(size, first, temp1)
+            asm.sal(size, second, temp1)
+            asm.copy(size, temp1, dst)
+        }
+        else -> {
+            asm.copy(size, first, dst)
+            asm.sal(size, second, dst)
         }
     }
 
@@ -30,13 +33,25 @@ class SalCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperan
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        asm.mov(size, first, dst)
-        asm.sal(size, second, dst)
+        if (dst == second) {
+            asm.mov(size, first, temp1)
+            asm.sal(size, second, temp1)
+            asm.copy(size, temp1, dst)
+        } else {
+            asm.mov(size, first, dst)
+            asm.sal(size, second, dst)
+        }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        asm.copy(size, first, dst)
-        asm.sal(size, second, dst)
+        if (dst == second) {
+            asm.mov(size, first, temp1)
+            asm.sal(size, second, temp1)
+            asm.copy(size, temp1, dst)
+        } else {
+            asm.copy(size, first, dst)
+            asm.sal(size, second, dst)
+        }
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {

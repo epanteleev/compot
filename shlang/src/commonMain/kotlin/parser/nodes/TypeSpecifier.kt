@@ -56,7 +56,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
         var pointerType = type.typeDesc.cType()
         for (idx in 0 until pointers.size - 1) {
             val pointer = pointers[idx]
-            pointerType = CPointer(pointerType, pointer.property().toSet())
+            pointerType = CPointer(pointerType, pointer.property())
         }
 
         return VarDescriptor(TypeDesc.from(CPointer(pointerType), type.typeDesc.qualifiers()), type.storageClass)

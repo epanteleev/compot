@@ -14,7 +14,10 @@ class ArgumentValue(private val index: Int, private val tp: NonTrivialType, val 
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is ArgumentValue) return false
+        if (other == null || this::class != other::class) return false
+
+        other as ArgumentValue
+
         return index == other.index
     }
 

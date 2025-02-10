@@ -1176,7 +1176,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val els = conditional_expression()?: throw ParserException(InvalidToken("Expected conditional expression", peak()))
             logor = Conditional(logor, then, els)
-            continue
         }
 
         return@rule logor
@@ -1195,7 +1194,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val bitor = logical_and_expression()?: throw ParserException(InvalidToken("Expected or expression", peak()))
             logand = BinaryOp(logand, bitor, BinaryOpType.OR)
-            continue
         }
         return@rule logand
     }
@@ -1213,7 +1211,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val bitand = inclusive_or_expression()?: throw ParserException(InvalidToken("Expected and expression", peak()))
             bitor = BinaryOp(bitor, bitand, BinaryOpType.AND)
-            continue
         }
         return@rule bitor
     }
@@ -1231,7 +1228,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val bitor = exclusive_or_expression()?: throw ParserException(InvalidToken("Expected inclusive expression", peak()))
             bitxor = BinaryOp(bitxor, bitor, BinaryOpType.BIT_OR)
-            continue
         }
         return@rule bitxor
     }
@@ -1249,7 +1245,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val xor = and_expression()?: throw ParserException(InvalidToken("Expected exclusive expression", peak()))
             bitand = BinaryOp(bitand, xor, BinaryOpType.BIT_XOR)
-            continue
         }
         return@rule bitand
     }
@@ -1267,7 +1262,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val bitand = equality_expression()?: throw ParserException(InvalidToken("Expected and expression", peak()))
             equality = BinaryOp(equality, bitand, BinaryOpType.BIT_AND)
-            continue
         }
         return@rule equality
     }

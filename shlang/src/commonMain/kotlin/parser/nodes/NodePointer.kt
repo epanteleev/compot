@@ -6,7 +6,7 @@ import typedesc.TypeQualifier
 class NodePointer(val begin: Position, val qualifiers: List<TypeQualifierNode>) {
     fun begin(): Position = begin
 
-    fun property(): List<TypeQualifier> {
-        return qualifiers.map { it.qualifier() }
+    fun property(): Set<TypeQualifier> {
+        return qualifiers.mapTo(hashSetOf()) { it.qualifier() }
     }
 }

@@ -35,7 +35,7 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) :
     }
 }
 
-class ParameterVarArg(val punctuator: Punctuator): AnyParameter() {
+class ParameterVarArg(private val punctuator: Punctuator): AnyParameter() {
     override fun begin(): Position = punctuator.position()
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
     override fun resolveType(typeHolder: TypeHolder): TypeDesc {

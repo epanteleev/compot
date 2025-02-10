@@ -36,15 +36,21 @@ data class SubCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOper
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        asm.mov(size, first, dst)
-        asm.sub(size, second, dst)
+        if (dst == second) {
+            asm.mov(size, first, temp1)
+            asm.sub(size, second, temp1)
+            asm.copy(size, temp1, dst)
+        } else {
+            asm.mov(size, first, dst)
+            asm.sub(size, second, dst)
+        }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
         if (dst == second) {
-            TODO()
-            asm.sub(size, first, dst)
-            asm.neg(size, dst)
+            asm.copy(size, first, temp1)
+            asm.sub(size, second, temp1)
+            asm.copy(size, temp1, dst)
         } else {
             asm.copy(size, first, dst)
             asm.sub(size, second, dst)

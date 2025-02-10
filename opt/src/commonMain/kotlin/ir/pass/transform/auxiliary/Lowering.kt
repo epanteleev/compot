@@ -711,9 +711,25 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         } else {
             bb.updateUsages(rem) { bb.putAfter(rem, Copy.copy(rem)) }
         }
+
+        val div = tupleDiv.quotient()
+        if (div == null) {
+            bb.putAfter(tupleDiv, Projection.proj(tupleDiv, 0))
+        } else {
+            bb.updateUsages(div) { bb.putAfter(div, Copy.copy(div)) }
+        }
     }
 
     override fun visit(tupleDiv: TupleDiv): Instruction {
+        val quotient = tupleDiv.quotient()
+        if (quotient == null) {
+            bb.putAfter(tupleDiv, Projection.proj(tupleDiv, 0))
+        }
+        val rem = tupleDiv.remainder()
+        if (rem == null) {
+            bb.putAfter(tupleDiv, Projection.proj(tupleDiv, 1))
+        }
+
         tupleDiv.match(tupleDiv(value(i8()), value(i8()))) {
             // Before:
             //  %resANDrem = div i8 %a, %b
@@ -752,16 +768,8 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             return truncateProjections(tupleDiv, newDiv, U8Type)
         }
-        tupleDiv.match(tupleDiv(constant().not(), any())) {
-            // TODO temporal
 
-            val copy = bb.putBefore(tupleDiv, Copy.copy(tupleDiv.second()))
-            bb.updateDF(tupleDiv, TupleDiv.SECOND, copy)
-            isolateReminder(tupleDiv)
-            return tupleDiv
-        }
-
-        tupleDiv.match(tupleDiv(any(), any())) { tupleDiv: TupleDiv ->
+        tupleDiv.match(tupleDiv(any(), any())) {
             // Before:
             //  %resANDrem = div %a, %b
             //  %projDiv = proj %resANDrem, 0
@@ -774,6 +782,11 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = copy %projRem
 
             isolateReminder(tupleDiv)
+            val divider = tupleDiv.second()
+            if (divider is LocalValue) {
+                val copy = bb.putBefore(tupleDiv, Copy.copy(divider))
+                bb.updateDF(tupleDiv, TupleDiv.SECOND, copy)
+            }
             return tupleDiv
         }
 

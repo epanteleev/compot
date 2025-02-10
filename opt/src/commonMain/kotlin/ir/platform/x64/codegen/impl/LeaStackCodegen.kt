@@ -26,7 +26,6 @@ data class LeaStackCodegen (val type: PtrType, val basicType: NonTrivialType, va
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("untested")
         asm.mov(POINTER_SIZE, second, dst)
         val address = when (first) {
             is Address2 -> Address.from(first.base, first.offset, dst, ScaleFactor.from(size))

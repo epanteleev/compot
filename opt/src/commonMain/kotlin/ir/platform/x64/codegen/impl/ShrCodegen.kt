@@ -34,12 +34,25 @@ class ShrCodegen (val type: ArithmeticType, val asm: X64MacroAssembler): GPOpera
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        asm.mov(size, first, dst)
-        asm.shr(size, second, dst)
+        if (dst == second) {
+            asm.mov(size, first, temp1)
+            asm.shr(size, second, temp1)
+            asm.copy(size, temp1, dst)
+        } else {
+            asm.mov(size, first, dst)
+            asm.shr(size, second, dst)
+        }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+        if (dst == second) {
+            asm.mov(size, first, temp1)
+            asm.shr(size, second, temp1)
+            asm.copy(size, temp1, dst)
+        } else {
+            asm.copy(size, first, dst)
+            asm.shr(size, second, dst)
+        }
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {

@@ -27,7 +27,7 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
     override fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         var pointerType = typeDesc.cType()
         for (pointer in pointers) {
-            pointerType = CPointer(pointerType, pointer.property().toSet())
+            pointerType = CPointer(pointerType, pointer.property())
         }
         var newTypeDesc = TypeDesc.from(pointerType)
         if (directAbstractDeclarators == null) {
@@ -122,7 +122,6 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
                     paramTypes.add(type)
                 }
                 is ParameterVarArg -> {}
-                else -> throw IllegalStateException("Unknown parameter $param")
             }
         }
 

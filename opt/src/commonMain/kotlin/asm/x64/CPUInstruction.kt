@@ -2,9 +2,10 @@ package asm.x64
 
 import asm.Operand
 import asm.Register
-import asm.x64.CPUInstruction.Companion.prefix
-import asm.x64.GPRegister.rdx
 import common.assertion
+import asm.x64.GPRegister.rdx
+import asm.x64.GPRegister.rax
+import asm.x64.CPUInstruction.Companion.prefix
 
 
 sealed interface CPUInstruction {
@@ -177,7 +178,9 @@ internal data class Or(val size: Int, val src: Operand, val dst: Operand): Arith
 
 internal data class Div(val size: Int, val divider: Operand): Arithmetic {
     init {
-        assertion(divider != rdx) { "Second operand cannot be rdx" }
+        assertion(divider != rdx && divider != rax) {
+            "Second operand cannot be $divider"
+        }
     }
 
     override fun toString(): String {
@@ -187,8 +190,8 @@ internal data class Div(val size: Int, val divider: Operand): Arithmetic {
 
 internal data class Idiv(val size: Int, val divider: Operand): Arithmetic {
     init {
-        assertion(divider != rdx) {
-            "Second operand cannot be rdx"
+        assertion(divider != rdx && divider != rax) {
+            "Second operand cannot be $divider"
         }
     }
 

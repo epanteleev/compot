@@ -8,21 +8,21 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-class FSubCodegen(val type: FloatingPointType, val asm: X64MacroAssembler): XmmOperandsVisitorBinaryOp {
+internal class FSubCodegen(val type: FloatingPointType, val asm: X64MacroAssembler): XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         XmmOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
-    override fun rrr(dst: XmmRegister, first: XmmRegister, second: XmmRegister) {
-        if (dst == first) {
-            asm.subf(size, second, dst)
-        } else if (dst == second) {
+    override fun rrr(dst: XmmRegister, first: XmmRegister, second: XmmRegister) = when (dst) {
+        first -> asm.subf(size, second, dst)
+        second -> {
             asm.movf(size, first, xmmTemp1)
             asm.subf(size, second, xmmTemp1)
             asm.movf(size, xmmTemp1, dst)
-        } else {
+        }
+        else -> {
             asm.movf(size, first, dst)
             asm.subf(size, second, dst)
         }

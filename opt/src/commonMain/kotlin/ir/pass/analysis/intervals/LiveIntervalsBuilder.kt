@@ -6,6 +6,7 @@ import ir.value.LocalValue
 import ir.module.FunctionData
 import ir.instruction.Instruction
 import ir.instruction.Phi
+import ir.instruction.isa
 import ir.instruction.matching.lea
 import ir.instruction.matching.any
 import ir.module.Sensitivity
@@ -14,7 +15,6 @@ import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.traverse.LinearScanOrderFabric
 import ir.pass.analysis.LivenessAnalysisPassFabric
-import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.common.AnalysisType
 import ir.platform.x64.pass.analysis.regalloc.Group
 import ir.value.TupleValue
@@ -23,7 +23,6 @@ import ir.value.TupleValue
 private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
     private val intervals       = hashMapOf<LocalValue, LiveRangeImpl>()
     private val groups          = hashMapOf<LocalValue, Group>()
-    private val dominatorTree   = data.analysis(DominatorTreeFabric)
     private val linearScanOrder = run {
         val linearScanOrder = data.analysis(LinearScanOrderFabric)
         val map = linkedMapOf<Block, Int>()
@@ -41,8 +40,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
         val arguments = data.arguments()
         for ((index, arg) in arguments.withIndex()) {
             val loc = -(arguments.size - index)
-            val begin = Location(loc, loc)
-            intervals[arg] = LiveRangeImpl(data.begin(), begin)
+            intervals[arg] = LiveRangeImpl(loc)
         }
     }
 
@@ -56,20 +54,19 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
                 }
 
                 /** New definition. */
-                val begin = Location(ordering, ordering)
-                intervals[inst] = LiveRangeImpl(bb, begin)
+                intervals[inst] = LiveRangeImpl(ordering)
             }
         }
     }
 
-    private fun updateLiveRange(inst: Instruction, bb: Block, instructionLocation: Int) {
+    private fun updateLiveRange(inst: Instruction, instructionLocation: Int) {
         inst.operands { usage ->
             if (usage !is LocalValue) {
                 return@operands
             }
 
             val liveRange = intervals[usage] ?: throw LiveIntervalsException("in $usage")
-            liveRange.registerUsage(bb, dominatorTree, linearScanOrder, instructionLocation)
+            liveRange.registerUsage(instructionLocation)
         }
     }
 
@@ -81,13 +78,13 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
                 val liveRange = intervals[op] ?: throw LiveIntervalsException("cannot find $op")
 
                 val index = bb.size
-                liveRange.registerUsage(bb, dominatorTree, linearScanOrder, ordering + index)
+                liveRange.registerUsage(ordering + index)
             }
 
             for (inst in bb) {
                 ordering += 1
 
-                updateLiveRange(inst, bb, ordering)
+                updateLiveRange(inst, ordering)
             }
         }
     }
@@ -99,7 +96,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
                 return@operands
             }
             used as Instruction
-            assertion(used is Copy || lea(any())(used)) { "expect this invariant: used=$used" }
+            assertion(used is Copy || used.isa(lea(any()))) { "expect this invariant: used=$used" }
 
             range.merge(intervals[used]!!)
             intervals[used] = range
@@ -145,7 +142,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
     }
 
     private fun sortIntervals(): Map<LocalValue, LiveRange> {
-        val sorted = intervals.toList().sortedBy { it.second.begin().from }
+        val sorted = intervals.toList().sortedBy { it.second.begin() }
         val linkedMap = linkedMapOf<LocalValue, LiveRange>()
         for ((v, r) in sorted) {
             linkedMap[v] = r

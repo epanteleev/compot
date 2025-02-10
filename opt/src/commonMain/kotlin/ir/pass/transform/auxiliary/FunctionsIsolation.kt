@@ -16,72 +16,19 @@ import ir.value.constant.U64Value
 
 
 internal class FunctionsIsolation private constructor(private val cfg: FunctionData) {
-    private val liveness = cfg.analysis(LivenessAnalysisPassFabric)
-    private val allCalls = run { //TODO separate analysis pass
-        val calls = arrayListOf<Instruction>()
-        for (bb in cfg) {
-            val last = bb.last()
-            if (last is Callable) {
-                calls.add(last)
-            }
-        }
-        calls
-    }
-
-    private fun liveOut(liveOutWhat: Instruction, arg: ArgumentValue): Boolean {
-        if (liveness.liveOut(liveOutWhat.owner()).contains(arg)) {
-            // Argument is live out of the call
-            return true
-        }
-        if (liveOutWhat.operands().contains(arg)) {
-            // Argument is used in the call
-            return true
-        }
-
-        return false
-    }
-
-    private fun mustBeIsolated(arg: ArgumentValue, index: Int): Boolean {
+    private fun mustBeIsolated(arg: ArgumentValue): Boolean {
         if (arg.attributes.find { it is ByValue } != null) {
             // Argument is in overflow area
             return false
         }
 
-        val argType = arg.type()
-        if (index == 2 && (argType is IntegerType || argType is PtrType)) {
-            /*for (rdxOp in RDXFixedReg) {
-                if (liveOut(rdxOp, arg)) {
-                    return true
-                }
-            }*/
-
-            return true
-        }
-
-        if (index == 3 && (argType is IntegerType || argType is PtrType)) {
-            /*for (rcxOp in RCXFixedReg) {
-                if (liveOut(rcxOp, arg)) {
-                    return true
-                }
-            }*/
-
-            return true
-        }
-
-        for (call in allCalls) {
-            call as Callable
-            if (liveOut(call, arg)) {
-                return true
-            }
-        }
-
-        return false
+        return true
     }
 
     private fun isolateArgumentValues() {
         val begin = cfg.begin()
-        for ((idx, arg) in cfg.arguments().withIndex()) {
-            if (!mustBeIsolated(arg, idx)) {
+        for (arg in cfg.arguments()) {
+            if (!mustBeIsolated(arg)) {
                 continue
             }
 

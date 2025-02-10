@@ -14,8 +14,8 @@ import ir.module.FunctionData
 import ir.instruction.lir.Generate
 import ir.instruction.lir.Lea
 import ir.module.Sensitivity
-import ir.pass.analysis.InterferenceGraphFabric
 import ir.pass.analysis.intervals.LiveIntervalsFabric
+import ir.pass.analysis.intervals.LiveRange
 import ir.pass.common.AnalysisType
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
@@ -24,7 +24,6 @@ import ir.platform.x64.pass.analysis.FixedRegisterInstructionsAnalysis
 
 class LinearScan internal constructor(private val data: FunctionData): FunctionAnalysisPass<RegisterAllocation>() {
     private val liveRanges = data.analysis(LiveIntervalsFabric)
-    private val interferenceGraph = data.analysis(InterferenceGraphFabric)
     private val fixedRegistersInfo = FixedRegisterInstructionsAnalysis.run(data)
 
     private val registerMap = hashMapOf<LocalValue, Operand>()
@@ -32,8 +31,16 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     private val active      = linkedMapOf<LocalValue, Operand>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
 
+    private val activeFixedIntervals = arrayListOf<Pair<LiveRange, Operand>>()
+
     init {
-        allocFixedRegisters()
+        val unorderedFixedIntervals = allocFixedRegisters()
+        unorderedFixedIntervals.sortedBy {
+            it.first.end()
+        }
+
+        activeFixedIntervals.addAll(unorderedFixedIntervals)
+
         allocRegistersForArgumentValues()
         allocRegistersForLocalVariables()
     }
@@ -53,10 +60,10 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         }
     }
 
-    private fun allocFunctionArguments(callable: Callable) {
+    private fun allocFunctionArguments(callable: Callable): List<Pair<LiveRange, Operand>> {
         val allocation = pool.callerArgumentAllocate(callable.arguments())
         callInfo[callable] = allocation
-
+        val fixedArguments = arrayListOf<Pair<LiveRange, Operand>>()
         allocation.forEachWith(callable.arguments()) { operand, arg ->
             if (operand == null) {
                 // Nothing to do. UB happens
@@ -65,23 +72,38 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
             assertion(arg is Copy || arg is Lea || arg is Generate) { "arg=$arg" }
 
             registerMap[arg as LocalValue] = operand
+            fixedArguments.add(liveRanges[arg] to operand)
         }
+
+        return fixedArguments
     }
 
-    private fun allocFixedRegisters() {
+    private fun allocFixedRegisters(): List<Pair<LiveRange, Operand>> {
+        val fixed = arrayListOf<Pair<LiveRange, Operand>>()
         for (bb in data) {
             val inst = bb.last()
             if (inst is Callable) {
-                allocFunctionArguments(inst)
+                fixed.addAll(allocFunctionArguments(inst))
             }
         }
 
+
         for (value in fixedRegistersInfo.rdxFixedReg) {
             registerMap[value] = rdx
+            fixed.add(liveRanges[value] to rdx)
         }
 
         for (value in fixedRegistersInfo.rcxFixedReg) {
             registerMap[value] = rcx
+            fixed.add(liveRanges[value] to rcx)
+        }
+
+        return fixed
+    }
+
+    private fun deactivateFixedIntervals(where: LiveRange) {
+        activeFixedIntervals.retainAll { (interval, _) ->
+            return@retainAll interval.intersect(where)
         }
     }
 
@@ -107,6 +129,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
                 active[value] = reg
                 continue
             }
+            //deactivateFixedIntervals(range)
 
             active.entries.retainAll { (local, operand) ->
                 if (!liveRanges[local].intersect(range)) {
@@ -122,8 +145,16 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     }
 
     private fun excludeIf(value: LocalValue, reg: Register): Boolean {
-        val neighbors = interferenceGraph.neighbors(value) ?: return false
-        return neighbors.any { registerMap[it] == reg }
+        val range = liveRanges[value]
+        for ((interval, operand) in activeFixedIntervals) {
+            if (interval.intersect(range)) {
+                if (operand == reg) {
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 
     private fun pickOperandGroup(value: LocalValue) {

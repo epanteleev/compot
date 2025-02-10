@@ -1,35 +1,35 @@
 package ir.pass.analysis.intervals
 
-import ir.module.block.Block
-import ir.pass.analysis.dominance.DominatorTree
 
+sealed class LiveRange(protected var creation: Int, protected var ending: Int) {
+    fun begin(): Int = creation
+    fun end(): Int = ending
 
-abstract class LiveRange internal constructor(protected var locations: MutableMap<Block, Location>) {
-    fun begin(): Location = locations.minBy { it.value.from }.value //TODO cached
-    fun end(): Location = locations.maxBy { it.value.to }.value //TODO cached
+    override fun hashCode(): Int {
+        return creation * 31 + ending
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as LiveRange
+
+        if (creation != other.creation) return false
+        if (ending != other.ending) return false
+
+        return true
+    }
 
     fun intersect(other: LiveRange): Boolean {
-        return !(begin().from > other.end().to || other.begin().from > end().to) //TODo not worried about holes
-        /*val maxRange = if (locations.size >= other.locations.size) {
-            locations
-        } else {
-            other.locations
+        if (other.begin() >= end()) {
+            return false
+        }
+        if (begin() >= other.end()) {
+            return false
         }
 
-        val minRange = if (locations.size >= other.locations.size) {
-            other.locations
-        } else {
-            locations
-        }
-
-        for ((block, location) in maxRange) {
-            val otherLocation = minRange[block] ?: continue
-            if (location.intersect(otherLocation)) {
-                return true
-            }
-        }
-
-        return false*/
+        return true
     }
 
     override fun toString(): String {
@@ -37,46 +37,13 @@ abstract class LiveRange internal constructor(protected var locations: MutableMa
     }
 }
 
-class LiveRangeImpl internal constructor(private val creationBlock: Block, creation: Location): LiveRange(hashMapOf(Pair(creationBlock, creation))) {
+class LiveRangeImpl internal constructor(creation: Int): LiveRange(creation, creation) {
     fun merge(other: LiveRangeImpl) {
-        for ((block, location) in other.locations) {
-            val loc = locations[block]
-            if (loc == null) {
-                locations[block] = location
-            } else {
-                locations[block] = loc.merge(location)
-            }
-        }
+        creation = minOf(creation, other.creation)
+        ending = maxOf(ending, other.ending)
     }
 
-    private fun propagateLocation(bb: Block, domTree: DominatorTree, locationMap: Map<Block, Int>) {
-        if (bb == creationBlock) {
-            val start = locationMap[bb]!!
-            val loc = locations[bb]!!
-            locations[bb] = loc.mergeTo(start + bb.size)
-            return
-        }
-
-        for (dom in domTree.dominators(bb)) {
-            dom as Block
-            val start = locationMap[dom]!!
-            val loc = locations[dom]
-            if (loc != null) {
-                locations[dom] = loc.mergeTo(start + dom.size)
-                return
-            } else {
-                locations[dom] = Location(start, start + dom.size)
-            }
-        }
-    }
-
-    internal fun registerUsage(bb: Block, domTree: DominatorTree, locationMap: Map<Block, Int>, location: Int) {
-        val loc = locations[bb]
-        if (loc == null) {
-            locations[bb] = Location(locationMap[bb]!!, location)
-            propagateLocation(bb, domTree, locationMap)
-        } else {
-            locations[bb] = loc.mergeTo(location)
-        }
+    internal fun registerUsage(location: Int) {
+        ending = maxOf(ending, location)
     }
 }

@@ -9,51 +9,60 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class UIntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class UIntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         assertion(second != rdx) { "Second operand cannot be rdx" }
-        asm.xor(size, rdx, rdx)
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         asm.copy(size, first, rax)
+        asm.xor(size, rdx, rdx)
         asm.div(size, second)
         asm.copy(size, rax, dst)
     }
 
     override fun arr(dst: Address, first: GPRegister, second: GPRegister) {
         asm.copy(size, first, rax)
+        asm.xor(size, rdx, rdx)
         asm.div(size, second)
         asm.mov(size, rax, dst)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
         asm.mov(size, first, rax)
+        asm.xor(size, rdx, rdx)
         asm.div(size, second)
         asm.copy(size, rax, dst)
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
         asm.copy(size, first, rax)
+        asm.xor(size, rdx, rdx)
         asm.div(size, second)
         asm.copy(size, rax, dst)
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
         asm.copy(size, first, rax)
+        asm.xor(size, rdx, rdx)
         asm.div(size, second)
         asm.copy(size, rax, dst)
     }
 
     override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.copy(size, first, rax)
+        asm.copy(size, second, dst)
+        asm.xor(size, rdx, rdx)
+        asm.div(size, dst)
+        asm.copy(size, rax, dst)
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
         asm.mov(size, first, rax)
+        asm.xor(size, rdx, rdx)
         asm.div(size, second)
         asm.copy(size, rax, dst)
     }
@@ -71,11 +80,16 @@ class UIntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOp
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, rax)
+        asm.mov(size, second, dst)
+        asm.xor(size, rdx, rdx)
+        asm.div(size, dst)
+        asm.copy(size, rax, dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
         asm.copy(size, first, rax)
+        asm.xor(size, rdx, rdx)
         asm.div(size, second)
         asm.mov(size, rax, dst)
     }
@@ -93,7 +107,11 @@ class UIntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOp
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.copy(size, first, rax)
+        asm.mov(size, second, dst)
+        asm.xor(size, rdx, rdx)
+        asm.div(size, dst)
+        asm.mov(size, rax, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
@@ -102,12 +120,14 @@ class UIntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOp
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
         asm.mov(size, first, rax)
+        asm.xor(size, rdx, rdx)
         asm.div(size, second)
         asm.mov(size, rax, dst)
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
         asm.mov(size, first, rax)
+        asm.xor(size, rdx, rdx)
         asm.div(size, second)
         asm.mov(size, rax, dst)
     }

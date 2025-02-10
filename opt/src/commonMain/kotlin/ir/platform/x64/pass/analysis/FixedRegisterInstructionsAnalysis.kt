@@ -25,6 +25,11 @@ class FixedRegisterInstructionsAnalysis private constructor(private val cfg: Fun
 
         inst.match(tupleDiv(any(), any())) { tupleDiv: TupleDiv ->
             rdxFixedReg.add(tupleDiv.remainder()!!)
+            val divider = tupleDiv.second()
+            if (divider is LocalValue) {
+                rcxFixedReg.add(divider)
+            }
+
             return inst
         }
 

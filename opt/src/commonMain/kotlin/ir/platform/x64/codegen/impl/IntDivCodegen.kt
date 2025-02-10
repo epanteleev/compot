@@ -50,7 +50,13 @@ data class IntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): 
         asm.copy(size, rax, dst)
     }
 
-    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) = default(dst, first, second)
+    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
+        asm.copy(size, first, rax)
+        asm.copy(size, second, dst)
+        asm.cdq(size)
+        asm.idiv(size, dst)
+        asm.copy(size, rax, dst)
+    }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
         asm.mov(size, first, rax)
@@ -97,11 +103,19 @@ data class IntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): 
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.copy(size, first, rax)
+        asm.mov(size, second, dst)
+        asm.cdq(size)
+        asm.idiv(size, dst)
+        asm.mov(size, rax, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, rax)
+        asm.mov(size, second, dst)
+        asm.cdq(size)
+        asm.idiv(size, dst)
+        asm.mov(size, rax, dst)
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

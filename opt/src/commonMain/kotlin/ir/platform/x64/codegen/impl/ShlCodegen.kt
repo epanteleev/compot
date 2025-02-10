@@ -15,16 +15,16 @@ class ShlCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperan
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
-    override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
-        when (dst) {
-            first -> {
-                asm.copy(size, second, temp1)
-                asm.shl(size, temp1, dst)
-            }
-            else -> {
-                asm.copy(size, first, dst)
-                asm.shl(size, second, dst)
-            }
+    override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) = when (dst) {
+        first -> asm.shl(size, second, dst)
+        second -> {
+            asm.copy(size, first, temp1)
+            asm.shl(size, second, temp1)
+            asm.copy(size, temp1, dst)
+        }
+        else -> {
+            asm.copy(size, first, dst)
+            asm.shl(size, second, dst)
         }
     }
 
@@ -34,13 +34,25 @@ class ShlCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperan
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {
-        asm.mov(size, first, dst)
-        asm.shl(size, second, dst)
+        if (dst == second) {
+            asm.mov(size, first, temp1)
+            asm.shl(size, second, temp1)
+            asm.copy(size, temp1, dst)
+        } else {
+            asm.mov(size, first, dst)
+            asm.shl(size, second, dst)
+        }
     }
 
     override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
-        asm.mov(size, first, dst)
-        asm.shl(size, second, dst)
+        if (dst == second) {
+            asm.mov(size, first, temp1)
+            asm.shl(size, second, temp1)
+            asm.copy(size, temp1, dst)
+        } else {
+            asm.copy(size, first, dst)
+            asm.shl(size, second, dst)
+        }
     }
 
     override fun rra(dst: GPRegister, first: GPRegister, second: Address) {
