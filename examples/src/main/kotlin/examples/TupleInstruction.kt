@@ -11,8 +11,7 @@ fun main() {
     val builder = ir.module.builder.impl.ModuleBuilder.create()
     builder.createFunction("func", I32Type, arrayListOf(I32Type)).apply {
         val divRes = tupleDiv(I32Value.of(10), I32Value.of(2))
-        val reminder = proj(divRes, 1)
-        ret(U32Type, arrayOf(reminder))
+        ret(U32Type, arrayOf(divRes.remainder))
     }
 
     val module = builder.build()

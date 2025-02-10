@@ -25,7 +25,7 @@ interface InstructionFabric {
     fun shr(a: Value, b: Value): Shr
     fun sub(a: Value, b: Value): Sub
     fun mul(a: Value, b: Value): Mul
-    fun tupleDiv(a: Value, b: Value): TupleDiv
+    fun tupleDiv(a: Value, b: Value): DivProjections
     fun icmp(a: Value, predicate: IntPredicate, b: Value): IntCompare
     fun fcmp(a: Value, predicate: FloatPredicate, b: Value): FloatCompare
     fun load(loadedType: PrimitiveType, ptr: Value): Load

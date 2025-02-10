@@ -84,22 +84,6 @@ class InconsistentCFG {
     }
 
     @Test
-    fun testMultiplyProjections() {
-        val builder = ModuleBuilder.create()
-
-        builder.createFunction("main", U32Type, arrayListOf()).apply {
-            val tuple = tupleDiv(U32Value.of(100), U32Value.of(20))
-
-            proj(tuple, 0)
-            val proj1 = proj(tuple, 0)
-            ret(U32Type, arrayOf(proj1))
-        }
-
-        val throwable = assertFails { builder.build() }
-        assertTrue { throwable is ValidateSSAErrorException }
-    }
-
-    @Test
     fun testInconsistentCondBranch() {
         val builder = ModuleBuilder.create()
 

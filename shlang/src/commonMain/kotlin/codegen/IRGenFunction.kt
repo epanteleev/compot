@@ -1025,21 +1025,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun divide(a: Value, b: Value): Value = when (val type = a.type()) {
-        is IntegerType -> {
-            val tupleDiv = ir.tupleDiv(a, b)
-            ir.proj(tupleDiv, 1)
-            ir.proj(tupleDiv, 0)
-        }
+        is IntegerType -> ir.tupleDiv(a, b).quotient
         is FloatingPointType -> ir.div(a, b)
         else -> throw RuntimeException("Unknown type: type=$type")
     }
 
     private fun rem(a: Value, b: Value): Value = when (val type = a.type()) {
-        is IntegerType -> {
-            val tupleDiv = ir.tupleDiv(a, b)
-            ir.proj(tupleDiv, 0)
-            ir.proj(tupleDiv, 1)
-        }
+        is IntegerType -> ir.tupleDiv(a, b).remainder
         else -> throw RuntimeException("Unknown type: type=$type")
     }
 

@@ -14,7 +14,6 @@ import codegen.TypeConverter.toIRType
 import common.assertion
 import ir.attributes.GlobalValueAttribute
 import ir.module.DirectFunctionPrototype
-import ir.module.FunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.value.constant.*
 import parser.LineAgnosticAstPrinter

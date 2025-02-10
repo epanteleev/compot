@@ -11,6 +11,7 @@ import ir.value.Value
 import ir.instruction.*
 import ir.intrinsic.IntrinsicProvider
 import ir.module.block.Block
+import ir.module.block.DivProjections
 import ir.module.block.Label
 import ir.module.block.InstructionFabric
 import ir.module.builder.AnyFunctionDataBuilder
@@ -79,8 +80,9 @@ class FunctionDataBuilder private constructor(prototype: FunctionPrototype, argu
         return bb.put(Div.div(a, b))
     }
 
-    override fun tupleDiv(a: Value, b: Value): TupleDiv {
-        return bb.put(TupleDiv.div(a, b))
+    override fun tupleDiv(a: Value, b: Value): DivProjections {
+        val div = bb.put(TupleDiv.div(a, b))
+        return DivProjections(proj(div, 0), proj(div, 1))
     }
 
     override fun icmp(a: Value, predicate: IntPredicate, b: Value): IntCompare {
