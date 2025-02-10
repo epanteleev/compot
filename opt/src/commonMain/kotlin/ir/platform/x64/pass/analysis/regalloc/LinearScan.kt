@@ -22,7 +22,7 @@ import ir.pass.common.FunctionAnalysisPassFabric
 import ir.platform.x64.pass.analysis.FixedRegisterInstructionsAnalysis
 
 
-class LinearScan internal constructor(private val data: FunctionData): FunctionAnalysisPass<RegisterAllocation>() {
+private class LinearScan(private val data: FunctionData): FunctionAnalysisPass<RegisterAllocation>() {
     private val liveRanges = data.analysis(LiveIntervalsFabric)
     private val fixedRegistersInfo = FixedRegisterInstructionsAnalysis.run(data)
 
@@ -34,13 +34,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
     private val activeFixedIntervals = arrayListOf<Pair<LiveRange, Operand>>()
 
     init {
-        val unorderedFixedIntervals = allocFixedRegisters()
-        unorderedFixedIntervals.sortedBy {
-            it.first.end()
-        }
-
-        activeFixedIntervals.addAll(unorderedFixedIntervals)
-
+        allocFixedRegisters()
         allocRegistersForArgumentValues()
         allocRegistersForLocalVariables()
     }
@@ -60,10 +54,9 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
         }
     }
 
-    private fun allocFunctionArguments(callable: Callable): List<Pair<LiveRange, Operand>> {
+    private fun allocFunctionArguments(callable: Callable) {
         val allocation = pool.callerArgumentAllocate(callable.arguments())
         callInfo[callable] = allocation
-        val fixedArguments = arrayListOf<Pair<LiveRange, Operand>>()
         allocation.forEachWith(callable.arguments()) { operand, arg ->
             if (operand == null) {
                 // Nothing to do. UB happens
@@ -72,38 +65,34 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
             assertion(arg is Copy || arg is Lea || arg is Generate) { "arg=$arg" }
 
             registerMap[arg as LocalValue] = operand
-            fixedArguments.add(liveRanges[arg] to operand)
+            activeFixedIntervals.add(liveRanges[arg] to operand)
         }
-
-        return fixedArguments
     }
 
-    private fun allocFixedRegisters(): List<Pair<LiveRange, Operand>> {
-        val fixed = arrayListOf<Pair<LiveRange, Operand>>()
+    private fun allocFixedRegisters(){
         for (bb in data) {
             val inst = bb.last()
             if (inst is Callable) {
-                fixed.addAll(allocFunctionArguments(inst))
+                allocFunctionArguments(inst)
             }
         }
 
-
         for (value in fixedRegistersInfo.rdxFixedReg) {
             registerMap[value] = rdx
-            fixed.add(liveRanges[value] to rdx)
+            activeFixedIntervals.add(liveRanges[value] to rdx)
         }
 
         for (value in fixedRegistersInfo.rcxFixedReg) {
             registerMap[value] = rcx
-            fixed.add(liveRanges[value] to rcx)
+            activeFixedIntervals.add(liveRanges[value] to rcx)
         }
 
-        return fixed
+        activeFixedIntervals.sortedBy { it.first.end() }
     }
 
     private fun deactivateFixedIntervals(where: LiveRange) {
         activeFixedIntervals.retainAll { (interval, _) ->
-            return@retainAll interval.intersect(where)
+            return@retainAll where.begin() <= interval.end()
         }
     }
 
@@ -129,7 +118,7 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
                 active[value] = reg
                 continue
             }
-            //deactivateFixedIntervals(range)
+            deactivateFixedIntervals(range)
 
             active.entries.retainAll { (local, operand) ->
                 if (!liveRanges[local].intersect(range)) {
@@ -151,6 +140,10 @@ class LinearScan internal constructor(private val data: FunctionData): FunctionA
                 if (operand == reg) {
                     return true
                 }
+            }
+
+            if (interval.end() < range.begin()) {
+                return false
             }
         }
 

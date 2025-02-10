@@ -8,7 +8,7 @@ import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
-class BfsOrderPass internal constructor(private val functionData: FunctionData): FunctionAnalysisPass<BlockOrder>() {
+private class BfsOrderPass(private val functionData: FunctionData): FunctionAnalysisPass<BlockOrder>() {
     override fun run(): BlockOrder {
         val order = BfsTraversalIterator(functionData.begin(), functionData.size()).order()
         return BlockOrder(order, functionData.marker())

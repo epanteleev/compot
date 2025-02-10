@@ -8,6 +8,7 @@ import ir.global.ExternValue
 import ir.global.GlobalValue
 import ir.instruction.lir.Generate
 import ir.value.ArgumentValue
+import ir.value.LocalValue
 import ir.value.constant.Constant
 
 
@@ -118,6 +119,8 @@ fun generate(): ValueMatcher = {
 }
 
 fun stackAlloc(): ValueMatcher = generate() or argumentByValue()
+
+fun local(): ValueMatcher = { it is LocalValue }
 
 inline fun alloc(crossinline type: TypeMatcher): ValueMatcher = {
     it is Alloc && type(it.allocatedType)

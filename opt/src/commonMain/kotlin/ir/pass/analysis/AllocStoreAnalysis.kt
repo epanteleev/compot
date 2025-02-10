@@ -12,7 +12,7 @@ import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
-class AllocAnalysisResult(private val storeInfo: Map<Alloc, Set<AnyBlock>>, marker: MutationMarker): AnalysisResult(marker),
+class AllocAnalysisResult internal constructor(private val storeInfo: Map<Alloc, Set<AnyBlock>>, marker: MutationMarker): AnalysisResult(marker),
     Iterable<Map.Entry<Alloc, Set<AnyBlock>>> {
     override fun toString(): String = buildString {
         for ((alloc, stores) in storeInfo) {

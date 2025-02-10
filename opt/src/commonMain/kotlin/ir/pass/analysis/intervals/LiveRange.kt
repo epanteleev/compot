@@ -37,7 +37,7 @@ sealed class LiveRange(protected var creation: Int, protected var ending: Int) {
     }
 }
 
-class LiveRangeImpl internal constructor(creation: Int): LiveRange(creation, creation) {
+internal class LiveRangeImpl internal constructor(creation: Int): LiveRange(creation, creation) {
     fun merge(other: LiveRangeImpl) {
         creation = minOf(creation, other.creation)
         ending = maxOf(ending, other.ending)

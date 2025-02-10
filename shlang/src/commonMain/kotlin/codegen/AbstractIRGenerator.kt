@@ -13,6 +13,8 @@ import ir.module.ExternFunction
 import codegen.TypeConverter.toIRType
 import common.assertion
 import ir.attributes.GlobalValueAttribute
+import ir.module.DirectFunctionPrototype
+import ir.module.FunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
 import ir.value.constant.*
 import parser.LineAgnosticAstPrinter
@@ -162,6 +164,21 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return mb.createExternFunction(name, cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
     }
 
+    private fun createFunctionPrototype(declarator: Declarator, cPrototype: CFunctionPrototype): DirectFunctionPrototype {
+        val existed = mb.findFunctionDeclarationOrNull(declarator.name())
+            ?: return mb.createFunctionDeclaration(declarator.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
+
+        if (existed.returnType() != cPrototype.returnType) {
+            throw IRCodeGenError("Function '${declarator.name()}' already exists with different return type", declarator.begin())
+        }
+
+        if (existed.arguments() != cPrototype.argumentTypes) {
+            throw IRCodeGenError("Function '${declarator.name()}' already exists with different arguments", declarator.begin())
+        }
+
+        return existed
+    }
+
     protected fun makeConstant(numNode: NumNode) = when (val num = numNode.number.toNumberOrNull()) {
         is Byte   -> I8Value.of(num.toByte())
         is Int    -> I32Value.of(num.toInt())
@@ -208,7 +225,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass).build()
                 return when (varDesc.storageClass) {
                     StorageClass.EXTERN -> getExternFunction(declarator.name(), cPrototype)
-                    else -> mb.createFunctionDeclaration(declarator.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
+                    else -> createFunctionPrototype(declarator, cPrototype)
                 }
             }
             is CPrimitive -> {

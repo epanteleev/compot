@@ -5,7 +5,7 @@ import ir.module.block.Block
 import ir.pass.common.AnalysisResult
 
 
-class BlockOrder(private val order: List<Block>, marker: MutationMarker): AnalysisResult(marker), Collection<Block> {
+class BlockOrder internal constructor(private val order: List<Block>, marker: MutationMarker): AnalysisResult(marker), Collection<Block> {
     override fun toString(): String = buildString {
         for (bb in order) {
             append("BB: $bb\n")

@@ -350,7 +350,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(returnValue: ReturnValue): Instruction {
-        returnValue.match(ret(gValue(anytype()))) { ret: ReturnValue ->
+        returnValue.match(ret(gValue(anytype()))) {
             // Before:
             //  ret @global
             //
@@ -358,7 +358,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = lea @global
             //  ret %lea
 
-            val toValue = ret.returnValue(0)
+            val toValue = returnValue.returnValue(0)
             val lea = bb.putBefore(returnValue, Lea.lea(toValue))
             bb.updateDF(returnValue, ReturnValue.RET_VALUE, lea)
             return lea
@@ -701,7 +701,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return remainderTruncate
     }
 
-    private fun isolateReminder(tupleDiv: TupleDiv) {
+    private fun isolateProjections(tupleDiv: TupleDiv) {
         val rem = tupleDiv.remainder()
         bb.updateUsages(rem) { bb.putAfter(rem, Copy.copy(rem)) }
 
@@ -729,6 +729,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             return truncateProjections(tupleDiv, newDiv, I8Type)
         }
+
         tupleDiv.match(tupleDiv(value(u8()), value(u8()))) {
             // Before:
             //  %resANDrem = div u8 %a, %b
@@ -749,6 +750,27 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return truncateProjections(tupleDiv, newDiv, U8Type)
         }
 
+        tupleDiv.match(tupleDiv(any(), local())) {
+            // Before:
+            //  %resANDrem = div %a, %b
+            //  %projDiv = proj %resANDrem, 0
+            //  %projRem = proj %resANDrem, 1
+            //
+            // After:
+            //  %copy = copy %b
+            //  %resANDrem = div %a, %copy
+            //  %projDiv = proj %resANDrem, 0
+            //  %projRem = proj %resANDrem, 1 <-- rdx
+            //  %res = copy %projDiv
+            //  %rem = copy %projRem
+
+            isolateProjections(tupleDiv)
+            val divider = tupleDiv.second().asValue<LocalValue>()
+            val copy = bb.putBefore(tupleDiv, Copy.copy(divider))
+            bb.updateDF(tupleDiv, TupleDiv.SECOND, copy)
+            return tupleDiv
+        }
+
         tupleDiv.match(tupleDiv(any(), any())) {
             // Before:
             //  %resANDrem = div %a, %b
@@ -759,14 +781,10 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %resANDrem = div %a, %b
             //  %projDiv = proj %resANDrem, 0
             //  %projRem = proj %resANDrem, 1 <-- rdx
-            //  %res = copy %projRem
+            //  %res = copy %projDiv
+            //  %rem = copy %projRem
 
-            isolateReminder(tupleDiv)
-            val divider = tupleDiv.second()
-            if (divider is LocalValue) {
-                val copy = bb.putBefore(tupleDiv, Copy.copy(divider))
-                bb.updateDF(tupleDiv, TupleDiv.SECOND, copy)
-            }
+            isolateProjections(tupleDiv)
             return tupleDiv
         }
 

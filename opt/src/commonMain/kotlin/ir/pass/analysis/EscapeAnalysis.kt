@@ -20,7 +20,7 @@ enum class EscapeState {
     Constant,
     Unknown;
 
-    fun union(other: EscapeState): EscapeState {
+    internal fun union(other: EscapeState): EscapeState {
         if (this == Unknown || other == Unknown) {
             return Unknown
         }

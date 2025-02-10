@@ -118,8 +118,9 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
 
     private fun handleTuple(value: TupleValue, range: LiveRangeImpl) {
         value.proj { proj ->
-            range.merge(intervals[proj]!!)
-            intervals[proj] = range
+            val projInterval = intervals[proj]!!
+            projInterval.merge(range)
+            intervals[proj] = projInterval
         }
     }
 
