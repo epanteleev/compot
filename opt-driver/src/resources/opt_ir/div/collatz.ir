@@ -16,6 +16,7 @@ if.then:
 if.end:
   %1 = load i32 %x.addr
   %div0 = div |i32, i32|, i32 %1, i32 2
+  %d00 = proj |i32, i32|, i32 %div0, 0
   %rem = proj |i32, i32|, i32 %div0, 1
   %cmp1 = icmp eq i32 %rem, 0
   br u1 %cmp1 label %if.then2, label %if.end3
@@ -24,6 +25,7 @@ if.then2:
   %2 = load i32 %x.addr
   %div = div |i32, i32|, i32 %2, i32 2
   %q = proj |i32, i32|, i32 %div, 0
+  %r00 = proj |i32, i32|, i32 %div, 1
   %call = call i32 @collatz(%q: i32) br label %next1
 
 next1:
@@ -33,6 +35,7 @@ next1:
 if.end3:
   %3 = load i32 %x.addr
   %div4 = div |i32, i32|, i32 %3, i32 2
+  %d400 = proj |i32, i32|, i32 %div4, 0
   %rem4 = proj |i32, i32|, i32 %div4, 1
   %cmp5 = icmp eq i32 %rem4, 1
   br u1 %cmp5 label %if.then6, label %if.end8

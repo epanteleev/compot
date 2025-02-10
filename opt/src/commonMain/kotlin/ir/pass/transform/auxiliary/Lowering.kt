@@ -688,48 +688,28 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         val divProj = tupleDiv.quotient()
         val quotient = bb.putBefore(tupleDiv, Projection.proj(newDiv, 0))
         val quotientTrunc = bb.putBefore(tupleDiv, Truncate.trunc(quotient, type))
-        if (divProj != null) {
-            bb.updateUsages(divProj) { quotientTrunc }
-            killOnDemand(divProj)
-        }
+        bb.updateUsages(divProj) { quotientTrunc }
+        killOnDemand(divProj)
 
         val remainder = tupleDiv.remainder()
         val proj      = bb.putBefore(tupleDiv, Projection.proj(newDiv, 1))
         val remainderTruncate = bb.putBefore(tupleDiv, Truncate.trunc(proj, type))
-        if (remainder != null) {
-            bb.updateUsages(remainder) { remainderTruncate }
-            killOnDemand(remainder)
-        }
+        bb.updateUsages(remainder) { remainderTruncate }
+        killOnDemand(remainder)
+
         killOnDemand(tupleDiv)
         return remainderTruncate
     }
 
     private fun isolateReminder(tupleDiv: TupleDiv) {
         val rem = tupleDiv.remainder()
-        if (rem == null) {
-            bb.putAfter(tupleDiv, Projection.proj(tupleDiv, 1))
-        } else {
-            bb.updateUsages(rem) { bb.putAfter(rem, Copy.copy(rem)) }
-        }
+        bb.updateUsages(rem) { bb.putAfter(rem, Copy.copy(rem)) }
 
         val div = tupleDiv.quotient()
-        if (div == null) {
-            bb.putAfter(tupleDiv, Projection.proj(tupleDiv, 0))
-        } else {
-            bb.updateUsages(div) { bb.putAfter(div, Copy.copy(div)) }
-        }
+        bb.updateUsages(div) { bb.putAfter(div, Copy.copy(div)) }
     }
 
     override fun visit(tupleDiv: TupleDiv): Instruction {
-        val quotient = tupleDiv.quotient()
-        if (quotient == null) {
-            bb.putAfter(tupleDiv, Projection.proj(tupleDiv, 0))
-        }
-        val rem = tupleDiv.remainder()
-        if (rem == null) {
-            bb.putAfter(tupleDiv, Projection.proj(tupleDiv, 1))
-        }
-
         tupleDiv.match(tupleDiv(value(i8()), value(i8()))) {
             // Before:
             //  %resANDrem = div i8 %a, %b

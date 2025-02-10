@@ -4,6 +4,7 @@ define u8 @div(%a: u8, %b: u8) {
 entry:
 	%0x0 = div |u8, u8|, u8 %a, u8 %b
 	%0x1 = proj |u8, u8|, u8 %0x0, 0
+	%0x2 = proj |u8, u8|, u8 %0x0, 1
 	ret u8 %0x1
 }
 

@@ -31,12 +31,12 @@ class TupleDiv private constructor(id: Identity, owner: Block, private val tp: T
         return operands[1]
     }
 
-    fun quotient(): Projection? {
-        return proj(0)
+    fun quotient(): Projection {
+        return proj(0) ?: throw IllegalStateException("quotient is not found in $this")
     }
 
-    fun remainder(): Projection? {
-        return proj(1)
+    fun remainder(): Projection {
+        return proj(1) ?: throw IllegalStateException("remainder is not found in $this")
     }
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {

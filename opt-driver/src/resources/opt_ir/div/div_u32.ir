@@ -4,6 +4,7 @@ define u32 @div(%a: u32, %b: u32) {
 entry:
 	%0x0 = div |u32, u32|, u32 %a, u32 %b
 	%0x1 = proj |u32, u32|, u32 %0x0, 0
+	%0x2 = proj |u32, u32|, u32 %0x0, 1
 	ret u32 %0x1
 }
 

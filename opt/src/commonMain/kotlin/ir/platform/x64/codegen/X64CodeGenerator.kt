@@ -335,21 +335,16 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
         val first  = registerAllocation.operand(tupleDiv.first())
         val second = registerAllocation.operand(tupleDiv.second())
-
-        val quotient = tupleDiv.quotient() ?: throw CodegenException("quotient is null")
-        val quotientOperand = registerAllocation.operand(quotient)
+        val quotient = registerAllocation.operand(tupleDiv.quotient())
 
         val remainderOperand = tupleDiv.remainder()
-        assertion(remainderOperand != null) {
-            "remainder is null"
-        }
-        assertion(registerAllocation.operand(remainderOperand as Projection) == rdx) {
+        assertion(registerAllocation.operand(remainderOperand) == rdx) {
             "remainderOperand=${registerAllocation.operand(remainderOperand)}, rdx=$rdx"
         }
 
         when (val type = divType.asInnerType<IntegerType>(1)) {
-            is SignedIntType   -> IntDivCodegen(type, asm)(quotientOperand, first, second)
-            is UnsignedIntType -> UIntDivCodegen(type, asm)(quotientOperand, first, second)
+            is SignedIntType   -> IntDivCodegen(type, asm)(quotient, first, second)
+            is UnsignedIntType -> UIntDivCodegen(type, asm)(quotient, first, second)
         }
     }
 

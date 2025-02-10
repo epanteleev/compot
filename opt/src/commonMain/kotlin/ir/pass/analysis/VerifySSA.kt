@@ -570,6 +570,9 @@ class VerifySSA private constructor(private val functionData: FunctionData,
                 "Projection '$proj' is duplicated in '${tupleDiv.dump()}'"
             }
         }
+        assert(tupleDiv.type().innerTypes().size == projSet.size) {
+            "Projections must exist everytime: '${tupleDiv.dump()}', projections=${tupleDiv.usedIn()}"
+        }
     }
 
     override fun visit(memcpy: Memcpy) {

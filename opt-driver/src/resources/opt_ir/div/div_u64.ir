@@ -4,6 +4,7 @@ define u64 @div(%a: u64, %b: u64) {
 entry:
 	%0x0 = div |u64, u64|, u64 %a, u64 %b
 	%0x1 = proj |u64, u64|, u64 %0x0, 0
+	%0x2 = proj |u64, u64|, u64 %0x0, 1
 	ret u64 %0x1
 }
 

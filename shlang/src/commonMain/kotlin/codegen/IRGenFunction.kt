@@ -1027,6 +1027,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun divide(a: Value, b: Value): Value = when (val type = a.type()) {
         is IntegerType -> {
             val tupleDiv = ir.tupleDiv(a, b)
+            ir.proj(tupleDiv, 1)
             ir.proj(tupleDiv, 0)
         }
         is FloatingPointType -> ir.div(a, b)
@@ -1036,6 +1037,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun rem(a: Value, b: Value): Value = when (val type = a.type()) {
         is IntegerType -> {
             val tupleDiv = ir.tupleDiv(a, b)
+            ir.proj(tupleDiv, 0)
             ir.proj(tupleDiv, 1)
         }
         else -> throw RuntimeException("Unknown type: type=$type")

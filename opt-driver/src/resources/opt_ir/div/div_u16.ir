@@ -4,6 +4,7 @@ define u16 @div(%a: u16, %b: u16) {
 entry:
 	%0x0 = div |u16, u16|, u16 %a, u16 %b
 	%0x1 = proj |u16, u16|, u16 %0x0, 0
+	%0x2 = proj |u16, u16|, u16 %0x0, 1
 	ret u16 %0x1
 }
 
