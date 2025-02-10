@@ -191,7 +191,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         is FloatingPointType -> {
             ReturnFloatCodegen(retInstType, asm)(fpRet, returnOperand)
         }
-        else -> throw CodegenException("unknown type=$retInstType")
+        is UndefType -> TODO("undefined behavior")
     }
 
     override fun visit(returnValue: ReturnValue) {
@@ -202,14 +202,14 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
                 when (val first = returnType.asInnerType<PrimitiveType>(0)) {
                     is IntegerType, is PtrType -> ReturnIntCodegen(first, asm)(retReg, value)
                     is FloatingPointType -> ReturnFloatCodegen(first, asm)(fpRet, value)
-                    else -> throw CodegenException("unknown type=$first")
+                    is UndefType -> TODO("undefined behavior")
                 }
 
                 val value1 = registerAllocation.operand(returnValue.returnValue(1))
                 when (val second = returnType.asInnerType<PrimitiveType>(1)) {
                     is IntegerType, is PtrType -> ReturnIntCodegen(second, asm)(rdx, value1)
                     is FloatingPointType -> ReturnFloatCodegen(second, asm)(XmmRegister.xmm1, value1)
-                    else -> throw CodegenException("unknown type=$second")
+                    is UndefType -> TODO("undefined behavior")
                 }
             }
             else -> throw CodegenException("unknown type=$returnType")
@@ -421,7 +421,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             is FloatingPointType -> {
                 CallFloatCodegen(retType, asm)(registerAllocation.operand(indirectionCall), fpRet)
             }
-            is UndefType -> throw RuntimeException("unknown value type=$retType")
+            is UndefType -> TODO("undefined behavior")
         }
     }
 
@@ -576,7 +576,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         }
 
         for ((idx, arg) in context.savedXmmRegisters.withIndex()) {
-            asm.movf(8, arg, Address.from(rsp, -(QWORD_SIZE * idx + QWORD_SIZE)))
+            asm.movf(QWORD_SIZE, arg, Address.from(rsp, -(QWORD_SIZE * idx + QWORD_SIZE)))
         }
 
         val argumentsSlotsSize = overflowAreaSize(call)
@@ -599,7 +599,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         }
 
         for ((idx, arg) in context.savedXmmRegisters.reversed().withIndex()) {
-            asm.movf(8, Address.from(rsp, -(QWORD_SIZE * (context.savedXmmRegisters.size - idx - 1) + QWORD_SIZE)), arg)
+            asm.movf(QWORD_SIZE, Address.from(rsp, -(QWORD_SIZE * (context.savedXmmRegisters.size - idx - 1) + QWORD_SIZE)), arg)
         }
 
         for (arg in context.savedGPRegisters.reversed()) {

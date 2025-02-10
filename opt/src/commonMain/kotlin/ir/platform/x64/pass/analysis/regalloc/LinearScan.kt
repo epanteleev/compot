@@ -69,7 +69,7 @@ private class LinearScan(private val data: FunctionData): FunctionAnalysisPass<R
         }
     }
 
-    private fun allocFixedRegisters(){
+    private fun allocFixedRegisters() {
         for (bb in data) {
             val inst = bb.last()
             if (inst is Callable) {

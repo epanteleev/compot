@@ -29,8 +29,9 @@ class ConditionPreprocessor(filename: String, condition: TokenList, val ctx: Pre
             if (hasParen) {
                 kill()
             }
+            killSpaces()
             val name = peak<CToken>()
-            kill()
+            killWithSpaces()
 
             val num = if (ctx.findMacros(name.str()) == null) 0 else 1
             add(PPNumber(num, name.position()))

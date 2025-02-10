@@ -4,6 +4,7 @@ import ir.value.*
 import common.assertion
 import ir.instruction.*
 import common.LeakedLinkedList
+import ir.module.LabelResolver
 import ir.module.ModificationCounter
 import ir.value.constant.UndefValue
 
@@ -26,6 +27,10 @@ class Block private constructor(private val mc: ModificationCounter, override va
     override fun last(): TerminateInstruction {
         return lastOrNull() ?:
             throw IllegalStateException("Last instruction is not terminate: bb=$this, last='${instructions.lastOrNull()?.dump()}'")
+    }
+
+    override fun resolve(labelResolver: LabelResolver): Block {
+        return this
     }
 
     fun lastOrNull(): TerminateInstruction? = instructions.lastOrNull() as? TerminateInstruction

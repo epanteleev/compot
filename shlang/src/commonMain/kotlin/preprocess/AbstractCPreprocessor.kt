@@ -34,7 +34,7 @@ sealed class AbstractCPreprocessor(val filename: String, protected val tokens: T
             throw ParserException(EndOfFile(filename))
         }
         if (current !is T) {
-            throw ParserException(InvalidToken("Unexpected token $current", current!!))
+            throw ParserException(InvalidToken("Expected ${T::class}, but got: ", current!!))
         }
         return current as T
     }

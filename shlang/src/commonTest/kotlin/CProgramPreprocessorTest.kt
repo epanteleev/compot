@@ -753,7 +753,7 @@ class CProgramPreprocessorTest {
     fun testIfdefined() {
         val data = """
             |#define TEST
-            |#if defined(TEST)
+            |#if defined(  TEST  )
             |int a = 9;
             |#endif
         """.trimMargin()

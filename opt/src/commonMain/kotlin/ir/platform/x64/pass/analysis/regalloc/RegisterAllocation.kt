@@ -20,7 +20,7 @@ import ir.types.UndefType
 import ir.value.constant.*
 
 
-class RegisterAllocation(private val spilledLocalsStackSize: Int,
+class RegisterAllocation internal constructor(private val spilledLocalsStackSize: Int,
                          private val registerMap: Map<LocalValue, Operand>,
                          val calleeSaveRegisters: List<GPRegister>,
                          private val callInfo: Map<Callable, List<Operand?>>,
@@ -107,7 +107,7 @@ class RegisterAllocation(private val spilledLocalsStackSize: Int,
     }
 }
 
-data class SavedContext(val savedGPRegisters: Set<GPRegister>, val savedXmmRegisters: Set<XmmRegister>, private val frameSize: Int) {
+class SavedContext internal constructor(val savedGPRegisters: Set<GPRegister>, val savedXmmRegisters: Set<XmmRegister>, private val frameSize: Int) {
     fun adjustStackSize(overflowAreaSize: Int): Int {
         var sizeToAdjust = savedXmmRegisters.size * QWORD_SIZE + overflowAreaSize
         val remains = (frameSize + overflowAreaSize) % CallConvention.STACK_ALIGNMENT

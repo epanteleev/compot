@@ -4,7 +4,6 @@ import common.assertion
 import ir.instruction.Return
 import ir.module.block.Block
 import ir.module.block.Label
-import ir.module.block.LabelResolver
 
 
 class BasicBlocks private constructor(): LabelResolver, Iterable<Block> {

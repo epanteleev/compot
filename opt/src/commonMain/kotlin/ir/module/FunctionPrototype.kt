@@ -1,11 +1,9 @@
 package ir.module
 
+import ir.types.*
 import ir.attributes.ByValue
 import ir.attributes.FunctionAttribute
-import ir.types.Type
 import ir.global.FunctionSymbol
-import ir.types.NonTrivialType
-import ir.types.PtrType
 
 
 sealed class AnyFunctionPrototype(protected val returnType: Type, protected val arguments: List<NonTrivialType>, val attributes: Set<FunctionAttribute>) {
@@ -28,15 +26,20 @@ sealed class AnyFunctionPrototype(protected val returnType: Type, protected val 
 
 sealed class DirectFunctionPrototype(val name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>):
     AnyFunctionPrototype(returnType, arguments, attributes), FunctionSymbol {
-    override fun shortDescription(): String {
-        val builder = StringBuilder()
-        builder.append("$returnType @$name(")
-        arguments.joinTo(builder)
-        builder.append(")")
-        attributes.forEach {
-            builder.append(" $it")
+    override fun shortDescription(): String = buildString {
+        append("$returnType @$name(")
+        for (i in arguments.indices) {
+            append(arguments[i])
+            if (i != arguments.size - 1) {
+                append(", ")
+            }
         }
-        return builder.toString()
+
+        append(")")
+        attributes.forEach {
+            append(" $it")
+        }
+        return toString()
     }
 
     final override fun hashCode(): Int {
@@ -68,15 +71,19 @@ class FunctionPrototype(name: String, returnType: Type, arguments: List<NonTrivi
 class IndirectFunctionPrototype(returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>):
     AnyFunctionPrototype(returnType, arguments, attributes) {
 
-    override fun shortDescription(): String {
-        val builder = StringBuilder()
-        builder.append("$returnType @<indirect>(")
-        arguments.joinTo(builder)
-        builder.append(")")
-        attributes.forEach {
-            builder.append(" $it")
+    override fun shortDescription(): String = buildString {
+        append("$returnType @<indirect>(")
+        for (i in arguments.indices) {
+            append(arguments[i])
+            if (i != arguments.size - 1) {
+                append(", ")
+            }
         }
-        return builder.toString()
+        append(")")
+        attributes.forEach {
+            append(" $it")
+        }
+        return toString()
     }
 
     override fun toString(): String {
@@ -100,13 +107,12 @@ class IndirectFunctionPrototype(returnType: Type, arguments: List<NonTrivialType
 
 class ExternFunction internal constructor(name: String, returnType: Type, arguments: List<NonTrivialType>, attributes: Set<FunctionAttribute>):
     DirectFunctionPrototype(name, returnType, arguments, attributes), FunctionSymbol {
-    override fun toString(): String {
-        val builder = StringBuilder()
-        builder.append("extern ")
-        builder.append(shortDescription())
+    override fun toString(): String = buildString {
+        append("extern ")
+        append(shortDescription())
         attributes.forEach {
-            builder.append(" $it")
+            append(" $it")
         }
-        return builder.toString()
+        return toString()
     }
 }

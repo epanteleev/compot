@@ -6,9 +6,9 @@ import ir.module.FunctionData
 import ir.instruction.matching.*
 
 
-class FixedRegisterInstructionsAnalysisResult(val rdxFixedReg: List<LocalValue>, val rcxFixedReg: List<LocalValue>)
+internal class FixedRegisterInstructionsAnalysisResult(val rdxFixedReg: List<LocalValue>, val rcxFixedReg: List<LocalValue>)
 
-class FixedRegisterInstructionsAnalysis private constructor(private val cfg: FunctionData) {
+internal class FixedRegisterInstructionsAnalysis private constructor(private val cfg: FunctionData) {
     private val rdxFixedReg = arrayListOf<LocalValue>()
     private val rcxFixedReg = arrayListOf<LocalValue>()
 

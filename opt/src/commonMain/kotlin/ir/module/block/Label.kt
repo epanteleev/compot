@@ -1,15 +1,11 @@
 package ir.module.block
 
-interface LabelResolver {
-    fun findBlock(label: Label): Block
-}
+import ir.module.LabelResolver
 
-interface Label {
+sealed interface Label {
     val index: Int
 
-    fun resolve(labelResolver: LabelResolver): Block {
-        return labelResolver.findBlock(this)
-    }
+    fun resolve(labelResolver: LabelResolver): Block
 
     companion object {
         val entry = BlockViewer(0)
@@ -25,6 +21,10 @@ class BlockViewer(override val index: Int): Label {
         } else {
             "L$index"
         }
+    }
+
+    override fun resolve(labelResolver: LabelResolver): Block {
+        return labelResolver.findBlock(this)
     }
 
     override fun equals(other: Any?): Boolean {

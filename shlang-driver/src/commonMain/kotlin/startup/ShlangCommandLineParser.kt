@@ -60,7 +60,7 @@ object ShlangCommandLineParser {
         } else if (IGNORED_OPTIONS.contains(arg)) {
             ignoreOption(arg)
 
-        } else if (arg.startsWith("-fvisibility")) {
+        } else if (arg.startsWith("-fvisibility") || arg.startsWith("-fno-") || arg.startsWith("-std=")) {
             ignoreOption(arg)
 
         } else {
@@ -132,5 +132,8 @@ object ShlangCommandLineParser {
         "-Werror",
         "-Wno-switch",
         "-fno-common",
+        "-MMD",
+        "-MP",
+        "-m64",
     )
 }
