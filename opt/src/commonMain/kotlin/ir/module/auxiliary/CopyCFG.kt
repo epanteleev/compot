@@ -351,6 +351,10 @@ class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionV
         return Phi.phi(newIncoming, newUsages) //TODO
     }
 
+    override fun visit(phi: UncompletedPhi): InstBuilder<Instruction> {
+        throw RuntimeException("Unsupported operation")
+    }
+
     override fun visit(returnValue: ReturnValue): InstBuilder<Instruction> {
         val value = arrayFrom(mapOperands(returnValue))
         return ReturnValue.ret(returnValue.type(), value)

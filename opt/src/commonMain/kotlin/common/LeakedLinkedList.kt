@@ -262,20 +262,18 @@ abstract class LeakedLinkedList<T: LListNode>: Collection<T> {
         }
     }
 
-    override fun toString(): String {
-        return buildString {
-            append("[")
-            var current = head
-            while (current != null) {
-                append(current.toString())
-                @Suppress("UNCHECKED_CAST")
-                current = current.next as T?
-                if (current != null) {
-                    append(", ")
-                }
+    override fun toString(): String = buildString {
+        append("[")
+        var current = head
+        while (current != null) {
+            append(current.toString())
+            @Suppress("UNCHECKED_CAST")
+            current = current.next as T?
+            if (current != null) {
+                append(", ")
             }
-            append("]")
         }
+        append("]")
     }
 
     override fun equals(other: Any?): Boolean {

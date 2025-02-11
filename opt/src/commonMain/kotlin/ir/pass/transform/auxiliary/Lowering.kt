@@ -349,6 +349,10 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return phi
     }
 
+    override fun visit(phi: UncompletedPhi): Instruction? {
+        throw UnsupportedOperationException("UncompletedPhi is not supported in lowering")
+    }
+
     override fun visit(returnValue: ReturnValue): Instruction {
         returnValue.match(ret(gValue(anytype()))) {
             // Before:

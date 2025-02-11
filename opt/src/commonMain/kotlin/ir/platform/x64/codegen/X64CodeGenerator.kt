@@ -693,6 +693,10 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
     override fun visit(phi: Phi) { /* nothing to do */ }
 
+    override fun visit(phi: UncompletedPhi) {
+        throw RuntimeException("UncompletedPhi should be handled before code generation")
+    }
+
     override fun visit(alloc: Alloc) {
         throw CodegenException("${Alloc.NAME} should be handled before code generation")
     }

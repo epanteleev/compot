@@ -408,6 +408,10 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         }
     }
 
+    override fun visit(phi: UncompletedPhi) {
+        throw ValidateSSAErrorException(functionData, "Uncompleted phi instruction: '${phi.dump()}'")
+    }
+
     override fun visit(phi: Phi) {
         assert(Phi.typeCheck(phi)) {
             val operands = buildString {

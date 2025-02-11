@@ -39,7 +39,6 @@ sealed class DirectFunctionPrototype(val name: String, returnType: Type, argumen
         attributes.forEach {
             append(" $it")
         }
-        return toString()
     }
 
     final override fun hashCode(): Int {
@@ -83,7 +82,6 @@ class IndirectFunctionPrototype(returnType: Type, arguments: List<NonTrivialType
         attributes.forEach {
             append(" $it")
         }
-        return toString()
     }
 
     override fun toString(): String {
@@ -113,6 +111,5 @@ class ExternFunction internal constructor(name: String, returnType: Type, argume
         attributes.forEach {
             append(" $it")
         }
-        return toString()
     }
 }

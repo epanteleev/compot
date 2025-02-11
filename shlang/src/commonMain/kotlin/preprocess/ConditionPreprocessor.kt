@@ -8,7 +8,7 @@ import codegen.consteval.TryConstEvalExpressionLong
 import preprocess.CProgramPreprocessor.Companion.create
 
 
-class ConditionPreprocessor(filename: String, condition: TokenList, val ctx: PreprocessorContext): AbstractCPreprocessor(filename, condition) {
+internal class ConditionPreprocessor(filename: String, condition: TokenList, val ctx: PreprocessorContext): AbstractCPreprocessor(filename, condition) {
     private fun preprocess(): TokenList {
         while (!eof()) {
             if (!check("defined")) {
