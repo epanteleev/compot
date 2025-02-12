@@ -126,6 +126,7 @@ object ShlangCommandLineParser {
         "-malign-double",
         "-fno-strict-aliasing",
         "-Wno-format-security",
+        "-Wno-unused-parameter",
         "-fPIC",
         "-Wall",
         "-Wextra",

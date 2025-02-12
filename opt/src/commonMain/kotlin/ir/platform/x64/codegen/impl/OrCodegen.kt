@@ -8,7 +8,7 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.X64MacroAssembler
 
 
-class OrCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class OrCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
@@ -104,9 +104,8 @@ class OrCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVi
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        asm.copy(size, first, temp1)
-        asm.or(size, second, temp1)
-        asm.mov(size, temp1, dst)
+        asm.mov(size, second, dst)
+        asm.or(size, first, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {

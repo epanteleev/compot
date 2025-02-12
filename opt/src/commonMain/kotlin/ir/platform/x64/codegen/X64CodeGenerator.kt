@@ -392,7 +392,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         when (val compare = flag2Int.value()) {
             is CompareInstruction -> {
                 when (val jmpType = compare.predicate()) {
-                    is IntPredicate   -> asm.setccInt(jmpType, dst)
+                    is IntPredicate   -> asm.setccInt(flag2Int.asType(), jmpType, dst)
                     is FloatPredicate -> asm.setccFloat(jmpType, dst)
                 }
                 Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, dst)

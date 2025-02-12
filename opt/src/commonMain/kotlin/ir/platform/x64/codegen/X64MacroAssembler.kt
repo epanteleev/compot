@@ -49,17 +49,27 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         }
     }
 
-    private fun intPredicateToSetCCType(jmpType: IntPredicate): SetCCType = when (jmpType) {
-        IntPredicate.Eq -> SetCCType.SETE
-        IntPredicate.Ne -> SetCCType.SETNE
-        IntPredicate.Gt -> SetCCType.SETG
-        IntPredicate.Ge -> SetCCType.SETGE
-        IntPredicate.Lt -> SetCCType.SETL
-        IntPredicate.Le -> SetCCType.SETLE
+    private fun intPredicateToSetCCType(type: IntegerType, jmpType: IntPredicate): SetCCType = when(type) {
+        is SignedIntType -> when (jmpType) {
+            IntPredicate.Eq -> SetCCType.SETE
+            IntPredicate.Ne -> SetCCType.SETNE
+            IntPredicate.Gt -> SetCCType.SETG
+            IntPredicate.Ge -> SetCCType.SETGE
+            IntPredicate.Lt -> SetCCType.SETL
+            IntPredicate.Le -> SetCCType.SETLE
+        }
+        is UnsignedIntType -> when (jmpType) {
+            IntPredicate.Eq -> SetCCType.SETE
+            IntPredicate.Ne -> SetCCType.SETNE
+            IntPredicate.Gt -> SetCCType.SETA
+            IntPredicate.Ge -> SetCCType.SETAE
+            IntPredicate.Lt -> SetCCType.SETB
+            IntPredicate.Le -> SetCCType.SETBE
+        }
     }
 
-    fun setccInt(jmpType: IntPredicate, dst: Operand) {
-        val type = intPredicateToSetCCType(jmpType)
+    fun setccInt(operandsType: IntegerType, jmpType: IntPredicate, dst: Operand) {
+        val type = intPredicateToSetCCType(operandsType, jmpType)
         when (dst) {
             is Address    -> setcc(type, dst)
             is GPRegister -> setcc(type, dst)
