@@ -39,7 +39,7 @@ class UncompletedPhi private constructor(id: Identity, owner: Block, private val
         const val NAME = "uncompleted-phi"
 
         fun phi(type: PrimitiveType, incoming: Value, predecessors: MutableList<Block>): InstBuilder<UncompletedPhi> = {
-                id: Identity, owner: Block -> makeUncompleted(id, owner, type, incoming, predecessors)
+            id: Identity, owner: Block -> makeUncompleted(id, owner, type, incoming, predecessors)
         }
 
         private fun makeUncompleted(id: Identity, owner: Block, type: PrimitiveType, incoming: Value, predecessors: MutableList<Block>): UncompletedPhi {

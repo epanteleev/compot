@@ -51,6 +51,7 @@ class I32Value private constructor(val i32: Int): SignedIntegerConstant {
         private val table = arrayOfNulls<I32Value>(SIZE.toInt())
 
         fun of(i32: Int): I32Value = getOrCreate(i32, table) { I32Value(i32) }
+        fun of(i8: Byte): I32Value = getOrCreate(i8, table) { I32Value(i8.toInt()) }
     }
 }
 

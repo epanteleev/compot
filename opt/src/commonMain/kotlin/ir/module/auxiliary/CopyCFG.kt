@@ -17,7 +17,7 @@ import ir.value.*
 import ir.value.constant.Constant
 
 
-class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<InstBuilder<Instruction>>() {
+internal class CopyCFG private constructor(private val fd: FunctionData) : IRInstructionVisitor<InstBuilder<Instruction>>() {
     private val oldValuesToNew = hashMapOf<LocalValue, LocalValue>()
     private val newCFG         = FunctionData.create(fd.prototype, copyArguments())
     private val oldToNewBlock  = setupNewBasicBlock()

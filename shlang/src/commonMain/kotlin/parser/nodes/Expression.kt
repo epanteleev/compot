@@ -307,7 +307,7 @@ data class CharNode(val char: CharLiteral) : Expression() {
         return@memoize CHAR
     }
 
-    fun toInt(): Int {
+    fun toByte(): Byte {
         return char.code()
     }
 }

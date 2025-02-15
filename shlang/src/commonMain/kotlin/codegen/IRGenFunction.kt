@@ -324,9 +324,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitCharNode(charNode: CharNode): Value {
-        val charType  = charNode.resolveType(typeHolder)
-        val charValue = I8Value.of(charNode.toInt().toByte())
-        return ir.convertLVToType(charValue, mb.toIRType<PrimitiveType>(typeHolder, charType))
+        return ir.trunc(I32Value.of(charNode.toByte()), I8Type)
     }
 
     private fun generateIfElsePattern(commonType: PrimitiveType, conditional: Conditional): Value {

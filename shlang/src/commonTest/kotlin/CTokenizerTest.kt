@@ -234,6 +234,5 @@ class CTokenizerTest {
         val literal = tokens[0] as CharLiteral
         assertEquals(-17, literal.code())
         tokens[0].isEqual(1, 1, "'ï'")
-
     }
 }

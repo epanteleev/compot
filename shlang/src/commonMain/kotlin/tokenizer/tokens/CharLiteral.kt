@@ -19,8 +19,8 @@ class CharLiteral(private val data: Char, position: Position): CToken(position) 
         return data == other.data
     }
 
-    fun code(): Int {
-        return data.code.toByte().toInt()
+    fun code(): Byte {
+        return data.code.toByte()
     }
 
     override fun cloneWith(pos: Position): CToken {

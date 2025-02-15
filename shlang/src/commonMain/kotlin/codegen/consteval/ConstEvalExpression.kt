@@ -116,7 +116,7 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(assignment: CharNode): Int? {
-        return assignment.toInt()
+        return assignment.toByte().toInt()
     }
 
     override fun visit(initializerList: InitializerList): Int? {
