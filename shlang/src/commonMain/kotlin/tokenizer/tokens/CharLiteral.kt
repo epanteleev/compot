@@ -3,7 +3,7 @@ package tokenizer.tokens
 import tokenizer.Position
 
 
-class CharLiteral(val data: Char, position: Position): CToken(position) {
+class CharLiteral(private val data: Char, position: Position): CToken(position) {
     override fun str(): String = "\'$data\'"
 
     override fun hashCode(): Int {
@@ -17,6 +17,10 @@ class CharLiteral(val data: Char, position: Position): CToken(position) {
         other as CharLiteral
 
         return data == other.data
+    }
+
+    fun code(): Int {
+        return data.code.toByte().toInt()
     }
 
     override fun cloneWith(pos: Position): CToken {

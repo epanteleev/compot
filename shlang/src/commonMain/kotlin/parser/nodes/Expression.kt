@@ -308,7 +308,7 @@ data class CharNode(val char: CharLiteral) : Expression() {
     }
 
     fun toInt(): Int {
-        return char.data.code
+        return char.code()
     }
 }
 
