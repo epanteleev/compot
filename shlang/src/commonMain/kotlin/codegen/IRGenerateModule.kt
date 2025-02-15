@@ -20,9 +20,8 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
     fun visit(programNode: ProgramNode) = varStack.scoped {
         for (node in programNode.nodes) {
             when (node) {
-                is FunctionNode -> generateFunction(node)
-                is Declaration  -> generateDeclaration(node)
-                else -> throw IRCodeGenError("Function expected", node.begin())
+                is FunctionDeclarationNode -> generateFunction(node.function)
+                is GlobalDeclaration  -> generateDeclaration(node.declaration)
             }
         }
     }

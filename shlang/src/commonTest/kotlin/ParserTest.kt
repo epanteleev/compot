@@ -2,6 +2,8 @@
 import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.ParserException
+import parser.nodes.ExternalDeclaration
+import parser.nodes.FunctionDeclarationNode
 import parser.nodes.FunctionNode
 import parser.nodes.Node
 import tokenizer.CTokenizer
@@ -568,10 +570,10 @@ class ParserTest {
         val tokens = CTokenizer.apply("int fun() { return 6; };")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.external_declaration() as Node
+        val expr = parser.external_declaration() as FunctionDeclarationNode
         println(expr)
         val expected = "int fun() {return 6;}"
-        assertEquals(expected, LineAgnosticAstPrinter.print(expr))
+        assertEquals(expected, LineAgnosticAstPrinter.print(expr.function))
     }
 
     @Test

@@ -104,7 +104,20 @@ class WhileStatement(private val whileKeyword: Keyword, val condition: Expressio
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-class ForStatement(private val forKeyword: Keyword, val init: Node?, val condition: Expression, val update: Expression, val body: Statement): Statement() {
+sealed class ForInit {
+    abstract fun inner(): Node
+}
+data class ForInitDeclaration(val declaration: Declaration): ForInit() {
+    override fun inner(): Node = declaration
+}
+data class ForInitExpression(val expression: ExprStatement): ForInit() {
+    override fun inner(): Node = expression
+}
+object ForInitEmpty: ForInit() {
+    override fun inner(): Node = EmptyStatement
+}
+
+class ForStatement(private val forKeyword: Keyword, val init: ForInit, val condition: Expression, val update: Expression, val body: Statement): Statement() {
     override fun begin(): Position = forKeyword.position()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }

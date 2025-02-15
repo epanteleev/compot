@@ -1564,11 +1564,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitInit(init: Node?) = when (init) {
-        is Declaration -> visitDeclaration(init)
-        is ExprStatement -> visit(init)
-        is EmptyStatement, null -> {}
-        else -> throw IRCodeGenError("Unknown init statement, init=$init", init.begin())
+    private fun visitInit(init: ForInit) = when (init) {
+        is ForInitDeclaration -> visitDeclaration(init.declaration)
+        is ForInitExpression -> visit(init.expression)
+        is ForInitEmpty -> {}
     }
 
     private fun visitUpdate(update: Expression) {

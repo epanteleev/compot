@@ -21,7 +21,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	| translation_unit external_declaration
     //	;
     fun translation_unit(): ProgramNode {
-        val nodes = mutableListOf<Node>()
+        val nodes = arrayListOf<ExternalDeclaration>()
         while (!eof()) {
             val node = external_declaration()?:
                 throw ParserException(InvalidToken("Expected external declaration", peak()))
@@ -263,7 +263,15 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 throw ParserException(InvalidToken("Expected '('", peak()))
             }
             eat()
-            val init = declaration() ?: expression_statement()
+
+            val forInit: ForInit = when (val init = declaration()) {
+                is Declaration -> ForInitDeclaration(init)
+                else -> when (val exprStatement = expression_statement()) {
+                    is ExprStatement -> ForInitExpression(exprStatement)
+                    is EmptyStatement -> ForInitEmpty
+                    else -> throw ParserException(InvalidToken("Expected expression statement", peak()))
+                }
+            }
 
             val condition = expression() ?: EmptyExpression
             if (!check(";")) {
@@ -276,7 +284,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val body = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule ForStatement(forKeyword.asToken(), init, condition, update, body)
+            return@rule ForStatement(forKeyword.asToken(), forInit, condition, update, body)
         }
         return@rule null
     }
@@ -1896,15 +1904,16 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	: function_definition
     //	| declaration
     //	;
-    fun external_declaration(): Node? = rule {
+    fun external_declaration(): ExternalDeclaration? = rule {
         val declaration = declaration()
         if (declaration != null) {
             // Early resolve type.
             // TODO this step should be skipped if the declaration doesn't have 'typedef' storage class specifier.
             declaration.specifyType(typeHolder, listOf())
-            return@rule declaration
+            return@rule GlobalDeclaration(declaration)
         }
-        return@rule function_definition()
+        val function = function_definition() ?: return@rule null
+        return@rule FunctionDeclarationNode(function)
     }
 
     companion object {

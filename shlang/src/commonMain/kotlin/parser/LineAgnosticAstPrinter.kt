@@ -140,8 +140,8 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(forStatement: ForStatement) {
         buffer.append("for(")
 
-        forStatement.init?.accept(this)
-        if (forStatement.init is EmptyStatement) {
+        forStatement.init.inner().accept(this)
+        if (forStatement.init.inner() is EmptyStatement) {
             buffer.append(';')
         }
         forStatement.condition.accept(this)
@@ -516,7 +516,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         fun print(programNode: ProgramNode): String {
             val astPrinter = LineAgnosticAstPrinter()
             for ((idx, node) in programNode.nodes.withIndex()) {
-                node.accept(astPrinter)
+                when (node) {
+                    is FunctionDeclarationNode -> node.function.accept(astPrinter)
+                    is GlobalDeclaration -> node.declaration.accept(astPrinter)
+                }
                 if (idx != programNode.nodes.size - 1) {
                     astPrinter.buffer.append(' ')
                 }
