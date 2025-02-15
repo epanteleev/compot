@@ -38,7 +38,7 @@ class ProcessedFile private constructor(val filename: String, val extension: Ext
             return this
         }
 
-        return create(basename(), extension)
+        return create(Files.removeExtension(filename), extension)
     }
 
     companion object {

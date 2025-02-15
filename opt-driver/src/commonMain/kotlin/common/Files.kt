@@ -5,6 +5,10 @@ import okio.Path.Companion.toPath
 object Files {
     fun getBasename(name: String): String {
         val fileName = name.toPath().name
+        return removeExtension(fileName)
+    }
+
+    fun removeExtension(fileName: String): String {
         val lastIndex = fileName.lastIndexOf('.')
         if (lastIndex != -1) {
             return fileName.substring(0, lastIndex)
