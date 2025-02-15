@@ -225,4 +225,15 @@ class CTokenizerTest {
         val num = tokens[0] as PPNumber
         assertEquals("42".toByte(), num.toNumberOrNull())
     }
+
+    @Test
+    fun testHexChar() {
+        val input = "'\\xef'"
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is CharLiteral }
+        val literal = tokens[0] as CharLiteral
+        assertEquals(-17, literal.code())
+        tokens[0].isEqual(1, 1, "'ï'")
+
+    }
 }

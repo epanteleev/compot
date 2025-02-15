@@ -154,7 +154,7 @@ class CTokenizer private constructor(private val filename: String, private val r
         var c = 0
         while (reader.isHexDigit()) {
             val ch = eat()
-            c = c * 16 + ch.digitToInt(16)
+            c = c.toByte() * 16 + ch.digitToInt(16)
         }
         return c.toChar()
     }
