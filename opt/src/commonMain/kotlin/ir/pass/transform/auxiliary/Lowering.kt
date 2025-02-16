@@ -6,10 +6,10 @@ import ir.module.Module
 import ir.instruction.*
 import ir.value.constant.*
 import ir.instruction.lir.*
+import ir.module.block.Block
+import ir.module.FunctionData
 import ir.instruction.matching.*
 import ir.instruction.utils.IRInstructionVisitor
-import ir.module.FunctionData
-import ir.module.block.Block
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
 
 
@@ -303,13 +303,27 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
     override fun visit(load: Load): Instruction {
         load.match(load(generate(primitive()))) {
-            // Before:
-            //  %res = load %gen
-            //
-            // After:
-            //  %lea = copy %gen
+            val gen = load.operand().asValue<Generate>()
+            if (gen.type() == load.type()) {
+                // Before:
+                //  %res = load %gen
+                //
+                // After:
+                //  %lea = copy %gen
 
-            return bb.replace(load, Copy.copy(load.operand()))
+                return bb.replace(load, Copy.copy(load.operand()))
+            } else {
+                // Before:
+                //  %res = load %gen
+                //
+                // After:
+                //  %lea = lea %gen
+                //  %res = load %lea
+
+                val lea = bb.putBefore(load, Lea.lea(load.operand()))
+                bb.updateDF(load, Load.VALUE, lea)
+                return lea
+            }
         }
 
         load.match(load(gep(stackAlloc(), any()))) {

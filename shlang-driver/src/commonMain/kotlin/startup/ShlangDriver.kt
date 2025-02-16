@@ -97,7 +97,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
             .libs(SystemConfig.runtimeLibraries() + cli.getDynamicLibraries())
             .libPaths(SystemConfig.runtimePathes())
             .crtObjects(crtObjs)
-            .objs(compiledFiles.map { it.filename })
+            .objs(compiledFiles)
             .dynamicLinker(SystemConfig.dynamicLinker())
             .execute()
 

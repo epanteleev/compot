@@ -264,7 +264,7 @@ internal object TypeConverter {
                     U64Type -> trunc(lvalue, toType)
                     F32Type -> fp2Int(lvalue, U8Type)
                     F64Type -> fp2Int(lvalue, U8Type)
-                    PtrType  -> ptr2int(lvalue, toType)
+                    PtrType -> ptr2int(lvalue, toType)
                     else -> throw RuntimeException("Cannot convert $lvalue to $toType")
                 }
             }

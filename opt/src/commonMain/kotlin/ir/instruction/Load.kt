@@ -30,6 +30,7 @@ class Load private constructor(id: Identity, owner: Block, private val loadedTyp
 
     companion object {
         const val NAME = "load"
+        const val VALUE = 0
 
         fun load(loadedType: PrimitiveType, operand: Value): InstBuilder<Load> = { id: Identity, owner: Block ->
             make(id, owner, loadedType, operand)

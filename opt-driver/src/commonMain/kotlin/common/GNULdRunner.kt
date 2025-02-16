@@ -2,7 +2,7 @@ package common
 
 
 class GNULdRunner(val outputFileName: ProcessedFile) {
-    private var objectFiles: List<String>? = null
+    private var objectFiles = arrayListOf<ProcessedFile>()
     private var crtObjects = arrayListOf<String>()
     private val libs = arrayListOf<String>()
     private val libPaths = arrayListOf<String>()
@@ -13,8 +13,8 @@ class GNULdRunner(val outputFileName: ProcessedFile) {
         return this
     }
 
-    fun objs(objs: List<String>): GNULdRunner {
-        objectFiles = objs
+    fun objs(objs: List<ProcessedFile>): GNULdRunner {
+        objectFiles.addAll(objs)
         return this
     }
 
@@ -44,8 +44,8 @@ class GNULdRunner(val outputFileName: ProcessedFile) {
             gnuLdCommandLine.addAll(listOf("--dynamic-linker", dynamicLinker!!))
         }
 
-        if (objectFiles != null) {
-            gnuLdCommandLine.addAll(objectFiles!!)
+        for (obj in objectFiles) {
+            gnuLdCommandLine.add(obj.filename)
         }
         gnuLdCommandLine.addAll(libs)
 

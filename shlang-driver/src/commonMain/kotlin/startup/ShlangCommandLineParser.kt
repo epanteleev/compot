@@ -44,8 +44,9 @@ object ShlangCommandLineParser {
             cli.addIncludeDirectory(arg.substring(2))
 
         } else if (arg.startsWith("-O")) {
-            val level = arg.substring(2)
-            cli.setOptLevel(level.toInt())
+            val levelString = arg.substring(2)
+            val level = levelString.toIntOrNull() ?: 0
+            cli.setOptLevel(level)
 
         } else if (arg.startsWith("-D")) {
             val define = arg.substring(2)
