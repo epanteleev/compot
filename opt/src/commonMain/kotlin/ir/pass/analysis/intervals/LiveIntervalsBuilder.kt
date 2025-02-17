@@ -60,9 +60,9 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
     }
 
     private fun updateLiveRange(inst: Instruction, instructionLocation: Int) {
-        inst.operands { usage ->
+        for (usage in inst.operands()) {
             if (usage !is LocalValue) {
-                return@operands
+                continue
             }
 
             val liveRange = intervals[usage] ?: throw LiveIntervalsException("in $usage")
@@ -91,9 +91,9 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
 
     private fun handlePhiOperands(phi: Phi, range: LiveRangeImpl) {
         val groupList = arrayListOf<LocalValue>(phi)
-        phi.operands { used ->
+        for (used in phi.operands()) {
             if (used !is LocalValue) {
-                return@operands
+                continue
             }
             used as Instruction
             assertion(used is Copy || used.isa(lea(any()))) { "expect this invariant: used=$used" }
@@ -107,10 +107,11 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
         }
 
         val group = Group(groupList)
-        phi.operands { used ->
+        for (used in phi.operands()) {
             if (used !is LocalValue) {
-                return@operands
+                continue
             }
+
             groups[used] = group
         }
         groups[phi] = group

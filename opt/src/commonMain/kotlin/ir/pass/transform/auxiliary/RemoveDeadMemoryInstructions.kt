@@ -18,7 +18,7 @@ internal class RemoveDeadMemoryInstructions private constructor(private val cfg:
                 if (load.operand() == UndefValue) {
                     return bb.kill(load, UndefValue)
                 }
-                if (!escapeState.isNoEscape(load)) {
+                if (!escapeState.isNoEscape(load.operand())) {
                     return load
                 }
                 return bb.kill(load, UndefValue)

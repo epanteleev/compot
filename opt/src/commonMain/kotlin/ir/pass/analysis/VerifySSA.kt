@@ -100,12 +100,12 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
     /** Check whether definition dominates to usage. */
     private fun validateDefUse(instruction: Instruction, block: Block) {
-        instruction.operands { use ->
+        for (use in instruction.operands()) {
             if (use !is LocalValue) {
-                return@operands
+                continue
             }
             if (use is ArgumentValue) {
-                return@operands
+                continue
             }
             use as Instruction
 
@@ -415,7 +415,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     override fun visit(phi: Phi) {
         assert(Phi.typeCheck(phi)) {
             val operands = buildString {
-                phi.operands {
+                for (it in phi.operands()) {
                     append(it.type())
                     append(" ")
                 }

@@ -63,16 +63,16 @@ private class LivenessAnalysis(private val functionData: FunctionData): Function
             for (inst in bb) {
                 // Handle input operands
                 if (inst !is Phi) {
-                    inst.operands { usage ->
-                        if (usage !is LocalValue) {
-                            return@operands
+                    for (operand in inst.operands()) {
+                        if (operand !is LocalValue) {
+                            continue
                         }
 
-                        if (kill.contains(usage)) {
-                            return@operands
+                        if (kill.contains(operand)) {
+                            continue
                         }
 
-                        gen.add(usage)
+                        gen.add(operand)
                     }
                 }
 

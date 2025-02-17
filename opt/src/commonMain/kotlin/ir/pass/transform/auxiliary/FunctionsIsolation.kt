@@ -17,12 +17,8 @@ import ir.value.constant.U64Value
 
 internal class FunctionsIsolation private constructor(private val cfg: FunctionData) {
     private fun mustBeIsolated(arg: ArgumentValue): Boolean {
-        if (arg.attributes.find { it is ByValue } != null) {
-            // Argument is in overflow area
-            return false
-        }
-
-        return true
+        // Argument is in overflow area
+        return arg.attributes.find { it is ByValue } == null
     }
 
     private fun isolateArgumentValues() {

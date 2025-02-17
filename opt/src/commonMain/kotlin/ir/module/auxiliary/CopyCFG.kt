@@ -107,8 +107,8 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
         assertion(old !is Callable) { "unexpected type for instruction=$old" }
 
         val newUsages = arrayListOf<Value>()
-        old.operands {
-            newUsages.add(mapUsage<Value>(it))
+        for (usage in old.operands()) {
+            newUsages.add(mapUsage<Value>(usage))
         }
 
         return newUsages

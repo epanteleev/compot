@@ -28,17 +28,13 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
         return operands[index]
     }
 
-    fun operands(visitor: (Value) -> Unit) {
-        operands.forEach(visitor)
-    }
-
     fun operands(): List<Value> = arrayWrapperOf(operands)
 
     fun containsOperand(value: Value): Boolean {
         return operands.contains(value)
     }
 
-    fun emptyOperands(): Boolean = operands.isEmpty()
+    fun isNoOperands(): Boolean = operands.isEmpty()
 
     // DO NOT USE THIS METHOD DIRECTLY
     internal fun update(closure: (Value) -> Value) {

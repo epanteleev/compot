@@ -10,11 +10,8 @@ import ir.instruction.matching.*
 import ir.pass.analysis.dominance.DominatorTree
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.analysis.EscapeAnalysisPassFabric
-import ir.types.NonTrivialType
 import ir.types.Type
 import ir.types.asType
-import ir.value.constant.Constant
-import ir.value.constant.NonTrivialConstant
 import ir.value.constant.PrimitiveConstant
 import ir.value.constant.UndefValue
 
@@ -34,9 +31,7 @@ sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree)
             return oldValue
         }
 
-        val newValue = findActualValueOrNull(bb, resultType, oldValue)
-            ?: return null
-        return newValue
+        return findActualValueOrNull(bb, resultType, oldValue)
     }
 
     protected fun findActualValue(bb: Label, resultType: Type, value: Value): Value {
@@ -46,9 +41,9 @@ sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree)
         }
     }
 
-    protected fun findActualValueOrNull(bb: Label, resultType: Type, value: Value): Value? { //TODO Duplicate code
+    protected fun findActualValueOrNull(bb: Label, resultType: Type, value: Value): Value? {
         for (d in dominatorTree.dominators(bb)) {
-            val newV = valueMap()[d]!![value] ?: continue
+            val newV = valueMap(d, value) ?: continue
             return when (newV) {
                 is PrimitiveConstant -> newV.convertTo(resultType.asType())
                 else -> newV
@@ -58,10 +53,10 @@ sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree)
         return null
     }
 
-    abstract fun valueMap(): Map<Block, Map<Value, Value>>
+    abstract fun valueMap(bb: Label, value: Value): Value?
 }
 
-class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val insertedPhis: Set<Phi>, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
+internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val insertedPhis: Set<Phi>, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
     private val escapeState = cfg.analysis(EscapeAnalysisPassFabric)
     private val bbToMapValues = setupValueMap()
 
@@ -90,14 +85,14 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
         }
     }
 
-    override fun valueMap(): Map<Block, Map<Value, Value>> {
-        return bbToMapValues
+    override fun valueMap(bb: Label, value: Value): Value? {
+        return bbToMapValues[bb]!![value]
     }
 
     private fun rewriteValuesSetup(bb: Block, phisToRewrite: MutableSet<Phi>) {
         val valueMap = bbToMapValues[bb]!!
         for (instruction in bb) {
-            if (instruction.emptyOperands()) {
+            if (instruction.isNoOperands()) {
                 continue
             }
 
@@ -149,7 +144,7 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
     }
 }
 
-class RewritePrimitives internal constructor(private val info: Map<Block, Map<Value, Value>>, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
+internal class RewritePrimitives internal constructor(private val info: Map<Block, Map<Value, Value>>, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
     override fun toString(): String {
         val builder = StringBuilder()
         for ((bb, valueMap) in info) {
@@ -162,5 +157,5 @@ class RewritePrimitives internal constructor(private val info: Map<Block, Map<Va
         return builder.toString()
     }
 
-    override fun valueMap(): Map<Block, Map<Value, Value>> = info
+    override fun valueMap(bb: Label, value: Value): Value? = info[bb]!![value]
 }

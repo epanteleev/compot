@@ -1,14 +1,10 @@
 package ir.pass.transform.auxiliary
 
 import ir.global.*
+import ir.module.*
 import ir.instruction.Instruction
 import ir.instruction.Load
-import ir.instruction.Store
 import ir.instruction.lir.Lea
-import ir.module.ExternFunction
-import ir.module.FunctionData
-import ir.module.FunctionPrototype
-import ir.module.Module
 import ir.module.block.Block
 import ir.types.PtrType
 

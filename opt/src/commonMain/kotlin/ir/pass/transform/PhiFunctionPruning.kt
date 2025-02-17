@@ -3,46 +3,48 @@ package ir.pass.transform
 import ir.module.*
 import common.assertion
 import ir.instruction.Phi
-import ir.module.block.Block
 import ir.value.constant.UndefValue
 import ir.pass.analysis.traverse.PreOrderFabric
 
 
-class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
-    private val usefull = UsefulnessMap()
+internal class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
+    private val usefull = hashMapOf<Phi, Boolean>()
     private val worklist = arrayListOf<Phi>()
-    private val phiPlacesInfo = setupPhiPlacesInfo()
 
-    private fun setupPhiPlacesInfo(): Map<Phi, Block> {
-        val phiInfo = hashMapOf<Phi, Block>()
-        for (bb in cfg) {
-            for (inst in bb) {
-                if (inst !is Phi) {
-                    continue
-                }
+    fun markUseless(phi: Phi) {
+        usefull[phi] = false
+    }
 
-                phiInfo[inst] = bb
+    fun markUseful(phi: Phi) {
+        usefull[phi] = true
+    }
+
+    fun isUseful(phi: Phi): Boolean {
+        return usefull[phi]!!
+    }
+
+    fun forEachUseless(closure: (Phi) -> Unit) {
+        for ((phi, useful) in usefull) {
+            if (!useful) {
+                closure(phi)
             }
         }
-
-        return phiInfo
     }
 
     private fun initialSetup() {
         for (bb in cfg.analysis(PreOrderFabric)) {
             for (inst in bb) {
                 if (inst is Phi) {
-                    usefull.markUseless(inst, bb)
+                    markUseless(inst)
                     continue
                 }
 
-                inst.operands { op ->
+                for (op in inst.operands()) {
                     if (op !is Phi) {
-                        return@operands
+                        continue
                     }
 
-                    val place = phiPlacesInfo[op]!!
-                    usefull.markUseful(op, place)
+                    markUseful(op)
                     worklist.add(op)
                 }
             }
@@ -51,34 +53,33 @@ class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
 
     private fun usefulnessPropagation() {
         while (worklist.isNotEmpty()) {
-            val phi = worklist.last()
-            worklist.removeLast()
+            val phi = worklist.removeLast()
 
-            phi.operands { op ->
+            for (op in phi.operands()) {
                 if (op !is Phi) {
-                    return@operands
+                    continue
                 }
-                val definedIn = phiPlacesInfo[op] ?: throw RuntimeException("cannon find op=${op}")
 
-                if (usefull.isUseful(op, definedIn)) {
-                    return@operands
+                if (isUseful(op)) {
+                    continue
                 }
-                usefull.markUseful(op, definedIn)
+
+                markUseful(op)
                 worklist.add(op)
             }
         }
     }
 
     private fun prunePhis() {
-        fun removePhi(phi: Phi, bb: Block) {
+        fun removePhi(phi: Phi) {
             assertion(phi.usedIn().fold(true) { acc, value -> acc && (value is Phi) }) {
                 "phi value is used in non phi instruction"
             }
 
-            bb.kill(phi, UndefValue)
+            phi.owner().kill(phi, UndefValue)
         }
 
-        usefull.forEachUseless { phi, bb -> removePhi(phi, bb) }
+        forEachUseless { phi -> removePhi(phi) }
     }
 
     private fun run() {
@@ -94,32 +95,6 @@ class PhiFunctionPruning private constructor(private val cfg: FunctionData) {
             }
 
             return module
-        }
-    }
-}
-
-private class UsefulnessMap {
-    private val usefull = hashMapOf<Pair<Phi, Block>, Boolean>()
-
-    fun markUseless(phi: Phi, bb: Block) {
-        usefull[Pair(phi, bb)] = false
-    }
-
-    fun markUseful(phi: Phi, bb: Block) {
-        usefull[Pair(phi, bb)] = true
-    }
-
-    fun isUseful(phi: Phi, bb: Block): Boolean {
-        return usefull[Pair(phi, bb)]!!
-    }
-
-    fun forEachUseless(closure: (Phi, Block) -> Unit) {
-        for ((pair, flag) in usefull) {
-            if (flag) {
-                continue
-            }
-
-            closure(pair.first, pair.second)
         }
     }
 }
