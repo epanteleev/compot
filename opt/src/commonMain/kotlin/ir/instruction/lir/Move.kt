@@ -8,6 +8,7 @@ import ir.instruction.InstBuilder
 import ir.instruction.Instruction
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
+import ir.types.PrimitiveType
 import ir.value.UsableValue
 
 
@@ -59,7 +60,19 @@ class Move private constructor(id: Identity, owner: Block, destination: Value, s
         }
 
         private fun isAppropriateType(toValue: UsableValue, fromValue: Value): Boolean {
-            return (toValue is Generate || toValue is GlobalValue) && toValue.type() == fromValue.type()
+            if (toValue !is Generate && toValue !is GlobalValue) {
+                return false
+            }
+            val toType = toValue.type()
+            if (toType !is PrimitiveType) {
+                return false
+            }
+            val fromType = fromValue.type()
+            if (fromType !is PrimitiveType) {
+                return false
+            }
+
+            return toType.sizeOf() >= fromType.sizeOf()
         }
     }
 }

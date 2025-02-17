@@ -10,41 +10,48 @@ import ir.instruction.matching.*
 import ir.pass.analysis.dominance.DominatorTree
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.pass.analysis.EscapeAnalysisPassFabric
+import ir.types.NonTrivialType
+import ir.types.Type
+import ir.types.asType
+import ir.value.constant.Constant
+import ir.value.constant.NonTrivialConstant
+import ir.value.constant.PrimitiveConstant
 import ir.value.constant.UndefValue
 
 
 sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree) {
-    protected fun rename(bb: Block, oldValue: Value): Value {
+    protected fun rename(bb: Block, resultType: Type, oldValue: Value): Value {
         val valueType = oldValue.type()
         if (valueType !is PrimitiveType) {
             return oldValue
         }
 
-        return tryRename(bb, oldValue)?: oldValue
+        return tryRename(bb, resultType, oldValue)?: oldValue
     }
 
-    fun tryRename(bb: Block, oldValue: Value): Value? {
+    fun tryRename(bb: Block, resultType: Type, oldValue: Value): Value? {
         if (oldValue !is LocalValue) {
             return oldValue
         }
 
-        val newValue = findActualValueOrNull(bb, oldValue)
+        val newValue = findActualValueOrNull(bb, resultType, oldValue)
             ?: return null
         return newValue
     }
 
-    protected fun findActualValue(bb: Label, value: Value): Value {
-        return findActualValueOrNull(bb, value) ?: let {
+    protected fun findActualValue(bb: Label, resultType: Type, value: Value): Value {
+        return findActualValueOrNull(bb, resultType, value) ?: let {
             println("Warning: use uninitialized value: bb=$bb, value=$value")//TODO remove it in future
             UndefValue
         }
     }
 
-    protected fun findActualValueOrNull(bb: Label, value: Value): Value? { //TODO Duplicate code
+    protected fun findActualValueOrNull(bb: Label, resultType: Type, value: Value): Value? { //TODO Duplicate code
         for (d in dominatorTree.dominators(bb)) {
-            val newV = valueMap()[d]!![value]
-            if (newV != null) {
-                return newV
+            val newV = valueMap()[d]!![value] ?: continue
+            return when (newV) {
+                is PrimitiveConstant -> newV.convertTo(resultType.asType())
+                else -> newV
             }
         }
 
@@ -79,7 +86,7 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
     // Rewrite phi instructions that was not inserted by mem2reg pass.
     private fun laterRewrite(phisToRewrite: MutableSet<Phi>) {
         for (phi in phisToRewrite) {
-            phi.owner().updateDF(phi) { bb, v -> rename(bb, v) }
+            phi.owner().updateDF(phi) { bb, v -> rename(bb, v.type(), v) }
         }
     }
 
@@ -95,8 +102,8 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
             }
 
             if (instruction.isa(store(alloc(primitive()), value(primitive()))) && escapeState.isNoEscape((instruction as Store).pointer())) {
-                val actual = findActualValueOrNull(bb, instruction.value())
-                val pointer = instruction.pointer()
+                val pointer = instruction.pointer() as Alloc
+                val actual = findActualValueOrNull(bb, pointer.allocatedType, instruction.value())
                 if (actual != null) {
                     valueMap[pointer] = actual
                 } else {
@@ -112,7 +119,7 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
             }
 
             if (instruction.isa(load(primitive(), alloc(primitive()))) && escapeState.isNoEscape((instruction as Load).operand())) {
-                val actual = findActualValue(bb, instruction.operand())
+                val actual = findActualValue(bb, instruction.type(), instruction.operand())
                 valueMap[instruction] = actual
                 continue
             }
@@ -130,7 +137,7 @@ class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val inser
                 continue
             }
 
-            bb.updateDF(instruction) { v -> rename(bb, v) }
+            bb.updateDF(instruction) { v -> rename(bb, v.type(), v) }
         }
     }
 

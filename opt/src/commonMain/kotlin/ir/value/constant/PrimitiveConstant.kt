@@ -27,7 +27,9 @@ sealed interface PrimitiveConstant: NonTrivialConstant {
             is IntegerType -> IntegerConstant.of(kind, value)
             is PtrType -> when (value.toLong()) {
                 0L -> NullValue
-                else -> throw IllegalArgumentException("Cannot create constant: kind=$kind, value=$value")
+                else -> {
+                    throw IllegalArgumentException("Cannot create constant: kind=$kind, value=$value")
+                }
             }
             is FloatingPointType -> FloatingPointConstant.of(kind, value)
             is UndefType -> UndefValue

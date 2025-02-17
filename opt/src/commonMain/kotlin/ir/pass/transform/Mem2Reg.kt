@@ -12,6 +12,7 @@ import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PostOrderFabric
 import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
+import ir.types.Type
 import ir.types.asType
 import ir.value.Value
 import ir.value.constant.UndefValue
@@ -51,12 +52,12 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
     }
 
     private fun completePhis(bbToMapValues: RewritePrimitives, insertedPhis: Set<Phi>) {
-        fun renameValues(block: Block, v: Value): Value {
-            return bbToMapValues.tryRename(block, v)?: UndefValue
+        fun renameValues(block: Block, type: Type, v: Value): Value {
+            return bbToMapValues.tryRename(block, type, v)?: UndefValue
         }
 
         for (phi in insertedPhis) {
-            phi.owner().updateDF(phi) { l, v -> renameValues(l, v) }
+            phi.owner().updateDF(phi) { l, v -> renameValues(l, phi.type(), v) }
         }
     }
 

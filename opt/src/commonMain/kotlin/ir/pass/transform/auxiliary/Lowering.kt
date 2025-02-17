@@ -45,11 +45,11 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return and
     }
 
-    override fun visit(sub: Sub): Instruction? {
+    override fun visit(sub: Sub): Instruction {
         return sub
     }
 
-    override fun visit(mul: Mul): Instruction? {
+    override fun visit(mul: Mul): Instruction {
         return mul
     }
 
@@ -57,7 +57,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return or
     }
 
-    override fun visit(xor: Xor): Instruction? {
+    override fun visit(xor: Xor): Instruction {
         return xor
     }
 
@@ -144,7 +144,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         return bitcast
     }
 
-    override fun visit(itofp: Int2Float): Instruction? {
+    override fun visit(itofp: Int2Float): Instruction {
         return itofp
     }
 
@@ -450,7 +450,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     private fun killOnDemand(instruction: LocalValue) {
         instruction as Instruction
         if (instruction.usedIn().isEmpty()) { //TODO Need DCE
-            instruction.owner().kill(instruction, UndefValue) // TODO bb may not contain pointer
+            instruction.owner().kill(instruction, UndefValue)
         }
     }
 
