@@ -54,7 +54,7 @@ interface InstructionFabric {
     fun fp2Int(value: Value, toType: IntegerType): Float2Int
     fun select(cond: Value, type: IntegerType, onTrue: Value, onFalse: Value): Select
     fun itupleCall(pointer: Value, func: IndirectFunctionPrototype, args: List<Value>, attributes: Set<FunctionAttribute>, target: Label): IndirectionTupleCall
-    fun phi(incoming: List<Value>, labels: List<Label>): Phi
+    fun phi(incoming: List<Value>, valueType: PrimitiveType, labels: List<Label>): Phi
     fun int2ptr(value: Value): Int2Pointer
     fun ptr2int(value: Value, toType: IntegerType): Pointer2Int
     fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant): Memcpy

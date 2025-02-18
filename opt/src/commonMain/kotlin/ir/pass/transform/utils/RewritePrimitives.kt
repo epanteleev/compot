@@ -56,7 +56,7 @@ sealed class AbstractRewritePrimitives(private val dominatorTree: DominatorTree)
     abstract fun valueMap(bb: Label, value: Value): Value?
 }
 
-internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, val insertedPhis: Set<Phi>, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
+internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
     private val escapeState = cfg.analysis(EscapeAnalysisPassFabric)
     private val bbToMapValues = setupValueMap()
 
@@ -120,15 +120,13 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
             }
 
             if (instruction is Phi) {
-                if (!insertedPhis.contains(instruction)) {
-                    // Phi instruction is not inserted by mem2reg pass.
-                    // Will rewrite it later.
-                    phisToRewrite.add(instruction)
-                    continue
-                }
-                // Note: all used values are equal in uncompleted phi instruction.
-                // Will take only first value.
-                valueMap[instruction.operand(0)] = instruction
+                // Will rewrite it later.
+                phisToRewrite.add(instruction)
+                continue
+            }
+
+            if (instruction is UncompletedPhi) {
+                valueMap[instruction.value()] = instruction
                 continue
             }
 
@@ -137,8 +135,8 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
     }
 
     companion object {
-        fun run(cfg: FunctionData, insertedPhis: Set<Phi>, dominatorTree: DominatorTree): RewritePrimitives {
-            val ana = RewritePrimitivesUtil(cfg, insertedPhis, dominatorTree)
+        fun run(cfg: FunctionData, dominatorTree: DominatorTree): RewritePrimitives {
+            val ana = RewritePrimitivesUtil(cfg, dominatorTree)
             return RewritePrimitives(ana.bbToMapValues, dominatorTree)
         }
     }

@@ -248,7 +248,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         ir.switchLabel(cont)
-        val argPtr = ir.phi(listOf(argInReg, argInMem), listOf(varArgInReg, varArgInStack))
+        val argPtr = ir.phi(listOf(argInReg, argInMem), PtrType, listOf(varArgInReg, varArgInStack))
         return ir.load(argType, argPtr)
     }
 
@@ -349,7 +349,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val falseBBCurrent = ir.currentLabel()
         ir.branch(end)
         ir.switchLabel(end)
-        return ir.phi(listOf(convertedRight, convertedLeft), listOf(trueBBCurrent, falseBBCurrent))
+        return ir.phi(listOf(convertedRight, convertedLeft), commonType, listOf(trueBBCurrent, falseBBCurrent))
     }
 
     private fun generateSelectPattern(conditional: Conditional, commonType: IntegerType): Value {
@@ -981,7 +981,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             ir.branch(end)
             ir.switchLabel(end)
-            ir.phi(listOf(I8Value.of(0), convertedRight), listOf(initialBB, current))
+            ir.phi(listOf(I8Value.of(0), convertedRight), I8Type, listOf(initialBB, current))
         }
         BinaryOpType.OR -> {
             val left = visitExpression(binOp.left, true)
@@ -999,7 +999,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             ir.branch(end)
             ir.switchLabel(end)
-            ir.phi(listOf(I8Value.of(1), convertedRight), listOf(initialBB, current))
+            ir.phi(listOf(I8Value.of(1), convertedRight), I8Type, listOf(initialBB, current))
         }
         BinaryOpType.SHR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::shr)
         BinaryOpType.SHL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::shl)

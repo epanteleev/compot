@@ -386,15 +386,11 @@ class FunctionDataBuilderWithContext private constructor(
     }
 
     fun phi(name: LocalValueToken, incomingTok: ArrayList<AnyValueToken>, labelsTok: ArrayList<Identifier>, expectedType: PrimitiveTypeToken): Value {
-        val blocks = arrayListOf<Block>()
-        for (tok in labelsTok) {
-            blocks.add(getBlockOrCreate(tok.string))
-        }
-
+        val blocks = arrayFrom(labelsTok) { it -> getBlockOrCreate(it.string) }
         val type = expectedType.asType<PrimitiveType>()
         val values = arrayFrom(incomingTok) { tok -> getConstant(tok, type) }
 
-        val phi = Phi.phi(blocks, values)
+        val phi = Phi.phi(blocks, type, values)
         val inst = memorize(name, phi)
         incompletePhis.add(PhiContext(inst, incomingTok, type))
         return inst

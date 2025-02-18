@@ -1,5 +1,7 @@
 package ir.pass.transform
 
+import common.arrayFrom
+import common.forEachWith
 import ir.pass.analysis.dominance.DominatorTree
 import ir.instruction.*
 import ir.module.FunctionData
@@ -38,12 +40,12 @@ object Mem2RegFabric: TransformPassFabric() {
 private class Mem2RegImpl(private val cfg: FunctionData) {
     private val joinSet = cfg.analysis(JoinPointSetPassFabric)
 
-    private fun insertPhis(): Set<Phi> {
-        val insertedPhis = hashSetOf<Phi>()
+    private fun insertPhis(): List<UncompletedPhi> {
+        val insertedPhis = arrayListOf<UncompletedPhi>()
         for ((bb, vSet) in joinSet) { bb as Block
             val blocks = bb.predecessors().mapTo(arrayListOf()) { it }
             for (v in vSet) {
-                val phi = bb.prepend(Phi.phiUncompleted(v.allocatedType.asType(), v, blocks))
+                val phi = bb.prepend(UncompletedPhi.phi(v.allocatedType.asType(), v, blocks))
                 insertedPhis.add(phi)
             }
         }
@@ -51,13 +53,24 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
         return insertedPhis
     }
 
-    private fun completePhis(bbToMapValues: RewritePrimitives, insertedPhis: Set<Phi>) {
+    private fun completePhis(bbToMapValues: RewritePrimitives, insertedPhis: List<UncompletedPhi>) {
         fun renameValues(block: Block, type: Type, v: Value): Value {
             return bbToMapValues.tryRename(block, type, v)?: UndefValue
         }
 
+        val completedPhis = arrayListOf<Phi>()
         for (phi in insertedPhis) {
-            phi.owner().updateDF(phi) { l, v -> renameValues(l, phi.type(), v) }
+            val values = arrayFrom(phi.incoming()) { l ->
+                renameValues(l, phi.type(), phi.value())
+            }
+
+            val newPhi = phi.owner().putBefore(phi, Phi.phi(phi.incoming().toTypedArray(), phi.type(), values))
+            completedPhis.add(newPhi)
+        }
+
+        completedPhis.forEachWith(insertedPhis) { phi, uncompletedPhi ->
+            uncompletedPhi.owner().updateUsages(uncompletedPhi) { phi }
+            uncompletedPhi.owner().kill(uncompletedPhi, UndefValue)
         }
     }
 
@@ -82,7 +95,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
 
     fun pass(dominatorTree: DominatorTree) {
         val insertedPhis = insertPhis()
-        val bbToMapValues = RewritePrimitivesUtil.run(cfg, insertedPhis, dominatorTree)
+        val bbToMapValues = RewritePrimitivesUtil.run(cfg, dominatorTree)
 
         if (insertedPhis.isEmpty()) {
             // No phis were inserted, so no need to make steps further

@@ -165,6 +165,7 @@ class FibonacciTest {
         val builder = CompileContextBuilder("fib")
             .setSuffix(".base")
 
+        println(module)
         val optimized = PassPipeline.opt(builder.construct()).run(module)
 
         val cfg = optimized.findFunction("fib")
