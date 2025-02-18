@@ -4,6 +4,7 @@ import common.arrayFrom
 import common.assertion
 import common.forEachWith
 import common.intMapOf
+import common.toTypedArray
 import ir.attributes.FunctionAttribute
 import ir.global.GlobalSymbol
 import ir.instruction.*
@@ -356,7 +357,7 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     }
 
     override fun visit(returnValue: ReturnValue): InstBuilder<Instruction> {
-        val value = arrayFrom(mapOperands(returnValue))
+        val value = mapOperands(returnValue).toTypedArray()
         return ReturnValue.ret(returnValue.type(), value)
     }
 

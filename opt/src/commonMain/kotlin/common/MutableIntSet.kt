@@ -92,7 +92,7 @@ class MutableIntSet<E>(private val bitmask: BooleanArray, val values: Array<E?>,
 }
 
 inline fun <reified E> mutableIntSetOf(values: Collection<E>, noinline closure: (E) -> Int): Set<E> {
-    val array = arrayFrom(values)
+    val array = values.toTypedArray()
     val boolArray = BooleanArray(values.size)
     for (v in array) {
         boolArray[closure(v)] = true

@@ -61,12 +61,11 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
     private val bbToMapValues = setupValueMap()
 
     init {
-        val phisToRewrite = hashSetOf<Phi>()
         for (bb in cfg.analysis(PreOrderFabric)) {
-            rewriteValuesSetup(bb, phisToRewrite)
+            rewriteValuesSetup(bb)
         }
 
-        laterRewrite(phisToRewrite)
+        rewritePhis()
     }
 
     private fun setupValueMap(): MutableMap<Block, MutableMap<Value, Value>> {
@@ -79,9 +78,9 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
     }
 
     // Rewrite phi instructions that was not inserted by mem2reg pass.
-    private fun laterRewrite(phisToRewrite: MutableSet<Phi>) {
-        for (phi in phisToRewrite) {
-            phi.owner().updateDF(phi) { bb, v -> rename(bb, v.type(), v) }
+    private fun rewritePhis() {
+        for (bb in cfg) {
+            bb.phis { phi -> phi.owner().updateDF(phi) { bb, v -> rename(bb, v.type(), v) } }
         }
     }
 
@@ -89,48 +88,41 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
         return bbToMapValues[bb]!![value]
     }
 
-    private fun rewriteValuesSetup(bb: Block, phisToRewrite: MutableSet<Phi>) {
+    private fun rewriteValuesSetup(bb: Block) {
         val valueMap = bbToMapValues[bb]!!
-        for (instruction in bb) {
-            if (instruction.isNoOperands()) {
+        for (inst in bb) {
+            if (inst.isNoOperands()) {
                 continue
             }
 
-            if (instruction.isa(store(alloc(primitive()), value(primitive()))) && escapeState.isNoEscape((instruction as Store).pointer())) {
-                val pointer = instruction.pointer() as Alloc
-                val actual = findActualValueOrNull(bb, pointer.allocatedType, instruction.value())
-                if (actual != null) {
-                    valueMap[pointer] = actual
-                } else {
-                    valueMap[pointer] = instruction.value()
-                }
-
+            if (inst.isa(store(alloc(primitive()), value(primitive()))) && escapeState.isNoEscape((inst as Store).pointer())) {
+                val pointer = inst.pointer() as Alloc
+                val actual = findActualValueOrNull(bb, pointer.allocatedType, inst.value()) ?: inst.value()
+                valueMap[pointer] = actual
                 continue
             }
 
-            if (instruction.isa(alloc(primitive())) && escapeState.isNoEscape(instruction as Alloc)) {
-                valueMap[instruction] = UndefValue
+            if (inst.isa(alloc(primitive())) && escapeState.isNoEscape(inst as Alloc)) {
+                valueMap[inst] = UndefValue
                 continue
             }
 
-            if (instruction.isa(load(primitive(), alloc(primitive()))) && escapeState.isNoEscape((instruction as Load).operand())) {
-                val actual = findActualValue(bb, instruction.type(), instruction.operand())
-                valueMap[instruction] = actual
+            if (inst.isa(load(primitive(), alloc(primitive()))) && escapeState.isNoEscape((inst as Load).operand())) {
+                valueMap[inst] = findActualValue(bb, inst.type(), inst.operand())
                 continue
             }
 
-            if (instruction is Phi) {
+            if (inst is Phi) {
                 // Will rewrite it later.
-                phisToRewrite.add(instruction)
                 continue
             }
 
-            if (instruction is UncompletedPhi) {
-                valueMap[instruction.value()] = instruction
+            if (inst is UncompletedPhi) {
+                valueMap[inst.value()] = inst
                 continue
             }
 
-            bb.updateDF(instruction) { v -> rename(bb, v.type(), v) }
+            bb.updateDF(inst) { v -> rename(bb, v.type(), v) }
         }
     }
 
@@ -143,17 +135,5 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
 }
 
 internal class RewritePrimitives internal constructor(private val info: Map<Block, Map<Value, Value>>, dominatorTree: DominatorTree): AbstractRewritePrimitives(dominatorTree) {
-    override fun toString(): String {
-        val builder = StringBuilder()
-        for ((bb, valueMap) in info) {
-            builder.append("----- bb=$bb -----\n")
-            for ((from, to) in valueMap) {
-                builder.append("$from -> $to\n")
-            }
-        }
-
-        return builder.toString()
-    }
-
     override fun valueMap(bb: Label, value: Value): Value? = info[bb]!![value]
 }

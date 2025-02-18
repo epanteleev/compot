@@ -1,13 +1,13 @@
 package ir.instruction
 
+import common.arrayWrapperOf
 import ir.types.*
-import ir.value.Value
+import ir.value.asValue
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
-import ir.value.asValue
 
 
-class UncompletedPhi private constructor(id: Identity, owner: Block, private val ty: PrimitiveType, private var incoming: MutableList<Block>, incomingValue: Alloc):
+class UncompletedPhi private constructor(id: Identity, owner: Block, private val ty: PrimitiveType, private val incoming: Array<Block>, incomingValue: Alloc):
     ValueInstruction(id, owner, arrayOf(incomingValue)) {
     override fun dump(): String = buildString {
         append("%${name()} = $NAME $ty [${value()}] [")
@@ -22,7 +22,7 @@ class UncompletedPhi private constructor(id: Identity, owner: Block, private val
 
     override fun type(): PrimitiveType = ty
 
-    fun incoming(): List<Block> = incoming
+    fun incoming(): List<Block> = arrayWrapperOf(incoming)
 
     fun value(): Alloc = operand(0).asValue()
 
@@ -33,11 +33,11 @@ class UncompletedPhi private constructor(id: Identity, owner: Block, private val
     companion object {
         const val NAME = "uncompleted-phi"
 
-        fun phi(type: PrimitiveType, incoming: Alloc, predecessors: MutableList<Block>): InstBuilder<UncompletedPhi> = {
-            id: Identity, owner: Block -> makeUncompleted(id, owner, type, incoming, predecessors)
+        fun phi(type: PrimitiveType, incoming: Alloc, predecessors: Array<Block>): InstBuilder<UncompletedPhi> = {
+            id: Identity, owner: Block -> make(id, owner, type, incoming, predecessors)
         }
 
-        private fun makeUncompleted(id: Identity, owner: Block, type: PrimitiveType, incoming: Alloc, predecessors: MutableList<Block>): UncompletedPhi {
+        private fun make(id: Identity, owner: Block, type: PrimitiveType, incoming: Alloc, predecessors: Array<Block>): UncompletedPhi {
             return registerUser(UncompletedPhi(id, owner, type, predecessors, incoming), incoming)
         }
     }

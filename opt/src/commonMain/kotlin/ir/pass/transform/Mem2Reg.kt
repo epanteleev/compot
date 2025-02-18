@@ -43,7 +43,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
     private fun insertPhis(): List<UncompletedPhi> {
         val insertedPhis = arrayListOf<UncompletedPhi>()
         for ((bb, vSet) in joinSet) { bb as Block
-            val blocks = bb.predecessors().mapTo(arrayListOf()) { it }
+            val blocks = bb.predecessors().toTypedArray()
             for (v in vSet) {
                 val phi = bb.prepend(UncompletedPhi.phi(v.allocatedType.asType(), v, blocks))
                 insertedPhis.add(phi)
@@ -53,13 +53,13 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
         return insertedPhis
     }
 
-    private fun completePhis(bbToMapValues: RewritePrimitives, insertedPhis: List<UncompletedPhi>) {
+    private fun completePhis(bbToMapValues: RewritePrimitives, uncompletedPhis: List<UncompletedPhi>) {
         fun renameValues(block: Block, type: Type, v: Value): Value {
             return bbToMapValues.tryRename(block, type, v)?: UndefValue
         }
 
         val completedPhis = arrayListOf<Phi>()
-        for (phi in insertedPhis) {
+        for (phi in uncompletedPhis) {
             val values = arrayFrom(phi.incoming()) { l ->
                 renameValues(l, phi.type(), phi.value())
             }
@@ -68,7 +68,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
             completedPhis.add(newPhi)
         }
 
-        completedPhis.forEachWith(insertedPhis) { phi, uncompletedPhi ->
+        completedPhis.forEachWith(uncompletedPhis) { phi, uncompletedPhi ->
             uncompletedPhi.owner().updateUsages(uncompletedPhi) { phi }
             uncompletedPhi.owner().kill(uncompletedPhi, UndefValue)
         }
@@ -94,15 +94,15 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
     }
 
     fun pass(dominatorTree: DominatorTree) {
-        val insertedPhis = insertPhis()
+        val uncompletedPhis = insertPhis()
         val bbToMapValues = RewritePrimitivesUtil.run(cfg, dominatorTree)
 
-        if (insertedPhis.isEmpty()) {
+        if (uncompletedPhis.isEmpty()) {
             // No phis were inserted, so no need to make steps further
             return
         }
 
-        completePhis(bbToMapValues, insertedPhis)
+        completePhis(bbToMapValues, uncompletedPhis)
 
         for (bb in cfg.analysis(PostOrderFabric)) {
             removeRedundantPhis(bb)
