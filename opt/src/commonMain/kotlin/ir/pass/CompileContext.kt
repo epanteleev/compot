@@ -5,7 +5,7 @@ import okio.Path.Companion.toPath
 
 
 class CompileContext(private val filename: String, private val suffix: String, private val outputDir: String?) {
-    fun log(passName: String, message: () -> String) {
+    fun dumpIr(passName: String, message: () -> String) {
         if (outputDir == null) {
             return
         }

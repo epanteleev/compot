@@ -2,6 +2,7 @@ package startup
 
 import common.Extension
 import common.ProcessedFile
+import logging.CommonLogger
 
 
 class ShlangArguments {
@@ -82,6 +83,10 @@ class ShlangArguments {
     }
 
     fun getDynamicLibraries(): Set<String> = dynamicLibraries
+
+    fun logger(): CommonLogger {
+        return CommonLogger(arrayOf())
+    }
 
     companion object {
         val DEFAULT_OUTPUT = ProcessedFile.create("a", Extension.EXE)

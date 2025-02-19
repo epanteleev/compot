@@ -12,13 +12,13 @@ import ir.pass.transform.SwitchReplacementFabric
 class PassPipeline private constructor(private val passFabrics: List<TransformPassFabric>, private val ctx: CompileContext) {
     fun run(start: Module): Module {
         var current = start
-        ctx.log("initial") { current.toString() }
+        ctx.dumpIr("initial") { current.toString() }
         for (fabric in passFabrics) {
             try {
                 val pass = fabric.create(current)
                 current = pass.run()
                 VerifySSA.run(current)
-                ctx.log(pass.name()) { current.toString() }
+                ctx.dumpIr(pass.name()) { current.toString() }
             } catch (ex: Throwable) {
                 println(current.toString())
                 throw ex
