@@ -36,8 +36,9 @@ class BasicBlocks private constructor(): LabelResolver, Iterable<Block> {
     internal fun end(): Block {
         val endBlock = basicBlocks.last()
         assertion(endBlock.lastOrNull() is Return) {
-            "Last instruction should be return, but got '${endBlock.last()}'"
+            "Last instruction should be return, but got '${endBlock.lastOrNull()}'"
         }
+
         return endBlock
     }
 

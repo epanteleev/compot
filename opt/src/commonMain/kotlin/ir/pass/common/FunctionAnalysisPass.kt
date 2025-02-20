@@ -23,7 +23,6 @@ enum class AnalysisType {
     LIVE_RANGE,
     ESCAPE_ANALYSIS,
     ALLOC_STORE_INFO,
-    INTERFERENCE_GRAPH,
     JOIN_POINT_SET,
     LINEAR_SCAN_ORDER,
     LIVE_INTERVALS,
@@ -34,8 +33,6 @@ enum class AnalysisType {
     LINEAR_SCAN;
 
     companion object {
-        fun size(): Int {
-            return entries.size
-        }
+        fun size(): Int = entries.size
     }
 }

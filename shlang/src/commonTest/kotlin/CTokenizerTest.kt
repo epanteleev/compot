@@ -235,4 +235,12 @@ class CTokenizerTest {
         assertEquals(-17, literal.code())
         tokens[0].isEqual(1, 1, "'ï'")
     }
+
+    @Test
+    fun testStringLiteralWithEscapeChar() {
+        val input = "\"\\46ELF\""
+        val tokens = CTokenizer.apply(input).toCTokenList()
+        assertTrue { tokens[0] is StringLiteral }
+        tokens[0].isEqual(1, 1, "\"&ELF\"")
+    }
 }

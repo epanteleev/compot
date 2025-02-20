@@ -10,17 +10,15 @@ import ir.instruction.utils.IRInstructionVisitor
 
 class Phi private constructor(id: Identity, owner: Block, private val ty: PrimitiveType, private var incoming: Array<Block>, incomingValue: Array<Value>):
     ValueInstruction(id, owner, incomingValue) {
-    override fun dump(): String {
-        val builder = StringBuilder()
-        builder.append("%${name()} = phi $ty [")
+    override fun dump(): String = buildString {
+        append("%${name()} = phi $ty [")
         zipWithIndex { value, bb, idx ->
-            builder.append("$bb: $value")
+            append("$bb: $value")
             if (idx != incoming.size - 1) {
-                builder.append(", ")
+                append(", ")
             }
         }
-        builder.append(']')
-        return builder.toString()
+        append(']')
     }
 
     override fun type(): PrimitiveType = ty

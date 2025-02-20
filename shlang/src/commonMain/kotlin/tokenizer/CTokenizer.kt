@@ -85,7 +85,12 @@ class CTokenizer private constructor(private val filename: String, private val r
                     eatHexChar(builder)
                     continue
                 }
-                throw IllegalStateException("Unknown escape sequence in line $line")
+                var octal = 0
+                while (reader.isOctal()) {
+                    octal = octal * 8 + eat().digitToInt()
+                }
+
+                builder.append(octal.toChar())
             }
 
             builder.append(eat())
