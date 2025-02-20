@@ -8,19 +8,22 @@ import ir.module.block.Block
 
 internal class SplitCriticalEdge private constructor(private val functionData: FunctionData) {
     fun pass() {
-        val criticalEdgeBetween = hashMapOf<Block, Block>()
+        val criticalEdgeBetween = hashMapOf<Block, MutableList<Block>>()
         for (bb in functionData) {
             for (p in bb.predecessors()) {
                 if (!bb.hasCriticalEdgeFrom(p)) {
                     continue
                 }
 
-                criticalEdgeBetween[p] = bb
+                val successors = criticalEdgeBetween.getOrPut(p) { arrayListOf() }
+                successors.add(bb)
             }
         }
 
-        for ((p, bb) in criticalEdgeBetween) {
-            insertBasicBlock(bb, p)
+        for ((p, bbs) in criticalEdgeBetween) {
+            for (b in bbs) {
+                insertBasicBlock(b, p)
+            }
         }
     }
 

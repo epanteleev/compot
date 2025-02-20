@@ -74,6 +74,10 @@ value class Imm64 private constructor(val value: Long) : ImmInt {
     }
 
     companion object {
+        fun of(value: Int): Imm64 {
+            return Imm64(value.toLong())
+        }
+
         fun of(value: Long): Imm64 {
             return Imm64(value)
         }

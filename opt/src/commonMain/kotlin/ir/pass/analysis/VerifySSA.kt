@@ -599,6 +599,11 @@ class VerifySSA private constructor(private val functionData: FunctionData,
         assert(Switch.typeCheck(switch)) {
             "Instruction '${switch.dump()}' has inconsistent types."
         }
+
+        val targets = switch.jumps()
+        assert(targets.size == switch.table().size) {
+            "Inconsistent switch instruction: targets=${targets.size}, values=${switch.table().size}"
+        }
     }
 
     override fun visit(tupleCall: IndirectionTupleCall) {

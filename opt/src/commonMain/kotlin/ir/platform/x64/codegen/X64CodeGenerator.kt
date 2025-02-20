@@ -11,6 +11,7 @@ import ir.instruction.Not
 import ir.instruction.Call
 import asm.x64.GPRegister.*
 import common.assertion
+import common.forEachWith
 import ir.Definitions
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
@@ -353,7 +354,12 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(switch: Switch) {
-        TODO("Not yet implemented")
+        val type = switch.value().asType<IntegerType>()
+        switch.jumps().forEachWith(switch.table()) { target, value ->
+            IntCmpCodegen(type, asm)(registerAllocation.operand(switch.value()), Imm64.of(value.toInt()))
+            asm.jcc(CondType.JE, makeLabel(target))
+        }
+        asm.jump(makeLabel(switch.default()))
     }
 
     override fun visit(tupleCall: IndirectionTupleCall) {

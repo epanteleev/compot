@@ -1,5 +1,6 @@
 package ir.instruction
 
+import common.arrayWrapperOf
 import common.assertion
 import common.forEachWith
 import ir.value.Value
@@ -11,7 +12,7 @@ import ir.value.constant.IntegerConstant
 
 class Switch private constructor(id: Identity, owner: Block,
                                  value: Value,
-                                 private val default: Block,
+                                 default: Block,
                                  private val table: Array<IntegerConstant>,
                                  targets: Array<Block>):
     TerminateInstruction(id, owner, arrayOf(value), targets + arrayOf(default)) {
@@ -22,11 +23,11 @@ class Switch private constructor(id: Identity, owner: Block,
             .append(' ')
             .append(value().toString())
             .append(", label ")
-            .append(default)
+            .append(default())
 
         builder.append(" [")
         table.forEachWith(targets) { value, bb, i ->
-            if (bb == default) {
+            if (bb == default()) {
                 return@forEachWith
             }
 
@@ -47,7 +48,10 @@ class Switch private constructor(id: Identity, owner: Block,
         return operands[0]
     }
 
-    fun default(): Block = default
+    fun jumps(): List<Block> = targets.toList().take(table.size) //TODO
+
+    fun default(): Block = targets.last()
+
     fun table(): Array<IntegerConstant> = table
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
