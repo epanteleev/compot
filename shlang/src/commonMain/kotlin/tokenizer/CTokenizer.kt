@@ -464,9 +464,5 @@ class CTokenizer private constructor(private val filename: String, private val r
         fun apply(data: String, filename: String): TokenList {
             return CTokenizer(filename, StringReader(data)).doTokenize()
         }
-
-        fun apply(data: String): TokenList {
-            return CTokenizer("<no-name>", StringReader(data)).doTokenize()
-        }
     }
 }

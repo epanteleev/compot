@@ -4,6 +4,7 @@ import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.nodes.*
 import tokenizer.CTokenizer
+import tokenizer.TokenList
 import typedesc.StorageClass
 import typedesc.TypeHolder
 import kotlin.test.Test
@@ -12,9 +13,13 @@ import kotlin.test.assertTrue
 
 
 class TypeResolutionTest {
+    private fun apply(input: String): TokenList {
+        return CTokenizer.apply(input, "<test-data>")
+    }
+    
     @Test
     fun testInt1() {
-        val tokens = CTokenizer.apply("2 + 3")
+        val tokens = apply("2 + 3")
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.assignment_expression() as Expression
@@ -25,7 +30,7 @@ class TypeResolutionTest {
 
     @Test
     fun testFloat1() {
-        val tokens = CTokenizer.apply("2.0 + 3.0")
+        val tokens = apply("2.0 + 3.0")
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.assignment_expression() as Expression
@@ -36,7 +41,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDeclarationSpecifiers1() {
-        val tokens = CTokenizer.apply("volatile int restrict")
+        val tokens = apply("volatile int restrict")
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
@@ -46,7 +51,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDeclarationSpecifiers2() {
-        val tokens = CTokenizer.apply("volatile float restrict")
+        val tokens = apply("volatile float restrict")
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
@@ -56,7 +61,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDeclarationSpecifiers3() {
-        val tokens = CTokenizer.apply("volatile struct point")
+        val tokens = apply("volatile struct point")
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
@@ -66,7 +71,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDecl() {
-        val tokens = CTokenizer.apply("int a = 3 + 6;")
+        val tokens = apply("int a = 3 + 6;")
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration() as Declaration
@@ -78,7 +83,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDecl2() {
-        val tokens = CTokenizer.apply("int a = 3 + 6, v = 90;")
+        val tokens = apply("int a = 3 + 6, v = 90;")
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration() as Declaration
@@ -91,7 +96,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDecl3() {
-        val tokens = CTokenizer.apply("int a = 3 + 6, v = 90, *p = &v;")
+        val tokens = apply("int a = 3 + 6, v = 90, *p = &v;")
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration() as Declaration
@@ -109,7 +114,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDecl4() {
-        val tokens = CTokenizer.apply("struct point* a = 0;")
+        val tokens = apply("struct point* a = 0;")
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration() as Declaration
@@ -121,7 +126,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDecl5() {
-        val tokens = CTokenizer.apply("struct point* a = 0, *b = 0;")
+        val tokens = apply("struct point* a = 0, *b = 0;")
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration() as Declaration
@@ -136,7 +141,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDecl6() {
-        val tokens = CTokenizer.apply("int add(int a, int b) { return a + b; }")
+        val tokens = apply("int add(int a, int b) { return a + b; }")
         val parser = CProgramParser.build(tokens)
         val expr = parser.function_definition() as FunctionNode
         val typeResolver = TypeHolder.default()
@@ -149,7 +154,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDecl7() {
-        val tokens = CTokenizer.apply("int add(void) { }")
+        val tokens = apply("int add(void) { }")
         val parser = CProgramParser.build(tokens)
         val expr = parser.function_definition() as FunctionNode
         val typeResolver = TypeHolder.default()
@@ -160,7 +165,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDecl8() {
-        val tokens = CTokenizer.apply("int add(int (a)(int, int), int b) { }")
+        val tokens = apply("int add(int (a)(int, int), int b) { }")
         val parser = CProgramParser.build(tokens)
         val expr = parser.function_definition() as FunctionNode
         val typeResolver = TypeHolder.default()
@@ -173,7 +178,7 @@ class TypeResolutionTest {
 
     @Test
     fun testDecl9() {
-        val tokens = CTokenizer.apply("int printf(const char* format, ...) { }")
+        val tokens = apply("int printf(const char* format, ...) { }")
         val parser = CProgramParser.build(tokens)
         val expr = parser.function_definition() as FunctionNode
         val typeResolver = TypeHolder.default()
@@ -184,7 +189,7 @@ class TypeResolutionTest {
 
     @Test
     fun testFunctionPointerDeclaration() {
-        val tokens = CTokenizer.apply("int (*add)(int, int) = 0;")
+        val tokens = apply("int (*add)(int, int) = 0;")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = TypeHolder.default()
@@ -195,7 +200,7 @@ class TypeResolutionTest {
 
     @Test
     fun testFunctionPointerDeclaration1() {
-        val tokens = CTokenizer.apply("int (*add)(int, int);")
+        val tokens = apply("int (*add)(int, int);")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = TypeHolder.default()
@@ -206,7 +211,7 @@ class TypeResolutionTest {
 
     @Test
     fun testFunctionPointerDeclaration2() {
-        val tokens = CTokenizer.apply("int (*add)(void) = 0, val = 999, *v = 0;")
+        val tokens = apply("int (*add)(void) = 0, val = 999, *v = 0;")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = TypeHolder.default()
@@ -219,7 +224,7 @@ class TypeResolutionTest {
 
     @Test
     fun testFunctionDeclarator() {
-        val tokens = CTokenizer.apply("int b(int b), n(float f);")
+        val tokens = apply("int b(int b), n(float f);")
         val parser = CProgramParser.build(tokens)
         parser.translation_unit()
         val typeResolver = parser.typeHolder()
@@ -230,7 +235,7 @@ class TypeResolutionTest {
 
     @Test
     fun testStructDeclaration() {
-        val tokens = CTokenizer.apply("struct point { int x; int y; };")
+        val tokens = apply("struct point { int x; int y; };")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
 
@@ -242,7 +247,7 @@ class TypeResolutionTest {
 
     @Test
     fun testStructDeclaration1() {
-        val tokens = CTokenizer.apply("struct point;")
+        val tokens = apply("struct point;")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = parser.typeHolder()
@@ -252,7 +257,7 @@ class TypeResolutionTest {
 
     @Test
     fun testArrayDeclaration() {
-        val tokens = CTokenizer.apply("int a[10];")
+        val tokens = apply("int a[10];")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
 
@@ -265,7 +270,7 @@ class TypeResolutionTest {
 
     @Test
     fun testArrayDeclaration1() {
-        val tokens = CTokenizer.apply("int a[5 + 5];")
+        val tokens = apply("int a[5 + 5];")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
 
@@ -278,7 +283,7 @@ class TypeResolutionTest {
 
     @Test
     fun testArrayDeclaration2() {
-        val tokens = CTokenizer.apply("int a[10], b[20];")
+        val tokens = apply("int a[10], b[20];")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
 
@@ -293,7 +298,7 @@ class TypeResolutionTest {
 
     @Test
     fun testArrayDeclaration3() {
-        val tokens = CTokenizer.apply("int a[10], b[20], *c = 0;")
+        val tokens = apply("int a[10], b[20], *c = 0;")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
 
@@ -310,7 +315,7 @@ class TypeResolutionTest {
 
     @Test
     fun testArrayDeclaration4() {
-        val tokens = CTokenizer.apply("int a[10][30];")
+        val tokens = apply("int a[10][30];")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
 
@@ -323,7 +328,7 @@ class TypeResolutionTest {
 
     @Test
     fun testConstString() {
-        val tokens = CTokenizer.apply("const char* a = \"hello\";")
+        val tokens = apply("const char* a = \"hello\";")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = TypeHolder.default()
@@ -335,7 +340,7 @@ class TypeResolutionTest {
 
     @Test
     fun testUnsignedInt() {
-        val tokens = CTokenizer.apply("unsigned int a = 10;")
+        val tokens = apply("unsigned int a = 10;")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = parser.typeHolder()
@@ -356,7 +361,7 @@ class TypeResolutionTest {
           };
           TNODE s, *sp;
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         val program = parser.translation_unit()
@@ -374,7 +379,7 @@ class TypeResolutionTest {
           typedef int A[2][3];
           const A a = {{4, 5, 6}, {7, 8, 9}};
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         val program = parser.translation_unit()
@@ -388,7 +393,7 @@ class TypeResolutionTest {
           typedef struct s1 { int x; } t1, *tp1;
           typedef struct s2 { int x; } t2, *tp2;
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         val program = parser.translation_unit()
@@ -412,7 +417,7 @@ class TypeResolutionTest {
             |};
             |union B b;
         """.trimMargin()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -437,7 +442,7 @@ class TypeResolutionTest {
             |};
             |struct A a;
         """.trimMargin()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -465,7 +470,7 @@ class TypeResolutionTest {
             |    int m;
             |} c;
         """.trimMargin()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -483,7 +488,7 @@ class TypeResolutionTest {
         val input = """
           int a[] = {1, 2, 3};
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -496,7 +501,7 @@ class TypeResolutionTest {
         val input = """
           int a[][3] = {{1, 2, 3}, {4, 5, 6}};
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -509,7 +514,7 @@ class TypeResolutionTest {
         val input = """
           int a[2][3] = {{1, 2, 3}, {4, 5, 6}};
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -524,7 +529,7 @@ class TypeResolutionTest {
             
             Point a[] = {{1, 2}, {3, 4}};
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -539,7 +544,7 @@ class TypeResolutionTest {
             
             Vect3 a[] = {{{1, 2, 3}}, {{4, 5, 6}}, {{7, 8, 9}}, {{10, 11, 12}}};
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -552,7 +557,7 @@ class TypeResolutionTest {
         val input = """
           int a[] = {1, 2, 3};
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -567,7 +572,7 @@ class TypeResolutionTest {
             
             Array arr;
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -580,7 +585,7 @@ class TypeResolutionTest {
         val input = """
             typedef unsigned long A;
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -593,7 +598,7 @@ class TypeResolutionTest {
         val input = """
             static int a = 10;
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -606,7 +611,7 @@ class TypeResolutionTest {
         val input = """
             extern int a;
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -619,7 +624,7 @@ class TypeResolutionTest {
         val input = """
             extern int a = 10, b = 20;
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -632,7 +637,7 @@ class TypeResolutionTest {
         val input = """
             static int a = 10, *b;
         """.trimIndent()
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
@@ -648,7 +653,7 @@ class TypeResolutionTest {
             static char* table[][2] = {{ ptr0, ptr }};
         """.trimIndent()
 
-        val tokens = CTokenizer.apply(input)
+        val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()

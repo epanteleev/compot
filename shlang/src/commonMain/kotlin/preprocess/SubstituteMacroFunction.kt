@@ -22,9 +22,9 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
         return res
     }
 
-    private fun concatTokens(current: CToken) {
+    private fun concatTokens(where: Position, current: CToken) {
         val value = argToValue[current] ?: tokenListOf(current.cloneWith(current.position()))
-        val preprocessed = CProgramPreprocessor.create(value, ctx).preprocess()
+        val preprocessed = CProgramPreprocessor.create(where.filename(), value, ctx).preprocess()
 
         val arg1 = result.findLast { it is CToken }
         if (arg1 == null) {
@@ -39,7 +39,7 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
         }
 
         val str = preprocessed.joinToString("", prefix = str1) { it.str() }
-        val tokens = CTokenizer.apply(str)
+        val tokens = CTokenizer.apply(str, where.filename())
         result.addAll(tokens)
         eat()
     }
@@ -83,7 +83,7 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
             if (check("##")) {
                 eat()
                 eatSpace()
-                concatTokens(peak())
+                concatTokens(macrosNamePos, peak())
                 continue
             }
 

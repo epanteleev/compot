@@ -25,7 +25,7 @@ object ShlangDriverTag: LogTag("shlang-driver")
 class ShlangDriver(private val cli: ShlangArguments) {
     private fun definedMacros(ctx: PreprocessorContext) {
         for ((name, value) in cli.getDefines()) {
-            val tokens      = CTokenizer.apply(value)
+            val tokens      = CTokenizer.apply(value, "<input>")
             val replacement = MacroReplacement(name, tokens)
             ctx.define(replacement)
         }

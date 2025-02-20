@@ -361,6 +361,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                 }
                 killWithSpaces()
                 val args = parseMacroFunctionArguments()
+
                 val preprocessedArgs = args.map { create(filename, it, ctx).preprocess() } //TODO remove this
 
                 return SubstituteMacroFunction(macros, ctx, preprocessedArgs)
@@ -420,10 +421,6 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
     companion object {
         fun create(filename: String, tokens: TokenList, ctx: PreprocessorContext): CProgramPreprocessor {
             return CProgramPreprocessor(filename, tokens, ctx)
-        }
-
-        fun create(tokens: TokenList, ctx: PreprocessorContext): CProgramPreprocessor {
-            return CProgramPreprocessor("no-name", tokens, ctx)
         }
 
         private fun preprocessHeader(header: Header, line: Int, ctx: PreprocessorContext): TokenList {

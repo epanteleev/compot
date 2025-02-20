@@ -19,6 +19,10 @@ class CTokenizerTest {
         return result
     }
 
+    private fun apply(input: String): TokenList {
+        return CTokenizer.apply(input, "<test-data>")
+    }
+
     private fun AnyToken.isEqual(l: Int, p: Int, string: String) {
         this as CToken
         assertEquals(l, line())
@@ -28,7 +32,7 @@ class CTokenizerTest {
 
     @Test
     fun test0() {
-        val tokens = CTokenizer.apply("4566,").toCTokenList()
+        val tokens = apply("4566,").toCTokenList()
 
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "4566")
@@ -37,7 +41,7 @@ class CTokenizerTest {
 
     @Test
     fun test1() {
-        val tokens = CTokenizer.apply("\"sdfsdf\" \"   \"").toCTokenList()
+        val tokens = apply("\"sdfsdf\" \"   \"").toCTokenList()
 
         assertTrue { tokens[0] is StringLiteral }
         assertEquals("\"sdfsdf\"", tokens[0].str())
@@ -45,7 +49,7 @@ class CTokenizerTest {
 
     @Test
     fun test2() {
-        val tokens = CTokenizer.apply("4.7 /* comment */ 6").toCTokenList()
+        val tokens = apply("4.7 /* comment */ 6").toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "4.7")
 
@@ -55,20 +59,20 @@ class CTokenizerTest {
 
     @Test
     fun test3() {
-        val tokens = CTokenizer.apply("+++").toCTokenList()
+        val tokens = apply("+++").toCTokenList()
         tokens[0].isEqual(1, 1, "++")
         tokens[1].isEqual(1, 3, "+")
     }
 
     @Test
     fun test4() {
-        val tokens = CTokenizer.apply("2L").toCTokenList()
+        val tokens = apply("2L").toCTokenList()
         tokens[0].isEqual(1, 1, "2L")
     }
 
     @Test
     fun test5() {
-        val tokens = CTokenizer.apply("int x = -1; // comment").toCTokenList()
+        val tokens = apply("int x = -1; // comment").toCTokenList()
         assertEquals(6, tokens.size)
         tokens[0].isEqual(1, 1, "int")
         tokens[1].isEqual(1, 5, "x")
@@ -84,7 +88,7 @@ class CTokenizerTest {
             4.7 /* comment
             test */ 6
         """.trimIndent()
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "4.7")
 
@@ -95,7 +99,7 @@ class CTokenizerTest {
     @Test
     fun test7() {
         val input = "0x88"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0x88") //TODO print hex??
     }
@@ -103,14 +107,14 @@ class CTokenizerTest {
     @Test
     fun test8() {
         val input = "# define UINT_LEAST64_MAX\t(__UINT64_C(18446744073709551615))"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         tokens[6].isEqual(1, 39, "18446744073709551615") //TODO print hex??
     }
 
     @Test
     fun test9() {
         val input = "0x88ull"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0x88ull")
     }
@@ -118,7 +122,7 @@ class CTokenizerTest {
     @Test
     fun test10() {
         val input = "0xff"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0xff")
         val tok = tokens[0] as PPNumber
@@ -128,7 +132,7 @@ class CTokenizerTest {
     @Test
     fun testZeroFloatLiteral0() {
         val input = "0."
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0.")
     }
@@ -136,7 +140,7 @@ class CTokenizerTest {
     @Test
     fun testZeroFloatLiteral1() {
         val input = "0.f"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         assertEquals(1, tokens.size)
         tokens[0].isEqual(1, 1, "0.f")
@@ -145,7 +149,7 @@ class CTokenizerTest {
     @Test
     fun testZeroFloatLiteral2() {
         val input = "00000000l"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         assertEquals(1, tokens.size)
         val num = tokens[0] as PPNumber
@@ -155,7 +159,7 @@ class CTokenizerTest {
     @Test
     fun testExponent() {
         val input = "45e14"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "45e14")
         val num = tokens[0] as PPNumber
@@ -165,7 +169,7 @@ class CTokenizerTest {
     @Test
     fun testExponent1() {
         val input = "1e-9"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "1e-9")
         val num = tokens[0] as PPNumber
@@ -175,7 +179,7 @@ class CTokenizerTest {
     @Test
     fun testPower() {
         val input = "0x1.ffffp+3"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0x1.ffffp+3")
         val num = tokens[0] as PPNumber
@@ -185,7 +189,7 @@ class CTokenizerTest {
     @Test
     fun testLongLiteral() {
         val input = "0xffff000000000000LL"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0xffff000000000000LL")
         val num = tokens[0] as PPNumber
@@ -195,7 +199,7 @@ class CTokenizerTest {
     @Test
     fun testQuotedString() {
         val input = "\"\\\"Hello, World!\\\"\""
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is StringLiteral }
         tokens[0].isEqual(1, 1, "\"\\\"Hello, World!\\\"\"")
     }
@@ -203,7 +207,7 @@ class CTokenizerTest {
     @Test
     fun testCharLiteral() {
         val input = "'\\x3b'"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is CharLiteral }
         tokens[0].isEqual(1, 1, "';'")
     }
@@ -211,7 +215,7 @@ class CTokenizerTest {
     @Test
     fun testLibPngBug() {
         val input = "-2147483647.)"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[1] is PPNumber }
         tokens[1].isEqual(1, 2, "2147483647.")
     }
@@ -219,7 +223,7 @@ class CTokenizerTest {
     @Test
     fun testBinaryLiteral() {
         val input = "0b101010"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0b101010")
         val num = tokens[0] as PPNumber
@@ -229,7 +233,7 @@ class CTokenizerTest {
     @Test
     fun testHexChar() {
         val input = "'\\xef'"
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is CharLiteral }
         val literal = tokens[0] as CharLiteral
         assertEquals(-17, literal.code())
@@ -239,7 +243,7 @@ class CTokenizerTest {
     @Test
     fun testStringLiteralWithEscapeChar() {
         val input = "\"\\46ELF\""
-        val tokens = CTokenizer.apply(input).toCTokenList()
+        val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is StringLiteral }
         tokens[0].isEqual(1, 1, "\"&ELF\"")
     }
