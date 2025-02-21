@@ -285,8 +285,8 @@ internal data class Cmp(val size: Int, val first: Operand, val second: Operand):
 }
 
 internal data class Call(private val data: String): CPUInstruction() {
-
     constructor(regOrMem: Operand): this("*${regOrMem.toString(8)}")
+    constructor(funSymbol: FunSymbol): this(funSymbol.toString())
 
     override fun toString(): String {
         return "callq $data"

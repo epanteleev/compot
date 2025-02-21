@@ -210,7 +210,7 @@ abstract class Assembler(functionName: String, val id: Int): AnonymousDirective(
     }
 
     // Call Procedure
-    protected fun call(name: String)    = add(Call(name))
+    protected fun call(name: FunSymbol) = add(Call(name))
     protected fun call(reg: GPRegister) = add(Call(reg))
     protected fun call(reg: Address)    = add(Call(reg))
 

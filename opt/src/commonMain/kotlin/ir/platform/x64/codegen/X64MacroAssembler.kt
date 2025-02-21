@@ -143,25 +143,9 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         }
     }
 
-    fun assertStackFrameLayout() {
-        val currentLabel = currentLabel()
-        val cont = anonLabel()
-        switchTo(currentLabel).let {
-            test(QWORD_SIZE, Imm32.of(0xf - 1), GPRegister.rsp)
-            jcc(CondType.JNE, cont)
-            mov(QWORD_SIZE, Imm32.of(0x0), rax)
-            mov(QWORD_SIZE, Address.from(rax, 0), rax)
-        }
-
-        switchTo(cont)
-    }
-
-    fun callFunction(call: Callable, func: DirectFunctionPrototype) {
+    fun callFunction(call: Callable, func: FunSymbol) {
         emitFPVarargsCount(call)
-        when (func) {
-            is ExternFunction    -> call(func.name + "@PLT")
-            is FunctionPrototype -> call(func.name)
-        }
+        call(func)
     }
 
     private fun emitFPVarargsCount(call: Callable) {

@@ -4,9 +4,12 @@ import ir.types.*
 import ir.value.Value
 import ir.instruction.*
 import ir.attributes.ByValue
+import ir.global.AnyAggregateGlobalConstant
 import ir.global.ExternValue
 import ir.global.GlobalValue
 import ir.instruction.lir.Generate
+import ir.module.ExternFunction
+import ir.module.FunctionPrototype
 import ir.value.ArgumentValue
 import ir.value.LocalValue
 import ir.value.constant.Constant
@@ -132,7 +135,9 @@ fun any(): ValueMatcher = { true }
 
 fun constant(): ValueMatcher = { it is Constant }
 
-fun extern(): ValueMatcher = { it is ExternValue }
+fun extern(): ValueMatcher = { it is ExternValue || it is ExternFunction }
+
+fun gAggregate(): ValueMatcher = { it is AnyAggregateGlobalConstant || it is FunctionPrototype }
 
 inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()) }
 

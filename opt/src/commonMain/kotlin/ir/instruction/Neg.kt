@@ -2,11 +2,10 @@ package ir.instruction
 
 import common.assertion
 import ir.value.Value
-import ir.types.Type
-import ir.instruction.utils.IRInstructionVisitor
+import ir.value.asType
 import ir.module.block.Block
 import ir.types.ArithmeticType
-import ir.types.asType
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Neg private constructor(id: Identity, owner: Block, tp: ArithmeticType, value: Value):
@@ -37,8 +36,7 @@ class Neg private constructor(id: Identity, owner: Block, tp: ArithmeticType, va
         }
 
         private fun make(id: Identity, owner: Block, value: Value): Neg {
-            val valueType = value.type()
-            return registerUser(Neg(id, owner, valueType.asType(), value), value)
+            return registerUser(Neg(id, owner, value.asType(), value), value)
         }
 
         fun typeCheck(unary: Neg): Boolean {

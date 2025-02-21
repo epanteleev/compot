@@ -11,9 +11,7 @@ import ir.platform.x64.pass.transform.*
 class SSADestruction(module: Module): TransformPass(module) {
     override fun name(): String = "ssa-destruction"
     override fun run(): Module {
-        val transformed = ConstantLoading.run(
-            MoveLargeConstants.run(Lowering.run(FunctionsIsolation.run(module)))
-        )
+        val transformed = MoveLargeConstants.run(Lowering.run(FunctionsIsolation.run(module)))
         return LModule(transformed.functions, transformed.functionDeclarations, transformed.constantPool, transformed.globals, transformed.types)
     }
 }
