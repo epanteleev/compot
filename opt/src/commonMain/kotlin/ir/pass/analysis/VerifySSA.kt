@@ -34,21 +34,28 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
     private fun pass() {
         validateArguments()
-        validateEdges()
         for (bb in functionData.analysis(PreOrderFabric)) {
+            validateEdges(bb)
             validateBlock(bb)
         }
         validateExitBlock()
     }
 
-    private fun validateEdges() {
-        for (bb in functionData) {
-            if (bb.predecessors().isEmpty() && bb != Label.entry) {
-                throw ValidateSSAErrorException(functionData, "Block '$bb' has no predecessors.")
-            }
-            for (succ in bb.successors()) {
-                assert(succ.predecessors().contains(bb)) { "Block '$succ' doesn't have predecessor '$bb'" }
-            }
+    private fun validateEdges(bb: Block) {
+        if (bb.predecessors().isEmpty() && bb != Label.entry) {
+            throw ValidateSSAErrorException(functionData, "Block '$bb' has no predecessors.")
+        }
+        val uniquePredecessors = bb.predecessors().toSet()
+        assert(uniquePredecessors.size == bb.predecessors().size) {
+            "Block '$bb' has duplicated predecessors: ${bb.predecessors()}"
+        }
+
+        for (succ in bb.successors()) {
+            assert(succ.predecessors().contains(bb)) { "Block '$succ' doesn't have predecessor '$bb'" }
+        }
+        val uniqueSuccessors = bb.successors().toSet()
+        assert(uniqueSuccessors.size == bb.successors().size) {
+            "Block '$bb' has duplicated successors: ${bb.successors()}"
         }
     }
 
@@ -89,10 +96,6 @@ class VerifySSA private constructor(private val functionData: FunctionData,
     }
 
     private fun validateBlock(block: Block) {
-        if (block.equals(Label.entry)) {
-            val predecessors = block.predecessors()
-            assert(predecessors.isEmpty()) { "Begin block must not have predecessors: $predecessors" }
-        }
         assert(block.lastOrNull() is TerminateInstruction) { "Block '$block' must have a terminator." }
         bb = block
         validateInstructions(block)

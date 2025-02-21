@@ -1,7 +1,7 @@
 package common
 
 
-class GNULdRunner(val outputFileName: ProcessedFile) {
+class GNULdRunner(private val outputFileName: ProcessedFile) {
     private var objectFiles = arrayListOf<ProcessedFile>()
     private var crtObjects = arrayListOf<String>()
     private val libs = arrayListOf<String>()

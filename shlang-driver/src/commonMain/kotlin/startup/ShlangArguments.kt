@@ -14,6 +14,7 @@ class ShlangArguments {
     private var sharedOption = false
     private val dynamicLibraries = hashSetOf<String>()
     private var inputs = arrayListOf<ProcessedFile>()
+    private var pic = false
 
     private var dumpIrDirectoryOutput: String? = null
     private var optimizationLevel = 0
@@ -84,8 +85,15 @@ class ShlangArguments {
 
     fun getDynamicLibraries(): Set<String> = dynamicLibraries
 
+    fun pic(): Boolean {
+        return pic
+    }
+    fun setPic(pic: Boolean) {
+        this.pic = pic
+    }
+
     fun logger(): CommonLogger {
-        return CommonLogger(arrayOf())
+        return CommonLogger(true)
     }
 
     companion object {

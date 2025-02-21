@@ -8,7 +8,6 @@ import common.GNULdRunner
 import common.ProcessedFile
 import preprocess.*
 import ir.module.Module
-import logging.LogTag
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import tokenizer.CTokenizer
@@ -17,9 +16,6 @@ import preprocess.macros.MacroReplacement
 import tokenizer.TokenList
 import tokenizer.TokenPrinter
 import kotlin.collections.iterator
-
-
-object ShlangDriverTag: LogTag("shlang-driver")
 
 
 class ShlangDriver(private val cli: ShlangArguments) {
@@ -121,6 +117,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
                     val module = compile(input.filename) ?: continue
                     val cli = makeOptCLIArguments(input)
                     val objFile = OptDriver.compile(cli, module)
+                    logDebug { "Compiled file: $objFile" }
                     processedFiles.add(objFile)
                 }
                 else -> throw IllegalStateException("Invalid input file: $input")
@@ -151,8 +148,6 @@ class ShlangDriver(private val cli: ShlangArguments) {
     }
 
     fun logDebug(message: () -> String) {
-        cli.logger().debug(ShlangDriverTag) {
-            message.toString()
-        }
+        cli.logger().debug(message)
     }
 }

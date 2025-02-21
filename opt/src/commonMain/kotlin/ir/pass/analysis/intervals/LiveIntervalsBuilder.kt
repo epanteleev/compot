@@ -10,7 +10,6 @@ import ir.instruction.isa
 import ir.instruction.matching.lea
 import ir.instruction.matching.any
 import ir.module.Sensitivity
-import ir.module.block.Block
 import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 import ir.pass.analysis.traverse.LinearScanOrderFabric
@@ -23,18 +22,8 @@ import ir.value.TupleValue
 private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnalysisPass<LiveIntervals>() {
     private val intervals       = hashMapOf<LocalValue, LiveRangeImpl>()
     private val groups          = hashMapOf<LocalValue, Group>()
-    private val linearScanOrder = run {
-        val linearScanOrder = data.analysis(LinearScanOrderFabric)
-        val map = linkedMapOf<Block, Int>()
-        var order = 0
-        for (block in linearScanOrder) {
-            map[block] = order
-            order += block.size
-        }
-        map
-    }
-
-    private val liveness = data.analysis(LivenessAnalysisPassFabric)
+    private val linearScanOrder = data.analysis(LinearScanOrderFabric)
+    private val liveness        = data.analysis(LivenessAnalysisPassFabric)
 
     private fun setupArguments() {
         val arguments = data.arguments()
@@ -45,8 +34,8 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
     }
 
     private fun setupLiveRanges() {
-        for ((bb, idx) in linearScanOrder) {
-            var ordering = idx - 1
+        var ordering = -1
+        for (bb in linearScanOrder) {
             for (inst in bb) {
                 ordering += 1
                 if (inst !is LocalValue) {
@@ -72,7 +61,7 @@ private class LiveIntervalsBuilder(private val data: FunctionData): FunctionAnal
 
     private fun evaluateUsages() {
         var ordering = -1
-        for (bb in linearScanOrder.keys) {
+        for (bb in linearScanOrder) {
             // TODO Improvement: skip this step if CFG doesn't have any loops.
             for (op in liveness.liveOut(bb)) {
                 val liveRange = intervals[op] ?: throw LiveIntervalsException("cannot find $op")

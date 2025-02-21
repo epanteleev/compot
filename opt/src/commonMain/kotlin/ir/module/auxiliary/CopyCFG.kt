@@ -460,7 +460,7 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     override fun visit(switch: Switch): InstBuilder<Instruction> {
         val newValue   = mapUsage<Value>(switch.value())
         val newDefault = mapBlock(switch.default())
-        val newTargets = arrayFrom(switch.targets()) { mapBlock(it) }
+        val newTargets = arrayFrom(switch.jumps()) { it -> mapBlock(it) }
         val newTable   = arrayFrom(switch.table()) { it }
 
         return Switch.switch(newValue, newDefault, newTable, newTargets)

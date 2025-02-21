@@ -12,8 +12,9 @@ import ir.pass.common.TransformPass
 import ir.pass.analysis.JoinPointSetPassFabric
 import ir.pass.analysis.dominance.DominatorTreeFabric
 import ir.pass.analysis.traverse.PostOrderFabric
-import ir.pass.transform.utils.*
 import ir.pass.transform.auxiliary.RemoveDeadMemoryInstructions
+import ir.pass.transform.auxiliary.RewritePrimitives
+import ir.pass.transform.auxiliary.RewritePrimitivesUtil
 import ir.types.Type
 import ir.types.asType
 import ir.value.Value

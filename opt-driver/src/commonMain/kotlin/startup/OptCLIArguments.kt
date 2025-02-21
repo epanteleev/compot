@@ -9,6 +9,7 @@ class OptCLIArguments {
     private var optimizationLevel = 0
     private var outFilename = ProcessedFile.fromFilename("out.o")
     private var inputFilename = arrayListOf<ProcessedFile>()
+    private var pic = false
 
     fun isDumpIr(): Boolean = dumpIrDirectoryOutput != null
 
@@ -29,6 +30,12 @@ class OptCLIArguments {
     fun getOptLevel(): Int = optimizationLevel
     fun setOptLevel(level: Int): OptCLIArguments {
         optimizationLevel = level
+        return this
+    }
+
+    fun isPic(): Boolean = pic
+    fun setPic(pic: Boolean): OptCLIArguments {
+        this.pic = pic
         return this
     }
 

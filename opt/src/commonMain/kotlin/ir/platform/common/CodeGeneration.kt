@@ -13,9 +13,12 @@ interface AnyCodeGenerator {
     fun emit(): CompiledModule
 }
 
+class CompilationContext(val picEnabled: Boolean)
+
 class CodeGenerationFactory {
     private var ctx: CompileContext? = null
     private var target: TargetPlatform? = null
+    private var picEnabled: Boolean = false
 
     fun setContext(context: CompileContext): CodeGenerationFactory {
         ctx = context
@@ -27,9 +30,14 @@ class CodeGenerationFactory {
         return this
     }
 
+    fun pic(picEnabled: Boolean): CodeGenerationFactory {
+        this.picEnabled = picEnabled
+        return this
+    }
+
     fun build(module: Module): CompiledModule {
         val compiled = when (target as TargetPlatform) {
-            TargetPlatform.X64 -> X64CodeGenerator(module).emit()
+            TargetPlatform.X64 -> X64CodeGenerator(module, CompilationContext(picEnabled)).emit()
         }
 
         return compiled

@@ -1,4 +1,4 @@
-package ir.pass.transform.utils
+package ir.pass.transform.auxiliary
 
 import ir.value.*
 import common.intMapOf

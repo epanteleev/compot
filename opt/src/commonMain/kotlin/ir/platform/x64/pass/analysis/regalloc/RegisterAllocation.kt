@@ -70,32 +70,7 @@ class RegisterAllocation internal constructor(private val spilledLocalsStackSize
         return SavedContext(registers, xmmRegisters, frameSize(registers, xmmRegisters))
     }
 
-    fun operand(value: Value): Operand {
-        if (value.type() == UndefType) {
-            return temp1
-        }
-
-        return operandOrNull(value) ?: throw IllegalArgumentException("cannot find operand for $value")
-    }
-
-    fun operandOrNull(value: Value): Operand? = when (value) {
-        is LocalValue -> registerMap[value]
-        is U8Value  -> Imm32.of(value.u8.toLong())
-        is I8Value  -> Imm32.of(value.i8.toLong())
-        is U16Value -> Imm32.of(value.u16.toLong())
-        is I16Value -> Imm32.of(value.i16.toLong())
-        is U32Value -> Imm32.of(value.u32.toLong())
-        is I32Value -> Imm32.of(value.i32.toLong())
-        is I64Value -> Imm64.of(value.i64)
-        is U64Value -> Imm64.of(value.u64)
-        is GlobalConstant    -> Address.internal(value.name())
-        is FunctionPrototype -> Address.internal(value.name())
-        is ExternFunction    -> Address.external(value.name())
-        is ExternValue -> Address.external(value.name())
-        is GlobalValue -> Address.internal(value.name())
-        is NullValue   -> Imm64.of(0)
-        else -> null
-    }
+    fun operandOrNull(value: LocalValue): Operand? = registerMap[value]
 
     override fun toString(): String {
         val builder = StringBuilder()

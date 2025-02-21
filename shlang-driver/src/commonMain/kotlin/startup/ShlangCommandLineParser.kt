@@ -30,6 +30,7 @@ object ShlangCommandLineParser {
                     cursor++
                     commandLineArguments.setOutputFilename(args[cursor])
                 }
+                "-fPIC" -> commandLineArguments.setPic(true)
                 "-E" -> commandLineArguments.setPreprocessOnly(true)
                 else -> parseOption(commandLineArguments, arg)
             }
@@ -58,15 +59,26 @@ object ShlangCommandLineParser {
         } else if (arg.startsWith("-l")) {
             cli.addLibrary(arg)
 
-        } else if (IGNORED_OPTIONS.contains(arg)) {
-            ignoreOption(arg)
-
-        } else if (arg.startsWith("-fvisibility") || arg.startsWith("-fno-") || arg.startsWith("-std=")) {
+        } else if (isIgnoredOption(arg)) {
             ignoreOption(arg)
 
         } else {
             cli.setInputFileName(arg)
         }
+    }
+
+    private fun isIgnoredOption(arg: String): Boolean {
+        if (IGNORED_OPTIONS.contains(arg)) {
+            return true
+        }
+        if (arg.startsWith("-fvisibility") ||
+            arg.startsWith("-fno-") ||
+            arg.startsWith("-std=") ||
+            arg.startsWith("-W")) {
+            return true
+        }
+
+        return false
     }
 
     private fun ignoreOption(arg: String) {
@@ -118,22 +130,11 @@ object ShlangCommandLineParser {
     }
 
     private val IGNORED_OPTIONS = hashSetOf(
-        "-Wall",
         "-pedantic",
         "-ansi",
-        "-std=c11",
         "-g",
         "-s",
         "-malign-double",
-        "-fno-strict-aliasing",
-        "-Wno-format-security",
-        "-Wno-unused-parameter",
-        "-fPIC",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        "-Wno-switch",
-        "-fno-common",
         "-MMD",
         "-MP",
         "-m64",
