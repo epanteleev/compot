@@ -56,7 +56,7 @@ internal class X64CodeGenerator(val module: Module, private val ctx: Compilation
 private class CodeEmitter(private val data: FunctionData, private val unit: CompilationUnit, private val ctx: CompilationContext): IRInstructionVisitor<Unit>() {
     private val registerAllocation by lazy { data.analysis(LinearScanFabric) }
     private val liveness by lazy { data.analysis(LivenessAnalysisPassFabric) }
-    private val  asm = unit.function(data.prototype.name)
+    private val asm = unit.function(data.prototype.name)
     private var next: Block? = null
 
     fun next(): Block = next?: throw RuntimeException("next block is null")
@@ -87,11 +87,24 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         } else {
             Address.internal(value.name())
         }
-        is ExternFunction    -> Address.external(value.name())
+        is ExternFunction -> Address.external(value.name())
         is ExternValue -> Address.external(value.name())
         is GlobalValue -> Address.internal(value.name())
         is NullValue -> Imm64.of(0)
         else -> null
+    }
+
+    private fun callFunction(call: Callable, prototype: DirectFunctionPrototype) {
+        val sym = when (prototype){
+            is FunctionPrototype -> if (ctx.picEnabled) {
+                ExternalFunSymbol(prototype.name())
+            } else {
+                InternalFunSymbol(prototype.name())
+            }
+            is ExternFunction -> ExternalFunSymbol(prototype.name())
+        }
+
+        asm.callFunction(call, sym)
     }
 
     private fun emitPrologue() {
@@ -271,7 +284,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(voidCall: VoidCall) {
-        asm.callFunction(voidCall, voidCall.prototype())
+        callFunction(voidCall, voidCall.prototype())
 
         assertion(voidCall.target() === next()) {
             // This is a bug in the compiler if this assertion fails
@@ -303,7 +316,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(tupleCall: TupleCall) { //TODO not compatible with linux C calling convention
-        asm.callFunction(tupleCall, tupleCall.prototype())
+        callFunction(tupleCall, tupleCall.prototype())
         consumeTupleCallOutputs(tupleCall)
     }
 
@@ -412,7 +425,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(call: Call) {
-        asm.callFunction(call, call.prototype())
+        callFunction(call, call.prototype())
 
         val callOp = operand(call)
         when (val retType = call.type()) {
