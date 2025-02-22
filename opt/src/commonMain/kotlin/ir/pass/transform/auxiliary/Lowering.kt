@@ -30,9 +30,9 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     private fun isIt(inst: Instruction) {
-        if (inst is Load ||
-            inst is Phi ||
-            inst is Callable ||
+        if (inst is IndirectionCall ||
+            inst is IndirectionVoidCall ||
+            inst is IndirectionTupleCall ||
             inst is Memcpy ||
             inst is Store) {
             handleGlobals(inst)
@@ -229,7 +229,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return bb.replace(copy, Load.load(PtrType, copy.origin()))
         }
 
-        copy.match(copy(gAggregate())) {
+        copy.match(copy(gAggregate())) { // TODO: Check if it's correct
             // Before:
             //  %res = copy %gAggregate
             //
@@ -474,6 +474,19 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
                 bb.updateDF(load, Load.VALUE, lea)
                 return lea
             }
+        }
+
+        load.match(load(extern())) {
+            // Before:
+            //  %res = load @extern
+            //
+            // After:
+            //  %lea = load PtrType, @extern
+            //  %res = load %lea
+
+            val lea = bb.putBefore(load, Load.load(PtrType, load.operand()))
+            bb.updateDF(load, Load.VALUE, lea)
+            return lea
         }
 
         load.match(load(gep(stackAlloc(), any()))) {
