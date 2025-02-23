@@ -23,9 +23,17 @@ class StringLiteral(private val data: String, position: Position): CToken(positi
 
     fun unquote(): String = data.unquoted()
 
-    fun data(): String = data
-
-    fun isEmpty(): Boolean = data.isEmpty()
+    fun data(): String {
+        val stringBuilder = StringBuilder()
+        for (element in data) {
+            if (element == '"') {
+                stringBuilder.append("\\\"")
+            } else {
+                stringBuilder.append(element)
+            }
+        }
+        return stringBuilder.toString()
+    }
 
     override fun cloneWith(pos: Position): CToken {
         return StringLiteral(data, pos)

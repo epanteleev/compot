@@ -35,11 +35,6 @@ private fun wrapEscapedChar(char: Char): String? = when (char) {
 fun String.quoted(): String {
     val stringBuilder = StringBuilder("\"")
     for (element in this) {
-        if (element == 'x' && stringBuilder.last() == '\\') {
-            stringBuilder.deleteCharAt(stringBuilder.length - 1)
-            continue
-        }
-
         val ch = wrapChar(element) ?: element
         stringBuilder.append(ch)
     }
@@ -50,7 +45,7 @@ fun String.quoted(): String {
 fun String.quotedEscapes(): String {
     val stringBuilder = StringBuilder("\"")
     for (element in this) {
-        val ch = wrapChar(element) ?: element
+        val ch = wrapEscapedChar(element) ?: element
         stringBuilder.append(ch)
     }
     stringBuilder.append("\"")

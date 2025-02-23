@@ -275,7 +275,7 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
     }
 
     private val data by lazy {
-        if (literals.all { it.isEmpty() }) {
+        if (literals.all { it.data().isEmpty() }) {
             ""
         } else {
             literals.joinToString("", postfix = "") { it.data() }

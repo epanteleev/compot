@@ -56,7 +56,7 @@ class CTokenizer private constructor(private val filename: String, private val r
         val builder = StringBuilder()
 
         while (!reader.check(quote)) {
-            if (reader.check("\\\n")) { //TODO remove ??
+            if (reader.check("\\\n")) {
                 eat()
                 eat()
                 incrementLine()
@@ -68,7 +68,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             }
             if (reader.check("\\\\")) {
                 builder.append(eat())
-                eat()
+                builder.append(eat())
                 continue
             }
             if (reader.check('\\')) {
@@ -81,6 +81,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 }
 
                 if (reader.check('x')) {
+                    builder.append("\\")
                     eatHexChar(builder)
                     continue
                 }
@@ -101,9 +102,11 @@ class CTokenizer private constructor(private val filename: String, private val r
         return builder.toString()
     }
 
-    private fun eatHexChar(builder: StringBuilder) {
-        val ch = readHexChar()
-        builder.append(ch)
+    private fun eatHexChar(builder: java.lang.StringBuilder) {
+        builder.append(eat())
+        while (reader.isHexDigit()) {
+            builder.append(eat())
+        }
     }
 
     private fun readEscapedChar(): Char {
@@ -153,12 +156,12 @@ class CTokenizer private constructor(private val filename: String, private val r
 
     private fun readHexChar(): Char {
         eat()
-        var c = 0L
+        var c = 0
         while (reader.isHexDigit()) {
             val ch = eat()
-            c = c * 16 + ch.digitToInt(16)
+            c = c.toByte() * 16 + ch.digitToInt(16)
         }
-        return c.toInt().toChar()
+        return c.toChar()
     }
 
     private fun isFPSuffix(str: String): Boolean {

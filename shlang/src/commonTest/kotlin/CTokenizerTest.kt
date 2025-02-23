@@ -241,24 +241,6 @@ class CTokenizerTest {
     }
 
     @Test
-    @Ignore
-    fun testHexString() {
-        val input = "\"\\x77\""
-        val tokens = apply(input).toCTokenList()
-        assertTrue { tokens[0] is StringLiteral }
-        tokens[0].isEqual(1, 1, "\"\\167\"")
-    }
-
-    @Test
-    @Ignore
-    fun testHexString1() {
-        val input = "\"\\xF7\\xF7\""
-        val tokens = apply(input).toCTokenList()
-        assertTrue { tokens[0] is StringLiteral }
-        tokens[0].isEqual(1, 1, "\"\\367\\367\"")
-    }
-
-    @Test
     fun testStringLiteralWithEscapeChar() {
         val input = "\"\\46ELF\""
         val tokens = apply(input).toCTokenList()
