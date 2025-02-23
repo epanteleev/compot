@@ -46,14 +46,19 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
 
     private fun stringify(current: CToken) {
         val value = argToValue[current] ?: throw MacroExpansionException("Invalid macro expansion: # without argument")
-        val str = value.joinToString("") {
-            if (it is StringLiteral) {
-                it.unquote()
+        val builder = StringBuilder()
+        for (tok in value) {
+            if (tok is StringLiteral) {
+                val q = tok.unquote()
+                builder.append('"')
+                builder.append(q)
+                builder.append('"')
             } else {
-                it.str()
+                builder.append(tok.str())
             }
         }
-        result.add(StringLiteral(str, current.position()))
+
+        result.add(StringLiteral(builder.toString(), current.position()))
         eat()
     }
 

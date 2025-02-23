@@ -153,6 +153,9 @@ class ShlangDriver(private val cli: ShlangArguments) {
 
                 val dst = input.withExtension(Extension.OBJ)
                 val src = compiledFile.filename
+                logDebug {
+                    "Copying file: $src to $dst"
+                }
                 FileSystem.SYSTEM.copy(src.toPath(), dst.filename.toPath())
             }
 
@@ -165,14 +168,15 @@ class ShlangDriver(private val cli: ShlangArguments) {
                 if (cli.isSharedOption()) {
                     throw IllegalStateException("Cannot create executable for shared object")
                 }
-                runLD(out, processedFiles + compiled, SystemConfig.crtStaticObjects())
+
+                runLD(out, compiled + processedFiles, SystemConfig.crtStaticObjects())
             }
             Extension.SO -> {
                 if (!cli.isSharedOption()) {
                     throw IllegalStateException("Cannot create shared object for executable")
                 }
 
-                runLD(out, processedFiles + compiled, SystemConfig.crtSharedObjects())
+                runLD(out, compiled + processedFiles, SystemConfig.crtSharedObjects())
             }
             else -> throw IllegalStateException("Invalid output file extension: $out")
         }

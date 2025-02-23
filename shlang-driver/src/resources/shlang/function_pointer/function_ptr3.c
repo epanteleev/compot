@@ -7,3 +7,4 @@ int main() {
     (*fun_ptr)(20);
     return 0;
 }
+

@@ -218,7 +218,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                 val nameOrBracket = peak<AnyToken>()
                 kill()
                 if (nameOrBracket is StringLiteral) {
-                    val header = ctx.findHeader(nameOrBracket.data(), HeaderType.USER) ?:
+                    val header = ctx.findHeader(nameOrBracket.unquote(), HeaderType.USER) ?:
                         throw PreprocessorException("Cannot find header $nameOrBracket")
 
                     val includeTokens = preprocessHeader(header, nameOrBracket.line(), ctx)
