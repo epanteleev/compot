@@ -49,7 +49,7 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
         val builder = StringBuilder()
         for (tok in value) {
             if (tok is StringLiteral) {
-                val q = tok.unquote()
+                val q = tok.data()
                 builder.append('"')
                 builder.append(q)
                 builder.append('"')
