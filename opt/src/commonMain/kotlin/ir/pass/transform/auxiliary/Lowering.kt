@@ -2,13 +2,16 @@ package ir.pass.transform.auxiliary
 
 import ir.types.*
 import ir.value.*
+import ir.global.*
 import ir.module.Module
 import ir.instruction.*
 import ir.value.constant.*
 import ir.instruction.lir.*
 import ir.module.block.Block
 import ir.module.FunctionData
+import ir.module.ExternFunction
 import ir.instruction.matching.*
+import ir.module.FunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
 
@@ -19,7 +22,33 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     private fun pass() {
         for (bb in cfg.analysis(BfsOrderOrderFabric)) {
             this.bb = bb
-            bb.transform { it.accept(this) }
+            bb.transform {
+                isIt(it)
+                it.accept(this)
+            }
+        }
+    }
+
+    private fun isIt(inst: Instruction) {
+        if (inst is IndirectionCall ||
+            inst is IndirectionVoidCall ||
+            inst is IndirectionTupleCall ||
+            inst is Memcpy ||
+            inst is Store) {
+            handleGlobals(inst)
+        }
+    }
+
+    fun handleGlobals(inst: Instruction) {
+        val bb = inst.owner()
+        for ((i ,use) in inst.operands().withIndex()) {
+            val builder = when (use) {
+                is AnyAggregateGlobalConstant, is FunctionPrototype -> Lea.lea(use)
+                is ExternValue, is ExternFunction -> Load.load(PtrType, use)
+                else -> continue
+            }
+            val lea = bb.putBefore(inst, builder)
+            bb.updateDF(inst, i, lea)
         }
     }
 
@@ -188,6 +217,29 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return bb.replace(copy, Lea.lea(copy.origin().asValue()))
         }
 
+        copy.match(copy(extern())) {
+            // Before:
+            //  %res = copy @extern
+            //
+            // After:
+            //  %lea = load PtrType, @extern
+            //  %res = copy %lea
+
+
+            return bb.replace(copy, Load.load(PtrType, copy.origin()))
+        }
+
+        copy.match(copy(gAggregate())) { // TODO: Check if it's correct
+            // Before:
+            //  %res = copy %gAggregate
+            //
+            // After:
+            //  %lea = lea %gAggregate
+            //  %res = copy %lea
+
+            return bb.replace(copy, Lea.lea(copy.origin()))
+        }
+
         return copy
     }
 
@@ -218,16 +270,68 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         }
 
         gep.match(gep(primitive(), generate(), any())) {
+            // Before:
+            //  %res = gep %gen, %idx
+            //
+            // After:
+            //  %lea = leastv %gen, %idx
+
             val baseType = gep.basicType.asType<PrimitiveType>()
             return bb.replace(gep, LeaStack.lea(gep.source(), baseType, gep.index()))
         }
 
         gep.match(gep(aggregate(), generate(), any())) {
+            // Before:
+            //  %res = gep %gen, %idx
+            //
+            // After:
+            //  %lea = mul %idx, %gen.size
+            //  %res = least %gen, %lea
+
             val baseType = gep.basicType.asType<AggregateType>()
             val index = gep.index()
             val mul = Mul.mul(index, NonTrivialConstant.of(index.asType(), baseType.sizeOf()))
             val offset = bb.putBefore(gep, mul)
             return bb.replace(gep, LeaStack.lea(gep.source(), I8Type, offset))
+        }
+
+        gep.match(gep(anytype(), extern(), any())) {
+            // Before:
+            //  %res = gep @extern, %idx
+            //
+            // After:
+            //  %lea = load PtrType, @extern
+            //  %res = gep %lea, %idx
+
+            val lea = bb.putBefore(gep, Load.load(PtrType, gep.source()))
+            bb.updateDF(gep, GetElementPtr.SOURCE, lea)
+            return lea
+        }
+
+        gep.match(gep(anytype(), any(), extern())) {
+            // Before:
+            //  %res = gep %gen, @extern
+            //
+            // After:
+            //  %lea = load PtrType, @extern
+            //  %res = gep %gen, %lea
+
+            val lea = bb.putBefore(gep, Load.load(PtrType, gep.index()))
+            bb.updateDF(gep, GetElementPtr.INDEX, lea)
+            return lea
+        }
+
+        gep.match(gep(anytype(), gAggregate(), any())) {
+            // Before:
+            //  %res = gep %gAggregate, %idx
+            //
+            // After:
+            //  %lea = lea %gAggregate
+            //  %res = gep %lea, %idx
+
+            val lea = bb.putBefore(gep, Lea.lea(gep.source()))
+            bb.updateDF(gep, GetElementPtr.SOURCE, lea)
+            return lea
         }
 
         return gep
@@ -259,6 +363,32 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             return bb.replace(gfp, LeaStack.lea(gfp.source(), U8Type, index))
         }
 
+        gfp.match(gfp(anytype(), gAggregate())) {
+            // Before:
+            //  %res = gfp %gAggregate, %idx
+            //
+            // After:
+            //  %lea = lea %gAggregate
+            //  %res = gfp %lea, %idx
+
+            val lea = bb.putBefore(gfp, Lea.lea(gfp.source()))
+            bb.updateDF(gfp, GetFieldPtr.SOURCE, lea)
+            return lea
+        }
+
+        gfp.match(gfp(anytype(), extern())) {
+            // Before:
+            //  %res = gfp @extern, %idx
+            //
+            // After:
+            //  %lea = load PtrType, @extern
+            //  %res = gfp %lea, %idx
+
+            val lea = bb.putBefore(gfp, Load.load(PtrType, gfp.source()))
+            bb.updateDF(gfp, GetFieldPtr.SOURCE, lea)
+            return lea
+        }
+
         return gfp
     }
 
@@ -287,6 +417,26 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             val lea = bb.putBefore(icmp, Lea.lea(icmp.first()))
             bb.updateDF(icmp, IntCompare.FIRST, lea)
             return lea
+        }
+
+        val lhs = icmp.first()
+        if (lhs.isa(extern())) {
+            val lea = bb.putBefore(icmp, Load.load(PtrType, lhs))
+            bb.updateDF(icmp, IntCompare.FIRST, lea)
+
+        } else if (lhs.isa(gAggregate())) {
+            val lea = bb.putBefore(icmp, Lea.lea(lhs))
+            bb.updateDF(icmp, IntCompare.FIRST, lea)
+        }
+
+        val rhs = icmp.second()
+        if (rhs.isa(extern())) {
+            val lea = bb.putBefore(icmp, Load.load(PtrType, rhs))
+            bb.updateDF(icmp, IntCompare.SECOND, lea)
+
+        } else if (rhs.isa(gAggregate())) {
+            val lea = bb.putBefore(icmp, Lea.lea(rhs))
+            bb.updateDF(icmp, IntCompare.SECOND, lea)
         }
 
         return icmp
@@ -324,6 +474,19 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
                 bb.updateDF(load, Load.VALUE, lea)
                 return lea
             }
+        }
+
+        load.match(load(extern())) {
+            // Before:
+            //  %res = load @extern
+            //
+            // After:
+            //  %lea = load PtrType, @extern
+            //  %res = load %lea
+
+            val lea = bb.putBefore(load, Load.load(PtrType, load.operand()))
+            bb.updateDF(load, Load.VALUE, lea)
+            return lea
         }
 
         load.match(load(gep(stackAlloc(), any()))) {
@@ -374,6 +537,34 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //
             // After:
             //  %lea = lea @global
+            //  ret %lea
+
+            val toValue = returnValue.returnValue(0)
+            val lea = bb.putBefore(returnValue, Lea.lea(toValue))
+            bb.updateDF(returnValue, ReturnValue.RET_VALUE, lea)
+            return lea
+        }
+
+        returnValue.match(ret(extern())) {
+            // Before:
+            //  ret @extern
+            //
+            // After:
+            //  %lea = load PtrType, @extern
+            //  ret %lea
+
+            val toValue = returnValue.returnValue(0)
+            val lea = bb.putBefore(returnValue, Load.load(PtrType, toValue))
+            bb.updateDF(returnValue, ReturnValue.RET_VALUE, lea)
+            return lea
+        }
+
+        returnValue.match(ret(gAggregate())) {
+            // Before:
+            //  ret %gAggregate
+            //
+            // After:
+            //  %lea = lea %gAggregate
             //  ret %lea
 
             val toValue = returnValue.returnValue(0)
@@ -607,6 +798,32 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             val lea = bb.putBefore(ptr2Int, Lea.lea(ptr2Int.value()))
             bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
             return lea
+        }
+
+        ptr2Int.match(ptr2int(extern())) {
+            // Before:
+            //  %res = ptr2int @extern
+            //
+            // After:
+            //  %lea = load PtrType, @extern
+            //  %res = ptr2int %lea
+
+            val use = ptr2Int.value()
+            val lea = bb.putBefore(ptr2Int, Load.load(PtrType, use))
+            bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
+        }
+
+        ptr2Int.match(ptr2int(gAggregate())) {
+            // Before:
+            //  %res = ptr2int %gAggregate
+            //
+            // After:
+            //  %lea = lea %gAggregate
+            //  %res = ptr2int %lea
+
+            val use = ptr2Int.value()
+            val lea = bb.putBefore(ptr2Int, Lea.lea(use))
+            bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
         }
 
         return ptr2Int

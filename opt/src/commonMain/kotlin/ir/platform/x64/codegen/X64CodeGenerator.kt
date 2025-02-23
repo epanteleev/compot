@@ -410,7 +410,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             asm.jcc(CondType.JE, makeLabel(target))
         }
 
-        asm.jump(makeLabel(switch.default()))
+        doJump(switch.default())
     }
 
     override fun visit(tupleCall: IndirectionTupleCall) {

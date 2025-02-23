@@ -33,6 +33,7 @@ class Copy private constructor(id: Identity, owner: Block, private val type: Pri
 
     companion object {
         const val NAME = "copy"
+        const val ORIGIN = 0
 
         fun copy(origin: Value): InstBuilder<Copy> = { id: Identity, owner: Block ->
             make(id, owner, origin)
