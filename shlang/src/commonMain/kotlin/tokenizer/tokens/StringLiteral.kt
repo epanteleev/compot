@@ -1,12 +1,11 @@
 package tokenizer.tokens
 
-import common.quoted
-import common.unquoted
+import common.quotedEscapes
 import tokenizer.Position
 
 
 class StringLiteral(private val data: String, position: Position): CToken(position) {
-    override fun str(): String = data.quoted()
+    override fun str(): String = data.quotedEscapes()
 
     override fun hashCode(): Int {
         return data.hashCode()
@@ -21,18 +20,10 @@ class StringLiteral(private val data: String, position: Position): CToken(positi
         return data == other.data
     }
 
-    fun unquote(): String = data.unquoted()
+    fun data(): String = data
 
-    fun data(): String {
-        val stringBuilder = StringBuilder()
-        for (element in data) {
-            if (element == '"') {
-                stringBuilder.append("\\\"")
-            } else {
-                stringBuilder.append(element)
-            }
-        }
-        return stringBuilder.toString()
+    fun isEmpty(): Boolean {
+        return data.isEmpty()
     }
 
     override fun cloneWith(pos: Position): CToken {

@@ -275,7 +275,7 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
     }
 
     private val data by lazy {
-        if (literals.all { it.data().isEmpty() }) {
+        if (literals.all { it.isEmpty() }) {
             ""
         } else {
             literals.joinToString("", postfix = "") { it.data() }
@@ -296,7 +296,20 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
 
     fun length(): Int = data.length + 1
 
-    fun data(): String = data
+    fun isNotEmpty(): Boolean = data.isNotEmpty()
+
+    fun data(): String {
+        val sb = StringBuilder()
+        for (ch in data) {
+            if (ch == '\"') {
+                sb.append("\\\"")
+            } else {
+                sb.append(ch)
+            }
+        }
+
+        return sb.toString()
+    }
 }
 
 data class CharNode(val char: CharLiteral) : Expression() {

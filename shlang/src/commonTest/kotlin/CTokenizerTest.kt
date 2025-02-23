@@ -201,7 +201,7 @@ class CTokenizerTest {
         val input = "\"\\\"Hello, World!\\\"\""
         val tokens = apply(input).toCTokenList()
         assertTrue { tokens[0] is StringLiteral }
-        tokens[0].isEqual(1, 1, "\"\\\"Hello, World!\\\"\"")
+        tokens[0].isEqual(1, 1, "\"\"Hello, World!\"\"")
     }
 
     @Test

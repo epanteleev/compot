@@ -2,7 +2,6 @@ package preprocess
 
 import tokenizer.*
 import common.forEachWith
-import common.quoted
 import preprocess.macros.MacroExpansionException
 import preprocess.macros.MacroFunction
 import tokenizer.tokens.*
@@ -48,14 +47,7 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
         val value = argToValue[current] ?: throw MacroExpansionException("Invalid macro expansion: # without argument")
         val builder = StringBuilder()
         for (tok in value) {
-            if (tok is StringLiteral) {
-                val q = tok.unquote()
-                builder.append('"')
-                builder.append(q)
-                builder.append('"')
-            } else {
-                builder.append(tok.str())
-            }
+            builder.append(tok.str())
         }
 
         result.add(StringLiteral(builder.toString(), current.position()))

@@ -9,18 +9,6 @@ fun String.padTo(count: Int, pad: String): String {
     return stringBuilder.toString()
 }
 
-private fun wrapChar(char: Char): String? {
-    val escaped = wrapEscapedChar(char)
-    if (escaped != null) {
-        return escaped
-    }
-    return when (char) {
-        '\\'     -> "\\\\"
-        '"'      -> "\\\""
-        else     -> null
-    }
-}
-
 private fun wrapEscapedChar(char: Char): String? = when (char) {
     '\n'     -> "\\n"
     '\t'     -> "\\t"
@@ -29,17 +17,8 @@ private fun wrapEscapedChar(char: Char): String? = when (char) {
     '\u000C' -> "\\f"
     '\u0007' -> "\\a"
     '\u0000' -> "\\0"
+    '\\'     -> "\\\\"
     else     -> null
-}
-
-fun String.quoted(): String {
-    val stringBuilder = StringBuilder("\"")
-    for (element in this) {
-        val ch = wrapChar(element) ?: element
-        stringBuilder.append(ch)
-    }
-    stringBuilder.append("\"")
-    return stringBuilder.toString()
 }
 
 fun String.quotedEscapes(): String {

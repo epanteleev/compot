@@ -280,7 +280,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 when (type.element().cType()) {
                     is CHAR, is UCHAR -> {
-                        if (expr.data().isNotEmpty()) {
+                        if (expr.isNotEmpty()) {
                             ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value.of(expr.length()))
                             val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(expr.length()))
                             ir.store(gep, I8Value.of(0))
@@ -468,7 +468,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitStringNode(stringNode: StringNode): Value {
         val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(I8Type, stringNode.length()), stringNode.data())
-        val s = stringLiteral.data()
         return mb.addConstant(stringLiteral)
     }
 

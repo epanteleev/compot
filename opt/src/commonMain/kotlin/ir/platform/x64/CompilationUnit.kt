@@ -26,7 +26,7 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
             // name:
             //    .string "string"
             label(globalValue.name()) {
-                string(globalValue.data())
+                string(globalValue.constant().toString())
             }
         }
         is AggregateGlobalConstant -> makeAggregateConstant(globalValue.name(), globalValue.contentType().asType(), globalValue.elements())

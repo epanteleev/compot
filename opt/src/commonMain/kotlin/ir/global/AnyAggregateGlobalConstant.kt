@@ -1,7 +1,6 @@
 package ir.global
 
 import ir.types.*
-import common.quoted
 import common.assertion
 import common.quotedEscapes
 import ir.value.constant.*
@@ -10,7 +9,6 @@ import ir.value.constant.*
 sealed class AnyAggregateGlobalConstant(override val name: String): GlobalConstant(name) {
     abstract fun contentType(): NonTrivialType
     override fun type(): NonTrivialType = PtrType
-    abstract fun data(): String
 }
 
 class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, val string: String): AnyAggregateGlobalConstant(name) {
@@ -19,11 +17,7 @@ class StringLiteralGlobalConstant(override val name: String, val tp: ArrayType, 
     }
 
     override fun dump(): String {
-        return "@$name = constant ${contentType()} ${string.quoted()}"
-    }
-
-    override fun data(): String {
-        return string.quotedEscapes()
+        return "@$name = constant ${contentType()} ${string.quotedEscapes()}"
     }
 
     override fun contentType(): NonTrivialType = ArrayType(I8Type, string.length)
@@ -36,11 +30,7 @@ sealed class AggregateGlobalConstant(override val name: String, val tp: NonTrivi
     }
 
     override fun dump(): String {
-        return "@$name = constant ${contentType()} ${data()}"
-    }
-
-    final override fun data(): String {
-        return elements.toString()
+        return "@$name = constant ${contentType()} $elements"
     }
 
     final override fun constant(): InitializerListValue {
