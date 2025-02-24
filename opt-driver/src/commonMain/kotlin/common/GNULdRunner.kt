@@ -7,6 +7,7 @@ class GNULdRunner(private val outputFileName: ProcessedFile) {
     private val libs = arrayListOf<String>()
     private val libPaths = arrayListOf<String>()
     private var dynamicLinker: String? = null
+    private var static = false
 
     fun crtObjects(objects: List<String>): GNULdRunner {
         crtObjects.addAll(objects)
@@ -33,6 +34,11 @@ class GNULdRunner(private val outputFileName: ProcessedFile) {
         return this
     }
 
+    fun static(enabled: Boolean): GNULdRunner {
+        static = enabled
+        return this
+    }
+
     fun execute(): ExecutionResult {
         val gnuLdCommandLine = arrayListOf<String>()
         gnuLdCommandLine.addAll(listOf("-m", "elf_x86_64"))
@@ -42,6 +48,10 @@ class GNULdRunner(private val outputFileName: ProcessedFile) {
 
         if (dynamicLinker != null) {
             gnuLdCommandLine.addAll(listOf("--dynamic-linker", dynamicLinker!!))
+        }
+
+        if (static) {
+            gnuLdCommandLine.add("-static")
         }
 
         for (obj in objectFiles) {

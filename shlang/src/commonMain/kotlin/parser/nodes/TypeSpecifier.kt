@@ -36,7 +36,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
     override fun begin(): Position = specifiers.first().begin()
 
     private fun specifyType1(typeHolder: TypeHolder) = memoizeType {
-        val typeBuilder = CTypeBuilder(specifiers.first().begin())
+        val typeBuilder = CTypeBuilder()
         for (specifier in specifiers) {
             val property = specifier.typeResolve(typeHolder, typeBuilder)
             if (property == StorageClass.TYPEDEF) {

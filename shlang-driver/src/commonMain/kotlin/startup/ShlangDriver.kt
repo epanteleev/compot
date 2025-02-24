@@ -93,7 +93,8 @@ class ShlangDriver(private val cli: ShlangArguments) {
         logDebug { "Linking files: $compiledFiles" }
         val result = GNULdRunner(out)
             .libs(SystemConfig.runtimeLibraries() + cli.getDynamicLibraries())
-            .libPaths(SystemConfig.runtimePathes())
+            .libPaths(SystemConfig.runtimePathes() + cli.getLibraryDirectories())
+            .static(cli.static())
             .crtObjects(crtObjs)
             .objs(compiledFiles)
             .dynamicLinker(SystemConfig.dynamicLinker())

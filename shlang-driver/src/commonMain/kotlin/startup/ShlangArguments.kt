@@ -13,8 +13,10 @@ class ShlangArguments {
     private var optionC = false
     private var sharedOption = false
     private val dynamicLibraries = hashSetOf<String>()
+    private val libraryDirectories = hashSetOf<String>()
     private var inputs = arrayListOf<ProcessedFile>()
     private var pic = false
+    private var static = false
 
     private var dumpIrDirectoryOutput: String? = null
     private var optimizationLevel = 0
@@ -83,13 +85,27 @@ class ShlangArguments {
         dynamicLibraries.add(library)
     }
 
-    fun getDynamicLibraries(): Set<String> = dynamicLibraries
+    fun getDynamicLibraries(): Set<String> = libraryDirectories
+
+    fun addLibraryDirectory(directory: String) {
+        libraryDirectories.add(directory)
+    }
+
+    fun getLibraryDirectories(): Set<String> = libraryDirectories
 
     fun pic(): Boolean {
         return pic
     }
     fun setPic(pic: Boolean) {
         this.pic = pic
+    }
+
+    fun static(): Boolean {
+        return static
+    }
+
+    fun setStatic(static: Boolean) {
+        this.static = static
     }
 
     fun logger(): CommonLogger {

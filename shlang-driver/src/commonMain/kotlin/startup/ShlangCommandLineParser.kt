@@ -30,6 +30,7 @@ object ShlangCommandLineParser {
                     cursor++
                     commandLineArguments.setOutputFilename(args[cursor])
                 }
+                "-static" -> commandLineArguments.setStatic(true)
                 "-fPIC" -> commandLineArguments.setPic(true)
                 "-E" -> commandLineArguments.setPreprocessOnly(true)
                 else -> parseOption(commandLineArguments, arg)
@@ -58,6 +59,9 @@ object ShlangCommandLineParser {
 
         } else if (arg.startsWith("-l")) {
             cli.addLibrary(arg)
+
+        } else if (arg.startsWith("-L")) {
+            cli.addLibraryDirectory(arg)
 
         } else if (isIgnoredOption(arg)) {
             ignoreOption(arg)
