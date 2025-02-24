@@ -121,6 +121,18 @@ fun generate(): ValueMatcher = {
     it is Generate
 }
 
+fun iCall(fnPointer: ValueMatcher): ValueMatcher = {
+    it is IndirectionCall && fnPointer(it.pointer())
+}
+
+fun ivCall(fnPointer: ValueMatcher): InstructionMatcher = {
+    it is IndirectionVoidCall && fnPointer(it.pointer())
+}
+
+fun itCall(fnPointer: ValueMatcher): InstructionMatcher = {
+    it is IndirectionTupleCall && fnPointer(it.pointer())
+}
+
 fun stackAlloc(): ValueMatcher = generate() or argumentByValue()
 
 fun local(): ValueMatcher = { it is LocalValue }

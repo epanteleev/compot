@@ -2,16 +2,13 @@ package ir.pass.transform.auxiliary
 
 import ir.types.*
 import ir.value.*
-import ir.global.*
 import ir.module.Module
 import ir.instruction.*
 import ir.value.constant.*
 import ir.instruction.lir.*
 import ir.module.block.Block
 import ir.module.FunctionData
-import ir.module.ExternFunction
 import ir.instruction.matching.*
-import ir.module.FunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
 
@@ -22,33 +19,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     private fun pass() {
         for (bb in cfg.analysis(BfsOrderOrderFabric)) {
             this.bb = bb
-            bb.transform {
-                isIt(it)
-                it.accept(this)
-            }
-        }
-    }
-
-    private fun isIt(inst: Instruction) {
-        if (inst is IndirectionCall ||
-            inst is IndirectionVoidCall ||
-            inst is IndirectionTupleCall ||
-            inst is Memcpy ||
-            inst is Store) {
-            handleGlobals(inst)
-        }
-    }
-
-    fun handleGlobals(inst: Instruction) {
-        val bb = inst.owner()
-        for ((i ,use) in inst.operands().withIndex()) {
-            val builder = when (use) {
-                is AnyAggregateGlobalConstant, is FunctionPrototype -> Lea.lea(use)
-                is ExternValue, is ExternFunction -> Load.load(PtrType, use)
-                else -> continue
-            }
-            val lea = bb.putBefore(inst, builder)
-            bb.updateDF(inst, i, lea)
+            bb.transform { it.accept(this) }
         }
     }
 
@@ -581,10 +552,66 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(indirectionCall: IndirectionCall): Instruction {
+        indirectionCall.match(iCall(extern())) {
+            // Before:
+            //  %res = indirectionCall @global
+            //
+            // After:
+            //  %lea = load @global
+            //  %res = indirectionCall %lea
+
+            val use = indirectionCall.pointer()
+            val lea = bb.putBefore(indirectionCall, Load.load(PtrType, use))
+            bb.updateDF(indirectionCall, indirectionCall.arguments().size, lea)
+            return lea
+        }
+
+        indirectionCall.match(iCall(function())) {
+            // Before:
+            //  %res = indirectionCall %gAggregate
+            //
+            // After:
+            //  %lea = lea %gAggregate
+            //  %res = indirectionCall %lea
+
+            val use = indirectionCall.pointer()
+            val lea = bb.putBefore(indirectionCall, Lea.lea(use))
+            bb.updateDF(indirectionCall, indirectionCall.arguments().size, lea)
+            return lea
+        }
+
         return indirectionCall
     }
 
     override fun visit(indirectionVoidCall: IndirectionVoidCall): Instruction {
+        indirectionVoidCall.match(ivCall(extern())) {
+            // Before:
+            //  %res = indirectionCall @global
+            //
+            // After:
+            //  %lea = load @global
+            //  %res = indirectionCall %lea
+
+            val use = indirectionVoidCall.pointer()
+            val lea = bb.putBefore(indirectionVoidCall, Load.load(PtrType, use))
+            bb.updateDF(indirectionVoidCall, indirectionVoidCall.arguments().size, lea)
+            return lea
+        }
+
+        indirectionVoidCall.match(ivCall(function())) {
+            // Before:
+            //  %res = indirectionCall %gAggregate
+            //
+            // After:
+            //  %lea = lea %gAggregate
+            //  %res = indirectionCall %lea
+
+            val use = indirectionVoidCall.pointer()
+            val lea = bb.putBefore(indirectionVoidCall, Lea.lea(use))
+            bb.updateDF(indirectionVoidCall, indirectionVoidCall.arguments().size, lea)
+            return lea
+        }
+
         return indirectionVoidCall
     }
 
@@ -646,6 +673,45 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(store: Store): Instruction {
+        store.match(store(extern(), any())) {
+            // Before:
+            //  store @global, %val
+            //
+            // After:
+            //  %lea = load PtrType, @global
+            //  store %lea, %val
+
+            val lea = bb.putBefore(store, Load.load(PtrType, store.pointer()))
+            bb.updateDF(store, Store.DESTINATION, lea)
+            return lea
+        }
+
+        store.match(store(any(), extern())) {
+            // Before:
+            //  store %ptr, @global
+            //
+            // After:
+            //  %lea = load PtrType, @global
+            //  store %ptr, %lea
+
+            val lea = bb.putBefore(store, Load.load(PtrType, store.value()))
+            bb.updateDF(store, Store.VALUE, lea)
+            return lea
+        }
+
+        store.match(store(any(), gAggregate())) {
+            // Before:
+            //  store %ptr, %gAggregate
+            //
+            // After:
+            //  %lea = lea %gAggregate
+            //  store %ptr, %lea
+
+            val lea = bb.putBefore(store, Lea.lea(store.value()))
+            bb.updateDF(store, Store.VALUE, lea)
+            return lea
+        }
+
         store.match(store(any(), generate())) {
             // Before:
             //  store %ptr, %val
@@ -830,6 +896,58 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(memcpy: Memcpy): Instruction {
+        memcpy.match(memcpy(extern(), any(), any())) {
+            // Before:
+            //  memcpy @extern, %dst, %size
+            //
+            // After:
+            //  %srcLea = load PtrType, @extern
+            //  memcpy %srcLea, %dst, %size
+
+            val dst = bb.putBefore(memcpy, Load.load(PtrType, memcpy.destination()))
+            bb.updateDF(memcpy, Memcpy.DESTINATION, dst)
+            return dst
+        }
+
+        memcpy.match(memcpy(any(), extern(), any())) {
+            // Before:
+            //  memcpy @extern, %dst, %size
+            //
+            // After:
+            //  %srcLea = load PtrType, @extern
+            //  memcpy %srcLea, %dst, %size
+
+            val src = bb.putBefore(memcpy, Load.load(PtrType, memcpy.source()))
+            bb.updateDF(memcpy, Memcpy.SOURCE, src)
+            return src
+        }
+
+        memcpy.match(memcpy(gAggregate(), any(), any())) {
+            // Before:
+            //  memcpy %src, %dst, %size
+            //
+            // After:
+            //  %srcLea = lea %src
+            //  memcpy %srcLea, %dst, %size
+
+            val dst = bb.putBefore(memcpy, Lea.lea(memcpy.destination()))
+            bb.updateDF(memcpy, Memcpy.DESTINATION, dst)
+            return dst
+        }
+
+        memcpy.match(memcpy(any(), gAggregate(), any())) {
+            // Before:
+            //  memcpy %src, %dst, %size
+            //
+            // After:
+            //  %dstLea = lea %dst
+            //  memcpy %src, %dstLea, %size
+
+            val src = bb.putBefore(memcpy, Lea.lea(memcpy.source()))
+            bb.updateDF(memcpy, Memcpy.SOURCE, src)
+            return src
+        }
+
         memcpy.match(memcpy(stackAlloc(), stackAlloc(), any())) {
             // Before:
             //  memcpy %src, %dst
@@ -1035,6 +1153,34 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
     }
 
     override fun visit(tupleCall: IndirectionTupleCall): Instruction {
+        tupleCall.match(itCall(extern())) {
+            // Before:
+            //  %res = indirectionCall @global
+            //
+            // After:
+            //  %lea = load @global
+            //  %res = indirectionCall %lea
+
+            val use = tupleCall.pointer()
+            val lea = bb.putBefore(tupleCall, Load.load(PtrType, use))
+            bb.updateDF(tupleCall, tupleCall.arguments().size, lea)
+            return lea
+        }
+
+        tupleCall.match(itCall(function())) {
+            // Before:
+            //  %res = indirectionCall %gAggregate
+            //
+            // After:
+            //  %lea = lea %gAggregate
+            //  %res = indirectionCall %lea
+
+            val use = tupleCall.pointer()
+            val lea = bb.putBefore(tupleCall, Lea.lea(use))
+            bb.updateDF(tupleCall, tupleCall.arguments().size, lea)
+            return lea
+        }
+
         return tupleCall
     }
 
