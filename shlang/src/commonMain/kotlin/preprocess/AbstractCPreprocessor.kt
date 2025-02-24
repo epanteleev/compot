@@ -95,6 +95,15 @@ sealed class AbstractCPreprocessor(val filename: String, protected val tokens: T
         return removed
     }
 
+    protected fun killNewLines(): Int {
+        var removed = 0
+        while (!eof() && check<NewLine>()) {
+            val indent = kill()
+            removed += indent.str().length
+        }
+        return removed
+    }
+
     protected fun eatSpace() {
         do {
             if (eof()) {

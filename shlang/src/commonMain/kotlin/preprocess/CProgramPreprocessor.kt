@@ -351,6 +351,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                 return macros.cloneContentWith(tok.position())
             }
             is MacroFunction -> {
+                killNewLines()
                 val spaces = killSpaces()
                 if (!check("(")) {
                     add(tok)

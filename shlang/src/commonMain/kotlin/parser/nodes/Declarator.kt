@@ -111,8 +111,8 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
     }
 }
 
-data object EmptyDeclarator : AnyDeclarator() {
-    override fun begin(): Position = Position.UNKNOWN
+class EmptyDeclarator(private val where: Position) : AnyDeclarator() {
+    override fun begin(): Position = where
     override fun name(): String = ""
 
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)

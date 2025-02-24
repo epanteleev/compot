@@ -726,6 +726,24 @@ class CProgramPreprocessorTest {
     }
 
     @Test
+    fun testStringify10() {
+        val data = """
+            |#define x(a, b) #a + b
+            |x
+            |   (abc, 4)
+        """.trimMargin()
+
+        val tokens = apply(data)
+        val ctx = PreprocessorContext.create(headerHolder)
+        val p = create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |"abc" + 4
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
     fun testFalseStringify() {
         val data = """
             |#define x #

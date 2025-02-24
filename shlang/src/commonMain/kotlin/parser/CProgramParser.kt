@@ -555,9 +555,9 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	;
     fun struct_declarator(): StructDeclarator? = rule {
         if (check(":")) {
-            eat()
+            val doubleDot = eat()
             val expr = constant_expression() ?: throw ParserException(InvalidToken("Expected constant expression", peak()))
-            return@rule StructDeclarator(EmptyDeclarator, expr)
+            return@rule StructDeclarator(EmptyDeclarator(doubleDot.position()), expr)
         }
         val declarator = declarator()?: return@rule null
         if (check(":")) {
@@ -933,7 +933,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (declarator != null) {
             return@rule Parameter(declspec, declarator)
         }
-        val abstractDeclarator = abstract_declarator()?: return@rule Parameter(declspec, EmptyDeclarator)
+        val abstractDeclarator = abstract_declarator()?: return@rule Parameter(declspec, EmptyDeclarator(declspec.begin()))
         return@rule Parameter(declspec, abstractDeclarator)
     }
 
