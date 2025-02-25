@@ -149,7 +149,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     is CUncompletedArrayType -> throw IRCodeGenError("Uncompleted array type", declarator.begin())
                 }
                 val newConstant = if (dimension > constEvalResult.toString().length.toLong()) {
-                    val content = constEvalResult.content.padTo(dimension.toInt(), "\\0")
+                    val content = constEvalResult.content
                     StringLiteralConstant(ArrayType(I8Type, dimension.toInt()), content)
                 } else {
                     constEvalResult

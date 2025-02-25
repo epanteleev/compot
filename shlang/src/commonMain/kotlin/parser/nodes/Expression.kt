@@ -270,9 +270,7 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
 
     fun isNotEmpty(): Boolean = data.isNotEmpty()
 
-    fun data(): String = buildString {
-        data.wrapEscapes(this)
-    }
+    fun data(): String = data
 }
 
 data class CharNode(val char: CharLiteral) : Expression() {

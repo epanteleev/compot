@@ -1,6 +1,9 @@
 package asm.x64
 
+import common.padTo
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+
 
 sealed class AnyDirective
 
@@ -98,7 +101,14 @@ class QuadDirective(val value: String, val offset: Int): AnonymousDirective() {
 
 class StringDirective(val value: String): AnonymousDirective() {
     override fun toString(): String {
-        return ".string $value"
+        val stringBuilder = StringBuilder()
+        for (element in value.toByteArray()) {
+            stringBuilder.append(".byte ")
+            stringBuilder.append(element)
+            stringBuilder.append("\n")
+        }
+        stringBuilder.append(".byte 0\n")
+        return stringBuilder.toString()
     }
 }
 
