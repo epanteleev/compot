@@ -66,11 +66,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 builder.append(eat())
                 continue
             }
-            if (reader.check("\\\\")) {
-                builder.append(eat())
-                builder.append(eat())
-                continue
-            }
+
             if (reader.check('\\')) {
                 eat()
                 val ch = asControlChar(reader.peek())
@@ -81,7 +77,6 @@ class CTokenizer private constructor(private val filename: String, private val r
                 }
 
                 if (reader.check('x')) {
-                    builder.append("\\")
                     eatHexChar(builder)
                     continue
                 }
@@ -102,11 +97,14 @@ class CTokenizer private constructor(private val filename: String, private val r
         return builder.toString()
     }
 
-    private fun eatHexChar(builder: java.lang.StringBuilder) {
-        builder.append(eat())
+    private fun eatHexChar(builder: StringBuilder) {
+        eat()
+        var c = 0
         while (reader.isHexDigit()) {
-            builder.append(eat())
+            val ch = eat()
+            c = c.toByte() * 16 + ch.digitToInt(16)
         }
+        builder.append(c.toChar())
     }
 
     private fun readEscapedChar(): Char {
