@@ -18,17 +18,22 @@ private fun wrapEscapedChar(char: Char): String? = when (char) {
     '\u0007' -> "\\a"
     '\u0000' -> "\\0"
     '\\'     -> "\\\\"
+    '"'      -> "\\\""
     else     -> null
 }
 
 fun String.quotedEscapes(): String {
     val stringBuilder = StringBuilder("\"")
+    wrapEscapes(stringBuilder)
+    stringBuilder.append("\"")
+    return stringBuilder.toString()
+}
+
+fun String.wrapEscapes(stringBuilder: StringBuilder) {
     for (element in this) {
         val ch = wrapEscapedChar(element) ?: element
         stringBuilder.append(ch)
     }
-    stringBuilder.append("\"")
-    return stringBuilder.toString()
 }
 
 fun String.unquoted(): String {

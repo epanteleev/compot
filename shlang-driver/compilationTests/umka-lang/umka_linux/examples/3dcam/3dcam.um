@@ -1,0 +1,40 @@
+import ( 
+    "std.um"
+    "rl.um"
+)
+
+const maxColumns = 20
+
+var cubes: [maxColumns] struct {
+    height:   real
+    position: rl::Vector3
+    color:    rl::Color
+}
+
+fn rnd(min, max: real): real {return min + (max - min) * std::frand()}
+
+fn initBodies() {    
+    // Generates some random columns
+    std::srand(std::time())
+    for _, cube^ in cubes {
+        cube.height   = rnd(1, 12);
+        cube.position = {rnd(-15, 15), cube.height / 2, rnd(-15, 15)}
+        cube.color    = {round(rnd(40, 150)), round(rnd(40, 60)), 40, 255}
+    }
+}
+
+fn drawBodies() {
+    // Draw ground
+    rl::drawPlane({0, 0, 0}, {32, 32}, {50, 100, 50, 255})
+
+    // Draw walls
+    rl::drawCube({-16, 2.5,   0}, 1, 5, 32, { 90,  90,  90, 255})
+    rl::drawCube({ 16, 2.5,   0}, 1, 5, 32, { 90,  90,  90, 255})
+    rl::drawCube({  0, 2.5, -16}, 32, 5, 1, {120, 120, 120, 255})
+    rl::drawCube({  0, 2.5,  16}, 32, 5, 1, {120, 120, 120, 255})    
+                
+    // Draw columns
+    for _, cube in cubes {
+        rl::drawCube(cube.position, 2, cube.height, 2, cube.color)
+    }
+}

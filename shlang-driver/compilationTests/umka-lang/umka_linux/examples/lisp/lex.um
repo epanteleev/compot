@@ -1,0 +1,111 @@
+import "std.um"
+
+type (
+    TokenKind* = enum {
+        Null
+        Atom
+        LPar
+        RPar
+    }
+
+    Token* = struct {
+        kind: TokenKind
+        name: str
+        val: int
+    }
+    
+    Lexer* = struct {
+        buf: str
+        pos, size: int
+        ch: char
+        tok: Token
+    }
+)
+
+
+spelling := [4]str{
+    "nothing", 
+    "atom", 
+    "(", 
+    ")"
+}
+
+
+fn (l: ^Lexer) open*(buf: str) {
+    l.buf = buf
+    l.pos = 0
+    l.size = len(l.buf)
+    l.ch = ' '
+}
+
+
+fn (l: ^Lexer) getch(): char {
+    if l.pos >= l.size {return '\0'}    
+    c := l.buf[l.pos]
+    l.pos++
+    return c
+}
+
+
+fn (l: ^Lexer) next*() {
+    const letter = fn(c: char): bool {return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z'}
+    const digit  = fn(c: char): bool {return c >= '0' && c <= '9'}
+    const space  = fn(c: char): bool {return c == ' ' || c == '\t' || c == '\n'}
+
+    ch := l.ch    
+    l.tok = Token{.Null, "", 0}
+    
+    // Skip spaces
+    for space(ch) {
+        ch = l.getch()
+    }
+    
+    // Read string atom
+    if letter(ch) {        
+        l.tok.kind = .Atom
+        l.tok.name = ""
+        for letter(ch) || digit(ch) {
+            l.tok.name += ch
+            ch = l.getch()
+        }
+        
+    // Read number
+    } else if ch == '+' || ch == '-' || digit(ch) {
+        l.tok.kind = .Atom
+        l.tok.name = "<number>"
+        s := ""
+        if ch == '+' || ch == '-' {
+            s = ch
+            ch = l.getch()
+        }
+        for digit(ch) {
+            s += ch
+            ch = l.getch()
+        }
+        l.tok.val = std::atoi(s)
+              
+    // Read parentheses
+    } else if ch == '(' || ch == ')' {        
+        if ch == '(' {l.tok.kind = .LPar} else {l.tok.kind = .RPar}
+        l.tok.name = ch
+        ch = l.getch()
+        
+    } else if ch != '\0' {
+        exit(2, "Illegal character " + ch + " (" + std::itoa(int(ch)) + ")")
+    }
+    
+    l.ch = ch
+}
+
+
+fn (l: ^Lexer) check*(kind: TokenKind) {
+    if l.tok.kind != kind {
+        exit(2, spelling[int(kind)] + " expected but " + spelling[int(l.tok.kind)] + " found")
+    }
+}
+
+
+fn (l: ^Lexer) eat*(kind: TokenKind) {
+    l.check(kind)
+    l.next()
+}

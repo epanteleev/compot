@@ -4,6 +4,7 @@ import types.*
 import typedesc.*
 import tokenizer.tokens.*
 import common.assertion
+import common.wrapEscapes
 import parser.LineAgnosticAstPrinter
 import parser.nodes.BinaryOpType.AND
 import parser.nodes.BinaryOpType.OR
@@ -269,17 +270,8 @@ data class StringNode(val literals: List<StringLiteral>) : Expression() {
 
     fun isNotEmpty(): Boolean = data.isNotEmpty()
 
-    fun data(): String {
-        val sb = StringBuilder()
-        for (ch in data) {
-            if (ch == '\"') {
-                sb.append("\\\"")
-            } else {
-                sb.append(ch)
-            }
-        }
-
-        return sb.toString()
+    fun data(): String = buildString {
+        data.wrapEscapes(this)
     }
 }
 

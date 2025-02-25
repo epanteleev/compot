@@ -1,0 +1,247 @@
+import "std.um"
+
+
+type Expr* = struct {
+    atom: str
+    val: int
+    car, cdr: ^Expr
+}
+
+
+fn _null(x: ^Expr): bool {
+    return x == null
+}
+
+
+fn num(x: ^Expr): bool {
+    return x != null && x.atom == "<number>"
+}
+
+
+fn (e: ^Expr) toStr*(): str {
+    if e == null {
+        return "nil"
+    } else if e.atom == "" {
+        return "(" + e.car.toStr() + " . " + e.cdr.toStr() + ")"
+    } else if num(e) {
+        return std::itoa(e.val)
+    }
+    return e.atom
+}
+
+
+fn (e: ^Expr) toInt*(): int {
+    if !num(e) {
+        exit(1, e.toStr() + " is non-numeric")
+    }
+    return e.val
+}
+
+
+fn (e: ^Expr) toBool*(): bool {
+    return e != null
+}
+
+
+fn strExpr*(s: str): ^Expr {
+    return &Expr{s, 0, null, null}
+}
+
+
+fn intExpr*(i: int): ^Expr {
+    return &Expr{"<number>", i, null, null}
+}
+
+
+fn boolExpr*(b: bool): ^Expr {
+    if b {return strExpr("t")}
+    return null
+}
+
+
+// Elementary functions
+
+fn car*(x: ^Expr): ^Expr {
+    if x == null {
+        return null
+    } else if x.atom != "" {
+        exit(1, "car() is undefined for atom " + x.toStr())
+    }
+    return x.car
+}
+
+
+fn cdr*(x: ^Expr): ^Expr {
+    if x == null {
+        return null
+    } else if x.atom != "" {
+        exit(1, "cdr() is undefined for atom " + x.toStr())
+    }
+    return x.cdr
+}
+
+
+fn cons*(x, y: ^Expr): ^Expr { 
+    return &Expr{"", 0, x, y}
+}
+
+
+fn atom*(x: ^Expr): bool {
+    return x == null || x.atom != ""
+}
+
+
+fn eq*(x, y: ^Expr): bool {
+    if x == null {return y == null}
+    if y == null {return x == null}
+    
+    if !atom(x) || !atom(y) {
+        exit(1, "eq() is undefined for non-atom(s) (" + x.toStr() + ", " + y.toStr() + ")")
+    }
+    
+    if num(x) && num(y) {return x.val == y.val}
+    return x.atom == y.atom
+}
+
+
+// Arithmetical functions
+
+fn ne*(x, y: ^Expr): bool {return x.toInt() != y.toInt()}
+fn gt*(x, y: ^Expr): bool {return x.toInt() >  y.toInt()}
+fn ge*(x, y: ^Expr): bool {return x.toInt() >= y.toInt()}
+fn lt*(x, y: ^Expr): bool {return x.toInt() <  y.toInt()}
+fn le*(x, y: ^Expr): bool {return x.toInt() <= y.toInt()}
+
+fn add*(x, y: ^Expr): ^Expr {return intExpr(x.toInt() + y.toInt())}
+fn sub*(x, y: ^Expr): ^Expr {return intExpr(x.toInt() - y.toInt())}
+fn mul*(x, y: ^Expr): ^Expr {return intExpr(x.toInt() * y.toInt())}
+fn div*(x, y: ^Expr): ^Expr {return intExpr(x.toInt() / y.toInt())}
+fn rem*(x, y: ^Expr): ^Expr {return intExpr(x.toInt() % y.toInt())}
+
+
+// Helper functions
+
+fn eval(e, a: ^Expr): ^Expr
+
+
+fn equal(x, y: ^Expr): bool {
+    if atom(x) {
+        if atom(y) {
+            return eq(x, y)
+        } else {
+            return false
+        }
+    } else if equal(car(x), car(y)) {
+        return equal(cdr(x), cdr(y))
+    }
+    return false
+}
+
+
+fn pairlis(x, y, a: ^Expr): ^Expr {
+    if _null(x) {return a}
+    return cons(cons(car(x), car(y)), pairlis(cdr(x), cdr(y), a))
+}
+
+
+fn assoc(x, a: ^Expr): ^Expr {   
+    if a == null {
+        exit(1, "No association for " + x.toStr())
+    } else if equal(car(car(a)), x) {
+        return car(a)
+    }
+    return assoc(x, cdr(a))
+}
+
+
+fn evcon(c, a: ^Expr): ^Expr {
+    if eval(car(car(c)), a).toBool() {
+        return eval(car(cdr(car(c))), a)
+    }
+    return evcon(cdr(c), a)    
+}
+
+
+fn evlis(m, a: ^Expr): ^Expr {
+    if _null(m) {return null}
+    return cons(eval(car(m), a), evlis(cdr(m), a))
+}
+
+
+// Universal function (Lisp 1.5 manual, p. 13)
+
+fn apply(f, x, a: ^Expr): ^Expr {
+    if atom(f) {
+        if num(f) {
+            return cons(f, x)
+            
+        } else if eq(f, strExpr("car")) {
+            return car(car(x))
+        } else if eq(f, strExpr("cdr")) {
+            return cdr(car(x))
+        } else if eq(f, strExpr("cons")) {
+            return cons(car(x), car(cdr(x)))
+        } else if eq(f, strExpr("atom")) {
+            return boolExpr(atom(car(x)))
+        } else if eq(f, strExpr("eq")) {
+            return boolExpr(eq(car(x), car(cdr(x))))
+            
+        } else if eq(f, strExpr("ne")) {
+            return boolExpr(ne(car(x), car(cdr(x)))) 
+        } else if eq(f, strExpr("gt")) {
+            return boolExpr(gt(car(x), car(cdr(x)))) 
+        } else if eq(f, strExpr("ge")) {
+            return boolExpr(ge(car(x), car(cdr(x)))) 
+        } else if eq(f, strExpr("lt")) {
+            return boolExpr(lt(car(x), car(cdr(x)))) 
+        } else if eq(f, strExpr("le")) {
+            return boolExpr(le(car(x), car(cdr(x))))
+            
+        } else if eq(f, strExpr("add")) {
+            return add(car(x), car(cdr(x)))
+        } else if eq(f, strExpr("sub")) {
+            return sub(car(x), car(cdr(x))) 
+        } else if eq(f, strExpr("mul")) {
+            return mul(car(x), car(cdr(x))) 
+        } else if eq(f, strExpr("div")) {
+            return div(car(x), car(cdr(x))) 
+        } else if eq(f, strExpr("rem")) {
+            return rem(car(x), car(cdr(x)))
+           
+        } else {
+            return apply(eval(f, a), x, a)
+        }
+    } else if eq(car(f), strExpr("lambda")) {
+        return eval(car(cdr(cdr(f))), pairlis(car(cdr(f)), x, a))     
+    } else if eq(car(f), strExpr("label")) {
+        return apply(car(cdr(cdr(f))), x, cons(cons(car(cdr(f)), car(cdr(cdr(f)))), a))
+    }
+    exit(1, "Illegal function call")
+    return null
+}
+
+
+fn eval(e, a: ^Expr): ^Expr {
+    if atom(e) {
+        if num(e) {
+            return e
+        } else {
+            return cdr(assoc(e, a))
+        }
+    } else if atom(car(e)) {
+        if eq(car(e), strExpr("quote")) {
+            return car(cdr(e))
+        } else if eq(car(e), strExpr("cond")) {
+            return evcon(cdr(e), a)
+        } else {
+            return apply(car(e), evlis(cdr(e), a), a)
+        }
+    }
+    return apply(car(e), evlis(cdr(e), a), a)
+
+}
+
+
+fn evalquote*(f, x: ^Expr): ^Expr {
+    return apply(f, x, null)
+}
