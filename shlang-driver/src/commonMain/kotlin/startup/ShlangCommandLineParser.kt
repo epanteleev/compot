@@ -78,7 +78,8 @@ object ShlangCommandLineParser {
         if (arg.startsWith("-fvisibility") ||
             arg.startsWith("-fno-") ||
             arg.startsWith("-std=") ||
-            arg.startsWith("-W")) {
+            arg.startsWith("-W") ||
+            arg.startsWith("-march=")) {
             return true
         }
 

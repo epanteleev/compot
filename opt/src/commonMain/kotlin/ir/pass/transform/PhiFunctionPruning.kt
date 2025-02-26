@@ -11,19 +11,19 @@ internal class PhiFunctionPruning private constructor(private val cfg: FunctionD
     private val usefull = hashMapOf<Phi, Boolean>()
     private val worklist = arrayListOf<Phi>()
 
-    fun markUseless(phi: Phi) {
+    private fun markUseless(phi: Phi) {
         usefull[phi] = false
     }
 
-    fun markUseful(phi: Phi) {
+    private fun markUseful(phi: Phi) {
         usefull[phi] = true
     }
 
-    fun isUseful(phi: Phi): Boolean {
+    private fun isUseful(phi: Phi): Boolean {
         return usefull[phi]!!
     }
 
-    fun forEachUseless(closure: (Phi) -> Unit) {
+    private fun forEachUseless(closure: (Phi) -> Unit) {
         for ((phi, useful) in usefull) {
             if (!useful) {
                 closure(phi)

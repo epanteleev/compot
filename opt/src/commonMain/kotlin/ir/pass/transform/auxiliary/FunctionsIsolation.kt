@@ -10,7 +10,6 @@ import ir.module.FunctionData
 import ir.module.Module
 import ir.module.SSAModule
 import ir.module.block.Block
-import ir.pass.analysis.LivenessAnalysisPassFabric
 import ir.value.*
 import ir.value.constant.U64Value
 
