@@ -33,6 +33,13 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("done\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testTernary() {
+        val result = runCTest("shlang/stdlib/ternary", listOf(), options())
+        assertEquals("Hello\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {

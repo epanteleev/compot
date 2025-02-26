@@ -91,9 +91,4 @@ enum class BinaryOpType {
     SHR {
         override fun toString(): String = ">>"
     };
-
-    fun isBoolean(): Boolean = when (this) {
-        OR, AND -> true
-        else -> false
-    }
 }

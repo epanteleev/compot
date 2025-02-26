@@ -5,6 +5,9 @@ import typedesc.*
 import tokenizer.tokens.*
 import common.assertion
 import parser.LineAgnosticAstPrinter
+import parser.nodes.BinaryOpType.AND
+import parser.nodes.BinaryOpType.OR
+import parser.nodes.BinaryOpType.COMMA
 import parser.nodes.visitors.*
 import tokenizer.Position
 
@@ -63,8 +66,10 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        if (opType.isBoolean()) {
-            return@memoize BOOL
+        when (opType) {
+            OR, AND -> return@memoize BOOL
+            COMMA -> return@memoize right.resolveType(typeHolder)
+            else -> {}
         }
         val l = left.resolveType(typeHolder)
         val r = right.resolveType(typeHolder)
@@ -100,6 +105,10 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val typeTrue  = eTrue.resolveType(typeHolder)
         val typeFalse = eFalse.resolveType(typeHolder)
+
+        if (typeTrue is VOID || typeFalse is VOID) {
+            return@memoize VOID
+        }
 
         if (typeTrue is AnyCStructType && typeFalse is AnyCStructType && typeTrue == typeFalse) {
             return@memoize typeTrue
