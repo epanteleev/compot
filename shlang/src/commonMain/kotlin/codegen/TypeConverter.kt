@@ -91,19 +91,25 @@ internal object TypeConverter {
         return structType(type.name, fields)
     }
 
+    private fun ModuleBuilder.getAppropriateField(typeHolder: TypeHolder, type: CUnionType): NonTrivialType? {
+        val fieldWithMaxSize = type.members().maxByOrNull { it.size() }
+        if (fieldWithMaxSize == null) {
+            return null
+        }
+        val ctype = fieldWithMaxSize.cType()
+        if (ctype is CPointer) {
+            return I64Type
+        }
+        return toIRLVType(typeHolder, fieldWithMaxSize.cType())
+    }
+
     private fun ModuleBuilder.convertUnionType(typeHolder: TypeHolder, type: CUnionType): Type {
         val structType = findStructTypeOrNull(type.name)
         if (structType != null) {
             return structType
         }
 
-        val field = type.members().maxByOrNull { it.cType().asType<CompletedType>().size() }.let {
-            if (it == null) {
-                null
-            } else {
-                toIRLVType<NonTrivialType>(typeHolder, it.cType())
-            }
-        }
+        val field = getAppropriateField(typeHolder, type)
         return if (field == null) {
             structType(type.name, listOf(), type.alignmentOf())
         } else {
@@ -131,7 +137,7 @@ internal object TypeConverter {
         return when (toType) {
             I8Type -> {
                 toType as SignedIntType
-                when (lvalue.type()) {
+                when (val lType = lvalue.type()) {
                     FlagType -> flag2int(lvalue, toType)
                     I16Type -> trunc(lvalue, toType)
                     I32Type -> trunc(lvalue, toType)
@@ -149,13 +155,13 @@ internal object TypeConverter {
                     F32Type -> fp2Int(lvalue, toType)
                     F64Type -> fp2Int(lvalue, toType)
                     PtrType -> ptr2int(lvalue, toType)
-                    else -> throw RuntimeException("Cannot convert $lvalue to $toType")
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$lType to $toType")
                 }
             }
 
             I16Type -> {
                 toType as SignedIntType
-                when (lvalue.type()) {
+                when (val lType = lvalue.type()) {
                     FlagType -> flag2int(lvalue, toType)
                     I8Type  -> sext(lvalue, toType)
                     I32Type -> trunc(lvalue, toType)
@@ -176,13 +182,13 @@ internal object TypeConverter {
                     F32Type -> fp2Int(lvalue, toType)
                     F64Type -> fp2Int(lvalue, toType)
                     PtrType -> ptr2int(lvalue, toType)
-                    else -> throw RuntimeException("Cannot convert $lvalue to $toType")
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$lType to $toType")
                 }
             }
 
             I32Type -> {
                 toType as SignedIntType
-                when (lvalue.type()) {
+                when (val lType = lvalue.type()) {
                     FlagType -> flag2int(lvalue, toType)
                     I8Type -> sext(lvalue, toType)
                     I16Type -> sext(lvalue, toType)
@@ -208,13 +214,13 @@ internal object TypeConverter {
                         trunc(tmp, toType)
                     }
                     PtrType -> ptr2int(lvalue, toType)
-                    else -> throw RuntimeException("Cannot convert $lvalue:${lvalue.type()} to $toType")
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$lType to $toType")
                 }
             }
 
             I64Type -> {
                 toType as SignedIntType
-                when (lvalue.type()) {
+                when (val lType = lvalue.type()) {
                     FlagType -> flag2int(lvalue, toType)
                     I8Type -> sext(lvalue, toType)
                     I16Type -> sext(lvalue, toType)
@@ -238,13 +244,13 @@ internal object TypeConverter {
                     F32Type -> fp2Int(lvalue, toType)
                     F64Type -> fp2Int(lvalue, toType)
                     PtrType -> ptr2int(lvalue, toType)
-                    else -> throw RuntimeException("Cannot convert $lvalue to $toType")
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$lType to $toType")
                 }
             }
 
             U8Type -> {
                 toType as UnsignedIntType
-                when (lvalue.type()) {
+                when (val lType = lvalue.type()) {
                     FlagType -> flag2int(lvalue, toType)
                     I8Type -> bitcast(lvalue, toType)
                     I16Type -> {
@@ -265,13 +271,13 @@ internal object TypeConverter {
                     F32Type -> fp2Int(lvalue, U8Type)
                     F64Type -> fp2Int(lvalue, U8Type)
                     PtrType -> ptr2int(lvalue, toType)
-                    else -> throw RuntimeException("Cannot convert $lvalue to $toType")
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$lType to $toType")
                 }
             }
 
             U16Type -> {
                 toType as UnsignedIntType
-                when (lvalue.type()) {
+                when (val lType = lvalue.type()) {
                     FlagType -> flag2int(lvalue, toType)
                     I8Type -> {
                         val sext = sext(lvalue, I16Type)
@@ -299,13 +305,13 @@ internal object TypeConverter {
 
                     F64Type -> fp2Int(lvalue, U16Type)
                     PtrType -> ptr2int(lvalue, toType)
-                    else -> throw RuntimeException("Cannot convert $lvalue to $toType")
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$lType to $toType")
                 }
             }
 
             U32Type -> {
                 toType as UnsignedIntType
-                when (lvalue.type()) {
+                when (val lType = lvalue.type()) {
                     FlagType -> flag2int(lvalue, toType)
                     I8Type -> {
                         val sext = sext(lvalue, I32Type)
@@ -329,13 +335,13 @@ internal object TypeConverter {
                         trunc(tmp, toType)
                     }
                     PtrType -> ptr2int(lvalue, toType)
-                    else -> throw RuntimeException("Cannot convert $lvalue to $toType")
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$lType to $toType")
                 }
             }
 
             U64Type -> {
                 toType as UnsignedIntType
-                when (lvalue.type()) {
+                when (val lType = lvalue.type()) {
                     FlagType -> flag2int(lvalue, toType)
                     I8Type -> {
                         val sext = sext(lvalue, I64Type)
@@ -356,13 +362,13 @@ internal object TypeConverter {
                     F32Type -> fp2Int(lvalue, toType)
                     F64Type -> fp2Int(lvalue, toType)
                     PtrType -> ptr2int(lvalue, toType)
-                    else -> throw RuntimeException("Cannot convert $lvalue to $toType")
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$lType to $toType")
                 }
             }
 
             F32Type -> {
                 toType as FloatingPointType
-                when (lvalue.type()) {
+                when (val lType = lvalue.type()) {
                     FlagType -> int2fp(lvalue, toType)
                     I8Type  -> int2fp(lvalue, toType)
                     I16Type -> int2fp(lvalue, toType)
@@ -373,13 +379,13 @@ internal object TypeConverter {
                     U32Type -> uint2fp(lvalue, toType)
                     U64Type -> int2fp(lvalue, toType)
                     F64Type -> fptrunc(lvalue, toType)
-                    else -> throw RuntimeException("Cannot convert $lvalue to $toType")
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$lType to $toType")
                 }
             }
 
             F64Type -> {
                 toType as FloatingPointType
-                when (lvalue.type()) {
+                when (val lType = lvalue.type()) {
                     FlagType -> int2fp(lvalue, toType)
                     I8Type  -> int2fp(lvalue, toType)
                     I16Type -> int2fp(lvalue, toType)
@@ -390,7 +396,7 @@ internal object TypeConverter {
                     U32Type -> uint2fp(lvalue, toType)
                     U64Type -> uint2fp(lvalue, toType)
                     F32Type -> fpext(lvalue, toType)
-                    else -> throw RuntimeException("Cannot convert $lvalue to $toType")
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$lType to $toType")
                 }
             }
 
@@ -400,7 +406,7 @@ internal object TypeConverter {
                 if (valueType is IntegerType) {
                     return int2ptr(lvalue)
                 } else {
-                    throw RuntimeException("Cannot convert $lvalue:${valueType} to $toType")
+                    throw IllegalStateException("Cannot convert $lvalue:${valueType} to $toType")
                 }
             }
 
@@ -414,9 +420,9 @@ internal object TypeConverter {
                 U32Type -> icmp(lvalue, IntPredicate.Ne, U32Value.of(0))
                 U64Type -> icmp(lvalue, IntPredicate.Ne, U64Value.of(0))
                 PtrType -> icmp(lvalue, IntPredicate.Ne, NullValue)
-                else -> throw RuntimeException("Cannot convert $lvalue:$vType to $toType")
+                else -> throw IllegalStateException("Cannot convert $lvalue:$vType to $toType")
             }
-            else -> throw RuntimeException("Cannot convert $lvalue:${lvalue.type()} to $toType")
+            else -> throw IllegalStateException("Cannot convert $lvalue:${lvalue.type()} to $toType")
         }
     }
 

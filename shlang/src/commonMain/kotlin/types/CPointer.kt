@@ -4,7 +4,7 @@ import typedesc.*
 import ir.Definitions.POINTER_SIZE
 
 
-class CPointer(val type: CType, private val properties: Set<TypeQualifier> = setOf()) : CPrimitive() {
+class CPointer(private val type: CType, private val properties: Set<TypeQualifier> = setOf()) : CPrimitive() {
     override fun size(): Int = POINTER_SIZE
 
     fun dereference(typeHolder: TypeHolder): CType = when (type) {
