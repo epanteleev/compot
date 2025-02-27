@@ -1,20 +1,21 @@
 package startup
 
-import okio.FileSystem
-
-import kotlin.random.Random
 import common.ExecutionResult
 import common.Extension
 import common.GNUAssemblerRunner
 import common.ProcessedFile
 import ir.module.Module
 import ir.pass.CompileContext
-import ir.pass.PassPipeline
-import okio.Path.Companion.toPath
 import ir.pass.CompileContextBuilder
+import ir.pass.PassPipeline
+import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.CompiledModule
 import ir.platform.common.TargetPlatform
-import ir.platform.common.CodeGenerationFactory
+import okio.FileSystem
+import okio.Path.Companion.toPath
+import java.awt.SystemColor.text
+import java.io.PrintWriter
+import kotlin.random.Random
 
 
 class OptDriver private constructor(private val commandLineArguments: OptCLIArguments) {
@@ -45,8 +46,8 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
         val tempDir = FileSystem.SYSTEM_TEMPORARY_DIRECTORY.resolve(OPT + Random.nextInt())
         val optimizedAsm = tempDir.toString()
         try {
-            FileSystem.SYSTEM.write(tempDir) {
-                writeUtf8(compiledModule.toString())
+            PrintWriter(optimizedAsm).use { out ->
+                out.println(compiledModule.toString())
             }
 
             if (commandLineArguments.isDumpIr()) {

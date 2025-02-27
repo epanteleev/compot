@@ -3,21 +3,20 @@ package ir.pass
 import ir.module.Module
 import ir.pass.analysis.VerifySSA
 import ir.pass.common.TransformPassFabric
-import ir.pass.transform.CSSAConstructionFabric
 import ir.pass.transform.Mem2RegFabric
-import ir.pass.transform.SSADestructionFabric
+import okio.FileSystem
 
 
 class PassPipeline private constructor(private val passFabrics: List<TransformPassFabric>, private val ctx: CompileContext) {
     fun run(start: Module): Module {
         var current = start
-        ctx.dumpIr("initial") { current.toString() }
+        dumpIr("initial") { current.toString() }
         for (fabric in passFabrics) {
             try {
                 val pass = fabric.create(current)
                 current = pass.run()
                 VerifySSA.run(current)
-                ctx.dumpIr(pass.name()) { current.toString() }
+                dumpIr(pass.name()) { current.toString() }
             } catch (ex: Throwable) {
                 println(current.toString())
                 throw ex
@@ -26,9 +25,17 @@ class PassPipeline private constructor(private val passFabrics: List<TransformPa
         return current
     }
 
+    private fun dumpIr(passName: String, message: () -> String) {
+        val filename = ctx.outputFile(passName) ?: return
+
+        FileSystem.SYSTEM.write(filename) {
+            writeUtf8(message())
+        }
+    }
+
     companion object {
-        fun base(ctx: CompileContext): PassPipeline = create(arrayListOf(CSSAConstructionFabric, SSADestructionFabric), ctx)
-        fun opt(ctx: CompileContext): PassPipeline = create(arrayListOf(Mem2RegFabric, CSSAConstructionFabric, SSADestructionFabric), ctx)
+        fun base(ctx: CompileContext): PassPipeline = create(arrayListOf(), ctx)
+        fun opt(ctx: CompileContext): PassPipeline = create(arrayListOf(Mem2RegFabric), ctx)
 
         fun create(passFabrics: List<TransformPassFabric>, ctx: CompileContext): PassPipeline {
             return PassPipeline(passFabrics, ctx)

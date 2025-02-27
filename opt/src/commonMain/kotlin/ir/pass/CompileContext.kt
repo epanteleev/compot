@@ -1,19 +1,16 @@
 package ir.pass
 
-import okio.FileSystem
+import okio.Path
 import okio.Path.Companion.toPath
 
 
 class CompileContext(private val filename: String, private val suffix: String, private val outputDir: String?) {
-    fun dumpIr(passName: String, message: () -> String) {
+    fun outputFile(passName: String): Path? {
         if (outputDir == null) {
-            return
+            return null
         }
 
-        val outputFile = "${outputDir}/$filename/${passName}${suffix}.ir".toPath()
-        FileSystem.SYSTEM.write(outputFile) {
-            writeUtf8(message())
-        }
+        return "${outputDir}/$filename/${passName}${suffix}.ir".toPath()
     }
 }
 
