@@ -5,6 +5,7 @@ import ir.pass.common.TransformPassFabric
 import ir.pass.common.TransformPass
 import ir.platform.x64.LModule
 import ir.pass.transform.auxiliary.*
+import ir.platform.x64.auxiliary.Lowering
 import ir.platform.x64.pass.transform.*
 
 

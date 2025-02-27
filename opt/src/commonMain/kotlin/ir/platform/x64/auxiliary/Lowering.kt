@@ -1,5 +1,7 @@
-package ir.pass.transform.auxiliary
+package ir.platform.x64.auxiliary
 
+import ir.global.AnyAggregateGlobalConstant
+import ir.global.ExternValue
 import ir.types.*
 import ir.value.*
 import ir.module.Module
@@ -10,6 +12,8 @@ import ir.module.block.Block
 import ir.module.FunctionData
 import ir.instruction.matching.*
 import ir.instruction.utils.IRInstructionVisitor
+import ir.module.ExternFunction
+import ir.module.FunctionPrototype
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
 
 
@@ -22,6 +26,12 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             bb.transform { it.accept(this) }
         }
     }
+
+    private fun extern(): ValueMatcher = { it is ExternValue || it is ExternFunction }
+
+    private fun gAggregate(): ValueMatcher = { it is AnyAggregateGlobalConstant || it is FunctionPrototype }
+
+    private fun function(): ValueMatcher = { it is FunctionPrototype }
 
     override fun visit(alloc: Alloc): Instruction {
         // Before:

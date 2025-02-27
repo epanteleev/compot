@@ -2,6 +2,11 @@ package ir.platform.common
 
 import ir.module.Module
 import ir.pass.CompileContext
+import ir.pass.PassPipeline
+import ir.pass.PassPipeline.Companion.create
+import ir.pass.transform.CSSAConstructionFabric
+import ir.pass.transform.Mem2RegFabric
+import ir.pass.transform.SSADestructionFabric
 import ir.platform.x64.codegen.X64CodeGenerator
 
 
@@ -36,10 +41,17 @@ class CodeGenerationFactory {
     }
 
     fun build(module: Module): CompiledModule {
+        val preparedModule = beforeCodegen(ctx as CompileContext)
+            .run(module)
+
         val compiled = when (target as TargetPlatform) {
-            TargetPlatform.X64 -> X64CodeGenerator(module, CompilationContext(picEnabled)).emit()
+            TargetPlatform.X64 -> X64CodeGenerator(preparedModule, CompilationContext(picEnabled)).emit()
         }
 
         return compiled
+    }
+
+    companion object {
+        private fun beforeCodegen(ctx: CompileContext): PassPipeline = create(arrayListOf(CSSAConstructionFabric, SSADestructionFabric), ctx)
     }
 }

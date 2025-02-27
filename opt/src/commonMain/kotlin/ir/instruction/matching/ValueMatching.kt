@@ -149,12 +149,6 @@ fun constant(): ValueMatcher = { it is Constant }
 
 fun externValue(): ValueMatcher = { it is ExternValue }
 
-fun extern(): ValueMatcher = { it is ExternValue || it is ExternFunction }
-
-fun gAggregate(): ValueMatcher = { it is AnyAggregateGlobalConstant || it is FunctionPrototype }
-
-fun function(): ValueMatcher = { it is FunctionPrototype }
-
 inline fun value(crossinline type: TypeMatcher): ValueMatcher = { type(it.type()) }
 
 inline fun gValue(crossinline type: TypeMatcher): ValueMatcher = {
