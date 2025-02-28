@@ -1,4 +1,5 @@
-#include <stdio.h>
+
+extern int printf(char format[], ...);
 
 void fun() { printf("Hello"); }
 

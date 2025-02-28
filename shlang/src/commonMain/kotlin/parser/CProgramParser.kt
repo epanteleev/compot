@@ -946,57 +946,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	| direct_declarator '(' identifier_list ')'
     //	| direct_declarator '(' ')'
     fun direct_declarator(): DirectDeclarator? = rule {
-        fun declarator_list(): List<DirectDeclaratorParam> {
-            val declarators = mutableListOf<DirectDeclaratorParam>()
-            while (true) {
-                if (check("(")) {
-                    eat()
-                    if (check(")")) {
-                        eat()
-                        declarators.add(ParameterTypeList(listOf()))
-                        continue
-                    }
-                    val declspec = parameter_type_list()
-                    if (declspec != null) {
-                        if (check(")")) {
-                            eat()
-                            declarators.add(ParameterTypeList(declspec))
-                            continue
-                        }
-                        throw ParserException(InvalidToken("Expected ')'", peak()))
-                    }
-                    val identifiers = identifier_list()
-                    if (identifiers != null) {
-                        if (check(")")) {
-                            eat()
-                            declarators.add(identifiers)
-                            continue
-                        }
-                        throw ParserException(InvalidToken("Expected ')'", peak()))
-                    }
-
-                    throw ParserException(InvalidToken("Expected ')'", peak()))
-                }
-                if (check("[")) {
-                    eat()
-                    if (check("]")) {
-                        eat()
-                        declarators.add(ArrayDeclarator(EmptyExpression))
-                        continue
-                    }
-                    val size = constant_expression()?: throw ParserException(InvalidToken("Expected constant expression", peak()))
-                    if (check("]")) {
-                        eat()
-                        declarators.add(ArrayDeclarator(size))
-                        continue
-                    }
-                    throw ParserException(InvalidToken("Expected ']'", peak()))
-                }
-                break
-            }
-            return declarators
-        }
-
         if (check<Identifier>()) {
             val ident = peak<Identifier>()
             eat()
@@ -1004,17 +953,66 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         if (check("(")) {
             eat()
-            val declarator = declarator()
-            if (declarator != null) {
-                if (check(")")) {
-                    eat()
-                    val declarators = declarator_list()
-                    return@rule DirectDeclarator(FunctionPointerDeclarator(declarator), declarators)
-                }
+            val declarator = declarator() ?: return@rule null
+            if (!check(")")) {
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
+            eat()
+            val declarators = declarator_list()
+            return@rule DirectDeclarator(FunctionDeclarator(declarator), declarators)
         }
         return@rule null
+    }
+
+    private fun declarator_list(): List<DirectDeclaratorParam> {
+        val declarators = mutableListOf<DirectDeclaratorParam>()
+        while (true) {
+            if (check("(")) {
+                eat()
+                if (check(")")) {
+                    eat()
+                    declarators.add(ParameterTypeList(listOf()))
+                    continue
+                }
+                val declspec = parameter_type_list()
+                if (declspec != null) {
+                    if (check(")")) {
+                        eat()
+                        declarators.add(ParameterTypeList(declspec))
+                        continue
+                    }
+                    throw ParserException(InvalidToken("Expected ')'", peak()))
+                }
+                val identifiers = identifier_list()
+                if (identifiers != null) {
+                    if (check(")")) {
+                        eat()
+                        declarators.add(identifiers)
+                        continue
+                    }
+                    throw ParserException(InvalidToken("Expected ')'", peak()))
+                }
+
+                throw ParserException(InvalidToken("Expected ')'", peak()))
+            }
+            if (check("[")) {
+                eat()
+                if (check("]")) {
+                    eat()
+                    declarators.add(ArrayDeclarator(EmptyExpression))
+                    continue
+                }
+                val size = constant_expression()?: throw ParserException(InvalidToken("Expected constant expression", peak()))
+                if (check("]")) {
+                    eat()
+                    declarators.add(ArrayDeclarator(size))
+                    continue
+                }
+                throw ParserException(InvalidToken("Expected ']'", peak()))
+            }
+            break
+        }
+        return declarators
     }
 
     // constant_expression

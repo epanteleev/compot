@@ -171,8 +171,8 @@ class TypeResolutionTest {
         val typeResolver = TypeHolder.default()
         val fnType = expr.resolveType(typeResolver)
 
-        assertEquals("int add(int(int, int)*, int)", fnType.toString())
-        assertEquals("int(int, int)*", typeResolver["a"].toString())
+        assertEquals("int add(int a(int, int), int)", fnType.toString())
+        assertEquals("int a(int, int)", typeResolver["a"].toString())
         assertEquals(INT, typeResolver["b"].typeDesc.cType())
     }
 

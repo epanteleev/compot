@@ -912,11 +912,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitAssignBinary(binop: BinaryOp): Value {
-        val rightExpression = binop.right
         val leftType = binop.left.resolveType(typeHolder)
-        if (leftType is AnyCStructType && rightExpression is FunctionCall) {
+        if (leftType is AnyCStructType && binop.right is FunctionCall) {
             val lvalueAdr = visitExpression(binop.left, false)
-            visitFuncCallForStructType(lvalueAdr, leftType, rightExpression)
+            visitFuncCallForStructType(lvalueAdr, leftType, binop.right)
             return lvalueAdr
         }
 

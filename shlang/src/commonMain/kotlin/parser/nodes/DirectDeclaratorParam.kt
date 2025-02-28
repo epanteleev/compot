@@ -128,34 +128,3 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
         return paramTypes
     }
 }
-
-// Special case for first parameter of DirectDeclarator
-sealed class DirectDeclaratorFirstParam : DirectDeclaratorParam() {
-    abstract fun name(): String
-}
-
-data class FunctionPointerDeclarator(val declarator: Declarator): DirectDeclaratorFirstParam() {
-    override fun begin(): Position = declarator.begin()
-    override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
-
-    override fun name(): String = declarator.name()
-
-    override fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc {
-        val cType = if (typeDesc.cType() is AbstractCFunction) {
-            TypeDesc.from(CPointer(typeDesc.cType() as AbstractCFunction, setOf()), listOf())
-        } else {
-            typeDesc
-        }
-        return declarator.directDeclarator.resolveType(cType, typeHolder)
-    }
-}
-
-data class DirectVarDeclarator(val ident: Identifier): DirectDeclaratorFirstParam() {
-    override fun begin(): Position = ident.position()
-    override fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>) = visitor.visit(this)
-    override fun name(): String = ident.str()
-
-    override fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc {
-        TODO("Not yet implemented")
-    }
-}
