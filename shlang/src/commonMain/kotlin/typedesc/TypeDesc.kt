@@ -12,10 +12,10 @@ class TypeDesc private constructor(private val baseType: CType, private val prop
         return TypeDesc(baseType, properties + extraProperties)
     }
 
-    inline fun<reified T: CType> asType(): T {
+    inline fun<reified T: CType> asType(where: Position = Position.UNKNOWN): T {
         val cTy = cType()
         if (cTy !is T) {
-            throw TypeResolutionException("Type $cTy is not of type ${T::class.simpleName}", Position.UNKNOWN) // TODO unknown pos???
+            throw TypeResolutionException("Type $cTy is not of type ${T::class.simpleName}", where)
         }
 
         return cTy

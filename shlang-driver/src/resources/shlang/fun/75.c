@@ -4,5 +4,6 @@ int ret(int a) {
 }
 
 int main() {
-    return ret((9 , 0, (void)0, 8));
+    int a = 8;
+    return ret((9 , 0, (void)0, a));
 }

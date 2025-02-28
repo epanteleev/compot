@@ -1018,7 +1018,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         BinaryOpType.BIT_AND_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::and)
         BinaryOpType.COMMA -> {
             visitExpression(binOp.left, false)
-            visitExpression(binOp.right, false)
+            visitExpression(binOp.right, true)
         }
     }
 
@@ -1915,7 +1915,8 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
                         nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
     fun generate(functionNode: FunctionNode) {
         val varDesc = functionNode.declareType(functionNode.specifier, typeHolder)
-        val fnType = varDesc.typeDesc.asType<CFunctionType>()
+        val fnType = varDesc.typeDesc
+            .asType<CFunctionType>(functionNode.begin())
 
         val parameters = functionNode.functionDeclarator().params()
         val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder, varDesc.storageClass).build()
