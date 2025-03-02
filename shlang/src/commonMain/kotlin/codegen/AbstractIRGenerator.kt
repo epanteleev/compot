@@ -266,25 +266,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
     }
 
-    protected fun constEvalExpression0(expr: Expression): Number? = when (expr.resolveType(typeHolder)) {
-        INT, SHORT, CHAR, UINT, USHORT, UCHAR, is CEnumType -> {
-            val ctx = CommonConstEvalContext<Int>(typeHolder)
-            ConstEvalExpression.eval(expr, TryConstEvalExpressionInt(ctx))
-        }
-        LONG, ULONG -> {
-            val ctx = CommonConstEvalContext<Long>(typeHolder)
-            ConstEvalExpression.eval(expr, TryConstEvalExpressionLong(ctx))
-        }
-        FLOAT -> {
-            val ctx = CommonConstEvalContext<Float>(typeHolder)
-            ConstEvalExpression.eval(expr, TryConstEvalExpressionFloat(ctx))
-        }
-        DOUBLE -> {
-            val ctx = CommonConstEvalContext<Double>(typeHolder)
-            ConstEvalExpression.eval(expr, TryConstEvalExpressionDouble(ctx))
-        }
-        else -> null
-    }
+    protected fun constEvalExpression0(expr: Expression): Number? = ConstEvalExpression.eval(expr, typeHolder)
 
     private fun constEvalInitializers(lValueCType: CAggregateType, expr: InitializerList): NonTrivialConstant {
         if (expr.initializers.size == 1 && lValueCType is CArrayType && lValueCType.element().cType() is CHAR) {

@@ -327,22 +327,12 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
                 else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType", begin())
             }
             PrefixUnaryOpType.ADDRESS -> CPointer(primaryType)
-            PrefixUnaryOpType.NOT -> {
-                if (primaryType is CPointer) {
-                    LONG //TODO UNSIGNED???
-                } else {
-                    primaryType
-                }
-            }
-            PrefixUnaryOpType.NEG -> {
-                primaryType as? CPrimitive ?: throw TypeResolutionException("Negation on non-primitive type: $primaryType", begin())
-            }
+            PrefixUnaryOpType.NOT -> INT
+            PrefixUnaryOpType.NEG,
             PrefixUnaryOpType.INC,
             PrefixUnaryOpType.DEC,
-            PrefixUnaryOpType.PLUS -> primaryType
-            PrefixUnaryOpType.BIT_NOT -> {
-                primaryType as? CPrimitive ?: throw TypeResolutionException("Bitwise not on non-primitive type: $primaryType", begin())
-            }
+            PrefixUnaryOpType.PLUS,
+            PrefixUnaryOpType.BIT_NOT -> primaryType
         }
     }
 }

@@ -9,7 +9,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class NotCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp {
+internal data class NotCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp {
     private val size = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {
@@ -27,13 +27,11 @@ data class NotCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOper
     }
 
     override fun ar(dst: Address, src: GPRegister) {
-        TODO("untested")
         asm.mov(size, src, dst)
         asm.not(size, dst)
     }
 
     override fun aa(dst: Address, src: Address) {
-        TODO("untested")
         if (dst == src) {
             asm.not(size, dst)
         } else {
@@ -48,8 +46,7 @@ data class NotCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOper
     }
 
     override fun ai(dst: Address, src: Imm32) {
-        TODO("untested")
-        asm.mov(size, Imm32.of(src.value().inv()), dst)
+        asm.mov(size, Imm64.of(src.value().inv()), dst)
     }
 
     override fun default(dst: Operand, src: Operand) {

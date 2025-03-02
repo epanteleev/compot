@@ -3,6 +3,7 @@ package codegen.consteval
 import types.*
 import parser.nodes.*
 import parser.nodes.visitors.ExpressionVisitor
+import typedesc.TypeHolder
 
 
 data class ConstEvalException(override val message: String): Exception(message)
@@ -11,6 +12,26 @@ sealed class ConstEvalExpression<T>: ExpressionVisitor<T?> {
     companion object {
         inline fun <reified T : Number?> eval(expression: Expression, ctx: ConstEvalExpression<T>): T? {
             return expression.accept(ctx)
+        }
+
+        fun eval(expr: Expression, typeHolder: TypeHolder): Number? = when (expr.resolveType(typeHolder)) {
+            INT, SHORT, CHAR, UINT, USHORT, UCHAR, is CEnumType -> {
+                val ctx = CommonConstEvalContext<Int>(typeHolder)
+                eval(expr, TryConstEvalExpressionInt(ctx))
+            }
+            LONG, ULONG -> {
+                val ctx = CommonConstEvalContext<Long>(typeHolder)
+                eval(expr, TryConstEvalExpressionLong(ctx))
+            }
+            FLOAT -> {
+                val ctx = CommonConstEvalContext<Float>(typeHolder)
+                eval(expr, TryConstEvalExpressionFloat(ctx))
+            }
+            DOUBLE -> {
+                val ctx = CommonConstEvalContext<Double>(typeHolder)
+                eval(expr, TryConstEvalExpressionDouble(ctx))
+            }
+            else -> null
         }
     }
 }
@@ -120,12 +141,10 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(cast: Cast): Int? {
-        val expression = cast.cast.accept(this) ?: return null
+        val expression = eval(cast.cast, ctx.typeHolder()) ?: return null
         val type = cast.typeName.specifyType(ctx.typeHolder(), listOf()).typeDesc
         return when (type.cType()) {
-            INT -> expression.toInt()
-            LONG, ULONG -> expression.toInt()
-            SHORT -> expression.toInt()
+            is AnyCInteger -> expression.toInt()
             else -> null
         }
     }
@@ -254,7 +273,7 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
     }
 
     override fun visit(cast: Cast): Long? {
-        val expression = cast.cast.accept(this) ?: return null
+        val expression = eval(cast.cast, ctx.typeHolder()) ?: return null
         val type = cast.typeName.specifyType(ctx.typeHolder(), listOf()).typeDesc
         val converted = when (type.cType()) {
             INT -> expression.toInt()
