@@ -128,6 +128,7 @@ sealed class CPrimitive: CompletedType() {
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     is CEnumType -> INT
+                    is CPointer -> type2
                     else -> null
                 }
             }
@@ -172,6 +173,7 @@ sealed class CPrimitive: CompletedType() {
                     UCHAR -> return this
                     INT -> return this
                     SHORT -> return this
+                    USHORT -> return this
                     UINT -> return this
                     FLOAT -> return this
                     LONG -> return this

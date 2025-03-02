@@ -70,6 +70,8 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
         when (opType) {
             OR, AND -> return@memoize BOOL
             COMMA -> return@memoize right.resolveType(typeHolder)
+            BinaryOpType.SHL,
+            BinaryOpType.SHR -> return@memoize left.resolveType(typeHolder)
             else -> {}
         }
         val l = left.resolveType(typeHolder)

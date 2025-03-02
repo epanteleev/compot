@@ -265,7 +265,7 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
     }
 
     override fun visit(assignment: CharNode): Long {
-        TODO("Not yet implemented")
+        return assignment.toByte().toLong()
     }
 
     override fun visit(sizeOf: SizeOf): Long {
