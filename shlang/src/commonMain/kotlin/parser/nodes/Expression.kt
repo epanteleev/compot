@@ -90,8 +90,8 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
     }
 }
 
-data object EmptyExpression : Expression() {
-    override fun begin(): Position = Position.UNKNOWN
+class EmptyExpression(private val where: Position) : Expression() {
+    override fun begin(): Position = where
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType {
@@ -179,47 +179,6 @@ class FunctionCall(val primary: Expression, val args: List<Expression>) : Expres
     override fun resolveType(typeHolder: TypeHolder): CType {
         return functionType(typeHolder).retType().cType()
     }
-}
-
-sealed class Initializer : Expression()
-
-class SingleInitializer(val expr: Expression) : Initializer() {
-    override fun begin(): Position = expr.begin()
-    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize expr.resolveType(typeHolder)
-    }
-}
-
-class DesignationInitializer(val designation: Designation, val initializer: Expression) : Initializer() {
-    override fun begin(): Position = designation.begin()
-    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize initializer.resolveType(typeHolder)
-    }
-}
-
-class InitializerList(private val begin: Position, val initializers: List<Initializer>) : Expression() {
-    override fun begin(): Position = begin
-    override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        val types = initializers.map { it.resolveType(typeHolder) }
-
-        val baseTypes = arrayListOf<CType>()
-        for (i in initializers.indices) {
-            baseTypes.add(types[i])
-        }
-        if (baseTypes.size == 1 && baseTypes[0] is CStringLiteral) {
-            return@memoize baseTypes[0] //TODO is it needed?
-        } else {
-            return@memoize InitializerType(baseTypes)
-        }
-    }
-
-    fun length(): Int = initializers.size
 }
 
 class MemberAccess(val primary: Expression, val fieldName: Identifier) : Expression() {

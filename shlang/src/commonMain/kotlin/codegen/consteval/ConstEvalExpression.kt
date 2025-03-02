@@ -120,15 +120,10 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(initializerList: InitializerList): Int? {
-        if (initializerList.initializers.size != 1) {
-            return null
-        }
-        return initializerList.initializers[0].accept(this)
+        return null
     }
 
-    override fun visit(singleInitializer: SingleInitializer): Int? {
-        return singleInitializer.expr.accept(this)
-    }
+    override fun visit(singleInitializer: SingleInitializer): Int? = null
 
     override fun visit(designationInitializer: DesignationInitializer): Int? = null
 
@@ -274,9 +269,7 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
         TODO("Not yet implemented")
     }
 
-    override fun visit(singleInitializer: SingleInitializer): Long? {
-        return singleInitializer.expr.accept(this)
-    }
+    override fun visit(singleInitializer: SingleInitializer): Long? = null
 
     override fun visit(designationInitializer: DesignationInitializer): Long {
         TODO("Not yet implemented")
@@ -442,9 +435,7 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
         TODO("Not yet implemented")
     }
 
-    override fun visit(singleInitializer: SingleInitializer): Float? {
-        return singleInitializer.expr.accept(this)
-    }
+    override fun visit(singleInitializer: SingleInitializer): Float? = null
 
     override fun visit(memberAccess: MemberAccess): Float {
         TODO("Not yet implemented")
@@ -599,9 +590,7 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
         TODO("Not yet implemented")
     }
 
-    override fun visit(singleInitializer: SingleInitializer): Double? {
-        return singleInitializer.expr.accept(this)
-    }
+    override fun visit(singleInitializer: SingleInitializer): Double? = null
 
     companion object {
         private fun compare(d1: Double, d2: Double): Int {

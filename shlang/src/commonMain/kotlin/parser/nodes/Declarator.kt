@@ -65,7 +65,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
     }
 }
 
-data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): AnyDeclarator() {
+data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): AnyDeclarator() {
     override fun begin(): Position = declarator.begin()
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
@@ -85,14 +85,15 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
         }
 
         when (rvalue) {
-            is InitializerList -> {
+            is InitializerListInitializer -> {
                 // Special case for array initialization without exact size like:
                 // int a[] = {1, 2};
                 // 'a' is array of 2 elements, not pointer to int
 
-                when (val initializerType = rvalue.resolveType(typeHolder)) {
+                val initializerList = rvalue.list
+                when (val initializerType = initializerList.resolveType(typeHolder)) {
                     is InitializerType -> {
-                        val rvalueType = TypeDesc.from(CArrayType(baseType.element(), rvalue.length().toLong()), listOf())
+                        val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerList.length().toLong()), listOf())
                         return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, declspecType.storageClass))
                     }
                     is CStringLiteral -> {
@@ -102,23 +103,15 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Expression): A
                     else -> throw TypeResolutionException("Array size is not specified: type=$initializerType", declarator.begin())
                 }
             }
-            is StringNode -> {
+            is ExpressionInitializer -> {
+                val expr = rvalue.expr
+                if (expr !is StringNode) {
+                    throw TypeResolutionException("Array size is not specified", declarator.begin())
+                }
                 // Special case for string initialization like:
                 // char a[] = "hello";
-                return@memoizeType typeHolder.addVar(name(), VarDescriptor(TypeDesc.from(rvalue.resolveType(typeHolder)), declspecType.storageClass))
+                return@memoizeType typeHolder.addVar(name(), VarDescriptor(TypeDesc.from(expr.resolveType(typeHolder)), declspecType.storageClass))
             }
-            else -> throw TypeResolutionException("Array size is not specified", declarator.begin())
         }
-    }
-}
-
-class EmptyDeclarator(private val where: Position) : AnyDeclarator() {
-    override fun begin(): Position = where
-    override fun name(): String = ""
-
-    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor {
-        throw TypeResolutionException("Empty declarator is not supported", begin())
     }
 }

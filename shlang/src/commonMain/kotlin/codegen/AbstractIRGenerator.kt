@@ -23,16 +23,23 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val typeHolder: TypeHolder,
                                    protected val varStack: VarStack<Value>,
                                    protected val nameGenerator: NameGenerator) {
-    private fun constEvalExpression(lValueType: CType, expr: Expression): NonTrivialConstant? = when (expr) {
-        is InitializerList -> when (lValueType) {
-            is CAggregateType -> constEvalInitializers(lValueType, expr)
-            else -> throw IRCodeGenError("Unsupported initializer list size ${expr.initializers.size}", expr.begin())
-        }
+
+    private fun constEvalInitializerList(lValueType: CType, list: InitializerList): NonTrivialConstant? = when (lValueType) {
+        is CAggregateType -> constEvalInitializers(lValueType, list)
+        else -> throw IRCodeGenError("Unsupported initializer list size ${list.initializers.size}", list.begin())
+    }
+
+    private fun constEvalInitializer(lValueType: CType, initializer: Initializer): NonTrivialConstant? = when (initializer) {
+        is InitializerListInitializer -> constEvalInitializerList(lValueType, initializer.list)
+        is ExpressionInitializer -> constEvalInitializerList(lValueType, initializer.expr)
+    }
+
+    private fun constEvalInitializerList(lValueType: CType, expr: Expression): NonTrivialConstant? = when (expr) {
         is UnaryOp -> {
             if (expr.opType == PrefixUnaryOpType.ADDRESS) {
                 val nonTrivialType = expr.primary.resolveType(typeHolder)
 
-                staticAddressOf(expr.primary) ?: constEvalExpression(nonTrivialType, expr.primary)
+                staticAddressOf(expr.primary) ?: constEvalInitializerList(nonTrivialType, expr.primary)
                     ?: throw IRCodeGenError("cannon evaluate", expr.primary.begin())
             } else {
                 defaultContEval(lValueType, expr)
@@ -49,7 +56,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         is Cast -> {
             val type = expr.resolveType(typeHolder)
             if (type is CPointer) {
-                constEvalExpression(lValueType, expr.cast) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
+                constEvalInitializerList(lValueType, expr.cast) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
             } else {
                 defaultContEval(lValueType, expr)
             }
@@ -61,7 +68,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         is CompoundLiteral -> {
             val varDesc = expr.typeName.specifyType(typeHolder, listOf())
             val cType = varDesc.typeDesc.cType()
-            val constant = constEvalExpression(cType, expr.initializerList) as InitializerListValue
+            val constant = constEvalInitializerList(cType, expr.initializerList) as InitializerListValue
             val gConstant = when (cType) {
                 is CArrayType  -> ArrayGlobalConstant(createGlobalConstantName(), constant)
                 is CStructType -> StructGlobalConstant(createGlobalConstantName(), constant)
@@ -71,10 +78,10 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
         is ArrayAccess -> {
             val indexType = expr.expr.resolveType(typeHolder)
-            val index = constEvalExpression(indexType, expr.expr) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
+            val index = constEvalInitializerList(indexType, expr.expr) ?: throw IRCodeGenError("Unsupported: $expr", expr.begin())
 
             val primaryCType = expr.primary.resolveType(typeHolder)
-            val array = constEvalExpression(primaryCType, expr.primary)
+            val array = constEvalInitializerList(primaryCType, expr.primary)
             array as PointerLiteral
             val gConstant = array.gConstant as GlobalValue
             index as IntegerConstant
@@ -130,7 +137,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         assertion(varDescriptor.storageClass != StorageClass.EXTERN) { "invariant: cType=$varDescriptor" }
         val attr = toIrAttribute(varDescriptor.storageClass)
 
-        val constEvalResult = constEvalExpression(lValueCType, declarator.rvalue)
+        val constEvalResult = constEvalInitializer(lValueCType, declarator.rvalue)
             ?: throw IRCodeGenError("Cannon evaluate expression", declarator.rvalue.begin())
 
         return when (constEvalResult) {
@@ -296,7 +303,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 throw IRCodeGenError("Unsupported initializer list size ${expr.initializers.size}", expr.begin())
             }
 
-            return constEvalExpression(lValueCType, singleInitializer.expr) ?:
+            return constEvalInitializer(lValueCType, singleInitializer.expr) ?:
                 throw IRCodeGenError("Unsupported type $lValueCType, expr=${LineAgnosticAstPrinter.print(expr)}", expr.begin())
         }
 
@@ -314,7 +321,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                         is CStructType -> lValueCType.fieldByIndex(index).cType()
                         is CUnionType -> lValueCType.descriptors().first().cType() // TODO check this
                     }
-                    val result = constEvalExpression(elementLValueType, initializer.expr) ?:
+                    val result = constEvalInitializer(elementLValueType, initializer.expr) ?:
                         throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
 
                     elements[index] = result
@@ -328,7 +335,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                     val nameToAccess = lastDesignator.name()
 
                     val elementLValueType = lValueCType.fieldByName(nameToAccess).cType()
-                    val result = constEvalExpression(elementLValueType, initializer.initializer) ?:
+                    val result = constEvalInitializer(elementLValueType, initializer.initializer) ?:
                         throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
 
                     elements[index] = result

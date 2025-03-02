@@ -253,71 +253,73 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitInitializer(singleInitializer: SingleInitializer): Value = when (val expr = singleInitializer.expr) {
-        is InitializerList -> visitInitializer(expr.initializers[0] as SingleInitializer)
-        else -> visitExpression(expr, true)
+        is InitializerListInitializer -> visitInitializer(expr.list.initializers[0] as SingleInitializer)
+        is ExpressionInitializer -> visitExpression(expr.expr, true)
     }
 
     private fun visitSingleInitializer(singleInitializer: SingleInitializer, lvalueAdr: Value, type: CAggregateType, idx: Int) {
-        when (val expr = singleInitializer.expr) {
-            is InitializerList -> when (type) {
+        when (val init = singleInitializer.expr) {
+            is InitializerListInitializer -> when (type) {
                 is CArrayType -> {
                     val t = type.element()
                     val irType = mb.toIRType<AggregateType>(typeHolder, t.cType())
                     val fieldPtr = ir.gep(lvalueAdr, irType, I64Value.of(idx))
-                    visitInitializerList(expr, fieldPtr, t.asType())
+                    visitInitializerList(init.list, fieldPtr, t.asType())
                 }
                 is CStructType -> {
-                    val t = type.fieldByIndexOrNull(idx) ?: throw IRCodeGenError("Field '$idx' not found", expr.begin())
+                    val t = type.fieldByIndexOrNull(idx) ?: throw IRCodeGenError("Field '$idx' not found", init.begin())
                     val irType = mb.toIRType<AggregateType>(typeHolder, t.cType())
                     val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
-                    visitInitializerList(expr, fieldPtr, t.asType())
+                    visitInitializerList(init.list, fieldPtr, t.asType())
                 }
                 else -> throw RuntimeException("Unknown type: type=$type")
             }
-            is StringNode -> {
-                if (type !is CArrayType) {
-                    throw IRCodeGenError("Expect array type, but type=$type", expr.begin())
-                }
-                when (type.element().cType()) {
-                    is CHAR, is UCHAR -> {
-                        if (expr.isNotEmpty()) {
-                            ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value.of(expr.length()))
-                            val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(expr.length()))
-                            ir.store(gep, I8Value.of(0))
-                        } else {
-                            val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(0))
-                            ir.store(gep, I8Value.of(0))
+            is ExpressionInitializer -> when (val expr = init.expr) {
+                is StringNode -> {
+                    if (type !is CArrayType) {
+                        throw IRCodeGenError("Expect array type, but type=$type", expr.begin())
+                    }
+                    when (type.element().cType()) {
+                        is CHAR, is UCHAR -> {
+                            if (expr.isNotEmpty()) {
+                                ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value.of(expr.length()))
+                                val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(expr.length()))
+                                ir.store(gep, I8Value.of(0))
+                            } else {
+                                val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(0))
+                                ir.store(gep, I8Value.of(0))
+                            }
                         }
+                        is CPointer -> {
+                            val stringPtr = visitStringNode(expr)
+                            val fieldPtr = ir.gep(lvalueAdr, I64Type, I64Value.of(idx))
+                            ir.store(fieldPtr, stringPtr)
+                        }
+                        else -> throw IRCodeGenError("Unknown type $type", expr.begin())
                     }
-                    is CPointer -> {
-                        val stringPtr = visitStringNode(expr)
-                        val fieldPtr = ir.gep(lvalueAdr, I64Type, I64Value.of(idx))
-                        ir.store(fieldPtr, stringPtr)
-                    }
-                    else -> throw IRCodeGenError("Unknown type $type", expr.begin())
                 }
-            }
-            else -> when (type) {
-                is AnyCArrayType -> {
-                    val rvalue = visitExpression(expr, true)
-                    val irType = mb.toIRType<AggregateType>(typeHolder, type)
+                else -> when (type) {
+                    is AnyCArrayType -> {
+                        val rvalue = visitExpression(expr, true)
+                        val irType = mb.toIRType<AggregateType>(typeHolder, type)
 
-                    val field = when (val irFieldType = irType.field(idx)) {
-                        is PrimitiveType -> irFieldType
-                        is StructType    -> irFieldType.field(0)
-                        else -> throw IRCodeGenError("Unknown type $irFieldType", expr.begin())
+                        val field = when (val irFieldType = irType.field(idx)) {
+                            is PrimitiveType -> irFieldType
+                            is StructType    -> irFieldType.field(0)
+                            else -> throw IRCodeGenError("Unknown type $irFieldType", expr.begin())
+                        }
+                        val converted = ir.convertLVToType(rvalue, field)
+                        val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
+                        ir.store(fieldPtr, converted)
                     }
-                    val converted = ir.convertLVToType(rvalue, field)
-                    val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
-                    ir.store(fieldPtr, converted)
-                }
-                is AnyCStructType -> {
-                    val rvalue = visitExpression(expr, true)
-                    val irType = mb.toIRType<AggregateType>(typeHolder, type)
-                    val irFieldType = irType.field(idx)
-                    val converted = ir.convertLVToType(rvalue, irFieldType)
-                    val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
-                    ir.store(fieldPtr, converted)
+                    is AnyCStructType -> {
+                        val rvalue = visitExpression(expr, true)
+                        val irType = mb.toIRType<AggregateType>(typeHolder, type)
+                        val irFieldType = irType.field(idx)
+                        val converted = ir.convertLVToType(rvalue, irFieldType)
+                        val fieldPtr = ir.gfp(lvalueAdr, irType, I64Value.of(idx))
+                        ir.store(fieldPtr, converted)
+                    }
                 }
             }
         }
@@ -1812,20 +1814,21 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
         }
 
-        if (designationInitializer.initializer is InitializerList) {
-            visitInitializerList(designationInitializer.initializer, address, innerType.asType())
-            return index
+        when (val initializer = designationInitializer.initializer) {
+            is InitializerListInitializer -> visitInitializerList(initializer.list, address, innerType.asType())
+            is ExpressionInitializer -> {
+                val expression = visitExpression(initializer.expr, true)
+                val converted = mb.toIRType<Type>(typeHolder, innerType)
+                val convertedRvalue = ir.convertRVToType(expression, converted)
+                ir.store(address, convertedRvalue)
+            }
         }
-
-        val expression = visitExpression(designationInitializer.initializer, true)
-        val converted = mb.toIRType<Type>(typeHolder, innerType)
-        val convertedRvalue = ir.convertRVToType(expression, converted)
-        ir.store(address, convertedRvalue)
         return index
     }
 
-    private fun generateInitDeclarationExpression(rValue: Expression): Value = when (rValue) {
-        is InitializerList -> {
+    private fun generateInitDeclarationExpression(initializer: Initializer): Value = when (initializer) {
+        is InitializerListInitializer -> {
+            val rValue = initializer.list
             if (rValue.initializers.size != 1) {
                 throw IRCodeGenError("Initializer list with more than one element", rValue.begin())
             }
@@ -1835,7 +1838,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
             visitInitializer(initializer)
         }
-        else -> visitExpression(rValue, true)
+        is ExpressionInitializer -> visitExpression(initializer.expr, true)
     }
 
     override fun visit(initDeclarator: InitDeclarator): Value {
@@ -1856,46 +1859,40 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val lvalueAdr = initDeclarator.declarator.accept(this)
         when (val rvalue = initDeclarator.rvalue) {
-            is InitializerList -> visitInitializerList(rvalue, lvalueAdr, varDesc.typeDesc.asType())
-            is FunctionCall -> {
-                val rValueType = rvalue.resolveType(typeHolder)
-                if (rValueType !is AnyCStructType) {
-                    throw IRCodeGenError("Unknown function type, type=$rValueType", rvalue.begin())
-                }
+            is InitializerListInitializer -> visitInitializerList(rvalue.list, lvalueAdr, varDesc.typeDesc.asType())
+            is ExpressionInitializer -> when (val expr = rvalue.expr) {
+                is FunctionCall -> {
+                    val rValueType = expr.resolveType(typeHolder)
+                    if (rValueType !is AnyCStructType) {
+                        throw IRCodeGenError("Unknown function type, type=$rValueType", rvalue.begin())
+                    }
 
-                visitFuncCallForStructType(lvalueAdr, rValueType, rvalue)
-            }
-            is StringNode -> {
-                // TODO impl special case for 'zero' string
-                val rvalueResult = visitStringNode(initDeclarator.rvalue)
-                val rvalueType = initDeclarator.rvalue.resolveType(typeHolder)
-                val irRvalueType = mb.toIRType<AggregateType>(typeHolder, rvalueType)
-                ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(irRvalueType.sizeOf().toLong()))
+                    visitFuncCallForStructType(lvalueAdr, rValueType, expr)
+                }
+                is StringNode -> {
+                    // TODO impl special case for 'zero' string
+                    val rvalueResult = visitStringNode(expr)
+                    val rvalueType = expr.resolveType(typeHolder)
+                    val irRvalueType = mb.toIRType<AggregateType>(typeHolder, rvalueType)
+                    ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(irRvalueType.sizeOf().toLong()))
 
-                if (type !is CompletedType) {
-                    throw IRCodeGenError("Unknown type, type=$type", initDeclarator.begin())
+                    if (type !is CompletedType) {
+                        throw IRCodeGenError("Unknown type, type=$type", initDeclarator.begin())
+                    }
+                    if (rvalueType.size() < type.size()) {
+                        val start = ir.gep(lvalueAdr, I8Type, U64Value.of(rvalueType.size().toLong()))
+                        zeroMemory(start, ArrayType(I8Type, type.size() - rvalueType.size()))
+                    }
                 }
-                if (rvalueType.size() < type.size()) {
-                    val start = ir.gep(lvalueAdr, I8Type, U64Value.of(rvalueType.size().toLong()))
-                    zeroMemory(start, ArrayType(I8Type, type.size() - rvalueType.size()))
+                else -> {
+                    val rvalueResult = visitExpression(expr, true)
+                    val rvalueType = expr.resolveType(typeHolder)
+                    val irRvalueType = mb.toIRType<AggregateType>(typeHolder, rvalueType)
+                    ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(irRvalueType.sizeOf().toLong()))
                 }
-            }
-            else -> {
-                val rvalueResult = visitExpression(initDeclarator.rvalue, true)
-                val rvalueType = initDeclarator.rvalue.resolveType(typeHolder)
-                val irRvalueType = mb.toIRType<AggregateType>(typeHolder, rvalueType)
-                ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(irRvalueType.sizeOf().toLong()))
             }
         }
         return lvalueAdr
-    }
-
-    override fun visit(arrayDeclarator: ArrayDeclarator): Value {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(emptyDeclarator: EmptyDeclarator): Value {
-        return UndefValue
     }
 }
 

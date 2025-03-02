@@ -4,8 +4,27 @@ import tokenizer.Position
 import typedesc.TypeHolder
 import typedesc.VarDescriptor
 
+sealed class AnyStructDeclaratorItem {
+    abstract fun begin(): Position
+    abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor
+}
 
-data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression) {
+class StructDeclaratorItem(val expr: Declarator): AnyStructDeclaratorItem() {
+    override fun begin(): Position = expr.begin()
+
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor {
+        return expr.declareType(declspec, typeHolder)
+    }
+}
+class EmptyStructDeclaratorItem(private val where: Position): AnyStructDeclaratorItem() {
+    override fun begin(): Position = where
+
+    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor {
+        throw IllegalStateException("Empty declarator is not supported")
+    }
+}
+
+data class StructDeclarator(val declarator: AnyStructDeclaratorItem, val expr: Expression) {
     private var cachedType: VarDescriptor? = null
 
     private fun memoizeType(type: () -> VarDescriptor): VarDescriptor {
@@ -26,7 +45,10 @@ data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression)
         return@memoizeType declarator.declareType(declspec, typeHolder)
     }
 
-    fun name(): String = declarator.name()
+    fun name(): String = when(declarator) {
+        is StructDeclaratorItem -> declarator.expr.name()
+        is EmptyStructDeclaratorItem -> ""
+    }
 }
 
 class StructField(val declspec: DeclarationSpecifier, val declarators: List<StructDeclarator>) {

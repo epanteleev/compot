@@ -27,7 +27,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append('(')
         expression.typeName.accept(this)
         buffer.append(')')
-        expression.initializerList.accept(this)
+        visit(expression.initializerList)
     }
 
     override fun visit(cast: Cast) {
@@ -230,7 +230,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(initDeclarator: InitDeclarator) {
         initDeclarator.declarator.accept(this)
         buffer.append(" = ")
-        initDeclarator.rvalue.accept(this)
+        when (initDeclarator.rvalue) {
+            is InitializerListInitializer -> visit(initDeclarator.rvalue.list)
+            is ExpressionInitializer -> initDeclarator.rvalue.expr.accept(this)
+        }
     }
 
     override fun visit(parameters: ParameterTypeList) {
@@ -264,7 +267,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(initializerList: InitializerList) {
         buffer.append('{')
         joinTo(initializerList.initializers, ", ") {
-            it.accept(this)
+            when (it) {
+                is SingleInitializer -> visit(it)
+                is DesignationInitializer -> visit(it)
+            }
         }
         buffer.append('}')
     }
@@ -272,11 +278,17 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(designationInitializer: DesignationInitializer) {
         visit(designationInitializer.designation)
         buffer.append(" = ")
-        designationInitializer.initializer.accept(this)
+        when (val initializer = designationInitializer.initializer) {
+            is InitializerListInitializer -> visit(initializer.list)
+            is ExpressionInitializer -> initializer.expr.accept(this)
+        }
     }
 
     override fun visit(singleInitializer: SingleInitializer) {
-        singleInitializer.expr.accept(this)
+        when (val expr = singleInitializer.expr) {
+            is InitializerListInitializer -> visit(expr.list)
+            is ExpressionInitializer -> expr.expr.accept(this)
+        }
     }
 
     override fun visit(builtin: BuiltinVaArg) {
@@ -483,10 +495,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     }
 
-    override fun visit(emptyDeclarator: EmptyDeclarator) {
-
-    }
-
     override fun visit(typeQualifier: TypeQualifierNode) {
         buffer.append(typeQualifier.name())
     }
@@ -496,7 +504,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     fun visit(structDeclarator: StructDeclarator) {
-        structDeclarator.declarator.accept(this)
+        when (val item = structDeclarator.declarator) {
+            is EmptyStructDeclaratorItem -> {}
+            is StructDeclaratorItem -> visit(item.expr)
+        }
 
         if (structDeclarator.expr !is EmptyExpression) {
             buffer.append(':')
@@ -558,6 +569,21 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         fun print(functionNode: FunctionNode): String {
             val astPrinter = LineAgnosticAstPrinter()
             astPrinter.visit(functionNode)
+            return astPrinter.buffer.toString()
+        }
+
+        fun print(entry: InitializerListEntry) : String {
+            val astPrinter = LineAgnosticAstPrinter()
+            when (entry) {
+                is SingleInitializer -> astPrinter.visit(entry)
+                is DesignationInitializer -> astPrinter.visit(entry)
+            }
+            return astPrinter.buffer.toString()
+        }
+
+        fun print(initializerList: InitializerList): String {
+            val astPrinter = LineAgnosticAstPrinter()
+            astPrinter.visit(initializerList)
             return astPrinter.buffer.toString()
         }
 
