@@ -11,9 +11,10 @@ import typedesc.TypeHolder
 import typedesc.VarDescriptor
 
 
-sealed class TypeSpecifier : Node() {
+sealed class TypeSpecifier {
     private var cachedType: VarDescriptor? = null
 
+    abstract fun begin(): Position
     abstract fun<T> accept(visitor: TypeSpecifierVisitor<T>): T
     abstract fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor
 

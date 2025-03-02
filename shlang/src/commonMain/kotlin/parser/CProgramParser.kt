@@ -339,10 +339,19 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             return@rule EmptyStatement
         }
-        val statements = mutableListOf<Node>()
+        val statements = mutableListOf<CompoundStmtItem>()
         while (!check("}")) {
-            statements.add(declaration()?: statement()?:
-                throw ParserException(InvalidToken("Expected declaration or statement", peak())))
+            val decl = declaration()
+            if (decl != null) {
+                statements.add(CompoundStmtDeclaration(decl))
+                continue
+            }
+            val stmt = statement()
+            if (stmt != null) {
+                statements.add(CompoundStmtStatement(stmt))
+                continue
+            }
+            throw ParserException(InvalidToken("Expected declaration or statement", peak()))
         }
         eat()
         return@rule CompoundStatement(statements)
@@ -936,10 +945,10 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
 
         val declarator = declarator()
         if (declarator != null) {
-            return@rule Parameter(declspec, declarator)
+            return@rule Parameter(declspec, ParamDeclarator(declarator))
         }
-        val abstractDeclarator = abstract_declarator()?: return@rule Parameter(declspec, EmptyDeclarator(declspec.begin()))
-        return@rule Parameter(declspec, abstractDeclarator)
+        val abstractDeclarator = abstract_declarator()?: return@rule Parameter(declspec, EmptyParamDeclarator(declspec.begin()))
+        return@rule Parameter(declspec, ParamAbstractDeclarator(abstractDeclarator))
     }
 
     // direct_declarator
@@ -1551,13 +1560,21 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             if (!check("(")) {
                 val expr = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-                return@rule SizeOf(expr)
+                return@rule SizeOf(SizeOfExpr(expr))
             }
             eat()
-            val type = type_name()?: unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            val type = type_name()
+            if (type != null) {
+                if (!check(")")) {
+                    throw ParserException(InvalidToken("Expected ')'", peak()))
+                }
+                eat()
+                return@rule SizeOf(SizeOfType(type))
+            }
+            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
             if (check(")")) {
                 eat()
-                return@rule SizeOf(type)
+                return@rule SizeOf(SizeOfExpr(unary))
             } else {
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }

@@ -57,7 +57,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(sizeOf: SizeOf) {
         buffer.append("sizeof(")
-        sizeOf.expr.accept(this)
+        when (val expr = sizeOf.expr) {
+            is SizeOfExpr -> expr.expr.accept(this)
+            is SizeOfType -> expr.typeName.accept(this)
+        }
         buffer.append(')')
     }
 
@@ -90,7 +93,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
             visit(it)
         }
 
-        declarator.directDeclarator.accept(this)
+        visit(declarator.directDeclarator)
     }
 
     override fun visit(declaration: Declaration) {
@@ -140,9 +143,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(forStatement: ForStatement) {
         buffer.append("for(")
 
-        forStatement.init.inner().accept(this)
-        if (forStatement.init.inner() is EmptyStatement) {
-            buffer.append(';')
+        when (val init = forStatement.init) {
+            is ForInitDeclaration -> init.declaration.accept(this)
+            is ForInitExpression -> init.expression.accept(this)
+            is ForInitEmpty -> buffer.append(';')
         }
         forStatement.condition.accept(this)
         buffer.append(';')
@@ -193,7 +197,10 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(compoundStatement: CompoundStatement) {
         joinTo(compoundStatement.statements, " ") {
-            it.accept(this)
+            when (it) {
+                is CompoundStmtDeclaration -> it.declaration.accept(this)
+                is CompoundStmtStatement -> it.statement.accept(this)
+            }
         }
     }
 
@@ -213,7 +220,11 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(parameter: Parameter) {
         parameter.declspec.accept(this)
         buffer.append(' ')
-        parameter.declarator.accept(this)
+        when (val declarator = parameter.declarator) {
+            is ParamDeclarator -> declarator.declarator.accept(this)
+            is ParamAbstractDeclarator -> declarator.abstractDeclarator.accept(this)
+            is EmptyParamDeclarator -> {}
+        }
     }
 
     override fun visit(initDeclarator: InitDeclarator) {
@@ -350,7 +361,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         structField.declspec.accept(this)
         buffer.append(' ')
         joinTo(structField.declarators, ", ") {
-            it.accept(this)
+            visit(it)
         }
         buffer.append(';')
     }
@@ -437,7 +448,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
-    override fun visit(directDeclarator: DirectDeclarator) {
+    fun visit(directDeclarator: DirectDeclarator) {
         visitDirectDeclaratorFirstParam(directDeclarator.decl)
         joinTo(directDeclarator.directDeclaratorParams, "") {
             it.accept(this)
@@ -484,7 +495,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(storageClassSpecifier.name())
     }
 
-    override fun visit(structDeclarator: StructDeclarator) {
+    fun visit(structDeclarator: StructDeclarator) {
         structDeclarator.declarator.accept(this)
 
         if (structDeclarator.expr !is EmptyExpression) {
@@ -520,11 +531,41 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
             return astPrinter.buffer.toString()
         }
 
+        fun print(type: TypeSpecifier): String {
+            val astPrinter = LineAgnosticAstPrinter()
+            type.accept(astPrinter)
+            return astPrinter.buffer.toString()
+        }
+
+        fun print(stmt: Statement): String {
+            val astPrinter = LineAgnosticAstPrinter()
+            stmt.accept(astPrinter)
+            return astPrinter.buffer.toString()
+        }
+
+        fun print(expr: Expression): String {
+            val astPrinter = LineAgnosticAstPrinter()
+            expr.accept(astPrinter)
+            return astPrinter.buffer.toString()
+        }
+
+        fun print(decl: AnyDeclarator): String {
+            val astPrinter = LineAgnosticAstPrinter()
+            decl.accept(astPrinter)
+            return astPrinter.buffer.toString()
+        }
+
+        fun print(functionNode: FunctionNode): String {
+            val astPrinter = LineAgnosticAstPrinter()
+            astPrinter.visit(functionNode)
+            return astPrinter.buffer.toString()
+        }
+
         fun print(programNode: ProgramNode): String {
             val astPrinter = LineAgnosticAstPrinter()
             for ((idx, node) in programNode.nodes.withIndex()) {
                 when (node) {
-                    is FunctionDeclarationNode -> node.function.accept(astPrinter)
+                    is FunctionDeclarationNode -> astPrinter.visit(node.function)
                     is GlobalDeclaration -> node.declaration.accept(astPrinter)
                 }
                 if (idx != programNode.nodes.size - 1) {

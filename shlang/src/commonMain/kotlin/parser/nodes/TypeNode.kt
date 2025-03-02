@@ -10,8 +10,8 @@ import parser.nodes.visitors.TypeNodeVisitor
 import tokenizer.Position
 
 
-sealed class AnyTypeNode(val name: CToken) : Node() {
-    final override fun begin(): Position = name.position()
+sealed class AnyTypeNode(val name: CToken) {
+    fun begin(): Position = name.position()
     fun name(): String = name.str()
 
     abstract fun<T> accept(visitor: TypeNodeVisitor<T>): T

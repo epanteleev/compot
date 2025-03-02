@@ -12,9 +12,10 @@ import parser.nodes.visitors.*
 import tokenizer.Position
 
 
-sealed class Expression : Node() {
+sealed class Expression {
     protected var type: CType? = null
 
+    abstract fun begin(): Position
     abstract fun<T> accept(visitor: ExpressionVisitor<T>): T
     abstract fun resolveType(typeHolder: TypeHolder): CType
 
@@ -408,7 +409,36 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
     }
 }
 
-data class SizeOf(val expr: Node) : Expression() {
+sealed class SizeOfParam {
+    abstract fun begin(): Position
+    abstract fun constEval(typeHolder: TypeHolder): Int
+}
+
+class SizeOfType(val typeName: TypeName) : SizeOfParam() {
+    override fun begin(): Position = typeName.begin()
+    override fun constEval(typeHolder: TypeHolder): Int {
+        val resolved = typeName.specifyType(typeHolder, listOf()).typeDesc.cType()
+        if (resolved !is CompletedType) {
+            throw TypeResolutionException("sizeof on uncompleted type: $resolved", begin())
+        }
+
+        return resolved.size()
+    }
+}
+
+class SizeOfExpr(val expr: Expression) : SizeOfParam() {
+    override fun begin(): Position = expr.begin()
+    override fun constEval(typeHolder: TypeHolder): Int {
+        val resolved = expr.resolveType(typeHolder)
+        if (resolved !is CompletedType) {
+            throw TypeResolutionException("sizeof on uncompleted type: $resolved", begin())
+        }
+
+        return resolved.size()
+    }
+}
+
+data class SizeOf(val expr: SizeOfParam) : Expression() {
     override fun begin(): Position = expr.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
@@ -416,23 +446,7 @@ data class SizeOf(val expr: Node) : Expression() {
         return@memoize INT
     }
 
-    fun constEval(typeHolder: TypeHolder): Int = when (expr) {
-        is TypeName -> {
-            val resolved = expr.specifyType(typeHolder, listOf()).typeDesc.cType()
-            if (resolved !is CompletedType) {
-                throw TypeResolutionException("sizeof on uncompleted type: $resolved", expr.begin())
-            }
-            resolved.size()
-        }
-        is Expression -> {
-            val resolved = expr.resolveType(typeHolder)
-            if (resolved !is CompletedType) {
-                throw TypeResolutionException("sizeof on uncompleted type: $resolved", expr.begin())
-            }
-            resolved.size()
-        }
-        else -> throw TypeResolutionException("Unknown sizeOf expression, expr=${expr}", expr.begin())
-    }
+    fun constEval(typeHolder: TypeHolder): Int = expr.constEval(typeHolder)
 }
 
 data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
@@ -463,7 +477,7 @@ class BuiltinVaArg(val assign: Expression, val typeName: TypeName) : Expression(
     }
 }
 
-class BuiltinVaStart(val vaList: Expression, val param: Node) : Expression() {
+class BuiltinVaStart(val vaList: Expression, val param: Expression) : Expression() {
     override fun begin(): Position = vaList.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 

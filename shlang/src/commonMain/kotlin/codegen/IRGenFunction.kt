@@ -1462,9 +1462,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
         for (node in compoundStatement.statements) {
             when (node) {
-                is Declaration -> visitDeclaration(node)
-                is Statement   -> visitStatement(node)
-                else -> throw IRCodeGenError("Statement or declaration expected, but got $node", node.begin())
+                is CompoundStmtDeclaration -> visitDeclaration(node.declaration)
+                is CompoundStmtStatement -> visitStatement(node.statement)
             }
         }
     }
@@ -1898,14 +1897,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     override fun visit(emptyDeclarator: EmptyDeclarator): Value {
         return UndefValue
     }
-
-    override fun visit(structDeclarator: StructDeclarator): Value {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(directDeclarator: DirectDeclarator): Value {
-        TODO("Not yet implemented")
-    }
 }
 
 internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
@@ -1913,7 +1904,7 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
                         varStack: VarStack<Value>,
                         nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
     fun generate(functionNode: FunctionNode) {
-        val varDesc = functionNode.declareType(functionNode.specifier, typeHolder)
+        val varDesc = functionNode.declareType(typeHolder)
         val fnType = varDesc.typeDesc
             .asType<CFunctionType>(functionNode.begin())
 

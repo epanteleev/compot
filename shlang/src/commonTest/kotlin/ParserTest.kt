@@ -2,9 +2,14 @@
 import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.ParserException
+import parser.nodes.AnyDeclarator
+import parser.nodes.Declaration
+import parser.nodes.DeclarationSpecifier
+import parser.nodes.Expression
 import parser.nodes.FunctionDeclarationNode
 import parser.nodes.FunctionNode
 import parser.nodes.Node
+import parser.nodes.Statement
 import tokenizer.CTokenizer
 import tokenizer.TokenList
 import kotlin.test.*
@@ -20,7 +25,7 @@ class ParserTest {
         val tokens = apply("t = 3 + 5;")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.assignment_expression() as Node
+        val expr = parser.assignment_expression() as Expression
         assertEquals("t = 3 + 5;", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -28,7 +33,7 @@ class ParserTest {
     fun testAssign2() {
         val tokens = apply("t = 3 + 5 * (67 << 56);")
         val parser = CProgramParser.build(tokens)
-        val expr = parser.assignment_expression() as Node
+        val expr = parser.assignment_expression() as Expression
         assertEquals("t = 3 + 5 * 67 << 56;", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -36,7 +41,7 @@ class ParserTest {
     fun testAssign3() {
         val tokens = apply("t = (1 || 1 || (1 || 1 >= 56))")
         val parser = CProgramParser.build(tokens)
-        val expr = parser.assignment_expression() as Node
+        val expr = parser.assignment_expression() as Expression
         assertEquals("t = 1 || 1 || 1 || 1 >= 56;", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -45,7 +50,7 @@ class ParserTest {
         val tokens = apply("t *= 5")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.assignment_expression() as Node
+        val expr = parser.assignment_expression() as Expression
         assertEquals("t *= 5", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -54,7 +59,7 @@ class ParserTest {
         val tokens = apply("v = 0? a : b;")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.assignment_expression() as Node
+        val expr = parser.assignment_expression() as Expression
         assertEquals("v = 0? a : b;", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -63,7 +68,7 @@ class ParserTest {
         val tokens = apply("int t = 3 + 5;")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.declaration() as Node
+        val expr = parser.declaration() as Declaration
         println(expr)
         assertEquals("int t = 3 + 5;", LineAgnosticAstPrinter.print(expr))
     }
@@ -73,7 +78,7 @@ class ParserTest {
         val tokens = apply("int bb, *aa;")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.declaration() as Node
+        val expr = parser.declaration() as Declaration
         assertEquals("int bb, *aa;", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -82,7 +87,7 @@ class ParserTest {
         val tokens = apply("int* bb;")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.declaration() as Node
+        val expr = parser.declaration() as Declaration
         println(expr)
         assertEquals("int *bb;", LineAgnosticAstPrinter.print(expr))
     }
@@ -92,7 +97,7 @@ class ParserTest {
         val tokens = apply("int t, *a;")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.declaration() as Node
+        val expr = parser.declaration() as Declaration
         println(expr)
         assertEquals("int t, *a;", LineAgnosticAstPrinter.print(expr))
     }
@@ -102,7 +107,7 @@ class ParserTest {
         val tokens = apply("int t = 90, *a = 0;")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.declaration() as Node
+        val expr = parser.declaration() as Declaration
         println(expr)
         assertEquals("int t = 90, *a = 0;", LineAgnosticAstPrinter.print(expr))
     }
@@ -119,7 +124,7 @@ class ParserTest {
         val tokens = apply("for (a = 0; a < 5; a++) {  }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         assertEquals("for(a = 0;a < 5;a++) {}", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -128,7 +133,7 @@ class ParserTest {
         val tokens = apply("for (int a = 0; a < 5; a++) {  }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         assertEquals("for(int a = 0;a < 5;a++) {}", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -137,7 +142,7 @@ class ParserTest {
         val tokens = apply("for (; a < 5; a++) {  }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         assertEquals("for(;a < 5;a++) {}", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -146,7 +151,7 @@ class ParserTest {
         val tokens = apply("for (; a < 5;) {  }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         assertEquals("for(;a < 5;) {}", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -155,7 +160,7 @@ class ParserTest {
         val tokens = apply("for (;;) {  }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         assertEquals("for(;;) {}", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -164,7 +169,7 @@ class ParserTest {
         val tokens = apply("for (int a = 0; a < 5; a++) { char tt = a + 4; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         assertEquals("for(int a = 0;a < 5;a++) {char tt = a + 4;}", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -173,7 +178,7 @@ class ParserTest {
         val tokens = apply("for (int a = 0; a < 5; a++) { char tt = a + 4; int rt; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         println(expr)
         val expected = "for(int a = 0;a < 5;a++) {char tt = a + 4; int rt;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -184,7 +189,7 @@ class ParserTest {
         val tokens = apply("if (a < 5) { char tt = a + 4; int rt; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         println(expr)
         val expected = "if(a < 5) {char tt = a + 4; int rt;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -195,7 +200,7 @@ class ParserTest {
         val tokens = apply("if (a < 5) { char tt = a + 4; int rt; } else { int rt; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         println(expr)
         val expected = "if(a < 5) {char tt = a + 4; int rt;} else {int rt;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -206,7 +211,7 @@ class ParserTest {
         val tokens = apply("if (a < 5) { char tt = a + 4; int rt; } else if (a < 6) { int rt; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         println(expr)
         val expected = "if(a < 5) {char tt = a + 4; int rt;} else if(a < 6) {int rt;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -217,7 +222,7 @@ class ParserTest {
         val tokens = apply("if (a < 5) { char tt = a + 4; int rt; } else if (a < 6) { int rt; } else { int rt; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         println(expr)
         val expected = "if(a < 5) {char tt = a + 4; int rt;} else if(a < 6) {int rt;} else {int rt;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -228,7 +233,7 @@ class ParserTest {
         val tokens = apply("while (a < 5) { char tt = a + 4; int rt; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         val expected = "while(a < 5) {char tt = a + 4; int rt;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
@@ -238,7 +243,7 @@ class ParserTest {
         val tokens = apply("do { char tt = a + 4; int rt; } while (a < 5);")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         val expected = "do {char tt = a + 4; int rt;} while(a < 5);"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
@@ -248,7 +253,7 @@ class ParserTest {
         val tokens = apply("goto L;")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         val expected = "goto L;"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
@@ -258,7 +263,7 @@ class ParserTest {
         val tokens = apply("switch (a) { case 1: break; case 2: break; default: break; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         val expected = "switch(a) {case 1: break; case 2: break; default: break;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
@@ -268,7 +273,7 @@ class ParserTest {
         val tokens = apply("while (a < 5) { char tt = a + 4; int rt; continue;}")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         val expected = "while(a < 5) {char tt = a + 4; int rt; continue;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
@@ -278,7 +283,7 @@ class ParserTest {
         val tokens = apply("while (a < 5) { char tt = a + 4; int rt; break;}")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         val expected = "while(a < 5) {char tt = a + 4; int rt; break;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
@@ -288,7 +293,7 @@ class ParserTest {
         val tokens = apply("while (a < 5) { char tt = a + 4; int rt; return 5;}")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.statement() as Node
+        val expr = parser.statement() as Statement
         val expected = "while(a < 5) {char tt = a + 4; int rt; return 5;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
@@ -298,7 +303,7 @@ class ParserTest {
         val tokens = apply("int main() { return 5; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "int main() {return 5;}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -357,7 +362,7 @@ class ParserTest {
         val tokens = apply("int")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.declaration_specifiers() as Node
+        val expr = parser.declaration_specifiers() as DeclarationSpecifier
         assertEquals("int", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -366,7 +371,7 @@ class ParserTest {
         val tokens = apply("volatile int restrict")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.declaration_specifiers() as Node
+        val expr = parser.declaration_specifiers() as DeclarationSpecifier
         assertEquals("volatile int restrict", LineAgnosticAstPrinter.print(expr))
     }
 
@@ -387,7 +392,7 @@ class ParserTest {
         val tokens = apply("arr[idx]")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.declarator() as Node
+        val expr = parser.declarator() as AnyDeclarator
         println(expr)
         val expected = "arr[idx]"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -398,7 +403,7 @@ class ParserTest {
         val tokens = apply("arr[idx + 1]")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.declarator() as Node
+        val expr = parser.declarator() as AnyDeclarator
         println(expr)
         val expected = "arr[idx + 1]"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -442,7 +447,7 @@ class ParserTest {
         val tokens = apply("int(fn)(void);")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.declaration() as Node
+        val expr = parser.declaration() as Declaration
         println(expr)
         val expected = "int (fn)(void );"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -453,7 +458,7 @@ class ParserTest {
         val tokens = apply("a = 5")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.init_declarator() as Node
+        val expr = parser.init_declarator() as AnyDeclarator
         println(expr)
         val expected = "a = 5"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -464,7 +469,7 @@ class ParserTest {
         val tokens = apply("*a = 5")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.init_declarator() as Node
+        val expr = parser.init_declarator() as AnyDeclarator
         println(expr)
         val expected = "*a = 5"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -475,7 +480,7 @@ class ParserTest {
         val tokens = apply("int fun() { arr[5]; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "int fun() {arr[5]}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -486,7 +491,7 @@ class ParserTest {
         val tokens = apply("int fun() { arr[5][6]; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "int fun() {arr[5][6]}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -497,7 +502,7 @@ class ParserTest {
         val tokens = apply("int fun() { arr[5][6][7]; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "int fun() {arr[5][6][7]}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -508,7 +513,7 @@ class ParserTest {
         val tokens = apply("int fun() { int arr[1] = {9}; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "int fun() {int arr[1] = {9};}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -519,7 +524,7 @@ class ParserTest {
         val tokens = apply("int fun() { int arr[2] = {9, 8}; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "int fun() {int arr[2] = {9, 8};}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -530,7 +535,7 @@ class ParserTest {
         val tokens = apply("int fun() { int arr[2][3] = {9, 8, 7, 6, 5, 4}; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "int fun() {int arr[2][3] = {9, 8, 7, 6, 5, 4};}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -541,7 +546,7 @@ class ParserTest {
         val tokens = apply("int fun() { int arr[] = {9}; }")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.function_definition() as Node
+        val expr = parser.function_definition() as FunctionNode
         println(expr)
         val expected = "int fun() {int arr[] = {9};}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -563,7 +568,7 @@ class ParserTest {
         val tokens = apply("(int) a")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.cast_expression() as Node
+        val expr = parser.cast_expression() as Expression
         println(expr)
         val expected = "(int) a"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))

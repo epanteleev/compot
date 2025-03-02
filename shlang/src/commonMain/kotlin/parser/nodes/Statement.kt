@@ -7,7 +7,8 @@ import tokenizer.Position
 import tokenizer.tokens.Keyword
 
 
-sealed class Statement: Node() {
+sealed class Statement {
+    abstract fun begin(): Position
     abstract fun<T> accept(visitor: StatementVisitor<T>): T
 }
 
@@ -79,7 +80,18 @@ class ReturnStatement(private val retKeyword: Keyword, val expr: Expression): St
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-class CompoundStatement(val statements: List<Node>): Statement() {
+sealed class CompoundStmtItem {
+    abstract fun begin(): Position
+}
+
+data class CompoundStmtDeclaration(val declaration: Declaration): CompoundStmtItem() {
+    override fun begin(): Position = declaration.begin()
+}
+data class CompoundStmtStatement(val statement: Statement): CompoundStmtItem() {
+    override fun begin(): Position = statement.begin()
+}
+
+class CompoundStatement(val statements: List<CompoundStmtItem>): Statement() {
     override fun begin(): Position = statements.first().begin()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
@@ -104,18 +116,10 @@ class WhileStatement(private val whileKeyword: Keyword, val condition: Expressio
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-sealed class ForInit {
-    abstract fun inner(): Node
-}
-data class ForInitDeclaration(val declaration: Declaration): ForInit() {
-    override fun inner(): Node = declaration
-}
-data class ForInitExpression(val expression: ExprStatement): ForInit() {
-    override fun inner(): Node = expression
-}
-object ForInitEmpty: ForInit() {
-    override fun inner(): Node = EmptyStatement
-}
+sealed class ForInit
+data class ForInitDeclaration(val declaration: Declaration): ForInit()
+data class ForInitExpression(val expression: ExprStatement): ForInit()
+object ForInitEmpty: ForInit()
 
 class ForStatement(private val forKeyword: Keyword, val init: ForInit, val condition: Expression, val update: Expression, val body: Statement): Statement() {
     override fun begin(): Position = forKeyword.position()

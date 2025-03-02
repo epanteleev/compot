@@ -10,9 +10,10 @@ import typedesc.TypeResolutionException
 import typedesc.VarDescriptor
 
 
-sealed class AnyDeclarator: Node() {
+sealed class AnyDeclarator {
     private var cachedType: VarDescriptor? = null
 
+    abstract fun begin(): Position
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
     internal abstract fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor
@@ -120,98 +121,4 @@ class EmptyDeclarator(private val where: Position) : AnyDeclarator() {
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor {
         throw TypeResolutionException("Empty declarator is not supported", begin())
     }
-}
-
-data class StructDeclarator(val declarator: AnyDeclarator, val expr: Expression): AnyDeclarator() {
-    override fun begin(): Position = declarator.begin()
-    override fun <T> accept(visitor: DeclaratorVisitor<T>): T {
-        return visitor.visit(this)
-    }
-
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor = memoizeType {
-        if(expr !is EmptyExpression) {
-            println("Warning: bit field is not supported")
-        }
-
-        return@memoizeType declarator.declareType(declspec, typeHolder)
-    }
-
-    override fun name(): String = declarator.name()
-}
-
-data class FunctionNode(val specifier: DeclarationSpecifier,
-                        val declarator: Declarator,
-                        val body: Statement) : AnyDeclarator() {
-    override fun begin(): Position = specifier.begin()
-
-    override fun name(): String {
-        return declarator.directDeclarator.decl.name()
-    }
-
-    fun functionDeclarator(): ParameterTypeList {
-        return declarator.directDeclarator.directDeclaratorParams[0] as ParameterTypeList
-    }
-
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor = memoizeType {
-        assertion(specifier === declspec) { "specifier should be the same" }
-
-        val declspecType = declspec.specifyType(typeHolder, declarator.pointers)
-
-        val type = declarator.directDeclarator.resolveType(declspecType.typeDesc, typeHolder)
-        assertion(!declspec.isTypedef) { "typedef is not supported here" }
-
-        val baseType = type.cType()
-        assertion(baseType is CFunctionType) { "function type expected" }
-        return@memoizeType typeHolder.addFunctionType(name(), VarDescriptor(type, declspecType.storageClass))
-    }
-
-    fun resolveType(typeHolder: TypeHolder): CFunctionType {
-        return declareType(specifier, typeHolder).typeDesc.cType() as CFunctionType
-    }
-
-    override fun <T> accept(visitor: DeclaratorVisitor<T>): T = visitor.visit(this)
-}
-
-data class DirectDeclarator(val decl: DirectDeclaratorEntry, val directDeclaratorParams: List<DirectDeclaratorParam>): AnyDeclarator() {
-    override fun begin(): Position = decl.begin()
-    override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
-    override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder, ): VarDescriptor {
-        TODO("Not yet implemented")
-    }
-
-    private fun resolveAllDecl(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
-        var currentType = baseType
-        for (decl in directDeclaratorParams.reversed()) {
-            when (decl) {
-                is ArrayDeclarator -> {
-                    currentType = decl.resolveType(currentType, typeHolder)
-                }
-
-                is ParameterTypeList -> {
-                    val abstractType = decl.resolveType(currentType, typeHolder)
-                    currentType = TypeDesc.from(CFunctionType(name(), abstractType.cType() as AbstractCFunction), abstractType.qualifiers())
-                }
-
-                else -> throw IllegalStateException("Unknown declarator $decl")
-            }
-        }
-        return currentType
-    }
-
-    fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc = when (decl) {
-        is FunctionDeclarator -> {
-            assertion(directDeclaratorParams.size == 1) { "Function pointer should have only one parameter" }
-            val fnDecl = directDeclaratorParams[0] as ParameterTypeList
-            val pointers = decl.declarator.pointers
-            if (pointers.isEmpty()) {
-                resolveAllDecl(baseType, typeHolder)
-            } else {
-                val type = fnDecl.resolveType(baseType, typeHolder)
-                decl.resolveType(type, typeHolder)
-            }
-        }
-        is DirectVarDeclarator -> resolveAllDecl(baseType, typeHolder)
-    }
-
-    override fun name(): String = decl.name()
 }

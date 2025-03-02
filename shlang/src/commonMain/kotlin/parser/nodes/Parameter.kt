@@ -7,30 +7,35 @@ import tokenizer.Position
 import tokenizer.tokens.Punctuator
 
 
-sealed class AnyParameter : Node() {
+sealed class AnyParameter {
+    abstract fun begin(): Position
     abstract fun resolveType(typeHolder: TypeHolder): TypeDesc
     abstract fun<T> accept(visitor: ParameterVisitor<T>): T
 }
 
-data class Parameter(val declspec: DeclarationSpecifier, val declarator: Node) : AnyParameter() {
+sealed class AnyParamDeclarator
+class EmptyParamDeclarator(val where: Position) : AnyParamDeclarator()
+class ParamAbstractDeclarator(val abstractDeclarator: AbstractDeclarator) : AnyParamDeclarator()
+class ParamDeclarator(val declarator: Declarator) : AnyParamDeclarator()
+
+data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyParamDeclarator) : AnyParameter() {
     override fun begin(): Position = declspec.begin()
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
 
     fun name(): String {
-        if (declarator !is Declarator) {
+        if (declarator !is ParamDeclarator) {
             throw IllegalStateException("Expected declarator, but got $declarator")
         }
 
-        return declarator.directDeclarator.decl.name()
+        return declarator.declarator.directDeclarator.decl.name()
     }
 
     override fun resolveType(typeHolder: TypeHolder): TypeDesc {
         val type = declspec.specifyType(typeHolder, listOf()).typeDesc
         return when (declarator) {
-            is Declarator         -> declarator.declareType(declspec, typeHolder).typeDesc
-            is AbstractDeclarator -> declarator.resolveType(type, typeHolder)
-            is EmptyDeclarator    -> type
-            else -> throw IllegalStateException("Unknown declarator $declarator")
+            is ParamDeclarator -> declarator.declarator.declareType(declspec, typeHolder).typeDesc
+            is ParamAbstractDeclarator -> declarator.abstractDeclarator.resolveType(type, typeHolder)
+            is EmptyParamDeclarator -> type
         }
     }
 }
