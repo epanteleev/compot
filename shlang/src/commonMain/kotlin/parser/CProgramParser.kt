@@ -23,6 +23,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     fun translation_unit(): ProgramNode {
         val nodes = arrayListOf<ExternalDeclaration>()
         while (!eof()) {
+            if (check(";")) {
+                eat()
+                continue
+            }
+
             val node = external_declaration()?:
                 throw ParserException(InvalidToken("Expected external declaration", peak()))
             nodes.add(node)
