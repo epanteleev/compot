@@ -8,7 +8,8 @@ import parser.nodes.visitors.DirectDeclaratorParamVisitor
 import tokenizer.Position
 
 
-sealed class DirectDeclaratorParam: Node() {
+sealed class DirectDeclaratorParam {
+    abstract fun begin(): Position
     abstract fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc
     abstract fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T
 }

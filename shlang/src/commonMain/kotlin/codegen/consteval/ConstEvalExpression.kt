@@ -17,10 +17,6 @@ sealed class ConstEvalExpression<T>: ExpressionVisitor<T?> {
 
 //TODO copy-pasted many times
 class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEvalExpression<Int?>() {
-    override fun visit(identNode: IdentNode): Int {
-        throw ConstEvalException("identifier=${identNode}")
-    }
-
     override fun visit(expression: CompoundLiteral): Int {
         TODO("Not yet implemented")
     }
@@ -119,14 +115,6 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
         return assignment.toByte().toInt()
     }
 
-    override fun visit(initializerList: InitializerList): Int? {
-        return null
-    }
-
-    override fun visit(singleInitializer: SingleInitializer): Int? = null
-
-    override fun visit(designationInitializer: DesignationInitializer): Int? = null
-
     override fun visit(sizeOf: SizeOf): Int {
         return sizeOf.constEval(ctx.typeHolder())
     }
@@ -165,10 +153,6 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
 }
 
 class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): ConstEvalExpression<Long?>() {
-    override fun visit(identNode: IdentNode): Long {
-        throw ConstEvalException("identifier=${identNode}")
-    }
-
     override fun visit(builtin: BuiltinVaEnd): Long? {
         TODO("Not yet implemented")
     }
@@ -265,16 +249,6 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
         TODO("Not yet implemented")
     }
 
-    override fun visit(initializerList: InitializerList): Long {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(singleInitializer: SingleInitializer): Long? = null
-
-    override fun visit(designationInitializer: DesignationInitializer): Long {
-        TODO("Not yet implemented")
-    }
-
     override fun visit(sizeOf: SizeOf): Long {
         return sizeOf.constEval(ctx.typeHolder()).toLong()
     }
@@ -315,10 +289,6 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
 }
 
 class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstEvalExpression<Float>() {
-    override fun visit(identNode: IdentNode): Float {
-        throw ConstEvalException("identifier=${identNode}")
-    }
-
     override fun visit(expression: CompoundLiteral): Float {
         TODO("Not yet implemented")
     }
@@ -406,10 +376,6 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
         TODO("Not yet implemented")
     }
 
-    override fun visit(initializerList: InitializerList): Float {
-        TODO("Not yet implemented")
-    }
-
     override fun visit(sizeOf: SizeOf): Float {
         return sizeOf.constEval(ctx.typeHolder()).toFloat()
     }
@@ -430,12 +396,6 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
     override fun visit(arrowMemberAccess: ArrowMemberAccess): Float {
         TODO("Not yet implemented")
     }
-
-    override fun visit(designationInitializer: DesignationInitializer): Float {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(singleInitializer: SingleInitializer): Float? = null
 
     override fun visit(memberAccess: MemberAccess): Float {
         TODO("Not yet implemented")
@@ -461,10 +421,6 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
 }
 
 class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): ConstEvalExpression<Double?>() {
-    override fun visit(identNode: IdentNode): Double {
-        throw ConstEvalException("identifier=${identNode}")
-    }
-
     override fun visit(expression: CompoundLiteral): Double {
         TODO("Not yet implemented")
     }
@@ -553,10 +509,6 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
         TODO("Not yet implemented")
     }
 
-    override fun visit(initializerList: InitializerList): Double {
-        TODO("Not yet implemented")
-    }
-
     override fun visit(sizeOf: SizeOf): Double {
         return sizeOf.constEval(ctx.typeHolder()).toDouble()
     }
@@ -585,12 +537,6 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
     override fun visit(emptyExpression: EmptyExpression): Double {
         TODO("Not yet implemented")
     }
-
-    override fun visit(designationInitializer: DesignationInitializer): Double {
-        TODO("Not yet implemented")
-    }
-
-    override fun visit(singleInitializer: SingleInitializer): Double? = null
 
     companion object {
         private fun compare(d1: Double, d2: Double): Int {

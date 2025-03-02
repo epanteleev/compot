@@ -417,16 +417,6 @@ data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
     }
 }
 
-data class IdentNode(private val str: Identifier) : Expression() {
-    override fun begin(): Position = str.position()
-    fun str(): String = str.str()
-    override fun <T> accept(visitor: ExpressionVisitor<T>): T = visitor.visit(this)
-
-    override fun resolveType(typeHolder: TypeHolder): CType {
-        TODO("Not yet implemented")
-    }
-}
-
 class BuiltinVaArg(val assign: Expression, val typeName: TypeName) : Expression() {
     override fun begin(): Position = assign.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)

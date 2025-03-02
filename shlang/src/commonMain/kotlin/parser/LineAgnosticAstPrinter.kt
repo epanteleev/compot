@@ -19,10 +19,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
-    override fun visit(identNode: IdentNode) {
-        buffer.append(identNode.str())
-    }
-
     override fun visit(expression: CompoundLiteral) {
         buffer.append('(')
         expression.typeName.accept(this)
@@ -208,7 +204,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         exprStatement.expr.accept(this)
     }
 
-    override fun visit(functionNode: FunctionNode) {
+    fun visit(functionNode: FunctionNode) {
         functionNode.specifier.accept(this)
         buffer.append(' ')
         functionNode.declarator.accept(this)
@@ -264,7 +260,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(memberAccess.fieldName.str())
     }
 
-    override fun visit(initializerList: InitializerList) {
+    fun visit(initializerList: InitializerList) {
         buffer.append('{')
         joinTo(initializerList.initializers, ", ") {
             when (it) {
@@ -275,7 +271,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append('}')
     }
 
-    override fun visit(designationInitializer: DesignationInitializer) {
+    fun visit(designationInitializer: DesignationInitializer) {
         visit(designationInitializer.designation)
         buffer.append(" = ")
         when (val initializer = designationInitializer.initializer) {
@@ -284,7 +280,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         }
     }
 
-    override fun visit(singleInitializer: SingleInitializer) {
+    fun visit(singleInitializer: SingleInitializer) {
         when (val expr = singleInitializer.expr) {
             is InitializerListInitializer -> visit(expr.list)
             is ExpressionInitializer -> expr.expr.accept(this)
@@ -339,7 +335,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(identifierList: IdentifierList) {
         buffer.append('(')
         joinTo(identifierList.list, ", ") {
-            it.accept(this)
+            buffer.append(it.str())
         }
         buffer.append(')')
     }
@@ -536,12 +532,6 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     }
 
     companion object {
-        fun print(expr: Node): String {
-            val astPrinter = LineAgnosticAstPrinter()
-            expr.accept(astPrinter)
-            return astPrinter.buffer.toString()
-        }
-
         fun print(type: TypeSpecifier): String {
             val astPrinter = LineAgnosticAstPrinter()
             type.accept(astPrinter)
@@ -584,6 +574,12 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         fun print(initializerList: InitializerList): String {
             val astPrinter = LineAgnosticAstPrinter()
             astPrinter.visit(initializerList)
+            return astPrinter.buffer.toString()
+        }
+
+        fun print(abstractDeclarator: AbstractDeclarator): String {
+            val astPrinter = LineAgnosticAstPrinter()
+            abstractDeclarator.accept(astPrinter)
             return astPrinter.buffer.toString()
         }
 

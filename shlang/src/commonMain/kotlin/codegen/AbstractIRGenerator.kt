@@ -185,15 +185,6 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return existed
     }
 
-    protected fun makeConstant(numNode: NumNode) = when (val num = numNode.number.toNumberOrNull()) {
-        is Byte   -> I8Value.of(num.toByte())
-        is Int    -> I32Value.of(num.toInt())
-        is Long   -> I64Value.of(num.toLong())
-        is Float  -> F32Value(num.toFloat())
-        is Double -> F64Value(num.toDouble())
-        else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}", numNode.begin())
-    }
-
     private fun generateName(declarator: AnyDeclarator): String {
         val varDesc = declarator.varDescriptor()
         return if (varDesc.storageClass == StorageClass.STATIC) {

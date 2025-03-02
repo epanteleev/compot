@@ -120,7 +120,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         is BuiltinVaArg      -> visitBuiltInVaArg(expression)
         is BuiltinVaEnd      -> visitBuiltInVaEnd(expression)
         is BuiltinVaCopy     -> visitBuiltInVaCopy(expression)
-        else -> throw RuntimeException("Unknown expression: $expression")
+        is EmptyExpression   -> UndefValue
     }
 
     private fun visitBuiltInVaCopy(builtinVaCopy: BuiltinVaCopy): Value {
@@ -177,7 +177,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val argType = mb.toIRType<PrimitiveType>(typeHolder, argCType)
                 emitBuiltInVaArg(vaList, argType, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
             }
-            is DOUBLE, is FLOAT -> {
+            is AnyCFloat -> {
                 val argType = mb.toIRType<PrimitiveType>(typeHolder, argCType)
                 emitBuiltInVaArg(vaList, argType, VaStart.FP_OFFSET_IDX, VaStart.FP_REG_SAVE_AREA_SIZE)
             }
@@ -279,10 +279,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     if (type !is CArrayType) {
                         throw IRCodeGenError("Expect array type, but type=$type", expr.begin())
                     }
+                    val literal = visitStringNode(expr)
                     when (type.element().cType()) {
                         is CHAR, is UCHAR -> {
                             if (expr.isNotEmpty()) {
-                                ir.memcpy(lvalueAdr, visitStringNode(expr), U64Value.of(expr.length()))
+                                ir.memcpy(lvalueAdr, literal, U64Value.of(expr.length()))
                                 val gep = ir.gep(lvalueAdr, I8Type, I64Value.of(expr.length()))
                                 ir.store(gep, I8Value.of(0))
                             } else {
@@ -291,9 +292,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                             }
                         }
                         is CPointer -> {
-                            val stringPtr = visitStringNode(expr)
                             val fieldPtr = ir.gep(lvalueAdr, I64Type, I64Value.of(idx))
-                            ir.store(fieldPtr, stringPtr)
+                            ir.store(fieldPtr, literal)
                         }
                         else -> throw IRCodeGenError("Unknown type $type", expr.begin())
                     }
@@ -1143,7 +1143,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitNumNode(numNode: NumNode): Constant = makeConstant(numNode)
+    private fun visitNumNode(numNode: NumNode): Constant = when (val num = numNode.number.toNumberOrNull()) {
+        is Byte   -> I8Value.of(num.toByte())
+        is Int    -> I32Value.of(num.toInt())
+        is Long   -> I64Value.of(num.toLong())
+        is Float  -> F32Value(num.toFloat())
+        is Double -> F64Value(num.toDouble())
+        else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}", numNode.begin())
+    }
 
     private fun getVariableAddress(varNode: VarNode, rvalueAddr: Value, isRvalue: Boolean): Value {
         if (!isRvalue) {
@@ -1295,10 +1302,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val cont = ir.createLabel()
         ir.intrinsic(arrayListOf(vaInitInstance), VaInit(fnType.args().first().cType()), cont)
         ir.switchLabel(cont)
-    }
-
-    override fun visit(functionNode: FunctionNode): Value {
-        TODO()
     }
 
     fun visitFun(parameters: List<String>, functionNode: FunctionNode): Value = scoped {

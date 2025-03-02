@@ -2,13 +2,13 @@
 import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
 import parser.ParserException
+import parser.nodes.AbstractDeclarator
 import parser.nodes.AnyDeclarator
 import parser.nodes.Declaration
 import parser.nodes.DeclarationSpecifier
 import parser.nodes.Expression
 import parser.nodes.FunctionDeclarationNode
 import parser.nodes.FunctionNode
-import parser.nodes.Node
 import parser.nodes.Statement
 import tokenizer.CTokenizer
 import tokenizer.TokenList
@@ -414,7 +414,7 @@ class ParserTest {
         val tokens = apply("(int a)")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.abstract_declarator() as Node
+        val expr = parser.abstract_declarator() as AbstractDeclarator
         println(expr)
         val expected = "(int a)"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -425,7 +425,7 @@ class ParserTest {
         val tokens = apply("(int a, int b)")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.abstract_declarator() as Node
+        val expr = parser.abstract_declarator() as AbstractDeclarator
         println(expr)
         val expected = "(int a, int b)"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
@@ -436,7 +436,7 @@ class ParserTest {
         val tokens = apply("(int a)[23]")
         val parser = CProgramParser.build(tokens)
 
-        val expr = parser.abstract_declarator() as Node
+        val expr = parser.abstract_declarator() as AbstractDeclarator
         println(expr)
         val expected = "(int a) [23]"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
