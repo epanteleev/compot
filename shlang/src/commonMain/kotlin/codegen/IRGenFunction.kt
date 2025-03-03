@@ -476,12 +476,22 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     private fun visitArrayAccess(arrayAccess: ArrayAccess, isRvalue: Boolean): Value {
         val index = visitExpression(arrayAccess.expr, true)
         val convertedIndex = ir.convertLVToType(index, I64Type)
-        val array = visitExpression(arrayAccess.primary, true)
 
+        val array = visitExpression(arrayAccess.primary, true)
         val arrayType = arrayAccess.resolveType(typeHolder)
         val elementType = mb.toIRLVType<NonTrivialType>(typeHolder, arrayType)
 
-        val adr = ir.gep(array, elementType, convertedIndex)
+        val adr = when (val primaryType = arrayAccess.primary.resolveType(typeHolder)) {
+            is AnyCArrayType, is CPointer -> ir.gep(array, elementType, convertedIndex)
+            is CPrimitive -> {
+                val arrValue = ir.convertLVToType(array, I64Type)
+                val mul = ir.mul(arrValue, I64Value.of(elementType.sizeOf()))
+                val add = ir.add(mul, convertedIndex)
+                ir.convertLVToType(add, PtrType)
+            }
+            else -> throw IRCodeGenError("Unknown type, type=$primaryType in array access", arrayAccess.begin())
+        }
+
         if (!isRvalue) {
             return adr
         }
@@ -762,34 +772,34 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         is UndefType         -> throw RuntimeException("Unsupported type: type=$type")
     }
 
-    private fun makeAlgebraicBinary(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
-        when (val commonType = mb.toIRType<Type>(typeHolder, binOp.resolveType(typeHolder))) {
-            is PtrType -> {
-                val lvalue     = visitExpression(binOp.left, true)
-                val lValueType = when (val l = binOp.left.resolveType(typeHolder)) {
-                    is AnyCArrayType -> l.asPointer()
-                    is CPointer      -> l
-                    else -> throw IRCodeGenError("Pointer type expected, but got $l", binOp.begin())
-                }
-                val convertedLValue = ir.convertLVToType(lvalue, I64Type)
-
-                val rvalue = visitExpression(binOp.right, true)
-                when (val r = binOp.right.resolveType(typeHolder)) {
-                    is AnyCArrayType, is CPrimitive -> {}
-                    else -> throw IRCodeGenError("Primitive type expected, but got $r", binOp.begin())
-                }
-                val convertedRValue = ir.convertLVToType(rvalue, I64Type)
-
-                val dereferenced = lValueType.dereference(typeHolder)
+    private fun evaluateAddress(expr: Expression, addressCType: CPointer): Value {
+        val rvalue = visitExpression(expr, true)
+        return when (val exprType = expr.resolveType(typeHolder)) {
+            is AnyCArrayType, is CPointer -> ir.convertLVToType(rvalue, I64Type)
+            is CPrimitive -> {
+                val convertedLValue = ir.convertLVToType(rvalue, I64Type)
+                val dereferenced = addressCType.dereference(typeHolder)
                 if (dereferenced !is CompletedType) {
-                    throw IRCodeGenError("unexpected uncompleted type: $dereferenced", binOp.begin())
+                    throw IRCodeGenError("unexpected uncompleted type: $dereferenced", expr.begin())
                 }
-                val mul = ir.mul(convertedRValue, I64Value.of(dereferenced.size()))
 
-                val result = op(convertedLValue, mul)
-                return ir.convertRVToType(result, commonType)
+                ir.mul(convertedLValue, I64Value.of(dereferenced.size()))
             }
-            is FloatingPointType -> {
+
+            else -> throw IRCodeGenError("Primitive type expected, but got $exprType", expr.begin())
+        }
+    }
+
+    private fun makeAlgebraicBinary(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
+        when (val cType = binOp.resolveType(typeHolder)) {
+            is CPointer -> {
+                val lAddress = evaluateAddress(binOp.left, cType)
+                val rAddress = evaluateAddress(binOp.right, cType)
+                val result = op(lAddress, rAddress)
+                return ir.convertRVToType(result, PtrType)
+            }
+            is AnyCFloat -> {
+                val commonType = mb.toIRType<FloatingPointType>(typeHolder, cType)
                 val left = visitExpression(binOp.left, true)
                 val leftConverted = ir.convertRVToType(left, commonType)
 
@@ -798,8 +808,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 return op(leftConverted, rightConverted)
             }
-            is IntegerType -> {
-                val cvtType = when (commonType) {
+            is AnyCInteger, is CEnumType -> {
+                val cvtType = when (val commonType = mb.toIRType<IntegerType>(typeHolder, cType)) {
                     is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) I32Type else commonType
                     is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) U32Type else commonType
                 }
@@ -811,7 +821,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 return op(leftConverted, rightConverted)
             }
-            is FlagType -> {
+            is BOOL -> {
                 val left = visitExpression(binOp.left, true)
                 val leftConverted = ir.convertLVToType(left, I32Type)
 
@@ -820,8 +830,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 return op(leftConverted, rightConverted)
             }
-            is UndefType -> throw IRCodeGenError("Undef type", binOp.begin())
-            else -> throw IRCodeGenError("Unexpected type: $commonType", binOp.begin())
+            else -> throw IRCodeGenError("Unexpected type: $cType", binOp.begin())
         }
     }
 

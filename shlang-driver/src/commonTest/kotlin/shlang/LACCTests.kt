@@ -59,7 +59,6 @@ sealed class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testArrayReverseIndex() {
         val result = runCTest("shlang/lacc/array-reverse-index", listOf(), options())
         assertEquals(2, result.exitCode)

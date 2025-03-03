@@ -350,10 +350,10 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
             is CUncompletedArrayType -> primaryType.elementType.cType()
             is CPointer              -> primaryType.dereference(typeHolder)
             is CPrimitive -> {
-                val e = expr.resolveType(typeHolder)
-                val exprType = convertToPointer(e)
-                    ?: throw TypeResolutionException("Array access with non-pointer type: $e", begin())
-                primaryType.interfere(typeHolder, exprType) ?: throw TypeResolutionException("Array access with incompatible types: $primaryType and $exprType", begin())
+                val expressionType = expr.resolveType(typeHolder)
+                val exprPointer = convertToPointer(expressionType)
+                    ?: throw TypeResolutionException("Array access with non-pointer type: $expressionType", begin())
+                exprPointer.dereference(typeHolder)
             }
             else -> throw TypeResolutionException("Array access on non-array type: $primaryType", begin())
         }
