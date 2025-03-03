@@ -217,7 +217,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(parameter: Parameter) {
         parameter.declspec.accept(this)
         buffer.append(' ')
-        when (val declarator = parameter.declarator) {
+        when (val declarator = parameter.paramDeclarator) {
             is ParamDeclarator -> declarator.declarator.accept(this)
             is ParamAbstractDeclarator -> declarator.abstractDeclarator.accept(this)
             is EmptyParamDeclarator -> {}

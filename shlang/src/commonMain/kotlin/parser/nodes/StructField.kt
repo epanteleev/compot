@@ -2,17 +2,18 @@ package parser.nodes
 
 import tokenizer.Position
 import typedesc.TypeHolder
+import typedesc.DeclSpec
 import typedesc.VarDescriptor
 
 sealed class AnyStructDeclaratorItem {
     abstract fun begin(): Position
-    abstract fun declareType(varDesc: VarDescriptor, typeHolder: TypeHolder): VarDescriptor
+    abstract fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor
 }
 
 class StructDeclaratorItem(val expr: Declarator): AnyStructDeclaratorItem() {
     override fun begin(): Position = expr.begin()
 
-    override fun declareType(varDesc: VarDescriptor, typeHolder: TypeHolder): VarDescriptor {
+    override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
         return expr.declareType(varDesc, typeHolder)
     }
 
@@ -20,7 +21,7 @@ class StructDeclaratorItem(val expr: Declarator): AnyStructDeclaratorItem() {
 class EmptyStructDeclaratorItem(private val where: Position): AnyStructDeclaratorItem() {
     override fun begin(): Position = where
 
-    override fun declareType(varDesc: VarDescriptor, typeHolder: TypeHolder): VarDescriptor {
+    override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
         throw IllegalStateException("Empty declarator is not supported")
     }
 }
@@ -38,7 +39,7 @@ data class StructDeclarator(val declarator: AnyStructDeclaratorItem, val expr: E
 
     fun begin(): Position = declarator.begin()
 
-    fun declareType(varDesc: VarDescriptor, typeHolder: TypeHolder): VarDescriptor = memoizeType {
+    fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor = memoizeType {
         if(expr !is EmptyExpression) {
             println("Warning: bit field is not supported")
         }

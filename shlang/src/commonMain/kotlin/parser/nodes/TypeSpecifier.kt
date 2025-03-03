@@ -5,17 +5,17 @@ import parser.nodes.visitors.TypeSpecifierVisitor
 import tokenizer.Position
 import typedesc.CTypeBuilder
 import typedesc.TypeHolder
-import typedesc.VarDescriptor
+import typedesc.DeclSpec
 
 
 sealed class TypeSpecifier {
-    private var cachedType: VarDescriptor? = null
+    private var cachedType: DeclSpec? = null
 
     abstract fun begin(): Position
     abstract fun<T> accept(visitor: TypeSpecifierVisitor<T>): T
-    abstract fun specifyType(typeHolder: TypeHolder): VarDescriptor
+    abstract fun specifyType(typeHolder: TypeHolder): DeclSpec
 
-    protected fun memoizeType(type: () -> VarDescriptor): VarDescriptor {
+    protected fun memoizeType(type: () -> DeclSpec): DeclSpec {
         if (cachedType == null) {
             cachedType = type()
         }
@@ -47,12 +47,12 @@ data class TypeName(val specifiers: DeclarationSpecifier, val abstractDeclarator
     override fun begin(): Position = specifiers.begin()
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 
-    override fun specifyType(typeHolder: TypeHolder): VarDescriptor {
+    override fun specifyType(typeHolder: TypeHolder): DeclSpec {
         val specifierType = specifiers.specifyType(typeHolder)
         if (abstractDeclarator == null) {
             return specifierType
         }
 
-        return VarDescriptor(abstractDeclarator.resolveType(specifierType.typeDesc, typeHolder), specifierType.storageClass)
+        return DeclSpec(abstractDeclarator.resolveType(specifierType.typeDesc, typeHolder), specifierType.storageClass)
     }
 }

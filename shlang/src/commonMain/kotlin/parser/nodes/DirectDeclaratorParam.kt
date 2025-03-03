@@ -87,7 +87,7 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
         }
         if (params.size == 1 && params[0] is Parameter) {
             val param = params[0] as Parameter
-            if (param.declarator is EmptyParamDeclarator) {
+            if (param.paramDeclarator is EmptyParamDeclarator) {
                 return emptyList()
             }
         }

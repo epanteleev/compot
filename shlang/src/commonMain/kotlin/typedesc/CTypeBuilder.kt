@@ -2,7 +2,6 @@ package typedesc
 
 import types.*
 import common.assertion
-import tokenizer.Position
 
 
 class CTypeBuilder {
@@ -70,10 +69,10 @@ class CTypeBuilder {
         return baseTypes[0].asType()
     }
 
-    fun build(): VarDescriptor {
+    fun build(): DeclSpec {
         val baseType = if (baseTypes.size == 1 && baseTypes[0] is TypeDef) {
             val ctype = (baseTypes[0] as TypeDef).typeDesc().copyWith(typeProperties)
-            return VarDescriptor(ctype, storageClass)
+            return DeclSpec(ctype, storageClass)
         } else if (baseTypes[0] is CPrimitive) {
             foldCTypes(baseTypes)
         } else {
@@ -81,6 +80,6 @@ class CTypeBuilder {
         }
 
         val cType = TypeDesc.from(baseType, typeProperties)
-        return VarDescriptor(cType, storageClass)
+        return DeclSpec(cType, storageClass)
     }
 }

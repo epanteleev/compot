@@ -18,23 +18,23 @@ class EmptyParamDeclarator(val where: Position) : AnyParamDeclarator()
 class ParamAbstractDeclarator(val abstractDeclarator: AbstractDeclarator) : AnyParamDeclarator()
 class ParamDeclarator(val declarator: Declarator) : AnyParamDeclarator()
 
-data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyParamDeclarator) : AnyParameter() {
+data class Parameter(val declspec: DeclarationSpecifier, val paramDeclarator: AnyParamDeclarator) : AnyParameter() {
     override fun begin(): Position = declspec.begin()
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
 
     fun name(): String {
-        if (declarator !is ParamDeclarator) {
-            throw IllegalStateException("Expected declarator, but got $declarator")
+        if (paramDeclarator !is ParamDeclarator) {
+            throw IllegalStateException("Expected declarator, but got $paramDeclarator")
         }
 
-        return declarator.declarator.directDeclarator.decl.name()
+        return paramDeclarator.declarator.directDeclarator.decl.name()
     }
 
     override fun resolveType(typeHolder: TypeHolder): TypeDesc {
         val type = declspec.specifyType(typeHolder)
-        return when (declarator) {
-            is ParamDeclarator -> declarator.declarator.declareType(type, typeHolder).typeDesc
-            is ParamAbstractDeclarator -> declarator.abstractDeclarator.resolveType(type.typeDesc, typeHolder)
+        return when (paramDeclarator) {
+            is ParamDeclarator -> paramDeclarator.declarator.declareType(type, typeHolder).typeDesc
+            is ParamAbstractDeclarator -> paramDeclarator.abstractDeclarator.resolveType(type.typeDesc, typeHolder)
             is EmptyParamDeclarator -> type.typeDesc
         }
     }

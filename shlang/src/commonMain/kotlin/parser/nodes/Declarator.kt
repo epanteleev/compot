@@ -7,6 +7,7 @@ import typedesc.StorageClass
 import typedesc.TypeDesc
 import typedesc.TypeHolder
 import typedesc.TypeResolutionException
+import typedesc.DeclSpec
 import typedesc.VarDescriptor
 
 
@@ -16,7 +17,7 @@ sealed class AnyDeclarator {
     abstract fun begin(): Position
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
-    internal abstract fun declareType(varDesc: VarDescriptor, typeHolder: TypeHolder): VarDescriptor
+    internal abstract fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor
 
     protected fun wrapPointers(type: CType, pointers: List<NodePointer>): CType {
         var pointerType = type
@@ -44,7 +45,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         return directDeclarator.name()
     }
 
-    override fun declareType(varDesc: VarDescriptor, typeHolder: TypeHolder): VarDescriptor = memoizeType {
+    override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor = memoizeType {
         var pointerType = wrapPointers(varDesc.typeDesc.cType(), pointers)
         val newTypeDesc = TypeDesc.from(pointerType, varDesc.typeDesc.qualifiers())
         val type = directDeclarator.resolveType(newTypeDesc, typeHolder)
@@ -74,7 +75,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): 
         return declarator.name()
     }
 
-    override fun declareType(varDesc: VarDescriptor, typeHolder: TypeHolder): VarDescriptor = memoizeType {
+    override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor = memoizeType {
         var pointerType = wrapPointers(varDesc.typeDesc.cType(), declarator.pointers)
         val newTypeDesc = TypeDesc.from(pointerType, varDesc.typeDesc.qualifiers())
 
