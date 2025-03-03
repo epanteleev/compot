@@ -275,14 +275,10 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
     override fun visit(cast: Cast): Long? {
         val expression = eval(cast.cast, ctx.typeHolder()) ?: return null
         val type = cast.typeName.specifyType(ctx.typeHolder(), listOf()).typeDesc
-        val converted = when (type.cType()) {
-            INT -> expression.toInt()
-            LONG, ULONG -> expression
-            SHORT -> expression.toShort()
-            else -> throw ConstEvalException("Cannot cast to type $type")
+        return when (type.cType()) {
+            is AnyCInteger -> expression.toLong()
+            else -> null
         }
-
-        return converted.toLong()
     }
 
     override fun visit(numNode: NumNode): Long? {

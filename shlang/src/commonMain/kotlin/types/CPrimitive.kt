@@ -31,6 +31,7 @@ sealed class CPrimitive: CompletedType() {
                     INT -> INT
                     LONG -> LONG
                     CHAR -> UCHAR
+                    SHORT -> SHORT
                     UINT -> UINT
                     ULONG -> ULONG
                     DOUBLE -> DOUBLE
@@ -45,6 +46,7 @@ sealed class CPrimitive: CompletedType() {
                     INT -> INT
                     LONG -> LONG
                     CHAR -> SHORT
+                    UCHAR -> SHORT
                     UINT -> UINT
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT

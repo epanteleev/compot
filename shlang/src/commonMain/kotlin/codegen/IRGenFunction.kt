@@ -329,6 +329,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         return ir.trunc(I32Value.of(charNode.toByte()), I8Type)
     }
 
+    private fun castFlagTypeToI8(value: Value): Value = when (value.type()) {
+        FlagType -> ir.flag2int(value, I8Type)
+        else -> value
+    }
+
     private fun generateIfElsePattern(commonType: PrimitiveType, conditional: Conditional): Value {
         val condition = makeConditionFromExpression(conditional.cond)
 
@@ -338,15 +343,15 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branchCond(condition, trueBB, falseBB)
         ir.switchLabel(trueBB)
 
-        val right = visitExpression(conditional.eTrue, true)
-        val convertedRight = ir.convertLVToType(right, commonType)
+        val right = castFlagTypeToI8(visitExpression(conditional.eTrue, true))
+        val convertedRight = ir.convertRVToType(right, commonType)
 
         val trueBBCurrent = ir.currentLabel()
         ir.branch(end)
         ir.switchLabel(falseBB)
 
-        val left = visitExpression(conditional.eFalse, true)
-        val convertedLeft = ir.convertLVToType(left, commonType)
+        val left = castFlagTypeToI8(visitExpression(conditional.eFalse, true))
+        val convertedLeft = ir.convertRVToType(left, commonType)
 
         val falseBBCurrent = ir.currentLabel()
         ir.branch(end)

@@ -216,7 +216,6 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         return@rule null
     }
 
-
     // <iteration-statement> ::= while ( <expression> ) <statement>
     //                        | do <statement> while ( <expression> ) ;
     //                        | for ( {<expression>}? ; {<expression>}? ; {<expression>}? ) <statement>
@@ -229,7 +228,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 throw ParserException(InvalidToken("Expected '('", peak()))
             }
             eat()
-            val condition = conditional_expression() ?: throw ParserException(
+            val condition = expression() ?: throw ParserException(
                 InvalidToken("Expected conditional expression", peak())
             )
             if (!check(")")) {
@@ -250,7 +249,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
                 throw ParserException(InvalidToken("Expected '('", peak()))
             }
             eat()
-            val condition = conditional_expression()
+            val condition = expression()
                 ?: throw ParserException(InvalidToken("Expected conditional expression", peak()))
             if (!check(")")) {
                 throw ParserException(InvalidToken("Expected ')'", peak()))
