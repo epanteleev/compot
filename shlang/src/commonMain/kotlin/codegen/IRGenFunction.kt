@@ -1673,7 +1673,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     override fun visit(declarator: Declarator): Value {
         val type = typeHolder[declarator.name()]
         if (type.storageClass == StorageClass.STATIC) {
-            return generateGlobalDeclarator(declarator)
+            return generateGlobalDeclarator(type, declarator)
         }
 
         val irType = when (val cType = type.typeDesc.cType()) {
@@ -1859,9 +1859,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(initDeclarator: InitDeclarator): Value {
-        val varDesc = typeHolder[initDeclarator.name()]
+        val varDesc = typeHolder.getVarTypeOrNull(initDeclarator.declarator.name())
+            ?: throw IRCodeGenError("Variable '${initDeclarator.declarator.name()}' not found", initDeclarator.declarator.begin())
+
         if (varDesc.storageClass == StorageClass.STATIC) {
-            return generateGlobalAssignmentDeclarator(initDeclarator)
+            return generateGlobalAssignmentDeclarator(varDesc, initDeclarator)
         }
         val type = varDesc.typeDesc.cType()
         if (type is CPrimitive) {

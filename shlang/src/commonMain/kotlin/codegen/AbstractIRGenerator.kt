@@ -130,8 +130,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         else -> GlobalValueAttribute.DEFAULT
     }
 
-    protected fun generateGlobalAssignmentDeclarator(declarator: InitDeclarator): AnyGlobalValue {
-        val varDescriptor = declarator.varDescriptor()
+    protected fun generateGlobalAssignmentDeclarator(varDescriptor: VarDescriptor, declarator: InitDeclarator): AnyGlobalValue {
         val lValueCType = varDescriptor.typeDesc.cType()
 
         assertion(varDescriptor.storageClass != StorageClass.EXTERN) { "invariant: cType=$varDescriptor" }
@@ -186,7 +185,9 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     private fun generateName(declarator: AnyDeclarator): String {
-        val varDesc = declarator.varDescriptor()
+        val varDesc = typeHolder.getVarTypeOrNull(declarator.name())
+            ?: throw IRCodeGenError("Variable '${declarator.name()}' not found", declarator.begin())
+
         return if (varDesc.storageClass == StorageClass.STATIC) {
             nameGenerator.createStaticVariableName(declarator.name())
         } else {
@@ -215,8 +216,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return globalValue
     }
 
-    protected fun generateGlobalDeclarator(declarator: Declarator): Value {
-        val varDesc = declarator.varDescriptor()
+    protected fun generateGlobalDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value {
         when (val cType = varDesc.typeDesc.cType()) {
             is CFunctionType -> {
                 val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass).build()

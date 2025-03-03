@@ -7,10 +7,6 @@ import typedesc.VarDescriptor
 data class Declaration(val declspec: DeclarationSpecifier, private val declarators: List<AnyDeclarator>) {
     fun begin(): Position = declspec.begin()
 
-    fun nonTypedefDeclarators(): List<AnyDeclarator> {
-        return declarators
-    }
-
     fun declarators(): List<AnyDeclarator> {
         return declarators
     }

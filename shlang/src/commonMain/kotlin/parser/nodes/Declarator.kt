@@ -18,12 +18,13 @@ sealed class AnyDeclarator {
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
     internal abstract fun declareType(varDesc: VarDescriptor, typeHolder: TypeHolder): VarDescriptor
 
-    fun varDescriptor(): VarDescriptor {
-        if (cachedType == null) {
-            throw IllegalStateException("type is not resolved")
+    protected fun wrapPointers(type: CType, pointers: List<NodePointer>): CType {
+        var pointerType = type
+        for (idx in pointers.indices) {
+            val pointer = pointers[idx]
+            pointerType = CPointer(pointerType, pointer.property())
         }
-
-        return cachedType!!
+        return pointerType
     }
 
     protected fun memoizeType(type: () -> VarDescriptor): VarDescriptor {
@@ -44,11 +45,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
     }
 
     override fun declareType(varDesc: VarDescriptor, typeHolder: TypeHolder): VarDescriptor = memoizeType {
-        var pointerType = varDesc.typeDesc.cType()
-        for (idx in pointers.indices) {
-            val pointer = pointers[idx]
-            pointerType = CPointer(pointerType, pointer.property())
-        }
+        var pointerType = wrapPointers(varDesc.typeDesc.cType(), pointers)
         val newTypeDesc = TypeDesc.from(pointerType, varDesc.typeDesc.qualifiers())
         val type = directDeclarator.resolveType(newTypeDesc, typeHolder)
 
@@ -78,11 +75,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): 
     }
 
     override fun declareType(varDesc: VarDescriptor, typeHolder: TypeHolder): VarDescriptor = memoizeType {
-        var pointerType = varDesc.typeDesc.cType()
-        for (idx in declarator.pointers.indices) {
-            val pointer = declarator.pointers[idx]
-            pointerType = CPointer(pointerType, pointer.property())
-        }
+        var pointerType = wrapPointers(varDesc.typeDesc.cType(), declarator.pointers)
         val newTypeDesc = TypeDesc.from(pointerType, varDesc.typeDesc.qualifiers())
 
         val type = declarator.directDeclarator.resolveType(newTypeDesc, typeHolder)

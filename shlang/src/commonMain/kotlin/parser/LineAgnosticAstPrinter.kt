@@ -330,7 +330,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     override fun visit(typeName: TypeName) {
         typeName.specifiers.accept(this)
-        typeName.abstractDecl?.accept(this)
+        typeName.abstractDeclarator?.accept(this)
     }
 
     override fun visit(identifierList: IdentifierList) {

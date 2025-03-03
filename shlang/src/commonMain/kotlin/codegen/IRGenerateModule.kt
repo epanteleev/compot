@@ -38,10 +38,11 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
             return
         }
 
-        for (declarator in node.nonTypedefDeclarators()) {
+        for (declarator in node.declarators()) {
+            val varDesc = declarator.declareType(varDesc, typeHolder)
             when (declarator) {
-                is Declarator     -> generateGlobalDeclarator(declarator)
-                is InitDeclarator -> generateGlobalAssignmentDeclarator(declarator)
+                is Declarator -> generateGlobalDeclarator(varDesc, declarator)
+                is InitDeclarator -> generateGlobalAssignmentDeclarator(varDesc, declarator)
             }
         }
     }
