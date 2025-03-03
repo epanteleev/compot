@@ -48,7 +48,7 @@ class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerLi
     override fun begin(): Position = typeName.begin()
 
     fun typeDesc(typeHolder: TypeHolder): TypeDesc {
-        val type = typeName.specifyType(typeHolder, listOf()).typeDesc
+        val type = typeName.specifyType(typeHolder).typeDesc
         val ctype = type.cType()
         if (ctype is CUncompletedArrayType) {
             return TypeDesc.from(CArrayType(ctype.elementType, initializerList.length().toLong()))
@@ -368,7 +368,7 @@ sealed class SizeOfParam {
 class SizeOfType(val typeName: TypeName) : SizeOfParam() {
     override fun begin(): Position = typeName.begin()
     override fun constEval(typeHolder: TypeHolder): Int {
-        val resolved = typeName.specifyType(typeHolder, listOf()).typeDesc.cType()
+        val resolved = typeName.specifyType(typeHolder).typeDesc.cType()
         if (resolved !is CompletedType) {
             throw TypeResolutionException("sizeof on uncompleted type: $resolved", begin())
         }
@@ -405,7 +405,7 @@ data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize typeName.specifyType(typeHolder, listOf()).typeDesc.cType()
+        return@memoize typeName.specifyType(typeHolder).typeDesc.cType()
     }
 }
 
@@ -414,7 +414,7 @@ class BuiltinVaArg(val assign: Expression, val typeName: TypeName) : Expression(
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize typeName.specifyType(typeHolder, listOf()).typeDesc.cType()
+        return@memoize typeName.specifyType(typeHolder).typeDesc.cType()
     }
 }
 

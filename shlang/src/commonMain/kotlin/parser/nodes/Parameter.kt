@@ -31,11 +31,11 @@ data class Parameter(val declspec: DeclarationSpecifier, val declarator: AnyPara
     }
 
     override fun resolveType(typeHolder: TypeHolder): TypeDesc {
-        val type = declspec.specifyType(typeHolder, listOf()).typeDesc
+        val type = declspec.specifyType(typeHolder)
         return when (declarator) {
-            is ParamDeclarator -> declarator.declarator.declareType(declspec, typeHolder).typeDesc
-            is ParamAbstractDeclarator -> declarator.abstractDeclarator.resolveType(type, typeHolder)
-            is EmptyParamDeclarator -> type
+            is ParamDeclarator -> declarator.declarator.declareType(type, typeHolder).typeDesc
+            is ParamAbstractDeclarator -> declarator.abstractDeclarator.resolveType(type.typeDesc, typeHolder)
+            is EmptyParamDeclarator -> type.typeDesc
         }
     }
 }

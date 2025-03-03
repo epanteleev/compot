@@ -5,6 +5,7 @@ import ir.module.Module
 import ir.module.builder.impl.ModuleBuilder
 import ir.pass.analysis.ValidateSSAErrorException
 import tokenizer.Position
+import typedesc.StorageClass
 import typedesc.TypeHolder
 
 
@@ -32,6 +33,11 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
     }
 
     private fun generateDeclaration(node: Declaration) {
+        val varDesc = node.specifyType(typeHolder)
+        if (varDesc.storageClass == StorageClass.TYPEDEF) {
+            return
+        }
+
         for (declarator in node.nonTypedefDeclarators()) {
             when (declarator) {
                 is Declarator     -> generateGlobalDeclarator(declarator)

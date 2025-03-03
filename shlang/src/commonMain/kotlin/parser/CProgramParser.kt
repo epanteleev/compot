@@ -1929,7 +1929,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (declaration != null) {
             // Early resolve type.
             // TODO this step should be skipped if the declaration doesn't have 'typedef' storage class specifier.
-            declaration.specifyType(typeHolder, listOf())
+            declaration.specifyType(typeHolder)
             return@rule GlobalDeclaration(declaration)
         }
         val function = function_definition() ?: return@rule null

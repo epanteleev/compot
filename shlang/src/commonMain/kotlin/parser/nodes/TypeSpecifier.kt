@@ -28,28 +28,23 @@ sealed class TypeSpecifier {
 }
 
 data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier() {
-    internal var isTypedef = false
-
     init {
         assertion(specifiers.isNotEmpty()) { "DeclarationSpecifier should have at least one specifier" }
     }
 
     override fun begin(): Position = specifiers.first().begin()
 
-    private fun specifyType1(typeHolder: TypeHolder) = memoizeType {
+    fun specifyType(typeHolder: TypeHolder) = memoizeType {
         val typeBuilder = CTypeBuilder()
         for (specifier in specifiers) {
-            val property = specifier.typeResolve(typeHolder, typeBuilder)
-            if (property == StorageClass.TYPEDEF) {
-                isTypedef = true
-            }
+            specifier.typeResolve(typeHolder, typeBuilder)
         }
 
         return@memoizeType typeBuilder.build()
     }
 
     override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor {
-        val type = specifyType1(typeHolder)
+        val type = specifyType(typeHolder)
         if (pointers.isEmpty()) {
             return type
         }
@@ -70,6 +65,15 @@ data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: Abst
     override fun begin(): Position = specifiers.begin()
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 
+    fun specifyType(typeHolder: TypeHolder): VarDescriptor {
+        val specifierType = specifiers.specifyType(typeHolder)
+        if (abstractDecl == null) {
+            return specifierType
+        }
+
+        return VarDescriptor(abstractDecl.resolveType(specifierType.typeDesc, typeHolder), specifierType.storageClass)
+    }
+
     override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor {
         val specifierType = specifiers.specifyType(typeHolder, pointers)
         if (abstractDecl == null) {
@@ -77,31 +81,5 @@ data class TypeName(val specifiers: DeclarationSpecifier, val abstractDecl: Abst
         }
 
         return VarDescriptor(abstractDecl.resolveType(specifierType.typeDesc, typeHolder), specifierType.storageClass)
-    }
-}
-
-data class Declaration(val declspec: DeclarationSpecifier, private val declarators: List<AnyDeclarator>): TypeSpecifier() {
-    override fun begin(): Position = declspec.begin()
-
-    fun nonTypedefDeclarators(): List<AnyDeclarator> {
-        if (declspec.isTypedef) {
-            return listOf()
-        }
-
-        return declarators
-    }
-
-    fun declarators(): List<AnyDeclarator> {
-        return declarators
-    }
-
-    override fun <T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
-
-    override fun specifyType(typeHolder: TypeHolder, pointers: List<NodePointer>): VarDescriptor {
-        for (it in declarators) {
-            it.declareType(declspec, typeHolder)
-        }
-
-        return declspec.specifyType(typeHolder, pointers)
     }
 }

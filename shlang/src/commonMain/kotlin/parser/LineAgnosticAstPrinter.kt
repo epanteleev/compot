@@ -4,6 +4,7 @@ import parser.nodes.*
 import parser.nodes.visitors.NodeVisitor
 
 
+//TODO refactor this class
 class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     private val buffer = StringBuilder()
 
@@ -92,7 +93,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         visit(declarator.directDeclarator)
     }
 
-    override fun visit(declaration: Declaration) {
+    fun visit(declaration: Declaration) {
         declaration.declspec.accept(this)
         buffer.append(' ')
         joinTo(declaration.declarators(), ", ") {
@@ -140,7 +141,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append("for(")
 
         when (val init = forStatement.init) {
-            is ForInitDeclaration -> init.declaration.accept(this)
+            is ForInitDeclaration -> visit(init.declaration)
             is ForInitExpression -> init.expression.accept(this)
             is ForInitEmpty -> buffer.append(';')
         }
@@ -194,7 +195,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
     override fun visit(compoundStatement: CompoundStatement) {
         joinTo(compoundStatement.statements, " ") {
             when (it) {
-                is CompoundStmtDeclaration -> it.declaration.accept(this)
+                is CompoundStmtDeclaration -> visit(it.declaration)
                 is CompoundStmtStatement -> it.statement.accept(this)
             }
         }
@@ -583,12 +584,18 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
             return astPrinter.buffer.toString()
         }
 
+        fun print(declaration: Declaration): String {
+            val astPrinter = LineAgnosticAstPrinter()
+            astPrinter.visit(declaration)
+            return astPrinter.buffer.toString()
+        }
+
         fun print(programNode: ProgramNode): String {
             val astPrinter = LineAgnosticAstPrinter()
             for ((idx, node) in programNode.nodes.withIndex()) {
                 when (node) {
                     is FunctionDeclarationNode -> astPrinter.visit(node.function)
-                    is GlobalDeclaration -> node.declaration.accept(astPrinter)
+                    is GlobalDeclaration -> astPrinter.visit(node.declaration)
                 }
                 if (idx != programNode.nodes.size - 1) {
                     astPrinter.buffer.append(' ')

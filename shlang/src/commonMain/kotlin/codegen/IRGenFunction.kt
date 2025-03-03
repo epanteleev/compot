@@ -68,7 +68,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitDeclaration(declaration: Declaration) {
-        declaration.specifyType(typeHolder, listOf())
+        declaration.specifyType(typeHolder)
 
         for (declarator in declaration.declarators()) {
             declarator.accept(this)

@@ -142,7 +142,7 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
 
     override fun visit(cast: Cast): Int? {
         val expression = eval(cast.cast, ctx.typeHolder()) ?: return null
-        val type = cast.typeName.specifyType(ctx.typeHolder(), listOf()).typeDesc
+        val type = cast.typeName.specifyType(ctx.typeHolder()).typeDesc
         return when (type.cType()) {
             is AnyCInteger -> expression.toInt()
             else -> null
@@ -274,7 +274,7 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
 
     override fun visit(cast: Cast): Long? {
         val expression = eval(cast.cast, ctx.typeHolder()) ?: return null
-        val type = cast.typeName.specifyType(ctx.typeHolder(), listOf()).typeDesc
+        val type = cast.typeName.specifyType(ctx.typeHolder()).typeDesc
         return when (type.cType()) {
             is AnyCInteger -> expression.toLong()
             else -> null

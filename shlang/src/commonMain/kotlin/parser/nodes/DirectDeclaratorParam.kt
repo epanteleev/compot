@@ -6,6 +6,17 @@ import codegen.consteval.*
 import parser.nodes.visitors.DirectDeclaratorParamVisitor
 import tokenizer.Position
 
+sealed interface DirectDeclaratorParam {
+    fun begin(): Position
+    fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc
+    fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T
+}
+
+sealed interface AbstractDirectDeclaratorParam {
+    fun begin(): Position
+    fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc
+    fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T
+}
 
 data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstractDeclarators: List<AbstractDirectDeclaratorParam>?): AbstractDirectDeclaratorParam {   //TODO
     override fun begin(): Position {
@@ -34,18 +45,6 @@ data class AbstractDeclarator(val pointers: List<NodePointer>, val directAbstrac
 
         return newTypeDesc
     }
-}
-
-sealed interface DirectDeclaratorParam {
-    fun begin(): Position
-    fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc
-    fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T
-}
-
-sealed interface AbstractDirectDeclaratorParam {
-    fun begin(): Position
-    fun resolveType(typeDesc: TypeDesc, typeHolder: TypeHolder): TypeDesc
-    fun<T> accept(visitor: DirectDeclaratorParamVisitor<T>): T
 }
 
 data class ArrayDeclarator(val constexpr: Expression) : DirectDeclaratorParam, AbstractDirectDeclaratorParam {
@@ -105,7 +104,6 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
     }
 
     private fun resolveParams(typeHolder: TypeHolder): List<TypeDesc> {
-        val paramTypes = mutableListOf<TypeDesc>()
         if (params.size == 1) {
             val type = params[0].resolveType(typeHolder)
             // Special case for void
@@ -116,6 +114,8 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
                 listOf(type)
             }
         }
+
+        val paramTypes = mutableListOf<TypeDesc>()
         for (param in params) {
             when (param) {
                 is Parameter -> {

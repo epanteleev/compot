@@ -22,12 +22,14 @@ sealed class AnyTypeNode(val name: CToken) {
         val members = arrayListOf<Member>()
         for (field in fields) {
             if (field.declarators.isEmpty()) {
-                val type = field.declspec.specifyType(typeHolder, listOf()).typeDesc
-                members.add(AnonMember(type))
+                val type = field.declspec.specifyType(typeHolder)
+                members.add(AnonMember(type.typeDesc))
                 continue
             }
+
             for (declarator in field.declarators) {
-                val resolved = declarator.declareType(field.declspec, typeHolder).typeDesc
+                val type = field.declspec.specifyType(typeHolder)
+                val resolved = declarator.declareType(type, typeHolder).typeDesc
                 members.add(FieldMember(declarator.name(), resolved))
             }
         }
@@ -85,10 +87,7 @@ class StorageClassSpecifier(name: Keyword): AnyTypeNode(name) {
 
     override fun typeResolve(typeHolder: TypeHolder, typeBuilder: CTypeBuilder): TypeProperty {
         val storageClass = storageClass()
-        if (storageClass != StorageClass.TYPEDEF) {
-           typeBuilder.add(storageClass)
-        }
-
+        typeBuilder.add(storageClass)
         return storageClass
     }
 

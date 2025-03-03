@@ -66,7 +66,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             else -> defaultContEval(lValueType, expr)
         }
         is CompoundLiteral -> {
-            val varDesc = expr.typeName.specifyType(typeHolder, listOf())
+            val varDesc = expr.typeName.specifyType(typeHolder)
             val cType = varDesc.typeDesc.cType()
             val constant = constEvalInitializerList(cType, expr.initializerList) as InitializerListValue
             val gConstant = when (cType) {

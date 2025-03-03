@@ -1,6 +1,5 @@
 package parser.nodes
 
-import common.assertion
 import tokenizer.Position
 import typedesc.TypeHolder
 import typedesc.VarDescriptor
@@ -27,14 +26,8 @@ class FunctionNode(val specifier: DeclarationSpecifier, val declarator: Declarat
     }
 
     fun declareType(typeHolder: TypeHolder): VarDescriptor = memoizeType {
-        val declspecType = specifier.specifyType(typeHolder, declarator.pointers)
-
-        val type = declarator.directDeclarator.resolveType(declspecType.typeDesc, typeHolder)
-        assertion(!specifier.isTypedef) { "typedef is not supported here" }
-
-        val baseType = type.cType()
-        assertion(baseType is CFunctionType) { "function type expected" }
-        return@memoizeType typeHolder.addFunctionType(name(), VarDescriptor(type, declspecType.storageClass))
+        val declspecType = specifier.specifyType(typeHolder)
+        return@memoizeType declarator.declareType(declspecType, typeHolder)
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
