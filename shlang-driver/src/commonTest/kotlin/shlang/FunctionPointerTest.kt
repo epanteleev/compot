@@ -55,10 +55,9 @@ abstract class FunctionPointerTest: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testFunctionPointer8() {
         val result = runCTest("shlang/function_pointer/function_ptr8", listOf(), options())
-        assertEquals("2\n", result.output)
+        assertEquals(2, result.exitCode)
     }
 }
 

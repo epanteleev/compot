@@ -86,7 +86,7 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
         val rightType = convertToPrimitive(r)
             ?: throw TypeResolutionException("Binary operation on non-primitive type '$r': '${LineAgnosticAstPrinter.print(right)}'", begin())
 
-        val resultType = leftType.interfere(typeHolder, rightType) ?:
+        val resultType = leftType.interfere(rightType) ?:
             throw TypeResolutionException("Binary operation '$opType' on incompatible types: $leftType and $rightType in ${left.begin()}'", begin())
         return@memoize resultType
     }
@@ -126,7 +126,7 @@ class Conditional(val cond: Expression, val eTrue: Expression, val eFalse: Expre
             return@memoize cvtTypeTrue
         }
 
-        return@memoize cvtTypeTrue.interfere(typeHolder, cvtTypeFalse) ?:
+        return@memoize cvtTypeTrue.interfere(cvtTypeFalse) ?:
             throw TypeResolutionException("Conditional with incompatible types: $cvtTypeTrue and $cvtTypeFalse: '${LineAgnosticAstPrinter.print(this)}'", begin())
     }
 }

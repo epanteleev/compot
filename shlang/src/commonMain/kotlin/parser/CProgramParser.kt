@@ -1925,6 +1925,8 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     fun external_declaration(): ExternalDeclaration? = rule {
         val function = function_definition()
         if (function != null) {
+            val fn = function.declareType(typeHolder)
+            typeHolder.addVar(fn)
             return@rule FunctionDeclarationNode(function)
         }
         val declaration = declaration()

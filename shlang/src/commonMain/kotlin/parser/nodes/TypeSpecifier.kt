@@ -53,6 +53,7 @@ data class TypeName(val specifiers: DeclarationSpecifier, val abstractDeclarator
             return specifierType
         }
 
-        return DeclSpec(abstractDeclarator.resolveType(specifierType.typeDesc, typeHolder), specifierType.storageClass)
+        val typeDesc = abstractDeclarator.resolveType(specifierType.typeDesc, typeHolder)
+        return DeclSpec(typeDesc, specifierType.storageClass)
     }
 }

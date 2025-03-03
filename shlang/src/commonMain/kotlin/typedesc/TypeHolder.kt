@@ -10,7 +10,6 @@ class TypeHolder private constructor(): Scope {
     val structTypeMap = VarStack<CType>()
     val unionTypeMap = VarStack<CType>()
 
-    private val functions = hashMapOf<String, VarDescriptor>()
     private val typedefs = VarStack<TypeDesc>()
 
     operator fun get(varName: String): VarDescriptor {
@@ -18,7 +17,7 @@ class TypeHolder private constructor(): Scope {
     }
 
     fun getVarTypeOrNull(varName: String): VarDescriptor? {
-        return valueMap[varName] ?: functions[varName]
+        return valueMap[varName]
     }
 
     fun findEnumByEnumerator(name: String): Int? {
@@ -108,11 +107,11 @@ class TypeHolder private constructor(): Scope {
     }
 
     fun getFunctionType(name: String): VarDescriptor {
-        return functions[name] ?: valueMap[name] ?: throw Exception("Type for function '$name' not found")
+        return valueMap[name] ?: throw Exception("Type for function '$name' not found")
     }
 
     fun addFunctionType(varDesc: VarDescriptor): VarDescriptor {
-        functions[varDesc.name] = varDesc
+        valueMap[varDesc.name] = varDesc
         return varDesc
     }
 

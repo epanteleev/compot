@@ -3,6 +3,7 @@ package parser.nodes
 import tokenizer.Position
 import typedesc.TypeHolder
 
+
 data class Declaration(val declspec: DeclarationSpecifier, private val declarators: List<AnyDeclarator>) {
     fun begin(): Position = declspec.begin()
 
@@ -11,9 +12,10 @@ data class Declaration(val declspec: DeclarationSpecifier, private val declarato
     }
 
     fun specifyType(typeHolder: TypeHolder) {
-        val varDesc = declspec.specifyType(typeHolder)
-        for (it in declarators) {
-            it.declareType(varDesc, typeHolder)
+        val declSpec = declspec.specifyType(typeHolder)
+        for (declarator in declarators) {
+            val varDesc = declarator.declareType(declSpec, typeHolder) ?: continue
+            typeHolder.addVar(varDesc)
         }
     }
 }

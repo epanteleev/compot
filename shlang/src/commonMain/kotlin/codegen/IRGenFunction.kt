@@ -1318,7 +1318,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.switchLabel(cont)
     }
 
-    fun visitFun(parameters: List<String>, functionNode: FunctionNode): Value = scoped {
+    fun visitFun(parameters: List<VarDescriptor>, functionNode: FunctionNode): Value = scoped {
+        for (param in parameters) {
+            typeHolder.addVar(param)
+        }
+
         stmtStack.scoped(FunctionStmtInfo()) { stmt ->
             val retType = functionNode.resolveType(typeHolder).retType().cType()
             val arguments = if (retType is AnyCStructType && !retType.isSmall()) {
@@ -1326,7 +1330,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             } else {
                 ir.arguments()
             }
-            visitParameters(parameters, functionType.args(), arguments) { param, cType, args ->
+            visitParameters(parameters.map { it.name }, functionType.args(), arguments) { param, cType, args ->
                 visitParameter(param, cType, args)
             }
 
@@ -1921,6 +1925,8 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
                         nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
     fun generate(functionNode: FunctionNode) {
         val varDesc = functionNode.declareType(typeHolder)
+        typeHolder.addFunctionType(varDesc)
+
         val fnType = varDesc.typeDesc
             .asType<CFunctionType>(functionNode.begin())
 
@@ -1930,6 +1936,6 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
         val funGen = IrGenFunction(mb, typeHolder, varStack, nameGenerator, currentFunction, fnType)
 
-        funGen.visitFun(parameters.map { it.name }, functionNode)
+        funGen.visitFun(parameters, functionNode)
     }
 }

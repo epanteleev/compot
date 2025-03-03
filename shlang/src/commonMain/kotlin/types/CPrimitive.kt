@@ -1,13 +1,12 @@
 package types
 
-import typedesc.*
 import ir.Definitions.BYTE_SIZE
 
 
 sealed class CPrimitive: CompletedType() {
     final override fun alignmentOf(): Int = size()
 
-    fun interfere(typeHolder: TypeHolder, type2: CType): CPrimitive? {
+    fun interfere(type2: CType): CPrimitive? {
         when (this) {
             type2 -> return this
             CHAR -> {
@@ -104,20 +103,7 @@ sealed class CPrimitive: CompletedType() {
                 }
             }
 
-            DOUBLE -> {
-                return when (type2) {
-                    BOOL -> DOUBLE
-                    CHAR -> DOUBLE
-                    INT -> DOUBLE
-                    SHORT -> DOUBLE
-                    UINT -> DOUBLE
-                    FLOAT -> DOUBLE
-                    LONG -> DOUBLE
-                    is CEnumType -> DOUBLE
-                    else -> null
-                }
-            }
-
+            DOUBLE -> return DOUBLE
             USHORT -> {
                 return when (type2) {
                     BOOL -> USHORT
@@ -169,32 +155,7 @@ sealed class CPrimitive: CompletedType() {
                 }
             }
 
-            is CPointer -> {
-                when (type2) {
-                    CHAR -> return this
-                    UCHAR -> return this
-                    INT -> return this
-                    SHORT -> return this
-                    USHORT -> return this
-                    UINT -> return this
-                    FLOAT -> return this
-                    LONG -> return this
-                    is CPointer -> {
-                        val deref1 = dereference(typeHolder)
-                        val deref2 = type2.dereference(typeHolder)
-                        if (deref1 is CPointer && deref2 is CPointer) {
-                            return this
-                        }
-                        if (deref1 == deref2) return this
-                        if (deref1 == VOID) return this
-                        if (deref2 == VOID) return type2
-                        return null
-                    }
-                    ULONG -> return this
-                    is CEnumType -> return this
-                    else -> return null
-                }
-            }
+            is CPointer -> return this
             is CEnumType -> {
                 return when (type2) {
                     BOOL -> INT
