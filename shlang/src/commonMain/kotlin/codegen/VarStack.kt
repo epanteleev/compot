@@ -19,7 +19,7 @@ class VarStack<V>: Scope, Iterable<V> {
     }
 
     override fun leave() {
-        stack.removeAt(stack.size - 1)
+        stack.removeLast()
     }
 
     operator fun set(name: String, type: V) {

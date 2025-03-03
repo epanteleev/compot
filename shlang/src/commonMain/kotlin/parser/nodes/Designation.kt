@@ -26,7 +26,7 @@ class ArrayDesignator(val constExpression: Expression): Designator() {
     }
 }
 
-class MemberDesignator(val name: Identifier): Designator() {
+class MemberDesignator(private val name: Identifier): Designator() {
     override fun begin(): Position = name.position()
     fun name(): String = name.str()
 }

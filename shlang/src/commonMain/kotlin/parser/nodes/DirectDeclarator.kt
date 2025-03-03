@@ -13,18 +13,18 @@ data class DirectDeclarator(val decl: DirectDeclaratorEntry, val directDeclarato
 
     private fun resolveAllDecl(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc {
         var currentType = baseType
-        for (decl in directDeclaratorParams.reversed()) {
-            when (decl) {
+        for (directDeclaratorParam in directDeclaratorParams.reversed()) {
+            when (directDeclaratorParam) {
                 is ArrayDeclarator -> {
-                    currentType = decl.resolveType(currentType, typeHolder)
+                    currentType = directDeclaratorParam.resolveType(currentType, typeHolder)
                 }
 
                 is ParameterTypeList -> {
-                    val abstractType = decl.resolveType(currentType, typeHolder)
+                    val abstractType = directDeclaratorParam.resolveType(currentType, typeHolder)
                     currentType = TypeDesc.from(CFunctionType(name(), abstractType.cType() as AbstractCFunction), abstractType.qualifiers())
                 }
 
-                else -> throw IllegalStateException("Unknown declarator $decl")
+                is IdentifierList -> throw IllegalStateException("Identifier list is not supported")
             }
         }
         return currentType
@@ -33,11 +33,11 @@ data class DirectDeclarator(val decl: DirectDeclaratorEntry, val directDeclarato
     fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc = when (decl) {
         is FunctionDeclarator -> {
             assertion(directDeclaratorParams.size == 1) { "Function pointer should have only one parameter" }
-            val fnDecl = directDeclaratorParams[0] as ParameterTypeList
             val pointers = decl.declarator.pointers
             if (pointers.isEmpty()) {
                 resolveAllDecl(baseType, typeHolder)
             } else {
+                val fnDecl = directDeclaratorParams[0] as ParameterTypeList
                 val type = fnDecl.resolveType(baseType, typeHolder)
                 decl.resolveType(type, typeHolder)
             }

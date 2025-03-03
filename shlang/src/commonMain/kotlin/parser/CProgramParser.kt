@@ -1123,8 +1123,8 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	| direct_abstract_declarator '(' ')'
     //	| direct_abstract_declarator '(' parameter_type_list ')'
     //	;
-    fun direct_abstract_declarator(): List<DirectDeclaratorParam>? = rule {
-        val abstractDeclarators = mutableListOf<DirectDeclaratorParam>()
+    fun direct_abstract_declarator(): List<AbstractDirectDeclaratorParam>? = rule {
+        val abstractDeclarators = mutableListOf<AbstractDirectDeclaratorParam>()
         while (true) {
             if (check("(")) {
                 eat()

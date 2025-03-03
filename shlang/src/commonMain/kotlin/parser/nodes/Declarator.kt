@@ -75,10 +75,9 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): 
 
     override fun declareType(declspec: DeclarationSpecifier, typeHolder: TypeHolder): VarDescriptor = memoizeType {
         val declspecType = declspec.specifyType(typeHolder, declarator.pointers)
-
-        val type = declarator.directDeclarator.resolveType(declspecType.typeDesc, typeHolder)
         assertion (!declspec.isTypedef) { "typedef is not supported here" }
 
+        val type = declarator.directDeclarator.resolveType(declspecType.typeDesc, typeHolder)
         val baseType = type.cType()
         if (baseType !is CUncompletedArrayType) {
             return@memoizeType typeHolder.addVar(name(), VarDescriptor(type, declspecType.storageClass))

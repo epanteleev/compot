@@ -480,7 +480,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
 
     fun visit(memberDesignator: MemberDesignator) {
         buffer.append('.')
-        buffer.append(memberDesignator.name.str())
+        buffer.append(memberDesignator.name())
     }
 
     private fun visit(varDecl: DirectVarDeclarator) {
