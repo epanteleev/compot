@@ -36,7 +36,6 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
             when (declarator) {
                 is Declarator     -> generateGlobalDeclarator(declarator)
                 is InitDeclarator -> generateGlobalAssignmentDeclarator(declarator)
-                else -> throw IRCodeGenError("Unsupported declarator $declarator", node.begin())
             }
         }
     }

@@ -7,10 +7,10 @@ import ir.pass.transform.Mem2RegFabric
 import okio.FileSystem
 
 
-class PassPipeline private constructor(private val passFabrics: List<TransformPassFabric>, private val ctx: CompileContext) {
+class PassPipeline private constructor(private val name: String, private val passFabrics: List<TransformPassFabric>, private val ctx: CompileContext) {
     fun run(start: Module): Module {
         var current = start
-        dumpIr("initial") { current.toString() }
+        dumpIr(name) { current.toString() }
         for (fabric in passFabrics) {
             try {
                 val pass = fabric.create(current)
@@ -34,11 +34,11 @@ class PassPipeline private constructor(private val passFabrics: List<TransformPa
     }
 
     companion object {
-        fun base(ctx: CompileContext): PassPipeline = create(arrayListOf(), ctx)
-        fun opt(ctx: CompileContext): PassPipeline = create(arrayListOf(Mem2RegFabric), ctx)
+        fun base(ctx: CompileContext): PassPipeline = create("initial", arrayListOf(), ctx)
+        fun opt(ctx: CompileContext): PassPipeline = create("initial", arrayListOf(Mem2RegFabric), ctx)
 
-        fun create(passFabrics: List<TransformPassFabric>, ctx: CompileContext): PassPipeline {
-            return PassPipeline(passFabrics, ctx)
+        fun create(name: String, passFabrics: List<TransformPassFabric>, ctx: CompileContext): PassPipeline {
+            return PassPipeline(name, passFabrics, ctx)
         }
     }
 }

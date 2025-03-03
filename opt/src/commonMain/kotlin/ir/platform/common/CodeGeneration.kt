@@ -52,6 +52,6 @@ class CodeGenerationFactory {
     }
 
     companion object {
-        private fun beforeCodegen(ctx: CompileContext): PassPipeline = create(arrayListOf(CSSAConstructionFabric, SSADestructionFabric), ctx)
+        private fun beforeCodegen(ctx: CompileContext): PassPipeline = create("before-codegen", arrayListOf(CSSAConstructionFabric, SSADestructionFabric), ctx)
     }
 }

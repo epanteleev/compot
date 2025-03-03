@@ -5,6 +5,7 @@ import ir.types.*
 import ir.value.asValue
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
+import ir.value.Value
 
 
 class UncompletedPhi private constructor(id: Identity, owner: Block, private val ty: PrimitiveType, private val incoming: Array<Block>, incomingValue: Alloc):
@@ -24,7 +25,7 @@ class UncompletedPhi private constructor(id: Identity, owner: Block, private val
 
     fun incoming(): List<Block> = arrayWrapperOf(incoming)
 
-    fun value(): Alloc = operand(0).asValue()
+    fun value(): Value = operand(0)
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

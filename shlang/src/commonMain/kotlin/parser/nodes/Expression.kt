@@ -87,7 +87,7 @@ data class BinaryOp(val left: Expression, val right: Expression, val opType: Bin
             ?: throw TypeResolutionException("Binary operation on non-primitive type '$r': '${LineAgnosticAstPrinter.print(right)}'", begin())
 
         val resultType = leftType.interfere(typeHolder, rightType) ?:
-            throw TypeResolutionException("Binary operation on incompatible types: $leftType and $rightType in ${left.begin()}'", begin())
+            throw TypeResolutionException("Binary operation '$opType' on incompatible types: $leftType and $rightType in ${left.begin()}'", begin())
         return@memoize resultType
     }
 }

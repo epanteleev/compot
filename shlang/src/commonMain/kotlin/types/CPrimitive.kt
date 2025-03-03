@@ -180,6 +180,9 @@ sealed class CPrimitive: CompletedType() {
                     is CPointer -> {
                         val deref1 = dereference(typeHolder)
                         val deref2 = type2.dereference(typeHolder)
+                        if (deref1 is CPointer && deref2 is CPointer) {
+                            return this
+                        }
                         if (deref1 == deref2) return this
                         if (deref1 == VOID) return this
                         if (deref2 == VOID) return type2

@@ -4,7 +4,6 @@ import common.arrayFrom
 import common.assertion
 import common.forEachWith
 import common.intMapOf
-import common.toTypedArray
 import ir.attributes.FunctionAttribute
 import ir.global.GlobalSymbol
 import ir.instruction.*
@@ -26,6 +25,10 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
 
     private val bb: Block
         get() = currentBB?: throw RuntimeException("currentBB is null")
+
+    private fun raiseError(message: String): Exception {
+        return RuntimeException("$message, bb=$bb, function=${fd.prototype.shortDescription()}")
+    }
 
     private fun setupNewBasicBlock(): Map<Block, Block> {
         val oldToNew = intMapOf<Block, Block>(fd.size()) { it.index }
@@ -94,11 +97,18 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
         if (old is Constant || old is GlobalSymbol) {
             return old as T
         }
-        val value = oldValuesToNew[old]?: let {
-            throw RuntimeException("cannot find localValue=${old}")
+        val value = oldValuesToNew[old]
+        if (value == null) {
+            val str = when (old) {
+                is Instruction -> old.dump()
+                else -> old.toString()
+            }
+
+            throw raiseError("cannot find localValue=$str")
         }
+
         if (value !is T) {
-            throw RuntimeException("unexpected type for value=$value")
+            throw raiseError("unexpected type for value=$value")
         }
 
         return value
@@ -125,7 +135,7 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     }
 
     private fun mapBlock(old: Block): Block {
-        return oldToNewBlock[old]?: throw RuntimeException("cannot find new block, oldBlock=$old")
+        return oldToNewBlock[old]?: throw raiseError("cannot find new block, oldBlock=$old")
     }
 
     private fun cloneAttributes(call: Callable): Set<FunctionAttribute> {
@@ -353,7 +363,7 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     }
 
     override fun visit(phi: UncompletedPhi): InstBuilder<Instruction> {
-        throw RuntimeException("Unsupported operation")
+        throw raiseError("Unsupported operation")
     }
 
     override fun visit(returnValue: ReturnValue): InstBuilder<Instruction> {
