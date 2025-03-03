@@ -7,6 +7,7 @@ import ir.pass.analysis.ValidateSSAErrorException
 import tokenizer.Position
 import typedesc.StorageClass
 import typedesc.TypeHolder
+import types.CFunctionType
 
 
 data class IRCodeGenError(override val message: String, val position: Position) : Exception(message)
@@ -27,7 +28,7 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
         }
     }
 
-    private fun generateFunction(node: FunctionNode) = typeHolder.scoped {
+    private fun generateFunction(node: FunctionNode) {
         val gen = FunGenInitializer(mb, typeHolder, varStack, nameGenerator)
         gen.generate(node)
     }
@@ -42,6 +43,14 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
             val varDesc = declarator.declareType(varDesc, typeHolder)
             if (varDesc == null) {
                throw IRCodeGenError("Typedef is not supported in global declarations", node.begin())
+            }
+
+            val baseType = varDesc.cType()
+            if (baseType is CFunctionType) {
+                // declare extern function or function without body
+                typeHolder.addFunctionType(varDesc)
+            } else {
+                typeHolder.addVar(varDesc)
             }
 
             when (declarator) {
