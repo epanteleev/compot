@@ -53,9 +53,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             declarations.add(declaration)
         }
         assertion(declarations.isEmpty()) { "Declaration list is not supported yet" }
-        val body = compound_statement() ?: let {
-            throw ParserException(InvalidToken("Expected compound statement", peak()))
-        }
+        val body = compound_statement() ?: return@funcRule null
         return@funcRule FunctionNode(declspec, declarator, body)
     }
 
@@ -1925,6 +1923,10 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //	| declaration
     //	;
     fun external_declaration(): ExternalDeclaration? = rule {
+        val function = function_definition()
+        if (function != null) {
+            return@rule FunctionDeclarationNode(function)
+        }
         val declaration = declaration()
         if (declaration != null) {
             // Early resolve type.
@@ -1932,8 +1934,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             declaration.specifyType(typeHolder)
             return@rule GlobalDeclaration(declaration)
         }
-        val function = function_definition() ?: return@rule null
-        return@rule FunctionDeclarationNode(function)
+        return@rule null
     }
 
     companion object {

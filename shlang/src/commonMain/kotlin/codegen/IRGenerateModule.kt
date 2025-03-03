@@ -40,6 +40,10 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
 
         for (declarator in node.declarators()) {
             val varDesc = declarator.declareType(varDesc, typeHolder)
+            if (varDesc == null) {
+               throw IRCodeGenError("Typedef is not supported in global declarations", node.begin())
+            }
+
             when (declarator) {
                 is Declarator -> generateGlobalDeclarator(varDesc, declarator)
                 is InitDeclarator -> generateGlobalAssignmentDeclarator(varDesc, declarator)

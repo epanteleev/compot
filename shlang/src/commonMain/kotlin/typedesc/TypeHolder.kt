@@ -88,9 +88,9 @@ class TypeHolder private constructor(): Scope {
         return type
     }
 
-    fun addVar(name: String, type: VarDescriptor): VarDescriptor {
-        valueMap[name] = type
-        return type
+    fun addVar(varDesc: VarDescriptor): VarDescriptor {
+        valueMap[varDesc.name] = varDesc
+        return varDesc
     }
 
     fun containsVar(varName: String): Boolean {
@@ -111,9 +111,9 @@ class TypeHolder private constructor(): Scope {
         return functions[name] ?: valueMap[name] ?: throw Exception("Type for function '$name' not found")
     }
 
-    fun addFunctionType(name: String, type: VarDescriptor): VarDescriptor {
-        functions[name] = type
-        return type
+    fun addFunctionType(varDesc: VarDescriptor): VarDescriptor {
+        functions[varDesc.name] = varDesc
+        return varDesc
     }
 
     override fun enter() {

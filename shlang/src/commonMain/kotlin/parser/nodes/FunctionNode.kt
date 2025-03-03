@@ -27,7 +27,9 @@ class FunctionNode(val specifier: DeclarationSpecifier, val declarator: Declarat
 
     fun declareType(typeHolder: TypeHolder): VarDescriptor = memoizeType {
         val declspecType = specifier.specifyType(typeHolder)
+
         return@memoizeType declarator.declareType(declspecType, typeHolder)
+            ?: throw IllegalStateException("Function type is not specified")
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {

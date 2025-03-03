@@ -2,7 +2,7 @@ package typedesc
 
 import types.CType
 
-class VarDescriptor(val typeDesc: TypeDesc, val storageClass: StorageClass?) {
+class VarDescriptor(val name: String, val typeDesc: TypeDesc, val storageClass: StorageClass?) {
     fun cType(): CType {
         return typeDesc.cType()
     }

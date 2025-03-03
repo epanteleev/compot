@@ -14,7 +14,12 @@ class StructDeclaratorItem(val expr: Declarator): AnyStructDeclaratorItem() {
     override fun begin(): Position = expr.begin()
 
     override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
-        return expr.declareType(varDesc, typeHolder)
+        val varDesc = expr.declareType(varDesc, typeHolder)
+        if (varDesc == null) {
+            throw IllegalStateException("Typedef is not supported in struct fields")
+        }
+
+        return varDesc
     }
 
 }

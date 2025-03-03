@@ -81,22 +81,21 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
         return TypeDesc.from(AbstractCFunction(typeDesc, params, isVarArg()), arrayListOf())
     }
 
-    fun params(): List<String> {
+    fun params(typeHolder: TypeHolder): List<VarDescriptor>? {
         if (params.isEmpty()) {
             return emptyList()
         }
-        if (params.size == 1 && params[0] is Parameter) {
-            val param = params[0] as Parameter
-            if (param.paramDeclarator is EmptyParamDeclarator) {
-                return emptyList()
+        val varDescs = arrayListOf<VarDescriptor>()
+        for (param in params) {
+            if (param !is Parameter) {
+                continue
             }
+
+            val varDesc = param.resolveVarDesc(typeHolder) ?: return null
+            varDescs.add(varDesc)
         }
-        return params.map {
-            when (it) {
-                is Parameter -> it.name()
-                is ParameterVarArg -> "..."
-            }
-        }
+
+        return varDescs
     }
 
     private fun isVarArg(): Boolean {
@@ -105,7 +104,11 @@ data class ParameterTypeList(val params: List<AnyParameter>): DirectDeclaratorPa
 
     private fun resolveParams(typeHolder: TypeHolder): List<TypeDesc> {
         if (params.size == 1) {
-            val type = params[0].resolveType(typeHolder)
+            val first = params[0]
+            if (first !is Parameter) {
+                return emptyList()
+            }
+            val type = first.resolveType(typeHolder)
             // Special case for void
             // Pattern: 'void f(void)' can be found in the C program.
             return if (type.cType() == VOID) {

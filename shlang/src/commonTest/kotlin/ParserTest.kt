@@ -856,7 +856,7 @@ class ParserTest {
 
         val program = parser.translation_unit()
         println(program)
-        assertEquals("union union.0 {int x; float fp;} ;", LineAgnosticAstPrinter.print(program))
+        assertEquals("union union.1 {int x; float fp;} ;", LineAgnosticAstPrinter.print(program))
     }
 
     @Test

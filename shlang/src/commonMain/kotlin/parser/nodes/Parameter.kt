@@ -5,45 +5,65 @@ import typedesc.TypeHolder
 import parser.nodes.visitors.*
 import tokenizer.Position
 import tokenizer.tokens.Punctuator
+import typedesc.DeclSpec
+import typedesc.VarDescriptor
 
 
 sealed class AnyParameter {
     abstract fun begin(): Position
-    abstract fun resolveType(typeHolder: TypeHolder): TypeDesc
     abstract fun<T> accept(visitor: ParameterVisitor<T>): T
 }
 
-sealed class AnyParamDeclarator
-class EmptyParamDeclarator(val where: Position) : AnyParamDeclarator()
-class ParamAbstractDeclarator(val abstractDeclarator: AbstractDeclarator) : AnyParamDeclarator()
-class ParamDeclarator(val declarator: Declarator) : AnyParamDeclarator()
+sealed class AnyParamDeclarator {
+   abstract fun resolveType(declSpec: DeclSpec, typeHolder: TypeHolder): TypeDesc
+}
+
+data class EmptyParamDeclarator(val where: Position) : AnyParamDeclarator() {
+    override fun resolveType(declSpec: DeclSpec, typeHolder: TypeHolder): TypeDesc = declSpec.typeDesc
+}
+
+class ParamAbstractDeclarator(val abstractDeclarator: AbstractDeclarator) : AnyParamDeclarator() {
+    override fun resolveType(declSpec: DeclSpec, typeHolder: TypeHolder): TypeDesc {
+        return abstractDeclarator.resolveType(declSpec.typeDesc, typeHolder)
+    }
+}
+
+class ParamDeclarator(val declarator: Declarator) : AnyParamDeclarator() {
+    override fun resolveType(declSpec: DeclSpec, typeHolder: TypeHolder): TypeDesc {
+        val varDesc = declarator.declareType(declSpec, typeHolder)
+        if (varDesc == null) {
+            throw IllegalStateException("Typedef is not supported in function parameters")
+        }
+
+        return varDesc.typeDesc
+    }
+}
 
 data class Parameter(val declspec: DeclarationSpecifier, val paramDeclarator: AnyParamDeclarator) : AnyParameter() {
     override fun begin(): Position = declspec.begin()
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
 
-    fun name(): String {
+    private fun name(): String? {
         if (paramDeclarator !is ParamDeclarator) {
-            throw IllegalStateException("Expected declarator, but got $paramDeclarator")
+            return null
         }
 
         return paramDeclarator.declarator.directDeclarator.decl.name()
     }
 
-    override fun resolveType(typeHolder: TypeHolder): TypeDesc {
+    fun resolveType(typeHolder: TypeHolder): TypeDesc {
         val type = declspec.specifyType(typeHolder)
-        return when (paramDeclarator) {
-            is ParamDeclarator -> paramDeclarator.declarator.declareType(type, typeHolder).typeDesc
-            is ParamAbstractDeclarator -> paramDeclarator.abstractDeclarator.resolveType(type.typeDesc, typeHolder)
-            is EmptyParamDeclarator -> type.typeDesc
-        }
+        return paramDeclarator.resolveType(type, typeHolder)
+    }
+
+    fun resolveVarDesc(typeHolder: TypeHolder): VarDescriptor? {
+        val type = resolveType(typeHolder)
+        val name = name() ?: return null
+        return VarDescriptor(name, type, null)
     }
 }
 
 class ParameterVarArg(private val punctuator: Punctuator): AnyParameter() {
     override fun begin(): Position = punctuator.position()
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
-    override fun resolveType(typeHolder: TypeHolder): TypeDesc {
-        throw IllegalStateException("VarArg type is not resolved")
-    }
 }

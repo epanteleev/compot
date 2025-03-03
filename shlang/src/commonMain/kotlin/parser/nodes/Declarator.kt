@@ -12,12 +12,10 @@ import typedesc.VarDescriptor
 
 
 sealed class AnyDeclarator {
-    private var cachedType: VarDescriptor? = null
-
     abstract fun begin(): Position
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
-    internal abstract fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor
+    internal abstract fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor?
 
     protected fun wrapPointers(type: CType, pointers: List<NodePointer>): CType {
         var pointerType = type
@@ -26,14 +24,6 @@ sealed class AnyDeclarator {
             pointerType = CPointer(pointerType, pointer.property())
         }
         return pointerType
-    }
-
-    protected fun memoizeType(type: () -> VarDescriptor): VarDescriptor {
-        if (cachedType == null) {
-            cachedType = type()
-        }
-
-        return cachedType!!
     }
 }
 
@@ -45,25 +35,25 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         return directDeclarator.name()
     }
 
-    override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor = memoizeType {
+    override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor? {
         var pointerType = wrapPointers(varDesc.typeDesc.cType(), pointers)
         val newTypeDesc = TypeDesc.from(pointerType, varDesc.typeDesc.qualifiers())
         val type = directDeclarator.resolveType(newTypeDesc, typeHolder)
 
         if (varDesc.storageClass == StorageClass.TYPEDEF) {
             typeHolder.addTypedef(name(), type)
-            return@memoizeType VarDescriptor(type, varDesc.storageClass)
+            return null
         }
 
-        val varDesc = VarDescriptor(type, varDesc.storageClass)
+        val varDesc = VarDescriptor(name(), type, varDesc.storageClass)
         val baseType = type.cType()
         if (baseType is CFunctionType) {
             // declare extern function or function without body
-            typeHolder.addFunctionType(name(), varDesc)
+            typeHolder.addFunctionType(varDesc)
         } else {
-            typeHolder.addVar(name(), varDesc)
+            typeHolder.addVar(varDesc)
         }
-        return@memoizeType varDesc
+        return varDesc
     }
 }
 
@@ -75,14 +65,14 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): 
         return declarator.name()
     }
 
-    override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor = memoizeType {
+    override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
         var pointerType = wrapPointers(varDesc.typeDesc.cType(), declarator.pointers)
         val newTypeDesc = TypeDesc.from(pointerType, varDesc.typeDesc.qualifiers())
 
         val type = declarator.directDeclarator.resolveType(newTypeDesc, typeHolder)
         val baseType = type.cType()
         if (baseType !is CUncompletedArrayType) {
-            return@memoizeType typeHolder.addVar(name(), VarDescriptor(type, varDesc.storageClass))
+            return typeHolder.addVar(VarDescriptor(name(), type, varDesc.storageClass))
         }
 
         when (rvalue) {
@@ -95,11 +85,11 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): 
                 when (val initializerType = initializerList.resolveType(typeHolder)) {
                     is InitializerType -> {
                         val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerList.length().toLong()), listOf())
-                        return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, varDesc.storageClass))
+                        return typeHolder.addVar(VarDescriptor(name(), rvalueType, varDesc.storageClass))
                     }
                     is CStringLiteral -> {
                         val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerType.dimension + 1), listOf())
-                        return@memoizeType typeHolder.addVar(name(), VarDescriptor(rvalueType, varDesc.storageClass))
+                        return typeHolder.addVar(VarDescriptor(name(), rvalueType, varDesc.storageClass))
                     }
                     else -> throw TypeResolutionException("Array size is not specified: type=$initializerType", declarator.begin())
                 }
@@ -111,7 +101,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): 
                 }
                 // Special case for string initialization like:
                 // char a[] = "hello";
-                return@memoizeType typeHolder.addVar(name(), VarDescriptor(TypeDesc.from(expr.resolveType(typeHolder)), varDesc.storageClass))
+                return typeHolder.addVar(VarDescriptor(name(), TypeDesc.from(expr.resolveType(typeHolder)), varDesc.storageClass))
             }
         }
     }

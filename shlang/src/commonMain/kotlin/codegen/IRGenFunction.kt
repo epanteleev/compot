@@ -1924,11 +1924,12 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
         val fnType = varDesc.typeDesc
             .asType<CFunctionType>(functionNode.begin())
 
-        val parameters = functionNode.functionDeclarator().params()
+        val parameters = functionNode.functionDeclarator().params(typeHolder) ?: emptyList()
         val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder, varDesc.storageClass).build()
 
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
         val funGen = IrGenFunction(mb, typeHolder, varStack, nameGenerator, currentFunction, fnType)
-        funGen.visitFun(parameters, functionNode)
+
+        funGen.visitFun(parameters.map { it.name }, functionNode)
     }
 }
