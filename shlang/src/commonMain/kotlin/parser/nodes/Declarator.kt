@@ -19,8 +19,7 @@ sealed class AnyDeclarator {
 
     protected fun wrapPointers(type: CType, pointers: List<NodePointer>): CType {
         var pointerType = type
-        for (idx in pointers.indices) {
-            val pointer = pointers[idx]
+        for (pointer in pointers) {
             pointerType = CPointer(pointerType, pointer.property())
         }
         return pointerType
