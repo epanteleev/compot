@@ -36,7 +36,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
     }
 
     override fun declareType(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor? {
-        var pointerType = wrapPointers(declSpec.typeDesc.cType(), pointers)
+        val pointerType = wrapPointers(declSpec.typeDesc.cType(), pointers)
         val newTypeDesc = TypeDesc.from(pointerType, declSpec.typeDesc.qualifiers())
         val type = directDeclarator.resolveType(newTypeDesc, typeHolder)
 
