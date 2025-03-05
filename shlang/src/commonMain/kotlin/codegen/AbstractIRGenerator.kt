@@ -1,6 +1,5 @@
 package codegen
 
-import common.padTo
 import codegen.TypeConverter.toIRLVType
 import types.*
 import ir.types.*

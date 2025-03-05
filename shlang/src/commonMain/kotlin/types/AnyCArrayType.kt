@@ -71,12 +71,25 @@ class CArrayType(type: TypeDesc, val dimension: Long) : AnyCArrayType(type) {
     }
 }
 
-data class CUncompletedArrayType(val elementType: TypeDesc) : AnyCArrayType(elementType) {
+class CUncompletedArrayType(elementType: TypeDesc) : AnyCArrayType(elementType) {
     override fun size(): Int = 0
     override fun alignmentOf(): Int = 1
 
     override fun toString(): String = buildString {
         append("[]")
-        append(elementType)
+        append(type)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CUncompletedArrayType) return false
+
+        if (type != other.type) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return type.hashCode()
     }
 }

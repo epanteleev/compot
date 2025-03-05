@@ -1,5 +1,6 @@
 package ir.value.constant
 
+import common.asCString
 import common.quotedEscapes
 import ir.types.*
 
@@ -12,7 +13,7 @@ class StringLiteralConstant(val ty: ArrayType, val content: String): AggregateCo
     }
 
     override fun toString(): String {
-        return content.quotedEscapes()
+        return content.asCString()
     }
 }
 

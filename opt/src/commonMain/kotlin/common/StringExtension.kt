@@ -1,13 +1,6 @@
 package common
 
-fun String.padTo(count: Int, pad: String): String {
-    val stringBuilder = StringBuilder()
-    stringBuilder.append(this)
-    for (i in 0 until count - length) {
-        stringBuilder.append(pad)
-    }
-    return stringBuilder.toString()
-}
+import kotlin.text.iterator
 
 private fun wrapEscapedChar(char: Char): String? = when (char) {
     '\n'     -> "\\n"
@@ -29,37 +22,36 @@ fun String.quotedEscapes(): String {
     return stringBuilder.toString()
 }
 
-fun String.wrapEscapes(stringBuilder: StringBuilder) {
+fun String.asCString(): String {
+    val sb = StringBuilder("\"")
+    for (element in this) {
+        val code = element.code
+        if (code in 128..255) {
+            cvtToOctalSequence(code, sb)
+            continue
+        }
+
+        val ch = wrapEscapedChar(element) ?: element
+        sb.append(ch)
+    }
+
+    sb.append("\"")
+    return sb.toString()
+}
+
+private fun cvtToOctalSequence(code: Int, cb: StringBuilder) {
+    val octal = code.toString(8)
+    when (octal.length) {
+        3 -> cb.append("\\$octal")
+        4 -> cb.append("\\3${octal[0]}${octal[1]}$\\2${octal[2]}${octal[3]}")
+        6 -> cb.append("\\3${octal[0]}${octal[1]}$\\2${octal[2]}${octal[3]}$\\2${octal[4]}${octal[5]}")
+        else -> throw IllegalArgumentException("Invalid octal value: $octal")
+    }
+}
+
+private fun String.wrapEscapes(stringBuilder: StringBuilder) {
     for (element in this) {
         val ch = wrapEscapedChar(element) ?: element
         stringBuilder.append(ch)
     }
-}
-
-fun String.unquoted(): String {
-    val stringBuilder = StringBuilder()
-    var i = 0
-    while (i < length) {
-        val ch = this[i]
-        if (ch == '\\') {
-            i++
-            val unescaped = when (val escaped = this[i]) {
-                'n'  -> '\n'
-                't'  -> '\t'
-                'r'  -> '\r'
-                'b'  -> '\b'
-                'f'  -> '\u000C'
-                'a'  -> '\u0007'
-                '0'  -> '\u0000'
-                '\\' -> '\\'
-                '"'  -> '"'
-                else -> throw IllegalArgumentException("Unknown escape character: $escaped")
-            }
-            stringBuilder.append(unescaped)
-        } else {
-            stringBuilder.append(ch)
-        }
-        i++
-    }
-    return stringBuilder.toString()
 }

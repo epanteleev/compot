@@ -4,7 +4,6 @@ import types.*
 import typedesc.*
 import tokenizer.tokens.*
 import common.assertion
-import common.wrapEscapes
 import parser.LineAgnosticAstPrinter
 import parser.nodes.BinaryOpType.AND
 import parser.nodes.BinaryOpType.OR
@@ -21,7 +20,7 @@ sealed class Expression {
     abstract fun resolveType(typeHolder: TypeHolder): CType
 
     protected fun convertToPrimitive(type: CType): CPrimitive? = when (type) {
-        is CPrimitive    -> type
+        is CPrimitive -> type
         is AnyCArrayType -> type.asPointer()
         is AnyCFunctionType -> type.asPointer()
         else -> null
@@ -52,7 +51,7 @@ class CompoundLiteral(val typeName: TypeName, val initializerList: InitializerLi
         val type = typeName.specifyType(typeHolder).typeDesc
         val ctype = type.cType()
         if (ctype is CUncompletedArrayType) {
-            return TypeDesc.from(CArrayType(ctype.elementType, initializerList.length().toLong()))
+            return TypeDesc.from(CArrayType(ctype.element(), initializerList.length().toLong()))
         }
 
         return type
@@ -313,9 +312,8 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
 
         return@memoize when (opType) {
             PrefixUnaryOpType.DEREF -> when (primaryType) {
-                is CPointer              -> primaryType.dereference(typeHolder)
-                is CArrayType            -> primaryType.type.cType()
-                is CUncompletedArrayType -> primaryType.elementType.cType()
+                is CPointer      -> primaryType.dereference(typeHolder)
+                is AnyCArrayType -> primaryType.element().cType()
                 else -> throw TypeResolutionException("Dereference on non-pointer type: $primaryType", begin())
             }
             PrefixUnaryOpType.ADDRESS -> CPointer(primaryType)
@@ -335,10 +333,8 @@ data class ArrayAccess(val primary: Expression, val expr: Expression) : Expressi
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         return@memoize when (val primaryType = primary.resolveType(typeHolder)) {
-            is CArrayType            -> primaryType.type.cType()
-            is CStringLiteral        -> CHAR
-            is CUncompletedArrayType -> primaryType.elementType.cType()
-            is CPointer              -> primaryType.dereference(typeHolder)
+            is AnyCArrayType -> primaryType.element().cType()
+            is CPointer -> primaryType.dereference(typeHolder)
             is CPrimitive -> {
                 val expressionType = expr.resolveType(typeHolder)
                 val exprPointer = convertToPointer(expressionType)
@@ -384,7 +380,7 @@ data class SizeOf(val expr: SizeOfParam) : Expression() {
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize INT
+        return@memoize LONG
     }
 
     fun constEval(typeHolder: TypeHolder): Int = expr.constEval(typeHolder)
