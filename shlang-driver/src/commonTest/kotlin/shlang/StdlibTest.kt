@@ -40,6 +40,13 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("Hello\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testString() {
+        val result = runCTest("shlang/stdlib/string", listOf(), options())
+        assertEquals("11000010 10000000", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {

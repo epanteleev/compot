@@ -46,13 +46,16 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
         val tempDir = FileSystem.SYSTEM_TEMPORARY_DIRECTORY.resolve(OPT + Random.nextInt())
         val optimizedAsm = tempDir.toString()
         try {
-            PrintWriter(optimizedAsm).use { out ->
+            PrintWriter(optimizedAsm, Charsets.UTF_8).use { out ->
                 out.println(compiledModule.toString())
             }
 
             if (commandLineArguments.isDumpIr()) {
-                val dst = "${commandLineArguments.getDumpIrDirectory()}/${inputBasename()}/$asmFileName".toPath()
-                FileSystem.SYSTEM.copy(tempDir, dst)
+                val dst = "${commandLineArguments.getDumpIrDirectory()}/${inputBasename()}/$asmFileName"
+                println("Dumping asm to $dst")
+                PrintWriter(dst, Charsets.UTF_8).use { out ->
+                    out.println(compiledModule.toString())
+                }
             }
 
             val output = commandLineArguments.getOutputFilename().withExtension(Extension.OBJ)

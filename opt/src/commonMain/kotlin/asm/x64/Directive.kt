@@ -102,9 +102,10 @@ class QuadDirective(val value: String, val offset: Int): AnonymousDirective() {
 class StringDirective(val value: String): AnonymousDirective() {
     override fun toString(): String {
         val stringBuilder = StringBuilder()
-        for (element in value.toByteArray()) {
+        val arr = value.toCharArray()
+        for (element in arr) {
             stringBuilder.append(".byte ")
-            stringBuilder.append(element)
+            stringBuilder.append(element.code.toUByte())
             stringBuilder.append("\n")
         }
         stringBuilder.append(".byte 0\n")

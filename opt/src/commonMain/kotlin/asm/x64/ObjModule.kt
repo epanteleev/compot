@@ -1,6 +1,7 @@
 package asm.x64
 
 import ir.platform.x64.codegen.X64MacroAssembler
+import java.nio.charset.StandardCharsets
 
 abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
     private val symbols = arrayListOf<AnyDirective>()
@@ -105,6 +106,6 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
             }
         }
         builder.append("\n")
-        return builder.toString()
+        return String(builder.toString().toByteArray(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
     }
 }

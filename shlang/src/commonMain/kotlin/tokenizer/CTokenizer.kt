@@ -104,8 +104,7 @@ class CTokenizer private constructor(private val filename: String, private val r
             val ch = eat()
             c = c * 16 + ch.digitToInt(16)
         }
-        val res = c and 0xFF
-        builder.append(res.toChar())
+        builder.append(c.toChar())
     }
 
     private fun readEscapedChar(): Char {
