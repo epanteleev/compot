@@ -1,9 +1,5 @@
 package asm.x64
 
-import common.padTo
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
-
 
 sealed class AnyDirective
 
@@ -100,16 +96,44 @@ class QuadDirective(val value: String, val offset: Int): AnonymousDirective() {
 }
 
 class StringDirective(val value: String): AnonymousDirective() {
+
+    private fun intToByteArray(value: Int): List<Byte> {
+        val result = arrayListOf<Byte>()
+        var c = value
+        while (c > 0) {
+            result.add((c and 0xFF).toByte())
+            c = c ushr 8
+        }
+        return result
+    }
+
     override fun toString(): String {
         val stringBuilder = StringBuilder()
-        val arr = value.toCharArray()
-        for (element in arr) {
-            stringBuilder.append(".byte ")
-            stringBuilder.append(element.code.toUByte())
-            stringBuilder.append("\n")
+        for (ch in value) {
+            val int = ch.code
+            if (int in 128..255) {
+                val octal = int.toString(8)
+                if (octal.length == 3) {
+                    stringBuilder.append("\\$octal")
+                } else {
+                    val chunks = octal.chunked(2)
+                    if (chunks.size == 2) {
+                        stringBuilder.append("\\3${chunks[0]}")
+                        stringBuilder.append("\\2${chunks[1]}")
+                    } else if (chunks.size == 3) {
+                        stringBuilder.append("\\360")
+                        stringBuilder.append("\\2${chunks[0]}")
+                        stringBuilder.append("\\2${chunks[1]}")
+                        stringBuilder.append("\\2${chunks[2]}")
+                    } else {
+                        throw IllegalArgumentException("Invalid octal value: $octal")
+                    }
+                }
+            } else {
+                stringBuilder.append(ch)
+            }
         }
-        stringBuilder.append(".byte 0\n")
-        return stringBuilder.toString()
+        return ".string $stringBuilder"
     }
 }
 

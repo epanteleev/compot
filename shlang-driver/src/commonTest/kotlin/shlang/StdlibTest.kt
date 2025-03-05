@@ -47,6 +47,20 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("11000010 10000000", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testString1() {
+        val result = runCTest("shlang/stdlib/string1", listOf(), options())
+        assertEquals("11010000 10010111", result.output)
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    fun testString2() {
+        val result = runCTest("shlang/stdlib/string2", listOf(), options())
+        assertEquals("🚩😁", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {
