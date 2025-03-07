@@ -1925,7 +1925,7 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
                         nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
     fun generate(functionNode: FunctionNode) {
         val varDesc = functionNode.declareType(typeHolder)
-        typeHolder.addFunctionType(varDesc)
+        typeHolder.addVar(varDesc)
 
         val fnType = varDesc.typeDesc
             .asType<CFunctionType>(functionNode.begin())

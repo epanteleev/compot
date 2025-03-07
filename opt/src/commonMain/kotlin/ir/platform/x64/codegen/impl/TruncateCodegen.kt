@@ -9,7 +9,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class TruncateCodegen(val fromType: IntegerType, val toType: IntegerType, val asm: X64MacroAssembler):
+internal class TruncateCodegen(fromType: IntegerType, toType: IntegerType, val asm: X64MacroAssembler):
     GPOperandsVisitorUnaryOp {
     private val toSize = toType.sizeOf()
     private val fromSize = fromType.sizeOf()

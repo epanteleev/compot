@@ -6,9 +6,9 @@ import codegen.VarStack
 
 class TypeHolder private constructor(): Scope {
     private val valueMap = VarStack<VarDescriptor>()
-    val enumTypeMap = VarStack<CType>()
-    val structTypeMap = VarStack<CType>()
-    val unionTypeMap = VarStack<CType>()
+    private val enumTypeMap = VarStack<CType>()
+    private val structTypeMap = VarStack<CType>()
+    private val unionTypeMap = VarStack<CType>()
 
     private val typedefs = VarStack<TypeDesc>()
 
@@ -96,7 +96,7 @@ class TypeHolder private constructor(): Scope {
         return valueMap.containsKey(varName)
     }
 
-    inline fun <reified T : CType> addNewType(name: String, type: T): T {
+    fun addNewType(name: String, type: CType): CType {
         when (type) {
             is CEnumType, is CUncompletedEnumType -> enumTypeMap[name] = type
             is CStructType, is CUncompletedStructType -> structTypeMap[name] = type
@@ -108,11 +108,6 @@ class TypeHolder private constructor(): Scope {
 
     fun getFunctionType(name: String): VarDescriptor {
         return valueMap[name] ?: throw Exception("Type for function '$name' not found")
-    }
-
-    fun addFunctionType(varDesc: VarDescriptor): VarDescriptor {
-        valueMap[varDesc.name] = varDesc
-        return varDesc
     }
 
     override fun enter() {

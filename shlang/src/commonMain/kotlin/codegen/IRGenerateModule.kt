@@ -45,13 +45,7 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
                throw IRCodeGenError("Typedef is not supported in global declarations", node.begin())
             }
 
-            val baseType = varDesc.cType()
-            if (baseType is CFunctionType) {
-                // declare extern function or function without body
-                typeHolder.addFunctionType(varDesc)
-            } else {
-                typeHolder.addVar(varDesc)
-            }
+            typeHolder.addVar(varDesc)
 
             when (declarator) {
                 is Declarator -> generateGlobalDeclarator(varDesc, declarator)
