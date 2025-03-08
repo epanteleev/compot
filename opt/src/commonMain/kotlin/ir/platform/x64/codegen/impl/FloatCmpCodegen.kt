@@ -8,7 +8,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.CmpXmmOperandVisitor
 
 
-class FloatCmpCodegen(val type: FloatingPointType, val asm: Assembler): CmpXmmOperandVisitor {
+internal class FloatCmpCodegen(val type: FloatingPointType, val asm: Assembler): CmpXmmOperandVisitor {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(first: Operand, second: Operand) {

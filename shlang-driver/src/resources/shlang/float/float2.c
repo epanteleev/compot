@@ -18,5 +18,21 @@ int is_neg_inf(double x) {
 
 int main() {
     double acc = HUGE_VAL;
-    return is_inf(acc) + is_neg_inf(-acc) + is_neg_inf(acc) + is_inf(-acc);
+    if (!is_inf(acc)) {
+        return 1;
+    }
+
+    if (is_inf(-acc)) {
+        return 1;
+    }
+
+    if (!is_neg_inf(-acc)) {
+        return 1;
+    }
+
+    if (is_neg_inf(acc)) {
+        return 1;
+    }
+
+    return 0;
 }

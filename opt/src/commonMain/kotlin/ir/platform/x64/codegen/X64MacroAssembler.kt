@@ -79,32 +79,27 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         }
     }
 
-    fun condIntType(cmp: IntCompare, type: PrimitiveType): CondType {
-        val convType = cmp.predicate().invert()
-        return when (type) {
-            is SignedIntType -> when (convType) {
-                IntPredicate.Eq -> CondType.JE
-                IntPredicate.Ne -> CondType.JNE
-                IntPredicate.Gt -> CondType.JG
-                IntPredicate.Ge -> CondType.JGE
-                IntPredicate.Lt -> CondType.JL
-                IntPredicate.Le -> CondType.JLE
-                else -> throw CodegenException("unknown conversion type: convType=$convType")
-            }
-            is UnsignedIntType, PtrType -> when (convType) {
-                IntPredicate.Eq -> CondType.JE
-                IntPredicate.Ne -> CondType.JNE
-                IntPredicate.Gt -> CondType.JA
-                IntPredicate.Ge -> CondType.JAE
-                IntPredicate.Lt -> CondType.JB
-                IntPredicate.Le -> CondType.JBE
-                else -> throw CodegenException("unknown conversion type: convType=$convType")
-            }
-            else -> throw CodegenException("unknown conversion type: type=$type")
+    fun condIntType(convType: IntPredicate, type: PrimitiveType): CondType = when (type) {
+        is SignedIntType -> when (convType) {
+            IntPredicate.Eq -> CondType.JE
+            IntPredicate.Ne -> CondType.JNE
+            IntPredicate.Gt -> CondType.JG
+            IntPredicate.Ge -> CondType.JGE
+            IntPredicate.Lt -> CondType.JL
+            IntPredicate.Le -> CondType.JLE
         }
+        is UnsignedIntType, PtrType -> when (convType) {
+            IntPredicate.Eq -> CondType.JE
+            IntPredicate.Ne -> CondType.JNE
+            IntPredicate.Gt -> CondType.JA
+            IntPredicate.Ge -> CondType.JAE
+            IntPredicate.Lt -> CondType.JB
+            IntPredicate.Le -> CondType.JBE
+        }
+        else -> throw CodegenException("unknown conversion type: type=$type")
     }
 
-    fun condFloatType(cmp: FloatCompare): CondType = when (val convType = cmp.predicate().invert()) {
+    fun condFloatType(predicate: FloatPredicate): CondType = when (predicate) {
         FloatPredicate.Oeq -> CondType.JE
         FloatPredicate.Ogt -> CondType.JA
         FloatPredicate.Oge -> CondType.JAE
@@ -113,13 +108,12 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         FloatPredicate.One -> CondType.JNE
         FloatPredicate.Ord -> TODO()
         FloatPredicate.Ueq -> TODO()
-        FloatPredicate.Ugt -> TODO()
+        FloatPredicate.Ugt -> CondType.JA
         FloatPredicate.Uge -> TODO()
         FloatPredicate.Ult -> TODO()
         FloatPredicate.Ule -> CondType.JBE
         FloatPredicate.Uno -> TODO()
         FloatPredicate.Une -> TODO()
-        else -> throw CodegenException("unknown conversion type: convType=$convType")
     }
 
     fun indirectCall(call: Callable, pointer: Operand) {

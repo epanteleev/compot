@@ -11,6 +11,14 @@ int is_nan(double x) {
 
 int main() {
     double nan = NAN;
+    if (nan == HUGE_VAL) {
+        return 2;
+    }
+
+    if (nan == -HUGE_VAL) {
+        return 2;
+    }
+
     printf("%lf\n", nan);
     return is_nan(nan);
 }

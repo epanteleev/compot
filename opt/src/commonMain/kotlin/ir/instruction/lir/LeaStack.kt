@@ -65,7 +65,7 @@ class LeaStack private constructor(id: Identity, owner: Block, val loadedType: P
                 return false
             }
 
-            return index.sizeOf() == QWORD_SIZE && originType is AggregateType
+            return index.sizeOf() == QWORD_SIZE
         }
     }
 }

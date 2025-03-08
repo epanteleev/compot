@@ -550,14 +550,23 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
             }
         }
         is IntCompare -> {
-            val jmpType = asm.condIntType(cond, cond.operandsType())
+            val jmpType = asm.condIntType(cond.predicate().invert(), cond.operandsType())
             asm.jcc(jmpType, makeLabel(branchCond.onFalse()))
         }
-        is FloatCompare -> {
-            val onFalse = makeLabel(branchCond.onFalse())
-            asm.jcc(CondType.JP, onFalse)
-            val jmpType = asm.condFloatType(cond)
-            asm.jcc(jmpType, onFalse)
+        is FloatCompare -> when (cond.predicate()) {
+            FloatPredicate.One, FloatPredicate.Une -> {
+                val onTrue = makeLabel(branchCond.onTrue())
+                val jmpType = asm.condFloatType(cond.predicate())
+                asm.jcc(jmpType, onTrue)
+                asm.jcc(CondType.JP, onTrue)
+                doJump(branchCond.onFalse())
+            }
+            else -> {
+                val onFalse = makeLabel(branchCond.onFalse())
+                val jmpType = asm.condFloatType(cond.predicate().invert())
+                asm.jcc(jmpType, onFalse)
+                asm.jcc(CondType.JP, onFalse)
+            }
         }
         else -> throw CodegenException("unknown condition type, cond=${cond}")
     }

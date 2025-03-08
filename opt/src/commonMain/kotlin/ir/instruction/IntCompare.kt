@@ -30,6 +30,8 @@ enum class IntPredicate: AnyPredicateType {
         override fun toString(): String = "le"
         override fun invert(): IntPredicate = Gt
     };
+
+    abstract override fun invert(): IntPredicate
 }
 
 class IntCompare private constructor(id: Identity, owner: Block, operandsType: PrimitiveType, a: Value, private val predicate: IntPredicate, b: Value) :

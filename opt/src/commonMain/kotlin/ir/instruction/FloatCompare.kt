@@ -63,6 +63,8 @@ enum class FloatPredicate: AnyPredicateType {
         override fun invert(): FloatPredicate = TODO()
         override fun toString(): String = "uno"
     };
+
+    abstract override fun invert(): FloatPredicate
 }
 
 class FloatCompare private constructor(id: Identity, owner: Block, operandsType: FloatingPointType, a: Value, private val predicate: FloatPredicate, b: Value) :

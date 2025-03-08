@@ -16,15 +16,21 @@ abstract class FloatTests: CommonCTest() {
     @Test
     fun test2() {
         val result = runCTest("shlang/float/float2", listOf(), options())
-        assertEquals(2, result.exitCode)
+        assertEquals(0, result.exitCode)
     }
 
     @Test
-    @Ignore
     fun test3() {
         val result = runCTest("shlang/float/float3", listOf(), options())
         assertEquals("nan\n", result.output)
         assertEquals(1, result.exitCode)
+    }
+
+    @Test
+    fun test4() {
+        val result = runCTest("shlang/float/float4", listOf(), options())
+        assertEquals("000000f87f\n", result.output)
+        assertEquals(0, result.exitCode)
     }
 }
 

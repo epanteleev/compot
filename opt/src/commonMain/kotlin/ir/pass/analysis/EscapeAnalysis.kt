@@ -75,6 +75,10 @@ private class EscapeAnalysis(private val functionData: FunctionData): FunctionAn
         }
     }
 
+    private fun visitGetElementPtr(getElementPtr: GetElementPtr) {
+        escapeState[getElementPtr.source()] = union(getElementPtr.source(), EscapeState.Field)
+    }
+
     override fun run(): EscapeAnalysisResult {
         for (block in preorder) {
             for (instruction in block) {
@@ -84,6 +88,7 @@ private class EscapeAnalysis(private val functionData: FunctionData): FunctionAn
                     is Load  -> visitLoad(instruction)
                     is Callable -> visitCall(instruction)
                     is Pointer2Int -> visitPointer2Int(instruction)
+                    is GetElementPtr -> visitGetElementPtr(instruction)
                 }
             }
         }
