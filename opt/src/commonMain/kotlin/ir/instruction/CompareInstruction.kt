@@ -10,37 +10,10 @@ sealed interface AnyPredicateType {
     fun invert(): AnyPredicateType
 }
 
-enum class IntPredicate: AnyPredicateType {
-    Eq {
-        override fun toString(): String = "eq"
-        override fun invert(): IntPredicate = Ne
-    },
-    Ne {
-        override fun toString(): String = "ne"
-        override fun invert(): IntPredicate = Eq
-    },
-    Gt {
-        override fun toString(): String = "gt"
-        override fun invert(): IntPredicate = Le
-    },
-    Ge {
-        override fun toString(): String = "ge"
-        override fun invert(): IntPredicate = Lt
-    },
-    Lt {
-        override fun toString(): String = "lt"
-        override fun invert(): IntPredicate = Ge
-    },
-    Le {
-        override fun toString(): String = "le"
-        override fun invert(): IntPredicate = Gt
-    };
-}
-
-
 sealed class CompareInstruction(id: Identity, owner: Block, val operandsType: PrimitiveType, first: Value, second: Value) :
     ValueInstruction(id, owner, arrayOf(first, second)) {
-    fun operandsType(): PrimitiveType = operandsType
+
+    abstract fun operandsType(): PrimitiveType
     abstract fun predicate(): AnyPredicateType
 
     fun first(): Value {

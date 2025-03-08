@@ -65,11 +65,13 @@ enum class FloatPredicate: AnyPredicateType {
     };
 }
 
-class FloatCompare private constructor(id: Identity, owner: Block, operandsType: PrimitiveType, a: Value, private val predicate: FloatPredicate, b: Value) :
+class FloatCompare private constructor(id: Identity, owner: Block, operandsType: FloatingPointType, a: Value, private val predicate: FloatPredicate, b: Value) :
     CompareInstruction(id, owner, operandsType, a, b) {
     override fun dump(): String {
         return "%${name()} = $NAME $predicate $operandsType ${first()}, ${second()}"
     }
+
+    override fun operandsType(): FloatingPointType = operandsType.asType<FloatingPointType>()
 
     override fun predicate(): FloatPredicate = predicate
 

@@ -79,8 +79,8 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         }
     }
 
-    fun condType(cond: CompareInstruction, type: PrimitiveType): CondType {
-        val convType = cond.predicate().invert()
+    fun condIntType(cmp: IntCompare, type: PrimitiveType): CondType {
+        val convType = cmp.predicate().invert()
         return when (type) {
             is SignedIntType -> when (convType) {
                 IntPredicate.Eq -> CondType.JE
@@ -100,25 +100,26 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
                 IntPredicate.Le -> CondType.JBE
                 else -> throw CodegenException("unknown conversion type: convType=$convType")
             }
-            is FloatingPointType -> when (convType) {
-                FloatPredicate.Oeq -> CondType.JE // TODO Clang insert extra instruction 'jp ${labelName}"
-                FloatPredicate.Ogt -> CondType.JA
-                FloatPredicate.Oge -> CondType.JAE
-                FloatPredicate.Olt -> CondType.JB
-                FloatPredicate.Ole -> CondType.JBE
-                FloatPredicate.One -> CondType.JNE // TODO Clang insert extra instruction 'jp ${labelName}"
-                FloatPredicate.Ord -> TODO()
-                FloatPredicate.Ueq -> TODO()
-                FloatPredicate.Ugt -> TODO()
-                FloatPredicate.Uge -> TODO()
-                FloatPredicate.Ult -> TODO()
-                FloatPredicate.Ule -> CondType.JBE
-                FloatPredicate.Uno -> TODO()
-                FloatPredicate.Une -> TODO()
-                else -> throw CodegenException("unknown conversion type: convType=$convType")
-            }
-            is UndefType -> TODO()
+            else -> throw CodegenException("unknown conversion type: type=$type")
         }
+    }
+
+    fun condFloatType(cmp: FloatCompare): CondType = when (val convType = cmp.predicate().invert()) {
+        FloatPredicate.Oeq -> CondType.JE
+        FloatPredicate.Ogt -> CondType.JA
+        FloatPredicate.Oge -> CondType.JAE
+        FloatPredicate.Olt -> CondType.JB
+        FloatPredicate.Ole -> CondType.JBE
+        FloatPredicate.One -> CondType.JNE
+        FloatPredicate.Ord -> TODO()
+        FloatPredicate.Ueq -> TODO()
+        FloatPredicate.Ugt -> TODO()
+        FloatPredicate.Uge -> TODO()
+        FloatPredicate.Ult -> TODO()
+        FloatPredicate.Ule -> CondType.JBE
+        FloatPredicate.Uno -> TODO()
+        FloatPredicate.Une -> TODO()
+        else -> throw CodegenException("unknown conversion type: convType=$convType")
     }
 
     fun indirectCall(call: Callable, pointer: Operand) {

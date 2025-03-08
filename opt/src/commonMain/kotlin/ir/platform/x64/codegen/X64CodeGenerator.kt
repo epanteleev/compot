@@ -539,23 +539,27 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         doJump(branch.target())
     }
 
-    override fun visit(branchCond: BranchCond) {
-        when (val cond = branchCond.condition()) {
-            is BoolValue -> {
-                // Condition is constant - true or false.
-                // Just select necessary branch and jump to it.
-                if (cond.bool) {
-                    doJump(branchCond.onTrue())
-                } else {
-                    doJump(branchCond.onFalse())
-                }
+    override fun visit(branchCond: BranchCond) = when (val cond = branchCond.condition()) {
+        is BoolValue -> {
+            // Condition is constant - true or false.
+            // Just select necessary branch and jump to it.
+            if (cond.bool) {
+                doJump(branchCond.onTrue())
+            } else {
+                doJump(branchCond.onFalse())
             }
-            is CompareInstruction -> {
-                val jmpType = asm.condType(cond, cond.operandsType())
-                asm.jcc(jmpType, makeLabel(branchCond.onFalse()))
-            }
-            else -> throw CodegenException("unknown condition type, cond=${cond}")
         }
+        is IntCompare -> {
+            val jmpType = asm.condIntType(cond, cond.operandsType())
+            asm.jcc(jmpType, makeLabel(branchCond.onFalse()))
+        }
+        is FloatCompare -> {
+            val onFalse = makeLabel(branchCond.onFalse())
+            asm.jcc(CondType.JP, onFalse)
+            val jmpType = asm.condFloatType(cond)
+            asm.jcc(jmpType, onFalse)
+        }
+        else -> throw CodegenException("unknown condition type, cond=${cond}")
     }
 
     override fun visit(copy: Copy) {
