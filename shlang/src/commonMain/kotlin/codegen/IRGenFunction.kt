@@ -795,48 +795,88 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun makeAlgebraicBinary(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
-        when (val cType = binOp.resolveType(typeHolder)) {
-            is CPointer -> {
-                val lAddress = evaluateAddress(binOp.left, cType)
-                val rAddress = evaluateAddress(binOp.right, cType)
-                val result = op(lAddress, rAddress)
-                return ir.convertRVToType(result, PtrType)
+    private fun makeSubBinary(binOp: BinaryOp): Value = when (val cType = binOp.resolveType(typeHolder)) {
+        is CPointer -> {
+            val lAddress = evaluateAddress(binOp.left, cType)
+            val rAddress = evaluateAddress(binOp.right, cType)
+            val result = ir.sub(lAddress, rAddress)
+            val rType = binOp.right.resolveType(typeHolder)
+            val lType = binOp.left.resolveType(typeHolder)
+            val divided = if (rType is CPointer && lType is CPointer) {
+                val vType = cType.dereference(typeHolder).asType<CompletedType>()
+                divide(result, I64Value.of(vType.size()))
+            } else {
+                result
             }
-            is AnyCFloat -> {
-                val commonType = mb.toIRType<FloatingPointType>(typeHolder, cType)
-                val left = visitExpression(binOp.left, true)
-                val leftConverted = ir.convertRVToType(left, commonType)
 
-                val right = visitExpression(binOp.right, true)
-                val rightConverted = ir.convertRVToType(right, commonType)
-
-                return op(leftConverted, rightConverted)
-            }
-            is AnyCInteger, is CEnumType -> {
-                val cvtType = when (val commonType = mb.toIRType<IntegerType>(typeHolder, cType)) {
-                    is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) I32Type else commonType
-                    is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) U32Type else commonType
-                }
-                val left = visitExpression(binOp.left, true)
-                val leftConverted = ir.convertLVToType(left, cvtType)
-
-                val right = visitExpression(binOp.right, true)
-                val rightConverted = ir.convertLVToType(right, cvtType)
-
-                return op(leftConverted, rightConverted)
-            }
-            is BOOL -> {
-                val left = visitExpression(binOp.left, true)
-                val leftConverted = ir.convertLVToType(left, I32Type)
-
-                val right = visitExpression(binOp.right, true)
-                val rightConverted = ir.convertLVToType(right, I32Type)
-
-                return op(leftConverted, rightConverted)
-            }
-            else -> throw IRCodeGenError("Unexpected type: $cType", binOp.begin())
+            ir.convertRVToType(divided, PtrType)
         }
+        is AnyCFloat -> {
+            val commonType = mb.toIRType<FloatingPointType>(typeHolder, cType)
+            val left = visitExpression(binOp.left, true)
+            val leftConverted = ir.convertRVToType(left, commonType)
+
+            val right = visitExpression(binOp.right, true)
+            val rightConverted = ir.convertRVToType(right, commonType)
+
+            ir.sub(leftConverted, rightConverted)
+        }
+        is AnyCInteger, is CEnumType -> {
+            val cvtType = when (val commonType = mb.toIRType<IntegerType>(typeHolder, cType)) {
+                is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) I32Type else commonType
+                is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) U32Type else commonType
+            }
+            val left = visitExpression(binOp.left, true)
+            val leftConverted = ir.convertLVToType(left, cvtType)
+
+            val right = visitExpression(binOp.right, true)
+            val rightConverted = ir.convertLVToType(right, cvtType)
+
+            ir.sub(leftConverted, rightConverted)
+        }
+        else -> throw IRCodeGenError("Unexpected type: $cType", binOp.begin())
+    }
+
+    private fun makeAlgebraicBinary(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value = when (val cType = binOp.resolveType(typeHolder)) {
+        is CPointer -> {
+            val lAddress = evaluateAddress(binOp.left, cType)
+            val rAddress = evaluateAddress(binOp.right, cType)
+            val result = op(lAddress, rAddress)
+            ir.convertRVToType(result, PtrType)
+        }
+        is AnyCFloat -> {
+            val commonType = mb.toIRType<FloatingPointType>(typeHolder, cType)
+            val left = visitExpression(binOp.left, true)
+            val leftConverted = ir.convertRVToType(left, commonType)
+
+            val right = visitExpression(binOp.right, true)
+            val rightConverted = ir.convertRVToType(right, commonType)
+
+            op(leftConverted, rightConverted)
+        }
+        is AnyCInteger, is CEnumType -> {
+            val cvtType = when (val commonType = mb.toIRType<IntegerType>(typeHolder, cType)) {
+                is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) I32Type else commonType
+                is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) U32Type else commonType
+            }
+            val left = visitExpression(binOp.left, true)
+            val leftConverted = ir.convertLVToType(left, cvtType)
+
+            val right = visitExpression(binOp.right, true)
+            val rightConverted = ir.convertLVToType(right, cvtType)
+
+            op(leftConverted, rightConverted)
+        }
+        is BOOL -> {
+            val left = visitExpression(binOp.left, true)
+            val leftConverted = ir.convertLVToType(left, I32Type)
+
+            val right = visitExpression(binOp.right, true)
+            val rightConverted = ir.convertLVToType(right, I32Type)
+
+            op(leftConverted, rightConverted)
+        }
+        else -> throw IRCodeGenError("Unexpected type: $cType", binOp.begin())
     }
 
     private fun makeAlgebraicBinaryWithAssignment(binOp: BinaryOp, op: (a: Value, b: Value) -> Value): Value {
@@ -969,7 +1009,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitBinary(binOp: BinaryOp, isRvalue: Boolean): Value = when (binOp.opType) { // TODO can compile incorrect code
         BinaryOpType.ADD -> makeAlgebraicBinary(binOp, ir::add)
-        BinaryOpType.SUB -> makeAlgebraicBinary(binOp, ir::sub)
+        BinaryOpType.SUB -> makeSubBinary(binOp)
         BinaryOpType.ASSIGN -> visitAssignBinary(binOp)
         BinaryOpType.ADD_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::add)
         BinaryOpType.DIV_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ::divide)
