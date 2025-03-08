@@ -52,7 +52,6 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
 
             if (commandLineArguments.isDumpIr()) {
                 val dst = "${commandLineArguments.getDumpIrDirectory()}/${inputBasename()}/$asmFileName"
-                println("Dumping asm to $dst")
                 PrintWriter(dst, Charsets.UTF_8).use { out ->
                     out.println(compiledModule.toString())
                 }
