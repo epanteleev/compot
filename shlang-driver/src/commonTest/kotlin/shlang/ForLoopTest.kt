@@ -1,6 +1,7 @@
 package shlang
 
 import common.CommonCTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -47,6 +48,13 @@ abstract class ForLoopTests: CommonCTest() {
     fun testMemset1() {
         val result = runCTest("shlang/loop/memset1", listOf("runtime/runtime.c"), options())
         assert(result, "0 0 0 0 0 0 0 0 0 0 \n")
+    }
+
+    @Test
+    @Ignore
+    fun testGotoLoop1() {
+        val result = runCTest("shlang/loop/gotoLoop1", listOf("runtime/runtime.c"), options())
+        assertEquals(10, result.exitCode)
     }
 }
 

@@ -39,15 +39,20 @@ List * makelist() {
   return list;
 }
 
+void print_nodes(Node * node) {
+  while(node != NULL) {
+    printf(FMT, node->data);
+    node = node->next;
+  }
+}
+
 void display(List * list) {
   Node * current = list->head;
   if(list->head == NULL) {
     return;
   }
 
-  for(; current != NULL; current = current->next) {
-    printf(FMT, current->data);
-  }
+  print_nodes(current);
 }
 
 void add(DATATYPE data, List * list) {
