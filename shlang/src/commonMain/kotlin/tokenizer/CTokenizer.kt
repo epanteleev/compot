@@ -179,7 +179,18 @@ class CTokenizer private constructor(private val filename: String, private val r
         }
         val last = str.last()
         return when (last) {
-            'u', 'U', 'l', 'L' -> true
+            'l', 'L' -> true
+            else -> false
+        }
+    }
+
+    private fun isUintSuffix1(str: String): Boolean {
+        if (str.isEmpty()) {
+            return false
+        }
+        val last = str.last()
+        return when (last) {
+            'u', 'U' -> true
             else -> false
         }
     }
@@ -204,7 +215,7 @@ class CTokenizer private constructor(private val filename: String, private val r
         else -> throw IllegalStateException("Unknown base")
     }
 
-    private fun numberWithPower(string: String, base: Int): Number? {
+    private fun consumePower(string: String, base: Int): Number? {
         if (base == 10) {
             if (string.contains('e') || string.contains('E')) {
                 return java.lang.Double.valueOf(string)
@@ -215,63 +226,81 @@ class CTokenizer private constructor(private val filename: String, private val r
                 return java.lang.Double.valueOf(string)
             }
         }
+
+        return null
+    }
+
+    private fun numberWithPower(string: String, base: Int): Number? { //TODO code duplication
+        val powered = consumePower(string, base)
+        if (powered != null) {
+            return powered
+        }
+
         val substring = numberSubstring(string, base, 0)
         return toLongDefault(substring, base)
     }
 
-    private fun readPPNumber(string: String): Number? {
-        var base = 10
-
-        if (string.startsWith("0x") || string.startsWith("0X")) {
-            base = 16
-        } else if (string.startsWith("0b") || string.startsWith("0B")) {
-            base = 2
-        } else if (string.startsWith("0") && string.getOrNull(1)?.isDigit() == true) {
-            base = 8
-        }
-
-        if (string.contains('.')) {
-            if (isFPSuffix(string)) {
-                val substring = string.substring(0, string.length - 1)
-                return tryGetFPSuffix(substring)
-            }
-
-            if (isLongSuffix1(string)) {
-                val substring = numberSubstring(string, base, 1)
-                return toLongDefault(substring, base)
-            }
-
-            return tryGetFPSuffix(string)
-        }
-
-        if (isLongSuffix3(string)) {
-            val substring = numberSubstring(string, base, 3)
-            return toLongDefault(substring, base)
-        }
-
-        if (isLongSuffix2(string)) {
-            val substring = numberSubstring(string, base, 2)
-            return toLongDefault(substring, base)
-        }
-
-        if (isLongSuffix1(string)) {
-            val substring = string.substring(0, string.length - 1)
-            return numberWithPower(substring, base)
-        }
-
-        if (base == 10) {
-            if (string.contains('e') || string.contains('E')) {
-                return java.lang.Double.valueOf(string)
-            }
-        }
-
-        if (base == 16) {
-            if (string.contains('p') || string.contains('P')) {
-                return java.lang.Double.valueOf(string)
-            }
+    private fun numberWithPower0(string: String, base: Int): Number? {
+        val powered = consumePower(string, base)
+        if (powered != null) {
+            return powered
         }
 
         val substring = numberSubstring(string, base, 0)
+        return toNumberDefault(substring, base)
+    }
+
+    private fun readPPNumber(num: String): Number? {
+        var base = 10
+
+        if (num.startsWith("0x") || num.startsWith("0X")) {
+            base = 16
+        } else if (num.startsWith("0b") || num.startsWith("0B")) {
+            base = 2
+        } else if (num.startsWith("0") && num.getOrNull(1)?.isDigit() == true) {
+            base = 8
+        }
+
+        if (num.contains('.')) {
+            if (isFPSuffix(num)) {
+                val substring = num.substring(0, num.length - 1)
+                return tryGetFPSuffix(substring)
+            }
+
+            if (isLongSuffix1(num)) {
+                val substring = numberSubstring(num, base, 1)
+                return toLongDefault(substring, base)
+            }
+
+            return tryGetFPSuffix(num)
+        }
+
+        if (isLongSuffix3(num)) {
+            val substring = numberSubstring(num, base, 3)
+            return toLongDefault(substring, base)
+        }
+
+        if (isLongSuffix2(num)) {
+            val substring = numberSubstring(num, base, 2)
+            return toLongDefault(substring, base)
+        }
+
+        if (isLongSuffix1(num)) {
+            val substring = num.substring(0, num.length - 1)
+            return numberWithPower(substring, base)
+        }
+
+        if (isUintSuffix1(num)) {
+            val substring = num.substring(0, num.length - 1)
+            return numberWithPower0(substring, base)
+        }
+
+        val powered = consumePower(num, base)
+        if (powered != null) {
+            return powered
+        }
+
+        val substring = numberSubstring(num, base, 0)
         return toNumberDefault(substring, base)
     }
 

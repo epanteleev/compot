@@ -153,7 +153,7 @@ class CTokenizerTest {
         assertTrue { tokens[0] is PPNumber }
         assertEquals(1, tokens.size)
         val num = tokens[0] as PPNumber
-        assertEquals(0L, num.toNumberOrNull())
+        assertEquals(0L, num.toNumberOrNull().toLong())
     }
 
     @Test

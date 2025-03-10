@@ -95,7 +95,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     private fun callFunction(call: Callable, prototype: DirectFunctionPrototype) {
-        val sym = when (prototype){
+        val sym = when (prototype) {
             is FunctionPrototype -> if (ctx.picEnabled) {
                 ExternalFunSymbol(prototype.name())
             } else {
