@@ -121,16 +121,6 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
             "__STDC__" to STDC,
         )
 
-        // Compiler-specific macros
-        private val NAN = MacroReplacement("NAN", tokenListOf( // TODO introduce __builtin_nanf
-            Punctuator("-", Position.UNKNOWN),
-            Punctuator("(", Position.UNKNOWN),
-            PPNumber(0.0f, Position.UNKNOWN),
-            Punctuator("/", Position.UNKNOWN),
-            PPNumber(0.0f, Position.UNKNOWN),
-            Punctuator(")", Position.UNKNOWN),
-        ))
-
         fun create(headerHolder: HeaderHolder): PreprocessorContext {
             val macroReplacements = hashMapOf(
                 // 6.10.8.1 Mandatory macros
@@ -153,9 +143,6 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
                 "__SIZEOF_DOUBLE__"  to __SIZEOF_DOUBLE__,
                 "__INT32_MAX__"      to __INT32_MAX__,
                 "__SIZE_TYPE__"      to __SIZE_TYPE__,
-
-                // Compiler-specific macros
-                "NAN"                to NAN
             )
 
             return PreprocessorContext(macroReplacements, hashMapOf(), hashMapOf(), predefined, headerHolder)

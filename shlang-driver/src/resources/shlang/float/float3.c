@@ -1,6 +1,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#define NAN -(0.0 / 0.0)
+
 int is_nan(double x) {
     if (x != x) {
         return 1;
