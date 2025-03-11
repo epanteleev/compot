@@ -92,7 +92,8 @@ internal class OrCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPO
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
+        val or = first.value() or second.value()
+        asm.mov(size, Imm64.of(or), dst)
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
@@ -109,7 +110,13 @@ internal class OrCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPO
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        if (dst == first) {
+            asm.or(size, second, dst)
+        } else {
+            asm.mov(size, first, temp1)
+            asm.or(size, second, temp1)
+            asm.mov(size, temp1, dst)
+        }
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {

@@ -51,7 +51,6 @@ abstract class ForLoopTests: CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testGotoLoop1() {
         val result = runCTest("shlang/loop/gotoLoop1", listOf("runtime/runtime.c"), options())
         assertEquals(10, result.exitCode)
