@@ -85,7 +85,7 @@ private class Mem2RegImpl(private val cfg: FunctionData) {
         val deadPool = hashSetOf<Instruction>()
         fun filter(bb: Block, instruction: Instruction): Instruction? {
             if (instruction !is Phi) {
-                return instruction
+                return bb.last()
             }
 
             if (instruction.usedIn().isEmpty() || deadPool.containsAll(instruction.usedIn())) {
