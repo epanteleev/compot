@@ -1,7 +1,6 @@
 package ir.value.constant
 
 import common.asCString
-import common.quotedEscapes
 import ir.types.*
 
 

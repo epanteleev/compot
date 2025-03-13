@@ -17,25 +17,7 @@ internal class SelectCodegen(val type: IntegerType, val condition: IntCompare, v
         GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
     }
 
-    private fun matchIntCondition(): CMoveFlag = when (condition.operandsType()) {
-        is SignedIntType -> when (condition.predicate()) {
-            IntPredicate.Eq -> CMoveFlag.CMOVE
-            IntPredicate.Ne -> CMoveFlag.CMOVNE
-            IntPredicate.Gt -> CMoveFlag.CMOVG
-            IntPredicate.Ge -> CMoveFlag.CMOVGE
-            IntPredicate.Lt -> CMoveFlag.CMOVL
-            IntPredicate.Le -> CMoveFlag.CMOVLE
-        }
-        is UnsignedIntType, PtrType -> when (condition.predicate()) {
-            IntPredicate.Eq -> CMoveFlag.CMOVE
-            IntPredicate.Ne -> CMoveFlag.CMOVNE
-            IntPredicate.Gt -> CMoveFlag.CMOVA
-            IntPredicate.Ge -> CMoveFlag.CMOVAE
-            IntPredicate.Lt -> CMoveFlag.CMOVB
-            IntPredicate.Le -> CMoveFlag.CMOVBE
-        }
-        else -> throw RuntimeException("unexpected condition type: condition=$condition")
-    }
+    private fun matchIntCondition(): CMoveFlag = asm.cMoveCondition(condition.predicate(), condition.operandsType)
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {
         if (first == second) {

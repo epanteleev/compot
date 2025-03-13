@@ -50,7 +50,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
     }
 
     private fun intPredicateToSetCCType(type: PrimitiveType, jmpType: IntPredicate): SetCCType = when(type) {
-        is SignedIntType -> when (jmpType) {
+        is SignedIntType, is PtrType -> when (jmpType) {
             IntPredicate.Eq -> SetCCType.SETE
             IntPredicate.Ne -> SetCCType.SETNE
             IntPredicate.Gt -> SetCCType.SETG
@@ -58,7 +58,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
             IntPredicate.Lt -> SetCCType.SETL
             IntPredicate.Le -> SetCCType.SETLE
         }
-        is UnsignedIntType, is PtrType -> when (jmpType) {
+        is UnsignedIntType -> when (jmpType) {
             IntPredicate.Eq -> SetCCType.SETE
             IntPredicate.Ne -> SetCCType.SETNE
             IntPredicate.Gt -> SetCCType.SETA
@@ -80,7 +80,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
     }
 
     fun condIntType(convType: IntPredicate, type: PrimitiveType): CondType = when (type) {
-        is SignedIntType -> when (convType) {
+        is SignedIntType, is PtrType -> when (convType) {
             IntPredicate.Eq -> CondType.JE
             IntPredicate.Ne -> CondType.JNE
             IntPredicate.Gt -> CondType.JG
@@ -88,7 +88,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
             IntPredicate.Lt -> CondType.JL
             IntPredicate.Le -> CondType.JLE
         }
-        is UnsignedIntType, PtrType -> when (convType) {
+        is UnsignedIntType -> when (convType) {
             IntPredicate.Eq -> CondType.JE
             IntPredicate.Ne -> CondType.JNE
             IntPredicate.Gt -> CondType.JA
@@ -97,6 +97,26 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
             IntPredicate.Le -> CondType.JBE
         }
         else -> throw CodegenException("unknown conversion type: type=$type")
+    }
+
+    fun cMoveCondition(convType: IntPredicate, type: PrimitiveType): CMoveFlag = when (type) {
+        is SignedIntType, is PtrType -> when (convType) {
+            IntPredicate.Eq -> CMoveFlag.CMOVE
+            IntPredicate.Ne -> CMoveFlag.CMOVNE
+            IntPredicate.Gt -> CMoveFlag.CMOVG
+            IntPredicate.Ge -> CMoveFlag.CMOVGE
+            IntPredicate.Lt -> CMoveFlag.CMOVL
+            IntPredicate.Le -> CMoveFlag.CMOVLE
+        }
+        is UnsignedIntType -> when (convType) {
+            IntPredicate.Eq -> CMoveFlag.CMOVE
+            IntPredicate.Ne -> CMoveFlag.CMOVNE
+            IntPredicate.Gt -> CMoveFlag.CMOVA
+            IntPredicate.Ge -> CMoveFlag.CMOVAE
+            IntPredicate.Lt -> CMoveFlag.CMOVB
+            IntPredicate.Le -> CMoveFlag.CMOVBE
+        }
+        else -> throw RuntimeException("unexpected condition type: condition=$convType")
     }
 
     fun condFloatType(predicate: FloatPredicate): CondType = when (predicate) {
