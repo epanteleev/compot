@@ -23,7 +23,8 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
     }
 
     private fun evaluateCondition(tokens: TokenList): Long {
-        return ConditionPreprocessor(filename, tokens, ctx).evaluateCondition()
+        return ConditionPreprocessor(filename, tokens, ctx)
+            .evaluateCondition()
     }
 
     private fun skipBlock2() {

@@ -73,7 +73,7 @@ internal class SarCodegen (val type: ArithmeticType, val asm: X64MacroAssembler)
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        val constant = first.value() shr second.value().toInt()
+        val constant = first.value() ushr second.value().toInt()
         asm.copy(size, Imm32.of(constant), dst)
     }
 
@@ -91,7 +91,8 @@ internal class SarCodegen (val type: ArithmeticType, val asm: X64MacroAssembler)
     }
 
     override fun aii(dst: Address, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
+        val constant = first.value() ushr second.value().toInt()
+        asm.mov(size, Imm32.of(constant), dst)
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {

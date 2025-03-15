@@ -61,6 +61,12 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("🚩😁", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testString3() {
+        val result = runCTest("shlang/stdlib/ulong", listOf(), options())
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {

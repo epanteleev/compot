@@ -232,7 +232,7 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
             BinaryOpType.BIT_OR -> left or right
             BinaryOpType.BIT_XOR -> left xor right
             BinaryOpType.SHL -> left shl right.toInt()
-            BinaryOpType.SHR -> left shr right.toInt()
+            BinaryOpType.SHR -> left ushr right.toInt()
             else -> throw ConstEvalException("Cannot evaluate binary operator ${binop.opType}")
         }
     }
