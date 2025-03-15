@@ -946,7 +946,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private inline fun makeComparisonBinary(binOp: BinaryOp, crossinline predicate: (PrimitiveType) -> AnyPredicateType, isRvalue: Boolean): Value {
+    private fun makeCompareBinary(binOp: BinaryOp, predicate: (PrimitiveType) -> AnyPredicateType, isRvalue: Boolean): Value {
         val commonType = mb.toIRType<Type>(typeHolder, binOp.resolveType(typeHolder))
         val left = visitExpression(binOp.left, true)
         val leftConverted = ir.convertRVToType(left, commonType)
@@ -1016,10 +1016,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         BinaryOpType.MUL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::mul)
         BinaryOpType.BIT_OR -> makeAlgebraicBinary(binOp, ir::or)
         BinaryOpType.MUL -> makeAlgebraicBinary(binOp, ir::mul)
-        BinaryOpType.NE -> makeComparisonBinary(binOp, ::ne, isRvalue)
-        BinaryOpType.GT -> makeComparisonBinary(binOp, ::gt, isRvalue)
-        BinaryOpType.LT -> makeComparisonBinary(binOp, ::lt, isRvalue)
-        BinaryOpType.LE -> makeComparisonBinary(binOp, ::le, isRvalue)
+        BinaryOpType.NE -> makeCompareBinary(binOp, ::ne, isRvalue)
+        BinaryOpType.GT -> makeCompareBinary(binOp, ::gt, isRvalue)
+        BinaryOpType.LT -> makeCompareBinary(binOp, ::lt, isRvalue)
+        BinaryOpType.LE -> makeCompareBinary(binOp, ::le, isRvalue)
         BinaryOpType.AND -> {
             val left = visitExpression(binOp.left, true)
             val convertedLeft = ir.convertLVToType(left, FlagType)
@@ -1060,8 +1060,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         BinaryOpType.SHL_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::shl)
         BinaryOpType.BIT_XOR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::xor)
         BinaryOpType.BIT_OR_ASSIGN -> makeAlgebraicBinaryWithAssignment(binOp, ir::or)
-        BinaryOpType.GE  -> makeComparisonBinary(binOp, ::ge, isRvalue)
-        BinaryOpType.EQ  -> makeComparisonBinary(binOp, ::eq, isRvalue)
+        BinaryOpType.GE  -> makeCompareBinary(binOp, ::ge, isRvalue)
+        BinaryOpType.EQ  -> makeCompareBinary(binOp, ::eq, isRvalue)
         BinaryOpType.SHL -> makeAlgebraicBinary(binOp, ir::shl)
         BinaryOpType.SHR -> makeAlgebraicBinary(binOp, ir::shr)
         BinaryOpType.BIT_AND -> makeAlgebraicBinary(binOp, ir::and)

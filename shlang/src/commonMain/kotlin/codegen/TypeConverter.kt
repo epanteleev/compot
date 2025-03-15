@@ -402,11 +402,13 @@ internal object TypeConverter {
 
             PtrType -> {
                 toType as PtrType
-                val valueType = lvalue.type()
-                if (valueType is IntegerType) {
-                    return int2ptr(lvalue)
-                } else {
-                    throw IllegalStateException("Cannot convert $lvalue:${valueType} to $toType")
+                return when (val valueType = lvalue.type()) {
+                    is IntegerType -> int2ptr(lvalue)
+                    is FlagType -> {
+                        val flag2Int = flag2int(lvalue, I64Type)
+                        int2ptr(flag2Int)
+                    }
+                    else -> throw IllegalStateException("Cannot convert $lvalue:$valueType to $toType")
                 }
             }
 

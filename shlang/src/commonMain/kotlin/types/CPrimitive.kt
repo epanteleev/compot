@@ -151,6 +151,7 @@ sealed class CPrimitive: CompletedType() {
                     DOUBLE -> DOUBLE
                     FLOAT -> FLOAT
                     is CEnumType -> ULONG
+                    is CPointer -> type2
                     else -> null
                 }
             }
