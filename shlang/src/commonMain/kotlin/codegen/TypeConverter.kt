@@ -143,14 +143,17 @@ internal object TypeConverter {
                     I32Type -> trunc(lvalue, toType)
                     I64Type -> trunc(lvalue, toType)
                     U8Type  -> bitcast(lvalue, toType)
-                    U16Type -> trunc(lvalue, toType)
+                    U16Type -> {
+                        val trunc = trunc(lvalue, U8Type)
+                        bitcast(trunc, toType)
+                    }
                     U32Type -> {
                         val trunc = trunc(lvalue, U8Type)
                         bitcast(trunc, toType)
                     }
                     U64Type -> {
-                        val bitcast = bitcast(lvalue, I64Type)
-                        trunc(bitcast, toType)
+                        val trunc = trunc(lvalue, U8Type)
+                        bitcast(trunc, toType)
                     }
                     F32Type -> fp2Int(lvalue, toType)
                     F64Type -> fp2Int(lvalue, toType)

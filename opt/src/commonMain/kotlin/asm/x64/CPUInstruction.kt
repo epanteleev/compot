@@ -212,7 +212,7 @@ data class Label(val id: String) {
     }
 }
 
-enum class CondType {
+enum class CondType { // TODO: unify with SetCCType
     JE { // Jump if equal (ZF=1).
         override fun toString(): String = "je"
     },
@@ -485,7 +485,7 @@ internal data class Cvtsi2sd(val fromSize: Int, val src: Operand, val dst: Opera
     }
 }
 
-enum class CMoveFlag {
+enum class CMoveFlag { //TODO: unify with CondType
     CMOVA { // Move if above (CF=0 and ZF=0).
         override fun toString(): String = "cmova"
         override fun invert(): CMoveFlag = CMOVNA

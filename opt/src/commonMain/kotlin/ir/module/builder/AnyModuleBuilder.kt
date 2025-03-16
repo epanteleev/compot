@@ -98,8 +98,8 @@ abstract class AnyModuleBuilder {
         return functionDeclarations[name] as? ExternFunction
     }
 
-    fun findFunctionDeclarationOrNull(name: String): FunctionPrototype? {
-        return functionDeclarations[name] as? FunctionPrototype
+    fun findFunctionDeclarationOrNull(name: String): DirectFunctionPrototype? {
+        return functionDeclarations[name]
     }
 
     fun findConstantOrNull(name: String): GlobalSymbol? {

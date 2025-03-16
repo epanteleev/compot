@@ -4,6 +4,7 @@ int get() {
 }
 
 extern int get();
+int get();
 
 int main() {
     return get();

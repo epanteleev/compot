@@ -12,6 +12,7 @@ sealed class CPrimitive: CompletedType() {
             CHAR -> {
                 return when (type2) {
                     BOOL -> CHAR
+                    UCHAR -> UCHAR
                     INT -> INT
                     LONG -> LONG
                     ULONG -> ULONG
