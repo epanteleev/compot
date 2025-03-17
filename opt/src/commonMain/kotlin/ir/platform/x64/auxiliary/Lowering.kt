@@ -271,7 +271,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val baseType = gep.basicType.asType<AggregateType>()
             val index = gep.index()
-            val mul = Mul.mul(index, NonTrivialConstant.of(index.asType(), baseType.sizeOf()))
+            val mul = Mul.mul(index, PrimitiveConstant.of(index.asType(), baseType.sizeOf()))
             val offset = bb.putBefore(gep, mul)
             return bb.replace(gep, LeaStack.lea(gep.source(), I8Type, offset))
         }
@@ -743,7 +743,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = lea @global
             //  %res = store i8 %val, %lea
 
-            val lea = bb.putBefore(store, Lea.lea(store.pointer().asValue()))
+            val lea = bb.putBefore(store, Lea.lea(store.pointer()))
             bb.updateDF(store, Store.DESTINATION, lea)
             return lea
         }
@@ -759,6 +759,19 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             val toValue = store.pointer().asValue<Generate>()
             val value = bb.putBefore(store, Lea.lea(store.value()))
             return bb.replace(store, Move.move(toValue, value))
+        }
+
+        store.match(store(any(), gValue(anytype()))) {
+            // Before:
+            //  store %ptr, @global
+            //
+            // After:
+            //  %lea = lea @global
+            //  move %ptr, %lea
+
+            val lea = bb.putBefore(store, Lea.lea(store.value()))
+            bb.updateDF(store, Store.VALUE, lea)
+            return lea
         }
 
         store.match(store(generate(primitive()), any())) {

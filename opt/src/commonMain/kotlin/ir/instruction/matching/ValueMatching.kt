@@ -4,12 +4,9 @@ import ir.types.*
 import ir.value.Value
 import ir.instruction.*
 import ir.attributes.ByValue
-import ir.global.AnyAggregateGlobalConstant
 import ir.global.ExternValue
 import ir.global.GlobalValue
 import ir.instruction.lir.Generate
-import ir.module.ExternFunction
-import ir.module.FunctionPrototype
 import ir.value.ArgumentValue
 import ir.value.LocalValue
 import ir.value.constant.Constant
