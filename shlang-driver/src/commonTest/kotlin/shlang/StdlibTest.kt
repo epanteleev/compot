@@ -67,6 +67,13 @@ sealed class StdlibTest: CommonCTest() {
         val result = runCTest("shlang/stdlib/ulong", listOf(), options())
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testMaxSize() {
+        val result = runCTest("shlang/stdlib/maxsize", listOf(), options())
+        assertEquals("v: 1908874353", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {

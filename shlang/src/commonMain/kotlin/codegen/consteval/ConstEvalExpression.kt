@@ -98,7 +98,7 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
             BinaryOpType.BIT_OR   -> left or right
             BinaryOpType.BIT_XOR  -> left xor right
             BinaryOpType.SHL      -> left shl right
-            BinaryOpType.SHR      -> left shr right
+            BinaryOpType.SHR      -> left ushr right
             else -> throw ConstEvalException("Cannot evaluate binary operator ${binop.opType}")
         }
     }
