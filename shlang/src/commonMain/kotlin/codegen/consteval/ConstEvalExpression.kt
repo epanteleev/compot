@@ -150,7 +150,7 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
     }
 
     override fun visit(numNode: NumNode): Int {
-        val number = numNode.number.toNumberOrNull()
+        val number = numNode.number.number()
         return number.toInt()
     }
 
@@ -282,7 +282,7 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
     }
 
     override fun visit(numNode: NumNode): Long? {
-        val num = numNode.number.toNumberOrNull()
+        val num = numNode.number.number()
         return num.toLong()
     }
 
@@ -400,7 +400,7 @@ class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): Con
     }
 
     override fun visit(numNode: NumNode): Float {
-        return numNode.number.toNumberOrNull() as Float
+        return numNode.number.number() as Float
     }
 
     override fun visit(varNode: VarNode): Float? {
@@ -533,7 +533,7 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
     }
 
     override fun visit(numNode: NumNode): Double {
-        return numNode.number.toNumberOrNull() as Double
+        return numNode.number.number() as Double
     }
 
     override fun visit(varNode: VarNode): Double? {

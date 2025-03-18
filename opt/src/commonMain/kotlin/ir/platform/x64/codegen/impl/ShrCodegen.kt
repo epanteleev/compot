@@ -69,7 +69,8 @@ class ShrCodegen (val type: ArithmeticType, val asm: X64MacroAssembler): GPOpera
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        TODO("Not yet implemented")
+        val value = first.value() ushr second.value().toInt()
+        asm.copy(size, Imm64.of(value), dst)
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
@@ -98,9 +99,8 @@ class ShrCodegen (val type: ArithmeticType, val asm: X64MacroAssembler): GPOpera
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {
-        asm.copy(size, first, temp1)
-        asm.shr(size, second, temp1)
-        asm.mov(size, temp1, dst)
+        asm.mov(size, first, dst)
+        asm.shr(size, second, dst)
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {

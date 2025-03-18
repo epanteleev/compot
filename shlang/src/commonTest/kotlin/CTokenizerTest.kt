@@ -126,7 +126,7 @@ class CTokenizerTest {
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0xff")
         val tok = tokens[0] as PPNumber
-        assertEquals(255, tok.toNumberOrNull())
+        assertEquals(255, tok.number())
     }
 
     @Test
@@ -153,7 +153,7 @@ class CTokenizerTest {
         assertTrue { tokens[0] is PPNumber }
         assertEquals(1, tokens.size)
         val num = tokens[0] as PPNumber
-        assertEquals(0L, num.toNumberOrNull().toLong())
+        assertEquals(0L, num.number().toLong())
     }
 
     @Test
@@ -163,7 +163,7 @@ class CTokenizerTest {
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "45e14")
         val num = tokens[0] as PPNumber
-        assertEquals(4500000000000000.000000, num.toNumberOrNull())
+        assertEquals(4500000000000000.000000, num.number())
     }
 
     @Test
@@ -173,7 +173,7 @@ class CTokenizerTest {
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "1e-9")
         val num = tokens[0] as PPNumber
-        assertEquals(1.0E-9, num.toNumberOrNull())
+        assertEquals(1.0E-9, num.number())
     }
 
     @Test
@@ -183,7 +183,7 @@ class CTokenizerTest {
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0x1.ffffp+3")
         val num = tokens[0] as PPNumber
-        assertEquals(15.9998779296875, num.toNumberOrNull())
+        assertEquals(15.9998779296875, num.number())
     }
 
     @Test
@@ -193,7 +193,7 @@ class CTokenizerTest {
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0xffff000000000000LL")
         val num = tokens[0] as PPNumber
-        assertEquals("FFFF000000000000".toULong(16).toLong(), num.toNumberOrNull())
+        assertEquals("FFFF000000000000".toULong(16).toLong(), num.number())
     }
 
     @Test
@@ -227,7 +227,7 @@ class CTokenizerTest {
         assertTrue { tokens[0] is PPNumber }
         tokens[0].isEqual(1, 1, "0b101010")
         val num = tokens[0] as PPNumber
-        assertEquals("42".toByte(), num.toNumberOrNull())
+        assertEquals("42".toInt(), num.number())
     }
 
     @Test

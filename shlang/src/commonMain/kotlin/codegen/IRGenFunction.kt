@@ -1197,12 +1197,11 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitNumNode(numNode: NumNode): Constant = when (val num = numNode.number.toNumberOrNull()) {
-        is Byte   -> I8Value.of(num.toByte())
-        is Int    -> I32Value.of(num.toInt())
-        is Long   -> I64Value.of(num.toLong())
-        is Float  -> F32Value(num.toFloat())
-        is Double -> F64Value(num.toDouble())
+    private fun visitNumNode(numNode: NumNode): Constant = when (numNode.number.type) {
+        INT -> I32Value.of(numNode.number.number().toInt())
+        LONG -> I64Value.of(numNode.number.number().toLong())
+        ULONG -> U64Value.of(numNode.number.number().toLong())
+        DOUBLE -> F64Value(numNode.number.number().toDouble())
         else -> throw IRCodeGenError("Unknown number type, num=${numNode.number.str()}", numNode.begin())
     }
 

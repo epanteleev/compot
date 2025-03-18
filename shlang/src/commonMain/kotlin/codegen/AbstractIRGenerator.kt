@@ -44,7 +44,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 defaultContEval(lValueType, expr)
             }
         }
-        is StringNode        -> when (lValueType) {
+        is StringNode -> when (lValueType) {
             is AnyCArrayType -> StringLiteralConstant(ArrayType(I8Type, expr.length()), expr.data())
             else -> {
                 val constant = expr.data()

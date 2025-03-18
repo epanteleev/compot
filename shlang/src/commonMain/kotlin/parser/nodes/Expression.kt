@@ -289,15 +289,7 @@ data class NumNode(val number: PPNumber) : Expression() {
     override fun begin(): Position = number.position()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        when (number.toNumberOrNull()) {
-            is Int, is Byte -> INT
-            is Long   -> LONG
-            is Float  -> FLOAT
-            is Double -> DOUBLE
-            else      -> throw TypeResolutionException("Unknown number type, but got ${number.str()}", begin())
-        }
-    }
+    override fun resolveType(typeHolder: TypeHolder): CPrimitive = number.type
 }
 
 data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expression() {

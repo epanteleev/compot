@@ -6,6 +6,7 @@ import parser.CProgramParser
 import codegen.consteval.ConstEvalExpression
 import codegen.consteval.TryConstEvalExpressionLong
 import preprocess.CProgramPreprocessor.Companion.create
+import types.INT
 
 
 internal class ConditionPreprocessor(filename: String, condition: TokenList, val ctx: PreprocessorContext): AbstractCPreprocessor(filename, condition) {
@@ -34,7 +35,7 @@ internal class ConditionPreprocessor(filename: String, condition: TokenList, val
             killWithSpaces()
 
             val num = if (ctx.findMacros(name.str()) == null) 0 else 1
-            add(PPNumber(num, name.position()))
+            add(PPNumber(num, INT, name.position()))
 
             if (hasParen) {
                 if (!check(")")) {

@@ -5,6 +5,10 @@ import tokenizer.LexicalElements.keywords
 import tokenizer.LexicalElements.isOperator2
 import tokenizer.LexicalElements.isOperator3
 import tokenizer.StringReader.Companion.tryPunct
+import types.DOUBLE
+import types.INT
+import types.LONG
+import types.ULONG
 
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {
@@ -142,15 +146,8 @@ class CTokenizer private constructor(private val filename: String, private val r
         null
     }
 
-    private fun toNumberDefault(data: String, radix: Int): Number? = data.toByteOrNull(radix)
-        ?: data.toIntOrNull(radix)
-        ?: data.toLongOrNull(radix)
-        ?: data.toULongOrNull(radix)?.toLong()
-        ?: data.toDoubleOrNull()
-
     private fun toLongDefault(data: String, radix: Int): Number? = data.toLongOrNull(radix)
         ?: data.toULongOrNull(radix)?.toLong()
-        ?: data.toDoubleOrNull()
 
     private fun readHexChar(): Char {
         eat()
@@ -195,14 +192,16 @@ class CTokenizer private constructor(private val filename: String, private val r
         }
     }
 
-    private fun isLongSuffix2(string: String): Boolean = string.endsWith("ul") ||
-        string.endsWith("UL") ||
-        string.endsWith("lu") ||
-        string.endsWith("LU") ||
+    private fun isLongSuffix2(string: String): Boolean =
         string.endsWith("ll") ||
         string.endsWith("LL")
 
-    private fun isLongSuffix3(string: String): Boolean = string.endsWith("ull") ||
+    private fun isULongSuffix2(string: String): Boolean = string.endsWith("ul") ||
+        string.endsWith("UL") ||
+        string.endsWith("lu") ||
+        string.endsWith("LU")
+
+    private fun isULongSuffix3(string: String): Boolean = string.endsWith("ull") ||
         string.endsWith("ULL") ||
         string.endsWith("llu") ||
         string.endsWith("LLU")
@@ -215,7 +214,7 @@ class CTokenizer private constructor(private val filename: String, private val r
         else -> throw IllegalStateException("Unknown base")
     }
 
-    private fun consumePower(string: String, base: Int): Number? {
+    private fun consumePower(string: String, base: Int): Double? {
         if (base == 10) {
             if (string.contains('e') || string.contains('E')) {
                 return java.lang.Double.valueOf(string)
@@ -247,61 +246,93 @@ class CTokenizer private constructor(private val filename: String, private val r
         }
 
         val substring = numberSubstring(string, base, 0)
-        return toNumberDefault(substring, base)
+        return substring.toULongOrNull(base)?.toLong()
     }
 
-    private fun readPPNumber(num: String): Number? {
-        var base = 10
-
-        if (num.startsWith("0x") || num.startsWith("0X")) {
-            base = 16
-        } else if (num.startsWith("0b") || num.startsWith("0B")) {
-            base = 2
-        } else if (num.startsWith("0") && num.getOrNull(1)?.isDigit() == true) {
-            base = 8
-        }
-
-        if (num.contains('.')) {
-            if (isFPSuffix(num)) {
-                val substring = num.substring(0, num.length - 1)
-                return tryGetFPSuffix(substring)
-            }
-
-            if (isLongSuffix1(num)) {
-                val substring = numberSubstring(num, base, 1)
-                return toLongDefault(substring, base)
-            }
-
-            return tryGetFPSuffix(num)
-        }
-
-        if (isLongSuffix3(num)) {
-            val substring = numberSubstring(num, base, 3)
-            return toLongDefault(substring, base)
-        }
-
-        if (isLongSuffix2(num)) {
-            val substring = numberSubstring(num, base, 2)
-            return toLongDefault(substring, base)
+    private fun readDouble(num: String, pos: Position, base: Int): PPNumber? {
+        if (isFPSuffix(num)) {
+            val substring = num.substring(0, num.length - 1)
+            val fp = tryGetFPSuffix(substring) ?: return null
+            return PPNumber(num, fp, DOUBLE, pos)
         }
 
         if (isLongSuffix1(num)) {
-            val substring = num.substring(0, num.length - 1)
-            return numberWithPower(substring, base)
+            val substring = numberSubstring(num, base, 1)
+            val value = substring.toDoubleOrNull() ?: return null
+            return PPNumber(num, value, DOUBLE, pos)
         }
 
-        if (isUintSuffix1(num)) {
-            val substring = num.substring(0, num.length - 1)
-            return numberWithPower0(substring, base)
+        val fp = tryGetFPSuffix(num) ?: return null
+        return PPNumber(num, fp, DOUBLE, pos)
+    }
+
+    private fun convertToPPNumber(number: String, pos: Position): PPNumber? {
+        var base = 10
+
+        if (number.startsWith("0x") || number.startsWith("0X")) {
+            base = 16
+        } else if (number.startsWith("0b") || number.startsWith("0B")) {
+            base = 2
+        } else if (number.startsWith("0") && number.getOrNull(1)?.isDigit() == true) {
+            base = 8
         }
 
-        val powered = consumePower(num, base)
+        if (number.contains('.')) {
+            return readDouble(number, pos, base)
+        }
+
+        if (isULongSuffix3(number)) {
+            val substring = numberSubstring(number, base, 3)
+            val value = substring.toULongOrNull(base)?.toLong() ?: return null
+            return PPNumber(number, value, ULONG, pos)
+        }
+
+        if (isLongSuffix2(number)) {
+            val substring = numberSubstring(number, base, 2)
+            val value = substring.toULongOrNull(base)?.toLong() ?: return null
+            return PPNumber(number, value, LONG, pos)
+        }
+
+        if (isULongSuffix2(number)) {
+            val substring = numberSubstring(number, base, 2)
+            val value = substring.toULongOrNull(base)?.toLong() ?: return null
+            return PPNumber(number, value, ULONG, pos)
+        }
+
+        if (isLongSuffix1(number)) {
+            val substring = number.substring(0, number.length - 1)
+            val value = numberWithPower(substring, base) ?: return null
+            return PPNumber(number, value, LONG, pos)
+        }
+
+        if (isUintSuffix1(number)) {
+            val substring = number.substring(0, number.length - 1)
+            val value = numberWithPower0(substring, base) ?: return null
+            return PPNumber(number, value, ULONG, pos)
+        }
+
+        val powered = consumePower(number, base)
         if (powered != null) {
-            return powered
+            return PPNumber(number, powered, DOUBLE, pos)
         }
 
-        val substring = numberSubstring(num, base, 0)
-        return toNumberDefault(substring, base)
+        val substring = numberSubstring(number, base, 0)
+        val int = substring.toIntOrNull(base)
+        if (int != null) {
+            return PPNumber(number, int, INT, pos)
+        }
+
+        val long = substring.toLongOrNull(base)
+        if (long != null) {
+            return PPNumber(number, long, LONG, pos)
+        }
+
+        val ulong = substring.toULongOrNull(base)?.toLong()
+        if (ulong != null) {
+            return PPNumber(number, ulong, ULONG, pos)
+        }
+
+        return null
     }
 
     private fun readIdentifier(): String {
@@ -347,6 +378,27 @@ class CTokenizer private constructor(private val filename: String, private val r
                 continue
             }
             eat()
+        }
+    }
+
+    private fun readNumberString(): String = buildString {
+        append(eat())
+        while (true) {
+            if (reader.isDigit()) {
+                append(eat())
+            } else if (reader.isOneFrom('e', 'E') && reader.isOneFrom(1, '+', '-')) {
+                append(eat())
+                append(eat())
+            } else if (reader.isOneFrom('p', 'P') && reader.isOneFrom(1, '+', '-')) {
+                append(eat())
+                append(eat())
+            } else if (reader.check('.')) {
+                append(eat())
+            } else if (reader.isLetter()) {
+                append(eat())
+            } else {
+                break
+            }
         }
     }
 
@@ -416,35 +468,15 @@ class CTokenizer private constructor(private val filename: String, private val r
             // Numbers
             if (reader.isDigit() || ((reader.check('.') && reader.isDigit(1)))) {
                 val saved = position
-                val numberStringBuilder = StringBuilder()
-                numberStringBuilder.append(eat())
-
-                while (true) {
-                    if (reader.isDigit()) {
-                        numberStringBuilder.append(eat())
-                    } else if (reader.isOneFrom('e', 'E') && reader.isOneFrom(1, '+', '-')) {
-                        numberStringBuilder.append(eat())
-                        numberStringBuilder.append(eat())
-                    } else if (reader.isOneFrom('p', 'P') && reader.isOneFrom(1, '+', '-')) {
-                        numberStringBuilder.append(eat())
-                        numberStringBuilder.append(eat())
-                    } else if (reader.check('.')) {
-                        numberStringBuilder.append(eat())
-                    } else if (reader.isLetter()) {
-                        numberStringBuilder.append(eat())
-                    } else {
-                        break
-                    }
-                }
-
-                val numberString = numberStringBuilder.toString()
-                val pair = readPPNumber(numberString)
+                val numberString = readNumberString()
+                val where = OriginalPosition(line, saved, filename)
+                val pair = convertToPPNumber(numberString, where)
                 if (pair == null) {
                     append(Identifier(numberString, OriginalPosition(line, saved, filename)))
                     continue
                 }
 
-                append(PPNumber(numberString, pair, OriginalPosition(line, saved, filename)))
+                append(pair)
                 continue
             }
 
