@@ -73,6 +73,12 @@ abstract class SwitchTests: CommonCTest() {
         assertEquals("All tests passed\n", result.output)
         assertReturnCode(result, 0)
     }
+
+    @Test
+    fun testSwitch10() {
+        val result = runCTest("shlang/switch/switch10", listOf(), options())
+        assertReturnCode(result, 0)
+    }
 }
 
 

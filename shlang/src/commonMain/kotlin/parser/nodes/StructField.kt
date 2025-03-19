@@ -14,20 +14,16 @@ class StructDeclaratorItem(val expr: Declarator): AnyStructDeclaratorItem() {
     override fun begin(): Position = expr.begin()
 
     override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
-        val varDesc = expr.declareType(varDesc, typeHolder)
-        if (varDesc == null) {
-            throw IllegalStateException("Typedef is not supported in struct fields")
-        }
-
-        return varDesc
+        return expr.declareType(varDesc, typeHolder)
+            ?: throw IllegalStateException("Typedef is not supported in struct fields")
     }
-
 }
+
 class EmptyStructDeclaratorItem(private val where: Position): AnyStructDeclaratorItem() {
     override fun begin(): Position = where
 
     override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
-        throw IllegalStateException("Empty declarator is not supported")
+        throw IllegalStateException("Empty declarator is not supported: $where")
     }
 }
 

@@ -1445,7 +1445,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.branch(loopInfo.resolveExit(ir))
     }
 
-    override fun visit(defaultStatement: DefaultStatement) = scoped {
+    override fun visit(defaultStatement: DefaultStatement) {
         val switchInfo = stmtStack.top() as SwitchStmtInfo
         val default = switchInfo.resolveDefault(ir)
 
@@ -1466,7 +1466,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val caseValueConverted = IntegerConstant.of(switchInfo.conditionType.asType(), constant)
         val caseBlock = ir.createLabel()
-        if (switchInfo.table.isNotEmpty() && ir.last() !is TerminateInstruction) {
+        if ((switchInfo.table.isNotEmpty() || ir.currentLabel() == switchInfo.default()) && ir.last() !is TerminateInstruction) {
             // fall through
             ir.branch(caseBlock)
         }
