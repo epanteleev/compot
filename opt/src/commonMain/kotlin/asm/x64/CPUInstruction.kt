@@ -339,6 +339,12 @@ enum class SetCCType {
     SETNB {
         override fun toString(): String = "setnb"
     },
+    SETP {
+        override fun toString(): String = "setp"
+    },
+    SETNP {
+        override fun toString(): String = "setnp"
+    },
 }
 
 internal data class SetCc(val tp: SetCCType, val reg: Operand): CPUInstruction() {

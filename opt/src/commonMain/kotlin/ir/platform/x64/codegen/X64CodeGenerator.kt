@@ -13,6 +13,7 @@ import asm.x64.GPRegister.*
 import common.assertion
 import common.forEachWith
 import ir.Definitions
+import ir.Definitions.BYTE_SIZE
 import ir.Definitions.POINTER_SIZE
 import ir.Definitions.QWORD_SIZE
 import ir.attributes.GlobalValueAttribute
@@ -449,9 +450,25 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
         when (val compare = flag2Int.value()) {
             is CompareInstruction -> {
-                when (val jmpType = compare.predicate()) {
-                    is IntPredicate   -> asm.setccInt(compare.operandsType().asType(), jmpType, dst)
-                    is FloatPredicate -> asm.setccFloat(jmpType, dst)
+                when (val predicate = compare.predicate()) {
+                    is IntPredicate   -> asm.setccInt(compare.operandsType().asType(), predicate, dst)
+                    is FloatPredicate -> {
+                        asm.setccFloat(predicate, dst)
+                        asm.setcc(SetCCType.SETNP, rax)
+                        when (dst) { //TODO CMPSS, CMPSD
+                            is Address -> {
+                                asm.and(BYTE_SIZE, dst, rax)
+                                asm.and(BYTE_SIZE, Imm32.of(1), rax)
+                                asm.mov(POINTER_SIZE, rax, dst)
+                            }
+                            is GPRegister -> {
+                                asm.and(BYTE_SIZE, dst, rax)
+                                asm.and(BYTE_SIZE, Imm32.of(1), rax)
+                                asm.copy(POINTER_SIZE, rax, dst)
+                            }
+                            else -> throw CodegenException("unknown dst=$dst")
+                        }
+                    }
                 }
                 Flag2IntCodegen(flag2Int.type().sizeOf(), asm)(dst, dst)
             }

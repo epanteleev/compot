@@ -2,6 +2,7 @@ package ir.platform.x64.codegen.impl
 
 import asm.Operand
 import asm.x64.*
+import ir.platform.x64.CallConvention.xmmTemp1
 import ir.types.*
 import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
@@ -62,7 +63,9 @@ data class FMulCodegen(val type: FloatingPointType, val asm: X64MacroAssembler):
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, xmmTemp1)
+        asm.mulf(size, second, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

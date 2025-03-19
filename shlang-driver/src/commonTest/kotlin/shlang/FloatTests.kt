@@ -32,6 +32,13 @@ abstract class FloatTests: CommonCTest() {
         assertEquals("000000f87f\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun test5() {
+        val result = runCTest("shlang/float/float5", listOf(), options())
+        assertEquals("nan\n", result.output)
+        assertEquals(1, result.exitCode)
+    }
 }
 
 class FloatTestsO0: FloatTests() {
