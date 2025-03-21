@@ -8,7 +8,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-class FXorCodegen(val type: FloatingPointType, val asm: X64MacroAssembler): XmmOperandsVisitorBinaryOp {
+internal class FXorCodegen(val type: FloatingPointType, val asm: X64MacroAssembler): XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
@@ -65,7 +65,9 @@ class FXorCodegen(val type: FloatingPointType, val asm: X64MacroAssembler): XmmO
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, xmmTemp1)
+        asm.xorpf(size, dst, xmmTemp1)
+        asm.movf(size, xmmTemp1, dst)
     }
 
     override fun default(dst: Operand, first: Operand, second: Operand) {

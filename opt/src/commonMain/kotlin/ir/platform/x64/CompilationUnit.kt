@@ -96,8 +96,15 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
         is U16Value -> builder.short(data.u16)
         is I8Value  -> builder.byte(data.i8)
         is U8Value  -> builder.byte(data.u8)
-        is F32Value -> builder.long(data.bits())
-        is F64Value -> builder.quad(data.bits())
+        is F32Value -> {
+            builder.long(data.bits())
+            builder.long(0)
+            builder.quad(0)
+        }
+        is F64Value -> {
+            builder.quad(data.bits())
+            builder.quad(0)
+        }
         is PointerLiteral -> {
             val gConstant = data.gConstant
             builder.quad(findLabel(gConstant.name()), data.index)
