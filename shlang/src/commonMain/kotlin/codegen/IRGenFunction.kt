@@ -1457,7 +1457,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         visitStatement(defaultStatement.stmt)
     }
 
-    override fun visit(caseStatement: CaseStatement) = scoped {
+    override fun visit(caseStatement: CaseStatement) {
         val switchInfo = stmtStack.top() as SwitchStmtInfo
 
         val ctx = CommonConstEvalContext<Int>(typeHolder)

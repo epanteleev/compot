@@ -12,23 +12,23 @@ import ir.pass.common.FunctionAnalysisPass
 import ir.pass.common.FunctionAnalysisPassFabric
 
 
-class AllocAnalysisResult internal constructor(private val storeInfo: Map<Alloc, Set<AnyBlock>>, marker: MutationMarker): AnalysisResult(marker),
+class AllocAnalysisResult internal constructor(private val allocInfo: Map<Alloc, Set<AnyBlock>>, marker: MutationMarker): AnalysisResult(marker),
     Iterable<Map.Entry<Alloc, Set<AnyBlock>>> {
     override fun toString(): String = buildString {
-        for ((alloc, stores) in storeInfo) {
+        for ((alloc, stores) in allocInfo) {
             append("Alloc: $alloc\n")
             append("Stores: $stores\n")
         }
     }
 
     override fun iterator(): Iterator<Map.Entry<Alloc, Set<AnyBlock>>> {
-        return storeInfo.iterator()
+        return allocInfo.iterator()
     }
 }
 
 private class AllocStoreAnalysis(private val functionData: FunctionData): FunctionAnalysisPass<AllocAnalysisResult>() {
     private val escapeState = functionData.analysis(EscapeAnalysisPassFabric)
-    private val stores: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal() }
+    private val allocToBlock: Map<Alloc, Set<AnyBlock>> by lazy { allStoresInternal() }
 
     private inline fun forEachAlloc(closure: (Alloc) -> Unit) {
         for (bb in functionData) {
@@ -54,9 +54,6 @@ private class AllocStoreAnalysis(private val functionData: FunctionData): Functi
                 if (user !is Store) {
                     continue
                 }
-                if (!escapeState.isNoEscape(user.pointer())) {
-                    break
-                }
                 stores.add(user.owner())
             }
             allStores[alloc] = stores
@@ -66,7 +63,7 @@ private class AllocStoreAnalysis(private val functionData: FunctionData): Functi
     }
 
     override fun run(): AllocAnalysisResult {
-        return AllocAnalysisResult(stores, functionData.marker())
+        return AllocAnalysisResult(allocToBlock, functionData.marker())
     }
 }
 

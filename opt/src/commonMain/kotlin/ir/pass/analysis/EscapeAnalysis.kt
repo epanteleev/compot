@@ -27,11 +27,16 @@ enum class EscapeState {
         if (this == other) {
             return this
         }
+        if (this == NoEscape) {
+            return other
+        }
+        if (other == NoEscape) {
+            return this
+        }
+
         return when {
-            this == Argument || other == NoEscape -> Argument
-            this == NoEscape || other == Argument -> Argument
-            this == Field || other == NoEscape -> Field
-            this == NoEscape || other == Field -> Field
+            this == Argument || other == Field -> Argument
+            this == Field || other == Argument -> Field
             else -> throw IllegalStateException("Cannot union $this and $other")
         }
     }
@@ -51,7 +56,7 @@ private class EscapeAnalysis(private val functionData: FunctionData): FunctionAn
     }
 
     private fun visitStore(store: Store) {
-        escapeState[store.pointer().asValue()] = union(store.pointer(), EscapeState.NoEscape)
+        escapeState[store.pointer()] = union(store.pointer(), EscapeState.NoEscape)
         when (val value = store.value()) {
             is Constant -> escapeState[value] = EscapeState.Constant
             is LocalValue -> escapeState[value] = union(value, EscapeState.Field)
@@ -61,7 +66,9 @@ private class EscapeAnalysis(private val functionData: FunctionData): FunctionAn
     private fun visitLoad(load: Load) {
         val operand = load.operand()
         if (operand is LocalValue) {
-            escapeState[load] = union(operand, EscapeState.Field)
+            escapeState[operand] = union(operand, EscapeState.NoEscape)
+        } else {
+            escapeState[operand] = union(operand, EscapeState.Unknown)
         }
     }
 
@@ -79,6 +86,10 @@ private class EscapeAnalysis(private val functionData: FunctionData): FunctionAn
         escapeState[getElementPtr.source()] = union(getElementPtr.source(), EscapeState.Field)
     }
 
+    private fun visitGetFieldPtr(getFieldPtr: GetFieldPtr) {
+        escapeState[getFieldPtr.source()] = union(getFieldPtr.source(), EscapeState.Field)
+    }
+
     override fun run(): EscapeAnalysisResult {
         for (block in preorder) {
             for (instruction in block) {
@@ -89,6 +100,7 @@ private class EscapeAnalysis(private val functionData: FunctionData): FunctionAn
                     is Callable -> visitCall(instruction)
                     is Pointer2Int -> visitPointer2Int(instruction)
                     is GetElementPtr -> visitGetElementPtr(instruction)
+                    is GetFieldPtr -> visitGetFieldPtr(instruction)
                 }
             }
         }

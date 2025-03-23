@@ -32,6 +32,7 @@ class JoinPointSetResult internal constructor(private val joinSet: Map<AnyBlock,
 private class JoinPointSetEvaluate(private val functionData: FunctionData) : FunctionAnalysisPass<JoinPointSetResult>() {
     private val frontiers = functionData.analysis(DominatorTreeFabric).frontiers()
     private val joinSet = intMapOf<AnyBlock, MutableSet<Alloc>>(functionData.size()) { bb: Label -> bb.index }
+    private val liveness = functionData.analysis(LivenessAnalysisPassFabric)
 
     private fun hasUserInBlock(bb: AnyBlock, variable: Alloc): Boolean {
         if (bb === variable.owner()) {
@@ -63,6 +64,10 @@ private class JoinPointSetEvaluate(private val functionData: FunctionData) : Fun
                 if (phiPlaces.contains(frontier)) {
                     continue
                 }
+                if (!liveness.liveIn(frontier).contains(v)) {
+                    continue
+                }
+
                 val values = joinSet.getOrPut(frontier) { mutableSetOf() }
 
                 values.add(v)
