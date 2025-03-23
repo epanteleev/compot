@@ -106,7 +106,7 @@ class PreprocessorContext private constructor(private val macroReplacements: Mut
         private val __SIZEOF_FLOAT__   = MacroReplacement("__SIZEOF_FLOAT__", tokenListOf(PPNumber(4, INT, Position.UNKNOWN)))
         private val __SIZEOF_DOUBLE__  = MacroReplacement("__SIZEOF_DOUBLE__", tokenListOf(PPNumber(8, INT, Position.UNKNOWN)))
         private val __INT32_MAX__      = MacroReplacement("__INT32_MAX__", tokenListOf(PPNumber(2147483647, INT, Position.UNKNOWN)))
-        private val __SIZE_TYPE__      = MacroReplacement("__SIZE_TYPE__", tokenListOf(Keyword("unsigned", Position.UNKNOWN), Keyword("long", Position.UNKNOWN)))
+        private val __SIZE_TYPE__      = MacroReplacement("__SIZE_TYPE__", tokenListOf(Keyword("unsigned", Position.UNKNOWN, Hideset()), Keyword("long", Position.UNKNOWN, Hideset())))
 
         // Implementation-defined macros
         private val PLATFORM = MacroReplacement("__x86_64__", tokenListOf(PPNumber(1, INT, Position.UNKNOWN)))

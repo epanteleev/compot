@@ -1,5 +1,6 @@
 package tokenizer
 
+import preprocess.Hideset
 import tokenizer.tokens.*
 import tokenizer.LexicalElements.keywords
 import tokenizer.LexicalElements.isOperator2
@@ -472,7 +473,7 @@ class CTokenizer private constructor(private val filename: String, private val r
                 val where = OriginalPosition(line, saved, filename)
                 val pair = convertToPPNumber(numberString, where)
                 if (pair == null) {
-                    append(Identifier(numberString, OriginalPosition(line, saved, filename)))
+                    append(Identifier(numberString, OriginalPosition(line, saved, filename), Hideset()))
                     continue
                 }
 
@@ -508,9 +509,9 @@ class CTokenizer private constructor(private val filename: String, private val r
                 val saved = position
                 val identifier = readIdentifier()
                 if (keywords.contains(identifier)) {
-                    append(Keyword(identifier, OriginalPosition(line, saved, filename)))
+                    append(Keyword(identifier, OriginalPosition(line, saved, filename), Hideset()))
                 } else {
-                    append(Identifier(identifier, OriginalPosition(line, saved, filename)))
+                    append(Identifier(identifier, OriginalPosition(line, saved, filename), Hideset()))
                 }
                 continue
             }

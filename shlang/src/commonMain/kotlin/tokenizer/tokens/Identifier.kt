@@ -2,9 +2,10 @@ package tokenizer.tokens
 
 import tokenizer.*
 import common.assertion
+import preprocess.Hideset
 
 
-class Identifier(private val data: String, position: Position): CToken(position) {
+class Identifier(private val data: String, position: Position, hideset: Hideset): CToken(position, hideset) {
     init {
         assertion(LexicalElements.keywords.contains(data).not()) {
             "Identifier '$data' is a keyword"
@@ -18,7 +19,7 @@ class Identifier(private val data: String, position: Position): CToken(position)
     override fun str(): String = data
 
     override fun cloneWith(pos: Position): CToken {
-        return Identifier(data, pos)
+        return Identifier(data, pos, hideset)
     }
 
     override fun hashCode(): Int {
@@ -36,7 +37,7 @@ class Identifier(private val data: String, position: Position): CToken(position)
 
     companion object {
         fun unknown(name: String): Identifier {
-            return Identifier(name, Position.UNKNOWN)
+            return Identifier(name, Position.UNKNOWN, Hideset())
         }
     }
 }

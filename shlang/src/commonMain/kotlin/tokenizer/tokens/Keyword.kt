@@ -1,11 +1,12 @@
 package tokenizer.tokens
 
 import common.assertion
+import preprocess.Hideset
 import tokenizer.LexicalElements
 import tokenizer.Position
 
 
-class Keyword(val data: String, position: Position): CToken(position) {
+class Keyword(val data: String, position: Position, hideset: Hideset): CToken(position, hideset) {
     init {
         assertion(LexicalElements.keywords.contains(data)) {
             "Keyword '$data' is not a keyword"
@@ -28,6 +29,6 @@ class Keyword(val data: String, position: Position): CToken(position) {
     }
 
     override fun cloneWith(pos: Position): CToken {
-        return Keyword(data, pos)
+        return Keyword(data, pos, hideset)
     }
 }

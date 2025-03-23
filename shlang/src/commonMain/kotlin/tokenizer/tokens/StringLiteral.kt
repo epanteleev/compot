@@ -1,10 +1,11 @@
 package tokenizer.tokens
 
 import common.quotedEscapes
+import preprocess.Hideset
 import tokenizer.Position
 
 
-class StringLiteral(private val data: String, position: Position): CToken(position) {
+class StringLiteral(private val data: String, position: Position): CToken(position, Hideset()) {
     override fun str(): String = data.quotedEscapes()
 
     override fun hashCode(): Int {

@@ -1,6 +1,5 @@
 package ir.pass.analysis
 
-import ir.instruction.Instruction
 import ir.value.LocalValue
 import ir.instruction.Phi
 import ir.module.FunctionData

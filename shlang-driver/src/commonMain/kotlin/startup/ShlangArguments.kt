@@ -85,7 +85,7 @@ class ShlangArguments {
         dynamicLibraries.add(library)
     }
 
-    fun getDynamicLibraries(): Set<String> = libraryDirectories
+    fun getDynamicLibraries(): Set<String> = dynamicLibraries
 
     fun addLibraryDirectory(directory: String) {
         libraryDirectories.add(directory)

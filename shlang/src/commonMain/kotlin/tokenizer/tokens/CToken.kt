@@ -1,8 +1,9 @@
 package tokenizer.tokens
 
+import preprocess.Hideset
 import tokenizer.Position
 
-sealed class CToken(private val position: Position): AnyToken() {
+sealed class CToken(private val position: Position, val hideset: Hideset): AnyToken() {
     fun line(): Int = position.line()
     fun pos(): Int = position.pos()
 

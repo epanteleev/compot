@@ -1,10 +1,12 @@
 package tokenizer.tokens
 
+import preprocess.Hideset
 import tokenizer.Position
 import types.CPrimitive
 
 // 6.4.8 Preprocessing numbers
-class PPNumber internal constructor(private val data: String, private var number: Number, val type: CPrimitive, position: Position): CToken(position) {
+class PPNumber internal constructor(private val data: String, private var number: Number, val type: CPrimitive, position: Position):
+    CToken(position, Hideset()) {
     constructor(number: Number, type: CPrimitive, pos: Position) : this(number.toString(), number, type, pos)
 
     override fun str(): String = data
