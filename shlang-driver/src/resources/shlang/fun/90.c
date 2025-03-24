@@ -15,5 +15,5 @@ struct Vec2 {
 int main() {
     struct Vec2 v;
     v.x = 1;
-    return v.p1.x;
+    return v.x;
 }

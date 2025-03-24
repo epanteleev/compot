@@ -22,7 +22,7 @@ class MacroReplacement(name: String, val value: TokenList): Macros(name) {
     fun substitute(macrosNamePos: Position): TokenList {
         val result = TokenList()
         for (tok in value) {
-            result.add(newTokenFrom(macrosNamePos, tok))
+            result.add(newTokenFrom(name, macrosNamePos, tok))
         }
 
         return result

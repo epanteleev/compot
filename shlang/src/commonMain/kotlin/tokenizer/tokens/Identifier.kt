@@ -19,7 +19,7 @@ class Identifier(private val data: String, position: Position, hideset: Hideset)
     override fun str(): String = data
 
     override fun cloneWith(pos: Position): CToken {
-        return Identifier(data, pos, hideset)
+        return Identifier(data, pos, hideset.copy())
     }
 
     override fun hashCode(): Int {

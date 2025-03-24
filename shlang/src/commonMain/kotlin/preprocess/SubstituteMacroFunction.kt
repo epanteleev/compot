@@ -116,7 +116,7 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
 
             val value = argToValue[peak()]
             if (value == null) {
-                result.add(newTokenFrom(macrosNamePos, peak()))
+                result.add(newTokenFrom(macros.name, macrosNamePos, peak()))
                 eat()
                 continue
             }

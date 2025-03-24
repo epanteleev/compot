@@ -25,13 +25,15 @@ sealed class Macros(val name: String) {
     }
 
     companion object {
-        fun newTokenFrom(macrosNamePos: Position, tok: AnyToken): AnyToken {
+        fun newTokenFrom(name: String, macrosNamePos: Position, tok: AnyToken): AnyToken {
             if (tok !is CToken) {
                 return tok.cloneWith(macrosNamePos)
             }
 
             val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, tok.position() as OriginalPosition)
-            return tok.cloneWith(preprocessedPosition)
+            val newTok = tok.cloneWith(preprocessedPosition).asToken<CToken>()
+            newTok.hideset.add(name)
+            return newTok
         }
     }
 }

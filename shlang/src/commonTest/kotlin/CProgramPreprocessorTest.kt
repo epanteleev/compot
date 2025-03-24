@@ -1,11 +1,9 @@
 import tokenizer.CTokenizer
 
 import preprocess.*
-import tokenizer.StringReader
 import tokenizer.TokenList
 
 import tokenizer.TokenPrinter
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -473,7 +471,6 @@ class CProgramPreprocessorTest {
     }
 
     @Test
-    @Ignore
     fun testRecursiveExpansion2() {
         val data = """
             |#define    x          3
@@ -509,7 +506,6 @@ class CProgramPreprocessorTest {
     // 6.10.3.5 Scope of macro definitions
     // EXAMPLE 3
     @Test
-    @Ignore //TODO not fully correct test
     fun testMacroFunction444() {
         val data = """
             |#define    x          3
