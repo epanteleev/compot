@@ -104,7 +104,7 @@ sealed class AbstractCPreprocessor(val filename: String, protected val tokens: T
         return removed
     }
 
-    protected fun eatSpace() {
+    protected fun eatSpaces() {
         do {
             if (eof()) {
                 throw MacroExpansionException("Invalid macro expansion")

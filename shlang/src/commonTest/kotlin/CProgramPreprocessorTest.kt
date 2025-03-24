@@ -4,6 +4,7 @@ import preprocess.*
 import tokenizer.TokenList
 
 import tokenizer.TokenPrinter
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -397,6 +398,19 @@ class CProgramPreprocessorTest {
         val expected = """
             |
             | + 3 + 4
+        """.trimMargin()
+        assertEquals(expected, TokenPrinter.print(p))
+    }
+
+    @Test
+    @Ignore
+    fun testMacroFunction11() {
+        val tokens = apply("#define SUM(a, b, c) a+b+c\nSUM(3,,(4))")
+        val ctx = PreprocessorContext.create(headerHolder)
+        val p = create(tokens, ctx).preprocess()
+        val expected = """
+            |
+            |3 + + (4)
         """.trimMargin()
         assertEquals(expected, TokenPrinter.print(p))
     }

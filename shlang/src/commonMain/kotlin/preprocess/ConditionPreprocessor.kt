@@ -22,7 +22,7 @@ internal class ConditionPreprocessor(filename: String, condition: TokenList, val
             //  | defined MACROS
             //  | defined (MACROS)
             kill()
-            eatSpace()
+            eatSpaces()
             if (!check<CToken>()) {
                 throw PreprocessorException("Expected identifier: but '${peak<AnyToken>()}'")
             }

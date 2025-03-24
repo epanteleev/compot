@@ -364,9 +364,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
                 killWithSpaces()
                 val args = parseMacroFunctionArguments()
 
-                val preprocessedArgs = args.map { create(filename, it, ctx).preprocess() } //TODO remove this
-
-                return SubstituteMacroFunction(macros, ctx, preprocessedArgs)
+                return SubstituteMacroFunction(macros, ctx, args)
                     .substitute(tok.position())
             }
             is MacroDefinition -> return TokenList()
@@ -384,9 +382,6 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
             return true
         }
         addAll(replacement)
-        if (macros.first().str() == tok.str()) {
-            eat()
-        }
 
         return true
     }

@@ -2,6 +2,7 @@ package preprocess
 
 import tokenizer.*
 import common.forEachWith
+import preprocess.CProgramPreprocessor.Companion.create
 import preprocess.macros.MacroExpansionException
 import preprocess.macros.MacroFunction
 import tokenizer.tokens.*
@@ -23,8 +24,6 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
 
     private fun concatTokens(where: Position, current: CToken) {
         val value = argToValue[current] ?: tokenListOf(current.cloneWith(current.position()))
-        val preprocessed = CProgramPreprocessor.create(where.filename(), value, ctx).preprocess()
-
         val arg1 = result.findLast { it is CToken }
         if (arg1 == null) {
             return
@@ -37,7 +36,7 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
             result.removeLast()
         }
 
-        val str = preprocessed.joinToString("", prefix = str1) { it.str() }
+        val str = value.joinToString("", prefix = str1) { it.str() }
         val tokens = CTokenizer.apply(str, where.filename())
         result.addAll(tokens)
         eat()
@@ -79,14 +78,14 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
 
             if (check("##")) {
                 eat()
-                eatSpace()
+                eatSpaces()
                 concatTokens(macrosNamePos, peak())
                 continue
             }
 
             if (check("#")) {
                 eat()
-                eatSpace()
+                eatSpaces()
 
                 if (!check("__VA_ARGS__")) {
                     stringify(peak())
@@ -116,13 +115,15 @@ class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx
 
             val value = argToValue[peak()]
             if (value == null) {
+
                 result.add(newTokenFrom(macros.name, macrosNamePos, peak()))
                 eat()
                 continue
             }
 
+            val preprocessed = create(filename, value, ctx).preprocess()
             val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, peak<CToken>().position() as OriginalPosition)
-            for (tok in value) {
+            for (tok in preprocessed) {
                 result.add(tok.cloneWith(preprocessedPosition))
             }
             eat()
