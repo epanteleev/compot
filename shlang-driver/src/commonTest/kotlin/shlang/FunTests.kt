@@ -546,6 +546,13 @@ abstract class FunTests: CommonCTest() {
         val result = runCTest("shlang/fun/90", listOf(), options())
         assertReturnCode(result, 1)
     }
+
+    @Test
+    @Ignore
+    fun test91() {
+        val result = runCTest("shlang/fun/91", listOf(), options())
+        assertReturnCode(result, 0)
+    }
 }
 
 class FunTestsO0: FunTests() {

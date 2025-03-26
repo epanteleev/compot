@@ -195,7 +195,9 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     private fun registerExtern(declarator: Declarator, irType: NonTrivialType): ExternValue {
-        val externValue = mb.addExternValue(generateName(declarator), irType)
+        val externValue = mb.addExternValue(generateName(declarator), irType) ?:
+            throw IRCodeGenError("Variable '${declarator.name()}' already exists", declarator.begin())
+
         varStack[declarator.name()] = externValue
         return externValue
     }

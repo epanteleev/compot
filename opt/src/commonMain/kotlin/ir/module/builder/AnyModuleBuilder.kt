@@ -39,11 +39,11 @@ abstract class AnyModuleBuilder {
         return addGlobalValue(name, data, GlobalValueAttribute.DEFAULT)
     }
 
-    fun addExternValue(name: String, type: NonTrivialType): ExternValue {
+    fun addExternValue(name: String, type: NonTrivialType): ExternValue? {
         val global = ExternValue(name, type)
         val has = globals.put(name, global)
         if (has != null) {
-            throw IllegalArgumentException("global with name='$name' already exists")
+            return null
         }
 
         return global
