@@ -74,6 +74,13 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("v: 1908874353", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testStrlen() {
+        val result = runCTest("shlang/stdlib/strlen", listOf(), options())
+        assertEquals("Hello, world!\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {

@@ -194,7 +194,26 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
     }
 
-    private fun registerExtern(declarator: Declarator, irType: NonTrivialType): ExternValue {
+    private fun registerExtern(declarator: Declarator, cType: CType): ExternValue {
+        val existed = varStack[declarator.name()]
+        if (existed != null) {
+            if (existed !is ExternValue) {
+                throw IRCodeGenError("Variable '${declarator.name()}' already exists", declarator.begin())
+            }
+            val type = typeHolder.getVarTypeOrNull(declarator.name())
+                ?: throw IRCodeGenError("Variable '${declarator.name()}' not found", declarator.begin())
+
+            if (type.storageClass != StorageClass.EXTERN) {
+                throw IRCodeGenError("Variable '${declarator.name()}' already exists with different storage class", declarator.begin())
+            }
+            if (type.typeDesc.cType() != cType) {
+                throw IRCodeGenError("Variable '${declarator.name()}' already exists with different type", declarator.begin())
+            }
+
+            return existed
+        }
+
+        val irType = mb.toIRLVType<NonTrivialType>(typeHolder, cType)
         val externValue = mb.addExternValue(generateName(declarator), irType) ?:
             throw IRCodeGenError("Variable '${declarator.name()}' already exists", declarator.begin())
 
@@ -227,32 +246,32 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 }
             }
             is CPrimitive -> {
-                val irType = mb.toIRLVType<NonTrivialType>(typeHolder, cType)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
-                    return registerExtern(declarator, irType)
+                    return registerExtern(declarator, cType)
                 }
 
+                val irType = mb.toIRLVType<NonTrivialType>(typeHolder, cType)
                 val attr = toIrAttribute(varDesc.storageClass)
                 val constant = NonTrivialConstant.of(irType, 0)
                 return registerGlobal(declarator, constant, attr)
             }
             is CArrayType -> {
-                val irType = mb.toIRType<ArrayType>(typeHolder, cType)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
-                    return registerExtern(declarator, irType)
+                    return registerExtern(declarator, cType)
                 }
 
+                val irType = mb.toIRType<ArrayType>(typeHolder, cType)
                 val attr = toIrAttribute(varDesc.storageClass)
                 val zero = NonTrivialConstant.of(irType.elementType(), 0)
                 val elements = generateSequence { zero }.take(irType.length).toList()
                 return registerGlobal(declarator, InitializerListValue(irType, elements), attr)
             }
             is CStructType -> {
-                val irType = mb.toIRType<StructType>(typeHolder, cType)
                 if (varDesc.storageClass == StorageClass.EXTERN) {
-                    return registerExtern(declarator, irType)
+                    return registerExtern(declarator, cType)
                 }
 
+                val irType = mb.toIRType<StructType>(typeHolder, cType)
                 val elements = arrayListOf<NonTrivialConstant>()
                 for (field in cType.members()) {
                     val irFieldType = mb.toIRType<NonTrivialType>(typeHolder, field.cType())

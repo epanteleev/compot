@@ -3,10 +3,6 @@ package preprocess
 class Hideset {
     private val hidden = arrayListOf<String>()
 
-    fun unionWith(other: Hideset) {
-        hidden.addAll(other.hidden)
-    }
-
     fun add(name: String) {
         hidden.add(name)
     }
