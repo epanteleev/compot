@@ -74,11 +74,13 @@ internal class OrCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPO
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.or(size, second, dst)
     }
 
     override fun rai(dst: GPRegister, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.or(size, second, dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {

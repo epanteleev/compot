@@ -26,7 +26,7 @@ data class LeaStackCodegen (val type: PtrType, val basicType: NonTrivialType, va
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        asm.mov(POINTER_SIZE, second, dst)
+        asm.mov(POINTER_SIZE, second, dst) //TODO: bug. get index size
         val address = when (first) {
             is Address2 -> Address.from(first.base, first.offset, dst, ScaleFactor.from(size))
             else -> TODO()
@@ -61,7 +61,13 @@ data class LeaStackCodegen (val type: PtrType, val basicType: NonTrivialType, va
     }
 
     override fun aaa(dst: Address, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(POINTER_SIZE, second, temp1) //TODO: bug. get index size
+        val address = when (first) {
+            is Address2 -> Address.from(first.base, first.offset, temp1, ScaleFactor.from(size))
+            else -> TODO()
+        }
+        asm.lea(POINTER_SIZE, address, temp1)
+        asm.mov(POINTER_SIZE, temp1, dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {

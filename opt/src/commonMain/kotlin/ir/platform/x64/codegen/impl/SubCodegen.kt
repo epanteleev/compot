@@ -106,11 +106,14 @@ data class SubCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOper
     }
 
     override fun air(dst: Address, first: Imm32, second: GPRegister) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.sub(size, second, dst)
     }
 
     override fun aia(dst: Address, first: Imm32, second: Address) {
-        TODO("Not yet implemented")
+        asm.copy(size, first, temp1)
+        asm.sub(size, second, temp1)
+        asm.mov(size, temp1, dst)
     }
 
     override fun ari(dst: Address, first: GPRegister, second: Imm32) {

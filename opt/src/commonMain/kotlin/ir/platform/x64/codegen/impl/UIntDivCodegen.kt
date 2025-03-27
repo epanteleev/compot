@@ -115,7 +115,11 @@ internal class UIntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembl
     }
 
     override fun aai(dst: Address, first: Address, second: Imm32) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, rax)
+        asm.mov(size, second, dst)
+        asm.xor(size, rdx, rdx)
+        asm.div(size, dst)
+        asm.mov(size, rax, dst)
     }
 
     override fun aar(dst: Address, first: Address, second: GPRegister) {
