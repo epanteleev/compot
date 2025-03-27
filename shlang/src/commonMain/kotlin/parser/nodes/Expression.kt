@@ -299,7 +299,8 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
     override fun resolveType(typeHolder: TypeHolder): CType = memoize {
         val primaryType = primary.resolveType(typeHolder)
         if (opType !is PrefixUnaryOpType) {
-            return@memoize primaryType
+            return@memoize convertToPrimitive(primaryType)
+                ?: throw TypeResolutionException("Unary operation '${opType}' on non-primitive type: $primaryType", begin())
         }
 
         return@memoize when (opType) {
@@ -314,7 +315,8 @@ data class UnaryOp(val primary: Expression, val opType: UnaryOpType) : Expressio
             PrefixUnaryOpType.INC,
             PrefixUnaryOpType.DEC,
             PrefixUnaryOpType.PLUS,
-            PrefixUnaryOpType.BIT_NOT -> primaryType
+            PrefixUnaryOpType.BIT_NOT -> convertToPrimitive(primaryType)
+                ?: throw TypeResolutionException("Unary operation '${opType}' on non-primitive type: $primaryType", begin())
         }
     }
 }
