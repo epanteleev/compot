@@ -281,7 +281,18 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                 val attr = toIrAttribute(varDesc.storageClass)
                 return registerGlobal(declarator, InitializerListValue(irType, elements), attr)
             }
-            is CUncompletedArrayType -> return UndefValue
+            is CUncompletedArrayType -> {
+                if (varDesc.storageClass == StorageClass.EXTERN) {
+                    return registerExtern(declarator, cType)
+                }
+
+                // Important: gcc & clang allow to declare array with 1 element
+                val irType = ArrayType(mb.toIRType<NonTrivialType>(typeHolder, cType.element().cType()), 1)
+                val attr = toIrAttribute(varDesc.storageClass)
+                val zero = NonTrivialConstant.of(irType.elementType(), 0)
+                val elements = arrayListOf(zero)
+                return registerGlobal(declarator, InitializerListValue(irType, elements), attr)
+            }
             else -> throw IRCodeGenError("Unsupported type $cType", declarator.begin())
         }
     }

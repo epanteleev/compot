@@ -1714,12 +1714,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     override fun visit(declarator: Declarator): Value {
-        val type = typeHolder[declarator.name()]
-        if (type.storageClass == StorageClass.STATIC) {
-            return generateGlobalDeclarator(type, declarator)
+        val varDesc = typeHolder.getVarTypeOrNull(declarator.name())
+            ?: throw IRCodeGenError("Variable not found", declarator.begin())
+        if (varDesc.storageClass == StorageClass.STATIC) {
+            return generateGlobalDeclarator(varDesc, declarator)
         }
 
-        val irType = when (val cType = type.typeDesc.cType()) {
+        val irType = when (val cType = varDesc.typeDesc.cType()) {
             is BOOL                          -> I8Type
             is CAggregateType, is CPrimitive -> mb.toIRType<NonTrivialType>(typeHolder, cType)
             else -> throw IRCodeGenError("Unknown type, type=$cType", declarator.begin())

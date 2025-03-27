@@ -60,6 +60,10 @@ internal object TypeConverter {
             val elementType = toIRLVType<NonTrivialType>(typeHolder, type.type.cType())
             ArrayType(elementType, type.dimension.toInt())
         }
+        is CUncompletedArrayType -> {
+            val elementType = toIRLVType<NonTrivialType>(typeHolder, type.type.cType())
+            ArrayType(elementType, 0)
+        }
         is CStringLiteral -> {
             val elementType = toIRLVType<NonTrivialType>(typeHolder, type.type.cType())
             ArrayType(elementType, type.dimension.toInt())
