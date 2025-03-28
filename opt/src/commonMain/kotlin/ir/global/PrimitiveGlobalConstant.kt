@@ -4,7 +4,9 @@ import ir.types.*
 import ir.value.constant.*
 
 
-sealed class PrimitiveGlobalConstant(override val name: String): GlobalConstant(name)
+sealed class PrimitiveGlobalConstant(override val name: String): GlobalConstant(name) {
+    abstract override fun constant(): PrimitiveConstant
+}
 
 class U8ConstantValue(override val name: String, private val u8: UByte): PrimitiveGlobalConstant(name) {
     override fun dump(): String {

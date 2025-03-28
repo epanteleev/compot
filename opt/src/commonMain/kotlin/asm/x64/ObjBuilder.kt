@@ -2,6 +2,7 @@ package asm.x64
 
 sealed interface ObjBuilder {
     fun byte(value: Byte)
+    fun zero(count: Int)
     fun short(value: Short)
     fun long(value: Int)
     fun quad(label: ObjLabel)

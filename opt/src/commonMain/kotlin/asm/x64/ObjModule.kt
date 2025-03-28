@@ -61,6 +61,10 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
         arrayToAppend.add(ByteDirective(value.toString()))
     }
 
+    override fun zero(count: Int) {
+        arrayToAppend.add(ZeroDirective(count))
+    }
+
     override fun short(value: Short) {
         arrayToAppend.add(ShortDirective(value.toString()))
     }

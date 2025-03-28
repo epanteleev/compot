@@ -79,6 +79,10 @@ class ByteDirective(val value: String): AnonymousDirective() {
     override fun toString(): String = ".byte $value"
 }
 
+class ZeroDirective(val count: Int): AnonymousDirective() {
+    override fun toString(): String = ".zero $count"
+}
+
 class ShortDirective(val value: String): AnonymousDirective() {
     override fun toString(): String = ".short $value"
 }

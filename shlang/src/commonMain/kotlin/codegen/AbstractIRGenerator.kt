@@ -23,7 +23,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                                    protected val varStack: VarStack<Value>,
                                    protected val nameGenerator: NameGenerator) {
 
-    private fun constEvalInitializerList(lValueType: CType, list: InitializerList): NonTrivialConstant? = when (lValueType) {
+    private fun constEvalInitializerList(lValueType: CType, list: InitializerList): NonTrivialConstant = when (lValueType) {
         is CAggregateType -> constEvalInitializers(lValueType, list)
         else -> throw IRCodeGenError("Unsupported initializer list size ${list.initializers.size}", list.begin())
     }
@@ -47,8 +47,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         is StringNode -> when (lValueType) {
             is AnyCArrayType -> StringLiteralConstant(ArrayType(I8Type, expr.length()), expr.data())
             else -> {
-                val constant = expr.data()
-                val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(U8Type, expr.length()), constant)
+                val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(U8Type, expr.length()), expr.data())
                 PointerLiteral.of(mb.addConstant(stringLiteral))
             }
         }
