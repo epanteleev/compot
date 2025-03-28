@@ -62,6 +62,10 @@ abstract class ObjModule(private val nameAssistant: NameAssistant): ObjBuilder {
     }
 
     override fun zero(count: Int) {
+        if (count < 0) {
+            throw IllegalArgumentException("count must be non-negative: $count")
+        }
+
         arrayToAppend.add(ZeroDirective(count))
     }
 
