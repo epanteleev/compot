@@ -15,6 +15,7 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.ExternFunction
 import ir.module.FunctionPrototype
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
+import java.util.logging.Logger.global
 
 
 internal class Lowering private constructor(val cfg: FunctionData): IRInstructionVisitor<Instruction?>() {
@@ -408,6 +409,10 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         } else if (lhs.isa(gAggregate())) {
             val lea = bb.putBefore(icmp, Lea.lea(lhs))
             bb.updateDF(icmp, IntCompare.FIRST, lea)
+
+        } else if (lhs.isa(gValue(anytype()))) {
+            val lea = bb.putBefore(icmp, Lea.lea(lhs))
+            bb.updateDF(icmp, IntCompare.FIRST, lea)
         }
 
         val rhs = icmp.second()
@@ -416,6 +421,10 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             bb.updateDF(icmp, IntCompare.SECOND, lea)
 
         } else if (rhs.isa(gAggregate())) {
+            val lea = bb.putBefore(icmp, Lea.lea(rhs))
+            bb.updateDF(icmp, IntCompare.SECOND, lea)
+
+        } else if (rhs.isa(gValue(anytype()))) {
             val lea = bb.putBefore(icmp, Lea.lea(rhs))
             bb.updateDF(icmp, IntCompare.SECOND, lea)
         }
