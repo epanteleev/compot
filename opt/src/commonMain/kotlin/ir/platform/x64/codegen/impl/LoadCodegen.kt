@@ -9,7 +9,7 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.*
 
 
-data class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
+internal class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
     XmmOperandsVisitorUnaryOp {
     private val size = type.sizeOf()
 

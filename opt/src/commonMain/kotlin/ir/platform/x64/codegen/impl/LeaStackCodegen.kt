@@ -9,7 +9,7 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-data class LeaStackCodegen (val type: PtrType, val basicType: NonTrivialType, val asm: Assembler):
+internal class LeaStackCodegen (val type: PtrType, val basicType: NonTrivialType, val asm: Assembler):
     GPOperandsVisitorBinaryOp {
     private val size: Int = basicType.sizeOf()
 

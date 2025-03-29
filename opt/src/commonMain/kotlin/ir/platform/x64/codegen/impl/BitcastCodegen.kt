@@ -9,7 +9,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class BitcastCodegen (val type: PrimitiveType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp {
+internal class BitcastCodegen (val type: PrimitiveType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp {
     private val size = type.sizeOf() // toSize
 
     operator fun invoke(dst: Operand, src: Operand) {

@@ -4,7 +4,6 @@ import ir.instruction.Instruction
 import ir.module.FunctionData
 import ir.module.auxiliary.DumpFunctionData
 import ir.module.block.Block
-import ir.pass.analysis.intervals.LiveIntervalsFabric
 import ir.platform.x64.pass.analysis.regalloc.LinearScanFabric
 import ir.value.LocalValue
 import ir.value.TupleValue

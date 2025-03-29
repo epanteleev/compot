@@ -8,7 +8,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorBinaryOp
 
 
-data class FMulCodegen(val type: FloatingPointType, val asm: X64MacroAssembler): XmmOperandsVisitorBinaryOp {
+internal class FMulCodegen(val type: FloatingPointType, val asm: X64MacroAssembler): XmmOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {

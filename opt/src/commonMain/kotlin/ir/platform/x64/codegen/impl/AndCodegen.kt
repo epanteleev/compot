@@ -8,7 +8,7 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.X64MacroAssembler
 
 
-class AndCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class AndCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {

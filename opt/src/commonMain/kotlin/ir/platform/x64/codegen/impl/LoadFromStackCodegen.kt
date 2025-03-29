@@ -8,7 +8,7 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class LoadFromStackCodegen (val type: PrimitiveType, indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
+internal class LoadFromStackCodegen (val type: PrimitiveType, indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
     private val size = type.sizeOf()
     private val indexSize = indexType.sizeOf()
 

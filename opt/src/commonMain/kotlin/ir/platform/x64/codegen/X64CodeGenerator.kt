@@ -352,7 +352,14 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val dst = operand(indexedLoad)
         val first = operand(indexedLoad.origin())
         val second = operand(indexedLoad.index())
-        IndexedLoadCodegen(indexedLoad.type(), indexedLoad.index().asType(), asm)(dst, first, second)
+
+        when (val type = indexedLoad.type()) {
+            is FloatingPointType -> IndexedFloatLoadCodegen(type, indexedLoad.index().asType(), asm)(dst, first, second)
+            is IntegerType, is PtrType -> {
+                IndexedIntLoadCodegen(indexedLoad.type(), indexedLoad.index().asType(), asm)(dst, first, second)
+            }
+            is UndefType -> TODO("undefined behavior")
+        }
     }
 
     override fun visit(store: StoreOnStack) {
@@ -607,13 +614,18 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     }
 
     override fun visit(move: MoveByIndex) {
-        val index       = operand(move.index())
+        val index = operand(move.index())
         val destination = operand(move.destination())
-
-        val indexType  = move.index().asType<PrimitiveType>()
-        val sourceType = move.source().asType<PrimitiveType>()
         val srcOperand = operand(move.source())
-        MoveByIndexCodegen(sourceType, indexType, asm)(destination, srcOperand, index)
+
+        when (val sourceType = move.source().asType<PrimitiveType>()) {
+            is FloatingPointType -> MoveFloatByIndexCodegen(sourceType, asm)(destination, srcOperand, index)
+            is IntegerType, is PtrType -> {
+                val indexType = move.index().asType<PrimitiveType>()
+                MoveIntByIndexCodegen(sourceType, indexType, asm)(destination, srcOperand, index)
+            }
+            is UndefType -> TODO("undefined behavior")
+        }
     }
 
     private fun getState(call: Callable): SavedContext {

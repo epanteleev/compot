@@ -10,7 +10,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.*
 
 
-internal class SelectCodegen(val type: IntegerType, val condition: IntCompare, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class SelectCodegen(type: IntegerType, val condition: IntCompare, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {

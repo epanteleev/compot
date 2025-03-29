@@ -9,7 +9,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp {
+internal class ZeroExtendCodegen(fromType: IntegerType, toType: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp {
     private val fromTypeSize = fromType.sizeOf()
     private val toTypeSize = toType.sizeOf()
 

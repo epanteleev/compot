@@ -2,14 +2,13 @@ package ir.platform.x64.codegen.impl
 
 import asm.Operand
 import asm.x64.*
-import ir.types.Type
 import ir.instruction.Flag2Int
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 import ir.types.U8Type
 
 
-class Flag2IntCodegen(private val toSize: Int, private val asm: Assembler): GPOperandsVisitorUnaryOp {
+internal class Flag2IntCodegen(private val toSize: Int, private val asm: Assembler): GPOperandsVisitorUnaryOp {
     operator fun invoke(dst: Operand, src: Operand) {
         if (toSize == fromSize && dst == src) {
             return

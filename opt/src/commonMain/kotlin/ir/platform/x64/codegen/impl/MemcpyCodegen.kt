@@ -10,8 +10,7 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-class MemcpyCodegen(val length: UnsignedIntegerConstant, val asm: Assembler):
-    GPOperandsVisitorUnaryOp {
+internal class MemcpyCodegen(val length: UnsignedIntegerConstant, val asm: Assembler): GPOperandsVisitorUnaryOp {
     operator fun invoke(dst: Operand, src: Operand) {
         GPOperandsVisitorUnaryOp.apply(dst, src, this)
     }
@@ -38,17 +37,11 @@ class MemcpyCodegen(val length: UnsignedIntegerConstant, val asm: Assembler):
         }
     }
 
-    override fun ra(dst: GPRegister, src: Address) {
-        TODO("Not yet implemented")
-    }
+    override fun ra(dst: GPRegister, src: Address) = default(dst, src)
 
-    override fun ar(dst: Address, src: GPRegister) {
-        TODO("Not yet implemented")
-    }
+    override fun ar(dst: Address, src: GPRegister) = default(dst, src)
 
-    override fun aa(dst: Address, src: Address) {
-        TODO("Not yet implemented")
-    }
+    override fun aa(dst: Address, src: Address) = default(dst, src)
 
     override fun ri(dst: GPRegister, src: Imm32) = default(dst, src)
 

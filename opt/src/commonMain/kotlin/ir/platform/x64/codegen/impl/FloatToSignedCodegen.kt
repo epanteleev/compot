@@ -8,7 +8,7 @@ import ir.platform.x64.codegen.visitors.*
 import ir.types.IntegerType
 
 
-class FloatToSignedCodegen(val toType: IntegerType, fromType: FloatingPointType, val asm: Assembler): XmmToGPOperandsVisitor {
+internal class FloatToSignedCodegen(val toType: IntegerType, fromType: FloatingPointType, val asm: Assembler): XmmToGPOperandsVisitor {
     private val toSize = run {
         val size = toType.sizeOf()
         if (size >= 4) {

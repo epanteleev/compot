@@ -12,7 +12,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandToXmmVisitor
 
 
-class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType, val asm: X64MacroAssembler) : GPOperandToXmmVisitor {
+internal class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType, val asm: X64MacroAssembler) : GPOperandToXmmVisitor {
     private val toSize = toType.sizeOf()
     private val fromSize = fromType.sizeOf()
 
@@ -29,7 +29,6 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
             asm.movzext(fromSize, TEMP_SIZE, src, temp1)
             asm.cvtint2fp(TEMP_SIZE, toSize, temp1, dst)
         }
-        else -> throw RuntimeException("Internal error: '${Int2Float.NAME}' dst=$dst, src=$src")
     }
 
     override fun ax(dst: XmmRegister, src: Address) = when (fromType) {
@@ -43,7 +42,6 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
             asm.movzext(fromSize, TEMP_SIZE, src, temp1)
             asm.cvtint2fp(TEMP_SIZE, toSize, temp1, dst)
         }
-        else -> throw RuntimeException("Internal error: '${Int2Float.NAME}' dst=$dst, src=$src")
     }
 
     override fun ar(dst: Address, src: GPRegister) = when (fromType) {
@@ -57,7 +55,6 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
             asm.cvtint2fp(TEMP_SIZE, toSize, temp1, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
         }
-        else -> throw RuntimeException("Internal error: '${Int2Float.NAME}' dst=$dst, src=$src")
     }
 
     override fun aa(dst: Address, src: Address) = when (fromType) {
@@ -73,7 +70,6 @@ class Uint2FloatCodegen(toType: FloatingPointType, val fromType: UnsignedIntType
             asm.cvtint2fp(TEMP_SIZE, toSize, temp1, xmmTemp1)
             asm.movf(toSize, xmmTemp1, dst)
         }
-        else -> throw RuntimeException("Internal error: '${Int2Float.NAME}' dst=$dst, src=$src")
     }
 
     override fun default(dst: Operand, src: Operand) {

@@ -15,7 +15,6 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.module.ExternFunction
 import ir.module.FunctionPrototype
 import ir.pass.analysis.traverse.BfsOrderOrderFabric
-import java.util.logging.Logger.global
 
 
 internal class Lowering private constructor(val cfg: FunctionData): IRInstructionVisitor<Instruction?>() {

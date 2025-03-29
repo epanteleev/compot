@@ -9,7 +9,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.GPOperandToXmmVisitor
 
 
-class Int2FloatCodegen(toType: FloatingPointType, fromType: SignedIntType, val asm: Assembler) : GPOperandToXmmVisitor {
+internal class Int2FloatCodegen(toType: FloatingPointType, fromType: SignedIntType, val asm: Assembler) : GPOperandToXmmVisitor {
     private val toSize = toType.sizeOf()
     private val fromSize = fromType.sizeOf()
 

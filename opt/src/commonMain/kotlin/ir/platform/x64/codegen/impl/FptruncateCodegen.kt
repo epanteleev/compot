@@ -9,7 +9,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.visitors.XmmOperandsVisitorUnaryOp
 
 
-data class FptruncateCodegen(val toType: FloatingPointType, val asm: Assembler):
+internal class FptruncateCodegen(val toType: FloatingPointType, val asm: Assembler):
     XmmOperandsVisitorUnaryOp {
     private val toSize = toType.sizeOf()
 

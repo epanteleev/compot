@@ -8,7 +8,7 @@ import ir.platform.x64.codegen.visitors.CallGPOperandValueVisitor
 import ir.platform.x64.codegen.visitors.CallXmmOperandValueVisitor
 
 
-class CallIntCodegen(val type: PrimitiveType, val asm: X64MacroAssembler) : CallGPOperandValueVisitor {
+internal class CallIntCodegen(val type: PrimitiveType, val asm: X64MacroAssembler) : CallGPOperandValueVisitor {
     private val size = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: GPRegister) {

@@ -8,7 +8,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-data class SubCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class SubCodegen(val type: IntegerType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {

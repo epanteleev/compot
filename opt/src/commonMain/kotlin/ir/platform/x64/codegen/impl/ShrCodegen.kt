@@ -8,7 +8,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-class ShrCodegen (val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class ShrCodegen (type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {

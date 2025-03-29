@@ -10,16 +10,14 @@ import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.visitors.*
 
 
-data class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
+internal class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
     XmmOperandsVisitorUnaryOp {
     private val size = type.sizeOf()
 
-    operator fun invoke(value: Operand, pointer: Operand) {
-        when (type) {
-            is FloatingPointType       -> XmmOperandsVisitorUnaryOp.apply(pointer, value, this)
-            is IntegerType, is PtrType -> GPOperandsVisitorUnaryOp.apply(pointer, value, this)
-            else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
-        }
+    operator fun invoke(value: Operand, pointer: Operand) = when (type) {
+        is FloatingPointType       -> XmmOperandsVisitorUnaryOp.apply(pointer, value, this)
+        is IntegerType, is PtrType -> GPOperandsVisitorUnaryOp.apply(pointer, value, this)
+        else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
     }
 
     override fun rr(dst: GPRegister, src: GPRegister) {

@@ -9,7 +9,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.CmpGPOperandVisitor
 
 
-class IntCmpCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): CmpGPOperandVisitor {
+internal class IntCmpCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): CmpGPOperandVisitor {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(first: Operand, second: Operand) {

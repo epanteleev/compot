@@ -10,7 +10,7 @@ import ir.platform.x64.CallConvention.xmmTemp1
 import ir.platform.x64.codegen.X64MacroAssembler
 
 
-data class CopyCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp, XmmOperandsVisitorUnaryOp {
+internal class CopyCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp, XmmOperandsVisitorUnaryOp {
     private val size = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) = when (type) {

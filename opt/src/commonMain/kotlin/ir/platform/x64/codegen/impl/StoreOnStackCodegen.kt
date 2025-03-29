@@ -13,7 +13,7 @@ import ir.types.IntegerType
 import ir.types.PtrType
 
 
-class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
+internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
     private val size = type.sizeOf()
     private val indexSize = indexType.sizeOf()
 

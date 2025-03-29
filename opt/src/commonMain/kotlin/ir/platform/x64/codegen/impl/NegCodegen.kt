@@ -8,7 +8,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorUnaryOp
 
 
-data class NegCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp {
+internal class NegCodegen(val type: PrimitiveType, val asm: X64MacroAssembler): GPOperandsVisitorUnaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, src: Operand) {
