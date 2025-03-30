@@ -530,7 +530,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val toValue = returnValue.returnValue(0)
             val lea = bb.putBefore(returnValue, Lea.lea(toValue))
-            bb.updateDF(returnValue, ReturnValue.RET_VALUE, lea)
+            returnValue.returnValue(0, lea)
             return lea
         }
 
@@ -544,7 +544,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val toValue = returnValue.returnValue(0)
             val lea = bb.putBefore(returnValue, Load.load(PtrType, toValue))
-            bb.updateDF(returnValue, ReturnValue.RET_VALUE, lea)
+            returnValue.returnValue(0, lea)
             return lea
         }
 
@@ -558,7 +558,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val toValue = returnValue.returnValue(0)
             val lea = bb.putBefore(returnValue, Lea.lea(toValue))
-            bb.updateDF(returnValue, ReturnValue.RET_VALUE, lea)
+            returnValue.returnValue(0, lea)
             return lea
         }
 
@@ -580,7 +580,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val use = indirectionCall.pointer()
             val lea = bb.putBefore(indirectionCall, Load.load(PtrType, use))
-            bb.updateDF(indirectionCall, indirectionCall.arguments().size, lea)
+            indirectionCall.pointer(lea)
             return lea
         }
 
@@ -594,7 +594,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val use = indirectionCall.pointer()
             val lea = bb.putBefore(indirectionCall, Lea.lea(use))
-            bb.updateDF(indirectionCall, indirectionCall.arguments().size, lea)
+            indirectionCall.pointer(lea)
             return lea
         }
 
@@ -612,7 +612,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val use = indirectionVoidCall.pointer()
             val lea = bb.putBefore(indirectionVoidCall, Load.load(PtrType, use))
-            bb.updateDF(indirectionVoidCall, indirectionVoidCall.arguments().size, lea)
+            indirectionVoidCall.pointer(lea)
             return lea
         }
 
@@ -626,7 +626,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val use = indirectionVoidCall.pointer()
             val lea = bb.putBefore(indirectionVoidCall, Lea.lea(use))
-            bb.updateDF(indirectionVoidCall, indirectionVoidCall.arguments().size, lea)
+            indirectionVoidCall.pointer(lea)
             return lea
         }
 
@@ -880,7 +880,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = ptr2int %lea
 
             val lea = bb.putBefore(ptr2Int, Lea.lea(ptr2Int.operand().asValue()))
-            bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
+            ptr2Int.operand(lea)
             return lea
         }
 
@@ -893,7 +893,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = ptr2int %lea
 
             val lea = bb.putBefore(ptr2Int, Lea.lea(ptr2Int.operand()))
-            bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
+            ptr2Int.operand(lea)
             return lea
         }
 
@@ -907,7 +907,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val use = ptr2Int.operand()
             val lea = bb.putBefore(ptr2Int, Load.load(PtrType, use))
-            bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
+            ptr2Int.operand(lea)
         }
 
         ptr2Int.match(ptr2int(gAggregate())) {
@@ -920,7 +920,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val use = ptr2Int.operand()
             val lea = bb.putBefore(ptr2Int, Lea.lea(use))
-            bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
+            ptr2Int.operand(lea)
         }
 
         return ptr2Int
@@ -1073,13 +1073,13 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
         val divProj = tupleDiv.quotient()
         val quotient = bb.putBefore(tupleDiv, Projection.proj(newDiv, 0))
         val quotientTrunc = bb.putBefore(tupleDiv, Truncate.trunc(quotient, type))
-        bb.updateUsages(divProj) { quotientTrunc }
+        divProj.updateUsages(quotientTrunc)
         killOnDemand(divProj)
 
         val remainder = tupleDiv.remainder()
         val proj      = bb.putBefore(tupleDiv, Projection.proj(newDiv, 1))
         val remainderTruncate = bb.putBefore(tupleDiv, Truncate.trunc(proj, type))
-        bb.updateUsages(remainder) { remainderTruncate }
+        remainder.updateUsages(remainderTruncate)
         killOnDemand(remainder)
 
         killOnDemand(tupleDiv)
@@ -1088,10 +1088,10 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
     private fun isolateProjections(tupleDiv: TupleDiv) {
         val rem = tupleDiv.remainder()
-        bb.updateUsages(rem) { bb.putAfter(rem, Copy.copy(rem)) }
+        rem.updateUsages(bb.putAfter(rem, Copy.copy(rem)))
 
         val div = tupleDiv.quotient()
-        bb.updateUsages(div) { bb.putAfter(div, Copy.copy(div)) }
+        div.updateUsages(bb.putAfter(div, Copy.copy(div)))
     }
 
     override fun visit(tupleDiv: TupleDiv): Instruction {
@@ -1195,7 +1195,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val use = tupleCall.pointer()
             val lea = bb.putBefore(tupleCall, Load.load(PtrType, use))
-            bb.updateDF(tupleCall, tupleCall.arguments().size, lea)
+            tupleCall.pointer(lea)
             return lea
         }
 
@@ -1209,7 +1209,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
 
             val use = tupleCall.pointer()
             val lea = bb.putBefore(tupleCall, Lea.lea(use))
-            bb.updateDF(tupleCall, tupleCall.arguments().size, lea)
+            tupleCall.pointer(lea)
             return lea
         }
 

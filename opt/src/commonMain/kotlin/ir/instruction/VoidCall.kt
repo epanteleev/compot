@@ -25,6 +25,10 @@ class VoidCall private constructor(id: Identity,
         return arrayWrapperOf(operands)
     }
 
+    override fun arg(idx: Int, newValue: Value) = owner.df {
+        update(idx, newValue)
+    }
+
     override fun prototype(): DirectFunctionPrototype {
         return func
     }
@@ -39,11 +43,9 @@ class VoidCall private constructor(id: Identity,
         return targets[0]
     }
 
-    override fun dump(): String {
-        val builder = StringBuilder()
-        builder.append("call $VoidType @${func.name}")
-        printArguments(builder)
-        return builder.toString()
+    override fun dump(): String = buildString {
+        append("call $VoidType @${func.name}")
+        printArguments(this)
     }
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {

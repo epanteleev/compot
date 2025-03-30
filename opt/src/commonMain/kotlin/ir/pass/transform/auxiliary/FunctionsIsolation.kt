@@ -27,15 +27,17 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                 continue
             }
 
-            begin.updateUsages(arg) { begin.prepend(Copy.copy(arg)) }
+            arg.updateUsages(begin.prepend(Copy.copy(arg)))
         }
     }
 
     private fun isolateByValueArgument(bb: Block, call: Instruction, i: ByValue, arg: Value) {
+        call as Callable
+
         val gen = bb.putBefore(call, Generate.gen(i.aggregateType))
         val lea = bb.putAfter(gen, Lea.lea(gen))
         bb.putAfter(lea, Memcpy.memcpy(lea, arg, U64Value.of(i.aggregateType.sizeOf().toLong())))
-        bb.updateDF(call, i.argumentIndex, gen)
+        call.arg(i.argumentIndex, gen)
     }
 
     private fun isolateByValueArguments(bb: Block, call: Instruction) {
@@ -54,7 +56,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
             when (val ty = arg.type()) {
                 is FloatingPointType, is IntegerType -> {
                     val copy = bb.putBefore(call, Copy.copy(arg))
-                    bb.updateDF(call, i, copy)
+                    call.arg(i, copy)
                 }
                 is PtrType -> {
                     val copyOrLea = if (arg is GlobalValue) {
@@ -62,7 +64,7 @@ internal class FunctionsIsolation private constructor(private val cfg: FunctionD
                     } else {
                         bb.putBefore(call, Copy.copy(arg))
                     }
-                    bb.updateDF(call, i, copyOrLea)
+                    call.arg(i, copyOrLea)
                 }
                 is AggregateType -> {
                     val byValue = byValueAttr.find { it.argumentIndex == i }

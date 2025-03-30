@@ -10,6 +10,7 @@ class ArgumentValue(private val index: Int, private val tp: NonTrivialType, val 
     override fun name(): String = "arg$index"
 
     override fun type(): NonTrivialType = tp
+
     override fun hashCode(): Int = index
 
     override fun equals(other: Any?): Boolean {

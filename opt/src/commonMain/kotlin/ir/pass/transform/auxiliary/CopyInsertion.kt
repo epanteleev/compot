@@ -24,10 +24,10 @@ internal class CopyInsertion private constructor(private val cfg: FunctionData) 
             } else {
                 incoming.putBefore(last, Copy.copy(operand))
             }
-            bb.updateDF(phi, idx, copy)
+            phi.value(idx, copy)
         }
 
-        return bb.updateUsages(phi) { bb.putAfter(phi, Copy.copy(phi)) }
+        return phi.updateUsages(bb.putAfter(phi, Copy.copy(phi)))
     }
 
     fun pass() {

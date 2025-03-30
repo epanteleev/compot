@@ -477,7 +477,8 @@ private data class PhiContext(val phi: Phi, val valueTokens: List<AnyValueToken>
             if (local.type() != expectedType) {
                 throw ParseErrorException("mismatch type ${local.type()} in ${tok.position()}")
             }
-            phi.owner().updateDF(phi, idx, local)
+
+            phi.value(idx, local)
         }
     }
 }

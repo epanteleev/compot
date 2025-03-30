@@ -4,8 +4,6 @@ import common.arrayWrapperOf
 import common.assertion
 import ir.attributes.FunctionAttribute
 import ir.value.Value
-import ir.types.Type
-import ir.module.AnyFunctionPrototype
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.DirectFunctionPrototype
 import ir.module.block.Block
@@ -28,6 +26,10 @@ class Call private constructor(id: Identity, owner: Block, private val func: Dir
 
     override fun arguments(): List<Value> {
         return arrayWrapperOf(operands)
+    }
+
+    override fun arg(idx: Int, newValue: Value) = owner.df {
+        update(idx, newValue)
     }
 
     override fun prototype(): DirectFunctionPrototype {

@@ -440,7 +440,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
             }
         }
 
-        val incoming     = phi.incoming()
+        val incoming     = phi.values()
         val predecessors = bb.predecessors()
         assert(predecessors.size == incoming.size) {
             "Inconsistent phi instruction: incoming blocks and predecessors are not equal. incoming=$incoming predecessors=$predecessors"

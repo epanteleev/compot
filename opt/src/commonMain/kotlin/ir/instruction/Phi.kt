@@ -1,6 +1,7 @@
 package ir.instruction
 
 import common.arrayWrapperOf
+import common.assertion
 import ir.types.*
 import ir.value.Value
 import common.forEachWith
@@ -23,7 +24,23 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
 
     override fun type(): PrimitiveType = ty
 
-    fun incoming(): List<Block> = arrayWrapperOf(incoming)
+    fun values(): List<Block> = arrayWrapperOf(incoming)
+
+    fun value(idx: Int, newValue: Value) = owner.df {
+        update(idx, newValue)
+    }
+
+    fun values(closure: (Block, Value) -> Value) = owner.df {
+        zipWithIndex { bb, value, idx ->
+            update(idx, closure(bb, value))
+        }
+    }
+
+    fun incoming(closure: (Block, Value) -> Block) = owner.cf {
+        zipWithIndex { bb, value, idx ->
+            updateIncoming(closure(bb, value), idx)
+        }
+    }
 
     // DO NOT USE THIS METHOD DIRECTLY
     internal fun updateIncoming(block: Block, idx: Int) {
@@ -31,13 +48,13 @@ class Phi private constructor(id: Identity, owner: Block, private val ty: Primit
     }
 
     fun zip(closure: (Block, Value) -> Unit) {
-        incoming().forEachWith(operands) { bb, value ->
+        values().forEachWith(operands) { bb, value ->
             closure(bb, value)
         }
     }
 
     fun zipWithIndex(closure: (Block, Value, Int) -> Unit) {
-        incoming().forEachWith(operands) { bb, value, i ->
+        values().forEachWith(operands) { bb, value, i ->
             closure(bb, value, i)
         }
     }

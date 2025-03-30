@@ -80,7 +80,9 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
     // Rewrite phi instructions that was not inserted by mem2reg pass.
     private fun rewritePhis() {
         for (bb in cfg) {
-            bb.phis { phi -> phi.owner().updateDF(phi) { bb, v -> rename(bb, v.type(), v) } }
+            bb.phis { phi ->
+                phi.values { bb, v -> rename(bb, v.type(), v) }
+            }
         }
     }
 
@@ -122,7 +124,7 @@ internal class RewritePrimitivesUtil private constructor(val cfg: FunctionData, 
                 continue
             }
 
-            bb.updateDF(inst) { v -> rename(bb, v.type(), v) }
+            inst.update { v -> rename(bb, v.type(), v) }
         }
     }
 

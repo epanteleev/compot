@@ -24,6 +24,10 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
         return operands[index]
     }
 
+    fun returnValue(index: Int, newValue: Value) = owner.df {
+        update(index, newValue)
+    }
+
     fun type(): Type = returnType
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
@@ -32,7 +36,6 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
 
     companion object {
         const val NAME = "ret"
-        const val RET_VALUE = 0
 
         fun ret(returnType: Type, values: Array<Value>): InstBuilder<Return> = { id: Identity, owner: Block ->
             make(id, owner, returnType, values)

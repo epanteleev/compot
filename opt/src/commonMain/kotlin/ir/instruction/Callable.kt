@@ -10,6 +10,7 @@ import ir.types.*
 
 sealed interface Callable {
     fun arguments(): List<Value>
+    fun arg(idx: Int, newValue: Value)
     fun prototype(): AnyFunctionPrototype
     fun shortName(): String = prototype().shortDescription()
     fun target(): Block

@@ -36,8 +36,7 @@ abstract class Instruction(protected val id: Identity, protected val owner: Bloc
 
     fun isNoOperands(): Boolean = operands.isEmpty()
 
-    // DO NOT USE THIS METHOD DIRECTLY
-    internal fun update(closure: (Value) -> Value) {
+    fun update(closure: (Value) -> Value) = owner.df {
         for ((i, v) in operands.withIndex()) {
             val newValue = closure(v)
             update(i, newValue)

@@ -41,8 +41,20 @@ class IndirectionCall private constructor(id: Identity, owner: Block,
         return operands.last()
     }
 
+    fun pointer(newPointer: Value) = owner.df {
+        update(operands.size - 1, newPointer)
+    }
+
     override fun arguments(): List<Value> {
         return arrayWrapperOf(arrayWith(operands.size - 1) { operands[it] })
+    }
+
+    override fun arg(idx: Int, newValue: Value) = owner.df {
+        if (idx >= operands.size - 1 || idx < 0) {
+            throw IndexOutOfBoundsException("index=$idx, operands=${operands.joinToString { it.toString() }}")
+        }
+
+        update(idx, newValue)
     }
 
     override fun prototype(): IndirectFunctionPrototype {

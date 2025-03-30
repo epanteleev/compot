@@ -24,6 +24,10 @@ class TupleCall private constructor(id: Identity,
         return arrayWrapperOf(operands)
     }
 
+    override fun arg(idx: Int, newValue: Value) = owner.df {
+        update(idx, newValue)
+    }
+
     override fun prototype(): DirectFunctionPrototype {
         return func
     }

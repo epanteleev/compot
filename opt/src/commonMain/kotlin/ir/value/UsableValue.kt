@@ -24,11 +24,17 @@ interface UsableValue: Value {
         return usedIn
     }
 
+    fun<V: Value> updateUsages(replacement: V): V {
+        return updateUsages(this, replacement)
+    }
+
     fun name(): String
 
+    override fun equals(other: Any?): Boolean
+    override fun hashCode(): Int
+
     companion object {
-        fun<V: Value> updateUsages(localValue: UsableValue, replacement: () -> V): V {
-            val valueToReplace = replacement()
+        fun<V: Value> updateUsages(localValue: UsableValue, valueToReplace: V): V {
             for (user in localValue.release()) {
                 for ((idxUse, use) in user.operands().withIndex()) {
                     if (use !== localValue) {

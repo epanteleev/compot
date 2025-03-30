@@ -81,53 +81,9 @@ class Block private constructor(private val mc: ModificationCounter, override va
         return mc.cf(closure)
     }
 
-    fun<T> dfANDcf(closure: () -> T): T {
-        return mc.dfANDcf(closure)
-    }
-
-    fun<V: Value> updateUsages(localValue: UsableValue, replacement: () -> V): V = mc.df {
-        return@df UsableValue.updateUsages(localValue, replacement)
-    }
-
-    fun updateDF(instruction: Instruction, closure: (Value) -> Value) = mc.df {
-        assertion(instruction.owner() === this) {
-            "instruction=$instruction is not in bb=$this"
-        }
-
-        instruction.update { closure(it) }
-    }
-
-    fun updateDF(instruction: Instruction, index: Int, value: Value) = mc.df {
-        assertion(instruction.owner() === this) {
-            "instruction=$instruction is not in bb=$this"
-        }
-
-        instruction.update(index, value)
-    }
-
-    fun updateDF(phi: Phi, closure: (Block, Value) -> Value) = mc.df { //TODO remove this after UncompletedPhi instruction creation
-        assertion(phi.owner() === this) {
-            "phi=$phi is not in bb=$this"
-        }
-
-        phi.zipWithIndex { bb, value, idx ->
-            phi.update(idx, closure(bb, value))
-        }
-    }
-
-    fun updateCF(phi: Phi, closure: (Block, Value) -> Block) = mc.cf {
-        assertion(phi.owner() === this) {
-            "phi=$phi is not in bb=$this"
-        }
-
-        phi.zipWithIndex { bb, value, idx ->
-            phi.updateIncoming(closure(bb, value), idx)
-        }
-    }
-
     private fun updatePhi(oldSucc: Block, newSucc: Block) {
         oldSucc.phis { phi ->
-            oldSucc.updateCF(phi) { oldBB, _ ->
+            phi.incoming { oldBB, _ ->
                 if (oldBB == this) newSucc else oldBB
             }
         }
@@ -187,7 +143,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
 
         val next = instruction.prev()
         if (instruction is UsableValue) {
-            updateUsages(instruction) { replacement }
+            instruction.updateUsages(replacement)
         }
 
         val removed = remove(instruction)
@@ -290,7 +246,7 @@ class Block private constructor(private val mc: ModificationCounter, override va
             assertion(newInstruction is UsableValue) {
                 "should be local value, but newInstruction=$newInstruction"
             }
-            updateUsages(instruction) { newInstruction as UsableValue }
+            instruction.updateUsages(newInstruction as UsableValue)
         }
         kill(instruction, UndefValue)
         return newInstruction
