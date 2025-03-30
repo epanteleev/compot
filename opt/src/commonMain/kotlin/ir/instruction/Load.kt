@@ -2,27 +2,17 @@ package ir.instruction
 
 import ir.types.*
 import ir.value.Value
-import common.assertion
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 
 
-
-class Load private constructor(id: Identity, owner: Block, private val loadedType: PrimitiveType, ptr: Value):
-    ValueInstruction(id, owner, arrayOf(ptr)) {
+class Load private constructor(id: Identity, owner: Block, loadedType: PrimitiveType, ptr: Value):
+    Unary(id, owner, loadedType, ptr) {
     override fun dump(): String {
-        return "%${name()} = $NAME $loadedType ${operand()}"
+        return "%${name()} = $NAME $tp ${operand()}"
     }
 
-    fun operand(): Value {
-        assertion(operands.size == 1) {
-            "size should be 2 in $this instruction"
-        }
-
-        return operands[0]
-    }
-
-    override fun type(): PrimitiveType = loadedType
+    override fun type(): PrimitiveType = tp
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -30,7 +20,6 @@ class Load private constructor(id: Identity, owner: Block, private val loadedTyp
 
     companion object {
         const val NAME = "load"
-        const val VALUE = 0
 
         fun load(loadedType: PrimitiveType, operand: Value): InstBuilder<Load> = { id: Identity, owner: Block ->
             make(id, owner, loadedType, operand)

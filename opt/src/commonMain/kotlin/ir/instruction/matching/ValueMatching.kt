@@ -37,7 +37,7 @@ inline fun lea(crossinline pointer: ValueMatcher): ValueMatcher = {
 }
 
 inline fun copy(crossinline origin: ValueMatcher): InstructionMatcher = {
-    it is Copy && origin(it.origin())
+    it is Copy && origin(it.operand())
 }
 
 inline fun div(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
@@ -61,7 +61,7 @@ inline fun<reified T: Instruction> select(crossinline cond: ValueMatcher, crossi
 }
 
 inline fun tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher): InstructionMatcher = {
-    it is TupleDiv && a(it.first()) && b(it.second())
+    it is TupleDiv && a(it.lhs()) && b(it.rhs())
 }
 
 inline fun proj(crossinline type: TypeMatcher, crossinline origin: ValueMatcher, idx: Int): InstructionMatcher = {
@@ -71,15 +71,15 @@ inline fun proj(crossinline type: TypeMatcher, crossinline origin: ValueMatcher,
 fun tupleCall(): ValueMatcher = { it is TupleCall }
 
 inline fun uint2float(crossinline origin: ValueMatcher): InstructionMatcher = {
-    it is Unsigned2Float && origin(it.value())
+    it is Unsigned2Float && origin(it.operand())
 }
 
 inline fun tupleDiv(crossinline a: ValueMatcher, crossinline b: ValueMatcher, crossinline type: TypeMatcher): InstructionMatcher = {
-    it is TupleDiv && a(it.first()) && b(it.second()) && type(it.type())
+    it is TupleDiv && a(it.lhs()) && b(it.rhs()) && type(it.type())
 }
 
 inline fun ptr2int(crossinline origin: ValueMatcher): InstructionMatcher = {
-    it is Pointer2Int && origin(it.value())
+    it is Pointer2Int && origin(it.operand())
 }
 
 inline fun memcpy(crossinline dst: ValueMatcher, crossinline src: ValueMatcher, crossinline length: ValueMatcher): InstructionMatcher = {
@@ -87,7 +87,7 @@ inline fun memcpy(crossinline dst: ValueMatcher, crossinline src: ValueMatcher, 
 }
 
 inline fun icmp(crossinline lhs: ValueMatcher, crossinline typeMatcher: TypeMatcher, crossinline rhs: ValueMatcher): InstructionMatcher = {
-    it is IntCompare && lhs(it.first()) && typeMatcher(it.operandsType()) && rhs(it.second())
+    it is IntCompare && lhs(it.lhs()) && typeMatcher(it.operandsType()) && rhs(it.rhs())
 }
 
 inline fun gep(crossinline src: ValueMatcher, crossinline idx: ValueMatcher): ValueMatcher = {

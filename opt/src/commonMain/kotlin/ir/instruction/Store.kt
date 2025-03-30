@@ -22,12 +22,20 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
         return operands[DESTINATION]
     }
 
+    fun pointer(newPointer: Value) = owner.df {
+        update(DESTINATION, newPointer)
+    }
+
     fun value(): Value {
         assertion(operands.size == 2) {
             "size should be 2 in $this instruction"
         }
 
         return operands[VALUE]
+    }
+
+    fun value(newValue: Value) = owner.df {
+        update(VALUE, newValue)
     }
 
     fun valueType(): NonTrivialType = valueType
@@ -37,8 +45,8 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
     }
 
     companion object {
-        const val DESTINATION = 0
-        const val VALUE = 1
+        private const val DESTINATION = 0
+        private const val VALUE = 1
         const val NAME = "store"
 
         fun store(pointer: Value, value: Value): InstBuilder<Store> = { id: Identity, owner: Block ->

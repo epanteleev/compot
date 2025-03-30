@@ -2,26 +2,17 @@ package ir.instruction
 
 import ir.types.*
 import ir.value.Value
-import common.assertion
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Bitcast private constructor(id: Identity, owner: Block, val toType: IntegerType, value: Value):
-    ValueInstruction(id, owner, arrayOf(value)) {
+class Bitcast private constructor(id: Identity, owner: Block, toType: IntegerType, value: Value):
+    Unary(id, owner, toType, value) {
     override fun dump(): String {
-        return "%${name()} = $NAME ${value().type()} ${value()} to $toType"
+        return "%${name()} = $NAME ${operand().type()} ${operand()} to $tp"
     }
 
-    fun value(): Value {
-        assertion(operands.size == 1) {
-            "size should be 1 in $this instruction"
-        }
-
-        return operands[0]
-    }
-
-    override fun type(): IntegerType = toType
+    override fun type(): IntegerType = tp.asType()
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -54,7 +45,7 @@ class Bitcast private constructor(id: Identity, owner: Block, val toType: Intege
         }
 
         fun typeCheck(bitcast: Bitcast): Boolean {
-            return isAppropriateType(bitcast.type(), bitcast.value().type())
+            return isAppropriateType(bitcast.type(), bitcast.operand().type())
         }
     }
 }

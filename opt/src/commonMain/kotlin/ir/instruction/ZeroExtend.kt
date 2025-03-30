@@ -2,26 +2,17 @@ package ir.instruction
 
 import ir.types.*
 import ir.value.Value
-import common.assertion
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class ZeroExtend private constructor(id: Identity, owner: Block, private val toType: UnsignedIntType, value: Value):
-    ValueInstruction(id, owner, arrayOf(value)) {
+class ZeroExtend private constructor(id: Identity, owner: Block, toType: UnsignedIntType, value: Value):
+    Unary(id, owner, toType, value) {
     override fun dump(): String {
-        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
+        return "%${name()} = $NAME ${operand().type()} ${operand()} to ${type()}"
     }
 
-    fun value(): Value {
-        assertion(operands.size == 1) {
-            "size should be 1 in $this instruction"
-        }
-
-        return operands[0]
-    }
-
-    override fun type(): UnsignedIntType = toType
+    override fun type(): UnsignedIntType = tp.asType()
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -52,7 +43,7 @@ class ZeroExtend private constructor(id: Identity, owner: Block, private val toT
         }
 
         fun typeCheck(zext: ZeroExtend): Boolean {
-            return isAppropriateType(zext.type(), zext.value().type())
+            return isAppropriateType(zext.type(), zext.operand().type())
         }
     }
 }

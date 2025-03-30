@@ -86,12 +86,12 @@ class FunctionDataBuilderWithContext private constructor(
         switchLabel(label)
     }
 
-    fun neg(name: LocalValueToken, valueTok: AnyValueToken, expectedType: ArithmeticTypeToken): ArithmeticUnary {
+    fun neg(name: LocalValueToken, valueTok: AnyValueToken, expectedType: ArithmeticTypeToken): Unary {
         val value = getValue(valueTok, expectedType.type(moduleBuilder))
         return memorize(name, Neg.neg(value))
     }
 
-    fun not(name: LocalValueToken, valueTok: AnyValueToken, expectedType: IntegerTypeToken): ArithmeticUnary {
+    fun not(name: LocalValueToken, valueTok: AnyValueToken, expectedType: IntegerTypeToken): Unary {
         val value  = getValue(valueTok, expectedType.type())
         return memorize(name, Not.not(value))
     }

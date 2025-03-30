@@ -17,8 +17,6 @@ class Mul private constructor(id: Identity, owner: Block, tp: ArithmeticType, a:
 
     companion object {
         const val NAME = "mul"
-        const val FIRST = 0
-        const val SECOND = 1
 
         fun mul(a: Value, b: Value): InstBuilder<Mul> = {
             id: Identity, owner: Block -> make(id, owner, a, b)

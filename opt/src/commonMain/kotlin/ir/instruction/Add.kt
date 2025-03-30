@@ -20,8 +20,6 @@ class Add private constructor(id: Identity, owner: Block, tp: ArithmeticType, a:
 
     companion object {
         const val NAME = "add"
-        const val FIRST = 0
-        const val SECOND = 1
 
         fun add(a: Value, b: Value): InstBuilder<Add> = {
             id: Identity, owner: Block -> make(id, owner, a, b)

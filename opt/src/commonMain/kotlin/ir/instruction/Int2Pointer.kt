@@ -8,17 +8,9 @@ import ir.instruction.utils.IRInstructionVisitor
 
 
 class Int2Pointer private constructor(id: Identity, owner: Block, value: Value):
-    ValueInstruction(id, owner, arrayOf(value)) {
+    Unary(id, owner, PtrType, value) {
     override fun dump(): String {
-        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
-    }
-
-    fun value(): Value {
-        assertion(operands.size == 1) {
-            "size should be 1 in $this instruction"
-        }
-
-        return operands[0]
+        return "%${name()} = $NAME ${operand().type()} ${operand()} to ${type()}"
     }
 
     override fun type(): PtrType = PtrType
@@ -48,7 +40,7 @@ class Int2Pointer private constructor(id: Identity, owner: Block, value: Value):
         }
 
         fun typeCheck(int2ptr: Int2Pointer): Boolean {
-            return isAppropriateType(int2ptr.value().type())
+            return isAppropriateType(int2ptr.operand().type())
         }
     }
 }

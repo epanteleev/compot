@@ -1,11 +1,9 @@
 package ir.instruction
 
-import ir.instruction.utils.IRInstructionVisitor
-import ir.module.block.Block
-import ir.types.ArithmeticType
-import ir.types.Type
-import ir.types.UndefType
+import ir.types.*
 import ir.value.Value
+import ir.module.block.Block
+import ir.instruction.utils.IRInstructionVisitor
 
 
 class Sub private constructor(id: Identity, owner: Block, tp: ArithmeticType, a: Value, b: Value) : ArithmeticBinary(id, owner, tp, a, b) {
@@ -19,8 +17,6 @@ class Sub private constructor(id: Identity, owner: Block, tp: ArithmeticType, a:
 
     companion object {
         const val NAME = "sub"
-        const val FIRST = 0
-        const val SECOND = 1
 
         fun sub(a: Value, b: Value): InstBuilder<Sub> = { id: Identity, owner: Block ->
             make(id, owner, a, b)

@@ -16,7 +16,7 @@ sealed class CompareInstruction(id: Identity, owner: Block, val operandsType: Pr
     abstract fun operandsType(): PrimitiveType
     abstract fun predicate(): AnyPredicateType
 
-    fun first(): Value {
+    fun lhs(): Value {
         assertion(operands.size == 2) {
             "size should be 2 in $this instruction"
         }
@@ -24,12 +24,20 @@ sealed class CompareInstruction(id: Identity, owner: Block, val operandsType: Pr
         return operands[0]
     }
 
-    fun second(): Value {
+    fun lhs(newLhs: Value) = owner.df {
+        update(0, newLhs)
+    }
+
+    fun rhs(): Value {
         assertion(operands.size == 2) {
             "size should be 2 in $this instruction"
         }
 
         return operands[1]
+    }
+
+    fun rhs(newRhs: Value) = owner.df {
+        update(1, newRhs)
     }
 
     override fun type(): FlagType = FlagType

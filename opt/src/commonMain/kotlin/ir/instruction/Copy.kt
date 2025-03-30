@@ -3,7 +3,6 @@ package ir.instruction
 import ir.types.Type
 import ir.value.Value
 import ir.types.asType
-import common.assertion
 import ir.module.block.Block
 import ir.types.PrimitiveType
 import ir.value.constant.UndefValue
@@ -11,20 +10,12 @@ import ir.instruction.utils.IRInstructionVisitor
 
 
 class Copy private constructor(id: Identity, owner: Block, private val type: PrimitiveType, origin: Value):
-    ValueInstruction(id, owner, arrayOf(origin)) {
+    Unary(id, owner, type, origin) {
 
     override fun type(): PrimitiveType = type
 
     override fun dump(): String {
-        return "%${name()} = $NAME $type ${origin()}"
-    }
-
-    fun origin(): Value {
-        assertion(operands.size == 1) {
-            "size should be 1 in $this instruction"
-        }
-
-        return operands[0]
+        return "%${name()} = $NAME $type ${operand()}"
     }
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
@@ -33,7 +24,6 @@ class Copy private constructor(id: Identity, owner: Block, private val type: Pri
 
     companion object {
         const val NAME = "copy"
-        const val ORIGIN = 0
 
         fun copy(origin: Value): InstBuilder<Copy> = { id: Identity, owner: Block ->
             make(id, owner, origin)
@@ -49,7 +39,7 @@ class Copy private constructor(id: Identity, owner: Block, private val type: Pri
         }
 
         fun typeCheck(copy: Copy): Boolean {
-            return isAppropriateType(copy.type(), copy.origin())
+            return isAppropriateType(copy.type(), copy.operand())
         }
 
         private fun isAppropriateType(originType: Type, origin: Value): Boolean {

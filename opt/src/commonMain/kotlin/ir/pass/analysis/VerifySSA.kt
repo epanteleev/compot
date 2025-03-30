@@ -308,7 +308,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
             "Instruction '${flag2Int.dump()}' has inconsistent types."
         }
 
-        validatePredicate(flag2Int, flag2Int.value())
+        validatePredicate(flag2Int, flag2Int.operand())
     }
 
     override fun visit(bitcast: Bitcast) {
@@ -395,13 +395,13 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
     override fun visit(icmp: IntCompare) {
         assert(IntCompare.typeCheck(icmp)) {
-            "Instruction '${icmp.dump()}' requires all operands to be of the same type: a=${icmp.first().type()}, b=${icmp.second().type()}"
+            "Instruction '${icmp.dump()}' requires all operands to be of the same type: a=${icmp.lhs().type()}, b=${icmp.rhs().type()}"
         }
     }
 
     override fun visit(fcmp: FloatCompare) {
         assert(FloatCompare.typeCheck(fcmp)) {
-            "Instruction '${fcmp.dump()}' requires all operands to be of the same type: a=${fcmp.first().type()}, b=${fcmp.second().type()}"
+            "Instruction '${fcmp.dump()}' requires all operands to be of the same type: a=${fcmp.lhs().type()}, b=${fcmp.rhs().type()}"
         }
     }
 
@@ -563,7 +563,7 @@ class VerifySSA private constructor(private val functionData: FunctionData,
 
     override fun visit(tupleDiv: TupleDiv) {
         assert(TupleDiv.typeCheck(tupleDiv)) {
-            "Instruction '${tupleDiv.dump()}' requires all operands to be of the same type: a=${tupleDiv.first().type()}, b=${tupleDiv.second().type()}"
+            "Instruction '${tupleDiv.dump()}' requires all operands to be of the same type: a=${tupleDiv.lhs().type()}, b=${tupleDiv.rhs().type()}"
         }
 
         val projSet = hashSetOf<Int>()

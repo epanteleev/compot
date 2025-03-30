@@ -8,13 +8,12 @@ import ir.instruction.utils.IRInstructionVisitor
 
 
 class ReturnValue private constructor(id: Identity, owner: Block, val returnType: Type, values: Array<Value>): Return(id, owner, values) {
-    override fun dump(): String {
-        val stringBuilder = StringBuilder("$NAME ${type()}")
+    override fun dump(): String = buildString {
+        append("$NAME ${type()}")
         for (value in operands) {
-            stringBuilder.append(" ")
-            stringBuilder.append(value)
+            append(" ")
+            append(value)
         }
-        return stringBuilder.toString()
     }
 
     fun returnValue(index: Int): Value {
@@ -39,7 +38,7 @@ class ReturnValue private constructor(id: Identity, owner: Block, val returnType
             make(id, owner, returnType, values)
         }
 
-        fun make(id: Identity, owner: Block, returnType: Type, values: Array<Value>): Return {
+        private fun make(id: Identity, owner: Block, returnType: Type, values: Array<Value>): Return {
             require(isAppropriateType(returnType, values)) {
                 "cannot be $returnType, but values=${values.joinToString { it.toString() }}"
             }

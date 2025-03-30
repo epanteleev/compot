@@ -2,7 +2,6 @@ package ir.instruction
 
 import common.arrayWrapperOf
 import ir.types.*
-import ir.value.asValue
 import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 import ir.value.Value

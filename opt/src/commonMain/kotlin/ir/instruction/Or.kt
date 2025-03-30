@@ -4,7 +4,6 @@ import ir.instruction.utils.IRInstructionVisitor
 import ir.types.Type
 import ir.value.Value
 import ir.module.block.Block
-import ir.types.ArithmeticType
 import ir.types.IntegerType
 
 
@@ -19,8 +18,6 @@ class Or private constructor(id: Identity, owner: Block, tp: IntegerType, a: Val
 
     companion object {
         const val NAME = "or"
-        const val FIRST = 0
-        const val SECOND = 1
 
         fun or(a: Value, b: Value): InstBuilder<Or> = { id: Identity, owner: Block ->
             make(id, owner, a, b)

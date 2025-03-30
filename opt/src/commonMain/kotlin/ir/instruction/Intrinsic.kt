@@ -10,18 +10,16 @@ import ir.intrinsic.IntrinsicProvider
 
 class Intrinsic private constructor(id: Identity, owner: Block, private val inputs: Array<Value>, val implementor: IntrinsicProvider, cont: Block)
     : TerminateInstruction(id, owner, inputs, arrayOf(cont)) {
-    override fun dump(): String {
-        val builder = StringBuilder()
-        builder.append(NAME)
-        builder.append(" @${implementor.name}(")
+    override fun dump(): String = buildString {
+        append(NAME)
+        append(" @${implementor.name}(")
         inputs.forEachIndexed { index, value ->
-            builder.append("$value: ${value.type()}")
+            append("$value: ${value.type()}")
             if (index != inputs.size - 1) {
-                builder.append(", ")
+                append(", ")
             }
         }
-        builder.append(")")
-        return builder.toString()
+        append(")")
     }
 
     fun inputs(): ArrayWrapper<Value> {

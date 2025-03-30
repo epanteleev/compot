@@ -70,7 +70,7 @@ enum class FloatPredicate: AnyPredicateType {
 class FloatCompare private constructor(id: Identity, owner: Block, operandsType: FloatingPointType, a: Value, private val predicate: FloatPredicate, b: Value) :
     CompareInstruction(id, owner, operandsType, a, b) {
     override fun dump(): String {
-        return "%${name()} = $NAME $predicate $operandsType ${first()}, ${second()}"
+        return "%${name()} = $NAME $predicate $operandsType ${lhs()}, ${rhs()}"
     }
 
     override fun operandsType(): FloatingPointType = operandsType.asType<FloatingPointType>()
@@ -103,7 +103,7 @@ class FloatCompare private constructor(id: Identity, owner: Block, operandsType:
         }
 
         fun typeCheck(icmp: FloatCompare): Boolean {
-            return isAppropriateType(icmp.first().type(), icmp.second().type())
+            return isAppropriateType(icmp.lhs().type(), icmp.rhs().type())
         }
     }
 }

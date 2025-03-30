@@ -17,8 +17,6 @@ class Shl private constructor(id: Identity, owner: Block, tp: IntegerType, a: Va
 
     companion object {
         const val NAME = "shl"
-        const val FIRST = 0
-        const val OFFSET = 1
 
         fun shl(a: Value, b: Value): InstBuilder<Shl> = { id: Identity, owner: Block ->
             make(id, owner, a, b)

@@ -27,6 +27,10 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
         return operands[SOURCE]
     }
 
+    fun source(newSource: Value) = owner.df {
+        update(SOURCE, newSource)
+    }
+
     fun index(): IntegerConstant = index
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
@@ -34,7 +38,7 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
     }
 
     companion object {
-        const val SOURCE = 0
+        private const val SOURCE = 0
         const val NAME = "gfp"
 
         fun gfp(source: Value, type: AggregateType, index: IntegerConstant): InstBuilder<GetFieldPtr> = {

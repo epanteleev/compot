@@ -85,7 +85,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = shl %a, %copy
 
             val copy = bb.putBefore(shl, Copy.copy(shl.rhs()))
-            bb.updateDF(shl, Shl.OFFSET, copy)
+            shl.rhs(copy)
             return shl
         }
 
@@ -102,7 +102,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = shr %a, %copy
 
             val copy = bb.putBefore(shr, Copy.copy(shr.rhs()))
-            bb.updateDF(shr, Shr.OFFSET, copy)
+            shr.rhs(copy)
             return shr
         }
 
@@ -195,7 +195,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = lea %gen
             //  %res = copy %lea
 
-            return bb.replace(copy, Lea.lea(copy.origin().asValue()))
+            return bb.replace(copy, Lea.lea(copy.operand().asValue()))
         }
 
         copy.match(copy(extern())) {
@@ -207,7 +207,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = copy %lea
 
 
-            return bb.replace(copy, Load.load(PtrType, copy.origin()))
+            return bb.replace(copy, Load.load(PtrType, copy.operand()))
         }
 
         copy.match(copy(gAggregate())) { // TODO: Check if it's correct
@@ -218,7 +218,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = lea %gAggregate
             //  %res = copy %lea
 
-            return bb.replace(copy, Lea.lea(copy.origin()))
+            return bb.replace(copy, Lea.lea(copy.operand()))
         }
 
         return copy
@@ -246,7 +246,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = gep %lea, %idx
 
             val lea = bb.putBefore(gep, Lea.lea(gep.source().asValue()))
-            bb.updateDF(gep, GetElementPtr.SOURCE, lea)
+            gep.source(lea)
             return lea
         }
 
@@ -285,7 +285,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = gep %lea, %idx
 
             val lea = bb.putBefore(gep, Load.load(PtrType, gep.source()))
-            bb.updateDF(gep, GetElementPtr.SOURCE, lea)
+            gep.source(lea)
             return lea
         }
 
@@ -298,7 +298,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = gep %gen, %lea
 
             val lea = bb.putBefore(gep, Load.load(PtrType, gep.index()))
-            bb.updateDF(gep, GetElementPtr.INDEX, lea)
+            gep.index(lea)
             return lea
         }
 
@@ -311,7 +311,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = gep %lea, %idx
 
             val lea = bb.putBefore(gep, Lea.lea(gep.source()))
-            bb.updateDF(gep, GetElementPtr.SOURCE, lea)
+            gep.source(lea)
             return lea
         }
 
@@ -328,7 +328,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = gfp %lea, %idx
 
             val lea = bb.putBefore(gfp, Lea.lea(gfp.source().asValue()))
-            bb.updateDF(gfp, GetFieldPtr.SOURCE, lea)
+            gfp.source(lea)
             return lea
         }
 
@@ -353,7 +353,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = gfp %lea, %idx
 
             val lea = bb.putBefore(gfp, Lea.lea(gfp.source()))
-            bb.updateDF(gfp, GetFieldPtr.SOURCE, lea)
+            gfp.source(lea)
             return lea
         }
 
@@ -366,7 +366,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = gfp %lea, %idx
 
             val lea = bb.putBefore(gfp, Load.load(PtrType, gfp.source()))
-            bb.updateDF(gfp, GetFieldPtr.SOURCE, lea)
+            gfp.source(lea)
             return lea
         }
 
@@ -382,8 +382,8 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = lea %gen
             //  %res = icmp %pred, %lea
 
-            val lea = bb.putBefore(icmp, Lea.lea(icmp.second()))
-            bb.updateDF(icmp, IntCompare.SECOND, lea)
+            val lea = bb.putBefore(icmp, Lea.lea(icmp.rhs()))
+            icmp.rhs(lea)
             return lea
         }
 
@@ -395,37 +395,37 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = lea %gen
             //  %res = icmp %pred, %lea
 
-            val lea = bb.putBefore(icmp, Lea.lea(icmp.first()))
-            bb.updateDF(icmp, IntCompare.FIRST, lea)
+            val lea = bb.putBefore(icmp, Lea.lea(icmp.lhs()))
+            icmp.lhs(lea)
             return lea
         }
 
-        val lhs = icmp.first()
+        val lhs = icmp.lhs()
         if (lhs.isa(extern())) {
             val lea = bb.putBefore(icmp, Load.load(PtrType, lhs))
-            bb.updateDF(icmp, IntCompare.FIRST, lea)
+            icmp.lhs(lea)
 
         } else if (lhs.isa(gAggregate())) {
             val lea = bb.putBefore(icmp, Lea.lea(lhs))
-            bb.updateDF(icmp, IntCompare.FIRST, lea)
+            icmp.lhs(lea)
 
         } else if (lhs.isa(gValue(anytype()))) {
             val lea = bb.putBefore(icmp, Lea.lea(lhs))
-            bb.updateDF(icmp, IntCompare.FIRST, lea)
+            icmp.lhs(lea)
         }
 
-        val rhs = icmp.second()
+        val rhs = icmp.rhs()
         if (rhs.isa(extern())) {
             val lea = bb.putBefore(icmp, Load.load(PtrType, rhs))
-            bb.updateDF(icmp, IntCompare.SECOND, lea)
+            icmp.rhs(lea)
 
         } else if (rhs.isa(gAggregate())) {
             val lea = bb.putBefore(icmp, Lea.lea(rhs))
-            bb.updateDF(icmp, IntCompare.SECOND, lea)
+            icmp.rhs(lea)
 
         } else if (rhs.isa(gValue(anytype()))) {
             val lea = bb.putBefore(icmp, Lea.lea(rhs))
-            bb.updateDF(icmp, IntCompare.SECOND, lea)
+            icmp.rhs(lea)
         }
 
         return icmp
@@ -460,7 +460,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
                 //  %res = load %lea
 
                 val lea = bb.putBefore(load, Lea.lea(load.operand()))
-                bb.updateDF(load, Load.VALUE, lea)
+                load.operand(lea)
                 return lea
             }
         }
@@ -474,7 +474,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = load %lea
 
             val lea = bb.putBefore(load, Load.load(PtrType, load.operand()))
-            bb.updateDF(load, Load.VALUE, lea)
+            load.operand(lea)
             return lea
         }
 
@@ -700,7 +700,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  store %lea, %val
 
             val lea = bb.putBefore(store, Load.load(PtrType, store.pointer()))
-            bb.updateDF(store, Store.DESTINATION, lea)
+            store.pointer(lea)
             return lea
         }
 
@@ -713,7 +713,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  store %ptr, %lea
 
             val lea = bb.putBefore(store, Load.load(PtrType, store.value()))
-            bb.updateDF(store, Store.VALUE, lea)
+            store.value(lea)
             return lea
         }
 
@@ -726,7 +726,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  store %ptr, %lea
 
             val lea = bb.putBefore(store, Lea.lea(store.value()))
-            bb.updateDF(store, Store.VALUE, lea)
+            store.value(lea)
             return lea
         }
 
@@ -739,7 +739,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  store %res, %val
 
             val lea = bb.putBefore(store, Lea.lea(store.value().asValue()))
-            bb.updateDF(store, Store.VALUE, lea)
+            store.value(lea)
             return lea
         }
 
@@ -752,7 +752,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = store i8 %val, %lea
 
             val lea = bb.putBefore(store, Lea.lea(store.pointer()))
-            bb.updateDF(store, Store.DESTINATION, lea)
+            store.pointer(lea)
             return lea
         }
 
@@ -778,7 +778,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  move %ptr, %lea
 
             val lea = bb.putBefore(store, Lea.lea(store.value()))
-            bb.updateDF(store, Store.VALUE, lea)
+            store.value(lea)
             return lea
         }
 
@@ -879,7 +879,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = lea %gen
             //  %res = ptr2int %lea
 
-            val lea = bb.putBefore(ptr2Int, Lea.lea(ptr2Int.value().asValue()))
+            val lea = bb.putBefore(ptr2Int, Lea.lea(ptr2Int.operand().asValue()))
             bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
             return lea
         }
@@ -892,7 +892,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = lea @global
             //  %res = ptr2int %lea
 
-            val lea = bb.putBefore(ptr2Int, Lea.lea(ptr2Int.value()))
+            val lea = bb.putBefore(ptr2Int, Lea.lea(ptr2Int.operand()))
             bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
             return lea
         }
@@ -905,7 +905,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = load PtrType, @extern
             //  %res = ptr2int %lea
 
-            val use = ptr2Int.value()
+            val use = ptr2Int.operand()
             val lea = bb.putBefore(ptr2Int, Load.load(PtrType, use))
             bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
         }
@@ -918,7 +918,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %lea = lea %gAggregate
             //  %res = ptr2int %lea
 
-            val use = ptr2Int.value()
+            val use = ptr2Int.operand()
             val lea = bb.putBefore(ptr2Int, Lea.lea(use))
             bb.updateDF(ptr2Int, Pointer2Int.SOURCE, lea)
         }
@@ -936,7 +936,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  memcpy %srcLea, %dst, %size
 
             val dst = bb.putBefore(memcpy, Load.load(PtrType, memcpy.destination()))
-            bb.updateDF(memcpy, Memcpy.DESTINATION, dst)
+            memcpy.destination(dst)
             return dst
         }
 
@@ -949,7 +949,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  memcpy %srcLea, %dst, %size
 
             val src = bb.putBefore(memcpy, Load.load(PtrType, memcpy.source()))
-            bb.updateDF(memcpy, Memcpy.SOURCE, src)
+            memcpy.source(src)
             return src
         }
 
@@ -962,7 +962,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  memcpy %srcLea, %dst, %size
 
             val dst = bb.putBefore(memcpy, Lea.lea(memcpy.destination()))
-            bb.updateDF(memcpy, Memcpy.DESTINATION, dst)
+            memcpy.destination(dst)
             return dst
         }
 
@@ -975,7 +975,7 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  memcpy %src, %dstLea, %size
 
             val src = bb.putBefore(memcpy, Lea.lea(memcpy.source()))
-            bb.updateDF(memcpy, Memcpy.SOURCE, src)
+            memcpy.source(src)
             return src
         }
 
@@ -989,10 +989,10 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  memcpy %srcLea, %dstLea
 
             val src = bb.putBefore(memcpy, Lea.lea(memcpy.source()))
-            bb.updateDF(memcpy, Memcpy.SOURCE, src)
+            memcpy.source(src)
 
             val dst = bb.putBefore(memcpy, Lea.lea(memcpy.destination()))
-            bb.updateDF(memcpy, Memcpy.DESTINATION, dst)
+            memcpy.destination(dst)
             return memcpy
         }
 
@@ -1005,10 +1005,10 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  memcpy %srcLea, %dst
 
             val src = bb.putBefore(memcpy, Lea.lea(memcpy.source()))
-            bb.updateDF(memcpy, Memcpy.SOURCE, src)
+            memcpy.source(src)
 
             val copyDst = bb.putBefore(memcpy, Copy.copy(memcpy.destination()))
-            bb.updateDF(memcpy, Memcpy.DESTINATION, copyDst)
+            memcpy.destination(copyDst)
             return memcpy
         }
 
@@ -1021,10 +1021,10 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  memcpy %src, %dstLea
 
             val copySrc = bb.putBefore(memcpy, Copy.copy(memcpy.source()))
-            bb.updateDF(memcpy, Memcpy.SOURCE, copySrc)
+            memcpy.source(copySrc)
 
             val dst = bb.putBefore(memcpy, Lea.lea(memcpy.destination()))
-            bb.updateDF(memcpy, Memcpy.DESTINATION, dst)
+            memcpy.destination(dst)
             return memcpy
         }
 
@@ -1038,9 +1038,10 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  memcpy %srcLea, %dstLea
 
             val copySrc = bb.putBefore(memcpy, Copy.copy(memcpy.source()))
+            memcpy.source(copySrc)
+
             val copyDst = bb.putBefore(memcpy, Copy.copy(memcpy.destination()))
-            bb.updateDF(memcpy, Memcpy.SOURCE, copySrc)
-            bb.updateDF(memcpy, Memcpy.DESTINATION, copyDst)
+            memcpy.destination(copyDst)
             return memcpy
         }
 
@@ -1107,8 +1108,8 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = trunc %projDiv to i8
             //  %rem = trunc %projRem to i8
 
-            val extFirst  = bb.putBefore(tupleDiv, SignExtend.sext(tupleDiv.first(), I16Type))
-            val extSecond = bb.putBefore(tupleDiv, SignExtend.sext(tupleDiv.second(), I16Type))
+            val extFirst  = bb.putBefore(tupleDiv, SignExtend.sext(tupleDiv.lhs(), I16Type))
+            val extSecond = bb.putBefore(tupleDiv, SignExtend.sext(tupleDiv.rhs(), I16Type))
             val newDiv    = bb.putBefore(tupleDiv, TupleDiv.div(extFirst, extSecond))
 
             return truncateProjections(tupleDiv, newDiv, I8Type)
@@ -1127,8 +1128,8 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %res = trunc %projDiv to u8
             //  %rem = trunc %projRem to u8
 
-            val extFirst  = bb.putBefore(tupleDiv, ZeroExtend.zext(tupleDiv.first(), U16Type))
-            val extSecond = bb.putBefore(tupleDiv, ZeroExtend.zext(tupleDiv.second(), U16Type))
+            val extFirst  = bb.putBefore(tupleDiv, ZeroExtend.zext(tupleDiv.lhs(), U16Type))
+            val extSecond = bb.putBefore(tupleDiv, ZeroExtend.zext(tupleDiv.rhs(), U16Type))
             val newDiv    = bb.putBefore(tupleDiv, TupleDiv.div(extFirst, extSecond))
 
             return truncateProjections(tupleDiv, newDiv, U8Type)
@@ -1149,9 +1150,9 @@ internal class Lowering private constructor(val cfg: FunctionData): IRInstructio
             //  %rem = copy %projRem
 
             isolateProjections(tupleDiv)
-            val divider = tupleDiv.second().asValue<LocalValue>()
+            val divider = tupleDiv.rhs().asValue<LocalValue>()
             val copy = bb.putBefore(tupleDiv, Copy.copy(divider))
-            bb.updateDF(tupleDiv, TupleDiv.SECOND, copy)
+            tupleDiv.rhs(copy)
             return tupleDiv
         }
 

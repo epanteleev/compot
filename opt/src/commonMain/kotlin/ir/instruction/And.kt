@@ -17,8 +17,6 @@ class And private constructor(id: Identity, owner: Block, tp: IntegerType, a: Va
 
     companion object {
         const val NAME = "and"
-        const val FIRST = 0
-        const val SECOND = 1
 
         fun and(a: Value, b: Value): InstBuilder<And> = {
             id: Identity, owner: Block -> make(id, owner, a, b)

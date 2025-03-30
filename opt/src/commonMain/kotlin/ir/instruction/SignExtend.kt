@@ -7,21 +7,13 @@ import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class SignExtend private constructor(id: Identity, owner: Block, private val toType: SignedIntType, value: Value):
-    ValueInstruction(id, owner, arrayOf(value)) {
+class SignExtend private constructor(id: Identity, owner: Block, toType: SignedIntType, value: Value):
+    Unary(id, owner, toType, value) {
     override fun dump(): String {
-        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
+        return "%${name()} = $NAME ${operand().type()} ${operand()} to ${type()}"
     }
 
-    fun value(): Value {
-        assertion(operands.size == 1) {
-            "size should be 1 in $this instruction"
-        }
-
-        return operands[0]
-    }
-
-    override fun type(): SignedIntType = toType
+    override fun type(): SignedIntType = tp.asType()
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -52,7 +44,7 @@ class SignExtend private constructor(id: Identity, owner: Block, private val toT
         }
 
         fun typeCheck(sext: SignExtend): Boolean {
-            return isAppropriateType(sext.type(), sext.value().type())
+            return isAppropriateType(sext.type(), sext.operand().type())
         }
     }
 }

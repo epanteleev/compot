@@ -1,31 +1,22 @@
 package ir.instruction
 
-import common.assertion
 import ir.value.Value
 import ir.types.*
 import ir.instruction.utils.IRInstructionVisitor
 import ir.module.block.Block
 
 
-class Int2Float private constructor(id: Identity, owner: Block, private val toType: FloatingPointType, value: Value):
-    ValueInstruction(id, owner, arrayOf(value)) {
+class Int2Float private constructor(id: Identity, owner: Block, toType: FloatingPointType, value: Value):
+    Unary(id, owner, toType, value) {
     override fun dump(): String {
-        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
-    }
-
-    fun value(): Value {
-        assertion(operands.size == 1) {
-            "size should be 1 in $this instruction"
-        }
-
-        return operands[0]
+        return "%${name()} = $NAME ${operand().type()} ${operand()} to ${type()}"
     }
 
     fun fromType(): SignedIntType {
-        return value().type().asType()
+        return operand().type().asType()
     }
 
-    override fun type(): FloatingPointType = toType
+    override fun type(): FloatingPointType = tp.asType()
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -52,7 +43,7 @@ class Int2Float private constructor(id: Identity, owner: Block, private val toTy
         }
 
         fun typeCheck(fpext: Int2Float): Boolean {
-            return isAppropriateType(fpext.value().type())
+            return isAppropriateType(fpext.operand().type())
         }
     }
 }

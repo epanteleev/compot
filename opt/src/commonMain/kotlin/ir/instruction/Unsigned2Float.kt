@@ -8,25 +8,17 @@ import ir.types.FloatingPointType
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Unsigned2Float private constructor(id: Identity, owner: Block, private val toType: FloatingPointType, value: Value):
-    ValueInstruction(id, owner, arrayOf(value)) {
+class Unsigned2Float private constructor(id: Identity, owner: Block, toType: FloatingPointType, value: Value):
+    Unary(id, owner, toType, value) {
     override fun dump(): String {
-        return "%${name()} = $NAME ${value().type()} ${value()} to ${type()}"
-    }
-
-    fun value(): Value {
-        assertion(operands.size == 1) {
-            "size should be 1 in $this instruction"
-        }
-
-        return operands[0]
+        return "%${name()} = $NAME ${operand().type()} ${operand()} to ${type()}"
     }
 
     fun fromType(): UnsignedIntType {
-        return value().type().asType()
+        return operand().type().asType()
     }
 
-    override fun type(): FloatingPointType = toType
+    override fun type(): FloatingPointType = tp.asType()
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
@@ -34,7 +26,6 @@ class Unsigned2Float private constructor(id: Identity, owner: Block, private val
 
     companion object {
         const val NAME = "uint2fp"
-        const val VALUE = 0
 
         fun uint2fp(value: Value, toType: FloatingPointType): InstBuilder<Unsigned2Float> = {
             id: Identity, owner: Block -> make(id, owner, toType, value)
@@ -54,7 +45,7 @@ class Unsigned2Float private constructor(id: Identity, owner: Block, private val
         }
 
         fun typeCheck(uint2fp: Unsigned2Float): Boolean {
-            return isAppropriateType(uint2fp.value().type())
+            return isAppropriateType(uint2fp.operand().type())
         }
     }
 }

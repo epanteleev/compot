@@ -73,7 +73,7 @@ private class EscapeAnalysis(private val functionData: FunctionData): FunctionAn
     }
 
     private fun visitPointer2Int(pointer2Int: Pointer2Int) {
-        escapeState[pointer2Int.value()] = union(pointer2Int.value(), EscapeState.Unknown)
+        escapeState[pointer2Int.operand()] = union(pointer2Int.operand(), EscapeState.Unknown)
     }
 
     private fun visitCall(call: Callable) {

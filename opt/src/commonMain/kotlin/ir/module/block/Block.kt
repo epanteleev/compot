@@ -73,6 +73,18 @@ class Block private constructor(private val mc: ModificationCounter, override va
         instructions.transform { fn(it) }
     }
 
+    fun<T> df(closure: () -> T): T {
+        return mc.df(closure)
+    }
+
+    fun<T> cf(closure: () -> T): T {
+        return mc.cf(closure)
+    }
+
+    fun<T> dfANDcf(closure: () -> T): T {
+        return mc.dfANDcf(closure)
+    }
+
     fun<V: Value> updateUsages(localValue: UsableValue, replacement: () -> V): V = mc.df {
         return@df UsableValue.updateUsages(localValue, replacement)
     }

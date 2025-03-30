@@ -14,9 +14,17 @@ abstract class ArithmeticBinary(id: Identity, owner: Block, protected val tp: Ar
         return operands[LHS]
     }
 
+    fun lhs(newLhs: Value) = owner.df {
+        update(LHS, newLhs)
+    }
+
     fun rhs(): Value {
         check()
         return operands[RHS]
+    }
+
+    fun rhs(newRhs: Value) = owner.df {
+        update(RHS, newRhs)
     }
 
     private fun check() {
@@ -26,7 +34,7 @@ abstract class ArithmeticBinary(id: Identity, owner: Block, protected val tp: Ar
     }
 
     companion object {
-        const val LHS = 0
-        const val RHS = 1
+        private const val LHS = 0
+        private const val RHS = 1
     }
 }

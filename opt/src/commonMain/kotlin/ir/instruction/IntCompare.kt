@@ -37,7 +37,7 @@ enum class IntPredicate: AnyPredicateType {
 class IntCompare private constructor(id: Identity, owner: Block, operandsType: PrimitiveType, a: Value, private val predicate: IntPredicate, b: Value) :
     CompareInstruction(id, owner, operandsType, a, b) {
     override fun dump(): String {
-        return "%${name()} = $NAME $predicate $operandsType ${first()}, ${second()}"
+        return "%${name()} = $NAME $predicate $operandsType ${lhs()}, ${rhs()}"
     }
 
     override fun operandsType(): PrimitiveType = operandsType
@@ -49,8 +49,6 @@ class IntCompare private constructor(id: Identity, owner: Block, operandsType: P
 
     companion object {
         const val NAME = "icmp"
-        const val FIRST = 0
-        const val SECOND = 1
 
         fun icmp(a: Value, predicate: IntPredicate, b: Value): InstBuilder<IntCompare> = { id: Identity, owner: Block ->
             make(id, owner, a, predicate, b)
@@ -71,7 +69,7 @@ class IntCompare private constructor(id: Identity, owner: Block, operandsType: P
         }
 
         fun typeCheck(icmp: IntCompare): Boolean {
-            return isAppropriateType(icmp.first().type(), icmp.second().type())
+            return isAppropriateType(icmp.lhs().type(), icmp.rhs().type())
         }
     }
 }

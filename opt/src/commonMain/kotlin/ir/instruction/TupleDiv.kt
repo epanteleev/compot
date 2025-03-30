@@ -10,12 +10,12 @@ import ir.instruction.utils.IRInstructionVisitor
 class TupleDiv private constructor(id: Identity, owner: Block, private val tp: TupleType, a: Value, b: Value) :
     ValueInstruction(id, owner, arrayOf(a, b)), TupleValue {
     override fun dump(): String {
-        return "%${name()} = $NAME $tp, ${first().type()} ${first()}, ${second().type()} ${second()}"
+        return "%${name()} = $NAME $tp, ${lhs().type()} ${lhs()}, ${rhs().type()} ${rhs()}"
     }
 
     override fun type(): TupleType = tp
 
-    fun first(): Value {
+    fun lhs(): Value {
         assertion(operands.size == 2) {
             "size should be 2 in $this instruction"
         }
@@ -23,12 +23,20 @@ class TupleDiv private constructor(id: Identity, owner: Block, private val tp: T
         return operands[0]
     }
 
-    fun second(): Value {
+    fun lhs(newValue: Value) = owner.df {
+        update(FIRST, newValue)
+    }
+
+    fun rhs(): Value {
         assertion(operands.size == 2) {
             "size should be 2 in $this instruction"
         }
 
         return operands[1]
+    }
+
+    fun rhs(newValue: Value) = owner.df {
+        update(SECOND, newValue)
     }
 
     fun quotient(): Projection {
@@ -45,8 +53,8 @@ class TupleDiv private constructor(id: Identity, owner: Block, private val tp: T
 
     companion object {
         const val NAME = "div"
-        const val FIRST = 0
-        const val SECOND = 1
+        private const val FIRST = 0
+        private const val SECOND = 1
 
         fun div(a: Value, b: Value): InstBuilder<TupleDiv> = {
             id: Identity, owner: Block -> make(id, owner, a, b)
@@ -70,7 +78,7 @@ class TupleDiv private constructor(id: Identity, owner: Block, private val tp: T
         }
 
         fun typeCheck(binary: TupleDiv): Boolean {
-            return isAppropriateTypes(binary.type(), binary.first().type(), binary.second().type())
+            return isAppropriateTypes(binary.type(), binary.lhs().type(), binary.rhs().type())
         }
     }
 }

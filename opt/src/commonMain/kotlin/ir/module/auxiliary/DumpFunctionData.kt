@@ -6,7 +6,6 @@ import ir.module.FunctionPrototype
 import ir.module.block.Block
 import ir.pass.analysis.traverse.PreOrderFabric
 import ir.value.ArgumentValue
-import ir.value.Value
 
 
 abstract class DumpFunctionData(protected val functionData: FunctionData) {

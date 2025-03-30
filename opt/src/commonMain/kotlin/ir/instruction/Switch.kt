@@ -1,6 +1,5 @@
 package ir.instruction
 
-import common.arrayWrapperOf
 import common.assertion
 import common.forEachWith
 import ir.value.Value
@@ -16,28 +15,26 @@ class Switch private constructor(id: Identity, owner: Block,
                                  private val table: Array<IntegerConstant>,
                                  targets: Array<Block>):
     TerminateInstruction(id, owner, arrayOf(value), targets + arrayOf(default)) {
-    override fun dump(): String {
-        val builder = StringBuilder()
-        builder.append("$NAME ")
-            .append(value().type().toString())
-            .append(' ')
-            .append(value().toString())
-            .append(", label ")
-            .append(default())
+    override fun dump(): String = buildString {
+        append("$NAME ")
+        append(value().type().toString())
+        append(' ')
+        append(value().toString())
+        append(", label ")
+        append(default())
 
-        builder.append(" [")
+        append(" [")
         table.forEachWith(targets) { value, bb, i ->
             if (bb == default()) {
                 return@forEachWith
             }
 
-            builder.append("$value: $bb")
+            append("$value: $bb")
             if (i < table.size - 1) {
-                builder.append(", ")
+                append(", ")
             }
         }
-        builder.append(']')
-        return builder.toString()
+        append(']')
     }
 
     fun value(): Value {

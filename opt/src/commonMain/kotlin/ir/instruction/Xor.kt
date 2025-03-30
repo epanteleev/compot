@@ -19,8 +19,6 @@ class Xor private constructor(id: Identity, owner: Block, tp: IntegerType, a: Va
 
     companion object {
         const val NAME = "xor"
-        const val FIRST = 0
-        const val SECOND = 1
 
         fun xor(a: Value, b: Value): InstBuilder<Xor> = { id: Identity, owner: Block ->
             make(id, owner, a, b)

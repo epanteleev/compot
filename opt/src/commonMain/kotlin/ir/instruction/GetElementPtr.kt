@@ -24,6 +24,10 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
         return operands[SOURCE]
     }
 
+    fun source(newSource: Value) = owner.df {
+        update(SOURCE, newSource)
+    }
+
     fun index(): Value {
         assertion(operands.size == 2) {
             "size should be 2 in $this instruction"
@@ -32,13 +36,17 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
         return operands[INDEX]
     }
 
+    fun index(newIndex: Value) = owner.df {
+        update(INDEX, newIndex)
+    }
+
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
     }
 
     companion object {
-        const val SOURCE = 0
-        const val INDEX  = 1
+        private const val SOURCE = 0
+        private const val INDEX  = 1
         const val NAME = "gep"
 
         fun gep(source: Value, elementType: NonTrivialType, index: Value): InstBuilder<GetElementPtr> = {

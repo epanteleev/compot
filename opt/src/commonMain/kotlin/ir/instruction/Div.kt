@@ -19,8 +19,6 @@ class Div private constructor(id: Identity, owner: Block, tp: FloatingPointType,
 
     companion object {
         const val NAME = "div"
-        const val FIRST = 0
-        const val SECOND = 1
 
         fun div(a: Value, b: Value): InstBuilder<Div> = {
             id: Identity, owner: Block -> make(id, owner, a, b)

@@ -27,12 +27,20 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
         return operands[DESTINATION]
     }
 
+    fun destination(newValue: Value) = owner.df {
+        update(DESTINATION, newValue)
+    }
+
     fun source(): Value {
         assertion(operands.size == 3) {
             "size should be 2 in $this instruction"
         }
 
         return operands[SOURCE]
+    }
+
+    fun source(newValue: Value) = owner.df {
+        update(SOURCE, newValue)
     }
 
     fun length(): UnsignedIntegerConstant {
@@ -45,9 +53,9 @@ class Memcpy private constructor(id: Identity, owner: Block, dst: Value, src: Va
 
     companion object {
         const val NAME = "memcpy"
-        const val DESTINATION = 0
-        const val SOURCE = 1
-        const val LENGTH = 2
+        private const val DESTINATION = 0
+        private const val SOURCE = 1
+        private const val LENGTH = 2
 
         fun memcpy(dst: Value, src: Value, length: UnsignedIntegerConstant): InstBuilder<Memcpy> = {
             id: Identity, owner: Block -> make(id, owner, dst, src, length)

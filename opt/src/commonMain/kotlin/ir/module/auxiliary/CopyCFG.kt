@@ -261,32 +261,32 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     }
 
     override fun visit(bitcast: Bitcast): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(bitcast.value())
+        val operand = mapUsage<Value>(bitcast.operand())
         return Bitcast.bitcast(operand, bitcast.type())
     }
 
     override fun visit(flag2Int: Flag2Int): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(flag2Int.value())
+        val operand = mapUsage<Value>(flag2Int.operand())
         return Flag2Int.flag2int(operand, flag2Int.type())
     }
 
     override fun visit(zext: ZeroExtend): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(zext.value())
+        val operand = mapUsage<Value>(zext.operand())
         return ZeroExtend.zext(operand, zext.type())
     }
 
     override fun visit(itofp: Int2Float): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(itofp.value())
+        val operand = mapUsage<Value>(itofp.operand())
         return Int2Float.int2fp(operand, itofp.type())
     }
 
     override fun visit(utofp: Unsigned2Float): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(utofp.value())
+        val operand = mapUsage<Value>(utofp.operand())
         return Unsigned2Float.uint2fp(operand, utofp.type())
     }
 
     override fun visit(sext: SignExtend): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(sext.value())
+        val operand = mapUsage<Value>(sext.operand())
         return SignExtend.sext(operand, sext.type())
     }
 
@@ -296,12 +296,12 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     }
 
     override fun visit(fptruncate: FpTruncate): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(fptruncate.value())
+        val operand = mapUsage<Value>(fptruncate.operand())
         return FpTruncate.fptrunc(operand, fptruncate.type())
     }
 
     override fun visit(fpext: FpExtend): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(fpext.value())
+        val operand = mapUsage<Value>(fpext.operand())
         return FpExtend.fpext(operand, fpext.type())
     }
 
@@ -311,7 +311,7 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     }
 
     override fun visit(copy: Copy): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(copy.origin())
+        val operand = mapUsage<Value>(copy.operand())
         return Copy.copy(operand)
     }
 
@@ -338,15 +338,15 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     }
 
     override fun visit(icmp: IntCompare): InstBuilder<Instruction> {
-        val first  = mapUsage<Value>(icmp.first())
-        val second = mapUsage<Value>(icmp.second())
+        val first  = mapUsage<Value>(icmp.lhs())
+        val second = mapUsage<Value>(icmp.rhs())
 
         return IntCompare.icmp(first, icmp.predicate(), second)
     }
 
     override fun visit(fcmp: FloatCompare): InstBuilder<Instruction> {
-        val first  = mapUsage<Value>(fcmp.first())
-        val second = mapUsage<Value>(fcmp.second())
+        val first  = mapUsage<Value>(fcmp.lhs())
+        val second = mapUsage<Value>(fcmp.rhs())
 
         return FloatCompare.fcmp(first, fcmp.predicate(), second)
     }
@@ -417,12 +417,12 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     }
 
     override fun visit(int2ptr: Int2Pointer): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(int2ptr.value())
+        val operand = mapUsage<Value>(int2ptr.operand())
         return Int2Pointer.int2ptr(operand)
     }
 
     override fun visit(ptr2Int: Pointer2Int): InstBuilder<Instruction> {
-        val operand = mapUsage<Value>(ptr2Int.value())
+        val operand = mapUsage<Value>(ptr2Int.operand())
         return Pointer2Int.ptr2int(operand, ptr2Int.type())
     }
 
@@ -456,8 +456,8 @@ internal class CopyCFG private constructor(private val fd: FunctionData) : IRIns
     }
 
     override fun visit(tupleDiv: TupleDiv): InstBuilder<Instruction> {
-        val first  = mapUsage<Value>(tupleDiv.first())
-        val second = mapUsage<Value>(tupleDiv.second())
+        val first  = mapUsage<Value>(tupleDiv.lhs())
+        val second = mapUsage<Value>(tupleDiv.rhs())
 
         return TupleDiv.div(first,  second)
     }

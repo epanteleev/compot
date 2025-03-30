@@ -25,7 +25,7 @@ internal class FixedRegisterInstructionsAnalysis private constructor(private val
 
         inst.match(tupleDiv(any(), any())) { tupleDiv: TupleDiv ->
             rdxFixedReg.add(tupleDiv.remainder())
-            val divider = tupleDiv.second()
+            val divider = tupleDiv.rhs()
             if (divider is LocalValue) {
                 rcxFixedReg.add(divider)
             }

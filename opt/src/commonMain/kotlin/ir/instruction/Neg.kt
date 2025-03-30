@@ -1,28 +1,20 @@
 package ir.instruction
 
-import common.assertion
 import ir.value.Value
 import ir.value.asType
 import ir.module.block.Block
 import ir.types.ArithmeticType
 import ir.instruction.utils.IRInstructionVisitor
+import ir.types.asType
 
 
 class Neg private constructor(id: Identity, owner: Block, tp: ArithmeticType, value: Value):
-    ArithmeticUnary(id, owner, tp, value) {
+    Unary(id, owner, tp, value) {
     override fun dump(): String {
         return "%${name()} = $NAME $tp ${operand()}"
     }
 
-    override fun type(): ArithmeticType = tp
-
-    fun operand(): Value {
-        assertion(operands.size == 1) {
-            "size should be 2 in $this instruction"
-        }
-
-        return operands[0]
-    }
+    override fun type(): ArithmeticType = tp.asType()
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)
