@@ -1466,9 +1466,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val caseValueConverted = IntegerConstant.of(switchInfo.conditionType.asType(), constant)
         val caseBlock = ir.createLabel()
-        if ((switchInfo.table.isNotEmpty() || ir.currentLabel() == switchInfo.default()) && ir.last() !is TerminateInstruction) {
-            // fall through
-            ir.branch(caseBlock)
+        if (ir.last() !is TerminateInstruction) {
+            if (switchInfo.isFallThrough(ir.currentLabel())) {
+                // fall through
+                ir.branch(caseBlock)
+            } else if (ir.currentLabel() != switchInfo.condBlock) {
+                // fall through
+                ir.branch(caseBlock)
+            }
         }
 
         switchInfo.table.add(caseBlock)

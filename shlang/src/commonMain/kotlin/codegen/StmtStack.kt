@@ -70,6 +70,10 @@ internal class SwitchStmtInfo(val conditionType: IntegerType, val condBlock: Lab
         return default as Label
     }
 
+    fun isFallThrough(label: Label): Boolean {
+        return table.isNotEmpty() && default == label
+    }
+
     fun default(): Label? {
         return default
     }
