@@ -1431,7 +1431,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (val loopInfo = stmtStack.topLoop()) {
             is ForLoopStmtInfo -> ir.branch(loopInfo.resolveUpdate(ir)) //TODO bug???
             is LoopStmtInfo    -> ir.branch(loopInfo.resolveCondition(ir))
-            else -> throw IRCodeGenError("Continue statement outside of loop", continueStatement.begin())
+            null               -> throw IRCodeGenError("Continue statement outside of loop", continueStatement.begin())
         }
     }
 
