@@ -8,7 +8,7 @@ import ir.module.block.Block
 import ir.instruction.utils.IRInstructionVisitor
 
 
-class Store private constructor(id: Identity, owner: Block, pointer: Value, value: Value, private val valueType: NonTrivialType):
+class Store private constructor(id: Identity, owner: Block, pointer: Value, value: Value, private val valueType: PrimitiveType):
     Instruction(id, owner, arrayOf(pointer, value)) {
     override fun dump(): String {
         return "$NAME ptr ${pointer()}, ${value().type()} ${value()}"
@@ -38,7 +38,7 @@ class Store private constructor(id: Identity, owner: Block, pointer: Value, valu
         update(VALUE, newValue)
     }
 
-    fun valueType(): NonTrivialType = valueType
+    fun valueType(): PrimitiveType = valueType
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

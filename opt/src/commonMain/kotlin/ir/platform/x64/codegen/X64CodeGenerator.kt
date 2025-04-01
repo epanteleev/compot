@@ -48,7 +48,7 @@ import ir.value.constant.*
 
 internal data class CodegenException(override val message: String): Exception(message)
 
-internal class X64CodeGenerator(val module: Module, private val ctx: CompilationContext): AnyCodeGenerator {
+internal class X64CodeGenerator(val module: LModule, private val ctx: CompilationContext): AnyCodeGenerator {
     override fun emit(): CompiledModule {
         return CodeEmitter.codegen(module, ctx)
     }
@@ -518,9 +518,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
         val pointerOperand = operand(pointer)
         val value          = operand(store.value())
-        val type = store.value().type()
-
-        StoreCodegen(type.asType(), asm)(value, pointerOperand)
+        StoreCodegen(store.valueType(), asm)(value, pointerOperand)
     }
 
     override fun visit(load: Load) {
@@ -795,7 +793,7 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(phi: Phi) { /* nothing to do */ }
 
     override fun visit(phi: UncompletedPhi) {
-        throw RuntimeException("UncompletedPhi should be handled before code generation")
+        throw RuntimeException("${UncompletedPhi.NAME} should be handled before code generation")
     }
 
     override fun visit(alloc: Alloc) {
@@ -847,33 +845,26 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         val temp1 = CallConvention.temp1
         val fpRet = CallConvention.fpRet
 
-        fun codegen(module: Module, ctx: CompilationContext): CompilationUnit {
-            if (module !is LModule) {
-                throw CodegenException("cannot transform module")
-            }
+        fun codegen(module: LModule, ctx: CompilationContext): CompilationUnit {
             val unit = CompilationUnit()
-
             for (data in module.functions()) {
                 if (data.prototype.attributes.contains(GlobalValueAttribute.INTERNAL)) {
                     continue
                 }
+
                 unit.global(data.prototype.name)
             }
 
-            if (module.globals.isNotEmpty() || module.constantPool.isNotEmpty()) {
-                unit.section(DataSection)
-                for (c in module.constantPool.values) {
-                    unit.mkConstant(c)
-                }
-
-                for (global in module.globals.values) {
-                    unit.makeGlobal(global)
-                }
+            //.data
+            unit.section(DataSection)
+            for (c in module.constantPool.values) {
+                unit.mkConstant(c)
+            }
+            for (global in module.globals.values) {
+                unit.makeGlobal(global)
             }
 
-            if (module.functions().isEmpty()) {
-                return unit
-            }
+            //.text
             unit.section(TextSection)
             for (data in module.functions()) {
                 CodeEmitter(data, unit, ctx).emit()
@@ -881,7 +872,6 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
 
             // Ubuntu requires this section to be present
             unit.section(Section("\".note.GNU-stack\"", "\"\"", SectionType.PROGBITS))
-
             return unit
         }
     }

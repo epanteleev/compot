@@ -133,7 +133,7 @@ private class LinearScan(private val data: FunctionData): FunctionAnalysisPass<R
         }
     }
 
-    private fun excludeIf(value: LocalValue, reg: Register): Boolean {
+    private fun excludeIf(value: LocalValue, reg: Register): Boolean { //TODO improve algorithm
         val range = liveRanges[value]
         for ((interval, operand) in activeFixedIntervals) {
             if (interval.intersect(range)) {
@@ -158,17 +158,15 @@ private class LinearScan(private val data: FunctionData): FunctionAnalysisPass<R
         }
     }
 
-    override fun toString(): String {
-        val builder = StringBuilder()
-        builder.append("----Liveness----\n")
-            .append(liveRanges.toString())
-            .append("----Register allocation----\n")
+    override fun toString(): String = buildString {
+        append("----Liveness----\n")
+        append(liveRanges.toString())
+        append("----Register allocation----\n")
 
         for ((value , _) in liveRanges) {
-            builder.append("$value -> ${registerMap[value]}\n")
+            append("$value -> ${registerMap[value]}\n")
         }
-        builder.append("----The end----\n")
-        return builder.toString()
+        append("----The end----\n")
     }
 }
 
