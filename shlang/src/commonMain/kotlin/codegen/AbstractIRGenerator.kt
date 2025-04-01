@@ -130,32 +130,12 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     protected fun generateGlobalAssignmentDeclarator(varDescriptor: VarDescriptor, declarator: InitDeclarator): AnyGlobalValue {
         val lValueCType = varDescriptor.typeDesc.cType()
-
-        assertion(varDescriptor.storageClass != StorageClass.EXTERN) { "invariant: cType=$varDescriptor" }
         val attr = toIrAttribute(varDescriptor.storageClass)
 
         val constEvalResult = constEvalInitializer(lValueCType, declarator.rvalue)
             ?: throw IRCodeGenError("Cannon evaluate expression", declarator.rvalue.begin())
 
-        return when (constEvalResult) {
-            is PrimitiveConstant -> registerGlobal(declarator, constEvalResult, attr)
-            is InitializerListValue -> registerGlobal(declarator, constEvalResult, attr)
-            is StringLiteralConstant -> {
-                val dimension = when (val cArrayType = varDescriptor.typeDesc.cType() as AnyCArrayType) {
-                    is CArrayType     -> cArrayType.dimension
-                    is CStringLiteral -> cArrayType.dimension
-                    is CUncompletedArrayType -> throw IRCodeGenError("Uncompleted array type", declarator.begin())
-                }
-                val newConstant = if (dimension > constEvalResult.toString().length.toLong()) {
-                    val content = constEvalResult.content
-                    StringLiteralConstant(ArrayType(I8Type, dimension.toInt()), content)
-                } else {
-                    constEvalResult
-                }
-
-                registerGlobal(declarator, newConstant, attr)
-            }
-        }
+        return registerGlobal(declarator, constEvalResult, attr)
     }
 
     private fun getExternFunction(name: String, cPrototype: CFunctionPrototype): ExternFunction {
@@ -235,65 +215,53 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         return globalValue
     }
 
-    protected fun generateGlobalDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value {
+    protected fun generateExternDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value =
         when (val cType = varDesc.typeDesc.cType()) {
             is CFunctionType -> {
-                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass).build()
-                return when (varDesc.storageClass) {
-                    StorageClass.EXTERN -> getExternFunction(declarator.name(), cPrototype)
-                    else -> createFunctionPrototype(declarator, cPrototype)
-                }
+                val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass)
+                    .build()
+                getExternFunction(declarator.name(), cPrototype)
             }
-            is CPrimitive -> {
-                if (varDesc.storageClass == StorageClass.EXTERN) {
-                    return registerExtern(declarator, cType)
-                }
-
-                val irType = mb.toIRLVType<NonTrivialType>(typeHolder, cType)
-                val attr = toIrAttribute(varDesc.storageClass)
-                val constant = NonTrivialConstant.of(irType, 0)
-                return registerGlobal(declarator, constant, attr)
-            }
-            is CArrayType -> {
-                if (varDesc.storageClass == StorageClass.EXTERN) {
-                    return registerExtern(declarator, cType)
-                }
-
-                val irType = mb.toIRType<ArrayType>(typeHolder, cType)
-                val attr = toIrAttribute(varDesc.storageClass)
-                val zero = NonTrivialConstant.of(irType.elementType(), 0)
-                val elements = generateSequence { zero }.take(irType.length).toList()
-                return registerGlobal(declarator, InitializerListValue(irType, elements), attr)
-            }
-            is CStructType -> {
-                if (varDesc.storageClass == StorageClass.EXTERN) {
-                    return registerExtern(declarator, cType)
-                }
-
-                val irType = mb.toIRType<StructType>(typeHolder, cType)
-                val elements = arrayListOf<NonTrivialConstant>()
-                for (field in cType.members()) {
-                    val irFieldType = mb.toIRType<NonTrivialType>(typeHolder, field.cType())
-                    val zero = NonTrivialConstant.of(irFieldType, 0)
-                    elements.add(zero)
-                }
-                val attr = toIrAttribute(varDesc.storageClass)
-                return registerGlobal(declarator, InitializerListValue(irType, elements), attr)
-            }
-            is CUncompletedArrayType -> {
-                if (varDesc.storageClass == StorageClass.EXTERN) {
-                    return registerExtern(declarator, cType)
-                }
-
-                // Important: gcc & clang allow to declare array with 1 element
-                val irType = ArrayType(mb.toIRType<NonTrivialType>(typeHolder, cType.element().cType()), 1)
-                val attr = toIrAttribute(varDesc.storageClass)
-                val zero = NonTrivialConstant.of(irType.elementType(), 0)
-                val elements = arrayListOf(zero)
-                return registerGlobal(declarator, InitializerListValue(irType, elements), attr)
-            }
-            else -> throw IRCodeGenError("Unsupported type $cType", declarator.begin())
+            else -> registerExtern(declarator, cType)
         }
+
+    protected fun generateGlobalDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value = when (val cType = varDesc.typeDesc.cType()) {
+        is CFunctionType -> {
+            val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass).build()
+            createFunctionPrototype(declarator, cPrototype)
+        }
+        is CPrimitive -> {
+            val irType = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
+            val attr = toIrAttribute(varDesc.storageClass)
+            val constant = PrimitiveConstant.of(irType, 0)
+            registerGlobal(declarator, constant, attr)
+        }
+        is CArrayType -> {
+            val irType = mb.toIRType<ArrayType>(typeHolder, cType)
+            val attr = toIrAttribute(varDesc.storageClass)
+            val zero = NonTrivialConstant.of(irType.elementType(), 0)
+            val elements = generateSequence { zero }.take(irType.length).toList()
+            registerGlobal(declarator, InitializerListValue(irType, elements), attr)
+        }
+        is CStructType -> {
+            val irType = mb.toIRType<StructType>(typeHolder, cType)
+            val elements = arrayListOf<NonTrivialConstant>()
+            for (field in cType.members()) {
+                val irFieldType = mb.toIRType<NonTrivialType>(typeHolder, field.cType())
+                elements.add(NonTrivialConstant.of(irFieldType, 0))
+            }
+            val attr = toIrAttribute(varDesc.storageClass)
+            registerGlobal(declarator, InitializerListValue(irType, elements), attr)
+        }
+        is CUncompletedArrayType -> {
+            // Important: gcc & clang allow to declare array with 1 element
+            val irType = ArrayType(mb.toIRType<NonTrivialType>(typeHolder, cType.element().cType()), 1)
+            val attr = toIrAttribute(varDesc.storageClass)
+            val zero = NonTrivialConstant.of(irType.elementType(), 0)
+            val elements = arrayListOf(zero)
+            registerGlobal(declarator, InitializerListValue(irType, elements), attr)
+        }
+        else -> throw IRCodeGenError("Unsupported type $cType", declarator.begin())
     }
 
     protected fun constEvalExpression0(expr: Expression): Number? = ConstEvalExpression.eval(expr, typeHolder)

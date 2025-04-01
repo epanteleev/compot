@@ -4,20 +4,13 @@ import asm.Operand
 import asm.x64.*
 import ir.value.*
 import ir.Definitions.QWORD_SIZE
-import ir.global.ExternValue
-import ir.global.GlobalConstant
-import ir.global.GlobalValue
 import ir.instruction.Callable
-import ir.module.ExternFunction
-import ir.module.FunctionPrototype
 import ir.module.MutationMarker
 import ir.pass.common.AnalysisResult
 import ir.platform.x64.CallConvention
 import ir.platform.x64.CallConvention.gpCallerSaveRegs
-import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.xmmCallerSaveRegs
 import ir.types.UndefType
-import ir.value.constant.*
 
 
 class RegisterAllocation internal constructor(private val spilledLocalsStackSize: Int,

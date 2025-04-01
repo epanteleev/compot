@@ -43,7 +43,10 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
                 ?: throw IRCodeGenError("Typedef is not supported in global declarations", node.begin())
 
             when (declarator) {
-                is Declarator -> generateGlobalDeclarator(varDesc, declarator)
+                is Declarator -> when (varDesc.storageClass) {
+                    StorageClass.EXTERN -> generateExternDeclarator(varDesc, declarator)
+                    else -> generateGlobalDeclarator(varDesc, declarator)
+                }
                 is InitDeclarator -> generateGlobalAssignmentDeclarator(varDesc, declarator)
             }
         }
