@@ -19,10 +19,8 @@ class ArrayDesignator(val constExpression: Expression): Designator() {
 
     fun constEval(typeHolder: TypeHolder): Long {
         val ctx = ArraySizeConstEvalContext(typeHolder)
-        val constEval = ConstEvalExpression.eval(constExpression, TryConstEvalExpressionLong(ctx))
+        return ConstEvalExpression.eval(constExpression, TryConstEvalExpressionLong(ctx))
             ?: throw Exception("Cannot evaluate array designator")
-
-        return constEval
     }
 }
 

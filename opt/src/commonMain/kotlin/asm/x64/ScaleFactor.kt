@@ -6,22 +6,18 @@ enum class ScaleFactor {
     TIMES_4,
     TIMES_8;
 
-    override fun toString(): String {
-        return when (this) {
-            TIMES_1 -> "1"
-            TIMES_2 -> "2"
-            TIMES_4 -> "4"
-            TIMES_8 -> "8"
-        }
+    override fun toString(): String = when (this) {
+        TIMES_1 -> "1"
+        TIMES_2 -> "2"
+        TIMES_4 -> "4"
+        TIMES_8 -> "8"
     }
 
-    fun value(): Int {
-        return when (this) {
-            TIMES_1 -> 1
-            TIMES_2 -> 2
-            TIMES_4 -> 4
-            TIMES_8 -> 8
-        }
+    fun value(): Int = when (this) {
+        TIMES_1 -> 1
+        TIMES_2 -> 2
+        TIMES_4 -> 4
+        TIMES_8 -> 8
     }
 
     companion object {

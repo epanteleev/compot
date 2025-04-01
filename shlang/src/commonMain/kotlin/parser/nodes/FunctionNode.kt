@@ -5,6 +5,7 @@ import typedesc.TypeHolder
 import typedesc.VarDescriptor
 import types.CFunctionType
 
+
 class FunctionNode(val specifier: DeclarationSpecifier, val declarator: Declarator, val body: Statement) {
     private var cachedType: VarDescriptor? = null
     private fun memoizeType(type: () -> VarDescriptor): VarDescriptor {

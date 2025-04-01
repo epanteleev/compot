@@ -1,10 +1,9 @@
 package tokenizer.tokens
 
-import preprocess.Hideset
 import tokenizer.Position
 
 
-class CharLiteral(private val data: Char, position: Position): CToken(position, Hideset()) {
+class CharLiteral(private val data: Char, position: Position): CToken(position) {
     override fun str(): String = "\'$data\'"
 
     override fun hashCode(): Int {

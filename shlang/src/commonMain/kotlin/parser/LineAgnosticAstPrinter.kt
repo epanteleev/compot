@@ -417,7 +417,7 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(enumSpecifier.name())
         buffer.append(" {")
         joinTo(enumSpecifier.enumerators, ", ") {
-            buffer.append(it.ident.str())
+            buffer.append(it.name())
             if (it.constExpr !is EmptyExpression) {
                 buffer.append(" = ")
                 it.constExpr.accept(this)

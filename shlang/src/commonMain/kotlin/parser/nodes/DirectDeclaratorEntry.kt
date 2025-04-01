@@ -29,7 +29,7 @@ data class FunctionDeclarator(val declarator: Declarator): DirectDeclaratorEntry
     }
 }
 
-data class DirectVarDeclarator(val ident: Identifier): DirectDeclaratorEntry() {
+data class DirectVarDeclarator(private val ident: Identifier): DirectDeclaratorEntry() {
     override fun begin(): Position = ident.position()
     override fun name(): String = ident.str()
 }

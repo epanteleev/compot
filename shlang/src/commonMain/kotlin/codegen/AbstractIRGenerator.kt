@@ -19,9 +19,9 @@ import parser.LineAgnosticAstPrinter
 
 
 internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
-                                   protected val typeHolder: TypeHolder,
-                                   protected val varStack: VarStack<Value>,
-                                   protected val nameGenerator: NameGenerator) {
+                                          protected val typeHolder: TypeHolder,
+                                          protected val vregStack: VarStack<Value>,
+                                          protected val nameGenerator: NameGenerator) {
 
     private fun constEvalInitializerList(lValueType: CType, list: InitializerList): NonTrivialConstant = when (lValueType) {
         is CAggregateType -> constEvalInitializers(lValueType, list)
@@ -90,7 +90,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
 
     private fun getRValueVariable(varNode: VarNode): Value {
         val name = varNode.name()
-        val rvalueAttr = varStack[name]
+        val rvalueAttr = vregStack[name]
         if (rvalueAttr != null) {
             return rvalueAttr
         }
@@ -194,7 +194,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     private fun registerExtern(declarator: Declarator, cType: CType): ExternValue {
-        val existed = varStack[declarator.name()]
+        val existed = vregStack[declarator.name()]
         if (existed != null) {
             if (existed !is ExternValue) {
                 throw IRCodeGenError("Variable '${declarator.name()}' already exists", declarator.begin())
@@ -216,22 +216,22 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         val externValue = mb.addExternValue(generateName(declarator), irType) ?:
             throw IRCodeGenError("Variable '${declarator.name()}' already exists", declarator.begin())
 
-        varStack[declarator.name()] = externValue
+        vregStack[declarator.name()] = externValue
         return externValue
     }
 
     private fun registerGlobal(declarator: AnyDeclarator, cst: NonTrivialConstant, attribute: GlobalValueAttribute): GlobalValue {
-        val has = varStack[declarator.name()]
+        val has = vregStack[declarator.name()]
         if (has == null) {
             val globalValue = mb.addGlobalValue(generateName(declarator), cst, attribute)
-            varStack[declarator.name()] = globalValue
+            vregStack[declarator.name()] = globalValue
             return globalValue
         }
         if (has !is AnyGlobalValue) {
             throw IRCodeGenError("Variable '${declarator.name()}' isn't global", declarator.begin())
         }
         val globalValue = mb.redefineGlobalValue(has, has.name(), cst, attribute)
-        varStack[declarator.name()] = globalValue
+        vregStack[declarator.name()] = globalValue
         return globalValue
     }
 

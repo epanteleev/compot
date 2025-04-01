@@ -1,12 +1,11 @@
 package tokenizer.tokens
 
 import common.assertion
-import preprocess.Hideset
 import tokenizer.LexicalElements
 import tokenizer.Position
 
 
-class Punctuator(val data: String, position: Position): CToken(position, Hideset()) {
+class Punctuator(val data: String, position: Position): CToken(position) {
     init {
         assertion(LexicalElements.allPunctuators.contains(data)) {
             "Operator '$data' is not an operator"

@@ -1,15 +1,12 @@
 package tokenizer
 
+import types.*
 import preprocess.Hideset
 import tokenizer.tokens.*
 import tokenizer.LexicalElements.keywords
 import tokenizer.LexicalElements.isOperator2
 import tokenizer.LexicalElements.isOperator3
 import tokenizer.StringReader.Companion.tryPunct
-import types.DOUBLE
-import types.INT
-import types.LONG
-import types.ULONG
 
 
 class CTokenizer private constructor(private val filename: String, private val reader: StringReader) {

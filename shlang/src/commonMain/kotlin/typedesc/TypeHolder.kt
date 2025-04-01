@@ -92,10 +92,6 @@ class TypeHolder private constructor(): Scope {
         return varDesc
     }
 
-    fun containsVar(varName: String): Boolean {
-        return valueMap.containsKey(varName)
-    }
-
     fun addNewType(name: String, type: CType): CType {
         when (type) {
             is CEnumType, is CUncompletedEnumType -> enumTypeMap[name] = type

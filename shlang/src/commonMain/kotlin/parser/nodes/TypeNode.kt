@@ -140,7 +140,7 @@ class StructDeclaration(name: Identifier) : AnyTypeNode(name) {
     }
 }
 
-class Enumerator(val ident: Identifier, val constExpr: Expression) {
+class Enumerator(private val ident: Identifier, val constExpr: Expression) {
     fun begin(): Position = ident.position()
     fun name() = ident.str()
 }

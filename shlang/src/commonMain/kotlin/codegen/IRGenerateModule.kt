@@ -7,7 +7,6 @@ import ir.pass.analysis.ValidateSSAErrorException
 import tokenizer.Position
 import typedesc.StorageClass
 import typedesc.TypeHolder
-import types.CFunctionType
 
 
 data class IRCodeGenError(override val message: String, val position: Position) : Exception(message)
@@ -19,7 +18,7 @@ object GenerateIR {
 }
 
 private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGenerator(ModuleBuilder.create(), typeHolder, VarStack(), NameGenerator()) {
-    fun visit(programNode: ProgramNode) = varStack.scoped {
+    fun visit(programNode: ProgramNode) = vregStack.scoped {
         for (node in programNode.nodes) {
             when (node) {
                 is FunctionDeclarationNode -> generateFunction(node.function)
@@ -29,23 +28,19 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
     }
 
     private fun generateFunction(node: FunctionNode) {
-        val gen = FunGenInitializer(mb, typeHolder, varStack, nameGenerator)
+        val gen = FunGenInitializer(mb, typeHolder, vregStack, nameGenerator)
         gen.generate(node)
     }
 
     private fun generateDeclaration(node: Declaration) {
-        val varDesc = node.declspec.specifyType(typeHolder)
-        if (varDesc.storageClass == StorageClass.TYPEDEF) {
+        val declSpec = node.declspec.specifyType(typeHolder)
+        if (declSpec.storageClass == StorageClass.TYPEDEF) {
             return
         }
 
         for (declarator in node.declarators()) {
-            val varDesc = declarator.declareType(varDesc, typeHolder)
-            if (varDesc == null) {
-               throw IRCodeGenError("Typedef is not supported in global declarations", node.begin())
-            }
-
-            typeHolder.addVar(varDesc)
+            val varDesc = declarator.declareType(declSpec, typeHolder)
+                ?: throw IRCodeGenError("Typedef is not supported in global declarations", node.begin())
 
             when (declarator) {
                 is Declarator -> generateGlobalDeclarator(varDesc, declarator)

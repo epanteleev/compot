@@ -31,9 +31,7 @@ class ParamAbstractDeclarator(val abstractDeclarator: AbstractDeclarator) : AnyP
 class ParamDeclarator(val declarator: Declarator) : AnyParamDeclarator() {
     override fun resolveType(declSpec: DeclSpec, typeHolder: TypeHolder): TypeDesc {
         val varDesc = declarator.declareType(declSpec, typeHolder)
-        if (varDesc == null) {
-            throw IllegalStateException("Typedef is not supported in function parameters")
-        }
+            ?: throw IllegalStateException("Typedef is not supported in function parameters")
 
         return varDesc.typeDesc
     }
@@ -63,7 +61,7 @@ data class Parameter(val declspec: DeclarationSpecifier, val paramDeclarator: An
     }
 }
 
-class ParameterVarArg(private val punctuator: Punctuator): AnyParameter() {
-    override fun begin(): Position = punctuator.position()
+class ParameterVarArg(private val punctuation: Punctuator): AnyParameter() {
+    override fun begin(): Position = punctuation.position()
     override fun<T> accept(visitor: ParameterVisitor<T>): T = visitor.visit(this)
 }

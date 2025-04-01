@@ -1,6 +1,7 @@
 package codegen
 
 import common.assertion
+import intrinsic.VaStart
 import ir.types.*
 import ir.Definitions.BYTE_SIZE
 import ir.Definitions.HWORD_SIZE
@@ -46,6 +47,7 @@ internal object CallConvention {
         }
         else -> {
             assertion(!cType.isSmall()) { "unsupported size=$size" }
+            assertion(cType != VaStart.vaList) { "unsupported size=$size" }
             null
         }
     }

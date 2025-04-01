@@ -32,7 +32,10 @@ sealed class Macros(val name: String) {
 
             val preprocessedPosition = PreprocessedPosition.makeFrom(macrosNamePos, tok.position() as OriginalPosition)
             val newTok = tok.cloneWith(preprocessedPosition).asToken<CToken>()
-            newTok.hideset.add(name)
+
+            if (newTok is HidesetHolder) {
+                newTok.add(name)
+            }
             return newTok
         }
     }

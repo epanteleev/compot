@@ -31,7 +31,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
 
     override fun begin(): Position = specifiers.first().begin()
 
-    override fun specifyType(typeHolder: TypeHolder) = memoizeType {
+    override fun specifyType(typeHolder: TypeHolder): DeclSpec = memoizeType {
         val typeBuilder = CTypeBuilder()
         for (specifier in specifiers) {
             specifier.typeResolve(typeHolder, typeBuilder)

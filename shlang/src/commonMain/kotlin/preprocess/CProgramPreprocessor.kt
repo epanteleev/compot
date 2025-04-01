@@ -373,7 +373,10 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
 
     private fun handleToken(tok: CToken): Boolean {
         val macros = ctx.findMacros(tok.str()) ?: return false
-        if (tok.hideset.contains(macros.name)) {
+        if (tok !is HidesetHolder) {
+            return false
+        }
+        if (tok.contains(macros.name)) {
             return false
         }
         kill()

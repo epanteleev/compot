@@ -76,10 +76,11 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration() as Declaration
-        println(expr)
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
-        assertEquals(INT, typeResolver["a"].typeDesc.cType())
+        val vars = expr.declareVars(typeResolver)
+        val a = vars.find { it.name == "a" }!!
+
+        assertEquals(INT, a.typeDesc.cType())
     }
 
     @Test
@@ -88,11 +89,13 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration() as Declaration
-        println(expr)
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
-        assertEquals(INT, typeResolver["a"].typeDesc.cType())
-        assertEquals(INT, typeResolver["v"].typeDesc.cType())
+        val vars = expr.declareVars(typeResolver)
+        val a = vars.find { it.name == "a" }!!
+        val v = vars.find { it.name == "v" }!!
+
+        assertEquals(INT, a.typeDesc.cType())
+        assertEquals(INT, v.typeDesc.cType())
     }
 
     @Test
@@ -101,16 +104,15 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration() as Declaration
-        println(expr)
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
+        val vars = expr.declareVars(typeResolver)
+        val a = vars.find { it.name == "a" }!!
+        val v = vars.find { it.name == "v" }!!
+        val p = vars.find { it.name == "p" }!!
 
-        assertTrue { typeResolver.containsVar("a") }
-        assertTrue { typeResolver.containsVar("v") }
-        assertTrue { typeResolver.containsVar("p") }
-        assertEquals(INT, typeResolver["a"].typeDesc.cType())
-        assertEquals(INT, typeResolver["v"].typeDesc.cType())
-        assertEquals(CPointer(INT), typeResolver["p"].typeDesc.cType())
+        assertEquals(INT, a.typeDesc.cType())
+        assertEquals(INT, v.typeDesc.cType())
+        assertEquals(CPointer(INT), p.typeDesc.cType())
     }
 
     @Test
@@ -119,10 +121,10 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration() as Declaration
-        println(expr)
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
-        assertEquals("struct point*", typeResolver["a"].toString())
+        val vars = expr.declareVars(typeResolver)
+        val a = vars.find { it.name == "a" }!!
+        assertEquals("struct point*", a.toString())
     }
 
     @Test
@@ -131,13 +133,13 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration() as Declaration
-        println(expr)
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
-        assertTrue { typeResolver.containsVar("a") }
-        assertTrue { typeResolver.containsVar("b") }
-        assertEquals("struct point*", typeResolver["a"].toString())
-        assertEquals("struct point*", typeResolver["b"].toString())
+        val vars = expr.declareVars(typeResolver)
+        val a = vars.find { it.name == "a" }!!
+        val b = vars.find { it.name == "b" }!!
+
+        assertEquals("struct point*", a.toString())
+        assertEquals("struct point*", b.toString())
     }
 
     @Test
@@ -196,9 +198,10 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
+        val vars = expr.declareVars(typeResolver)
+        val add = vars.find { it.name == "add" }!!
 
-        assertEquals("int(int, int)*", typeResolver["add"].toString())
+        assertEquals("int(int, int)*", add.toString())
     }
 
     @Test
@@ -207,9 +210,11 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
 
-        assertEquals("int(int, int)*", typeResolver["add"].toString())
+        val vars = expr.declareVars(typeResolver)
+        val add = vars.find { it.name == "add" }!!
+
+        assertEquals("int(int, int)*", add.toString())
     }
 
     @Test
@@ -218,11 +223,15 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
+        val vars = expr.declareVars(typeResolver)
 
-        assertEquals("int()*", typeResolver["add"].toString())
-        assertEquals("int", typeResolver["val"].toString())
-        assertEquals("int*", typeResolver["v"].toString())
+        val add = vars.find { it.name == "add" }!!
+        val valVar = vars.find { it.name == "val" }!!
+        val v = vars.find { it.name == "v" }!!
+
+        assertEquals("int()*", add.toString())
+        assertEquals("int", valVar.toString())
+        assertEquals("int*", v.toString())
     }
 
     @Test
@@ -243,7 +252,7 @@ class TypeResolutionTest {
         val expr = parser.declaration() as Declaration
 
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
+        expr.declareVars(typeResolver)
 
         assertEquals("struct point {int x;int y;}", typeResolver.getStructType("point").toString())
     }
@@ -254,7 +263,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = parser.typeHolder()
-        expr.specifyType(typeResolver)
+        expr.declareVars(typeResolver)
         assertEquals("struct point", typeResolver.getStructType("point").toString())
     }
 
@@ -265,9 +274,9 @@ class TypeResolutionTest {
         val expr = parser.declaration() as Declaration
 
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
+        val vars = expr.declareVars(typeResolver)
 
-        val a = typeResolver["a"]
+        val a = vars.find { it.name == "a" }!!
         assertEquals("[10]int", a.toString())
     }
 
@@ -278,9 +287,9 @@ class TypeResolutionTest {
         val expr = parser.declaration() as Declaration
 
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
+        val vars = expr.declareVars(typeResolver)
 
-        val a = typeResolver["a"]
+        val a = vars.find { it.name == "a" }!!
         assertEquals("[10]int", a.toString())
     }
 
@@ -291,10 +300,10 @@ class TypeResolutionTest {
         val expr = parser.declaration() as Declaration
 
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
+        val vars = expr.declareVars(typeResolver)
 
-        val a = typeResolver["a"]
-        val b = typeResolver["b"]
+        val a = vars.find { it.name == "a" }!!
+        val b = vars.find { it.name == "b" }!!
         assertEquals("[10]int", a.toString())
         assertEquals("[20]int", b.toString())
     }
@@ -306,11 +315,11 @@ class TypeResolutionTest {
         val expr = parser.declaration() as Declaration
 
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
+        val vars = expr.declareVars(typeResolver)
 
-        val a = typeResolver["a"]
-        val b = typeResolver["b"]
-        val c = typeResolver["c"]
+        val a = vars.find { it.name == "a" }!!
+        val b = vars.find { it.name == "b" }!!
+        val c = vars.find { it.name == "c" }!!
         assertEquals("[10]int", a.toString())
         assertEquals("[20]int", b.toString())
         assertEquals("int*", c.toString())
@@ -323,9 +332,9 @@ class TypeResolutionTest {
         val expr = parser.declaration() as Declaration
 
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
+        val vars = expr.declareVars(typeResolver)
 
-        val a = typeResolver["a"]
+        val a = vars.find { it.name == "a" }!!
         assertEquals("[10][30]int", a.toString())
     }
 
@@ -335,9 +344,9 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = TypeHolder.default()
-        expr.specifyType(typeResolver)
+        val vars = expr.declareVars(typeResolver)
 
-        val a = typeResolver["a"]
+        val a = vars.find { it.name == "a" }!!
         assertEquals("const char*", a.toString())
     }
 
@@ -347,9 +356,9 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
         val typeResolver = parser.typeHolder()
-        expr.specifyType(typeResolver)
+        val vars = expr.declareVars(typeResolver)
 
-        val a = typeResolver["a"]
+        val a = vars.find { it.name == "a" }!!
         assertEquals(UINT, a.typeDesc.cType())
     }
 
@@ -643,9 +652,10 @@ class TypeResolutionTest {
         val tokens = apply(input)
         val parser = CProgramParser.build(tokens)
 
-        parser.translation_unit()
-        val typeHolder = parser.typeHolder()
-        assertEquals(StorageClass.STATIC, typeHolder["a"].storageClass)
+        val declaration = parser.declaration()!!
+        val vars = declaration.declareVars(parser.typeHolder())
+        val a = vars.find { it.name == "a" }!!
+        assertEquals(StorageClass.STATIC, a.storageClass)
     }
 
     @Test

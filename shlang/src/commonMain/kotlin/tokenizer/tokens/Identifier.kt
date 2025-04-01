@@ -5,7 +5,7 @@ import common.assertion
 import preprocess.Hideset
 
 
-class Identifier(private val data: String, position: Position, hideset: Hideset): CToken(position, hideset) {
+class Identifier(private val data: String, position: Position, private val hideset: Hideset): CToken(position), HidesetHolder {
     init {
         assertion(LexicalElements.keywords.contains(data).not()) {
             "Identifier '$data' is a keyword"
@@ -17,6 +17,7 @@ class Identifier(private val data: String, position: Position, hideset: Hideset)
     }
 
     override fun str(): String = data
+    override fun hideset(): Hideset = hideset
 
     override fun cloneWith(pos: Position): CToken {
         return Identifier(data, pos, hideset.copy())

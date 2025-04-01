@@ -56,7 +56,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private inline fun<reified T> scoped(noinline block: () -> T): T {
-        return typeHolder.scoped { varStack.scoped(block) }
+        return typeHolder.scoped { vregStack.scoped(block) }
     }
 
     private fun seekOrAddLabel(name: String): Label {
@@ -68,7 +68,10 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitDeclaration(declaration: Declaration) {
-        declaration.specifyType(typeHolder)
+        val varDescriptors = declaration.declareVars(typeHolder)
+        for (varDesc in varDescriptors) {
+            typeHolder.addVar(varDesc)
+        }
 
         for (declarator in declaration.declarators()) {
             declarator.accept(this)
@@ -528,10 +531,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         val convertedArgs = mutableListOf<Value>()
         val attributes = hashSetOf<FunctionAttribute>()
 
-        var offset = 0
-        if (returnType is AnyCStructType && !returnType.isSmall()) {
-            offset += 1
-        }
+        var offset = evaluateFirstArgIdx(returnType)
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
@@ -1219,7 +1219,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     private fun visitVarNode(varNode: VarNode, isRvalue: Boolean): Value {
         val name = varNode.name()
-        val rvalueAttr = varStack[name]
+        val rvalueAttr = vregStack[name]
         if (rvalueAttr != null) {
             return getVariableAddress(varNode, rvalueAttr, isRvalue)
         }
@@ -1236,61 +1236,72 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         throw IRCodeGenError("Variable '$name' not found", varNode.begin())
     }
 
-    private fun visitParameters(parameters: List<String>,
-                                cTypes: List<TypeDesc>,
-                                arguments: List<ArgumentValue>,
-                                closure: (String, CType, List<ArgumentValue>) -> Unit) {
-        var argumentIdx = 0
-        for (currentArg in cTypes.indices) {
-            when (val cType = cTypes[currentArg].cType()) {
-                is CPrimitive -> {
-                    closure(parameters[currentArg], cType, listOf(arguments[argumentIdx]))
+    private fun evaluateFirstArgIdx(retType: CType): Int {
+        if (retType is AnyCStructType && !retType.isSmall()) {
+            return 1
+        }
+
+        return 0
+    }
+
+    private fun visitPrimitiveParameter(param: VarDescriptor, arg: ArgumentValue) {
+        when (val cType = param.cType()) {
+            is AnyCArrayType -> {
+                vregStack[param.name] = arg
+            }
+            is CPrimitive -> {
+                val irType = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
+                val rvalueAdr = ir.alloc(irType)
+                ir.store(rvalueAdr, ir.convertLVToType(arg, irType))
+                vregStack[param.name] = rvalueAdr
+            }
+            is AnyCStructType -> {
+                if (cType.isSmall()) {
+                    throw RuntimeException("internal error")
                 }
+
+                vregStack[param.name] = arg
+            }
+            else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
+        }
+    }
+
+    private fun visitParameter(param: String, cType: AnyCStructType, args: List<ArgumentValue>) {
+        if (!cType.isSmall()) {
+            throw RuntimeException("internal error")
+        }
+
+        val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
+        val rvalueAdr = ir.alloc(irType)
+        ir.storeCoerceArguments(cType, rvalueAdr, args)
+        vregStack[param] = rvalueAdr
+    }
+
+    private fun visitParameters(parameters: List<VarDescriptor>, arguments: List<ArgumentValue>, retType: CType) {
+        var argumentIdx = evaluateFirstArgIdx(retType)
+        for (currentArg in parameters.indices) {
+            val param = parameters[currentArg]
+
+            when (val cType = param.cType()) {
+                is CPrimitive, is AnyCArrayType -> visitPrimitiveParameter(param, arguments[argumentIdx])
                 is AnyCStructType -> {
-                    val types = CallConvention.coerceArgumentTypes(cType) ?: listOf(PtrType)
+                    if (!cType.isSmall()) {
+                        visitPrimitiveParameter(param, arguments[argumentIdx])
+                        argumentIdx++
+                        continue
+                    }
+
+                    val types = CallConvention.coerceArgumentTypes(cType) ?: throw RuntimeException("internal error")
                     val args = mutableListOf<ArgumentValue>()
                     for (i in types.indices) {
                         args.add(arguments[argumentIdx + i])
                     }
                     argumentIdx += types.size - 1
-                    closure(parameters[currentArg], cType, args)
-                }
-                is AnyCArrayType -> {
-                    closure(parameters[currentArg], cType, listOf(arguments[argumentIdx]))
+                    visitParameter(param.name, cType, args)
                 }
                 else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
             }
             argumentIdx++
-        }
-    }
-
-    private fun visitParameter(param: String, cType: CType, args: List<ArgumentValue>) {
-        when (cType) {
-            is AnyCArrayType -> {
-                assertion(args.size == 1) { "invariant" }
-                varStack[param] = args[0]
-            }
-            is CPrimitive -> {
-                assertion(args.size == 1) { "invariant" }
-
-                val irType    = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
-                val rvalueAdr = ir.alloc(irType)
-                ir.store(rvalueAdr, ir.convertLVToType(args[0], irType))
-                varStack[param] = rvalueAdr
-            }
-            is AnyCStructType -> {
-                if (!cType.isSmall() || cType === VaStart.vaList) {
-                    assertion(args.size == 1) { "invariant" }
-                    varStack[param] = args[0]
-                    return
-                }
-
-                val irType    = mb.toIRType<NonTrivialType>(typeHolder, cType)
-                val rvalueAdr = ir.alloc(irType)
-                ir.storeCoerceArguments(cType, rvalueAdr, args)
-                varStack[param] = rvalueAdr
-            }
-            else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
         }
     }
 
@@ -1358,20 +1369,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     fun visitFun(parameters: List<VarDescriptor>, functionNode: FunctionNode): Value = scoped {
-        for (param in parameters) {
-            typeHolder.addVar(param)
-        }
-
         stmtStack.scoped(FunctionStmtInfo()) { stmt ->
+            for (param in parameters) {
+                typeHolder.addVar(param)
+            }
+
             val retType = functionNode.resolveType(typeHolder).retType().cType()
-            val arguments = if (retType is AnyCStructType && !retType.isSmall()) {
-                ir.arguments().takeLast(parameters.size)
-            } else {
-                ir.arguments()
-            }
-            visitParameters(parameters.map { it.name }, functionType.args(), arguments) { param, cType, args ->
-                visitParameter(param, cType, args)
-            }
+            visitParameters(parameters, ir.arguments(), retType)
 
             emitReturnType(stmt, functionType.retType(), ir.arguments())
 
@@ -1732,7 +1736,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val rvalueAdr = ir.alloc(irType)
-        varStack[declarator.name()] = rvalueAdr
+        vregStack[declarator.name()] = rvalueAdr
         return rvalueAdr
     }
 
@@ -1969,9 +1973,7 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
                         varStack: VarStack<Value>,
                         nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
     fun generate(functionNode: FunctionNode) {
-        val varDesc = functionNode.declareType(typeHolder)
-        typeHolder.addVar(varDesc)
-
+        val varDesc = typeHolder.addVar(functionNode.declareType(typeHolder))
         val fnType = varDesc.typeDesc
             .asType<CFunctionType>(functionNode.begin())
 
@@ -1979,7 +1981,7 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
         val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder, varDesc.storageClass).build()
 
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)
-        val funGen = IrGenFunction(mb, typeHolder, varStack, nameGenerator, currentFunction, fnType)
+        val funGen = IrGenFunction(mb, typeHolder, vregStack, nameGenerator, currentFunction, fnType)
 
         funGen.visitFun(parameters, functionNode)
     }

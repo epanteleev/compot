@@ -6,7 +6,7 @@ import tokenizer.LexicalElements
 import tokenizer.Position
 
 
-class Keyword(val data: String, position: Position, hideset: Hideset): CToken(position, hideset) {
+class Keyword(val data: String, position: Position, private val hideset: Hideset): CToken(position), HidesetHolder {
     init {
         assertion(LexicalElements.keywords.contains(data)) {
             "Keyword '$data' is not a keyword"
@@ -14,6 +14,7 @@ class Keyword(val data: String, position: Position, hideset: Hideset): CToken(po
     }
 
     override fun str(): String = data
+    override fun hideset(): Hideset = hideset
 
     override fun hashCode(): Int {
         return data.hashCode()
