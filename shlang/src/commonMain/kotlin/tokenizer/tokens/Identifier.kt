@@ -37,8 +37,8 @@ class Identifier(private val data: String, position: Position, private val hides
     }
 
     companion object {
-        fun unknown(name: String): Identifier {
-            return Identifier(name, Position.UNKNOWN, Hideset())
+        fun unknown(name: String, where: Position): Identifier {
+            return Identifier(name, where, Hideset())
         }
     }
 }

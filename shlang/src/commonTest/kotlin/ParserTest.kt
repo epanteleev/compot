@@ -213,7 +213,7 @@ class ParserTest {
 
         val expr = parser.statement() as Statement
         println(expr)
-        val expected = "if(a < 5) {char tt = a + 4; int rt;} else if(a < 6) {int rt;}"
+        val expected = "if(a < 5) {char tt = a + 4; int rt;} else {if(a < 6) {int rt;}}"
         assertEquals(expected, LineAgnosticAstPrinter.print(expr))
     }
 

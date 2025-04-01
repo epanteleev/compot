@@ -159,14 +159,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     //
     // <expression-statement> ::= {<expression>}? ;
     fun expression_statement(): Statement? = rule {
-        val expr = expression()
-        if (expr == null) {
-            if (check(";")) {
-                eat()
-                return@rule EmptyStatement
-            }
-            return@rule null
+        if (check(";")) {
+            val tok = eat()
+            return@rule EmptyStatement(tok.position())
         }
+        val expr = expression() ?: return@rule null
         if (check(";")) {
             eat()
             return@rule ExprStatement(expr)
@@ -191,11 +188,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             val then = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
             if (!check("else")) {
-                return@rule IfStatement(ifKeyword.asToken(), expr, then, EmptyStatement)
+                return@rule IfStatement(ifKeyword.asToken(), expr, then)
             }
             eat()
             val els = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule IfStatement(ifKeyword.asToken(), expr, then, els)
+            return@rule IfElseStatement(ifKeyword.asToken(), expr, then, els)
         }
         if (check("switch")) {
             val switchKeyword = eat()
@@ -334,8 +331,8 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         eat()
         if (check("}")) {
-            eat()
-            return@rule EmptyStatement
+            val tok = eat()
+            return@rule EmptyStatement(tok.position())
         }
         val statements = mutableListOf<CompoundStmtItem>()
         while (!check("}")) {
@@ -636,11 +633,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             if (check("{")) {
                 eat()
                 val fields = struct_declaration_list()
-                if (check("}")) {
-                    eat()
-                    return@rule StructSpecifier(Identifier.unknown(anonymousName("struct")), fields)
+                if (!check("}")) {
+                    throw ParserException(InvalidToken("Expected '}'", peak()))
                 }
-                throw ParserException(InvalidToken("Expected '}'", peak()))
+                val brace = eat()
+                return@rule StructSpecifier(Identifier.unknown(anonymousName("struct"), brace.position()), fields)
             }
             if (check<Identifier>()) {
                 val name = peak<Identifier>()
@@ -663,11 +660,11 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             if (check("{")) {
                 eat()
                 val fields = struct_declaration_list()
-                if (check("}")) {
-                    eat()
-                    return@rule UnionSpecifier(Identifier.unknown(anonymousName("union")), fields)
+                if (!check("}")) {
+                    throw ParserException(InvalidToken("Expected '}'", peak()))
                 }
-                throw ParserException(InvalidToken("Expected '}'", peak()))
+                val brace = eat()
+                return@rule UnionSpecifier(Identifier.unknown(anonymousName("union"), brace.position()), fields)
             }
             if (check<Identifier>()) {
                 val name = peak<Identifier>()
@@ -736,25 +733,25 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (check("{")) {
             eat()
             val enumerators = enumerator_list()
-            if (check("}")) {
-                eat()
-                return@rule EnumSpecifier(Identifier.unknown(anonymousName("enum")), enumerators)
+            if (!check("}")) {
+                throw ParserException(InvalidToken("Expected '}'", peak()))
             }
-            throw ParserException(InvalidToken("Expected '}'", peak()))
+            val brace = eat()
+            return@rule EnumSpecifier(Identifier.unknown(anonymousName("enum"), brace.position()), enumerators)
         }
         if (check<Identifier>()) {
             val name = peak<Identifier>()
             eat()
-            if (check("{")) {
-                eat()
-                val enumerators = enumerator_list()
-                if (check("}")) {
-                    eat()
-                    return@rule EnumSpecifier(name, enumerators)
-                }
+            if (!check("{")) {
+                return@rule EnumDeclaration(name)
+            }
+            eat()
+            val enumerators = enumerator_list()
+            if (!check("}")) {
                 throw ParserException(InvalidToken("Expected '}'", peak()))
             }
-            return@rule EnumDeclaration(name)
+            eat()
+            return@rule EnumSpecifier(name, enumerators)
         }
         throw ParserException(InvalidToken("Expected identifier", peak()))
     }

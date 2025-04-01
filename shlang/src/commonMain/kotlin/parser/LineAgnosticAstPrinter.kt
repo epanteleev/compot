@@ -109,24 +109,28 @@ class LineAgnosticAstPrinter: NodeVisitor<Unit> {
         buffer.append(';')
     }
 
-    override fun visit(ifStatement: IfStatement) {
+    override fun visit(ifElseStatement: IfElseStatement) {
         buffer.append("if(")
-        ifStatement.condition.accept(this)
+        ifElseStatement.condition.accept(this)
         buffer.append(") {")
-        ifStatement.then.accept(this)
+        ifElseStatement.then.accept(this)
         buffer.append('}')
-        if (ifStatement.elseNode !is EmptyStatement) {
-            buffer.append(" else ")
-            if (ifStatement.elseNode !is IfStatement) {
-                buffer.append('{')
-            }
-
-            ifStatement.elseNode.accept(this)
-
-            if (ifStatement.elseNode !is IfStatement) {
-                buffer.append('}')
-            }
+        buffer.append(" else ")
+        if (ifElseStatement.elseNode !is IfElseStatement) {
+            buffer.append('{')
         }
+        ifElseStatement.elseNode.accept(this)
+        if (ifElseStatement.elseNode !is IfElseStatement) {
+            buffer.append('}')
+        }
+    }
+
+    override fun visit(ifElseStatement: IfStatement) {
+        buffer.append("if(")
+        ifElseStatement.condition.accept(this)
+        buffer.append(") {")
+        ifElseStatement.then.accept(this)
+        buffer.append('}')
     }
 
     override fun visit(whileStatement: WhileStatement) {

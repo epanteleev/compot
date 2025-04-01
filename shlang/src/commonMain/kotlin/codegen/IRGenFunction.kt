@@ -1539,49 +1539,54 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    override fun visit(ifStatement: IfStatement) = scoped {
+    override fun visit(ifElseStatement: IfElseStatement) = scoped {
         if (ir.last() is TerminateInstruction) {
             return@scoped
         }
-        val condition = makeConditionFromExpression(ifStatement.condition)
+        val condition = makeConditionFromExpression(ifElseStatement.condition)
         val thenBlock = ir.createLabel()
 
-        if (ifStatement.elseNode is EmptyStatement) {
+        val elseBlock = ir.createLabel()
+        ir.branchCond(condition, thenBlock, elseBlock)
+        // then
+        ir.switchLabel(thenBlock)
+        visitStatement(ifElseStatement.then)
+        val endBlock = if (ir.last() !is TerminateInstruction) {
             val endBlock = ir.createLabel()
-            ir.branchCond(condition, thenBlock, endBlock)
-            ir.switchLabel(thenBlock)
-            visitStatement(ifStatement.then)
-            if (ir.last() !is TerminateInstruction) {
-                ir.branch(endBlock)
-            }
-            ir.switchLabel(endBlock)
+            ir.branch(endBlock)
+            endBlock
         } else {
-
-            val elseBlock = ir.createLabel()
-            ir.branchCond(condition, thenBlock, elseBlock)
-            // then
-            ir.switchLabel(thenBlock)
-            visitStatement(ifStatement.then)
-            val endBlock = if (ir.last() !is TerminateInstruction) {
-                val endBlock = ir.createLabel()
-                ir.branch(endBlock)
-                endBlock
-            } else {
-                null
-            }
-
-            // else
-            ir.switchLabel(elseBlock)
-            visitStatement(ifStatement.elseNode)
-
-            if (ir.last() !is TerminateInstruction) {
-                val newEndBlock = endBlock ?: ir.createLabel()
-                ir.branch(newEndBlock)
-                ir.switchLabel(newEndBlock)
-            } else if (endBlock != null) {
-                ir.switchLabel(endBlock)
-            }
+            null
         }
+
+        // else
+        ir.switchLabel(elseBlock)
+        visitStatement(ifElseStatement.elseNode)
+
+        if (ir.last() !is TerminateInstruction) {
+            val newEndBlock = endBlock ?: ir.createLabel()
+            ir.branch(newEndBlock)
+            ir.switchLabel(newEndBlock)
+        } else if (endBlock != null) {
+            ir.switchLabel(endBlock)
+        }
+    }
+
+    override fun visit(ifElseStatement: IfStatement) = scoped {
+        if (ir.last() is TerminateInstruction) {
+            return@scoped
+        }
+        val condition = makeConditionFromExpression(ifElseStatement.condition)
+        val thenBlock = ir.createLabel()
+
+        val endBlock = ir.createLabel()
+        ir.branchCond(condition, thenBlock, endBlock)
+        ir.switchLabel(thenBlock)
+        visitStatement(ifElseStatement.then)
+        if (ir.last() !is TerminateInstruction) {
+            ir.branch(endBlock)
+        }
+        ir.switchLabel(endBlock)
     }
 
     override fun visit(doWhileStatement: DoWhileStatement) = scoped {

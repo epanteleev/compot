@@ -14,6 +14,7 @@ interface StatementVisitor<T> {
     fun visit(caseStatement: CaseStatement): T
     fun visit(returnStatement: ReturnStatement): T
     fun visit(compoundStatement: CompoundStatement): T
+    fun visit(ifElseStatement: IfElseStatement): T
     fun visit(ifStatement: IfStatement): T
     fun visit(doWhileStatement: DoWhileStatement): T
     fun visit(whileStatement: WhileStatement): T

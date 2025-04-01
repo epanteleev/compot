@@ -12,8 +12,8 @@ sealed class Statement {
     abstract fun<T> accept(visitor: StatementVisitor<T>): T
 }
 
-data object EmptyStatement : Statement() {
-    override fun begin(): Position = Position.UNKNOWN
+class EmptyStatement(private val position: Position) : Statement() {
+    override fun begin(): Position = position
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
@@ -101,7 +101,12 @@ class ExprStatement(val expr: Expression): Statement() {
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
 
-class IfStatement(private val ifKeyword: Keyword, val condition: Expression, val then: Statement, val elseNode: Statement): Statement() {
+class IfElseStatement(private val ifKeyword: Keyword, val condition: Expression, val then: Statement, val elseNode: Statement): Statement() {
+    override fun begin(): Position = ifKeyword.position()
+    override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
+}
+
+class IfStatement(private val ifKeyword: Keyword, val condition: Expression, val then: Statement): Statement() {
     override fun begin(): Position = ifKeyword.position()
     override fun<T> accept(visitor: StatementVisitor<T>) = visitor.visit(this)
 }
