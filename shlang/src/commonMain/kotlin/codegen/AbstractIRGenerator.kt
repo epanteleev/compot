@@ -45,11 +45,19 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             }
         }
         is StringNode -> when (lValueType) {
-            is AnyCArrayType -> StringLiteralConstant(ArrayType(I8Type, expr.length()), expr.data())
-            else -> {
+            is AnyCArrayType -> {
+                val dimension = when (lValueType) {
+                    is CArrayType -> lValueType.dimension.toInt()
+                    is CStringLiteral -> lValueType.dimension.toInt()
+                    is CUncompletedArrayType -> expr.length()
+                }
+                StringLiteralConstant(ArrayType(I8Type, dimension), expr.data())
+            }
+            is CPointer -> {
                 val stringLiteral = StringLiteralGlobalConstant(createStringLiteralName(), ArrayType(U8Type, expr.length()), expr.data())
                 PointerLiteral.of(mb.addConstant(stringLiteral))
             }
+            else -> throw IRCodeGenError("Unsupported type $lValueType", expr.begin())
         }
         is Cast -> {
             val type = expr.resolveType(typeHolder)

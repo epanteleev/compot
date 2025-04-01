@@ -92,11 +92,9 @@ class CompilationUnit: CompiledModule, ObjModule(NameAssistant()) {
                 is InitializerListValue -> makeAggregateConstant(globalValue.name(), globalValue.contentType().asType(), constant)
                 is StringLiteralConstant -> {
                     val arrayType = globalValue.contentType() as ArrayType
+                    makeStringLiteralConstant(globalValue, type, constant)
                     if (arrayType.length > constant.content.length) {
-                        makeStringLiteralConstant(globalValue, type, constant)
                         zero(arrayType.length - constant.content.length)
-                    } else {
-                        makeStringLiteralConstant(globalValue, type, constant)
                     }
                 }
                 else -> throw IllegalArgumentException("unsupported constant type: $constant")

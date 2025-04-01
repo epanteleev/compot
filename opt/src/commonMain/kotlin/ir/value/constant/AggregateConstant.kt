@@ -6,10 +6,8 @@ import ir.types.*
 
 sealed interface AggregateConstant: NonTrivialConstant
 
-class StringLiteralConstant(val ty: ArrayType, val content: String): AggregateConstant {
-    override fun type(): ArrayType {
-        return ty
-    }
+class StringLiteralConstant(private val ty: ArrayType, val content: String): AggregateConstant {
+    override fun type(): ArrayType = ty
 
     override fun toString(): String {
         return content.asCString()
