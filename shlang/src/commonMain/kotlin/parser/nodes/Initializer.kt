@@ -3,6 +3,7 @@ package parser.nodes
 import tokenizer.Position
 import typedesc.TypeHolder
 import types.CType
+import types.CompletedType
 
 sealed class Initializer {
     abstract fun begin(): Position
@@ -11,7 +12,7 @@ sealed class Initializer {
 
 class ExpressionInitializer(val expr: Expression): Initializer() {
     override fun begin(): Position = expr.begin()
-    override fun resolveType(typeHolder: TypeHolder): CType {
+    override fun resolveType(typeHolder: TypeHolder): CompletedType {
         return expr.resolveType(typeHolder)
     }
 }

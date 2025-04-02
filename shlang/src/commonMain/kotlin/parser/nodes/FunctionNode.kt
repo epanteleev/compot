@@ -34,6 +34,6 @@ class FunctionNode(val specifier: DeclarationSpecifier, val declarator: Declarat
     }
 
     fun resolveType(typeHolder: TypeHolder): CFunctionType {
-        return declareType(typeHolder).typeDesc.cType() as CFunctionType
+        return declareType(typeHolder).cType() as CFunctionType
     }
 }

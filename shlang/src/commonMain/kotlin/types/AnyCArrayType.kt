@@ -9,6 +9,11 @@ sealed class AnyCArrayType(val type: TypeDesc): CAggregateType() {
     }
 
     fun element(): TypeDesc = type
+
+    fun completedType(): CompletedType? = when (val cType = type.cType()) {
+        is CompletedType -> cType
+        else -> null
+    }
 }
 
 class CStringLiteral(elementType: TypeDesc, val dimension: Long): AnyCArrayType(elementType) {

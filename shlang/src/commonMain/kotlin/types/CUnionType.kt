@@ -2,6 +2,7 @@ package types
 
 import ir.Definitions
 import ir.Definitions.BYTE_SIZE
+import tokenizer.Position
 
 
 class CUnionType private constructor(
@@ -15,7 +16,7 @@ class CUnionType private constructor(
             return BYTE_SIZE
         }
 
-        val unalignedSize = fields.maxOf { it.cType().asType<CompletedType>().size() }
+        val unalignedSize = fields.maxOf { it.cType().asType<CompletedType>(Position.UNKNOWN).size() }
         return Definitions.alignTo(unalignedSize, alignmentOf())
     }
 
@@ -35,7 +36,7 @@ class CUnionType private constructor(
             return BYTE_SIZE
         }
 
-        return fields.maxOf { it.cType().asType<CompletedType>().alignmentOf() }
+        return fields.maxOf { it.cType().asType<CompletedType>(Position.UNKNOWN).alignmentOf() }
     }
 
     companion object {

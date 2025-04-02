@@ -2,22 +2,23 @@ package types
 
 import typedesc.*
 import ir.Definitions.POINTER_SIZE
+import tokenizer.Position
 
 
 class CPointer(private val type: CType, private val properties: Set<TypeQualifier> = setOf()) : CPrimitive() {
     override fun size(): Int = POINTER_SIZE
 
-    fun dereference(typeHolder: TypeHolder): CompletedType {
+    fun dereference(where: Position, typeHolder: TypeHolder): CompletedType {
         val cType = when (type) {
-            is CFunctionType          -> type.functionType.asType()
+            is CFunctionType          -> type.functionType.asType(where)
             is CUncompletedStructType -> typeHolder.getStructType(type.name)
             is CUncompletedUnionType  -> typeHolder.getUnionType(type.name)
             is CUncompletedEnumType   -> typeHolder.getEnumType(type.name)
-            else -> type.asType()
+            else -> type.asType(where)
         }
 
         if (cType !is CompletedType) {
-            throw Exception("Type $cType is not completed")
+            throw TypeResolutionException("Dereferencing pointer to incomplete type $type", where)
         }
 
         return cType

@@ -417,7 +417,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is CPointer      -> ty
             else -> throw IRCodeGenError("Pointer type expected, but got $ty", arrowMemberAccess.begin())
         }
-        val cStructType = cPointer.dereference(typeHolder)
+        val cStructType = cPointer.dereference(arrowMemberAccess.begin(), typeHolder)
 
         if (cStructType !is AnyCStructType) {
             throw IRCodeGenError("Struct type expected, but got '$cStructType'", arrowMemberAccess.begin())
@@ -581,8 +581,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     }
                     is CPrimitive, is AnyCFunctionType, is CStringLiteral -> value
                     is CUncompletedArrayType -> TODO()
-                    is InitializerType -> TODO()
-                    is CUncompletedType -> TODO()
                 }
                 ir.convertLVToType(baseAddr, PtrType)
             }
@@ -783,7 +781,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is AnyCArrayType, is CPointer -> ir.convertLVToType(rvalue, I64Type)
             is CPrimitive -> {
                 val convertedLValue = ir.convertLVToType(rvalue, I64Type)
-                val dereferenced = addressCType.dereference(typeHolder)
+                val dereferenced = addressCType.dereference(expr.begin(), typeHolder)
                 ir.mul(convertedLValue, I64Value.of(dereferenced.size()))
             }
 
@@ -799,7 +797,8 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             val rType = binOp.right.resolveType(typeHolder)
             val lType = binOp.left.resolveType(typeHolder)
             val divided = if (rType is CPointer && lType is CPointer) {
-                val vType = cType.dereference(typeHolder).asType<CompletedType>()
+                val vType = cType.dereference(binOp.begin(), typeHolder)
+                    .asType<CompletedType>(binOp.begin())
                 divide(result, I64Value.of(vType.size()))
             } else {
                 result
@@ -895,7 +894,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 val convertedLValue = ir.convertLVToType(ptr2intLValue, I64Type)
 
-                val dereferenced = lValueType.dereference(typeHolder)
+                val dereferenced = lValueType.dereference(binOp.begin(), typeHolder)
                 val mul = ir.mul(convertedRValue, I64Value.of(dereferenced.size()))
 
                 val result = op(convertedLValue, mul)
@@ -978,10 +977,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return rightCvt
         }
         val rightType = binop.right.resolveType(typeHolder)
-        if (rightType !is CompletedType) {
-            throw IRCodeGenError("Uncompleted type: type=$rightType", binop.right.begin())
-        }
-
         val left = visitExpression(binop.left, true)
         ir.memcpy(left, right, U64Value.of(rightType.size().toLong()))
         return right
@@ -1093,7 +1088,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         when (ctype) {
             is CPointer -> {
                 val converted = ir.convertLVToType(loaded, I64Type)
-                val dereferenced = ctype.dereference(typeHolder)
+                val dereferenced = ctype.dereference(unaryOp.begin(), typeHolder)
                 val inc = op(converted, I64Value.of(dereferenced.size()))
                 ir.store(addr, ir.convertLVToType(inc, type))
             }
@@ -1116,7 +1111,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is CPointer -> {
                 val loaded    = ir.load(PtrType, address)
                 val converted = ir.convertLVToType(loaded, I64Type)
-                val dereferenced = cType.dereference(typeHolder)
+                val dereferenced = cType.dereference(unaryOp.begin(), typeHolder)
                 val inc       = op(converted, I64Value.of(dereferenced.size()))
                 val incPtr    = ir.convertLVToType(inc, PtrType)
                 ir.store(address, incPtr)
@@ -1738,7 +1733,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return generateGlobalDeclarator(varDesc, declarator)
         }
 
-        val irType = when (val cType = varDesc.typeDesc.cType()) {
+        val irType = when (val cType = varDesc.cType()) {
             is BOOL                          -> I8Type
             is CAggregateType, is CPrimitive -> mb.toIRType<NonTrivialType>(typeHolder, cType)
             else -> throw IRCodeGenError("Unknown type, type=$cType", declarator.begin())
@@ -1873,14 +1868,15 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val member = innerType.fieldByNameOrNull(designator.name()) ?:
                         throw IRCodeGenError("Unknown field, field=${designator.name()}", designationInitializer.begin())
 
-                    innerType = member.cType().asType()
+                    innerType = member.cType()
+                        .asType(designator.begin())
                     address = ir.gfp(address, fieldType, I64Value.of(member.index))
                 }
             }
         }
 
         when (val initializer = designationInitializer.initializer) {
-            is InitializerListInitializer -> visitInitializerList(initializer.list, address, innerType.asType())
+            is InitializerListInitializer -> visitInitializerList(initializer.list, address, innerType.asType(initializer.begin()))
             is ExpressionInitializer -> {
                 val expression = visitExpression(initializer.expr, true)
                 val converted = mb.toIRType<Type>(typeHolder, innerType)
@@ -1926,7 +1922,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         if (varDesc.storageClass == StorageClass.STATIC) {
             return generateGlobalAssignmentDeclarator(varDesc, initDeclarator)
         }
-        val type = varDesc.typeDesc.cType()
+        val type = varDesc.cType()
         if (type is CPrimitive) {
             val rvalue = generateInitDeclaratorExpressionForPrimitive(initDeclarator.rvalue)
             val commonType      = mb.toIRType<Type>(typeHolder, type)
@@ -1939,7 +1935,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val lvalueAdr = initDeclarator.declarator.accept(this)
         when (val rvalue = initDeclarator.rvalue) {
-            is InitializerListInitializer -> visitInitializerList(rvalue.list, lvalueAdr, varDesc.typeDesc.asType())
+            is InitializerListInitializer -> visitInitializerList(rvalue.list, lvalueAdr, varDesc.cType().asType(rvalue.begin()))
             is ExpressionInitializer -> when (val expr = rvalue.expr) {
                 is FunctionCall -> {
                     val rValueType = expr.resolveType(typeHolder)
@@ -1982,7 +1978,7 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
                         nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
     fun generate(functionNode: FunctionNode) {
         val varDesc = typeHolder.addVar(functionNode.declareType(typeHolder))
-        val fnType = varDesc.typeDesc
+        val fnType = varDesc.cType()
             .asType<CFunctionType>(functionNode.begin())
 
         val parameters = functionNode.functionDeclarator().params(typeHolder) ?: emptyList()

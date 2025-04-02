@@ -137,7 +137,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     protected fun generateGlobalAssignmentDeclarator(varDescriptor: VarDescriptor, declarator: InitDeclarator): AnyGlobalValue {
-        val lValueCType = varDescriptor.typeDesc.cType()
+        val lValueCType = varDescriptor.cType()
         val attr = toIrAttribute(varDescriptor.storageClass)
 
         val constEvalResult = constEvalInitializer(lValueCType, declarator.rvalue)
@@ -193,7 +193,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             if (type.storageClass != StorageClass.EXTERN) {
                 throw IRCodeGenError("Variable '${declarator.name()}' already exists with different storage class", declarator.begin())
             }
-            if (type.typeDesc.cType() != cType) {
+            if (type.cType() != cType) {
                 throw IRCodeGenError("Variable '${declarator.name()}' already exists with different type", declarator.begin())
             }
 
@@ -224,7 +224,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
     }
 
     protected fun generateExternDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value =
-        when (val cType = varDesc.typeDesc.cType()) {
+        when (val cType = varDesc.cType()) {
             is CFunctionType -> {
                 val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass)
                     .build()
@@ -233,7 +233,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             else -> registerExtern(declarator, cType)
         }
 
-    protected fun generateGlobalDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value = when (val cType = varDesc.typeDesc.cType()) {
+    protected fun generateGlobalDeclarator(varDesc: VarDescriptor, declarator: Declarator): Value = when (val cType = varDesc.cType()) {
         is CFunctionType -> {
             val cPrototype = CFunctionPrototypeBuilder(declarator.begin(), cType.functionType, mb, typeHolder, varDesc.storageClass).build()
             createFunctionPrototype(declarator, cPrototype)

@@ -80,7 +80,7 @@ class TypeResolutionTest {
         val vars = expr.declareVars(typeResolver)
         val a = vars.find { it.name == "a" }!!
 
-        assertEquals(INT, a.typeDesc.cType())
+        assertEquals(INT, a.cType())
     }
 
     @Test
@@ -94,8 +94,8 @@ class TypeResolutionTest {
         val a = vars.find { it.name == "a" }!!
         val v = vars.find { it.name == "v" }!!
 
-        assertEquals(INT, a.typeDesc.cType())
-        assertEquals(INT, v.typeDesc.cType())
+        assertEquals(INT, a.cType())
+        assertEquals(INT, v.cType())
     }
 
     @Test
@@ -110,9 +110,9 @@ class TypeResolutionTest {
         val v = vars.find { it.name == "v" }!!
         val p = vars.find { it.name == "p" }!!
 
-        assertEquals(INT, a.typeDesc.cType())
-        assertEquals(INT, v.typeDesc.cType())
-        assertEquals(CPointer(INT), p.typeDesc.cType())
+        assertEquals(INT, a.cType())
+        assertEquals(INT, v.cType())
+        assertEquals(CPointer(INT), p.cType())
     }
 
     @Test
@@ -152,8 +152,8 @@ class TypeResolutionTest {
         val fnType = expr.resolveType(typeResolver)
 
         assertEquals("int add(int, int)", fnType.toString())
-        assertEquals(INT, typeResolver["a"].typeDesc.cType())
-        assertEquals(INT, typeResolver["b"].typeDesc.cType())
+        assertEquals(INT, typeResolver["a"].cType())
+        assertEquals(INT, typeResolver["b"].cType())
     }
 
     @Test
@@ -178,7 +178,7 @@ class TypeResolutionTest {
 
         assertEquals("int add(int a(int, int), int)", fnType.toString())
         assertEquals("int a(int, int)", typeResolver["a"].toString())
-        assertEquals(INT, typeResolver["b"].typeDesc.cType())
+        assertEquals(INT, typeResolver["b"].cType())
     }
 
     @Test
@@ -359,7 +359,7 @@ class TypeResolutionTest {
         val vars = expr.declareVars(typeResolver)
 
         val a = vars.find { it.name == "a" }!!
-        assertEquals(UINT, a.typeDesc.cType())
+        assertEquals(UINT, a.cType())
     }
 
     // https://port70.net/~nsz/c/c11/n1570.html#6.7.2.3p11
@@ -436,7 +436,7 @@ class TypeResolutionTest {
         val typeHolder = parser.typeHolder()
         val unionType = typeHolder.getVarTypeOrNull("b") ?: error("Cannot find union type")
         assertEquals("union B {int a;struct struct.1 {int b;char c;}}", unionType.toString())
-        val ty = unionType.typeDesc.cType() as CUnionType
+        val ty = unionType.cType() as CUnionType
         assertEquals(0, ty.fieldByNameOrNull("a")?.index)
         assertEquals(0, ty.fieldByNameOrNull("b")?.index)
         //assertEquals(2, ty.fieldIndex("c")) TODO
@@ -461,7 +461,7 @@ class TypeResolutionTest {
         val typeHolder = parser.typeHolder()
         val structType = typeHolder.getVarTypeOrNull("a") ?: error("Cannot find struct type")
         assertEquals("struct A {int a;union union.1 {int b;char c;}}", structType.toString())
-        val ty = structType.typeDesc.cType() as CStructType
+        val ty = structType.cType() as CStructType
         assertEquals(0, ty.fieldByName("a").index)
         assertEquals(1, ty.fieldByName("b").index)
         assertEquals(1, ty.fieldByName("c").index)
@@ -489,7 +489,7 @@ class TypeResolutionTest {
         val typeHolder = parser.typeHolder()
         val structType = typeHolder.getVarTypeOrNull("c") ?: error("Cannot find struct type")
         assertEquals("struct C {union union.5 {struct struct.3 {int i;int j;}struct struct.4 {long k;long l;} w;}int m;}", structType.toString())
-        val ty = structType.typeDesc.cType() as CStructType
+        val ty = structType.cType() as CStructType
         assertEquals(0, ty.fieldByName("i").index)
         assertEquals(1, ty.fieldByName("j").index)
         assertEquals(0, ty.fieldByName("w").index)

@@ -1,5 +1,6 @@
 package types
 
+import tokenizer.Position
 import typedesc.TypeDesc
 
 sealed class Member(protected val typeDesc: TypeDesc) {
@@ -10,12 +11,12 @@ sealed class Member(protected val typeDesc: TypeDesc) {
 }
 
 class AnonMember(typeDesc: TypeDesc): Member(typeDesc) {
-    override fun cType(): AnyCStructType = typeDesc.cType().asType()
+    override fun cType(): AnyCStructType = typeDesc.cType().asType(Position.UNKNOWN)
     override fun toString(): String = typeDesc.toString()
 }
 
 class FieldMember(val name: String, typeDesc: TypeDesc): Member(typeDesc) {
-    override fun cType(): CompletedType = typeDesc.cType().asType()
+    override fun cType(): CompletedType = typeDesc.cType().asType(Position.UNKNOWN)
     override fun toString(): String   = "$typeDesc $name;"
 }
 

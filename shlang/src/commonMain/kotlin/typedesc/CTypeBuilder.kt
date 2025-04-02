@@ -2,9 +2,10 @@ package typedesc
 
 import types.*
 import common.assertion
+import tokenizer.Position
 
 
-class CTypeBuilder {
+class CTypeBuilder(private val where: Position) {
     private val typeProperties = mutableListOf<TypeQualifier>()
     private val baseTypes = mutableListOf<CType>()
     private var storageClass: StorageClass? = null
@@ -66,7 +67,7 @@ class CTypeBuilder {
         assertion(baseTypes.size == 1) {
             "Unknown type '$baseTypes'"
         }
-        return baseTypes[0].asType()
+        return baseTypes[0].asType(where)
     }
 
     fun build(): DeclSpec {
