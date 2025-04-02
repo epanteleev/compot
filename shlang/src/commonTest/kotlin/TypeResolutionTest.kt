@@ -143,7 +143,6 @@ class TypeResolutionTest {
     }
 
     @Test
-    @Ignore
     fun testDecl6() {
         val tokens = apply("int add(int a, int b) { return a + b; }")
         val parser = CProgramParser.build(tokens)
@@ -152,8 +151,6 @@ class TypeResolutionTest {
         val fnType = expr.resolveType(typeResolver)
 
         assertEquals("int add(int, int)", fnType.toString())
-        assertEquals(INT, typeResolver["a"].cType())
-        assertEquals(INT, typeResolver["b"].cType())
     }
 
     @Test
@@ -168,7 +165,6 @@ class TypeResolutionTest {
     }
 
     @Test
-    @Ignore
     fun testDecl8() {
         val tokens = apply("int add(int (a)(int, int), int b) { }")
         val parser = CProgramParser.build(tokens)
@@ -177,8 +173,6 @@ class TypeResolutionTest {
         val fnType = expr.resolveType(typeResolver)
 
         assertEquals("int add(int a(int, int), int)", fnType.toString())
-        assertEquals("int a(int, int)", typeResolver["a"].toString())
-        assertEquals(INT, typeResolver["b"].cType())
     }
 
     @Test

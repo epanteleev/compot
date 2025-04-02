@@ -65,14 +65,14 @@ class CStructType private constructor(
                         is CUnionType -> {
                             for (fieldDesc in cType.descriptors()) {
                                 val name = fieldDesc.name()
-                                val newFieldDesc = FieldDesc(name, idx + fieldDesc.index + offset, field)
+                                val newFieldDesc = FieldDesc(name, idx + fieldDesc.index + offset, fieldDesc.member())
                                 fieldDescs.add(newFieldDesc)
                             }
                         }
                         is CStructType -> {
                             for (fieldDesc in cType.descriptors()) {
                                 val name = fieldDesc.name()
-                                val newFieldDesc = FieldDesc(name, idx + fieldDesc.index + offset, field)
+                                val newFieldDesc = FieldDesc(name, idx + fieldDesc.index + offset, fieldDesc.member())
                                 fieldDescs.add(newFieldDesc)
                                 offset += cType.members().size
                             }

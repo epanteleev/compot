@@ -10,7 +10,6 @@ import parser.nodes.*
 import codegen.consteval.*
 import ir.module.ExternFunction
 import codegen.TypeConverter.toIRType
-import common.assertion
 import ir.attributes.GlobalValueAttribute
 import ir.module.DirectFunctionPrototype
 import ir.module.builder.impl.ModuleBuilder
@@ -251,28 +250,49 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
             val elements = generateSequence { zero }.take(irType.length).toList()
             registerGlobal(declarator, InitializerListValue(irType, elements), attr)
         }
-        is CStructType -> {
+        is AnyCStructType -> {
             val irType = mb.toIRType<StructType>(typeHolder, cType)
             val elements = arrayListOf<NonTrivialConstant>()
-            for (field in cType.members()) {
-                val irFieldType = mb.toIRType<NonTrivialType>(typeHolder, field.cType())
-                elements.add(NonTrivialConstant.of(irFieldType, 0))
+            for (field in irType.fields) {
+                elements.add(NonTrivialConstant.of(field, 0))
             }
             val attr = toIrAttribute(varDesc.storageClass)
             registerGlobal(declarator, InitializerListValue(irType, elements), attr)
         }
         is CUncompletedArrayType -> {
-            // Important: gcc & clang allow to declare array with 1 element
+            // Important: gcc & clang allow to declare array with 0 element
             val irType = ArrayType(mb.toIRType<NonTrivialType>(typeHolder, cType.element().cType()), 1)
             val attr = toIrAttribute(varDesc.storageClass)
             val zero = NonTrivialConstant.of(irType.elementType(), 0)
             val elements = arrayListOf(zero)
             registerGlobal(declarator, InitializerListValue(irType, elements), attr)
         }
-        else -> throw IRCodeGenError("Unsupported type $cType", declarator.begin())
+        is AbstractCFunction -> TODO()
+        is CStringLiteral -> TODO()
     }
 
     protected fun constEvalExpression0(expr: Expression): Number? = ConstEvalExpression.eval(expr, typeHolder)
+
+    private fun initialConstants(lValueCType: CAggregateType, initializerList: InitializerList): MutableList<NonTrivialConstant> {
+        val lValueType = mb.toIRType<AggregateType>(typeHolder, lValueCType)
+        val elements = arrayListOf<NonTrivialConstant>()
+        when (lValueCType) {
+            is AnyCArrayType -> {
+                for (i in initializerList.initializers.indices) {
+                    elements.add(NonTrivialConstant.of(lValueType.field(i), 0))
+                }
+
+                return elements
+            }
+            is AnyCStructType -> {
+                for (i in initializerList.initializers.indices) {
+                    elements.add(NonTrivialConstant.of(lValueType.field(i), 0))
+                }
+
+                return elements
+            }
+        }
+    }
 
     private fun constEvalInitializers(lValueCType: CAggregateType, expr: InitializerList): NonTrivialConstant {
         if (expr.initializers.size == 1 && lValueCType is CArrayType && lValueCType.element().cType() is CHAR) {
@@ -287,10 +307,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
         }
 
         val lValueType = mb.toIRType<AggregateType>(typeHolder, lValueCType)
-        val elements = arrayListOf<NonTrivialConstant>()
-        for (i in expr.initializers.indices) {
-            elements.add(NonTrivialConstant.of(lValueType.field(i), 0))
-        }
+        val elements = initialConstants(lValueCType, expr)
 
         for ((index, initializer) in expr.initializers.withIndex()) {
             when (initializer) {

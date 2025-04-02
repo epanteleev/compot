@@ -1,6 +1,6 @@
 package types
 
-// TODO MANY CODE DUPLICATES iN THIS FILE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
 sealed class CAggregateType: CompletedType() {
     fun hasFloatOnly(lo: Int, hi: Int): Boolean {
         return hasFloat(this, lo, hi, 0)
@@ -9,7 +9,7 @@ sealed class CAggregateType: CompletedType() {
     private fun hasFloat(ty: CType, lo: Int, hi: Int, offset: Int): Boolean {
         if (ty is AnyCStructType) {
             for ((idx, field) in ty.members().withIndex()) {
-                if (!hasFloat(field.cType(), lo, hi, offset + ty.offset(idx))) { //TODO inefficient
+                if (!hasFloat(field.cType(), lo, hi, offset + ty.offset(idx))) {
                     return false
                 }
             }

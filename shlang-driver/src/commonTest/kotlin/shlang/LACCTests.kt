@@ -129,7 +129,6 @@ sealed class LACCTests : CommonCTest() {
     }
 
     @Test
-    @Ignore
     fun testCastFloatUnion() {
         val result = runCTest("shlang/lacc/cast-float-union", listOf(), options())
         assertEquals("549754765312.000000\n", result.output)
