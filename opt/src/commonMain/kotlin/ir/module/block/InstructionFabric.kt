@@ -3,11 +3,9 @@ package ir.module.block
 import ir.attributes.FunctionAttribute
 import ir.types.*
 import ir.instruction.*
-import ir.instruction.lir.*
 import ir.intrinsic.IntrinsicProvider
 import ir.module.DirectFunctionPrototype
 import ir.module.IndirectFunctionPrototype
-import ir.value.UsableValue
 import ir.value.constant.IntegerConstant
 import ir.value.constant.UnsignedIntegerConstant
 import ir.value.Value
@@ -62,5 +60,3 @@ interface InstructionFabric {
     fun switch(value: Value, default: Label, table: List<IntegerConstant>, targets: List<Label>): Switch
     fun intrinsic(inputs: List<Value>, implementor: IntrinsicProvider, target: Label): Intrinsic
 }
-
-interface AnyInstructionFabric : InstructionFabric

@@ -74,7 +74,7 @@ sealed class DominatorCalculate<T: AnalysisResult>: FunctionAnalysisPass<T>() {
 
     abstract fun blockOrdering(basicBlocks: FunctionData): BlockOrder
 
-    fun evalIndexToBlock(blockToIndex: Map<AnyBlock, Int>): Map<Int, AnyBlock> {
+    private fun evalIndexToBlock(blockToIndex: Map<AnyBlock, Int>): Map<Int, AnyBlock> {
         val indexToBlock = intMapOf<Int, AnyBlock>(blockToIndex.size) { it }
         for ((key, value) in blockToIndex) {
             indexToBlock[value] = key

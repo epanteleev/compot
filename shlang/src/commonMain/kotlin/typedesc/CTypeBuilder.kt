@@ -70,10 +70,7 @@ class CTypeBuilder {
     }
 
     fun build(): DeclSpec {
-        val baseType = if (baseTypes.size == 1 && baseTypes[0] is TypeDef) {
-            val ctype = (baseTypes[0] as TypeDef).typeDesc().copyWith(typeProperties)
-            return DeclSpec(ctype, storageClass)
-        } else if (baseTypes[0] is CPrimitive) {
+        val baseType = if (baseTypes[0] is CPrimitive) {
             foldCTypes(baseTypes)
         } else {
             baseTypes[0]

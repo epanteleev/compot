@@ -81,6 +81,13 @@ sealed class StdlibTest: CommonCTest() {
         assertEquals("Hello, world!\n", result.output)
         assertEquals(0, result.exitCode)
     }
+
+    @Test
+    fun testPrintStr() {
+        val result = runCTest("shlang/stdlib/print_str", listOf(), options())
+        assertEquals("Hello, world!\n", result.output)
+        assertEquals(0, result.exitCode)
+    }
 }
 
 class StdlibTestO0: StdlibTest() {

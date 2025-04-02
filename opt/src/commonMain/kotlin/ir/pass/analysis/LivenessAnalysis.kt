@@ -45,9 +45,9 @@ private data class KillGenSet(val kill: Set<LocalValue>, val gen: Set<LocalValue
 private class LivenessAnalysis(private val functionData: FunctionData): FunctionAnalysisPass<LivenessAnalysisInfo>() {
     private val linearScanOrder = functionData.analysis(LinearScanOrderFabric)
     private val liveness = run {
-        val mapOf = mutableMapOf<Label, LiveInfo>()
+        val mapOf = hashMapOf<Label, LiveInfo>()
         for (bb in functionData) {
-            mapOf[bb] = LiveInfo(mutableSetOf(), mutableSetOf())
+            mapOf[bb] = LiveInfo(hashSetOf(), hashSetOf())
         }
 
         mapOf
@@ -56,8 +56,8 @@ private class LivenessAnalysis(private val functionData: FunctionData): Function
     private fun computeLocalLiveSets(): Map<Label, KillGenSet> {
         val killGenSet = mutableMapOf<Label, KillGenSet>()
         for (bb in linearScanOrder) {
-            val gen = mutableSetOf<LocalValue>()
-            val kill = mutableSetOf<LocalValue>()
+            val gen = hashSetOf<LocalValue>()
+            val kill = hashSetOf<LocalValue>()
 
             for (inst in bb) {
                 // Handle input operands

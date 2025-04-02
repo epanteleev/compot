@@ -230,10 +230,15 @@ data class VarNode(private val str: Identifier) : Expression() {
 
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
+    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
         val varType = typeHolder.getVarTypeOrNull(str.str())
         if (varType != null) {
-            return@memoize varType.typeDesc.cType()
+            val cType = varType.typeDesc.cType()
+            if (cType !is CompletedType) {
+                throw TypeResolutionException("Variable '$str' has uncompleted type: $cType", begin())
+            }
+
+            return@memoize cType
         }
 
         return@memoize typeHolder.findEnum(str.str()) ?: throw TypeResolutionException("Variable '$str' not found", begin())
@@ -276,9 +281,7 @@ data class CharNode(val char: CharLiteral) : Expression() {
     override fun begin(): Position = char.position()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize CHAR
-    }
+    override fun resolveType(typeHolder: TypeHolder): CHAR = CHAR
 
     fun toByte(): Byte {
         return char.code()
@@ -373,9 +376,7 @@ data class SizeOf(val expr: SizeOfParam) : Expression() {
     override fun begin(): Position = expr.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize LONG
-    }
+    override fun resolveType(typeHolder: TypeHolder): LONG = LONG
 
     fun constEval(typeHolder: TypeHolder): Int = expr.constEval(typeHolder)
 }
