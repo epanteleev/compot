@@ -33,7 +33,7 @@ class ParamDeclarator(val declarator: Declarator) : AnyParamDeclarator() {
         val varDesc = declarator.declareType(declSpec, typeHolder)
             ?: throw IllegalStateException("Typedef is not supported in function parameters")
 
-        return TypeDesc.from(varDesc.cType(), varDesc.qualifiers())
+        return varDesc.toTypeDesc()
     }
 }
 
@@ -57,7 +57,7 @@ data class Parameter(val declspec: DeclarationSpecifier, val paramDeclarator: An
     fun resolveVarDesc(typeHolder: TypeHolder): VarDescriptor? {
         val type = resolveType(typeHolder)
         val name = name() ?: return null
-        return VarDescriptor(name, type, null)
+        return VarDescriptor(name, type.asType(begin()), type.qualifiers(), null)
     }
 }
 

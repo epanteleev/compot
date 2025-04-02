@@ -255,12 +255,7 @@ data class VarNode(private val str: Identifier) : Expression() {
     override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
         val varType = typeHolder.getVarTypeOrNull(str.str())
         if (varType != null) {
-            val cType = varType.cType()
-            if (cType !is CompletedType) {
-                throw TypeResolutionException("Variable '$str' has uncompleted type: $cType", begin())
-            }
-
-            return@memoize cType
+            return@memoize varType.cType()
         }
 
         return@memoize typeHolder.findEnum(str.str()) ?: throw TypeResolutionException("Variable '$str' not found", begin())

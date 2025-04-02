@@ -1781,7 +1781,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun zeroMemory(address: Value, type: ArrayType) {
-        zeroMemory(address, type, 0 until type.length.toInt())
+        zeroMemory(address, type, 0 until type.length)
     }
 
     private fun zeroingGaps(value: Value, type: AggregateType, filledPositions: List<Int>) = when (type) {
@@ -1952,9 +1952,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     val irRvalueType = mb.toIRType<AggregateType>(typeHolder, rvalueType)
                     ir.memcpy(lvalueAdr, rvalueResult, U64Value.of(irRvalueType.sizeOf().toLong()))
 
-                    if (type !is CompletedType) {
-                        throw IRCodeGenError("Unknown type, type=$type", initDeclarator.begin())
-                    }
                     if (rvalueType.size() < type.size()) {
                         val start = ir.gep(lvalueAdr, I8Type, U64Value.of(rvalueType.size().toLong()))
                         zeroMemory(start, ArrayType(I8Type, type.size() - rvalueType.size()))

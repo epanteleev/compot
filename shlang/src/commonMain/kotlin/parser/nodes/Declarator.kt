@@ -44,7 +44,7 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
             return null
         }
 
-        return VarDescriptor(name(), type, declSpec.storageClass)
+        return VarDescriptor(name(), type.asType(begin()), type.qualifiers(), declSpec.storageClass)
     }
 }
 
@@ -63,7 +63,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): 
         val type = declarator.directDeclarator.resolveType(newTypeDesc, typeHolder)
         val baseType = type.cType()
         if (baseType !is CUncompletedArrayType) {
-            return VarDescriptor(name(), type, declSpec.storageClass)
+            return VarDescriptor(name(), baseType.asType(begin()), type.qualifiers(), declSpec.storageClass)
         }
 
         when (rvalue) {
@@ -75,12 +75,12 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): 
                 val initializerList = rvalue.list
                 when (val initializerType = initializerList.resolveType(typeHolder)) {
                     is InitializerType -> {
-                        val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerList.length().toLong()), listOf())
-                        return VarDescriptor(name(), rvalueType, declSpec.storageClass)
+                        val rvalueType = CArrayType(baseType.element(), initializerList.length().toLong())
+                        return VarDescriptor(name(), rvalueType, listOf(), declSpec.storageClass)
                     }
                     is CStringLiteral -> {
-                        val rvalueType = TypeDesc.from(CArrayType(baseType.element(), initializerType.dimension + 1), listOf())
-                        return VarDescriptor(name(), rvalueType, declSpec.storageClass)
+                        val rvalueType = CArrayType(baseType.element(), initializerType.dimension + 1)
+                        return VarDescriptor(name(), rvalueType, listOf(), declSpec.storageClass)
                     }
                     else -> throw TypeResolutionException("Array size is not specified: type=$initializerType", declarator.begin())
                 }
@@ -92,7 +92,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): 
                 }
                 // Special case for string initialization like:
                 // char a[] = "hello";
-                return VarDescriptor(name(), TypeDesc.from(expr.resolveType(typeHolder)), declSpec.storageClass)
+                return VarDescriptor(name(), expr.resolveType(typeHolder), listOf(), declSpec.storageClass)
             }
         }
     }

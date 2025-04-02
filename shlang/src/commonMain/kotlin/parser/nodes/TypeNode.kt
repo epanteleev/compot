@@ -30,9 +30,7 @@ sealed class AnyTypeNode(val name: CToken) {
             for (declarator in field.declarators) {
                 val type = field.declspec.specifyType(typeHolder)
                 val resolved = declarator.declareType(type, typeHolder)
-
-                val typeDesc = TypeDesc.from(resolved.cType(), resolved.qualifiers())
-                members.add(FieldMember(declarator.name(), typeDesc))
+                members.add(FieldMember(declarator.name(), resolved.toTypeDesc()))
             }
         }
 
