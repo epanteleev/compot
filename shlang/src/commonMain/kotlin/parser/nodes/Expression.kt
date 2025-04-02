@@ -385,8 +385,13 @@ data class Cast(val typeName: TypeName, val cast: Expression) : Expression() {
     override fun begin(): Position = typeName.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize typeName.specifyType(typeHolder).typeDesc.cType()
+    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
+        val cType = typeName.specifyType(typeHolder).typeDesc.cType()
+        if (cType !is CompletedType) {
+            throw TypeResolutionException("Cast on uncompleted type: $cType", begin())
+        }
+
+        return@memoize cType
     }
 }
 
@@ -394,8 +399,13 @@ class BuiltinVaArg(val assign: Expression, val typeName: TypeName) : Expression(
     override fun begin(): Position = assign.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize typeName.specifyType(typeHolder).typeDesc.cType()
+    override fun resolveType(typeHolder: TypeHolder): CompletedType = memoize {
+        val cType = typeName.specifyType(typeHolder).typeDesc.cType()
+        if (cType !is CompletedType) {
+            throw TypeResolutionException("va_arg on uncompleted type: $cType", begin())
+        }
+
+        return@memoize cType
     }
 }
 
@@ -403,25 +413,19 @@ class BuiltinVaStart(val vaList: Expression, val param: Expression) : Expression
     override fun begin(): Position = vaList.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize VOID
-    }
+    override fun resolveType(typeHolder: TypeHolder): VOID = VOID
 }
 
 class BuiltinVaEnd(val vaList: Expression) : Expression() {
     override fun begin(): Position = vaList.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize VOID
-    }
+    override fun resolveType(typeHolder: TypeHolder): VOID = VOID
 }
 
 class BuiltinVaCopy(val dest: Expression, val src: Expression) : Expression() {
     override fun begin(): Position = dest.begin()
     override fun<T> accept(visitor: ExpressionVisitor<T>) = visitor.visit(this)
 
-    override fun resolveType(typeHolder: TypeHolder): CType = memoize {
-        return@memoize VOID
-    }
+    override fun resolveType(typeHolder: TypeHolder): VOID = VOID
 }

@@ -7,12 +7,20 @@ import ir.Definitions.POINTER_SIZE
 class CPointer(private val type: CType, private val properties: Set<TypeQualifier> = setOf()) : CPrimitive() {
     override fun size(): Int = POINTER_SIZE
 
-    fun dereference(typeHolder: TypeHolder): CType = when (type) {
-        is CFunctionType          -> type.functionType.asType()
-        is CUncompletedStructType -> typeHolder.getStructType(type.name)
-        is CUncompletedUnionType  -> typeHolder.getUnionType(type.name)
-        is CUncompletedEnumType   -> typeHolder.getEnumType(type.name)
-        else -> type.asType()
+    fun dereference(typeHolder: TypeHolder): CompletedType {
+        val cType = when (type) {
+            is CFunctionType          -> type.functionType.asType()
+            is CUncompletedStructType -> typeHolder.getStructType(type.name)
+            is CUncompletedUnionType  -> typeHolder.getUnionType(type.name)
+            is CUncompletedEnumType   -> typeHolder.getEnumType(type.name)
+            else -> type.asType()
+        }
+
+        if (cType !is CompletedType) {
+            throw Exception("Type $cType is not completed")
+        }
+
+        return cType
     }
 
     override fun equals(other: Any?): Boolean {

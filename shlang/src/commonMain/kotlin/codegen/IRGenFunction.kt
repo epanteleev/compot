@@ -784,10 +784,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is CPrimitive -> {
                 val convertedLValue = ir.convertLVToType(rvalue, I64Type)
                 val dereferenced = addressCType.dereference(typeHolder)
-                if (dereferenced !is CompletedType) {
-                    throw IRCodeGenError("unexpected uncompleted type: $dereferenced", expr.begin())
-                }
-
                 ir.mul(convertedLValue, I64Value.of(dereferenced.size()))
             }
 
@@ -900,9 +896,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val convertedLValue = ir.convertLVToType(ptr2intLValue, I64Type)
 
                 val dereferenced = lValueType.dereference(typeHolder)
-                if (dereferenced !is CompletedType) {
-                    throw IRCodeGenError("unexpected uncompleted type: $dereferenced", binOp.begin())
-                }
                 val mul = ir.mul(convertedRValue, I64Value.of(dereferenced.size()))
 
                 val result = op(convertedLValue, mul)
@@ -1101,9 +1094,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             is CPointer -> {
                 val converted = ir.convertLVToType(loaded, I64Type)
                 val dereferenced = ctype.dereference(typeHolder)
-                if (dereferenced !is CompletedType) {
-                    throw IRCodeGenError("unexpected uncompleted type: $dereferenced", unaryOp.begin())
-                }
                 val inc = op(converted, I64Value.of(dereferenced.size()))
                 ir.store(addr, ir.convertLVToType(inc, type))
             }
@@ -1127,9 +1117,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val loaded    = ir.load(PtrType, address)
                 val converted = ir.convertLVToType(loaded, I64Type)
                 val dereferenced = cType.dereference(typeHolder)
-                if (dereferenced !is CompletedType) {
-                    throw IRCodeGenError("unexpected uncompleted type: $dereferenced", unaryOp.begin())
-                }
                 val inc       = op(converted, I64Value.of(dereferenced.size()))
                 val incPtr    = ir.convertLVToType(inc, PtrType)
                 ir.store(address, incPtr)
