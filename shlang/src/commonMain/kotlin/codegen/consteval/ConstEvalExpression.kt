@@ -256,9 +256,7 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
         return ctx.callFunction(primary.nameIdent(), evaluated)
     }
 
-    override fun visit(arrayAccess: ArrayAccess): Long {
-        TODO("Not yet implemented")
-    }
+    override fun visit(arrayAccess: ArrayAccess): Long? = null
 
     override fun visit(stringNode: StringNode): Long {
         TODO("Not yet implemented")
