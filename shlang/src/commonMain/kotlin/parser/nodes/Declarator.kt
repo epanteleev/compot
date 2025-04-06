@@ -15,7 +15,7 @@ sealed class AnyDeclarator {
     abstract fun begin(): Position
     abstract fun name(): String
     abstract fun<T> accept(visitor: DeclaratorVisitor<T>): T
-    internal abstract fun declareType(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor?
+    internal abstract fun declareVar(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor?
 
     protected fun wrapPointers(type: CType, pointers: List<NodePointer>): CType {
         var pointerType = type
@@ -26,7 +26,7 @@ sealed class AnyDeclarator {
     }
 }
 
-data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
+class Declarator(val directDeclarator: DirectDeclarator, val pointers: List<NodePointer>): AnyDeclarator() {
     override fun begin(): Position = directDeclarator.begin()
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
@@ -34,21 +34,31 @@ data class Declarator(val directDeclarator: DirectDeclarator, val pointers: List
         return directDeclarator.name()
     }
 
-    override fun declareType(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor? {
+    fun resolveTypedef(declSpec: DeclSpec, typeHolder: TypeHolder) {
+        if (declSpec.storageClass != StorageClass.TYPEDEF) {
+            return
+        }
+
         val pointerType = wrapPointers(declSpec.typeDesc.cType(), pointers)
         val newTypeDesc = TypeDesc.from(pointerType, declSpec.typeDesc.qualifiers())
-        val type = directDeclarator.resolveType(newTypeDesc, typeHolder)
 
+        val type = directDeclarator.resolveType(newTypeDesc, typeHolder)
+        typeHolder.addTypedef(name(), type)
+    }
+
+    override fun declareVar(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor? {
         if (declSpec.storageClass == StorageClass.TYPEDEF) {
-            typeHolder.addTypedef(name(), type)
             return null
         }
 
+        val pointerType = wrapPointers(declSpec.typeDesc.cType(), pointers)
+        val newTypeDesc = TypeDesc.from(pointerType, declSpec.typeDesc.qualifiers())
+        val type = directDeclarator.resolveType(newTypeDesc, typeHolder)
         return VarDescriptor(name(), type.asType(begin()), type.qualifiers(), declSpec.storageClass)
     }
 }
 
-data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): AnyDeclarator() {
+class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): AnyDeclarator() {
     override fun begin(): Position = declarator.begin()
     override fun<T> accept(visitor: DeclaratorVisitor<T>) = visitor.visit(this)
 
@@ -56,7 +66,7 @@ data class InitDeclarator(val declarator: Declarator, val rvalue: Initializer): 
         return declarator.name()
     }
 
-    override fun declareType(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
+    override fun declareVar(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
         val pointerType = wrapPointers(declSpec.typeDesc.cType(), declarator.pointers)
         val newTypeDesc = TypeDesc.from(pointerType, declSpec.typeDesc.qualifiers())
 

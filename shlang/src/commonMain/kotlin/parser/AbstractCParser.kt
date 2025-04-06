@@ -4,14 +4,18 @@ import tokenizer.*
 import typedesc.TypeHolder
 import tokenizer.tokens.*
 
+class FunctionCtx(val labelResolver: LabelResolver, val typeHolder: TypeHolder)
+
 
 sealed class AbstractCParser(val filename: String, tokens: TokenList) {
     private var anonymousCounter = 0
     protected var current: AnyToken? = tokens.firstOrNull()
-    protected val typeHolder = TypeHolder.default()
-    protected var labelResolver = LabelResolver.default()
+    protected val globalTypeHolder = TypeHolder.default()
+    protected var funcCtx: FunctionCtx? = FunctionCtx(LabelResolver.default(), globalTypeHolder)
 
-    fun typeHolder(): TypeHolder = typeHolder
+    fun globalTypeHolder(): TypeHolder = globalTypeHolder
+
+    protected fun typeHolder(): TypeHolder = funcCtx?.typeHolder ?: globalTypeHolder
 
     protected fun anonymousName(prefix: String): String {
         return "$prefix.${anonymousCounter++}"
@@ -75,9 +79,10 @@ sealed class AbstractCParser(val filename: String, tokens: TokenList) {
     }
 
     protected inline fun<reified T> funcRule(fn: () -> T?): T? {
-        labelResolver = LabelResolver.default()
+        funcCtx = FunctionCtx(LabelResolver.default(), globalTypeHolder.copy())
         val result = rule(fn)
-        labelResolver.resolveAll()
+        funcCtx!!.labelResolver.resolveAll()
+        funcCtx = null
         return result
     }
 }

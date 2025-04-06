@@ -28,8 +28,8 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
     }
 
     private fun generateFunction(node: FunctionNode) {
-        val gen = FunGenInitializer(mb, typeHolder, vregStack, nameGenerator)
-        gen.generate(node)
+        val gen = FunGenInitializer(mb, node, vregStack, nameGenerator)
+        gen.generate()
     }
 
     private fun generateDeclaration(node: Declaration) {
@@ -39,7 +39,7 @@ private class IRGen private constructor(typeHolder: TypeHolder): AbstractIRGener
         }
 
         for (declarator in node.declarators()) {
-            val varDesc = declarator.declareType(declSpec, typeHolder)
+            val varDesc = declarator.declareVar(declSpec, typeHolder)
                 ?: throw IRCodeGenError("Typedef is not supported in global declarations", node.begin())
 
             when (declarator) {

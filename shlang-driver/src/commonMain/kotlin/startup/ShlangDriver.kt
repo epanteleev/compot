@@ -85,7 +85,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
 
         val parser     = CProgramParser.build(filename, postProcessedTokens)
         val program    = parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         return GenerateIR.apply(typeHolder, program)
     }
 

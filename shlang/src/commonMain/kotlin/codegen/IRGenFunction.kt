@@ -43,7 +43,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     typeHolder: TypeHolder,
                     varStack: VarStack<Value>,
                     nameGenerator: NameGenerator,
-                    private val parameters: List<VarDescriptor>,
+                    private val parameters: List<VarDescriptor>?,
                     private val ir: FunctionDataBuilder,
                     private val functionType: CFunctionType) :
     AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator),
@@ -69,11 +69,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun visitDeclaration(declaration: Declaration) {
+        if (declaration.isTypedef) {
+            return
+        }
         val varDescriptors = declaration.declareVars(typeHolder)
         for (varDesc in varDescriptors) {
             typeHolder.addVar(varDesc)
         }
-
         for (declarator in declaration.declarators()) {
             declarator.accept(this)
         }
@@ -1188,6 +1190,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     }
 
     private fun isArgumentVariable(varNode: VarNode): Boolean {
+        if (parameters == null) {
+            return false
+        }
         val name = varNode.name()
         return parameters.find { it.name == name } != null
     }
@@ -1304,7 +1309,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun emitReturnType(fnStmt: FunctionStmtInfo, retCType: TypeDesc, args: List<ArgumentValue>) {
+    private fun visitReturnType(fnStmt: FunctionStmtInfo, retCType: TypeDesc, args: List<ArgumentValue>) {
         val exitBlock = fnStmt.resolveExit(ir)
         when (val cType = retCType.cType()) {
             is VOID -> {
@@ -1367,16 +1372,23 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         ir.switchLabel(cont)
     }
 
+    private fun visitParameters(functionNode: FunctionNode) {
+        if (parameters == null) {
+            return
+        }
+
+        for (param in parameters) {
+            typeHolder.addVar(param)
+        }
+
+        val retType = functionNode.resolveType(typeHolder).retType().cType()
+        visitParameters(parameters, ir.arguments(), retType)
+    }
+
     fun visitFun(functionNode: FunctionNode): Value = scoped {
         stmtStack.scoped(FunctionStmtInfo()) { stmt ->
-            for (param in parameters) {
-                typeHolder.addVar(param)
-            }
-
-            val retType = functionNode.resolveType(typeHolder).retType().cType()
-            visitParameters(parameters, ir.arguments(), retType)
-
-            emitReturnType(stmt, functionType.retType(), ir.arguments())
+            visitParameters(functionNode)
+            visitReturnType(stmt, functionType.retType(), ir.arguments())
 
             ir.switchLabel(Label.entry)
             initializeVarArgs(functionType, stmt)
@@ -1728,7 +1740,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
     override fun visit(declarator: Declarator): Value {
         val varDesc = typeHolder.getVarTypeOrNull(declarator.name())
-            ?: throw IRCodeGenError("Variable not found", declarator.begin())
+            ?: throw IRCodeGenError("Variable not found: '${declarator.name()}'", declarator.begin())
         if (varDesc.storageClass == StorageClass.STATIC) {
             return generateGlobalDeclarator(varDesc, declarator)
         }
@@ -1970,15 +1982,16 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 }
 
 internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
-                        typeHolder: TypeHolder,
-                        varStack: VarStack<Value>,
-                        nameGenerator: NameGenerator) : AbstractIRGenerator(moduleBuilder, typeHolder, varStack, nameGenerator) {
-    fun generate(functionNode: FunctionNode) {
+                                 private val functionNode: FunctionNode,
+                                 varStack: VarStack<Value>,
+                                 nameGenerator: NameGenerator) :
+    AbstractIRGenerator(moduleBuilder, functionNode.typeHolder, varStack, nameGenerator) {
+    fun generate() {
         val varDesc = typeHolder.addVar(functionNode.declareType(typeHolder))
         val fnType = varDesc.cType()
             .asType<CFunctionType>(functionNode.begin())
 
-        val parameters = functionNode.functionDeclarator().params(typeHolder) ?: emptyList()
+        val parameters = functionNode.functionDeclarator().params(typeHolder)
         val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder, varDesc.storageClass).build()
 
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)

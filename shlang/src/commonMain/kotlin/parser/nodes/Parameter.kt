@@ -30,7 +30,7 @@ class ParamAbstractDeclarator(val abstractDeclarator: AbstractDeclarator) : AnyP
 
 class ParamDeclarator(val declarator: Declarator) : AnyParamDeclarator() {
     override fun resolveType(declSpec: DeclSpec, typeHolder: TypeHolder): TypeDesc {
-        val varDesc = declarator.declareType(declSpec, typeHolder)
+        val varDesc = declarator.declareVar(declSpec, typeHolder)
             ?: throw IllegalStateException("Typedef is not supported in function parameters")
 
         return varDesc.toTypeDesc()

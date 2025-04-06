@@ -54,7 +54,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         assertion(declarations.isEmpty()) { "Declaration list is not supported yet" }
         val body = compound_statement() ?: return@funcRule null
-        return@funcRule FunctionNode(declspec, declarator, body)
+        return@funcRule FunctionNode(funcCtx!!.typeHolder, declspec, declarator, body)
     }
 
     // 6.8 Statements and blocks
@@ -85,7 +85,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             eat()
             if (check(";")) {
                 eat()
-                return@rule labelResolver.addGoto(GotoStatement(ident))
+                return@rule funcCtx!!.labelResolver.addGoto(GotoStatement(ident))
             }
             throw ParserException(InvalidToken("Expected ';'", peak()))
         }
@@ -131,7 +131,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             }
             eat()
             val stmt = statement() ?: throw ParserException(InvalidToken("Expected statement", peak()))
-            return@rule labelResolver.addLabel(LabeledStatement(ident, stmt))
+            return@rule funcCtx!!.labelResolver.addLabel(LabeledStatement(ident, stmt))
         }
         if (check("case")) {
             val caseKeyword = eat()
@@ -500,12 +500,12 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         val declarationSpecifiers = declaration_specifiers() ?: return@rule null
         if (check(";")) {
             eat()
-            return@rule Declaration(declarationSpecifiers, listOf())
+            return@rule Declaration.create(typeHolder(), declarationSpecifiers, listOf())
         }
         val initDeclaratorList = init_declarator_list()
         if (check(";")) {
             eat()
-            return@rule Declaration(declarationSpecifiers, initDeclaratorList)
+            return@rule Declaration.create(typeHolder(), declarationSpecifiers, initDeclaratorList)
         }
         return@rule null
     }
@@ -834,7 +834,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
 
         if (check<Identifier>()) {
             val tok = peak<Identifier>()
-            if (typeHolder.getTypedefOrNull(tok.str()) != null) {
+            if (typeHolder().getTypedefOrNull(tok.str()) != null) {
                 eat()
                 return@rule TypeNode(tok)
             }
@@ -1875,7 +1875,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             return@rule BuiltinVaCopy(expr1, expr2)
         }
         if (check<Identifier>() &&
-            typeHolder.getTypedefOrNull(peak<Identifier>().str()) == null) {
+            typeHolder().getTypedefOrNull(peak<Identifier>().str()) == null) {
             val ident = peak<Identifier>()
             eat()
             return@rule VarNode(ident)
@@ -1922,16 +1922,16 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
     fun external_declaration(): ExternalDeclaration? = rule {
         val function = function_definition()
         if (function != null) {
-            val fn = function.declareType(typeHolder)
-            typeHolder.addVar(fn)
+            val fn = function.declareType(globalTypeHolder)
+            globalTypeHolder.addVar(fn)
             return@rule FunctionDeclarationNode(function)
         }
         val declaration = declaration() ?: return@rule null
         // Early resolve type.
         // TODO this step should be skipped if the declaration doesn't have 'typedef' storage class specifier.
-        val vars = declaration.declareVars(typeHolder)
+        val vars = declaration.declareVars(globalTypeHolder)
         for (varNode in vars) {
-            typeHolder.addVar(varNode)
+            globalTypeHolder.addVar(varNode)
         }
         return@rule GlobalDeclaration(declaration)
     }

@@ -4,14 +4,11 @@ import types.*
 import codegen.VarStack
 
 
-class TypeHolder private constructor(): Scope {
-    private val valueMap = VarStack<VarDescriptor>()
-    private val enumTypeMap = VarStack<CType>()
-    private val structTypeMap = VarStack<CType>()
-    private val unionTypeMap = VarStack<CType>()
-
-    private val typedefs = VarStack<TypeDesc>()
-
+class TypeHolder private constructor(private val valueMap: VarStack<VarDescriptor>,
+                                     private val enumTypeMap: VarStack<CType>,
+                                     private val structTypeMap: VarStack<CType>,
+                                     private val unionTypeMap: VarStack<CType>,
+                                     private val typedefs: VarStack<TypeDesc>): Scope {
     operator fun get(varName: String): VarDescriptor {
         return getVarTypeOrNull(varName) ?: throw Exception("Type for variable '$varName' not found")
     }
@@ -120,9 +117,25 @@ class TypeHolder private constructor(): Scope {
         enumTypeMap.leave()
     }
 
+    fun copy(): TypeHolder {
+        val newValueMap = valueMap.copy()
+        val newEnumTypeMap = enumTypeMap.copy()
+        val newStructTypeMap = structTypeMap.copy()
+        val newUnionTypeMap = unionTypeMap.copy()
+        val newTypedefs = typedefs.copy()
+
+        return TypeHolder(newValueMap, newEnumTypeMap, newStructTypeMap, newUnionTypeMap, newTypedefs)
+    }
+
     companion object {
         fun default(): TypeHolder {
-            return TypeHolder()
+            val valueMap = VarStack<VarDescriptor>()
+            val enumTypeMap = VarStack<CType>()
+            val structTypeMap = VarStack<CType>()
+            val unionTypeMap = VarStack<CType>()
+
+            val typedefs = VarStack<TypeDesc>()
+            return TypeHolder(valueMap, enumTypeMap, structTypeMap, unionTypeMap, typedefs)
         }
     }
 }

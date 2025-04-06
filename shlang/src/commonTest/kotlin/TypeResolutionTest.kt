@@ -7,7 +7,6 @@ import tokenizer.CTokenizer
 import tokenizer.TokenList
 import typedesc.StorageClass
 import typedesc.TypeHolder
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -66,7 +65,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         val expr = parser.declaration_specifiers() as DeclarationSpecifier
-        val typeResolver = parser.typeHolder()
+        val typeResolver = parser.globalTypeHolder()
         assertEquals("volatile struct point", expr.specifyType(typeResolver).toString())
     }
 
@@ -233,7 +232,7 @@ class TypeResolutionTest {
         val tokens = apply("int b(int b), n(float f);")
         val parser = CProgramParser.build(tokens)
         parser.translation_unit()
-        val typeResolver = parser.typeHolder()
+        val typeResolver = parser.globalTypeHolder()
 
         assertEquals("int b(int)", typeResolver.getFunctionType("b").toString())
         assertEquals("int n(float)", typeResolver.getFunctionType("n").toString())
@@ -245,8 +244,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
 
-        val typeResolver = TypeHolder.default()
-        expr.declareVars(typeResolver)
+        val typeResolver = parser.globalTypeHolder()
 
         assertEquals("struct point {int x;int y;}", typeResolver.getStructType("point").toString())
     }
@@ -256,7 +254,7 @@ class TypeResolutionTest {
         val tokens = apply("struct point;")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        val typeResolver = parser.typeHolder()
+        val typeResolver = parser.globalTypeHolder()
         expr.declareVars(typeResolver)
         assertEquals("struct point", typeResolver.getStructType("point").toString())
     }
@@ -349,7 +347,7 @@ class TypeResolutionTest {
         val tokens = apply("unsigned int a = 10;")
         val parser = CProgramParser.build(tokens)
         val expr = parser.declaration() as Declaration
-        val typeResolver = parser.typeHolder()
+        val typeResolver = parser.globalTypeHolder()
         val vars = expr.declareVars(typeResolver)
 
         val a = vars.find { it.name == "a" }!!
@@ -374,7 +372,7 @@ class TypeResolutionTest {
         println(program)
         assertEquals("typedef struct tnode TNODE; struct tnode {int count; TNODE *left, *right;} ; TNODE s, *sp;", LineAgnosticAstPrinter.print(program))
 
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals("struct tnode {int count;struct tnode* left;struct tnode* right;}", typeHolder.getStructType("tnode").toString())
     }
 
@@ -390,7 +388,7 @@ class TypeResolutionTest {
 
         val program = parser.translation_unit()
         assertEquals("typedef int A[2][3]; const A a = {{4, 5, 6}, {7, 8, 9}};", LineAgnosticAstPrinter.print(program))
-        assertEquals("[2][3]int", parser.typeHolder().getTypedef("A").toString())
+        assertEquals("[2][3]int", parser.globalTypeHolder().getTypedef("A").toString())
     }
 
     @Test
@@ -404,7 +402,7 @@ class TypeResolutionTest {
 
         val program = parser.translation_unit()
         assertEquals("typedef struct s1 {int x;} t1, *tp1; typedef struct s2 {int x;} t2, *tp2;", LineAgnosticAstPrinter.print(program))
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals("struct s1 {int x;}", typeHolder.getStructType("s1").toString())
         assertEquals("struct s2 {int x;}", typeHolder.getStructType("s2").toString())
         assertEquals("struct s1 {int x;}", typeHolder.getTypedef("t1").toString())
@@ -427,7 +425,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         val unionType = typeHolder.getVarTypeOrNull("b") ?: error("Cannot find union type")
         assertEquals("union B {int a;struct struct.1 {int b;char c;}}", unionType.toString())
         val ty = unionType.cType() as CUnionType
@@ -452,7 +450,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         val structType = typeHolder.getVarTypeOrNull("a") ?: error("Cannot find struct type")
         assertEquals("struct A {int a;union union.1 {int b;char c;}}", structType.toString())
         val ty = structType.cType() as CStructType
@@ -480,7 +478,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         val structType = typeHolder.getVarTypeOrNull("c") ?: error("Cannot find struct type")
         assertEquals("struct C {union union.5 {struct struct.3 {int i;int j;}struct struct.4 {long k;long l;} w;}int m;}", structType.toString())
         val ty = structType.cType() as CStructType
@@ -498,7 +496,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals("[3]int", typeHolder["a"].toString())
     }
 
@@ -511,7 +509,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals("[2][3]int", typeHolder["a"].toString())
     }
 
@@ -524,7 +522,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals("[2][3]int", typeHolder["a"].toString())
     }
 
@@ -539,7 +537,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals("[2]struct point {int x;int y;}", typeHolder["a"].toString())
     }
 
@@ -554,7 +552,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals("[4]struct Vec {[3]int point;}", typeHolder["a"].toString())
     }
 
@@ -567,7 +565,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals("[3]int", typeHolder["a"].toString())
     }
 
@@ -582,7 +580,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals("struct Array_ {int len;[]int arr;}", typeHolder["arr"].toString())
     }
 
@@ -595,7 +593,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals("unsigned long", typeHolder.getTypedef("A").cType().toString())
     }
 
@@ -608,7 +606,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals(StorageClass.STATIC, typeHolder["a"].storageClass)
     }
 
@@ -621,7 +619,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals(StorageClass.EXTERN, typeHolder["a"].storageClass)
     }
 
@@ -634,7 +632,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         assertEquals(StorageClass.EXTERN, typeHolder["a"].storageClass)
     }
 
@@ -647,7 +645,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         val declaration = parser.declaration()!!
-        val vars = declaration.declareVars(parser.typeHolder())
+        val vars = declaration.declareVars(parser.globalTypeHolder())
         val a = vars.find { it.name == "a" }!!
         assertEquals(StorageClass.STATIC, a.storageClass)
     }
@@ -664,7 +662,7 @@ class TypeResolutionTest {
         val parser = CProgramParser.build(tokens)
 
         parser.translation_unit()
-        val typeHolder = parser.typeHolder()
+        val typeHolder = parser.globalTypeHolder()
         println(typeHolder)
     }
 }

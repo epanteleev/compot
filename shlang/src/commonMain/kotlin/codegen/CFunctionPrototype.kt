@@ -16,7 +16,13 @@ import typedesc.StorageClass
 
 internal class CFunctionPrototype(val returnType: Type, val argumentTypes: List<NonTrivialType>, val attributes: Set<FunctionAttribute>)
 
-internal class CFunctionPrototypeBuilder(val begin: Position, private val functionType: AnyCFunctionType, private val mb: ModuleBuilder, val typeHolder: TypeHolder, val storageClass: StorageClass?) {
+internal class CFunctionPrototypeBuilder(
+    private val begin: Position,
+    private val functionType: AnyCFunctionType,
+    private val mb: ModuleBuilder,
+    val typeHolder: TypeHolder,
+    val storageClass: StorageClass?,
+) {
     private val returnType = irReturnType()
     private val types = arrayListOf<NonTrivialType>()
     private val attributes = hashSetOf<FunctionAttribute>()
@@ -76,7 +82,7 @@ internal class CFunctionPrototypeBuilder(val begin: Position, private val functi
                 is CPointer    -> types.add(PtrType)
                 is BOOL        -> types.add(I8Type)
                 is CPrimitive  -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type.cType()))
-                else -> throw IRCodeGenError("Unknown type, type=$type", begin) //FIXME argument positions!!!
+                else -> throw IRCodeGenError("Unknown type, type=$type", begin)
             }
         }
     }

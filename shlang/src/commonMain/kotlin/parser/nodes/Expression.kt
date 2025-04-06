@@ -27,7 +27,7 @@ sealed class Expression {
     }
 
     protected fun convertToPointer(type: CompletedType): CPointer? = when (type) {
-        is CPointer      -> type
+        is CPointer -> type
         is AnyCArrayType -> type.asPointer()
         else -> null
     }
