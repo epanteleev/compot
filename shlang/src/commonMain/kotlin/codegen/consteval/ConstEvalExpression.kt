@@ -15,7 +15,7 @@ sealed class ConstEvalExpression<T>: ExpressionVisitor<T?> {
         }
 
         fun eval(expr: Expression, typeHolder: TypeHolder): Number? = when (expr.resolveType(typeHolder)) {
-            INT, SHORT, CHAR, UINT, USHORT, UCHAR, is CEnumType -> {
+            BOOL, INT, SHORT, CHAR, UINT, USHORT, UCHAR, is CEnumType -> {
                 val ctx = CommonConstEvalContext<Int>(typeHolder)
                 eval(expr, TryConstEvalExpressionInt(ctx))
             }
