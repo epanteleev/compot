@@ -1142,8 +1142,14 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 if (type is CAggregateType || type is AnyCFunctionType) {
                     return addr
                 }
+
                 val loadedType = mb.toIRLVType<PrimitiveType>(typeHolder, type)
-                ir.load(loadedType, addr)
+                val cvtAddr = when (unaryOp.primary.resolveType(typeHolder)) {
+                    is AnyCArrayType -> ir.gep(addr, loadedType, I64Value.of(0))
+                    else -> addr
+                }
+
+                ir.load(loadedType, cvtAddr)
             }
             PostfixUnaryOpType.INC -> visitIncOrDec(unaryOp, ir::add)
             PostfixUnaryOpType.DEC -> visitIncOrDec(unaryOp, ir::sub)

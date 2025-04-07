@@ -68,11 +68,10 @@ internal class UIntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembl
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
-        TODO("untested")
-        val imm = first.value() / second.value()
-        asm.copy(size, Imm32.of(imm), dst)
-        val remImm = first.value() % second.value()
-        asm.copy(size, Imm32.of(remImm), rdx)
+        val imm = first.value().toULong() / second.value().toULong()
+        asm.copy(size, Imm32.of(imm.toLong()), dst)
+        val remImm = first.value().toULong() % second.value().toULong()
+        asm.copy(size, Imm32.of(remImm.toLong()), rdx)
     }
 
     override fun ria(dst: GPRegister, first: Imm32, second: Address) {
