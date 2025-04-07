@@ -318,7 +318,7 @@ internal sealed class AbstractIRGenerator(protected val mb: ModuleBuilder,
                         is CUnionType -> lValueCType.descriptors().first().cType() // TODO check this
                     }
                     val result = constEvalInitializer(elementLValueType, initializer.expr) ?:
-                        throw IRCodeGenError("Unsupported type $elementLValueType, initializer=${LineAgnosticAstPrinter.print(initializer)}", expr.begin())
+                        throw IRCodeGenError("Unsupported type $elementLValueType, initializer='${LineAgnosticAstPrinter.print(initializer)}'", expr.begin())
 
                     elements[index] = result
                 }

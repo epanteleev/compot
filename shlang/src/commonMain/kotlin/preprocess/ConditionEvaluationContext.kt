@@ -1,11 +1,16 @@
 package preprocess
 
 import codegen.consteval.ConstEvalContext
+import parser.nodes.VarNode
 import tokenizer.tokens.CToken
 import typedesc.TypeHolder
+import types.CompletedType
+import types.INT
 
 
 class ConditionEvaluationContext(private val preprocessorContext: PreprocessorContext): ConstEvalContext<Long> {
+    private val defaultTypes = TypeHolder.create(::handleUndefinedVar)
+
     override fun getVariable(name: CToken): Long {
         val predefined = preprocessorContext.findPredefinedMacros(name.str())
         if (predefined != null) {
@@ -20,7 +25,12 @@ class ConditionEvaluationContext(private val preprocessorContext: PreprocessorCo
         throw PreprocessorException("Unknown function '${name.str()}' in \"${name.position().filename()}\" at ${name.line()}:${name.pos()}")
     }
 
-    override fun typeHolder(): TypeHolder {
-        TODO("Not yet implemented")
+    override fun typeHolder(): TypeHolder = defaultTypes
+
+    companion object {
+        private fun handleUndefinedVar(varNode: VarNode): CompletedType {
+            // Assume that the undefined variable is an "SIGNED" integer
+            return INT
+        }
     }
 }

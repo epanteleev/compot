@@ -88,10 +88,22 @@ class TryConstEvalExpressionInt(private val ctx: ConstEvalContext<Int>): ConstEv
             BinaryOpType.MUL      -> left * right
             BinaryOpType.DIV      -> left / right
             BinaryOpType.MOD      -> left % right
-            BinaryOpType.LT       -> if (left < right) 1 else 0
-            BinaryOpType.GT       -> if (left > right) 1 else 0
-            BinaryOpType.LE       -> if (left <= right) 1 else 0
-            BinaryOpType.GE       -> if (left >= right) 1 else 0
+            BinaryOpType.LT       -> when (binop.resolveType(ctx.typeHolder())) {
+                is AnyCUnsigned -> if (left.toUInt() < right.toUInt()) 1 else 0
+                else -> if (left < right) 1 else 0
+            }
+            BinaryOpType.GT       -> when (binop.resolveType(ctx.typeHolder())) {
+                is AnyCUnsigned -> if (left.toUInt() > right.toUInt()) 1 else 0
+                else -> if (left > right) 1 else 0
+            }
+            BinaryOpType.LE       -> when (binop.resolveType(ctx.typeHolder())) {
+                is AnyCUnsigned -> if (left.toUInt() <= right.toUInt()) 1 else 0
+                else -> if (left <= right) 1 else 0
+            }
+            BinaryOpType.GE       -> when (binop.resolveType(ctx.typeHolder())) {
+                is AnyCUnsigned -> if (left.toUInt() >= right.toUInt()) 1 else 0
+                else -> if (left >= right) 1 else 0
+            }
             BinaryOpType.EQ       -> if (left == right) 1 else 0
             BinaryOpType.NE       -> if (left != right) 1 else 0
             BinaryOpType.BIT_AND  -> left and right
@@ -222,10 +234,22 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
             BinaryOpType.MUL -> left * right
             BinaryOpType.DIV -> left / right
             BinaryOpType.MOD -> left % right
-            BinaryOpType.LT -> if (left < right) 1 else 0
-            BinaryOpType.GT -> if (left > right) 1 else 0
-            BinaryOpType.LE -> if (left <= right) 1 else 0
-            BinaryOpType.GE -> if (left >= right) 1 else 0
+            BinaryOpType.LT -> when (binop.resolveType(ctx.typeHolder())) {
+                is AnyCUnsigned -> if (left.toULong() < right.toULong()) 1 else 0
+                else -> if (left < right) 1 else 0
+            }
+            BinaryOpType.GT -> when (binop.resolveType(ctx.typeHolder())) {
+                is AnyCUnsigned -> if (left.toULong() > right.toULong()) 1 else 0
+                else -> if (left > right) 1 else 0
+            }
+            BinaryOpType.LE -> when (binop.resolveType(ctx.typeHolder())) {
+                is AnyCUnsigned -> if (left.toULong() <= right.toULong()) 1 else 0
+                else -> if (left <= right) 1 else 0
+            }
+            BinaryOpType.GE -> when (binop.resolveType(ctx.typeHolder())) {
+                is AnyCUnsigned -> if (left.toULong() >= right.toULong()) 1 else 0
+                else -> if (left >= right) 1 else 0
+            }
             BinaryOpType.EQ -> if (left == right) 1 else 0
             BinaryOpType.NE -> if (left != right) 1 else 0
             BinaryOpType.BIT_AND -> left and right

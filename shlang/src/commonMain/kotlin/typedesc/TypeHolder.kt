@@ -2,13 +2,20 @@ package typedesc
 
 import types.*
 import codegen.VarStack
+import parser.nodes.VarNode
 
 
 class TypeHolder private constructor(private val valueMap: VarStack<VarDescriptor>,
                                      private val enumTypeMap: VarStack<CType>,
                                      private val structTypeMap: VarStack<CType>,
                                      private val unionTypeMap: VarStack<CType>,
-                                     private val typedefs: VarStack<TypeDesc>): Scope {
+                                     private val typedefs: VarStack<TypeDesc>,
+    private val varMissingHandler: (VarNode) -> CompletedType): Scope {
+
+    fun handleMissingVar(varName: VarNode): CompletedType {
+        return varMissingHandler(varName)
+    }
+
     operator fun get(varName: String): VarDescriptor {
         return getVarTypeOrNull(varName) ?: throw Exception("Type for variable '$varName' not found")
     }
@@ -124,18 +131,26 @@ class TypeHolder private constructor(private val valueMap: VarStack<VarDescripto
         val newUnionTypeMap = unionTypeMap.copy()
         val newTypedefs = typedefs.copy()
 
-        return TypeHolder(newValueMap, newEnumTypeMap, newStructTypeMap, newUnionTypeMap, newTypedefs)
+        return TypeHolder(newValueMap, newEnumTypeMap, newStructTypeMap, newUnionTypeMap, newTypedefs, varMissingHandler)
     }
 
     companion object {
         fun default(): TypeHolder {
+            return create(::defaultVarMissingHandler)
+        }
+
+        fun create(handler: (VarNode) -> CompletedType): TypeHolder {
             val valueMap = VarStack<VarDescriptor>()
             val enumTypeMap = VarStack<CType>()
             val structTypeMap = VarStack<CType>()
             val unionTypeMap = VarStack<CType>()
 
             val typedefs = VarStack<TypeDesc>()
-            return TypeHolder(valueMap, enumTypeMap, structTypeMap, unionTypeMap, typedefs)
+            return TypeHolder(valueMap, enumTypeMap, structTypeMap, unionTypeMap, typedefs, handler)
+        }
+
+        private fun defaultVarMissingHandler(varName: VarNode): CompletedType {
+            throw TypeResolutionException("Variable '${varName.name()}' not found", varName.begin())
         }
     }
 }

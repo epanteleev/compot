@@ -5,11 +5,14 @@ import tokenizer.tokens.*
 import parser.CProgramParser
 import codegen.consteval.ConstEvalExpression
 import codegen.consteval.TryConstEvalExpressionLong
+import parser.nodes.VarNode
 import preprocess.CProgramPreprocessor.Companion.create
+import typedesc.TypeHolder
+import types.CompletedType
 import types.INT
 
 
-internal class ConditionPreprocessor(filename: String, condition: TokenList, val ctx: PreprocessorContext): AbstractCPreprocessor(filename, condition) {
+internal class ConditionPreprocessor(filename: String, condition: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(filename, condition) {
     private fun preprocess(): TokenList {
         while (!eof()) {
             if (!check("defined")) {

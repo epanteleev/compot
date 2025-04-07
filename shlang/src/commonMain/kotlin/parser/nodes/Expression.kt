@@ -258,7 +258,7 @@ data class VarNode(private val str: Identifier) : Expression() {
             return@memoize varType.cType()
         }
 
-        return@memoize typeHolder.findEnum(str.str()) ?: throw TypeResolutionException("Variable '$str' not found", begin())
+        return@memoize typeHolder.findEnum(str.str()) ?: typeHolder.handleMissingVar(this)
     }
 }
 
