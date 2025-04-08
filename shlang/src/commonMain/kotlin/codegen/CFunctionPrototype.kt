@@ -62,7 +62,7 @@ internal class CFunctionPrototypeBuilder(
             types.add(PtrType)
         }
         for ((idx, type) in functionType.args().withIndex()) {
-            when (val ty = type.cType()) {
+            when (val ty = type.asType<CompletedType>()) {
                 is AnyCStructType -> {
                     if (ty === VaStart.vaList) {
                         types.add(PtrType)
@@ -78,11 +78,9 @@ internal class CFunctionPrototypeBuilder(
                     types.addAll(parameters)
                     offset += parameters.size - 1
                 }
-                is CArrayType, is CUncompletedArrayType -> types.add(PtrType)
-                is CPointer    -> types.add(PtrType)
+                is AnyCArrayType, is AnyCFunctionType, is CPointer -> types.add(PtrType)
                 is BOOL        -> types.add(I8Type)
                 is CPrimitive  -> types.add(mb.toIRType<PrimitiveType>(typeHolder, type.cType()))
-                else -> throw IRCodeGenError("Unknown type, type=$type", begin)
             }
         }
     }

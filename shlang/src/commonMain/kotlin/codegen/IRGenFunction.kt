@@ -1259,7 +1259,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.store(rvalueAdr, ir.convertLVToType(arg, PtrType))
                 vregStack[param.name] = rvalueAdr
             }
-            is CPrimitive -> {
+            is CPrimitive, is AnyCFunctionType -> {
                 val irType = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
                 val rvalueAdr = ir.alloc(irType)
                 ir.store(rvalueAdr, ir.convertLVToType(arg, irType))
@@ -1272,7 +1272,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 vregStack[param.name] = arg
             }
-            else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
         }
     }
 
@@ -1287,13 +1286,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         vregStack[param] = rvalueAdr
     }
 
-    private fun visitParameters(parameters: List<VarDescriptor>, arguments: List<ArgumentValue>, retType: CType) {
+    private fun visitParameters(parameters: List<VarDescriptor>, arguments: List<ArgumentValue>, retType: CType, where: Position) {
         var argumentIdx = evaluateFirstArgIdx(retType)
         for (currentArg in parameters.indices) {
             val param = parameters[currentArg]
-
             when (val cType = param.cType()) {
-                is CPrimitive, is AnyCArrayType -> visitPrimitiveParameter(param, arguments[argumentIdx])
+                is CPrimitive, is AnyCArrayType, is AnyCFunctionType -> visitPrimitiveParameter(param, arguments[argumentIdx])
                 is AnyCStructType -> {
                     if (!cType.isSmall()) {
                         visitPrimitiveParameter(param, arguments[argumentIdx])
@@ -1309,7 +1307,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     argumentIdx += types.size - 1
                     visitParameter(param.name, cType, args)
                 }
-                else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
             }
             argumentIdx++
         }
@@ -1388,7 +1385,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val retType = functionNode.resolveType(typeHolder).retType().cType()
-        visitParameters(parameters, ir.arguments(), retType)
+        visitParameters(parameters, ir.arguments(), retType, functionNode.begin())
     }
 
     fun visitFun(functionNode: FunctionNode): Value = scoped {
