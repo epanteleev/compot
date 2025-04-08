@@ -316,13 +316,9 @@ class TryConstEvalExpressionLong(private val ctx: ConstEvalContext<Long>): Const
         return null
     }
 
-    override fun visit(memberAccess: MemberAccess): Long {
-        TODO("Not yet implemented")
-    }
+    override fun visit(memberAccess: MemberAccess): Long? = null
 
-    override fun visit(emptyExpression: EmptyExpression): Long {
-        TODO("Not yet implemented")
-    }
+    override fun visit(emptyExpression: EmptyExpression): Long? = null
 }
 
 class TryConstEvalExpressionFloat(private val ctx: ConstEvalContext<Float>): ConstEvalExpression<Float>() {
