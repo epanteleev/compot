@@ -1,7 +1,5 @@
 package asm.x64
 
-import asm.Operand
-import asm.Register
 import common.assertion
 import asm.x64.GPRegister.rdx
 import asm.x64.GPRegister.rax

@@ -1,6 +1,6 @@
 package ir.platform.x64.codegen.impl
 
-import asm.Operand
+import asm.x64.Operand
 import asm.x64.*
 import ir.platform.x64.codegen.X64MacroAssembler
 import ir.types.PrimitiveType

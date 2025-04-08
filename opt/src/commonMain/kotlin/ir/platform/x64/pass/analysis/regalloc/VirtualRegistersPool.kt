@@ -1,7 +1,7 @@
 package ir.platform.x64.pass.analysis.regalloc
 
-import asm.Operand
-import asm.Register
+import asm.x64.Operand
+import asm.x64.Register
 import asm.x64.*
 import ir.Definitions
 import ir.types.*
@@ -10,12 +10,12 @@ import ir.Definitions.QWORD_SIZE
 import ir.instruction.lir.Generate
 
 
-internal class VirtualRegistersPool private constructor(private val argumentSlots: List<Operand>) {
+internal class VirtualRegistersPool private constructor(private val argumentSlots: List<VReg>) {
     private val frame = StackFrame.create()
     private val gpRegisters = GPRegistersList(argumentSlots.filterIsInstance<GPRegister>()) //TODO
     private val xmmRegisters = XmmRegisterList(argumentSlots.filterIsInstance<XmmRegister>()) //TODO
 
-    fun allocSlot(value: LocalValue, excludeIf: (Register) -> Boolean): Operand = when (value) {
+    fun allocSlot(value: LocalValue, excludeIf: (Register) -> Boolean): VReg = when (value) {
         is Generate -> frame.takeSlot(value)
         else -> when (val tp = value.type()) {
             is FloatingPointType -> xmmRegisters.pickRegister(excludeIf) ?: frame.takeSlot(value)
@@ -26,7 +26,7 @@ internal class VirtualRegistersPool private constructor(private val argumentSlot
 
     fun arguments(): List<Operand> = argumentSlots
 
-    fun takeArgument(arg: ArgumentValue): Operand {
+    fun takeArgument(arg: ArgumentValue): VReg {
         return argumentSlots[arg.position()]
     }
 
@@ -50,7 +50,7 @@ internal class VirtualRegistersPool private constructor(private val argumentSlot
         return xmmRegisters.usedCalleeSaveRegisters()
     }
 
-    fun callerArgumentAllocate(arguments: List<Value>): List<Operand?> {
+    fun callerArgumentAllocate(arguments: List<Value>): List<VReg?> {
         return CallerArgumentAllocator.alloc(frame, arguments)
     }
 

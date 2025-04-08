@@ -27,7 +27,7 @@ class EmptyStructDeclaratorItem(private val where: Position): AnyStructDeclarato
     }
 }
 
-data class StructDeclarator(val declarator: AnyStructDeclaratorItem, val expr: Expression) {
+class StructDeclarator(val declarator: AnyStructDeclaratorItem, val expr: Expression) {
     private var cachedType: VarDescriptor? = null
 
     private fun memoizeType(type: () -> VarDescriptor): VarDescriptor {

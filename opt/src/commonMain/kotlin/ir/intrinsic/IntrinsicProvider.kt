@@ -1,6 +1,6 @@
 package ir.intrinsic
 
-import asm.Operand
+import asm.x64.Operand
 import ir.platform.MacroAssembler
 
 

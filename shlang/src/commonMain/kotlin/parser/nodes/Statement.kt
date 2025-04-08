@@ -124,7 +124,7 @@ class WhileStatement(private val whileKeyword: Keyword, val condition: Expressio
 sealed class ForInit
 data class ForInitDeclaration(val declaration: Declaration): ForInit()
 data class ForInitExpression(val expression: ExprStatement): ForInit()
-object ForInitEmpty: ForInit()
+data object ForInitEmpty: ForInit()
 
 class ForStatement(private val forKeyword: Keyword, val init: ForInit, val condition: Expression, val update: Expression, val body: Statement): Statement() {
     override fun begin(): Position = forKeyword.position()

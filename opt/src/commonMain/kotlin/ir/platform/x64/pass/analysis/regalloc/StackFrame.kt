@@ -4,6 +4,8 @@ import ir.value.*
 import asm.x64.Address
 import asm.x64.ArgumentSlot
 import asm.x64.GPRegister.*
+import asm.x64.LocalAddress
+import asm.x64.VReg
 import common.assertion
 import ir.Definitions
 import ir.instruction.lir.Generate
@@ -11,9 +13,9 @@ import ir.types.NonTrivialType
 
 
 sealed interface StackFrame {
-    fun takeSlot(value: LocalValue): Address
+    fun takeSlot(value: LocalValue): LocalAddress
     fun returnSlot(slot: Address, size: Int)
-    fun takeArgument(offset: Int): Address
+    fun takeArgument(offset: Int): VReg
     fun size(): Int
 
     companion object {
@@ -36,20 +38,20 @@ private class BasePointerAddressedStackFrame : StackFrame {
         return Definitions.alignTo(value, alignment)
     }
 
-    private fun stackSlotAlloc(value: Generate): Address {
+    private fun stackSlotAlloc(value: Generate): LocalAddress {
         val ty = value.type()
         frameSize = withAlignment(ty.alignmentOf(), frameSize + ty.sizeOf())
         return Address.from(rbp, -frameSize)
     }
 
     /** Spilled value. */
-    private fun valueInstructionAlloc(value: LocalValue): Address {
+    private fun valueInstructionAlloc(value: LocalValue): LocalAddress {
         val ty = value.asType<NonTrivialType>()
         frameSize = withAlignment(ty.alignmentOf(), frameSize + ty.sizeOf())
         return Address.from(rbp, -frameSize)
     }
 
-    override fun takeSlot(value: LocalValue): Address = when (value) {
+    override fun takeSlot(value: LocalValue): LocalAddress = when (value) {
         is Generate -> stackSlotAlloc(value)
         else -> valueInstructionAlloc(value)
     }
@@ -66,7 +68,7 @@ private class BasePointerAddressedStackFrame : StackFrame {
         return frameSize
     }
 
-    override fun takeArgument(offset: Int): Address {
+    override fun takeArgument(offset: Int): LocalAddress {
         return ArgumentSlot(rsp, offset)
     }
 }

@@ -1,7 +1,5 @@
 package asm.x64
 
-import asm.Register
-
 enum class GPRegister : Register {
     rax {
         override fun toString(size: Int): String {

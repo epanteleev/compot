@@ -1,11 +1,11 @@
 package ir.platform.x64.pass.analysis.regalloc
 
 import ir.types.*
-import asm.Operand
-import asm.Register
+import asm.x64.Register
 import ir.value.LocalValue
 import asm.x64.GPRegister.rcx
 import asm.x64.GPRegister.rdx
+import asm.x64.VReg
 import common.assertion
 import common.forEachWith
 import ir.instruction.*
@@ -26,12 +26,12 @@ private class LinearScan(private val data: FunctionData): FunctionAnalysisPass<R
     private val liveRanges = data.analysis(LiveIntervalsFabric)
     private val fixedRegistersInfo = FixedRegisterInstructionsAnalysis.run(data)
 
-    private val registerMap = hashMapOf<LocalValue, Operand>()
-    private val callInfo    = hashMapOf<Callable, List<Operand?>>()
-    private val active      = linkedMapOf<LocalValue, Operand>()
+    private val registerMap = hashMapOf<LocalValue, VReg>()
+    private val callInfo    = hashMapOf<Callable, List<VReg?>>()
+    private val active      = linkedMapOf<LocalValue, VReg>()
     private val pool        = VirtualRegistersPool.create(data.arguments())
 
-    private val activeFixedIntervals = arrayListOf<Pair<LiveRange, Operand>>()
+    private val activeFixedIntervals = arrayListOf<Pair<LiveRange, VReg>>()
 
     init {
         allocFixedRegisters()
@@ -43,7 +43,7 @@ private class LinearScan(private val data: FunctionData): FunctionAnalysisPass<R
         return RegisterAllocation(pool.spilledLocalsAreaSize(), registerMap, pool.usedGPCalleeSaveRegisters(), callInfo, data.marker())
     }
 
-    private fun allocate(slot: Operand, value: LocalValue) {
+    private fun allocate(slot: VReg, value: LocalValue) {
         registerMap[value] = slot
         active[value] = slot
     }

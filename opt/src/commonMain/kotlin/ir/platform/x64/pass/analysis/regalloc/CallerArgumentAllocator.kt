@@ -1,6 +1,6 @@
 package ir.platform.x64.pass.analysis.regalloc
 
-import asm.Operand
+import asm.x64.VReg
 import common.assertion
 import ir.Definitions
 import ir.value.Value
@@ -15,7 +15,7 @@ internal class CallerArgumentAllocator private constructor(private val stackFram
     private var xmmRegPos = 0
     private var memSlots = 0
 
-    private fun peakFPArgument(): Operand {
+    private fun peakFPArgument(): VReg {
         if (xmmRegPos < fpRegisters.size) {
             xmmRegPos += 1
             return fpRegisters[xmmRegPos - 1]
@@ -25,7 +25,7 @@ internal class CallerArgumentAllocator private constructor(private val stackFram
         }
     }
 
-    private fun peakGPArgument(): Operand {
+    private fun peakGPArgument(): VReg {
         if (gpRegPos < gpRegisters.size) {
             gpRegPos += 1
             return gpRegisters[gpRegPos - 1]
@@ -35,7 +35,7 @@ internal class CallerArgumentAllocator private constructor(private val stackFram
         }
     }
 
-    private fun peakStructArgument(value: Value): Operand {
+    private fun peakStructArgument(value: Value): VReg {
         assertion(value is Generate) { "value=$value" }
         value as Generate
         val size = value.type().sizeOf()
@@ -44,7 +44,7 @@ internal class CallerArgumentAllocator private constructor(private val stackFram
         return stackFrame.takeArgument(slot * QWORD_SIZE)
     }
 
-    private fun emit(value: Value): Operand? = when (value.type()) {
+    private fun emit(value: Value): VReg? = when (value.type()) {
         is FloatingPointType       -> peakFPArgument()
         is IntegerType, is PtrType -> peakGPArgument()
         is AggregateType           -> peakStructArgument(value)
@@ -52,8 +52,8 @@ internal class CallerArgumentAllocator private constructor(private val stackFram
         else -> throw IllegalArgumentException("type=$value")
     }
 
-    private fun calculate(): List<Operand?> {
-        val allocation = arrayListOf<Operand?>()
+    private fun calculate(): List<VReg?> {
+        val allocation = arrayListOf<VReg?>()
         for (arg in arguments) {
             allocation.add(emit(arg))
         }
@@ -65,7 +65,7 @@ internal class CallerArgumentAllocator private constructor(private val stackFram
         private val gpRegisters = CallConvention.gpArgumentRegisters
         private val fpRegisters = CallConvention.xmmArgumentRegister
 
-        fun alloc(stackFrame: StackFrame, arguments: List<Value>): List<Operand?> {
+        fun alloc(stackFrame: StackFrame, arguments: List<Value>): List<VReg?> {
             return CallerArgumentAllocator(stackFrame, arguments).calculate()
         }
     }

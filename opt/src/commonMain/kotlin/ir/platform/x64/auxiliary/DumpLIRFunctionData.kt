@@ -20,7 +20,7 @@ class DumpLIRFunctionData(functionData: FunctionData): DumpFunctionData(function
 
     override fun dumpInstruction(instruction: Instruction, idx: Int) {
         if (instruction is LocalValue && instruction !is TupleValue) {
-            val operand = regAlloc.operandOrNull(instruction)
+            val operand = regAlloc.vRegOrNull(instruction)
             if (operand != null) {
                 builder.append("[$operand]")
             }

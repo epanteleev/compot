@@ -1,7 +1,7 @@
 package ir.platform.x64.codegen.impl
 
 import asm.x64.*
-import asm.Operand
+import asm.x64.Operand
 import ir.instruction.Return
 import ir.types.PrimitiveType
 import ir.platform.x64.codegen.X64MacroAssembler

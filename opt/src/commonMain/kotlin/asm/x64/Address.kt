@@ -1,30 +1,30 @@
 package asm.x64
 
-import asm.Operand
 import ir.Definitions.QWORD_SIZE
 
+sealed interface LocalAddress : VReg
 
 sealed interface Address : Operand {
     companion object {
-        fun from(base: GPRegister, offset: Int): Address {
+        fun from(base: GPRegister, offset: Int): LocalAddress {
             return Address2(base, offset)
         }
 
-        fun from(base: GPRegister?, offset: Int, index: GPRegister, scale: ScaleFactor): Address {
+        fun from(base: GPRegister?, offset: Int, index: GPRegister, scale: ScaleFactor): LocalAddress {
             return Address4(base, offset, index, scale)
         }
 
-        fun internal(label: String): Address {
+        fun internal(label: String): InternalAddressLiteral {
             return InternalAddressLiteral(0, label)
         }
 
-        fun external(label: String): Address {
+        fun external(label: String): ExternalAddressLiteral {
             return ExternalAddressLiteral(label)
         }
     }
 }
 
-open class Address2 internal constructor(val base: GPRegister, val offset: Int) : Address { //TODO open!!????!??
+open class Address2 internal constructor(val base: GPRegister, val offset: Int) : Address, LocalAddress { //TODO open!!????!??
     fun withOffset(index: GPRegister): Address {
         return Address4(base, offset, index, ScaleFactor.TIMES_1)
     }
@@ -62,7 +62,7 @@ open class Address2 internal constructor(val base: GPRegister, val offset: Int) 
 }
 
 class Address4 internal constructor(private val base: GPRegister?, private val offset: Int, val index: GPRegister, private val scale: ScaleFactor) :
-    Address {
+    Address, LocalAddress {
     override fun toString(): String {
         return toString(Int.MAX_VALUE)
     }

@@ -2,7 +2,7 @@ package ir.platform.x64.pass.analysis.regalloc
 
 import asm.x64.*
 import ir.types.*
-import asm.Operand
+import asm.x64.Operand
 import asm.x64.GPRegister.rbp
 import ir.value.ArgumentValue
 import ir.Definitions.QWORD_SIZE
@@ -16,7 +16,7 @@ internal class CalleeArgumentAllocator private constructor() {
     private var xmmRegPos = 0
     private var argumentSlotIndex: Int = 0
 
-    private fun peakIntegerArgument(): Operand {
+    private fun peakIntegerArgument(): VReg {
         if (gpRegPos < gpRegisters.size) {
             gpRegPos += 1
             return gpRegisters[gpRegPos - 1]
@@ -27,7 +27,7 @@ internal class CalleeArgumentAllocator private constructor() {
         }
     }
 
-    private fun peakFPArgument(): Operand {
+    private fun peakFPArgument(): VReg {
         if (xmmRegPos < fpRegisters.size) {
             xmmRegPos += 1
             return fpRegisters[xmmRegPos - 1]
@@ -38,22 +38,22 @@ internal class CalleeArgumentAllocator private constructor() {
         }
     }
 
-    private fun peakStructArgument(structType: StructType): Operand {
+    private fun peakStructArgument(structType: StructType): VReg {
         val size = structType.sizeOf()
         val old = argumentSlotIndex
-        val offset = alignTo(argumentSlotIndex * QWORD_SIZE + OVERFLOW_AREA_OFFSET + size, QWORD_SIZE)
-        argumentSlotIndex = argumentSlotIndex + offset / QWORD_SIZE
+        val offset = alignTo((argumentSlotIndex * QWORD_SIZE) + OVERFLOW_AREA_OFFSET + size, QWORD_SIZE)
+        argumentSlotIndex += offset / QWORD_SIZE
         return ArgumentSlot(rbp, old * DOUBLE_SIZE + OVERFLOW_AREA_OFFSET)
     }
 
-    private fun pickArgument(type: NonTrivialType): Operand = when (type) {
+    private fun pickArgument(type: NonTrivialType): VReg = when (type) {
         is IntegerType, is PtrType -> peakIntegerArgument()
         is FloatingPointType           -> peakFPArgument()
         is StructType                  -> peakStructArgument(type)
         else -> throw IllegalArgumentException("not allowed for this type=$type")
     }
 
-    private fun allocate(arguments: List<ArgumentValue>): List<Operand> {
+    private fun allocate(arguments: List<ArgumentValue>): List<VReg> {
         return arguments.mapTo(arrayListOf()) {
             pickArgument(it.type())
         }
@@ -67,7 +67,7 @@ internal class CalleeArgumentAllocator private constructor() {
         private val gpRegisters = CallConvention.gpArgumentRegisters
         private val fpRegisters = CallConvention.xmmArgumentRegister
 
-        fun allocate(arguments: List<ArgumentValue>): List<Operand> {
+        fun allocate(arguments: List<ArgumentValue>): List<VReg> {
             return CalleeArgumentAllocator().allocate(arguments)
         }
     }

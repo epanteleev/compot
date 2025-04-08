@@ -1,6 +1,5 @@
 package ir.platform.x64.pass.analysis.regalloc
 
-import asm.Operand
 import asm.x64.*
 import ir.value.*
 import ir.Definitions.QWORD_SIZE
@@ -14,16 +13,16 @@ import ir.types.UndefType
 
 
 class RegisterAllocation internal constructor(private val spilledLocalsStackSize: Int,
-                         private val registerMap: Map<LocalValue, Operand>,
-                         val calleeSaveRegisters: List<GPRegister>,
-                         private val callInfo: Map<Callable, List<Operand?>>,
-                         marker: MutationMarker): AnalysisResult(marker) {
+                                              private val registerMap: Map<LocalValue, VReg>,
+                                              val calleeSaveRegisters: List<GPRegister>,
+                                              private val callInfo: Map<Callable, List<VReg?>>,
+                                              marker: MutationMarker): AnalysisResult(marker) {
 
     private fun frameSize(savedRegisters: Set<GPRegister>, savedXmmRegisters: Set<XmmRegister>): Int {
         return (savedRegisters.size + savedXmmRegisters.size + calleeSaveRegisters.size + /** include retaddr and rbp **/ 2) * QWORD_SIZE + spilledLocalsStackSize
     }
 
-    fun callArguments(callable: Callable): List<Operand?> {
+    fun callArguments(callable: Callable): List<VReg?> {
         return callInfo[callable]!!
     }
 
@@ -63,7 +62,7 @@ class RegisterAllocation internal constructor(private val spilledLocalsStackSize
         return SavedContext(registers, xmmRegisters, frameSize(registers, xmmRegisters))
     }
 
-    fun operandOrNull(value: LocalValue): Operand? = registerMap[value]
+    fun vRegOrNull(value: LocalValue): VReg? = registerMap[value]
 
     override fun toString(): String {
         val builder = StringBuilder()

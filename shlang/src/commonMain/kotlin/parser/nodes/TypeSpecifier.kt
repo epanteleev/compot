@@ -24,7 +24,7 @@ sealed class TypeSpecifier {
     }
 }
 
-data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier() {
+class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifier() {
     init {
         assertion(specifiers.isNotEmpty()) { "DeclarationSpecifier should have at least one specifier" }
     }
@@ -43,7 +43,7 @@ data class DeclarationSpecifier(val specifiers: List<AnyTypeNode>) : TypeSpecifi
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 }
 
-data class TypeName(val specifiers: DeclarationSpecifier, val abstractDeclarator: AbstractDeclarator?) : TypeSpecifier() {
+class TypeName(val specifiers: DeclarationSpecifier, val abstractDeclarator: AbstractDeclarator?) : TypeSpecifier() {
     override fun begin(): Position = specifiers.begin()
     override fun<T> accept(visitor: TypeSpecifierVisitor<T>): T = visitor.visit(this)
 

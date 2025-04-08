@@ -1,6 +1,6 @@
 package ir.platform.x64.codegen
 
-import asm.Operand
+import asm.x64.Operand
 import asm.x64.*
 import asm.x64.GPRegister.rax
 import common.assertion

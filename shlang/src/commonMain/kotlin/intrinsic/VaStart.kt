@@ -1,7 +1,7 @@
 package intrinsic
 
 import types.*
-import asm.Operand
+import asm.x64.Operand
 import asm.x64.Address
 import asm.x64.Address2
 import asm.x64.GPRegister.*
