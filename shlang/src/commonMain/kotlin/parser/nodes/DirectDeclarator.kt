@@ -30,6 +30,16 @@ data class DirectDeclarator(val decl: DirectDeclaratorEntry, val directDeclarato
         return currentType
     }
 
+    private fun parameterTypeList(): ParameterTypeList {
+        val decl = decl as FunctionDeclarator
+        val dir = decl.declarator.directDeclarator.directDeclaratorParams
+        if (dir.size == 1 && dir[0] is ParameterTypeList) {
+            return dir[0] as ParameterTypeList
+        }
+
+        return directDeclaratorParams[0] as ParameterTypeList
+    }
+
     fun resolveType(baseType: TypeDesc, typeHolder: TypeHolder): TypeDesc = when (decl) {
         is FunctionDeclarator -> {
             assertion(directDeclaratorParams.size == 1) { "Function pointer should have only one parameter" }
@@ -37,7 +47,7 @@ data class DirectDeclarator(val decl: DirectDeclaratorEntry, val directDeclarato
             if (pointers.isEmpty()) {
                 resolveAllDecl(baseType, typeHolder)
             } else {
-                val fnDecl = directDeclaratorParams[0] as ParameterTypeList
+                val fnDecl = parameterTypeList()
                 val type = fnDecl.resolveType(baseType, typeHolder)
                 decl.resolveType(type, typeHolder)
             }
