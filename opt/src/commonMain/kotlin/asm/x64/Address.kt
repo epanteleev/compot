@@ -6,11 +6,11 @@ sealed interface LocalAddress : VReg
 
 sealed interface Address : Operand {
     companion object {
-        fun from(base: GPRegister, offset: Int): LocalAddress {
+        fun from(base: GPRegister, offset: Int): Address2 {
             return Address2(base, offset)
         }
 
-        fun from(base: GPRegister?, offset: Int, index: GPRegister, scale: ScaleFactor): LocalAddress {
+        fun from(base: GPRegister?, offset: Int, index: GPRegister, scale: ScaleFactor): Address4 {
             return Address4(base, offset, index, scale)
         }
 

@@ -1259,7 +1259,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 ir.store(rvalueAdr, ir.convertLVToType(arg, PtrType))
                 vregStack[param.name] = rvalueAdr
             }
-            is CPrimitive -> {
+            is CPrimitive, is AnyCFunctionType -> {
                 val irType = mb.toIRLVType<PrimitiveType>(typeHolder, cType)
                 val rvalueAdr = ir.alloc(irType)
                 ir.store(rvalueAdr, ir.convertLVToType(arg, irType))
@@ -1272,7 +1272,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
                 vregStack[param.name] = arg
             }
-            else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
         }
     }
 
@@ -1287,13 +1286,12 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         vregStack[param] = rvalueAdr
     }
 
-    private fun visitParameters(parameters: List<VarDescriptor>, arguments: List<ArgumentValue>, retType: CType) {
+    private fun visitParameters(parameters: List<VarDescriptor>, arguments: List<ArgumentValue>, retType: CType, where: Position) {
         var argumentIdx = evaluateFirstArgIdx(retType)
         for (currentArg in parameters.indices) {
             val param = parameters[currentArg]
-
             when (val cType = param.cType()) {
-                is CPrimitive, is AnyCArrayType -> visitPrimitiveParameter(param, arguments[argumentIdx])
+                is CPrimitive, is AnyCArrayType, is AnyCFunctionType -> visitPrimitiveParameter(param, arguments[argumentIdx])
                 is AnyCStructType -> {
                     if (!cType.isSmall()) {
                         visitPrimitiveParameter(param, arguments[argumentIdx])
@@ -1309,7 +1307,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     argumentIdx += types.size - 1
                     visitParameter(param.name, cType, args)
                 }
-                else -> throw IRCodeGenError("Unknown type, type=$cType", Position.UNKNOWN) //TODO correct position
             }
             argumentIdx++
         }
@@ -1388,7 +1385,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         val retType = functionNode.resolveType(typeHolder).retType().cType()
-        visitParameters(parameters, ir.arguments(), retType)
+        visitParameters(parameters, ir.arguments(), retType, functionNode.begin())
     }
 
     fun visitFun(functionNode: FunctionNode): Value = scoped {
@@ -1517,7 +1514,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val value = visitExpression(expr, true)
         when (val type = returnStatement.expr.resolveType(typeHolder)) {
-            is CPrimitive, is CStringLiteral -> when (functionType.retType().cType()) {
+            is CPrimitive, is CStringLiteral, is AnyCFunctionType -> when (functionType.retType().cType()) {
                 is BOOL -> {
                     val returnType = ir.prototype().returnType().asType<PrimitiveType>()
                     val returnValue = ir.convertLVToType(value, FlagType)
@@ -1539,7 +1536,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val returnValue = ir.convertLVToType(value, returnType)
                 ir.store(fnStmt.returnValueAdr(), returnValue)
             }
-            else -> throw IRCodeGenError("Unknown return type, type=$type", returnStatement.begin())
         }
         ir.branch(fnStmt.resolveExit(ir))
     }
@@ -1719,9 +1715,13 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             return@scoped
         }
         val condition = visitExpression(switchStatement.condition, true)
-        val conditionBlock = ir.currentLabel()
+        val cvtCond = when (condition.type()) {
+            PtrType -> ir.ptr2int(condition, I64Type)
+            else -> condition
+        }
 
-        stmtStack.scoped(SwitchStmtInfo(condition.type().asType(), conditionBlock, arrayListOf(), arrayListOf())) { info ->
+        val conditionBlock = ir.currentLabel()
+        stmtStack.scoped(SwitchStmtInfo(cvtCond.type().asType(), conditionBlock, arrayListOf(), arrayListOf())) { info ->
             visitStatement(switchStatement.body)
             if (ir.last() !is TerminateInstruction) {
                 ir.branch(info.resolveExit(ir))
@@ -1736,7 +1736,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             ir.switchLabel(conditionBlock)
             val default = info.default() ?: info.resolveExit(ir)
-            ir.switch(condition, default, info.values, info.table)
+            ir.switch(cvtCond, default, info.values, info.table)
 
             if (info.exit() != null) {
                 ir.switchLabel(info.resolveExit(ir))
