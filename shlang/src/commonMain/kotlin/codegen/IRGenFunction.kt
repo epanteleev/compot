@@ -1312,9 +1312,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
     }
 
-    private fun visitReturnType(fnStmt: FunctionStmtInfo, retCType: TypeDesc, args: List<ArgumentValue>) {
+    private fun visitReturnType(fnStmt: FunctionStmtInfo, retCType: TypeDesc, args: List<ArgumentValue>, where: Position) {
         val exitBlock = fnStmt.resolveExit(ir)
-        when (val cType = retCType.cType()) {
+        when (val cType = retCType.asType<CompletedType>()) {
             is VOID -> {
                 ir.switchLabel(exitBlock)
                 ir.retVoid()
@@ -1325,7 +1325,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 val ret = ir.load(I8Type, returnValueAdr)
                 ir.ret(I8Type, arrayOf(ret))
             }
-            is CPrimitive -> {
+            is CPrimitive, is AnyCFunctionType -> {
                 val retType = mb.toIRLVType<PrimitiveType>(typeHolder, retCType.cType())
                 val returnValueAdr = fnStmt.resolveReturnValueAdr { ir.alloc(retType) }
                 ir.switchLabel(exitBlock)
@@ -1359,7 +1359,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                 }
                 else -> throw RuntimeException("Unknown type, type=$irRetType")
             }
-            else -> throw RuntimeException("Unknown return type, type=$cType")
+            is AnyCArrayType -> throw IRCodeGenError("Array type not supported in return type", where)
         }
     }
 
@@ -1391,7 +1391,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
     fun visitFun(functionNode: FunctionNode): Value = scoped {
         stmtStack.scoped(FunctionStmtInfo()) { stmt ->
             visitParameters(functionNode)
-            visitReturnType(stmt, functionType.retType(), ir.arguments())
+            visitReturnType(stmt, functionType.retType(), ir.arguments(), functionNode.begin())
 
             ir.switchLabel(Label.entry)
             initializeVarArgs(functionType, stmt)
@@ -1997,7 +1997,7 @@ internal class FunGenInitializer(moduleBuilder: ModuleBuilder,
         val fnType = varDesc.cType()
             .asType<CFunctionType>(functionNode.begin())
 
-        val parameters = functionNode.functionDeclarator().params(typeHolder)
+        val parameters = functionNode.parameterTypeList().params(typeHolder)
         val cPrototype = CFunctionPrototypeBuilder(functionNode.begin(), fnType, mb, typeHolder, varDesc.storageClass).build()
 
         val currentFunction = mb.createFunction(functionNode.name(), cPrototype.returnType, cPrototype.argumentTypes, cPrototype.attributes)

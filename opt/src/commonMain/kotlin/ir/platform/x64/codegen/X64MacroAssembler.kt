@@ -66,7 +66,7 @@ class X64MacroAssembler(name: String, id: Int): Assembler(name, id), MacroAssemb
         is FloatingPointType -> throw MacroAssemblerException("invalid type: type=$type")
     }
 
-    fun setccInt(operandsType: PrimitiveType, jmpType: IntPredicate, dst: Operand) {
+    fun setccInt(operandsType: PrimitiveType, jmpType: IntPredicate, dst: VReg) {
         val type = intPredicateToSetCCType(operandsType, jmpType)
         when (dst) {
             is Address    -> setcc(type, dst)

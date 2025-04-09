@@ -1,4 +1,5 @@
 
+import org.junit.Ignore
 import types.*
 import parser.CProgramParser
 import parser.LineAgnosticAstPrinter
@@ -183,6 +184,24 @@ class TypeResolutionTest {
         val fnType = expr.resolveType(typeResolver)
 
         assertEquals("int printf(const char*, ...)", fnType.toString())
+    }
+
+    @Test
+    @Ignore
+    fun testDecl10() {
+        val input = """
+            int (*test1(int b))(int a, int c) {
+                return (void*)0;
+            }
+        """.trimIndent()
+
+        val tokens = apply(input)
+        val parser = CProgramParser.build(tokens)
+        val expr = parser.function_definition() as FunctionNode
+        val typeResolver = TypeHolder.default()
+        val fnType = expr.resolveType(typeResolver)
+
+        assertEquals("int(int, int)* test1(int)", fnType.toString())
     }
 
     @Test

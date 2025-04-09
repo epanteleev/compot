@@ -22,7 +22,16 @@ class FunctionNode(val typeHolder: TypeHolder, val specifier: DeclarationSpecifi
         return declarator.directDeclarator.decl.name()
     }
 
-    fun functionDeclarator(): ParameterTypeList {
+    fun parameterTypeList(): ParameterTypeList {
+        val decl = declarator.directDeclarator.decl
+        if (decl !is FunctionDeclarator) {
+            return declarator.directDeclarator.directDeclaratorParams[0] as ParameterTypeList
+        }
+
+        val directDeclaratorParams = decl.declarator.directDeclarator.directDeclaratorParams
+        if (directDeclaratorParams.size == 1 && directDeclaratorParams[0] is ParameterTypeList) {
+            return directDeclaratorParams[0] as ParameterTypeList
+        }
         return declarator.directDeclarator.directDeclaratorParams[0] as ParameterTypeList
     }
 
