@@ -31,12 +31,6 @@ data class DirectDeclarator(val decl: DirectDeclaratorEntry, val directDeclarato
     }
 
     private fun parameterTypeList(): ParameterTypeList {
-        val decl = decl as FunctionDeclarator
-        val dir = decl.declarator.directDeclarator.directDeclaratorParams
-        if (dir.size == 1 && dir[0] is ParameterTypeList) {
-            return dir[0] as ParameterTypeList
-        }
-
         return directDeclaratorParams[0] as ParameterTypeList
     }
 
