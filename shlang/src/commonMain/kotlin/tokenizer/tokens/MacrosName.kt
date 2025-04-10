@@ -2,7 +2,7 @@ package tokenizer.tokens
 
 import preprocess.Hideset
 
-sealed interface HidesetHolder {
+sealed interface MacrosName {
     fun hideset(): Hideset
 
     fun contains(name: String): Boolean {

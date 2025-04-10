@@ -9,13 +9,13 @@ import tokenizer.tokens.*
 import preprocess.macros.Macros.Companion.newTokenFrom
 
 
-class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx: PreprocessorContext, val args: List<TokenList>):
+internal class SubstituteMacroFunction(private val macros: MacroFunction, private val ctx: PreprocessorContext, private val args: List<TokenList>):
     AbstractCPreprocessor(macros.name, macros.value) {
     private val result = TokenList()
     private val argToValue = evaluateSubstitution(args)
 
     private fun evaluateSubstitution(args: List<TokenList>): Map<CToken, TokenList> {
-        val res = mutableMapOf<CToken, TokenList>()
+        val res = hashMapOf<CToken, TokenList>()
         macros.argNames.forEachWith(args) { arg, value ->
             res[arg] = value
         }

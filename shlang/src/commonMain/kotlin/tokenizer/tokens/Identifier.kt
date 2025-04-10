@@ -5,7 +5,7 @@ import common.assertion
 import preprocess.Hideset
 
 
-class Identifier(private val data: String, position: Position, private val hideset: Hideset): CToken(position), HidesetHolder {
+class Identifier(private val data: String, position: Position, private val hideset: Hideset): CToken(position), MacrosName {
     init {
         assertion(LexicalElements.keywords.contains(data).not()) {
             "Identifier '$data' is a keyword"

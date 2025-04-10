@@ -11,7 +11,7 @@ private enum class ConditionType {
 
 private class ConditionState(var type: ConditionType, var isIncluded: Boolean)
 
-class CProgramPreprocessor(filename: String, original: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(filename, original) {
+class CProgramPreprocessor private constructor(filename: String, original: TokenList, private val ctx: PreprocessorContext): AbstractCPreprocessor(filename, original) {
     private val conditions = mutableListOf<ConditionState>()
 
     private fun enterCondition(type: ConditionType, condResult: Boolean) {
@@ -373,7 +373,7 @@ class CProgramPreprocessor(filename: String, original: TokenList, private val ct
 
     private fun handleToken(tok: CToken): Boolean {
         val macros = ctx.findMacros(tok.str()) ?: return false
-        if (tok !is HidesetHolder) {
+        if (tok !is MacrosName) {
             return false
         }
         if (tok.contains(macros.name)) {

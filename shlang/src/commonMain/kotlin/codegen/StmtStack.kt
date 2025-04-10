@@ -38,10 +38,6 @@ internal class StmtStack {
         return stack.findLast { it is AnyLoopStmtInfo } as AnyLoopStmtInfo?
     }
 
-    fun topSwitch(): SwitchStmtInfo? {
-        return stack.findLast { it is SwitchStmtInfo } as SwitchStmtInfo?
-    }
-
     fun topSwitchOrLoop(): StmtInfo? {
         return stack.findLast { it is AnyLoopStmtInfo || it is SwitchStmtInfo }
     }

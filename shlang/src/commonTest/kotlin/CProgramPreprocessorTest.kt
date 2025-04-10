@@ -44,7 +44,7 @@ class CProgramPreprocessorTest {
         .addHeader(Header("math.h", mathHeaderContent, HeaderType.SYSTEM))
 
     private fun create(tokens: TokenList, ctx: PreprocessorContext): CProgramPreprocessor {
-        return CProgramPreprocessor("no-name", tokens, ctx)
+        return CProgramPreprocessor.create("no-name", tokens, ctx)
     }
 
     fun apply(data: String): TokenList {

@@ -179,7 +179,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
         val vaList = visitExpression(builtinVaArg.assign, true)
         return when (val argCType = builtinVaArg.resolveType(typeHolder)) {
-            is AnyCInteger, is CPointer, is BOOL -> {
+            is AnyCInteger, is CPointer, is BOOL -> { //TODO add test for function pointer
                 val argType = mb.toIRType<PrimitiveType>(typeHolder, argCType)
                 emitBuiltInVaArg(vaList, argType, VaStart.GP_OFFSET_IDX, VaStart.REG_SAVE_AREA_SIZE)
             }
@@ -522,10 +522,9 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             throw IRCodeGenError("Too many arguments in function call '${function.shortDescription()}'", Position.UNKNOWN) //TODO correct position
         }
         return when (expr.type()) {
-            F32Type         -> ir.convertLVToType(expr, F64Type)
-            I8Type, I16Type -> ir.convertLVToType(expr, I32Type)
+            F32Type -> ir.convertLVToType(expr, F64Type)
+            I8Type, I16Type, FlagType -> ir.convertLVToType(expr, I32Type)
             U8Type, U16Type -> ir.convertLVToType(expr, U32Type)
-            FlagType        -> ir.convertLVToType(expr, I32Type)
             else -> expr
         }
     }
@@ -538,7 +537,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         for ((idx, argValue) in args.withIndex()) {
             val expr = visitExpression(argValue, true)
             when (val argCType = argValue.resolveType(typeHolder)) {
-                is CPrimitive, is CFunctionType, is CUncompletedArrayType, is CStringLiteral -> {
+                is CPrimitive, is AnyCFunctionType, is CUncompletedArrayType, is CStringLiteral -> {
                     val convertedArg = convertArg(function, idx + offset, expr)
                     convertedArgs.add(convertedArg)
                 }
@@ -560,7 +559,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
                     convertedArgs.addAll(argValues)
                     offset += argValues.size - 1
                 }
-                else -> throw IRCodeGenError("Unknown type, type=$argCType in function call", argValue.begin())
             }
         }
         return FunctionArgInfo(convertedArgs, attributes)
@@ -808,7 +806,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             ir.convertRVToType(divided, PtrType)
         }
-        is AnyCFloat -> {
+        is AnyCFloat -> { //TODO code duplication with makeAlgebraicBinary
             val commonType = mb.toIRType<FloatingPointType>(typeHolder, cType)
             val left = visitExpression(binOp.left, true)
             val leftConverted = ir.convertRVToType(left, commonType)
@@ -818,7 +816,7 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
 
             ir.sub(leftConverted, rightConverted)
         }
-        is AnyCInteger, is CEnumType -> {
+        is AnyCInteger, is CEnumType -> { //TODO code duplication with makeAlgebraicBinary
             val cvtType = when (val commonType = mb.toIRType<IntegerType>(typeHolder, cType)) {
                 is SignedIntType   -> if (commonType.sizeOf() < WORD_SIZE) I32Type else commonType
                 is UnsignedIntType -> if (commonType.sizeOf() < WORD_SIZE) U32Type else commonType
@@ -1242,14 +1240,6 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
         }
 
         throw IRCodeGenError("Variable '$name' not found", varNode.begin())
-    }
-
-    private fun evaluateFirstArgIdx(retType: CType): Int {
-        if (retType is AnyCStructType && !retType.isSmall()) {
-            return 1
-        }
-
-        return 0
     }
 
     private fun visitPrimitiveParameter(param: VarDescriptor, arg: ArgumentValue) {
@@ -1984,6 +1974,16 @@ private class IrGenFunction(moduleBuilder: ModuleBuilder,
             }
         }
         return lvalueAdr
+    }
+
+    companion object {
+        private fun evaluateFirstArgIdx(retType: CType): Int {
+            if (retType is AnyCStructType && !retType.isSmall()) {
+                return 1
+            }
+
+            return 0
+        }
     }
 }
 

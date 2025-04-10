@@ -6,7 +6,7 @@ import tokenizer.LexicalElements
 import tokenizer.Position
 
 
-class Keyword(val data: String, position: Position, private val hideset: Hideset): CToken(position), HidesetHolder {
+class Keyword(val data: String, position: Position, private val hideset: Hideset): CToken(position), MacrosName {
     init {
         assertion(LexicalElements.keywords.contains(data)) {
             "Keyword '$data' is not a keyword"
