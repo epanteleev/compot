@@ -187,7 +187,6 @@ class TypeResolutionTest {
     }
 
     @Test
-    @Ignore
     fun testDecl10() {
         val input = """
             int (*test1(int b))(int a, int c) {
