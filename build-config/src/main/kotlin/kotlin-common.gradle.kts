@@ -10,11 +10,6 @@ repositories {
 
 kotlin {
     sourceSets {
-        commonMain {
-            dependencies {
-                implementation("com.squareup.okio:okio:3.9.0")
-            }
-        }
         commonTest {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-test-annotations-common")

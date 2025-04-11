@@ -1,9 +1,8 @@
 package common
 
-import okio.FileSystem
-import okio.Path.Companion.toPath
 import startup.ShlangDriver
 import startup.ShlangCommandLineParser
+import java.io.FileInputStream
 import kotlin.random.Random
 
 
@@ -31,8 +30,9 @@ abstract class CommonCTest: CommonTest() {
     }
 
     protected fun readExpectedOutput(filename: String): String {
-        return FileSystem.SYSTEM.read("$TESTCASES_DIR/expected_out/$filename".toPath()) {
-            readUtf8()
+        val path = "$TESTCASES_DIR/expected_out/$filename"
+        return FileInputStream(path).use { inputStream ->
+            inputStream.readBytes().decodeToString()
         }
     }
 

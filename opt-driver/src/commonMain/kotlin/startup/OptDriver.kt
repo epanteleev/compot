@@ -1,9 +1,6 @@
 package startup
 
-import common.ExecutionResult
-import common.Extension
-import common.GNUAssemblerRunner
-import common.ProcessedFile
+import common.*
 import ir.module.Module
 import ir.pass.CompileContext
 import ir.pass.CompileContextBuilder
@@ -11,10 +8,10 @@ import ir.pass.PassPipeline
 import ir.platform.common.CodeGenerationFactory
 import ir.platform.common.CompiledModule
 import ir.platform.common.TargetPlatform
-import okio.FileSystem
-import okio.Path.Companion.toPath
-import java.awt.SystemColor.text
 import java.io.PrintWriter
+import java.nio.file.Path
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.exists
 import kotlin.random.Random
 
 
@@ -43,7 +40,7 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
     }
 
     private fun compileAsmFile(compiledModule: CompiledModule, asmFileName: String): ExecutionResult {
-        val tempDir = FileSystem.SYSTEM_TEMPORARY_DIRECTORY.resolve(OPT + Random.nextInt())
+        val tempDir = FileUtils.createTempFile(OPT + Random.nextInt())
         val optimizedAsm = tempDir.toString()
         try {
             PrintWriter(optimizedAsm, Charsets.UTF_8).use { out ->
@@ -60,7 +57,7 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
             val output = commandLineArguments.getOutputFilename().withExtension(Extension.OBJ)
             return GNUAssemblerRunner.compileAsm(optimizedAsm, output.filename)
         } finally {
-            FileSystem.SYSTEM.delete(optimizedAsm.toPath())
+            tempDir.deleteIfExists()
         }
     }
 
@@ -68,10 +65,10 @@ class OptDriver private constructor(private val commandLineArguments: OptCLIArgu
         if (!commandLineArguments.isDumpIr()) {
             return
         }
-        val directoryName = "${commandLineArguments.getDumpIrDirectory()}/${inputBasename()}/".toPath()
+        val directoryName = Path.of("${commandLineArguments.getDumpIrDirectory()}/${inputBasename()}/")
 
-        if (!FileSystem.SYSTEM.exists(directoryName)) {
-            FileSystem.SYSTEM.createDirectories(directoryName)
+        if (!directoryName.exists()) {
+            FileUtils.deleteDirectory(directoryName.toFile())
         }
     }
 

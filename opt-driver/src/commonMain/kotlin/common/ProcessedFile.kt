@@ -12,7 +12,7 @@ enum class Extension(val value: String) {
 
 class ProcessedFile private constructor(val filename: String, val extension: Extension) {
     fun basename(): String {
-        return Files.getBasename(filename)
+        return FileUtils.getBasename(filename)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -38,7 +38,7 @@ class ProcessedFile private constructor(val filename: String, val extension: Ext
             return this
         }
 
-        return create(Files.removeExtension(filename), extension)
+        return create(FileUtils.removeExtension(filename), extension)
     }
 
     companion object {

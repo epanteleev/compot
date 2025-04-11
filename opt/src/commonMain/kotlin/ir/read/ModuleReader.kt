@@ -2,12 +2,11 @@ package ir.read
 
 import ir.types.*
 import ir.global.*
-import okio.FileSystem
 import ir.module.Module
 import ir.read.bulder.*
 import ir.read.tokens.*
 import ir.value.constant.*
-import okio.Path.Companion.toPath
+import java.io.FileInputStream
 
 
 class ModuleReader private constructor(string: String) {
@@ -301,8 +300,8 @@ class ModuleReader private constructor(string: String) {
 
     companion object {
         fun read(name: String): Module {
-            val text = FileSystem.SYSTEM.read(name.toPath()) {
-                readUtf8()
+            val text = FileInputStream(name).use { inputStream ->
+                inputStream.bufferedReader().use { it.readText() }
             }
 
             try {

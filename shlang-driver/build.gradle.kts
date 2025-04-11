@@ -24,7 +24,6 @@ kotlin {
                 implementation("org.jetbrains.kotlin:kotlin-test-common")
                 implementation("org.jetbrains.kotlin:kotlin-test-annotations-common")
                 implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
-                implementation("com.squareup.okio:okio:3.9.0")
                 implementation(project(":opt-driver"))
             }
         }
@@ -39,10 +38,6 @@ kotlin {
             dependencies {
                 implementation("junit:junit:4.13")
                 implementation("org.jetbrains.kotlin:kotlin-test-junit")
-
-                implementation("org.jetbrains.kotlin:kotlin-scripting-common")
-                implementation("org.jetbrains.kotlin:kotlin-scripting-jvm")
-                implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host")
             }
         }
     }

@@ -1,11 +1,11 @@
 package preprocess
 
 import common.getInclude
-import okio.FileSystem
 import tokenizer.CTokenizer
 import tokenizer.TokenList
-import okio.Path.Companion.toPath
-
+import java.io.FileInputStream
+import java.nio.file.Path
+import kotlin.io.path.exists
 
 enum class HeaderType {
     SYSTEM,
@@ -45,17 +45,22 @@ class PredefinedHeaderHolder(includeDirectories: Set<String>): HeaderHolder(incl
 }
 
 class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>): HeaderHolder(includeDirectories) {
-    private fun getUserHeader(name: String): Header? {
-        val fileName = "$pwd/$name"
-        val filePath = fileName.toPath()
-        if (!FileSystem.SYSTEM.exists(filePath)) {
+    private fun tryReadHeader(fullPath: String, type: HeaderType): Header? {
+        val filePath = Path.of(fullPath)
+        if (!filePath.exists()) {
             return null
         }
 
-        val content = FileSystem.SYSTEM.read(filePath) {
-            readUtf8()
+        val content = FileInputStream(filePath.toFile()).use { inputStream ->
+            inputStream.readBytes().decodeToString()
         }
-        return Header(fileName, content, HeaderType.USER)
+        return Header(fullPath, content, type)
+    }
+
+
+    private fun getUserHeader(name: String): Header? {
+        val fileName = "$pwd/$name"
+        return tryReadHeader(fileName, HeaderType.USER)
     }
 
     private fun getSystemHeader(name: String): Header? {
@@ -66,15 +71,7 @@ class FileHeaderHolder(private val pwd: String, includeDirectories: Set<String>)
 
         for (includeDirectory in includeDirectories) {
             val fileName = "$includeDirectory/$name"
-            val filePath = fileName.toPath()
-            if (!FileSystem.SYSTEM.exists(filePath)) {
-                continue
-            }
-
-            val content = FileSystem.SYSTEM.read(filePath) {
-                readUtf8()
-            }
-            return Header(fileName, content, HeaderType.SYSTEM)
+            return tryReadHeader(fileName, HeaderType.SYSTEM) ?: continue
         }
         return null
     }

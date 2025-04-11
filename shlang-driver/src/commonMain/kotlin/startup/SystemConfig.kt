@@ -1,8 +1,6 @@
 package startup
 
-import okio.FileSystem
-import okio.Path.Companion.toPath
-import kotlin.io.path.Path
+import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
 
@@ -11,11 +9,13 @@ import kotlin.io.path.listDirectoryEntries
 internal object SystemConfig {
     fun systemHeadersPaths(): List<String> {
         val paths = arrayListOf<String>()
-        if (FileSystem.SYSTEM.exists(USR_INCLUDE_GNU_LINUX_PATH.toPath())) {
+        val usrIncludeGNUPath = Path.of(USR_INCLUDE_GNU_LINUX_PATH)
+        if (usrIncludeGNUPath.exists()) {
             paths.add(USR_INCLUDE_GNU_LINUX_PATH)
         }
 
-        if (FileSystem.SYSTEM.exists(USR_INCLUDE_PATH.toPath())) {
+        val usrIncludePath = Path.of(USR_INCLUDE_PATH)
+        if (usrIncludePath.exists()) {
             paths.add(USR_INCLUDE_PATH)
         }
 
@@ -30,11 +30,13 @@ internal object SystemConfig {
             objects.add("$crtPath/$crtObject")
         }
 
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
+        val crtObjectGNUPath = Path.of(CRT_OBJECT_GNU_LINUX_PATH)
+        if (crtObjectGNUPath.exists()) {
             return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
         }
 
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
+        val crtObjectPath = Path.of(CRT_OBJECT_PATH)
+        if (crtObjectPath.exists()) {
             return crtCommonStaticObjects.mapTo(objects) { "$CRT_OBJECT_PATH$it" }
         }
 
@@ -49,11 +51,13 @@ internal object SystemConfig {
             objects.add("$crtPath/$crtObject")
         }
 
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_GNU_LINUX_PATH.toPath())) {
+        val crtObjectGNUPath = Path.of(CRT_OBJECT_GNU_LINUX_PATH)
+        if (crtObjectGNUPath.exists()) {
             return crtCommonSharedObjects.mapTo(objects) { "$CRT_OBJECT_GNU_LINUX_PATH$it" }
         }
 
-        if (FileSystem.SYSTEM.exists(CRT_OBJECT_PATH.toPath())) {
+        val crtObjectPath = Path.of(CRT_OBJECT_PATH)
+        if (crtObjectPath.exists()) {
             return crtCommonSharedObjects.mapTo(objects) { "$CRT_OBJECT_PATH$it" }
         }
 
@@ -61,18 +65,18 @@ internal object SystemConfig {
     }
 
     private fun crtPath(): String {
-        val crtPathGccPc = Path(CRT_OBJECT_PC_GCC)
+        val crtPathGccPc = Path.of(CRT_OBJECT_PC_GCC)
         if (crtPathGccPc.exists()) {
-            val crtPath = Path(CRT_OBJECT_PC_GCC)
+            val crtPath = crtPathGccPc
                 .listDirectoryEntries()
                 .first()
 
             return crtPath.toString()
         }
 
-        val crtPathGcc = Path(CRT_OBJECT_GCC)
+        val crtPathGcc = Path.of(CRT_OBJECT_GCC)
         if (crtPathGcc.exists()) {
-            val crtPath = Path(CRT_OBJECT_GCC)
+            val crtPath = crtPathGcc
                 .listDirectoryEntries()
                 .first()
 

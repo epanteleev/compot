@@ -1,7 +1,6 @@
 package ir.pass
 
-import okio.Path
-import okio.Path.Companion.toPath
+import java.nio.file.Path
 
 
 class CompileContext(private val filename: String, private val suffix: String, private val outputDir: String?) {
@@ -10,7 +9,7 @@ class CompileContext(private val filename: String, private val suffix: String, p
             return null
         }
 
-        return "${outputDir}/$filename/${passName}${suffix}.ir".toPath()
+        return Path.of("${outputDir}/$filename/${passName}${suffix}.ir")
     }
 }
 

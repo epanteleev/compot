@@ -4,7 +4,9 @@ import ir.module.Module
 import ir.pass.analysis.VerifySSA
 import ir.pass.common.TransformPassFabric
 import ir.pass.transform.Mem2RegFabric
-import okio.FileSystem
+import java.io.FileOutputStream
+import java.io.OutputStream
+import java.io.OutputStreamWriter
 
 
 class PassPipeline private constructor(private val name: String, private val passFabrics: List<TransformPassFabric>, private val ctx: CompileContext) {
@@ -28,8 +30,9 @@ class PassPipeline private constructor(private val name: String, private val pas
     private fun dumpIr(passName: String, message: () -> String) {
         val filename = ctx.outputFile(passName) ?: return
 
-        FileSystem.SYSTEM.write(filename) {
-            writeUtf8(message())
+        val outputStream: OutputStream = FileOutputStream(filename.toFile())
+        outputStream.use {
+            OutputStreamWriter(outputStream).use { it.write(message()) }
         }
     }
 

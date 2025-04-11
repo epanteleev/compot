@@ -3,19 +3,20 @@ package startup
 import codegen.GenerateIR
 import common.pwd
 import common.Extension
-import common.Files
+import common.FileUtils
 import common.GNULdRunner
 import common.ProcessedFile
 import preprocess.*
 import ir.module.Module
-import okio.FileSystem
-import okio.Path.Companion.toPath
 import tokenizer.CTokenizer
 import parser.CProgramParser
 import preprocess.macros.MacroReplacement
 import tokenizer.TokenList
 import tokenizer.TokenPrinter
+import java.io.FileInputStream
+import java.nio.file.Path
 import kotlin.collections.iterator
+import kotlin.io.path.copyTo
 import kotlin.random.Random
 
 
@@ -31,7 +32,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
     private fun initializePreprocessorContext(filename: String): PreprocessorContext {
         val usrDir = SystemConfig.systemHeadersPaths()
         val includeDirectories = cli.getIncludeDirectories() + usrDir
-        val workingDirectory   = Files.getDirName(filename)
+        val workingDirectory   = FileUtils.getDirName(filename)
         val headerHolder       = FileHeaderHolder(pwd(), includeDirectories + workingDirectory)
 
         val ctx = PreprocessorContext.create(headerHolder)
@@ -40,8 +41,8 @@ class ShlangDriver(private val cli: ShlangArguments) {
     }
 
     private fun preprocess(filename: String): TokenList? {
-        val source = FileSystem.SYSTEM.read(filename.toPath()) {
-            readUtf8() //TODO: stream reading
+        val source = FileInputStream(filename).use { inputStream ->
+            inputStream.readBytes().decodeToString()
         }
         val ctx = initializePreprocessorContext(filename)
 
@@ -69,7 +70,7 @@ class ShlangDriver(private val cli: ShlangArguments) {
     }
 
     private fun makeOptCLIArguments(inputFilename: ProcessedFile): OptCLIArguments {
-        val file = FileSystem.SYSTEM_TEMPORARY_DIRECTORY.resolve(inputFilename.basename() + Random.nextInt() + ".o")
+        val file = FileUtils.createTempFile(inputFilename.basename() + Random.nextInt() + ".o")
         val optCLIArguments = OptCLIArguments()
         optCLIArguments.setFilename(inputFilename.withExtension(Extension.IR))
             .setOptLevel(cli.getOptLevel())
@@ -141,7 +142,10 @@ class ShlangDriver(private val cli: ShlangArguments) {
                 logDebug {
                     "Copying file: $src to $output"
                 }
-                FileSystem.SYSTEM.copy(src.filename.toPath(), output.filename.toPath())
+
+                val srsPath = Path.of(src.filename)
+                val dstPath = Path.of(output.filename)
+                srsPath.copyTo(dstPath, overwrite = true)
                 return
             }
 
@@ -157,7 +161,10 @@ class ShlangDriver(private val cli: ShlangArguments) {
                 logDebug {
                     "Copying file: $src to $dst"
                 }
-                FileSystem.SYSTEM.copy(src.toPath(), dst.filename.toPath())
+
+                val srsPath = Path.of(src)
+                val dstPath = Path.of(dst.filename)
+                srsPath.copyTo(dstPath, overwrite = true)
             }
 
             return
