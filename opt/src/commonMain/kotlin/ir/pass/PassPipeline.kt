@@ -30,6 +30,9 @@ class PassPipeline private constructor(private val name: String, private val pas
     private fun dumpIr(passName: String, message: () -> String) {
         val filename = ctx.outputFile(passName) ?: return
 
+        if (!filename.parent.toFile().exists()) {
+            filename.parent.toFile().mkdirs()
+        }
         val outputStream: OutputStream = FileOutputStream(filename.toFile())
         outputStream.use {
             OutputStreamWriter(outputStream).use { it.write(message()) }

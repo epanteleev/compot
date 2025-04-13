@@ -7,23 +7,23 @@ import typedesc.VarDescriptor
 
 sealed class AnyStructDeclaratorItem {
     abstract fun begin(): Position
-    abstract fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor
+    abstract fun declareType(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor
 }
 
 class StructDeclaratorItem(val expr: Declarator): AnyStructDeclaratorItem() {
     override fun begin(): Position = expr.begin()
 
-    override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
-        return expr.declareVar(varDesc, typeHolder)
+    override fun declareType(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
+        return expr.declareVar(declSpec, typeHolder)
             ?: throw IllegalStateException("Typedef is not supported in struct fields")
     }
 }
 
-class EmptyStructDeclaratorItem(private val where: Position): AnyStructDeclaratorItem() {
+class EmptyStructDeclaratorItem(private val name: String, private val where: Position): AnyStructDeclaratorItem() {
     override fun begin(): Position = where
 
-    override fun declareType(varDesc: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
-        throw IllegalStateException("Empty declarator is not supported: $where")
+    override fun declareType(declSpec: DeclSpec, typeHolder: TypeHolder): VarDescriptor {
+        return VarDescriptor(name, declSpec.typeDesc.asType(), declSpec.typeDesc.qualifiers(), declSpec.storageClass)
     }
 }
 

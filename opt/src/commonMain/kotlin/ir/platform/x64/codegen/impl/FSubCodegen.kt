@@ -51,7 +51,8 @@ internal class FSubCodegen(val type: FloatingPointType, val asm: X64MacroAssembl
     }
 
     override fun raa(dst: XmmRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.movf(size, first, dst)
+        asm.subf(size, second, dst)
     }
 
 

@@ -566,7 +566,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         if (check(":")) {
             val doubleDot = eat()
             val expr = constant_expression() ?: throw ParserException(InvalidToken("Expected constant expression", peak()))
-            return@rule StructDeclarator(EmptyStructDeclaratorItem(doubleDot.position()), expr)
+            return@rule StructDeclarator(EmptyStructDeclaratorItem(anonymousName("field"), doubleDot.position()), expr)
         }
         val declarator = declarator()?: return@rule null
         if (check(":")) {
@@ -1553,26 +1553,20 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         if (check("sizeof")) {
             eat()
-            if (!check("(")) {
-                val expr = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            val expr = unary_expression()
+            if (expr != null) {
                 return@rule SizeOf(SizeOfExpr(expr))
             }
-            eat()
-            val type = type_name()
-            if (type != null) {
-                if (!check(")")) {
-                    throw ParserException(InvalidToken("Expected ')'", peak()))
-                }
-                eat()
-                return@rule SizeOf(SizeOfType(type))
+            if (!check("(")) {
+                throw ParserException(InvalidToken("Expected unary expression", peak()))
             }
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
-            if (check(")")) {
-                eat()
-                return@rule SizeOf(SizeOfExpr(unary))
-            } else {
+            eat()
+            val type = type_name() ?: return@rule null
+            if (!check(")")) {
                 throw ParserException(InvalidToken("Expected ')'", peak()))
             }
+            eat()
+            return@rule SizeOf(SizeOfType(type))
         }
         return@rule null
     }
