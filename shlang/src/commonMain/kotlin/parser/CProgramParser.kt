@@ -1538,17 +1538,17 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
         }
         if (check("++")) {
             eat()
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            val unary = unary_expression() ?: throw ParserException(InvalidToken("Expected unary expression", peak()))
             return@rule UnaryOp(unary, PrefixUnaryOpType.INC)
         }
         if (check("--")) {
             eat()
-            val unary = unary_expression()?: throw ParserException(InvalidToken("Expected unary expression", peak()))
+            val unary = unary_expression() ?: throw ParserException(InvalidToken("Expected unary expression", peak()))
             return@rule UnaryOp(unary, PrefixUnaryOpType.DEC)
         }
         val op = unary_operator()
         if (op != null) {
-            val cast = cast_expression()?: throw ParserException(InvalidToken("Expected cast expression", peak()))
+            val cast = cast_expression() ?: throw ParserException(InvalidToken("Expected cast expression", peak()))
             return@rule UnaryOp(cast, op)
         }
         if (check("sizeof")) {
@@ -1581,7 +1581,7 @@ class CProgramParser private constructor(filename: String, iterator: TokenList):
             return@rule null
         }
         eat()
-        val type = type_name()?: throw ParserException(InvalidToken("Expected type name", peak()))
+        val type = type_name() ?: throw ParserException(InvalidToken("Expected type name", peak()))
         if (!check(")")) {
             throw ParserException(InvalidToken("Expected ')'", peak()))
         }

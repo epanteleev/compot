@@ -551,12 +551,11 @@ class TryConstEvalExpressionDouble(private val ctx: ConstEvalContext<Double>): C
     }
 
     override fun visit(numNode: NumNode): Double {
-        return numNode.number.number() as Double
+        return numNode.number.number().toDouble()
     }
 
     override fun visit(varNode: VarNode): Double? {
-        val variable = ctx.getVariable(varNode.nameIdent()) ?: return null
-        return variable
+        return ctx.getVariable(varNode.nameIdent())
     }
 
     override fun visit(arrowMemberAccess: ArrowMemberAccess): Double {

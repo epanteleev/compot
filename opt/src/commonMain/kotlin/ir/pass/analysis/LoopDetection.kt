@@ -13,7 +13,7 @@ import ir.pass.analysis.traverse.PostOrderFabric
 import ir.pass.common.AnalysisType
 
 
-data class LoopBlockData(val header: Block, val loopBody: Set<Block>, private val exit: Block) {
+data class LoopBlockData(private val header: Block, val loopBody: Set<Block>, private val exit: Block) {
     fun exit(): Block = exit
 
     fun enter(): Block {
