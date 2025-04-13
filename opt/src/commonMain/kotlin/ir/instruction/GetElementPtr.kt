@@ -9,14 +9,14 @@ import ir.module.block.Block
 
 
 class GetElementPtr private constructor(id: Identity, owner: Block, val basicType: NonTrivialType, source: Value, index: Value):
-    ValueInstruction(id, owner, arrayOf(source, index)) {
+    AnyGetElementPtr(id, owner, arrayOf(source, index)) {
     override fun dump(): String {
         return "%${name()} = $NAME $basicType, ptr ${source()}, ${index().type()} ${index()}"
     }
 
     override fun type(): PtrType = PtrType
 
-    fun source(): Value {
+    override fun source(): Value {
         assertion(operands.size == 2) {
             "size should be 2 in $this instruction"
         }
@@ -24,11 +24,9 @@ class GetElementPtr private constructor(id: Identity, owner: Block, val basicTyp
         return operands[SOURCE]
     }
 
-    fun source(newSource: Value) = owner.df {
-        update(SOURCE, newSource)
-    }
+    override fun accessType(): NonTrivialType = basicType
 
-    fun index(): Value {
+    override fun index(): Value {
         assertion(operands.size == 2) {
             "size should be 2 in $this instruction"
         }

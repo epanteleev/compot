@@ -14,26 +14,24 @@ interface GPOperandsVisitorUnaryOp {
     fun default(dst: Operand, src: Operand)
 
     companion object {
-        fun apply(dst: Operand, src: Operand, closure: GPOperandsVisitorUnaryOp) {
-            when (dst) {
-                is GPRegister -> {
-                    when (src) {
-                        is GPRegister -> closure.rr(dst, src)
-                        is Address    -> closure.ra(dst, src)
-                        is ImmInt     -> closure.ri(dst, src.asImm32())
-                        else -> closure.default(dst, src)
-                    }
+        fun apply(dst: Operand, src: Operand, closure: GPOperandsVisitorUnaryOp) = when (dst) {
+            is GPRegister -> {
+                when (src) {
+                    is GPRegister -> closure.rr(dst, src)
+                    is Address    -> closure.ra(dst, src)
+                    is ImmInt     -> closure.ri(dst, src.asImm32())
+                    else -> closure.default(dst, src)
                 }
-                is Address -> {
-                    when (src) {
-                        is GPRegister -> closure.ar(dst, src)
-                        is Address    -> closure.aa(dst, src)
-                        is ImmInt     -> closure.ai(dst, src.asImm32())
-                        else -> closure.default(dst, src)
-                    }
-                }
-                else -> closure.default(dst, src)
             }
+            is Address -> {
+                when (src) {
+                    is GPRegister -> closure.ar(dst, src)
+                    is Address    -> closure.aa(dst, src)
+                    is ImmInt     -> closure.ai(dst, src.asImm32())
+                    else -> closure.default(dst, src)
+                }
+            }
+            else -> closure.default(dst, src)
         }
     }
 }

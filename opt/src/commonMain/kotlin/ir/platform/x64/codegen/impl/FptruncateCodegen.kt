@@ -23,20 +23,20 @@ internal class FptruncateCodegen(val toType: FloatingPointType, val asm: Assembl
         XmmOperandsVisitorUnaryOp.apply(dst, src, this)
     }
 
-    override fun rrF(dst: XmmRegister, src: XmmRegister) {
+    override fun rr(dst: XmmRegister, src: XmmRegister) {
         asm.cvtsd2ss(src, dst)
     }
 
-    override fun raF(dst: XmmRegister, src: Address) {
+    override fun ra(dst: XmmRegister, src: Address) {
         asm.cvtsd2ss(src, dst)
     }
 
-    override fun arF(dst: Address, src: XmmRegister) {
+    override fun ar(dst: Address, src: XmmRegister) {
         asm.cvtsd2ss(src, xmmTemp1)
         asm.movf(toSize, xmmTemp1, dst)
     }
 
-    override fun aaF(dst: Address, src: Address) {
+    override fun aa(dst: Address, src: Address) {
         asm.cvtsd2ss(src, xmmTemp1)
         asm.movf(toSize, xmmTemp1, dst)
     }

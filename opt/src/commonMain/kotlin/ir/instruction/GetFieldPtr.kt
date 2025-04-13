@@ -10,7 +10,7 @@ import ir.instruction.utils.IRInstructionVisitor
 
 
 class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType: AggregateType, source: Value, private val index: IntegerConstant):
-    ValueInstruction(id, owner, arrayOf(source)) {
+    AnyGetElementPtr(id, owner, arrayOf(source)) {
     override fun dump(): String {
         val stringBuilder = StringBuilder("%${name()} = $NAME $basicType, ptr ${source()}, ")
         stringBuilder.append("${index.type()} $index")
@@ -19,7 +19,7 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
 
     override fun type(): PtrType = PtrType
 
-    fun source(): Value {
+    override fun source(): Value {
         assertion(operands.size == 1) {
             "size should be 2 in $this instruction"
         }
@@ -27,11 +27,9 @@ class GetFieldPtr private constructor(id: Identity, owner: Block, val basicType:
         return operands[SOURCE]
     }
 
-    fun source(newSource: Value) = owner.df {
-        update(SOURCE, newSource)
-    }
+    override fun accessType(): AggregateType = basicType
 
-    fun index(): IntegerConstant = index
+    override fun index(): IntegerConstant = index
 
     override fun<T> accept(visitor: IRInstructionVisitor<T>): T {
         return visitor.visit(this)

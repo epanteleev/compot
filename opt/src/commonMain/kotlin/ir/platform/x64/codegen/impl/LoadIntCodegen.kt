@@ -9,12 +9,10 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.visitors.*
 
 
-internal class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
-    XmmOperandsVisitorUnaryOp {
+internal class LoadIntCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp {
     private val size = type.sizeOf()
 
     operator fun invoke(value: Operand, pointer: Operand) = when (type) {
-        is FloatingPointType       -> XmmOperandsVisitorUnaryOp.apply(value, pointer, this)
         is IntegerType, is PtrType -> GPOperandsVisitorUnaryOp.apply(value, pointer, this)
         else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
     }
@@ -55,25 +53,6 @@ internal class LoadCodegen(val type: PrimitiveType, val asm: Assembler): GPOpera
     }
 
     override fun ai(dst: Address, src: Imm32) {
-        TODO("Not yet implemented")
-    }
-
-    override fun rrF(dst: XmmRegister, src: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun raF(dst: XmmRegister, src: Address) {
-        when (src) {
-            is AddressLiteral -> asm.movf(size, src, dst) // TODO: should be removed after implementing the correct handling of AddressLiteral
-            else -> TODO()
-        }
-    }
-
-    override fun arF(dst: Address, src: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun aaF(dst: Address, src: Address) {
         TODO("Not yet implemented")
     }
 

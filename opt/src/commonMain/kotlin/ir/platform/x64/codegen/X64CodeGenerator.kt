@@ -330,19 +330,19 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         when (val type = int2ptr.operand().asType<IntegerType>()) {
             is SignedIntType -> {
                 if (type.sizeOf() == QWORD_SIZE) {
-                    CopyCodegen(int2ptr.type(), asm)(dst, src)
+                    CopyIntCodegen(int2ptr.type(), asm)(dst, src)
                 } else {
                     SignExtendCodegen(type, I64Type, asm)(dst, src)
                 }
             }
-            is UnsignedIntType -> CopyCodegen(int2ptr.type(), asm)(dst, src)
+            is UnsignedIntType -> CopyIntCodegen(int2ptr.type(), asm)(dst, src)
         }
     }
 
     override fun visit(ptr2Int: Pointer2Int) {
         val dst = vReg(ptr2Int)
         val src = operand(ptr2Int.operand())
-        CopyCodegen(ptr2Int.type(), asm)(dst, src)
+        CopyIntCodegen(ptr2Int.type(), asm)(dst, src)
     }
 
     override fun visit(memcpy: Memcpy) {
@@ -519,13 +519,21 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
     override fun visit(store: Store) {
         val pointerOperand = operand(store.pointer())
         val value          = operand(store.value())
-        StoreCodegen(store.valueType(), asm)(value, pointerOperand)
+        when (val type = store.valueType()) {
+            is FloatingPointType -> StoreFloatCodegen(type, asm)(value, pointerOperand)
+            is IntegerType, is PtrType -> StoreIntCodegen(type, asm)(value, pointerOperand)
+            is UndefType -> TODO("undefined behavior")
+        }
     }
 
     override fun visit(load: Load) {
         val pointer = operand(load.operand())
         val value   = vReg(load)
-        LoadCodegen(load.type(), asm)(value, pointer)
+        when (val type = load.type()) {
+            is FloatingPointType -> LoadFloatCodegen(type, asm)(value, pointer)
+            is IntegerType, is PtrType -> LoadIntCodegen(type, asm)(value, pointer)
+            is UndefType -> TODO("undefined behavior")
+        }
     }
 
     override fun visit(icmp: IntCompare) {
@@ -601,15 +609,23 @@ private class CodeEmitter(private val data: FunctionData, private val unit: Comp
         }
         val result  = vReg(copy)
         val operand = operand(copy.operand())
-        CopyCodegen(copy.type(), asm)(result, operand)
+        when (val type = copy.type()) {
+            is IntegerType, is PtrType -> CopyIntCodegen(type, asm)(result, operand)
+            is FloatingPointType -> CopyFloatCodegen(type, asm)(result, operand)
+            is UndefType -> TODO("undefined behavior")
+        }
     }
 
     override fun visit(move: Move) {
         val source      = operand(move.source())
         val destination = operand(move.destination())
 
-        val type = move.source().asType<PrimitiveType>()
-        MoveCodegen(type, asm)(destination, source)
+        when (val type = move.source().asType<PrimitiveType>()) {
+            is IntegerType, is PtrType -> MoveIntCodegen(type, asm)(destination, source)
+            is FloatingPointType -> MoveFloatCodegen(type, asm)(destination, source)
+            is UndefType -> TODO("undefined behavior")
+        }
+
     }
 
     override fun visit(move: MoveByIndex) {

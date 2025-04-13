@@ -4,31 +4,25 @@ import asm.x64.Operand
 import asm.x64.*
 
 interface XmmOperandsVisitorUnaryOp {
-    fun rrF(dst: XmmRegister, src: XmmRegister)
-    fun raF(dst: XmmRegister, src: Address)
-    fun arF(dst: Address, src: XmmRegister)
-    fun aaF(dst: Address, src: Address)
+    fun rr(dst: XmmRegister, src: XmmRegister)
+    fun ra(dst: XmmRegister, src: Address)
+    fun ar(dst: Address, src: XmmRegister)
+    fun aa(dst: Address, src: Address)
     fun default(dst: Operand, src: Operand)
 
     companion object {
-        fun apply(dst: Operand, src: Operand, closure: XmmOperandsVisitorUnaryOp) {
-            when (dst) {
-                is XmmRegister -> {
-                    when (src) {
-                        is XmmRegister -> closure.rrF(dst, src)
-                        is Address     -> closure.raF(dst, src)
-                        else           -> closure.default(dst, src)
-                    }
-                }
-                is Address -> {
-                    when (src) {
-                        is XmmRegister -> closure.arF(dst, src)
-                        is Address     -> closure.aaF(dst, src)
-                        else           -> closure.default(dst, src)
-                    }
-                }
-                else -> closure.default(dst, src)
+        fun apply(dst: Operand, src: Operand, closure: XmmOperandsVisitorUnaryOp) = when (dst) {
+            is XmmRegister -> when (src) {
+                is XmmRegister -> closure.rr(dst, src)
+                is Address     -> closure.ra(dst, src)
+                else           -> closure.default(dst, src)
             }
+            is Address -> when (src) {
+                is XmmRegister -> closure.ar(dst, src)
+                is Address     -> closure.aa(dst, src)
+                else           -> closure.default(dst, src)
+            }
+            else -> closure.default(dst, src)
         }
     }
 }

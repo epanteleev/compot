@@ -8,7 +8,7 @@ import ir.platform.x64.codegen.X64MacroAssembler
 import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
 
 
-internal class SarCodegen (val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class SarCodegen (type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
@@ -69,7 +69,8 @@ internal class SarCodegen (val type: ArithmeticType, val asm: X64MacroAssembler)
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
-        TODO("Not yet implemented")
+        asm.mov(size, first, dst)
+        asm.sar(size, second, dst)
     }
 
     override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {

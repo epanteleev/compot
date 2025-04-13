@@ -29,14 +29,12 @@ internal class SubstituteMacroFunction(private val macros: MacroFunction, privat
             return
         }
 
-        val str1 = arg1.str()
         result.remove(arg1)
-
         if (result.lastOrNull() is Indent) {
             result.removeLast()
         }
 
-        val str = value.joinToString("", prefix = str1) { it.str() }
+        val str = value.joinToString("", prefix = arg1.str()) { it.str() }
         val tokens = CTokenizer.apply(str, where.filename())
         result.addAll(tokens)
         eat()
@@ -53,18 +51,15 @@ internal class SubstituteMacroFunction(private val macros: MacroFunction, privat
         eat()
     }
 
-    private fun concatVariadicArgs(): String {
-        val stringBuilder = StringBuilder()
+    private fun concatVariadicArgs(): String = buildString {
         for (arg in args) {
             for (tok in arg) {
-                stringBuilder.append(tok.str())
+                append(tok.str())
             }
             if (arg != args.last()) {
-                stringBuilder.append(", ")
+                append(", ")
             }
         }
-
-        return stringBuilder.toString()
     }
 
     fun substitute(macrosNamePos: Position): TokenList {

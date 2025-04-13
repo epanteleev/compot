@@ -10,12 +10,10 @@ import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.visitors.*
 
 
-internal class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp,
-    XmmOperandsVisitorUnaryOp {
+internal class StoreIntCodegen(val type: PrimitiveType, val asm: Assembler): GPOperandsVisitorUnaryOp {
     private val size = type.sizeOf()
 
     operator fun invoke(value: Operand, pointer: Operand) = when (type) {
-        is FloatingPointType       -> XmmOperandsVisitorUnaryOp.apply(pointer, value, this)
         is IntegerType, is PtrType -> GPOperandsVisitorUnaryOp.apply(pointer, value, this)
         else -> throw RuntimeException("Unknown type=$type, value=$value, pointer=$pointer")
     }
@@ -47,23 +45,6 @@ internal class StoreCodegen(val type: PrimitiveType, val asm: Assembler): GPOper
     override fun ai(dst: Address, src: Imm32) {
         asm.mov(POINTER_SIZE, dst, temp1)
         asm.mov(size, src, Address.from(temp1, 0))
-    }
-
-    override fun rrF(dst: XmmRegister, src: XmmRegister) {
-        TODO("Not yet implemented")
-    }
-
-    override fun raF(dst: XmmRegister, src: Address) {
-        TODO("Not yet implemented")
-    }
-
-    override fun arF(dst: Address, src: XmmRegister) {
-        asm.mov(POINTER_SIZE, dst, temp1)
-        asm.movf(size, src, Address.from(temp1, 0))
-    }
-
-    override fun aaF(dst: Address, src: Address) {
-        TODO("Not yet implemented")
     }
 
     override fun default(dst: Operand, src: Operand) {
