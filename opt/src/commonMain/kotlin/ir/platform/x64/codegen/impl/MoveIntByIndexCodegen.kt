@@ -7,15 +7,15 @@ import ir.Definitions.POINTER_SIZE
 import ir.instruction.lir.MoveByIndex
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
-import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorArithmeticBinaryOp
 
 
-internal class MoveIntByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
+internal class MoveIntByIndexCodegen(val type: PrimitiveType, indexType: NonTrivialType, val asm: Assembler) : GPOperandsVisitorArithmeticBinaryOp {
     private val size = type.sizeOf()
     private val indexSize = indexType.sizeOf()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) = when (type) {
-        is IntegerType, is PtrType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
+        is IntegerType, is PtrType -> GPOperandsVisitorArithmeticBinaryOp.apply(dst, source, index, this)
         else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
     }
 

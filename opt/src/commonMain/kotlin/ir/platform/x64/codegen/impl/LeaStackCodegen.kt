@@ -6,15 +6,15 @@ import ir.types.*
 import ir.Definitions.POINTER_SIZE
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorArithmeticBinaryOp
 
 
 internal class LeaStackCodegen (val type: PtrType, val basicType: NonTrivialType, val asm: Assembler):
-    GPOperandsVisitorBinaryOp {
+    GPOperandsVisitorArithmeticBinaryOp {
     private val size: Int = basicType.sizeOf()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
-        GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
+        GPOperandsVisitorArithmeticBinaryOp.apply(dst, source, index, this)
     }
 
     override fun rar(dst: GPRegister, first: Address, second: GPRegister) {

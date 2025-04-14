@@ -54,7 +54,7 @@ internal class SelectCodegen(type: IntegerType, val condition: IntCompare, val a
         }
     }
 
-    override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
+    override fun rir(dst: GPRegister, first: Imm, second: GPRegister) {
         TODO("untested")
         asm.copy(size, second, dst)
         asm.mov(size, first, temp1)
@@ -71,7 +71,7 @@ internal class SelectCodegen(type: IntegerType, val condition: IntCompare, val a
         }
     }
 
-    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
+    override fun rri(dst: GPRegister, first: GPRegister, second: Imm) {
         if (dst == first) {
             TODO("untested")
             asm.mov(size, second, temp1)
@@ -93,7 +93,7 @@ internal class SelectCodegen(type: IntegerType, val condition: IntCompare, val a
         }
     }
 
-    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
+    override fun rii(dst: GPRegister, first: Imm, second: Imm) {
         if (first == second) {
             asm.mov(size, first, dst)
             return
@@ -103,12 +103,12 @@ internal class SelectCodegen(type: IntegerType, val condition: IntCompare, val a
         asm.cmovcc(size, matchIntCondition(), temp1, dst)
     }
 
-    override fun ria(dst: GPRegister, first: Imm32, second: Address) {
+    override fun ria(dst: GPRegister, first: Imm, second: Address) {
         asm.mov(size, first, dst)
         asm.cmovcc(size, matchIntCondition().invert(), second, dst)
     }
 
-    override fun rai(dst: GPRegister, first: Address, second: Imm32) {
+    override fun rai(dst: GPRegister, first: Address, second: Imm) {
         asm.mov(size, second, dst)
         asm.cmovcc(size, matchIntCondition(), first, dst)
     }
@@ -117,9 +117,14 @@ internal class SelectCodegen(type: IntegerType, val condition: IntCompare, val a
         TODO("Not yet implemented")
     }
 
-    override fun aii(dst: Address, first: Imm32, second: Imm32) {
+    override fun aii(dst: Address, first: Imm, second: Imm) {
         if (first == second) {
-            asm.mov(size, first, dst)
+            if (Imm.canBeImm32(first.value())) {
+                asm.mov(size, first.asImm32(), dst)
+            } else {
+                asm.copy(size, first, temp1)
+                asm.mov(size, temp1, dst)
+            }
             return
         }
         asm.mov(size, second, temp2)
@@ -128,27 +133,27 @@ internal class SelectCodegen(type: IntegerType, val condition: IntCompare, val a
         asm.mov(size, temp2, dst)
     }
 
-    override fun air(dst: Address, first: Imm32, second: GPRegister) {
+    override fun air(dst: Address, first: Imm, second: GPRegister) {
         TODO("untested")
         asm.mov(size, first, temp1)
         asm.cmovcc(size, matchIntCondition().invert(), second, temp1)
         asm.mov(size, temp1, dst)
     }
 
-    override fun aia(dst: Address, first: Imm32, second: Address) {
+    override fun aia(dst: Address, first: Imm, second: Address) {
         TODO("untested")
         asm.mov(size, first, temp1)
         asm.cmovcc(size, matchIntCondition().invert(), second, temp1)
         asm.mov(size, temp1, dst)
     }
 
-    override fun ari(dst: Address, first: GPRegister, second: Imm32) {
+    override fun ari(dst: Address, first: GPRegister, second: Imm) {
         asm.mov(size, second, temp1)
         asm.cmovcc(size, matchIntCondition(), first, temp1)
         asm.mov(size, temp1, dst)
     }
 
-    override fun aai(dst: Address, first: Address, second: Imm32) {
+    override fun aai(dst: Address, first: Address, second: Imm) {
         asm.mov(size, second, temp2)
         asm.mov(size, first, temp1)
         asm.cmovcc(size, matchIntCondition(), temp1, temp2)

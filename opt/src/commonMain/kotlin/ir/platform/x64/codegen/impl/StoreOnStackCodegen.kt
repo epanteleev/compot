@@ -7,13 +7,13 @@ import ir.instruction.lir.StoreOnStack
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.CallConvention.xmmTemp1
-import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorArithmeticBinaryOp
 import ir.types.FloatingPointType
 import ir.types.IntegerType
 import ir.types.PtrType
 
 
-internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
+internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorArithmeticBinaryOp {
     private val size = type.sizeOf()
     private val indexSize = indexType.sizeOf()
 
@@ -25,13 +25,11 @@ internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: Inte
                         asm.movf(size, source, Address.from(dst.base, dst.offset, index, ScaleFactor.from(size)))
                     }
                     dst is Address2 && source is XmmRegister && index is Imm -> {
-                        val indexImm = index as Imm
-                        asm.movf(size, source, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
+                        asm.movf(size, source, Address.from(dst.base, dst.offset + index.asImm32().value().toInt() * size))
                     }
                     dst is Address2 && source is Address && index is Imm -> {
-                        val indexImm = index as Imm
                         asm.movf(indexSize, source, xmmTemp1)
-                        asm.movf(size, xmmTemp1, Address.from(dst.base, dst.offset + indexImm.asImm32().value().toInt() * size))
+                        asm.movf(size, xmmTemp1, Address.from(dst.base, dst.offset + index.asImm32().value().toInt() * size))
                     }
                     else -> {
                         println("${index::class}")
@@ -39,7 +37,7 @@ internal class StoreOnStackCodegen (val type: PrimitiveType, val indexType: Inte
                     }
                 }
             }
-            is IntegerType, is PtrType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
+            is IntegerType, is PtrType -> GPOperandsVisitorArithmeticBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }
     }

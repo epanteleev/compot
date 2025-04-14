@@ -92,7 +92,7 @@ internal class Uint2FloatCodegen(toType: FloatingPointType, val fromType: Unsign
         asm.switchTo(slowPath).let {
             asm.copy(fromSize, src, temp1)
             asm.copy(fromSize, src, temp2)
-            asm.shr(QWORD_SIZE, Imm32.of(1), temp1)
+            asm.shr(QWORD_SIZE, Imm8.of(1), temp1)
             asm.and(fromSize, Imm32.of(1), temp2)
             asm.or(QWORD_SIZE, temp1, temp2)
             asm.pxor(dst, dst)
@@ -117,7 +117,7 @@ internal class Uint2FloatCodegen(toType: FloatingPointType, val fromType: Unsign
         }
         asm.switchTo(slowPath).let {
             asm.mov(fromSize, src, temp2)
-            asm.shr(QWORD_SIZE, Imm32.of(1), temp1)
+            asm.shr(QWORD_SIZE, Imm8.of(1), temp1)
             asm.and(fromSize, Imm32.of(1), temp2)
             asm.or(QWORD_SIZE, temp1, temp2)
             asm.pxor(dst, dst)

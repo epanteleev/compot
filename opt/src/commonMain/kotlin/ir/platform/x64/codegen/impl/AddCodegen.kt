@@ -8,11 +8,11 @@ import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.X64MacroAssembler
 
 
-internal class AddCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class AddCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorArithmeticBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: VReg, first: Operand, second: Operand) {
-        GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
+        GPOperandsVisitorArithmeticBinaryOp.apply(dst, first, second, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {

@@ -44,7 +44,7 @@ internal class ShrCodegen (type: ArithmeticType, val asm: X64MacroAssembler): GP
         }
     }
 
-    override fun rir(dst: GPRegister, first: Imm32, second: GPRegister) {
+    override fun rir(dst: GPRegister, first: Imm, second: GPRegister) {
         if (dst == second) {
             asm.mov(size, first, temp1)
             asm.shr(size, second, temp1)
@@ -59,56 +59,56 @@ internal class ShrCodegen (type: ArithmeticType, val asm: X64MacroAssembler): GP
         TODO("Not yet implemented")
     }
 
-    override fun rri(dst: GPRegister, first: GPRegister, second: Imm32) {
+    override fun rri(dst: GPRegister, first: GPRegister, second: Imm) {
         asm.copy(size, first, dst)
-        asm.shr(size, second, dst)
+        asm.shr(size, Imm8.round(second.value()), dst)
     }
 
     override fun raa(dst: GPRegister, first: Address, second: Address) {
         TODO("Not yet implemented")
     }
 
-    override fun rii(dst: GPRegister, first: Imm32, second: Imm32) {
+    override fun rii(dst: GPRegister, first: Imm, second: Imm) {
         val value = first.value() ushr second.value().toInt()
         asm.copy(size, Imm64.of(value), dst)
     }
 
-    override fun ria(dst: GPRegister, first: Imm32, second: Address) {
+    override fun ria(dst: GPRegister, first: Imm, second: Address) {
         TODO("Not yet implemented")
     }
 
-    override fun rai(dst: GPRegister, first: Address, second: Imm32) {
+    override fun rai(dst: GPRegister, first: Address, second: Imm) {
         asm.mov(size, first, dst)
-        asm.shr(size, second, dst)
+        asm.shr(size, Imm8.round(second.value()), dst)
     }
 
     override fun ara(dst: Address, first: GPRegister, second: Address) {
         TODO("Not yet implemented")
     }
 
-    override fun aii(dst: Address, first: Imm32, second: Imm32) {
+    override fun aii(dst: Address, first: Imm, second: Imm) {
         TODO("Not yet implemented")
     }
 
-    override fun air(dst: Address, first: Imm32, second: GPRegister) {
+    override fun air(dst: Address, first: Imm, second: GPRegister) {
         TODO("Not yet implemented")
     }
 
-    override fun aia(dst: Address, first: Imm32, second: Address) {
+    override fun aia(dst: Address, first: Imm, second: Address) {
         TODO("Not yet implemented")
     }
 
-    override fun ari(dst: Address, first: GPRegister, second: Imm32) {
+    override fun ari(dst: Address, first: GPRegister, second: Imm) {
         asm.mov(size, first, dst)
-        asm.shr(size, second, dst)
+        asm.shr(size, Imm8.round(second.value()), dst)
     }
 
-    override fun aai(dst: Address, first: Address, second: Imm32) {
+    override fun aai(dst: Address, first: Address, second: Imm) {
         if (dst == first) {
-            asm.shr(size, second, dst)
+            asm.shr(size, Imm8.round(second.value()), dst)
         } else {
             asm.mov(size, first, temp1)
-            asm.shr(size, second, temp1)
+            asm.shr(size, Imm8.round(second.value()), temp1)
             asm.mov(size, temp1, dst)
         }
     }

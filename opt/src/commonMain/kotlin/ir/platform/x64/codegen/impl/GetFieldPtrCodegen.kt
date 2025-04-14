@@ -6,14 +6,14 @@ import ir.types.*
 import ir.Definitions.POINTER_SIZE
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorArithmeticBinaryOp
 
 
 internal class GetFieldPtrCodegen(val type: PtrType, private val basicType: AggregateType, val asm: Assembler):
-    GPOperandsVisitorBinaryOp {
+    GPOperandsVisitorArithmeticBinaryOp {
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
-        GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
+        GPOperandsVisitorArithmeticBinaryOp.apply(dst, source, index, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) = default(dst, first, second)

@@ -10,12 +10,12 @@ import ir.platform.x64.CallConvention.temp2
 import ir.platform.x64.codegen.visitors.*
 
 
-internal class IndexedIntLoadCodegen(private val loadedType: PrimitiveType, indexType: PrimitiveType, val asm: Assembler): GPOperandsVisitorBinaryOp {
+internal class IndexedIntLoadCodegen(private val loadedType: PrimitiveType, indexType: PrimitiveType, val asm: Assembler): GPOperandsVisitorArithmeticBinaryOp {
     private val size: Int = loadedType.sizeOf()
     private val indexSize: Int = indexType.sizeOf()
 
     operator fun invoke(dst: Operand, operand: Operand, index: Operand) = when (loadedType) {
-        is IntegerType, is PtrType -> GPOperandsVisitorBinaryOp.apply(dst, operand, index, this)
+        is IntegerType, is PtrType -> GPOperandsVisitorArithmeticBinaryOp.apply(dst, operand, index, this)
         else -> default(dst, operand, index)
     }
 

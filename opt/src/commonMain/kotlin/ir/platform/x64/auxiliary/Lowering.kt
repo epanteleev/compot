@@ -164,10 +164,8 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
 
             val copy = bb.putBefore(shl, Copy.copy(shl.rhs()))
             shl.rhs(copy)
-            lowerArithmeticOperands(shl) //TODO: check if it is needed
             return shl
         }
-        lowerArithmeticOperands(shl) //TODO: check if it is needed
         return shl
     }
 
@@ -183,10 +181,8 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
 
             val copy = bb.putBefore(shr, Copy.copy(shr.rhs()))
             shr.rhs(copy)
-            lowerArithmeticOperands(shr) //TODO: check if it is needed
             return shr
         }
-        lowerArithmeticOperands(shr) //TODO: check if it is needed
         return shr
     }
 
@@ -777,30 +773,6 @@ internal class Lowering private constructor(private val cfg: FunctionData, priva
     }
 
     override fun visit(select: Select): Instruction {
-        val onTrue = select.onTrue()
-        if (onTrue.isa(i64imm32())) { //TODO temporary solution
-            val operand = onTrue.asValue<I64Value>()
-            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
-            select.onTrue(constant)
-
-        } else if (onTrue.isa(u64imm32())) {
-            val operand = onTrue.asValue<U64Value>()
-            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
-            select.onTrue(constant)
-        }
-
-        val onFalse = select.onFalse()
-        if (onFalse.isa(i64imm32())) { //TODO temporary solution
-            val operand = onFalse.asValue<I64Value>()
-            val constant = module.addConstant(I64ConstantValue(constName(), operand.i64))
-            select.onFalse(constant)
-
-        } else if (onFalse.isa(u64imm32())) {
-            val operand = onFalse.asValue<U64Value>()
-            val constant = module.addConstant(U64ConstantValue(constName(), operand.u64))
-            select.onFalse(constant)
-        }
-
         select.match(select(any(), value(i8()), value(i8()))) {
             // Before:
             //  %cond = icmp <predicate> i8 %a, %b

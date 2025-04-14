@@ -95,10 +95,10 @@ abstract class Assembler(functionName: String, val id: Int): AnonymousDirective(
 
     // Unsigned logical Shift Right
     fun shr(size: Int, src: GPRegister, dst: GPRegister) = add(Shr(size, src, dst))
-    fun shr(size: Int, src: Imm32, dst: GPRegister)      = add(Shr(size, src, dst))
+    fun shr(size: Int, src: Imm8, dst: GPRegister)      = add(Shr(size, src, dst))
     fun shr(size: Int, src: GPRegister, dst: Address)    = add(Shr(size, src, dst))
     fun shr(size: Int, src: Address, dst: GPRegister)    = add(Shr(size, src, dst))
-    fun shr(size: Int, src: Imm32, dst: Address)         = add(Shr(size, src, dst))
+    fun shr(size: Int, src: Imm8, dst: Address)         = add(Shr(size, src, dst))
 
     // Signed logical Shift Left
     fun sar(size: Int, src: GPRegister, dst: GPRegister) = add(Sar(size, src, dst))

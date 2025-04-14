@@ -6,15 +6,15 @@ import ir.types.*
 import common.assertion
 import asm.x64.GPRegister.*
 import ir.platform.x64.codegen.X64MacroAssembler
-import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorArithmeticBinaryOp
 
 
-internal class UIntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorBinaryOp {
+internal class UIntDivCodegen(val type: ArithmeticType, val asm: X64MacroAssembler): GPOperandsVisitorArithmeticBinaryOp {
     private val size: Int = type.sizeOf()
 
     operator fun invoke(dst: Operand, first: Operand, second: Operand) {
         assertion(second != rdx) { "Second operand cannot be rdx" }
-        GPOperandsVisitorBinaryOp.apply(dst, first, second, this)
+        GPOperandsVisitorArithmeticBinaryOp.apply(dst, first, second, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {

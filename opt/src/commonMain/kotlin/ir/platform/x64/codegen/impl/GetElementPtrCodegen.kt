@@ -7,15 +7,15 @@ import ir.types.*
 import ir.instruction.GetElementPtr
 import ir.platform.x64.CallConvention.temp1
 import ir.platform.x64.codegen.X64MacroAssembler
-import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorArithmeticBinaryOp
 
 
 internal class GetElementPtrCodegen(val type: PtrType, private val secondOpSize: Int, basicType: NonTrivialType, val asm: X64MacroAssembler) :
-    GPOperandsVisitorBinaryOp {
+    GPOperandsVisitorArithmeticBinaryOp {
     private val size: Int = basicType.sizeOf()
 
     operator fun invoke(dst: Operand, source: Operand, index: Operand) {
-        GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
+        GPOperandsVisitorArithmeticBinaryOp.apply(dst, source, index, this)
     }
 
     override fun rrr(dst: GPRegister, first: GPRegister, second: GPRegister) {

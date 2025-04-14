@@ -5,10 +5,10 @@ import asm.x64.*
 import ir.types.*
 import ir.instruction.lir.LoadFromStack
 import ir.platform.x64.CallConvention.temp1
-import ir.platform.x64.codegen.visitors.GPOperandsVisitorBinaryOp
+import ir.platform.x64.codegen.visitors.GPOperandsVisitorArithmeticBinaryOp
 
 
-internal class LoadFromStackCodegen (val type: PrimitiveType, indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorBinaryOp {
+internal class LoadFromStackCodegen (val type: PrimitiveType, indexType: IntegerType, val asm: Assembler) : GPOperandsVisitorArithmeticBinaryOp {
     private val size = type.sizeOf()
     private val indexSize = indexType.sizeOf()
 
@@ -26,7 +26,7 @@ internal class LoadFromStackCodegen (val type: PrimitiveType, indexType: Integer
                     default(dst, source, index)
                 }
             }
-            is IntegerType, is PtrType -> GPOperandsVisitorBinaryOp.apply(dst, source, index, this)
+            is IntegerType, is PtrType -> GPOperandsVisitorArithmeticBinaryOp.apply(dst, source, index, this)
             else -> throw RuntimeException("Unknown type=$type, dst=$dst, source=$source, index=$index")
         }
     }
